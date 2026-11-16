@@ -1,22 +1,4 @@
-# The nuclear repository is the root of the working tree (plan 006): the other repositories are folders inside it,
-# each with its own git.
-/dragonfly/
-/dragonfly-mobile/
-/dragonfly-backend/
-/dragonfly-web/
-/nuclear-vscode/
-/nuclear-jetbrains/
-/nuclear-zed/
-/nuclear-graph/
-/nuclear-developer/
-/website/
-/github-profile/
-
-# not published: teaching material
-/CodeBuilder/
-/docs/aprende/
-
-# build output and local tools (regenerated)
+# One repository for the whole tree. Build output and local tools (regenerated):
 target/
 build/
 dist/
@@ -25,6 +7,7 @@ node_modules/
 .venv/
 __pycache__/
 *.pyc
+*.egg-info/
 .dart_tool/
 .pytest_cache/
 .nuclear/
@@ -32,3 +15,10 @@ __pycache__/
 *.sqlite
 .DS_Store
 
+# not published: teaching material
+/CodeBuilder/
+/docs/aprende/
+
+# repositories of their own: the organization's profile (GitHub reads it only from `.github`), the website
+/github-profile/
+/website/

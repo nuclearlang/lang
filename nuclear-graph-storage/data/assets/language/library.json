@@ -1,0 +1,2133 @@
+{
+ "shelf": "language",
+ "origin": "generated",
+ "generator": "library",
+ "about": "The members of the standard library and the names of other languages they replace (library.rs of nuclear-dialect).",
+ "rows": [
+  {
+   "id": "lib:Bytes",
+   "type": "library",
+   "title": "`Bytes` — Nuclear's standard library",
+   "summary": "The members of `Bytes` in Nuclear's standard library, the same in every dialect: of, fromBase64, fromHex.",
+   "body": "Methods: `of()` → Bytes, `fromBase64()` → Bytes, `fromHex()` → Bytes.",
+   "keys": [
+    "bytes members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Bytes"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "of",
+      "property": false,
+      "gives": "Bytes"
+     },
+     {
+      "name": "fromBase64",
+      "property": false,
+      "gives": "Bytes"
+     },
+     {
+      "name": "fromHex",
+      "property": false,
+      "gives": "Bytes"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:DateTime",
+   "type": "library",
+   "title": "`DateTime` — Nuclear's standard library",
+   "summary": "The members of `DateTime` in Nuclear's standard library, the same in every dialect: now, utc, new, parse, fromMillis.",
+   "body": [
+    "Methods: `now()` → DateTime, `utc()` → DateTime, `new()` → DateTime, `parse()` → DateTime?, `fromMillis()` → DateTime.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `DateTime.fromMillisecondsSinceEpoch` → `DateTime.fromMillis(ms)`"
+   ],
+   "keys": [
+    "datetime members"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "DateTime"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "now",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "utc",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "new",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "parse",
+      "property": false,
+      "gives": "DateTime?"
+     },
+     {
+      "name": "fromMillis",
+      "property": false,
+      "gives": "DateTime"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "DateTime.fromMillisecondsSinceEpoch",
+      "fix": "DateTime.fromMillis(ms)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:Duration",
+   "type": "library",
+   "title": "`Duration` — Nuclear's standard library",
+   "summary": "The members of `Duration` in Nuclear's standard library, the same in every dialect: new.",
+   "body": "Methods: `new()` → Duration.",
+   "keys": [
+    "duration members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Duration"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "new",
+      "property": false,
+      "gives": "Duration"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:Error",
+   "type": "library",
+   "title": "`Error` — Nuclear's standard library",
+   "summary": "The members of `Error` in Nuclear's standard library, the same in every dialect: new.",
+   "body": "Methods: `new()` → Error.",
+   "keys": [
+    "error members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Error"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "new",
+      "property": false,
+      "gives": "Error"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:Json",
+   "type": "library",
+   "title": "`Json` — Nuclear's standard library",
+   "summary": "The members of `Json` in Nuclear's standard library, the same in every dialect: encode, decode.",
+   "body": "Methods: `encode()` → string, `decode()` → any.",
+   "keys": [
+    "json members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Json"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "encode",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "decode",
+      "property": false,
+      "gives": "any"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:Math",
+   "type": "library",
+   "title": "`Math` — Nuclear's standard library",
+   "summary": "The members of `Math` in Nuclear's standard library, the same in every dialect: pi, e, sqrt, cbrt, hypot, sin, cos, tan, asin, acos, atan, atan2, exp, log, log10, log2, min, max, clamp, random.",
+   "body": [
+    "Properties (written without parentheses): `pi` → double, `e` → double.",
+    "",
+    "Methods: `sqrt()` → double, `cbrt()` → double, `hypot()` → double, `sin()` → double, `cos()` → double, `tan()` → double, `asin()` → double, `acos()` → double, `atan()` → double, `atan2()` → double, `exp()` → double, `log()` → double, `log10()` → double, `log2()` → double, `min()` → a number, `max()` → a number, `clamp()` → a number, `random()` → double.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `Math.floor` → `x.floor()`",
+    "- `Math.ceil` → `x.ceil()`",
+    "- `Math.round` → `x.round()`",
+    "- `Math.trunc` → `x.truncate()`",
+    "- `Math.abs` → `x.abs()`",
+    "- `Math.pow` → `the `**` operator`",
+    "- `Math.sign` → `x.sign()`",
+    "- `Math.PI` → `Math.pi`",
+    "- `Math.E` → `Math.e`"
+   ],
+   "keys": [
+    "math members"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Math"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "pi",
+      "property": true,
+      "gives": "double"
+     },
+     {
+      "name": "e",
+      "property": true,
+      "gives": "double"
+     },
+     {
+      "name": "sqrt",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "cbrt",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "hypot",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "sin",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "cos",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "tan",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "asin",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "acos",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "atan",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "atan2",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "exp",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "log",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "log10",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "log2",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "min",
+      "property": false,
+      "gives": "a number"
+     },
+     {
+      "name": "max",
+      "property": false,
+      "gives": "a number"
+     },
+     {
+      "name": "clamp",
+      "property": false,
+      "gives": "a number"
+     },
+     {
+      "name": "random",
+      "property": false,
+      "gives": "double"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "Math.floor",
+      "fix": "x.floor()"
+     },
+     {
+      "name": "Math.ceil",
+      "fix": "x.ceil()"
+     },
+     {
+      "name": "Math.round",
+      "fix": "x.round()"
+     },
+     {
+      "name": "Math.trunc",
+      "fix": "x.truncate()"
+     },
+     {
+      "name": "Math.abs",
+      "fix": "x.abs()"
+     },
+     {
+      "name": "Math.pow",
+      "fix": "the `**` operator"
+     },
+     {
+      "name": "Math.sign",
+      "fix": "x.sign()"
+     },
+     {
+      "name": "Math.PI",
+      "fix": "Math.pi"
+     },
+     {
+      "name": "Math.E",
+      "fix": "Math.e"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:Regex",
+   "type": "library",
+   "title": "`Regex` — Nuclear's standard library",
+   "summary": "The members of `Regex` in Nuclear's standard library, the same in every dialect: new.",
+   "body": "Methods: `new()` → Regex.",
+   "keys": [
+    "regex members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Regex"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "new",
+      "property": false,
+      "gives": "Regex"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:Set",
+   "type": "library",
+   "title": "`Set` — Nuclear's standard library",
+   "summary": "The members of `Set` in Nuclear's standard library, the same in every dialect: new, of.",
+   "body": "Methods: `new()` → Set, `of()` → Set.",
+   "keys": [
+    "set members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "Set"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "new",
+      "property": false,
+      "gives": "Set"
+     },
+     {
+      "name": "of",
+      "property": false,
+      "gives": "Set"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:String",
+   "type": "library",
+   "title": "`String` — Nuclear's standard library",
+   "summary": "The members of `String` in Nuclear's standard library, the same in every dialect: fromCodes.",
+   "body": [
+    "Methods: `fromCodes()` → string.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `String.fromCharCode` → `String.fromCodes(codes)`",
+    "- `String.fromCharCodes` → `String.fromCodes(codes)`"
+   ],
+   "keys": [
+    "string members"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "String"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "fromCodes",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "String.fromCharCode",
+      "fix": "String.fromCodes(codes)"
+     },
+     {
+      "name": "String.fromCharCodes",
+      "fix": "String.fromCodes(codes)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:any",
+   "type": "library",
+   "title": "`any` — Nuclear's standard library",
+   "summary": "The members of `any` in Nuclear's standard library, the same in every dialect: toString.",
+   "body": [
+    "Methods: `toString()` → string.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `toStr` → `toString()`"
+   ],
+   "keys": [
+    "any members",
+    "tostr"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "any"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "toString",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "toStr",
+      "fix": "toString()"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:boolean",
+   "type": "library",
+   "title": "`boolean` — Nuclear's standard library",
+   "summary": "The members of `boolean` in Nuclear's standard library, the same in every dialect: toString.",
+   "body": "Methods: `toString()` → string.",
+   "keys": [
+    "boolean members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "boolean"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "toString",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:bytes",
+   "type": "library",
+   "title": "`bytes` — Nuclear's standard library",
+   "summary": "The members of `bytes` in Nuclear's standard library, the same in every dialect: length, toText, slice, toList, toBase64, toHex.",
+   "body": [
+    "Properties (written without parentheses): `length` → int.",
+    "",
+    "Methods: `toText()` → string, `slice()` → Bytes, `toList()` → int[], `toBase64()` → string, `toHex()` → string."
+   ],
+   "keys": [
+    "bytes members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "bytes"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "length",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "toText",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "slice",
+      "property": false,
+      "gives": "Bytes"
+     },
+     {
+      "name": "toList",
+      "property": false,
+      "gives": "int[]"
+     },
+     {
+      "name": "toBase64",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "toHex",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:datetime",
+   "type": "library",
+   "title": "`datetime` — Nuclear's standard library",
+   "summary": "The members of `datetime` in Nuclear's standard library, the same in every dialect: year, month, day, hour, minute, second, millisecond, weekday, millis, isUtc, add, subtract, difference, isBefore, isAfter, toUtc, toLocal, toIso.",
+   "body": [
+    "Properties (written without parentheses): `year` → int, `month` → int, `day` → int, `hour` → int, `minute` → int, `second` → int, `millisecond` → int, `weekday` → int, `millis` → int, `isUtc` → boolean.",
+    "",
+    "Methods: `add()` → DateTime, `subtract()` → DateTime, `difference()` → Duration, `isBefore()` → boolean, `isAfter()` → boolean, `toUtc()` → DateTime, `toLocal()` → DateTime, `toIso()` → string."
+   ],
+   "keys": [
+    "datetime members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "datetime"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "year",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "month",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "day",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "hour",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "minute",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "second",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "millisecond",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "weekday",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "millis",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "isUtc",
+      "property": true,
+      "gives": "boolean"
+     },
+     {
+      "name": "add",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "subtract",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "difference",
+      "property": false,
+      "gives": "Duration"
+     },
+     {
+      "name": "isBefore",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "isAfter",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "toUtc",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "toLocal",
+      "property": false,
+      "gives": "DateTime"
+     },
+     {
+      "name": "toIso",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:double",
+   "type": "library",
+   "title": "`double` — Nuclear's standard library",
+   "summary": "The members of `double` in Nuclear's standard library, the same in every dialect: isNaN, isFinite.",
+   "body": [
+    "Properties (written without parentheses): `isNaN` → boolean, `isFinite` → boolean.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `toStringAsFixed` → `toFixed(digits)`",
+    "- `toPrecision` → `toFixed(digits)`",
+    "- `trunc` → `truncate()`",
+    "- `double.parse` → `text.toDouble()`"
+   ],
+   "keys": [
+    "double members",
+    "toprecision",
+    "tostringasfixed",
+    "trunc"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "double"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "isNaN",
+      "property": true,
+      "gives": "boolean"
+     },
+     {
+      "name": "isFinite",
+      "property": true,
+      "gives": "boolean"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "toStringAsFixed",
+      "fix": "toFixed(digits)"
+     },
+     {
+      "name": "toPrecision",
+      "fix": "toFixed(digits)"
+     },
+     {
+      "name": "trunc",
+      "fix": "truncate()"
+     },
+     {
+      "name": "double.parse",
+      "fix": "text.toDouble()"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:duration",
+   "type": "library",
+   "title": "`duration` — Nuclear's standard library",
+   "summary": "The members of `duration` in Nuclear's standard library, the same in every dialect: inDays, inHours, inMinutes, inSeconds, inMillis.",
+   "body": "Properties (written without parentheses): `inDays` → int, `inHours` → int, `inMinutes` → int, `inSeconds` → int, `inMillis` → int.",
+   "keys": [
+    "duration members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "duration"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "inDays",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "inHours",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "inMinutes",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "inSeconds",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "inMillis",
+      "property": true,
+      "gives": "int"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:error",
+   "type": "library",
+   "title": "`error` — Nuclear's standard library",
+   "summary": "The members of `error` in Nuclear's standard library, the same in every dialect: message.",
+   "body": "Properties (written without parentheses): `message` → string.",
+   "keys": [
+    "error members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "error"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "message",
+      "property": true,
+      "gives": "string"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:functions",
+   "type": "library",
+   "title": "functions and statics of other languages — Nuclear's standard library",
+   "summary": "The functions and statics of other languages (`len`, `str`, `console.log`...) and what Nuclear writes instead.",
+   "body": [
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `console.log` → `print(a, b)`",
+    "- `JSON.stringify` → `Json.encode(value)`",
+    "- `JSON.parse` → `Json.decode(text)`",
+    "- `Date.now` → `DateTime.now()`",
+    "- `Number.parseInt` → `text.toInt()`",
+    "- `Number.parseFloat` → `text.toDouble()`",
+    "- `RegExp.new` → `Regex(pattern)`",
+    "- `int.parse` → `text.toInt()`",
+    "- `len(x)` → `x.length`",
+    "- `str(x)` → `x.toString()`",
+    "- `String(x)` → `x.toString()`",
+    "- `int(x)` → `x.toInt()`",
+    "- `float(x)` → `x.toDouble()`",
+    "- `parseInt(x)` → `x.toInt()`",
+    "- `parseFloat(x)` → `x.toDouble()`",
+    "- `Number(x)` → `x.toDouble()`",
+    "- `sorted(x)` → `xs.sorted()`",
+    "- `reversed(x)` → `xs.reversed()`",
+    "- `sum(x)` → `xs.sum()`",
+    "- `min(x)` → `xs.min() or Math.min(a, b)`",
+    "- `max(x)` → `xs.max() or Math.max(a, b)`",
+    "- `abs(x)` → `x.abs()`",
+    "- `round(x)` → `x.round()`",
+    "- `jsonEncode(x)` → `Json.encode(value)`",
+    "- `jsonDecode(x)` → `Json.decode(text)`"
+   ],
+   "keys": [
+    "float",
+    "functions members",
+    "jsondecode",
+    "jsonencode",
+    "len",
+    "parsefloat",
+    "parseint",
+    "str"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "functions"
+   },
+   "data": {
+    "members": [],
+    "wrong": [
+     {
+      "name": "console.log",
+      "fix": "print(a, b)"
+     },
+     {
+      "name": "JSON.stringify",
+      "fix": "Json.encode(value)"
+     },
+     {
+      "name": "JSON.parse",
+      "fix": "Json.decode(text)"
+     },
+     {
+      "name": "Date.now",
+      "fix": "DateTime.now()"
+     },
+     {
+      "name": "Number.parseInt",
+      "fix": "text.toInt()"
+     },
+     {
+      "name": "Number.parseFloat",
+      "fix": "text.toDouble()"
+     },
+     {
+      "name": "RegExp.new",
+      "fix": "Regex(pattern)"
+     },
+     {
+      "name": "int.parse",
+      "fix": "text.toInt()"
+     },
+     {
+      "name": "len(x)",
+      "fix": "x.length"
+     },
+     {
+      "name": "str(x)",
+      "fix": "x.toString()"
+     },
+     {
+      "name": "String(x)",
+      "fix": "x.toString()"
+     },
+     {
+      "name": "int(x)",
+      "fix": "x.toInt()"
+     },
+     {
+      "name": "float(x)",
+      "fix": "x.toDouble()"
+     },
+     {
+      "name": "parseInt(x)",
+      "fix": "x.toInt()"
+     },
+     {
+      "name": "parseFloat(x)",
+      "fix": "x.toDouble()"
+     },
+     {
+      "name": "Number(x)",
+      "fix": "x.toDouble()"
+     },
+     {
+      "name": "sorted(x)",
+      "fix": "xs.sorted()"
+     },
+     {
+      "name": "reversed(x)",
+      "fix": "xs.reversed()"
+     },
+     {
+      "name": "sum(x)",
+      "fix": "xs.sum()"
+     },
+     {
+      "name": "min(x)",
+      "fix": "xs.min() or Math.min(a, b)"
+     },
+     {
+      "name": "max(x)",
+      "fix": "xs.max() or Math.max(a, b)"
+     },
+     {
+      "name": "abs(x)",
+      "fix": "x.abs()"
+     },
+     {
+      "name": "round(x)",
+      "fix": "x.round()"
+     },
+     {
+      "name": "jsonEncode(x)",
+      "fix": "Json.encode(value)"
+     },
+     {
+      "name": "jsonDecode(x)",
+      "fix": "Json.decode(text)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:int",
+   "type": "library",
+   "title": "`int` — Nuclear's standard library",
+   "summary": "The members of `int` in Nuclear's standard library, the same in every dialect: .",
+   "body": [
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `toStringAsFixed` → `toFixed(digits)`",
+    "- `toPrecision` → `toFixed(digits)`",
+    "- `trunc` → `truncate()`"
+   ],
+   "keys": [
+    "int members",
+    "toprecision",
+    "tostringasfixed",
+    "trunc"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "int"
+   },
+   "data": {
+    "members": [],
+    "wrong": [
+     {
+      "name": "toStringAsFixed",
+      "fix": "toFixed(digits)"
+     },
+     {
+      "name": "toPrecision",
+      "fix": "toFixed(digits)"
+     },
+     {
+      "name": "trunc",
+      "fix": "truncate()"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:list",
+   "type": "library",
+   "title": "`list` — Nuclear's standard library",
+   "summary": "The members of `list` in Nuclear's standard library, the same in every dialect: length, isEmpty, first, last, add, addAll, insert, remove, removeAt, removeLast, clear, indexOf, lastIndexOf, map, filter, find, findIndex, any, all, count, reduce, sum, min, max, join, slice, take, skip, reversed, sorted, sortedBy, reverse, sort, sortBy,….",
+   "body": [
+    "Properties (written without parentheses): `length` → int, `isEmpty` → boolean, `first` → the element, `last` → the element.",
+    "",
+    "Methods: `add()` → void, `addAll()` → void, `insert()` → void, `remove()` → boolean, `removeAt()` → the element, `removeLast()` → the element, `clear()` → void, `indexOf()` → int, `lastIndexOf()` → int, `map()` → a list, `filter()` → a list of the elements, `find()` → the element, or null, `findIndex()` → int, `any()` → boolean, `all()` → boolean, `count()` → int, `reduce()` → any, `sum()` → a number, `min()` → the element, or null, `max()` → the element, or null, `join()` → string, `slice()` → a list of the elements, `take()` → a list of the elements, `skip()` → a list of the elements, `reversed()` → a list of the elements, `sorted()` → a list of the elements, `sortedBy()` → a list of the elements, `reverse()` → void, `sort()` → void, `sortBy()` → void, `unique()` → a list of the elements, `flatten()` → a list, `copy()` → a list of the elements, `groupBy()` → a map of lists.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `push` → `add(x)`",
+    "- `append` → `add(x)`",
+    "- `extend` → `addAll(ys)`",
+    "- `concat` → `addAll(ys) or [...xs, ...ys]`",
+    "- `pop` → `removeLast()`",
+    "- `shift` → `removeAt(0)`",
+    "- `unshift` → `insert(0, x)`",
+    "- `includes` → `the `in` operator (x in xs)`",
+    "- `contains` → `the `in` operator (x in xs)`",
+    "- `some` → `any(f)`",
+    "- `every` → `all(f)`",
+    "- `where` → `filter(f)`",
+    "- `firstWhere` → `find(f)`",
+    "- `indexWhere` → `findIndex(f)`",
+    "- `fold` → `reduce(initial, f)`",
+    "- `forEach` → `for x in xs`",
+    "- `size` → `length`",
+    "- `isNotEmpty` → `not xs.isEmpty`",
+    "- `toList` → `nothing: a list is already a list`",
+    "- `sublist` → `slice(start, end)`",
+    "- `index` → `indexOf(x)`",
+    "- `removeWhere` → `filter(f)`",
+    "- `expand` → `map(f).flatten()`",
+    "- `at` → `xs[i]`",
+    "- `splice` → `removeAt(i) or insert(i, x)`",
+    "- `elementAt` → `xs[i]`"
+   ],
+   "keys": [
+    "append",
+    "at",
+    "concat",
+    "contains",
+    "elementat",
+    "every",
+    "expand",
+    "extend",
+    "firstwhere",
+    "fold",
+    "foreach",
+    "includes",
+    "index",
+    "indexwhere",
+    "isnotempty",
+    "list members",
+    "pop",
+    "push",
+    "removewhere",
+    "shift",
+    "size",
+    "some",
+    "splice",
+    "sublist",
+    "unshift",
+    "where"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "list"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "length",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "isEmpty",
+      "property": true,
+      "gives": "boolean"
+     },
+     {
+      "name": "first",
+      "property": true,
+      "gives": "the element"
+     },
+     {
+      "name": "last",
+      "property": true,
+      "gives": "the element"
+     },
+     {
+      "name": "add",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "addAll",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "insert",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "remove",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "removeAt",
+      "property": false,
+      "gives": "the element"
+     },
+     {
+      "name": "removeLast",
+      "property": false,
+      "gives": "the element"
+     },
+     {
+      "name": "clear",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "indexOf",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "lastIndexOf",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "map",
+      "property": false,
+      "gives": "a list"
+     },
+     {
+      "name": "filter",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "find",
+      "property": false,
+      "gives": "the element, or null"
+     },
+     {
+      "name": "findIndex",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "any",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "all",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "count",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "reduce",
+      "property": false,
+      "gives": "any"
+     },
+     {
+      "name": "sum",
+      "property": false,
+      "gives": "a number"
+     },
+     {
+      "name": "min",
+      "property": false,
+      "gives": "the element, or null"
+     },
+     {
+      "name": "max",
+      "property": false,
+      "gives": "the element, or null"
+     },
+     {
+      "name": "join",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "slice",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "take",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "skip",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "reversed",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "sorted",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "sortedBy",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "reverse",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "sort",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "sortBy",
+      "property": false,
+      "gives": "void"
+     },
+     {
+      "name": "unique",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "flatten",
+      "property": false,
+      "gives": "a list"
+     },
+     {
+      "name": "copy",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "groupBy",
+      "property": false,
+      "gives": "a map of lists"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "push",
+      "fix": "add(x)"
+     },
+     {
+      "name": "append",
+      "fix": "add(x)"
+     },
+     {
+      "name": "extend",
+      "fix": "addAll(ys)"
+     },
+     {
+      "name": "concat",
+      "fix": "addAll(ys) or [...xs, ...ys]"
+     },
+     {
+      "name": "pop",
+      "fix": "removeLast()"
+     },
+     {
+      "name": "shift",
+      "fix": "removeAt(0)"
+     },
+     {
+      "name": "unshift",
+      "fix": "insert(0, x)"
+     },
+     {
+      "name": "includes",
+      "fix": "the `in` operator (x in xs)"
+     },
+     {
+      "name": "contains",
+      "fix": "the `in` operator (x in xs)"
+     },
+     {
+      "name": "some",
+      "fix": "any(f)"
+     },
+     {
+      "name": "every",
+      "fix": "all(f)"
+     },
+     {
+      "name": "where",
+      "fix": "filter(f)"
+     },
+     {
+      "name": "firstWhere",
+      "fix": "find(f)"
+     },
+     {
+      "name": "indexWhere",
+      "fix": "findIndex(f)"
+     },
+     {
+      "name": "fold",
+      "fix": "reduce(initial, f)"
+     },
+     {
+      "name": "forEach",
+      "fix": "for x in xs"
+     },
+     {
+      "name": "size",
+      "fix": "length"
+     },
+     {
+      "name": "isNotEmpty",
+      "fix": "not xs.isEmpty"
+     },
+     {
+      "name": "toList",
+      "fix": "nothing: a list is already a list"
+     },
+     {
+      "name": "sublist",
+      "fix": "slice(start, end)"
+     },
+     {
+      "name": "index",
+      "fix": "indexOf(x)"
+     },
+     {
+      "name": "removeWhere",
+      "fix": "filter(f)"
+     },
+     {
+      "name": "expand",
+      "fix": "map(f).flatten()"
+     },
+     {
+      "name": "at",
+      "fix": "xs[i]"
+     },
+     {
+      "name": "splice",
+      "fix": "removeAt(i) or insert(i, x)"
+     },
+     {
+      "name": "elementAt",
+      "fix": "xs[i]"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:map",
+   "type": "library",
+   "title": "`map` — Nuclear's standard library",
+   "summary": "The members of `map` in Nuclear's standard library, the same in every dialect: length, isEmpty, remove, keys, values.",
+   "body": [
+    "Properties (written without parentheses): `length` → int, `isEmpty` → boolean, `keys` → the keys, `values` → the values.",
+    "",
+    "Methods: `remove()` → the element, or null.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `containsKey` → `the `in` operator (key in map)`",
+    "- `has` → `the `in` operator (key in map)`",
+    "- `get` → `map[key]`",
+    "- `set` → `map[key] = value`",
+    "- `delete` → `remove(key)`",
+    "- `size` → `length`",
+    "- `entries` → `for key, value in map`",
+    "- `items` → `for key, value in map`",
+    "- `isNotEmpty` → `not map.isEmpty`"
+   ],
+   "keys": [
+    "containskey",
+    "delete",
+    "entries",
+    "get",
+    "has",
+    "isnotempty",
+    "items",
+    "map members",
+    "size"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "map"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "length",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "isEmpty",
+      "property": true,
+      "gives": "boolean"
+     },
+     {
+      "name": "remove",
+      "property": false,
+      "gives": "the element, or null"
+     },
+     {
+      "name": "keys",
+      "property": true,
+      "gives": "the keys"
+     },
+     {
+      "name": "values",
+      "property": true,
+      "gives": "the values"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "containsKey",
+      "fix": "the `in` operator (key in map)"
+     },
+     {
+      "name": "has",
+      "fix": "the `in` operator (key in map)"
+     },
+     {
+      "name": "get",
+      "fix": "map[key]"
+     },
+     {
+      "name": "set",
+      "fix": "map[key] = value"
+     },
+     {
+      "name": "delete",
+      "fix": "remove(key)"
+     },
+     {
+      "name": "size",
+      "fix": "length"
+     },
+     {
+      "name": "entries",
+      "fix": "for key, value in map"
+     },
+     {
+      "name": "items",
+      "fix": "for key, value in map"
+     },
+     {
+      "name": "isNotEmpty",
+      "fix": "not map.isEmpty"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:match",
+   "type": "library",
+   "title": "`match` — Nuclear's standard library",
+   "summary": "The members of `match` in Nuclear's standard library, the same in every dialect: text, start, end, group.",
+   "body": [
+    "Properties (written without parentheses): `text` → string, `start` → int, `end` → int.",
+    "",
+    "Methods: `group()` → string?."
+   ],
+   "keys": [
+    "match members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "match"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "text",
+      "property": true,
+      "gives": "string"
+     },
+     {
+      "name": "start",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "end",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "group",
+      "property": false,
+      "gives": "string?"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:number",
+   "type": "library",
+   "title": "`number` — Nuclear's standard library",
+   "summary": "The members of `number` in Nuclear's standard library, the same in every dialect: abs, sign, round, floor, ceil, truncate, toFixed, toInt, toDouble, toRadix.",
+   "body": "Methods: `abs()` → the same type, `sign()` → int, `round()` → int, `floor()` → int, `ceil()` → int, `truncate()` → int, `toFixed()` → string, `toInt()` → int, `toDouble()` → double, `toRadix()` → string.",
+   "keys": [
+    "number members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "number"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "abs",
+      "property": false,
+      "gives": "the same type"
+     },
+     {
+      "name": "sign",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "round",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "floor",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "ceil",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "truncate",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "toFixed",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "toInt",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "toDouble",
+      "property": false,
+      "gives": "double"
+     },
+     {
+      "name": "toRadix",
+      "property": false,
+      "gives": "string"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:regex",
+   "type": "library",
+   "title": "`regex` — Nuclear's standard library",
+   "summary": "The members of `regex` in Nuclear's standard library, the same in every dialect: test, find, findAll.",
+   "body": "Methods: `test()` → boolean, `find()` → Match?, `findAll()` → Match[].",
+   "keys": [
+    "regex members"
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "regex"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "test",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "find",
+      "property": false,
+      "gives": "Match?"
+     },
+     {
+      "name": "findAll",
+      "property": false,
+      "gives": "Match[]"
+     }
+    ],
+    "wrong": []
+   }
+  },
+  {
+   "id": "lib:set",
+   "type": "library",
+   "title": "`set` — Nuclear's standard library",
+   "summary": "The members of `set` in Nuclear's standard library, the same in every dialect: length, isEmpty, add, remove, toList, union, intersection, difference.",
+   "body": [
+    "Properties (written without parentheses): `length` → int, `isEmpty` → boolean.",
+    "",
+    "Methods: `add()` → boolean, `remove()` → boolean, `toList()` → a list of the elements, `union()` → the same type, `intersection()` → the same type, `difference()` → the same type.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `contains` → `the `in` operator (x in set)`",
+    "- `has` → `the `in` operator (x in set)`",
+    "- `size` → `length`",
+    "- `isNotEmpty` → `not set.isEmpty`"
+   ],
+   "keys": [
+    "contains",
+    "has",
+    "isnotempty",
+    "set members",
+    "size"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "set"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "length",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "isEmpty",
+      "property": true,
+      "gives": "boolean"
+     },
+     {
+      "name": "add",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "remove",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "toList",
+      "property": false,
+      "gives": "a list of the elements"
+     },
+     {
+      "name": "union",
+      "property": false,
+      "gives": "the same type"
+     },
+     {
+      "name": "intersection",
+      "property": false,
+      "gives": "the same type"
+     },
+     {
+      "name": "difference",
+      "property": false,
+      "gives": "the same type"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "contains",
+      "fix": "the `in` operator (x in set)"
+     },
+     {
+      "name": "has",
+      "fix": "the `in` operator (x in set)"
+     },
+     {
+      "name": "size",
+      "fix": "length"
+     },
+     {
+      "name": "isNotEmpty",
+      "fix": "not set.isEmpty"
+     }
+    ]
+   }
+  },
+  {
+   "id": "lib:string",
+   "type": "library",
+   "title": "`string` — Nuclear's standard library",
+   "summary": "The members of `string` in Nuclear's standard library, the same in every dialect: length, isEmpty, codeAt, upper, lower, trim, trimStart, trimEnd, startsWith, endsWith, indexOf, lastIndexOf, substring, split, chars, replace, replaceAll, repeat, padStart, padEnd, toInt, toDouble, compareTo, toBytes.",
+   "body": [
+    "Properties (written without parentheses): `length` → int, `isEmpty` → boolean.",
+    "",
+    "Methods: `codeAt()` → int, `upper()` → string, `lower()` → string, `trim()` → string, `trimStart()` → string, `trimEnd()` → string, `startsWith()` → boolean, `endsWith()` → boolean, `indexOf()` → int, `lastIndexOf()` → int, `substring()` → string, `split()` → string[], `chars()` → string[], `replace()` → string, `replaceAll()` → string, `repeat()` → string, `padStart()` → string, `padEnd()` → string, `toInt()` → int?, `toDouble()` → double?, `compareTo()` → int, `toBytes()` → Bytes.",
+    "",
+    "Names of other languages and the Nuclear one (the compiler reports them as `N0114` with this fix):",
+    "",
+    "- `toUpperCase` → `upper()`",
+    "- `toLowerCase` → `lower()`",
+    "- `trimLeft` → `trimStart()`",
+    "- `trimRight` → `trimEnd()`",
+    "- `lstrip` → `trimStart()`",
+    "- `rstrip` → `trimEnd()`",
+    "- `strip` → `trim()`",
+    "- `charAt` → `text[i]`",
+    "- `charCodeAt` → `codeAt(i)`",
+    "- `codeUnitAt` → `codeAt(i)`",
+    "- `replaceFirst` → `replace(from, to)`",
+    "- `startswith` → `startsWith(text)`",
+    "- `endswith` → `endsWith(text)`",
+    "- `find` → `indexOf(text)`",
+    "- `rfind` → `lastIndexOf(text)`",
+    "- `substr` → `substring(start, end)`",
+    "- `slice` → `substring(start, end)`",
+    "- `padLeft` → `padStart(width, fill)`",
+    "- `padRight` → `padEnd(width, fill)`",
+    "- `ljust` → `padEnd(width, fill)`",
+    "- `rjust` → `padStart(width, fill)`",
+    "- `isNotEmpty` → `not text.isEmpty`",
+    "- `size` → `length`",
+    "- `runes` → `chars()`",
+    "- `toStringAsFixed` → `toFixed(digits)`"
+   ],
+   "keys": [
+    "charat",
+    "charcodeat",
+    "codeunitat",
+    "isnotempty",
+    "ljust",
+    "lstrip",
+    "padleft",
+    "padright",
+    "replacefirst",
+    "rfind",
+    "rjust",
+    "rstrip",
+    "runes",
+    "size",
+    "string members",
+    "strip",
+    "substr",
+    "tolowercase",
+    "tostringasfixed",
+    "touppercase",
+    "trimleft",
+    "trimright"
+   ],
+   "links": [
+    {
+     "rel": "wrong-name-is",
+     "to": "error:N0114"
+    }
+   ],
+   "sources": [
+    "nuclearlang/crates/nuclear-dialect/src/library.rs",
+    "nuclearlang/docs/07-reference/library.md"
+   ],
+   "meta": {
+    "base": "string"
+   },
+   "data": {
+    "members": [
+     {
+      "name": "length",
+      "property": true,
+      "gives": "int"
+     },
+     {
+      "name": "isEmpty",
+      "property": true,
+      "gives": "boolean"
+     },
+     {
+      "name": "codeAt",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "upper",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "lower",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "trim",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "trimStart",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "trimEnd",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "startsWith",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "endsWith",
+      "property": false,
+      "gives": "boolean"
+     },
+     {
+      "name": "indexOf",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "lastIndexOf",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "substring",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "split",
+      "property": false,
+      "gives": "string[]"
+     },
+     {
+      "name": "chars",
+      "property": false,
+      "gives": "string[]"
+     },
+     {
+      "name": "replace",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "replaceAll",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "repeat",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "padStart",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "padEnd",
+      "property": false,
+      "gives": "string"
+     },
+     {
+      "name": "toInt",
+      "property": false,
+      "gives": "int?"
+     },
+     {
+      "name": "toDouble",
+      "property": false,
+      "gives": "double?"
+     },
+     {
+      "name": "compareTo",
+      "property": false,
+      "gives": "int"
+     },
+     {
+      "name": "toBytes",
+      "property": false,
+      "gives": "Bytes"
+     }
+    ],
+    "wrong": [
+     {
+      "name": "toUpperCase",
+      "fix": "upper()"
+     },
+     {
+      "name": "toLowerCase",
+      "fix": "lower()"
+     },
+     {
+      "name": "trimLeft",
+      "fix": "trimStart()"
+     },
+     {
+      "name": "trimRight",
+      "fix": "trimEnd()"
+     },
+     {
+      "name": "lstrip",
+      "fix": "trimStart()"
+     },
+     {
+      "name": "rstrip",
+      "fix": "trimEnd()"
+     },
+     {
+      "name": "strip",
+      "fix": "trim()"
+     },
+     {
+      "name": "charAt",
+      "fix": "text[i]"
+     },
+     {
+      "name": "charCodeAt",
+      "fix": "codeAt(i)"
+     },
+     {
+      "name": "codeUnitAt",
+      "fix": "codeAt(i)"
+     },
+     {
+      "name": "replaceFirst",
+      "fix": "replace(from, to)"
+     },
+     {
+      "name": "startswith",
+      "fix": "startsWith(text)"
+     },
+     {
+      "name": "endswith",
+      "fix": "endsWith(text)"
+     },
+     {
+      "name": "find",
+      "fix": "indexOf(text)"
+     },
+     {
+      "name": "rfind",
+      "fix": "lastIndexOf(text)"
+     },
+     {
+      "name": "substr",
+      "fix": "substring(start, end)"
+     },
+     {
+      "name": "slice",
+      "fix": "substring(start, end)"
+     },
+     {
+      "name": "padLeft",
+      "fix": "padStart(width, fill)"
+     },
+     {
+      "name": "padRight",
+      "fix": "padEnd(width, fill)"
+     },
+     {
+      "name": "ljust",
+      "fix": "padEnd(width, fill)"
+     },
+     {
+      "name": "rjust",
+      "fix": "padStart(width, fill)"
+     },
+     {
+      "name": "isNotEmpty",
+      "fix": "not text.isEmpty"
+     },
+     {
+      "name": "size",
+      "fix": "length"
+     },
+     {
+      "name": "runes",
+      "fix": "chars()"
+     },
+     {
+      "name": "toStringAsFixed",
+      "fix": "toFixed(digits)"
+     }
+    ]
+   }
+  }
+ ]
+}

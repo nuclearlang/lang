@@ -1,0 +1,3282 @@
+{
+ "shelf": "docs",
+ "origin": "generated",
+ "generator": "04-dragonfly",
+ "about": "Dragonfly: the framework, its platforms, its kinds, the tutorial",
+ "rows": [
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#commands",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Commands",
+   "summary": "From the root of the tree: cargo test # everything: the contracts, the examples, the command cargo clippy --all-targets cargo test -p nuclear-dialect --test loader # every framework dialect implements its platform's contract cargo test -p nuclear-transpile --test projects # the examples: goldens…",
+   "body": [
+    "From the root of the tree:",
+    "",
+    "```sh",
+    "cargo test                                        # everything: the contracts, the examples, the command",
+    "cargo clippy --all-targets",
+    "cargo test -p nuclear-dialect --test loader       # every framework dialect implements its platform's contract",
+    "cargo test -p nuclear-transpile --test projects   # the examples: goldens and the conformance test",
+    "cargo test -p dragonfly                           # the `dragonfly` crate (cli/)",
+    "UPDATE_GOLDEN=1 cargo test                        # generated output changed on purpose: regenerate, review the diff",
+    "installer/install.sh --no-vscode                  # the user runs the installed `dragonfly`: install after a change",
+    "```",
+    "",
+    "The checks of each platform against the target's own tools: `platforms/docs/05-standards/testing.md`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#documents-open-one-only-when-its-line-matches-the-task.480aaa",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Documents (open one only when its line matches the task)",
+   "summary": "Documents (open one only when its line matches the task)",
+   "body": [
+    "| You need | Read |",
+    "|---|---|",
+    "| What the framework is for, its users, what it does not do | [docs/00-context/vision.md](docs/00-context/vision.md) |",
+    "| A word with two meanings (contract, component, dialect, plugin, kind package) | [docs/00-context/glossary.md](docs/00-context/glossary.md) |",
+    "| What the framework must give, per platform | [docs/01-product/prd.md](docs/01-product/prd.md) |",
+    "| What is half done, untested, to decide or pending in the framework as a whole | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
+    "| The parts (platform, dialect, runtime, command), a project, how `.nuc` becomes a running app | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
+    "| To design a kind, a decorator, a platform feature or a dialect: the rules all of them follow | [docs/02-architecture/rules.md](docs/02-architecture/rules.md) |",
+    "| Where a kind comes from, kind packages, plugins, N0304–N0306 | [docs/02-architecture/kinds-and-plugins.md](docs/02-architecture/kinds-and-plugins.md) |",
+    "| The contract a backend publishes and a client reads: files, flow, N0307, N0116 | [docs/02-architecture/shared-contracts.md](docs/02-architecture/shared-contracts.md) |",
+    "| Why a rule of the framework exists | [docs/03-adr/README.md](docs/03-adr/README.md) |",
+    "| A change with a plan | [docs/04-specs/README.md](docs/04-specs/README.md) |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#documents-open-one-only-when-its-line-matches-the-task.c70628",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Documents (open one only when its line matches the task)",
+   "summary": "Documents (open one only when its line matches the task)",
+   "body": [
+    "| What a platform is, `platform.toml`, what the loader checks, how a platform is tested | [platforms/AGENTS.md](platforms/AGENTS.md) |",
+    "| What a user reads: the guide, the tutorial, kinds, generators | [docs/08-guides/README.md](docs/08-guides/README.md) |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#dragonfly-the-framework-of-nuclearlang",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang",
+   "summary": "Dragonfly is to Nuclear what Actix is to Rust: the language comes with its framework, and no other is needed.",
+   "body": [
+    "Dragonfly is to Nuclear what Actix is to Rust: the language comes with its framework, and no other is needed. It",
+    "is what a project adds to the base language (kinds, decorators, components, `config.nuc`, plugins and tests),",
+    "identical for every dialect of a platform. It has exactly three platforms, `web`, `mobile` and `backend`; a dialect",
+    "only changes the language underneath: the Nuclear code of a project never changes when its dialect changes.",
+    "",
+    "Paths in these documents are relative to this folder (`nuclear-synapsis-framework/`); a path that starts with",
+    "`nuclearlang/`, `tools/`, `installer/` or `.github/` starts at the root of the tree. The rules of the whole tree",
+    "are in [the root `AGENTS.md`](../AGENTS.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#folders",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Folders",
+   "summary": "folder per platform, each its own project: `mobile/`, `backend/`, `web/`.",
+   "body": [
+    "- `platforms/`: what is common to the three platforms ([`platforms/AGENTS.md`](platforms/AGENTS.md)) and one",
+    "  folder per platform, each its own project: [`mobile/`](platforms/mobile/AGENTS.md),",
+    "  [`backend/`](platforms/backend/AGENTS.md), [`web/`](platforms/web/AGENTS.md).",
+    "- `cli/`: what `make` and `gen` write is documented in `tools/code_generator/`. The crate of the `dragonfly` command (new projects, generators, build, run, test, migrate, devices, the",
+    "  editor workspace). It sits here until it is merged into `tools/cli/` (spec 008, T2.2) and is documented by that",
+    "  project: `tools/cli/AGENTS.md`.",
+    "- `eval/agent-eval/`: the agent evaluation: each task of `tasks.toml` run with Claude Code in a fresh copy of its",
+    "  project, then checked (`run.py --mode baseline|agent`).",
+    "- `eval/thesis/`: the three measurable claims of NuclearLang tested with numbers (`run.py`, `bench.py`,",
+    "  `report.py`); step by step in [`eval/thesis/README.md`](eval/thesis/README.md).",
+    "- `docs/`: the documents of the framework (the table below). `docs/08-guides/` is what a user reads; the installer",
+    "  ships it and `nuclear help tutorial` prints it.",
+    "- `README.md`: the introduction for a user. `CHANGELOG.md`: what changed for a user."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#rules.12b966",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Rules",
+   "summary": "1. A platform is what is written; a dialect is only how it comes out.",
+   "body": [
+    "1. **A platform is what is written; a dialect is only how it comes out.** Kinds, decorators, folders,",
+    "   `config.nuc`, plugins and tests are the platform's, in Nuclear, the same for every dialect of it. Kinds and",
+    "   features may differ between platforms, never between the dialects of one platform.",
+    "2. **The one exception** is code that uses a dialect's type definitions (`numpy` exists only in Python), or a kind",
+    "   package implemented for some dialects: allowed, and it ties that project to those dialects.",
+    "3. **A platform names no dialect and no target's library.** Its contract, reference, docs, examples and",
+    "   diagnostics hold only Nuclear and Nuclear's own library (`nuclearlang/docs/07-reference/library.md`).",
+    "4. **Kinds are data, never compiler code:** TOML, templates, a runtime package and docs. What a template cannot",
+    "   express is asked for as a generic capability of the compiler (`nuclearlang/`), for every kind.",
+    "5. **A project is only `.nuc`.** Everything generated goes to `build/` and is never edited; no target code is",
+    "   written by hand to make a dialect easier.",
+    "6. **The command knows no language.** What it runs for a platform comes from the dialect (`[toolchain]`).",
+    "7. **Something new of the tree is written with Dragonfly** when one of the three platforms fits it (root rule 12)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#rules.bde4e7",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Rules",
+   "summary": "8. `docs/08-guides/` and each platform's `docs/07-reference/` are checked by tools and shipped in an install: they change only with the feature they describe, in the same change.",
+   "body": [
+    "8. `docs/08-guides/` and each platform's `docs/07-reference/` are checked by tools and shipped in an install:",
+    "   they change only with the feature they describe, in the same change.",
+    "9. A decision of the user becomes an ADR in `docs/03-adr/`, cited `ADR-synapsis-NNNN`; a feature starts as a spec",
+    "   in `docs/04-specs/`; pending work is `docs/01-product/roadmap.md`. What cannot be read from the code or the",
+    "   documents is asked, not invented.",
+    "10. Done = `cargo test` and `cargo clippy --all-targets` green, the documents of the area updated in the same",
+    "    change, the roadmap current."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#stack",
+   "type": "readme",
+   "title": "Dragonfly — the framework of NuclearLang — Stack",
+   "summary": "TOML) read by the compiler's loader (`nuclearlang/crates/nuclear-dialect`).",
+   "body": [
+    "- The framework itself is data and documents: one contract per platform (`platforms/<platform>/platform.toml`,",
+    "  TOML) read by the compiler's loader (`nuclearlang/crates/nuclear-dialect`).",
+    "- The dialects that implement the platforms are with their language:",
+    "  `nuclearlang/dialects/<language>/frameworks/<dialect>/` (`flutter`, `fastapi`, `nestjs`, `react`).",
+    "- Runtime packages in the target languages, per platform: Dart (`dragonfly`, `dragonfly_genkit`), Python",
+    "  (`dragonfly-py`), TypeScript (`dragonfly-nest`, `dragonfly-web`).",
+    "- `cli/`: the Rust crate `dragonfly` (the `dragonfly` binary), a member of the tree's one Cargo workspace.",
+    "- `eval/`: Python scripts."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/CHANGELOG.md#changelog",
+   "type": "changelog",
+   "title": "Changelog",
+   "summary": "All notable changes to dragonfly are written here; versions follow Semantic Versioning.",
+   "body": "All notable changes to dragonfly are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "sources": [
+    "nuclear-synapsis-framework/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/CHANGELOG.md#unreleased.a3a01c",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- `dragonfly gen resource` on a resource that exists finishes what it adds: a new action also gets the repository's method and the controller's route (it left a use case calling a method nobody had). `--source db --actions search` is refused: which column is searched is a decision (a query of the repository, wired with `gen usecase --calls`). ADR-developer-0001.",
+   "sources": [
+    "nuclear-synapsis-framework/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/CHANGELOG.md#unreleased.bdfe74",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in `config.nuc` and generates its type definitions into `defs/` (`dependencies.rs`); a mobile app goes through `flutter add`.",
+   "body": [
+    "- `dragonfly add <package>[@version]... [--module <m>]` and `dragonfly remove <package>...` on every platform",
+    "  (ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in",
+    "  `config.nuc` and generates its type definitions into `defs/` (`dependencies.rs`); a mobile app goes through",
+    "  `flutter add`. `dragonfly install` generates the definitions a package of `config.nuc` lacks. A section of",
+    "  `config.nuc` written in one line is edited.",
+    "- First public version.",
+    "- `dragonfly gen inspect|component|resource` (ADR-codegen-0001): a resource's finished code from `--fields`, `--from-json` or `--from-spec`, for the three platforms.",
+    "- `dragonfly gen usecase <component> <Name> [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"]` (ADR-codegen-0001): a use case wired into its component (its alias in the facade; backend: its route in the controller of the route's prefix), its signature read from the project; with `--calls` the use case is written too. A `merge` piece adds whole members (a route keeps its decorator and its body), and a name another file declares also stops a new `merge` file.",
+    "- `docs/dragonfly/generators.md`: the generators' guide (every option, what each platform gets, a use case written and wired step by step, the refusals, the MCP tool of each command, what is not generated yet)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#contributing",
+   "type": "readme",
+   "title": "Dragonfly — Contributing",
+   "summary": "From the root of the tree, before a pull request: cargo test && cargo clippy --all-targets installer/install.sh --no-vscode # the installed dragonfly and its help the area, the guide, and the documents for agents and contributors (AGENTS.md).",
+   "body": [
+    "From the root of the tree, before a pull request:",
+    "",
+    "```sh",
+    "cargo test && cargo clippy --all-targets",
+    "installer/install.sh --no-vscode       # the installed dragonfly and its help",
+    "```",
+    "",
+    "- Everything is written in English: code, comments, docs and messages.",
+    "- A change that a user of NuclearLang can see updates its documentation in the same pull request: the reference of",
+    "  the area, the guide, and the documents for agents and contributors ([AGENTS.md](AGENTS.md)).",
+    "- Rules and the reasons behind them: [the root AGENTS.md](../AGENTS.md) and the decisions in",
+    "  [docs/03-adr/](docs/03-adr/README.md).",
+    "",
+    "By contributing you agree that your contribution is licensed under the [Apache License 2.0](../LICENSE)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#dragonfly",
+   "type": "readme",
+   "title": "Dragonfly",
+   "summary": "The framework of NuclearLang.",
+   "body": [
+    "The framework of NuclearLang. You write a **platform** (`mobile`, `backend` or `web`) in Nuclear: entities, use",
+    "cases, screens, endpoints, agents. A **dialect** is the language and framework it comes out in, and the Nuclear",
+    "code of a project never changes when its dialect changes. The guide, with every platform, its dialects and its",
+    "plugins: [docs/08-guides/README.md](docs/08-guides/README.md).",
+    "",
+    "**Start with the tutorial:** [docs/08-guides/tutorial.md](docs/08-guides/tutorial.md) (`nuclear help tutorial`):",
+    "an app from scratch with a component, a repository, a screen and tests. Kinds, yours and the community's:",
+    "[docs/08-guides/kinds.md](docs/08-guides/kinds.md). The generators: [docs/08-guides/generators.md](docs/08-guides/generators.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#the-dragonfly-command",
+   "type": "readme",
+   "title": "Dragonfly — The `dragonfly` command",
+   "summary": "Creates and works with apps written in NuclearLang: only `.nuc` files; for a Flutter app, the app is generated in `build/app`.",
+   "body": [
+    "Creates and works with apps written in NuclearLang: only `.nuc` files; for a Flutter app, the app is generated in",
+    "`build/app`. Full rules of the mobile commands:",
+    "[flutter.md §11](../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (`nuclear help flutter`)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#the-dragonfly-command-diagnosis-and-flutter",
+   "type": "readme",
+   "title": "Dragonfly — Diagnosis and Flutter",
+   "summary": "`nuclear`, the flutter dialect and its type definitions, the dragonfly Dart package, Flutter (where it is and whether it is missing from the PATH), VS Code with the NuclearLang, Dart and Flutter extensions, and the current project.",
+   "body": [
+    "- `dragonfly doctor`: checks what NuclearLang and Dragonfly need (like `flutter doctor`): `dragonfly` and",
+    "  `nuclear`, the flutter dialect and its type definitions, the dragonfly Dart package, Flutter (where it is and",
+    "  whether it is missing from the PATH), VS Code with the NuclearLang, Dart and Flutter extensions, and the",
+    "  current project. Each problem comes with how to solve it. Flutter's own (Android, iOS, devices):",
+    "  `dragonfly flutter doctor`.",
+    "- `dragonfly setup`: installs Flutter following the official guide, asking before each step: system packages",
+    "  (apt, dnf, pacman, zypper or Apple's tools), the latest stable version checked with its sha256, unpacking into",
+    "  `~/develop` (`--dir` chooses another folder) and your shell's PATH."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#the-dragonfly-command-install",
+   "type": "readme",
+   "title": "Dragonfly — Install",
+   "summary": "cd <the NuclearLang tree> installer/install.sh # nuclear and dragonfly in ~/.local/bin + the VS Code extension dragonfly doctor # checks everything is there: CLIs, dialect, dragonfly package, Flutter, VS Code dragonfly setup # if Flutter is missing: installs it step by step (system packages, SDK,…",
+   "body": [
+    "```sh",
+    "cd <the NuclearLang tree>",
+    "installer/install.sh         # nuclear and dragonfly in ~/.local/bin + the VS Code extension",
+    "dragonfly doctor             # checks everything is there: CLIs, dialect, dragonfly package, Flutter, VS Code",
+    "dragonfly setup              # if Flutter is missing: installs it step by step (system packages, SDK, PATH)",
+    "```",
+    "",
+    "`installer/install.sh --uninstall` removes it. Flutter is found by itself (PATH, fvm, `~/development/flutter`...);",
+    "`FLUTTER` or `FLUTTER_ROOT` choose another one."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#the-dragonfly-command-landing-page-and-credits",
+   "type": "readme",
+   "title": "Dragonfly — Landing page and credits",
+   "summary": "dragonfly arrives) and the page with the logos; afterwards, only the page.",
+   "body": [
+    "- `dragonfly` alone: the first time, an animation (the explosion, WELCOME, everything grows back and the",
+    "  dragonfly arrives) and the page with the logos; afterwards, only the page.",
+    "- `dragonfly credits` (or `author`): always the full animation, with the author and the repository.",
+    "- After WELCOME the motto appears: \"Before, everything was chaos; now everything is simpler with Dragonfly\" (in",
+    "  Spanish if your system is in Spanish).",
+    "- Every other command starts with a header with the NuclearLang and Dragonfly logos, and its messages are in",
+    "  colors: green = done, red = error, yellow = warning, blue = commands you can type.",
+    "- `dragonfly help` (or `-h`): the header and the commands with their symbols and colors. Through a pipe, or with",
+    "  `NO_COLOR`, everything comes out as plain text."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#the-dragonfly-command-use",
+   "type": "readme",
+   "title": "Dragonfly — Use",
+   "summary": "dragonfly # landing page dragonfly new shop_app # only .nuc + the Flutter app in build/app dragonfly new -p backend -d fastapi shop_api # another platform, with one of its dialects cd shop_app dragonfly code # VS Code: ▷ on a .nuc or F5 runs the app; saving a .nuc reloads it dragonfly g c products…",
+   "body": [
+    "```sh",
+    "dragonfly                         # landing page",
+    "dragonfly new shop_app            # only .nuc + the Flutter app in build/app",
+    "dragonfly new -p backend -d fastapi shop_api   # another platform, with one of its dialects",
+    "cd shop_app",
+    "dragonfly code                    # VS Code: ▷ on a .nuc or F5 runs the app; saving a .nuc reloads it",
+    "dragonfly g c products            # component",
+    "dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character  # finished code from an API",
+    "dragonfly gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a use case over a repository method, wired",
+    "dragonfly g s products detail --route /detail -m DetailManager -st DetailView",
+    "dragonfly test",
+    "dragonfly help                    # every command",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/glossary.md#glossary.29c85e",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| Project dialect | A dialect inside a project that extends a dialect with that project's shortcuts and kinds. | \"kind package\" | `<project>/dialects/<name>/` |",
+    "| Kind | The word that says what a declaration is (`usecase`, `repository`, `controller`, `stateless`). Data, not code: `[kinds.<word>]` plus a template. | \"class type\", \"annotation\" | a dialect's `dialect.toml` and `templates/` |",
+    "| Native kind | A kind of a platform: listed in its contract, implemented by every dialect of it. | | `[platform] kinds` |",
+    "| Extension kind | A kind that comes in a kind package or a project dialect, on top of a dialect. | | `KindSource::Package` |",
+    "| Kind package | A folder with a `kind.toml`, a `docs.toml` and one folder per dialect it implements; it belongs to one platform and is enabled like a plugin. | \"plugin\" for the folder itself | `<project>/kinds/<name>/`, `<install>/kinds/`; `Loader.packages` |",
+    "| Plugin | An optional part of a framework (a database driver, Genkit, Kafka) that a project carries only when `config.nuc` enables it. | \"dependency\" | `[project.plugins.<name>]` of a dialect; `plugins(name = true)` |",
+    "| Decorator | A `@word` a project may write on a declaration or a field; the platform lists the ones it allows. | \"annotation\" | `[platform] decorators`, `[decorators.*]` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/glossary.md#glossary.489270",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| Term | Definition | Do not say | Where it is in the code |",
+    "|---|---|---|---|",
+    "| Dragonfly | The framework of NuclearLang: what a project adds to the base language. | \"the Flutter framework\" | `dragonfly(...)` in `config.nuc`; the `dragonfly` command; the `dragonfly*` runtime packages |",
+    "| Platform | One of `web`, `mobile`, `backend`: a specification in Nuclear only (project layout, `config.nuc`, kinds, decorators, connections, plugins, tests, errors). What the user and the agent write. | \"target\", \"framework\" for a platform | `nuclear-synapsis-framework/platforms/<platform>/`; `Dialect.platform` |",
+    "| Platform contract | The file `platform.toml` of a platform: what every dialect of it must implement, identically. | \"the contract\" alone, when a shared contract could be meant | `platforms/<platform>/platform.toml`; `check_platform` in `nuclearlang/crates/nuclear-dialect/src/model.rs` |",
+    "| Language dialect | How the base language and its library are written in one language: `typescript`, `dart`, `python`, `nodejs`. | \"platform\" | `nuclearlang/dialects/<language>/` |",
+    "| Framework dialect (in the code and the references: \"Dragonfly dialect\") | A language and a framework that implement a platform: `flutter`, `fastapi`, `nestjs`, `react`. Extends a language dialect. | naming it by its language | `nuclearlang/dialects/<language>/frameworks/<dialect>/`; `[dialect] platform` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/glossary.md#glossary.9fdda1",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| Component | A feature of an app: a folder `components/<c>/` with layers, closed to the other components. | \"module\" | `[architecture] scope = \"components\"` |",
+    "| Facade | The kind `appcomponent`: what the rest of the app sees of a component. | | `[layout] appcomponent` |",
+    "| Global component | The kind `component` in `shared/components/`: cross-cutting use cases with `@on(Event)` methods. | \"component\" alone | `[layout] component` |",
+    "| `config.nuc` | The only manifest of a Dragonfly project: `dragonfly(platform, dialect)`, `app(...)`, `plugins(...)`, `contracts(...)`. | \"the pubspec\", \"nuclear.toml\" | `Manifest` in `nuclearlang/crates/nuclear-transpile` |",
+    "| Connection | A database, a chat model, a broker or an HTTP API, declared in the project's `config/` and never opened by hand. | | kinds `appConfig`, `config` |",
+    "| Layout | Where the file of each kind goes in a project. | \"folder convention\" | `[layout]` of the contract; `nuclear help layout --dialect <d>` |",
+    "| Runtime package | What a target framework lacks, written in the target language and added to a generated project automatically. | \"SDK\" | `platforms/<platform>/packages/` |",
+    "| Shared contract (a project's contract) | The description of what a project exposes or calls, written at every build; a client generates Nuclear from a backend's. | \"platform contract\" | `.nuclear/contract.json`; `contracts(...)`; `contracts/<name>/` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/glossary.md#glossary.c99411",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Use these words in code, documents and conversations.",
+   "body": "Use these words in code, documents and conversations. Paths start at the root of the tree.",
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/glossary.md#glossary.d07104",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": "| Conformance test | One example of a platform built from the same `.nuc` with every dialect of the platform. | | `backend_example_builds_with_every_backend_dialect` |",
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/vision.md#problem",
+   "type": "context",
+   "title": "Vision — Problem",
+   "summary": "Writing an app on a platform usually means choosing and wiring many packages: state, JSON, injection, http, routing, translations, tests.",
+   "body": [
+    "Writing an app on a platform usually means choosing and wiring many packages: state, JSON, injection, http,",
+    "routing, translations, tests. With Dragonfly the dialect already brings that architecture: in Nuclear only the",
+    "business logic is written, and constructors, overrides, injection, JSON, http, states, modules and imports are",
+    "written by the transpiler.",
+    "",
+    "Dragonfly is to Nuclear what Actix is to Rust: the language comes with its framework, and no other is needed. It",
+    "is what a project adds to the base language: kinds, decorators, components, `config.nuc`, plugins and tests.",
+    "",
+    "The philosophy is common; each platform applies it its own way, because platforms are incompatible (a `stateless`",
+    "view does not exist in an HTTP API). The differences that matter are between a web app, a mobile app and a",
+    "backend, not between the languages that run them. So Dragonfly has exactly three **platforms** (`web`, `mobile`,",
+    "`backend`), each written once in Nuclear, and a **dialect** only changes the language and framework the code comes",
+    "out in: the Nuclear code of a project never changes when its dialect changes (ADR-synapsis-0002)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/vision.md#users",
+   "type": "context",
+   "title": "Vision — Users",
+   "summary": "Users",
+   "body": [
+    "| User | Needs |",
+    "|---|---|",
+    "| AI coding agents | one way to write each thing, the same in every dialect of a platform; a fixed place for each file; diagnostics when the architecture is broken |",
+    "| Developers of apps | write business logic only; a project that builds, tests and runs with one command |",
+    "| Kind authors (a project, the community) | add a kind to a platform with TOML, templates and a runtime, never touching the compiler |",
+    "| Dialect authors | implement a platform in another language and framework from its contract, with the loader saying what is missing |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/00-context/vision.md#what-it-does-not-do",
+   "type": "context",
+   "title": "Vision — What it does not do",
+   "summary": "(ADR-synapsis-0001).",
+   "body": [
+    "- It does not replace the target's own tools: Flutter's CLI still builds and runs; Dragonfly drives it.",
+    "- It has no fourth platform and no feature that exists in one dialect of a platform only.",
+    "- A project holds no target code: everything generated goes to `build/` and is never edited",
+    "  (ADR-synapsis-0001).",
+    "- It never reads target code back into Nuclear (a non-goal of the whole platform).",
+    "- It adds nothing to the grammar: a kind is a header and a block of the base language (ADR-synapsis-0004)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/01-product/prd.md#functional-requirements",
+   "type": "context",
+   "title": "PRD: Dragonfly — Functional requirements",
+   "summary": "Functional requirements",
+   "body": [
+    "| Requirement | State |",
+    "|---|---|",
+    "| A platform is a contract every dialect of it implements identically; the loader refuses a dialect that leaves it | done (`platforms/docs/02-architecture/contract.md`) |",
+    "| The same `.nuc` of a project builds with every dialect of its platform | done for `backend` (the conformance test); `mobile` and `web` have one dialect each |",
+    "| The mobile platform: its kinds (model, repository, usecase, screen, statemanager, form...), a runtime package, generated tests | done |",
+    "| The backend platform with two dialects and their runtimes | done; what is left for parity is in the backend platform's roadmap |",
+    "| The web platform | first version; what is left is in the web platform's roadmap |",
+    "| Optional parts as plugins a project enables in `config.nuc` | done (ADR-synapsis-0004) |",
+    "| Kinds a project or the community writes, as packages, without touching the compiler | half done ([roadmap](roadmap.md)) |",
+    "| A client app generates its models and repositories from a backend's contract | done; limits in the [roadmap](roadmap.md) (ADR-synapsis-0006) |",
+    "| One command for every platform: new, make, gen, build, run, test, and what each platform adds | the `dragonfly` command: see `tools/cli/` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/01-product/prd.md#non-functional-requirements",
+   "type": "context",
+   "title": "PRD: Dragonfly — Non-functional requirements",
+   "summary": "Non-functional requirements",
+   "body": [
+    "| Requirement |",
+    "|---|",
+    "| The golden rule: generated code as fast as an expert's, instant transpilation, minimal readable Nuclear. A kind, decorator or shortcut that breaks one of the three is rejected (ADR-lang-0001). |",
+    "| Generated code passes the target's analyzer without warnings: `flutter analyze` with `flutter_lints`, `tsc --strict`, `pyright --strict`. |",
+    "| A no-change `dragonfly build` takes about 40 ms. |",
+    "| A platform's reference, docs, examples and diagnostics name no dialect and no target's library. |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/01-product/prd.md#open-questions",
+   "type": "context",
+   "title": "PRD: Dragonfly — Open questions",
+   "summary": "The design questions waiting for the user are in the roadmap, \"To decide with the user\".",
+   "body": "The design questions waiting for the user are in the [roadmap](roadmap.md), \"To decide with the user\".",
+   "sources": [
+    "nuclear-synapsis-framework/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/01-product/prd.md#scope",
+   "type": "context",
+   "title": "PRD: Dragonfly — Scope",
+   "summary": "Excluded: a fourth platform; a feature of one dialect only; replacing the target's own tools (the `dragonfly` command drives them).",
+   "body": [
+    "| Platform | What it is | Dialects | Planned dialects |",
+    "|---|---|---|---|",
+    "| `mobile` | apps for Android, iOS, desktop and web through one UI toolkit | `flutter` (Dart) | `react-native`, `kotlin-multiplatform`, native Android |",
+    "| `backend` | HTTP APIs, data, events and AI agents | `fastapi` (Python), `nestjs` (TypeScript) | `express`, Dragonfly's own backend in Rust |",
+    "| `web` | web apps in the browser through one UI library | `react` (TypeScript), a first version | `vue`, `angular` |",
+    "",
+    "Excluded: a fourth platform; a feature of one dialect only; replacing the target's own tools (the `dragonfly`",
+    "command drives them)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/01-product/prd.md#summary",
+   "type": "context",
+   "title": "PRD: Dragonfly — Summary",
+   "summary": "The framework built into NuclearLang: three platforms written in Nuclear, each implemented by one or more dialects.",
+   "body": [
+    "The framework built into NuclearLang: three platforms written in Nuclear, each implemented by one or more dialects.",
+    "A project holds only business logic in `.nuc` files; the transpiler and a runtime package of the platform give the",
+    "rest. The requirements of the whole platform (the language, the editors, the agents) are in the tree's own PRD;",
+    "this file holds only what the framework must give."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md#a-kind-package",
+   "type": "context",
+   "title": "Kinds, kind packages and plugins — A kind package",
+   "summary": "kinds/jobs/ ├── kind.toml [package] name, version, platform, description ├── docs.toml the editor documentation of its words ├── fastapi/kind.toml [plugin] (runtime packages, defs, names) + the sections of a dialect and its templates └── nestjs/kind.toml (`Loader::apply_packages`), as a layer…",
+   "body": [
+    "```",
+    "kinds/jobs/",
+    "├── kind.toml          [package] name, version, platform, description",
+    "├── docs.toml          the editor documentation of its words",
+    "├── fastapi/kind.toml  [plugin] (runtime packages, defs, names) + the sections of a dialect and its templates",
+    "└── nestjs/kind.toml",
+    "```",
+    "",
+    "- It belongs to one platform. The loader applies only the packages of the dialect's platform",
+    "  (`Loader::apply_packages`), as a layer named after the package.",
+    "- Its implementation for a project is the folder named after the project's dialect, or after a dialect that one",
+    "  extends. Without one, the package is a gap (`package_gaps`): N0306 when the project enables it.",
+    "- A project enables it with `plugins(<name> = true)` in `config.nuc` and keeps its `dragonfly(platform, dialect)`.",
+    "- The loader looks in `<project>/kinds/` and in the install's `kinds/`. A platform may ship packages in",
+    "  `platforms/<platform>/kinds/`, which the installer copies; none does today.",
+    "- `nuclear kind new <name> -p <platform> -d <dialect>` writes the skeleton in the project; `dragonfly add <folder>`",
+    "  installs a package for every project."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md#a-plugin",
+   "type": "context",
+   "title": "Kinds, kind packages and plugins — A plugin",
+   "summary": "An optional part of a framework that a project carries only when it asks for it.",
+   "body": [
+    "An optional part of a framework that a project carries only when it asks for it.",
+    "",
+    "- A dialect declares it: `[project.plugins.<name>]` with `packages`, `dev_packages`, `defs`, `kinds`, `names`,",
+    "  `requires`. The names a platform allows are `[platform] plugins` of its contract, the same in every dialect.",
+    "- A project enables it: `plugins(genkit = true, googleAI = true)` in `config.nuc`.",
+    "- A kind or a name of a plugin that is not enabled is N0304, with the line to add; an unknown plugin or a value",
+    "  that is not `true` or `false` is N0303.",
+    "- The generated manifest lists only the packages of the enabled plugins. The runtimes keep the optional parts in",
+    "  modules of their own, so a project without a plugin does not need its package.",
+    "- Its type definitions are always loaded (their index only), so an editor completes them before the plugin is on.",
+    "",
+    "| Platform | Plugins of its contract |",
+    "|---|---|",
+    "| `mobile` | `genkit`, `firebaseAI`, `googleAI`, `vertexAI`, `openAI`, `anthropic` |",
+    "| `backend` | `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma` |",
+    "| `web` | none |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md#kinds-kind-packages-and-plugins",
+   "type": "context",
+   "title": "Kinds, kind packages and plugins",
+   "summary": "How the framework grows without touching the compiler (ADR-synapsis-0004).",
+   "body": [
+    "How the framework grows without touching the compiler (ADR-synapsis-0004). The normative text is in the language's",
+    "reference: `nuclearlang/docs/07-reference/dialects.md` §5.4 (a kind) and §7 (kind packages),",
+    "`nuclearlang/docs/07-reference/projects.md` §3.3 (plugins). The user's guide is",
+    "[../08-guides/kinds.md](../08-guides/kinds.md). Paths start at the root of the tree."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md#where-a-kind-comes-from",
+   "type": "context",
+   "title": "Kinds, kind packages and plugins — Where a kind comes from",
+   "summary": "A kind is data: `[kinds.<word>]` plus a template.",
+   "body": [
+    "| Source | Declared in | Who may use it |",
+    "|---|---|---|",
+    "| The language's | the language dialect (`dart`'s `data`, `mixin`) | every project of that language |",
+    "| Native of a platform | `[platform] kinds` of `platforms/<platform>/platform.toml`, implemented by every dialect of the platform | every project of the platform |",
+    "| A kind package | `kinds/<name>/` of a project or of the install | a project of the package's platform that enables it, with a dialect the package implements |",
+    "| A project dialect | `<project>/dialects/<name>/` with `extends` | that project, tied to the dialect it extends |",
+    "",
+    "A kind is data: `[kinds.<word>]` plus a template. No kind name is written in Rust. A dialect's own TOML never adds",
+    "a kind its platform does not declare (N0305). When a template cannot express something, a generic capability of",
+    "the compiler is asked for (an `[options]` entry or a template variable), for every kind.",
+    "",
+    "The loader records the source of every kind in `Dialect.kind_sources` (`KindSource::Language`, `Platform`,",
+    "`Package`); the language server shows it in the hover and the completion of a kind (`kind_source` in",
+    "`nuclearlang/crates/nuclear-lsp/src/features.rs`)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/overview.md#a-project",
+   "type": "context",
+   "title": "Architecture — A project",
+   "summary": "A Dragonfly project is a folder of `.nuc` files with `config.nuc` at its root, the only manifest: dragonfly(platform = \"backend\", dialect = \"fastapi\") app(name = \"tasks_api\", description = \"Tasks and an assistant.\", version = \"0.1.0\") plugins(sqlite = true, events = true, ollama = true) `dragonfly…",
+   "body": [
+    "A Dragonfly project is a folder of `.nuc` files with `config.nuc` at its root, the only manifest:",
+    "",
+    "```nuclear",
+    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "app(name = \"tasks_api\", description = \"Tasks and an assistant.\", version = \"0.1.0\")",
+    "plugins(sqlite = true, events = true, ollama = true)",
+    "```",
+    "",
+    "`dragonfly new -p <platform> -d <dialect> <name>` creates it; without `-d` it gets the platform's",
+    "`default_dialect`. The code lives in `components/<c>/` by layer, with `config/`, `shared/` and `test/` beside them;",
+    "the place of each kind's file is the platform's `[layout]`. Everything generated goes to `build/` and is never",
+    "edited. `nuclear.toml` is for projects of a language dialect without Dragonfly.",
+    "",
+    "What every project looks like, and why, is in [rules.md](rules.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/overview.md#from-nuc-to-a-running-app",
+   "type": "context",
+   "title": "Architecture — From `.nuc` to a running app",
+   "summary": "1. The loader (`nuclear-dialect`) loads the project's dialect: the chain language dialect → framework dialect (→ project dialect), then the platform's contract, then the kind packages of that platform.",
+   "body": [
+    "1. The loader (`nuclear-dialect`) loads the project's dialect: the chain language dialect → framework dialect (→",
+    "   project dialect), then the platform's contract, then the kind packages of that platform. A dialect that leaves",
+    "   its contract is refused (`platforms/docs/02-architecture/contract.md`).",
+    "2. The transpiler (`nuclear-transpile::project`) reads `config.nuc`, generates `contracts/<name>/` when the project",
+    "   declares contracts ([shared-contracts.md](shared-contracts.md)), checks the architecture rules of the dialect",
+    "   (N0301, N0302) and writes the target project into `build/` with the dialect's templates.",
+    "3. The `dragonfly` command runs what the dialect's `[toolchain]` declares in the generated project: install, run,",
+    "   test, migrate, add a package. It uses `nuclear-transpile::project` and `nuclear-dialect::Loader` as a library",
+    "   and knows no language (its mobile path still calls Flutter directly: [rules.md](rules.md), rule 9).",
+    "4. The generated code imports the platform's runtime package, which the generated manifest adds by itself; a",
+    "   project lists only third-party packages and plugins in `config.nuc`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/overview.md#the-parts.a8b771",
+   "type": "context",
+   "title": "Architecture — The parts",
+   "summary": "a project (.nuc only) config.nuc: dragonfly(platform = \"backend\", dialect = \"fastapi\") │ written for a ▼ PLATFORM web · mobile · backend nuclear-synapsis-framework/platforms/<platform>/platform.toml (the contract) │ implemented by + its reference, runtime packages, examples, checks ▼ FRAMEWORK…",
+   "body": [
+    "```",
+    " a project (.nuc only)             config.nuc: dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "        │ written for a",
+    "        ▼",
+    " PLATFORM  web · mobile · backend  nuclear-synapsis-framework/platforms/<platform>/platform.toml   (the contract)",
+    "        │ implemented by                + its reference, runtime packages, examples, checks",
+    "        ▼",
+    " FRAMEWORK DIALECT                 nuclearlang/dialects/<language>/frameworks/<dialect>/           (TOML + templates)",
+    "        │ extends a",
+    "        ▼",
+    " LANGUAGE DIALECT                  nuclearlang/dialects/<language>/",
+    "        │ the transpiler writes",
+    "        ▼",
+    " build/  the target project        + the platform's RUNTIME PACKAGE (platforms/<platform>/packages/)",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/overview.md#the-parts.b8a941",
+   "type": "context",
+   "title": "Architecture — The parts",
+   "summary": "The parts",
+   "body": [
+    "| Part | Where | Owner of its documents |",
+    "|---|---|---|",
+    "| The philosophy, the rules every platform follows, the decisions | `nuclear-synapsis-framework/docs/` | this project |",
+    "| What is common to the platforms: the contract file, the shape of a platform folder | `nuclear-synapsis-framework/platforms/docs/` | this project |",
+    "| A platform: its contract, reference, runtime packages, examples, checks | `nuclear-synapsis-framework/platforms/{mobile,backend,web}/` | that platform |",
+    "| A framework dialect: kinds, decorators, templates, `[toolchain]`, type definitions | `nuclearlang/dialects/<language>/frameworks/<dialect>/` | its language's dialect project |",
+    "| The loader and the transpiler that read all of it | `nuclearlang/crates/` | `nuclearlang/` |",
+    "| The `dragonfly` command | `nuclear-synapsis-framework/cli/` until it is merged into `tools/cli/` | `tools/cli/` |",
+    "| The evaluations | `nuclear-synapsis-framework/eval/` | this project (`AGENTS.md`) |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/overview.md#where-the-files-are-found",
+   "type": "context",
+   "title": "Architecture — Where the files are found",
+   "summary": "The loader reads two folders that have the same shape in the source tree and in an install (`nuclear_dialect::Home`): `dialects/` and `platforms/`.",
+   "body": [
+    "The loader reads two folders that have the same shape in the source tree and in an install",
+    "(`nuclear_dialect::Home`): `dialects/` and `platforms/`. In the tree they are `nuclearlang/dialects/` and",
+    "`nuclear-synapsis-framework/platforms/`; in an install, `$NUCLEAR_HOME/dialects` and `$NUCLEAR_HOME/platforms`.",
+    "`installer/release/stage.sh` builds an install from this project: each platform's `platform.toml`, its",
+    "`docs/07-reference/` and `docs/08-guides/`, its `kinds/` when it has one and every folder of its `packages/`, plus",
+    "the framework's `docs/08-guides/` (what `nuclear help tutorial` prints)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/rules.md#proposals",
+   "type": "context",
+   "title": "The rules every platform and dialect follows — Proposals",
+   "summary": "Something an agent decided that waits for the user's review is a proposal, not a rule: it is listed in the roadmap under \"To decide with the user\".",
+   "body": [
+    "Something an agent decided that waits for the user's review is a proposal, not a rule: it is listed in",
+    "[the roadmap](../01-product/roadmap.md) under \"To decide with the user\". Once decided it becomes a rule here and",
+    "an ADR."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/rules.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/rules.md#the-rules-every-platform-and-dialect-follows.0a6055",
+   "type": "context",
+   "title": "The rules every platform and dialect follows",
+   "summary": "7. The same concepts in every platform, implemented natively: events on demand, session, ACL with guards, forms, translations (ADR-synapsis-0005), logs by component (ADR-mobile-0005); connections declared in `config/`.",
+   "body": [
+    "7. **The same concepts in every platform, implemented natively:** events on demand, session, ACL with guards,",
+    "   forms, translations (ADR-synapsis-0005), logs by component (ADR-mobile-0005); connections declared in `config/`.",
+    "8. **Warn** when something breaks the architecture or brings security or performance problems (the mobile",
+    "   platform documents its security checks).",
+    "9. **Commands per platform.** `dragonfly <command>` reads `dragonfly(...)` of `config.nuc` (ADR-cli-0001,",
+    "   ADR-synapsis-0001). The command knows no language: what it runs is declared by the dialect in `[toolchain]`.",
+    "   The mobile path of the command still calls Flutter directly (the roadmap of `tools/cli/`).",
+    "10. **The golden rule** for every kind, decorator or shortcut: generated code as fast as an expert's, instant",
+    "    transpilation, minimal readable Nuclear (ADR-lang-0001).",
+    "11. **A conformance test per platform:** one example built from the same `.nuc` with every dialect of the platform",
+    "    (ADR-synapsis-0002; `platforms/docs/05-standards/testing.md`).",
+    "12. **Kinds are the libraries** (ADR-synapsis-0004): native kinds in the platform's contract, extension kinds as",
+    "    packages made of TOML, templates, a runtime and docs only, never of compiler code",
+    "    ([kinds-and-plugins.md](kinds-and-plugins.md)).",
+    "",
+    "Two more rules come from the hard rules of the root `AGENTS.md`:"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/rules.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/rules.md#the-rules-every-platform-and-dialect-follows.785df7",
+   "type": "context",
+   "title": "The rules every platform and dialect follows",
+   "summary": "What makes a project a Dragonfly project, whatever its platform and its dialect.",
+   "body": [
+    "What makes a project a Dragonfly project, whatever its platform and its dialect. A new kind, decorator, platform",
+    "feature or dialect is designed against this list. Paths start at the root of the tree."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/rules.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/rules.md#the-rules-every-platform-and-dialect-follows.7983ff",
+   "type": "context",
+   "title": "The rules every platform and dialect follows",
+   "summary": "Nuclear.",
+   "body": [
+    "- **The platform names no dialect** (rule 11). A platform's reference, docs, examples and diagnostics hold only",
+    "  Nuclear. The standard library is Nuclear's own (`nuclearlang/docs/07-reference/library.md`, ADR-lang-0009): a",
+    "  target's library name (`push`, `len`, `toUpperCase`) in platform code, references, docs or examples is a bug.",
+    "- **Nuclear and Dragonfly first** (rule 12). A new development of the tree (a service, a tool, an agent) is a",
+    "  Dragonfly project when one of the three platforms fits."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/rules.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/rules.md#the-rules-every-platform-and-dialect-follows.d85af4",
+   "type": "context",
+   "title": "The rules every platform and dialect follows",
+   "summary": "1. Light clean architecture.",
+   "body": [
+    "1. **Light clean architecture.** Components with layers (`config`, `data`, `domain`, and the platform's entry",
+    "   layer: `presentation` in mobile and web, `api` in backend) and a facade (`appcomponent`). The layers exist in",
+    "   the generated code, not as ceremony in Nuclear (ADR-dart-0001, ADR-synapsis-0003).",
+    "2. **Closed components.** From another component only its public kinds are visible (the facade, models, events,",
+    "   global components, guards, screens); the transpiler checks it (N0302). Who calls whom is checked too (N0301): a",
+    "   use case only from the facade; a service only from a use case or an aggregate (ADR-synapsis-0003). The rules",
+    "   are data of each dialect: `[architecture]` (`nuclearlang/docs/07-reference/projects.md` §4).",
+    "3. **Injection by header.** A typed parameter in a kind's header is injected (ADR-synapsis-0003).",
+    "4. **Errors as values.** Use cases return `Result<E, T>` (ADR-lang-0006, ADR-lang-0006); the runtime's errors carry",
+    "   an HTTP status in backend.",
+    "5. **Only `.nuc` in the project.** Everything generated goes to `build/` and is never edited (ADR-synapsis-0001).",
+    "6. **Only third-party packages and plugins in `config.nuc`.** The framework's packages are added automatically",
+    "   (ADR-mobile-0001), a plugin's packages only when it is enabled (ADR-synapsis-0004)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/rules.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md#how-a-client-uses-it",
+   "type": "context",
+   "title": "Shared contracts — How a client uses it",
+   "summary": "build and stale files are removed.",
+   "body": [
+    "- `contracts(<name> = \"<path>\")`: a backend built next to the client; `contracts/<name>/` is rewritten on every",
+    "  build and stale files are removed.",
+    "- `contracts(<name> = \"<url>\")`: a running API; `nuclear contracts update [name]` fetches it and regenerates.",
+    "- `<name>` is the `connectionName` of the connection the generated repositories use.",
+    "- Only the decorators the client's dialect consumes are written: `@primary` and the validation rules where they",
+    "  exist, `@key` everywhere; a GET that answers a keyed model gets `local = true` where the local database exists.",
+    "- `nuclear contracts list` prints each contract, its source and the version of the local copy."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md#shared-contracts",
+   "type": "context",
+   "title": "Shared contracts",
+   "summary": "A model and a route are written once, in the backend project; every app that calls it generates its models and its repositories at build time (ADR-synapsis-0006).",
+   "body": [
+    "A model and a route are written once, in the backend project; every app that calls it generates its models and its",
+    "repositories at build time (ADR-synapsis-0006). The normative text is",
+    "`nuclearlang/docs/07-reference/projects.md` §1.2; the user's guide is",
+    "`nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts.md`. Paths start at the root of the tree.",
+    "",
+    "```",
+    "backend project (tasks_api)                       client project (tasks_app: mobile or web)",
+    "  components/tasks/...                             config.nuc: contracts(tasks_api = \"../tasks_api\")",
+    "        │ any build                                contracts/tasks_api/        generated Nuclear, do not edit",
+    "        ▼                                            models/task.nuc, models/tasks_api_error.nuc",
+    "  .nuclear/contract.json   ───────────────►          tasks_repository.nuc",
+    "  .nuclear/openapi.json                            then the normal build of the client's dialect",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md#what-fails-the-build",
+   "type": "context",
+   "title": "Shared contracts — What fails the build",
+   "summary": "What fails the build",
+   "body": [
+    "| Case | Code |",
+    "|---|---|",
+    "| A contract that cannot be read | N0307 |",
+    "| A field the backend renamed, used by the client | N0116, with the field's name |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md#what-is-written",
+   "type": "context",
+   "title": "Shared contracts — What is written",
+   "summary": "The contract is in Nuclear's notation and is the same whatever the dialect of the backend.",
+   "body": [
+    "| File | Written by | Holds |",
+    "|---|---|---|",
+    "| `.nuclear/contract.json` | every build and check of any project (`project::write_metadata`) | the models (fields, Nuclear types, optionality, defaults, JSON names, rules, the key, doc comments); a backend's controllers and routes; an app's repositories and calls |",
+    "| `.nuclear/openapi.json` | a backend's build | OpenAPI 3.1 made from the contract, for clients that are not Nuclear |",
+    "| `contracts/<name>/` in the client | the client's build, before it reads the sources | a model per model the routes carry, `<Name>Error`, a repository per controller with a method per route |",
+    "| `contracts/<name>/contract.json` in the client | the same step (`contract::install`); for a url contract, `nuclear contracts update` | the local copy of the contract. For a url contract it is what a build reads: it is committed, so a build never needs the network |",
+    "",
+    "The contract is in Nuclear's notation and is the same whatever the dialect of the backend. Both `.nuclear/` files",
+    "are copied into the output folder, and the backend runtimes serve them at `GET /.nuclear/contract.json` and `GET",
+    "/.nuclear/openapi.json`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md#where-the-code-is",
+   "type": "context",
+   "title": "Shared contracts — Where the code is",
+   "summary": "`nuclear_transpile::contract` (writing the contract, generating the Nuclear: `contract::generate`), the `nuclear contracts` command in `tools/cli/`, the runtimes `dragonfly-py` and `dragonfly-nest` (serving the two files).",
+   "body": [
+    "`nuclear_transpile::contract` (writing the contract, generating the Nuclear: `contract::generate`), the `nuclear",
+    "contracts` command in `tools/cli/`, the runtimes `dragonfly-py` and `dragonfly-nest` (serving the two files). The",
+    "example: `nuclear-synapsis-framework/platforms/mobile/examples/examples-flutter-dialect/tasks_app` over",
+    "`nuclear-synapsis-framework/platforms/backend/examples/examples-backend/tasks_api`. The limits are in",
+    "[the roadmap](../01-product/roadmap.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/02-architecture/shared-contracts.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#contracts-one-backend-its-apps-generated",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform — Contracts: one backend, its apps generated",
+   "summary": "A backend's build publishes what it exposes (`.nuclear/contract.json`, plus OpenAPI); an app declares it (`contracts(tasks_api = \"../tasks_api\")` or a url) and its models and repositories are generated at build time, rules and keys included; a renamed field breaks the app's build instead of the…",
+   "body": [
+    "A backend's build publishes what it exposes (`.nuclear/contract.json`, plus OpenAPI); an app declares it",
+    "(`contracts(tasks_api = \"../tasks_api\")` or a url) and its models and repositories are generated at build time, rules",
+    "and keys included; a renamed field breaks the app's build instead of the phone (ADR-synapsis-0006). Guide:",
+    "[Contracts](../../platforms/backend/docs/08-guides/contracts.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#dragonfly-three-platforms-one-code-per-platform.2c3e49",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform",
+   "summary": "The platforms share the same architecture, so moving from one to another means learning its kinds, not a new way to think: use cases) and its entry points (`presentation/` in Flutter, `api/` in the backends, `ai/` for agents).",
+   "body": [
+    "| `web` | `react` (TypeScript) | React 19 (no JSX), React Router 7, Vite, Vitest | [React](../../../nuclearlang/dialects/typescript/docs/08-guides/react.md) | [web.md](../../platforms/web/docs/07-reference/web.md), [react.md](../../../nuclearlang/dialects/typescript/docs/07-reference/react.md) |",
+    "",
+    "The platforms share the same architecture, so moving from one to another means learning its kinds, not a new",
+    "way to think:",
+    "",
+    "- **Components** by feature (`components/tasks/`), each with `data/` (entities, repositories), `domain/` (models,",
+    "  use cases) and its entry points (`presentation/` in Flutter, `api/` in the backends, `ai/` for agents).",
+    "- **Kinds** say what a declaration is: `usecase`, `repository`, `controller`, `stateless`, `agent`, `graph`...",
+    "  The dialect writes the class, its decorators, its registration in the injector and its imports.",
+    "- **`appcomponent`** is what the rest of the app sees of a component; one component never reaches inside another.",
+    "- **Errors are values:** a use case answers `Result<Error, T>`; a controller turns `Err(NotFound(...))` into a 404.",
+    "- **Connections** (a database, a chat model, Kafka, Redis, an AI provider) are listed in",
+    "  `config/project_config.nuc`, never opened by hand.",
+    "- **Tests in Nuclear:** `tests Name` with `@test(...)` methods, written for the target's test runner."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#dragonfly-three-platforms-one-code-per-platform.585d80",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform",
+   "summary": "Dragonfly is the framework of NuclearLang.",
+   "body": [
+    "Dragonfly is the framework of NuclearLang. You write a **platform** — `mobile`, `backend` or `web` — in Nuclear:",
+    "entities, use cases, screens, endpoints, agents. A **dialect** is the language and framework it comes out in, and",
+    "the Nuclear code of a project never changes when its dialect changes: a backend written once builds as a Python",
+    "service or as a TypeScript service from the same files. Only a use of a dialect's type definitions (`numpy` exists",
+    "in Python only) ties code to one dialect."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#dragonfly-three-platforms-one-code-per-platform.c37770",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform",
+   "summary": "Dragonfly: three platforms, one code per platform",
+   "body": [
+    "| Platform | Dialect | What comes out | Guide | Rules |",
+    "|---|---|---|---|---|",
+    "| `mobile` | `flutter` | Dart, Flutter, bloc, go_router, json_serializable | [Tutorial](tutorial.md) | [mobile.md](../../platforms/mobile/docs/07-reference/mobile.md), [flutter.md](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |",
+    "| `mobile` + plugin `genkit` | `flutter` | Genkit Dart: chats with tools, flows, RAG, remote flows | [Genkit](../../platforms/mobile/docs/08-guides/genkit.md) | [flutter.md §6.20](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |",
+    "| `backend` | `fastapi` (Python) | FastAPI, SQLAlchemy 2 async, pydantic, LangChain, LangGraph | [Python](../../../nuclearlang/dialects/python/docs/08-guides/fastapi.md) | [backend.md](../../platforms/backend/docs/07-reference/backend.md), [fastapi.md](../../../nuclearlang/dialects/python/docs/07-reference/fastapi.md) |",
+    "| `backend` | `nestjs` (TypeScript) | NestJS 12, Sequelize, class-validator, LangChain.js, LangGraph.js | [NestJS](../../../nuclearlang/dialects/typescript/docs/08-guides/nestjs.md) | [backend.md](../../platforms/backend/docs/07-reference/backend.md), [nestjs.md](../../../nuclearlang/dialects/typescript/docs/07-reference/nestjs.md) |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#generators-the-finished-code-of-a-resource",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform — Generators: the finished code of a resource",
+   "summary": "`dragonfly gen resource <component> <Name>` writes, for any platform, the models, the repository (REST over an `Http` connection or a database), one use case per action, the component's facade, the controller (backend) or the screen with its state manager (mobile, web) and their tests; everything…",
+   "body": [
+    "`dragonfly gen resource <component> <Name>` writes, for any platform, the models, the repository (REST over an `Http`",
+    "connection or a database), one use case per action, the component's facade, the controller (backend) or the screen",
+    "with its state manager (mobile, web) and their tests; everything compiles as written. The fields come from",
+    "`--fields \"id:int name:string\"`, from an answer (`--from-json <url|file>`: nested models and pages included, `@key`",
+    "for snake_case keys) or from a spec (`--from-spec spec.md`: its example answer, its `Key | Type` table, its",
+    "`GET <url>` line). `dragonfly gen inspect` lists what the project has; nothing is ever overwritten.",
+    "",
+    "`dragonfly gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, on the",
+    "backend, `--route \"POST orders/{id}/cancel\"` adds its route to the controller of `orders` (made when missing). A use",
+    "case with rules of its own is written first and then wired, with the signature the project gives it; one that only",
+    "calls a repository method is written by the command too: `--calls OrderRepository.pending`.",
+    "",
+    "Every option, what each platform gets, the refusals and worked examples: [Generators](generators.md). The MCP server",
+    "gives the same tools to an agent, and the editor's Loop runs them before planning. Why: ADR-codegen-0001."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#mobile-the-backend-s-orm-on-the-device.33f449",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform — Mobile: the backend's ORM on the device",
+   "summary": "A mobile app keeps what it fetches with two words (ADR-mobile-0006).",
+   "body": [
+    "A mobile app keeps what it fetches with two words (ADR-mobile-0006). `@primary` on a field gives the model an encrypted",
+    "local table (`@entity(\"characters\")` names it; the same database on phones, desktops and web); `saveLocal = true` on the repository makes every GET that answers that model save its rows and get a",
+    "twin `<method>AsLocal()`, same signature, that answers the last rows from the device without a request. The",
+    "queries are the backend repository's: `where`, `orderBy`, `limit`, `offset`, `getOne`, `getMany`, `count`,",
+    "`exists`, `update`, `delete`, plus `find`, `findAll`, `save`, `remove`.",
+    "",
+    "```nuclear",
+    "@entity(\"characters\")",
+    "Character",
+    "  @primary",
+    "  id: int",
+    "  name: string",
+    "  status: string",
+    "",
+    "@repository(path = \"character\", saveLocal = true)",
+    "repository CharacterRepository",
+    "  @get(path = \":id\")",
+    "  getOne(id: int) Result<CharacterError, Character>     // + getOneAsLocal(id)",
+    "",
+    "  alive() Character[]",
+    "    ~local<Character>().where({ \"status\": \"Alive\" }).orderBy(\"name\").getMany()",
+    "```",
+    "",
+    "Encryption (AES-256, key in the device's secure storage) is on by default and is a line of the config files:",
+    "`local: LocalDatabase = LocalDatabase(encrypted = true)` in the project's `appConfig`, or in a component's `config`",
+    "for its own tables."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#mobile-the-backend-s-orm-on-the-device.5efa91",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform — Mobile: the backend's ORM on the device",
+   "summary": "Rules and the generated Dart: flutter.md §6.3; the package API: dragonfly.md §3.2.",
+   "body": [
+    "Rules and the generated Dart: [flutter.md §6.3](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md); the package API: [dragonfly.md",
+    "§3.2](../../platforms/mobile/docs/07-reference/dragonfly.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#plugins-only-what-the-project-uses",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform — Plugins: only what the project uses",
+   "summary": "The optional parts of each framework are plugins, enabled in the project's `config.nuc`.",
+   "body": [
+    "The optional parts of each framework are **plugins**, enabled in the project's `config.nuc`. A project without a",
+    "plugin does not carry its packages:",
+    "",
+    "```nuclear",
+    "// config.nuc",
+    "plugins(genkit = true, googleAI = true)",
+    "```",
+    "",
+    "| Dialect | Plugins |",
+    "|---|---|",
+    "| `flutter` | `genkit`, and its providers `firebaseAI`, `googleAI`, `vertexAI`, `openAI`, `anthropic` |",
+    "| `fastapi`, `nestjs` (the backend platform: the same list) | `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma` |",
+    "",
+    "- Only the enabled plugins reach `pubspec.yaml`, `pyproject.toml` or `package.json`. Turning one off removes its",
+    "  packages on the next build.",
+    "- A provider plugin enables the plugin it needs (`googleAI` enables `genkit`; `ollama` enables `ai`).",
+    "- Using a kind or a class of a plugin that is not enabled is diagnostic **N0304**, which says which line to add.",
+    "  The editor still completes those names, so you can discover them.",
+    "",
+    "How a dialect declares its plugins: [projects.md §3.3](../../../nuclearlang/docs/07-reference/projects.md). Why: ADR-synapsis-0004.",
+    "",
+    "The native kinds of each platform, and how to write your own kind without touching the compiler: [Kinds](kinds.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#writing-with-an-ai-agent",
+   "type": "readme",
+   "title": "Dragonfly: three platforms, one code per platform — Writing with an AI agent",
+   "summary": "Each dialect has a short sheet for agents: `nuclear spec --brief --dialect fastapi` (also `nestjs`, `flutter`), and `nuclear help <word> --dialect <d>` explains a kind or decorator.",
+   "body": [
+    "Each dialect has a short sheet for agents: `nuclear spec --brief --dialect fastapi` (also `nestjs`, `flutter`),",
+    "and `nuclear help <word> --dialect <d>` explains a kind or decorator. `nuclear agent init --dialect <d>` writes",
+    "the `AGENTS.md` of a project."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#1-a-resource.28ac85",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 1. A resource",
+   "summary": "What a resource is made of on each platform:",
+   "body": [
+    "| Option | Meaning |",
+    "|---|---|",
+    "| `--source rest:<base url>` \\| `rest` \\| `db` | where the data lives: another API (an HTTP repository) or the database (backend only). Default: `db`, or `rest` when a url was given |",
+    "| `--actions list,get,search,create,update,delete` | one use case each. Default: `list,get` for an API, every one for a database |",
+    "| `--path <path>` | the API's path of the resource. Default: the url's last segment, or the name |",
+    "| `--screen <screen>` | mobile and web: a screen that lists the resource, with its state manager and state model |",
+    "| `--plural <Names>` | when the English plural is not the right one |",
+    "",
+    "What a resource is made of on each platform:",
+    "",
+    "| | Backend | Mobile and web |",
+    "|---|---|---|",
+    "| Data | `rest`: an HTTP repository over an `Http` connection. `db`: an entity, a `New<Name>` model and a paged query | an HTTP repository over the app's `Http` connection |",
+    "| Domain | one use case per action | one use case per action |",
+    "| Facade | an alias per use case | an alias per use case |",
+    "| Entry | the controller with a route per action | with `--screen`, the screen with its state manager |",
+    "| Tests | for a database resource | with the repository mocked |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#1-a-resource.c1166a",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 1. A resource",
+   "summary": "dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character dragonfly gen resource orders Order --fields \"id:int total:double status:string\" --source db dragonfly gen resource episodes Episode --from-spec specs/episodes/spec.md --screen episode_list The fields…",
+   "body": [
+    "```sh",
+    "dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character",
+    "dragonfly gen resource orders Order --fields \"id:int total:double status:string\" --source db",
+    "dragonfly gen resource episodes Episode --from-spec specs/episodes/spec.md --screen episode_list",
+    "```",
+    "",
+    "The fields come from one of three places:",
+    "",
+    "| Option | The fields are read from |",
+    "|---|---|",
+    "| `--from-json <file\\|url>` | an example answer of the API. A nested object becomes a model named `<Name><Key>`, a paged answer gives `<Name>Page`, a snake_case key gets `@key`. A url also gives the API to call |",
+    "| `--from-spec <spec.md>` | the spec's example answer, or else its `Key \\| Type \\| Description` table; a `GET https://...` line gives the API |",
+    "| `--fields \"id:int name:string origin:Origin?\"` | the command line. A type that is not a basic one must be declared in the project |",
+    "",
+    "The other options:"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#2-a-use-case.5caa75",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 2. A use case",
+   "summary": "A resource brings the standard use cases.",
+   "body": [
+    "A resource brings the standard use cases. `gen usecase` is for the next one, and it covers two different cases.",
+    "",
+    "**A use case that only calls a repository method** is written by the command, because there is nothing to decide:",
+    "",
+    "```sh",
+    "dragonfly gen usecase orders PageOrders --calls OrderRepository.page --route \"GET orders/pages/{page}\"",
+    "```",
+    "",
+    "```",
+    "    created  components/orders/domain/usecases/page_orders.nuc",
+    "   added to  components/orders/orders_appcomponent.nuc",
+    "   added to  components/orders/api/orders_controller.nuc",
+    "```",
+    "",
+    "```nuclear",
+    "// What OrderRepository.page answers, for the rest of orders.",
+    "usecase PageOrders(repository: OrderRepository)",
+    "  exec(page: int, size: int) Result<Error, Page<Order>>",
+    "    Ok(~repository.page(page, size))",
+    "```",
+    "",
+    "The parameters and the answer are the method's own, read from the project. An answer that is not a `Result` goes",
+    "inside an `Ok` (backend).",
+    "",
+    "**A use case with rules of its own** is written first, by hand or by an agent, because its rules are the part no",
+    "command can know. Then the command wires it:"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#2-a-use-case.852dec",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 2. A use case",
+   "summary": "// Cancels an order that is still pending; Conflict (409) when it is not.",
+   "body": [
+    "```nuclear",
+    "// Cancels an order that is still pending; Conflict (409) when it is not.",
+    "usecase CancelOrder(repository: OrderRepository)",
+    "  exec(id: int) Result<Error, Order>",
+    "    found = ~repository.find(id)",
+    "    if found.status != \"pending\"",
+    "      return Err(Conflict(\"only a pending order is cancelled\"))",
+    "    found.status = \"cancelled\"",
+    "    Ok(~repository.save(found))",
+    "```",
+    "",
+    "```sh",
+    "dragonfly gen usecase orders CancelOrder --route \"POST orders/{id}/cancel\"",
+    "```",
+    "",
+    "It adds the alias to the facade and the route to the controller, with the signature `exec` has in the project:",
+    "",
+    "```nuclear",
+    "appcomponent OrdersAppComponent",
+    "  cancelOrder() = CancelOrder.exec",
+    "```",
+    "",
+    "```nuclear",
+    "@controller(\"orders\")",
+    "controller OrdersController(app: OrdersAppComponent)",
+    "  @post(\"{id}/cancel\")",
+    "  cancelOrder(id: int) Result<Error, Order>",
+    "    ~app.cancelOrder(id)",
+    "```",
+    "",
+    "`--route \"<VERB> <prefix>[/<path>]\"` is backend only. The first segment is the controller's prefix: `orders` is",
+    "`OrdersController`, created when the component has none. A `{name}` of the path is a parameter of the use case; the",
+    "other parameters arrive as the verb sends them. The route calls the use case with `~` only when its `exec` awaits.",
+    "",
+    "On mobile and web the command adds the alias (and, with `--calls`, writes the use case). What a screen shows of it,",
+    "a method of its state manager and the state it emits, is written by hand."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#3-what-every-generator-keeps",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 3. What every generator keeps",
+   "summary": "members they lack, each one whole (a route with its decorator and its body).",
+   "body": [
+    "- **Nothing is overwritten.** A file that exists is kept. The facade, the repository and the controller get only the",
+    "  members they lack, each one whole (a route with its decorator and its body). So an action added to a resource that",
+    "  exists (`dragonfly gen resource orders Order ... --actions list,get,search` on one that had `list,get`) adds its use",
+    "  case, its alias, the repository's method and its route, and what is written still compiles. Running a command twice changes nothing: the second",
+    "  time every file says `kept`.",
+    "- **Nothing is declared twice.** A name another file of the project declares stops the command before it writes.",
+    "- **Nothing is left to fill in.** What a command writes compiles as written. When it cannot write something finished,",
+    "  it refuses and says what to do."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 4. When a generator refuses",
+   "summary": "4. When a generator refuses",
+   "body": [
+    "| It says | What to do |",
+    "|---|---|",
+    "| `<Name> is not declared. A use case with rules of its own is written first ...` | write the use case in the file it names, then run the command again; or give `--calls` when it only calls a repository |",
+    "| the repository, or its method, is not declared | `--calls` names a method a repository of the project has: `dragonfly gen inspect` lists the repositories and their files |",
+    "| a `{name}` of the route is not a parameter of the use case | name the path's parameter like the one `exec` takes |",
+    "| the use case belongs to another component | give the component that declares it |",
+    "| the platform has no routes | `--route` is backend only: on mobile and web leave it out |",
+    "| a type of `--fields` is not declared | declare the model first, or take the fields from an answer (`--from-json`), which writes the nested models too |",
+    "| the name is declared in another file | pick another name, or remove the old declaration when it is a leftover |",
+    "| a database resource has no generated search | which column is searched is yours to say: write the query in the repository, then `dragonfly gen usecase <component> Search<Names> --calls <Name>Repository.<method>` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#5-from-an-ai-agent-and-from-the-editor",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 5. From an AI agent and from the editor",
+   "summary": "The MCP server of NuclearLang gives the same commands to Claude Code, Codex or Cursor as tools, and tells every model to generate first and write only what is left: the MCP server.",
+   "body": [
+    "The MCP server of NuclearLang gives the same commands to Claude Code, Codex or Cursor as tools, and tells every model",
+    "to generate first and write only what is left:",
+    "[the MCP server](../../../tools/mcp/docs/08-guides/mcp.md).",
+    "",
+    "| Command | MCP tool |",
+    "|---|---|",
+    "| `dragonfly gen inspect` | `project_inspect` |",
+    "| `dragonfly gen component` | `generate_component` |",
+    "| `dragonfly gen resource` | `generate_resource` (and `api_inspect`, which shows an API's shape first) |",
+    "| `dragonfly gen usecase` | `generate_usecase` |",
+    "",
+    "The editor's Loop has a *Generate* stage before any agent works: it runs `dragonfly gen resource` for every resource",
+    "the spec names, and the planner plans only what is left",
+    "([the AI loop](../../../extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md))."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#6-what-is-not-generated-yet",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 6. What is not generated yet",
+   "summary": "How a platform declares its generators (`[[generators.<what>]]` in its `platform.toml`: templates, never code in the CLI) is in the dialects' spec.",
+   "body": [
+    "- A database resource has no relations to other entities, and no search: add them by hand.",
+    "- A backend resource over another API (`rest`) gets no tests.",
+    "- On mobile and web, what a screen shows of a use case added with `gen usecase`.",
+    "- The Loop's *Generate* stage writes resources only: it does not call `gen usecase`.",
+    "",
+    "How a platform declares its generators (`[[generators.<what>]]` in its `platform.toml`: templates, never code in the",
+    "CLI) is in [the dialects' spec](../../../nuclearlang/docs/07-reference/dialects.md). Why they exist:",
+    "[ADR-codegen-0001](../../../tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#generators-the-standard-code-written-by-a-command",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command",
+   "summary": "Most of a feature is the same every time: a model, a repository, a use case per action, the facade's aliases, the routes or the screen, the tests.",
+   "body": [
+    "Most of a feature is the same every time: a model, a repository, a use case per action, the facade's aliases, the",
+    "routes or the screen, the tests. `dragonfly gen` writes that part, finished and compiling, on the three platforms.",
+    "A person or an agent writes only what is particular to the app: a use case with rules of its own, the details of a",
+    "view.",
+    "",
+    "`dragonfly make` is the other command that creates files: one nearly empty declaration of a kind, to fill in.",
+    "`dragonfly gen` writes code that is already done.",
+    "",
+    "| Command | What it writes |",
+    "|---|---|",
+    "| `dragonfly gen inspect` | nothing: what the project has (platform, dialect, components, every declaration by kind), as JSON |",
+    "| `dragonfly gen component <component>` | a component: its facade and its config |",
+    "| `dragonfly gen resource <component> <Name>` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests |",
+    "| `dragonfly gen usecase <component> <Name>` | a use case wired into its component: its alias in the facade and, on the backend, its route |",
+    "",
+    "Every command runs inside a project and takes `--dry-run`, which shows the files and writes nothing."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#1-native-kinds",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — 1. Native kinds",
+   "summary": "The native kinds are the platform's contract: the same words, with the same meaning, in every dialect of the platform.",
+   "body": [
+    "The native kinds are the platform's contract: the same words, with the same meaning, in every dialect of the",
+    "platform. Change the dialect and the kinds do not change. Kinds differ between platforms, because a backend and a",
+    "mobile app are different things."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#1-native-kinds-backend-nuclear-synapsis-framework-platforms-backend-docs-07-refe.075b2e",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — Backend (`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md`)",
+   "summary": "Backend (`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md`)",
+   "body": [
+    "| Kind | Where | What it is |",
+    "|---|---|---|",
+    "| `appConfig` | `config/` | The project's connections (databases, brokers, models) |",
+    "| `config` | component `config/` | The connections of one component |",
+    "| `entity` | `data/entities/` | A table: `@entity(\"name\")`, fields with `@primary(generated = true)`, `@column(...)`, relations `@manyToOne`, `@oneToMany`, `@manyToMany`, `@oneToOne` |",
+    "| `repository` | `data/repositories/` | Queries over an entity; `find`, `findAll`, `save`, `remove` come with the kind |",
+    "| `model` | `domain/models/` | What the API reads and answers, with validation decorators |",
+    "| `usecase` | `domain/usecases/` | One business operation: `exec(...)` returning a `Result` |",
+    "| `service` | `domain/` | Helpers of the use cases (mapping, transformations) |",
+    "| `aggregate` | `domain/` | Business rules several use cases share |",
+    "| `appcomponent` | component root | The facade: what the rest of the app sees of a component |",
+    "| `controller` | `api/` | HTTP routes: `@controller(\"tasks\")`, `@get(\"{id}\")`, `@post()` methods |",
+    "| `listener` | `events/` | Methods that receive every message of a topic: `@consumer(\"topic\")` |",
+    "| `tools` | `ai/` | Methods a model can call; the doc comment is what the model reads |",
+    "| `agent` | `ai/` | An agent with its tools and prompt: `~guide.ask(question)` |",
+    "| `state` | `ai/` | The state of a graph: fields read as `state.field` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#1-native-kinds-backend-nuclear-synapsis-framework-platforms-backend-docs-07-refe.c70e0a",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — Backend (`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md`)",
+   "summary": "Backend (`nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md`)",
+   "body": [
+    "| `graph` | `ai/` | A graph of nodes: `@start`, `@next(\"node\")` |",
+    "| `tests` | `test/` | Tests: `@test(\"what it checks\")` methods |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#1-native-kinds-mobile-nuclear-synapsis-framework-platforms-mobile-docs-07-refere.285b63",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — Mobile (`nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md`)",
+   "summary": "Mobile (`nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md`)",
+   "body": [
+    "| Kind | Where | What it is |",
+    "|---|---|---|",
+    "| `appConfig`, `config` | `config/` | Connections and globals of the project or of one component |",
+    "| `stateless`, `stateful` | `presentation/screens/`, `widgets/` | Widgets; `@screen(route = ...)` makes one a screen |",
+    "| `repository` | `data/repositories/` | HTTP calls: `@repository(path)` and `@get`/`@post` methods without body |",
+    "| `usecase`, `service`, `aggregate` | `domain/` | The same roles as in backend |",
+    "| `appcomponent` | component root | The facade of a component |",
+    "| `model` | `domain/models/` | Immutable data with JSON in and out |",
+    "| `converter` | `domain/` | How a value type reads and writes JSON |",
+    "| `statemanager`, `statemodel` | `presentation/` | The state of a screen and its possible states |",
+    "| `form`, `formmanager` | `presentation/*/forms/` | A form's fields and rules, and its validation state |",
+    "| `component` | `shared/components/` | A global component; `@on(Event)` methods run on every event |",
+    "| `guard` | `shared/guards/` | A custom access check: `canActivate()` |",
+    "| `event` | `shared/events/` | A global event with JSON, so another engine can publish it |",
+    "| `tests`, `integration` | `test/`, `integration_test/` | Unit and widget tests; tests on a device |",
+    "| `tools`, `flow`, `chat`, `remote`, `knowledge` | `ai/` (plugin `genkit`) | AI: tools, flows, chats with memory, remote flows, texts searched by meaning |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#1-native-kinds-mobile-nuclear-synapsis-framework-platforms-mobile-docs-07-refere.ff96b7",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — Mobile (`nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md`)",
+   "summary": "A kind that needs an optional part of the framework belongs to a plugin and is available when `config.nuc` enables it (`plugins(genkit = true)`); using it without the plugin is diagnostic N0304, which tells you the line to add (README).",
+   "body": [
+    "A kind that needs an optional part of the framework belongs to a **plugin** and is available when `config.nuc`",
+    "enables it (`plugins(genkit = true)`); using it without the plugin is diagnostic N0304, which tells you the line to",
+    "add ([README](README.md))."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#2-extension-kinds-yours-and-the-community-s.566166",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — 2. Extension kinds: yours and the community's",
+   "summary": "Anything a project repeats can become a kind: a scheduled job, a webhook handler, a report, a screen layout your app uses forty times.",
+   "body": [
+    "Anything a project repeats can become a kind: a scheduled job, a webhook handler, a report, a screen layout your",
+    "app uses forty times. An extension kind is a **package**: its TOML, templates, the runtime it needs in the target",
+    "language, its type definitions and its editor docs, with one implementation per dialect it supports. It is enabled",
+    "like a plugin, `plugins(jobs = true)`, and the project keeps `dragonfly(platform = \"backend\", dialect = \"fastapi\")`.",
+    "A package belongs to one platform: a backend package never shows up in a mobile project, even when the word exists",
+    "there with another meaning (`repository` is table queries in backend and HTTP calls in mobile).",
+    "",
+    "**The editor knows the difference.** Completion lists only the kinds of your platform: the native ones plus the",
+    "packages your `config.nuc` enables. Hover says where a kind comes from (the platform, or a package and the dialects",
+    "it implements) and shows its docs. A kind of a package made for another platform, or not implemented for your",
+    "dialect, is reported with the line to fix.",
+    "",
+    "The rule of portability (ADR-synapsis-0002, ADR-synapsis-0004): the Nuclear you write with a kind is the same in every dialect that",
+    "implements it. A package implemented for one dialect only ties your project to that dialect, exactly as using a",
+    "dialect's type definitions does; the compiler tells you which dialects you can still build with."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#2-extension-kinds-yours-and-the-community-s.b9b787",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — 2. Extension kinds: yours and the community's",
+   "summary": "Status: the package format, `nuclear kind new`, `dragonfly add` and the missing-implementation diagnostic (N0306) exist (ADR-synapsis-0004); the editor's view of a kind's source and `nuclear dialect test` are pending (the framework's `docs/01-product/roadmap.md`).",
+   "body": [
+    "Status: the package format, `nuclear kind new`, `dragonfly add` and the missing-implementation diagnostic (N0306)",
+    "exist (ADR-synapsis-0004); the editor's view of a kind's source and `nuclear dialect test` are pending (the framework's `docs/01-product/roadmap.md`)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#3-write-a-kind-what-a-kind-can-declare.a476de",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — What a kind can declare",
+   "summary": "The template receives the declaration's data: `name`, `params_list` (each with `name`, `type`, `tinfo`, `decor`), `fields`, `methods`, `methods_code`, `members`, `decor` (each decorator with its arguments), `ret_info`, `extends`, `implements`, `generics`, `file`, `component`, `kind`, and more…",
+   "body": [
+    "The template receives the declaration's data: `name`, `params_list` (each with `name`, `type`, `tinfo`, `decor`),",
+    "`fields`, `methods`, `methods_code`, `members`, `decor` (each decorator with its arguments), `ret_info`, `extends`,",
+    "`implements`, `generics`, `file`, `component`, `kind`, and more ([projects.md §5](../../../nuclearlang/docs/07-reference/projects.md)). Templates",
+    "are a Mustache subset: sections, inverted sections, `@first`/`@last`, and filters such as `pascal`, `snake`, `kebab`,",
+    "`join` ([dialects.md §4](../../../nuclearlang/docs/07-reference/dialects.md)).",
+    "",
+    "A kind can also bring decorators (`[decorators] consumed`), modifiers and clauses, its own `[auto_imports]` and a",
+    "runtime package in the target language; the full format is [dialects.md](../../../nuclearlang/docs/07-reference/dialects.md) §5 and §7."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#3-write-a-kind-what-a-kind-can-declare.d9a559",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — What a kind can declare",
+   "summary": "What a kind can declare",
+   "body": [
+    "| Key | Use |",
+    "|---|---|",
+    "| `template` | The whole declaration, inline or in a `.tpl` file |",
+    "| `requires`, `methods`, `returns` | Methods the block must have; the only methods allowed; the type every method returns |",
+    "| `async_methods`, `void_methods` | Every method is asynchronous; methods return nothing |",
+    "| `inherits`, `overrides`, `members` | Bases from the type definitions (their members are known), methods that override, inherited names |",
+    "| `imports` | Symbols imported when the generated code writes them |",
+    "| `rename`, `named_params`, `param_access` | Output name, named constructor arguments, how constructor parameters are read |",
+    "| `alias_via`, `provide`, `declares` | Where an alias's instance comes from; how other declarations are read inside the kind; extra classes the template writes |",
+    "| `file_header`, `syntax` | Text once per file; `[syntax]` templates that change only inside this kind |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#3-write-a-kind.5421aa",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — 3. Write a kind",
+   "summary": "// config.nuc dragonfly(platform = \"backend\", dialect = \"fastapi\") app(name = \"demo\") plugins(jobs = true) // components/cleanup/jobs/purge_job.nuc job PurgeJob run() int print(\"purging\") 0 nuclear build . Change `dialect` to `nestjs` and the build says what the rule of portability says: the…",
+   "body": [
+    "```nuclear",
+    "// config.nuc",
+    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "app(name = \"demo\")",
+    "plugins(jobs = true)",
+    "```",
+    "",
+    "```nuclear",
+    "// components/cleanup/jobs/purge_job.nuc",
+    "job PurgeJob",
+    "  run() int",
+    "    print(\"purging\")",
+    "    0",
+    "```",
+    "",
+    "```sh",
+    "nuclear build .",
+    "```",
+    "",
+    "",
+    "Change `dialect` to `nestjs` and the build says what the rule of portability says: the package `jobs` has no",
+    "implementation for `nestjs` (it has `fastapi`), so either build with fastapi or add `kinds/jobs/nestjs/` (N0306).",
+    "To use the package in every project of your machine: `dragonfly add kinds/jobs`. The editor completes `job`,",
+    "shows its `description` and the text of `docs.toml`, and reports a job without `run()` while you type."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#3-write-a-kind.76bf48",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — 3. Write a kind",
+   "summary": "A backend project that needs scheduled jobs.",
+   "body": [
+    "A backend project that needs scheduled jobs. One command, two edits, no compiler change.",
+    "",
+    "**1. The package**, created in the project:",
+    "",
+    "```sh",
+    "nuclear kind new jobs -p backend -d fastapi",
+    "```",
+    "",
+    "```",
+    "kinds/jobs/",
+    "├── kind.toml                 [package] name, version, platform, description",
+    "├── docs.toml                 what the editor shows for each word",
+    "└── fastapi/",
+    "    ├── kind.toml             [plugin] (runtime packages) and [kinds.job]",
+    "    └── templates/job.tpl     the whole declaration in Python",
+    "```",
+    "",
+    "**2. The kind**, `kinds/jobs/fastapi/kind.toml`:",
+    "",
+    "",
+    "and its template, `kinds/jobs/fastapi/templates/job.tpl`, which writes the whole declaration (the variables come",
+    "from the header and the block; `nuclear spec --dialect fastapi` lists them all):",
+    "",
+    "```",
+    "class {{name}}:",
+    "    \"\"\"Scheduled job: {{source_name}}.\"\"\"",
+    "",
+    "    def __init__(self{{#params_list}}, {{name}}: {{type}}{{/params_list}}) -> None:",
+    "{{#params_list}}",
+    "        self.{{name}} = {{name}}",
+    "{{/params_list}}",
+    "{{^params_list}}",
+    "        pass",
+    "{{/params_list}}",
+    "",
+    "    {{methods_code}}",
+    "```",
+    "",
+    "**3. The Nuclear**, with the package enabled in `config.nuc`:"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#4-what-a-kind-cannot-do",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly — 4. What a kind cannot do",
+   "summary": "read.",
+   "body": [
+    "- **Add syntax.** Inside the block you write Nuclear; the kind chooses what the block becomes, never how Nuclear is",
+    "  read. If something needs new grammar, it is not a kind.",
+    "- **Touch the compiler.** If a template cannot express what you need, ask for a generic capability (a template",
+    "  variable or an `[options]` entry): it is added for every kind, never as a special case. Do not fake the output.",
+    "- **Offer a second way of writing the same thing.** A kind exists only if it removes repeated code of the target",
+    "  (golden rule, ADR-lang-0001).",
+    "- **Generate code an expert would not write:** no reflection, no unused layers, no analyzer warnings.",
+    "- **Change with the dialect.** The Nuclear of a kind is the same in every dialect that implements it.",
+    "",
+    "Rules and format: [dialects.md](../../../nuclearlang/docs/07-reference/dialects.md) §5.4, §7 and §8, [projects.md](../../../nuclearlang/docs/07-reference/projects.md) §5.",
+    "Why: ADR-synapsis-0002, ADR-synapsis-0004."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/kinds.md#kinds-the-libraries-of-dragonfly",
+   "type": "guide",
+   "title": "Kinds: the libraries of Dragonfly",
+   "summary": "A kind is the word before the name of a declaration: `usecase CreateTask`, `controller TasksController`, `stateless Home`.",
+   "body": [
+    "A **kind** is the word before the name of a declaration: `usecase CreateTask`, `controller TasksController`,",
+    "`stateless Home`. It tells Dragonfly what that block is, and the dialect writes the whole declaration in the target",
+    "(the class, its base, its imports, its boilerplate) so you only write the logic. Kinds are to Dragonfly what",
+    "libraries are to a language: a platform comes with its **native kinds**, and a project or the community can add",
+    "**extension kinds** on top of a dialect, without touching the compiler (ADR-synapsis-0004).",
+    "",
+    "The parser never knows a kind. Every kind is \"a header and a block\" of the base grammar; the kind itself is data:",
+    "a TOML entry and a template. That is why adding one needs no lexer, no parser and no Rust."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#0-install-once",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 0. Install (once)",
+   "summary": "curl -fsSL https://nuclearlang.github.io/install.sh | sh # Windows: irm https://nuclearlang.github.io/install.ps1 | iex dragonfly doctor # checks everything: CLIs, dialect, dragonfly package, Flutter, VS Code dragonfly setup # only if doctor says Flutter is missing: installs it step by step…",
+   "body": [
+    "```sh",
+    "curl -fsSL https://nuclearlang.github.io/install.sh | sh   # Windows: irm https://nuclearlang.github.io/install.ps1 | iex",
+    "# or, from the source tree: installer/install.sh (needs Rust)",
+    "dragonfly doctor             # checks everything: CLIs, dialect, dragonfly package, Flutter, VS Code",
+    "dragonfly setup              # only if doctor says Flutter is missing: installs it step by step",
+    "```",
+    "",
+    "`dragonfly` finds Flutter by itself (on the PATH, `~/development/flutter`, fvm...); `FLUTTER`",
+    "chooses another one.",
+    "",
+    "From the source tree the installation is a copy: after changing the transpiler, the dialects or the dragonfly",
+    "package, run `installer/install.sh` again."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-project.2149e7",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 1. Create the project",
+   "summary": "main() void ~startDragonfly() Hive.init(\"data\") // import 'package:hive/hive.dart' comes out by itself runApp(App()) The definitions are stored once in `~/.cache/nuclearlang/defs` and serve all your projects; removing the package does not delete them.",
+   "body": [
+    "```nuclear",
+    "main() void",
+    "  ~startDragonfly()",
+    "  Hive.init(\"data\")                     // import 'package:hive/hive.dart' comes out by itself",
+    "  runApp(App())",
+    "```",
+    "",
+    "The definitions are stored once in `~/.cache/nuclearlang/defs` and serve all your projects; removing the",
+    "package does not delete them. The editor uses them too: completion, hover and imports of `Hive`.",
+    "",
+    "Only third-party packages Dragonfly does not use are added. `dragonfly flutter add dio` (or `go_router`,",
+    "`fpdart`...) is rejected: those already come with the framework and are used directly. A project created before",
+    "`config.nuc` gets one on its first `dragonfly check`.",
+    "",
+    "Images, audio, fonts and shaders are not configured: they go in `assets/` and the build adds them to the app. A",
+    "font goes in its family's folder and its name says the weight and style:",
+    "",
+    "```",
+    "assets/images/logo.png                       Image.asset(\"assets/images/logo.png\")",
+    "assets/fonts/Roboto/Roboto-Regular.ttf       ThemeData(fontFamily = \"Roboto\")",
+    "assets/fonts/Roboto/Roboto-BoldItalic.ttf    700 italic",
+    "assets/shaders/wave.frag                     FragmentProgram.fromAsset(\"assets/shaders/wave.frag\")",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-project.d9d803",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 1. Create the project",
+   "summary": "cd ~/Documents/projects # wherever you want dragonfly new my_store cd my_store It creates only `.nuc` files: `main.nuc`, `config.nuc`, `config/project_config.nuc` and a `home` component with its screen at `/`.",
+   "body": [
+    "```sh",
+    "cd ~/Documents/projects      # wherever you want",
+    "dragonfly new my_store",
+    "cd my_store",
+    "```",
+    "",
+    "It creates only `.nuc` files: `main.nuc`, `config.nuc`, `config/project_config.nuc` and a `home` component with",
+    "its screen at `/`. The Flutter app goes to `build/app`, which is never edited by hand.",
+    "",
+    "`config.nuc` is the project's manifest, written in Nuclear: the platform it is written for and the dialect it is",
+    "built with (`dragonfly new -p mobile -d flutter` wrote them), then the pubspec: name, description, version and",
+    "its own packages. Those Dragonfly uses (bloc, go_router, json_serializable...) are added automatically and are",
+    "not written:",
+    "",
+    "```nuclear",
+    "dragonfly(platform = \"mobile\", dialect = \"flutter\")",
+    "",
+    "app(",
+    "  name = \"my_store\",",
+    "  description = \"A Dragonfly app.\",",
+    "  version = \"1.0.0+1\",",
+    "  usesMaterialDesign = true,",
+    ")",
+    "```",
+    "",
+    "To use a pub.dev package, add it with the CLI. It writes it in `config.nuc` and generates its type definitions,",
+    "so the transpiler writes its imports by itself. `dependencies` and `devDependencies` appear with their first",
+    "package and disappear when the last one is removed:",
+    "",
+    "```sh",
+    "dragonfly add hive                      # hive@^2.2.0 to pin the version (the same command on every platform)",
+    "dragonfly remove hive",
+    "dragonfly flutter add hive --dev        # for devDependencies; hive:^2.2.0 as Flutter writes it",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#2-generate-the-pieces.397314",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 2. Generate the pieces",
+   "summary": "dragonfly g c products # component: its facade (appcomponent) dragonfly g r products product # repository + Product model dragonfly g s products product_list # screen + manager + state model dragonfly g sm products product_list cart_manager # one more state manager + its state model dragonfly g sf…",
+   "body": [
+    "```sh",
+    "dragonfly g c products                  # component: its facade (appcomponent)",
+    "dragonfly g r products product          # repository + Product model",
+    "dragonfly g s products product_list     # screen + manager + state model",
+    "dragonfly g sm products product_list cart_manager  # one more state manager + its state model",
+    "dragonfly g sf rating_stars             # a stateful widget in shared/widgets",
+    "dragonfly g t products                  # tests file",
+    "rm components/products/domain/usecases/hello_products_usecase.nuc   # the sample use case",
+    "```",
+    "",
+    "`dragonfly help` lists every generator and its aliases.",
+    "",
+    "A resource that follows from its data is generated whole, already compiling: its models, the repository, a use case",
+    "per action, the facade's aliases and the screen (mobile, web) or the controller (backend). The fields come from an",
+    "example answer of the API, from the spec's table, or from `--fields`:",
+    "",
+    "```sh",
+    "dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character --screen characters",
+    "dragonfly gen resource catalog Book --fields \"title:string author:string year:int\" --source db   # backend",
+    "dragonfly gen inspect                   # what the project has, as JSON",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#2-generate-the-pieces.b32fec",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 2. Generate the pieces",
+   "summary": "Write by hand only what is yours: a use case with its own rules, the details of a view.",
+   "body": [
+    "Write by hand only what is yours: a use case with its own rules, the details of a view. A use case you wrote is wired",
+    "by its generator (its alias in the facade; on the backend, its route), and one that only calls a repository method",
+    "is written by it too:",
+    "",
+    "```sh",
+    "dragonfly gen usecase catalog LendBook --route \"POST books/{bookId}/lend\"   # backend: LendBook is in the project",
+    "dragonfly gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#3-write-the-business-logic.038627",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 3. Write the business logic",
+   "summary": "You navigate with the screen, not with the address; only views navigate.",
+   "body": "You navigate with the screen, not with the address; only views navigate.",
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#3-write-the-business-logic.4d0737",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 3. Write the business logic",
+   "summary": "@screen(route = \"/products\", providers = [ProductListManager]) stateless ProductListScreen build(context: BuildContext) Widget Scaffold( appBar = AppBar(title = Text(\"My store\")), body = ProductListStateBuilder<ProductListManager>( loading = () => Center(child = CircularProgressIndicator()), items…",
+   "body": [
+    "```nuclear",
+    "@screen(route = \"/products\", providers = [ProductListManager])",
+    "stateless ProductListScreen",
+    "  build(context: BuildContext) Widget",
+    "    Scaffold(",
+    "      appBar = AppBar(title = Text(\"My store\")),",
+    "      body = ProductListStateBuilder<ProductListManager>(",
+    "        loading = () => Center(child = CircularProgressIndicator()),",
+    "        items = (items) => ListView.builder(",
+    "          itemCount = items.length,",
+    "          itemBuilder = (context, i) => ListTile(",
+    "            leading = SizedBox(width = 48, height = 48, child = Image.network(items[i].image)),",
+    "            title = Text(items[i].title),",
+    "            subtitle = Text(\"\\$${items[i].price}\"),",
+    "          ),",
+    "        ),",
+    "        error = (e) => Center(child = Text(e.message)),",
+    "      ),",
+    "      floatingActionButton = FloatingActionButton(",
+    "        onPressed = () => ProductListManager.load(),",
+    "        child = Icon(Icons.refresh),",
+    "      ),",
+    "    )",
+    "```",
+    "",
+    "- `dragonfly g s` gives it the route of its name (`/product-list`); two screens cannot have the same one.",
+    "- An image inside a `ListTile` needs a fixed size (`SizedBox`): if it fails to load, it takes the whole row.",
+    "",
+    "**Navigation**: in `components/home/presentation/home/home_screen.nuc`, inside the `Scaffold`:",
+    "",
+    "```nuclear",
+    "      floatingActionButton = FloatingActionButton(",
+    "        onPressed = () => context.goTo(ProductListScreen()),",
+    "        child = Icon(Icons.shopping_bag),",
+    "      ),",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#3-write-the-business-logic.9b9746",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 3. Write the business logic",
+   "summary": "baseUrl = \"https://fakestoreapi.com/\", Product id: int title: string price: double image: string ProductError message: string If the backend uses another name for a field, `@key` says so; if it sends data in its own format (a date in milliseconds), a `converter` reads and writes it.",
+   "body": [
+    "**The API**, in `config/project_config.nuc`:",
+    "",
+    "```nuclear",
+    "      baseUrl = \"https://fakestoreapi.com/\",",
+    "```",
+    "",
+    "**The models**, in `components/products/domain/models/product.nuc`:",
+    "",
+    "```nuclear",
+    "Product",
+    "  id: int",
+    "  title: string",
+    "  price: double",
+    "  image: string",
+    "",
+    "ProductError",
+    "  message: string",
+    "```",
+    "",
+    "If the backend uses another name for a field, `@key` says so; if it sends data in its own format (a date in",
+    "milliseconds), a `converter` reads and writes it. Its types come from the signature of `fromJson`:",
+    "",
+    "```nuclear",
+    "Order",
+    "  id: int",
+    "  @key(\"created_at\")",
+    "  @EpochConverter",
+    "  createdAt: DateTime",
+    "```",
+    "",
+    "```nuclear",
+    "// shared/converters/epoch_converter.nuc",
+    "converter EpochConverter",
+    "  fromJson(json: int) DateTime",
+    "    DateTime.fromMillisecondsSinceEpoch(json)",
+    "  toJson(value: DateTime) int",
+    "    value.millisecondsSinceEpoch",
+    "```",
+    "",
+    "**The repository** (each method without a body is an http request), in",
+    "`components/products/data/product_repository.nuc`:",
+    "",
+    "```nuclear",
+    "@repository(path = \"products\")",
+    "repository ProductRepository",
+    "  @get(cache = true)",
+    "  getAll() Result<ProductError, Product[]>",
+    "",
+    "  @get(path = \":id\")",
+    "  getOne(id: int) Result<ProductError, Product>",
+    "```",
+    "",
+    "**The use case**, a new file `components/products/domain/usecases/list_products_usecase.nuc`:",
+    "",
+    "```nuclear",
+    "usecase ListProductsUseCase",
+    "  (repository: ProductRepository)"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#3-write-the-business-logic.d257b0",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 3. Write the business logic",
+   "summary": "@requires(internet = true) exec() Result<ProductError, Product[]> products = ~repository.getAll() Ok(products.filter((p) => p.price < 100)) `~` waits for the response; if it fails, the error is returned by itself (no `try` nor `match`).",
+   "body": [
+    "@requires(internet = true)",
+    "  exec() Result<ProductError, Product[]>",
+    "    products = ~repository.getAll()",
+    "    Ok(products.filter((p) => p.price < 100))",
+    "```",
+    "",
+    "`~` waits for the response; if it fails, the error is returned by itself (no `try` nor `match`). Without",
+    "internet, it returns the error without calling the API.",
+    "",
+    "**The facade** (the only thing other components see), in `components/products/products_component.nuc`:",
+    "",
+    "```nuclear",
+    "appcomponent ProductsComponent",
+    "  list() = ListProductsUseCase.exec",
+    "```",
+    "",
+    "**The state model** (the screen's states), in",
+    "`components/products/presentation/product_list/state_models/product_list_state.nuc`:",
+    "",
+    "```nuclear",
+    "ProductListState",
+    "  (items: Product[], error: ProductError, loading: boolean)",
+    "```",
+    "",
+    "**The manager** (the screen's state), in",
+    "`components/products/presentation/product_list/managers/product_list_manager.nuc`:",
+    "",
+    "```nuclear",
+    "@stateModel(ProductListState)",
+    "statemanager ProductListManager",
+    "  (products: ProductsComponent)",
+    "    load()",
+    "",
+    "  @state(ProductListState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(ProductListState.items)",
+    "  load() Result<ProductError, Product[]>",
+    "    ~products.list()",
+    "```",
+    "",
+    "`load()` below the constructor runs when the screen is created; `@before(loading)` shows the loading state, and",
+    "an error goes by itself to the `error` state.",
+    "",
+    "**The screen**, in `components/products/presentation/product_list/product_list_screen.nuc`:"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#4-tests",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 4. Tests",
+   "summary": "`test/products_test.nuc`: shirt() Product Product(id = 1, title = \"Shirt\", price = 20.5, image = \"\") @mock([ProductRepository]) ProductsTest setUp() when(() => ProductRepository.getAll()).thenReturnAsync(Ok([shirt(), Product(id = 2, title = \"TV\", price = 900, image = \"\")])) @test(\"the list has…",
+   "body": [
+    "`test/products_test.nuc`:",
+    "",
+    "```nuclear",
+    "shirt() Product",
+    "  Product(id = 1, title = \"Shirt\", price = 20.5, image = \"\")",
+    "",
+    "@mock([ProductRepository])",
+    "ProductsTest",
+    "  setUp()",
+    "    when(() => ProductRepository.getAll()).thenReturnAsync(Ok([shirt(), Product(id = 2, title = \"TV\", price = 900, image = \"\")]))",
+    "",
+    "  @test(\"the list has only the products under 100\")",
+    "  cheap()",
+    "    expect(~ProductsComponent.list(), isOkWith([shirt()]))",
+    "",
+    "  @widget(\"the screen shows the products\")",
+    "  screen(tester: WidgetTester)",
+    "    ~tester.pumpScreen(ProductListScreen())",
+    "    expect(find.text(\"Shirt\"), findsOneWidget)",
+    "```",
+    "",
+    "The repository is a mock; the component, the use case and the screen are the real ones. Each app also gets",
+    "generated tests (JSON of the models, requests of the repositories, screens)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.0e7674",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 5. Check, test and run",
+   "summary": "dragonfly check # errors and architecture rules (does not need Flutter) dragonfly test # written + generated tests dragonfly code # VS Code: choose a device and press F5 dragonfly run -- -d linux # or from the terminal dragonfly device iphone14pro # a test phone in its own window (several at once)…",
+   "body": [
+    "```sh",
+    "dragonfly check              # errors and architecture rules (does not need Flutter)",
+    "dragonfly test               # written + generated tests",
+    "dragonfly code               # VS Code: choose a device and press F5",
+    "dragonfly run -- -d linux    # or from the terminal",
+    "dragonfly device iphone14pro # a test phone in its own window (several at once)",
+    "dragonfly terminal-device    # or inside the terminal",
+    "dragonfly build apk          # build to publish",
+    "```",
+    "",
+    "In VS Code (with `dragonfly code` or opening the folder with `code .`) you choose the device in the status bar",
+    "and run with ▷ or F5 from any `.nuc`, as in a Flutter project. Saving a `.nuc` transpiles and hot reloads the",
+    "running app; the errors of the `.nuc` files show in Problems while you type. In Android Studio you open the",
+    "project folder; the first time the Nuclear plugin asks for *Reopen Project* and then there is a device picker,",
+    "`main.dart` ▷ and hot reload when saving a `.nuc` (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.2). In Zed, the task **Dragonfly: run**",
+    "(*task: spawn*) runs the app in a terminal, where `r` does a hot reload (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.3).",
+    "",
+    "More things the editors do (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.1 and §11.2):"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.149fa9",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 5. Check, test and run",
+   "summary": "highlights the `.nuc` line, and a Dart run-time error is marked on its `.nuc` line with a window beside it that explains it.",
+   "body": [
+    "- **Debugging in Nuclear:** a breakpoint in a `.nuc` stops the app on that line (with Debug), the pause",
+    "  highlights the `.nuc` line, and a Dart run-time error is marked on its `.nuc` line with a window beside it that",
+    "  explains it. From the terminal: `dragonfly explain < error.txt`. In VS Code, after a `.nuc` breakpoint, F10",
+    "  advances one Nuclear line (not a Dart one), the mouse over a name shows its value and the *Nuclear Call Stack*",
+    "  view gives the stack in Nuclear.",
+    "- **If something fails without errors in the `.nuc` files** (packages, stale generated code, a broken build),",
+    "  the extensions run `dragonfly repair` by themselves and relaunch the app; you can also run it by hand:",
+    "  `dragonfly repair`.",
+    "- **Dragonfly devices from the terminal:** `dragonfly device` opens the app in a phone-shaped window, like an",
+    "  emulator (with another device name, another one: device 2, 3...), and `dragonfly terminal-device` shows it",
+    "  inside the terminal, with mouse and keyboard (`?` shows the keys). See nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.",
+    "- **Dragonfly device (VS Code):** choose \"Dragonfly device\" in the device picker (it comes with the extension;",
+    "  the first time it asks for *Reload Window*) and the app runs inside VS Code, on an emulated iPhone, Pixel, iPad"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.95e4cb",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 5. Check, test and run",
+   "summary": "or desktop, with hot reload on save.",
+   "body": [
+    "or desktop, with hot reload on save. It is Flutter web: native features (camera, files) are tested on a real",
+    "  device."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#6-next-steps.630b62",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 6. Next steps",
+   "summary": "6. Next steps",
+   "body": [
+    "| For | You write | Spec |",
+    "|---|---|---|",
+    "| A screen only with a session | `@screen(..., loggedIn = { forward: LoginScreen })` | flutter.md §6.9 |",
+    "| Roles and permissions | `acl = { roles: [\"admin\"], forward: DeniedScreen }`, `Acl(inherits = {...})` | §6.13 |",
+    "| Starting and ending the session | `~session.start(auth, token = auth.token, roles = auth.roles)`, `~session.destroy()` | §6.12 |",
+    "| Showing something by session | `GlobalEvents<Auth>(sessionStarted = (auth) => ..., sessionEnded = (e) => ...)` | §6.10 |",
+    "| Tabs | `shell = { widget: MainShell, tab: 0 }` | §6.9 |",
+    "| A global event | `event ForceLogout` + `Events.publish(ForceLogout())` | §6.10 |",
+    "| Something that runs with each event | a `component` in `shared/components/` with `@on(Event)` | §6.11 |",
+    "| A form with validations | a form model in `presentation/<p>/forms/` (`@required`, `@email`, `@minLength(6)`...), `@form(XForm) formmanager XFormManager`, `DragonflyForm(manager = XFormManager, onSubmit = (form) => ...)` + `FormTextField(\"field\")` + `FormSubmit` | §6.14 |",
+    "| Validating a field against the API | in the form manager, `@validate(\"field\")` on a method that calls the component and returns the message or `null` | §6.14 |",
+    "| A dialog | `DragonflyDialog.success(child = Text(\"Saved\")).show(context)`; with `onAccept = () => ...`, Close / Accept | §6.15 |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#6-next-steps.cc08a0",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly — 6. Next steps",
+   "summary": "The complete example project (login with a form and remote validation, dialogs, translations in English and Spanish, global events, ACL, tabs, an error page) is in `examples/examples-flutter-dialect/clean-flutter-project/`.",
+   "body": [
+    "| A short message | `Popups.toast(context, \"Copied\")`, `Popups.snackbar(context, \"No network\", type = PopupType.danger)` | §6.15 |",
+    "| Texts in several languages | `assets/i18n/<language>/<component>.json`, `Translations(locales = [\"en\", \"es\"])` in the config, `\"products.list.title\".tr()` | §6.16 |",
+    "",
+    "The complete example project (login with a form and remote validation, dialogs, translations in English and",
+    "Spanish, global events, ACL, tabs, an error page) is in `examples/examples-flutter-dialect/clean-flutter-project/`.",
+    "",
+    "`dragonfly new` does not create the translation dictionaries yet; the folders of `assets/i18n/` you add are",
+    "declared in the app's pubspec by the build (nuclearlang/dialects/dart/docs/07-reference/flutter.md §3.2)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#tutorial-a-flutter-app-from-scratch-with-dragonfly",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Dragonfly",
+   "summary": "We are going to build my_store, an app that shows the products of a public API (fakestoreapi.com): a component with its repository, a use case, the screen's state, the screen, navigation and its tests.",
+   "body": [
+    "We are going to build **my_store**, an app that shows the products of a public API (fakestoreapi.com): a",
+    "component with its repository, a use case, the screen's state, the screen, navigation and its tests. Everything",
+    "is written in Nuclear; the Flutter app is generated by itself.",
+    "",
+    "The full rules are in [nuclearlang/dialects/dart/docs/07-reference/flutter.md](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (or `nuclear help flutter`)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#commands",
+   "type": "readme",
+   "title": "The platforms of Dragonfly — Commands",
+   "summary": "From the root of the tree: cargo test -p nuclear-dialect --test loader # every framework dialect implements its platform's contract cargo test -p nuclear-transpile --test projects # the examples: goldens and the conformance test UPDATE_GOLDEN=1 cargo test # generated output changed on purpose:…",
+   "body": [
+    "From the root of the tree:",
+    "",
+    "```sh",
+    "cargo test -p nuclear-dialect --test loader       # every framework dialect implements its platform's contract",
+    "cargo test -p nuclear-transpile --test projects   # the examples: goldens and the conformance test",
+    "UPDATE_GOLDEN=1 cargo test                        # generated output changed on purpose: regenerate, review the diff",
+    "cargo run -q -p nuclear-cli -- dialect check <dialect>            # one dialect's report, its contract included",
+    "cargo run -q -p nuclear-cli -- help layout --dialect <dialect>    # where each kind's file goes",
+    "```",
+    "",
+    "The checks of each platform against the target's own tools are in",
+    "[docs/05-standards/testing.md](docs/05-standards/testing.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#documents",
+   "type": "readme",
+   "title": "The platforms of Dragonfly — Documents",
+   "summary": "Documents",
+   "body": [
+    "| Read | When |",
+    "|---|---|",
+    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You need what a platform is, the table of the three, what a platform folder holds and what an install takes from it |",
+    "| [docs/02-architecture/contract.md](docs/02-architecture/contract.md) | You read or change a `platform.toml`, add a dialect to a platform, or meet N0305 |",
+    "| [docs/05-standards/testing.md](docs/05-standards/testing.md) | You run or add a test of a contract, a conformance example, a golden or a platform check |",
+    "| [../docs/02-architecture/rules.md](../docs/02-architecture/rules.md) | You design something for any platform: the rules all of them follow |",
+    "| [../docs/03-adr/README.md](../docs/03-adr/README.md) | You need why there are three platforms and why dialects never show in the Nuclear code (`ADR-synapsis-0002`) |",
+    "| [../docs/01-product/roadmap.md](../docs/01-product/roadmap.md) | You look for the pending work that is not of one platform |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#folders",
+   "type": "readme",
+   "title": "The platforms of Dragonfly — Folders",
+   "summary": "`examples/` (and `examples/expected/`), `checks/`, `docs/`, its own `AGENTS.md`.",
+   "body": [
+    "- `mobile/`, `backend/`, `web/`: one platform each, with the same shape: `platform.toml`, `packages/`,",
+    "  `examples/` (and `examples/expected/`), `checks/`, `docs/`, its own `AGENTS.md`.",
+    "- `docs/`: the documents of this level (the table below)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#rules",
+   "type": "readme",
+   "title": "The platforms of Dragonfly — Rules",
+   "summary": "1. A platform is written in Nuclear only.",
+   "body": [
+    "1. **A platform is written in Nuclear only.** Its contract, its reference, its brief, its examples and its",
+    "   diagnostics name no dialect, no language and no target's library.",
+    "2. **Exactly three platforms.** A new one is a decision of the user and a new ADR of the framework.",
+    "3. **The contract comes first.** A kind, a decorator or a plugin is declared in `platform.toml` and implemented by",
+    "   every dialect of the platform in the same change; the loader refuses a dialect that leaves the contract",
+    "   (N0305). Only a plugin may be brought later by a dialect (a warning).",
+    "4. **No name of a kind or of a decorator is written in Rust.** A rule every dialect shares is data of the contract",
+    "   (`[decorators.args]`, `[decorators.fields]`, `[layout]`).",
+    "5. **What only some projects need is not in a contract:** it is a kind package or a plugin",
+    "   (`../docs/02-architecture/kinds-and-plugins.md`).",
+    "6. **One fact, one platform.** This level describes no platform: it links to it. A platform does not repeat what",
+    "   is here.",
+    "7. A file under a platform's `docs/07-reference/` or `docs/08-guides/` is normative and shipped by the installer:",
+    "   it changes only with the feature it describes."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#stack",
+   "type": "readme",
+   "title": "The platforms of Dragonfly — Stack",
+   "summary": "`nuclearlang/dialects/<language>/frameworks/<dialect>/` (`flutter`, `fastapi`, `nestjs`, `react`).",
+   "body": [
+    "- The contract of each platform: TOML (`<platform>/platform.toml`), read by `nuclearlang/crates/nuclear-dialect`.",
+    "- The dialects that implement a platform: TOML and templates in",
+    "  `nuclearlang/dialects/<language>/frameworks/<dialect>/` (`flutter`, `fastapi`, `nestjs`, `react`).",
+    "- Runtime packages in the target languages: Dart (`mobile/packages/`), Python and TypeScript",
+    "  (`backend/packages/`), TypeScript (`web/packages/`).",
+    "- Examples in Nuclear with golden output; checks in `sh`, `bash` and Python."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#the-platforms-of-dragonfly",
+   "type": "readme",
+   "title": "The platforms of Dragonfly",
+   "summary": "What is common to the three platforms of the framework, and only that: what a platform is, the contract file (`platform.toml`) every dialect of a platform implements, the shape of a platform folder, and how the promise \"the same Nuclear for every dialect\" is tested.",
+   "body": [
+    "What is common to the three platforms of the framework, and only that: what a platform is, the contract file",
+    "(`platform.toml`) every dialect of a platform implements, the shape of a platform folder, and how the promise \"the",
+    "same Nuclear for every dialect\" is tested. Everything about one platform is in that platform's own folder.",
+    "",
+    "Paths in these documents are relative to this folder (`nuclear-synapsis-framework/platforms/`); a path that starts",
+    "with `nuclearlang/`, `tools/`, `installer/` or `.github/` starts at the root of the tree. The framework's rules are",
+    "in [`../AGENTS.md`](../AGENTS.md), the rules of the whole tree in [the root `AGENTS.md`](../../AGENTS.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/AGENTS.md#where-to-go",
+   "type": "readme",
+   "title": "The platforms of Dragonfly — Where to go",
+   "summary": "Where to go",
+   "body": [
+    "| The task is about | Open |",
+    "|---|---|",
+    "| A mobile app: views, state, forms, the local database, Genkit; the Dart runtime | [`mobile/AGENTS.md`](mobile/AGENTS.md) |",
+    "| A backend: controllers, entities, migrations, events, agents and graphs; the Python and TypeScript runtimes | [`backend/AGENTS.md`](backend/AGENTS.md) |",
+    "| A web app in the browser; the TypeScript runtime | [`web/AGENTS.md`](web/AGENTS.md) |",
+    "| How one dialect writes a platform (templates, `[toolchain]`, type definitions) | `nuclearlang/dialects/<language>/AGENTS.md` |",
+    "| The loader that reads and checks the contracts | `nuclearlang/AGENTS.md` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#changing-a-contract",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml` — Changing a contract",
+   "summary": "1. A new kind, decorator or plugin is written in `[platform]` first; a kind also gets its `[layout]` path (a test requires one for every kind) and, where the platform has them, a `[skeletons]` entry.",
+   "body": [
+    "1. A new kind, decorator or plugin is written in `[platform]` first; a kind also gets its `[layout]` path (a test",
+    "   requires one for every kind) and, where the platform has them, a `[skeletons]` entry.",
+    "2. Every dialect of the platform implements it in the same change, or the loader refuses the dialect that does",
+    "   not. A plugin is the one thing a dialect may bring later (a warning).",
+    "3. Every new word gets its editor documentation in the dialect's `docs.toml` (a test requires it), and the",
+    "   platform's reference (`<platform>/docs/07-reference/<platform>.md`) gets the rule, in Nuclear only.",
+    "4. The examples and their goldens follow: [testing.md](../05-standards/testing.md).",
+    "",
+    "A kind that only one project or one community needs is not added to a contract: it is a kind package",
+    "(`nuclear-synapsis-framework/docs/02-architecture/kinds-and-plugins.md`)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#how-a-dialect-implements-it",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml` — How a dialect implements it",
+   "summary": "A framework dialect is a folder `nuclearlang/dialects/<language>/frameworks/<dialect>/` (`dialect.toml`, `docs.toml`, `templates/`).",
+   "body": [
+    "A framework dialect is a folder `nuclearlang/dialects/<language>/frameworks/<dialect>/` (`dialect.toml`,",
+    "`docs.toml`, `templates/`). Its `[dialect]` table names the language dialect it extends and its platform:",
+    "",
+    "",
+    "It then gives each kind of the contract a `[kinds.<word>]` with its template, lists the decorators its templates",
+    "read (`[decorators] consumed`), declares the platform's plugins (`[project.plugins.<name>]`), the architecture",
+    "rules (`[architecture]`) and what the `dragonfly` command runs (`[toolchain]`). A project dialect that extends it",
+    "inherits the platform."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#sections.61b33c",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml` — Sections",
+   "summary": "`decorators` is the list of the `@words` a project may write: one in lower case that is not in it is N0309 in a project of the platform.",
+   "body": [
+    "`decorators` is the list of the `@words` a project may write: one in lower case that is not in it is N0309 in a",
+    "project of the platform. The mobile contract has no `[skeletons]`; the web contract has no `[decorators.*]`",
+    "tables."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#sections.8a5522",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml` — Sections",
+   "summary": "Sections",
+   "body": [
+    "| Section | Holds | Read by |",
+    "|---|---|---|",
+    "| `[platform]` | `name` (must be the folder's and the one the dialect names), `description`, `default_dialect` (what `dragonfly new -p <platform>` uses without `-d`), `kinds`, `decorators`, `plugins` | the loader's check (below) |",
+    "| `[decorators.args]` | decorator → its named arguments (`!` = required), the same in every dialect; a dialect's own entry wins | N0217 |",
+    "| `[decorators.fields]` | decorator → the rule a field with it must meet: `optional`, `list`, `target`, `sibling`, `inverse`, `with` | N0308 |",
+    "| `[decorators.replaced]` | a removed decorator → what replaces it | N0309 |",
+    "| `[layout]` | kind → the path of its file, with `{component}`, `{screen}` and `{file}` (the name in snake_case) | `nuclear help layout --dialect <d>`, `dragonfly make`, `dragonfly gen`, agents |",
+    "| `[skeletons]` | kind → the smallest file of the kind that compiles, with `{{Name}}`, `{{name}}`, `{{component}}`, `{{Component}}`, `{{table}}` | `dragonfly make <kind> <component> <Name>` |",
+    "| `[gen]` | how a generator writes an `Http` connection (`http`, `http_named`) | `dragonfly gen` |",
+    "| `[[generators.<what>]]` | the files `dragonfly gen <what>` writes (`component`, `resource`, `usecase`), in order: `kind`, `name`, `template`, and `when`, `each`, `merge` | `dragonfly gen` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#the-contract-of-a-platform-platform-toml",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml`",
+   "summary": "`<platform>/platform.toml` says what every dialect of the platform must implement, identically.",
+   "body": [
+    "`<platform>/platform.toml` says what every dialect of the platform must implement, identically. It is data read by",
+    "the compiler's loader; nothing in it names a language. The normative description of each key, with the values a",
+    "generator template gets, is `nuclearlang/docs/07-reference/dialects.md` §1. Paths that start with `nuclearlang/`",
+    "or `tools/` start at the root of the tree."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#what-the-loader-checks.4e925a",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml` — What the loader checks",
+   "summary": "`check_platform` in `nuclearlang/crates/nuclear-dialect/src/model.rs` runs when a dialect that names a platform is loaded.",
+   "body": [
+    "`check_platform` in `nuclearlang/crates/nuclear-dialect/src/model.rs` runs when a dialect that names a platform is",
+    "loaded. Every finding is the diagnostic N0305; an error means the dialect does not load.",
+    "",
+    "| Case | Result |",
+    "|---|---|",
+    "| The dialect names a platform without a `platform.toml` in the loader's platform folders | error |",
+    "| The file is not valid TOML, has no `[platform]`, or its `name` is not the platform the dialect names | error |",
+    "| The dialect misses a kind of `kinds` | error |",
+    "| The dialect adds a kind that is not in `kinds` (the language dialect's own kinds, such as `dart`'s `mixin`, do not count) | error |",
+    "| The dialect consumes a decorator that is not in `decorators` | error |",
+    "| The dialect declares a plugin that is not in `plugins` | error |",
+    "| `[layout]` names something that is not a kind of the platform | error |",
+    "| `[skeletons]` or a `[[generators.<what>]]` names a kind with no place in `[layout]`; a generator's `name` or `template` does not compile | error |",
+    "| The dialect does not bring a plugin of `plugins` yet | warning |",
+    "",
+    "The loader also copies the platform's data into the loaded dialect, so every tool reads it from one place:",
+    "`platform_decorators`, `decorator_args`, `decorator_fields`, `replaced_decorators`, `layout`, `skeletons`,",
+    "`generators`, `gen_values`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md#what-the-loader-checks.fbf4f1",
+   "type": "context",
+   "title": "The contract of a platform: `platform.toml` — What the loader checks",
+   "summary": "The contract is found by `Loader::platform_file`: the first `<platform>/platform.toml` of `Loader.platform_paths`, which are the `platforms/` folder next to each dialects folder and the `platforms` of each home (the install, then the source tree).",
+   "body": [
+    "The contract is found by `Loader::platform_file`: the first `<platform>/platform.toml` of `Loader.platform_paths`,",
+    "which are the `platforms/` folder next to each dialects folder and the `platforms` of each home (the install, then",
+    "the source tree)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/contract.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md#in-an-install",
+   "type": "context",
+   "title": "What a platform is — In an install",
+   "summary": "`installer/release/stage.sh` copies, for each platform: `platform.toml`, `docs/07-reference/` and `docs/08-guides/` into `$NUCLEAR_HOME/platforms/<platform>/`, every folder of `packages/` into `$NUCLEAR_HOME/packages/`, and `kinds/` into `$NUCLEAR_HOME/kinds/`.",
+   "body": [
+    "`installer/release/stage.sh` copies, for each platform: `platform.toml`, `docs/07-reference/` and `docs/08-guides/`",
+    "into `$NUCLEAR_HOME/platforms/<platform>/`, every folder of `packages/` into `$NUCLEAR_HOME/packages/`, and",
+    "`kinds/` into `$NUCLEAR_HOME/kinds/`. A built JavaScript package must have its `dist/` or the staging stops. What a",
+    "build or a test leaves inside a package (`build`, `node_modules`, `__pycache__`...) is never copied.",
+    "",
+    "The loader finds the contracts in its platform folders (`Loader.platform_paths`): the `platforms/` of the install",
+    "and, while the source tree is on disk, `nuclear-synapsis-framework/platforms/` (`nuclear_dialect::Home`)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md#what-a-platform-folder-holds.552b92",
+   "type": "context",
+   "title": "What a platform is — What a platform folder holds",
+   "summary": "├── platform.toml the contract every dialect of the platform implements (contract.md) ├── packages/ the runtime packages: what the target frameworks lack, in the target languages ├── examples/ projects in Nuclear, and expected/ with their golden output ├── checks/ scripts that run the generated…",
+   "body": [
+    "```",
+    "<platform>/",
+    "├── platform.toml     the contract every dialect of the platform implements (contract.md)",
+    "├── packages/         the runtime packages: what the target frameworks lack, in the target languages",
+    "├── examples/         projects in Nuclear, and expected/ with their golden output",
+    "├── checks/           scripts that run the generated code against the target's own tools",
+    "├── kinds/            kind packages shipped with the platform (optional; none today)",
+    "├── docs/             its documents; 07-reference/ is the normative text, 08-guides/ what a user reads",
+    "└── AGENTS.md, CLAUDE.md, README.md, CHANGELOG.md",
+    "```",
+    "",
+    "What is **not** here: the dialects that implement the platform and the type definitions of its runtime packages.",
+    "They live with their language: `nuclearlang/dialects/<language>/frameworks/<dialect>/` and",
+    "`nuclearlang/dialects/<language>/defs/<package>/<version>/`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md#what-a-platform-folder-holds.d89f46",
+   "type": "context",
+   "title": "What a platform is — What a platform folder holds",
+   "summary": "project gets them by itself; a project never lists them in `config.nuc`.",
+   "body": [
+    "- **Runtime packages.** One per target language of the platform's dialects, plus those of its plugins. A generated",
+    "  project gets them by itself; a project never lists them in `config.nuc`. A change to the public API of a runtime",
+    "  package means regenerating its type definitions (the platform's own documents say how).",
+    "- **Examples.** Each platform has the complete projects its tests build; `examples/expected/<project>/` is the",
+    "  golden output, compared by `cargo test` and accepted with `UPDATE_GOLDEN=1 cargo test`.",
+    "- **Checks.** What `cargo test` cannot do: the target's analyzer, the target's test runner and a live run of the",
+    "  generated project ([testing.md](../05-standards/testing.md)).",
+    "- **Reference.** `docs/07-reference/<platform>.md` is the platform's rules in Nuclear only, and",
+    "  `docs/07-reference/brief/<platform>.md` the short sheet an agent reads. How a dialect writes each kind is in that",
+    "  dialect's reference, `nuclearlang/dialects/<language>/docs/07-reference/<dialect>.md`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md#what-a-platform-is.621e98",
+   "type": "context",
+   "title": "What a platform is",
+   "summary": "Kinds and features may differ between platforms (`stateless` is mobile and web, `controller` is backend), never between the dialects of one platform.",
+   "body": [
+    "Kinds and features may differ between platforms (`stateless` is mobile and web, `controller` is backend), never",
+    "between the dialects of one platform. The same word may mean different things in two platforms: `repository` is",
+    "table queries in backend and HTTP calls in mobile. The web platform takes the kinds of the mobile platform that",
+    "make sense in a browser, with the same words, so an app's domain reads the same on a phone and on the web",
+    "(ADR-web-0001)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md#what-a-platform-is.a198f8",
+   "type": "context",
+   "title": "What a platform is",
+   "summary": "Paths without a root are relative to `nuclear-synapsis-framework/platforms/`; a path that starts with `nuclearlang/`, `installer/` or `.github/` starts at the root of the tree.",
+   "body": [
+    "Paths without a root are relative to `nuclear-synapsis-framework/platforms/`; a path that starts with",
+    "`nuclearlang/`, `installer/` or `.github/` starts at the root of the tree.",
+    "",
+    "A platform is a specification written in Nuclear only: the project layout, `config.nuc`, the kinds, the",
+    "decorators, the connections, the plugins, the tests and the errors of one kind of software. It names no language.",
+    "It is what the user and the agent write; a dialect is only the language and framework the code comes out in, and",
+    "the Nuclear code of a project never changes when its dialect changes (ADR-synapsis-0002). There are exactly three.",
+    "",
+    "| Platform | What it is | Default dialect | Dialects (in `nuclearlang/dialects/`) | Runtime packages (`<platform>/packages/`) |",
+    "|---|---|---|---|---|",
+    "| [`mobile`](../../mobile/AGENTS.md) | apps for Android, iOS, desktop and web through one UI toolkit | `flutter` | `dart/frameworks/flutter` | `dragonfly`, `dragonfly_genkit` (Dart) |",
+    "| [`backend`](../../backend/AGENTS.md) | HTTP APIs, data, events and AI agents | `fastapi` | `python/frameworks/fastapi`, `typescript/frameworks/nestjs` | `dragonfly-py` (Python), `dragonfly-nest` (TypeScript) |",
+    "| [`web`](../../web/AGENTS.md) | web apps in the browser through one UI library | `react` | `typescript/frameworks/react` | `dragonfly-web` (TypeScript) |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/05-standards/testing.md#conventions",
+   "type": "context",
+   "title": "Testing a platform — Conventions",
+   "summary": "them; the test only rewrites `dialect = \"...\"` in its `config.nuc`.",
+   "body": [
+    "- **A conformance example is the platform's Nuclear**, with nothing tied to one dialect, so it builds with all of",
+    "  them; the test only rewrites `dialect = \"...\"` in its `config.nuc`.",
+    "- **Each dialect's output passes its own strict check:** `tsc --strict`, `pyright --strict`, `flutter analyze`",
+    "  with `flutter_lints`, the tests written in Nuclear, and a smoke run.",
+    "- **A platform with one dialect** (`mobile`, `web` today) has no conformance test yet: it gets one with its second",
+    "  dialect.",
+    "- **An example is a golden.** A change in generated output is accepted with `UPDATE_GOLDEN=1 cargo test` and",
+    "  reviewed as a diff, never edited by hand."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/05-standards/testing.md#how-to-run-them.c4de18",
+   "type": "context",
+   "title": "Testing a platform — How to run them",
+   "summary": "cargo test -p nuclear-dialect --test loader # the contracts, the layout, the editor docs, kind packages cargo test -p nuclear-transpile --test projects # the examples: goldens and conformance cargo test -p dragonfly # the generators and the new projects UPDATE_GOLDEN=1 cargo test # generated…",
+   "body": [
+    "```sh",
+    "cargo test -p nuclear-dialect --test loader       # the contracts, the layout, the editor docs, kind packages",
+    "cargo test -p nuclear-transpile --test projects   # the examples: goldens and conformance",
+    "cargo test -p dragonfly                           # the generators and the new projects",
+    "UPDATE_GOLDEN=1 cargo test                        # generated output changed on purpose: regenerate, review the diff",
+    "",
+    "sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh   # pyright --strict, pytest, a live run",
+    "sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh    # tsc --strict, node:test, a live run",
+    "sh nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh         # tsc --strict, vitest, vite build",
+    "nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh           # flutter analyze of the examples",
+    "python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py   # the flutter reference's blocks equal the example",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/05-standards/testing.md#how-to-run-them.ed22cf",
+   "type": "context",
+   "title": "Testing a platform — How to run them",
+   "summary": "What each check needs installed (`nuclearlang/tools/node`, `nuclearlang/tools/python/.venv`, the Flutter SDK) is in the head of its script and in its platform's documents.",
+   "body": [
+    "What each check needs installed (`nuclearlang/tools/node`, `nuclearlang/tools/python/.venv`, the Flutter SDK) is in",
+    "the head of its script and in its platform's documents. CI runs the Rust tests in `.github/workflows/ci.yml`;",
+    "`.github/workflows/platform-{mobile,backend,web}.yml` run what each platform checks: its scripts in `checks/`, the",
+    "equivalences of its dialects' references and its runtime's own tests."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/05-standards/testing.md#testing-a-platform",
+   "type": "context",
+   "title": "Testing a platform",
+   "summary": "How \"the same Nuclear for every dialect of a platform\" is kept true.",
+   "body": [
+    "How \"the same Nuclear for every dialect of a platform\" is kept true. Commands run from the root of the tree; paths",
+    "that start with `nuclearlang/`, `nuclear-synapsis-framework/` or `.github/` start there."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/05-standards/testing.md#what-is-tested-at-each-level.012c8f",
+   "type": "context",
+   "title": "Testing a platform — What is tested at each level",
+   "summary": "What is tested at each level",
+   "body": [
+    "| Level | What it covers | Where |",
+    "|---|---|---|",
+    "| The contract | Every framework dialect loads, names its platform and matches its `platform.toml`; a dialect that names a platform nobody declares, or adds a kind, is refused | `dragonfly_dialects_implement_their_platform` in `nuclearlang/crates/nuclear-dialect/tests/loader.rs` |",
+    "| The layout | Every kind of every platform has a `.nuc` path in `[layout]` | `every_platform_kind_has_a_place_in_the_layout`, same file |",
+    "| Editor docs | Every word of a dialect has its entry in `docs.toml` | `every_dialect_word_has_editor_docs`, same file |",
+    "| Kind packages | A package of a platform extends a dialect of that platform | `kind_packages_extend_a_platform_dialect`, same file |",
+    "| Conformance | One example of a platform, built from the same `.nuc` files with every dialect of the platform | `backend_example_builds_with_every_backend_dialect` in `nuclearlang/crates/nuclear-transpile/tests/projects.rs` (`tasks_api` with `nestjs` and `fastapi`) |",
+    "| Goldens | Each example's generated output equals `<platform>/examples/expected/<project>/` | `nuclearlang/crates/nuclear-transpile/tests/projects.rs` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/docs/05-standards/testing.md#what-is-tested-at-each-level.1d48c1",
+   "type": "context",
+   "title": "Testing a platform — What is tested at each level",
+   "summary": "What is tested at each level",
+   "body": [
+    "| Generators | A generated resource and its use cases compile with every dialect; a new project compiles with its dialect | `a_generated_resource_compiles_with_every_dialect` (`nuclear-synapsis-framework/cli/src/main.rs`), `every_new_project_compiles_with_its_dialect` (`cli/src/scaffold.rs`) |",
+    "| The target's own tools | The generated project passes its analyzer, its test runner and a live run | each platform's `checks/` |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "04-dragonfly",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  }
+ ]
+}

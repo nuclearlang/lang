@@ -1,0 +1,178 @@
+// What every local agent shares: the Nuclear Smart Graph, the NuclearLang tools and the models. No method has a doc
+// comment, so none is offered to a model as a tool: the graphs call them in a fixed order, because a small model
+// follows steps better than it chooses tools.
+//
+// The prompts are files of the graph (`nuclear-graph/prompts/agents/<name>.md`), read with
+// `prompt(name, values)`: nothing a model reads is written inside this code.
+tools Workbench(knowledge: GraphClient, toolchain: Toolchain)
+
+  // ---- what the graph knows ----
+
+  // What the graph holds for a piece of work: the guide of the use case and, for a piece of one kind, the kind's own
+  // card, every mistake small models repeat with that kind, the rules closest to the task and validated examples of
+  // that kind (solved tasks, and a file of an example project; two files when no task of that kind was solved).
+  recall(query: string, platform: string, useCase: string, kind: string = "") Recall
+    try
+      guide = ~knowledge.prompt(useCase)
+      card = ""
+      pitfalls = ""
+      if kind.length > 0
+        card = ~knowledge.card("kind:${platform}.${kind}", related = false)
+        pitfalls = ~knowledge.pitfalls(query, kind, platform = platform)
+      rules = ~knowledge.search(query, shelves = "language,platforms", k = 3, platform = platform, agents = true)
+      // examples of the same kind only: an example of another kind makes a small model write that other kind
+      solved: string = ~knowledge.examples(query, platform = platform, k = 2, kind = kind, type = "solved")
+      shapes = ~knowledge.examples(query, platform = platform, k = solved.length == 0 ? 2 : 1, kind = kind, type = "file")
+      Recall(guide = guide, knowledge = sections([card, pitfalls, rules]), examples = sections([solved, shapes]), note = "")
+    catch e
+      Recall(guide = "", knowledge = "", examples = "", note = "the Nuclear Smart Graph is not reachable: ${e.message}")
+
+  // What the graph answers to a question in plain words: the closest cards of every shelf a local agent reads, each
+  // with a line for the rows it links to.
+  lookup(question: string, platform: string) string
+    ~knowledge.search(question, k = 4, platform = platform, agents = true, expand = true)
+
+  // What the graph gives for a question of the chat before the model reads it (the graph's query planner; no model
+  // is asked): `facts`, the exact answer of every question with one right answer the question is (the rows of the
+  // graph's database, whole); `knowledge`, the cards the shelves answer by meaning; `needs`, the exact questions it
+  // is close to that lack a name. `history`: the conversation so far, read for the names a follow-up leaves out. A
+  // graph that cannot plan (an older one) gives only the cards.
+  answer(question: string, platform: string, history: string) <string, string>
+    try
+      ~knowledge.answer(question, platform = platform, history = history, agents = true)
+    catch e
+      { "facts": "", "knowledge": ~lookup(question, platform), "needs": "" }
+
+  // The cards a text of the graph holds, by name: `[shelf/type] Title` is the first line of each. What an agent's
+  // step says it read, so a run's trace names its sources.
+  read(text: string) string
+    titles: string[] = []
+    for m in Regex(r"^\[(\w+)/([\w-]+)\] (.+)$", multiline = true).findAll(text)
+      titles.add("${m[2]}: ${m[3]}")
+    titles.length > 0 ? titles.join("; ") : "nothing"
+
+  // The cards of the diagnostics a text names (`N0114`...), at most three: what each error means and how it is fixed.
+  explain(text: string) string
+    codes: string[] = []
+    for m in Regex(r"N0\d{3}").findAll(text)
+      code = m[0] ?? ""
+      if code.length > 0 and not (code in codes) and codes.length < 3
+        codes.add(code)
+    cards: string[] = []
+    for code in codes
+      card: string = ~knowledge.card("error:${code}", related = false)
+      cards.add(card)
+    sections(cards)
+
+  // The failures of the tools and the services closest to a text (the end of a log).
+  failures(text: string, platform: string) string
+    ~knowledge.search(text, shelves = "errors", k = 2, platform = platform, type = "failure", agents = true)
+
+  // The files of the project that declare the names a task writes (its context), without the ones `have` already
+  // shows; "" when the caller gave no project folder.
+  files(root: string, task: string, skip: string = "", have: string = "") string
+    if root.length == 0
+      return ""
+    found: string = Workspace(root).context(task, skip = skip)
+    blocks = found.split("\n\n```nuclear\n").filter((b) => b.trim().length > 0)
+    fresh: string[] = []
+    for block in blocks
+      text = block.startsWith("```nuclear\n") ? block : "```nuclear\n${block}"
+      name = text.split("\n")[1]
+      if not (name in have)
+        fresh.add(text)
+    fresh.join("\n\n")
+
+  // Texts joined as the parts of a prompt, the empty ones left out.
+  sections(parts: string[]) string
+    parts.filter((p) => p.trim().length > 0).join("\n\n---\n\n")
+
+  // ---- the prompts ----
+
+  // The prompt file `agents/<name>.md` with each `{{key}}` filled. A `## ` section all of whose values are empty is
+  // dropped whole, with the words the file writes around them: a model never reads an empty heading, nor what to do
+  // with rows it was not given (it copies those words into its answer).
+  prompt(name: string, values: <string, string>) string
+    text = ~knowledge.prompt("agent.${name}")
+    parts = text.split("\n## ")
+    kept: string[] = []
+    for at in 0..parts.length
+      named = Regex(r"\{\{(\w+)\}\}").findAll(parts[at]).map((m) => m[1] ?? "")
+      if at > 0 and named.length > 0 and named.all((key) => (values[key] ?? "").length == 0)
+        continue
+      part = parts[at]
+      for key, value in values
+        part = part.replaceAll("{{${key}}}", value)
+      if at == 0 or part.split("\n").slice(1).join("\n").trim().length > 0
+        kept.add(part)
+    kept.join("\n## ").trim()
+
+  // The prompt of a piece: the guide of the use case, then the knowledge, the examples (left out when `examples` is
+  // false), the files it depends on and the task, so the most important text is the last one the model reads.
+  compose(state: PieceState, examples: boolean = true) string
+    where = ""
+    if state.path.length > 0
+      where = "${where} File `${state.path}`."
+    if state.kind.length > 0
+      where = "${where} Its kind: `${state.kind}`."
+    values = { "guide": state.guide, "knowledge": state.knowledge, "examples": examples ? state.examples : "", "context": state.context, "platform": state.platform, "where": where, "task": state.task }
+    ~prompt("piece", values)
+
+  // ---- the models ----
+
+  ask(model: string, prompt: string) string
+    reply = ~chatModel(model).ainvoke(prompt)
+    textOf(reply)
+
+  // Writes the code of a piece from its prompt (`request`) and repairs it with the compiler's errors, each with the
+  // card of its code, at most `tries` times. With `faithful`, an answer that compiles is also held to the task's own
+  // words: a name, a path or a value the task writes and the answer lacks is asked for once more.
+  write(state: PieceState, request: string, tries: int, faithful: boolean = false) PieceReply
+    code = stripFences(~ask("coder", request))
+    check = ~toolchain.check(code, state.platform)
+    attempts = 1
+    trace: <string, string>[] = state.trace + [step("write", "attempt 1: ${firstLine(check)}")]
+    while check != "ok" and attempts < tries
+      repair = ~prompt("repair", { "prompt": request, "code": code, "errors": check, "cards": ~explain(check) })
+      code = stripFences(~ask("coder", repair))
+      check = ~toolchain.check(code, state.platform)
+      attempts += 1
+      trace.add(step("repair", "attempt ${attempts}: ${firstLine(check)}"))
+    lacking = faithful and check == "ok" ? missing(state.task, code) : []
+    if lacking.length > 0
+      // asked again without the examples: a name of an example is what replaced the task's own
+      again = stripFences(~ask("coder", ~prompt("faithful", { "prompt": ~compose(state, examples = false), "code": code, "missing": lacking.map((t) => "- `${t}`").join("\n") })))
+      checked = ~toolchain.check(again, state.platform)
+      better = checked == "ok" and missing(state.task, again).length < lacking.length
+      if better
+        code = again
+      attempts += 1
+      still = missing(state.task, again)
+      trace.add(step("faithful", "${lacking.join(", ")}: ${better ? "added" : "kept the first answer (the second: ${firstLine(checked)}; still without ${still.join(", ")})"}"))
+    PieceReply(code = code, report = "", check = check, attempts = attempts, trace = trace)
+
+  // The exact words a task gives that its answer must have: quoted texts, decorators with their arguments, calls on
+  // a member (`books.byAuthor(name)`), signatures (`book(id: int)`, `all()`) and status codes. Names alone are not asked for: a task also names what it only
+  // describes (`NotFound` when nothing is found).
+  terms(task: string) string[]
+    found: string[] = []
+    patterns = [r'"[^"\n]{1,60}"', r"@[a-zA-Z]+\([^()\n]*\)", r"[a-z][A-Za-z0-9]*(?:\.[a-zA-Z][A-Za-z0-9]*)+\([^()\n]*\)", r"\b[a-z][A-Za-z0-9]*\((?:[a-z][A-Za-z0-9]*: [^()\n]*)?\)", r"\b[1-5]\d\d\b"]
+    for pattern in patterns
+      for m in Regex(pattern).findAll(task)
+        term = m[0] ?? ""
+        if term.length > 0 and not (term in found)
+          found.add(term)
+    found
+
+  // The terms of a task its code does not have. A quoted text counts by what is inside its quotes: both quotes write
+  // the same string, and a description the task quotes may be a comment.
+  missing(task: string, code: string) string[]
+    terms(task).filter((t) => not ((t.startsWith("\"") ? t.substring(1, t.length - 1) : t) in code))
+
+  // ---- the trace ----
+
+  step(name: string, detail: string) <string, string>
+    { "step": name, "detail": detail }
+
+  firstLine(text: string) string
+    text.split("\n")[0]

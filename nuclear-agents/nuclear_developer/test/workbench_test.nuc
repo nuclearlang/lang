@@ -1,0 +1,108 @@
+// The parts of the agents that need no model: how a prompt is put together, an unreachable graph, the compiler.
+tests WorkbenchTests
+  @test("the prompt file starts with the guide, ends with the task and drops an empty section")
+  compose() void
+    bench = inject<Workbench>()
+    state = PieceState(task = "A model NewBook", platform = "backend", path = "a.nuc", kind = "model", guide = "GUIDE", knowledge = "KNOWLEDGE", examples = "EXAMPLES")
+    prompt = ~bench.compose(state)
+    expect(prompt.startsWith("GUIDE"))
+    expect(prompt.endsWith("A model NewBook"))
+    expect("KNOWLEDGE" in prompt and "EXAMPLES" in prompt and "File `a.nuc`." in prompt)
+    expect(not ("## The files it uses" in prompt))
+
+  @test("a section whose value is empty is dropped with the words written around it")
+  emptySection() void
+    bench = inject<Workbench>()
+    values = { "guide": "GUIDE", "facts": "", "knowledge": "CARDS", "examples": "", "map": "", "files": "", "history": "", "message": "what is nuclear", "platform": "backend" }
+    open = ~bench.prompt("chat", values)
+    expect(not ("Exact facts" in open) and "## What the documentation says\n\nCARDS" in open and open.endsWith("what is nuclear"))
+    exact = ~bench.prompt("chat", { ...values, "facts": "ROWS" })
+    expect("## Exact facts" in exact and "invent none.\n\nROWS" in exact)
+
+  @test("an unreachable graph is a note, not an error")
+  unreachable() void
+    bench = Workbench(GraphClient(url = "http://127.0.0.1:9"), Toolchain())
+    found = ~bench.recall("a model", "backend", "piece")
+    expect(found.note.startsWith("the Nuclear Smart Graph is not reachable"))
+    expect(found.knowledge == "")
+
+  @test("a step names the cards it read")
+  read() void
+    bench = inject<Workbench>()
+    expect(bench.read("[concepts/concept] The MCP\n\nbody\n\n[tools/command] dragonfly make") == "concept: The MCP; command: dragonfly make")
+    expect(bench.read("") == "nothing")
+
+  @test("the compiler accepts valid Nuclear and explains invalid Nuclear")
+  check() void
+    bench = inject<Workbench>()
+    expect(~bench.toolchain.check("model NewBook\n  title: string\n", "backend") == "ok")
+    expect("N0114" in ~bench.toolchain.check("model A\n  n: string\n  size() int\n    n.lenght\n", "backend"))
+
+  @test("a plan's paths come from the platform's layout, and the spec corrects what the model forgot or mislabeled")
+  plan() void
+    planner = inject<Planner>()
+    raw = "kind | Book | model | | id: int\nrepository | BookRepository | books/data | - | all()\nservice | Extra | books | - | not in the spec"
+    planned = ~planner.pieces(raw, "mobile", "A model Book (id: int). A repository BookRepository. A use case AllBooksUseCase(books: BookRepository). An application component BooksComponent with all() = AllBooksUseCase.exec.")
+    expect(planned.length == 4)
+    // "application component" is how people write `appcomponent`: the graph's card of the kind says so
+    expect(planned[3]["kind"] == "appcomponent" and planned[3]["path"] == "components/books/books_component.nuc")
+    expect(planned[0]["path"] == "components/books/domain/models/book.nuc")
+    expect(planned[1]["path"] == "components/books/data/book_repository.nuc")
+    expect(planned[2]["path"] == "components/books/domain/usecases/all_books_use_case.nuc")
+    expect(planned[0]["task"]! == "model Book. The spec says: A model Book (id: int)")
+    expect(not ("BookRepository" in planned[0]["task"]!))
+    // in a project that has Book and BookRepository in a component `library`: what the spec only uses is not planned
+    // again, what it introduces with its kind's word is (a change of its file), and the new piece goes to that component
+    has = { "Book": "components/library/domain/models/book.nuc", "BookRepository": "components/library/data/book_repository.nuc" }
+    again = ~planner.pieces("usecase | CountBooks | books | - | exec()\nmodel | Book | books | - | id\nrepository | BookRepository | books | - | all()", "mobile", "A use case CountBooks(books: BookRepository) that counts every Book of the shelf.", has)
+    expect(again.length == 1 and again[0]["path"] == "components/library/domain/usecases/count_books.nuc")
+    changed = ~planner.pieces("repository | BookRepository | books | - | count()", "mobile", "A repository BookRepository with count() int.", has)
+    expect(changed.length == 1 and changed[0]["path"] == "components/library/data/book_repository.nuc")
+
+  @test("a spec in plain words keeps every piece the model designed, but its tests: a capitalised noun names no declaration")
+  plainWords() void
+    planner = inject<Planner>()
+    raw = "entity | Character | character | id: int, name: string\nrepository | CharacterRepository | character | getCharacters(page)\nusecase | GetCharactersUsecase | character | execute(page)\ncontroller | CharacterController | character | getCharacters(page)\nappcomponent | CharacterAppComponent | character |\ntests | CharacterRepositoryTest |"
+    planned = ~planner.pieces(raw, "backend", "This implementation calls the api and gives the same output for the list of characters. The model is: Character schema, id int, name string.")
+    expect(planned.map((p) => p["kind"]!) == ["entity", "repository", "usecase", "controller", "appcomponent"])
+    // a line without a component takes the plural of the first name
+    expect(planned[1]["path"] == "components/characters/data/repositories/character_repository.nuc")
+    // the task is the model's line: no sentence of the spec is about that file
+    expect(planned[0]["task"]! == "entity Character: id: int, name: string")
+
+  @test("an answer is held to the task's own words: quoted texts, calls and status codes")
+  faithful() void
+    bench = inject<Workbench>()
+    task = "A controller AuthorsController(books: BooksAppComponent) on the path \"authors\": GET \"{name}/books\" returns books.byAuthor(name) with status 201."
+    expect(bench.terms(task) == ["\"authors\"", "\"{name}/books\"", "books.byAuthor(name)", "201"])
+    code = "@controller('authors')\ncontroller AuthorsController(books: BooksAppComponent)\n  @get('{name}/books')\n  books(name: string) Result<Error, Book[]>\n    ~books.booksOf(name)\n"
+    expect(bench.missing(task, code) == ["books.byAuthor(name)", "201"])
+    // a signature the task writes is one of its words: a method is never renamed
+    expect(bench.missing("one GET request book(id: int) on the path \":id\"", "@get(path = ':id')\n  getOne(id: int) Result<BookError, Book>") == ["book(id: int)"])
+    expect(bench.missing("a GET all() that returns Result<BookError, Book[]>", "@get\n  getAll() Result<BookError, Book[]>") == ["all()"])
+
+  @test("a plan is shown as its parts, their tasks and their pieces, in the order the layers are written")
+  tree() void
+    planner = inject<Planner>()
+    pieces = [{ "kind": "usecase", "path": "components/books/domain/usecases/books_of_author.nuc" }, { "kind": "entity", "path": "components/books/data/entities/book.nuc" }, { "kind": "appcomponent", "path": "components/books/books_appcomponent.nuc" }, { "kind": "tests", "path": "test/books_test.nuc" }]
+    expect(planner.tree(pieces) == "books\n  data\n    - entity → components/books/data/entities/book.nuc\n  domain\n    - usecase → components/books/domain/usecases/books_of_author.nuc\n  facade\n    - appcomponent → components/books/books_appcomponent.nuc\ntests\n  tests\n    - tests → test/books_test.nuc")
+    expect(planner.layerOf("components/books/api/books_controller.nuc") == "api" and planner.partOf("config/project_config.nuc") == "app")
+
+  @test("without a project folder an agent reads no file")
+  noProject() void
+    bench = inject<Workbench>()
+    expect(bench.files("", "A use case BooksOfAuthor(books: BookRepository)") == "")
+
+  @test("a failure is classified by rules, and each kind says what to do")
+  classify() void
+    diagnoser = inject<Diagnoser>()
+    expect(diagnoser.classify("the local developer is not running at http://127.0.0.1:7879 (fetch failed)") == "transient")
+    expect(diagnoser.classify("dragonfly: command not found") == "environment")
+    expect(diagnoser.classify("278 MB free in /tmp (at least 500 MB are needed: free some space)") == "disk")
+    expect(diagnoser.classify("a.nuc:3:5 N0106 'book' is not defined") == "code")
+    expect(diagnoser.classify("FAILED tests/books_test.py::test_add - assert 0 == 1") == "test")
+    expect(diagnoser.classify("the planner gave 0 pieces") == "spec")
+    expect(diagnoser.classify("CharactersAppComponent is not in the plan: the plan does not cover the spec. N0220 'CharactersAppComponent'") == "spec")
+    expect(diagnoser.classify("something else") == "unknown")
+    expect(diagnoser.actionOf("transient").startsWith("retry"))
+    expect(diagnoser.tail("abcdef", 2) == "ef")

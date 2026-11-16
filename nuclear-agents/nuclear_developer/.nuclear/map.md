@@ -1,0 +1,202 @@
+# Project map: nuclear_developer (backend)
+
+Written by `nuclear check` and `nuclear build`: every declaration with its kind, its description (its doc comment) and its members, in Nuclear. Read it before writing; a declaration without a description gets one with a `//` line above it.
+
+## Component `developer`
+
+- `components/developer/ai/acceptor.nuc`
+  - graph `Acceptor(bench: Workbench)` — The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Loop (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.
+    - `@start @next("end") judge(state: PieceState) <string, any>`
+- `components/developer/ai/analyst.nuc`
+  - graph `Analyst(bench: Workbench, toolchain: Toolchain)` — The analyst: before anything is generated or planned, says which kind of request a spec is and what the strategy of that kind asks of the run (ADR-0105). Tools decide, in a fixed order: the project's files say which names of the request the project has; the graph's strategy rows say which kind of request it is, by its exact signs first; the strategy says which stages run, where the pieces come from and which facts it cannot start without. A model is asked for one thing only, the resources a request in plain words describes, and the generator's dry run accepts or refuses each. Prompt: agents/analyze.md.
+    - `@start @next("classify") read(state: PieceState) <string, any>`
+    - `@next("derive") classify(state: PieceState) <string, any>`
+    - `@next("end") derive(state: PieceState) <string, any>`
+    - `named(task: string, layout: <string, string>, spoken: <string, string>, humps: boolean) string[]` — The names a request introduces: the one after a kind's word ("a model Reader", "use case CancelOrder"; how people write each kind comes from the graph) and every name of two words or more (`CancelOrder`). A sentence's first word is not one. `humps = false`: only the ones after a kind's word.
+    - `listed(task: string) int` — How many fields a request lists for a thing: the items of its first list after `has`, `with`, `con`, `tiene` or a colon ("a name, a phone and an email" is 3). 0: it lists none, and nobody may invent them.
+    - `fieldsOf(args: string[]) int` — The fields of a generator call besides its key (0 for a call that takes them from an API's answer).
+    - `explicit(task: string) boolean` — A request that already says its resources the way the Generate stage reads them: a `GET <url>` line or a Resources section.
+    - `commands(raw: string, platform: string) string[][]` — The lines `component | Name | fields | source | actions` a model answered → the arguments of `dragonfly gen` for each (`resource orders Order --fields "..." --source db --actions list,create`). A line without a name, or with no field besides the key and no url, is left out: nothing is generated from a guess.
+    - `renameOf(task: string, existing: string[]) string[]` — The two names of a rename: the declaration of the project the request names first, and the name it gets (the first one after it that follows `to`, `a`, `por`, an arrow or `called`). [] when one is missing.
+    - `unmet(need: string, task: string, why: string, inProject: boolean, generated: int, tooled: int, designed: boolean) boolean` — Whether the request lacks a fact its strategy cannot start without. `why`: the signs that chose the strategy; `inProject`: a project was read; `generated` and `tooled`: the generator calls and the pieces the tools gave; `designed`: the request introduces a declaration with its kind's word (its fields are in its own words).
+- `components/developer/ai/assistant.nuc`
+  - graph `Assistant(bench: Workbench)` — The assistant: answers a message of the chat about the project or about NuclearLang. The graph's query planner reads the message first, without a model: a question with one right answer (every command of a tool, the tools of the MCP server and their parameters, the commands that write a kind...) gets the rows of the graph's database, whole (`facts`), and the rest the cards of the shelves closest to it (`knowledge`). The model writes the answer from both, the project's map and the last messages of the session; the rows then end the answer as the graph gave them, put there by this code: a model retells a long list in part, so the list never depends on it. It explains and proposes Nuclear; it changes no file (an order to change the project is a Loop run). Prompt: agents/chat.md.
+    - `@start @next("answer") recall(state: PieceState) <string, any>`
+    - `@next("end") answer(state: PieceState) <string, any>`
+- `components/developer/ai/coder.nuc`
+  - graph `Coder(bench: Workbench)` — The coder: writes one .nuc file from a precise task, with the card of the kind it writes, the mistakes to avoid with that kind and validated examples of it (all from the graph), and repairs it with the card of each error the compiler reports until `nuclear check` reports none. Prompts: agents/piece.md, agents/repair.md.
+    - `@start @next("write") recall(state: PieceState) <string, any>`
+    - `@next("end") write(state: PieceState) <string, any>`
+- `components/developer/ai/diagnoser.nuc`
+  - graph `Diagnoser(bench: Workbench, toolchain: Toolchain)` — The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `dragonfly doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.
+    - `@start @next("explain") gather(state: PieceState) <string, any>`
+    - `@next("end") explain(state: PieceState) <string, any>`
+    - `classify(text: string) string` — The kind of a failure from its text, the first rule that matches: disk (no room left: no retry helps until some is freed), transient (the services or the network: retrying helps), environment (a tool or a package is missing), code (the compiler's errors), test (a test failed), spec (nothing to do was understood), else unknown.
+    - `tail(text: string, size: int) string` — The last `size` characters of a text (the end of a log is where it says what failed).
+    - `actionOf(kind: string) string` — What to do about each kind of failure.
+- `components/developer/ai/documenter.nuc`
+  - graph `Documenter(bench: Workbench)` — The documenter: reads the journal of a run (what every agent did, step by step) and writes what was done in plain English for the person or the frontier model that reviews it. It documents; it does not change the code. Prompt: agents/document.md (over the `docs` guide).
+    - `@start @next("write") recall(state: PieceState) <string, any>`
+    - `@next("end") write(state: PieceState) <string, any>`
+- `components/developer/ai/planner.nuc`
+  - graph `Planner(bench: Workbench, toolchain: Toolchain)` — The planner: splits a spec into pieces of one file each, in the order they can be written (the local plan when no frontier model leads the work). The model names each piece's kind, declaration, component and screen; its path comes from the platform's layout (`nuclear help layout`), so a small model never guesses a folder. Prompts: agents/plan.md, agents/plan-again.md.
+    - `@start @next("split") recall(state: PieceState) <string, any>`
+    - `@next("end") split(state: PieceState) <string, any>`
+    - `tree(pieces: <string, string>[]) string` — The plan as a tree: the big parts (one per component), the tasks of each (a layer: data, domain, the facade, the entry points, the tests) and the pieces of each task (one file), in the order the layers are written.
+    - `partOf(path: string) string` — The big part a file belongs to: its component, the tests, or the app itself.
+    - `layerOf(path: string) string` — The task a file belongs to inside its part: the layer its folder says.
+    - `pieces(raw: string, platform: string, spec: string, declared: <string, string>) <string, string>[]` — The lines `kind | Name | component | screen | what` → pieces with the layout's path. A small model may move the columns: the kind is the cell the layout knows, the name the first one in PascalCase. Left out: a line without both, a name already planned and, when the spec names its declarations, a name it does not (the planner splits such a spec; it does not design more). A spec names a declaration with its kind's word before it ("a use case CancelOrder") or with a name of two words or more (`CancelOrder`); a capitalised noun alone ("Character schema") names none, so a spec in plain words keeps every line the model designed, but its tests: the Tests first stage writes those from the acceptance criteria. A component that is not a plain name takes the one the other lines give. Each piece's task ends with the spec's own sentence about it: the model's summary may lose a detail. `declared`: what the project already has (name → file). A name of it the spec only uses (`repository: BookRepository`) is not planned again; one the spec introduces with its kind's word ("a repository BookRepository with...") is, as a change of its file. New pieces go to the component of the declarations the spec uses.
+- `components/developer/ai/security.nuc`
+  - graph `Security(bench: Workbench, toolchain: Toolchain)` — The security reviewer: the compiler's check plus a review guided by the graph's security rules. It reports; it does not change the code. Prompt: agents/security.md.
+    - `@start @next("review") recall(state: PieceState) <string, any>`
+    - `@next("end") review(state: PieceState) <string, any>`
+- `components/developer/ai/states/piece_state.nuc`
+  - state `PieceState` — The state of one piece of work of a local agent: the task, what the graph gave it, its answer and its check.
+    - `task: string`
+    - `platform: string`
+    - `path: string`
+    - `kind: string`
+    - `context: string`
+    - `root: string` — the project's folder ("" when the caller gave none)
+    - `map: string` — the chat: the project's map and the last messages of the session
+    - `history: string`
+    - `facts: string` — the chat: the exact facts the graph's planner gave for the message (the rows of its database)
+    - `failure: string` — the diagnoser: the kind of a failure (transient, environment, code, test, spec, unknown)
+    - `guide: string`
+    - `knowledge: string`
+    - `examples: string`
+    - `code: string`
+    - `report: string`
+    - `check: string`
+    - `attempts: int`
+    - `pieces: <string, string>[]`
+    - `tree: string` — the planner: the plan as a tree, and what of the spec is beyond the platform or the local agents
+    - `limits: string[]`
+    - `declared: <string, string>` — the analyst: the project's declarations (name → file), the ones the request names, the names new to the project, the strategy the request itself asks for, the strategy the graph gave (its fields as texts), the generator calls (the arguments of `dragonfly gen`) and the questions for the user
+    - `existing: string[]`
+    - `fresh: string[]`
+    - `designed: int` — how many declarations the request introduces with their kind's word (a request already designed)
+    - `forced: string`
+    - `strategy: <string, string>`
+    - `generate: string[][]`
+    - `questions: string[]`
+    - `trace: <string, string>[]`
+- `components/developer/ai/tester.nuc`
+  - graph `Tester(bench: Workbench)` — The tester: writes the Nuclear tests (`tests` kind) of a piece of code, checked like any other file. Prompts: agents/test.md (over the `test` guide), agents/piece.md, agents/repair.md.
+    - `@start @next("write") recall(state: PieceState) <string, any>`
+    - `@next("end") write(state: PieceState) <string, any>`
+- `components/developer/ai/workbench.nuc`
+  - tools `Workbench(knowledge: GraphClient, toolchain: Toolchain)` — What every local agent shares: the Nuclear Smart Graph, the NuclearLang tools and the models. No method has a doc comment, so none is offered to a model as a tool: the graphs call them in a fixed order, because a small model follows steps better than it chooses tools.  The prompts are files of the graph (`nuclear-graph/prompts/agents/<name>.md`), read with `prompt(name, values)`: nothing a model reads is written inside this code.
+    - `recall(query: string, platform: string, useCase: string, kind: string) Recall` — What the graph holds for a piece of work: the guide of the use case and, for a piece of one kind, the kind's own card, every mistake small models repeat with that kind, the rules closest to the task and validated examples of that kind (solved tasks, and a file of an example project; two files when no task of that kind was solved).
+    - `lookup(question: string, platform: string) string` — What the graph answers to a question in plain words: the closest cards of every shelf a local agent reads, each with a line for the rows it links to.
+    - `answer(question: string, platform: string, history: string) <string, string>` — What the graph gives for a question of the chat before the model reads it (the graph's query planner; no model is asked): `facts`, the exact answer of every question with one right answer the question is (the rows of the graph's database, whole); `knowledge`, the cards the shelves answer by meaning; `needs`, the exact questions it is close to that lack a name. `history`: the conversation so far, read for the names a follow-up leaves out. A graph that cannot plan (an older one) gives only the cards.
+    - `read(text: string) string` — The cards a text of the graph holds, by name: `[shelf/type] Title` is the first line of each. What an agent's step says it read, so a run's trace names its sources.
+    - `explain(text: string) string` — The cards of the diagnostics a text names (`N0114`...), at most three: what each error means and how it is fixed.
+    - `failures(text: string, platform: string) string` — The failures of the tools and the services closest to a text (the end of a log).
+    - `files(root: string, task: string, skip: string, have: string) string` — The files of the project that declare the names a task writes (its context), without the ones `have` already shows; "" when the caller gave no project folder.
+    - `sections(parts: string[]) string` — Texts joined as the parts of a prompt, the empty ones left out.
+    - `prompt(name: string, values: <string, string>) string` — The prompt file `agents/<name>.md` with each `{{key}}` filled. A `## ` section all of whose values are empty is dropped whole, with the words the file writes around them: a model never reads an empty heading, nor what to do with rows it was not given (it copies those words into its answer).
+    - `compose(state: PieceState, examples: boolean) string` — The prompt of a piece: the guide of the use case, then the knowledge, the examples (left out when `examples` is false), the files it depends on and the task, so the most important text is the last one the model reads.
+    - `ask(model: string, prompt: string) string`
+    - `write(state: PieceState, request: string, tries: int, faithful: boolean) PieceReply` — Writes the code of a piece from its prompt (`request`) and repairs it with the compiler's errors, each with the card of its code, at most `tries` times. With `faithful`, an answer that compiles is also held to the task's own words: a name, a path or a value the task writes and the answer lacks is asked for once more.
+    - `terms(task: string) string[]` — The exact words a task gives that its answer must have: quoted texts, decorators with their arguments, calls on a member (`books.byAuthor(name)`), signatures (`book(id: int)`, `all()`) and status codes. Names alone are not asked for: a task also names what it only describes (`NotFound` when nothing is found).
+    - `missing(task: string, code: string) string[]` — The terms of a task its code does not have. A quoted text counts by what is inside its quotes: both quotes write the same string, and a description the task quotes may be a comment.
+    - `step(name: string, detail: string) <string, string>`
+    - `firstLine(text: string) string`
+- `components/developer/api/developer_controller.nuc`
+  - controller `DeveloperController(coder: Coder, tester: Tester, security: Security, documenter: Documenter, assistant: Assistant, diagnoser: Diagnoser, planner: Planner, analyst: Analyst, acceptor: Acceptor)` — The local developer over HTTP (127.0.0.1:7879): POST /developer/code, /test, /security, /document, /chat, /diagnose, /analyze, /plan and /accept. Each request runs on a thread of its own, so nothing of one request reaches the next.
+    - `@post("code", status = 200) code(input: PieceRequest) PieceReply`
+    - `@post("test", status = 200) test(input: PieceRequest) PieceReply`
+    - `@post("security", status = 200) review(input: PieceRequest) PieceReply`
+    - `@post("document", status = 200) document(input: PieceRequest) PieceReply`
+    - `@post("chat", status = 200) chat(input: ChatRequest) PieceReply`
+    - `@post("diagnose", status = 200) diagnose(input: PieceRequest) PieceReply` — Why a step failed: `task` is the step, `context` its output, `path` the project's folder.
+    - `@post("accept", status = 200) accept(input: PieceRequest) PieceReply` — Each acceptance criterion held against what a run left: `task` the criteria, numbered; `context` the facts and the files of the run.
+    - `@post("plan", status = 200) plan(input: PlanRequest) PlanReply`
+    - `@post("analyze", status = 200) analyze(input: AnalyzeRequest) Analysis` — Which kind of request a spec is and what its strategy asks of the run: before anything is generated or planned.
+    - `fresh() string`
+    - `start(input: PieceRequest) <string, any>`
+    - `reply(state: <string, any>) PieceReply`
+- `components/developer/domain/models/developer_models.nuc`
+  - model `PieceRequest` — One piece of work for a local agent: ONE file, named as precisely as possible.
+    - `@minLength(3) task: string`
+    - `platform: string` — backend, mobile or web: the agents write Nuclear for a platform, never for a dialect
+    - `path: string`
+    - `kind: string`
+    - `context: string`
+    - `root: string` — the project's folder: with it an agent reads by itself the files that declare the names its task writes
+  - model `PieceReply` — What an agent answers: the code (or the review), its check and what it did, step by step.
+    - `code: string`
+    - `report: string`
+    - `check: string`
+    - `attempts: int`
+    - `trace: <string, string>[]`
+  - model `PlanRequest` — A spec to split into pieces.
+    - `@minLength(3) spec: string`
+    - `platform: string` — backend, mobile or web: the agents write Nuclear for a platform, never for a dialect
+    - `root: string` — the project's folder: what it already declares is not planned again, and new pieces go to its components
+  - model `PlanReply` — The pieces of a plan, in the order they can be written; the same plan as a tree (the big parts, their tasks, the pieces of each); and what of the spec is beyond the platform or the local agents, for the user to know.
+    - `pieces: <string, string>[]`
+    - `raw: string`
+    - `trace: <string, string>[]`
+    - `tree: string`
+    - `limits: string[]`
+  - model `AnalyzeRequest` — A request to analyse before a run: which kind of request it is.
+    - `@minLength(3) spec: string`
+    - `platform: string`
+    - `root: string` — the project's folder: with it the analyst knows which names of the request the project has
+    - `strategy: string` — the strategy the request itself names (`usecase`), when it names one
+  - model `Analysis` — The strategy of a request (ADR-0105) and what it asks of the run: the stages that run, the generator calls (the arguments of `dragonfly gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code` is written as it is) and the facts the request lacks.
+    - `strategy: string`
+    - `title: string`
+    - `why: string`
+    - `mode: string` — write, repair, verify, review, answer, commands or lead
+    - `stages: string[]`
+    - `lead: string` — local, or frontier when the strategy needs a model that understands several files at once
+    - `source: string` — where the pieces come from: plan (the planner splits what is left), declaring, naming or none
+    - `generate: string[][]`
+    - `pieces: <string, string>[]`
+    - `questions: string[]`
+    - `limits: string[]`
+    - `report: string`
+    - `trace: <string, string>[]`
+  - model `Recall` — What the Nuclear Smart Graph gave an agent for a task.
+    - `guide: string`
+    - `knowledge: string`
+    - `examples: string`
+    - `note: string`
+  - model `ChatRequest` — A message to the local assistant, with what it needs to answer about the project.
+    - `@minLength(1) message: string`
+    - `platform: string` — backend, mobile or web
+    - `map: string` — the project's map (.nuclear/map.md): every declaration with its kind, description and members
+    - `history: string` — the last messages of the session, oldest first, as `you: ...` / `agent: ...` lines
+    - `root: string` — the project's folder: with it the assistant reads the files that declare the names the question writes
+
+## `config/`
+
+- `config/project_config.nuc`
+  - appConfig `ProjectConfig` — The models of the local agents, both on Ollama: a small coder model writes the code, a small general model plans and reviews. Neither may be larger than 3B parameters of effective size (the user's rule). Their context window is CONTEXT_TOKENS (8192 by default; the editor passes its nuclear.ai.contextTokens).
+    - `connections: Connection[]`
+
+## `test/`
+
+- `test/analyst_test.nuc`
+  - tests `AnalystTests` — The parts of the analyst that need no model: the names a request introduces, the generator calls a model's lines become, the two names of a rename and the facts a request lacks.
+    - `@test("the names a request introduces: the one after a kind's word, and every name of two words") named() void`
+    - `@test("a model's lines become generator calls; a line with no field besides the key and no url is left out") commands() void`
+    - `@test("the fields a request lists are counted; a request that lists none is never given to a model") listed() void`
+    - `@test("a rename is the project's name the request writes and the name it gets") rename() void`
+    - `@test("a request is asked for the facts its strategy cannot start without, and for nothing it already says") needs() void`
+- `test/workbench_test.nuc`
+  - tests `WorkbenchTests` — The parts of the agents that need no model: how a prompt is put together, an unreachable graph, the compiler.
+    - `@test("the prompt file starts with the guide, ends with the task and drops an empty section") compose() void`
+    - `@test("a section whose value is empty is dropped with the words written around it") emptySection() void`
+    - `@test("an unreachable graph is a note, not an error") unreachable() void`
+    - `@test("a step names the cards it read") read() void`
+    - `@test("the compiler accepts valid Nuclear and explains invalid Nuclear") check() void`
+    - `@test("a plan's paths come from the platform's layout, and the spec corrects what the model forgot or mislabeled") plan() void`
+    - `@test("a spec in plain words keeps every piece the model designed, but its tests: a capitalised noun names no declaration") plainWords() void`
+    - `@test("an answer is held to the task's own words: quoted texts, calls and status codes") faithful() void`
+    - `@test("a plan is shown as its parts, their tasks and their pieces, in the order the layers are written") tree() void`
+    - `@test("without a project folder an agent reads no file") noProject() void`
+    - `@test("a failure is classified by rules, and each kind says what to do") classify() void`

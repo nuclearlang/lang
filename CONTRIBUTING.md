@@ -1,30 +1,29 @@
-# Contributing to nuclear
+# Contributing to NuclearLang
 
-Thank you for helping. This repository is part of [NuclearLang](https://github.com/nuclearlang): the language is the
-[nuclear](https://github.com/nuclearlang/nuclear) repository, and the other repositories live as folders inside a clone of it, each with its
-own git (the tools find each other that way).
+Thank you for helping. The whole platform is this one repository; each folder is a project with its own
+`AGENTS.md` and `docs/` ([README.md](README.md), "The tree").
 
 ## Set up
 
 ```sh
 git clone https://github.com/nuclearlang/nuclear && cd nuclear
-# the platforms and editors you work on, inside it (README.md, "The repositories")
-./install.sh
+installer/install.sh
 ```
 
 ## Before a pull request
 
 ```sh
 cargo test && cargo clippy --all-targets
-python3 tools/spec-check/check.py spec/typescript.md typescript typescript   # also dart, python
-sh tools/stdlib-check.sh                                                    # needs tsc, dart and python
-UPDATE_GOLDEN=1 cargo test                                                  # when the output changes on purpose
+UPDATE_GOLDEN=1 cargo test                                    # when the output changes on purpose
+(cd nuclearlang && python3 tools/spec-check/check.py dialects/typescript/docs/07-reference/typescript.md typescript typescript)   # also dart, python
+sh nuclearlang/tools/stdlib-check.sh                          # needs tsc, dart and python
 ```
 
-- Everything is written in English: code, comments, docs and messages.
-- A change that the user of NuclearLang can see updates its documentation in the same pull request (the spec of
-  the area, the guide, `docs/context/` for agents and contributors).
-- Rules and the reasons behind them: the [nuclear repository's AGENTS.md](https://github.com/nuclearlang/nuclear/blob/main/AGENTS.md) and its
-  [decision records](https://github.com/nuclearlang/nuclear/tree/main/docs/adr).
+The checks of the project you touch are in its `AGENTS.md`.
+
+- Everything is written in English: code, comments, documents and messages.
+- A change updates the documents of the project it touches in the same pull request: its reference, its guides,
+  its `docs/` for agents and contributors ([docs/05-standards/coding.md](docs/05-standards/coding.md)).
+- The rules are in [AGENTS.md](AGENTS.md); the reasons behind them, in each project's `docs/03-adr/`.
 
 By contributing you agree that your contribution is licensed under the [Apache License 2.0](LICENSE).

@@ -1,0 +1,15 @@
+# Changelog
+
+All notable changes to dragonfly-backend are written here; versions follow [Semantic Versioning](https://semver.org).
+
+## Unreleased
+
+- `[toolchain] package_*` in fastapi (pip) and nestjs (npm, with the `@types` package of one that ships no types):
+  `dragonfly add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,
+  `koa` are added with a word on what the platform already gives.
+- First public version.
+- HTTP repositories (`Http` connection, bodiless `@get`/`@post`...) in fastapi and nestjs; `@key` for a JSON key that differs from the field; `[[generators]]` for `dragonfly gen` (ADR-codegen-0001).
+- `[[generators.usecase]]`: `dragonfly gen usecase` writes a use case over a repository method, its alias in the facade and its route (ADR-codegen-0001).
+- The order of a controller's routes no longer matters, in both dialects: a fixed segment wins over a parameter. Before, fastapi added the routes by method name (`GET <prefix>/search` of a generated resource answered 400, taken by `{id}`) and nestjs in the order written (`dragonfly-py` `router_of`, `dragonfly-nest` `configureApp`; `spec/backend.md` §2.7).
+- `[[generators.resource]]`: the repository and the controller are merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001).
+- nestjs: `npm test` (what `dragonfly test` runs) removes `dist/test` before compiling: `tsc` never deletes the output of a source that is gone, so a test that was deleted or renamed kept running from its old `.js` and failed the project.

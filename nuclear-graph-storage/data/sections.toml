@@ -1,0 +1,269 @@
+# The documents of the working tree, in reading order: which markdown files the knowledge base holds, on which shelf
+# of the Smart Graph each one goes and who reads it (ADR-graph-0001). `nuclear-graph knowledge build` cuts every file into
+# one row per heading section and writes them to `assets/<shelf>/<section id>.json`; a file no section claims is a
+# problem the build reports, so none is ever left out.
+#
+# `shelf`: `docs` (the default: the long form), `language` (the base language: its guide and rules) or `platforms`
+# (the rules of a platform). Everything with a structure of its own is not listed here, because its rows are read from
+# its source: the diagnostics, the standard library, the kinds and decorators (platform.toml, docs.toml), the help of
+# the command line tools, the MCP tools, the examples (.nuc).
+#
+# `agents = false`: the local agents of the Nuclear Developer do not read the section (they write only Nuclear: the
+# target languages, the dialects underneath, the runtimes, the decisions and the state are for people and frontier
+# models). In a section they read, the code blocks of a target language are left out of the rows.
+
+# The website's checkout (a repository of its own, outside the working tree).
+website = "~/Documents/projects/nuc/react/nuclearlang_website"
+
+exclude = [
+  "**/CLAUDE.md",                 # one line that imports AGENTS.md
+  "**/icon-themes/**", "**/icons/atom/**", "**/vendor/**",
+  "nuclearlang/tools/defs/flutter_project/**",
+  "nuclear-graph-storage/data/**",    # this folder
+  "nuclear-graph-storage/prompts/**", # the prompt files: the graph's `prompts` collection
+  "nuclearlang/docs/07-reference/diagnostics.md",  # one row per diagnostic, read from the compiler
+  "**/docs/01-product/roadmap.md",    # the pending work of a project changes with every task: never part of the base
+  "STATUS.md", "docs/context/**", "docs/ai/**",    # the old documents, until spec 008 deletes them
+  "docs/05-standards/agent-context-docs-implementation.md",  # the user's guideline, in Spanish
+  "docs/04-specs/008-restructure/work/**",
+]
+
+# A file goes to the first section that claims it: the decisions and plans of every project are listed first.
+
+[[section]]
+id = "11-decisions"
+title = "Every decision and why (ADRs) and the plans, of every project"
+agents = false
+files = [
+  "**/docs/03-adr/**",
+  "**/docs/04-specs/**",
+  "docs/adr/**",
+  "nuclearlang/docs/07-reference/decisions.md",
+]
+
+[[section]]
+id = "01-introduction"
+title = "What NuclearLang and Dragonfly are"
+files = [
+  "README.md",
+  "AGENTS.md",
+  "CONTRIBUTING.md",
+  "CHANGELOG.md",
+  "github-profile/**",
+  "docs/README.md",
+  "docs/0[0-2]-*/**",
+  "docs/05-standards/**",
+  "docs/06-runbooks/**",
+]
+
+[[section]]
+id = "02-language"
+title = "The language: the guide, then the rules and the library"
+shelf = "language"
+files = [
+  "nuclearlang/docs/08-guides/README.md",
+  "nuclearlang/docs/08-guides/[0-9][0-9]-*.md",
+  "nuclearlang/docs/08-guides/reference.md",
+  "nuclearlang/docs/07-reference/nuclear-base.md",
+  "nuclearlang/docs/07-reference/brief/nuclear-base.md",
+  "nuclearlang/docs/07-reference/grammar.ebnf",
+  "nuclearlang/docs/07-reference/reserved-words.md",
+  "nuclearlang/docs/07-reference/library.md",
+]
+
+[[section]]
+id = "03-projects"
+title = "Projects of several files, results, tests and the limits of the language"
+files = [
+  "nuclearlang/docs/07-reference/projects.md",
+  "nuclearlang/docs/02-architecture/projects.md",
+  "nuclearlang/docs/02-architecture/result.md",
+  "nuclearlang/docs/02-architecture/syntax.md",
+  "nuclearlang/docs/02-architecture/limits.md",
+  "nuclearlang/docs/05-standards/testing.md",
+]
+
+[[section]]
+id = "03-compiler"
+title = "The compiler inside: dialects as data, type definitions, the emitter, the language server"
+agents = false
+files = [
+  "nuclearlang/AGENTS.md",
+  "nuclearlang/docs/07-reference/dialects.md",
+  "nuclearlang/docs/07-reference/definitions.md",
+  "nuclearlang/docs/0[0-6]-*/**",
+  "nuclearlang/docs/08-guides/**",
+  "nuclearlang/crates/**",
+  "nuclearlang/tools/**",
+  "nuclearlang/base/**",
+  ".claude/hooks/README.md",
+]
+
+[[section]]
+id = "03-compiler-targets"
+title = "What the base language becomes in each target language"
+agents = false
+files = [
+  "nuclearlang/dialects/README.md",
+  "nuclearlang/dialects/*/AGENTS.md",
+  "nuclearlang/dialects/*/docs/0[0-6]-*/**",
+  "nuclearlang/dialects/typescript/docs/07-reference/typescript.md",
+  "nuclearlang/dialects/dart/docs/07-reference/dart.md",
+  "nuclearlang/dialects/python/docs/07-reference/python.md",
+  "nuclearlang/dialects/nodejs/docs/07-reference/nodejs.md",
+  "nuclearlang/dialects/typescript/docs/07-reference/brief/typescript.md",
+  "nuclearlang/dialects/dart/docs/07-reference/brief/dart.md",
+  "nuclearlang/dialects/python/docs/07-reference/brief/python.md",
+  "nuclearlang/dialects/*/frameworks/**",
+]
+
+[[section]]
+id = "04-dragonfly"
+title = "Dragonfly: the framework, its platforms, its kinds, the tutorial"
+files = [
+  "nuclear-synapsis-framework/AGENTS.md",
+  "nuclear-synapsis-framework/README.md",
+  "nuclear-synapsis-framework/CHANGELOG.md",
+  "nuclear-synapsis-framework/docs/**",
+  "nuclear-synapsis-framework/platforms/AGENTS.md",
+  "nuclear-synapsis-framework/platforms/docs/**",
+]
+
+[[section]]
+id = "05-backend-rules"
+title = "The backend platform: its rules"
+shelf = "platforms"
+files = [
+  "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md",
+  "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md",
+]
+
+[[section]]
+id = "05-backend"
+title = "The backend platform: its project, contracts and context"
+files = [
+  "nuclear-synapsis-framework/platforms/backend/README.md",
+  "nuclear-synapsis-framework/platforms/backend/AGENTS.md",
+  "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md",
+  "nuclear-synapsis-framework/platforms/backend/docs/**",
+  "nuclear-synapsis-framework/platforms/backend/examples/**",
+]
+
+[[section]]
+id = "05-backend-dialects"
+title = "The backend dialects underneath: fastapi and nestjs, their runtimes"
+agents = false
+files = [
+  "nuclearlang/dialects/python/docs/07-reference/fastapi.md",
+  "nuclearlang/dialects/python/docs/07-reference/brief/fastapi.md",
+  "nuclearlang/dialects/python/docs/08-guides/fastapi.md",
+  "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md",
+  "nuclearlang/dialects/typescript/docs/07-reference/brief/nestjs.md",
+  "nuclearlang/dialects/typescript/docs/08-guides/nestjs.md",
+  "nuclear-synapsis-framework/platforms/backend/packages/**",
+  "nuclear-synapsis-framework/platforms/backend/checks/**",
+]
+
+[[section]]
+id = "06-mobile-rules"
+title = "The mobile platform: its rules"
+shelf = "platforms"
+files = [
+  "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md",
+  "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md",
+]
+
+[[section]]
+id = "06-mobile-dialects"
+title = "The mobile dialect underneath: flutter, its runtimes"
+agents = false
+files = [
+  "nuclearlang/dialects/dart/docs/07-reference/flutter.md",
+  "nuclearlang/dialects/dart/docs/07-reference/brief/flutter.md",
+  "nuclearlang/dialects/dart/docs/08-guides/**",
+  "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md",
+  "nuclear-synapsis-framework/platforms/mobile/docs/08-guides/**",
+  "nuclear-synapsis-framework/platforms/mobile/packages/**",
+  "nuclear-synapsis-framework/platforms/mobile/checks/**",
+]
+
+[[section]]
+id = "06-mobile"
+title = "The mobile platform: its project and context"
+files = [
+  "nuclear-synapsis-framework/platforms/mobile/README.md",
+  "nuclear-synapsis-framework/platforms/mobile/AGENTS.md",
+  "nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md",
+  "nuclear-synapsis-framework/platforms/mobile/docs/**",
+  "nuclear-synapsis-framework/platforms/mobile/examples/**",
+]
+
+[[section]]
+id = "07-web-rules"
+title = "The web platform: its rules"
+shelf = "platforms"
+files = [
+  "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md",
+  "nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md",
+]
+
+[[section]]
+id = "07-web-dialects"
+title = "The web dialect underneath: react, its runtime"
+agents = false
+files = [
+  "nuclearlang/dialects/typescript/docs/07-reference/react.md",
+  "nuclearlang/dialects/typescript/docs/07-reference/brief/react.md",
+  "nuclearlang/dialects/typescript/docs/08-guides/react.md",
+  "nuclear-synapsis-framework/platforms/web/packages/**",
+  "nuclear-synapsis-framework/platforms/web/checks/**",
+]
+
+[[section]]
+id = "07-web"
+title = "The web platform: its project and context, and the website"
+files = [
+  "nuclear-synapsis-framework/platforms/web/README.md",
+  "nuclear-synapsis-framework/platforms/web/AGENTS.md",
+  "nuclear-synapsis-framework/platforms/web/CHANGELOG.md",
+  "nuclear-synapsis-framework/platforms/web/docs/**",
+  "nuclear-synapsis-framework/platforms/web/examples/**",
+  "website/**",
+]
+
+[[section]]
+id = "10-ai"
+title = "AI: the Smart Graph, the MCP server, the Nuclear Developer, the pipeline tool and the chat, the agent skill"
+files = [
+  "tools/mcp/**",
+  "tools/cli/agent-files/**",
+  "extensions/tools/nuclear-builder/**",
+  "extensions/tools/nuclear-ai-chat/**",
+  "nuclear-graph-storage/**",
+  "nuclear-agents/**",
+]
+
+[[section]]
+id = "08-cli"
+title = "The command line tools, the code generator, the devices and the installer"
+files = [
+  "tools/**",
+  "device-emulators/**",
+  "installer/**",
+]
+
+[[section]]
+id = "09-editors"
+title = "The editors: VS Code, Android Studio, Zed, and their tools"
+files = [
+  "extensions/**",
+]
+
+[[section]]
+id = "12-tools"
+title = "The tools of the working tree: checks, evaluations, benchmarks, examples"
+agents = false
+files = [
+  "nuclear-synapsis-framework/eval/**",
+  "nuclearlang/examples/**",
+]

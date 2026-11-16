@@ -1,0 +1,36 @@
+# The VS Code extension: compiled and packaged with the language server and every dialect.
+name: extension-vscode
+
+on:
+  push:
+    branches: [main]
+    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
+  pull_request:
+    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: "Compile, the generated themes and icons, the package"
+        working-directory: extensions/vscode
+        run: |
+          npm ci --no-audit --no-fund
+          npm run compile
+          npm run theme
+          npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: extensions/vscode/*.vsix

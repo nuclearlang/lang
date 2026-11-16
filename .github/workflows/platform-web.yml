@@ -1,0 +1,34 @@
+# The web platform: the react dialect against the example, tsc, the tests, a production bundle.
+name: platform-web
+
+on:
+  push:
+    branches: [main]
+    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/web/**', '.github/workflows/platform-web.yml']
+  pull_request:
+    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/web/**', '.github/workflows/platform-web.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Node tools of the checks and the runtimes
+        run: |
+          (cd nuclearlang/tools/node && npm ci --no-audit --no-fund)
+          installer/release/build-runtimes.sh
+      - name: "The reference's equivalences"
+        working-directory: nuclearlang
+        run: python3 tools/spec-check/check.py dialects/typescript/docs/07-reference/react.md react typescript
+      - name: "tsc, the tests, vite build"
+        run: sh nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh

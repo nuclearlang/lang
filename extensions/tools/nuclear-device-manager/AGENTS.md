@@ -1,0 +1,47 @@
+# nuclear-device-manager
+
+The devices inside the editor: the **Dragonfly device** (a mobile app running in a panel of VS Code, like Android
+Studio's Running Devices) and the **web device** (a web app beside its code, at the size of a desktop, a laptop, a
+tablet or a phone), plus the *Devices* tool of the Nuclear workspace (`Ctrl+Alt+V`), which lists the open devices
+and opens as many as wanted. It works. VS Code only.
+
+The devices themselves are the project [`device-emulators/`](../../../device-emulators/AGENTS.md) (the devices the CLI and
+the editors start; today inside the CLI crate, spec 008 T4.1). The panels of this tool carry their own engine in
+TypeScript, with the same presets as the CLI's `dragonfly device`.
+
+## Where the code is today
+It moves into this folder in [spec 008, T4.4](../../../docs/04-specs/008-restructure/tasks.md).
+
+| File | What it is |
+|---|---|
+| `extensions/vscode/src/device.ts` | the Dragonfly device: the panels, the running apps, the Flutter custom device, the presets |
+| `extensions/vscode/src/webDevice.ts` | the web device's panel and its commands |
+| `extensions/vscode/src/webSession.ts` | the web device's engine; no `vscode` import |
+| `extensions/vscode/src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |
+
+## Stack
+- TypeScript; CDP over node's WebSocket; a headless Chromium (Chrome, Chromium, Brave, Edge, Vivaldi)
+- Flutter's `chrome` device for a mobile app; the dialect's dev server (Vite) for a web app
+- The Dart and Flutter extensions of VS Code, for the debug session
+
+## Commands
+Run in `extensions/vscode/`: `npm run compile`. There is no test of the devices; the web device's engine can be run
+with node without the editor ([testing](../../vscode/docs/05-standards/testing.md)).
+
+## Rules
+- Nothing stays alive when VS Code closes: every process a device starts carries the window's marker and is reaped.
+- An app lives on its own: closing a device's tab only hides it. A run never replaces a running device.
+- The devices belong to the mobile workspaces and the Devices tool; elsewhere they are parked, not ended.
+- A frame matches the device's on-screen pixels 1:1: nothing is upscaled.
+- `webSession.ts` and `cdp.ts` never import `vscode`.
+- The decisions: ADR-extensions-0002 (several devices, park, the web device), ADR-devices-0001 (the Dragonfly device).
+
+## Documents (read by task)
+| You need… | Read |
+|---|---|
+| The panels, the running apps, park and unpark, the watchdog, the processes | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
+| How a mobile app gets into a panel: the custom device, the launch, the screencast, the input | [docs/02-architecture/mobile-device.md](docs/02-architecture/mobile-device.md) |
+| The web device: its engine, its panel, its debugger | [docs/02-architecture/web-device.md](docs/02-architecture/web-device.md) |
+| The pending work, what was never tried | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
+| The Devices pane and the ▷ Run / ◉ Debug / ▭ Device pickers | [the workspace](../../vscode/docs/02-architecture/workspace.md) |
+| The CLI's devices (`dragonfly device`, `terminal-device`) | [`device-emulators/`](../../../device-emulators/AGENTS.md) |

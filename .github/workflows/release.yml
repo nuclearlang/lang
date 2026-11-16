@@ -1,9 +1,6 @@
 # The release of NuclearLang: on a tag v<version> (the version of Cargo.toml [workspace.package]) every target's archive
-# is built (tools/release/package.sh), with the VS Code extension, and published in the GitHub release that the
-# installers download from (tools/release/install.sh, install.ps1; also served by the website).
-#
-# The working tree is assembled as on a developer's machine (plan 006): this repository at the root and the other
-# repositories of the organization inside it. Their names are below.
+# is built (installer/release/package.sh), with the VS Code extension, and published in the GitHub release that the
+# installers download from (installer/release/install.sh, install.ps1; also served by the website).
 name: release
 
 on:
@@ -13,12 +10,6 @@ on:
 
 permissions:
   contents: write
-
-env:
-  ORG: nuclearlang
-  # folder:repository of the repositories inside this one
-  # (the AI services ride in every archive, ADR-0106: the graph, the Developer and, inside it, its knowledge base)
-  INSIDE: dragonfly:dragonfly dragonfly-mobile:dragonfly-mobile dragonfly-backend:dragonfly-backend dragonfly-web:dragonfly-web nuclear-vscode:nuclear-vscode nuclear-graph:nuclear-graph nuclear-developer:nuclear-developer nuclear-developer/data:nuclear-knowledge
 
 jobs:
   archive:
@@ -38,47 +29,38 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - name: The repositories inside this one
-        run: |
-          for pair in $INSIDE; do
-            git clone --depth 1 ${GITHUB_REF_TYPE:+--branch "$GITHUB_REF_NAME"} "https://github.com/$ORG/${pair#*:}" "${pair%%:*}" \
-              || git clone --depth 1 "https://github.com/$ORG/${pair#*:}" "${pair%%:*}"
-          done
       - uses: actions/setup-node@v4
         with:
           node-version: 26
       - name: The JavaScript runtimes (their dist/)
-        run: tools/release/build-runtimes.sh
+        run: installer/release/build-runtimes.sh
       - name: Rust target
         run: rustup target add ${{ matrix.target }}
       - name: musl (static Linux binaries, any distribution)
         if: contains(matrix.target, 'musl')
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - name: Archive
-        run: tools/release/package.sh ${{ matrix.target }}
+        run: installer/release/package.sh ${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
           name: archive-${{ matrix.target }}
           path: |
-            dist/*.tar.gz
-            dist/*.zip
-            dist/*.sha256
+            installer/dist/*.tar.gz
+            installer/dist/*.zip
+            installer/dist/*.sha256
 
   vscode:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: The repositories inside this one
-        run: |
-          for pair in $INSIDE; do git clone --depth 1 "https://github.com/$ORG/${pair#*:}" "${pair%%:*}"; done
       - uses: actions/setup-node@v4
         with:
           node-version: 26
       - name: The extension (its bundled server is the Linux one; the installers link the platform's own nuclear-lsp)
         run: |
           version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
-          cd nuclear-vscode && npm ci --no-audit --no-fund && npm run package
-          mkdir -p ../dist && cp nuclearlang-*.vsix "../dist/nuclearlang-$version.vsix"
+          cd extensions/vscode && npm ci --no-audit --no-fund && npm run package
+          mkdir -p ../../dist && cp nuclearlang-*.vsix "../../dist/nuclearlang-$version.vsix"
       - uses: actions/upload-artifact@v4
         with:
           name: vscode
@@ -94,7 +76,7 @@ jobs:
           path: dist
           merge-multiple: true
       - name: The installers, also as assets of the release
-        run: cp tools/release/install.sh tools/release/install.ps1 dist/
+        run: cp installer/release/install.sh installer/release/install.ps1 dist/
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*

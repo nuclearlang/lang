@@ -1,4 +1,5 @@
-# The language: the compiler, the CLI and the language server, the specs of the language dialects.
+# Every Rust crate of the tree (the compiler, the language server, the command line tools) against every dialect and
+# platform example, and the equivalences of the language dialects' references.
 name: ci
 
 on:
@@ -15,25 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: nuclear
-      - name: The other repositories of the working tree
-        run: |
-          git clone --depth 1 https://github.com/nuclearlang/dragonfly nuclear/dragonfly
-          git clone --depth 1 https://github.com/nuclearlang/dragonfly-mobile nuclear/dragonfly-mobile
-          git clone --depth 1 https://github.com/nuclearlang/dragonfly-backend nuclear/dragonfly-backend
-          git clone --depth 1 https://github.com/nuclearlang/dragonfly-web nuclear/dragonfly-web
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
       - name: "Tests and clippy"
-        working-directory: nuclear
         run: |
           cargo test
           cargo clippy --all-targets -- -D warnings
-      - name: "The specs' equivalences"
-        working-directory: nuclear
+      - name: "The references' equivalences"
+        working-directory: nuclearlang
         run: |
-          python3 tools/spec-check/check.py spec/typescript.md typescript typescript
-          python3 tools/spec-check/check.py spec/dart.md dart dart
-          python3 tools/spec-check/check.py spec/python.md python python
+          for l in typescript dart python; do
+            python3 tools/spec-check/check.py dialects/$l/docs/07-reference/$l.md $l $l
+          done

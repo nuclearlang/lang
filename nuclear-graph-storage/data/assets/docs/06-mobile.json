@@ -1,0 +1,2111 @@
+{
+ "shelf": "docs",
+ "origin": "generated",
+ "generator": "06-mobile",
+ "about": "The mobile platform: its project and context",
+ "rows": [
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#commands",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Commands",
+   "summary": "From the root of the tree: cargo test # builds the examples, compares the goldens UPDATE_GOLDEN=1 cargo test # rewrites the goldens after a wanted change; review the diff python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py # the 27 Dragonfly examples of the flutter…",
+   "body": [
+    "From the root of the tree:",
+    "",
+    "```sh",
+    "cargo test                           # builds the examples, compares the goldens",
+    "UPDATE_GOLDEN=1 cargo test           # rewrites the goldens after a wanted change; review the diff",
+    "python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py         # the 27 Dragonfly examples of the flutter reference",
+    "python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py --fix   # rewrites them from the example project",
+    "FLUTTER=<sdk>/bin/flutter nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]   # single-file examples through `flutter analyze`",
+    "```",
+    "",
+    "From this folder:",
+    "",
+    "```sh",
+    "(cd packages/dragonfly && flutter pub get && flutter test && flutter analyze)    # the runtime: 64 tests",
+    "(cd examples/examples-flutter-dialect/tasks_app && dragonfly build && dragonfly test)",
+    "```",
+    "",
+    "The last one needs the installed `nuclear` and `dragonfly` (`installer/install.sh`) and the backend example built",
+    "(`nuclear build nuclear-synapsis-framework/platforms/backend/examples/examples-backend/tasks_api`). What each check",
+    "covers: [docs/05-standards/testing.md](docs/05-standards/testing.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#documents-open-only-the-one-the-task-needs.51228e",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Documents (open only the one the task needs)",
+   "summary": "Documents (open only the one the task needs)",
+   "body": [
+    "| Read when | Document |",
+    "|---|---|",
+    "| You need what the platform is for and what it leaves out | [docs/00-context/vision.md](docs/00-context/vision.md) |",
+    "| A word of the platform is unclear (kind, facade, twin, golden...) | [docs/00-context/glossary.md](docs/00-context/glossary.md) |",
+    "| You look for what is untested, pending or waiting for the user | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
+    "| You need the parts of the project, the contract's sections, the examples or the CI | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
+    "| You touch a library, a version, the type definitions or who uses this project | [docs/02-architecture/dependencies.md](docs/02-architecture/dependencies.md) |",
+    "| You work on a project's layout, `config.nuc`, assets, kind by folder or the architecture rules | [docs/02-architecture/project.md](docs/02-architecture/project.md) |",
+    "| You need what a kind or a decorator does | [docs/02-architecture/kinds.md](docs/02-architecture/kinds.md) |",
+    "| You change or use a service of the `dragonfly` package, or the `genkit` runtime | [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) |",
+    "| You touch `@primary`, `saveLocal`, `<method>AsLocal()` or the local tables | [docs/02-architecture/local-database.md](docs/02-architecture/local-database.md) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#documents-open-only-the-one-the-task-needs.a5084a",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Documents (open only the one the task needs)",
+   "summary": "Documents (open only the one the task needs)",
+   "body": [
+    "| You ask why something is the way it is | [docs/03-adr/README.md](docs/03-adr/README.md) |",
+    "| You change this project: conventions of the contract, the runtime and the docs | [docs/05-standards/coding.md](docs/05-standards/coding.md) |",
+    "| You run or add a check, a golden or a test | [docs/05-standards/testing.md](docs/05-standards/testing.md) |",
+    "| You add networking, storage, logging, events or tokens, or review for security and performance | [docs/05-standards/security.md](docs/05-standards/security.md) |",
+    "| You changed the runtime's public API, an example's output, or publish a package | [docs/06-runbooks/runtime-release.md](docs/06-runbooks/runtime-release.md) |",
+    "| You need the platform's normative rules (project, kinds, architecture, generators) | [docs/07-reference/mobile.md](docs/07-reference/mobile.md) |",
+    "| You need the API of the `dragonfly` package | [docs/07-reference/dragonfly.md](docs/07-reference/dragonfly.md) |",
+    "| You need the short sheet an agent gets to write an app | [docs/07-reference/brief/mobile.md](docs/07-reference/brief/mobile.md) |",
+    "| You use Genkit in an app | [docs/08-guides/genkit.md](docs/08-guides/genkit.md) |",
+    "| You need how a kind is written in the target, the generated files, the CLI or the editors | [the flutter reference](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#folders",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Folders",
+   "summary": "forms, dialogs, translations, splash, test helpers).",
+   "body": [
+    "- `platform.toml`: the contract of the platform and what `dragonfly gen` writes.",
+    "- `packages/dragonfly/`: the runtime of an app (http, local database, events, session, ACL, network, routes, logs,",
+    "  forms, dialogs, translations, splash, test helpers).",
+    "- `packages/dragonfly_genkit/`: the runtime of the `genkit` plugin (AI).",
+    "- `examples/examples-flutter-dialect/`: the example projects (`clean-flutter-project`, `genkit-assistant`,",
+    "  `tasks_app`) and four single-file examples; `examples/expected/`: the goldens of the projects.",
+    "- `checks/`: `analyze-flutter.sh`, `spec-check-dragonfly.py`.",
+    "- `docs/`: the context documentation (the table below)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#rules-of-this-project.d2b137",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Rules of this project",
+   "summary": "architect, framework architect.",
+   "body": [
+    "- What cannot be read from the code or the documents is asked, never invented.",
+    "- Roles the user asked for when working here: Flutter architect, Flutter and native optimizer, transpiler",
+    "  architect, framework architect."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#rules-of-this-project.ddc8e9",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Rules of this project",
+   "summary": "target language; a project's Nuclear never changes between the dialects of the platform (root rule 11).",
+   "body": [
+    "- **The platform is Nuclear only.** Where a document describes what a project writes it names no dialect and no",
+    "  target language; a project's Nuclear never changes between the dialects of the platform (root rule 11).",
+    "- **The contract comes first.** A kind, a decorator or a plugin exists when `platform.toml` lists it; the loader",
+    "  refuses a dialect that leaves the list. A new one is added here, then in every dialect.",
+    "- **Data, not code.** The platform adds kinds and decorators only as data; language rules come from the base. A",
+    "  generic mechanism belongs in the compiler; nothing specific to this platform or to its toolkit ever does.",
+    "- **The runtime works on web**: no `dart:isolate` nor `dart:io` without a `kIsWeb` guard.",
+    "- **Never edit by hand**: `docs/07-reference/` and `docs/08-guides/` without their tools (they are checked and",
+    "  embedded in binaries), the Dragonfly blocks of the flutter reference (`--fix` writes them), `examples/expected/`",
+    "  (`UPDATE_GOLDEN=1`), any `build/` folder.",
+    "- A change of the public API of a runtime package regenerates its type definitions",
+    "  ([docs/06-runbooks/runtime-release.md](docs/06-runbooks/runtime-release.md)).",
+    "- English everywhere. A change the user can see updates its documents in the same change. A decision is a new ADR",
+    "  in `docs/03-adr/`; pending work is `docs/01-product/roadmap.md` and nowhere else."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#stack",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly — Stack",
+   "summary": "(Dart SDK `^3.12.0`, Flutter `>=3.44.0`).",
+   "body": [
+    "- Contract: TOML (`platform.toml`), read by the compiler's loader (`nuclearlang/crates/nuclear-dialect`).",
+    "- Runtime: two packages for Flutter in Dart, `packages/dragonfly` 0.1.0 and `packages/dragonfly_genkit` 0.1.0",
+    "  (Dart SDK `^3.12.0`, Flutter `>=3.44.0`).",
+    "- Examples: Nuclear projects and single files with their expected output.",
+    "- Checks: one bash script, one Python script. CI: `.github/workflows/platform-mobile.yml`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#the-mobile-platform-of-dragonfly",
+   "type": "readme",
+   "title": "The mobile platform of Dragonfly",
+   "summary": "Apps for Android, iOS, desktop and web through one UI toolkit, written once in Nuclear by the user and the agent.",
+   "body": [
+    "Apps for Android, iOS, desktop and web through one UI toolkit, written once in Nuclear by the user and the agent.",
+    "This project holds what is the same for every dialect of the platform: its contract (`platform.toml`: kinds,",
+    "decorators, plugins, layout, generators), its runtime packages (`dragonfly`, `dragonfly_genkit`), its examples and",
+    "its checks. ADR key: `mobile`.",
+    "",
+    "Its only dialect today is `flutter`. It lives in `nuclearlang/dialects/dart/frameworks/flutter/` and is documented",
+    "by the [`dart` dialect project](../../../nuclearlang/dialects/dart/AGENTS.md): how the code comes out is read there,",
+    "never here. What the three platforms share (what a contract is, what the loader checks) is",
+    "[`platforms/`](../AGENTS.md); the framework is [`nuclear-synapsis-framework/`](../../AGENTS.md); the rules of the",
+    "whole tree are the root [`AGENTS.md`](../../../AGENTS.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/AGENTS.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md#changelog",
+   "type": "changelog",
+   "title": "Changelog",
+   "summary": "All notable changes to dragonfly-mobile are written here; versions follow Semantic Versioning.",
+   "body": "All notable changes to dragonfly-mobile are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md#unreleased",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "without the AI plugin.",
+   "body": [
+    "- `dragonfly add|remove <package>` is `flutter add|remove` (ADR-lang-0008); adding a package no longer fails in an app",
+    "  without the AI plugin.",
+    "- First public version.",
+    "- `[[generators]]` in the platform: `dragonfly gen` writes a resource's models, repository, use cases, screen with its state manager and tests (ADR-codegen-0001).",
+    "- `[[generators.usecase]]`: `dragonfly gen usecase` adds a use case's alias to its component's facade and, with `--calls`, writes a use case over a repository method (ADR-codegen-0001).",
+    "- `[[generators.resource]]`: the repository is merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#dragonfly-mobile",
+   "type": "readme",
+   "title": "Dragonfly mobile",
+   "summary": "The mobile platform of Dragonfly: apps for Android, iOS, desktop and the web written once in Nuclear.",
+   "body": [
+    "The mobile platform of Dragonfly: apps for Android, iOS, desktop and the web written once in Nuclear. This folder",
+    "holds the platform's contract (`platform.toml`), its runtime for Flutter — the `dragonfly` package (repositories",
+    "over dio, state managers, events, sessions, ACL, routing, forms, a local database) and `dragonfly_genkit` for AI —",
+    "and its examples. Its dialect `flutter` (TOML + templates read by the `nuclear` compiler) is in",
+    "[`nuclearlang/dialects/dart/frameworks/flutter/`](../../../nuclearlang/dialects/dart/frameworks/flutter/).",
+    "",
+    "Start with the [Dragonfly tutorial](../../docs/08-guides/tutorial.md) and",
+    "[the rules of the platform](docs/07-reference/mobile.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#license",
+   "type": "readme",
+   "title": "Dragonfly mobile — License",
+   "summary": "Apache-2.0. By contributing you agree that your contribution is licensed under it.",
+   "body": "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it.",
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#what-is-inside",
+   "type": "readme",
+   "title": "Dragonfly mobile — What is inside",
+   "summary": "What is inside",
+   "body": [
+    "| Folder | What |",
+    "|---|---|",
+    "| `platform.toml` | the contract: the kinds, decorators and plugins every dialect of the platform implements; where each file goes; what `dragonfly gen` writes |",
+    "| `packages/dragonfly/` | the runtime of an app ([its API](docs/07-reference/dragonfly.md)) |",
+    "| `packages/dragonfly_genkit/` | the runtime of the `genkit` plugin ([guide](docs/08-guides/genkit.md)) |",
+    "| `examples/` | example apps and their expected output |",
+    "| `checks/` | the scripts that check the examples and the reference |",
+    "| `docs/` | the documentation, for people and agents ([AGENTS.md](AGENTS.md) lists it) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#working-on-it",
+   "type": "readme",
+   "title": "Dragonfly mobile — Working on it",
+   "summary": "It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree: git clone https://github.com/nuclearlang/nuclear && cd nuclear installer/install.sh The checks before a change, and what each one covers: docs/05-standards/testing.md.",
+   "body": [
+    "It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree:",
+    "",
+    "```sh",
+    "git clone https://github.com/nuclearlang/nuclear && cd nuclear",
+    "installer/install.sh",
+    "```",
+    "",
+    "The checks before a change, and what each one covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).",
+    "Conventions: [docs/05-standards/coding.md](docs/05-standards/coding.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md#glossary.441a69",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| Event | The kind `event`: a typed global event with JSON fields | `shared/events/` |",
+    "| Converter | The kind `converter`: how a field's value is read from and written to JSON | `shared/converters/` |",
+    "| Local table | The table on the device of a model that has `@primary` | [local-database.md](../02-architecture/local-database.md) |",
+    "| Twin | `<method>AsLocal()`: the copy of a repository's GET method that answers from the device and never sends a request | [local-database.md](../02-architecture/local-database.md) |",
+    "| Runtime | The packages an app runs on: `dragonfly`, and `dragonfly_genkit` with the `genkit` plugin | `packages/` |",
+    "| Generated tests | The tests the build writes by itself for models, repositories, routes and screens | [testing.md](../05-standards/testing.md) |",
+    "| Golden | The expected output of an example, compared by `cargo test` | `examples/expected/`, the `.dart` beside a single-file example |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md#glossary.5aaa1a",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| Component | A business unit in `components/<name>/` with its own config, data, domain and presentation. Closed: another component sees only what the architecture rules allow | `components/` |",
+    "| Facade | The `appcomponent` of a component: what the screens and the other components see of it, usually an alias per use case | `components/<c>/<c>_component.nuc` |",
+    "| Global component | The kind `component`, in `shared/components/`: anyone uses it and its `@on(Event)` methods always receive | `shared/components/` |",
+    "| Connection | What a config declares to reach the outside: `Http`, `WebSocket`, an AI provider. Named with `connectionName`; the one without a name is the default | `appConfig`, `config` |",
+    "| State model | The states of a screen: each field is one state; a boolean field is a state without data | `presentation/<screen>/state_models/` |",
+    "| State manager | The kind `statemanager`: the state of one screen; its `@state` methods emit a state of its state model | `presentation/<screen>/managers/` |",
+    "| View | A `stateless` or a `stateful`. Only views use the UI toolkit's context and navigate | `presentation/` |",
+    "| Screen | A view with `@screen(route, ...)` | `presentation/<screen>/`, `shared/screens/` |",
+    "| Guard | The kind `guard`: an own access check, `canActivate()`, sync or async | `shared/guards/` |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md#glossary.764075",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Use these words, with these meanings, in code, documents and conversations.",
+   "body": "Use these words, with these meanings, in code, documents and conversations.",
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md#glossary.cfa241",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| Term | Meaning | Where it appears |",
+    "|---|---|---|",
+    "| Platform | What the user and the agent write: kinds, decorators, folders, `config.nuc`, plugins and tests, in Nuclear, the same for every dialect. Here: `mobile` | `platform.toml` |",
+    "| Dialect | The language and the UI toolkit the code comes out in. Today only `flutter` | `nuclearlang/dialects/dart/frameworks/flutter/` |",
+    "| Contract of the platform | The kinds, decorators and plugins every dialect of the platform must implement, identically | `platform.toml`, `[platform]` |",
+    "| Contract of a backend | What a backend written in Nuclear publishes; `contracts(...)` in `config.nuc` generates `contracts/<name>/` from it (ADR-synapsis-0006). Not the contract of the platform | `examples/examples-flutter-dialect/tasks_app` |",
+    "| Kind | The word that says what a declaration is (`repository`, `usecase`, `stateless`...). In some folders the folder gives it and no word is written | `platform.toml` `kinds`, `[layout]` |",
+    "| Decorator | `@name(...)` on a declaration, a method or a field; the list a project may write is the contract's | `platform.toml` `decorators` |",
+    "| Plugin | An optional part an app enables in `config.nuc` (`plugins(genkit = true)`); an app that does not enable it does not carry its packages | `platform.toml` `plugins` |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md#problem",
+   "type": "context",
+   "title": "Vision — Problem",
+   "summary": "Between its screens and its backend, an app carries a lot of code that is the same in every app: http calls with cache and retries, JSON mapping, state handling, the injector, session, access control, events, routes, forms, translations, a local database, tests.",
+   "body": [
+    "Between its screens and its backend, an app carries a lot of code that is the same in every app: http calls with",
+    "cache and retries, JSON mapping, state handling, the injector, session, access control, events, routes, forms,",
+    "translations, a local database, tests. The mobile platform lets a project write **only its business logic**, in",
+    "Nuclear; constructors, overrides, registration in the injector, serialization, http calls, state handling and",
+    "imports are written by the transpiler, and what the UI toolkit lacks comes from the platform's runtime.",
+    "",
+    "The golden rule of the whole tree applies first: performance, speed and readability of the syntax. The platform's",
+    "own rules are the normative text: [mobile.md §3](../07-reference/mobile.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md#users",
+   "type": "context",
+   "title": "Vision — Users",
+   "summary": "tests, identical for every dialect of the platform.",
+   "body": [
+    "- **The user and the agent**, who write an app in Nuclear: kinds, decorators, folders, `config.nuc`, plugins and",
+    "  tests, identical for every dialect of the platform. The agent's short sheet is",
+    "  [brief/mobile.md](../07-reference/brief/mobile.md).",
+    "- **The author of a dialect**, who implements the contract (`platform.toml`) for a language and a UI toolkit.",
+    "- **A Flutter developer**, who may use the `dragonfly` package by hand in any Flutter app: it is an independent",
+    "  package."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md#what-it-does-not-do",
+   "type": "context",
+   "title": "Vision — What it does not do",
+   "summary": "data around: the layers exist in the generated code.",
+   "body": [
+    "- It does not describe how the target code is written: that is the dialect's.",
+    "- A project's Nuclear names no dialect and no storage engine, and it has no interfaces nor classes that only pass",
+    "  data around: the layers exist in the generated code.",
+    "- A second dialect does not exist yet: `react-native` and `kotlin-multiplatform` are planned, not built.",
+    "- The local database is for what a phone shows, not for millions of rows.",
+    "- Translations use no third-party library.",
+    "- A backend and a web app are the other platforms of the framework",
+    "  ([`backend`](../../../backend/AGENTS.md), [`web`](../../../web/AGENTS.md)); an app reads a backend written in",
+    "  Nuclear through its contract (ADR-synapsis-0006)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md#what-it-is",
+   "type": "context",
+   "title": "Vision — What it is",
+   "summary": "Apps for Android, iOS, desktop and web through one UI toolkit.",
+   "body": [
+    "Apps for Android, iOS, desktop and web through one UI toolkit. Three parts (ADR-dart-0001, ADR-dart-0001):",
+    "",
+    "1. the **contract and its dialects**: `platform.toml` here; `flutter`, the only dialect today, in the",
+    "   [`dart` dialect project](../../../../../nuclearlang/dialects/dart/AGENTS.md). Kinds and decorators add",
+    "   behaviour: a `repository` with `@get` is the http call, the mapping and the cache;",
+    "2. the **runtime**: the `dragonfly` package, and `dragonfly_genkit` for the `genkit` plugin;",
+    "3. the **CLI and the editor extensions**, each its own project",
+    "   ([`tools/cli/`](../../../../../tools/cli/AGENTS.md), [`extensions/`](../../../../../extensions/AGENTS.md))."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md#inside-the-tree",
+   "type": "context",
+   "title": "Dependencies — Inside the tree",
+   "summary": "Inside the tree",
+   "body": [
+    "| Consumer | Depends on | Notes |",
+    "|---|---|---|",
+    "| The dialect `flutter` (`nuclearlang/dialects/dart/frameworks/flutter/`) | `platform.toml` | names the platform; refused by the loader when it leaves the contract |",
+    "| A generated app (`build/app`) | `packages/dragonfly` | the dialect's generated code calls its API |",
+    "| An app with the `genkit` plugin | `packages/dragonfly_genkit` | added to the app only when the plugin is enabled |",
+    "| `packages/dragonfly_genkit` | `packages/dragonfly` | a path dependency (`../dragonfly`) |",
+    "| The type definitions `nuclearlang/dialects/dart/defs/{dragonfly,dragonfly_genkit}/0.1.0/` | the public API of the two packages | written by `nuclearlang/tools/defs/generate.sh`; used by the transpiler and the editor |",
+    "| `checks/analyze-flutter.sh` | `nuclearlang/tools/defs/flutter_project` (its host project), the `nuclear` binary | |",
+    "| `checks/spec-check-dragonfly.py` | `nuclearlang/dialects/dart/docs/07-reference/flutter.md`, `examples/` | |",
+    "| The compiler's tests (`nuclear-transpile`, `nuclear-lsp`) | `examples/` | goldens and project tests |",
+    "| `examples/examples-flutter-dialect/tasks_app` | the backend example `platforms/backend/examples/examples-backend/tasks_api` | its contract (ADR-synapsis-0006) |",
+    "| The `dragonfly` CLI | `platform.toml` (`[layout]`, the generators), the debug text layer of the runtime | the terminal device reads `__dragonflyTextLayer` |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md#the-dragonfly-genkit-package",
+   "type": "context",
+   "title": "Dependencies — The `dragonfly_genkit` package",
+   "summary": "`dragonfly` (path), `genkit ^1.0.1`, `schemantic ^1.0.0`; `publish_to: none`.",
+   "body": [
+    "`dragonfly` (path), `genkit ^1.0.1`, `schemantic ^1.0.0`; `publish_to: none`. The provider packages (Firebase AI,",
+    "Google AI, Vertex AI, OpenAI, Anthropic) are added to an app by its plugin, not by this package's pubspec."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md#the-dragonfly-package",
+   "type": "context",
+   "title": "Dependencies — The `dragonfly` package",
+   "summary": "Versions are `packages/dragonfly/pubspec.yaml`; what each library is used for, class by class, is dragonfly.md §1. The package re-exports nothing of them.",
+   "body": [
+    "Versions are `packages/dragonfly/pubspec.yaml`; what each library is used for, class by class, is",
+    "[dragonfly.md §1](../07-reference/dragonfly.md). The package re-exports nothing of them.",
+    "",
+    "| Use | Libraries |",
+    "|---|---|",
+    "| State | `bloc`, `flutter_bloc` |",
+    "| Http | `dio` |",
+    "| Injector | `get_it` |",
+    "| Routes | `go_router` |",
+    "| Network status | `connectivity_plus` |",
+    "| Session and the key of the local database | `flutter_secure_storage` |",
+    "| Local database | `hive_ce` |",
+    "| Models' JSON | `json_annotation` |",
+    "| Translations | `flutter_localizations` (SDK), `path_provider`, `web` |",
+    "| `Result` and test helpers (`testing.dart`) | `fpdart` (`Result` is its `Either`), `mocktail`, `flutter_test` (SDK) |",
+    "",
+    "Environment: Dart SDK `^3.12.0`, Flutter `>=3.44.0`. Lints: `flutter_lints`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md#what-an-app-gets-besides-the-runtime",
+   "type": "context",
+   "title": "Dependencies — What an app gets besides the runtime",
+   "summary": "The dialect adds these to every generated app; a project never lists them in `config.nuc` (ADR-mobile-0001): `dragonfly`, `flutter_bloc`, `fpdart`, `go_router`, `json_annotation`; to generate code and for tests `build_runner`, `json_serializable`, `mocktail`, `bloc_test`, `integration_test`;…",
+   "body": [
+    "The dialect adds these to every generated app; a project never lists them in `config.nuc`",
+    "([ADR-mobile-0001](../03-adr/0001-project-manifest-packages-and-assets.md)): `dragonfly`, `flutter_bloc`, `fpdart`,",
+    "`go_router`, `json_annotation`; to generate code and for tests `build_runner`, `json_serializable`, `mocktail`,",
+    "`bloc_test`, `integration_test`; `flutter_native_splash` with a `@splash`. The full list of an app is its",
+    "`build/app/pubspec.yaml`. The list itself is the dialect's",
+    "([flutter reference §3.1](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md))."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md#why-these",
+   "type": "context",
+   "title": "Dependencies — Why these",
+   "summary": "Why these",
+   "body": [
+    "| Choice | Decision |",
+    "|---|---|",
+    "| `json_serializable` + `build_runner` for JSON | [ADR-mobile-0003](../03-adr/0003-json-models-names-and-converters.md) |",
+    "| `go_router`, used from views only | [ADR-mobile-0002](../03-adr/0002-screens-routes-dialogs-and-splash.md) |",
+    "| `mocktail`, `bloc_test` for tests | [ADR-mobile-0004](../03-adr/0004-tests-in-nuclear.md) |",
+    "| `hive_ce` for the local database | [ADR-mobile-0006](../03-adr/0006-local-database.md) |",
+    "| `fpdart` for `Result` | ADR-lang-0006 |",
+    "| Genkit Dart for AI | ADR-synapsis-0004 |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md#kinds-and-decorators.6c2632",
+   "type": "context",
+   "title": "Kinds and decorators",
+   "summary": "What each kind is for.",
+   "body": [
+    "What each kind is for. The list is the contract's (`platform.toml`); the index by area is",
+    "[mobile.md §2](../07-reference/mobile.md); each kind's full rules and its output are the",
+    "[flutter reference §5, §6 and §8](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md); a worked",
+    "example of every piece is the [brief](../07-reference/brief/mobile.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md#kinds-and-decorators.702564",
+   "type": "context",
+   "title": "Kinds and decorators",
+   "summary": "Kinds and decorators",
+   "body": [
+    "| `usecase` | one method `exec`, always returns `Result`; guards `@requires(internet, session)` and `@acl(roles, permissions, guards)` |",
+    "| `appcomponent` | the facade: exposes the component's functions, usually aliases `getOne() = GetOneCharacterUseCase.exec` |",
+    "| `service`, `aggregate` | helpers of use cases |",
+    "| `statemodel` | each field is a state (a boolean is a state without data); `initial` always exists; generates a typed `<Model>Builder<Manager>` |",
+    "| `statemanager` | a screen's state: `@stateModel(M)`, `@state(M.field)` emits that state, `@before(f)` / `@after(f)`; a `@state` method that returns `Result` emits the error with the `Err` |",
+    "| `stateless` / `stateful` + `@screen` | `@screen(route, providers, loggedIn = { forward }, acl = { roles, permissions, guards, forward }, shell = { widget, tab }, notFound, transition = ScreenTransition.x)`; `@splash(color!, image)` is the native splash ([ADR-mobile-0002](../03-adr/0002-screens-routes-dialogs-and-splash.md)) |",
+    "| `event` | a typed global event (`shared/events/`), with JSON fields only and a name it travels by |",
+    "| `component` | a global component (`shared/components/`, ADR-synapsis-0003): anyone uses it; its `@on(Event)` methods always receive |",
+    "| `guard` | `canActivate()` with injected dependencies, like NestJS; sync or async (`~`) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md#kinds-and-decorators.c3aabd",
+   "type": "context",
+   "title": "Kinds and decorators",
+   "summary": "Kinds and decorators",
+   "body": [
+    "| `form` / `formmanager` | a form model with `@required @email @url @minLength @maxLength @min @max @pattern @matches` (each with `message`); `@form(F)`, `@validate(\"field\")` is a remote validation with debounce (ADR-synapsis-0005) |",
+    "| `tests` / `integration` | `@mock([X])`, `@test`, `@states`, `@widget`, `@offline`; a method without a decorator is setUp / tearDown; `X.m()` is `inject<X>().m()`; `Result` does not propagate ([ADR-mobile-0004](../03-adr/0004-tests-in-nuclear.md)) |",
+    "| `tools`, `chat`, `flow`, `remote`, `knowledge` | the AI kinds of the `genkit` plugin, with `@remote`, `@flow`, `@stream` (ADR-synapsis-0004; [guide](../08-guides/genkit.md)) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md#kinds-and-decorators.f8e3ca",
+   "type": "context",
+   "title": "Kinds and decorators",
+   "summary": "Kinds and decorators",
+   "body": [
+    "| Kind | Rule |",
+    "|---|---|",
+    "| `appConfig` / `config` | global / per-component configuration: `Http(connectionName, baseUrl, timeouts, interceptors)`, `WebSocket(uri, connectionName, interceptors)`, global services; `logColor`; `local: LocalDatabase` |",
+    "| `model` | only the definition; the transpiler writes the immutable class, the JSON mapping and equality. Generics `Page<T>` (ADR-synapsis-0005). `@key(\"json_name\")`; `@Converter` on a field ([ADR-mobile-0003](../03-adr/0003-json-models-names-and-converters.md)). `@primary` (+ `@created`, `@updated`, `@entity(\"table\")`) gives it a local table ([local-database.md](local-database.md)) |",
+    "| `converter` | `fromJson(json: J) T` + `toJson(value: T) J` (+ optional `sample() T` for the generated tests); in `shared/converters/`, visible everywhere |",
+    "| `repository` | `@repository(path, connection, saveLocal)`; methods `@get/@post/@put/@patch/@delete(path, headers = {...}, cache, cacheKey, ttl, retry, local)`. A cached method generates `purge<Method>()`; `purgeCache(key)` always exists. Undecorated parameters: to the path if `:name`, else the query (GET/DELETE) or the body (POST/PUT/PATCH); `@path`, `@query`, `@body` force it. Automatic retries only on GET, PUT and DELETE. `saveLocal` / `local` and the `<method>AsLocal()` twins: [local-database.md](local-database.md) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md#rules-that-cross-kinds",
+   "type": "context",
+   "title": "Kinds and decorators — Rules that cross kinds",
+   "summary": "editor lists only the kinds of the project's platform.",
+   "body": [
+    "- `Result<E, T>` is error first (ADR-lang-0006); `.ok()` / `.error()` by what the callback returns (ADR-lang-0006).",
+    "- Navigation is `context.goTo / pushTo / goBack(Screen(...))`, only in views.",
+    "- A decorator removed from the platform is `N0309` with its replacement: `@generated` is `@primary(generated = true)`.",
+    "- Every kind and decorator has its entry in the dialect's `docs.toml` (ADR-lang-0010): the editor shows it, and the",
+    "  editor lists only the kinds of the project's platform."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md#where-to-see-each-one-written",
+   "type": "context",
+   "title": "Kinds and decorators — Where to see each one written",
+   "summary": "In `examples/examples-flutter-dialect/clean-flutter-project/`: `shared/models/page.nuc` (`Page<T>`, `PageInfo`), `components/episodes/domain/models/episode.nuc` with `shared/converters/date_converter.nuc` (a converter on a field), `shared/screens/start_screen.nuc` (the `@splash`, route `/start`,…",
+   "body": [
+    "In `examples/examples-flutter-dialect/clean-flutter-project/`: `shared/models/page.nuc` (`Page<T>`, `PageInfo`),",
+    "`components/episodes/domain/models/episode.nuc` with `shared/converters/date_converter.nuc` (a converter on a",
+    "field), `shared/screens/start_screen.nuc` (the `@splash`, route `/start`, the initial route),",
+    "`shared/guards/premium_guard.nuc`, `shared/events/`, `shared/components/force_logout_component.nuc`,",
+    "`components/session/presentation/login/` (a form, its form manager, a state manager), `test/` and",
+    "`integration_test/`. The AI kinds: `examples/examples-flutter-dialect/genkit-assistant/components/assistant/`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/kinds.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#in-the-runtime",
+   "type": "context",
+   "title": "The local database — In the runtime",
+   "summary": "`packages/dragonfly/lib/src/local/local.dart`.",
+   "body": [
+    "`packages/dragonfly/lib/src/local/local.dart`.",
+    "",
+    "- `Local`: the registry and the storage. One box per table, the same engine on every platform (a file per box on",
+    "  Android, iOS, Linux, macOS and Windows; IndexedDB on web). `LocalDatabase(encrypted)` comes from the configs'",
+    "  `local`, per component (`configure` / `settings`, the table's `component`). The AES key is made at the first",
+    "  encrypted box and kept in the secure storage. `memory` keeps the boxes in memory, unencrypted, for tests.",
+    "  `store` / `recall` use a calls box that remembers which rows each call (name, url and query) answered.",
+    "- `LocalTable<T>`: CRUD and the query builder over JSON rows (the model's own JSON mapping, nested objects",
+    "  intact); the box is `dragonfly_<name>`. `putRow` stamps `created` / `updated` (ISO-8601 texts) and gives",
+    "  `generated` keys.",
+    "- `LocalQuery<T>` and the operators as top-level functions.",
+    "- `NotFound`: a `RepositoryError`, like `HttpError`; `attempt` catches both.",
+    "- `Repository.send(local:)`, `recall`, `target`, `local<T>()`, `saveLocal`.",
+    "- `Dragonfly.reset` closes the database; `DragonflyTest.start` sets `memory`.",
+    "- The dialect writes the table in the model and registers it with its component at startup; nothing generated",
+    "  names the engine, so it can change in the package without touching the transpiler or any `.nuc`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#limits",
+   "type": "context",
+   "title": "The local database — Limits",
+   "summary": "A table is loaded in memory: it is for what a phone shows, not for millions of rows.",
+   "body": [
+    "A table is loaded in memory: it is for what a phone shows, not for millions of rows. Turning `encrypted` on or off",
+    "after the first run needs the tables cleared. On web the key lives in the browser's storage, weaker than a phone's",
+    "keystore. The open limits are in the [roadmap](../01-product/roadmap.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#the-local-database",
+   "type": "context",
+   "title": "The local database",
+   "summary": "The backend's ORM on the device: the same words as a backend entity and its query builder, 100 % local.",
+   "body": [
+    "The backend's ORM on the device: the same words as a backend entity and its query builder, 100 % local. The rule",
+    "is [mobile.md §3, rule 6](../07-reference/mobile.md); the decision and what was rejected,",
+    "[ADR-mobile-0006](../03-adr/0006-local-database.md); the classes, [dragonfly.md §3.2](../07-reference/dragonfly.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#what-a-project-writes.3b444f",
+   "type": "context",
+   "title": "The local database — What a project writes",
+   "summary": "What a project writes",
+   "body": [
+    "| Words | Effect |",
+    "|---|---|",
+    "| `@primary` on a model's key field | the model has a local table |",
+    "| `@primary(generated = true)` | the table gives the key (the field is optional) |",
+    "| `@created`, `@updated` | stamps the table writes |",
+    "| `@entity(\"table\")` | the table's name; default: the model's name in snake_case |",
+    "| `local: LocalDatabase = LocalDatabase(encrypted = false)` in `appConfig` or in a component's `config` | how the tables are kept, for the project or for the tables of that component's models; the default is encrypted |",
+    "| `@repository(saveLocal = true)` | every GET of the repository that answers a model with a table (or a list of them) keeps its answer, and gets a twin |",
+    "| `@get(local = true)` | the same for one method |",
+    "| `<method>AsLocal()` | the twin: same signature and return type; it answers the rows that call answered, as they are now, and never sends a request. Without a previous answer it is an `Err` for a `Result` method |",
+    "| `local<M>()` in a repository method with a body | the table of `M`: `find`, `findAll`, `save`, `saveAll`, `remove`, `clear`, and the queries `where`, `orderBy`, `limit`, `offset`, `getOne`, `getMany`, `paginate` → `Page<T>`, `count`, `exists`, `update`, `delete` |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md#what-a-project-writes.7be5b8",
+   "type": "context",
+   "title": "The local database — What a project writes",
+   "summary": "is \"is null\" and `ne(null)` \"is not null\".",
+   "body": [
+    "- The operators of `where` are `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `between`; a plain `null`",
+    "  is \"is null\" and `ne(null)` \"is not null\". There is no `isNull`.",
+    "- A repository may be 100 % local: no http method at all.",
+    "- A GET that answers a generic (`Page<Character>`) is not kept: it has no key.",
+    "- `@column` is not part of the platform: in a document store the JSON name (`@key`) is the column.",
+    "- The Nuclear never names the storage engine.",
+    "- The generated tests call each twin and check it answers without a request."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/local-database.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md#ci",
+   "type": "context",
+   "title": "Architecture — CI",
+   "summary": "`.github/workflows/platform-mobile.yml`: the reference's examples (`spec-check-dragonfly.py`, then the language's `spec-check` over the flutter reference), the runtime (`flutter pub get && flutter test && flutter analyze` in `packages/dragonfly`), an install of `nuclear` and `dragonfly`, the…",
+   "body": [
+    "`.github/workflows/platform-mobile.yml`: the reference's examples (`spec-check-dragonfly.py`, then the language's",
+    "`spec-check` over the flutter reference), the runtime (`flutter pub get && flutter test && flutter analyze` in",
+    "`packages/dragonfly`), an install of `nuclear` and `dragonfly`, the backend example built, and `tasks_app` built",
+    "and tested."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md#the-contract-platform-toml",
+   "type": "context",
+   "title": "Architecture — The contract: `platform.toml`",
+   "summary": "What each section of a contract means, what the loader checks and how a contract is changed are the same for the three platforms: the contract of a platform.",
+   "body": [
+    "What each section of a contract means, what the loader checks and how a contract is changed are the same for the",
+    "three platforms: [the contract of a platform](../../../docs/02-architecture/contract.md). What this one holds:",
+    "",
+    "| Section | In the mobile contract |",
+    "|---|---|",
+    "| `[platform]` | `name = \"mobile\"`, `default_dialect = \"flutter\"`, 25 `kinds`, the `decorators` a project may write, the `plugins` `genkit`, `firebaseAI`, `googleAI`, `vertexAI`, `openAI`, `anthropic` |",
+    "| `[decorators.args]` | the arguments of the data decorators, the same as the backend platform's (ADR-backend-0001): `primary = [\"generated\", \"length\"]` |",
+    "| `[decorators.replaced]` | `generated` → `@primary(generated = true)` |",
+    "| `[layout]` | the file of each of the 25 kinds ([project.md](project.md)) |",
+    "| `[gen]` | how `dragonfly gen` writes the connection of an HTTP resource: the default one, or a named one when the app has another |",
+    "| `[[generators.component]]`, `[[generators.resource]]`, `[[generators.usecase]]` | what `dragonfly gen` writes (ADR-codegen-0001): the next section |",
+    "",
+    "It has no `[skeletons]` and no `[decorators.fields]`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md#the-examples",
+   "type": "context",
+   "title": "Architecture — The examples",
+   "summary": "Who reads them: the compiler's tests (`nuclearlang/crates/nuclear-transpile/tests/{golden,projects}.rs`, `nuclearlang/crates/nuclear-lsp/tests/server.rs`), the two scripts of `checks/` and the flutter reference, whose Dragonfly blocks are the files of `clean-flutter-project`.",
+   "body": [
+    "| Path under `examples/` | What it shows |",
+    "|---|---|",
+    "| `examples-flutter-dialect/clean-flutter-project/` | the complete app: characters, episodes, session, forms, translations, guards, events, a splash. Golden in `expected/clean-flutter-project/`. `dragonfly test` 34 tests, integration on Linux, `flutter analyze` 0, `flutter build web` and `linux` |",
+    "| `examples-flutter-dialect/genkit-assistant/` | the `genkit` plugin: a chat with tools, a flow, a knowledge base, a remote flow. Golden in `expected/genkit-assistant/` |",
+    "| `examples-flutter-dialect/tasks_app/` | a client generated from a backend's contract (`contracts/tasks_api/`, ADR-synapsis-0006); built and tested by the CI |",
+    "| `examples-flutter-dialect/{flutter_app,widgets_tour,framework_libs,dart_extension}.nuc` | single-file examples, each with its golden `.dart` beside it |",
+    "",
+    "Who reads them: the compiler's tests (`nuclearlang/crates/nuclear-transpile/tests/{golden,projects}.rs`,",
+    "`nuclearlang/crates/nuclear-lsp/tests/server.rs`), the two scripts of `checks/` and the flutter reference, whose",
+    "Dragonfly blocks are the files of `clean-flutter-project`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md#the-generators.222873",
+   "type": "context",
+   "title": "Architecture — The generators",
+   "summary": "`dragonfly gen` writes finished, compiling Nuclear from a resource's data; the values a template may use are listed in the backend platform's `platform.toml`.",
+   "body": [
+    "`dragonfly gen` writes finished, compiling Nuclear from a resource's data; the values a template may use are listed",
+    "in the backend platform's `platform.toml`. The mobile platform reads other APIs (`--source rest`); its local",
+    "database is the repositories' `saveLocal`, not a resource of its own. What the command does for the user:",
+    "[mobile.md §2, Generators](../07-reference/mobile.md).",
+    "",
+    "| Generator | Writes | Condition |",
+    "|---|---|---|",
+    "| `component` | the facade `<Component>Component` | merged into an existing one |",
+    "| `resource` | one model per model of the answer | `each = \"models\"`, `when = \"rest\"` |",
+    "| `resource` | `<Name>Error` with `message` | `when = \"rest\"` |",
+    "| `resource` | `<Name>Repository`: `all`/`page`, `one`, `search`, `create`, `update`, `remove`, by action | `when = \"rest\"`, merged |",
+    "| `resource` | one use case per action | `each = \"each_action\"` |",
+    "| `resource` | an alias per use case in the facade | merged |",
+    "| `resource` | `<Names>State`, `<Names>Manager`, `<Names>Screen` (a list) | `when = \"screen\"` |",
+    "| `resource` | `<Names>Test`: the repository mocked, everything else the real code | `when = \"actions.list\"` |",
+    "| `usecase` | a use case over one repository method that answers a `Result` | `when = \"result\"` (`--calls`) |",
+    "| `usecase` | its alias in the facade | merged |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md#the-generators.744db3",
+   "type": "context",
+   "title": "Architecture — The generators",
+   "summary": "`merge = true` gives an existing declaration only the members it lacks, so an action added to a resource that exists is finished (ADR-developer-0001).",
+   "body": [
+    "`merge = true` gives an existing declaration only the members it lacks, so an action added to a resource that",
+    "exists is finished (ADR-developer-0001). What a screen shows of a generated use case is its state manager's, written by",
+    "hand."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md#the-parts",
+   "type": "context",
+   "title": "Architecture — The parts",
+   "summary": "The parts",
+   "body": [
+    "| Part | Where | Owner |",
+    "|---|---|---|",
+    "| The contract of the platform | `platform.toml` | this project |",
+    "| The runtime packages | `packages/dragonfly/`, `packages/dragonfly_genkit/` | this project ([runtime.md](runtime.md)) |",
+    "| The examples and their goldens | `examples/` | this project |",
+    "| The checks | `checks/` | this project ([testing.md](../05-standards/testing.md)) |",
+    "| The dialect `flutter`: kinds as templates, the generated files, the manifest, the toolchain | `nuclearlang/dialects/dart/frameworks/flutter/` | the [`dart` dialect project](../../../../../nuclearlang/dialects/dart/AGENTS.md) |",
+    "| The type definitions of the toolkit and of the runtime packages | `nuclearlang/dialects/dart/defs/` | the `dart` dialect project |",
+    "| The loader, the transpiler, the architecture checks | `nuclearlang/crates/` | the [language project](../../../../../nuclearlang/AGENTS.md) |",
+    "| `dragonfly new/make/gen/build/test/run` | `nuclear-synapsis-framework/cli/`, `tools/cli/` | the [CLI project](../../../../../tools/cli/AGENTS.md) |",
+    "| The tutorial and the guides shared by the platforms | `nuclear-synapsis-framework/docs/08-guides/` | the [framework](../../../../AGENTS.md) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#a-project-of-the-platform",
+   "type": "context",
+   "title": "A project of the platform",
+   "summary": "The normative text is mobile.md §1 and §4; how the dialect turns each part into the app is the flutter reference §3.",
+   "body": [
+    "The normative text is [mobile.md §1 and §4](../07-reference/mobile.md); how the dialect turns each part into the",
+    "app is the [flutter reference §3](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#architecture-rules",
+   "type": "context",
+   "title": "A project of the platform — Architecture rules",
+   "summary": "The transpiler checks the dialect's `[architecture]` across the whole project (ADR-synapsis-0003; projects.md §4).",
+   "body": [
+    "The transpiler checks the dialect's `[architecture]` across the whole project (ADR-synapsis-0003;",
+    "[projects.md §4](../../../../../nuclearlang/docs/07-reference/projects.md)). All are errors; the editor shows them.",
+    "",
+    "| Rule | Code |",
+    "|---|---|",
+    "| Who calls whom: `usecase` ← `appcomponent`; `service` ← `usecase` or `aggregate`; `aggregate` ← `usecase`; `repository` ← `usecase` or `aggregate` | `N0301` |",
+    "| The UI toolkit's context and router only in views (the names are the dialect's `[architecture.names]`) | `N0301` |",
+    "| Closed components: from another component only the `appcomponent`, models, converters, events, global components, guards and screens are visible | `N0302` |",
+    "| Tests may use everything | — |",
+    "",
+    "The app has one injector; privacy is checked by the transpiler, not by the runtime. The open questions of the",
+    "linter (warnings, disabling a rule, new rules) are in the",
+    "[framework's roadmap](../../../../docs/01-product/roadmap.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#assets-by-convention",
+   "type": "context",
+   "title": "A project of the platform — Assets by convention",
+   "summary": "No assets section.",
+   "body": [
+    "No assets section. `assets/fonts/<Family>/<Family>-BoldItalic.ttf` is a font (weight and style from the end of the",
+    "name; `Oblique` is italic; two files with the same weight and style are an error); `assets/shaders/*.frag` are",
+    "shaders; any other folder of `assets/` is bundled. The app's manifest is rewritten from the files on every build.",
+    "The project only adds: it overrides no dependency."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#config-nuc",
+   "type": "context",
+   "title": "A project of the platform — `config.nuc`",
+   "summary": "The only manifest of a project (ADR-mobile-0001), written with the language's call syntax.",
+   "body": [
+    "The only manifest of a project ([ADR-mobile-0001](../03-adr/0001-project-manifest-packages-and-assets.md)), written",
+    "with the language's call syntax. It is not transpiled; its errors are `N0303`.",
+    "",
+    "| Line | What |",
+    "|---|---|",
+    "| `dragonfly(platform = \"mobile\", dialect = ...)` | the platform the project is written for and the dialect it is built with (ADR-synapsis-0002) |",
+    "| `app(...)` and the sections of the app's package manifest | the dialect's: their names and arguments are in the flutter reference §3.1 |",
+    "| `plugins(genkit = true, ...)` | the optional parts; a kind or a class of a plugin not enabled is `N0304` |",
+    "| `dependencies(package = \"version\")`, `devDependencies(...)` | third-party packages only |",
+    "| `contracts(name = \"path or url\")` | a backend's contract: `contracts/<name>/` is generated at every build (ADR-synapsis-0006) |",
+    "",
+    "- An empty section is not written: a new project has only the app.",
+    "- Only third-party packages the framework does not use. The dialect's and Dragonfly's own are added by themselves",
+    "  and are visible in the generated app's manifest; listing one is `N0303` on its line and `dragonfly add` rejects",
+    "  it before changing anything.",
+    "- A project without `config.nuc` gets one on its first `check` or `build`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#layout",
+   "type": "context",
+   "title": "A project of the platform — Layout",
+   "summary": "main.nuc config.nuc config/ appConfig shared/ widgets events models converters components guards screens components/<c>/<c>_component.nuc the facade components/<c>/config/ data/ components/<c>/domain/ models usecases aggregates services components/<c>/presentation/<screen>/ the screen, managers/…",
+   "body": [
+    "```",
+    "main.nuc  config.nuc",
+    "config/                              appConfig",
+    "shared/                              widgets events models converters components guards screens",
+    "components/<c>/<c>_component.nuc     the facade",
+    "components/<c>/config/  data/",
+    "components/<c>/domain/               models usecases aggregates services",
+    "components/<c>/presentation/<screen>/   the screen, managers/ state_models/ forms/",
+    "components/<c>/presentation/widgets/",
+    "components/<c>/ai/                   tools, flow, chat, knowledge (plugin genkit)",
+    "assets/i18n/<locale>/  assets/splash/",
+    "test/  integration_test/",
+    "```",
+    "",
+    "The exact file of each kind is `[layout]` of `platform.toml` (`nuclear help layout --platform mobile`).",
+    "",
+    "**Kind by folder:** a declaration without a header word in `models/`, `state_models/`, `forms/`, `test/` or",
+    "`integration_test/` takes its folder's kind. What is in `test/` is visible only to the files of `test/`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#only-nuc-files-and-assets",
+   "type": "context",
+   "title": "A project of the platform — Only `.nuc` files and `assets/`",
+   "summary": "A project has only `.nuc` files and `assets/` (ADR-synapsis-0001).",
+   "body": [
+    "A project has only `.nuc` files and `assets/` (ADR-synapsis-0001). No `nuclear.toml`: the project's name is its folder.",
+    "Everything generated goes to `build/` (the app in `build/app`) and is never edited."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md#type-definitions-of-a-project-s-packages",
+   "type": "context",
+   "title": "A project of the platform — Type definitions of a project's packages",
+   "summary": "Each dependency gets type definitions generated once into `~/.cache/nuclearlang/defs` and listed in `build/defs.lock` (imports, overrides, hover).",
+   "body": [
+    "Each dependency gets type definitions generated once into `~/.cache/nuclearlang/defs` and listed in",
+    "`build/defs.lock` (imports, overrides, hover). The editor uses the same lock. Debugging a name of a package that",
+    "gets no import: look at `build/defs.lock` and the cache; `nuclear defs show` does not see them."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/project.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly-events",
+   "type": "context",
+   "title": "The runtime packages — Events",
+   "summary": "`Events.publish / subscribe`.",
+   "body": [
+    "`Events.publish / subscribe`. Delivery is **on demand**: the visible screen gets the event at once; a hidden one",
+    "gets the last of each type when it is shown again. A `component` with `@on` always receives. Widgets",
+    "`EventBuilder`, `EventListener`, `GlobalEvents<T>`; mixin `EventsOnDemand`.",
+    "",
+    "A background isolate publishes to the main one (not on web: no `ReceivePort` nor `IsolateNameServer` under",
+    "`kIsWeb`). An `event` has `eventName` and `toJson` / `fromJson`, so from another engine (workmanager) it travels as",
+    "JSON text and `Events.decoder`, registered at startup, reads it back. The backend publishes an event with the",
+    "header `x-app-event` (`EventInterceptor`)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly-genkit",
+   "type": "context",
+   "title": "The runtime packages — `packages/dragonfly_genkit`",
+   "summary": "The runtime of the `genkit` plugin (ADR-synapsis-0004).",
+   "body": [
+    "The runtime of the `genkit` plugin (ADR-synapsis-0004). `lib/dragonfly_genkit.dart`, `lib/testing.dart`",
+    "(`startFakeGenkit`), and in `lib/src/`:",
+    "",
+    "| File | Holds |",
+    "|---|---|",
+    "| `providers.dart` | the AI providers a config declares among its connections |",
+    "| `tools.dart` | the tools a model may call |",
+    "| `chat.dart` | a chat with memory and streaming, `ChatController` for a screen |",
+    "| `flows.dart` | `GenkitFlow`: typed flows with structured output |",
+    "| `remote.dart` | `RemoteFlows`: the flows of a Genkit server |",
+    "| `knowledge.dart` | `Knowledge`: embeddings and search, kept in memory |",
+    "| `schemas.dart` | `Schemas`: the schemas of the app's models, what a flow reads and answers and what a structured output is |",
+    "| `runtime.dart` | `DragonflyGenkit`: the Genkit instance of the app and the models and embedders of its providers, by connection name; `generateText` |",
+    "",
+    "The kinds are `tools`, `chat`, `flow`, `remote` and `knowledge`; the dialect writes one project file",
+    "(`lib/dragonfly_genkit.g.dart`) that starts it; the plugins of `config.nuc` are the dialect's `[project.plugins]`",
+    "([projects.md §3.3](../../../../../nuclearlang/docs/07-reference/projects.md)). Example:",
+    "`examples/examples-flutter-dialect/genkit-assistant`. How to use it: [the guide](../08-guides/genkit.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly-logs",
+   "type": "context",
+   "title": "The runtime packages — Logs",
+   "summary": "`Log.d / i / s / w / e` (and the long names).",
+   "body": [
+    "`Log.d / i / s / w / e` (and the long names). One block per log: the breadcrumb `component › kind › Class.method`,",
+    "the time, the message, `data` as JSON, the error, the stack, and the `.nuc` file and line at the foot, which the",
+    "transpiler writes in the call (`at`). A thick frame and a level badge in the colors of Bootstrap's dark alerts;",
+    "code colors in the breadcrumb and the data; Dragonfly's own logs in purple; only the error's line blinks. A pastel",
+    "color per component (`LogColor`, a stable hash; `logColor` in the component's `config`).",
+    "",
+    "- Release: only warn and error. `token`, `password`, `authorization`, `secret` and `cookie` are masked.",
+    "- `Log.level`, `Log.colors`, `Log.console`, `Log.sink` (a `LogEntry`).",
+    "- Flutter exceptions: `Log.catchFlutterErrors(app:)`, called at startup: a double red frame, the stack in columns,",
+    "  a repeated error shown once.",
+    "- The package logs by itself http (request, response, error), the failures of a splash's `onLoad` and the",
+    "  translations.",
+    "- Not caught: async errors outside Flutter (there is no `PlatformDispatcher.onError`).",
+    "",
+    "Why: [ADR-mobile-0005](../03-adr/0005-readable-logs-by-component.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly.37ae1f",
+   "type": "context",
+   "title": "The runtime packages — `packages/dragonfly`",
+   "summary": "Decisions of this project behind the table: routes, dialogs and splash, ADR-mobile-0002; async guards, events between engines and the session's events, ADR-mobile-0007.",
+   "body": [
+    "Decisions of this project behind the table: routes, dialogs and splash,",
+    "[ADR-mobile-0002](../03-adr/0002-screens-routes-dialogs-and-splash.md); async guards, events between engines and the",
+    "session's events, [ADR-mobile-0007](../03-adr/0007-accepted-rules-of-events-guards-forms-and-state.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly.b2557b",
+   "type": "context",
+   "title": "The runtime packages — `packages/dragonfly`",
+   "summary": "What the UI toolkit lacks.",
+   "body": [
+    "What the UI toolkit lacks. Independent and publishable: README and CHANGELOG for pub.dev, `example/`. The entry",
+    "points are `lib/dragonfly.dart` and `lib/testing.dart`; a service is one folder of `lib/src/`. A global service is",
+    "a `Global`: `register`, `init` at startup, `dispose`. 64 tests in `test/`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly.c83533",
+   "type": "context",
+   "title": "The runtime packages — `packages/dragonfly`",
+   "summary": "`packages/dragonfly`",
+   "body": [
+    "| Forms (ADR-synapsis-0005) | `forms/` | format validation in presentation, business validation in the domain (`@validate`). `Rules`, `FormManager` with `checkOf` and debounce, `DragonflyForm`, `FormTextField`, `FormCheckbox`, `FormInput<T>`, `FormSubmit`, `Validators`; bound by the field's name |",
+    "| Dialogs | `popups/` | `DragonflyDialog` header / body / footer (`.info / .success / .warning / .danger`, `size`, `autoClose`, `onClose`, `onCloseButton`, `onAccept`); `Popups.toast / snackbar / alert / confirm`, `PopupTheme` |",
+    "| Translations (ADR-synapsis-0005) | `i18n/` | `assets/i18n/<locale>/<component>.json` + `shared.json`; `\"key\".tr({...})`; `Translations(locales, fallback, remote)`; `RemoteDictionaries` by version (files, or localStorage on web). No third-party library |",
+    "| Device text layer | `device/probe_web.dart` | in debug the package exposes `__dragonflyTextLayer` for the terminal device |",
+    "| Test helpers | `lib/testing.dart` | `DragonflyTest.start / respondWith / requests / replace / startSession`, `pumpScreen / pumpRouter / closeScreen`, `isOk / isErr`, `thenReturnAsync`; `start` keeps the local database in memory |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly.cdc699",
+   "type": "context",
+   "title": "The runtime packages — `packages/dragonfly`",
+   "summary": "`packages/dragonfly`",
+   "body": [
+    "| Service | `lib/src/` | Behaviour |",
+    "|---|---|---|",
+    "| Startup, injector | `core.dart` | `Dragonfly.start(config)`, `addConfig(config, component:)`, one injector, `Dragonfly.reset` stops the services and closes the local database |",
+    "| Http | `http/` | `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |",
+    "| Local database | `local/local.dart` | [local-database.md](local-database.md) |",
+    "| State | `state/` | `StateManager<S>` never emits after it is closed |",
+    "| Events (ADR-synapsis-0005) | `events/` | below |",
+    "| Session (ADR-synapsis-0005) | `session/` | `session.start(data, token, roles, permissions, expiresAt)`, `get<T>()`, `set / value / remove`, `destroy()`; kept in the secure storage, it survives restarts. `start` publishes `SessionStarted<T>`; `destroy` publishes `SessionEnded` and purges the cache. `SessionInterceptor` adds the token, ends the session on a 401 and never sends an expired token |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-dragonfly.d73699",
+   "type": "context",
+   "title": "The runtime packages — `packages/dragonfly`",
+   "summary": "`packages/dragonfly`",
+   "body": [
+    "| ACL (ADR-synapsis-0005) | `acl/` | Phalcon style (`Acl(inherits, permissions)`, deny by default) plus NestJS guards. The access map per screen is computed once per session. `canActivate` is `FutureOr<bool>`: the router (async `redirect` only then), `AclBuilder`, `Acl.check` and `Guards.verify` (async use cases) wait; `Acl.can`, `canOpen` and `Guards.check` stay sync and throw on an async guard |",
+    "| Routes | `router/router.dart` | go_router from views only; `AppRoute`, `goTo / pushTo / goBack`, typed path and query parameters, deep links, `shell` tabs, `notFound`, a `ScreenTransition` per screen; a route is nested by its path prefix, so back returns to the parent |",
+    "| Splash | `router/splash.dart` | `SplashScreen(next, child, minDuration = 3 s, onLoad, onError)`; then `goTo(next)`; `onError` with retry. `onLoad` has no timeout. The native splash is `@splash` |",
+    "| Network | `network/` | `NetworkManager` (connection and quality; it probes only when connectivity changes; on web it trusts the browser), `NetworkManager.fixed`, `NetworkWrapper`, `NetworkBuilder` |",
+    "| Logs | `log/log.dart` | below |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#the-runtime-packages",
+   "type": "context",
+   "title": "The runtime packages",
+   "summary": "Two packages for Flutter, in Dart.",
+   "body": [
+    "Two packages for Flutter, in Dart. This file says how each service behaves and where it lives; every class and",
+    "argument is in the API reference, [dragonfly.md](../07-reference/dragonfly.md). The code a project's kinds turn",
+    "into is the dialect's."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md#conventions",
+   "type": "context",
+   "title": "Conventions",
+   "summary": "The rules of the whole tree are the root `AGENTS.md` (English everywhere, quality first, no commits unless the user asks).",
+   "body": [
+    "The rules of the whole tree are the root [`AGENTS.md`](../../../../../AGENTS.md) (English everywhere, quality",
+    "first, no commits unless the user asks). These are the ones of this project."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md#platform-toml",
+   "type": "context",
+   "title": "Conventions — `platform.toml`",
+   "summary": "How a contract is changed (the contract first, then every dialect, the `docs.toml` entry, the reference) is the same for the three platforms: changing a contract.",
+   "body": [
+    "How a contract is changed (the contract first, then every dialect, the `docs.toml` entry, the reference) is the",
+    "same for the three platforms: [changing a contract](../../../docs/02-architecture/contract.md). In this one:",
+    "",
+    "- The arguments of the data decorators are the same as the backend platform's (`[decorators.args]`).",
+    "- A removed decorator gets its line in `[decorators.replaced]`, so a project that still writes it is told what",
+    "  replaces it (`N0309`).",
+    "- A generator template writes finished, compiling Nuclear, each declaration under a comment that says what it is",
+    "  for; `merge = true` on a declaration a later run may complete.",
+    "- Every new diagnostic code is documented in the language's",
+    "  [diagnostics.md](../../../../../nuclearlang/docs/07-reference/diagnostics.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md#the-documents",
+   "type": "context",
+   "title": "Conventions — The documents",
+   "summary": "project writes, no questions, no history, no \"pending\".",
+   "body": [
+    "- `docs/07-reference/mobile.md` holds only final rules and only Nuclear: no dialect's name where it says what a",
+    "  project writes, no questions, no history, no \"pending\". Doubts go to the user; decisions become ADRs.",
+    "- A change the user of the platform can see updates its documents in the same change: the reference, the guide,",
+    "  the context documents of this folder, the `CHANGELOG.md`.",
+    "- One fact, one file: what is the dialect's is linked in the",
+    "  [`dart` dialect project](../../../../../nuclearlang/dialects/dart/AGENTS.md), never copied here."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md#the-platform",
+   "type": "context",
+   "title": "Conventions — The platform",
+   "summary": "here, TOML and templates in each dialect.",
+   "body": [
+    "- Language rules come from the base. The platform adds **kinds and decorators only as data**: `platform.toml`",
+    "  here, TOML and templates in each dialect.",
+    "- A generic mechanism belongs in the compiler (projects, decorator arguments, architecture names, call sites);",
+    "  nothing specific to this platform, to a dialect or to a UI toolkit ever does. A template capability that is",
+    "  missing is asked for as a generic one.",
+    "- Kinds and features may differ between platforms, never between the dialects of this one.",
+    "- The standard library is Nuclear's: a target's library name in platform code, reference, docs or examples is a",
+    "  bug."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md#the-runtime-packages",
+   "type": "context",
+   "title": "Conventions — The runtime packages",
+   "summary": "import is left over.",
+   "body": [
+    "- **They work on web**: no `dart:isolate` nor `dart:io` without a `kIsWeb` guard.",
+    "- The `dragonfly` package re-exports nothing of the libraries it uses: each name is imported from its own, so no",
+    "  import is left over.",
+    "- It stays an independent package: usable by hand in any Flutter app, with its README, CHANGELOG and `example/`.",
+    "- An app-wide service is a `Global` (`register`, `init`, `dispose`).",
+    "- Nothing the dialect generates names what is behind a service (the storage engine of the local database): the",
+    "  generated code calls the package's classes, so the engine can change in the package alone.",
+    "- The package logs its own work through `Log` (http, the splash's failures, translations).",
+    "- Lints: `flutter_lints`; `flutter analyze` reports nothing.",
+    "- A change of the public API updates [dragonfly.md](../07-reference/dragonfly.md) and regenerates the type",
+    "  definitions in the same change ([runbook](../06-runbooks/runtime-release.md))."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/security.md#access",
+   "type": "context",
+   "title": "Security and performance rules — Access",
+   "summary": "Access is denied by default.",
+   "body": [
+    "Access is denied by default. A screen declares its rule in `@screen(loggedIn, acl)` and a use case in `@requires`",
+    "and `@acl`; the checks are the runtime's ([runtime.md](../02-architecture/runtime.md)). Privacy between components",
+    "is checked by the transpiler, not at run time ([project.md](../02-architecture/project.md))."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/security.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/security.md#security-and-performance-rules",
+   "type": "context",
+   "title": "Security and performance rules",
+   "summary": "Dragonfly must warn when code breaks one of these.",
+   "body": [
+    "Dragonfly must warn when code breaks one of these.",
+    "",
+    "| Topic | Rule |",
+    "|---|---|",
+    "| Headers | name / value pairs: `headers = { \"Accept\": \"application/json\" }` |",
+    "| Retries | automatic only on idempotent methods; POST and PATCH only with an explicit `retry` |",
+    "| Cache | purged when the session ends |",
+    "| WebSocket | `wss://` in production (`ws://` travels unencrypted) |",
+    "| Tokens | only `SessionManager` stores them (secure storage); never in annotations or config |",
+    "| Logs | mask sensitive data; no debug nor info in release |",
+    "| Network | no constant polling: only on connectivity changes and on demand |",
+    "| Events | typed (the kind `event`), delivered on demand |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/security.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/security.md#sensitive-data",
+   "type": "context",
+   "title": "Security and performance rules — Sensitive data",
+   "summary": "Sensitive data",
+   "body": [
+    "| Data | How it is protected |",
+    "|---|---|",
+    "| The session (data, token, roles, permissions) | the secure storage; it ends after its timeout without activity; an expired token is never sent and a 401 ends the session |",
+    "| The local database | encrypted unless a config says otherwise: AES-256 with a key generated once and kept in the secure storage. On web the key lives in the browser's storage, weaker than a phone's keystore ([ADR-mobile-0006](../03-adr/0006-local-database.md)) |",
+    "| Logs | `token`, `password`, `authorization`, `secret` and `cookie` are masked; release writes only warn and error |",
+    "| The key of an AI provider | a key written in an app can be read by anyone who has the app: for production prefer `FirebaseAI` or a remote flow on a server ([guide](../08-guides/genkit.md)) |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/security.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#before-a-change-is-done",
+   "type": "context",
+   "title": "Testing — Before a change is done",
+   "summary": "From the root of the tree, then from this folder: cargo test && cargo clippy --all-targets python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py (cd packages/dragonfly && flutter pub get && flutter test && flutter analyze) (cd…",
+   "body": [
+    "From the root of the tree, then from this folder:",
+    "",
+    "```sh",
+    "cargo test && cargo clippy --all-targets",
+    "python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py",
+    "(cd packages/dragonfly && flutter pub get && flutter test && flutter analyze)",
+    "(cd examples/examples-flutter-dialect/tasks_app && dragonfly build && dragonfly test)",
+    "```",
+    "",
+    "The tests every platform shares (the contract, the layout, the editor docs, the generators) and their conventions:",
+    "[testing a platform](../../../docs/05-standards/testing.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#checks-analyze-flutter-sh",
+   "type": "context",
+   "title": "Testing — `checks/analyze-flutter.sh`",
+   "summary": "Builds the `nuclear` binary in release, transpiles every `examples/examples-flutter-dialect/*.nuc` (and the files given as arguments) into `nuclearlang/tools/defs/flutter_project/lib/generated`, and runs `flutter analyze` there.",
+   "body": [
+    "Builds the `nuclear` binary in release, transpiles every `examples/examples-flutter-dialect/*.nuc` (and the files",
+    "given as arguments) into `nuclearlang/tools/defs/flutter_project/lib/generated`, and runs `flutter analyze` there.",
+    "A file with an `extension`, `mixin` or `data` declaration and no view is built with the `dart` dialect, the others",
+    "with `flutter`. It needs the Flutter SDK: `FLUTTER=path/to/flutter/bin/flutter`, default `flutter` in the PATH;",
+    "`NUCLEAR_ROOT` names another tree."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#checks-spec-check-dragonfly-py",
+   "type": "context",
+   "title": "Testing — `checks/spec-check-dragonfly.py`",
+   "summary": "Keeps the Dragonfly examples of the flutter reference (`nuclearlang/dialects/dart/docs/07-reference/flutter.md`) equal to the example project.",
+   "body": [
+    "Keeps the Dragonfly examples of the flutter reference",
+    "(`nuclearlang/dialects/dart/docs/07-reference/flutter.md`) equal to the example project. A pair in the reference",
+    "is a `nuclear` block, a caption ``Output (`<lib|test|integration_test>/<path>.dart`...)`` and a `dart` block; a",
+    "caption ``Generated (`<lib|test>/<path>.dart`)`` goes before a `dart` block alone. The Nuclear block must be the",
+    "source `<path>.nuc` of `clean-flutter-project`; the Dart block must be its golden in",
+    "`examples/expected/clean-flutter-project/`, without the imports. Without arguments it reports the blocks that",
+    "differ and exits 1; `--fix` rewrites them (after `UPDATE_GOLDEN=1 cargo test`)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#goldens",
+   "type": "context",
+   "title": "Testing — Goldens",
+   "summary": "A golden changes only with `UPDATE_GOLDEN=1 cargo test`, and its diff is reviewed.",
+   "body": [
+    "A golden changes only with `UPDATE_GOLDEN=1 cargo test`, and its diff is reviewed. `examples/expected/` and the",
+    "`.dart` beside a single-file example are never edited by hand."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#the-tests-of-an-app",
+   "type": "context",
+   "title": "Testing — The tests of an app",
+   "summary": "(ADR-mobile-0004, kinds.md).",
+   "body": [
+    "- A project writes its tests in Nuclear: the kinds `tests` and `integration`",
+    "  ([ADR-mobile-0004](../03-adr/0004-tests-in-nuclear.md), [kinds.md](../02-architecture/kinds.md)).",
+    "- The build generates the standard ones: the JSON of the models, the contracts of the repositories, the guards of",
+    "  the routes, a smoke test of the screens, the twins of the local database. In the `flutter` dialect they are one",
+    "  file, `test/dragonfly_generated_test.dart`. A field with a converter gets the JSON the converter writes",
+    "  (`const Conv().toJson(DateTime(2000))`), or its `sample()` when it has one; an enum field gets its first value.",
+    "- The helpers are the runtime's: `package:dragonfly/testing.dart`",
+    "  ([dragonfly.md §7](../07-reference/dragonfly.md)) and `package:dragonfly_genkit/testing.dart`",
+    "  (`startFakeGenkit`). `DragonflyTest.start` runs an app without network or device: fake http answers, the session",
+    "  and the local database in memory."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#what-each-check-covers.14e99b",
+   "type": "context",
+   "title": "Testing — What each check covers",
+   "summary": "What each check covers",
+   "body": [
+    "| Check | Covers | Where |",
+    "|---|---|---|",
+    "| `cargo test`: goldens of the single-file examples | `flutter_app`, `dart_extension`, `widgets_tour`, `framework_libs`: each `.nuc` against the `.dart` beside it | `nuclearlang/crates/nuclear-transpile/tests/golden.rs` |",
+    "| `cargo test`: goldens of the projects | `clean-flutter-project` and `genkit-assistant` against `examples/expected/` | `tests/projects.rs`, `projects_match_expected_output` |",
+    "| `cargo test`: the contract of a backend | `tasks_app` built from the contract of `tasks_api`; a change in the backend breaks the client's build with the field's name | `tests/projects.rs`, `a_client_builds_from_the_backend_contract_and_sees_drift` |",
+    "| `cargo test`: the reference shows the real output | the Dragonfly blocks of the flutter reference | `tests/projects.rs`, `dragonfly_spec_shows_the_real_output` |",
+    "| `checks/spec-check-dragonfly.py` | the same blocks, 27 today, and `--fix` to rewrite them | below |",
+    "| `flutter test` in `packages/dragonfly` | the runtime: 64 tests (`dragonfly_test`, `framework_test`, `local_test`, `testing_test`, `ui_test`) | `packages/dragonfly/test/` |",
+    "| `flutter analyze` in `packages/dragonfly` | `flutter_lints`, nothing reported | `packages/dragonfly/analysis_options.yaml` |"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md#what-each-check-covers.f3bf74",
+   "type": "context",
+   "title": "Testing — What each check covers",
+   "summary": "CI runs the reference's examples, the runtime's tests and analysis, and `tasks_app`: `.github/workflows/platform-mobile.yml`.",
+   "body": [
+    "| `flutter test` in `packages/dragonfly_genkit` | the `genkit` runtime (`remote_test`, `runtime_test`); the CI workflow does not run it | `packages/dragonfly_genkit/test/` |",
+    "| `checks/analyze-flutter.sh [file.nuc...]` | every single-file example transpiled and checked with `flutter analyze` (`flutter_lints`, 0 warnings) | below |",
+    "| `dragonfly build && dragonfly test` in `tasks_app` | an app built and tested end to end; run by the CI | `examples/examples-flutter-dialect/tasks_app` |",
+    "| `dragonfly test` in `clean-flutter-project` | 34 tests; also integration on Linux, `flutter analyze` 0, `flutter build web` and `linux` | `examples/examples-flutter-dialect/clean-flutter-project` |",
+    "",
+    "CI runs the reference's examples, the runtime's tests and analysis, and `tasks_app`:",
+    "`.github/workflows/platform-mobile.yml`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md#an-example-s-output-changed",
+   "type": "context",
+   "title": "Change an example, change the runtime, publish a package — An example's output changed",
+   "summary": "After a change of an example, of the contract or of what the dialect writes: 1. `UPDATE_GOLDEN=1 cargo test`, and review the diff of `examples/expected/` and of the `.dart` goldens.",
+   "body": [
+    "After a change of an example, of the contract or of what the dialect writes:",
+    "",
+    "1. `UPDATE_GOLDEN=1 cargo test`, and review the diff of `examples/expected/` and of the `.dart` goldens.",
+    "2. `python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py --fix`: the Dragonfly",
+    "   blocks of the flutter reference are rewritten from the example project.",
+    "3. `cargo test && cargo clippy --all-targets`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md#change-an-example-change-the-runtime-publish-a-package",
+   "type": "context",
+   "title": "Change an example, change the runtime, publish a package",
+   "summary": "Commands run from the root of the tree unless a step says otherwise.",
+   "body": "Commands run from the root of the tree unless a step says otherwise.",
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md#publish-dragonfly",
+   "type": "context",
+   "title": "Change an example, change the runtime, publish a package — Publish `dragonfly`",
+   "summary": "cd nuclear-synapsis-framework/platforms/mobile/packages/dragonfly flutter analyze && flutter test dart pub publish --dry-run The package was never published; what is left before it can be is in the roadmap.",
+   "body": [
+    "```sh",
+    "cd nuclear-synapsis-framework/platforms/mobile/packages/dragonfly",
+    "flutter analyze && flutter test",
+    "dart pub publish --dry-run",
+    "```",
+    "",
+    "The package was never published; what is left before it can be is in the",
+    "[roadmap](../01-product/roadmap.md). `dragonfly_genkit` is `publish_to: none`."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md#the-public-api-of-a-runtime-package-changed",
+   "type": "context",
+   "title": "Change an example, change the runtime, publish a package — The public API of a runtime package changed",
+   "summary": "1. In the package: `flutter pub get && flutter test && flutter analyze`.",
+   "body": [
+    "1. In the package: `flutter pub get && flutter test && flutter analyze`.",
+    "2. Regenerate its type definitions, which the transpiler and the editor read:",
+    "   `FLUTTER_ROOT=<flutter sdk> nuclearlang/tools/defs/generate.sh` writes",
+    "   `nuclearlang/dialects/dart/defs/{dragonfly,dragonfly_genkit}/<version>/` with every other package of the",
+    "   `dart` language. The generator is the language project's:",
+    "   [its README](../../../../../nuclearlang/tools/defs/README.md).",
+    "3. When the installed Flutter is newer than the definitions of the toolkit (`flutter@3.47.7` today), regenerate",
+    "   only `dragonfly` without moving the others: run `bin/defs.dart` with `FV=3.47.7`, as the `pub dragonfly` line",
+    "   of `generate.sh` does.",
+    "4. If a version changed, the `defs` list of the dialect's `dialect.toml` changes with it.",
+    "5. `cargo test`: the goldens show whether an import changed.",
+    "6. Update the API reference, [dragonfly.md](../07-reference/dragonfly.md), and the package's `CHANGELOG.md`.",
+    "7. `installer/install.sh`, so the installed commands get the change."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/docs/06-runbooks/runtime-release.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  }
+ ]
+}

@@ -1,0 +1,979 @@
+{
+  "model-new-book": {
+    "round": 23,
+    "code": "model NewBook\n  @minLength(1) title: string\n  author: string\n  year: int\n",
+    "attempts": 1,
+    "seconds": 6.0,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4727 characters of knowledge, 1290 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "model-reader": {
+    "round": 23,
+    "code": "// What the API receives to create a reader.\nmodel NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n",
+    "attempts": 1,
+    "seconds": 2.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "3680 characters of knowledge, 1290 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "model-book-changes": {
+    "round": 23,
+    "code": "model BookChanges\n  title?: string\n  year?: int\n  available?: boolean\n",
+    "attempts": 1,
+    "seconds": 2.0,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "3813 characters of knowledge, 1649 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "entity-book": {
+    "round": 23,
+    "code": "@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n\n  @column(length = 200)\n  title: string\n\n  author: string\n  year: int\n  available: boolean = true\n",
+    "attempts": 1,
+    "seconds": 3.8,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5613 characters of knowledge, 1438 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "entity-loan": {
+    "round": 23,
+    "code": "@entity(\"loans\")\nentity Loan\n  @primary(generated = true)\n  id: int\n  bookId: int\n  reader: string\n  returned: boolean = false\n",
+    "attempts": 1,
+    "seconds": 2.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7497 characters of knowledge, 1379 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "entity-reader": {
+    "round": 23,
+    "code": "@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n\n  @column(length = 120, unique = true)\n  email: string\n",
+    "attempts": 1,
+    "seconds": 3.0,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5613 characters of knowledge, 1379 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "repo-by-author": {
+    "round": 23,
+    "code": "repository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"year\")\n    getMany()\n",
+    "attempts": 1,
+    "seconds": 4.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "8562 characters of knowledge, 1379 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "repo-available-since": {
+    "round": 23,
+    "code": "repository BookRepository\n  availableSince(year: int, max: int = 20) Book[]\n    where({ \"available\": true, \"year\": gte(year) })\n    orderBy(\"title\")\n    limit(max)\n    getMany()\n",
+    "attempts": 1,
+    "seconds": 1.9,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "8562 characters of knowledge, 1379 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "repo-by-title": {
+    "round": 23,
+    "code": "repository BookRepository\n  byTitle(title: string) Result<Error, Book>\n    where({ \"title\": title })\n    getOne()\n",
+    "attempts": 1,
+    "seconds": 3.4,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "8220 characters of knowledge, 1379 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "repo-count-open-loans": {
+    "round": 23,
+    "code": "repository LoanRepository\n  openFor(reader: string) int\n    where({ \"reader\": reader, \"returned\": false })\n    count()\n",
+    "attempts": 1,
+    "seconds": 1.7,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7436 characters of knowledge, 1198 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "usecase-create-book": {
+    "round": 23,
+    "code": "usecase CreateBook(books: BookRepository)\n  exec(input: NewBook) Result<Error, Book>\n    taken = ~books.where({ \"title\": input.title }).exists()\n    if taken\n      return Err(Conflict(\"${input.title} already exists\"))\n    book = ~books.save(Book(title = input.title, author = input.author, year = input.year))\n    Ok(book)\n",
+    "attempts": 1,
+    "seconds": 5.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6972 characters of knowledge, 2111 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "usecase-get-book": {
+    "round": 23,
+    "code": "usecase GetBook(books: BookRepository)\n  exec(id: int) Result<Error, Book>\n    ~books.find(id)\n",
+    "attempts": 1,
+    "seconds": 3.5,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7764 characters of knowledge, 1642 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "usecase-lend-book": {
+    "round": 23,
+    "code": "usecase LendBook(books: BookRepository, loans: LoanRepository)\n  exec(bookId: int, reader: string) Result<Error, Loan>\n    book = ~books.find(bookId)\n    if not book\n      return Err(NotFound(\"book ${bookId} not found\"))\n    if not book.available\n      return Err(Conflict(\"book ${bookId} is not available\"))\n    book.available = false\n    ~books.save(book)\n    loan = Loan(bookId = bookId, reader = reader, returned = false)\n    ~loans.save(loan)\n    Ok(loan)\n",
+    "attempts": 1,
+    "seconds": 5.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7021 characters of knowledge, 1761 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "usecase-books-of-author": {
+    "round": 23,
+    "code": "usecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n",
+    "attempts": 1,
+    "seconds": 2.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7021 characters of knowledge, 1920 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "appcomponent-books": {
+    "round": 23,
+    "code": "appcomponent BooksAppComponent\n  book() = GetBook.exec\n  create() = CreateBook.exec\n  byAuthor() = BooksOfAuthor.exec\n",
+    "attempts": 1,
+    "seconds": 2.8,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4326 characters of knowledge, 1937 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "appcomponent-loans": {
+    "round": 23,
+    "code": "appcomponent LoansAppComponent\n  lend() = LendBook.exec\n  giveBack() = ReturnBook.exec\n",
+    "attempts": 1,
+    "seconds": 1.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4326 characters of knowledge, 1937 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "controller-books": {
+    "round": 23,
+    "code": "@controller(\"books\")\ncontroller BooksController(books: BooksAppComponent)\n  @get(\"{id}\")\n  one(id: int) Result<Error, Book>\n    ~books.book(id)\n\n  @post()\n  create(input: NewBook) Result<Error, Book>\n    ~books.create(input)\n",
+    "attempts": 1,
+    "seconds": 4.4,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6377 characters of knowledge, 2065 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "controller-author": {
+    "round": 23,
+    "code": "@controller(\"authors\")\ncontroller AuthorsController(books: BooksAppComponent)\n  @get(\"{name}/books\")\n  books(name: string) Result<Error, Book[]>\n    ~books.byAuthor(name)\n",
+    "attempts": 2,
+    "seconds": 4.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5522 characters of knowledge, 2065 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      },
+      {
+        "step": "faithful",
+        "detail": "books.byAuthor(name): added"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "controller-loans": {
+    "round": 23,
+    "code": "@controller(\"loans\")\ncontroller LoansController(loans: LoansAppComponent)\n  @post(\"{bookId}\")\n  lend(bookId: int, reader: string) Result<Error, Loan>\n    ~loans.lend(bookId, reader)\n    status = 201\n",
+    "attempts": 1,
+    "seconds": 3.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5647 characters of knowledge, 2065 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "tools-books": {
+    "round": 23,
+    "code": "tools BookTools(books: BooksAppComponent)\n  // Gives the title of the book with that id.\n  bookTitle(id: int) string\n    match ~books.book(id)\n      Ok(b) -> b.title\n      Err(e) -> e.message\n",
+    "attempts": 1,
+    "seconds": 3.7,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5155 characters of knowledge, 1349 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "tools-loans": {
+    "round": 23,
+    "code": "tools LoanTools(loans: LoansAppComponent)\n  // Lends a book to a reader.\n  lend(bookId: int, reader: string) string\n    match ~loans.lend(bookId, reader)\n      Ok(l) -> \"loan ${l.id}\"\n      Err(e) -> e.message\n",
+    "attempts": 1,
+    "seconds": 3.8,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5155 characters of knowledge, 2131 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "agent-librarian": {
+    "round": 23,
+    "code": "agent Librarian(tools: BookTools)\n  prompt: string = \"You help readers find books. Use the tools; never invent ids.\"\n",
+    "attempts": 1,
+    "seconds": 2.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4193 characters of knowledge, 1107 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "agent-loans": {
+    "round": 23,
+    "code": "agent LoanDesk(tools: LoanTools)\n  model: string = \"coder\"\n  prompt: string = \"You lend books. Confirm every loan.\"\n",
+    "attempts": 1,
+    "seconds": 2.2,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4193 characters of knowledge, 1107 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "graph-summary": {
+    "round": 23,
+    "code": "// A state SummaryState (question: string, answer: string) and a graph Summary(librarian: Librarian) over it with one node ask, the first and the last, that returns { \"answer\": ~librarian.ask(state.question) }.\n\nstate SummaryState\n  question: string\n  answer: string\n\n@state(SummaryState)\ngraph Summary(librarian: Librarian)\n  @start\n  @next(\"end\")\n  ask(state: SummaryState) <string, string>\n    { \"answer\": ~librarian.ask(state.question) }\n",
+    "attempts": 1,
+    "seconds": 6.3,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7100 characters of knowledge, 2559 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "graph-two-steps": {
+    "round": 23,
+    "code": "// A state ReviewState (text: string, draft: string, final: string) and a graph Review(librarian: Librarian): node draft (the first) sets draft to ~librarian.ask(state.text) and goes to polish; node polish sets final to ~librarian.ask(\"Shorten: ${state.draft}\") and ends.\n@state(ReviewState)\ngraph Review(librarian: Librarian)\n  @start\n  @next(\"polish\")\n  draft(state: ReviewState) <string, string>\n    { \"draft\": ~librarian.ask(state.text) }\n\n  @next(\"end\")\n  polish(state: ReviewState) <string, string>\n    { \"final\": ~librarian.ask(\"Shorten: ${state.draft}\") }\n",
+    "attempts": 1,
+    "seconds": 6.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7045 characters of knowledge, 1937 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "tests-create-book": {
+    "round": 23,
+    "code": "tests Books\n  books: BooksAppComponent = inject<BooksAppComponent>()\n\n  @test(\"creates a book and refuses the same title\")\n  checkDuplicate() void\n    book = NewBook(title = \"Dune\", author = \"Herbert\", year = 1965)\n    first = ~books.create(book)\n    expect(first.isOk)\n    second = ~books.create(book)\n    expect(second.error.status == 409)\n",
+    "attempts": 1,
+    "seconds": 5.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6262 characters of knowledge, 1767 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "tests-missing-book": {
+    "round": 23,
+    "code": "tests Missing\n  books: BooksAppComponent = inject<BooksAppComponent>()\n\n  @test(\"a missing book is 404\")\n  missingBook() void\n    missing = ~books.book(999)\n    expect(missing.isErr)\n    expect(missing.error.status == 404)\n",
+    "attempts": 1,
+    "seconds": 3.7,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6207 characters of knowledge, 1767 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "listener-loans": {
+    "round": 23,
+    "code": "listener BookEvents(books: BooksAppComponent)\n  @consumer(\"books.created\")\n  created(input: NewBook)\n    ~books.create(input)\n",
+    "attempts": 1,
+    "seconds": 2.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4335 characters of knowledge, 1124 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "flutter-model": {
+    "round": 23,
+    "code": "model Book\n  id: int\n  title: string\n  author: string\n",
+    "attempts": 1,
+    "seconds": 2.7,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5779 characters of knowledge, 803 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "flutter-repository": {
+    "round": 23,
+    "code": "@repository(path = \"books\")\nrepository BookRepository\n  @get(path = \":id\")\n  book(id: int) Result<BookError, Book>\n",
+    "attempts": 1,
+    "seconds": 4.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "8364 characters of knowledge, 1660 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "service-isbn": {
+    "round": 23,
+    "code": "service Isbn()\n  valid(code: string) boolean\n    code.replaceAll(\"-\", \"\").length == 13\n",
+    "attempts": 1,
+    "seconds": 2.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5160 characters of knowledge, 0 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "function-label": {
+    "round": 23,
+    "code": "service Labels(year: int, now: int) string\n  label = if now - year < 2\n    \"new\"\n  else if now - year < 10\n    \"recent\"\n  else\n    \"classic\"\n  label\n",
+    "attempts": 3,
+    "seconds": 6.3,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "3859 characters of knowledge, 0 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: 2:3 N0017 a module body cannot hold statements: declare a field (name: Type = value) or assign it in the constructor block"
+      },
+      {
+        "step": "repair",
+        "detail": "attempt 2: 2:3 N0017 a module body cannot hold statements: declare a field (name: Type = value) or assign it in the constructor block"
+      },
+      {
+        "step": "repair",
+        "detail": "attempt 3: 2:3 N0017 a module body cannot hold statements: declare a field (name: Type = value) or assign it in the constructor block"
+      }
+    ],
+    "check": "2:3 N0017 a module body cannot hold statements: declare a field (name: Type = value) or assign it in the constructor block\n4:3 N0001 'else' is a reserved word and cannot be a name\n6:3 N0001 'else' is a reserved word and cannot be a name",
+    "missing": [
+      "age(year: int, now: int) string"
+    ],
+    "pass": false
+  },
+  "flutter-usecase": {
+    "round": 23,
+    "code": "usecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n",
+    "attempts": 1,
+    "seconds": 4.2,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "9084 characters of knowledge, 1127 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "flutter-state-model": {
+    "round": 23,
+    "code": "BooksState\n  (loaded: Book[], error: BookError, loading: boolean)\n",
+    "attempts": 1,
+    "seconds": 2.4,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4398 characters of knowledge, 980 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "flutter-manager": {
+    "round": 23,
+    "code": "@stateModel(BooksState)\nstatemanager BooksManager\n  (books: BooksComponent)\n    load()\n\n  @state(BooksState.loading)\n  loading()\n\n  @before(loading)\n  @state(BooksState.loaded)\n  load() Result<BookError, Book[]>\n    ~books.all()\n",
+    "attempts": 1,
+    "seconds": 3.8,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5142 characters of knowledge, 1099 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "flutter-screen": {
+    "round": 23,
+    "code": "@screen(route = \"/books\", providers = [BooksManager])\nstateless BooksScreen\n  build(context: BuildContext) Widget\n    Scaffold(\n      appBar = AppBar(title = Text(\"Books\")),\n      body = BooksStateBuilder<BooksManager>(\n        loading = () => Center(child = CircularProgressIndicator()),\n        loaded = (books) => ListView.builder(\n          itemCount = books.length,\n          itemBuilder = (context, index) => ListTile(title = Text(books[index].title)),\n        ),\n        error = (e) => Center(child = Text(e.message)),\n      ),\n    )\n",
+    "attempts": 1,
+    "seconds": 6.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6656 characters of knowledge, 2529 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "flutter-repository-post": {
+    "round": 23,
+    "code": "@repository(path = \"books\")\nrepository BookRepository\n  @post(retry = 1)\n  save(book: Book) Result<BookError, Book>\n",
+    "attempts": 1,
+    "seconds": 3.2,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "7791 characters of knowledge, 1660 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "web-repository": {
+    "round": 23,
+    "code": "@repository(path = \"books\")\nrepository BookRepository\n  @get(path = \":id\")\n  getOne(id: int) Result<BookError, Book>\n\n  @get(cache = true, ttl = 60000)\n  all() Result<BookError, Book[]>\n",
+    "attempts": 1,
+    "seconds": 4.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6664 characters of knowledge, 804 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "web-tile": {
+    "round": 23,
+    "code": "// A view BookTile(book: Book) of the web app: an li with class \"tile\" whose children are a span with class \"title\" showing the book's title and a small with its author.\nstateless BookTile(book: Book)\n  build() Element\n    li(className = \"tile\", children = [\n      span(className = \"title\", children = book.title),\n      small(children = book.author),\n    ])\n",
+    "attempts": 1,
+    "seconds": 4.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5765 characters of knowledge, 1696 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "web-service": {
+    "round": 23,
+    "code": "service BookFilters()\n  available(books: Book[]) Book[]\n    books.filter(book => book.available)\n",
+    "attempts": 1,
+    "seconds": 3.4,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "6104 characters of knowledge, 960 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "web-manager": {
+    "round": 23,
+    "code": "@stateModel(BooksState)\nstatemanager BooksManager\n  (books: BooksComponent)\n    load()\n\n  @state(BooksState.loading)\n  loading()\n\n  @before(loading)\n  @state(BooksState.loaded)\n  load() Result<BookError, Book[]>\n    ~books.all()\n",
+    "attempts": 1,
+    "seconds": 3.3,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "4047 characters of knowledge, 563 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "web-appcomponent": {
+    "round": 23,
+    "code": "appcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n  one() = GetBookUseCase.exec\n",
+    "attempts": 1,
+    "seconds": 3.0,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "5923 characters of knowledge, 1177 of examples"
+      },
+      {
+        "step": "write",
+        "detail": "attempt 1: ok"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "feature-books-by-author": {
+    "round": 23,
+    "code": "// file: components/books/data/entities/book.nuc\n@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n  title: string\n  author: string\n\n// file: components/books/data/repositories/book_repository.nuc\nrepository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"title\")\n    getMany()\n\n// file: components/books/domain/usecases/books_of_author.nuc\nusecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n\n// file: components/books/books_appcomponent.nuc\nappcomponent BooksAppComponent\n  booksOf() = BooksOfAuthor.exec\n\n// file: components/books/api/books_controller.nuc\n@controller(\"books\")\ncontroller BooksController(books: BooksAppComponent)\n  @get(\"author/{author}\")\n  byAuthor(author: string) Result<Error, Book[]>\n    ~books.booksOf(author)\n",
+    "files": {
+      "components/books/data/entities/book.nuc": "@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n  title: string\n  author: string\n",
+      "components/books/data/repositories/book_repository.nuc": "repository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"title\")\n    getMany()\n",
+      "components/books/domain/usecases/books_of_author.nuc": "usecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n",
+      "components/books/books_appcomponent.nuc": "appcomponent BooksAppComponent\n  booksOf() = BooksOfAuthor.exec\n",
+      "components/books/api/books_controller.nuc": "@controller(\"books\")\ncontroller BooksController(books: BooksAppComponent)\n  @get(\"author/{author}\")\n  byAuthor(author: string) Result<Error, Book[]>\n    ~books.booksOf(author)\n"
+    },
+    "plan": [
+      {
+        "path": "components/books/data/entities/book.nuc",
+        "kind": "entity",
+        "task": "entity Book. The spec says: An entity Book (id: a generated primary key, title: string, author: string)"
+      },
+      {
+        "path": "components/books/data/repositories/book_repository.nuc",
+        "kind": "repository",
+        "task": "repository BookRepository. The spec says: A repository BookRepository with byAuthor(author: string) Book[] that filters by author and orders by title"
+      },
+      {
+        "path": "components/books/domain/usecases/books_of_author.nuc",
+        "kind": "usecase",
+        "task": "usecase BooksOfAuthor. The spec says: A use case BooksOfAuthor(books: BookRepository) whose exec(author: string) returns those books"
+      },
+      {
+        "path": "components/books/books_appcomponent.nuc",
+        "kind": "appcomponent",
+        "task": "appcomponent BooksAppComponent. The spec says: An application component BooksAppComponent with booksOf() = BooksOfAuthor.exec"
+      },
+      {
+        "path": "components/books/api/books_controller.nuc",
+        "kind": "controller",
+        "task": "controller BooksController. The spec says: A controller BooksController(books: BooksAppComponent) on \"books\" with GET \"author/{author}\" that answers ~books.booksOf(author)."
+      }
+    ],
+    "attempts": 5,
+    "seconds": 59.6,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "plan guide, the platform's layout and structure"
+      },
+      {
+        "step": "split",
+        "detail": "5 pieces"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  },
+  "feature-new-reader": {
+    "round": 23,
+    "code": "// file: components/readers/data/entities/reader.nuc\n@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n  email: string\n  @column(unique = true)\n  email: string\n\n// file: components/readers/domain/models/new_reader.nuc\nmodel NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n\n// file: components/readers/domain/usecases/create_reader.nuc\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n\n// file: components/readers/data/repositories/reader_repository.nuc\nrepository ReaderRepository\n  byName(name: string) Result<Error, Reader>\n    where({ \"name\": name })\n    getOne()\n\n  aliveSince(year: int, max: int = 20) Reader[]\n    where({ \"status\": \"alive\", \"year\": gte(year) })\n    orderBy(\"name\")\n    limit(max)\n    getMany()\n\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n\n// file: components/readers/readers_appcomponent.nuc\nappcomponent ReadersAppComponent\n  create() = CreateReader.exec\n\n// file: components/readers/api/readers_controller.nuc\n@controller(\"readers\")\ncontroller ReadersController(readers: ReadersAppComponent)\n  @post()\n  create(input: NewReader) Result<Error, Reader>\n    ~readers.create(input)\n    status = 201\n",
+    "files": {
+      "components/readers/data/entities/reader.nuc": "@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n  email: string\n  @column(unique = true)\n  email: string\n",
+      "components/readers/domain/models/new_reader.nuc": "model NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n",
+      "components/readers/domain/usecases/create_reader.nuc": "usecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n",
+      "components/readers/data/repositories/reader_repository.nuc": "repository ReaderRepository\n  byName(name: string) Result<Error, Reader>\n    where({ \"name\": name })\n    getOne()\n\n  aliveSince(year: int, max: int = 20) Reader[]\n    where({ \"status\": \"alive\", \"year\": gte(year) })\n    orderBy(\"name\")\n    limit(max)\n    getMany()\n\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n",
+      "components/readers/readers_appcomponent.nuc": "appcomponent ReadersAppComponent\n  create() = CreateReader.exec\n",
+      "components/readers/api/readers_controller.nuc": "@controller(\"readers\")\ncontroller ReadersController(readers: ReadersAppComponent)\n  @post()\n  create(input: NewReader) Result<Error, Reader>\n    ~readers.create(input)\n    status = 201\n"
+    },
+    "plan": [
+      {
+        "path": "components/readers/data/entities/reader.nuc",
+        "kind": "entity",
+        "task": "entity Reader. The spec says: An entity Reader (id: a generated primary key, name: string, email: string unique)"
+      },
+      {
+        "path": "components/readers/domain/models/new_reader.nuc",
+        "kind": "model",
+        "task": "model NewReader. The spec says: A model NewReader (name: at least 2 characters, email: a valid email)"
+      },
+      {
+        "path": "components/readers/domain/usecases/create_reader.nuc",
+        "kind": "usecase",
+        "task": "usecase CreateReader. The spec says: A use case CreateReader(readers: ReaderRepository) whose exec(input: NewReader) saves a Reader with the input's name and email and returns it in a Result"
+      },
+      {
+        "path": "components/readers/data/repositories/reader_repository.nuc",
+        "kind": "repository",
+        "task": "repository ReaderRepository. The spec says: A use case CreateReader(readers: ReaderRepository) whose exec(input: NewReader) saves a Reader with the input's name and email and returns it in a Result"
+      },
+      {
+        "path": "components/readers/readers_appcomponent.nuc",
+        "kind": "appcomponent",
+        "task": "appcomponent ReadersAppComponent. The spec says: An application component ReadersAppComponent with create() = CreateReader.exec"
+      },
+      {
+        "path": "components/readers/api/readers_controller.nuc",
+        "kind": "controller",
+        "task": "controller ReadersController. The spec says: A controller ReadersController(readers: ReadersAppComponent) on \"readers\" with a POST that answers ~readers.create(input) with status 201."
+      }
+    ],
+    "attempts": 13,
+    "seconds": 77.3,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "plan guide, the platform's layout and structure"
+      },
+      {
+        "step": "split",
+        "detail": "6 pieces"
+      }
+    ],
+    "check": "components/readers/data/entities/reader.nuc:9:3 N0102 'email' is declared twice in 'Reader'; each member is declared once\ncomponents/readers/domain/usecases/create_reader.nuc:1:9 N0303 'CreateReader' is also declared in components/readers/data/repositories/reader_repository.nuc; each name is declared once in a project",
+    "missing": [],
+    "pass": false
+  },
+  "feature-books-list-app": {
+    "round": 23,
+    "code": "// file: components/book/domain/models/book.nuc\nmodel Book\n  id: int\n  title: string\n\n// file: components/book/domain/models/book_error.nuc\nmodel BookError\n  message: string\n\n// file: components/book/data/book_repository.nuc\n@repository(path = \"books\")\nrepository BookRepository\n  @get(local = true)\n  all() Result<BookError, Book[]>\n\n// file: components/book/domain/usecases/all_books_use_case.nuc\nusecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n\n// file: components/book/book_component.nuc\nappcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n",
+    "files": {
+      "components/book/domain/models/book.nuc": "model Book\n  id: int\n  title: string\n",
+      "components/book/domain/models/book_error.nuc": "model BookError\n  message: string\n",
+      "components/book/data/book_repository.nuc": "@repository(path = \"books\")\nrepository BookRepository\n  @get(local = true)\n  all() Result<BookError, Book[]>\n",
+      "components/book/domain/usecases/all_books_use_case.nuc": "usecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n",
+      "components/book/book_component.nuc": "appcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n"
+    },
+    "plan": [
+      {
+        "path": "components/book/domain/models/book.nuc",
+        "kind": "model",
+        "task": "model Book. The spec says: A model Book (id: int, title: string)"
+      },
+      {
+        "path": "components/book/domain/models/book_error.nuc",
+        "kind": "model",
+        "task": "model BookError. The spec says: A model BookError (message: string)"
+      },
+      {
+        "path": "components/book/data/book_repository.nuc",
+        "kind": "repository",
+        "task": "repository BookRepository. The spec says: A repository BookRepository over the API's \"books\" path with a GET all() that returns Result<BookError, Book[]>"
+      },
+      {
+        "path": "components/book/domain/usecases/all_books_use_case.nuc",
+        "kind": "usecase",
+        "task": "usecase AllBooksUseCase. The spec says: A use case AllBooksUseCase(books: BookRepository) whose exec() returns ~books.all()"
+      },
+      {
+        "path": "components/book/book_component.nuc",
+        "kind": "appcomponent",
+        "task": "appcomponent BooksComponent. The spec says: An application component BooksComponent with all() = AllBooksUseCase.exec."
+      }
+    ],
+    "attempts": 6,
+    "seconds": 57.1,
+    "trace": [
+      {
+        "step": "recall",
+        "detail": "plan guide, the platform's layout and structure"
+      },
+      {
+        "step": "split",
+        "detail": "5 pieces"
+      }
+    ],
+    "check": "ok",
+    "missing": [],
+    "pass": true
+  }
+}
