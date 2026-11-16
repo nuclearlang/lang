@@ -11,7 +11,7 @@ related: [../02-architecture/overview.md, ../01-product/roadmap.md]
 | Level | What it covers | How |
 |---|---|---|
 | Types | every file of `src/` and of `../tools/*/src` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |
-| The engines, without the editor | Nuclear Builder (retries, a run retried from a stage or a step, a run from scratch, an interrupted run recovered, a stalled call, the preflight, a hung command, the generate and analysis steps, the acceptance), the chat's templates and history, the 3B rule of the local models | `npm test` → `../tools/nuclear-builder/test/engine.test.ts` |
+| The engines, without the editor | Nuclear Builder (retries, a run retried from a stage or a step, a run from scratch, an interrupted run recovered, a stalled call, the preflight, a hung command, the generate and analysis steps, the acceptance), Nuclear Atlas's templates and history, the 3B rule of the local models | `npm test` → `../tools/nuclear-builder/test/engine.test.ts` |
 | The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `aiSetup.json` says | `npm test` → `test/setup.test.ts` |
 | The bundle | the bundled server loads every bundled dialect without the tree | `npm run server` ends with `nuclear-lsp --check-bundle` |
 | The server | completion, hover, projects | `cargo test -p nuclear-lsp`, in the language project |

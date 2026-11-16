@@ -38,7 +38,7 @@ Tree root: `/home/julian/Documents/projects/nuclearlang` (ONE git repository sin
 
 Write the names the code has TODAY: "Dragonfly", the `dragonfly` command, the packages `dragonfly`, `dragonfly-py`,
 `dragonfly-nest`, `dragonfly-web`, `nuclear-loop`, `nuclear-graph`, "the Loop", "Nuclear HTTP". They are renamed
-later by a script (to Synapsis, `nuclear`, `nuclear-builder`, `nuclear-connector`). Only FOLDER PATHS are the new
+later by a script (to Synapsis, `nuclear`, `nuclear-builder`, `nuclear-http-connections`). Only FOLDER PATHS are the new
 ones. Do not describe the rename.
 
 ## Hard limits

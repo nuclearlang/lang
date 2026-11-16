@@ -28,7 +28,7 @@ own rules are the normative text: [mobile.md §3](../07-reference/mobile.md).
 
 ## What it is
 
-Apps for Android, iOS, desktop and web through one UI toolkit. Three parts (ADR-dart-0001, ADR-dart-0001):
+Apps for Android, iOS, desktop and web through one UI toolkit. Three parts (ADR-dart-0001):
 
 1. the **contract and its dialects**: `platform.toml` here; `flutter`, the only dialect today, in the
    [`dart` dialect project](../../../../../nuclearlang/dialects/dart/AGENTS.md). Kinds and decorators add

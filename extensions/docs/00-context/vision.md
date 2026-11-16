@@ -14,7 +14,7 @@ feature in one place, so working on a backend and its apps does not need several
 ## Users
 - A developer who writes Nuclear by hand: live diagnostics, completion, hover, go to definition, the generated code
   beside the `.nuc`, run and debug of a project of any platform.
-- A developer who works with agents: Nuclear Builder, the chat and their settings, on the developer's machine.
+- A developer who works with agents: Nuclear Builder, Nuclear Atlas and their settings, on the developer's machine.
 
 ## What each editor has
 
@@ -28,9 +28,9 @@ feature in one place, so working on a backend and its apps does not need several
 | Run, hot reload on save, repair of a Synapsis project | yes | yes (the Flutter plugin runs the app) | tasks and ▷ runnables |
 | Debugging a `.nuc` | every platform, with mixed stepping | breakpoints, the paused line, error explanations | no |
 | The devices inside the editor | the Synapsis device and the web device | no | no |
-| Nuclear Connector | yes | yes | no |
+| HTTP Connections | yes | yes | no |
 | Nuclear Builder | yes | yes, through `nuclear-builder` | no |
-| The chat, the settings page, the notifications | yes | no | no |
+| Nuclear Atlas, the settings page, the notifications | yes | no | no |
 
 ## What it does not do
 - It is not the language server: completion, hover, diagnostics and the project rules are

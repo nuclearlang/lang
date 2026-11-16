@@ -38,7 +38,7 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
    of one platform is offered to another (context key `nuclear.platform`; no buttons while a tool is the active tab):
    - mobile: ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, Build, Test, Check;
    - backend: ▷ Serve (`nuclear run`; the server restarts on each build), ◉ Debug (debugpy for fastapi, node with
-     source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the Connector tool);
+     source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the HTTP Connections tool);
    - web: ▷ Serve (`nuclear run`, Vite), ▭ Device, ◉ Debug, ↻ Reload, Build, Test, Check.
 7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web
    project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app
@@ -46,7 +46,7 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
    install, run, test, check and the dialect's debug launch), and every `nuclear build` writes `.nuclear/lines.json`,
    so a breakpoint in a `.nuc` stops in every debugger and the paused line shows in the `.nuc`.
 8. **The tools are workspaces too, independent of the projects.**
-   - The Connector tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts
+   - The HTTP Connections tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts
      / components → endpoints, OpenAPI documents, the environment); a component is an editor tab and each endpoint a
      tab inside it, so the tab bar never fills with requests. A component panel keeps its tabs, forms and responses
      while its workspace is left. Environments belong to the window (`<first folder>/.nuclear/http.json`, else the
@@ -76,7 +76,7 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
     a short toast with its shortcut, so the mouse teaches the keys. The user may rebind any of them.
 12. **A welcome page at startup** (`nuclear.workspace.welcome`, on by default, only when the window restored no
     editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.
-13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the Connector tool window,
+13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,
     `Alt+Shift+H`). Zed cannot contribute keybindings or views.
 
 ## Options considered
@@ -107,4 +107,4 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
 
 ## References
 - Replaces: ADR-0099
-- The contract the Connector tool reads: ADR-synapsis-0006. The Synapsis device: ADR-devices-0001.
+- The contract the HTTP Connections tool reads: ADR-synapsis-0006. The Synapsis device: ADR-devices-0001.

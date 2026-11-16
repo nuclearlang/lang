@@ -7,6 +7,9 @@
 //   public/content/home.json    the home page: its hooks, the samples and their outputs, the agent's fix (the real compiler)
 //   public/content/tools.json   every tool: its page and its documents
 //   public/content/platforms.json  every platform: its levels, its onboarding run again, its code built per dialect
+//   public/logos/<name>.svg     the logos of the integrations (simple-icons), coloured for each theme
+//   public/icons/<name>.svg     the icons the site uses (lucide), in the theme's accent
+//   public/brand/<mark>.svg     the marks of NuclearLang's own tools and the orbit of the workspaces (tools/marks.mjs)
 //   public/static/<path>.html   the same page as plain HTML, for search engines and agents that read without JS
 //   public/llms.txt, public/llms-full.txt, public/sitemap.xml, public/robots.txt
 //
@@ -20,6 +23,8 @@ import { fileURLToPath } from 'node:url'
 import MarkdownIt from 'markdown-it'
 import { bundledLanguages, createHighlighter } from 'shiki'
 import { parse } from 'smol-toml'
+import * as simpleIcons from 'simple-icons'
+import { marks, orbit } from './marks.mjs'
 
 const project = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const config = parse(readFileSync(join(project, 'site.toml'), 'utf8'))
@@ -321,17 +326,132 @@ const flowOf = f => {
   return { source: m[1], target: m[2], text: m[3] ?? '' }
 }
 
+// --- the logos and the icons: SVG files whose colour follows the reader's theme (an <img> reads prefers-color-scheme) ---
+const THEME = { light: '#17200f', dark: '#dbe7d2', accentLight: '#3d7a00', accentDark: '#a7ff00' }
+const luminance = hex => {
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+const themed = (light, dark, prop) => `<style>*{${prop}:${light}}@media (prefers-color-scheme:dark){*{${prop}:${dark}}}</style>`
+mkdirSync(join(out, 'logos'), { recursive: true })
+// a logo is a simple-icons slug, or { devicon = "<folder>/<file>", name } for a brand simple-icons leaves out (VS Code,
+// IntelliJ IDEA), or { lucide = "<icon>", name } for a product with no free logo (Codex); { simple, name } renames one
+const lucideSvg = (owner, name, light, dark) => {
+  const file = join(project, 'tools/node_modules/lucide-static/icons', `${name}.svg`)
+  if (!existsSync(file)) {
+    console.error(`${owner}: lucide has no icon "${name}"`)
+    process.exit(1)
+  }
+  const svg = readFileSync(file, 'utf8').replace(/<!--.*?-->\s*/s, '').replace('stroke="currentColor"', '')
+  return svg.replace(/(<svg[^>]*>)/, `$1${themed(light, dark, 'stroke')}`)
+}
+const logos = new Map(Object.entries(config.logos).map(([name, source]) => {
+  const file = join(out, 'logos', `${name}.svg`)
+  if (typeof source === 'object' && source.devicon) {
+    const from = join(project, 'tools/node_modules/devicon/icons', `${source.devicon}.svg`)
+    if (!existsSync(from)) {
+      console.error(`[logos] ${name}: devicon has no "${source.devicon}"`)
+      process.exit(1)
+    }
+    copyFileSync(from, file)
+    return [name, { name: source.name, src: `/logos/${name}.svg` }]
+  }
+  if (typeof source === 'object' && source.lucide) {
+    writeFileSync(file, lucideSvg(`[logos] ${name}`, source.lucide, THEME.light, THEME.dark))
+    return [name, { name: source.name, src: `/logos/${name}.svg` }]
+  }
+  const slug = typeof source === 'object' ? source.simple : source
+  const icon = Object.values(simpleIcons).find(i => i?.slug === slug)
+  if (!icon) {
+    console.error(`[logos] ${name}: simple-icons has no "${slug}"`)
+    process.exit(1)
+  }
+  // a brand colour too dark for the dark theme (or too light for the light one) takes the theme's text colour
+  const l = luminance(icon.hex)
+  const light = l > 0.7 ? THEME.light : `#${icon.hex}`
+  const dark = l < 0.08 ? THEME.dark : `#${icon.hex}`
+  writeFileSync(file, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">${themed(light, dark, 'fill')}<path d="${icon.path}"/></svg>`)
+  return [name, { name: source.name ?? icon.title, src: `/logos/${name}.svg` }]
+}))
+const logo = (owner, name) => {
+  if (!logos.has(name)) {
+    console.error(`${owner}: no logo "${name}" in [logos] of site.toml`)
+    process.exit(1)
+  }
+  return logos.get(name)
+}
+mkdirSync(join(out, 'icons'), { recursive: true })
+mkdirSync(join(out, 'brand'), { recursive: true })
+const icon = (owner, name) => {
+  if (name.startsWith('brand:')) {
+    const mark = name.slice(6)
+    if (!marks[mark]) {
+      console.error(`${owner}: tools/marks.mjs has no mark "${mark}"`)
+      process.exit(1)
+    }
+    writeFileSync(join(out, 'brand', `${mark}.svg`), marks[mark]())
+    return `/brand/${mark}.svg`
+  }
+  writeFileSync(join(out, 'icons', `${name}.svg`), lucideSvg(owner, name, THEME.accentLight, THEME.accentDark))
+  return `/icons/${name}.svg`
+}
+// the screenshots of the editor: an image of public/shots/, the keys it answers to and its callouts
+const shots = new Map(config.shots.map(sh => {
+  if (!existsSync(join(out, sh.image))) {
+    console.error(`[[shots]] ${sh.id}: no image ${sh.image} in public/`)
+    process.exit(1)
+  }
+  return [sh.id, { id: sh.id, image: sh.image, alt: sh.alt, caption: sh.caption, spots: sh.spots }]
+}))
+const shotsOf = (owner, ids = []) => ids.map(id => {
+  if (!shots.has(id)) {
+    console.error(`${owner}: no [[shots]] "${id}" in site.toml`)
+    process.exit(1)
+  }
+  return shots.get(id)
+})
+// the orbit of the workspaces: the platforms (their first dialect's logo) around the same Nuclear
+const platformLogo = key => {
+  const source = config.logos[config.platforms.find(p => p.key === key).dialects[0]]
+  const slug = typeof source === 'object' ? source.simple : source
+  const i = Object.values(simpleIcons).find(x => x?.slug === slug)
+  return { path: i.path, hex: i.hex }
+}
+writeFileSync(join(out, 'brand', 'orbit.svg'), orbit(['mobile', 'backend', 'web'].map(platformLogo)))
+const ART = { orbit: '/brand/orbit.svg' }
+// the parts of the extension, most important first; each links to its tool's page
+const modules = new Map(config.modules.map(m => {
+  if (!m.link && !config.tools.some(t => t.key === m.tool)) {
+    console.error(`[[modules]] ${m.id}: no tool "${m.tool}"`)
+    process.exit(1)
+  }
+  if (m.art && !ART[m.art]) {
+    console.error(`[[modules]] ${m.id}: no art "${m.art}"`)
+    process.exit(1)
+  }
+  return [m.id, {
+    id: m.id, name: m.name, icon: icon(m.id, m.icon), title: m.title, points: m.points, keys: m.keys,
+    logos: (m.logos ?? []).map(l => logo(m.id, l)), marks: (m.marks ?? []).map(k => ({ name: k.label, src: icon(m.id, k.icon) })),
+    art: m.art ? ART[m.art] : '', shots: shotsOf(m.id, m.shots), more: m.link ?? `/tools/${m.tool}`,
+  }]
+}))
+
+// an output of a dialect, with the logo of its language or framework for its tab
+const withLogo = o => ({ ...o, logo: logos.get(o.dialect)?.src ?? '' })
+
 const tools = config.tools.map(t => ({
   key: t.key, name: t.name, group: t.group, tagline: t.tagline, pitch: t.pitch, highlights: t.highlights,
+  icon: icon(t.key, t.icon), logos: (t.logos ?? []).map(l => logo(t.key, l)), shots: shotsOf(t.key, t.shots),
   demo: highlight(t.demo.trim(), 'shellscript'), project: `${org}/nuclear/tree/${branch}/${t.project}`, pages: pagesOf(t.key, t.pages),
 }))
 writeFileSync(join(out, 'content', 'tools.json'), JSON.stringify(tools))
 
 const platforms = config.platforms.map(p => ({
-  key: p.key, name: p.name, dialects: p.dialects.join(' · '), tagline: p.tagline, pitch: p.pitch,
+  key: p.key, name: p.name, dialects: p.dialects.join(' · '), logos: p.dialects.map(d => logo(p.key, d)), tagline: p.tagline, pitch: p.pitch,
   levels: p.levels.map(l => ({ level: l.level, title: l.title, text: l.text, boxes: l.boxes, flows: l.flows.map(flowOf) })),
   pages: pagesOf(p.key, p.pages),
   ...onboardings.get(p.key),
+  code: { ...onboardings.get(p.key).code, outputs: onboardings.get(p.key).code.outputs.map(withLogo) },
 }))
 writeFileSync(join(out, 'content', 'platforms.json'), JSON.stringify(platforms))
 
@@ -342,10 +462,14 @@ writeFileSync(join(out, 'content', 'home.json'), JSON.stringify({
   lead: config.site.lead,
   tagline: config.site.tagline,
   actions: h.actions.map(a => ({ title: a.title, path: address(a.path), primary: !!a.primary })),
-  hooks: h.hooks,
+  targetsTitle: h.hero.targetsTitle,
+  targets: h.hero.targets.map(t => logo('home.hero', t)),
+  agentsTitle: h.hero.agentsTitle,
+  agents: h.hero.agents.map(t => logo('home.hero', t)),
+  hooks: h.hooks.map(k => ({ title: k.title, text: k.text, icon: icon(k.title, k.icon) })),
   samplesTitle: h.samples.title,
   samplesNote: h.samples.note,
-  samples,
+  samples: samples.map(sample => ({ ...sample, outputs: sample.outputs.map(withLogo) })),
   check,
   generatorTitle: h.generator.title,
   generatorText: h.generator.text,
@@ -357,16 +481,28 @@ writeFileSync(join(out, 'content', 'home.json'), JSON.stringify({
   dialects: platforms.find(p => p.key === h.dialects.platform).code,
   platformsTitle: h.platforms.title,
   platformsText: h.platforms.text,
-  platforms: platforms.map(p => ({ key: p.key, name: p.name, dialects: p.dialects, tagline: p.tagline })),
+  logs: modules.get(h.logs.module),
+  extension: { title: h.extension.title, text: h.extension.text, editorsTitle: h.extension.editorsTitle,
+    editors: h.extension.editors.map(e => ({ ...logo('home.extension', e.logo), path: `/tools/${e.tool}` })), modules: h.extension.modules.map(id => {
+    if (!modules.has(id)) {
+      console.error(`home.extension: no [[modules]] "${id}"`)
+      process.exit(1)
+    }
+    return modules.get(id)
+  }) },
+  platforms: platforms.map(p => ({ key: p.key, name: p.name, dialects: p.dialects, logos: p.logos, tagline: p.tagline })),
   toolsTitle: h.tools.title,
   toolsText: h.tools.text,
-  tools: tools.map(t => ({ key: t.key, name: t.name, group: t.group, tagline: t.tagline })),
+  tools: tools.filter(t => t.group !== 'Editors').map(t => ({ key: t.key, name: t.name, group: t.group, tagline: t.tagline, icon: t.icon })),
   librariesTitle: h.libraries.title,
   librariesText: h.libraries.text,
   librariesCommand: highlight(h.libraries.code.trim(), 'shellscript'),
   librariesExample: highlight(h.libraries.example.trim(), 'nuclear'),
-  installTitle: h.install.title,
-  install: h.install.lines.map(fillSite).join('\n'),
+  install: {
+    title: h.install.title, text: h.install.text, mark: icon('home.install', 'brand:install'),
+    systems: h.install.systems.map(x => ({ name: x.name, logos: x.logos.map(l => logo('home.install', l)), html: highlight(fillSite(x.command), 'shellscript') })),
+    next: highlight(h.install.next.trim(), 'shellscript'),
+  },
 }))
 
 // llms.txt (llmstxt.org): what an AI agent reads first; llms-full.txt carries the short sheets and the reference

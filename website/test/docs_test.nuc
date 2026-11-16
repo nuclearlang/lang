@@ -15,7 +15,34 @@ step(command: string, output: string) PlatformSteps
   PlatformSteps(title = "Create the project", text = "Only .nuc files.", command = command, output = output)
 
 code() PlatformCode
-  PlatformCode(path = "components/todos/api/todos_controller.nuc", html = "<pre>nuclear</pre>", outputs = [PlatformOutputs(dialect = "fastapi", path = "build/app/todos_controller.py", html = "<pre>python</pre>")])
+  PlatformCode(path = "components/todos/api/todos_controller.nuc", html = "<pre>nuclear</pre>", outputs = [PlatformOutputs(dialect = "fastapi", path = "build/app/todos_controller.py", html = "<pre>python</pre>", logo = "/logos/fastapi.svg")])
+
+logo() Logo
+  Logo(name = "React", src = "/logos/react.svg")
+
+shot() Shot
+  Shot(
+    id = "connector",
+    image = "/shots/connector.webp",
+    alt = "HTTP Connections",
+    caption = "HTTP Connections",
+    spots = [ShotSpot(x = 0.5, y = 0.5, label = "copy as curl")],
+  )
+
+module() ExtensionModule
+  ExtensionModule(
+    id = "http-connections",
+    name = "HTTP Connections",
+    icon = "/brand/http.svg",
+    title = "An API client that fills itself",
+    points = ["It finds the services of every project."],
+    keys = [ShotKey(key = "Ctrl+Alt+H", label = "VS Code")],
+    logos = [],
+    marks = [],
+    art = "",
+    shots = [shot()],
+    more = "/tools/http-connections",
+  )
 
 stats() PlatformStats
   PlatformStats(nucFiles = 14, nucLines = 99, outFiles = 15, outLines = 197)
@@ -26,10 +53,14 @@ home() Home
     lead = "Write only the logic.",
     tagline = "A language.",
     actions = [Action(title = "Start", path = "/start/backend", primary = true)],
-    hooks = [Hook(title = "Made for agents", text = "One way to write each thing.")],
+    targetsTitle = "Builds to",
+    targets = [logo()],
+    agentsTitle = "Made for your agents",
+    agents = [Logo(name = "Claude Code", src = "/logos/claudecode.svg")],
+    hooks = [Hook(title = "Made for agents", text = "One way to write each thing.", icon = "/icons/bot.svg")],
     samplesTitle = "Write it once",
     samplesNote = "A note.",
-    samples = [Sample(title = "Models", nuclear = "<pre>nuclear</pre>", outputs = [Output(dialect = "typescript", html = "<pre>ts</pre>")])],
+    samples = [Sample(title = "Models", nuclear = "<pre>nuclear</pre>", outputs = [Output(dialect = "typescript", html = "<pre>ts</pre>", logo = "/logos/typescript.svg")])],
     check = CheckDemo(title = "Errors an agent can fix", text = "Text.", wrong = "<pre>let x</pre>", diagnostics = [Diagnostic(code = "N0022", line = 1, col = 1, message = "declare by assigning", fix = "let  → ")], json = "<pre>[]</pre>", fixed = "<pre>x</pre>"),
     generatorTitle = "One command writes the feature",
     generatorText = "Text.",
@@ -39,18 +70,19 @@ home() Home
     dialectsTitle = "Change the dialect",
     dialectsText = "Text.",
     dialects = code(),
+    logs = module(),
+    extension = Extension(title = "Everything in one extension", text = "Text.", editorsTitle = "Five editors", editors = [EditorLink(name = "Zed", src = "/logos/zed.svg", path = "/tools/zed")], modules = [module()]),
     platformsTitle = "Three platforms",
     platformsText = "Text.",
-    platforms = [PlatformCard(key = "web", name = "Web", dialects = "react", tagline = "In a browser.")],
+    platforms = [PlatformCard(key = "web", name = "Web", dialects = "react", logos = [logo()], tagline = "In a browser.")],
     toolsTitle = "The tools",
     toolsText = "Text.",
-    tools = [ToolCard(key = "mcp", name = "MCP server", group = "AI", tagline = "Nuclear in any client.")],
+    tools = [ToolCard(key = "mcp", name = "MCP server", group = "AI", tagline = "Nuclear in any client.", icon = "/icons/plug.svg")],
     librariesTitle = "Any library",
     librariesText = "Text.",
     librariesCommand = "<pre>nuclear add motion</pre>",
     librariesExample = "<pre>example</pre>",
-    installTitle = "Install",
-    install = "curl -fsSL https://example.org/install.sh | sh",
+    install = Install(title = "Install in one line", text = "Text.", mark = "/brand/install.svg", systems = [InstallSystem(name = "Windows", logos = [logo()], html = "<pre>irm</pre>")], next = "<pre>nuclear new</pre>"),
   )
 
 tool() Tool
@@ -61,6 +93,9 @@ tool() Tool
     tagline = "Nuclear in any client.",
     pitch = "It speaks MCP.",
     highlights = [ToolHighlights(title = "Generate first", text = "The generators, as tools.")],
+    icon = "/icons/plug.svg",
+    logos = [logo()],
+    shots = [shot()],
     demo = "<pre>nuclear-mcp tools</pre>",
     project = "https://github.com/example/tree/main/tools/mcp",
     pages = [ToolPages(title = "The MCP server", path = "/mcp/guide/mcp")],
@@ -71,6 +106,7 @@ platform() Platform
     key = "backend",
     name = "Backend",
     dialects = "fastapi · nestjs",
+    logos = [logo()],
     tagline = "APIs from the same .nuc.",
     pitch = "Controllers and entities.",
     levels = [PlatformLevels(level = "1 · Context", title = "Your API and its clients", text = "Text.", boxes = [PlatformBoxes(name = "Your API", kind = "system", text = "in Nuclear")], flows = [PlatformFlows(source = "Clients", target = "Your API", text = "HTTP")])],
@@ -136,6 +172,12 @@ DocsTest
     ~screen.findByText("Run nuclear fix")
     ~screen.findByText("\$ nuclear new todos_api -p backend")
     ~screen.findByText("Every tool")
+    ~screen.findByText("Everything in one extension")
+    ~screen.findByText("Made for your agents")
+    ~screen.findByText("Install in one line")
+    ~screen.findByText("Zed")
+    ~screen.findAllByText("An API client that fills itself")
+    ~screen.findAllByText("Ctrl+Alt+H")
 
   @widget("the page of a tool shows its pitch, how it starts and the index of its documents")
   showsTool()
@@ -143,6 +185,8 @@ DocsTest
     ~screen.findByText("It speaks MCP.")
     ~screen.findByText("Generate first")
     ~screen.findByText("The MCP server")
+    ~screen.findAllByText("HTTP Connections")
+    ~screen.findAllByText("React")
 
   @widget("a tool that does not exist says so")
   missingTool()

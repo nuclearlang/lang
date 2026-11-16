@@ -2,11 +2,11 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [workspace.md, ../../../tools/nuclear-builder/AGENTS.md, ../../../tools/nuclear-ai-chat/AGENTS.md, ../../../../installer/docs/08-guides/ai-setup.md]
+related: [workspace.md, ../../../tools/nuclear-builder/AGENTS.md, ../../../tools/nuclear-atlas/AGENTS.md, ../../../../installer/docs/08-guides/ai-setup.md]
 ---
 # The AI services in the editor: set-up, settings, connections, notifications
 
-What Nuclear Builder and the chat need around them. The services themselves (the Smart Graph, the Nuclear Developer) and
+What Nuclear Builder and Nuclear Atlas need around them. The services themselves (the Smart Graph, the Nuclear Developer) and
 their models are other projects; what a user does is in
 [Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md).
 
@@ -84,6 +84,6 @@ needs the user.
   run or session). The tools that have notices: `agent`, `builder`, `settings`.
 - The workspace shows them: the badge on the Nuclear icon of the activity bar, a count on the tool's tab, the list
   in the tool's pane.
-- Nuclear Builder's engines (`engines` in `tools/nuclear-builder/src/panel.ts`) and the chat's jobs (`jobs` in
-  `tools/nuclear-ai-chat/src/panel.ts`) are module-level: a page is only a view, so closing it or switching tools
+- Nuclear Builder's engines (`engines` in `tools/nuclear-builder/src/panel.ts`) and Nuclear Atlas's jobs (`jobs` in
+  `tools/nuclear-atlas/src/panel.ts`) are module-level: a page is only a view, so closing it or switching tools
   leaves the work running.

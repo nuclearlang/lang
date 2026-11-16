@@ -11,17 +11,22 @@ recorded in each tool's roadmap: the web platform (navigation by address, no DOM
 generator (a screen keyed by an `id` the model lacks, no single-object resource, no app-wide shared view), the
 compiler (an arrow passed where a `void` callback is expected passes `nuclear check` and fails `tsc`).
 
-## To decide with the user
+## Half done
 
-- **Publishing at nuclearlang.github.io from this tree is not wired.** The domain is served only from the
-  `nuclearlang.github.io` repository; the site's old repository still deploys the old content. The CI
-  (`.github/workflows/website.yml`) builds and tests the bundle but publishes nothing. How: a token that pushes the
-  bundle to that repository, or a Pages workflow there that checks out this one.
+- **The site is published from the `nuclearlang.github.io` repository**, whose only file of substance is a workflow
+  that checks out this tree's `main`, builds `website/` and deploys it: by hand, every day, or on a
+  `repository_dispatch` of type `website`. A push to this tree does not publish at once: the tree's CI
+  (`.github/workflows/website.yml`) has no token to send that dispatch. TODO(human): a token (a fine-grained one with
+  Actions write on `nuclearlang.github.io`, as a secret here), or is the daily run enough?
 
 ## Untested
 
+- **The Cursor page** says the VS Code extension runs in Cursor, as the user states; no Cursor was at hand to open it.
+- **The install block** shows the one-line installers; they need a published release, and there is none yet
+  (`installer/` roadmap).
 - The animations on Safari and Firefox: checked only in a Chromium browser (Brave, headless, desktop and phone
-  widths) and in the tests (where they are skipped).
+  widths) and in the tests (where they are skipped). The same for the screenshots' tilted windows and callouts,
+  and for the logos' colour per theme (an SVG `<img>` that reads `prefers-color-scheme`).
 
 ## Pending
 

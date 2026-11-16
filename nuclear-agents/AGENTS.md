@@ -23,5 +23,5 @@ its own `AGENTS.md` and `docs/`. Today there is one.
 |---|---|
 | The knowledge the agents read, the prompts | [`nuclear-graph-storage/`](../nuclear-graph-storage/AGENTS.md) |
 | The tools a frontier model calls the agents with | [`tools/mcp/`](../tools/mcp/AGENTS.md) |
-| The Builder and the chat of the editors, `nuclear-builder` | [`extensions/`](../extensions/AGENTS.md) |
+| The Builder and Nuclear Atlas of the editors, `nuclear-builder` | [`extensions/`](../extensions/AGENTS.md) |
 | The set-up that installs and starts the agents | [`installer/`](../installer/AGENTS.md) |

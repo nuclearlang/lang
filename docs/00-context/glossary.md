@@ -26,5 +26,5 @@ Use these words, with this meaning, in code, documents and the chat.
 | The Developer | The local agents (coder, tester, planner...). | | `nuclear-agents/nuclear_developer/` |
 | `nuclear` | The one command line tool: the compiler's commands and the framework's (`new`, `make`, `gen`, `run`, `test`...). | "the `synapsis` command", "`dragonfly`" | `tools/cli/` |
 | Nuclear Builder | The pipeline tool of the editors: command `nuclear-builder`, runs in `.nuclear/builder/`. | "the Loop" | `extensions/tools/nuclear-builder/` |
-| Nuclear Connector | The editors' protocol client (HTTP/REST today). | "Nuclear HTTP" | `extensions/tools/nuclear-connector/` |
+| HTTP Connections | The editors' protocol client (HTTP/REST today). | "Nuclear HTTP" | `extensions/tools/nuclear-http-connections/` |
 | Project | In these documents: one folder of the tree with its own `AGENTS.md`. In Nuclear: what a user builds (`config.nuc` or `nuclear.toml`). | "repository" for a folder | `docs/README.md` |

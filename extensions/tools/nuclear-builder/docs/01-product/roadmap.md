@@ -16,6 +16,8 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Untested
 
+- **The message that sends a question to Nuclear Atlas** (renamed from the chat) and its tests pass (`npm test`);
+  never seen in a running VS Code.
 - **The Nuclear Builder panel was never opened in a running VS Code** (only headless renders, node checks, HTTP
   calls and `nuclear-builder`): the form, the pipeline, the *Generate* stage, the *Analysis* step, a stage skipped by a
   strategy, the questions that stop a run, the Plan step's tree and limits, the *For the agent* tab, the run's graph
@@ -40,7 +42,7 @@ What the agents, the strategies and the generators still lack is in their own pr
   of other sessions' scratch and of `flutter_tools.*` folders, every run stopped at *Check the connections*. The
   message names the folder and the diagnoser has the kind `disk`; nothing cleans the temporary folders the tools
   leave (`nuclear-lsp-backend-*`, `nuclear-web-device-*`).
-- **Not written in Nuclear** (rule 12 of the root `AGENTS.md`): `nuclear-builder` is TypeScript, inside
+- **Not written in Nuclear** (rule 9 of the root `AGENTS.md`): `nuclear-builder` is TypeScript, inside
   `extensions/vscode`. Decided by the user to stay as it is for now.
 
 What Android Studio's tool window lacks: [the plugin's roadmap](../../../../jetbrains/docs/01-product/roadmap.md).

@@ -828,25 +828,25 @@
    "id": "concept:ecosystem",
    "type": "architecture",
    "title": "The parts of the NuclearLang ecosystem",
-   "summary": "The compiler with its CLI and language server; Synapsis with its CLI and three platforms; the editor extensions; and the AI pieces: the Smart Graph (knowledge base and MCP server), the Nuclear Developer (local agents), the knowledge base itself and the Builder.",
+   "summary": "One repository, a project per folder: the language (compiler, language server, dialects), the framework Synapsis with its three platforms, the tools (the `nuclear` command, the code generator, the MCP server), the editor extensions and their tools, the devices, the Smart Graph, the local agents, the installer and the website.",
    "body": [
-    "| Part | What it is | Repository |",
-    "|---|---|---|",
-    "| `nuclear` | the language: compiler, the `nuclear` CLI, the language server, the language dialects (TypeScript, Dart, Python), the specs | `nuclearlang/nuclear` |",
-    "| `synapsis` | the framework's CLI and the platforms' philosophy | `nuclearlang/synapsis` |",
-    "| `synapsis-backend` | the backend platform: dialects `fastapi` and `nestjs`, their runtimes | `nuclearlang/synapsis-backend` |",
-    "| `synapsis-mobile` | the mobile platform: dialect `flutter`, its runtime | `nuclearlang/synapsis-mobile` |",
-    "| `synapsis-web` | the web platform: dialect `react`, its runtime | `nuclearlang/synapsis-web` |",
-    "| `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-zed` | the editor extensions; VS Code also has the workspace, the devices, the Connector tool, the Builder and the agent's chat | one each |",
-    "| `nuclear-graph` | the Nuclear Smart Graph: the private knowledge base and the MCP server | `nuclearlang/nuclear-graph` |",
-    "| `nuclear-developer` | the local AI agents | `nuclearlang/nuclear-developer` |",
-    "| `nuclear-knowledge` | the knowledge base the graph ingests: its asset files | `nuclearlang/nuclear-knowledge` |",
-    "| `nuclear-builder` | the pipeline from a spec to deployed code, without the editor (it ships with the VS Code extension) | `nuclearlang/nuclear-vscode` |",
-    "| `website` | the website, written in Nuclear on the web platform | `nuclearlang/website` |",
+    "| Folder | What it is |",
+    "|---|---|",
+    "| `nuclearlang/` | the language: the compiler, the language server, the base words, the examples |",
+    "| `nuclearlang/dialects/` | the dialects: `python` (with `fastapi`), `typescript` (with `nestjs`, `react`), `dart` (with `flutter`), `nodejs` |",
+    "| `nuclear-synapsis-framework/` | the framework and its three platforms: `mobile`, `backend`, `web` |",
+    "| `tools/` | the `nuclear` command, the code generator, the MCP server (`nuclear-mcp`) |",
+    "| `extensions/` | the VS Code, JetBrains and Zed extensions and their tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices) |",
+    "| `device-emulators/` | the devices the tools and the editors start |",
+    "| `nuclear-graph-storage/` | the Smart Graph: the local, private knowledge base every agent reads |",
+    "| `nuclear-agents/` | the local agents (the Nuclear Developer) |",
+    "| `installer/` | the installers and the release |",
+    "| `website/` | the documentation site, written in Nuclear |",
+    "| `docs/` | what is about the whole platform: vision, architecture, decisions, standards |",
     "",
-    "How they fit: you write `.nuc`; `nuclear` checks and builds it; `synapsis` runs the project's life (new, gen, build, run, test); the editor shows it all; the graph knows everything written here; the local agents use the graph and the compiler to write code; the Builder takes a spec through them; an MCP client (Claude Code, Codex, Cursor) reaches all of it through `nuclear-graph mcp`.",
+    "How they fit: you write `.nuc`; one command, `nuclear`, checks and builds it and runs the project's life (new, make, gen, build, run, test); the editor shows it all through the language server; the graph knows everything written here; the local agents use the graph and the compiler to write code; the Builder takes a spec through them; an MCP client (Claude Code, Codex, Cursor) reaches all of it through `nuclear-mcp`.",
     "",
-    "Each component's version has a row: `component:nuclear`, `component:synapsis`, `component:nuclear-vscode`..."
+    "Each component's version has a row: `component:nuclear`, `component:nuclear-vscode`, `component:nuclear-graph`..."
    ],
    "keys": [
     "ecosystem",
@@ -890,8 +890,9 @@
     }
    ],
    "sources": [
-    "README.md",
-    "AGENTS.md"
+    "README.md#The tree",
+    "AGENTS.md",
+    "docs/02-architecture/overview.md#The layers"
    ],
    "meta": {
     "topic": "ecosystem"
@@ -901,12 +902,12 @@
    "id": "concept:editors",
    "type": "concept",
    "title": "The editors: VS Code, Android Studio (JetBrains) and Zed",
-   "summary": "One language server gives the three editors diagnostics, completion, hover, rename and the documentation of every word. VS Code adds the Nuclear workspace: run and debug `.nuc`, devices, an HTTP client, the Builder, the agent's chat and the settings of the AI pieces.",
+   "summary": "One language server gives the three editors diagnostics, completion, hover, rename and the documentation of every word. VS Code adds the Nuclear workspace: run and debug `.nuc`, devices, HTTP Connections (an HTTP client), the Builder, Nuclear Atlas (the chat with the local agents over the Smart Graph) and the settings of the AI pieces.",
    "body": [
-    "- **The language server** (`nuclear-lsp`): diagnostics with quick fixes, completion, hover with the documentation of a kind or decorator, signature help, rename. It follows the platform and dialect of the project's `config.nuc`.",
-    "- **VS Code** (`nuclear-vscode`): the Nuclear workspace with a tab per project and tools; the actions of the active project in the editor's title bar (run, debug, hot reload, device, build, test, check); breakpoints in `.nuc` lines; Synapsis devices for a mobile app and a web device; the Nuclear Connector client; the Builder (`Ctrl+Alt+P`); the chat with the local agents (`Ctrl+Alt+A`); the settings and integrations page (`Ctrl+Alt+S`).",
-    "- **Android Studio and IntelliJ** (`nuclear-jetbrains`): the language, the Nuclear Connector tool window and the Nuclear Builder tool window (`Alt+Shift+P`).",
-    "- **Zed** (`nuclear-zed`): the language with a tree-sitter grammar and the same server.",
+    "- **The language server** (`nuclear-lsp`): diagnostics with quick fixes, completion, hover with the documentation of a kind or decorator, signature help, rename. It follows the platform and dialect of the project's manifest (`config.nuc` or `nuclear.toml`).",
+    "- **VS Code** (`nuclear-vscode`): the Nuclear workspace with a tab per project and tools; the actions of the active project in the editor's title bar (run, debug, device, build, test, check); breakpoints in `.nuc` lines; the Synapsis device for a mobile app and a web device; HTTP Connections (`Ctrl+Alt+H`); the Builder (`Ctrl+Alt+P`); Nuclear Atlas, the chat with the local agents over the Smart Graph (`Ctrl+Alt+A`); the settings and integrations page (`Ctrl+Alt+S`).",
+    "- **Android Studio and IntelliJ** (`nuclear-jetbrains`): the language, `.nuc` breakpoints for a mobile app, and two tool windows: HTTP Connections (`Alt+Shift+H`) and Nuclear Builder (`Alt+Shift+P`).",
+    "- **Zed** (`nuclear-zed`): the language with a tree-sitter grammar and the same server, tasks and runnables.",
     "",
     "The commands and shortcuts of VS Code are in the row `editor:vscode.commands`; its settings in `editor:vscode.settings.ai` and `editor:vscode.settings.editor`."
    ],
@@ -920,7 +921,9 @@
     "zed",
     "extension",
     "lsp",
-    "language server"
+    "language server",
+    "http connections",
+    "nuclear atlas"
    ],
    "asks": [
     "which editors support nuclear",
@@ -943,8 +946,9 @@
     }
    ],
    "sources": [
+    "extensions/docs/08-guides/README.md#Which editor has what",
     "extensions/docs/02-architecture/overview.md",
-    "extensions/vscode/README.md"
+    "extensions/vscode/docs/08-guides/README.md#Commands"
    ],
    "meta": {
     "topic": "ecosystem"

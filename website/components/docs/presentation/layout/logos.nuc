@@ -1,0 +1,9 @@
+// Integrations by their logo, each with its name unless `names` is false. Never inside a text: next to it.
+stateless Logos(items: Logo[], names: boolean = true)
+  build() Element
+    span(
+      className = "logos",
+      children = items.map((l) =>
+        span(key = l.name, className = "integration", title = l.name, children = [img(src = l.src, alt = names ? "" : l.name, width = 16, height = 16), if names span(children = l.name)])
+      ),
+    )

@@ -49,12 +49,12 @@ Semantic token colors are `semanticTokenColors` in VS Code and the `DEFAULT_*` k
 - `icons/nuclear.svg`, the container's icon, is the trefoil as a `currentColor` mask: the activity bar paints every
   icon in the theme's color, so a colored logo is not possible there.
 
-## The colors of the Nuclear Connector tree
+## The colors of the HTTP Connections tree
 
-`theme/build.mjs` sets `nuclearConnector.get/post/put/patch/delete/platform/project/component` from the palette (type,
+`theme/build.mjs` sets `nuclearHttpConnections.get/post/put/patch/delete/platform/project/component` from the palette (type,
 function, warning, number, error, primary, enumMember, property), so the tree follows each variant. `package.json`
 contributes the same ids with neutral dark and light defaults for other themes; a theme may override them. In a
-webview they are `var(--vscode-nuclearConnector-get)`.
+webview they are `var(--vscode-nuclearHttpConnections-get)`.
 
 ## Testing a changed theme
 

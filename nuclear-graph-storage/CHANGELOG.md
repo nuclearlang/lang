@@ -4,6 +4,8 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear
+  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.
 - MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the
   project added (ADR-lang-0008).
 - The planner runs a query of the exact facts only when its exact question is closer to what was asked than the

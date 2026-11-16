@@ -329,7 +329,7 @@ ExtractTools
     src = ["extensions/vscode/package.json"]
     rows: <string, any>[] = [{
       "id": "editor:vscode.commands", "type": "editor", "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-      "summary": "The ${lines.length} commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, the Connector tool, the Builder, the agent's chat and the settings.",
+      "summary": "The ${lines.length} commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
       "body": lines.join("\n"), "keys": ["vscode commands", "keyboard shortcuts", "shortcuts"], "sources": src, "meta": { "tool": "vscode", "name": "commands" },
       "data": { "commands": listed },
     }]

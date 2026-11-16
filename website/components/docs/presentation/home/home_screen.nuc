@@ -19,16 +19,18 @@ stateless HomeBody(home: Home)
       Hero(home = home),
       section(
         className = "hooks",
-        children = home.hooks.map((h) => article(key = h.title, className = "hook reveal", children = [h3(children = h.title), p(children = h.text)])),
+        children = home.hooks.map((h) => article(key = h.title, className = "hook reveal", children = [Icon(src = h.icon, className = "icon hook-icon"), h3(children = h.title), p(children = h.text)])),
       ),
+      InstallBlock(install = home.install),
       Samples(home = home),
       CheckBlock(demo = home.check),
+      section(className = "block reveal", children = ModulePanel(module = home.logs)),
       GeneratorBlock(home = home),
       DialectsBlock(home = home),
+      ExtensionBlock(extension = home.extension),
       PlatformsBlock(home = home),
       ToolsBlock(home = home),
       LibrariesBlock(home = home),
-      section(className = "install reveal", children = [h2(children = home.installTitle), pre(children = home.install)]),
     )
 
 stateless Hero(home: Home)
@@ -45,10 +47,8 @@ stateless Hero(home: Home)
           className = "actions rise",
           children = home.actions.map((x) => a(key = x.path, className = x.primary ? "button primary" : "button", href = x.path, children = x.title)),
         ),
-        div(
-          className = "targets rise",
-          children = ["TypeScript", "Dart", "Python", "Flutter", "FastAPI", "NestJS", "React"].map((t) => span(key = t, className = "chip", children = t)),
-        ),
+        div(className = "targets rise", children = [small(children = home.targetsTitle), Logos(items = home.targets)]),
+        div(className = "targets agents rise", children = [small(children = home.agentsTitle), Logos(items = home.agents)]),
       ],
     )
 
@@ -72,6 +72,7 @@ stateful Samples(home: Home)
           titles = home.samples[selected].outputs.map((o) => o.dialect),
           panes = home.samples[selected].outputs.map((o) => o.html),
           pinned = home.samples[selected].nuclear,
+          icons = home.samples[selected].outputs.map((o) => o.logo),
         ),
         p(className = "muted", children = home.samplesNote),
       ],
@@ -167,6 +168,7 @@ stateless DialectsBlock(home: Home)
           panes = home.dialects.outputs.map((o) => o.html),
           pinned = home.dialects.html,
           pinnedTitle = home.dialects.path,
+          icons = home.dialects.outputs.map((o) => o.logo),
         ),
       ],
     )
@@ -186,7 +188,7 @@ stateless PlatformsBlock(home: Home)
               className = "card platform-${c.key}",
               children = [
                 h3(children = a(href = "/platforms/${c.key}", children = c.name)),
-                small(children = c.dialects),
+                Logos(items = c.logos),
                 p(children = c.tagline),
                 div(className = "card-links", children = [a(href = "/platforms/${c.key}", children = "How it works"), a(href = "/start/${c.key}", children = "Start")]),
               ],
@@ -206,7 +208,7 @@ stateless ToolsBlock(home: Home)
         div(
           className = "cards tools",
           children = home.tools.map((t) =>
-            a(key = t.key, className = "card tool", href = "/tools/${t.key}", children = [small(children = t.group), h3(children = t.name), p(children = t.tagline)])
+            a(key = t.key, className = "card tool", href = "/tools/${t.key}", children = [Icon(src = t.icon), small(children = t.group), h3(children = t.name), p(children = t.tagline)])
           ),
         ),
         a(className = "button", href = "/tools", children = "Every tool"),

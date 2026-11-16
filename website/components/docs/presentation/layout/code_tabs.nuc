@@ -1,6 +1,6 @@
 // Code in tabs: one pane at a time (highlighted HTML, made when the site was built). With `pinned` the Nuclear stays
-// on the left and the tabs choose what it becomes on the right.
-stateful CodeTabs(titles: string[], panes: string[], pinned: string = "", pinnedTitle: string = "Nuclear")
+// on the left and the tabs choose what it becomes on the right. `icons`: the logo of each tab ("" for none).
+stateful CodeTabs(titles: string[], panes: string[], pinned: string = "", pinnedTitle: string = "Nuclear", icons: string[] = [])
   selected: int = 0
 
   build() Element
@@ -15,7 +15,7 @@ stateful CodeTabs(titles: string[], panes: string[], pinned: string = "", pinned
               className = "tabs",
               role = "tablist",
               children = titles.map((t, i) =>
-                button(key = t, role = "tab", className = i == selected ? "tab active" : "tab", onClick = () => select(i), children = t)
+                button(key = t, role = "tab", className = i == selected ? "tab active" : "tab", onClick = () => select(i), children = [if i < icons.length and icons[i] != "" img(src = icons[i], alt = "", width = 14, height = 14), span(children = t)])
               ),
             ),
             div(className = "code", dangerouslySetInnerHTML = { "__html": panes[selected] }),

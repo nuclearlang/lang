@@ -7,19 +7,20 @@
    "id": "concept:ai-loop",
    "type": "architecture",
    "title": "AI in NuclearLang: the Smart Graph, the Nuclear Developer and the Builder",
-   "summary": "Three pieces take a spec to tested, reviewed code on your machine: the Smart Graph (a private knowledge base and the MCP server), the Nuclear Developer (local agents on models of at most 3B parameters) and the Builder (the pipeline). A frontier model can lead; the local agents write.",
+   "summary": "Four pieces take a spec to tested, reviewed code on your machine: the Smart Graph (a private knowledge base), the MCP server `nuclear-mcp`, the Nuclear Developer (local agents on models of at most 3B parameters) and the Builder (the pipeline). A frontier model can lead; the local agents write.",
    "body": [
     "| Piece | What it is | Where it runs |",
     "|---|---|---|",
-    "| Nuclear Smart Graph | the knowledge base of the whole ecosystem, searched instead of guessing; and the MCP server | `127.0.0.1:7878` |",
-    "| Nuclear Developer | the local agents: coder, tester, security reviewer, planner, documenter, diagnoser, assistant | `127.0.0.1:7879` |",
-    "| The Builder | the pipeline from a spec to deployed code: generate, plan, tests first, code, verification, security, artifacts, deploy | the editor, or `nuclear-builder` |",
+    "| Nuclear Smart Graph | the knowledge base of the whole ecosystem, searched instead of guessing | `127.0.0.1:7878` |",
+    "| The MCP server (`nuclear-mcp`) | gives any agent the graph, the compiler, a project's commands, the generators and the local developer | started by the AI client, over stdio |",
+    "| Nuclear Developer | the local agents: coder, tester, security reviewer, planner, analyst, documenter, diagnoser, acceptor, assistant | `127.0.0.1:7879` |",
+    "| The Builder | the pipeline from a spec to deployed code: specification, generate, plan, tests first, code, verification, security, artifacts, deploy | the editor, or `nuclear-builder` |",
     "",
     "The idea: a small model cannot hold much in its head, so what it needs comes from the graph, and what it writes is checked by the compiler before it answers. Standard code is written by generators, not by a model. A frontier model (Claude, or any other over MCP) is the lead: it plans, validates and corrects only what is wrong, and what it corrects becomes an example the local agents learn from.",
     "",
-    "Everything runs on your machine: the models on Ollama, the graph and the Developer on `127.0.0.1`. It goes to the internet only when you choose a frontier model to lead, import a spec from Jira or GitHub, read an API's answer or documentation, or deploy.",
+    "Everything local runs on your machine: the models on Ollama, the graph and the Developer on `127.0.0.1`. It goes to the internet only when you choose a frontier model to lead, import a spec from Jira or GitHub, read an API's answer or documentation, or deploy.",
     "",
-    "Set up once: `nuclear-builder setup` (the installer runs it at its end; VS Code has it as a wizard). It suggests the models that fit the machine, installs everything and starts the services at every login."
+    "Set up once: `nuclear-builder setup` (the installer's last step; VS Code has it as a wizard). It suggests the models that fit the machine, installs everything and starts the services at every login."
    ],
    "keys": [
     "ai",
@@ -60,7 +61,8 @@
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md",
+    "docs/03-adr/0003-the-ai-loop.md#Decision",
+    "extensions/tools/nuclear-builder/docs/00-context/vision.md",
     "nuclear-graph-storage/docs/02-architecture/overview.md#Context",
     "installer/docs/08-guides/ai-setup.md"
    ],
@@ -78,7 +80,7 @@
     "- **Cards.** A row is one card with a stable id (`error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.resource`), a title, a summary, a body and links to other cards. A card can be fetched by its id, with no search.",
     "- **A graph.** Cards link to each other with typed edges: an error to the errors it comes with and to its fix, a kind to its decorators, a playbook to the tools of its steps.",
     "- **Hybrid search.** A query is matched by meaning (a local embeddings model) and by the exact names it writes (`N0114`, `gen resource`, `usecase`), and a card is also found by the questions it answers. The search is exact: every card a filter matches is compared with the question, so a card the graph holds is always found.",
-    "- **Exact answers.** A question that asks which, how many or what are (every tool of the MCP server, the parameters of a tool, the commands that create a kind, what a diagnostic means, the stages of the Builder) is not answered by meaning: the graph keeps the names and structured fields of every card in a relational database (SQLite, in memory only, made from the sealed cards) and a catalogue of exact questions (the `queries` shelf), each with the query that answers it. A planner matches the question to the catalogue and to the shelves: the query runs only when its exact question is closer to what was asked than the closest card, so \"what is nuclear\" gets its card and not the commands of the tool of that name. It fills the query's parameters from the question's own words and runs it, with no model: the answer is every row, the same every time. The chat shows those rows as they are, under the assistant's explanation.",
+    "- **Exact answers.** A question that asks which, how many or what are (every tool of the MCP server, the parameters of a tool, the commands that create a kind, what a diagnostic means, the stages of the Builder) is not answered by meaning: the graph keeps the names and structured fields of every card in a relational database (SQLite, in memory only, made from the sealed cards) and a catalogue of exact questions (the `queries` shelf), each with the query that answers it. A planner matches the question to the catalogue and to the shelves: the query runs only when its exact question is closer to what was asked than the closest card, so \"what is nuclear\" gets its card and not the commands of the tool of that name. It fills the query's parameters from the question's own words and runs it, with no model: the answer is every row, the same every time. Nuclear Atlas shows those rows as they are, under the assistant's explanation.",
     "- **Two readers.** A local agent reads only Nuclear (`agents`); a frontier model also reads the dialects underneath, the decisions and the state.",
     "- **Private.** It listens on `127.0.0.1` only, refuses web pages, gives nothing without a token the user allowed, and stores its texts encrypted.",
     "- **Versioned.** The base has a schema and a revision; a check fails when it is behind the code.",
@@ -130,7 +132,8 @@
    "sources": [
     "nuclear-graph-storage/docs/03-adr/0001-a-library-of-typed-linked-versioned-rows.md",
     "nuclear-graph-storage/docs/03-adr/0002-exact-facts-a-query-planner-and-the-graph-in-nuclear.md",
-    "nuclear-graph-storage/README.md"
+    "nuclear-graph-storage/docs/08-guides/README.md",
+    "nuclear-graph-storage/docs/00-context/vision.md"
    ],
    "meta": {
     "topic": "ai"
@@ -140,30 +143,29 @@
    "id": "concept:mcp",
    "type": "concept",
    "title": "The MCP of NuclearLang: what it is and how it works",
-   "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Cursor) starts a program and calls its tools. `nuclear-graph mcp` is that program for NuclearLang: it gives the client the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer as tools.",
+   "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls its tools. `nuclear-mcp` is that program for NuclearLang (`nuclear-graph mcp` runs it): it gives the client the generators, the local developer, the Smart Graph, the compiler, the `nuclear` commands and the internet as tools.",
    "body": [
-    "**How it works.** The AI client starts `nuclear-graph mcp` and talks to it over stdio. The server offers tools and a set of instructions; the model calls a tool, the server runs it on your machine (a search in the graph, `nuclear check`, `nuclear gen`, a request to the local agents) and answers text the model reads.",
+    "**How it works.** The AI client starts `nuclear-mcp` and talks to it over stdio. The server offers tools and a set of instructions; the model calls a tool, the server runs it on your machine (a search in the graph, `nuclear check`, `nuclear gen`, a request to the local agents) and answers text the model reads.",
     "",
     "**Connect it.**",
     "",
     "```sh",
-    "nuclear-builder setup                                 # once: the services, and the MCP server's access to the graph",
-    "claude mcp add nuclear -- nuclear-graph mcp        # Claude Code",
-    "codex mcp add nuclear -- nuclear-graph mcp         # Codex",
+    "nuclear-builder setup                                # once: the AI services, and MCP clients' access to the graph",
+    "claude mcp add --scope user nuclear -- nuclear-mcp   # Claude Code",
+    "codex mcp add nuclear -- nuclear-mcp                 # Codex",
     "```",
     "",
-    "Cursor and others: an MCP server whose command is `nuclear-graph` with the argument `mcp`. VS Code's settings page (`Ctrl+Alt+S`) adds it with a button.",
+    "Cursor (`~/.cursor/mcp.json`) and OpenCode (`~/.config/opencode/opencode.json`): an MCP server whose command is `nuclear-mcp`. VS Code's *Settings and integrations* (`Ctrl+Alt+S`) adds it with a button.",
     "",
     "**Its tools, by group.**",
     "",
-    "- The graph: `graph_strategy` (which kind of request it is and the plan of that kind: the first call), `graph_search`, `graph_card`, `graph_prompt`, `graph_remember`.",
-    "- The compiler: `nuclear_check`, `nuclear_build`, `nuclear_fmt`, `nuclear_help`, `nuclear_brief`, `nuclear_defs`.",
-    "- The project: `synapsis` (new, build, install, test, check, make, migrate, explain), `project_inspect`.",
-    "- The generators: `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`.",
-    "- The internet: `web_search`, `web_read`.",
+    "- The generators: `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`.",
     "- The local developer: `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`.",
+    "- The graph: `graph_strategy` (which kind of request it is and the plan of that kind: the first call), `graph_answer`, `graph_search`, `graph_card`, `graph_prompt`, `graph_remember`.",
+    "- The compiler and the command line: `nuclear_check`, `nuclear_build`, `nuclear_fmt`, `nuclear_help`, `nuclear_brief`, `nuclear_defs`, `nuclear_project` (new, build, install, test, check, analyze, make, gen, migrate, add, remove, explain).",
+    "- The internet: `web_search`, `web_read`.",
     "",
-    "**The way of working it asks for.** The generators write the standard code; the local developer does the task first (`developer_task`); the frontier model reads the journal, validates (`nuclear_check`, `nuclear test`), corrects only what is wrong and records its review (`developer_review`), so the local agents learn from the correction.",
+    "**The way of working it asks for.** The generators write the standard code; the local developer does the rest first (`developer_task`); the frontier model validates (`nuclear_check`, `nuclear test`), corrects only what is wrong and records its review (`developer_review`), so the local agents learn from the correction.",
     "",
     "Each tool has its row: `mcp:generate_resource`, `mcp:developer_task`... and the whole server is `mcp:server`.",
     "",
@@ -230,9 +232,9 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/README.md#Use it from an AI agent (MCP)",
+    "tools/mcp/docs/08-guides/mcp.md",
     "tools/mcp/server.nuc",
-    "tools/mcp/docs/08-guides/mcp.md"
+    "nuclear-graph-storage/AGENTS.md#Stack"
    ],
    "meta": {
     "topic": "ai"
@@ -242,25 +244,25 @@
    "id": "concept:nuclear-developer",
    "type": "concept",
    "title": "The Nuclear Developer: the local AI agents",
-   "summary": "The Nuclear Developer is a team of local agents on models of at most 3B parameters (on Ollama, no GPU needed): a coder, a tester, a security reviewer, a planner, an analyst, a documenter, a diagnoser and a chat assistant. Each follows fixed steps: recall from the Smart Graph, write, check with the compiler, repair.",
+   "summary": "The Nuclear Developer is a team of local agents on models of at most 3B parameters (on Ollama): a coder, a tester, a security reviewer, a planner, an analyst, a documenter, a diagnoser, an acceptor and a chat assistant. Each follows fixed steps: recall from the Smart Graph, write, check with the compiler, repair.",
    "body": [
-    "It is the junior developer of the team: it writes one small piece well when the task is precise, and it does not make architecture decisions. It is itself a Synapsis backend written in Nuclear.",
+    "It is the junior developer of a frontier model: it writes one small piece well when the task is precise, and it does not make architecture decisions. It is itself a Synapsis backend written in Nuclear.",
     "",
     "**Why it works with a small model.**",
     "",
     "- A small model follows fixed steps better than it chooses tools, so each agent is a graph of fixed steps.",
     "- What the model cannot remember comes from the Smart Graph: the card of the kind it writes, validated examples, the mistakes to avoid.",
-    "- What it writes is checked by the compiler before it answers; an error goes back to it with its fix, at most three times.",
+    "- What it writes is checked by the compiler before it answers; an error goes back to it with its card, at most three times.",
     "- Standard code is not written by the model at all: the generators write it.",
     "- It reads the project by itself: the files that declare the names its order writes are its context.",
-    "- Its answer is held to the order's own words: a name, a path or a value the order writes and the answer lacks is asked for again.",
+    "- Its answer is held to the order's own words: a name, a call or a value the order writes and the answer lacks is asked for once more.",
     "- It reads and writes only Nuclear, never the target language.",
     "",
-    "**The agents** (each has its row: `agent:coder`, `agent:tester`...): the coder writes one `.nuc` file; the tester writes the tests; the security reviewer reports findings; the planner splits a spec into pieces of one file; the documenter writes what a run did; the diagnoser says why a step failed and what to do; the assistant answers the editor's chat.",
+    "**The agents** (each has its row: `agent:coder`, `agent:tester`...): the coder writes one `.nuc` file; the tester writes the tests; the security reviewer reports findings; the planner splits a spec into pieces of one file; the analyst says which kind of request a spec is; the documenter writes what a run did; the diagnoser says why a step failed and what to do; the acceptor holds each acceptance criterion against what a run left; the assistant answers Nuclear Atlas, the editor's chat.",
     "",
     "**Roles.** Developer is one of its faces. It also works as tester, security reviewer, planner, documenter and support (`role:developer`, `role:tester`, `role:security`, `role:devops`...).",
     "",
-    "**It knows its limits.** One file per call, an 8192-token window, no decisions. Its plan says what of a spec the platform cannot do yet or is beyond a local model; a task beyond it is split smaller, handed to a frontier model that leads, or asked back to the user (`limit:agent-reasoning`, `playbook:escalate`).",
+    "**It knows its limits.** One file per call, an 8192-token window by default, no decisions. Its plan says what of a spec the platform cannot do yet or is beyond a local model; a task beyond it is split smaller, handed to a frontier model that leads, or asked back to the user (`limit:agent-reasoning`, `playbook:escalate`).",
     "",
     "Run it: `nuclear-developer` (it listens on `127.0.0.1:7879`); its models: `qwen2.5-coder:3b` writes code, `gemma4:e2b` plans, reviews and answers."
    ],
@@ -328,7 +330,9 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/README.md",
+    "nuclear-agents/nuclear_developer/docs/00-context/vision.md",
+    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md",
+    "nuclear-agents/nuclear_developer/docs/06-runbooks/run.md#Settings",
     "docs/03-adr/0003-the-ai-loop.md#Decision"
    ],
    "meta": {
@@ -348,7 +352,7 @@
     "| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |",
     "| `medium` | `qwen2.5-coder:3b` | 2.5 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
     "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.7 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
-    "| `remote` | none | 0 | any | nothing runs on the machine: the MCP server alone |",
+    "| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine: the MCP server alone |",
     "",
     "Every local profile also downloads `embeddinggemma` (0.6 GB, in the figures above), which makes the graph's vectors.",
     "",

@@ -538,12 +538,12 @@
    "title": "Can: take a spec to tested code with AI agents, on your machine or under a frontier model",
    "summary": "The Builder runs a spec through generate, plan, tests first, code, verification, security, artifacts and deploy with the local agents; any MCP client (Claude Code, Codex, Cursor) can lead it; every run is documented, retried from where it failed and exportable as CI.",
    "body": [
-    "- Local only: `nuclear-builder run specs/<id>/spec.md --lead local`, or `/task` in the chat.",
+    "- Local only: `nuclear-builder run specs/<id>/spec.md --lead local`, or `/task` in Nuclear Atlas.",
     "- Under a lead: `--lead claude`, or the MCP tools `developer_task`, `developer_retry`, `developer_review`.",
     "- Specs imported from Jira or a GitHub issue (VS Code).",
     "- The internet for facts: `web_search`, `web_read`, `api_inspect` (MCP tools).",
     "- CI: `nuclear-builder export github|gitlab|bitbucket`; `nuclear-builder ci` runs the same commands locally.",
-    "- A chat about the project with the local assistant (VS Code)."
+    "- A chat about the project with the local assistant: Nuclear Atlas (VS Code)."
    ],
    "keys": [
     "ai workflow",

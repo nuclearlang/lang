@@ -21,12 +21,15 @@ stateless ToolPage(tools: Tool[], name: string)
         section(
           className = "page-hero",
           children = [
+            Icon(src = tool.icon, className = "icon big rise"),
             small(className = "eyebrow rise", children = tool.group),
             h1(className = "rise", children = tool.name),
             p(className = "lead rise", children = tool.tagline),
             p(className = "tagline rise", children = tool.pitch),
+            if tool.logos.length > 0 div(className = "rise", children = Logos(items = tool.logos)),
           ],
         ),
+        ...tool.shots.map((s) => section(key = s.id, className = "block reveal", children = ShotView(shot = s))),
         section(
           className = "hooks",
           children = tool.highlights.map((h) => article(key = h.title, className = "hook reveal", children = [h3(children = h.title), p(children = h.text)])),

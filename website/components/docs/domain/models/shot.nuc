@@ -1,0 +1,18 @@
+// A screenshot of the editor (site.toml [[shots]]): the image, what it shows, its caption and its callouts.
+Shot
+  id: string
+  image: string
+  alt: string
+  caption: string
+  spots: ShotSpot[]
+
+// A key of the editor and what it opens.
+ShotKey
+  key: string
+  label: string
+
+// A callout on the image: x and y are fractions of its width and height, from the top left corner.
+ShotSpot
+  x: double
+  y: double
+  label: string

@@ -1,15 +1,15 @@
-# NuclearLang
+# NuclearLang for VS Code
 
 **NuclearLang** (`.nuc`) is a minimal language, made to be written by AI agents and read by people. A transpiler
-written in Rust turns it into real code of other technologies, like Dart/Flutter or TypeScript. This extension
-brings the language server (`nuclear-lsp`), every dialect (flutter, fastapi, nestjs, dart, python, typescript), their type definitions and the
-**Chernobyl** theme.
+written in Rust turns it into the code an expert would write in the target: Dart/Flutter, TypeScript, Python. This
+extension brings the language server (`nuclear-lsp`), the dialects (`flutter`, `fastapi`, `nestjs`, `react`, and
+the base `dart`, `python`, `typescript`) with their type definitions, the **Nuclear workspace** with the platform's
+tools, and the **Chernobyl** themes.
 
-## What we do
+## Why it exists
 
-You write the idea once in Nuclear and the transpiler generates the code an expert in the target would write:
-imports, `@override`, `async`, constructors, `const`/`final` and the formatting. It goes one way only
-(`.nuc` → `.dart` / `.ts`): it neither reads nor changes code of the target language.
+Agents write better when there is less to write and one single way to write it. Nuclear removes the noise of the
+target (imports, boilerplate, `super.key`, `setState(() { })`) and keeps the logic. This `.nuc`:
 
 ```nuclear
 stateful Counter
@@ -29,7 +29,7 @@ stateful Counter
     )
 ```
 
-generates this Dart (the transpiler's real output):
+becomes this Dart (the transpiler's real output):
 
 ```dart
 import 'package:flutter/material.dart';
@@ -60,197 +60,78 @@ class _CounterState extends State<Counter> {
 }
 ```
 
-## Philosophy
+The extension puts everything around that code in one window: writing it, running and debugging the app, calling
+its API and handing work to the local agents. It is not the language: completion, hover and diagnostics come from
+the language server, and what a dialect means comes from the dialect.
 
-**Golden rule:** performance, speed and readability. Each rule of the language and of each dialect is accepted
-only if it meets the three:
+## What it brings
 
-- **Performance:** the generated code runs as fast as an expert's hand-written code.
-- **Speed:** transpiling is immediate, because only what is needed is read.
-- **Readability:** Nuclear code is minimal and is understood effortlessly.
+- **The language server**: live diagnostics with the transpiler's codes (`N0106`) and a quick fix when the fix is
+  exact; completion of members, named arguments, overrides and decorators; hover and signature help from the type
+  definitions; go to definition, references, rename, outline, folding; semantic colors; multi-file projects with the
+  architecture rules of their platform. The status bar shows the project's platform and dialect (`backend · fastapi`).
+- **Show Generated Code**: the Dart, TypeScript or Python a `.nuc` generates, beside it.
+- **Code metrics**: a complexity code lens above each function, like CodeMetrics.
+- **The Nuclear workspace** (`Ctrl+Alt+N`): a strip of tabs, the projects at the top and the tools at the bottom.
+  Every tab is a workspace of its own; a project's tab shows its files and puts its platform's actions (run, debug,
+  device, build, test, check…) in the editor title bar, each with a key.
+- **Run, debug and reload on save** for every platform: breakpoints in the `.nuc`, the paused line in the `.nuc`,
+  stepping by Nuclear line, under the Dart debugger, node, debugpy and Chrome; saving a `.nuc` rebuilds and the
+  running app, server or page takes it.
+- **The devices** (`Ctrl+Alt+V`): a mobile app or a web app running inside the editor, beside its code.
+- **HTTP Connections** (`Ctrl+Alt+H`): an HTTP client like Bruno that already knows every endpoint of your
+  projects, read from the contract the compiler writes.
+- **Nuclear Builder** (`Ctrl+Alt+P`): a spec taken through plan, tests first, code, verification, security and
+  deploy by Claude and the local agents, every step visible. The same engine is the `nuclear-builder` command.
+- **Nuclear Atlas** (`Ctrl+Alt+A`): the local agent integrated with the RAG, a chat with the local agents about the
+  active project, answered from the Nuclear Smart Graph (100% local, the knowledge base the MCP serves too); `/task <order>` runs it
+  as a Builder run.
+- **Set up the AI services** and **Settings and integrations** (`Ctrl+Alt+S`): a wizard that installs the Smart
+  Graph, the Nuclear Developer and the local models that fit the machine, and one page for every `nuclear.ai.*`
+  setting, the MCP server and the connections.
+- **The Chernobyl and Chernobyl Soft themes**, with their file icons.
 
-Principles:
+Every command, key and setting is in [the guide](docs/08-guides/README.md).
 
-1. **The easiest to write.** No `;`, no `{ }` for blocks, no mandatory `return`, `new` or `this.`, no manual
-   `async`. Blocks are marked with a 2-space indentation.
-2. **One single way to do each thing.** So an agent never hesitates between two equivalent syntaxes.
-3. **Familiar before novel.** Types, `=>`, decorators and generics are written as in TypeScript.
-4. **Everything is a value**, as in Elixir: `if` and `match` return, and a function's last line is its result.
-5. **Clear errors before magic.** No hidden inference: every diagnostic has a code (`N0106`), a position and,
-   when possible, a suggested fix.
-6. **The language does not change per dialect.** A dialect adds meaning, not grammar.
+## How we made it
 
-## How it works
+- **One language server and one base extension per editor**
+  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)): the same `nuclear-lsp` serves
+  VS Code, Android Studio and Zed, and the extension knows a dialect only as data. A project's dialect comes from its
+  manifest (`config.nuc` or `nuclear.toml`), so a backend project never sees Flutter's kinds.
+- **The Nuclear workspace** ([ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md)): one container,
+  one thing on screen at a time, keyboard first, the devices beside the code like emulators.
+- **A page is only a view**: a Builder run or a chat question belongs to the extension, so closing its page or
+  switching tools leaves the work running, and a notification says when it ends.
+- **The tools come first** ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)): the
+  generators of the file tree's *New with Synapsis* menu are `nuclear make` and `nuclear gen`, and the Builder runs
+  `nuclear gen` before any agent writes.
+- **Written in TypeScript**, bundled with esbuild, the panels in plain HTML and script with no framework. The tools'
+  code lives in their own projects ([`../tools/`](../tools/)), bundled here.
 
-A **dialect** is a declarative folder (TOML + templates) loaded at run time. It defines:
+Done and never tried in a running VS Code (only headless renders and node checks): the workspace, the AI pages and
+the web device panel among them ([roadmap](docs/01-product/roadmap.md)).
 
-- the **kinds**: header words like `stateless`, `stateful`, `repository` or `controller`, which generate their
-  framework's structure;
-- the decorators, the architecture rules and the structure of projects;
-- how each construct is written in the target language.
+## Try it
 
-Rust decides *what* is emitted and the dialect decides *how* it is written. To support a new framework you create a
-dialect, without touching the compiler.
-
-The **type definitions** (`defs/`, generated from the SDK, like `.d.ts`) describe each class of Dart, Flutter and
-packages like bloc, dio and go_router. With them the imports are written by themselves, `@override` goes where it
-belongs and the editor completes members and arguments.
-
-## Why
-
-AI agents write better when there is less to write and one single way to do it. Nuclear removes the noise of the
-target language (imports, boilerplate, `super.key`, `setState(() { })`) without losing performance. What is left
-is the logic, shorter to read and to review. The same `.nuc` can target another technology by changing the
-dialect.
-
-## Dialects
-
+```sh
+code --install-extension nuclearlang-<version>.vsix   # from a GitHub release, or built below
+cd extensions/vscode && npm install && npm run package # → nuclearlang-<version>.vsix
 ```
-typescript ─► nodejs ─► nestjs
-dart ───────► flutter
-```
 
-| Dialect | Target | What it adds |
-|---|---|---|
-| `dart` | Dart | kinds `extension`, `mixin`, `data`; `Result<E, T>` with fpdart |
-| `flutter` | Dart + Flutter | `stateless`, `stateful` and the Synapsis framework: `@screen` (routes, providers, session, ACL), `repository`, `usecase`, `statemanager`, `event`, `component`, `guard` and tests in Nuclear |
-| `typescript` | TypeScript | the base language over strict TS |
-| `nodejs` | TypeScript for Node.js | Node APIs |
-| `nestjs` | NestJS | kinds `controller` and `service` |
+The NuclearLang installer installs the `.vsix` by itself when `code` is on the `PATH`. Then open a `.nuc` file:
+diagnostics appear while you type. *Preferences: Color Theme* → **Chernobyl**; `Ctrl+Alt+N` opens the workspace,
+`Ctrl+Alt+W` its welcome page with the projects, the tools and the keys.
 
-The extension brings every dialect of the repository (`flutter`, `fastapi`, `nestjs`, `dart`, `python`,
-`typescript`) with their type definitions. A project is checked with the dialect its manifest names (`config.nuc`
-with `synapsis(platform, dialect)`, or `nuclear.toml`): a backend project never sees Flutter's kinds, and the
-status bar shows its platform and dialect (`backend · fastapi`), read from the project card `.nuclear/project.json`
-the server writes. `nuclear.dialect` only applies to `.nuc` files outside a project. To use a dialect of your own,
-add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects` folder is always searched.
+## Where to read next
 
-## What the extension brings
-
-- **Live diagnostics**, with the same codes as the transpiler, and quick fixes.
-- **Semantic highlighting:** kinds, modules, enums, parameters and library names (deprecated ones struck through).
-- **Completion:** members of external classes (`Colors.`, `x.`), named arguments (required ones first), methods
-  to override, decorators and the arguments of `@screen`.
-- **Hover and signature help** from the type definitions, with a link to Flutter's API.
-- **Go to definition, references, rename, outline and folding.**
-- **Multi-file projects** (`nuclear.toml`, or a folder with `main.nuc` in a Synapsis project): the names of the
-  other files are visible and the architecture rules apply.
-- **A Synapsis project like a Flutter project**, opened with `nuclear code` or as a folder (`code .`): the
-  Flutter extension's device picker, a ▷ Run / Debug button and F5 on a `.nuc` (transpiles and launches the app
-  with the `<project> (debug)` configuration of `build/<project>.code-workspace`), and **hot reload on saving a
-  `.nuc`** while the app runs. If the Flutter app is created with the window already open, the extension offers to
-  reload the window so the devices appear.
-- **Debugging the `.nuc`** on every platform: breakpoints in the `.nuc`, the pause highlighted in the `.nuc`,
-  F10/F11/Shift+F11 by Nuclear line, variable values in the `.nuc`, the *Nuclear Call Stack* view and *Go to the
-  Same Line in the generated code*, under the Dart debugger (mobile; also Dart errors on their `.nuc` line), node
-  (nestjs, with source maps), debugpy (fastapi) and Chrome (react, also on the web device). ◉ Debug or F5 with
-  `build/<project>.code-workspace`, which `nuclear build` writes for every platform with its tasks and launch.
-- **Backend and web apps reload on save:** saving a `.nuc` runs `nuclear build` and the running server or page
-  takes it (uvicorn `--reload`, `node --watch`, Vite); `nuclear.buildOnSave`.
-- **The web device** (▭ Device of a web project): the app beside the code at the size of a desktop, a laptop, a
-  tablet or a phone (user agent, touch, rotation, any size), with an address bar, Chrome's DevTools of the page, the
-  color scheme, network throttling, no cache, the page's **Console** and **Network**, screenshots and ◉ Debug.
-- **The Nuclear workspace** (activity bar, `Ctrl+Alt+N`): one container where everything of Nuclear meets. A vertical
-  strip of tabs beside a pane; every tab is a workspace of its own and switching swaps the editor area. The projects
-  at the top (`Ctrl+1` … `Ctrl+9`; open another as a tab with `Ctrl+Alt+O`, without touching the VS Code workspace;
-  platform glyph + dialect badge): the pane shows its files with the Chernobyl icon theme, and **the actions of its
-  platform are the editor title bar's toolbar** (mobile: run, debug, hot reload, device, build, test, check; backend:
-  serve, debug, test, build, check, API; web: serve, device, debug, reload, build, test, check; `Ctrl+Alt+R/G/L/B/T/C`). Run, Debug and Device of a
-  mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only
-  there): one reload, then the action continues. The tools at the bottom
-  (`Ctrl+Alt+<letter>`). Clicking a tab or an action shows the shortcut that does the same. A welcome page
-  (`Ctrl+Alt+W`, and at startup when no editor is open) lists the projects, the tools and the keys.
-- **Nuclear Builder** (`Ctrl+Alt+P`): spec-driven work as a pipeline. The first page is the spec: what you want (a feature, a
-  refactor, a bug, tests, a security review, documentation, a diagram), written here or imported from Jira or a GitHub
-  issue, its acceptance criteria, the context files the agents get (suggested from the project and your skills) and
-  who leads (Claude with the local Nuclear Developer, or the local agents only). A run is drawn like a GitHub pipeline
-  that zooms like a C4 diagram: the stages (spec, generate, plan, code, tests, security, artifacts, deploy; the *Specification* ends with the
-  **analysis**: which kind of request the spec is (a whole system, one screen, a rename, a failing test...: its
-  strategy, ADR-developer-0001), which decides the stages that run, what the generators write and what is asked of you first;
-  *Generate* runs `nuclear gen` for the
-  resources the spec names, also in plain words, so the agents write only what is left; *Plan* shows the work as parts, tasks and pieces
-  and says what of the spec is beyond the platform or the local agents; *Tests first* is skipped when the generators
-  wrote every file), then the steps of a stage, then what each agent did (its trace, its code, its output). Every
-  call to an agent carries the project's folder, so the agent reads by itself the files its task names. The commands of each stage are
-  `.nuclear/builder.json`; *Export CI* writes them for GitHub Actions, GitLab CI or Bitbucket Pipelines. Needs the
-  [Nuclear Smart Graph](https://github.com/nuclearlang/nuclear-graph) and the
-  [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer) running. The same engine runs without the
-  editor as `nuclear-builder` (`run` a spec file, `ci` the server stages, `export`, `runs`), installed by
-  `installer/install.sh`.
-- **Nuclear agent** (`Ctrl+Alt+A`): a chat with the local agents of the
-  [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer), like the chats of Claude or Cursor, over the
-  active project and on your machine. Ask anything about the project: the local assistant answers from the project's
-  map (`.nuclear/map.md`) and the Smart Graph. Give an order with `/task <what to do>`: the local agents plan it, write
-  the tests first, then the code, run the tests and the security review, and their journal is the answer (*Open the
-  journal of the run*). The templates above the input are built from the project's own components and use cases;
-  every session is kept in the project (`.nuclear/chat/<id>.json`) and listed on the left.
-- **Set up the AI services** (*Nuclear: Set Up the AI Services*; offered once on a machine never set up; *Set-up…* in
-  *Settings and integrations*): a wizard in four steps. It reads the machine (processor, memory, GPU, free disk) and
-  asks where the agents run: on this machine, or remote agents only. It offers three sets of local models, `lite`,
-  `medium` and `hard`, each with what it downloads, the memory it wants, what works with it and what does not; the
-  one that fits the machine is suggested, the tight ones and the ones that do not fit are marked, and the choice is
-  the user's. It finds what the services need (NuclearLang, uv, Ollama) by itself once installed, or installs it in a
-  terminal. Then it installs the Smart Graph, the Nuclear Developer, the models and the knowledge base, with the
-  progress of each step and *Try again* from the one that failed, and leaves both services starting at every login.
-  The same set-up in a terminal: `nuclear-builder setup`
-  ([Set up the AI services](../../installer/docs/08-guides/ai-setup.md)).
-- **Settings and integrations** (`Ctrl+Alt+S`): every setting of the AI services in one page, kept as the editor's
-  `nuclear.ai.*` settings: the services (Smart Graph, Nuclear Developer, Ollama) with their state and *Start* /
-  *Restart* with the chosen models; the local models (installed ones with their size, a warning over the 3B rule,
-  *Pull*); the Nuclear MCP server (`nuclear-mcp`) added to Claude Code, Codex, Cursor or OpenCode in one click; the connections (the graph's
-  clients and pending access requests with *Allow* / *Deny* / *Revoke*, Jira, GitHub); Claude's model and the retry
-  policy. A project's `.nuclear/builder.json` still wins for its own pipeline.
-- **Work that does not stop, and notifications**: a Nuclear Builder run or a chat question belongs to the extension, not to its
-  page: switch tools or close the page and it keeps working. When it ends (a chat answered, a run passed or failed) a
-  notification says so (*Open* goes to that run or session) unless you are looking at it; the Nuclear icon of the
-  activity bar shows a badge with the unread ones, each tool's tab its count, and the tool's pane lists them.
-- **The chat in detail**: what the agent did is folded in grey under each answer (its steps, how long, how many tokens
-  it read); a context meter shows how full the local model's window is (`nuclear.ai.contextTokens`) and tells you to
-  start a new session when it is near; ↑ / ↓ in the input go through the questions you asked before; a question that
-  failed has *↻ Retry*, an order that failed *↻ Retry from the step that failed*.
-- **A run survives the editor**: every run writes a trace log (`.nuclear/builder/runs/<id>.log`), a heartbeat and a ledger
-  of the files it writes. Close or crash VS Code in the middle of a run and, when it opens again, the run is found
-  interrupted: what its unfinished step wrote is undone and it goes on from that step by itself (a notification says
-  so; `nuclear.ai.resumeInterrupted`). A call nothing is working on (the Developer silent, Ollama holding no model) is
-  cut and retried; a command that hangs is killed; two windows never run the same run.
-- **Every connection is checked**: each run starts with *Check the connections* (the Developer, the Smart Graph,
-  Ollama and the models it needs, Claude Code when it leads, free disk), each chat question checks what it needs, and
-  every few minutes every integration is checked again (Claude Code, Codex, OpenCode, GitHub, Jira): a notification when
-  one stops answering. Every integration is configured in *Settings and integrations* with its default.
-- **When a run fails**: a call to the local agents that fails for a passing reason (the service starting, busy, a
-  5xx) is retried by itself with exponential backoff and jitter (*Settings*: tries, first wait, longest wait); each
-  retry is written in the step's trace. When a stage fails, the local **diagnoser** tells why (the kind of failure by
-  rules, the evidence from the compiler or `nuclear doctor`, the next step), shown on the run and in the chat;
-  *↻ Retry* goes on from the step that failed (on the run and on the failed step itself), keeping every step that
-  passed; *Restart <stage>* runs the whole stage again (`nuclear-builder retry <run> [--from <stage>]` without the editor).
-- **Nuclear Connector** (`Ctrl+Alt+H`): a workspace like Bruno. Its pane is the endpoints tree of every project by platform,
-  project and component (from the contract the compiler writes, `.nuclear/contract.json`), the contracts an app
-  declares with *↓ Update* (`nuclear contracts update`), OpenAPI documents of APIs that are not Nuclear, and the
-  environment (`.nuclear/http.json`: variables, headers, base urls). A component is an editor tab and each endpoint a
-  tab inside it: path and query parameters, headers, a sample body from the model, the pretty-printed response and
-  *copy as curl*.
-- **Devices** (`Ctrl+Alt+V`): the open Synapsis devices and *+ New device*: as many as you want at once, like
-  emulators, tiled side by side, each with its own size, identity, app and session; ▷ Run, ◉ Debug and ▭ Device ask
-  which device to run on (Synapsis, new, or any Flutter device); a run never replaces a running device. Closing a
-  device tab only hides it (the app goes on); ✕ in the Devices workspace ends it now; a device nobody looks at for 30
-  minutes ends by itself and a watchdog frees orphan processes. They belong to the mobile workspaces.
-- **Show Generated Code:** shows beside it the Dart or TypeScript the file generates.
-- **Complexity metrics** per function, like CodeMetrics.
-- **Chernobyl and Chernobyl Soft themes**, with file icons.
-
-## Settings
-
-| Setting | What it does |
+| | |
 |---|---|
-| `nuclear.buildOnSave` | saving a `.nuc` of a backend or web project runs `nuclear build` (the server or page reloads by itself); on by default |
-| `nuclear.dialect` | the dialect of files outside a project (`flutter` by default; `base` checks only the base language) |
-| `nuclear.dialectPaths` | extra folders with dialects |
-| `nuclear.server.path` | another `nuclear-lsp` binary (empty: the one the extension brings) |
-| `nuclear.workspace.welcome` | the welcome page of the Nuclear workspace at startup (default on) |
-| `nuclear.ai.mcpCommand` | the program that serves the Nuclear MCP server, started with no argument (`nuclear-mcp`) |
-| `nuclear.ai.graphCommand` | the Smart Graph's program: serve, connect, requests, revoke (`nuclear-graph`) |
-| `nuclear.codemetrics.*` | costs and thresholds of the metrics |
-
-Commands (category **Nuclear**): **Show the Nuclear Workspace**, **Go to Project Tab**, **Open a Project as a Tab**,
-**Open a Tool**, **Welcome Page**, **Add the Active Project to the VS Code Workspace**, **Run**, **Debug**, **Select
-Dialect**, **Show Generated Code**, **Restart Language Server** and the metrics ones.
+| Install, every command, key and setting, troubleshooting | [docs/08-guides/README.md](docs/08-guides/README.md) |
+| The strip, the actions, the file tree, the settings page | [docs/08-guides/workspace.md](docs/08-guides/workspace.md) |
+| The tasks, run, hot reload and `.nuc` debugging | [docs/08-guides/run-and-debug.md](docs/08-guides/run-and-debug.md) |
+| The tools | [Nuclear Builder](../tools/nuclear-builder/README.md), [HTTP Connections](../tools/nuclear-http-connections/README.md), [Nuclear Atlas](../tools/nuclear-atlas/README.md), [the devices](../tools/nuclear-device-manager/README.md) |
+| Set up the AI services | [the set-up guide](../../installer/docs/08-guides/ai-setup.md) |
+| What the three editors share | [the extensions](../README.md) |
+| What changed | [CHANGELOG.md](CHANGELOG.md) |
+| To change it | [AGENTS.md](AGENTS.md) |

@@ -8,7 +8,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { activateDebug } from './debug';
 import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
-import { activateConnector } from '../../tools/nuclear-connector/src/connector';
+import { activateHttpConnections } from '../../tools/nuclear-http-connections/src/httpConnections';
 import { appDir, CARD, projectCard, readCard } from './card';
 import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
 import { activateWorkspace } from './workspace';
@@ -77,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   watchAppCreation(context);
   // the project of a folder (a session's cwd, a breakpoint's file), or the first one of the workspace
   debugNuc = activateDebug(context, (dir?: string) => (dir ? synapsisOf(path.join(dir, '_')) : findSynapsis()));
-  const http = activateConnector(context);
+  const http = activateHttpConnections(context);
   activateWorkspace(context, http);
   // the set-up of the AI services (ADR-installer-0002): a command, and an offer on a machine that was never set up
   context.subscriptions.push(vscode.commands.registerCommand('nuclear.ai.setup', () => SetupPanel.show()));

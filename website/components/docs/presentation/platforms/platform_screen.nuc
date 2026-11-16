@@ -23,7 +23,7 @@ stateless PlatformPage(platforms: Platform[], name: string)
         section(
           className = "page-hero",
           children = [
-            small(className = "eyebrow rise", children = platform.dialects),
+            div(className = "rise", children = Logos(items = platform.logos)),
             h1(className = "rise", children = platform.name),
             p(className = "lead rise", children = platform.tagline),
             p(className = "tagline rise", children = platform.pitch),
@@ -47,6 +47,7 @@ stateless PlatformPage(platforms: Platform[], name: string)
               panes = platform.code.outputs.map((o) => o.html),
               pinned = platform.code.html,
               pinnedTitle = platform.code.path,
+              icons = platform.code.outputs.map((o) => o.logo),
             ),
           ],
         ),

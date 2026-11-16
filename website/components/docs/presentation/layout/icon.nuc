@@ -1,0 +1,4 @@
+// A decorative icon (lucide), in the theme's accent.
+stateless Icon(src: string, className: string = "icon")
+  build() Element
+    img(className = className, src = src, alt = "", width = 24, height = 24)

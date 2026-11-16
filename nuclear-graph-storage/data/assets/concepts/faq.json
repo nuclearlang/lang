@@ -168,12 +168,11 @@
    "id": "faq:privacy",
    "type": "faq",
    "title": "Is my code sent anywhere?",
-   "summary": "No. The models run on Ollama on your machine, and the Smart Graph and the Nuclear Developer listen on `127.0.0.1` only. Something leaves the machine only when you choose it: a frontier model that leads, a spec imported from Jira or GitHub, an API read for its fields, a web search, a deploy.",
+   "summary": "The local pieces keep it on your machine: the models run on Ollama, and the Smart Graph and the Nuclear Developer listen on `127.0.0.1` only. Something leaves the machine when you choose it: a frontier model that leads, a spec imported from Jira or GitHub, an API read for its fields, a web search, a deploy.",
    "body": [
     "- The graph refuses web pages (any request with an `Origin` header), gives nothing without a token you allowed (`nuclear-graph connect`, `allow`), and stores its texts encrypted (AES-256-GCM, the key in your keyring).",
-    "- `web_read` never reads a page of this machine or of the local network.",
-    "- With *Local agents only* (`--lead local`) a run needs no internet at all, unless its spec names an API to read.",
-    "- With *Claude leads*, the spec, the journal and the files Claude reads go to Anthropic through Claude Code, as with any Claude Code session."
+    "- The internet tools (`web_read`) refuse local addresses.",
+    "- The Builder lets you choose who leads: *Claude leads, the local developer writes* (the default) or *Local agents only*. What a frontier model reads leaves the machine, as with any frontier model (ADR-platform-0003)."
    ],
    "keys": [
     "privacy",
@@ -198,7 +197,10 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/README.md#Who may read it"
+    "nuclear-graph-storage/docs/05-standards/security.md#How it is protected",
+    "nuclear-agents/nuclear_developer/docs/08-guides/README.md",
+    "extensions/tools/nuclear-builder/docs/00-context/vision.md#Who leads, and why",
+    "docs/03-adr/0003-the-ai-loop.md"
    ],
    "meta": {
     "topic": "ai"
@@ -247,7 +249,7 @@
    "id": "faq:ask-the-agent",
    "type": "faq",
    "title": "How do I ask the local agent to do something?",
-   "summary": "In VS Code open the chat (`Ctrl+Alt+A`): a question is answered from the project's map and the Smart Graph; `/task <what to do>` is an order, run as a Builder by the local agents. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
+   "summary": "In VS Code open Nuclear Atlas (`Ctrl+Alt+A`): a question is answered from the project's map and the Smart Graph; `/task <what to do>` is an order, run as a Builder by the local agents. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
    "body": [
     "- **A question** (\"what does `BooksAppComponent` expose?\", \"how do I add a route?\"): the assistant answers and changes nothing.",
     "- **An order** (`/task add a use case that lists the books of an author`): a run of the Builder with the local agents; its journal says what was done.",
@@ -261,7 +263,8 @@
     "chat",
     "ask the agent",
     "/task",
-    "nuclear agent"
+    "nuclear agent",
+    "nuclear atlas"
    ],
    "asks": [
     "how do I use the agent",

@@ -21,7 +21,7 @@ nuclearlang/                                    the language
   examples/  tools/  docs/
 extensions/
   vscode/  jetbrains/  zed/
-  tools/<tool>/                                 nuclear-builder, nuclear-connector, nuclear-ai-chat,
+  tools/<tool>/                                 nuclear-builder, nuclear-http-connections, nuclear-atlas,
                                                 nuclear-device-manager; not built: nuclear-documentor,
                                                 nuclear-ui-designer, nuclear-backend-designer,
                                                 nuclear-storage-connector

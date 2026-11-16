@@ -1,7 +1,7 @@
 # Set up the AI services
 
 NuclearLang comes with two services that run on your machine: the **Smart Graph** (what an agent needs to know about
-NuclearLang and Synapsis, and the MCP server your agent talks to) and the **Nuclear Developer** (small local models
+NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the **Nuclear Developer** (small local models
 that plan, write, test and review code). Their set-up reads your machine, suggests which models fit it, tells you how
 far each choice works, and installs what you choose. Nothing is downloaded before you say so.
 
@@ -81,7 +81,7 @@ In a terminal, without questions: `nuclear-builder setup --profile medium --yes`
 Nothing runs on your machine and nothing is downloaded but the MCP server. Claude Code, Codex, Cursor or OpenCode
 get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
 ([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). What you give up: the Smart Graph (no strategy for a request, no search of the knowledge
-base), the Builder panel and the *Nuclear agent* chat of the editor, and the local agents themselves, so your remote
+base), the Builder panel and Nuclear Atlas of the editor, and the local agents themselves, so your remote
 agent writes every line the generators do not and all of it is paid tokens.
 
 ## 5. After the set-up

@@ -2,7 +2,7 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [../02-architecture/overview.md, ../../../docs/08-guides/README.md, ../../../tools/nuclear-connector/docs/08-guides/README.md, ../../../tools/nuclear-builder/docs/08-guides/README.md]
+related: [../02-architecture/overview.md, ../../../docs/08-guides/README.md, ../../../tools/nuclear-http-connections/docs/08-guides/README.md, ../../../tools/nuclear-builder/docs/08-guides/README.md]
 ---
 # NuclearLang for Android Studio and IntelliJ
 
@@ -75,7 +75,7 @@ Backend and web projects get the language server but no run integration in this 
 
 | Tool window | Where | Shortcut | Guide |
 |---|---|---|---|
-| Nuclear Connector | left | `Alt+Shift+H` | [Nuclear Connector](../../../tools/nuclear-connector/docs/08-guides/README.md) |
+| HTTP Connections | left | `Alt+Shift+H` | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |
 | Nuclear Builder | bottom | `Alt+Shift+P` | [Nuclear Builder](../../../tools/nuclear-builder/docs/08-guides/README.md) |
 | Nuclear Error | right | — | above |
 
@@ -85,5 +85,5 @@ which the installer puts on the `PATH`.
 ## What it does not have
 
 The Nuclear workspace, the platform and dialect in the status bar, *Show Generated Code*, the devices inside the
-editor, the chat, *Settings and integrations*, the notifications and the *Retry* buttons of Nuclear Builder. They
+editor, Nuclear Atlas, *Settings and integrations*, the notifications and the *Retry* buttons of Nuclear Builder. They
 are in [VS Code](../../../vscode/docs/08-guides/README.md).

@@ -1,6 +1,6 @@
 // The Nuclear workspace (ADR-extensions-0002): one activity bar container where everything of Nuclear meets. A strip of tabs
 // (projects on top, tools at the bottom; keyboard first: Ctrl+1..9 and Ctrl+Alt+<letter>) beside a pane that
-// depends on the tab: the files of a project (its platform's actions sit in the editor title bar), the endpoints tree of the Connector tool, the
+// depends on the tab: the files of a project (its platform's actions sit in the editor title bar), the endpoints tree of the HTTP Connections tool, the
 // open devices. Every tab is a workspace of its own: switching swaps the editor area (the editors of one are
 // remembered and closed, those of the other reopened); only the devices stay, like emulators beside the code. A
 // welcome page at startup lists the projects and the shortcuts. VS Code's own explorer, search and git are not
@@ -11,13 +11,13 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { isInstalled } from './card';
 import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
-import { ChatPanel } from '../../tools/nuclear-ai-chat/src/panel';
+import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
 import { Notice, notices } from './notifications';
 import { SettingsPanel } from './settingsPanel';
 import { watchConnections } from './connections';
 import { BuilderPanel, resumeOrphans } from '../../tools/nuclear-builder/src/panel';
-import { findProjects, HttpModel, NodeAction, Project, readProject } from '../../tools/nuclear-connector/src/connector';
-import { ComponentPanel } from '../../tools/nuclear-connector/src/panel';
+import { findProjects, HttpModel, NodeAction, Project, readProject } from '../../tools/nuclear-http-connections/src/httpConnections';
+import { ComponentPanel } from '../../tools/nuclear-http-connections/src/panel';
 import { contextFor, registerTreeCommands } from './treeMenu';
 
 interface Tool {
@@ -33,9 +33,9 @@ interface Tool {
 
 export const TOOLS: Tool[] = [
   {
-    id: 'connector',
-    label: 'Nuclear Connector',
-    short: 'CONN',
+    id: 'http-connections',
+    label: 'HTTP Connections',
+    short: 'HTTP',
     key: 'Ctrl+Alt+H',
     about: 'Every endpoint of every project as a tree by platform, project and component; a component is a tab, each endpoint a tab inside it; environments (ADR-synapsis-0006).',
     planned: [],
@@ -73,11 +73,11 @@ export const TOOLS: Tool[] = [
     planned: ['a page per component with its use cases, repositories and screens', 'the API reference from `.nuclear/openapi.json`', 'a model explaining each declaration on demand'],
   },
   {
-    id: 'agent',
-    label: 'Nuclear agent',
-    short: 'AI',
+    id: 'atlas',
+    label: 'Nuclear Atlas',
+    short: 'ATLAS',
     key: 'Ctrl+Alt+A',
-    about: 'A chat with the local agents (Nuclear Developer) over the active project: questions answered from its map and the Smart Graph, orders with /task run by the local agents, templates from the project, sessions kept in .nuclear/chat.',
+    about: 'The local agent integrated with the RAG: a chat with the local agents (Nuclear Developer) over the active project, answered from its map and the Nuclear Smart Graph, the 100% local knowledge base the agents also read through the MCP; orders with /task run by the local agents, templates from the project, sessions kept in .nuclear/chat.',
     planned: [],
   },
   {
@@ -116,7 +116,7 @@ const PLATFORM_ACTIONS: Record<string, Action[]> = {
     action('test', '✓ Test', 'nuclear test'),
     action('build', '⚒ Build', 'nuclear build: transpile into build/ (and compile a TypeScript server)'),
     action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
-    action('api', '⇄ API', 'the routes of this backend in the Connector tool'),
+    action('api', '⇄ API', 'the routes of this backend in the HTTP Connections tool'),
   ],
   web: [
     action('run', '▷ Serve', 'nuclear run: build, then the dev server (Vite); saving a .nuc updates the page'),
@@ -185,7 +185,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
       const pending = context.globalState.get<PendingAction>(PENDING);
       if (pending && inFolders(pending.root)) void vscode.commands.executeCommand('workbench.action.reloadWindow');
     }),
-    http.onDidChange(() => ws.activeKey() === TOOL_PREFIX + 'connector' && ws.refresh()),
+    http.onDidChange(() => ws.activeKey() === TOOL_PREFIX + 'http-connections' && ws.refresh()),
     devicesChanged.event(() => ws.activeKey() === TOOL_PREFIX + 'devices' && ws.refresh()),
     vscode.commands.registerCommand('nuclear.workspace.show', () => vscode.commands.executeCommand(CONTAINER)),
     vscode.commands.registerCommand('nuclear.workspace.project', (index?: number) => ws.selectProject(index)),
@@ -252,7 +252,7 @@ class Workspace implements vscode.WebviewViewProvider {
   /** The active tab: a project's root, or `tool:<id>`. */
   activeKey(): string {
     const key = this.context.workspaceState.get<string>(ACTIVE);
-    if (key?.startsWith(TOOL_PREFIX)) return TOOLS.some((t) => TOOL_PREFIX + t.id === key) ? key : TOOL_PREFIX + 'connector';
+    if (key?.startsWith(TOOL_PREFIX)) return TOOLS.some((t) => TOOL_PREFIX + t.id === key) ? key : TOOL_PREFIX + 'http-connections';
     const all = this.projects();
     return all.find((p) => p.root === key)?.root ?? all[0]?.root ?? '';
   }
@@ -290,7 +290,7 @@ class Workspace implements vscode.WebviewViewProvider {
         .filter((t) => t.input instanceof vscode.TabInputText)
         .map((t) => ({ path: (t.input as vscode.TabInputText).uri.fsPath, column: t.group.viewColumn, active: t.isActive && t.group.isActive }));
       await this.context.workspaceState.update(TABS, saved);
-      if (from === TOOL_PREFIX + 'connector') this.http.reopen = ComponentPanel.openKeys();
+      if (from === TOOL_PREFIX + 'http-connections') this.http.reopen = ComponentPanel.openKeys();
     }
     // an unsaved editor is never closed (VS Code would ask to save, as if the window closed): it stays until saved
     const closable = open.filter((t) => !t.isDirty);
@@ -302,11 +302,11 @@ class Workspace implements vscode.WebviewViewProvider {
     await vscode.commands.executeCommand('nuclear.parkDevices');
     const tool = TOOLS.find((t) => TOOL_PREFIX + t.id === to);
     if (tool) {
-      if (tool.id === 'connector') ComponentPanel.restore(this.context, this.http, this.http.reopen);
+      if (tool.id === 'http-connections') ComponentPanel.restore(this.context, this.http, this.http.reopen);
       else if (tool.id === 'devices') await vscode.commands.executeCommand('nuclear.unparkDevices');
       else if (tool.id === 'builder') BuilderPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
-      else if (tool.id === 'agent') ChatPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
       return true;
     }
@@ -364,7 +364,7 @@ class Workspace implements vscode.WebviewViewProvider {
     await this.go(TOOL_PREFIX + n.tool);
     if (n.tool === 'builder') BuilderPanel.show(this.context, () => this.projects(), n.root, n.ref);
     else if (n.tool === 'settings') SettingsPanel.show(this.context);
-    else ChatPanel.show(this.context, () => this.projects(), n.root, n.ref);
+    else AtlasPanel.show(this.context, () => this.projects(), n.root, n.ref);
   }
 
   async openTool(id?: string): Promise<void> {
@@ -404,7 +404,7 @@ class Workspace implements vscode.WebviewViewProvider {
     if (a.id === 'debug') return vscode.commands.executeCommand('nuclear.debug', p.root);
     if (a.id === 'reload') return vscode.commands.executeCommand('flutter.hotReload');
     if (a.id === 'device') return this.pickDevice(p, 'device');
-    if (a.id === 'api') return this.openTool('connector');
+    if (a.id === 'api') return this.openTool('http-connections');
     let cmd = TERMINAL_COMMANDS[p.platform ?? '']?.[a.id];
     if (!cmd) return;
     if (p.platform !== 'mobile' && (a.id === 'run' || a.id === 'test') && !isInstalled(p.root)) cmd = `nuclear install && ${cmd}`;
@@ -488,11 +488,11 @@ class Workspace implements vscode.WebviewViewProvider {
     const envs = this.http.environments();
     const pane = !tool
       ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect } }
-      : tool.id === 'connector'
+      : tool.id === 'http-connections'
         ? { kind: 'tree', nodes: this.http.tree(), environment: envs.active }
         : tool.id === 'devices'
           ? { kind: 'devices', devices: devices(), project: this.active()?.name }
-          : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key }, notices: tool.id === 'agent' || tool.id === 'builder' || tool.id === 'settings' ? notices.all().filter((n) => n.tool === tool.id).map((n) => ({ id: n.id, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })) : [] };
+          : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key }, notices: tool.id === 'atlas' || tool.id === 'builder' || tool.id === 'settings' ? notices.all().filter((n) => n.tool === tool.id).map((n) => ({ id: n.id, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })) : [] };
     void webview.postMessage({
       type: 'state',
       projects: this.projects().map((p) => ({
@@ -505,7 +505,7 @@ class Workspace implements vscode.WebviewViewProvider {
         dialectIcon: DIALECT_ICONS[p.dialect] ? this.icons.uri(webview, 'icon-themes', 'atom', 'files', `${DIALECT_ICONS[p.dialect]}.svg`) : undefined,
       })),
       active: key,
-      tools: TOOLS.map((t) => ({ id: t.id, label: t.label, short: t.short, key: t.key, unread: t.id === 'agent' || t.id === 'builder' || t.id === 'settings' ? notices.unread(t.id) : 0 })),
+      tools: TOOLS.map((t) => ({ id: t.id, label: t.label, short: t.short, key: t.key, unread: t.id === 'atlas' || t.id === 'builder' || t.id === 'settings' ? notices.unread(t.id) : 0 })),
       pane,
     });
   }
@@ -561,7 +561,7 @@ class Workspace implements vscode.WebviewViewProvider {
           void this.action(m.id);
           break;
         case 'endpoint':
-          if (m.endpoint) void vscode.commands.executeCommand('nuclear.connector.open', m.endpoint);
+          if (m.endpoint) void vscode.commands.executeCommand('nuclear.httpConnections.open', m.endpoint);
           break;
         case 'nodeAction':
           if (m.action?.type === 'updateContracts') void this.http.updateContracts(m.action.root, m.action.name);
@@ -763,8 +763,8 @@ function stripHtml(webview: vscode.Webview): string {
   .tab img.pi { width: 20px; height: 20px; }
   .tab img.di { position: absolute; right: -3px; bottom: -3px; width: 14px; height: 14px; border-radius: 3px; background: var(--vscode-sideBar-background); padding: 1px; }
   .tab svg.g { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-  .tab.t-http { color: var(--vscode-nuclearConnector-get); } .tab.t-devices { color: var(--vscode-nuclearConnector-platform); }
-  .tab.t-designer { color: var(--vscode-nuclearConnector-put); } .tab.t-docs { color: var(--vscode-nuclearConnector-component); } .tab.t-agent { color: var(--vscode-nuclearConnector-post); }
+  .tab.t-http-connections { color: var(--vscode-nuclearHttpConnections-get); } .tab.t-devices { color: var(--vscode-nuclearHttpConnections-platform); }
+  .tab.t-designer { color: var(--vscode-nuclearHttpConnections-put); } .tab.t-docs { color: var(--vscode-nuclearHttpConnections-component); } .tab.t-atlas { color: var(--vscode-nuclearHttpConnections-post); }
   .tab.add { opacity: .5; font-size: 16px; font-weight: 300; border: 1px dashed currentColor; }
   .tab.add:hover { opacity: 1; }
   .pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -789,13 +789,13 @@ function stripHtml(webview: vscode.Webview): string {
   .row .btn { margin-left: auto; font-size: 11px; padding: 0 6px; border-radius: 3px; opacity: 0; background: var(--vscode-toolbar-hoverBackground); }
   .row:hover .btn { opacity: 1; }
   .row.dir .name { font-weight: 500; }
-  .row.nuc .name { color: var(--vscode-nuclearConnector-project); }
-  .c-platform { color: var(--vscode-nuclearConnector-platform); } .c-project { color: var(--vscode-nuclearConnector-project); } .c-component { color: var(--vscode-nuclearConnector-component); }
-  .c-get { color: var(--vscode-nuclearConnector-get); } .c-post { color: var(--vscode-nuclearConnector-post); } .c-put { color: var(--vscode-nuclearConnector-put); } .c-patch { color: var(--vscode-nuclearConnector-patch); } .c-delete { color: var(--vscode-nuclearConnector-delete); }
+  .row.nuc .name { color: var(--vscode-nuclearHttpConnections-project); }
+  .c-platform { color: var(--vscode-nuclearHttpConnections-platform); } .c-project { color: var(--vscode-nuclearHttpConnections-project); } .c-component { color: var(--vscode-nuclearHttpConnections-component); }
+  .c-get { color: var(--vscode-nuclearHttpConnections-get); } .c-post { color: var(--vscode-nuclearHttpConnections-post); } .c-put { color: var(--vscode-nuclearHttpConnections-put); } .c-patch { color: var(--vscode-nuclearHttpConnections-patch); } .c-delete { color: var(--vscode-nuclearHttpConnections-delete); }
   .row.ep .name { font-family: var(--vscode-editor-font-family); font-size: 12px; }
   .row.ep .verb { font-weight: 700; font-size: 11px; width: 44px; flex: none; }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin: 0 6px 0 4px; background: var(--vscode-disabledForeground); }
-  .dot.live { background: var(--vscode-testing-iconPassed); } .dot.starting { background: var(--vscode-nuclearConnector-put); } .dot.hidden { background: var(--vscode-nuclearConnector-platform); opacity: .6; }
+  .dot.live { background: var(--vscode-testing-iconPassed); } .dot.starting { background: var(--vscode-nuclearHttpConnections-put); } .dot.hidden { background: var(--vscode-nuclearHttpConnections-platform); opacity: .6; }
   .empty { padding: 12px 10px; opacity: .7; line-height: 1.5; }
   .empty a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   .toast { position: fixed; left: 48px; bottom: 10px; max-width: calc(100% - 60px); padding: 6px 10px; border-radius: 4px; font-size: 12px; background: var(--vscode-notifications-background); color: var(--vscode-notifications-foreground); border: 1px solid var(--vscode-notifications-border, var(--vscode-widget-border, transparent)); box-shadow: 0 2px 8px rgba(0,0,0,.3); opacity: 0; transition: opacity .15s; pointer-events: none; z-index: 2; }
@@ -940,7 +940,7 @@ function stripHtml(webview: vscode.Webview): string {
     }
   }
 
-  // the endpoints tree of the Connector tool
+  // the endpoints tree of the HTTP Connections tool
   function renderHttp(pane, p) {
     head(pane, 'HTTP', 'every project');
     const bar = el('div', 'envbar');

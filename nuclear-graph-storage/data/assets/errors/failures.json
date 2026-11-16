@@ -90,11 +90,11 @@
    "title": "Failure: the Nuclear Smart Graph is not reachable",
    "summary": "A search, an ingest or an agent's recall cannot connect to `127.0.0.1:7878`: the graph's server is not running. Start its service again (`nuclear-builder setup --status` says what is down); an agent that cannot reach it goes on without knowledge and says so in its trace.",
    "body": [
-    "**Looks like.** `the graph is not running at http://127.0.0.1:7878`, `the Nuclear Smart Graph is not reachable`, `ECONNREFUSED 127.0.0.1:7878`, `connection refused`.",
+    "**Looks like.** `the graph is not running at http://127.0.0.1:7878: start it with nuclear-graph serve`, `ECONNREFUSED 127.0.0.1:7878`, `connection refused`.",
     "",
     "**Cause.** `nuclear-graph serve` is not running, or it listens on another port (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_GRAPH_URL`). Its embeddings also need Ollama with the model `embeddinggemma`.",
     "",
-    "**Next step.** `nuclear-builder setup --status`; then restart the service: `systemctl --user restart nuclear-graph` on Linux, `launchctl kickstart -k gui/$UID/io.github.nuclearlang.graph` on macOS, or the settings page of VS Code (`Ctrl+Alt+S`). A machine never set up: `nuclear-builder setup`. By hand: `nuclear-graph serve &`. Then `nuclear-graph stats` (the rows of each shelf and the revision). It is a passing failure: a run retries it by itself."
+    "**Next step.** `nuclear-builder setup --status`; then restart the service: `systemctl --user restart nuclear-graph` on Linux, `launchctl kickstart -k gui/$UID/io.github.nuclearlang.graph` on macOS, or the button of VS Code's *Settings and integrations* (`Ctrl+Alt+S`). A machine set up by the installer starts it at every login; one never set up: `nuclear-builder setup`. By hand: `nuclear-graph serve &`. Then `nuclear-graph stats` (the rows of each shelf and the revision)."
    ],
    "keys": [
     "graph is not running",
@@ -126,7 +126,9 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/README.md#Install"
+    "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#When it fails",
+    "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#Settings",
+    "installer/docs/08-guides/ai-setup.md#5. After the set-up"
    ],
    "meta": {
     "family": "transient",
@@ -139,13 +141,13 @@
    "title": "Failure: a program has no access to the graph (401, 403)",
    "summary": "The graph answers 401 (no token) or 403 (the token lacks a scope): no program reads it until you allow it. Give the client access with `nuclear-graph connect <client> --scopes read,write`, or allow its pending request.",
    "body": [
-    "**Looks like.** `'mcp' has no access to the Nuclear Smart Graph: run nuclear-graph connect mcp`, `401 a token is needed`, `403 client 'x' has no 'write' scope`.",
+    "**Looks like.** `'mcp' has no access to the Nuclear Smart Graph`, `401`, `a token is needed: ask for access (POST /v1/access) and let the user allow it`, `403` (the token lacks a scope).",
     "",
-    "**Cause.** Each client has its own token, kept in your keyring, with scopes: `read` (search, prompts), `write` (remember, examples), `admin` (ingest: only the owner).",
+    "**Cause.** Each client has its own token, kept in your keyring, with scopes: `read` (search, cards, prompts), `write` (remember, add examples), `admin` (ingest, manage: only the owner).",
     "",
-    "**Next step.** `nuclear-graph connect nuclear-developer --scopes read,write` (the local agents), `nuclear-graph connect mcp --scopes read,write` (the MCP server); `nuclear-graph requests` shows who asked; `nuclear-graph allow <request>`. Restart the client so it reads its token.",
+    "**Next step.** `nuclear-graph connect nuclear-developer --scopes read,write` (the local agents), `nuclear-graph connect mcp --scopes read,write` (the MCP server), with the graph running; `nuclear-graph requests` shows who asked; `nuclear-graph allow <request>`. Restart the client so it reads its token (`NUCLEAR_GRAPH_TOKEN`, else the keyring).",
     "",
-    "**The keyring was closed.** A graph that starts at login runs before the keyring opens: it waits for it (its log says `the keyring that keeps the graph's `owner` is closed` when it gives up, and the service starts again by itself). A graph of before 2026-11-13 made a second owner's token instead and answered 401 to your own commands until it was restarted: `systemctl --user restart nuclear-graph`."
+    "**The keyring was closed.** A graph that starts at login may run before the keyring opens: it waits for the keyring, then refuses, and never makes a second key or token."
    ],
    "keys": [
     "no access",
@@ -170,7 +172,8 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/README.md#Who may read it"
+    "nuclear-graph-storage/docs/05-standards/security.md#Who may read it",
+    "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#When it fails"
    ],
    "meta": {
     "family": "environment",
@@ -181,7 +184,7 @@
    "id": "failure:the-developer-is-not-running",
    "type": "failure",
    "title": "Failure: the Nuclear Developer is not running",
-   "summary": "A stage of the Builder, the chat or an MCP tool cannot reach the local agents at `127.0.0.1:7879`. Start their service again (`nuclear-builder setup --status` says what is down); a run checks it before it starts and retries a passing failure with growing waits.",
+   "summary": "A stage of the Builder, Nuclear Atlas or an MCP tool cannot reach the local agents at `127.0.0.1:7879`. Start their service again (`nuclear-builder setup --status` says what is down); a run checks it before it starts and retries a passing failure with growing waits.",
    "body": [
     "**Looks like.** `the local developer is not running at http://127.0.0.1:7879`, `fetch failed`, a run that stops at its preflight step.",
     "",
@@ -262,9 +265,9 @@
    "title": "Failure: Ollama is not running, or a model is not installed",
    "summary": "The local agents and the graph's embeddings run on Ollama. When Ollama is down, a model was never pulled, or another program holds the model, calls fail or wait: start Ollama and let the set-up download the models of the machine's profile.",
    "body": [
-    "**Looks like.** `model 'qwen2.5-coder:3b' not found`, a call that never answers and is cut (*stalled*), `connection refused` on port 11434.",
+    "**Looks like.** `model 'qwen2.5-coder:3b' not found`, `the Nuclear Developer does not answer at ...`, a call that never answers, `connection refused` on port 11434 (`OLLAMA_URL`, default `http://localhost:11434`).",
     "",
-    "**Next step.** `ollama serve`; `nuclear-builder setup --status` names the models of the profile that are missing, and `nuclear-builder setup` downloads them (by hand: `ollama pull <model>`); `ollama ps` shows which model is loaded and by whom. On a machine with little memory, two programs that load different models make each other wait: let one finish."
+    "**Next step.** `ollama serve`; `nuclear-builder setup --status` says what is missing (most often a model of the profile), and running `nuclear-builder setup` again downloads the profile's models (by hand: `ollama pull <model>`; `ollama list` shows what is installed). A download that stopped goes on from where it stopped when the step is tried again."
    ],
    "keys": [
     "ollama",
@@ -287,7 +290,8 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/README.md#Run it"
+    "nuclear-agents/nuclear_developer/docs/06-runbooks/run.md#When it fails",
+    "installer/docs/08-guides/ai-setup.md#7. When a step fails"
    ],
    "meta": {
     "family": "environment",

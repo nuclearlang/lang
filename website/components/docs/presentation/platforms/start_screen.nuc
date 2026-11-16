@@ -76,6 +76,7 @@ stateless Done(platform: Platform)
           panes = platform.code.outputs.map((o) => o.html),
           pinned = platform.code.html,
           pinnedTitle = platform.code.path,
+          icons = platform.code.outputs.map((o) => o.logo),
         ),
         div(
           className = "actions",

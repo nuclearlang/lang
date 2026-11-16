@@ -133,7 +133,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/AGENTS.md#rules.ec8fb0",
+   "id": "doc:nuclear-synapsis-framework/AGENTS.md#rules.bfa0c9",
    "type": "readme",
    "title": "Synapsis — the framework of NuclearLang — Rules",
    "summary": "1. A platform is what is written; a dialect is only how it comes out.",
@@ -150,7 +150,7 @@
     "5. **A project is only `.nuc`.** Everything generated goes to `build/` and is never edited; no target code is",
     "   written by hand to make a dialect easier.",
     "6. **The command knows no language.** What it runs for a platform comes from the dialect (`[toolchain]`).",
-    "7. **Something new of the tree is written with Synapsis** when one of the three platforms fits it (root rule 12)."
+    "7. **Something new of the tree is written with Synapsis** when one of the three platforms fits it (root rule 9)."
    ],
    "sources": [
     "nuclear-synapsis-framework/AGENTS.md"
@@ -267,25 +267,49 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/README.md#contributing",
+   "id": "doc:nuclear-synapsis-framework/README.md#how-we-made-it.031cf5",
    "type": "readme",
-   "title": "Synapsis — Contributing",
-   "summary": "From the root of the tree, before a pull request: cargo test && cargo clippy --all-targets installer/install.sh --no-vscode # the installed `nuclear` and its help the area, the guide, and the documents for agents and contributors (AGENTS.md).",
+   "title": "Synapsis — How we made it",
+   "summary": "(ADR-synapsis-0006).",
    "body": [
-    "From the root of the tree, before a pull request:",
+    "- **A backend publishes a contract**, and an app that calls it generates its models and repositories from it",
+    "  ([ADR-synapsis-0006](docs/03-adr/0006-shared-contracts.md)).",
     "",
-    "```sh",
-    "cargo test && cargo clippy --all-targets",
-    "installer/install.sh --no-vscode       # the installed `nuclear` and its help",
-    "```",
-    "",
-    "- Everything is written in English: code, comments, docs and messages.",
-    "- A change that a user of NuclearLang can see updates its documentation in the same pull request: the reference of",
-    "  the area, the guide, and the documents for agents and contributors ([AGENTS.md](AGENTS.md)).",
-    "- Rules and the reasons behind them: [the root AGENTS.md](../AGENTS.md) and the decisions in",
-    "  [docs/03-adr/](docs/03-adr/README.md).",
-    "",
-    "By contributing you agree that your contribution is licensed under the [Apache License 2.0](../LICENSE)."
+    "The framework itself is data and documents: one contract per platform (`platforms/<platform>/platform.toml`), read",
+    "by the compiler, and runtime packages in Dart, Python and TypeScript. Its commands (`new`, `gen`, `make`, `run`,",
+    "`test`...) are commands of `nuclear`, in [the command line tools](../tools/cli/AGENTS.md); what `gen` and `make`",
+    "write is [the code generator](../tools/code_generator/AGENTS.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#how-we-made-it.4aed3a",
+   "type": "readme",
+   "title": "Synapsis — How we made it",
+   "summary": "dialect applies to its technology.",
+   "body": [
+    "- **The framework comes with the language** and is a concept, not a target: components, layers and kinds that each",
+    "  dialect applies to its technology. The `nuclear` command knows no language; what it runs comes from the dialect",
+    "  ([ADR-synapsis-0001](docs/03-adr/0001-the-framework-comes-with-the-language.md)).",
+    "- **Exactly three platforms; dialects only change the language underneath.** Two backends written for the same",
+    "  framework came out with different Nuclear (`@get(\"/{id}\")` against `@get(\":id\")`), so a platform became a",
+    "  specification in Nuclear only, and the same `.nuc` builds for every dialect of it",
+    "  ([ADR-synapsis-0002](docs/03-adr/0002-three-platforms-dialects-under-them.md)).",
+    "- **One shape for every project**: closed components with layers and a facade (`appcomponent`), dependencies",
+    "  injected from a kind's header, and the transpiler checks who may call whom",
+    "  ([ADR-synapsis-0003](docs/03-adr/0003-components-injection-and-architecture-rules.md)).",
+    "- **Kinds are libraries**: TOML, templates and a runtime, never compiler code; optional parts are plugins enabled",
+    "  in `config.nuc`, so a project carries only what it uses",
+    "  ([ADR-synapsis-0004](docs/03-adr/0004-kinds-and-plugins-are-libraries.md)).",
+    "- **Every app gets the same services**: events, session, ACL, forms, translations and generic models",
+    "  ([ADR-synapsis-0005](docs/03-adr/0005-the-services-every-app-gets.md))."
    ],
    "sources": [
     "nuclear-synapsis-framework/README.md"
@@ -302,81 +326,41 @@
    "title": "Synapsis",
    "summary": "The framework of NuclearLang.",
    "body": [
-    "The framework of NuclearLang. You write a **platform** (`mobile`, `backend` or `web`) in Nuclear: entities, use",
-    "cases, screens, endpoints, agents. A **dialect** is the language and framework it comes out in, and the Nuclear",
-    "code of a project never changes when its dialect changes. The guide, with every platform, its dialects and its",
-    "plugins: [docs/08-guides/README.md](docs/08-guides/README.md).",
+    "The framework of NuclearLang. You write an app, a backend or a web app in Nuclear on one of three **platforms**",
+    "(`mobile`, `backend`, `web`), and a **dialect** turns it into Flutter, FastAPI, NestJS or React. Synapsis is to",
+    "Nuclear what Actix is to Rust: the language comes with its framework, and no other is needed."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/README.md#try-it",
+   "type": "readme",
+   "title": "Synapsis — Try it",
+   "summary": "With `nuclear` installed (the command line tools say how), a backend in three commands: nuclear new todos_api -p backend cd todos_api nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\" nuclear check --json # [] nuclear build # todos_api: 19 files → ./build (a FastAPI…",
+   "body": [
+    "With `nuclear` installed ([the command line tools](../tools/cli/docs/08-guides/README.md) say how), a backend in",
+    "three commands:",
     "",
-    "**Start with the tutorial:** [docs/08-guides/tutorial.md](docs/08-guides/tutorial.md) (`nuclear help tutorial`):",
-    "an app from scratch with a component, a repository, a screen and tests. Kinds, yours and the community's:",
-    "[docs/08-guides/kinds.md](docs/08-guides/kinds.md). The generators: [docs/08-guides/generators.md](docs/08-guides/generators.md)."
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/README.md"
-   ],
-   "meta": {
-    "section": "04-synapsis",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/README.md#the-nuclear-command",
-   "type": "readme",
-   "title": "Synapsis — The `nuclear` command",
-   "summary": "Creates and works with apps written in NuclearLang: only `.nuc` files; for a Flutter app, the app is generated in `build/app`.",
-   "body": [
-    "Creates and works with apps written in NuclearLang: only `.nuc` files; for a Flutter app, the app is generated in",
-    "`build/app`. Full rules of the mobile commands:",
-    "[flutter.md §11](../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (`nuclear help flutter`)."
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/README.md"
-   ],
-   "meta": {
-    "section": "04-synapsis",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/README.md#the-nuclear-command-diagnosis-and-flutter",
-   "type": "readme",
-   "title": "Synapsis — Diagnosis and Flutter",
-   "summary": "whether it is missing from the PATH), VS Code with the NuclearLang, Dart and Flutter extensions, and the current project.",
-   "body": [
-    "- `nuclear doctor`: checks what NuclearLang and Synapsis need (like `flutter doctor`): `nuclear`, the flutter dialect and its type definitions, the synapsis Dart package, Flutter (where it is and",
-    "  whether it is missing from the PATH), VS Code with the NuclearLang, Dart and Flutter extensions, and the",
-    "  current project. Each problem comes with how to solve it. Flutter's own (Android, iOS, devices):",
-    "  `nuclear flutter doctor`.",
-    "- `nuclear setup`: installs Flutter following the official guide, asking before each step: system packages",
-    "  (apt, dnf, pacman, zypper or Apple's tools), the latest stable version checked with its sha256, unpacking into",
-    "  `~/develop` (`--dir` chooses another folder) and your shell's PATH."
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/README.md"
-   ],
-   "meta": {
-    "section": "04-synapsis",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/README.md#the-nuclear-command-install",
-   "type": "readme",
-   "title": "Synapsis — Install",
-   "summary": "cd <the NuclearLang tree> installer/install.sh # nuclear, nuclear-lsp and nuclear-builder in ~/.local/bin + the VS Code extension nuclear doctor # checks everything is there: CLIs, dialect, synapsis package, Flutter, VS Code nuclear setup # if Flutter is missing: installs it step by step (system…",
-   "body": [
     "```sh",
-    "cd <the NuclearLang tree>",
-    "installer/install.sh         # nuclear, nuclear-lsp and nuclear-builder in ~/.local/bin + the VS Code extension",
-    "nuclear doctor             # checks everything is there: CLIs, dialect, synapsis package, Flutter, VS Code",
-    "nuclear setup              # if Flutter is missing: installs it step by step (system packages, SDK, PATH)",
+    "nuclear new todos_api -p backend",
+    "cd todos_api",
+    "nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\"",
+    "nuclear check --json      # []",
+    "nuclear build             # todos_api: 19 files → ./build   (a FastAPI app)",
     "```",
     "",
-    "`installer/install.sh --uninstall` removes it. Flutter is found by itself (PATH, fvm, `~/development/flutter`...);",
-    "`FLUTTER` or `FLUTTER_ROOT` choose another one."
+    "Change one word of `config.nuc`, `dialect = \"fastapi\"` to `dialect = \"nestjs\"`, and `nuclear build` again: the same",
+    "14 `.nuc` files become a NestJS app. The onboarding of each platform goes on from there (install, test, run):",
+    "[backend](platforms/backend/docs/08-guides/onboarding-backend.md),",
+    "[web](platforms/web/docs/08-guides/onboarding-web.md),",
+    "[mobile](platforms/mobile/docs/08-guides/onboarding-mobile.md)."
    ],
    "sources": [
     "nuclear-synapsis-framework/README.md"
@@ -388,20 +372,21 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/README.md#the-nuclear-command-landing-page-and-credits",
+   "id": "doc:nuclear-synapsis-framework/README.md#where-to-read-next",
    "type": "readme",
-   "title": "Synapsis — Landing page and credits",
-   "summary": "synapsis arrives) and the page with the logos; afterwards, only the page.",
+   "title": "Synapsis — Where to read next",
+   "summary": "Kinds, yours and the community's: docs/08-guides/kinds.md.",
    "body": [
-    "- `nuclear` alone: the first time, an animation (the explosion, WELCOME, everything grows back and the",
-    "  synapsis arrives) and the page with the logos; afterwards, only the page.",
-    "- `nuclear credits` (or `author`): always the full animation, with the author and the repository.",
-    "- After WELCOME the motto appears: \"Before, everything was chaos; now everything is simpler with Synapsis\" (in",
-    "  Spanish if your system is in Spanish).",
-    "- Every other command starts with a header with the NuclearLang and Synapsis logos, and its messages are in",
-    "  colors: green = done, red = error, yellow = warning, blue = commands you can type.",
-    "- `nuclear help` (or `-h`): the header and the commands with their symbols and colors. Through a pipe, or with",
-    "  `NO_COLOR`, everything comes out as plain text."
+    "- The guide, with every platform, its dialects and its plugins: [docs/08-guides/README.md](docs/08-guides/README.md).",
+    "- The tutorial, an app from scratch (`nuclear help tutorial`): [docs/08-guides/tutorial.md](docs/08-guides/tutorial.md).",
+    "  Kinds, yours and the community's: [docs/08-guides/kinds.md](docs/08-guides/kinds.md). The generators:",
+    "  [docs/08-guides/generators.md](docs/08-guides/generators.md).",
+    "- The three platforms: [platforms/](platforms/README.md).",
+    "- What the framework is for: [docs/00-context/vision.md](docs/00-context/vision.md); every decision:",
+    "  [docs/03-adr/](docs/03-adr/README.md).",
+    "- To change it: [AGENTS.md](AGENTS.md), and the rules of the whole tree in [the root AGENTS.md](../AGENTS.md).",
+    "",
+    "By contributing you agree that your contribution is licensed under the [Apache License 2.0](../LICENSE)."
    ],
    "sources": [
     "nuclear-synapsis-framework/README.md"
@@ -413,24 +398,23 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/README.md#the-nuclear-command-use",
+   "id": "doc:nuclear-synapsis-framework/README.md#why-it-exists",
    "type": "readme",
-   "title": "Synapsis — Use",
-   "summary": "nuclear # landing page nuclear new shop_app # only .nuc + the Flutter app in build/app nuclear new -p backend -d fastapi shop_api # another platform, with one of its dialects cd shop_app nuclear code # VS Code: ▷ on a .nuc or F5 runs the app; saving a .nuc reloads it nuclear g c products #…",
+   "title": "Synapsis — Why it exists",
+   "summary": "Writing an app usually means choosing and wiring many packages: state, JSON, injection, http, routing, translations, tests.",
    "body": [
-    "```sh",
-    "nuclear                          # landing page",
-    "nuclear new shop_app            # only .nuc + the Flutter app in build/app",
-    "nuclear new -p backend -d fastapi shop_api   # another platform, with one of its dialects",
-    "cd shop_app",
-    "nuclear code                    # VS Code: ▷ on a .nuc or F5 runs the app; saving a .nuc reloads it",
-    "nuclear g c products            # component",
-    "nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character  # finished code from an API",
-    "nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a use case over a repository method, wired",
-    "nuclear g s products detail --route /detail -m DetailManager -st DetailView",
-    "nuclear test",
-    "nuclear help                    # every command",
-    "```"
+    "Writing an app usually means choosing and wiring many packages: state, JSON, injection, http, routing,",
+    "translations, tests. That wiring is the same in every app, and an agent spends its turns on it. With Synapsis a",
+    "project holds only its business logic; constructors, overrides, injection, JSON, http, states, modules and imports",
+    "are written by the transpiler, and what a target framework lacks comes from a runtime package of Synapsis.",
+    "",
+    "What it leaves out on purpose:",
+    "",
+    "- **A fourth platform**, and any feature that exists in one dialect of a platform only.",
+    "- **Target code in a project.** A project is only `.nuc`; everything generated goes to `build/` and is never",
+    "  edited.",
+    "- **New grammar.** A kind is a header and a block of the base language.",
+    "- **Replacing the target's own tools.** Flutter's CLI still builds and runs an app; Synapsis drives it."
    ],
    "sources": [
     "nuclear-synapsis-framework/README.md"
@@ -2834,6 +2818,145 @@
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/AGENTS.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/README.md#how-we-made-it.2b7ebe",
+   "type": "readme",
+   "title": "The platforms of Synapsis — How we made it",
+   "summary": "A platform is a specification in Nuclear only: its layout, `config.nuc`, kinds, decorators, connections, plugins, tests and errors.",
+   "body": [
+    "- **Three platforms, dialects under them** ([ADR-synapsis-0002](../docs/03-adr/0002-three-platforms-dialects-under-them.md)).",
+    "  A platform is a specification in Nuclear only: its layout, `config.nuc`, kinds, decorators, connections,",
+    "  plugins, tests and errors.",
+    "- **The contract comes first.** Each platform's `platform.toml` lists its kinds, decorators and plugins; the",
+    "  compiler's loader refuses a dialect that leaves the list (N0305). No name of a kind or a decorator is written in",
+    "  Rust: a rule every dialect shares is data of the contract",
+    "  ([docs/02-architecture/contract.md](docs/02-architecture/contract.md)).",
+    "- **The same shape for each platform**: `platform.toml`, `packages/` (the runtimes), `examples/` with their golden",
+    "  output, `checks/` (the generated code against the target's own tools), `docs/`.",
+    "- **The web platform is the mobile one in a browser**: the same words for the same things, so an app's domain reads",
+    "  the same on a phone and on the web ([ADR-web-0001](web/docs/03-adr/0001-web-platform.md))."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/README.md#how-we-made-it.92d0a5",
+   "type": "readme",
+   "title": "The platforms of Synapsis — How we made it",
+   "summary": "The dialects themselves live with their language, in `nuclearlang/dialects/`.",
+   "body": [
+    "| Platform | What it makes | Dialects | Runtime packages |",
+    "|---|---|---|---|",
+    "| [`mobile`](mobile/README.md) | apps for Android, iOS, desktop and the web | `flutter` | `synapsis`, `synapsis_genkit` (Dart) |",
+    "| [`backend`](backend/README.md) | HTTP APIs, data, events and AI agents | `fastapi` (default), `nestjs` | `synapsis-py` (Python), `synapsis-nest` (TypeScript) |",
+    "| [`web`](web/README.md) | apps in the browser | `react` | `synapsis-web` (TypeScript) |",
+    "",
+    "The dialects themselves live with their language, in [`nuclearlang/dialects/`](../../nuclearlang/dialects/README.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/README.md#the-platforms-of-synapsis",
+   "type": "readme",
+   "title": "The platforms of Synapsis",
+   "summary": "The three kinds of software Synapsis knows how to make: `mobile` apps, `backend` services and `web` apps.",
+   "body": [
+    "The three kinds of software Synapsis knows how to make: `mobile` apps, `backend` services and `web` apps. Each is a",
+    "folder here; this level holds only what the three share: what a platform is, the contract every dialect of a",
+    "platform implements, and how \"the same Nuclear for every dialect\" is tested."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/README.md#try-it",
+   "type": "readme",
+   "title": "The platforms of Synapsis — Try it",
+   "summary": "From the root of the tree: cargo test -p nuclear-dialect --test loader # every framework dialect implements its platform's contract cargo test -p nuclear-transpile --test projects # the examples of every platform: goldens and the conformance test The conformance example,…",
+   "body": [
+    "From the root of the tree:",
+    "",
+    "```sh",
+    "cargo test -p nuclear-dialect --test loader       # every framework dialect implements its platform's contract",
+    "cargo test -p nuclear-transpile --test projects   # the examples of every platform: goldens and the conformance test",
+    "```",
+    "",
+    "The conformance example, `backend/examples/examples-backend/tasks_api`, builds with every backend dialect. Each",
+    "platform's onboarding makes its example app with `nuclear new` and `nuclear gen` only."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "The platforms of Synapsis — Where to read next",
+   "summary": "how a platform is tested: docs/05-standards/testing.md.",
+   "body": [
+    "- One platform: [mobile](mobile/README.md), [backend](backend/README.md), [web](web/README.md).",
+    "- What a platform is and what an install takes from it: [docs/02-architecture/overview.md](docs/02-architecture/overview.md);",
+    "  how a platform is tested: [docs/05-standards/testing.md](docs/05-standards/testing.md).",
+    "- The framework above them: [Synapsis](../README.md).",
+    "- To change this level: [AGENTS.md](AGENTS.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/README.md#why-it-exists",
+   "type": "readme",
+   "title": "The platforms of Synapsis — Why it exists",
+   "summary": "The differences that matter are between a phone app, an HTTP API and a page in a browser, not between the languages that run them: the state management of a screen has no use in an API.",
+   "body": [
+    "The differences that matter are between a phone app, an HTTP API and a page in a browser, not between the languages",
+    "that run them: the state management of a screen has no use in an API. So a platform is what the user and the agent",
+    "write, and a dialect is only the language and framework it comes out in. Without a fixed list of what a platform",
+    "may write, anyone could make the Nuclear of one dialect incompatible with another.",
+    "",
+    "What it leaves out on purpose: a fourth platform (that would be a decision of the user and a new ADR), any name of",
+    "a dialect, a language or a target's library in a platform's contract, reference or examples, and anything only some",
+    "projects need (that is a kind package or a plugin)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/README.md"
    ],
    "meta": {
     "section": "04-synapsis",

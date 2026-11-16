@@ -58,7 +58,7 @@ covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
 ## Rules of this project
 
 - **The platform is Nuclear only.** Where a document describes what a project writes it names no dialect and no
-  target language; a project's Nuclear never changes between the dialects of the platform (root rule 11).
+  target language; a project's Nuclear never changes between the dialects of the platform (root rules 3 and 4).
 - **The contract comes first.** A kind, a decorator or a plugin exists when `platform.toml` lists it; the loader
   refuses a dialect that leaves the list. A new one is added here, then in every dialect.
 - **Data, not code.** The platform adds kinds and decorators only as data; language rules come from the base. A

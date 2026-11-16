@@ -1,0 +1,40 @@
+// One part of the extension: its slogan, points and keys beside its screenshots (a pill per screenshot when it has
+// several), or beside its marks when it has none.
+stateful ModulePanel(module: ExtensionModule)
+  shot: int = 0
+
+  build() Element
+    div(
+      className = "module-panel",
+      children = [
+        div(
+          className = "feature-text",
+          children = [
+            small(className = "eyebrow", children = module.name),
+            h3(children = module.title),
+            ul(className = "points", children = module.points.map((p) => li(key = p, children = p))),
+            ul(className = "keys", children = module.keys.map((k) => li(key = k.key, children = [span(className = "kbd", children = k.key), span(children = k.label)]))),
+            if module.logos.length > 0 Logos(items = module.logos),
+            if module.art != "" img(className = "art", src = module.art, alt = "", width = 150, height = 150),
+            a(className = "more", href = module.more, children = "More about ${module.name} →"),
+          ],
+        ),
+        module.shots.length > 0 ? ModuleShots(module = module, current = shot, onPick = (i) => show(i)) : div(className = "module-media marks", children = module.marks.map((m) => div(key = m.name, className = "mark", children = [img(src = m.src, alt = "", width = 120, height = 120), span(children = m.name)]))),
+      ],
+    )
+
+  show(index: int) void
+    setState(() =>
+      shot = index
+    )
+
+// The screenshots of a part: a pill per screenshot when it has several, and the one picked.
+stateless ModuleShots(module: ExtensionModule, current: int, onPick: (int) => void)
+  build() Element
+    div(
+      className = "module-media",
+      children = [
+        if module.shots.length > 1 div(className = "pills", children = module.shots.map((s, i) => button(key = s.id, className = i == current ? "pill active" : "pill", onClick = () => onPick(i), children = s.caption))),
+        ShotView(key = module.shots[current].id, shot = module.shots[current]),
+      ],
+    )

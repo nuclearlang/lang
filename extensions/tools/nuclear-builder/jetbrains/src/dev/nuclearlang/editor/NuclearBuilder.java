@@ -56,7 +56,7 @@ public final class NuclearBuilder {
     private NuclearBuilder() {}
 
     /** A node of the tree: what it shows and what a click opens. */
-    record Item(String text, String detail, String status, Path file, String log, NuclearConnector.Proj project, Path spec) {
+    record Item(String text, String detail, String status, Path file, String log, HttpConnections.Proj project, Path spec) {
         @Override
         public String toString() {
             return text;
@@ -166,10 +166,10 @@ public final class NuclearBuilder {
         }
 
         /** The project of the selection, or the only project. */
-        private NuclearConnector.Proj projectOf() {
+        private HttpConnections.Proj projectOf() {
             Item item = selected();
             if (item != null && item.project() != null) return item.project();
-            List<NuclearConnector.Proj> all = NuclearConnector.findProjects(base);
+            List<HttpConnections.Proj> all = HttpConnections.findProjects(base);
             if (all.size() == 1) return all.get(0);
             Messages.showInfoMessage(project, "Select a project, a spec or a run in the Nuclear Builder window first.", "Nuclear Builder");
             return null;
@@ -180,7 +180,7 @@ public final class NuclearBuilder {
             List<String> keep = new ArrayList<>();
             if (tree.getSelectionPath() != null) for (Object o : tree.getSelectionPath().getPath()) keep.add(String.valueOf(o));
             DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-            for (NuclearConnector.Proj p : NuclearConnector.findProjects(base)) {
+            for (HttpConnections.Proj p : HttpConnections.findProjects(base)) {
                 DefaultMutableTreeNode pn = new DefaultMutableTreeNode(new Item(p.name(), (p.platform() == null ? "" : p.platform() + " · ") + p.dialect(), null, null, null, p, null));
                 DefaultMutableTreeNode specs = new DefaultMutableTreeNode(new Item("Specs", "", null, null, null, p, null));
                 for (Path spec : specs(p.root())) {
@@ -211,7 +211,7 @@ public final class NuclearBuilder {
             if (running == null || !running.isAlive()) poll.stop();
         }
 
-        private DefaultMutableTreeNode runNode(NuclearConnector.Proj p, JsonObject run) {
+        private DefaultMutableTreeNode runNode(HttpConnections.Proj p, JsonObject run) {
             JsonObject spec = run.getAsJsonObject("spec");
             Path specFile = p.root().resolve("specs").resolve(str(run, "id")).resolve("spec.md");
             double cost = run.has("costUsd") ? run.get("costUsd").getAsDouble() : 0;
@@ -272,7 +272,7 @@ public final class NuclearBuilder {
         }
 
         void newSpec() {
-            NuclearConnector.Proj p = projectOf();
+            HttpConnections.Proj p = projectOf();
             if (p == null) return;
             String title = Messages.showInputDialog(project, "Title of the spec", "New Nuclear Builder Spec", null);
             if (title == null || title.isBlank()) return;
@@ -299,12 +299,12 @@ public final class NuclearBuilder {
         }
 
         void ci() {
-            NuclearConnector.Proj p = projectOf();
+            HttpConnections.Proj p = projectOf();
             if (p != null) start(p, List.of("ci"));
         }
 
         void export() {
-            NuclearConnector.Proj p = projectOf();
+            HttpConnections.Proj p = projectOf();
             if (p == null) return;
             String[] providers = {"github", "gitlab", "bitbucket"};
             int i = Messages.showChooseDialog(project, "Where the pipeline runs", "Export CI", null, providers, providers[0]);
@@ -316,7 +316,7 @@ public final class NuclearBuilder {
         }
 
         /** `nuclear-builder <args>` in the project; its output streams into the log and the tree follows the run file. */
-        private void start(NuclearConnector.Proj p, List<String> args) {
+        private void start(HttpConnections.Proj p, List<String> args) {
             if (running != null && running.isAlive()) {
                 Messages.showInfoMessage(project, "A Builder command is still running (Stop ends it).", "Nuclear Builder");
                 return;

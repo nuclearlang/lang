@@ -1,11 +1,11 @@
-// The Builder engine without VS Code: the retry policy, a run retried from the stage that failed, and the chat's helpers.
+// The Builder engine without VS Code: the retry policy, a run retried from the stage that failed, and Nuclear Atlas's helpers.
 import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { test } from 'node:test';
-import { askedOf, historyOf, templatesOf, tokensOf } from '../../nuclear-ai-chat/src/chat';
+import { askedOf, historyOf, templatesOf, tokensOf } from '../../nuclear-atlas/src/chat';
 import { billionsOf, MAX_BILLIONS } from '../../../vscode/src/localModels';
 import { backoff, DEFAULT_RETRY, defaultConfig, ENGINE, journalMarkdown, BuilderEngine, newRun, nucFiles, parseSpecMarkdown, recoverRun, retryAfter, Run, specMarkdown, specResources, toolEnv, transientStatus, upgradeRun } from '../src/engine';
 import { checkConnections, readTrace } from '../src/safety';
@@ -73,7 +73,7 @@ test('a failed run is retried from its failed stage: the stages before it are ke
   assert.match(journalMarkdown(done), /Retried from verify/);
 });
 
-test('the chat builds templates from the map and keeps the last messages', () => {
+test('Nuclear Atlas builds templates from the map and keeps the last messages', () => {
   const map = '## Component `books`\n\n- `x.nuc`\n  - usecase `AllBooks` — all\n';
   assert.ok(templatesOf(map, 'backend').some((t) => t.text.includes('`AllBooks`')));
   assert.equal(historyOf([{ role: 'you', text: 'hi', at: 0 }]), 'you: hi');
@@ -117,7 +117,7 @@ test('a retry goes on from the step that failed: a piece written before is not w
   assert.ok(fs.existsSync(path.join(root, 'a', 'b.nuc')));
 });
 
-test('the chat history goes newest first without repeats, and tokens are estimated from characters', () => {
+test('the history of Nuclear Atlas goes newest first without repeats, and tokens are estimated from characters', () => {
   const s = (at: number, text: string) => ({ id: String(at), title: text, created: at, messages: [{ role: 'you' as const, text, at }] });
   assert.deepEqual(askedOf([s(1, 'a'), s(3, 'b'), s(2, 'a')]), ['b', 'a']);
   assert.equal(tokensOf(4000), 1000);
@@ -298,7 +298,7 @@ test('a request that is not a run (a question, a command) stops at the analysis;
   const stopped = await new BuilderEngine(newRun(project(), CARD, spec()), { ...config, developerUrl: none.url }).start();
   none.close();
   assert.equal(stopped.status, 'failed');
-  assert.match(stopped.stages[0].steps.find((x) => x.title.startsWith('Analysis'))!.summary, /question: this kind of request is not a run of the Builder \(ask it in the chat\)/);
+  assert.match(stopped.stages[0].steps.find((x) => x.title.startsWith('Analysis'))!.summary, /question: this kind of request is not a run of the Builder \(ask it in Nuclear Atlas\)/);
   // an older Developer answers 404 to /developer/analyze: the run goes on with every stage, as before
   const old = await service((url) => (url === '/developer/analyze' ? { status: 404, body: { detail: 'Not Found' } } : { status: 200, body: { code: 'Book\n  title: string\n', check: 'ok', attempts: 1, trace: [], report: '', pieces: [] } }));
   const run = newRun(project(), CARD, { ...spec(), pieces: [{ path: 'components/books/domain/models/book.nuc', kind: 'model', task: 'model Book' }] });

@@ -23,7 +23,7 @@ in [the language project](../../../nuclearlang/docs/01-product/roadmap.md).
   `vscode/docs/02-architecture/client.md` places ▷ Run / Debug in `editor/title/run`, where `package.json` has
   nothing (the buttons are `nuclear.action.*` in `editor/title`); the flutter reference §11.1 lists old action sets
   for backend and web and says a device panel stops the app after 5 minutes (the code parks it and ends it after 30
-  idle, `IDLE_LIMIT`); the Connector suggests `./openapi.yaml` but reads JSON only; `vscode/README.md` leaves out
+  idle, `IDLE_LIMIT`); the HTTP Connections tool suggests `./openapi.yaml` but reads JSON only; `vscode/README.md` leaves out
   `nuclear.trace.server`, `nuclear.debug.followInNuclear` and `nuclear.debug.explainErrors`; the Device and API
   actions have no key.
 - **Installers**: the public installers install only the `.vsix`; only `installer/install.sh` from the tree installs

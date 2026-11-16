@@ -87,5 +87,5 @@ A project's own commands are in its `AGENTS.md`.
 
 The restructure of the tree: its phases 1 to 4 are done (one repository, a project per folder with its own
 documents, one `nuclear` command, the code generator, the devices, the MCP server and the editors' tools in folders
-of their own). The names in the code are Synapsis, `nuclear`, `nuclear-builder` and Nuclear Connector. What is left
+of their own). The names in the code are Synapsis, `nuclear`, `nuclear-builder` and HTTP Connections. What is left
 is in [docs/04-specs/008-restructure/tasks.md](docs/04-specs/008-restructure/tasks.md).

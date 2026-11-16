@@ -6,7 +6,7 @@ related: [overview.md, ../00-context/domain.md, ../01-product/roadmap.md]
 ---
 # The engine (`engine.ts`, `safety.ts`)
 
-Neither file imports `vscode`: the page, `nuclear-builder`, the chat's `/task` and `test/engine.test.ts` (node:test)
+Neither file imports `vscode`: the page, `nuclear-builder`, Nuclear Atlas's `/task` and `test/engine.test.ts` (node:test)
 drive the same code.
 
 ## A run through its stages

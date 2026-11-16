@@ -21,6 +21,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 26
+      # The mobile onboarding is replayed (`nuclear new -p mobile` needs Flutter): the version of platform-mobile.yml.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.8
       - name: Install nuclear
         run: |
           installer/release/build-runtimes.sh && installer/install.sh --no-vscode --no-zed --no-agent

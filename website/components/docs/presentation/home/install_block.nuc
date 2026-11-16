@@ -1,0 +1,15 @@
+// Install: the animated mark, one line per system in its tab, and what to run next.
+stateless InstallBlock(install: Install)
+  build() Element
+    section(
+      className = "install-card reveal",
+      children = [
+        div(className = "install-head", children = [img(className = "install-mark", src = install.mark, alt = "", width = 72, height = 72), div(children = [h2(children = install.title), p(children = install.text)])]),
+        CodeTabs(
+          titles = install.systems.map((s) => s.name),
+          panes = install.systems.map((s) => s.html),
+          icons = install.systems.map((s) => s.logos[0].src),
+        ),
+        div(className = "code install-next", dangerouslySetInnerHTML = { "__html": install.next }),
+      ],
+    )

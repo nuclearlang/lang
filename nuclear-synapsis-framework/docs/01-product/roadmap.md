@@ -51,7 +51,7 @@ item is deleted. Paths start at the root of the tree.
   - a stale url copy is not a warning yet (F5 of the plan);
   - a url contract needs `curl`;
   - a web client gets no rules or key until the web platform has forms and the local database;
-  - the Nuclear Connector of the editors resolves `{{baseUrl}}` per project or connection only from the environment file
+  - the HTTP Connections of the editors resolves `{{baseUrl}}` per project or connection only from the environment file
     (the app's `Http(baseUrl)` is not in the contract yet).
 - **A real reference app shipped** (step 2 of the competitiveness plan the user chose): one complete app on
   Android, iOS and web with a fastapi backend deployed, built from the tutorial on a clean machine. It burns down

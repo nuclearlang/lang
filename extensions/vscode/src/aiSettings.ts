@@ -1,5 +1,5 @@
 // The configuration of the AI loop in the editor's settings (`nuclear.ai.*`): where the services answer, the local
-// models, Claude's model, the retry policy and the MCP command. The Builder and the chat read it as the machine's
+// models, Claude's model, the retry policy and the MCP command. The Builder and Nuclear Atlas read it as the machine's
 // defaults; a project's `.nuclear/builder.json` still wins (it is shared with CI). Jira's credentials live in the secret
 // storage.
 import * as vscode from 'vscode';

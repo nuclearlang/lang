@@ -23,7 +23,7 @@ fix, what can and cannot be done, how a task is done step by step, and validated
 - **Frontier models** (Claude Code, Codex, Cursor) through the MCP server: every row.
 - **The local agents** of the Nuclear Developer, over HTTP: only the rows written for them (`agents: true`), which
   hold no code of a target language.
-- **People**, from a terminal (`nuclear-graph search`, `card`, `answer`, `strategy`) and through the chat of the
+- **People**, from a terminal (`nuclear-graph search`, `card`, `answer`, `strategy`) and through Nuclear Atlas of the
   editor, whose assistant is one of the local agents.
 
 The Builder of the editors reads it through those two: the Developer and the MCP server.

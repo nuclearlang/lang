@@ -29,7 +29,7 @@ stateless PlatformsIndex(platforms: Platform[])
             className = "card platform-${c.key} reveal",
             children = [
               h3(children = a(href = "/platforms/${c.key}", children = c.name)),
-              small(children = c.dialects),
+              Logos(items = c.logos),
               p(children = c.pitch),
               div(className = "card-links", children = [a(href = "/platforms/${c.key}", children = "How it works"), a(href = "/start/${c.key}", children = "Start")]),
             ],

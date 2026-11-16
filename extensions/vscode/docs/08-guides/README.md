@@ -65,7 +65,7 @@ All are in the Command Palette (`Ctrl+Shift+P`) under **Nuclear** unless the cat
 | Set Up the AI Services | the set-up wizard of the Smart Graph, the Developer and the models | |
 | Open the web device · Debug on the web device · Reload the web device | the [web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md) of a web project | |
 | *Synapsis:* Open Synapsis Device · Run on Synapsis Device | the [Synapsis device](../../../tools/nuclear-device-manager/docs/08-guides/README.md) | |
-| *Nuclear Connector:* Refresh · Select Environment · Edit Environments · Add an OpenAPI Document · Open Request | [Nuclear Connector](../../../tools/nuclear-connector/docs/08-guides/README.md) | |
+| *HTTP Connections:* Refresh · Select Environment · Edit Environments · Add an OpenAPI Document · Open Request | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) | |
 | Step Over (Nuclear Line) · Step Into (Nuclear Line) · Step Out (Nuclear) | step by `.nuc` line while debugging | `F10` · `F11` · `Shift+F11` |
 | Go to the Same Line in Nuclear / Dart | jumps between the `.nuc` and the generated file while debugging | |
 
@@ -113,4 +113,4 @@ A project's `.nuclear/builder.json` wins over these settings for its own Nuclear
 | After the first build of a mobile app, no devices in the picker | accept *Reload Window*: the Dart extension looks for apps only when the window opens |
 | A build fails | read the *Synapsis* output panel; the extension runs `nuclear repair` once by itself |
 | A new theme does not show | quit VS Code completely and open it again |
-| The chat or the Builder says a service is down | open *Settings and integrations* (`Ctrl+Alt+S`) and *Start* it, or run the set-up ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)) |
+| Nuclear Atlas or the Builder says a service is down | open *Settings and integrations* (`Ctrl+Alt+S`) and *Start* it, or run the set-up ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)) |

@@ -41,7 +41,7 @@ The extensions talk to the server only through LSP and these requests.
 |---|---|---|
 | `.nuclear/project.json` (the project card) | `project::write_metadata` (`METADATA_FILE`) | the editors (the VS Code status bar) |
 | `.nuclear/map.md` (the project map) | `map::write`, with the card | an agent before it writes |
-| `.nuclear/contract.json` | `contract::write` (`CONTRACT_FILE`), under the project and its output folder | a client project that declares it in `contracts(...)`; the Nuclear Connector of the editors |
+| `.nuclear/contract.json` | `contract::write` (`CONTRACT_FILE`), under the project and its output folder | a client project that declares it in `contracts(...)`; the HTTP Connections of the editors |
 | `.nuclear/openapi.json` | `contract::write`, only for a `backend` project | any OpenAPI tool |
 | `contracts/<name>/` | `contract::sync`, at the start of `project::build` | the client project's own build |
 | `<output>/.nuclear/lines.json` (the line map) | the command line tools, from `project::line_map` (`LINE_MAP_FILE`) | the editors' debuggers |

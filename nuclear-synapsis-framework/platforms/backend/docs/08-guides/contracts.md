@@ -129,7 +129,7 @@ error[N0116]: 'done' is not a member of Task
 
 ## 5. In the editor
 
-The **Nuclear Connector** view of the VS Code extension lists every project of the workspace by platform, its
+The **HTTP Connections** view of the VS Code extension lists every project of the workspace by platform, its
 components and endpoints (from the contracts), the contracts an app declares with an *Update* action, and OpenAPI
 documents of APIs that are not Nuclear. Clicking an endpoint opens a request panel with the active environment's
 variables and headers (`.nuclear/http.json`), a sample body built from the model, and the pretty-printed response.

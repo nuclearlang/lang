@@ -146,4 +146,4 @@ not declare, answers where to write it.
 | a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |
 
 The graph knows every tool of this page: ask it with `graph_card("mcp:<tool>")`, or ask the editor's chat
-(*Nuclear agent*, `Ctrl+Alt+A`) in your own words.
+(`Ctrl+Alt+A`) in your own words.

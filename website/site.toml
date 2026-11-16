@@ -6,12 +6,37 @@
 [site]
 title = "NuclearLang"
 lead = "Write only the logic."
-tagline = "A minimal language for AI agents and people. One codebase, transpiled to TypeScript, Dart and Python by declarative dialects; Synapsis, its framework, builds mobile apps, backends and web apps from the same Nuclear."
+tagline = "An ecosystem made for AI agents and easy for people to read. Nuclear drops every line that is not business logic, so an agent writes less, guesses less and is checked on every name. One codebase becomes TypeScript, Dart and Python; Synapsis builds mobile apps, backends and web apps from it."
 # where the site is published, the organization of its repositories and their branch
 url = "https://nuclearlang.github.io"
 org = "https://github.com/nuclearlang"
 branch = "main"
 footer = "NuclearLang and Synapsis · free and open source, Apache-2.0 · this site is written in Nuclear (Synapsis web)"
+
+# the logos of the integrations (simple-icons, CC0): name → its slug. Shown next to a name, never inside a text.
+[logos]
+typescript = "typescript"
+dart = "dart"
+python = "python"
+flutter = "flutter"
+fastapi = "fastapi"
+nestjs = "nestjs"
+react = "react"
+claude = "claude"
+cursor = "cursor"
+jetbrains = "jetbrains"
+androidstudio = "androidstudio"
+zed = { simple = "zedindustries", name = "Zed" }
+ollama = "ollama"
+langchain = "langchain"
+claudecode = "claudecode"
+opencode = "opencode"
+codex = { lucide = "square-terminal", name = "Codex" }
+vscode = { devicon = "vscode/vscode-original", name = "VS Code" }
+intellij = { devicon = "intellij/intellij-original", name = "IntelliJ IDEA" }
+linux = "linux"
+apple = { simple = "apple", name = "macOS" }
+windows = { devicon = "windows11/windows11-original", name = "Windows" }
 
 [source]
 # the NuclearLang tree this project is a folder of; NUCLEAR_TREE overrides it
@@ -62,7 +87,7 @@ pages = ["tools/cli/docs/08-guides/README", "tools/cli/docs/08-guides/commands",
 
 [[sidebar]]
 title = "Editors"
-pages = ["extensions/docs/08-guides/README", "extensions/vscode/docs/08-guides/README", "extensions/vscode/docs/08-guides/*", "extensions/jetbrains/docs/08-guides/README", "extensions/zed/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/*", "extensions/tools/nuclear-connector/docs/08-guides/README", "extensions/tools/nuclear-device-manager/docs/08-guides/README", "extensions/tools/nuclear-ai-chat/docs/08-guides/README"]
+pages = ["extensions/docs/08-guides/README", "extensions/vscode/docs/08-guides/README", "extensions/vscode/docs/08-guides/*", "extensions/jetbrains/docs/08-guides/README", "extensions/zed/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/*", "extensions/tools/nuclear-http-connections/docs/08-guides/README", "extensions/tools/nuclear-device-manager/docs/08-guides/README", "extensions/tools/nuclear-atlas/docs/08-guides/README"]
 
 [[sidebar]]
 title = "Internals"
@@ -83,29 +108,42 @@ path = "/tools"
 title = "Language guide"
 path = "/nuclearlang/docs/08-guides/README"
 
-# why Nuclear, in one line each
+# the chips under the hero: what Nuclear is built into (a logo of [logos] each)
+[home.hero]
+targetsTitle = "Builds to"
+targets = ["typescript", "dart", "python", "flutter", "fastapi", "nestjs", "react"]
+agentsTitle = "Made for the agents you already use"
+agents = ["claudecode", "cursor", "codex", "opencode"]
+
+# why Nuclear, in one line each (`icon`: a lucide icon)
 [[home.hooks]]
-title = "Only the logic"
-text = "No semicolons, braces, new or async, and no mandatory return. Imports, wiring, JSON, routes and dependency injection are written by the transpiler."
+title = "Built for AI, from the first word"
+icon = "brand:hook-ai"
+text = "One way to write each thing, every error as JSON with its exact fix, and a local knowledge base the agent asks instead of guessing."
 
 [[home.hooks]]
-title = "Made for agents"
-text = "One way to write each thing, so an agent never hesitates. Every error comes as JSON with a code, a position and the exact fix."
+title = "Only business logic"
+icon = "brand:hook-logic"
+text = "No imports, wiring, JSON mapping, routes or dependency injection to write: the transpiler writes what is not logic, so nobody reads or reviews it."
 
 [[home.hooks]]
-title = "As fast as an expert's code"
-text = "The output passes tsc --strict, flutter analyze and pyright --strict. Measured against hand-written programs: between 0.98× and 1.11× their run time."
+title = "Easy for people to read"
+icon = "brand:hook-read"
+text = "No semicolons, braces, new or async, and no mandatory return. What a reviewer reads is what the program does."
 
 [[home.hooks]]
 title = "Tools write the standard code"
-text = "One command writes a whole resource: models, repository, use cases, the controller or the screen, and its tests, compiling."
+icon = "brand:hook-tools"
+text = "One command writes a whole resource with its tests, compiling: a model spends its tokens only on what is new."
 
 [[home.hooks]]
-title = "One codebase, any dialect"
-text = "The Nuclear of a backend is the same for FastAPI and for NestJS. Change one word of config.nuc, build again."
+title = "As fast as an expert's code"
+icon = "brand:hook-fast"
+text = "The output passes tsc --strict, flutter analyze and pyright --strict, and runs in 0.98× to 1.11× the time of hand-written programs."
 
 [[home.hooks]]
 title = "Free, open and local"
+icon = "brand:hook-local"
 text = "Apache-2.0. The knowledge base and the small agents run on your machine; your code never has to leave it."
 
 # the samples of the first interactive block: the same Nuclear, built by the real compiler to each target
@@ -201,6 +239,24 @@ title = "Change the dialect, keep the code"
 text = "The controller of the example API, built for FastAPI and for NestJS. The .nuc file is the same."
 platform = "backend"
 
+# the editor: what a developer has without leaving it; each feature is a [[shots]] entry
+[home.extension]
+title = "Everything you need, in one extension"
+text = "The editor is the whole studio: projects, specs, agents, knowledge, APIs and devices, each one a key away. Pick a part; each has its own page."
+modules = ["workspaces", "builder", "mcp", "atlas", "http-connections", "devices"]
+editorsTitle = "One extension, five editors"
+editors = [
+  { logo = "vscode", tool = "vscode" },
+  { logo = "cursor", tool = "cursor" },
+  { logo = "androidstudio", tool = "android-studio" },
+  { logo = "intellij", tool = "intellij" },
+  { logo = "zed", tool = "zed" },
+]
+
+# the logs of a Synapsis app, a block of the home page in the shape of a part of the extension ([[modules]] "logs")
+[home.logs]
+module = "logs"
+
 [home.platforms]
 title = "Synapsis: one framework, three platforms"
 text = "The same architecture, the same words and errors as values on a phone, a server and a browser. Pick one: each page goes from the idea to the code, level by level."
@@ -226,19 +282,23 @@ stateful Reveal(child: Element)
 '''
 
 [home.install]
-title = "Install"
-# {{site}}: the site's url
-lines = [
-  "curl -fsSL {{site}}/install.sh | sh                 # Linux and macOS",
-  "irm {{site}}/install.ps1 | iex                      # Windows (PowerShell)",
-  "nuclear new my_api -p backend                       # a project of a platform: mobile, backend or web",
-  "nuclear help                                        # documentation topics, also offline",
+title = "Install in one line"
+text = "No Rust, no build: the release of your system, checked by SHA-256, into your user folders. Then one command makes a project."
+# {{site}}: the site's url; a tab per system, its logos, the command
+systems = [
+  { name = "Linux · macOS", logos = ["linux", "apple"], command = "curl -fsSL {{site}}/install.sh | sh" },
+  { name = "Windows", logos = ["windows"], command = "irm {{site}}/install.ps1 | iex" },
 ]
+next = """
+nuclear new my_api -p backend     # a project: mobile, backend or web
+nuclear help                      # every topic, also offline
+"""
 
 # --- the tools: the index (/tools) and one page each (/tools/<key>). `pages` are the tool's documents in the tree ---
 
 [[tools]]
 key = "cli"
+icon = "terminal"
 name = "The nuclear command"
 group = "Build"
 tagline = "One binary for the compiler and the framework."
@@ -259,6 +319,7 @@ pages = ["tools/cli/docs/08-guides/README", "tools/cli/docs/08-guides/commands",
 
 [[tools]]
 key = "generator"
+icon = "wand-sparkles"
 name = "Code generator"
 group = "Build"
 tagline = "The standard code is written by a tool, not by a model."
@@ -278,6 +339,8 @@ pages = ["tools/code_generator/docs/08-guides/README", "nuclear-synapsis-framewo
 
 [[tools]]
 key = "mcp"
+icon = "brand:mcp"
+logos = ["claude", "cursor"]
 name = "MCP server"
 group = "AI"
 tagline = "NuclearLang inside Claude Code, Codex, Cursor and OpenCode."
@@ -296,10 +359,13 @@ pages = ["tools/mcp/docs/08-guides/mcp", "installer/docs/08-guides/ai-setup"]
 
 [[tools]]
 key = "extensions"
+icon = "square-code"
+logos = ["jetbrains", "androidstudio", "zed"]
+shots = ["workspace"]
 name = "Editor extensions"
 group = "Edit"
 tagline = "VS Code, Android Studio / IntelliJ and Zed."
-pitch = "The language server gives every editor the compiler's diagnostics with their fixes, completion from the type definitions, hover, go to definition and semantic colors. VS Code adds the Nuclear workspace: one strip with the project's actions and the tools (Connector, Devices, Builder, the agent, settings), tasks, debugging in .nuc and hot reload."
+pitch = "The language server gives every editor the compiler's diagnostics with their fixes, completion from the type definitions, hover, go to definition and semantic colors. VS Code adds the Nuclear workspace: one strip with the project's actions and the tools (HTTP Connections, Devices, Builder, Nuclear Atlas, settings), tasks, debugging in .nuc and hot reload."
 highlights = [
   { title = "The compiler as you type", text = "Every error underlined with its quick fix, the same ones nuclear fix applies." },
   { title = "The Nuclear workspace", text = "Run, debug, test and build any platform from one strip; each tool one key away (Ctrl+Alt+H, V, P, A, S)." },
@@ -313,9 +379,11 @@ pages = ["extensions/docs/08-guides/README", "extensions/vscode/docs/08-guides/R
 
 [[tools]]
 key = "builder"
+icon = "workflow"
+shots = ["specs", "loop"]
 name = "Nuclear Builder"
 group = "AI"
-tagline = "From a spec to a feature, stage by stage."
+tagline = "Spec-driven development: from a spec to a feature, stage by stage."
 pitch = "The Builder runs a spec through a pipeline of agents: it plans, writes the tests first, generates and writes the code, runs the checks and the tests, reviews security and keeps a journal of everything. You follow each run in the editor or from the terminal."
 highlights = [
   { title = "Spec in, feature out", text = "A Markdown spec with its acceptance criteria starts a run." },
@@ -329,24 +397,28 @@ project = "extensions/tools/nuclear-builder"
 pages = ["extensions/tools/nuclear-builder/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/write-a-spec", "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run", "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands"]
 
 [[tools]]
-key = "connector"
-name = "Nuclear Connector"
+key = "http-connections"
+icon = "brand:http"
+shots = ["connector"]
+name = "HTTP Connections"
 group = "Edit"
-tagline = "Call the project's API from the editor."
-pitch = "The Connector reads the routes of a backend project and lists them in a tree: pick one, fill its parameters and body, send it, read the answer. No collection to keep by hand: the project is the collection."
+tagline = "An API client that fills itself."
+pitch = "HTTP Connections finds the services of every project of the workspace (a backend's routes, the calls of a mobile or web app) and splits them by platform, project and component, from the contract the compiler writes. Nothing to type or import: open a request in its tab, send it, read the answer."
 highlights = [
-  { title = "From the code", text = "The routes come from the project, so they are never out of date." },
-  { title = "Colored by method", text = "GET, POST, PUT, PATCH and DELETE, each with its color of the theme." },
-  { title = "Inside the workspace", text = "Ctrl+Alt+H opens it next to the code." },
+  { title = "It fills itself", text = "The services come from the projects, so they are never out of date." },
+  { title = "Organized", text = "Platform, project, component; a tab per request; environments and variables." },
+  { title = "Inside the editor", text = "Ctrl+Alt+H in VS Code, Alt+Shift+H in Android Studio / IntelliJ: no other app." },
 ]
 demo = '''
-Ctrl+Alt+H                 # VS Code: the Connector of the open project
+Ctrl+Alt+H                 # VS Code: HTTP Connections of the open projects
 '''
-project = "extensions/tools/nuclear-connector"
-pages = ["extensions/tools/nuclear-connector/docs/08-guides/README"]
+project = "extensions/tools/nuclear-http-connections"
+pages = ["extensions/tools/nuclear-http-connections/docs/08-guides/README"]
 
 [[tools]]
 key = "devices"
+icon = "smartphone"
+shots = ["devices"]
 name = "Devices"
 group = "Run"
 tagline = "Phones and tablets in a window, without an emulator."
@@ -364,7 +436,29 @@ project = "device-emulators"
 pages = ["device-emulators/docs/08-guides/README", "extensions/tools/nuclear-device-manager/docs/08-guides/README"]
 
 [[tools]]
+key = "atlas"
+icon = "brand:atlas"
+logos = ["ollama"]
+shots = ["atlas"]
+name = "Nuclear Atlas"
+group = "AI"
+tagline = "Ask the whole ecosystem, without leaving your machine."
+pitch = "Nuclear Atlas is the chat with the local agent inside the editor. It answers from the Smart Graph, the 100% local knowledge base your agents also read through the MCP, with small local models: free, private, no account."
+highlights = [
+  { title = "Local RAG", text = "Every answer comes from the Smart Graph's rows, on your machine." },
+  { title = "The same knowledge as your agents", text = "What Atlas reads is what Claude, Codex or Cursor read through the MCP." },
+  { title = "In the workspace", text = "Ctrl+Alt+A opens it beside the code." },
+]
+demo = '''
+Ctrl+Alt+A                 # VS Code: Nuclear Atlas
+'''
+project = "extensions/tools/nuclear-atlas"
+pages = ["extensions/tools/nuclear-atlas/docs/08-guides/README"]
+
+[[tools]]
 key = "graph"
+icon = "brand:graph"
+logos = ["ollama"]
 name = "Smart Graph"
 group = "AI"
 tagline = "A private knowledge base every agent reads."
@@ -382,6 +476,8 @@ pages = ["nuclear-graph-storage/docs/08-guides/README", "installer/docs/08-guide
 
 [[tools]]
 key = "developer"
+icon = "bot"
+logos = ["ollama", "langchain"]
 name = "Nuclear Developer"
 group = "AI"
 tagline = "Small local agents that write what the generators leave."
@@ -395,7 +491,107 @@ demo = '''
 # from an MCP client: developer_task(project, title, description, criteria)
 '''
 project = "nuclear-agents/nuclear_developer"
-pages = ["nuclear-agents/nuclear_developer/docs/08-guides/README", "extensions/tools/nuclear-ai-chat/docs/08-guides/README"]
+pages = ["nuclear-agents/nuclear_developer/docs/08-guides/README"]
+
+[[tools]]
+key = "vscode"
+icon = "square-code"
+logos = ["vscode"]
+shots = ["workspace"]
+name = "VS Code"
+group = "Editors"
+tagline = "The whole studio: the language, the workspace and every tool."
+pitch = "The NuclearLang extension for VS Code: the compiler's diagnostics with their fixes as you type, completion from the type definitions, the Nuclear workspace, run and debug in .nuc for every platform, and the tools: Nuclear Builder, HTTP Connections, Nuclear Atlas and the devices."
+highlights = [
+  { title = "Every tool", text = "Builder (Ctrl+Alt+P), HTTP Connections (Ctrl+Alt+H), Atlas (Ctrl+Alt+A), devices (Ctrl+Alt+V)." },
+  { title = "Debug the .nuc", text = "Breakpoints and steps on the Nuclear line, hot reload on the device beside it." },
+  { title = "Chernobyl themes", text = "Vivid, radioactive colours, the same on this site." },
+]
+demo = '''
+installer/install.sh                 # builds and installs the extension with nuclear
+nuclear code                         # open the project with its tasks and devices
+'''
+project = "extensions/vscode"
+pages = ["extensions/vscode/docs/08-guides/README", "extensions/vscode/docs/08-guides/workspace", "extensions/vscode/docs/08-guides/run-and-debug"]
+
+[[tools]]
+key = "cursor"
+icon = "square-code"
+logos = ["cursor"]
+name = "Cursor"
+group = "Editors"
+tagline = "The same extension as VS Code, with Cursor's agent on NuclearLang."
+pitch = "Cursor runs the VS Code extension: the same language features, workspace and tools. Its agent reads the rule nuclear agent init writes (.cursor/rules/nuclear.mdc) and calls the Nuclear MCP server, so it generates, checks and asks the Smart Graph like Claude Code does."
+highlights = [
+  { title = "The VS Code extension", text = "The same .vsix: the language server, the workspace, the tools." },
+  { title = "A rule for its agent", text = "nuclear agent init writes .cursor/rules/nuclear.mdc in every project." },
+  { title = "The MCP server", text = "The AI set-up adds nuclear-mcp to ~/.cursor/mcp.json in one click." },
+]
+demo = '''
+cursor --install-extension nuclearlang-<version>.vsix
+nuclear agent init                   # AGENTS.md, CLAUDE.md and the Cursor rule
+'''
+project = "extensions/vscode"
+pages = ["extensions/vscode/docs/08-guides/README", "tools/mcp/docs/08-guides/mcp"]
+
+[[tools]]
+key = "android-studio"
+icon = "smartphone"
+logos = ["androidstudio"]
+name = "Android Studio"
+group = "Editors"
+tagline = "Nuclear in the IDE of mobile developers."
+pitch = "The NuclearLang plugin for Android Studio: the language server (diagnostics with quick fixes, completion, hover, rename, find usages), code metrics, the Chernobyl themes, and the HTTP Connections and Nuclear Builder tool windows. With the Flutter and Dart plugins, it works on Synapsis mobile projects."
+highlights = [
+  { title = "The language server", text = "Every error with its fix, completion and navigation in .nuc." },
+  { title = "Tool windows", text = "HTTP Connections (Alt+Shift+H) and Nuclear Builder (Alt+Shift+P)." },
+  { title = "Mobile first", text = "Beside the Flutter and Dart plugins you already use." },
+]
+demo = '''
+IDE_HOME=/opt/android-studio extensions/jetbrains/build.sh   # build/nuclearlang-<version>.zip
+# Settings → Plugins → Install Plugin from Disk…
+'''
+project = "extensions/jetbrains"
+pages = ["extensions/jetbrains/docs/08-guides/README"]
+
+[[tools]]
+key = "intellij"
+icon = "square-code"
+logos = ["intellij"]
+name = "IntelliJ IDEA"
+group = "Editors"
+tagline = "The same plugin, for backends and web apps."
+pitch = "IntelliJ IDEA (build 251 or newer) takes the same NuclearLang plugin as Android Studio: the language server, code metrics, the themes and the HTTP Connections and Nuclear Builder tool windows, for any Nuclear project."
+highlights = [
+  { title = "One plugin", text = "The same zip as Android Studio, built against the IDE's LSP support." },
+  { title = "Tool windows", text = "HTTP Connections (Alt+Shift+H) and Nuclear Builder (Alt+Shift+P)." },
+  { title = "Every dialect inside", text = "The plugin carries the server and all the dialects." },
+]
+demo = '''
+IDE_HOME=<IntelliJ> extensions/jetbrains/build.sh
+# Settings → Plugins → Install Plugin from Disk…
+'''
+project = "extensions/jetbrains"
+pages = ["extensions/jetbrains/docs/08-guides/README"]
+
+[[tools]]
+key = "zed"
+icon = "zap"
+logos = ["zed"]
+name = "Zed"
+group = "Editors"
+tagline = "Nuclear in a fast, minimal editor."
+pitch = "The NuclearLang extension for Zed: a tree-sitter grammar, the language server nuclear-lsp, the Synapsis tasks, and the Chernobyl theme and icons."
+highlights = [
+  { title = "The language server", text = "Diagnostics with fixes, completion and hover from the installed nuclear-lsp." },
+  { title = "Synapsis tasks", text = "Build, run and test a project from Zed's task runner." },
+  { title = "Chernobyl", text = "The theme and the icon theme of the other editors." },
+]
+demo = '''
+installer/install.sh                 # builds and installs it when Zed is installed
+'''
+project = "extensions/zed"
+pages = ["extensions/zed/docs/08-guides/README"]
 
 # --- the platforms: one page each (/platforms/<key>, its levels from the hook to the code) and an onboarding
 # (/start/<key>): the commands that make its example app, run again when the site is built ---
@@ -569,4 +765,198 @@ steps = [
   { title = "Generate the resource and its screen", text = "The model, an HTTP repository over the API, the use cases, the facade, a screen that lists the todos with its state manager, and a test.", run = "nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos --fields \"id:int title:string completed:boolean\" --screen todos" },
   { title = "Check it", text = "Every file, as an agent reads it: an empty list is no error.", run = "nuclear check --json" },
   { title = "Build, test, run", text = "The Flutter app, its tests, and the app on a device: a phone window with nuclear device, or nuclear run.", command = "nuclear build && nuclear test && nuclear device pixel7" },
+]
+
+# --- the parts of the extension, as the home page shows them (most important first): a mark (`icon`: a lucide name or
+# `brand:<mark>` of tools/marks.mjs), a slogan, at most three points, its keys, its screenshots and the tool it links to.
+# `art = "orbit"`: the animated orbit of the platforms beside the text ---
+
+[[modules]]
+id = "workspaces"
+name = "Workspaces"
+icon = "layout-grid"
+title = "Every project in one place, a key away"
+points = [
+  "A tab per project, marked with its platform and its dialect.",
+  "Run, debug, build, test and check without leaving the editor.",
+  "Every tool of the extension on its own shortcut.",
+]
+keys = [
+  { key = "Ctrl+Alt+N", label = "the workspace" },
+  { key = "Ctrl+1 … 9", label = "go to a project" },
+  { key = "Ctrl+Alt+R", label = "run or serve" },
+]
+art = "orbit"
+shots = ["workspace"]
+tool = "extensions"
+
+[[modules]]
+id = "builder"
+name = "Nuclear Builder"
+icon = "workflow"
+title = "Spec-driven development, from the spec to the deploy"
+points = [
+  "A spec assistant: pick the work, write it or bring it from Jira or a GitHub issue, list what must be true at the end.",
+  "Loop engineering: specification, generate, plan, tests, code, verify, security, artifacts and deploy, every step with who did it and why.",
+  "Claude leads and the local Nuclear Developer writes; Codex, Cursor and OpenCode get the same tools through the MCP.",
+]
+keys = [{ key = "Ctrl+Alt+P", label = "VS Code" }, { key = "Alt+Shift+P", label = "Android Studio / IntelliJ" }]
+logos = ["claude", "cursor", "ollama"]
+shots = ["specs", "loop"]
+tool = "builder"
+
+[[modules]]
+id = "mcp"
+name = "MCP & Smart Graph"
+icon = "brand:mcp"
+title = "Your AI client looks it up instead of guessing"
+points = [
+  "nuclear-mcp gives Claude Code, Codex, Cursor and OpenCode the generators, the compiler, the tests and the local agents as tools.",
+  "The Smart Graph is its RAG: every kind, rule, error and solved task of the ecosystem, private, on your machine.",
+  "Generate first, validate always: nuclear check and the tests decide when a change is done.",
+]
+keys = [{ key = "claude mcp add --scope user nuclear -- nuclear-mcp", label = "Claude Code; one line in each client" }]
+marks = [{ icon = "brand:mcp", label = "nuclear-mcp" }, { icon = "brand:graph", label = "Smart Graph, the RAG" }]
+logos = ["claude", "cursor"]
+tool = "mcp"
+
+[[modules]]
+id = "atlas"
+name = "Nuclear Atlas"
+icon = "brand:atlas"
+title = "Ask the whole ecosystem, without leaving your machine"
+points = [
+  "The chat with the local agent, inside the editor.",
+  "It answers from the Smart Graph, 100% local: the same knowledge your agents read through the MCP.",
+  "Free and private: small local models, no account.",
+]
+keys = [{ key = "Ctrl+Alt+A", label = "VS Code" }]
+logos = ["ollama"]
+shots = ["atlas"]
+tool = "atlas"
+
+[[modules]]
+id = "http-connections"
+name = "HTTP Connections"
+icon = "brand:http"
+title = "An API client that fills itself"
+points = [
+  "It finds the services of every project and splits them by platform, project and component: nothing to type or import, so you start testing at once.",
+  "A tab per request: several services side by side, with environments, variables and copy as curl.",
+  "No other app eating RAM beside the editor: one key away.",
+]
+keys = [{ key = "Ctrl+Alt+H", label = "VS Code" }, { key = "Alt+Shift+H", label = "Android Studio / IntelliJ" }]
+shots = ["connector"]
+tool = "http-connections"
+
+[[modules]]
+id = "devices"
+name = "Devices"
+icon = "smartphone"
+title = "Devices without an emulator, inside the editor"
+points = [
+  "Your app in a phone or tablet frame beside its code: iPhone, Pixel, Galaxy, iPad.",
+  "No Android emulator nor virtual machine: a headless browser the editor drives.",
+  "Hot reload and breakpoints in the .nuc, as on any device.",
+]
+keys = [{ key = "Ctrl+Alt+V", label = "the devices" }, { key = "Ctrl+Alt+L", label = "hot reload" }]
+logos = ["flutter"]
+shots = ["devices"]
+tool = "devices"
+
+[[modules]]
+id = "logs"
+name = "Logs"
+icon = "scroll-text"
+title = "Logs you actually want to read"
+points = [
+  "One block per log, coloured by its level: info, success, warning, error.",
+  "A breadcrumb to the place: component › kind › Class.method, every component in its own colour.",
+  "The .nuc file and line at the foot, the failing line marked first, secrets masked.",
+]
+keys = []
+shots = ["logs"]
+link = "/mobile/reference/synapsis"
+
+# --- the screenshots of the editor: an image of public/shots/ each and its callouts (`spots`: x and y as fractions of
+# the image, from its top left corner) ---
+
+[[shots]]
+id = "logs"
+image = "/shots/logs.webp"
+alt = "Four logs of a Synapsis app: info, success, warning and error, each with its breadcrumb, its data, and the .nuc file and line"
+caption = "flutter test"
+spots = [
+  { x = 0.78, y = 0.065, label = "component › kind › Class.method" },
+  { x = 0.45, y = 0.366, label = "secrets masked" },
+  { x = 0.73, y = 0.19, label = "the .nuc file and line" },
+  { x = 0.9, y = 0.853, label = "the line that failed" },
+]
+
+[[shots]]
+id = "workspace"
+image = "/shots/workspace.webp"
+alt = "The Nuclear workspace in VS Code: a strip of project tabs, each marked with its platform and dialect, beside the files of the selected project"
+caption = "The workspace"
+spots = [
+  { x = 0.27, y = 0.25, label = "a tab per project" },
+  { x = 0.7, y = 0.16, label = "its platform and dialect" },
+  { x = 0.27, y = 0.57, label = "open one more" },
+]
+
+[[shots]]
+id = "specs"
+image = "/shots/specs.webp"
+alt = "The spec assistant of Nuclear Builder: the kind of work, the spec written or imported from Jira or GitHub, its acceptance criteria and who leads"
+caption = "The spec assistant"
+spots = [
+  { x = 0.25, y = 0.09, label = "the kind of work" },
+  { x = 0.38, y = 0.375, label = "write it, or from Jira or GitHub" },
+  { x = 0.4, y = 0.693, label = "acceptance criteria, checked at the end" },
+  { x = 0.17, y = 0.812, label = "who leads" },
+]
+
+[[shots]]
+id = "loop"
+image = "/shots/loop.webp"
+alt = "A run of Nuclear Builder: its stages from specification to deploy, each step with who did it, and the detail of one step"
+caption = "Loop engineering"
+spots = [
+  { x = 0.3, y = 0.025, label = "spec → … → deploy" },
+  { x = 0.37, y = 0.225, label = "nuclear gen writes 15 files" },
+  { x = 0.07, y = 0.775, label = "who takes part" },
+  { x = 0.74, y = 0.24, label = "what it did, and why" },
+]
+
+[[shots]]
+id = "atlas"
+image = "/shots/atlas.webp"
+alt = "Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph"
+caption = "Nuclear Atlas"
+spots = [
+  { x = 0.34, y = 0.27, label = "answered locally" },
+  { x = 0.24, y = 0.55, label = "from the Smart Graph" },
+]
+
+[[shots]]
+id = "connector"
+image = "/shots/connector.webp"
+alt = "HTTP Connections: the services of every project, found by itself and split by platform, project and component, and a request open beside them"
+caption = "HTTP Connections"
+spots = [
+  { x = 0.42, y = 0.16, label = "found by itself, per project" },
+  { x = 0.2, y = 0.69, label = "split by platform" },
+  { x = 0.74, y = 0.205, label = "a tab per request" },
+  { x = 0.33, y = 0.095, label = "environments" },
+]
+
+[[shots]]
+id = "devices"
+image = "/shots/devices.webp"
+alt = "A Synapsis device inside VS Code: the app in an iPhone frame beside its main.nuc"
+caption = "A Synapsis device"
+spots = [
+  { x = 0.74, y = 0.125, label = "pick a device" },
+  { x = 0.64, y = 0.55, label = "your app, beside its code" },
+  { x = 0.6, y = 0.035, label = "hot reload, debug" },
 ]

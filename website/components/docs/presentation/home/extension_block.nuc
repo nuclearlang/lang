@@ -1,0 +1,32 @@
+// The editor: the parts of the extension, most important first, one at a time; each links to its tool's page.
+stateful ExtensionBlock(extension: Extension)
+  selected: int = 0
+
+  build() Element
+    section(
+      className = "block extension reveal",
+      children = [
+        h2(children = extension.title),
+        p(className = "block-text", children = extension.text),
+        div(
+          className = "editors",
+          children = [
+            small(children = extension.editorsTitle),
+            ...extension.editors.map((e) => a(key = e.path, className = "integration", href = e.path, children = [img(src = e.src, alt = "", width = 20, height = 20), span(children = e.name)])),
+          ],
+        ),
+        nav(
+          className = "modules",
+          role = "tablist",
+          children = extension.modules.map((m, i) =>
+            button(key = m.id, role = "tab", className = i == selected ? "module active" : "module", onClick = () => select(i), children = [Icon(src = m.icon, className = "module-icon"), span(children = m.name)])
+          ),
+        ),
+        ModulePanel(key = extension.modules[selected].id, module = extension.modules[selected]),
+      ],
+    )
+
+  select(index: int) void
+    setState(() =>
+      selected = index
+    )

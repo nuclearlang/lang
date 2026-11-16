@@ -150,6 +150,128 @@
    }
   },
   {
+   "id": "doc:device-emulators/README.md#how-we-made-it",
+   "type": "readme",
+   "title": "The devices — How we made it",
+   "summary": "The decision is ADR-devices-0001: come back as a screencast and input goes in as CDP events.",
+   "body": [
+    "The decision is [ADR-devices-0001](docs/03-adr/0001-a-device-is-the-app-as-flutter-web-in-chromium-driven-over-cdp.md):",
+    "",
+    "- **A device is Flutter's `chrome` device with a Chromium we drive over CDP**: the screen is emulated, the frames",
+    "  come back as a screencast and input goes in as CDP events. Flutter's `web-server` device was rejected (no",
+    "  breakpoints); an engine of our own, without a browser, is postponed.",
+    "- **One backend, several fronts.** Flutter, the browser, CDP, emulation, input, frames and hot reload are one",
+    "  backend; a front (the window, the terminal) only shows the screen and sends input back. The editor's device",
+    "  panel is the same idea in [the extensions](../extensions/AGENTS.md).",
+    "- **The same list of devices everywhere**: the browsers' device toolbar (Pixel, iPhone, iPad, Galaxy, laptop,",
+    "  responsive), shared with the editor's panel.",
+    "- **The terminal draws with the best it supports**: images (kitty, sixel), or colored blocks with the app's texts",
+    "  written as letters in their exact place, given by the `synapsis` package in debug.",
+    "- **Nothing stays alive when a device ends**: neither `flutter run` nor the browser.",
+    "- **Written in Rust**, the library crate `nuclear-devices`, which the `nuclear` command calls after it builds the",
+    "  app."
+   ],
+   "sources": [
+    "device-emulators/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/README.md#the-devices",
+   "type": "readme",
+   "title": "The devices",
+   "summary": "Test devices for a Synapsis mobile app, without an emulator: the app runs as Flutter web in a Chromium browser, with the size, density, touch and identity of a phone or a tablet, driven over the Chrome DevTools Protocol (CDP).",
+   "body": [
+    "Test devices for a Synapsis mobile app, without an emulator: the app runs as Flutter web in a Chromium browser,",
+    "with the size, density, touch and identity of a phone or a tablet, driven over the Chrome DevTools Protocol (CDP).",
+    "From the command line a device is a window of its own (`nuclear device`) or lives inside the terminal",
+    "(`nuclear terminal-device`)."
+   ],
+   "sources": [
+    "device-emulators/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/README.md#try-it",
+   "type": "readme",
+   "title": "The devices — Try it",
+   "summary": "Inside a mobile project (a folder with `config.nuc`), with Flutter and a Chromium browser (Chrome, Chromium, Edge, Brave or Vivaldi; `CHROME_EXECUTABLE` chooses one): nuclear device list # no Synapsis device is running nuclear device # a Pixel 7 in its own window: r hot reload, R hot restart, q…",
+   "body": [
+    "Inside a mobile project (a folder with `config.nuc`), with Flutter and a Chromium browser (Chrome, Chromium, Edge,",
+    "Brave or Vivaldi; `CHROME_EXECUTABLE` chooses one):",
+    "",
+    "```sh",
+    "nuclear device list            # no Synapsis device is running",
+    "                               # devices:",
+    "                               #   pixel7           Pixel 7 (412×915)",
+    "                               #   iphone14pro      iPhone 14 Pro (393×852)   ... 13 presets",
+    "nuclear device                 # a Pixel 7 in its own window: r hot reload, R hot restart, q quit",
+    "nuclear td iphonese --render blocks    # an iPhone SE inside this terminal",
+    "```",
+    "",
+    "In debug a device takes about 1.4 GB for `flutter run` and 0.9 GB for the browser. It was tested on Linux with",
+    "Hyprland; on macOS and Windows it compiles but never ran ([the roadmap](docs/01-product/roadmap.md))."
+   ],
+   "sources": [
+    "device-emulators/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "The devices — Where to read next",
+   "summary": "Where to read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md): the presets, the window, the terminal device's renders and keys.",
+    "- [How it is built](docs/02-architecture/overview.md), [the decisions](docs/03-adr/README.md).",
+    "- The command it is part of: [`nuclear`](../tools/cli/README.md). To change it: [AGENTS.md](AGENTS.md)."
+   ],
+   "sources": [
+    "device-emulators/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/README.md#why-it-exists",
+   "type": "readme",
+   "title": "The devices — Why it exists",
+   "summary": "A Synapsis app built from a terminal or opened in an editor had no device of its own: it needed an emulator, a phone or a plain browser tab beside the tool.",
+   "body": [
+    "A Synapsis app built from a terminal or opened in an editor had no device of its own: it needed an emulator, a",
+    "phone or a plain browser tab beside the tool. A device starts with what a Flutter developer already has (Flutter",
+    "and a Chromium browser), several at once, with hot reload, in a window, in a terminal, or in the editor's panel.",
+    "",
+    "What it leaves out on purpose: it is Flutter web, so no native plugins and no `dart:io`. It is a fast test device,",
+    "not a replacement for a real phone."
+   ],
+   "sources": [
+    "device-emulators/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-device-emulators-src-crate-nuclear-devices.10b241",
    "type": "context",
    "title": "The devices: overview — Modules (`device-emulators/src/`, crate `nuclear-devices`)",
@@ -694,6 +816,156 @@
    }
   },
   {
+   "id": "doc:installer/README.md#how-we-made-it.62531e",
+   "type": "readme",
+   "title": "The installers and the release — How we made it",
+   "summary": "and starts the services at every login.",
+   "body": [
+    "and starts the services at every login. Its engine is the editor's (`nuclear-builder setup` in a terminal), not",
+    "  code of this folder.",
+    "- **Written in POSIX `sh` and PowerShell**, with no dependency but `curl` or `wget`, `tar` and a SHA-256 tool:",
+    "  scripts that must run on a machine where nothing of NuclearLang exists yet.",
+    "",
+    "Not done yet: no release has been published (`release.yml` never ran), so the public one-liners fail until the",
+    "first tag ([the roadmap](docs/01-product/roadmap.md))."
+   ],
+   "sources": [
+    "installer/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/README.md#how-we-made-it.b8bd8c",
+   "type": "readme",
+   "title": "The installers and the release — How we made it",
+   "summary": "release archives both use it, so both give the same folders (ADR-installer-0001).",
+   "body": [
+    "- **One layout, one script.** `release/stage.sh` assembles an installation; the installer from source and the",
+    "  release archives both use it, so both give the same folders",
+    "  ([ADR-installer-0001](docs/03-adr/0001-release-archives-and-one-line-installers.md)).",
+    "- **One archive per system and architecture**, `nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with",
+    "  its `.sha256`, built by `.github/workflows/release.yml` on a tag `v<version>`: Linux (static musl binaries,",
+    "  x86_64 and aarch64), macOS (x86_64, arm64), Windows (x86_64, arm64). A package manager per system can wrap the",
+    "  same archives later.",
+    "- **One-line installers** (`install.sh` for `sh`, `install.ps1` for PowerShell) download the system's archive,",
+    "  check its SHA-256, install, set the PATH, copy the agents' skill and the VS Code extension, and uninstall. A",
+    "  mirror (`NUCLEAR_DOWNLOAD`) serves the same files, which is also how an installer is tested.",
+    "- **The AI services come with the installer**",
+    "  ([ADR-installer-0002](docs/03-adr/0002-the-ai-services-come-with-the-installer.md)): every archive carries the",
+    "  code of the Smart Graph and the Nuclear Developer; the large parts (the Python packages and the models) are",
+    "  downloaded by a set-up in steps that reads the machine, suggests a profile (`remote`, `lite`, `medium`, `hard`)"
+   ],
+   "sources": [
+    "installer/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/README.md#the-installers-and-the-release",
+   "type": "readme",
+   "title": "The installers and the release",
+   "summary": "How NuclearLang gets onto a machine: an installer from the source tree, one release archive per system, the one-line installers that download them, the workflow that publishes a release, and the set-up of the AI services the installers call at their end.",
+   "body": [
+    "How NuclearLang gets onto a machine: an installer from the source tree, one release archive per system, the",
+    "one-line installers that download them, the workflow that publishes a release, and the set-up of the AI services",
+    "the installers call at their end."
+   ],
+   "sources": [
+    "installer/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/README.md#try-it",
+   "type": "readme",
+   "title": "The installers and the release — Try it",
+   "summary": "From the source tree: installer/install.sh --help # its options: --no-vscode, --no-zed, --no-agent, --ai, --uninstall installer/install.sh # nuclear, nuclear-lsp, nuclear-builder in ~/.local/bin, the skill, the editors nuclear doctor # what the platforms still need on this machine nuclear-builder…",
+   "body": [
+    "From the source tree:",
+    "",
+    "```sh",
+    "installer/install.sh --help          # its options: --no-vscode, --no-zed, --no-agent, --ai, --uninstall",
+    "installer/install.sh                 # nuclear, nuclear-lsp, nuclear-builder in ~/.local/bin, the skill, the editors",
+    "nuclear doctor                       # what the platforms still need on this machine",
+    "nuclear-builder setup --status       # the AI services: profile, Smart Graph, Nuclear Developer, Ollama, at login",
+    "```",
+    "",
+    "Once a release exists:",
+    "",
+    "```sh",
+    "curl -fsSL https://nuclearlang.github.io/install.sh | sh        # Linux, macOS",
+    "irm https://nuclearlang.github.io/install.ps1 | iex             # Windows (PowerShell)",
+    "```",
+    "",
+    "Test an installer with a fake `HOME` and a mirror, never against your own: [the runbook](docs/06-runbooks/release.md)."
+   ],
+   "sources": [
+    "installer/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "The installers and the release — Where to read next",
+   "summary": "the decisions, the roadmap.",
+   "body": [
+    "- [Set up the AI services](docs/08-guides/ai-setup.md): the steps, the profiles, where things are, update, remove.",
+    "- [The release runbook](docs/06-runbooks/release.md), [how the scripts work](docs/02-architecture/overview.md),",
+    "  [the decisions](docs/03-adr/README.md), [the roadmap](docs/01-product/roadmap.md).",
+    "- What it installs: [the `nuclear` command](../tools/cli/README.md), [the MCP server](../tools/mcp/README.md),",
+    "  [the Smart Graph](../nuclear-graph-storage/README.md), [the editors](../extensions/AGENTS.md).",
+    "- To change it: [AGENTS.md](AGENTS.md)."
+   ],
+   "sources": [
+    "installer/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/README.md#why-it-exists",
+   "type": "readme",
+   "title": "The installers and the release — Why it exists",
+   "summary": "An installation is more than a binary: the dialects, the platforms' contracts and documents, the generators' data, the runtime packages, the definitions generator and the agents' skill travel with `nuclear`, and the binaries find them from their own location.",
+   "body": [
+    "An installation is more than a binary: the dialects, the platforms' contracts and documents, the generators' data,",
+    "the runtime packages, the definitions generator and the agents' skill travel with `nuclear`, and the binaries find",
+    "them from their own location. `cargo install` needs Rust on the machine and ships none of that. The goal is one",
+    "command on Linux, macOS and Windows, as Claude Code or Ollama have.",
+    "",
+    "What it leaves out on purpose: sudo and administrator rights (everything goes into the user's folders), and any",
+    "download before the user chooses it."
+   ],
+   "sources": [
+    "installer/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.4a8374",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
@@ -1187,7 +1459,7 @@
     "Nothing runs on your machine and nothing is downloaded but the MCP server. Claude Code, Codex, Cursor or OpenCode",
     "get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
     "([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). What you give up: the Smart Graph (no strategy for a request, no search of the knowledge",
-    "base), the Builder panel and the *Nuclear agent* chat of the editor, and the local agents themselves, so your remote",
+    "base), the Builder panel and Nuclear Atlas of the editor, and the local agents themselves, so your remote",
     "agent writes every line the generators do not and all of it is paid tokens."
    ],
    "sources": [
@@ -1323,10 +1595,10 @@
    "id": "doc:installer/docs/08-guides/ai-setup.md#set-up-the-ai-services",
    "type": "guide",
    "title": "Set up the AI services",
-   "summary": "NuclearLang comes with two services that run on your machine: the Smart Graph (what an agent needs to know about NuclearLang and Synapsis, and the MCP server your agent talks to) and the Nuclear Developer (small local models that plan, write, test and review code).",
+   "summary": "NuclearLang comes with two services that run on your machine: the Smart Graph (what an agent needs to know about NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the Nuclear Developer (small local models that plan, write, test and review code).",
    "body": [
     "NuclearLang comes with two services that run on your machine: the **Smart Graph** (what an agent needs to know about",
-    "NuclearLang and Synapsis, and the MCP server your agent talks to) and the **Nuclear Developer** (small local models",
+    "NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the **Nuclear Developer** (small local models",
     "that plan, write, test and review code). Their set-up reads your machine, suggests which models fit it, tells you how",
     "far each choice works, and installs what you choose. Nothing is downloaded before you say so."
    ],
@@ -1358,13 +1630,13 @@
    }
   },
   {
-   "id": "doc:tools/AGENTS.md#how-they-lean-on-each-other.89778d",
+   "id": "doc:tools/AGENTS.md#how-they-lean-on-each-other.a88ca5",
    "type": "readme",
    "title": "Tools — How they lean on each other",
-   "summary": "MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► platforms/<platform>/generators.toml │ │ ([gen], [skeletons], [[generators.*]]) │ the graph's │ Rust API │ package, HTTP ▼ ▼ nuclearlang/crates + the dialects' data; nuclear-devices (device-emulators/) Smart Graph, Nuclear…",
+   "summary": "MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► code_generator/platforms/<platform>/generators.toml │ │ ([gen], [skeletons], [[generators.*]]) │ the graph's │ Rust API │ package, HTTP ▼ ▼ nuclearlang/crates + the dialects' data; nuclear-devices (device-emulators/) Smart Graph,…",
    "body": [
     "```",
-    " MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► platforms/<platform>/generators.toml",
+    " MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► code_generator/platforms/<platform>/generators.toml",
     "     │                   │                                          ([gen], [skeletons], [[generators.*]])",
     "     │ the graph's       │ Rust API",
     "     │ package, HTTP     ▼",
@@ -1410,6 +1682,119 @@
    ],
    "sources": [
     "tools/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/README.md#how-they-lean-on-each-other",
+   "type": "readme",
+   "title": "The tools of NuclearLang — How they lean on each other",
+   "summary": "MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► code_generator/platforms/<platform>/generators.toml │ └──uses──► the language crates and the dialects' data; nuclear-devices (device-emulators/) same binary, so what works in one works in all of them (ADR-cli-0003).",
+   "body": [
+    "```",
+    " MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► code_generator/platforms/<platform>/generators.toml",
+    "                         │",
+    "                         └──uses──► the language crates and the dialects' data; nuclear-devices (device-emulators/)",
+    "```",
+    "",
+    "- **One entry point.** Everything goes through `nuclear`: a person, an agent, the editor and the MCP server run the",
+    "  same binary, so what works in one works in all of them",
+    "  ([ADR-cli-0003](cli/docs/03-adr/0003-one-command-nuclear.md)).",
+    "- **The MCP server adds no logic of its own to the generators**: a generator tool is a `nuclear gen` command.",
+    "- **The CLI and the code generator are Rust**; the MCP server is a Nuclear project built with the `python` dialect."
+   ],
+   "sources": [
+    "tools/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/README.md#the-tools-of-nuclearlang",
+   "type": "readme",
+   "title": "The tools of NuclearLang",
+   "summary": "What a person, an AI agent or an editor runs to work with NuclearLang: the `nuclear` command, the code generator behind `nuclear new`, `make` and `gen`, and the MCP server an AI client talks to.",
+   "body": [
+    "What a person, an AI agent or an editor runs to work with NuclearLang: the `nuclear` command, the code generator",
+    "behind `nuclear new`, `make` and `gen`, and the MCP server an AI client talks to. Three projects, each with its own",
+    "README and documents.",
+    "",
+    "| Project | What it is | Read |",
+    "|---|---|---|",
+    "| [`cli/`](cli/) | `nuclear`, the one command: the compiler (`build`, `check`, `fix`, `fmt`, `spec`, `defs`) and the framework, Synapsis (`new`, `gen`, `make`, `run`, `test`, `add`, the devices) | [README](cli/README.md) |",
+    "| [`code_generator/`](code_generator/) | `nuclear-codegen`: the finished code `new`, `gen` and `make` write, from each platform's templates | [README](code_generator/README.md) |",
+    "| [`mcp/`](mcp/) | `nuclear-mcp`: the tools an AI client (Claude Code, Codex, Cursor, OpenCode) calls, written in Nuclear | [README](mcp/README.md) |"
+   ],
+   "sources": [
+    "tools/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/README.md#try-it",
+   "type": "readme",
+   "title": "The tools of NuclearLang — Try it",
+   "summary": "nuclear help # every command, of the compiler and of the framework nuclear-mcp tools # the MCP server's instructions and its tools, as JSON",
+   "body": [
+    "```sh",
+    "nuclear help                  # every command, of the compiler and of the framework",
+    "nuclear-mcp tools             # the MCP server's instructions and its tools, as JSON",
+    "```"
+   ],
+   "sources": [
+    "tools/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "The tools of NuclearLang — Where to read next",
+   "summary": "AGENTS.md.",
+   "body": [
+    "- Each project's README (the table above), then its `AGENTS.md` to change it. The folder's map:",
+    "  [AGENTS.md](AGENTS.md).",
+    "- The devices `nuclear device` and `nuclear terminal-device` run: [device-emulators](../device-emulators/README.md).",
+    "- How the tools get onto a machine: [the installer](../installer/README.md)."
+   ],
+   "sources": [
+    "tools/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/README.md#why-they-exist",
+   "type": "readme",
+   "title": "The tools of NuclearLang — Why they exist",
+   "summary": "An agent that writes an application spends most of its tokens on code that is always the same, and invents APIs that do not exist (the vision).",
+   "body": [
+    "An agent that writes an application spends most of its tokens on code that is always the same, and invents APIs",
+    "that do not exist ([the vision](../docs/00-context/vision.md)). These tools take that work away: the generators",
+    "write the standard code, the compiler says exactly what is wrong and how to fix it, and the MCP server hands both",
+    "to any AI client with the same instructions. A product of the platform is made with them, never by writing or",
+    "porting target code by hand ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+   ],
+   "sources": [
+    "tools/README.md"
    ],
    "meta": {
     "section": "08-cli",
@@ -1613,6 +1998,160 @@
    ],
    "sources": [
     "tools/cli/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/README.md#how-we-made-it.28278d",
+   "type": "readme",
+   "title": "`nuclear`, the command line tool — How we made it",
+   "summary": "`device` and `terminal-device` call the devices.",
+   "body": [
+    "`device` and `terminal-device` call [the devices](../../device-emulators/README.md). The command only parses, calls",
+    "  and prints.",
+    "- **Written in Rust**, the crate `nuclear-cli`: a tool that cannot yet be written in Nuclear (the root",
+    "  `AGENTS.md`, rule 9)."
+   ],
+   "sources": [
+    "tools/cli/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/README.md#how-we-made-it.9c5d90",
+   "type": "readme",
+   "title": "`nuclear`, the command line tool — How we made it",
+   "summary": "one.",
+   "body": [
+    "- **One binary, two sets of commands.** There were two (`nuclear` and `dragonfly`), and an agent picked the wrong",
+    "  one. Now a command line is the framework's when its word is one only the framework has; `build` and `check`",
+    "  decide by their argument: with a path they transpile or check files, without one they work on the project they",
+    "  run in ([ADR-cli-0003](docs/03-adr/0003-one-command-nuclear.md)).",
+    "- **A project's commands come from its dialect's data.** How a generated project is installed, run, tested and",
+    "  debugged is the dialect's `[toolchain]`; nothing in the Rust names a port, a framework command or a package",
+    "  manager. A dialect's own commands go under its name (`nuclear flutter doctor`)",
+    "  ([ADR-cli-0001](docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md)). The mobile path still calls",
+    "  Flutter directly: that is in [the roadmap](docs/01-product/roadmap.md).",
+    "- **Agents learn Nuclear from the command**: a short brief, one skill, the agent files `nuclear agent init` writes",
+    "  into a project and the compiler's errors",
+    "  ([ADR-cli-0002](docs/03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md)).",
+    "- **The parser and the compiler are a library.** The command uses the language crates of",
+    "  [`nuclearlang/`](../../nuclearlang/AGENTS.md); `new`, `make` and `gen` call [the code generator](../code_generator/README.md),"
+   ],
+   "sources": [
+    "tools/cli/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/README.md#nuclear-the-command-line-tool",
+   "type": "readme",
+   "title": "`nuclear`, the command line tool",
+   "summary": "The one command of NuclearLang.",
+   "body": [
+    "The one command of NuclearLang. The same binary is the compiler (`build`, `check`, `fix`, `fmt`, `spec`, `defs`,",
+    "the documentation) and the framework, Synapsis (`new`, `gen`, `make`, `run`, `test`, `install`, `migrate`, `add`,",
+    "the devices). You write only `.nuc` files; `nuclear` writes the target project (Python, TypeScript or Dart) into",
+    "`build/` and runs the target's own tools there for you."
+   ],
+   "sources": [
+    "tools/cli/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/README.md#try-it",
+   "type": "readme",
+   "title": "`nuclear`, the command line tool — Try it",
+   "summary": "The compiler, on one file: printf 'greet(name: string) string\\n return \"Hello, ${name}\"\\n' > hello.nuc nuclear build hello.nuc --dialect python # def greet(name: str) -> str: return f\"Hello, {name}\" nuclear build hello.nuc --dialect dart # String greet(String name) { return 'Hello, $name'; }…",
+   "body": [
+    "The compiler, on one file:",
+    "",
+    "```sh",
+    "printf 'greet(name: string) string\\n  return \"Hello, ${name}\"\\n' > hello.nuc",
+    "nuclear build hello.nuc --dialect python     # def greet(name: str) -> str:  return f\"Hello, {name}\"",
+    "nuclear build hello.nuc --dialect dart       # String greet(String name) { return 'Hello, $name'; }",
+    "nuclear check hello.nuc --dialect python --json    # []",
+    "```",
+    "",
+    "The framework, a backend project:",
+    "",
+    "```sh",
+    "nuclear new demo -p backend                  # config.nuc, config/project_config.nuc, test/app_test.nuc, the agents' files",
+    "cd demo",
+    "nuclear gen resource books Book --fields \"id:int title:string author:string?\"",
+    "                                             # entity, repository, five use cases, controller, tests: finished code",
+    "nuclear build                                # demo: 17 files → ./build",
+    "nuclear check --json                         # []",
+    "nuclear doctor                               # what the platforms still need on this machine",
+    "```",
+    "",
+    "`nuclear install`, `nuclear run` and `nuclear test` then install the runtime, start the server and run the tests",
+    "written in Nuclear ([the guide](docs/08-guides/README.md))."
+   ],
+   "sources": [
+    "tools/cli/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "`nuclear`, the command line tool — Where to read next",
+   "summary": "agents use it.",
+   "body": [
+    "- [The user's guide](docs/08-guides/README.md): install, five minutes with a backend, the commands by job, how AI",
+    "  agents use it. [Every command and option](docs/08-guides/commands.md), as `nuclear help` prints them.",
+    "- [The Synapsis tutorial](../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
+    "- [The decisions](docs/03-adr/README.md) and [the roadmap](docs/01-product/roadmap.md).",
+    "- To change it: [AGENTS.md](AGENTS.md)."
+   ],
+   "sources": [
+    "tools/cli/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/README.md#why-it-exists",
+   "type": "readme",
+   "title": "`nuclear`, the command line tool — Why it exists",
+   "summary": "A person and an AI agent should not have to learn two tools, nor the package manager and framework commands of every target.",
+   "body": [
+    "A person and an AI agent should not have to learn two tools, nor the package manager and framework commands of",
+    "every target. `nuclear` is what a person types, what an agent runs, what the editor calls and what the MCP server",
+    "wraps, so what works in one works in all of them. It also teaches: `nuclear spec --brief` is the short sheet an",
+    "agent reads before it writes, and `nuclear check --json` gives every error a code, a position and usually its exact",
+    "fix.",
+    "",
+    "What it leaves out on purpose: it never reads target code, and it does not replace the target's tools (Flutter,",
+    "`pip`, `npm` still do the work; `nuclear` drives them)."
+   ],
+   "sources": [
+    "tools/cli/README.md"
    ],
    "meta": {
     "section": "08-cli",
@@ -2562,16 +3101,16 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.4131de",
+   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.c6bea4",
    "type": "readme",
    "title": "The `nuclear` command — Five minutes: a backend",
-   "summary": "nuclear new demo -p backend # a project of the backend platform (dialect fastapi by default) cd demo nuclear gen resource books Book --fields \"id:int title:string author:string?\" nuclear build # demo: 19 files → ./build nuclear install # the runtime and the packages (a venv, for fastapi) nuclear…",
+   "summary": "nuclear new demo -p backend # a project of the backend platform (dialect fastapi by default) cd demo nuclear gen resource books Book --fields \"id:int title:string author:string?\" nuclear build # demo: 17 files → ./build nuclear install # the runtime and the packages (a venv, for fastapi) nuclear…",
    "body": [
     "```sh",
     "nuclear new demo -p backend                  # a project of the backend platform (dialect fastapi by default)",
     "cd demo",
     "nuclear gen resource books Book --fields \"id:int title:string author:string?\"",
-    "nuclear build                                # demo: 19 files → ./build",
+    "nuclear build                                # demo: 17 files → ./build",
     "nuclear install                              # the runtime and the packages (a venv, for fastapi)",
     "nuclear run                                  # Uvicorn running on http://127.0.0.1:8000",
     "nuclear test                                 # 3 passed",
@@ -3349,6 +3888,134 @@
    ],
    "sources": [
     "tools/code_generator/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/README.md#how-we-made-it",
+   "type": "readme",
+   "title": "The code generator — How we made it",
+   "summary": "The decision is ADR-codegen-0001: fill.",
+   "body": [
+    "The decision is [ADR-codegen-0001](docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md):",
+    "",
+    "- **Finished code or a refusal, never a placeholder.** `make` used to write nearly empty skeletons for a model to",
+    "  fill. Measured, that was worse than writing from scratch (29 of 42 against 37): the model copies the holes. When",
+    "  `gen` cannot write something finished, it refuses and says what to write first.",
+    "- **The templates are the platform's data**, `platforms/<platform>/generators.toml` (`backend`, `mobile`, `web`),",
+    "  never code of the generator. So the Nuclear a generator writes is the same for every dialect of a platform, and a",
+    "  test builds a generated resource with every dialect of every platform.",
+    "- **The fields come from data**: `--fields`, an example answer of the API (`--from-json <file or url>`) or a spec",
+    "  (`--from-spec`). A JSON key that is not the field's camelCase name gets `@key(\"air_date\")`.",
+    "- **Nothing is overwritten, nothing is declared twice.** A file that exists is kept; a facade or a controller only",
+    "  gets the members it lacks; a name another file declares stops the command before it writes.",
+    "- **Written in Rust**, a library crate the `nuclear` command calls: the templates use the Mustache subset of the",
+    "  language's `nuclear-dialect`, and what it writes goes through the formatter."
+   ],
+   "sources": [
+    "tools/code_generator/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/README.md#the-code-generator",
+   "type": "readme",
+   "title": "The code generator",
+   "summary": "`nuclear-codegen`: what `nuclear new`, `nuclear gen` and `nuclear make` write into a project.",
+   "body": [
+    "`nuclear-codegen`: what `nuclear new`, `nuclear gen` and `nuclear make` write into a project. `gen` writes finished",
+    "code that compiles, from a resource's fields (models, repository, a use case per action, the facade's aliases, the",
+    "controller or the screen, the tests); `make` writes one skeleton of a kind, to fill in; `new` the files of a new",
+    "project."
+   ],
+   "sources": [
+    "tools/code_generator/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/README.md#try-it",
+   "type": "readme",
+   "title": "The code generator — Try it",
+   "summary": "In a backend project (`nuclear new demo -p backend && cd demo`): nuclear gen resource books Book --fields \"id:int title:string author:string?\" nuclear check --json # []: the generated code compiles nuclear gen usecase books ArchiveBook # ✗ ArchiveBook is not declared.",
+   "body": [
+    "In a backend project (`nuclear new demo -p backend && cd demo`):",
+    "",
+    "```sh",
+    "nuclear gen resource books Book --fields \"id:int title:string author:string?\"",
+    "#   created  components/books/data/entities/book.nuc",
+    "#   created  components/books/data/repositories/book_repository.nuc",
+    "#   created  components/books/domain/usecases/list_books.nuc   ... get, create, update, delete",
+    "#   created  components/books/api/books_controller.nuc",
+    "#   created  test/books_test.nuc",
+    "nuclear check --json                           # []: the generated code compiles",
+    "nuclear gen usecase books ArchiveBook          # ✗ ArchiveBook is not declared. A use case with rules of its own",
+    "                                               #   is written first (...), then this command wires it",
+    "nuclear make entity books Author               # created components/books/data/entities/author.nuc",
+    "nuclear gen resource weather Forecast --fields \"id:int city:string\" \\",
+    "  --source rest:https://api.example.com --actions list,get --dry-run   # an HTTP repository: prints, writes nothing",
+    "nuclear help layout --platform backend         # where each kind's file goes",
+    "```"
+   ],
+   "sources": [
+    "tools/code_generator/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "The code generator — Where to read next",
+   "summary": "each source is read, every refusal.",
+   "body": [
+    "- [The generators' guide](docs/08-guides/README.md): what `new`, `gen` and `make` write on each platform.",
+    "- [The generators in Synapsis](../../nuclear-synapsis-framework/docs/08-guides/generators.md): every option, how",
+    "  each source is read, every refusal.",
+    "- [How it works](docs/02-architecture/overview.md), [the roadmap](docs/01-product/roadmap.md).",
+    "- The command that calls it: [`nuclear`](../cli/README.md). To change it: [AGENTS.md](AGENTS.md)."
+   ],
+   "sources": [
+    "tools/code_generator/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/README.md#why-it-exists",
+   "type": "readme",
+   "title": "The code generator — Why it exists",
+   "summary": "Most of an app is standard code: an entity, a repository, a use case that only calls it, a controller, a screen that lists a resource, their tests.",
+   "body": [
+    "Most of an app is standard code: an entity, a repository, a use case that only calls it, a controller, a screen",
+    "that lists a resource, their tests. Written by a model, it costs tokens and fails on what is plain procedure;",
+    "written by a tool, it is the same every time, it compiles as written and it costs no model tokens. A person, an AI",
+    "agent, the MCP server and the Nuclear Builder all call the same generators, and only what they leave is written by",
+    "hand, in Nuclear ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
+    "",
+    "What it leaves out on purpose: a use case with rules of its own and what a screen shows of it. Those are written by",
+    "hand (or by the local developer); the generator then wires them in."
+   ],
+   "sources": [
+    "tools/code_generator/README.md"
    ],
    "meta": {
     "section": "08-cli",

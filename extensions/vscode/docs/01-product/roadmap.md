@@ -8,12 +8,14 @@ related: [../../../docs/01-product/roadmap.md, ../02-architecture/workspace.md, 
 
 What is common to the three editors: [the editors' roadmap](../../../docs/01-product/roadmap.md). Each tool has its
 own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md),
-[Nuclear Connector](../../../tools/nuclear-connector/docs/01-product/roadmap.md),
-[the chat](../../../tools/nuclear-ai-chat/docs/01-product/roadmap.md),
+[HTTP Connections](../../../tools/nuclear-http-connections/docs/01-product/roadmap.md),
+[Nuclear Atlas](../../../tools/nuclear-atlas/docs/01-product/roadmap.md),
 [the devices](../../../tools/nuclear-device-manager/docs/01-product/roadmap.md).
 
 ## Untested
 
+- **0.52.0, the renamed tools** (HTTP Connections, Nuclear Atlas: new command, colour and tool ids): compiled,
+  tested (`npm test`) and installed, never opened in a running VS Code.
 Done, and never tried in a running VS Code (only headless renders, node checks, HTTP calls and `nuclear-builder`):
 
 - **The Nuclear workspace** (ADR-extensions-0002): the icon theme on the file tree, the editors swapped per
@@ -33,7 +35,10 @@ Done, and never tried in a running VS Code (only headless renders, node checks, 
 ## Pending
 
 - The VS Code listing (`extensions/vscode/README.md`): the example goes in a ```` ```nuclear ```` block; a relative
-  image breaks locally and `vsce` rejects it without `repository`.
+  image breaks locally and `vsce` rejects it without `repository`. `package.json` `repository` and `bugs` still
+  name the old `nuclearlang/nuclear-vscode`: `vsce` rewrites the README's relative links (`../tools/`,
+  `../../installer/`, `../docs/03-adr/`) against it, so on the Marketplace they lead to the wrong repository; they
+  need the tree (`nuclearlang/nuclear`, `extensions/vscode/`) and a release.
 - The development build of the server is not found since the tree changed: `findServer` (`src/extension.ts`) looks
   in `../target/{release,debug}` from the extension's folder, which is `extensions/target/`; the tree's is
   `../../target/`. Its "not found" message still says "in the nuclear repository".

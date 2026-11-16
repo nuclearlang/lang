@@ -31,7 +31,7 @@ platforms still need (the CLIs of each dialect, Flutter, VS Code).
 nuclear new demo -p backend                  # a project of the backend platform (dialect fastapi by default)
 cd demo
 nuclear gen resource books Book --fields "id:int title:string author:string?"
-nuclear build                                # demo: 19 files → ./build
+nuclear build                                # demo: 17 files → ./build
 nuclear install                              # the runtime and the packages (a venv, for fastapi)
 nuclear run                                  # Uvicorn running on http://127.0.0.1:8000
 nuclear test                                 # 3 passed

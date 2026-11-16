@@ -1167,7 +1167,34 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/008-restructure/design.md#target-tree.540707",
+   "id": "doc:docs/04-specs/008-restructure/design.md#target-tree.bf5a0d",
+   "type": "spec",
+   "title": "Spec 008: restructure the tree — Design — Target tree",
+   "summary": "nuclear-synapsis-framework/ the framework (was Dragonfly) platforms/<platform>/ web, mobile, backend platform.toml packages/ examples/ checks/ docs/ tools/ cli/ the `nuclear` command code_generator/platforms/<platform>/ what `nuclear gen` and `nuclear make` write mcp/ the MCP server installer/ the…",
+   "body": [
+    "nuclear-synapsis-framework/                     the framework (was Dragonfly)",
+    "  platforms/<platform>/                         web, mobile, backend",
+    "    platform.toml  packages/  examples/  checks/  docs/",
+    "tools/",
+    "  cli/                                          the `nuclear` command",
+    "  code_generator/platforms/<platform>/          what `nuclear gen` and `nuclear make` write",
+    "  mcp/                                          the MCP server",
+    "installer/                                      the installers and the release",
+    "nuclear-graph-storage/                          the Smart Graph (the RAG) and its knowledge base (`data/`)",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/008-restructure/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/008-restructure/design.md#target-tree.c55802",
    "type": "spec",
    "title": "Spec 008: restructure the tree — Design — Target tree",
    "summary": "AGENTS.md CLAUDE.md README.md Cargo.toml the map, the hard rules, one Cargo workspace docs/ the whole platform only nuclearlang/ the language crates/ nuclear-diag, -syntax, -dialect, -transpile, -lsp base/ the base language's words and their docs (was languages/) dialects/<language>/ python,…",
@@ -1186,39 +1213,12 @@
     "  examples/  tools/  docs/",
     "extensions/",
     "  vscode/  jetbrains/  zed/",
-    "  tools/<tool>/                                 nuclear-builder, nuclear-connector, nuclear-ai-chat,",
+    "  tools/<tool>/                                 nuclear-builder, nuclear-http-connections, nuclear-atlas,",
     "                                                nuclear-device-manager; not built: nuclear-documentor,",
     "                                                nuclear-ui-designer, nuclear-backend-designer,",
     "                                                nuclear-storage-connector",
     "device-emulators/                               the devices the CLI and the editors start",
     "nuclear-agents/nuclear_developer/               the local agents"
-   ],
-   "agents": false,
-   "sources": [
-    "docs/04-specs/008-restructure/design.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:docs/04-specs/008-restructure/design.md#target-tree.bf5a0d",
-   "type": "spec",
-   "title": "Spec 008: restructure the tree — Design — Target tree",
-   "summary": "nuclear-synapsis-framework/ the framework (was Dragonfly) platforms/<platform>/ web, mobile, backend platform.toml packages/ examples/ checks/ docs/ tools/ cli/ the `nuclear` command code_generator/platforms/<platform>/ what `nuclear gen` and `nuclear make` write mcp/ the MCP server installer/ the…",
-   "body": [
-    "nuclear-synapsis-framework/                     the framework (was Dragonfly)",
-    "  platforms/<platform>/                         web, mobile, backend",
-    "    platform.toml  packages/  examples/  checks/  docs/",
-    "tools/",
-    "  cli/                                          the `nuclear` command",
-    "  code_generator/platforms/<platform>/          what `nuclear gen` and `nuclear make` write",
-    "  mcp/                                          the MCP server",
-    "installer/                                      the installers and the release",
-    "nuclear-graph-storage/                          the Smart Graph (the RAG) and its knowledge base (`data/`)",
-    "```"
    ],
    "agents": false,
    "sources": [
@@ -1306,7 +1306,7 @@
     "- [ ] THE SYSTEM SHALL keep no state file that every session loads whole; a project's pending work is in its docs.",
     "- [ ] WHEN a file of context is written THE SYSTEM SHALL keep it short enough to read at once.",
     "- [ ] THE SYSTEM SHALL name the framework Synapsis (`nuclear-synapsis-framework`), the pipeline tool",
-    "      `nuclear-builder` and the protocol client `nuclear-connector`, everywhere.",
+    "      `nuclear-builder` and the protocol client `nuclear-http-connections`, everywhere.",
     "- [ ] THE SYSTEM SHALL have one command line tool, `nuclear`; the `dragonfly` command does not exist.",
     "- [ ] WHEN a phase of `tasks.md` ends THE SYSTEM SHALL pass `cargo test` and `cargo clippy --all-targets`."
    ],
@@ -1363,10 +1363,10 @@
    "id": "doc:docs/04-specs/008-restructure/requirements.md#out-of-scope",
    "type": "spec",
    "title": "Spec 008: restructure the tree — Requirements — Out of scope",
-   "summary": "Building the tools that are only named: `nuclear-documentor`, `nuclear-ui-designer`, `nuclear-backend-designer`, `nuclear-storage-connector`, and the protocols of `nuclear-connector` other than HTTP.",
+   "summary": "Building the tools that are only named: `nuclear-documentor`, `nuclear-ui-designer`, `nuclear-backend-designer`, `nuclear-storage-connector`, and the protocols of `nuclear-http-connections` other than HTTP.",
    "body": [
     "Building the tools that are only named: `nuclear-documentor`, `nuclear-ui-designer`, `nuclear-backend-designer`,",
-    "`nuclear-storage-connector`, and the protocols of `nuclear-connector` other than HTTP. Each gets its folder and a",
+    "`nuclear-storage-connector`, and the protocols of `nuclear-http-connections` other than HTTP. Each gets its folder and a",
     "page saying it is not built."
    ],
    "agents": false,
@@ -1447,7 +1447,7 @@
     "      `synapsis-web`), type definitions, `synapsis(platform, dialect)` of `config.nuc`, generated files, docs",
     "      (`work/rename.py`).",
     "- [x] T2.4 The Loop → Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, `.nuclear/builder.json`); Nuclear HTTP →",
-    "      Nuclear Connector (`work/rename2.py`). The graph's command stays `nuclear-graph` (only its folder was named).",
+    "      HTTP Connections (`work/rename2.py`). The graph's command stays `nuclear-graph` (only its folder was named).",
     "- [x] T2.5 The user's projects in `~/Documents/projects/nuc/` follow the new words (a copy before:",
     "      `~/Documents/projects/nuc-backup-2026-11-16-before-synapsis.tar.gz`). `python/nuclear_langgraph_agent` still",
     "      has the two errors it had before (`@generated`, a variable named `tools`): the user's code, not changed."
@@ -1521,7 +1521,7 @@
     "      (out of each `platform.toml`); the loader reads it (`Home.generators`, `Loader::generators_file`).",
     "- [x] T4.3 `tools/mcp/`: a Nuclear project of its own, command `nuclear-mcp`; the MCP tool `dragonfly` is",
     "      `nuclear_project`; the editor's settings `nuclear.ai.mcpCommand` / `nuclear.ai.graphCommand`.",
-    "- [x] T4.4 `extensions/tools/<tool>/`: the code of the builder, the connector, the chat and the device manager (their",
+    "- [x] T4.4 `extensions/tools/<tool>/`: the code of the builder, HTTP Connections, Nuclear Atlas and the device manager (their",
     "      JetBrains parts in `jetbrains/src/`).",
     "- [x] T4.5 `website/`: moved into the tree (from `~/Documents/projects/nuc/react/nuclearlang_website`, a copy with",
     "      its git history is in the backup above); its pages come from every project's reference and guides; CI",
@@ -1727,7 +1727,7 @@
    }
   },
   {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.335b4a",
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.54528a",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
    "summary": "its own locked editor group to the right of the code (like Android Studio) and is never merged into the code's tab group.",
@@ -1742,7 +1742,7 @@
     "   of one platform is offered to another (context key `nuclear.platform`; no buttons while a tool is the active tab):",
     "   - mobile: ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, Build, Test, Check;",
     "   - backend: ▷ Serve (`nuclear run`; the server restarts on each build), ◉ Debug (debugpy for fastapi, node with",
-    "     source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the Connector tool);",
+    "     source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the HTTP Connections tool);",
     "   - web: ▷ Serve (`nuclear run`, Vite), ▭ Device, ◉ Debug, ↻ Reload, Build, Test, Check."
    ],
    "agents": false,
@@ -1756,7 +1756,37 @@
    }
   },
   {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.b067f6",
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.69b120",
+   "type": "adr",
+   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
+   "summary": "7. Every platform runs, debugs and reloads pre-configured, as Flutter does.",
+   "body": [
+    "7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web",
+    "   project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app",
+    "   has no packages. `nuclear build` writes `build/<name>.code-workspace` for every platform (the tasks build,",
+    "   install, run, test, check and the dialect's debug launch), and every `nuclear build` writes `.nuclear/lines.json`,",
+    "   so a breakpoint in a `.nuc` stops in every debugger and the paused line shows in the `.nuc`.",
+    "8. **The tools are workspaces too, independent of the projects.**",
+    "   - The HTTP Connections tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts",
+    "     / components → endpoints, OpenAPI documents, the environment); a component is an editor tab and each endpoint a",
+    "     tab inside it, so the tab bar never fills with requests. A component panel keeps its tabs, forms and responses",
+    "     while its workspace is left. Environments belong to the window (`<first folder>/.nuclear/http.json`, else the",
+    "     extension's storage).",
+    "   - The Devices tool lists the open Synapsis devices with their state and opens as many as wanted (a preset each),",
+    "     each in its own locked editor group tiled horizontally with its own app, so several users can be signed in at"
+   ],
+   "agents": false,
+   "sources": [
+    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.9e93ec",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
    "summary": "throttling (fast 4G, slow 3G, offline), no cache; a dock with the page's Console (errors counted, a line's source opens the generated file) and Network (method, status, address, type, size, time), filtered; a screenshot into `build/screenshots/`; ◉ Debug attaches VS Code's JavaScript debugger to…",
@@ -1772,7 +1802,7 @@
     "    a short toast with its shortcut, so the mouse teaches the keys. The user may rebind any of them.",
     "12. **A welcome page at startup** (`nuclear.workspace.welcome`, on by default, only when the window restored no",
     "    editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
-    "13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the Connector tool window,",
+    "13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,",
     "    `Alt+Shift+H`). Zed cannot contribute keybindings or views."
    ],
    "agents": false,
@@ -1791,36 +1821,6 @@
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
    "summary": "The VS Code extension first; Android Studio and Zed follow as far as their platform allows.",
    "body": "The VS Code extension first; Android Studio and Zed follow as far as their platform allows.",
-   "agents": false,
-   "sources": [
-    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.ede68d",
-   "type": "adr",
-   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
-   "summary": "7. Every platform runs, debugs and reloads pre-configured, as Flutter does.",
-   "body": [
-    "7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web",
-    "   project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app",
-    "   has no packages. `nuclear build` writes `build/<name>.code-workspace` for every platform (the tasks build,",
-    "   install, run, test, check and the dialect's debug launch), and every `nuclear build` writes `.nuclear/lines.json`,",
-    "   so a breakpoint in a `.nuc` stops in every debugger and the paused line shows in the `.nuc`.",
-    "8. **The tools are workspaces too, independent of the projects.**",
-    "   - The Connector tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts",
-    "     / components → endpoints, OpenAPI documents, the environment); a component is an editor tab and each endpoint a",
-    "     tab inside it, so the tab bar never fills with requests. A component panel keeps its tabs, forms and responses",
-    "     while its workspace is left. Environments belong to the window (`<first folder>/.nuclear/http.json`, else the",
-    "     extension's storage).",
-    "   - The Devices tool lists the open Synapsis devices with their state and opens as many as wanted (a preset each),",
-    "     each in its own locked editor group tiled horizontally with its own app, so several users can be signed in at"
-   ],
    "agents": false,
    "sources": [
     "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
@@ -1920,7 +1920,7 @@
    "summary": "References",
    "body": [
     "- Replaces: ADR-0099",
-    "- The contract the Connector tool reads: ADR-synapsis-0006. The Synapsis device: ADR-devices-0001."
+    "- The contract the HTTP Connections tool reads: ADR-synapsis-0006. The Synapsis device: ADR-devices-0001."
    ],
    "agents": false,
    "sources": [
@@ -10119,28 +10119,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md#decision.a4f4a1",
-   "type": "adr",
-   "title": "ADR-0001: A project's commands come from its dialect's data; a dialect's own commands go under its name — Decision",
-   "summary": "5. `nuclear build` removes the output of a removed `.nuc`, from the previous build's line map.",
-   "body": [
-    "5. **`nuclear build` removes the output of a removed `.nuc`**, from the previous build's line map.",
-    "",
-    "The release archives and the one-line installers were decided together with this; they are the installer's",
-    "decision: ADR-installer-0001."
-   ],
-   "agents": false,
-   "sources": [
-    "tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md#decision.e3330c",
+   "id": "doc:tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md#decision.77adca",
    "type": "adr",
    "title": "ADR-0001: A project's commands come from its dialect's data; a dialect's own commands go under its name — Decision",
    "summary": "1. Common commands stay at the first level (`build`, `check`, `make`, `run`, `test`...): the project already says its dialect.",
@@ -10158,8 +10137,29 @@
     "   `nuclear new -p <platform>` uses it, and so does an older Flutter app whose `config.nuc` has no",
     "   `synapsis(...)` line.",
     "4. **The project card carries `toolchain`** (`url`, `serve`, `installed` in `.nuclear/project.json`): an editor",
-    "   reads it instead of loading the dialect (the web device's server, the base urls of the Connector tool, \"needs",
+    "   reads it instead of loading the dialect (the web device's server, the base urls of the HTTP Connections tool, \"needs",
     "   install\")."
+   ],
+   "agents": false,
+   "sources": [
+    "tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md#decision.a4f4a1",
+   "type": "adr",
+   "title": "ADR-0001: A project's commands come from its dialect's data; a dialect's own commands go under its name — Decision",
+   "summary": "5. `nuclear build` removes the output of a removed `.nuc`, from the previous build's line map.",
+   "body": [
+    "5. **`nuclear build` removes the output of a removed `.nuc`**, from the previous build's line map.",
+    "",
+    "The release archives and the one-line installers were decided together with this; they are the installer's",
+    "decision: ADR-installer-0001."
    ],
    "agents": false,
    "sources": [

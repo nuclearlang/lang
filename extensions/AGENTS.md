@@ -1,7 +1,7 @@
 # Editor extensions
 
 The editor tooling of NuclearLang: one extension per editor (VS Code, Android Studio / IntelliJ, Zed) and the tools
-they show (Nuclear Builder, Nuclear Connector, the chat, the devices). This folder is the index of those projects
+they show (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices). This folder is the index of those projects
 and holds what the three extensions share. The language server is **not** here: it is
 `nuclearlang/crates/nuclear-lsp`, part of [the language project](../nuclearlang/AGENTS.md). The extensions run it
 as an external binary and talk to it only through LSP and the `nuclear/*` requests.
@@ -10,7 +10,7 @@ as an external binary and talk to it only through LSP and the `nuclear/*` reques
 - `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer
 - `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API
 - `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens
-- One version for the three (0.51.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,
+- One version for the three (0.52.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,
   `zed/extension.toml`
 
 ## Commands
@@ -26,7 +26,7 @@ Each extension has its own; they are in its `AGENTS.md`.
 - `jetbrains/`: the Android Studio / IntelliJ plugin
 - `zed/`: the Zed extension
 - `tools/<tool>/`: one project per tool of the editors, with its code: `src/` (and `test/`), bundled by the VS Code
-  extension, and `jetbrains/src/` (Nuclear Builder, Nuclear Connector), compiled by the JetBrains `build.sh`
+  extension, and `jetbrains/src/` (Nuclear Builder, HTTP Connections), compiled by the JetBrains `build.sh`
 - `docs/`: what is common to the three extensions
 
 ## Rules
@@ -51,8 +51,8 @@ Each extension has its own; they are in its `AGENTS.md`.
 | [jetbrains/](jetbrains/AGENTS.md) | the Android Studio / IntelliJ plugin |
 | [zed/](zed/AGENTS.md) | the Zed extension |
 | [tools/nuclear-builder/](tools/nuclear-builder/AGENTS.md) | Nuclear Builder: the pipeline tool and the `nuclear-builder` command |
-| [tools/nuclear-connector/](tools/nuclear-connector/AGENTS.md) | Nuclear Connector: the tool like Postman (HTTP/REST today) |
-| [tools/nuclear-ai-chat/](tools/nuclear-ai-chat/AGENTS.md) | the chat with the local agents (the tool *Nuclear agent*) |
+| [tools/nuclear-http-connections/](tools/nuclear-http-connections/AGENTS.md) | HTTP Connections: the tool like Postman (HTTP/REST today) |
+| [tools/nuclear-atlas/](tools/nuclear-atlas/AGENTS.md) | Nuclear Atlas: the local agent integrated with the RAG (the chat with the local agents over the Nuclear Smart Graph) |
 | [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Synapsis device and the web device |
 | [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |
 | [tools/nuclear-ui-designer/](tools/nuclear-ui-designer/AGENTS.md) | not built |

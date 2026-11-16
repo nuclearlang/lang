@@ -69,7 +69,7 @@ The checks of each platform against the target's own tools: `platforms/docs/05-s
 5. **A project is only `.nuc`.** Everything generated goes to `build/` and is never edited; no target code is
    written by hand to make a dialect easier.
 6. **The command knows no language.** What it runs for a platform comes from the dialect (`[toolchain]`).
-7. **Something new of the tree is written with Synapsis** when one of the three platforms fits it (root rule 12).
+7. **Something new of the tree is written with Synapsis** when one of the three platforms fits it (root rule 9).
 8. `docs/08-guides/` and each platform's `docs/07-reference/` are checked by tools and shipped in an install:
    they change only with the feature they describe, in the same change.
 9. A decision of the user becomes an ADR in `docs/03-adr/`, cited `ADR-synapsis-NNNN`; a feature starts as a spec

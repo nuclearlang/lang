@@ -8,21 +8,21 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 72 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, the Connector tool, the Builder, the agent's chat and the settings.",
+   "summary": "The 72 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
     "- Run an Action of the Active Project (run, debug, build, test…) (`nuclear.workspace.action`)",
     "- Add the Active Project to the VS Code Workspace (`nuclear.workspace.addToVsCode`)",
     "- Welcome Page — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
     "- Set Up the AI Services (`nuclear.ai.setup`)",
-    "- Open a Tool — `ctrl+alt+h (arg connector), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg agent), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
+    "- Open a Tool — `ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
     "- Open a Project as a Tab — `ctrl+alt+o` (`nuclear.workspace.openProject`)",
     "- Go to Project Tab — `ctrl+1 (arg 1), ctrl+2 (arg 2), ctrl+3 (arg 3), ctrl+4 (arg 4), ctrl+5 (arg 5), ctrl+6 (arg 6), ctrl+7 (arg 7), ctrl+8 (arg 8), ctrl+9 (arg 9)` (`nuclear.workspace.project`)",
     "- Show the Nuclear Workspace — `ctrl+alt+n` (`nuclear.workspace.show`)",
-    "- Refresh (`nuclear.connector.refresh`)",
-    "- Select Environment (`nuclear.connector.selectEnvironment`)",
-    "- Edit Environments (variables, headers, base urls) (`nuclear.connector.editEnvironments`)",
-    "- Add an OpenAPI Document (`nuclear.connector.addOpenApi`)",
-    "- Open Request (`nuclear.connector.open`)",
+    "- Refresh (`nuclear.httpConnections.refresh`)",
+    "- Select Environment (`nuclear.httpConnections.selectEnvironment`)",
+    "- Edit Environments (variables, headers, base urls) (`nuclear.httpConnections.editEnvironments`)",
+    "- Add an OpenAPI Document (`nuclear.httpConnections.addOpenApi`)",
+    "- Open Request (`nuclear.httpConnections.open`)",
     "- Update Contracts (nuclear contracts update) (`nuclear.contracts.update`)",
     "- Run (`nuclear.run`)",
     "- Debug (`nuclear.debug`)",
@@ -47,7 +47,7 @@
     "- Build — `ctrl+alt+b` (`nuclear.action.build`)",
     "- Test — `ctrl+alt+t` (`nuclear.action.test`)",
     "- Check — `ctrl+alt+c` (`nuclear.action.check`)",
-    "- Routes in Nuclear Connector (`nuclear.action.api`)",
+    "- Routes in HTTP Connections (`nuclear.action.api`)",
     "- Open the web device (`nuclear.webDevice.open`)",
     "- Debug on the web device (`nuclear.webDevice.debug`)",
     "- Reload the web device (`nuclear.webDevice.reload`)",
@@ -120,7 +120,7 @@
      {
       "title": "Open a Tool",
       "command": "nuclear.workspace.tool",
-      "keys": "ctrl+alt+h (arg connector), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg agent), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)"
+      "keys": "ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)"
      },
      {
       "title": "Open a Project as a Tab",
@@ -139,27 +139,27 @@
      },
      {
       "title": "Refresh",
-      "command": "nuclear.connector.refresh",
+      "command": "nuclear.httpConnections.refresh",
       "keys": ""
      },
      {
       "title": "Select Environment",
-      "command": "nuclear.connector.selectEnvironment",
+      "command": "nuclear.httpConnections.selectEnvironment",
       "keys": ""
      },
      {
       "title": "Edit Environments (variables, headers, base urls)",
-      "command": "nuclear.connector.editEnvironments",
+      "command": "nuclear.httpConnections.editEnvironments",
       "keys": ""
      },
      {
       "title": "Add an OpenAPI Document",
-      "command": "nuclear.connector.addOpenApi",
+      "command": "nuclear.httpConnections.addOpenApi",
       "keys": ""
      },
      {
       "title": "Open Request",
-      "command": "nuclear.connector.open",
+      "command": "nuclear.httpConnections.open",
       "keys": ""
      },
      {
@@ -283,7 +283,7 @@
       "keys": "ctrl+alt+c"
      },
      {
-      "title": "Routes in Nuclear Connector",
+      "title": "Routes in HTTP Connections",
       "command": "nuclear.action.api",
       "keys": ""
      },
@@ -478,7 +478,7 @@
     "- `nuclear.ai.retry.attempts` (default `5`): Tries of a call to the local agents that fails for a passing reason (down, busy, 5xx), the first included.",
     "- `nuclear.ai.retry.baseMs` (default `1000`): The ceiling of the first wait before a retry, in milliseconds; it doubles at each retry (exponential backoff with full jitter).",
     "- `nuclear.ai.retry.maxMs` (default `30000`): The longest wait before a retry, in milliseconds.",
-    "- `nuclear.ai.contextTokens` (default `8192`): The context window of the local models, in tokens: what the chat's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx).",
+    "- `nuclear.ai.contextTokens` (default `8192`): The context window of the local models, in tokens: what Nuclear Atlas's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx).",
     "- `nuclear.ai.claude.command` (default `\"claude\"`): Claude Code's command: the Builder's lead when Claude leads, checked before every such run.",
     "- `nuclear.ai.claude.maxBudgetUsd` (default `2`): The most a Builder run led by Claude may spend, in USD (0: no limit).",
     "- `nuclear.ai.codex.enabled` (default `false`): Use Codex (its MCP server entry and its regular check).",
@@ -573,7 +573,7 @@
      {
       "name": "nuclear.ai.contextTokens",
       "default": "8192",
-      "does": "The context window of the local models, in tokens: what the chat's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx)."
+      "does": "The context window of the local models, in tokens: what Nuclear Atlas's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx)."
      },
      {
       "name": "nuclear.ai.claude.command",

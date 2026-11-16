@@ -11,7 +11,7 @@ flowchart LR
   page[src/panel.ts: the page of VS Code] --> engine[src/engine.ts + src/safety.ts]
   cli[src/cli.ts: nuclear-builder] --> engine
   jb[jetbrains/src/…/NuclearBuilder.java: the JetBrains tool window] -- runs --> cli
-  chat[the chat: /task] --> engine
+  chat[Nuclear Atlas: /task] --> engine
   engine -- HTTP --> dev[Nuclear Developer]
   engine -- "claude -p + the Nuclear MCP" --> claude[Claude]
   engine -- "nuclear gen, the project's commands" --> shell[Shell]
@@ -87,7 +87,7 @@ In `extensions/vscode/`, `npm run builder` → `out/nuclear-builder.js`, also pa
 
 ## The JetBrains tool window (`NuclearBuilder.java`)
 
-Bottom, `Alt+Shift+P`. Per project (`NuclearConnector.findProjects`): its specs (`specs/*/spec.md`) and its runs
+Bottom, `Alt+Shift+P`. Per project (`HttpConnections.findProjects`): its specs (`specs/*/spec.md`) and its runs
 (`.nuclear/builder/runs/*.json`, newest first) → stages → steps (actor, summary, status colors). Below, the selected
 step's trace, input, code and output; a step's file opens. Title actions: New Spec (writes the markdown shape
 `parseSpecMarkdown` reads), Run the Spec with the local agents or with Claude leading, Server Stages, Export CI,

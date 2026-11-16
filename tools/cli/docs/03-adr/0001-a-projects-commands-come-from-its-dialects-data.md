@@ -25,7 +25,7 @@ for every dialect: some commands are the same in all of them, some belong to one
    `nuclear new -p <platform>` uses it, and so does an older Flutter app whose `config.nuc` has no
    `synapsis(...)` line.
 4. **The project card carries `toolchain`** (`url`, `serve`, `installed` in `.nuclear/project.json`): an editor
-   reads it instead of loading the dialect (the web device's server, the base urls of the Connector tool, "needs
+   reads it instead of loading the dialect (the web device's server, the base urls of the HTTP Connections tool, "needs
    install").
 5. **`nuclear build` removes the output of a removed `.nuc`**, from the previous build's line map.
 

@@ -23,12 +23,12 @@ The container `nuclear` (activity bar) has one view, the webview view `nuclear.w
 
 | id | Label | Key | State | Project |
 |---|---|---|---|---|
-| `connector` | Nuclear Connector | `Ctrl+Alt+H` | built | [`nuclear-connector`](../../../tools/nuclear-connector/AGENTS.md) |
+| `http-connections` | HTTP Connections | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |
 | `devices` | Devices | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
 | `builder` | Nuclear Builder | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |
 | `designer` | UI designer | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |
 | `docs` | AI documenter | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |
-| `agent` | Nuclear agent | `Ctrl+Alt+A` | built | [`nuclear-ai-chat`](../../../tools/nuclear-ai-chat/AGENTS.md) |
+| `atlas` | Nuclear Atlas | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |
 | `settings` | Settings and integrations | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |
 
 A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.
@@ -41,9 +41,9 @@ A tool with a `planned` list is a template: `ToolPanel` opens its page, which sa
   `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris
   (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts
   `refreshDir`.
-- **`tool:connector`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline
-  `GLYPHS` and the `nuclearConnector.*` colors (the collapsed ids are kept in the webview). An endpoint →
-  `nuclear.connector.open`; a node's button → `updateContracts` / `addOpenApi`.
+- **`tool:http-connections`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline
+  `GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview). An endpoint →
+  `nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`.
 - **`tool:devices`**: `devices()` of `tools/nuclear-device-manager/src/mobile-device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)
   and *+ New device* (a quick pick of `PRESETS` → `nuclear.openDevice(preset)`).
 - **The other tools**: a line about the tool and, for `agent`, `builder` and `settings`, the list of their notices.
@@ -60,7 +60,7 @@ shown by the context key `nuclear.platform` that `refresh()` sets, run by `actio
 | web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |
 
 - Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →
-  `nuclear.runOnDevice(undefined, root)`; api → the Connector tool.
+  `nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.
 - The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,
   `test`, `check`); `nuclear install` goes first for a backend or web run or test when the app has no packages.
 - A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global
@@ -77,12 +77,12 @@ Projects = `findProjects()` (the workspace folders) + the roots saved in `global
 `go(key)` calls `switchTabs(from, to)`:
 
 1. the open `TabInputText` tabs of the tab left go to `workspaceState` `nuclear.workspace.tabs` (path, column,
-   active); leaving the Connector tool keeps the keys of its open component panels (`model.reopen`);
+   active); leaving the HTTP Connections tool keeps the keys of its open component panels (`model.reopen`);
 2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`) and
    the unsaved editors, which stay open until saved;
 3. the devices are parked (`nuclear.parkDevices`), always before anything is reopened;
-4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for Nuclear Connector,
-   Nuclear Builder, the settings and the chat panels, the template page of a tool that is not built);
+4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for HTTP Connections,
+   Nuclear Builder, the settings and Nuclear Atlas panels, the template page of a tool that is not built);
 5. the devices are unparked (`nuclear.unparkDevices`) when the tab entered is a mobile project or the Devices tool.
 
 Clicking a tab or an action posts a toast with its shortcut.

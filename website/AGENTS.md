@@ -11,9 +11,11 @@ the onboardings' commands. ADR key: `website`.
 - The app: Nuclear (`.nuc`), `config.nuc` = `synapsis(platform = "web", dialect = "react")`; built into
   `build/app` (React, Vite, vitest). The animations: the npm package `motion`, added with `nuclear add motion`
   (its type definitions in `defs/`).
-- The content: `tools/content.mjs` (Node.js) with `markdown-it`, `shiki` and `smol-toml` (`tools/package.json`).
+- The content: `tools/content.mjs` (Node.js) with `markdown-it`, `shiki`, `smol-toml`, `simple-icons` (the logos)
+  `devicon` (the logos simple-icons leaves out) and `lucide-static` (the icons) (`tools/package.json`); `tools/marks.mjs` draws the marks of the tree's own tools.
 - The texts, menus, links and addresses: `site.toml`.
-- CI: `.github/workflows/website.yml` at the root of the tree (content, build, tests, bundle).
+- CI: `.github/workflows/website.yml` at the root of the tree (content, build, tests, bundle). Publishing: the
+  workflow of the `nuclearlang.github.io` repository builds this folder from `main` and deploys it (the roadmap).
 
 ## Commands
 
@@ -40,7 +42,7 @@ nuclear run                      # vite dev, http://localhost:5173
 | `components/docs/` | the one component: `data/` (the repositories of the content, the tools and the platforms), `domain/` (models, use cases, the search score), `presentation/` (`home/`, `tools/`, `platforms/` with the onboarding, `doc/`, `layout/` with the views the pages share) |
 | `defs/` | the type definitions of `motion` (written by `nuclear add`) |
 | `test/docs_test.nuc` | the search, a page, the home page, a tool, a platform, an onboarding (the repositories are mocks) |
-| `public/` | `styles.css`, `favicon.svg`; the rest is written by `tools/content.mjs` (ignored by git) |
+| `public/` | `styles.css`, `favicon.svg`, `shots/` (the editor's screenshots); the rest is written by `tools/content.mjs` (ignored by git) |
 | `site.toml` | every text, menu, link and address of the site; the tools, the platforms (their C4 levels) and the onboardings' steps |
 | `tools/` | `content.mjs` and its `package.json` |
 | `build/` | generated: never edit |
@@ -60,6 +62,7 @@ nuclear run                      # vite dev, http://localhost:5173
   `site.toml`; a missing page fails the build.
 - A new area of the documentation (a dialect, a platform, a tool with guides) gets a line in `site.toml`'s
   `[[sidebar]]`; a page matched by a `*` pattern needs none.
+- **A logo goes next to a name, never inside a text**: chips, tabs and cards carry it, an explanation does not.
 - The site is in English ([ADR-platform-0001](../docs/03-adr/0001-english-everywhere.md)).
 - A page's address is `/<project>/<reference|guide>/<name>` (`route` in `tools/content.mjs`): renaming or moving a
   published document changes its address. An address must keep three parts: the app's screens route no deeper.

@@ -29,8 +29,8 @@ finishes (`onStartupFinished`).
 Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.json`, bundled into
 `out/extension.js`); each is documented in its own folder:
 [Nuclear Builder](../../../tools/nuclear-builder/AGENTS.md),
-[Nuclear Connector](../../../tools/nuclear-connector/AGENTS.md),
-[the chat](../../../tools/nuclear-ai-chat/AGENTS.md),
+[HTTP Connections](../../../tools/nuclear-http-connections/AGENTS.md),
+[Nuclear Atlas](../../../tools/nuclear-atlas/AGENTS.md),
 [the devices](../../../tools/nuclear-device-manager/AGENTS.md).
 
 ## What `package.json` contributes
@@ -42,7 +42,7 @@ Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.jso
 - The debugger type `synapsis` (F5 without `launch.json`) and breakpoints in `.nuc` files.
 - The commands (category **Nuclear**), the `editor/title` buttons of each platform, the `webview/context` menu of
   the file tree, the keybindings.
-- The colors `nuclearConnector.*`.
+- The colors `nuclearHttpConnections.*`.
 - The settings: `nuclear.dialect`, `nuclear.dialectPaths`, `nuclear.server.path`, `nuclear.trace.server`,
   `nuclear.buildOnSave`, `nuclear.workspace.welcome`, `nuclear.debug.followInNuclear`, `nuclear.debug.explainErrors`,
   `nuclear.ai.*` (among them `nuclear.ai.mcpCommand`, default `nuclear-mcp`, the MCP server an AI client starts

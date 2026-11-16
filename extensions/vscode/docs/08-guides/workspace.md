@@ -39,7 +39,7 @@ The actions of the active project's platform are buttons in the editor title bar
 | Platform | Buttons |
 |---|---|
 | mobile | ▷ Run, ◉ Debug, ↻ Hot Reload, ▭ Run on a Synapsis Device, ⚒ Build, ✓ Test, ☑ Check |
-| backend | ▷ Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, ⇄ Routes in Nuclear Connector |
+| backend | ▷ Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, ⇄ Routes in HTTP Connections |
 | web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |
 
 | Key | Action |
@@ -60,7 +60,7 @@ Device and API have no key. *Nuclear: Run an Action of the Active Project* lists
 - Backend and web ▷ Serve, ⚒ Build, ✓ Test and ☑ Check run in a terminal named `<project> · <action>` (`nuclear
   run`, `build`, `test`, `check`). When the app has no packages yet, `nuclear install` runs first.
 - Web ▭ Device, ◉ Debug and ↻ Reload use [the web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md).
-- Backend ⇄ opens the project's routes in Nuclear Connector.
+- Backend ⇄ opens the project's routes in HTTP Connections.
 
 How a run and a debug session work: [run, debug and tasks](run-and-debug.md).
 
@@ -70,12 +70,12 @@ The tools are at the bottom of the strip.
 
 | Tool | Key | State | Guide |
 |---|---|---|---|
-| Nuclear Connector | `Ctrl+Alt+H` | built | [Nuclear Connector](../../../tools/nuclear-connector/docs/08-guides/README.md) |
+| HTTP Connections | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |
 | Devices | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |
 | Nuclear Builder | `Ctrl+Alt+P` | built | [Nuclear Builder](../../../tools/nuclear-builder/docs/08-guides/README.md) |
 | UI designer | `Ctrl+Alt+D` | a template page that lists what is planned | — |
 | AI documenter | `Ctrl+Alt+M` | a template page that lists what is planned | — |
-| Nuclear agent | `Ctrl+Alt+A` | built | [The chat](../../../tools/nuclear-ai-chat/docs/08-guides/README.md) |
+| Nuclear Atlas | `Ctrl+Alt+A` | built | [Nuclear Atlas](../../../tools/nuclear-atlas/docs/08-guides/README.md) |
 | Settings and integrations | `Ctrl+Alt+S` | built | below |
 
 The tools act on the last project you were in.
@@ -101,7 +101,7 @@ that was never set up.
 
 A chat answer or a Nuclear Builder run keeps working when you close its page or switch tabs. When it ends, a
 notification with *Open* tells you, unless you are already looking at it. Unread notices show as a badge on the
-Nuclear icon of the activity bar, a count on the tab of *Nuclear agent*, *Nuclear Builder* or *Settings and
+Nuclear icon of the activity bar, a count on the tab of *Nuclear Atlas*, *Nuclear Builder* or *Settings and
 integrations*, and a list in that tool's pane. Every `nuclear.ai.checkEveryMinutes` (5 by default) the extension
 checks each connection. If one stops answering, or answers again, you get a notice in *Settings and
 integrations*.

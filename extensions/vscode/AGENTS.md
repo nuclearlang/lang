@@ -1,8 +1,8 @@
 # VS Code extension
 
-The NuclearLang extension for VS Code (`nuclearlang`, 0.51.0): the client of the language server, semantic
+The NuclearLang extension for VS Code (`nuclearlang`, 0.52.0): the client of the language server, semantic
 highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the
-Chernobyl themes, and it bundles the tools (Nuclear Builder, Nuclear Connector, the chat, the devices), whose code is
+Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is
 in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What
 the three extensions share: [`../AGENTS.md`](../AGENTS.md).
 
@@ -63,7 +63,7 @@ To develop: open this folder in VS Code and press F5; then *Preferences: Color T
 | Colors, the Chernobyl themes, the icons, how to test a theme | [docs/02-architecture/theme.md](docs/02-architecture/theme.md) |
 | What the tests cover and how to try something without the editor | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
 | The pending work of this extension | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
-| Nuclear Builder, Nuclear Connector, the chat, the devices | [`../tools/`](../AGENTS.md) |
+| Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices | [`../tools/`](../AGENTS.md) |
 | What a user reads: install, the commands, keys and settings, troubleshooting | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | What a user reads about the strip, the actions, the file tree and the settings page | [docs/08-guides/workspace.md](docs/08-guides/workspace.md) |
 | What a user reads about the tasks, run, hot reload and `.nuc` debugging | [docs/08-guides/run-and-debug.md](docs/08-guides/run-and-debug.md) |

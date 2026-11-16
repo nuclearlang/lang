@@ -16,7 +16,7 @@ All of it is in this folder. It is built through the editors: the VS Code extens
 | `src/safety.ts` | what keeps a run safe when something breaks; no `vscode` import |
 | `src/panel.ts` | the page of VS Code: the runs, the spec form, a run as a graph |
 | `src/cli.ts` | the `nuclear-builder` command (bundled to `extensions/vscode/out/nuclear-builder.js`) |
-| `test/engine.test.ts` | the engine's tests (also the chat's templates and history, the 3B rule) |
+| `test/engine.test.ts` | the engine's tests (also Nuclear Atlas's templates and history, the 3B rule) |
 | `jetbrains/src/dev/nuclearlang/editor/NuclearBuilder.java` | the *Nuclear Builder* tool window, which runs `nuclear-builder` |
 
 ## Stack
@@ -36,7 +36,7 @@ The tool window: in `extensions/jetbrains/`, `IDE_HOME=/opt/android-studio ./bui
 (`installer/release/stage.sh`).
 
 ## Rules
-- `engine.ts` and `safety.ts` never import `vscode`: the page, `nuclear-builder`, the chat and the tests drive
+- `engine.ts` and `safety.ts` never import `vscode`: the page, `nuclear-builder`, Nuclear Atlas and the tests drive
   the same engine.
 - The page only draws. A run belongs to the extension (`engines`, module-level): closing the page or switching tools
   leaves it running.

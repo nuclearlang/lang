@@ -32,6 +32,10 @@ From the analysis of ADR-web-0001:
 
 ## Pending
 
+- **The runtime's HTML functions leave out common elements**: `figure`, `figcaption`, `kbd`, `code`, `blockquote`,
+  `video`, `picture` and others (`packages/synapsis-web/src/html.ts` exports 39 tags). The website uses a `div` and
+  a `span` with a class where it meant a `figure` and a `kbd`. The list should cover the HTML elements, with the
+  type definitions regenerated. Found by the website, 2026-11-16.
 - **A new project fails its tests**: `nuclear new <name> -p web` writes no test, and `nuclear test` exits 1
   (vitest: "No test files found"). A generated resource brings its test, and then they pass. The skeleton should
   bring one test, as the backend's does. Found by the functional tests of 2026-11-16.

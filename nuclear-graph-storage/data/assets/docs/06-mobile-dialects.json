@@ -1556,6 +1556,39 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-1-vs-code.06bf4a",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.1 VS Code",
+   "summary": "mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only there): the window reloads once and the action continues.",
+   "body": [
+    "mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only",
+    "  there): the window reloads once and the action continues. A welcome page (`Ctrl+Alt+W`; at startup when no editor is open, setting",
+    "  `nuclear.workspace.welcome`) lists the projects, the tools and the keys. *Nuclear: Add the Active Project to the VS",
+    "  Code Workspace* adds a tab's folder to the explorer, search and git when wanted.",
+    "- *HTTP Connections* (0.29.0 or newer, ADR-synapsis-0006; a workspace of its own since 0.33.0, `Ctrl+Alt+H`): its pane is the",
+    "  endpoints tree of every project of the window, by platform, project and component like the code (backend routes,",
+    "  mobile and web calls, read from `.nuclear/contract.json`), the contracts an app declares with *↓ Update*",
+    "  (`nuclear contracts update`), the OpenAPI documents of APIs that are not Nuclear (*+*), and the environment",
+    "  (`.nuclear/http.json` of the first folder: variables, headers, base urls per project or connection). Like Bruno, a",
+    "  component is an editor tab and each endpoint a tab inside it: method, url with path and query parameters, headers, a",
+    "  sample body from the model, the pretty-printed response and *copy as curl*; a component keeps its tabs when the",
+    "  workspace is left.",
+    "- *Devices* (0.33.0 or newer, `Ctrl+Alt+V`): the Synapsis devices open in the window with their state, *+ New device*"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-1-vs-code.1d21ad",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.1 VS Code",
@@ -1575,6 +1608,38 @@
     "    `nuclear.debug.followInNuclear`.",
     "  - Mixed debugging (0.22.0 or newer, ADR-lang-0011). The session is still the Dart extension's:",
     "    - **Steps by Nuclear line:** F10 / F11 / Shift+F11 repeat the Dart step until the pause is on another `.nuc`"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-1-vs-code.55b810",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.1 VS Code",
+   "summary": "vertical strip of tabs beside a pane.",
+   "body": [
+    "- *Nuclear workspace* (0.31.0 or newer, ADR-extensions-0002): one *Nuclear* container in the activity bar (`Ctrl+Alt+N`) with a",
+    "  vertical strip of tabs beside a pane. Every tab is a workspace of its own: the projects at the top (`Ctrl+1` …",
+    "  `Ctrl+9`; the Nuclear projects of the workspace folders, then the ones opened with *Open a Project as a Tab*,",
+    "  `Ctrl+Alt+O`, which remembers the folder without touching the VS Code workspace; each tab shows its platform with the",
+    "  dialect as a badge) and the tools at the bottom (`Ctrl+Alt+<letter>`). Switching tabs swaps the editor area: the",
+    "  editors of one are remembered and closed (an unsaved one stays open, never a save prompt), those of the other",
+    "  reopened; only the devices stay beside the code. A",
+    "  project's pane shows its files (with the Chernobyl icon theme, honouring `files.exclude`); **the actions of its",
+    "  platform are the toolbar of the editor title bar** (the row of the editor tabs, since 0.34.0): mobile Run",
+    "  `Ctrl+Alt+R`, Debug `Ctrl+Alt+G`, Hot reload `Ctrl+Alt+L`, Device, Build `Ctrl+Alt+B`, Test `Ctrl+Alt+T`, Check",
+    "  `Ctrl+Alt+C`; backend Serve, Test, Build, Check, API (its routes in the HTTP Connections tool); web Serve, Build, Test, Check.",
+    "  Clicking a tab shows the shortcut that does the same; the toolbar tooltips show theirs. Run, Debug and Device of a"
    ],
    "platforms": [
     "mobile"
@@ -1772,38 +1837,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-1-vs-code.ce72b1",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.1 VS Code",
-   "summary": "vertical strip of tabs beside a pane.",
-   "body": [
-    "- *Nuclear workspace* (0.31.0 or newer, ADR-extensions-0002): one *Nuclear* container in the activity bar (`Ctrl+Alt+N`) with a",
-    "  vertical strip of tabs beside a pane. Every tab is a workspace of its own: the projects at the top (`Ctrl+1` …",
-    "  `Ctrl+9`; the Nuclear projects of the workspace folders, then the ones opened with *Open a Project as a Tab*,",
-    "  `Ctrl+Alt+O`, which remembers the folder without touching the VS Code workspace; each tab shows its platform with the",
-    "  dialect as a badge) and the tools at the bottom (`Ctrl+Alt+<letter>`). Switching tabs swaps the editor area: the",
-    "  editors of one are remembered and closed (an unsaved one stays open, never a save prompt), those of the other",
-    "  reopened; only the devices stay beside the code. A",
-    "  project's pane shows its files (with the Chernobyl icon theme, honouring `files.exclude`); **the actions of its",
-    "  platform are the toolbar of the editor title bar** (the row of the editor tabs, since 0.34.0): mobile Run",
-    "  `Ctrl+Alt+R`, Debug `Ctrl+Alt+G`, Hot reload `Ctrl+Alt+L`, Device, Build `Ctrl+Alt+B`, Test `Ctrl+Alt+T`, Check",
-    "  `Ctrl+Alt+C`; backend Serve, Test, Build, Check, API (its routes in the Connector tool); web Serve, Build, Test, Check.",
-    "  Clicking a tab shows the shortcut that does the same; the toolbar tooltips show theirs. Run, Debug and Device of a"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-1-vs-code.cf63cb",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.1 VS Code",
@@ -1822,39 +1855,6 @@
     "    Ultra/A51, iPad Mini/Air/Pro, Galaxy Tab S7, Laptop, Desktop), width × height (editable, and by dragging the",
     "    borders in Responsive), zoom (*Fit to window*, 50–150 %) and rotation; hot reload, hot restart, stop and open",
     "    in the browser. The device always fits the panel's size, and each tap lands where it is seen. Phones and"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-1-vs-code.d24fbf",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.1 VS Code",
-   "summary": "mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only there): the window reloads once and the action continues.",
-   "body": [
-    "mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only",
-    "  there): the window reloads once and the action continues. A welcome page (`Ctrl+Alt+W`; at startup when no editor is open, setting",
-    "  `nuclear.workspace.welcome`) lists the projects, the tools and the keys. *Nuclear: Add the Active Project to the VS",
-    "  Code Workspace* adds a tab's folder to the explorer, search and git when wanted.",
-    "- *Nuclear Connector* (0.29.0 or newer, ADR-synapsis-0006; a workspace of its own since 0.33.0, `Ctrl+Alt+H`): its pane is the",
-    "  endpoints tree of every project of the window, by platform, project and component like the code (backend routes,",
-    "  mobile and web calls, read from `.nuclear/contract.json`), the contracts an app declares with *↓ Update*",
-    "  (`nuclear contracts update`), the OpenAPI documents of APIs that are not Nuclear (*+*), and the environment",
-    "  (`.nuclear/http.json` of the first folder: variables, headers, base urls per project or connection). Like Bruno, a",
-    "  component is an editor tab and each endpoint a tab inside it: method, url with path and query parameters, headers, a",
-    "  sample body from the model, the pretty-printed response and *copy as curl*; a component keeps its tabs when the",
-    "  workspace is left.",
-    "- *Devices* (0.33.0 or newer, `Ctrl+Alt+V`): the Synapsis devices open in the window with their state, *+ New device*"
    ],
    "platforms": [
     "mobile"
@@ -1990,7 +1990,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-2-android-studio-intellij.a833b2",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli-11-2-android-studio-intellij.c0ccef",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11.2 Android Studio / IntelliJ",
    "summary": "has a mirror Dart breakpoint in the `.dart`; each pause opens the `.nuc` with the line highlighted; an error Flutter prints in the console is marked in red on its `.nuc` line (icon and mark in the bar) and the *Nuclear Error* window (on the right, only in Synapsis projects) explains it, with the…",
@@ -2000,7 +2000,7 @@
     "  Error* window (on the right, only in Synapsis projects) explains it, with the stack in Nuclear and the Dart",
     "  error. Both options in *Settings → Tools → NuclearLang*.",
     "",
-    "- *Nuclear Connector* tool window (0.30.0 or newer, ADR-synapsis-0006; Alt+Shift+H, also under *Tools → NuclearLang*): the same",
+    "- *HTTP Connections* tool window (0.30.0 or newer, ADR-synapsis-0006; Alt+Shift+H, also under *Tools → NuclearLang*): the same",
     "  as the VS Code view: every project of the workspace by platform, its components and endpoints from the contract,",
     "  the contracts a client declares with *Update*, OpenAPI documents, environments in `.nuclear/http.json` and a",
     "  request panel with the response pretty-printed and *copy as curl*."

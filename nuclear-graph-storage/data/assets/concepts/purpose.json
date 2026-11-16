@@ -11,15 +11,15 @@
    "body": [
     "NuclearLang is a small base language. A file ends in `.nuc`. It is not compiled to machine code: a transpiler written in Rust turns `.nuc` into the code of another technology. It goes one way only: `.nuc` → `.ts`, `.dart` or `.py`. It never reads target code.",
     "",
-    "The idea in one line: write the logic of the product, and leave everything else to the transpiler. Imports, the wiring of a framework, JSON code, routes, dependency injection and boilerplate are not logic, so you do not write them.",
+    "The idea in one line: write the business logic of the product, and leave everything else to the framework and the transpiler. The wiring of a framework, imports, serialization, state and tests are always the same, so you do not write them.",
     "",
     "It has three parts that work together:",
     "",
-    "- **The base language**: indentation instead of braces, types after the name, `~` to await, `Result<E, T>` for errors, one standard library of its own. One way to write each thing.",
-    "- **Dialects**: data files (TOML and templates) that say how Nuclear is written in a target. A dialect is added without changing the compiler.",
+    "- **The base language**: indentation instead of braces, `~` to await, `Result<E, T>` for errors, one standard library of its own. One way to write each thing.",
+    "- **Dialects**: data files (TOML and templates) loaded at run time that say how Nuclear is written in a target. A dialect is added without changing the compiler.",
     "- **Synapsis**: the framework. Three platforms (`backend`, `mobile`, `web`), each written once in Nuclear and built by its dialects (`fastapi`, `nestjs`, `flutter`, `react`).",
     "",
-    "Around it there is a full toolchain: the `nuclear` and `nuclear` command lines, a language server, extensions for VS Code, Android Studio and Zed, a private knowledge base with an MCP server (the Nuclear Smart Graph), local AI agents (the Nuclear Developer) and a pipeline from a spec to deployed code (the Builder).",
+    "Around it there is a full toolchain: one command line, `nuclear`, a language server, extensions for VS Code, Android Studio and Zed, a private knowledge base (the Nuclear Smart Graph), an MCP server (`nuclear-mcp`), local AI agents (the Nuclear Developer) and a pipeline from a spec to deployed code (the Builder, `nuclear-builder`).",
     "",
     "It is open source (Apache-2.0), in the spirit of Rust, Deno, Gleam and Bun."
    ],
@@ -63,7 +63,9 @@
     }
    ],
    "sources": [
-    "README.md#Vision",
+    "docs/00-context/vision.md#Problem",
+    "README.md",
+    "nuclearlang/docs/07-reference/nuclear-base.md",
     "docs/01-product/prd.md"
    ],
    "meta": {
@@ -74,24 +76,25 @@
    "id": "concept:why-nuclear",
    "type": "purpose",
    "title": "Why NuclearLang exists: the problem it solves",
-   "summary": "Most of the code of an app is not its logic: it is imports, wiring, JSON, routes and framework ceremony. Agents spend tokens and make mistakes on it, and people repeat it in every stack. Nuclear keeps only the logic and generates the rest.",
+   "summary": "An AI agent that writes an application spends most of its tokens on code that is always the same (the wiring of a framework, imports, serialization, state, tests), invents APIs that do not exist, and people read and review all of it. In Nuclear only the business logic is written; the framework brings the architecture and the transpiler writes the rest.",
    "body": [
-    "The problem has three faces.",
+    "The problem:",
     "",
-    "**1. Agents pay for text that is not logic.** An AI agent that writes a Flutter screen or a NestJS endpoint writes many lines the framework demands: imports, annotations, registration, serializers, state classes. Every line costs tokens to write and to read again, and every line is a place to make a mistake or to invent an API that does not exist.",
-    "",
-    "**2. An app is N packages wired by hand.** State, JSON, dependency injection, HTTP, routing, translations, tests: each project chooses and connects them again. The result is different in every project, so neither a person nor an agent can move from one to another without learning it.",
-    "",
-    "**3. The same product is written once per technology.** The business rules of a backend are the same in Python and in TypeScript, but they are written twice.",
+    "- **Agents pay for text that is not logic.** Most of the tokens of an application go to code that is always the same: the wiring of a framework, imports, serialization, state, tests.",
+    "- **Agents invent APIs** that do not exist.",
+    "- **People read and review all of it.**",
     "",
     "What NuclearLang does about it:",
     "",
-    "- You write **only the logic**, in a language with one way to write each thing. The transpiler writes the rest as an expert would in the target.",
-    "- The **framework is inside the dialect** (Synapsis): the architecture, the wiring and the tests are the same in every project, so there is nothing to choose and nothing to wire.",
-    "- The **compiler answers with exact fixes**: every error has a code, a position and usually the corrected text, so an agent repairs its own code without reading documentation.",
-    "- The **same Nuclear builds with every dialect of a platform**: a backend written once comes out as a Python service or as a TypeScript one.",
+    "- You write **only the business logic**, with one way to write each thing and the fewest tokens.",
+    "- The **framework brings the architecture** (Synapsis): three platforms, `web`, `mobile` and `backend`, written once in Nuclear, so the wiring is not written by hand.",
+    "- The **compiler answers with exact fixes**: every error has a code, a position and the fix, as text or JSON, so an agent repairs its own code.",
+    "- **Type definitions**, so nobody invents an API.",
+    "- The **same Nuclear builds with every dialect of its platform**: a backend written once comes out as a Python (`fastapi`) or a TypeScript (`nestjs`) service.",
     "",
-    "The consequence that matters most: because the language is small and regular, a small local model (3B parameters) with the right knowledge base writes it as well as a frontier model writes one file. Development with AI stops depending on the largest model for every line."
+    "What it leaves out on purpose: it never reads or converts target code into Nuclear, it does not replace the target's own tools, and it has no package manager of its own.",
+    "",
+    "Because the language is small and regular, a local model of at most 3B parameters with the right knowledge base writes it well: the local developer passes 43 of 45 tasks of its evaluation, where Claude Sonnet passes 39 (`concept:nuclear-developer`)."
    ],
    "keys": [
     "why nuclear",
@@ -125,9 +128,9 @@
     }
    ],
    "sources": [
-    "README.md#Vision",
-    "docs/01-product/prd.md",
-    "docs/01-product/prd.md"
+    "README.md#Why it exists",
+    "docs/00-context/vision.md",
+    "nuclear-agents/nuclear_developer/docs/08-guides/README.md#How well it does"
    ],
    "meta": {
     "topic": "purpose"

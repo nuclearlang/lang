@@ -90,4 +90,4 @@ To see a change in a running app, start **watch** and **run**, then press `r` in
 Zed gives an extension no panels, views, keybindings or actions on save. So there is no Synapsis device inside the
 editor (`nuclear device` opens its own window), no `.nuc` breakpoints or debugging, no build and hot reload on
 save, no automatic repair, no generated code view beside the file and no Nuclear workspace. Nuclear Builder and
-Nuclear Connector are not offered in Zed. They are in [VS Code](../../../vscode/docs/08-guides/README.md).
+HTTP Connections are not offered in Zed. They are in [VS Code](../../../vscode/docs/08-guides/README.md).

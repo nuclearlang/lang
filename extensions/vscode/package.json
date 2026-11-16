@@ -2,7 +2,7 @@
   "name": "nuclearlang",
   "displayName": "NuclearLang",
   "description": "NuclearLang (.nuc) support: the Nuclear workspace (projects as tabs, tools full screen, keyboard first), language server, semantic highlighting, code metrics, the Synapsis dialects (flutter, fastapi, nestjs, react) and the Chernobyl theme",
-  "version": "0.51.0",
+  "version": "0.52.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
@@ -239,7 +239,7 @@
             "type": "number",
             "default": 8192,
             "minimum": 2048,
-            "description": "The context window of the local models, in tokens: what the chat's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx)."
+            "description": "The context window of the local models, in tokens: what Nuclear Atlas's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx)."
           },
           "nuclear.ai.claude.command": {
             "type": "string",
@@ -931,33 +931,33 @@
         "category": "Nuclear"
       },
       {
-        "command": "nuclear.connector.refresh",
+        "command": "nuclear.httpConnections.refresh",
         "title": "Refresh",
-        "category": "Nuclear Connector",
+        "category": "HTTP Connections",
         "icon": "$(refresh)"
       },
       {
-        "command": "nuclear.connector.selectEnvironment",
+        "command": "nuclear.httpConnections.selectEnvironment",
         "title": "Select Environment",
-        "category": "Nuclear Connector",
+        "category": "HTTP Connections",
         "icon": "$(server-environment)"
       },
       {
-        "command": "nuclear.connector.editEnvironments",
+        "command": "nuclear.httpConnections.editEnvironments",
         "title": "Edit Environments (variables, headers, base urls)",
-        "category": "Nuclear Connector",
+        "category": "HTTP Connections",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "nuclear.connector.addOpenApi",
+        "command": "nuclear.httpConnections.addOpenApi",
         "title": "Add an OpenAPI Document",
-        "category": "Nuclear Connector",
+        "category": "HTTP Connections",
         "icon": "$(add)"
       },
       {
-        "command": "nuclear.connector.open",
+        "command": "nuclear.httpConnections.open",
         "title": "Open Request",
-        "category": "Nuclear Connector"
+        "category": "HTTP Connections"
       },
       {
         "command": "nuclear.contracts.update",
@@ -1099,7 +1099,7 @@
       },
       {
         "command": "nuclear.action.api",
-        "title": "Routes in Nuclear Connector",
+        "title": "Routes in HTTP Connections",
         "category": "Nuclear workspace",
         "icon": "$(arrow-swap)"
       },
@@ -1755,7 +1755,7 @@
       },
       {
         "command": "nuclear.workspace.tool",
-        "args": "connector",
+        "args": "http-connections",
         "key": "ctrl+alt+h"
       },
       {
@@ -1775,7 +1775,7 @@
       },
       {
         "command": "nuclear.workspace.tool",
-        "args": "agent",
+        "args": "atlas",
         "key": "ctrl+alt+a"
       },
       {
@@ -1836,8 +1836,8 @@
     ],
     "colors": [
       {
-        "id": "nuclearConnector.get",
-        "description": "Nuclear Connector: a GET endpoint",
+        "id": "nuclearHttpConnections.get",
+        "description": "HTTP Connections: a GET endpoint",
         "defaults": {
           "dark": "#4EC9B0",
           "light": "#2E8B57",
@@ -1846,8 +1846,8 @@
         }
       },
       {
-        "id": "nuclearConnector.post",
-        "description": "Nuclear Connector: a POST endpoint",
+        "id": "nuclearHttpConnections.post",
+        "description": "HTTP Connections: a POST endpoint",
         "defaults": {
           "dark": "#569CD6",
           "light": "#1E6FD9",
@@ -1856,8 +1856,8 @@
         }
       },
       {
-        "id": "nuclearConnector.put",
-        "description": "Nuclear Connector: a PUT endpoint",
+        "id": "nuclearHttpConnections.put",
+        "description": "HTTP Connections: a PUT endpoint",
         "defaults": {
           "dark": "#DCDCAA",
           "light": "#B8860B",
@@ -1866,8 +1866,8 @@
         }
       },
       {
-        "id": "nuclearConnector.patch",
-        "description": "Nuclear Connector: a PATCH endpoint",
+        "id": "nuclearHttpConnections.patch",
+        "description": "HTTP Connections: a PATCH endpoint",
         "defaults": {
           "dark": "#CE9178",
           "light": "#C46A2B",
@@ -1876,8 +1876,8 @@
         }
       },
       {
-        "id": "nuclearConnector.delete",
-        "description": "Nuclear Connector: a DELETE endpoint",
+        "id": "nuclearHttpConnections.delete",
+        "description": "HTTP Connections: a DELETE endpoint",
         "defaults": {
           "dark": "#F14C4C",
           "light": "#D32F2F",
@@ -1886,8 +1886,8 @@
         }
       },
       {
-        "id": "nuclearConnector.platform",
-        "description": "Nuclear Connector: a platform (backend, mobile, web) or an OpenAPI document",
+        "id": "nuclearHttpConnections.platform",
+        "description": "HTTP Connections: a platform (backend, mobile, web) or an OpenAPI document",
         "defaults": {
           "dark": "#FFD600",
           "light": "#B59400",
@@ -1896,8 +1896,8 @@
         }
       },
       {
-        "id": "nuclearConnector.project",
-        "description": "Nuclear Connector: a project and its contracts",
+        "id": "nuclearHttpConnections.project",
+        "description": "HTTP Connections: a project and its contracts",
         "defaults": {
           "dark": "#C586C0",
           "light": "#8A4FAE",
@@ -1906,8 +1906,8 @@
         }
       },
       {
-        "id": "nuclearConnector.component",
-        "description": "Nuclear Connector: a component",
+        "id": "nuclearHttpConnections.component",
+        "description": "HTTP Connections: a component",
         "defaults": {
           "dark": "#9CDCFE",
           "light": "#2B6CB0",

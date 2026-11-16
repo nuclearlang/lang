@@ -1067,7 +1067,7 @@ export class BuilderEngine extends EventEmitter {
       return false;
     }
     if (!a.stages.length) {
-      const how = a.mode === 'answer' ? 'ask it in the chat' : a.mode === 'commands' ? 'it is done with commands' : 'it needs a lead or your own hands';
+      const how = a.mode === 'answer' ? 'ask it in Nuclear Atlas' : a.mode === 'commands' ? 'it is done with commands' : 'it needs a lead or your own hands';
       this.end(s, 'failed', `${name}: this kind of request is not a run of the Builder (${how}); its plan is in this step`);
       s.log = `${a.report}\n\nThe plan of ${a.strategy}: nuclear-graph card ${a.strategy}`;
       return false;

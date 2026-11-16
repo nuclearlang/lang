@@ -33,8 +33,9 @@ example, so the junior gets it right next time.
 *Claude leads, the local developer writes* is the default; *Local agents only* is the other choice.
 
 The local developer is measured against Claude Sonnet on a bank of 45 tasks, 18 of them held out: 42 single files of
-every platform and 3 features of several files. On single files the local 3B coder is at Sonnet's level (36 against
-36). On whole features it is behind: it passes one of the three by itself, while Sonnet passes all three. That is
+every platform and 3 features of several files. On single files the local 3B coder passes 41 or 42 of the 42
+(Sonnet 36). On whole features it is behind: it passes one or two of the three by itself, while Sonnet passes all
+three. That is
 why Claude leads by default: it plans and fixes, the local developer writes the pieces. The method, every round and
 every task are in [the Developer's README](../../../../../nuclear-agents/nuclear_developer/README.md).
 

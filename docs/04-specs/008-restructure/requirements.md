@@ -21,7 +21,7 @@ user on 2026-11-16: the context of all the projects sat in one documentation tre
 - [ ] THE SYSTEM SHALL keep no state file that every session loads whole; a project's pending work is in its docs.
 - [ ] WHEN a file of context is written THE SYSTEM SHALL keep it short enough to read at once.
 - [ ] THE SYSTEM SHALL name the framework Synapsis (`nuclear-synapsis-framework`), the pipeline tool
-      `nuclear-builder` and the protocol client `nuclear-connector`, everywhere.
+      `nuclear-builder` and the protocol client `nuclear-http-connections`, everywhere.
 - [ ] THE SYSTEM SHALL have one command line tool, `nuclear`; the `dragonfly` command does not exist.
 - [ ] WHEN a phase of `tasks.md` ends THE SYSTEM SHALL pass `cargo test` and `cargo clippy --all-targets`.
 
@@ -33,5 +33,5 @@ One git repository for the whole tree. One CLI, `nuclear`, with the framework's 
 ## Out of scope
 
 Building the tools that are only named: `nuclear-documentor`, `nuclear-ui-designer`, `nuclear-backend-designer`,
-`nuclear-storage-connector`, and the protocols of `nuclear-connector` other than HTTP. Each gets its folder and a
+`nuclear-storage-connector`, and the protocols of `nuclear-http-connections` other than HTTP. Each gets its folder and a
 page saying it is not built.

@@ -644,18 +644,19 @@
    "id": "playbook:connect-an-mcp-client",
    "type": "playbook",
    "title": "Playbook: connect Claude Code, Codex or Cursor to NuclearLang",
-   "summary": "Set up the AI services, then add `nuclear-graph mcp` to the client as an MCP server named `nuclear`. The client then has the graph, the compiler, the generators and the local developer as tools.",
+   "summary": "Set up the AI services, then add `nuclear-mcp` to the client as an MCP server named `nuclear`. The client then has the generators, the local developer, the graph and the compiler as tools.",
    "body": [
     "```sh",
-    "nuclear-builder setup                                           # once: the services, and the MCP server's access to the graph",
-    "claude mcp add --scope user nuclear -- nuclear-graph mcp     # Claude Code",
-    "codex mcp add nuclear -- nuclear-graph mcp                   # Codex",
+    "nuclear-builder setup                                # once: the services, and MCP clients' access to the graph",
+    "claude mcp add --scope user nuclear -- nuclear-mcp   # Claude Code",
+    "codex mcp add nuclear -- nuclear-mcp                 # Codex",
     "```",
     "",
-    "- Cursor and OpenCode: an MCP server with the command `nuclear-graph` and the argument `mcp`.",
-    "- VS Code: the settings page (`Ctrl+Alt+S`) has a button per client.",
+    "- Cursor (`~/.cursor/mcp.json`): `{ \"mcpServers\": { \"nuclear\": { \"command\": \"nuclear-mcp\" } } }`.",
+    "- OpenCode (`~/.config/opencode/opencode.json`): `{ \"mcp\": { \"nuclear\": { \"type\": \"local\", \"command\": [\"nuclear-mcp\"], \"enabled\": true } } }`.",
+    "- VS Code: *Settings and integrations* (`Ctrl+Alt+S`) has a button per client.",
     "- Check it: ask the client to call `graph_search` with \"what is nuclear\".",
-    "- No access: `nuclear-graph connect mcp --scopes read,write`; `nuclear-graph requests`, `nuclear-graph allow <request>`.",
+    "- The graph refuses the client: `nuclear-graph connect mcp --scopes read,write`, with the graph running.",
     "- A machine set up for remote agents only has no `graph_*` nor `developer_*` tools (`limit:remote-agents-only`)."
    ],
    "keys": [
@@ -693,7 +694,8 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/README.md#Use it from an AI agent (MCP)"
+    "tools/mcp/docs/08-guides/mcp.md#1. Set up",
+    "tools/mcp/docs/08-guides/mcp.md#4. When a tool fails"
    ],
    "meta": {
     "use_case": "setup",

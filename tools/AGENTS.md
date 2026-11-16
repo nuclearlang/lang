@@ -12,7 +12,7 @@ documents itself; open the `AGENTS.md` of the one the task touches.
 ## How they lean on each other
 
 ```
- MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► platforms/<platform>/generators.toml
+ MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► code_generator/platforms/<platform>/generators.toml
      │                   │                                          ([gen], [skeletons], [[generators.*]])
      │ the graph's       │ Rust API
      │ package, HTTP     ▼

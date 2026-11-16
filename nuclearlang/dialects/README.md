@@ -1,20 +1,38 @@
 # Dialects
 
-The same Nuclear code is written once and the transpiler turns it into each language and framework. A **dialect** is
-the data that says HOW the output is written in one target: TOML tables and templates the compiler loads at run
-time. A dialect never decides what the Nuclear code is: the `.nuc` of a project does not change when its dialect
-changes.
+A **dialect** is the data that says how Nuclear is written in one target: TOML tables and templates the compiler
+loads at run time. The same `.nuc` is written once and each dialect turns it into its language or framework.
 
-Each language dialect is a project of its own, with its `AGENTS.md` and its `docs/`.
+## Why they exist
 
-## Map
+A language built for agents should not need a new compiler for every target, and its code should not bend to the
+target it happens to be built for. A dialect decides only HOW the output is written; it never decides what the
+Nuclear code is: the `.nuc` of a project does not change when its dialect changes. Adding a target or a framework
+is writing data files, templates and tests, not Rust. What a dialect leaves out on purpose: it never reads target
+code, and it never wraps the target's libraries (they are used as they are, through their type definitions).
 
-| Dialect | Target | Framework dialects (the platform each implements) | Start here |
+## How we made them
+
+- **Rust decides what is emitted, the dialect decides how.** Nothing of a target lives in the compiler: a need of
+  one target becomes a generic option or template variable any dialect can use. Python was the proof: everything
+  it needed became generic emitter options (ADR-python-0001, [python/docs/03-adr/](python/docs/03-adr/README.md)).
+- **Language dialects and framework dialects.** A language dialect extends no other and translates the whole base
+  and Nuclear's standard library. A framework dialect names its language (`extends`) and the Synapsis platform it
+  writes (`platform = "backend"`); the platform's contract says which kinds exist, the dialect only how each is
+  written. Kinds never differ between the dialects of one platform.
+- **Official libraries, not code of our own**: the generated app relies on the target ecosystem's most used
+  libraries (ADR-dart-0001, ADR-python-0002, ADR-typescript-0001).
+- **The imports come from type definitions** generated from the installed target packages, versioned like `.d.ts`
+  (ADR-lang-0008, [../docs/03-adr/](../docs/03-adr/README.md)).
+- **The reference is checked.** Each dialect's `docs/07-reference/<dialect>.md` holds the real Nuclear → target
+  equivalences, verified by `../tools/spec-check/check.py` with 0 problems.
+
+| Dialect | Target | Framework dialects (the platform each implements) | Read |
 |---|---|---|---|
-| `python` | Python 3.12+ typed, checked with `pyright --strict` | `fastapi` (backend) | [python/AGENTS.md](python/AGENTS.md) |
-| `typescript` | TypeScript 5 with ES modules, checked with `tsc --strict` | `nestjs` (backend), `react` (web) | [typescript/AGENTS.md](typescript/AGENTS.md) |
-| `dart` | Dart 3 | `flutter` (mobile) | [dart/AGENTS.md](dart/AGENTS.md) |
-| `nodejs` | TypeScript for Node.js. Postponed by the user: not touched until asked | none of its own; `nestjs` extends it | [nodejs/AGENTS.md](nodejs/AGENTS.md) |
+| `python` | Python 3.12+ typed, checked with `pyright --strict` | `fastapi` (backend) | [python/](python/README.md) |
+| `typescript` | TypeScript 5 with ES modules, checked with `tsc --strict` | `nestjs` (backend), `react` (web) | [typescript/](typescript/README.md) |
+| `dart` | Dart 3, checked with `flutter analyze` | `flutter` (mobile) | [dart/](dart/README.md) |
+| `nodejs` | TypeScript for Node.js. Postponed by the user | none of its own; `nestjs` extends it | [nodejs/](nodejs/AGENTS.md) |
 
 Inheritance (`extends` in each `dialect.toml`):
 
@@ -25,29 +43,31 @@ python ─────► fastapi              backend platform
 dart ───────► flutter              mobile platform
 ```
 
-## What is common to all
+## What every dialect folder has
 
-- **One folder per language**, `nuclearlang/dialects/<language>/`: `dialect.toml` (options, `[syntax]`, `[types]`,
-  `[operators]`, names, imports), `keywords.toml` (the target's reserved words), `library.toml` (Nuclear's standard
-  library written in the target), `docs.toml` (what the editor shows for each word), `templates/*.tpl`,
-  `frameworks/<name>/` (its framework dialects), `defs/<package>/<version>/` (type definitions) and `docs/`.
-  A dialect's name is its folder's.
-- **A language dialect** extends no other: it defines every `[syntax]` template and one template per member of the
-  standard library.
-- **A framework dialect** names its language (`extends`) and its platform (`platform = "backend"`). The platform's
-  contract (kinds, decorators, layout) is `nuclear-synapsis-framework/platforms/<platform>/platform.toml`; the
-  dialect adds only how each kind is written (templates), the target's imports, the project files and the
-  `[toolchain]` commands. Kinds never differ between the dialects of one platform.
-- **Rust decides what is emitted; the dialect decides how.** Nothing of a target lives in the compiler: a need of
-  one target becomes a generic option or template variable any dialect can use.
-- **`defs/` is generated** by `nuclearlang/tools/defs/` from the installed target packages. Never edited by hand.
-- **`docs.toml`** is skipped by the loader (a build never reads it); a test requires an entry for every kind,
-  decorator and header word.
-- **The reference is checked.** `docs/07-reference/<dialect>.md` holds the real Nuclear → target equivalences
-  (`nuclearlang/tools/spec-check/check.py`, 0 problems); `docs/07-reference/brief/<dialect>.md` is the short sheet
-  for agents (`nuclear spec --brief --dialect <dialect>`).
+`dialect.toml` (options, `[syntax]`, `[types]`, `[operators]`, names, imports), `keywords.toml` (the target's
+reserved words), `library.toml` (Nuclear's standard library in the target), `docs.toml` (what the editor shows for
+each word; a build never reads it), `templates/*.tpl`, `frameworks/<name>/`, `defs/<package>/<version>/` (type
+definitions, generated, never edited by hand) and `docs/`. A dialect's name is its folder's.
 
-The format of a dialect (sections, templates, variables, validation, how the loader finds a dialect):
-[../docs/07-reference/dialects.md](../docs/07-reference/dialects.md). The generated tables of templates, variables
-and options: `nuclear spec`. Type definitions: [../docs/07-reference/definitions.md](../docs/07-reference/definitions.md).
-The standard library every language dialect translates: [../docs/07-reference/library.md](../docs/07-reference/library.md).
+## Try it
+
+From the root of the tree (or with the installed `nuclear`):
+
+```sh
+cargo run -q -p nuclear-cli -- dialect list              # every dialect, its chain and one line about it
+cargo run -q -p nuclear-cli -- dialect check flutter     # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ...
+cargo run -q -p nuclear-cli -- spec --dialect fastapi    # the contract: templates, variables, options
+cd nuclearlang && tools/stdlib-check.sh strings          # ok strings typescript / dart / python: the same output
+```
+
+## Where to read next
+
+- [The dialect format](../docs/07-reference/dialects.md): sections, templates, variables, validation, where the
+  loader finds a dialect.
+- [Create a dialect with an agent](../docs/08-guides/create-a-dialect-with-an-agent.md).
+- [Type definitions](../docs/07-reference/definitions.md) and [the standard library](../docs/07-reference/library.md)
+  every language dialect translates.
+- The platforms the framework dialects write:
+  [../../nuclear-synapsis-framework/platforms/](../../nuclear-synapsis-framework/platforms/AGENTS.md).
+- Each dialect's `AGENTS.md`, to change it.

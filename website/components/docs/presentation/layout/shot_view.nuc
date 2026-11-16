@@ -1,0 +1,42 @@
+// A screenshot in an editor's window, with numbered callouts on it and their legend below; pointing at an item of the
+// legend lights its callout; the image opens at full size (on a phone, to read it).
+stateful ShotView(shot: Shot)
+  active: int = -1
+
+  build() Element
+    div(
+      className = "shot",
+      children = [
+        div(
+          className = "shot-window",
+          children = [
+            div(className = "shot-bar", children = [span(className = "dot red"), span(className = "dot amber"), span(className = "dot green"), span(className = "shot-title", children = shot.caption)]),
+            div(
+              className = "shot-stage",
+              children = [
+                a(className = "shot-open", href = shot.image, target = "_blank", rel = "noopener", children = img(src = shot.image, alt = shot.alt, loading = "lazy")),
+                ...shot.spots.map((s, i) =>
+                  span(
+                    key = s.label,
+                    className = i == active ? "spot active" : "spot",
+                    style = { "left": "${s.x * 100}%", "top": "${s.y * 100}%" },
+                    children = [span(className = "spot-number", children = "${i + 1}"), span(className = "spot-label", children = s.label)],
+                  )
+                ),
+              ],
+            ),
+          ],
+        ),
+        ol(
+          className = "shot-legend",
+          children = shot.spots.map((s, i) =>
+            li(key = s.label, className = i == active ? "active" : "", onMouseEnter = () => point(i), onMouseLeave = () => point(-1), children = s.label)
+          ),
+        ),
+      ],
+    )
+
+  point(index: int) void
+    setState(() =>
+      active = index
+    )

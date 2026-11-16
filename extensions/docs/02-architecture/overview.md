@@ -54,10 +54,10 @@ The extensions read files; they do not assume a path, a port or a command of a d
 | File of the project | Written by | Read by |
 |---|---|---|
 | `.nuclear/project.json` (the project card: platform, dialect, output folder, toolchain; [projects §1.1](../../../nuclearlang/docs/07-reference/projects.md)) | the server (`Project::build`) and the CLIs | the VS Code status bar, the workspace, the tools |
-| `.nuclear/contract.json` (the endpoints) | the same, next to the card | Nuclear Connector |
+| `.nuclear/contract.json` (the endpoints) | the same, next to the card | HTTP Connections |
 | `.nuclear/lines.json`; `build/app/.dart_tool/nuclear_lines.json` for a mobile app | every `nuclear build` of a project; `nuclear build` | `.nuc` debugging |
 | `build/<name>.code-workspace` (the tasks and the dialect's debug launch) | `nuclear build` (`tools/cli/src/framework/vscode.rs`) | run and debug in VS Code and JetBrains |
-| `.nuclear/map.md` (every declaration with its kind, description and members) | the transpiler | the chat and Nuclear Builder's agents |
+| `.nuclear/map.md` (every declaration with its kind, description and members) | the transpiler | Nuclear Atlas and Nuclear Builder's agents |
 
 The JetBrains and Zed clients do not show the project card yet (the JetBrains tool windows read it only to find
 the projects); the server is the same, so their diagnostics are right.

@@ -168,8 +168,42 @@ button { font: inherit; }
 }
 .tagline { max-width: 720px; margin: 18px auto 30px; font-size: 18px; color: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 18px 0; }
-.targets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 26px; }
+.targets { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 28px; }
+.targets small, .editors small { color: var(--muted); font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+.targets .logos { justify-content: center; gap: 10px; }
+.agents { margin-top: 22px; }
 .chip { padding: 3px 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font: 13px var(--mono); background: var(--surface); }
+
+/* the logos of the integrations, next to their names */
+.logos { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.integration {
+  display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 9px; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--surface); color: var(--fg); font: 600 13px var(--mono); line-height: 1.4;
+  transition: border-color .2s, transform .2s;
+}
+.integration img { width: 16px; height: 16px; flex: none; }
+.integration:hover { border-color: var(--primary); transform: translateY(-1px); }
+.targets .integration { padding: 8px 18px 8px 13px; gap: 9px; font-size: 15px; }
+.targets .integration img { width: 24px; height: 24px; }
+.card .logos { margin: 4px 0 2px; }
+.card .integration { padding: 2px 10px 2px 7px; font-size: 12px; }
+.page-hero .logos { margin-top: 18px; }
+
+/* the icons (lucide, coloured by their file for each theme) */
+.icon {
+  width: 40px; height: 40px; padding: 8px; margin: 0 0 12px; border: 1px solid var(--border); border-radius: 11px;
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface)); box-shadow: 0 0 18px var(--glow);
+}
+.card .icon, .page-hero .icon { display: block; }
+.hook-icon { width: 60px; height: 60px; padding: 5px; border-radius: 16px; }
+.editors { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -6px 0 22px; }
+.editors small { margin-right: 4px; }
+.editors .integration { padding: 7px 16px 7px 11px; gap: 9px; font-size: 14px; color: var(--fg); }
+.editors .integration img { width: 22px; height: 22px; }
+.editors .integration:hover { text-decoration: none; }
+.icon.big { width: 56px; height: 56px; padding: 12px; border-radius: 15px; margin-bottom: 14px; }
+.tab { display: inline-flex; align-items: center; gap: 6px; }
+.tab img { width: 14px; height: 14px; }
 .button {
   display: inline-block; padding: 10px 20px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
   color: var(--fg); font-weight: 650; cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s;
@@ -315,13 +349,19 @@ a.card:hover, .card:hover { border-color: var(--primary); box-shadow: 0 0 0 4px 
 .doc-index a:hover { border-color: var(--primary); text-decoration: none; }
 .siblings { display: flex; flex-wrap: wrap; gap: 8px; margin: 56px 0 0; }
 
-/* install */
-.install { margin: 72px 0 0; }
-.install h2 { margin: 0 0 12px; font-size: 32px; }
-.install pre {
-  overflow: auto; margin: 0; padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--code-bg); font: 14px/1.7 var(--mono);
+/* install: a card with its animated mark, a tab per system and what to run next */
+.install-card {
+  position: relative; margin: 40px 0 0; padding: 28px; border: 1px solid var(--border); border-radius: calc(var(--radius) + 6px);
+  background: radial-gradient(ellipse 50% 90% at 0% 0%, var(--glow), transparent 70%), var(--surface); overflow: hidden;
 }
+.install-card::after { content: ''; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, var(--primary), var(--cyan), transparent); }
+.install-head { display: flex; align-items: center; gap: 18px; margin: 0 0 18px; }
+.install-head h2 { margin: 0 0 4px; font-size: clamp(24px, 3.2vw, 32px); letter-spacing: -.02em; }
+.install-head p { margin: 0; color: var(--muted); max-width: 680px; }
+.install-mark { flex: none; width: 72px; height: 72px; padding: 6px; border: 1px solid var(--border); border-radius: 18px; background: color-mix(in srgb, var(--primary) 8%, var(--surface)); box-shadow: 0 0 24px var(--glow); }
+.install-card .shiki { font-size: 15px; }
+.install-next { margin-top: 10px; }
+.install-next .shiki { font-size: 13.5px; }
 .footer { padding: 32px 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; text-align: center; }
 
 /* narrow screens: the menu and the outline go away, the links scroll, the panes stack */
@@ -346,4 +386,113 @@ a.card:hover, .card:hover { border-color: var(--primary); box-shadow: 0 0 0 4px 
   .hero { padding: 64px 0 40px; }
   .c4 { padding: 18px; }
   .block { margin-top: 56px; }
+}
+
+/* the editor block: a tab per part of the extension, then the part: its text beside its screenshots or marks */
+.modules { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.module {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--surface); color: var(--muted); font-weight: 650; font-size: 14.5px; cursor: pointer;
+  transition: border-color .2s, color .2s, box-shadow .2s;
+}
+.module:hover { color: var(--fg); border-color: var(--primary); }
+.module.active { color: var(--fg); border-color: var(--primary); box-shadow: 0 0 0 3px var(--glow); }
+.module-icon { width: 28px; height: 28px; padding: 4px; border-radius: 50%; background: color-mix(in srgb, var(--primary) 10%, var(--surface)); }
+.module-panel {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 36px; align-items: center; padding: 28px;
+  border: 1px solid var(--border); border-radius: calc(var(--radius) + 6px);
+  background: radial-gradient(ellipse 60% 80% at 100% 0%, var(--glow), transparent 70%), var(--surface);
+}
+.feature-text h3 { margin: 6px 0 12px; font-size: clamp(22px, 2.8vw, 28px); letter-spacing: -.015em; line-height: 1.2; }
+.points { margin: 0 0 18px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.points li { position: relative; padding-left: 22px; color: var(--muted); font-size: 15.5px; line-height: 1.5; }
+.points li::before { content: ''; position: absolute; left: 4px; top: .6em; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px var(--glow); }
+.feature-text .logos { margin: 16px 0 0; }
+.art { display: block; width: 150px; height: 150px; margin: 18px 0 0; }
+.more { display: block; margin-top: 18px; font-weight: 700; }
+.module-media { min-width: 0; }
+.module-media .pills { margin-bottom: 12px; }
+.module-media.marks { display: flex; justify-content: center; gap: 36px; padding: 24px 0; }
+.mark { display: grid; justify-items: center; gap: 10px; color: var(--muted); font: 600 13px var(--mono); }
+.module-media.marks img { width: 120px; height: 120px; filter: drop-shadow(0 0 22px var(--glow)); }
+.keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 14px; margin: 0; padding: 0; list-style: none; }
+.keys li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--muted); font-size: 14.5px; }
+.keys li:has(.kbd:only-child), .keys li { min-width: 0; }
+.kbd {
+  flex: none; padding: 2px 9px; border: 1px solid var(--border); border-bottom-width: 3px; border-radius: 7px;
+  background: var(--surface); color: var(--primary); font: 600 12.5px var(--mono); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* a screenshot in an editor's window, with numbered callouts */
+.shot { margin: 0; min-width: 0; }
+.shot-window {
+  position: relative; border: 1px solid var(--border); border-radius: calc(var(--radius) + 2px); overflow: hidden;
+  background: #121516; box-shadow: 0 0 0 1px rgb(167 255 0 / 6%), 0 30px 70px rgb(0 0 0 / 45%), 0 0 60px var(--glow);
+  transform: perspective(1400px) rotateY(-4deg) rotateX(2deg); transition: transform .5s ease;
+}
+.shot-window:hover { transform: none; }
+.shot-bar { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: #1b1f20; border-bottom: 1px solid #2a2f30; }
+.shot-title { margin-left: 8px; color: #9aa59a; font: 12.5px var(--mono); }
+.shot-stage { position: relative; }
+.shot-stage img { display: block; width: 100%; height: auto; }
+.shot-open { display: block; cursor: zoom-in; }
+.spot { position: absolute; transform: translate(-12px, -50%); display: flex; align-items: center; gap: 6px; pointer-events: none; }
+.spot-number {
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #a7ff00; color: #070a06;
+  font: 800 12px var(--mono); box-shadow: 0 0 0 4px rgb(167 255 0 / 25%), 0 0 18px rgb(167 255 0 / 60%);
+  animation: ping 2.4s ease-out infinite;
+}
+.spot-label {
+  padding: 3px 9px; border-radius: 7px; background: rgb(7 10 6 / 88%); border: 1px solid rgb(167 255 0 / 45%); color: #dbe7d2;
+  font: 600 12px var(--sans); white-space: nowrap; opacity: 0; transform: translateX(-4px); transition: opacity .2s, transform .2s;
+}
+.spot.active .spot-label, .shot-stage:hover .spot-label { opacity: 1; transform: none; }
+.spot.active .spot-number { transform: scale(1.25); }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 rgb(167 255 0 / 55%), 0 0 18px rgb(167 255 0 / 60%); } 70%, 100% { box-shadow: 0 0 0 12px rgb(167 255 0 / 0%), 0 0 18px rgb(167 255 0 / 60%); } }
+@media (prefers-reduced-motion: reduce) { .spot-number { animation: none; } .shot-window { transform: none !important; } }
+.shot-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 0 0 0 4px; list-style: none; counter-reset: spot; font-size: 14px; color: var(--muted); }
+.shot-legend li { counter-increment: spot; cursor: default; transition: color .2s; }
+.shot-legend li::before { content: counter(spot); display: inline-grid; place-items: center; width: 19px; height: 19px; margin-right: 6px; border-radius: 50%; background: color-mix(in srgb, var(--primary) 22%, transparent); color: var(--primary); font: 700 11px var(--mono); }
+.shot-legend li.active, .shot-legend li:hover { color: var(--fg); }
+@media (max-width: 860px) {
+  .module-panel { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 18px; }
+  .shot-window { transform: none; }
+  .art { display: none; }
+  .spot-label { display: none; }
+}
+
+/* tablets: two columns where three do not fit, the panels stacked, comfortable targets */
+@media (max-width: 1024px) {
+  .hooks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards.tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .module-panel { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .art { display: none; }
+  .shot-window { transform: none; }
+}
+/* phones: one column, the tab rows scroll sideways, nothing wider than the screen */
+@media (max-width: 640px) {
+  .hooks, .cards.tools, .cards.three { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: 42px; }
+  .lead { font-size: 22px; }
+  .tagline { font-size: 16.5px; }
+  .actions .button { flex: 1 1 auto; text-align: center; }
+  .targets .logos { gap: 8px; }
+  .targets .integration { padding: 6px 13px 6px 10px; font-size: 13.5px; }
+  .targets .integration img { width: 20px; height: 20px; }
+  .modules, .pills, .tabs { flex-wrap: nowrap; overflow-x: auto; margin-right: -16px; padding-right: 16px; scrollbar-width: none; }
+  .modules::-webkit-scrollbar, .pills::-webkit-scrollbar, .tabs::-webkit-scrollbar { display: none; }
+  .module, .pill, .tab { flex: none; }
+  .module-panel { padding: 16px; border-radius: var(--radius); }
+  .keys { grid-template-columns: minmax(0, 1fr); }
+  .shot-legend { font-size: 13px; }
+  .spot-number { width: 20px; height: 20px; font-size: 11px; }
+  .module-media.marks { gap: 20px; }
+  .module-media.marks img { width: 88px; height: 88px; }
+  .block h2 { font-size: 26px; }
+  .install-card { padding: 18px; }
+  .install-head { align-items: flex-start; }
+  .install-mark { width: 56px; height: 56px; }
+  .install-card .shiki { font-size: 13px; }
+  .stat strong { font-size: 34px; }
+  .code .shiki, .shiki { font-size: 12.5px; padding: 12px 14px; }
 }

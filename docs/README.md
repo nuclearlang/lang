@@ -41,6 +41,16 @@ platform**. Each project documents itself, in its own folder, the same way.
 its documents with one line each saying when to read it. Under 150 lines. A `CLAUDE.md` beside it holds only
 `@AGENTS.md`.
 
+`README.md` beside it: the page a person reads first, on GitHub or in the folder. It is not `AGENTS.md` (that one
+is for whoever changes the project) and it repeats no reference. In this order, under about 120 lines:
+
+1. **What it is**, in one or two sentences a newcomer understands.
+2. **Why it exists**: the problem it solves for an agent or a person, and what it leaves out on purpose.
+3. **How we made it**: the decisions that shape it and why, each linked to its ADR (`docs/03-adr/`); what it is
+   written in and, when it is a product, which tools made it (ADR-platform-0004). Only true and measured claims.
+4. **Try it**: the shortest commands that show it working, with what they print or open.
+5. **Where to read next**: its guides (`docs/08-guides/`), its reference, its `AGENTS.md` to change it.
+
 `docs/`, with these layers. A layer with nothing to say has no file; no file is a template waiting to be filled.
 
 | Folder | Holds | Changes |

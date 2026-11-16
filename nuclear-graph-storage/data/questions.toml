@@ -344,7 +344,7 @@ expect = ["lib:list", "concept:standard-library", "error:N0114"]
 
 [[question]]
 ask = "how do I write a for loop"
-expect = ["lang:docs/language/10-control*", "lang:spec/brief/nuclear-base.md*", "lang:docs/language/reference.md*"]
+expect = ["lang:nuclearlang/docs/08-guides/10-control*", "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md*", "lang:nuclearlang/docs/08-guides/reference.md*"]
 
 [[question]]
 ask = "what is a use case"
@@ -393,7 +393,7 @@ expect = ["tool:nuclear.check", "can:check-fix-format", "playbook:fix-compiler-e
 
 [[question]]
 ask = "nuclear gen resource"
-expect = ["tool:synapsis.gen.resource"]
+expect = ["tool:nuclear.gen.resource"]
 top = 1
 
 [[question]]
@@ -404,7 +404,7 @@ top = 1
 
 [[question]]
 ask = "nuclear gen usecase"
-expect = ["tool:synapsis.gen.usecase"]
+expect = ["tool:nuclear.gen.usecase"]
 top = 1
 
 [[question]]
@@ -415,7 +415,7 @@ top = 1
 
 [[question]]
 ask = "como agrego un caso de uso con su ruta"
-expect = ["playbook:add-a-use-case", "tool:synapsis.gen.usecase"]
+expect = ["playbook:add-a-use-case", "tool:nuclear.gen.usecase"]
 
 [[question]]
 ask = "que herramientas tiene el servidor MCP"
@@ -431,7 +431,7 @@ expect = ["editor:vscode.commands", "faq:ask-the-agent"]
 
 [[question]]
 ask = "what version is synapsis"
-expect = ["component:synapsis"]
+expect = ["component:synapsis-*"]
 
 [[question]]
 ask = "what does the planner agent do"

@@ -150,13 +150,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#rules-of-this-project.977ce0",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/AGENTS.md#rules-of-this-project.5751f6",
    "type": "readme",
    "title": "The mobile platform of Synapsis — Rules of this project",
-   "summary": "target language; a project's Nuclear never changes between the dialects of the platform (root rule 11).",
+   "summary": "target language; a project's Nuclear never changes between the dialects of the platform (root rules 3 and 4).",
    "body": [
     "- **The platform is Nuclear only.** Where a document describes what a project writes it names no dialect and no",
-    "  target language; a project's Nuclear never changes between the dialects of the platform (root rule 11).",
+    "  target language; a project's Nuclear never changes between the dialects of the platform (root rules 3 and 4).",
     "- **The contract comes first.** A kind, a decorator or a plugin exists when `platform.toml` lists it; the loader",
     "  refuses a dialect that leaves the list. A new one is added here, then in every dialect.",
     "- **Data, not code.** The platform adds kinds and decorators only as data; language rules come from the base. A",
@@ -304,11 +304,48 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#license",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#how-we-made-it.0e38d9",
    "type": "readme",
-   "title": "Synapsis mobile — License",
-   "summary": "Apache-2.0. By contributing you agree that your contribution is licensed under it.",
-   "body": "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it.",
+   "title": "Synapsis mobile — How we made it",
+   "summary": "`nuclear new` and `nuclear gen`, no file by hand (ADR-platform-0004); the website runs those commands again on every build and fails if they no longer give it.",
+   "body": [
+    "**The onboarding example was made with the tools.** `examples/onboarding/todos_app` was written only by",
+    "`nuclear new` and `nuclear gen`, no file by hand",
+    "([ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)); the website runs those",
+    "commands again on every build and fails if they no longer give it."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#how-we-made-it.9729ef",
+   "type": "readme",
+   "title": "Synapsis mobile — How we made it",
+   "summary": "(ADR-synapsis-0002); the dialect lives with its language, in `nuclearlang/dialects/dart/`.",
+   "body": [
+    "- **The platform is Nuclear only, and Flutter is one dialect of it**",
+    "  ([ADR-synapsis-0002](../../docs/03-adr/0002-three-platforms-dialects-under-them.md)); the dialect lives with its",
+    "  language, in [`nuclearlang/dialects/dart/`](../../../nuclearlang/dialects/dart/AGENTS.md).",
+    "- **The manifest is `config.nuc`**, listing only third-party packages; assets follow a convention",
+    "  ([ADR-mobile-0001](docs/03-adr/0001-project-manifest-packages-and-assets.md)).",
+    "- **A screen is `@screen`**, navigation belongs to the views, dialogs and the splash come from the runtime",
+    "  ([ADR-mobile-0002](docs/03-adr/0002-screens-routes-dialogs-and-splash.md)).",
+    "- **JSON is generated from the model** ([ADR-mobile-0003](docs/03-adr/0003-json-models-names-and-converters.md));",
+    "  **tests are written in Nuclear** and the build generates the standard ones",
+    "  ([ADR-mobile-0004](docs/03-adr/0004-tests-in-nuclear.md)).",
+    "- **The local database is the backend's ORM on the device**: `@primary` models, `@repository(saveLocal)`",
+    "  ([ADR-mobile-0006](docs/03-adr/0006-local-database.md)).",
+    "- Every decision: [docs/03-adr/](docs/03-adr/README.md)."
+   ],
    "platforms": [
     "mobile"
    ],
@@ -325,16 +362,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#synapsis-mobile",
    "type": "readme",
    "title": "Synapsis mobile",
-   "summary": "The mobile platform of Synapsis: apps for Android, iOS, desktop and the web written once in Nuclear.",
+   "summary": "The mobile platform of Synapsis: apps for Android, iOS, desktop and the web, written once in Nuclear and built today with the `flutter` dialect.",
    "body": [
-    "The mobile platform of Synapsis: apps for Android, iOS, desktop and the web written once in Nuclear. This folder",
-    "holds the platform's contract (`platform.toml`), its runtime for Flutter — the `synapsis` package (repositories",
-    "over dio, state managers, events, sessions, ACL, routing, forms, a local database) and `synapsis_genkit` for AI —",
-    "and its examples. Its dialect `flutter` (TOML + templates read by the `nuclear` compiler) is in",
-    "[`nuclearlang/dialects/dart/frameworks/flutter/`](../../../nuclearlang/dialects/dart/frameworks/flutter/).",
-    "",
-    "Start with the [Synapsis tutorial](../../docs/08-guides/tutorial.md) and",
-    "[the rules of the platform](docs/07-reference/mobile.md)."
+    "The mobile platform of Synapsis: apps for Android, iOS, desktop and the web, written once in Nuclear and built",
+    "today with the `flutter` dialect. This folder holds the platform's contract (`platform.toml`), its runtime for",
+    "Flutter (the `synapsis` package, and `synapsis_genkit` for AI) and its examples."
    ],
    "platforms": [
     "mobile"
@@ -349,47 +381,84 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#what-is-inside",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#try-it",
    "type": "readme",
-   "title": "Synapsis mobile — What is inside",
-   "summary": "What is inside",
+   "title": "Synapsis mobile — Try it",
+   "summary": "With `nuclear` installed (`nuclear doctor` says what is missing; without Flutter the `.nuc` files are still written): nuclear new todos_app -p mobile cd todos_app nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos \\ nuclear check --json # [] nuclear…",
    "body": [
-    "| Folder | What |",
-    "|---|---|",
-    "| `platform.toml` | the contract: the kinds, decorators and plugins every dialect of the platform implements; where each file goes (what `nuclear gen` writes is `tools/code_generator/platforms/mobile/generators.toml`) |",
-    "| `packages/synapsis/` | the runtime of an app ([its API](docs/07-reference/synapsis.md)) |",
-    "| `packages/synapsis_genkit/` | the runtime of the `genkit` plugin ([guide](docs/08-guides/genkit.md)) |",
-    "| `examples/` | example apps and their expected output |",
-    "| `checks/` | the scripts that check the examples and the reference |",
-    "| `docs/` | the documentation, for people and agents ([AGENTS.md](AGENTS.md) lists it) |"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/README.md"
-   ],
-   "meta": {
-    "section": "06-mobile",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#working-on-it",
-   "type": "readme",
-   "title": "Synapsis mobile — Working on it",
-   "summary": "It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree: git clone https://github.com/nuclearlang/nuclear && cd nuclear installer/install.sh The checks before a change, and what each one covers: docs/05-standards/testing.md.",
-   "body": [
-    "It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree:",
+    "With `nuclear` installed (`nuclear doctor` says what is missing; without Flutter the `.nuc` files are still",
+    "written):",
     "",
     "```sh",
-    "git clone https://github.com/nuclearlang/nuclear && cd nuclear",
-    "installer/install.sh",
+    "nuclear new todos_app -p mobile",
+    "cd todos_app",
+    "nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos \\",
+    "  --fields \"id:int title:string completed:boolean\" --screen todos",
+    "nuclear check --json      # []",
+    "nuclear build             # the Flutter app in build/app",
+    "nuclear test",
+    "nuclear device pixel7     # the app in a phone-shaped window, with hot reload",
     "```",
     "",
-    "The checks before a change, and what each one covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).",
-    "Conventions: [docs/05-standards/coding.md](docs/05-standards/coding.md)."
+    "Step by step: [docs/08-guides/onboarding-mobile.md](docs/08-guides/onboarding-mobile.md). An app from scratch, with",
+    "a component, a repository, a screen and tests: [the Synapsis tutorial](../../docs/08-guides/tutorial.md)."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#where-to-read-next",
+   "type": "readme",
+   "title": "Synapsis mobile — Where to read next",
+   "summary": "docs/07-reference/synapsis.md; the short sheet an agent reads: docs/07-reference/brief/mobile.md.",
+   "body": [
+    "- The rules of the platform: [docs/07-reference/mobile.md](docs/07-reference/mobile.md); the API of the runtime:",
+    "  [docs/07-reference/synapsis.md](docs/07-reference/synapsis.md); the short sheet an agent reads:",
+    "  [docs/07-reference/brief/mobile.md](docs/07-reference/brief/mobile.md).",
+    "- AI in an app: [docs/08-guides/genkit.md](docs/08-guides/genkit.md).",
+    "- How each kind comes out in Flutter: [the flutter reference](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md).",
+    "- What the platform is for: [docs/00-context/vision.md](docs/00-context/vision.md).",
+    "- To change it (the runtime, the checks, the goldens): [AGENTS.md](AGENTS.md).",
+    "",
+    "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/README.md"
+   ],
+   "meta": {
+    "section": "06-mobile",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/README.md#why-it-exists",
+   "type": "readme",
+   "title": "Synapsis mobile — Why it exists",
+   "summary": "Between its screens and its backend an app carries code that is the same in every app: http calls with cache and retries, JSON mapping, state, the injector, session, access control, events, routes, forms, translations, a local database, tests.",
+   "body": [
+    "Between its screens and its backend an app carries code that is the same in every app: http calls with cache and",
+    "retries, JSON mapping, state, the injector, session, access control, events, routes, forms, translations, a local",
+    "database, tests. On this platform a project writes only its business logic in Nuclear; the transpiler writes the",
+    "constructors, overrides, injection, serialization, http calls, state handling and imports, and what the UI toolkit",
+    "lacks comes from the runtime. The `synapsis` package is independent: a Flutter developer may use it by hand.",
+    "",
+    "What it leaves out on purpose: how the target code is written (that is the dialect's), interfaces or classes that",
+    "only pass data around (the layers exist in the generated code), translations through a third-party library, and a",
+    "local database for millions of rows. A second dialect (`react-native`, `kotlin-multiplatform`) is planned, not",
+    "built."
    ],
    "platforms": [
     "mobile"
@@ -589,7 +658,7 @@
    "title": "Vision — What it is",
    "summary": "Apps for Android, iOS, desktop and web through one UI toolkit.",
    "body": [
-    "Apps for Android, iOS, desktop and web through one UI toolkit. Three parts (ADR-dart-0001, ADR-dart-0001):",
+    "Apps for Android, iOS, desktop and web through one UI toolkit. Three parts (ADR-dart-0001):",
     "",
     "1. the **contract and its dialects**: `platform.toml` here; `flutter`, the only dialect today, in the",
     "   [`dart` dialect project](../../../../../nuclearlang/dialects/dart/AGENTS.md). Kinds and decorators add",

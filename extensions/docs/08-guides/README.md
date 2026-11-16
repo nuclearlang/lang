@@ -9,7 +9,7 @@ related: [../00-context/vision.md, ../02-architecture/language-server.md, ../../
 NuclearLang has one extension for each of three editors: VS Code, Android Studio / IntelliJ (JetBrains) and Zed.
 All three use the same language server, `nuclear-lsp`, so a `.nuc` file gets the same diagnostics, completion and
 colors in every editor. On top of that, each extension lets you use the platform's tools from the editor: the
-`nuclear` command, Nuclear Builder, Nuclear Connector and the devices. You make a product with those tools
+`nuclear` command, Nuclear Builder, HTTP Connections and the devices. You make a product with those tools
 ([ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)), and the extension is where
 you run them.
 
@@ -30,8 +30,8 @@ you run them.
   terminal.
 - **The Chernobyl themes**: *Chernobyl* and *Chernobyl Soft*, with their file icons.
 - **Run, debug and devices** for Synapsis projects. How much you get depends on the editor (see the table).
-- **The tools**: Nuclear Connector (an HTTP client like Postman), Nuclear Builder (the pipeline from a spec to
-  code), the chat with the local agents, and the devices. VS Code has all of them in the *Nuclear workspace*.
+- **The tools**: HTTP Connections (an HTTP client like Postman), Nuclear Builder (the pipeline from a spec to
+  code), Nuclear Atlas (the local agent integrated with the RAG: the chat with the local agents over the Smart Graph), and the devices. VS Code has all of them in the *Nuclear workspace*.
 
 ## Which editor has what
 
@@ -47,9 +47,9 @@ you run them.
 | Run, build on save, automatic repair | every platform | mobile (the Flutter plugin runs the app) | tasks and ▷ in the gutter |
 | `.nuc` breakpoints and the paused `.nuc` line | every platform, with stepping by Nuclear line | mobile | no |
 | Devices inside the editor | the Synapsis device (mobile) and the web device | no | no (`nuclear device` opens its own window) |
-| Nuclear Connector | `Ctrl+Alt+H` | `Alt+Shift+H` | no |
+| HTTP Connections | `Ctrl+Alt+H` | `Alt+Shift+H` | no |
 | Nuclear Builder | `Ctrl+Alt+P` | `Alt+Shift+P` (runs `nuclear-builder`) | no |
-| The chat, *Settings and integrations*, notifications | yes | no | no |
+| Nuclear Atlas, *Settings and integrations*, notifications | yes | no | no |
 
 Zed lets an extension add no panels, views, keybindings or actions on save, so the devices, `.nuc` debugging and
 the workspace cannot be built there.
@@ -82,8 +82,8 @@ The details are in each editor's guide.
 | [VS Code: run, debug and tasks](../../vscode/docs/08-guides/run-and-debug.md) | run a project, reload it on save, debug a `.nuc` |
 | [Android Studio / IntelliJ](../../jetbrains/docs/08-guides/README.md) | install the plugin and use it on a Synapsis project |
 | [Zed](../../zed/docs/08-guides/README.md) | install the extension, turn on its features, use the tasks |
-| [Nuclear Connector](../../tools/nuclear-connector/docs/08-guides/README.md) | call the endpoints of your projects, environments, OpenAPI |
+| [HTTP Connections](../../tools/nuclear-http-connections/docs/08-guides/README.md) | call the endpoints of your projects, environments, OpenAPI |
 | [Devices](../../tools/nuclear-device-manager/docs/08-guides/README.md) | run a mobile app or a web app inside VS Code |
-| [The chat (Nuclear agent)](../../tools/nuclear-ai-chat/docs/08-guides/README.md) | ask about your project and give orders to the local agents |
+| [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |
 | [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |
-| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models the chat and the Builder need |
+| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models Nuclear Atlas and the Builder need |

@@ -18,7 +18,8 @@ commands, its devices) is in that platform's roadmap.
   (`deprecated_member_use`) and exits 1. It comes from the Flutter release, not from a change in this tree; the
   local Flutter is older and does not show it. The right fix is moving the runtime, the `flutter` dialect's
   automatic imports, its templates and the Dart type definitions to `material_ui`. Hiding it with
-  `--no-fatal-infos` would be a shortcut.
+  `--no-fatal-infos` would be a shortcut. Until the move, the CI (`platform-mobile.yml`, `website.yml`) runs Flutter
+  3.47.8, the version the type definitions come from; a newer Flutter on a user's machine shows the same 9 infos.
 
 ## Pending
 

@@ -21,7 +21,7 @@ stateless ToolsIndex(tools: Tool[])
           p(className = "lead rise", children = "Everything around the language: what builds, edits, runs and helps an AI agent write a Nuclear project. Each one has its page and its documents."),
         ],
       ),
-      ...["Build", "Edit", "Run", "AI"].map((g) =>
+      ...["Build", "Edit", "Run", "AI", "Editors"].map((g) =>
         section(
           key = g,
           className = "block reveal",
@@ -30,7 +30,7 @@ stateless ToolsIndex(tools: Tool[])
             div(
               className = "cards tools",
               children = tools.filter((t) => t.group == g).map((t) =>
-                a(key = t.key, className = "card tool", href = "/tools/${t.key}", children = [h3(children = t.name), p(className = "tagline", children = t.tagline), p(children = t.pitch)])
+                a(key = t.key, className = "card tool", href = "/tools/${t.key}", children = [Icon(src = t.icon), h3(children = t.name), p(className = "tagline", children = t.tagline), p(children = t.pitch)])
               ),
             ),
           ],

@@ -1,9 +1,9 @@
 # JetBrains plugin
 
-The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.51.0): the client of the language
+The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.0): the client of the language
 server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects
-that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*Nuclear Connector*, *Nuclear Builder*),
-whose code is in `../tools/nuclear-connector/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What
+that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*HTTP Connections*, *Nuclear Builder*),
+whose code is in `../tools/nuclear-http-connections/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What
 the three extensions share: [`../AGENTS.md`](../AGENTS.md).
 
 ## Stack
@@ -50,7 +50,7 @@ Install: *Settings → Plugins → ⚙ → Install Plugin from Disk…* → the 
 | Which class does what, what the build leaves out, what the plugin does not have | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
 | The pending work of the plugin | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | How it finds the server; the bundle | [`../docs/02-architecture/language-server.md`](../docs/02-architecture/language-server.md) |
-| The *Nuclear Connector* tool window | [`../tools/nuclear-connector`](../tools/nuclear-connector/AGENTS.md) |
+| The *HTTP Connections* tool window | [`../tools/nuclear-http-connections`](../tools/nuclear-http-connections/AGENTS.md) |
 | The *Nuclear Builder* tool window | [`../tools/nuclear-builder`](../tools/nuclear-builder/AGENTS.md) |
 | What a user reads: install, the settings, Synapsis projects, debugging, the tool windows | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | What a user reads | `README.md`; [the flutter reference §11.2](../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |

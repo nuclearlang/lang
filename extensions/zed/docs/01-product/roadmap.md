@@ -9,6 +9,11 @@ related: [../../../docs/01-product/roadmap.md, ../02-architecture/overview.md]
 What is common to the three editors, also what was never tried in a running Zed:
 [the editors' roadmap](../../../docs/01-product/roadmap.md).
 
+## Untested
+
+- **0.52.0** (the version raised with the other two extensions; the themes regenerated): not built nor installed
+  into Zed (`installer/install.sh --no-zed`); run `./build.sh` once.
+
 ## Pending
 
 - `extension.toml` reads the grammar from a commit of the repository `nuclearlang/nuclear-zed`

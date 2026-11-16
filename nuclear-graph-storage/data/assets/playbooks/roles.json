@@ -265,7 +265,7 @@
    "title": "Role: support (answers questions and explains failures)",
    "summary": "Support answers a question about the project or about NuclearLang from the project's map and the graph, and when a step fails it says why (the kind of failure, the evidence, the next step). It changes no file: a change is an order.",
    "body": [
-    "- **Does**: answers the editor's chat; classifies a failure (transient, environment, code, test, spec) by fixed rules and explains it.",
+    "- **Does**: answers Nuclear Atlas, the editor's chat; classifies a failure (transient, environment, code, test, spec) by fixed rules and explains it.",
     "- **Tools**: the graph (every shelf), the project map, `nuclear check`, `nuclear doctor`.",
     "- **Agents**: the assistant (`POST /developer/chat`), the diagnoser (`POST /developer/diagnose`).",
     "- **Stops at**: what the graph does not say: it says that it does not know, and which command shows it."

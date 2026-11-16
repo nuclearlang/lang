@@ -3,7 +3,7 @@
 // tool's tab of the Nuclear strip and a badge on the strip's icon in the activity bar; opening the tool reads them.
 import * as vscode from 'vscode';
 
-export type NoticeTool = 'agent' | 'builder' | 'settings';
+export type NoticeTool = 'atlas' | 'builder' | 'settings';
 
 export interface Notice {
   id: number;

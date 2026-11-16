@@ -30,10 +30,10 @@ On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`.
 | Who calls it | How | What the Developer does |
 |---|---|---|
 | The **Builder** (VS Code `Ctrl+Alt+P`, Android Studio *Nuclear Builder*, `nuclear-builder run`) | spec → plan → tests first → code → verification → security → artifacts → deploy | the planner splits the spec, the tester writes the tests first (and fixes a test file the project rejects), the coder writes each piece and repairs it with the compiler and with failing tests told in Nuclear (`nuclear explain`), the security reviewer reads each new file; when a stage fails the **diagnoser** says why; at the end the **documenter** writes the journal's summary |
-| The **chat** (VS Code `Ctrl+Alt+A`, *Nuclear agent*) | a question, or `/task <order>` | the **assistant** answers from the project's map and the graph; an order is a Builder run with the local agents only |
+| **Nuclear Atlas** (VS Code `Ctrl+Alt+A`) | a question, or `/task <order>` | the **assistant** answers from the project's map and the graph; an order is a Builder run with the local agents only |
 | A **frontier model** over MCP (Claude Code, Codex, Cursor: `nuclear-mcp`) | `developer_task` first, then validate, correct, `developer_review`; `developer_retry` after a failure | the whole task by the local agents (`nuclear-builder run --lead local`), documented in the run's journal; the lead's corrected files become graph examples |
 
-The Builder, the chat and `nuclear-builder` are the project [`extensions/`](../../../../extensions/AGENTS.md); the MCP
+The Builder, Nuclear Atlas and `nuclear-builder` are the project [`extensions/`](../../../../extensions/AGENTS.md); the MCP
 tools (`developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`,
 `developer_security`) are the project [`tools/mcp`](../../../../tools/mcp/AGENTS.md).
 

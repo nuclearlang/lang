@@ -26,16 +26,19 @@ Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of 
 - **Highlighting**: shiki, with `extensions/vscode/syntaxes/nuclear.tmLanguage.json` and the theme
   `extensions/vscode/themes/chernobyl-color-theme.json` (dark) and `github-light`.
 
-## What it writes (into `public/`, ignored by git)
+## What it writes (into `public/`, ignored by git; `public/shots/` and `styles.css` are kept)
 
 | File | Holds |
 |---|---|
 | `content/<key>.json` | one page: path, title, html, headings (levels 2 and 3), its source on GitHub; key = the path with `/` → `--` |
 | `content/site.json` | title, url, org, footer, the top links, the side menu |
 | `content/search.json` | title, headings and words of every page |
-| `content/home.json` | the home page: texts, actions, hooks, the samples and their outputs, the agent's fix, the backend onboarding's steps and numbers, one file per dialect, the platforms and tools in short, the library, install lines |
-| `content/tools.json` | every tool: key, name, group, tagline, pitch, highlights, how it starts (highlighted), its project on GitHub, its pages |
+| `content/home.json` | the home page: texts, actions, the hero's logos, hooks with their icons, the editor's screenshots, the samples and their outputs, the agent's fix, the backend onboarding's steps and numbers, one file per dialect, the platforms and tools in short, the library, install lines |
+| `content/tools.json` | every tool: key, name, group, tagline, pitch, highlights, icon, logos, screenshots, how it starts (highlighted), its project on GitHub, its pages |
 | `content/platforms.json` | every platform: its levels (boxes and flows), its pages, and its onboarding run again: the app, the steps with their real output, the shown file and what each dialect writes from it, the numbers |
+| `logos/<name>.svg` | the logo of each `[logos]` entry, from `simple-icons` (CC0) or `devicon` (MIT), its brand colour per theme: a colour too dark for the dark theme (luminance under 0.08) or too light for the light one (over 0.7) takes the theme's text colour (an `<img>` SVG reads `prefers-color-scheme`) |
+| `icons/<name>.svg` | each icon the site names, from `lucide-static` (ISC), stroked in the theme's accent the same way |
+| `brand/<mark>.svg` | the animated marks of the hooks (`hook-*`) and of the install, the marks of NuclearLang's own tools (`mcp`, `graph`, `http`, `atlas`: the logo's trefoil with a hub, a database, two arrows, a globe) and `orbit.svg`, the animated orbit of the three platforms around Nuclear (the first dialect's logo of each), from `tools/marks.mjs` |
 | `static/<path>.html` | the plain page, with a canonical link to its route |
 | `llms.txt`, `llms-full.txt` | the briefs (`07-reference/brief/`) first, then the side menu's sections; the full file carries the briefs and `nuclearlang/docs/08-guides/reference.md` |
 | `sitemap.xml`, `robots.txt` | every route |
@@ -49,8 +52,27 @@ Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of 
   name; a pattern expands to the matching pages in order, without `README`s, each page once per section.
 - The home page: `[[home.actions]]`, `[[home.hooks]]`, `[home.samples]` (`targets` and its `items`), `[home.check]`
   (a mistake and its `dialect`), `[home.generator]` and `[home.dialects]` (the platform whose onboarding they show),
-  `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`{{site}}` is replaced by the url).
-- `[[tools]]`: `key` (its address `/tools/<key>`), `name`, `group` (Build, Edit, Run or AI), `tagline`, `pitch`,
+  `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`title`, `text`, `systems`: a tab each with
+  its `logos` and its `command`, `{{site}}` replaced by the url; `next`: the commands after it), `[home.logs]` (the
+  `[[modules]]` entry the logs block shows).
+- `[logos]`: name → a `simple-icons` slug, or `{ simple, name }` to rename one, `{ devicon = "<folder>/<file>", name }`
+  for a brand simple-icons leaves out (VS Code, IntelliJ IDEA, Windows: copied as they are), `{ lucide, name }` for a
+  product with no free logo (Codex). A logo goes next to a name (chips, tabs, cards), never inside a text.
+  `[home.hero] targets` and `agents`, a platform's `dialects`, a tool's `logos`, `[home.extension] editors` and a
+  dialect's tab name logos of this table.
+- `[home.extension]`: the editor block, `title`, `text`, `editorsTitle` and `editors` (a `logo` and its `tool` page each)
+  and `modules` (ids of `[[modules]]`, most important first).
+- `[[modules]]`: a part of the extension: `id`, `name`, `icon`, `title` (its slogan), `points` (at most three),
+  `keys` (`key`, `label`: the real shortcuts of the extensions' guides), `logos`, `marks` (`icon`, `label`), `art`
+  (`orbit`), `shots` (ids of `[[shots]]`) and `tool` (the page its "More about" link opens; the build fails if it is
+  not a tool) or `link` (any address). The text stays short: the detail is the tool's page.
+- `[[shots]]`: a screenshot of the editor: `id`, `image` (a file of `public/shots/`, kept in git), `alt`, `caption`
+  and `spots` (callouts: `x` and `y` as fractions of the image from its top left corner, `label`). A screenshot is
+  cropped to what it sells (its outline and what does not matter removed), lightly sharpened and saved as WebP. A
+  screenshot in another language is rendered again in English (Nuclear Atlas's).
+- A hook, a tool and a module name an `icon`: a `lucide` name, or `brand:<mark>` for a mark of `tools/marks.mjs`.
+- `[[tools]]`: `key` (its address `/tools/<key>`), `name`, `group` (Build, Edit, Run or AI), `tagline`, `pitch`, `icon`,
+  `logos` and `shots` (optional),
   `highlights`, `demo` (commands), `project` (its folder), `pages` (its documents: each must be a page, or the
   build fails).
 - `[[platforms]]`: `key`, `name`, `dialects`, `tagline`, `pitch`, `pages`, and `[[platforms.levels]]` (`level`,

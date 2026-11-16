@@ -50,7 +50,7 @@ Open questions the writers left for the user are written `TODO(human)` in the do
       `synapsis-web`), type definitions, `synapsis(platform, dialect)` of `config.nuc`, generated files, docs
       (`work/rename.py`).
 - [x] T2.4 The Loop → Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, `.nuclear/builder.json`); Nuclear HTTP →
-      Nuclear Connector (`work/rename2.py`). The graph's command stays `nuclear-graph` (only its folder was named).
+      HTTP Connections (`work/rename2.py`). The graph's command stays `nuclear-graph` (only its folder was named).
 - [x] T2.5 The user's projects in `~/Documents/projects/nuc/` follow the new words (a copy before:
       `~/Documents/projects/nuc-backup-2026-11-16-before-synapsis.tar.gz`). `python/nuclear_langgraph_agent` still
       has the two errors it had before (`@generated`, a variable named `tools`): the user's code, not changed.
@@ -62,7 +62,7 @@ Open questions the writers left for the user are written `TODO(human)` in the do
       (out of each `platform.toml`); the loader reads it (`Home.generators`, `Loader::generators_file`).
 - [x] T4.3 `tools/mcp/`: a Nuclear project of its own, command `nuclear-mcp`; the MCP tool `dragonfly` is
       `nuclear_project`; the editor's settings `nuclear.ai.mcpCommand` / `nuclear.ai.graphCommand`.
-- [x] T4.4 `extensions/tools/<tool>/`: the code of the builder, the connector, the chat and the device manager (their
+- [x] T4.4 `extensions/tools/<tool>/`: the code of the builder, HTTP Connections, Nuclear Atlas and the device manager (their
       JetBrains parts in `jetbrains/src/`).
 - [x] T4.5 `website/`: moved into the tree (from `~/Documents/projects/nuc/react/nuclearlang_website`, a copy with
       its git history is in the backup above); its pages come from every project's reference and guides; CI

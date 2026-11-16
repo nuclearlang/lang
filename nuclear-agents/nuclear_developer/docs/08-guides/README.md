@@ -87,9 +87,9 @@ The lead's loop is: generators first, `developer_task` for what they leave, vali
 | Where | How |
 |---|---|
 | The Builder | VS Code `Ctrl+Alt+P`, Android Studio *Nuclear Builder*, or `nuclear-builder run`; a failed run goes on with *↻ Retry* or `nuclear-builder retry <run>` |
-| The chat | VS Code `Ctrl+Alt+A` (*Nuclear agent*): a question about the project, or `/task <order>` for a Builder run. The assistant answers; it never changes a file itself |
+| Nuclear Atlas | VS Code `Ctrl+Alt+A`: a question about the project, or `/task <order>` for a Builder run. The assistant answers; it never changes a file itself |
 
-The Builder and the chat: [the extensions](../../../../extensions/AGENTS.md).
+The Builder and Nuclear Atlas: [the extensions](../../../../extensions/AGENTS.md).
 
 ### Over HTTP
 

@@ -23,7 +23,7 @@ junior gets it right next time.
 
 - **The Builder** of the editors and `nuclear-builder`: a spec goes through plan, tests first, code, verification,
   security and artifacts with the local agents.
-- **The chat** of the editor: a question about the project, or an order.
+- **Nuclear Atlas** of the editor: a question about the project, or an order.
 - **A frontier model** over MCP (Claude Code, Codex, Cursor): `developer_task` first, then it validates and
   corrects.
 

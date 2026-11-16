@@ -146,10 +146,10 @@
    "id": "limit:backend-not-yet",
    "type": "limit",
    "title": "Limit: what the backend platform does not have yet",
-   "summary": "Not in the backend platform yet: access control and guards on routes, sessions, background jobs, file uploads, a Dockerfile, observability, a command-line or MCP-server kind, and CORS for a browser client on another origin. Authentication is written by hand in a use case today.",
+   "summary": "Not in the backend platform yet: access control and guards on routes, sessions, background jobs, file uploads, a Dockerfile, observability, and CORS for a browser client on another origin. Authentication is written by hand in a use case today.",
    "body": [
-    "- No `@acl` or guards on a controller's routes, and no sessions (the mobile and web platforms have them).",
-    "- No kind for background jobs, file uploads, a command-line program or an MCP server.",
+    "- No `@acl` or guards on a controller's routes, and no sessions (the mobile platform has them).",
+    "- No background jobs and no file uploads.",
     "- No generated Dockerfile; no observability (metrics, traces).",
     "- No CORS: a web app on another origin cannot call the API (the browser blocks it).",
     "- `nuclear watch` does not exist for backend projects.",
@@ -184,8 +184,9 @@
     }
    ],
    "sources": [
-    "docs/01-product/roadmap.md",
-    "nuclear-synapsis-framework/platforms/backend/docs/01-product/roadmap.md"
+    "docs/01-product/roadmap.md#The competitiveness plan (decided by the user, 2026-11-06)",
+    "nuclear-synapsis-framework/platforms/backend/docs/01-product/roadmap.md",
+    "tools/cli/docs/01-product/roadmap.md"
    ],
    "meta": {
     "area": "backend",
@@ -217,7 +218,7 @@
    "id": "limit:web-first-version",
    "type": "limit",
    "title": "Limit: the web platform is in its first version",
-   "summary": "Not in the web platform yet: forms and form managers, converters, translations, the local database, plugins and AI kinds, a generated tests file, navigation by address inside rendered content, attributes whose name is not an identifier (`aria-label`), and the browser's globals (`window`, `document`) in the type definitions.",
+   "summary": "Not in the web platform yet: forms and form managers, converters, translations, the local database, plugins and AI kinds, a generated tests file, navigation by address inside rendered content, attributes whose name is not an identifier (`aria-label`), some HTML elements (`figure`, `kbd`), and the browser's globals (`window`, `document`) in the type definitions.",
    "body": [
     "- No `form` / `formmanager`, `converter`, translations (`.tr()`), `@primary` / `saveLocal`, plugins.",
     "- `@acl(guards)` only in a use case that awaits something; a view's arguments must be named.",
@@ -225,7 +226,8 @@
     "- A link inside rendered content reloads the page: navigation is by screen (`goTo`).",
     "- A statemanager has no generics (`N0218`).",
     "- A new project has no screen at `/`: the first screen is made with `nuclear gen resource ... --screen` or `nuclear make`.",
-    "- `window`, `document`, `navigator` and `IntersectionObserver` are not in the type definitions: an npm library that takes selectors (`nuclear add`) reaches the page instead."
+    "- `window`, `document`, `navigator` and `IntersectionObserver` are not in the type definitions: an npm library that takes selectors (`nuclear add`) reaches the page instead.",
+    "- The runtime's HTML functions leave out some elements (`figure`, `figcaption`, `kbd`, `code`, `blockquote`, `video`, `picture`...): use a `div` or a `span` with a class until they are added."
    ],
    "keys": [
     "web limits",
@@ -265,7 +267,7 @@
    "id": "limit:mobile-not-yet",
    "type": "limit",
    "title": "Limit: what the mobile platform does not have yet",
-   "summary": "Not in the mobile platform yet: offline write sync and conflict handling for the local database, push notifications, OAuth and Firebase Auth, analytics and crash reporting, deep links, and publishing to the stores from the CLI.",
+   "summary": "Not in the mobile platform yet: offline write sync and conflict handling for the local database, push notifications, OAuth, analytics and crash reporting, deep links, and CI templates and store publishing from the command line.",
    "body": [
     "- The local database keeps what a GET answered; it does not queue writes made offline.",
     "- A GET under `saveLocal` whose model has no `@primary` fails at run time.",
@@ -295,8 +297,9 @@
     }
    ],
    "sources": [
-    "docs/01-product/roadmap.md",
-    "nuclearlang/docs/02-architecture/limits.md#Behaviour limits"
+    "docs/01-product/roadmap.md#The competitiveness plan (decided by the user, 2026-11-06)",
+    "nuclear-synapsis-framework/platforms/mobile/docs/01-product/roadmap.md#Pending",
+    "nuclearlang/docs/02-architecture/limits.md#Limits seen in generated projects"
    ],
    "meta": {
     "area": "mobile",
@@ -305,7 +308,6 @@
      "push notification",
      "offline sync",
      "oauth",
-     "firebase auth",
      "deep link",
      "analytics",
      "crash report"
@@ -405,15 +407,15 @@
    "id": "limit:untested",
    "type": "limit",
    "title": "Limit: done but never run for real",
-   "summary": "Some parts are built and pass their automated checks but were never run against the real thing: a real phone, macOS and Windows, PostgreSQL, MySQL, MariaDB, Redis, Kafka and OpenAI with real services, the release installers on other systems. Only SQLite, a fake chat model and Linux were exercised.",
+   "summary": "Some parts are built and pass their automated checks but were never run against the real thing: a real phone, macOS and Windows, PostgreSQL, MySQL, MariaDB, Redis, Kafka and OpenAI with real services, the public installers on macOS and Windows, several editor features in a running IDE. The migrations ran only on SQLite, the installers only on Linux.",
    "body": [
     "Say it when a task depends on one of them: it should work, and it was not proven.",
     "",
-    "- Mobile: a real device or emulator (debugging, hot reload, the local database on disk).",
-    "- Backend: PostgreSQL, MySQL, MariaDB, Redis, Kafka with a broker, OpenAI; migrations on anything but SQLite.",
-    "- Web: the generated app in a real browser beyond the tests and the build.",
-    "- Installers: macOS, Windows.",
-    "- Editors: several features inside a running VS Code, Android Studio or Zed."
+    "- Mobile: a real phone, macOS; the local database on a real device and on web.",
+    "- Backend: PostgreSQL, MySQL, MariaDB, Redis, Kafka with a broker, OpenAI; migrations on anything but SQLite; `nuclear migrate` on Windows.",
+    "- Web: the `characters` example in a browser; the website's animations, its screenshots' windows and callouts and its logos per theme on Safari and Firefox (only Chromium ran).",
+    "- Installers: `install.sh` on macOS, `install.ps1` on Windows, the AI set-up on macOS and Windows; only the Linux x86_64 archive ran.",
+    "- Editors: the Nuclear workspace and the AI pages inside a running VS Code; the JetBrains plugin in a running IDE (only compiled). The extensions' 0.52.0 (HTTP Connections and Nuclear Atlas renamed) was never opened in a running VS Code or IDE; the VS Code extension inside Cursor was never tried."
    ],
    "keys": [
     "untested",
@@ -437,7 +439,14 @@
     }
    ],
    "sources": [
-    "docs/01-product/roadmap.md"
+    "nuclear-synapsis-framework/platforms/mobile/docs/01-product/roadmap.md#Untested",
+    "nuclear-synapsis-framework/platforms/backend/docs/01-product/roadmap.md#Untested",
+    "nuclearlang/dialects/python/docs/01-product/roadmap.md#Untested",
+    "nuclear-synapsis-framework/platforms/web/docs/01-product/roadmap.md#Untested",
+    "website/docs/01-product/roadmap.md#Untested",
+    "installer/docs/01-product/roadmap.md#Untested",
+    "extensions/vscode/docs/01-product/roadmap.md#Untested",
+    "extensions/jetbrains/docs/01-product/roadmap.md"
    ],
    "meta": {
     "area": "project",
@@ -470,9 +479,7 @@
     "",
     "> Add a library feature where readers can borrow books.",
     "",
-    "The second one has no pieces named: it needs someone to decide the entities, the rules and the files. Split it first (`playbook:decompose-a-spec`) or give it to a lead (`playbook:escalate`).",
-    "",
-    "Sizes that work: one declaration, or a few small ones of the same file; up to about 120 lines of Nuclear; a task of a few sentences."
+    "The second one has no pieces named: it needs someone to decide the entities, the rules and the files. Split it first (`playbook:decompose-a-spec`) or give it to a lead (`playbook:escalate`)."
    ],
    "keys": [
     "one file",
@@ -505,7 +512,9 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/README.md#How an agent works"
+    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#The agents",
+    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#How an agent works",
+    "nuclear-agents/nuclear_developer/docs/00-context/vision.md#What it does not do"
    ],
    "meta": {
     "area": "agent",
@@ -682,7 +691,9 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/README.md#Where it works"
+    "nuclear-agents/nuclear_developer/docs/00-context/vision.md#What it does not do",
+    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#What an agent reads",
+    "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md"
    ],
    "meta": {
     "area": "agent",
@@ -741,7 +752,7 @@
    "id": "limit:remote-agents-only",
    "type": "limit",
    "title": "Limit: a machine set up for remote agents only",
-   "summary": "With the profile `remote` nothing runs on the machine: no Smart Graph, no local agents, no models. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line and the internet tools; the `graph_*` and `developer_*` tools are absent, and the Builder panel and the *Nuclear agent* chat of the editor do not work.",
+   "summary": "With the profile `remote` nothing runs on the machine: no Smart Graph, no local agents, no models. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line and the internet tools; the `graph_*` and `developer_*` tools are absent, and the Builder panel and Nuclear Atlas of the editor do not work.",
    "body": [
     "- The remote agent writes every line the generators do not write, and all of it is paid tokens. With a local profile the local agents write it and the remote agent only leads, validates and corrects.",
     "- No strategy for a request (`graph_strategy`) and no search of the knowledge base: the agent reads `nuclear_brief` and `nuclear_help` instead.",

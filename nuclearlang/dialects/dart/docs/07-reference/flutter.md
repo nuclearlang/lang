@@ -2840,13 +2840,13 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
   project's pane shows its files (with the Chernobyl icon theme, honouring `files.exclude`); **the actions of its
   platform are the toolbar of the editor title bar** (the row of the editor tabs, since 0.34.0): mobile Run
   `Ctrl+Alt+R`, Debug `Ctrl+Alt+G`, Hot reload `Ctrl+Alt+L`, Device, Build `Ctrl+Alt+B`, Test `Ctrl+Alt+T`, Check
-  `Ctrl+Alt+C`; backend Serve, Test, Build, Check, API (its routes in the Connector tool); web Serve, Build, Test, Check.
+  `Ctrl+Alt+C`; backend Serve, Test, Build, Check, API (its routes in the HTTP Connections tool); web Serve, Build, Test, Check.
   Clicking a tab shows the shortcut that does the same; the toolbar tooltips show theirs. Run, Debug and Device of a
   mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only
   there): the window reloads once and the action continues. A welcome page (`Ctrl+Alt+W`; at startup when no editor is open, setting
   `nuclear.workspace.welcome`) lists the projects, the tools and the keys. *Nuclear: Add the Active Project to the VS
   Code Workspace* adds a tab's folder to the explorer, search and git when wanted.
-- *Nuclear Connector* (0.29.0 or newer, ADR-synapsis-0006; a workspace of its own since 0.33.0, `Ctrl+Alt+H`): its pane is the
+- *HTTP Connections* (0.29.0 or newer, ADR-synapsis-0006; a workspace of its own since 0.33.0, `Ctrl+Alt+H`): its pane is the
   endpoints tree of every project of the window, by platform, project and component like the code (backend routes,
   mobile and web calls, read from `.nuclear/contract.json`), the contracts an app declares with *↓ Update*
   (`nuclear contracts update`), the OpenAPI documents of APIs that are not Nuclear (*+*), and the environment
@@ -2934,7 +2934,7 @@ With the Nuclear plugin (0.16.0 or newer) and the Flutter one, open the project 
   Error* window (on the right, only in Synapsis projects) explains it, with the stack in Nuclear and the Dart
   error. Both options in *Settings → Tools → NuclearLang*.
 
-- *Nuclear Connector* tool window (0.30.0 or newer, ADR-synapsis-0006; Alt+Shift+H, also under *Tools → NuclearLang*): the same
+- *HTTP Connections* tool window (0.30.0 or newer, ADR-synapsis-0006; Alt+Shift+H, also under *Tools → NuclearLang*): the same
   as the VS Code view: every project of the workspace by platform, its components and endpoints from the contract,
   the contracts a client declares with *Update*, OpenAPI documents, environments in `.nuclear/http.json` and a
   request panel with the response pretty-printed and *copy as curl*.

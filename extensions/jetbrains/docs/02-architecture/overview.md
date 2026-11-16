@@ -50,7 +50,7 @@ Mixed stepping is not done here.
 
 | Tool window | Class | Shortcut | Project |
 |---|---|---|---|
-| *Nuclear Connector* (left) | `../tools/nuclear-connector/jetbrains/src/…/NuclearConnector.java` | `Alt+Shift+H` | [`tools/nuclear-connector`](../../../tools/nuclear-connector/docs/02-architecture/overview.md) |
+| *HTTP Connections* (left) | `../tools/nuclear-http-connections/jetbrains/src/…/HttpConnections.java` | `Alt+Shift+H` | [`tools/nuclear-http-connections`](../../../tools/nuclear-http-connections/docs/02-architecture/overview.md) |
 | *Nuclear Builder* (bottom) | `../tools/nuclear-builder/jetbrains/src/…/NuclearBuilder.java` | `Alt+Shift+P` | [`tools/nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/overview.md) |
 | *Nuclear Error* (right) | `NuclearDebug.java` | — | above |
 
@@ -65,7 +65,7 @@ stays comment gray) and the `language-configuration.json` without `onEnterRules`
 - The Nuclear workspace: it has tool windows and actions with shortcuts instead (ADR-extensions-0002).
 - The project card in the status bar: only the tool windows read `.nuclear/project.json`, to find the projects.
 - The devices inside the editor: the Synapsis device is a Flutter custom device of VS Code only.
-- The chat, the settings page, the notifications and the Retry buttons of Nuclear Builder.
+- Nuclear Atlas, the settings page, the notifications and the Retry buttons of Nuclear Builder.
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../../docs/03-adr/old-numbers.md).
