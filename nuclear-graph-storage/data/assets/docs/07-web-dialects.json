@@ -61,19 +61,18 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.59f303",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.2cbefc",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 2. How each kind is written",
    "summary": "2. How each kind is written",
    "body": [
     "| Kind | TypeScript |",
     "|---|---|",
-    "| `stateless Name(params)` | `export function Name(props: NameProps): Element` → `createElement(NameView, props)`; `NameProps` interface (`key?` added); `NameView = statelessOf(class extends StatelessView<NameProps> { build() })`; params read as `this.props.x`; with `@screen(providers)` the function wraps the view in `Providers` |",
+    "| `stateless Name(params)` | `export function Name(props: NameProps): Element` → `createElement(NameView, props)`; `NameProps` interface (`key?` added); `NameView = statelessOf(class extends StatelessView<NameProps> { build() })`; params read as `this.props.x`, a param with a default as `(this.props.x ?? default)` (it is optional in `NameProps`); when no param is required, `props` defaults to `{}` so the view is called with none; with `@screen(providers)` the function wraps the view in `Providers` |",
     "| `stateful Name(params)` + fields | the same over `statefulOf(class extends StatefulView<NameProps>)`: fields are class fields (`x: T \\| null = null` when optional), `setState`, `initState`, `dispose` |",
     "| `appConfig`, `config` | `class extends AppConfig` / `ComponentConfig` with `override readonly connections`, `globals` |",
     "| model | `class` with `readonly` fields, `constructor(init: {...})`, `static fromJson(json: Json)`, `toJson()`, `copyWith()`; a generic model's `fromJson(json, fromJsonT)` |",
-    "| `event` | the same, `extends AppEvent` with `eventName` |",
-    "| `@repository(path)` | `class extends Repository` with `super({ path })`; a `Result` method `return this.result(() => this.send(HttpMethod.get, ':id', { params: { id }, decode: Decode.one(Model.fromJson) }), (e) => new Error({ message: e.message }))`; another return type `return this.send(...)`; `cache` → `new Cache({ ttl })` + `purgeX()` |"
+    "| `event` | the same, `extends AppEvent` with `eventName` |"
    ],
    "platforms": [
     "web"
@@ -89,17 +88,17 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.80ed01",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.4f2882",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 2. How each kind is written",
    "summary": "2. How each kind is written",
    "body": [
+    "| `@repository(path)` | `class extends Repository` with `super({ path })`; a `Result` method `return this.result(() => this.send(HttpMethod.get, ':id', { params: { id }, decode: Decode.one(Model.fromJson) }), (e) => new Error({ message: e.message }))`; another return type `return this.send(...)`; `cache` → `new Cache({ ttl })` + `purgeX()` |",
     "| `usecase`, `service`, `aggregate`, `component` | `class` with `constructor(private readonly dep: Dep)`; `@requires` → `Guards.check({...})` + `return Err(...)`; `@acl` → `await Guards.verify({...})` |",
     "| `appcomponent` | `class` whose methods `return await inject(UseCase).exec(...)` |",
     "| `guard` | `class extends Guard` with `canActivate()` |",
     "| state model `Name(a: A, flag: boolean)` | `enum NameStatus`, `class Name` (`status`, optional data fields, `static initial()`, `static a(a)`, `static flag()`), `interface NameBuilders`, `function NameBuilder(builders)` → a component that reads `useStateOf(Name)` and calls the builder of the current status |",
-    "| `@stateModel(S) statemanager` | `class extends StateManager<S>`; `@state(S.x)` methods become `async x(...): Promise<void>` that `emit` (`result.match(S.error, S.x)` for a `Result`) around a private `_x` with the body; `@before`/`@after` call the named method |",
-    "| `tests` | `describe(name, () => { beforeEach(SynapsisTest.start(...), SynapsisTest.mock(X)); ... })`; `@test` → `test(desc, async () => ...)`; `@states` → `statesOf(manager, ...)` + `expect(states).toEqual(...)`; `@widget` → `test` |"
+    "| `@stateModel(S) statemanager` | `class extends StateManager<S>`; `@state(S.x)` methods become `async x(...): Promise<void>` that `emit` (`result.match(S.error, S.x)` for a `Result`) around a private `_x` with the body; `@before`/`@after` call the named method |"
    ],
    "platforms": [
     "web"
@@ -115,11 +114,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.9dfcfd",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.fe624e",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 2. How each kind is written",
    "summary": "Calls: a view, a builder or a screen is called like a function (`CharacterTile({ character: c })`): the kinds declare `construct = \"{{callee}}({{args}})\"` and the named arguments stay one object (TypeScript has no named parameters; the emitter keeps them for a kind with `named_params`).",
    "body": [
+    "| `tests` | `describe(name, () => { beforeEach(SynapsisTest.start(...), SynapsisTest.mock(X)); ... })`; `@test` → `test(desc, async () => ...)`; `@states` → `statesOf(manager, ...)` + `expect(states).toEqual(...)`; `@widget` → `test` |",
+    "",
     "Calls: a view, a builder or a screen is **called like a function** (`CharacterTile({ character: c })`): the kinds",
     "declare `construct = \"{{callee}}({{args}})\"` and the named arguments stay one object (TypeScript has no named",
     "parameters; the emitter keeps them for a kind with `named_params`). `inject<X>()` is `inject(X)`;",

@@ -1,6 +1,6 @@
 {{#decor.screen.providers}}
 /** @screen: builds {{#decor.screen.providers.items}}{{.}}{{^@last}}, {{/@last}}{{/decor.screen.providers.items}} once for this screen and provides them to its views. */
-export function {{name}}(props: {{name}}Props{{^params_list}} = {}{{/params_list}}): Element {
+export function {{name}}(props: {{name}}Props{{^params_required}} = {}{{/params_required}}): Element {
   return createElement(Providers, {
     managers: [{{#decor.screen.providers.items}}{{.}}{{^@last}}, {{/@last}}{{/decor.screen.providers.items}}],
     children: createElement({{name}}View, props),
@@ -8,7 +8,7 @@ export function {{name}}(props: {{name}}Props{{^params_list}} = {}{{/params_list
 }
 {{/decor.screen.providers}}
 {{^decor.screen.providers}}
-export function {{name}}(props: {{name}}Props{{^params_list}} = {}{{/params_list}}): Element {
+export function {{name}}(props: {{name}}Props{{^params_required}} = {}{{/params_required}}): Element {
   return createElement({{name}}View, props);
 }
 {{/decor.screen.providers}}
@@ -22,16 +22,6 @@ export interface {{name}}Props {
 
 const {{name}}View = statelessOf(
   class extends StatelessView<{{name}}Props> {
-{{#params_list}}
-{{#default}}
-{{#@first}}
-    constructor(props: {{name}}Props) {
-      super({ ...props{{#params_list}}{{#default}}, {{name}}: props.{{name}} ?? {{default}}{{/default}}{{/params_list}} });
-    }
-
-{{/@first}}
-{{/default}}
-{{/params_list}}
     {{members}}
   },
 );

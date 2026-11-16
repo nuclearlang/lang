@@ -1,0 +1,47 @@
+// The index of the platforms: the three of Synapsis, each with its page and its onboarding.
+@screen(route = "/platforms", providers = [PlatformsManager, SiteManager, SearchManager])
+stateless PlatformsScreen
+  build() Element
+    Frame(
+      current = "/platforms",
+      content = PlatformsStateBuilder(
+        loading = () => p(className = "muted center", children = "Loading…"),
+        full = (items) => Reveal(child = PlatformsIndex(platforms = items)),
+        error = (e) => p(className = "error center", children = e.message),
+      ),
+    )
+
+stateless PlatformsIndex(platforms: Platform[])
+  build() Element
+    fragment(
+      section(
+        className = "page-hero",
+        children = [
+          h1(className = "rise", children = "Three platforms, one framework"),
+          p(className = "lead rise", children = "Synapsis writes a mobile app, a backend or a web app from Nuclear, with the same architecture on the three."),
+        ],
+      ),
+      div(
+        className = "cards three",
+        children = platforms.map((c) =>
+          article(
+            key = c.key,
+            className = "card platform-${c.key} reveal",
+            children = [
+              h3(children = a(href = "/platforms/${c.key}", children = c.name)),
+              small(children = c.dialects),
+              p(children = c.pitch),
+              div(className = "card-links", children = [a(href = "/platforms/${c.key}", children = "How it works"), a(href = "/start/${c.key}", children = "Start")]),
+            ],
+          )
+        ),
+      ),
+    )
+
+// The tabs of the three platforms, the current one marked; `base` is `/platforms` or `/start`.
+stateless PlatformTabs(platforms: Platform[], current: string, base: string)
+  build() Element
+    nav(
+      className = "pills platform-tabs",
+      children = platforms.map((p) => a(key = p.key, className = p.key == current ? "pill active" : "pill", href = "${base}/${p.key}", children = p.name)),
+    )

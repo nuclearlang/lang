@@ -2,7 +2,7 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [overview.md]
+related: [overview.md, ../03-adr/0002-onboardings-are-run-when-the-site-is-built.md]
 ---
 # The content: `tools/content.mjs` and `site.toml`
 
@@ -33,7 +33,9 @@ Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of 
 | `content/<key>.json` | one page: path, title, html, headings (levels 2 and 3), its source on GitHub; key = the path with `/` → `--` |
 | `content/site.json` | title, url, org, footer, the top links, the side menu |
 | `content/search.json` | title, headings and words of every page |
-| `content/home.json` | the home page: texts, actions, features, the sample and its outputs, platforms, install lines |
+| `content/home.json` | the home page: texts, actions, hooks, the samples and their outputs, the agent's fix, the backend onboarding's steps and numbers, one file per dialect, the platforms and tools in short, the library, install lines |
+| `content/tools.json` | every tool: key, name, group, tagline, pitch, highlights, how it starts (highlighted), its project on GitHub, its pages |
+| `content/platforms.json` | every platform: its levels (boxes and flows), its pages, and its onboarding run again: the app, the steps with their real output, the shown file and what each dialect writes from it, the numbers |
 | `static/<path>.html` | the plain page, with a canonical link to its route |
 | `llms.txt`, `llms-full.txt` | the briefs (`07-reference/brief/`) first, then the side menu's sections; the full file carries the briefs and `nuclearlang/docs/08-guides/reference.md` |
 | `sitemap.xml`, `robots.txt` | every route |
@@ -42,11 +44,31 @@ Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of 
 ## `site.toml`
 
 - `[site]`: title, lead, tagline, `url` (`SITE_URL` overrides it), `org`, `branch`, footer.
-- `[[top]]`: the links of the top bar.
+- `[[top]]`: the links of the top bar (a path in the tree is a page; another, a screen: `/tools`, `/platforms/mobile`).
 - `[[sidebar]]`: the side menu; each section lists pages by their path without `.md`. A `*` matches any part of a
   name; a pattern expands to the matching pages in order, without `README`s, each page once per section.
-- `[[home.actions]]`, `[[home.features]]`, `[home.platforms]` with its cards, `[home.install]` (`{{site}}` is
-  replaced by the url).
-- `[home.sample]`: the Nuclear `code` and the `targets` (language dialects). Each output is
-  `nuclear build app.nuc --dialect <target>` run by the installed compiler (`NUCLEAR` overrides it), highlighted as
-  that language.
+- The home page: `[[home.actions]]`, `[[home.hooks]]`, `[home.samples]` (`targets` and its `items`), `[home.check]`
+  (a mistake and its `dialect`), `[home.generator]` and `[home.dialects]` (the platform whose onboarding they show),
+  `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`{{site}}` is replaced by the url).
+- `[[tools]]`: `key` (its address `/tools/<key>`), `name`, `group` (Build, Edit, Run or AI), `tagline`, `pitch`,
+  `highlights`, `demo` (commands), `project` (its folder), `pages` (its documents: each must be a page, or the
+  build fails).
+- `[[platforms]]`: `key`, `name`, `dialects`, `tagline`, `pitch`, `pages`, and `[[platforms.levels]]` (`level`,
+  `title`, `text`, `boxes` with a `kind` of person, system, container, component or external, `flows` written
+  `A → B: what`).
+- `[[onboarding]]`: `platform`, `example` (its folder in the tree), `show` (the file of the code level), `steps`
+  (`title`, `text`, and `run` to replay it or `command` to only show it).
+
+## What runs when the site is built
+
+With the installed `nuclear` (`NUCLEAR` overrides it), in a scratch folder:
+
+- each sample: `nuclear build sample.nuc --dialect <target>` for each target;
+- the mistake: `nuclear check mistake.nuc --dialect <d> --json`, then `nuclear fix` (the build fails if the mistake
+  gives no error);
+- each onboarding: its `run` steps in order (`nuclear new <name>` moves into the new folder), then the `.nuc` files
+  they made are compared with the example of the tree (the build fails on a difference; `UPDATE_EXAMPLES=1` writes
+  the example from them); then the project is copied once per dialect of the platform, `config.nuc` set to that
+  dialect, built with `nuclear build .`, the file made from `show` found by its name, and the lines of `.nuc` and of
+  the generated code counted (blank lines left out)
+  ([ADR-website-0002](../03-adr/0002-onboardings-are-run-when-the-site-is-built.md)).

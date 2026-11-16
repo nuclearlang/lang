@@ -1,0 +1,7 @@
+// What a todo is: a row of the table todos.
+@entity("todos")
+Todo()
+  @primary(generated = true)
+  id: int
+  title: string
+  completed: boolean

@@ -1,0 +1,89 @@
+// The onboarding of a platform (/start/web): the commands that make its example app, one step at a time, each with
+// the output it gave when this site was built (the site runs them again on every build).
+@screen(route = "/start/:name", providers = [PlatformsManager, SiteManager, SearchManager])
+stateless StartScreen(name: string)
+  build() Element
+    Frame(
+      current = "/platforms",
+      content = PlatformsStateBuilder(
+        loading = () => p(className = "muted center", children = "Loading…"),
+        full = (items) => Reveal(key = name, child = Onboarding(key = name, platforms = items, name = name)),
+        error = (e) => p(className = "error center", children = e.message),
+      ),
+    )
+
+stateful Onboarding(platforms: Platform[], name: string)
+  step: int = 0
+
+  build() Element
+    platform = platforms.find((p) => p.key == name)
+    if platform == null
+      section(className = "missing", children = [h1(children = "Not found"), p(children = "There is no platform named ${name}."), a(href = "/platforms", children = "The platforms")])
+    else
+      fragment(
+        PlatformTabs(platforms = platforms, current = name, base = "/start"),
+        section(
+          className = "page-hero",
+          children = [
+            small(className = "eyebrow rise", children = "Onboarding · ${platform.name}"),
+            h1(className = "rise", children = "Build ${platform.app}"),
+            p(className = "lead rise", children = "${platform.steps.length} steps. Nothing written by hand: every file comes from the tools."),
+          ],
+        ),
+        ol(
+          className = "stepper rise",
+          children = platform.steps.map((s, i) =>
+            li(key = s.title, className = i == step ? "current" : i < step ? "done" : "", children = button(onClick = () => go(i), children = [span(className = "number", children = "${i + 1}"), span(children = s.title)]))
+          ),
+        ),
+        StepCard(key = "${step}", step = platform.steps[step]),
+        div(
+          className = "actions",
+          children = [
+            if step > 0 button(className = "button", onClick = () => go(step - 1), children = "Back"),
+            if step < platform.steps.length - 1 button(className = "button primary", onClick = () => go(step + 1), children = "Next"),
+          ],
+        ),
+        step == platform.steps.length - 1 ? Done(platform = platform) : span(),
+      )
+
+  go(index: int) void
+    setState(() =>
+      step = index
+    )
+
+stateless StepCard(step: PlatformSteps)
+  build() Element
+    section(
+      className = "step-card",
+      children = [
+        h2(children = step.title),
+        p(children = step.text),
+        Terminal(key = step.command, steps = [step], title = step.output == "" ? "run it on your machine" : "its real output", controls = false),
+      ],
+    )
+
+// The end of the onboarding: the app is made; its code, the example in the tree and where to read on.
+stateless Done(platform: Platform)
+  build() Element
+    section(
+      className = "block",
+      children = [
+        h2(children = "That is the whole app"),
+        p(className = "block-text", children = "${platform.stats.nucFiles} .nuc files and ${platform.stats.nucLines} lines of Nuclear, all written by the commands above; the dialect writes ${platform.stats.outLines} lines from them."),
+        CodeTabs(
+          titles = platform.code.outputs.map((o) => o.path),
+          panes = platform.code.outputs.map((o) => o.html),
+          pinned = platform.code.html,
+          pinnedTitle = platform.code.path,
+        ),
+        div(
+          className = "actions",
+          children = [
+            a(className = "button primary", href = platform.example, children = "The example in the tree"),
+            a(className = "button", href = "/platforms/${platform.key}", children = "How the platform works"),
+            ...platform.pages.slice(0, 1).map((d) => a(key = d.path, className = "button", href = d.path, children = "The guide")),
+          ],
+        ),
+      ],
+    )

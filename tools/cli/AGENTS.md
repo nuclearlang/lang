@@ -79,6 +79,8 @@ nuclear new shop_app && cd shop_app && nuclear code
 | [docs/02-architecture/landing.md](docs/02-architecture/landing.md) | You change the landing page, the animation, the header, the help or the colors of the output |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, why there is one command, or why agents are supported the way they are |
 | [docs/04-specs/README.md](docs/04-specs/README.md) | You continue the agent support plan |
+| [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: what the command is, a quick start, the commands by job, how agents use it |
+| [docs/08-guides/commands.md](docs/08-guides/commands.md) | You need every command and option as `nuclear help` prints them (regenerate it when a `USAGE` text changes) |
 
 Elsewhere:
 

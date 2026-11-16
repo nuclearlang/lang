@@ -1,0 +1,15 @@
+// The project's pubspec: synapsis writes build/app/pubspec.yaml from it.
+// Synapsis adds by itself (not written here): synapsis, flutter_bloc, fpdart, go_router,
+// json_annotation; for code generation and tests: build_runner, json_serializable, mocktail, bloc_test,
+// integration_test (and flutter_native_splash with @splash). Full list: build/app/pubspec.yaml.
+// Only third-party packages the framework does not use (the ones above cannot be added).
+// `nuclear flutter add <package>` adds a package here and generates its type definitions.
+// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).
+synapsis(platform = "mobile", dialect = "flutter")
+
+app(
+  name = "todos_app",
+  description = "A Synapsis app.",
+  version = "1.0.0+1",
+  usesMaterialDesign = true,
+)

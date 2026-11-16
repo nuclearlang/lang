@@ -1,0 +1,15 @@
+// The tests of todos: the database is in memory and empty in each test.
+tests TodosTest
+  @test("adds a todo and finds it")
+  addsAndFinds() void
+    app = inject<TodosAppComponent>()
+    made = ~app.createTodo(NewTodo(title = "title", completed = true))
+    expect(made.isOk)
+    found = ~app.getTodo(made.value.id)
+    expect(found.isOk)
+
+  @test("a missing todo is not found")
+  missing() void
+    app = inject<TodosAppComponent>()
+    found = ~app.getTodo(999)
+    expect(found.error.status == 404)

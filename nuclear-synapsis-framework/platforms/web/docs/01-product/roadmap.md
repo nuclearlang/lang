@@ -18,8 +18,9 @@ in how the `react` dialect writes its target is in the TypeScript dialect's proj
 
 ## Untested
 
-- The generated app in a real browser (`npm run dev` of the `characters` example: routing, the detail page, the
-  state builder re-rendering). Only the jsdom tests, `tsc` and `vite build` ran.
+- The `characters` example in a browser (its detail page, the guard). Two web apps did run in a real browser
+  (Chromium, headless) on 2026-11-16: the onboarding's `todos_web` (its screen loads and lists the todos of the
+  API) and the website (every screen, routes with parameters, a library of npm, the state builders re-rendering).
 
 ## To decide with the user
 
@@ -37,6 +38,11 @@ From the analysis of ADR-web-0001:
 - **Not in the first version** (the same words as mobile): `form` / `formmanager` (react-hook-form + zod
   underneath), `converter`, translations, the local database (`@primary`, `saveLocal`; IndexedDB), plugins and AI
   kinds, a generated tests file, `@splash` / offline.
+- **A new project has no screen at `/`**: `nuclear new <name> -p web` writes the router and no screen, so the app
+  answers "not found" at its root until one is made (the onboarding opens `/todos`).
+- **No browser globals in the type definitions**: `window`, `document`, `navigator` and `IntersectionObserver` are
+  not in the react dialect's definitions, so Nuclear cannot read the url, the storage or the DOM (the website moves
+  its blocks through motion's selectors instead).
 - **Found building the website:**
   - navigation by address inside the app: a link of rendered content reloads the page (`goTo` is by screen);
   - the type of a state builder's callback parameter is unknown to the emitter, so a library member such as

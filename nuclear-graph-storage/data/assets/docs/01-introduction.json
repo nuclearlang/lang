@@ -29,11 +29,19 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.1791b0",
+   "id": "doc:AGENTS.md#hard-rules.7ab6d5",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
    "summary": "12. Node.js/Express is postponed by the user: do not touch it until asked.",
-   "body": "12. Node.js/Express is postponed by the user: do not touch it until asked.",
+   "body": [
+    "12. Node.js/Express is postponed by the user: do not touch it until asked.",
+    "13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).",
+    "    A product is any software made from Nuclear (an app, a backend, the website, an example). Its code is Nuclear,",
+    "    its target code comes from the transpiler, its standard parts from `nuclear new`/`gen`/`make` and the MCP",
+    "    server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a",
+    "    native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when",
+    "    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it."
+   ],
    "sources": [
     "AGENTS.md"
    ],
@@ -1223,7 +1231,8 @@
     "6. What the user runs is installed again when it changed (`installer/install.sh`; an extension: its version raised",
     "   and installed).",
     "",
-    "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn."
+    "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn (a file git",
+    "ignores, such as a build's output, is not code for them)."
    ],
    "sources": [
     "docs/05-standards/coding.md"

@@ -1,0 +1,5 @@
+// The tools of the API (content/tools.json): each method is an http call.
+@repository(path = "content/tools.json")
+repository ToolRepository
+  @get
+  all() Result<ToolError, Tool[]>

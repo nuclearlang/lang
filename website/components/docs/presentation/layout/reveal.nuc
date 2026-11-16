@@ -1,0 +1,18 @@
+// The motion of a page, with the npm package motion (`nuclear add motion`): the blocks of class "rise" come up one
+// after the other when the page opens, and the blocks of class "reveal" fade in when they scroll into view. It wraps
+// the content once it is loaded, so the blocks are there when it starts. Without animations (a browser that cannot,
+// the tests) every block simply stays visible.
+stateful Reveal(child: Element)
+  initState() void
+    try
+      animate(".rise", { "opacity": [0, 1], "transform": ["translateY(18px)", "none"] }, { "duration": 0.7, "delay": stagger(0.09) })
+      inView(".reveal", (element) => fadeIn(element), { "amount": 0.12 })
+    catch e
+      Log.w("no animations: ${e}")
+      animate(".rise, .reveal", { "opacity": 1 }, { "duration": 0 })
+
+  fadeIn(element: any) void
+    animate(element, { "opacity": [0, 1], "transform": ["translateY(28px)", "none"] }, { "duration": 0.65 })
+
+  build() Element
+    div(className = "motion", children = child)

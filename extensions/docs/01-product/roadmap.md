@@ -18,6 +18,16 @@ in [the language project](../../../nuclearlang/docs/01-product/roadmap.md).
 
 ## Pending
 
+- **Docs that do not match the code** (found writing the user guides, 2026-11-16): the server has no document
+  formatting, only on-type formatting (Enter in a comment), so a whole file is formatted with `nuclear fmt`;
+  `vscode/docs/02-architecture/client.md` places ▷ Run / Debug in `editor/title/run`, where `package.json` has
+  nothing (the buttons are `nuclear.action.*` in `editor/title`); the flutter reference §11.1 lists old action sets
+  for backend and web and says a device panel stops the app after 5 minutes (the code parks it and ends it after 30
+  idle, `IDLE_LIMIT`); the Connector suggests `./openapi.yaml` but reads JSON only; `vscode/README.md` leaves out
+  `nuclear.trace.server`, `nuclear.debug.followInNuclear` and `nuclear.debug.explainErrors`; the Device and API
+  actions have no key.
+- **Installers**: the public installers install only the `.vsix`; only `installer/install.sh` from the tree installs
+  Zed, and the release ships no JetBrains zip.
 - Split the base extension from Synapsis for Flutter (run, debug, device) in VS Code and JetBrains; the framework
   extensions namespaced and activated by the project marker (ADR-extensions-0001, ADR-platform-0002).
 - Binaries for other platforms (macOS, Windows) in the packages.

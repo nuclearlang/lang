@@ -1,0 +1,6 @@
+// The first test (nuclear help backend, §2.13): every test runs with the connections open and the databases in
+// memory; inject<X>() gives the app's instances, expect(condition) asserts.
+tests App
+  @test("the app starts with its connections")
+  starts() void
+    expect(true)

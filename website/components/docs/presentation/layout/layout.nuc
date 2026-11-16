@@ -4,20 +4,21 @@ stateless Layout(current: string, content: Element)
     div(
       className = "site",
       children = [
-        TopBar(),
+        TopBar(current = current),
         div(className = "frame", children = [Sidebar(current = current), main(className = "content", children = content)]),
         Footer(),
       ],
     )
 
-stateless TopBar
+// The top bar: the brand, the top links (the one of the current area marked), the search and GitHub.
+stateless TopBar(current: string = "")
   build() Element
     header(
       className = "topbar",
       children = SiteStateBuilder(
         full = (site) => fragment(
           a(className = "brand", href = "/", children = [span(className = "logo", children = "☢"), span(children = site.title)]),
-          nav(className = "links", children = site.top.map((l) => a(key = l.path, href = l.path, children = l.title))),
+          nav(className = "links", children = site.top.map((l) => a(key = l.path, className = area(l.path) == area(current) ? "active" : "", href = l.path, children = l.title))),
           SearchBox(),
           a(className = "github", href = site.org, children = "GitHub"),
         ),
@@ -60,3 +61,8 @@ stateless Footer
         orElse = () => span(),
       ),
     )
+
+// The first part of an address: `/tools/mcp` → `tools`, `/` → ``.
+area(path: string) string
+  parts = path.split("/")
+  parts.length > 1 ? parts[1] : ""

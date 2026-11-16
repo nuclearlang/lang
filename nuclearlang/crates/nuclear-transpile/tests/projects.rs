@@ -40,6 +40,10 @@ fn projects_match_expected_output() {
         "examples-fastapi/rick_api",
         "examples-backend/tasks_api",
         "examples-web/characters",
+        // the apps of the onboardings: made only by the tools (the website runs their commands again)
+        "onboarding/todos_app",
+        "onboarding/todos_api",
+        "onboarding/todos_web",
     ] {
         roots.push(tree(&format!("examples/{example}")));
     }

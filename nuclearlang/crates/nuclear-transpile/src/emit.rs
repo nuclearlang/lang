@@ -134,6 +134,9 @@ struct ModCtx {
     name: String,
     members: HashSet<String>,
     ctor_params: HashSet<String>,
+    /// The default value of each constructor parameter that has one, written in the target (`param_access` gets it
+    /// as `default`, so a kind whose parameters are read from an object can fill the missing ones).
+    ctor_defaults: HashMap<String, String>,
     param_access: Option<Template>,
     /// It extends something declared outside this file, whose members are unknown.
     open: bool,
@@ -741,7 +744,7 @@ impl<'a> Emitter<'a> {
             && m.ctor_params.contains(name)
             && let Some(t) = &m.param_access
         {
-            return t.render(&Ctx::new().set("name", name).into_value());
+            return t.render(&Ctx::new().set("name", name).opt("default", m.ctor_defaults.get(name).cloned()).into_value());
         }
         if self.d.options.implicit_self && !explicit {
             return name.to_string();
@@ -2443,10 +2446,18 @@ impl<'a> Emitter<'a> {
         }
         let implicit_members = self.inherited_members(implicit);
         member_names.extend(implicit_members.iter().cloned());
+        let mut ctor_defaults = HashMap::new();
+        for p in &ctor_params {
+            if let Some(e) = p.default.as_ref().filter(|e| !self.omitted_default(e)) {
+                let written = self.expr(e).0;
+                ctor_defaults.insert(p.name.name.clone(), written);
+            }
+        }
         let prev_module = self.module.replace(ModCtx {
             name: d.name.name.clone(),
             members: member_names,
             ctor_params: ctor_params.iter().map(|p| p.name.name.clone()).collect(),
+            ctor_defaults,
             param_access: kind.as_ref().and_then(|(_, k)| k.param_access.clone()),
             open,
         });
@@ -2741,6 +2752,8 @@ impl<'a> Emitter<'a> {
                     .value("methods", Value::List(methods_list))
                     .set("params", params_text)
                     .value("params_list", Value::List(params_list))
+                    // some constructor parameter has neither `?` nor a default: the declaration cannot be built without it
+                    .flag("params_required", ctor_params.iter().any(|p| !p.optional && p.default.is_none()))
                     .opt("ctor", ctor_text)
                     .set("extends", extends)
                     .set("implements", implements)

@@ -1,0 +1,39 @@
+// The index of the tools: every tool of the tree by what it is for (build, edit, run, AI), each with its page.
+@screen(route = "/tools", providers = [ToolsManager, SiteManager, SearchManager])
+stateless ToolsScreen
+  build() Element
+    Frame(
+      current = "/tools",
+      content = ToolsStateBuilder(
+        loading = () => p(className = "muted center", children = "Loading…"),
+        full = (items) => Reveal(child = ToolsIndex(tools = items)),
+        error = (e) => p(className = "error center", children = e.message),
+      ),
+    )
+
+stateless ToolsIndex(tools: Tool[])
+  build() Element
+    fragment(
+      section(
+        className = "page-hero",
+        children = [
+          h1(className = "rise", children = "The tools"),
+          p(className = "lead rise", children = "Everything around the language: what builds, edits, runs and helps an AI agent write a Nuclear project. Each one has its page and its documents."),
+        ],
+      ),
+      ...["Build", "Edit", "Run", "AI"].map((g) =>
+        section(
+          key = g,
+          className = "block reveal",
+          children = [
+            h2(children = g),
+            div(
+              className = "cards tools",
+              children = tools.filter((t) => t.group == g).map((t) =>
+                a(key = t.key, className = "card tool", href = "/tools/${t.key}", children = [h3(children = t.name), p(className = "tagline", children = t.tagline), p(children = t.pitch)])
+              ),
+            ),
+          ],
+        )
+      ),
+    )

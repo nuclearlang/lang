@@ -45,4 +45,5 @@ share: [`../AGENTS.md`](../AGENTS.md).
 | What each file of the extension does, and what Zed does not allow | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
 | The pending work of the extension | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | How it finds the server | [`../docs/02-architecture/language-server.md`](../docs/02-architecture/language-server.md) |
+| What a user reads: install, turning the features on, the server's settings, the tasks | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | What a user reads: settings, tasks | `README.md`; [the flutter reference §11.3](../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |

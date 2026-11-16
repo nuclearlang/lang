@@ -40,6 +40,7 @@ Run in `extensions/vscode/`: `npm run compile`. In `extensions/jetbrains/`:
 | You need… | Read |
 |---|---|
 | The model, the tree, the environments, the panel, the JetBrains window | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
+| What a user reads: the tree, sending a request, the environments | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | The pending work: the protocols, what was never tried | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | The colors of the tree | [the theme](../../vscode/docs/02-architecture/theme.md) |
 | How the tree is drawn in the workspace's pane | [the workspace](../../vscode/docs/02-architecture/workspace.md) |

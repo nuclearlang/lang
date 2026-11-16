@@ -146,11 +146,12 @@
    "id": "limit:backend-not-yet",
    "type": "limit",
    "title": "Limit: what the backend platform does not have yet",
-   "summary": "Not in the backend platform yet: access control and guards on routes, sessions, background jobs, file uploads, a Dockerfile, observability, and a command-line or MCP-server kind. Authentication is written by hand in a use case today.",
+   "summary": "Not in the backend platform yet: access control and guards on routes, sessions, background jobs, file uploads, a Dockerfile, observability, a command-line or MCP-server kind, and CORS for a browser client on another origin. Authentication is written by hand in a use case today.",
    "body": [
     "- No `@acl` or guards on a controller's routes, and no sessions (the mobile and web platforms have them).",
     "- No kind for background jobs, file uploads, a command-line program or an MCP server.",
     "- No generated Dockerfile; no observability (metrics, traces).",
+    "- No CORS: a web app on another origin cannot call the API (the browser blocks it).",
     "- `nuclear watch` does not exist for backend projects.",
     "- A `@transactional` use case uses the default database only.",
     "- The join table of a `@manyToMany` is always named `<owner table>_<field>`.",
@@ -216,13 +217,15 @@
    "id": "limit:web-first-version",
    "type": "limit",
    "title": "Limit: the web platform is in its first version",
-   "summary": "Not in the web platform yet: forms and form managers, converters, translations, the local database, plugins and AI kinds, a generated tests file, navigation by address inside rendered content, and attributes whose name is not an identifier (`aria-label`).",
+   "summary": "Not in the web platform yet: forms and form managers, converters, translations, the local database, plugins and AI kinds, a generated tests file, navigation by address inside rendered content, attributes whose name is not an identifier (`aria-label`), and the browser's globals (`window`, `document`) in the type definitions.",
    "body": [
     "- No `form` / `formmanager`, `converter`, translations (`.tr()`), `@primary` / `saveLocal`, plugins.",
     "- `@acl(guards)` only in a use case that awaits something; a view's arguments must be named.",
     "- The type of a state builder's callback parameter is not known to the compiler: write `list.length == 0` instead of `list.isEmpty` there.",
     "- A link inside rendered content reloads the page: navigation is by screen (`goTo`).",
-    "- A statemanager has no generics (`N0218`)."
+    "- A statemanager has no generics (`N0218`).",
+    "- A new project has no screen at `/`: the first screen is made with `nuclear gen resource ... --screen` or `nuclear make`.",
+    "- `window`, `document`, `navigator` and `IntersectionObserver` are not in the type definitions: an npm library that takes selectors (`nuclear add`) reaches the page instead."
    ],
    "keys": [
     "web limits",

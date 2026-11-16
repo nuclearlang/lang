@@ -1,0 +1,13 @@
+// The state of the platforms screen: it loads the first page when it is created.
+@stateModel(PlatformsState)
+statemanager PlatformsManager
+  (docs: DocsComponent)
+    load()
+
+  @state(PlatformsState.loading)
+  loading()
+
+  @before(loading)
+  @state(PlatformsState.full)
+  load() Result<PlatformError, Platform[]>
+    ~docs.listPlatforms()

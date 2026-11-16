@@ -1,0 +1,5 @@
+// The frame of a page without the side menu (the home page, the tools, the platforms): the top bar, the content and
+// the footer. `current` marks the top link of the page.
+stateless Frame(current: string, content: Element)
+  build() Element
+    div(className = "site wide", children = [TopBar(current = current), main(className = "page", children = content), Footer()])

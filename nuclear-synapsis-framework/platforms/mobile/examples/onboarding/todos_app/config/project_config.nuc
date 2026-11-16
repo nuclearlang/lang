@@ -1,0 +1,16 @@
+// Global configuration: the connections and the services of the whole app.
+appConfig ProjectConfig
+  connections: Connection[] = [
+    Http(connectionName = "todos", baseUrl = "https://jsonplaceholder.typicode.com"),
+    Http(
+      baseUrl = "https://api.example.com/",
+      connectTimeout = Duration(seconds = 10),
+      receiveTimeout = Duration(seconds = 10),
+      interceptors = [SessionInterceptor(), HttpLogInterceptor()],
+    ),
+  ]
+  globals: Global[] = [
+    Events(),
+    SessionManager(timeout = Duration(minutes = 30)),
+    NetworkManager(),
+  ]

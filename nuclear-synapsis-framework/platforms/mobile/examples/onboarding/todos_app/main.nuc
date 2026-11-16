@@ -1,0 +1,11 @@
+main() void
+  ~startSynapsis()
+  runApp(App())
+
+stateless App
+  build(context: BuildContext) Widget
+    MaterialApp.router(
+      title = "TodosApp",
+      routerConfig = appRouter,
+      builder = (context, child) => NetworkWrapper(child = child!),
+    )

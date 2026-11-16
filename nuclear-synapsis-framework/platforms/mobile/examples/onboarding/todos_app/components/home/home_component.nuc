@@ -1,0 +1,3 @@
+// Facade of the home component: the only part other components can use.
+appcomponent HomeComponent
+  hello() = HelloHomeUseCase.exec

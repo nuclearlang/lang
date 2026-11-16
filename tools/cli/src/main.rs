@@ -361,6 +361,11 @@ fn main() -> ExitCode {
                     print!("{text}");
                     ExitCode::SUCCESS
                 }
+                // a command of the framework (`nuclear help gen`): the framework's usage, where it is
+                None if framework::is_command(topic) => {
+                    print!("{}", framework::usage());
+                    ExitCode::SUCCESS
+                }
                 None => {
                     eprintln!("unknown topic or command '{topic}'\n");
                     eprint!("{}", help(&loader(&args)));
@@ -498,7 +503,9 @@ fn dialect_check(args: &Args, name: &str) -> ExitCode {
 
 fn load_dialect(args: &Args, name: &str) -> Option<Dialect> {
     let (d, report) = loader(args).load(name);
-    if print_report(&report, args.json) {
+    // with --json the command prints one document: the dialect's report only when it stops the command
+    let stops = report.diags.iter().any(|(_, d)| d.is_error());
+    if (!args.json || stops) && print_report(&report, args.json) {
         return None;
     }
     d

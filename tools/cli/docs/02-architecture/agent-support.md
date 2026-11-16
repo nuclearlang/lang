@@ -19,9 +19,15 @@ Why it is built this way: [ADR-cli-0002](../03-adr/0002-agents-learn-nuclear-fro
 
 The skill does not copy the brief: it asks the installed binary for it, so it is never out of date.
 
+The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,
+the MCP server, `add`), never by writing target code or translating native code by hand
+([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).
+
 ## `nuclear agent init [--dialect <d>]` (`agent::init`)
 
-Run in a project folder; `nuclear agent init` and every `nuclear new` call it. It writes four things and keeps
+Run in a project folder; `nuclear agent init` and every `nuclear new` call it. Inside a project of the framework
+(`framework::agent_init`) it runs in the same process: starting `nuclear agent init` again there would be claimed by
+the framework again, a loop. It writes four things and keeps
 everything else of the project's files:
 
 1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.

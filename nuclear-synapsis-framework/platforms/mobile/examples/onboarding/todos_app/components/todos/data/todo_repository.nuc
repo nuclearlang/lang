@@ -1,0 +1,8 @@
+// The todos of the API (todos): each method is an http call.
+@repository(path = "todos", connection = "todos")
+repository TodoRepository
+  @get
+  all() Result<TodoError, Todo[]>
+
+  @get(path = ":id")
+  one(id: int) Result<TodoError, Todo>

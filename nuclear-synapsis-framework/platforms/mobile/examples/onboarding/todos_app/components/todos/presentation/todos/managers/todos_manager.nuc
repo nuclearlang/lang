@@ -1,0 +1,13 @@
+// The state of the todos screen: it loads the first page when it is created.
+@stateModel(TodosState)
+statemanager TodosManager
+  (todos: TodosComponent)
+    load()
+
+  @state(TodosState.loading)
+  loading()
+
+  @before(loading)
+  @state(TodosState.full)
+  load() Result<TodoError, Todo[]>
+    ~todos.listTodos()

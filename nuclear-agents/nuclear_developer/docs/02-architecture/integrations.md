@@ -60,5 +60,5 @@ retried, and every run first checks that the Developer, the graph, Ollama and th
 |---|---|---|
 | The [Smart Graph](../../../../nuclear-graph-storage/AGENTS.md) (`127.0.0.1:7878`) | every recall, the strategy of a request, the exact facts, the prompt files; the client `nuclear-developer` with the scopes `read,write` | `NUCLEAR_GRAPH_URL`, `nuclear-graph connect nuclear-developer --scopes read,write` |
 | Ollama | the two models | `OLLAMA_URL`, `CODER_MODEL`, `ASSISTANT_MODEL`, `CONTEXT_TOKENS` |
-| The `nuclear` and `nuclear` commands | `nuclear check --platform` of every answer, `nuclear help layout`, `nuclear gen ... --dry-run`, `nuclear explain`, `nuclear doctor` | on the `PATH` |
+| The `nuclear` command | `nuclear check --platform` of every answer, `nuclear help layout`, `nuclear gen ... --dry-run`, `nuclear explain`, `nuclear doctor` | on the `PATH` |
 | The graph's package (`nuclear_graph.client`, `.toolchain`, `.workspace`) | the client, the compiler for an agent, a project's files | a dependency of `config.nuc`, typed by `defs/` |

@@ -1,0 +1,14 @@
+// The todos, as a list.
+@screen(route = "/todos", providers = [TodosManager])
+stateless TodosScreen
+  build() Element
+    main(
+      children = [
+        h1(children = "Todos"),
+        TodosStateBuilder(
+          loading = () => p(children = "Loading..."),
+          full = (items) => ul(children = items.map((item) => li(key = item.id, children = item.title))),
+          error = (e) => p(className = "error", children = e.message),
+        ),
+      ],
+    )

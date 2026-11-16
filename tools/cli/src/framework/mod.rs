@@ -25,7 +25,7 @@ use nuclear_transpile::project::{self, Manifest};
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
-const USAGE: &str = "usage: synapsis <command> [arguments]          (names in any case: user_profile, UserProfile)
+const USAGE: &str = "usage: nuclear <command> [arguments]          (names in any case: user_profile, UserProfile)
 
 project
   new <name> [-p mobile] [-d flutter]   (n)  new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react):
@@ -158,6 +158,11 @@ pub fn claims(args: &[String]) -> bool {
         "agent" => rest.first() == Some(&"init") && with_root(None, |_| Ok(())).is_ok(),
         _ => false,
     }
+}
+
+/// Whether `word` is a command of the framework (`nuclear help gen` prints the framework's usage).
+pub fn is_command(word: &str) -> bool {
+    OWN.contains(&word)
 }
 
 /// The usage of the framework's commands, for `nuclear help`.
@@ -856,7 +861,7 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
         eprintln!("\n{} web project {} created. Next:", landing::ok("✓"), landing::name(&name));
         eprintln!("  {}", landing::cmd(&format!("cd {name} && nuclear build")));
         eprintln!("  {}   {}", landing::cmd("nuclear install && nuclear run"), landing::dim("(npm install, then vite dev)"));
-        eprintln!("  {}", landing::dim("add screens with: nuclear make screen <component> <screen> --route /path"));
+        eprintln!("  {}", landing::dim("add a resource and its screen with: nuclear gen resource <component> <Name> --screen <screen>"));
         return Ok(());
     }
     if platform != MOBILE {
@@ -891,14 +896,13 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
     Ok(())
 }
 
-/// `nuclear agent init`: the files AI agents read (AGENTS.md...), written by `nuclear agent init`.
+/// `nuclear agent init` in a project: the files AI agents read (AGENTS.md...), written by the compiler's
+/// `agent::init` in this same process (running `nuclear agent init` here would be claimed by the framework again).
 fn agent_init(root: &Path, dialect: &str) -> Result<(), String> {
-    let status = Command::new("nuclear")
-        .args(["agent", "init", "--dialect", dialect])
-        .current_dir(root)
-        .status()
-        .map_err(|e| format!("cannot run `nuclear` ({e}): run installer/install.sh"))?;
-    if status.success() { Ok(()) } else { Err("nuclear agent init failed".into()) }
+    for done in crate::agent::init(root, Some(dialect), None)? {
+        println!("✓ {done}");
+    }
+    Ok(())
 }
 
 /// `flutter create` in the output folder, without the counter example, plus the packages Synapsis uses.

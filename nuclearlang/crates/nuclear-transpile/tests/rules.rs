@@ -958,3 +958,18 @@ fn a_local_does_not_hide_a_called_method() {
         assert_eq!(got.iter().filter(|c| **c == "N0102").count(), 1, "{d}: {got:?}");
     }
 }
+
+/// A parameter with a default, in a kind whose parameters are read from an object (the views of react): the template
+/// that reads a parameter gets its default, and a declaration with no required parameter can be built without any.
+#[test]
+fn a_view_reads_the_default_of_its_parameter() {
+    let code = build(
+        "stateless Tag(label: string, tone: string = \"plain\")\n  build() Element\n    span(className = tone, children = label)\n\nstateless Bare(tone: string = \"plain\")\n  build() Element\n    span(className = tone)\n",
+        "react",
+    );
+    has(&code, "(this.props.tone ?? 'plain')");
+    has(&code, "this.props.label");
+    has(&code, "export function Tag(props: TagProps): Element");
+    has(&code, "export function Bare(props: BareProps = {}): Element");
+    assert!(!code.contains("constructor"), "{code}");
+}

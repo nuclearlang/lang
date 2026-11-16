@@ -42,6 +42,7 @@ with node without the editor ([testing](../../vscode/docs/05-standards/testing.m
 | The panels, the running apps, park and unpark, the watchdog, the processes | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
 | How a mobile app gets into a panel: the custom device, the launch, the screencast, the input | [docs/02-architecture/mobile-device.md](docs/02-architecture/mobile-device.md) |
 | The web device: its engine, its panel, its debugger | [docs/02-architecture/web-device.md](docs/02-architecture/web-device.md) |
+| What a user reads: the Synapsis device, several devices, the web device | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | The pending work, what was never tried | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | The Devices pane and the ▷ Run / ◉ Debug / ▭ Device pickers | [the workspace](../../vscode/docs/02-architecture/workspace.md) |
 | The CLI's devices (`nuclear device`, `terminal-device`) | [`device-emulators/`](../../../device-emulators/AGENTS.md) |

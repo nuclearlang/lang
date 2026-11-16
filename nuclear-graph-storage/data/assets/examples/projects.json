@@ -6541,6 +6541,1252 @@
    }
   },
   {
+   "id": "example:todos_api/components/todos/api/todos_controller",
+   "type": "file",
+   "title": "`controller` TodosController — the example project todos_api (backend)",
+   "summary": "The routes of todos.",
+   "body": [
+    "`components/todos/api/todos_controller.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// The routes of todos.",
+    "@controller(\"todos\")",
+    "controller TodosController(app: TodosAppComponent)",
+    "  @get",
+    "  list(page: int = 1) Result<Error, Todo[]>",
+    "    ~app.listTodos(page)",
+    "",
+    "  @get(\"{id}\")",
+    "  one(id: int) Result<Error, Todo>",
+    "    ~app.getTodo(id)",
+    "",
+    "  @post",
+    "  create(input: NewTodo) Result<Error, Todo>",
+    "    ~app.createTodo(input)",
+    "",
+    "  @put(\"{id}\")",
+    "  update(id: int, input: NewTodo) Result<Error, Todo>",
+    "    ~app.updateTodo(id, input)",
+    "",
+    "  @delete(\"{id}\")",
+    "  remove(id: int) Result<Error, boolean>",
+    "    ~app.deleteTodo(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/api/todos_controller.nuc"
+   ],
+   "meta": {
+    "kind": "controller",
+    "name": "TodosController",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/domain/models/new_todo",
+   "type": "file",
+   "title": "`model` NewTodo — the example project todos_api (backend)",
+   "summary": "What it takes to add or change a todo.",
+   "body": [
+    "`components/todos/domain/models/new_todo.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// What it takes to add or change a todo.",
+    "NewTodo",
+    "  title: string",
+    "  completed: boolean",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/domain/models/new_todo.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "NewTodo",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/domain/usecases/create_todo",
+   "type": "file",
+   "title": "`usecase` CreateTodo — the example project todos_api (backend)",
+   "summary": "Adds a todo.",
+   "body": [
+    "`components/todos/domain/usecases/create_todo.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// Adds a todo.",
+    "usecase CreateTodo(repository: TodoRepository)",
+    "  exec(input: NewTodo) Result<Error, Todo>",
+    "    Ok(~repository.save(Todo(title = input.title, completed = input.completed)))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/domain/usecases/create_todo.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "CreateTodo",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/domain/usecases/delete_todo",
+   "type": "file",
+   "title": "`usecase` DeleteTodo — the example project todos_api (backend)",
+   "summary": "Removes a todo; NotFound (404) when there is none.",
+   "body": [
+    "`components/todos/domain/usecases/delete_todo.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// Removes a todo; NotFound (404) when there is none.",
+    "usecase DeleteTodo(repository: TodoRepository)",
+    "  exec(id: int) Result<Error, boolean>",
+    "    found = ~repository.find(id)",
+    "    ~repository.remove(found.id)",
+    "    Ok(true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/domain/usecases/delete_todo.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "DeleteTodo",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/domain/usecases/get_todo",
+   "type": "file",
+   "title": "`usecase` GetTodo — the example project todos_api (backend)",
+   "summary": "One todo by its id; NotFound (404) when there is none.",
+   "body": [
+    "`components/todos/domain/usecases/get_todo.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// One todo by its id; NotFound (404) when there is none.",
+    "usecase GetTodo(repository: TodoRepository)",
+    "  exec(id: int) Result<Error, Todo>",
+    "    ~repository.find(id)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/domain/usecases/get_todo.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetTodo",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/domain/usecases/list_todos",
+   "type": "file",
+   "title": "`usecase` ListTodos — the example project todos_api (backend)",
+   "summary": "One page of todos.",
+   "body": [
+    "`components/todos/domain/usecases/list_todos.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// One page of todos.",
+    "usecase ListTodos(repository: TodoRepository)",
+    "  exec(page: int) Result<Error, Todo[]>",
+    "    found = ~repository.page(page, 20)",
+    "    Ok(found.items)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/domain/usecases/list_todos.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListTodos",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/domain/usecases/update_todo",
+   "type": "file",
+   "title": "`usecase` UpdateTodo — the example project todos_api (backend)",
+   "summary": "Changes a todo; NotFound (404) when there is none.",
+   "body": [
+    "`components/todos/domain/usecases/update_todo.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// Changes a todo; NotFound (404) when there is none.",
+    "usecase UpdateTodo(repository: TodoRepository)",
+    "  exec(id: int, input: NewTodo) Result<Error, Todo>",
+    "    found = ~repository.find(id)",
+    "    found.title = input.title",
+    "    found.completed = input.completed",
+    "    Ok(~repository.save(found))",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/domain/usecases/update_todo.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "UpdateTodo",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/components/todos/todos_appcomponent",
+   "type": "file",
+   "title": "`appcomponent` TodosAppComponent — the example project todos_api (backend)",
+   "summary": "What the rest of the app sees of todos: an alias for each of its use cases.",
+   "body": [
+    "`components/todos/todos_appcomponent.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// What the rest of the app sees of todos: an alias for each of its use cases.",
+    "appcomponent TodosAppComponent",
+    "  listTodos() = ListTodos.exec",
+    "  getTodo() = GetTodo.exec",
+    "  createTodo() = CreateTodo.exec",
+    "  updateTodo() = UpdateTodo.exec",
+    "  deleteTodo() = DeleteTodo.exec",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/components/todos/todos_appcomponent.nuc"
+   ],
+   "meta": {
+    "kind": "appcomponent",
+    "name": "TodosAppComponent",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/config",
+   "type": "file",
+   "title": "`config` config — the example project todos_api (backend)",
+   "summary": "A `config` of the example project `todos_api`, a backend project.",
+   "body": [
+    "`config.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
+    "app(name = \"todos_api\", description = \"A Synapsis backend.\", version = \"0.1.0\")",
+    "",
+    "// The optional parts this project uses, only these go to the generated project (nuclear help backend):",
+    "// sqlite, postgres, mysql, mariadb, redis, kafka, events, ai, openai, ollama, chroma",
+    "plugins(sqlite = true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/config.nuc"
+   ],
+   "meta": {
+    "kind": "config",
+    "name": "config",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/config/project_config",
+   "type": "file",
+   "title": "`appConfig` ProjectConfig — the example project todos_api (backend)",
+   "summary": "The connections of the whole app: databases, chat models, Kafka, Redis (nuclear help backend, §2.8). Each one needs its plugin in config.nuc.",
+   "body": [
+    "`config/project_config.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// The connections of the whole app: databases, chat models, Kafka, Redis (nuclear help backend, §2.8).",
+    "// Each one needs its plugin in config.nuc.",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true),",
+    "  ]",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/config/project_config.nuc"
+   ],
+   "meta": {
+    "kind": "appConfig",
+    "name": "ProjectConfig",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/test/app_test",
+   "type": "file",
+   "title": "`tests` App — the example project todos_api (backend)",
+   "summary": "The first test (nuclear help backend, §2.13): every test runs with the connections open and the databases in memory; inject<X>() gives the app's instances, expect(condition) asserts.",
+   "body": [
+    "`test/app_test.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// The first test (nuclear help backend, §2.13): every test runs with the connections open and the databases in",
+    "// memory; inject<X>() gives the app's instances, expect(condition) asserts.",
+    "tests App",
+    "  @test(\"the app starts with its connections\")",
+    "  starts() void",
+    "    expect(true)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/test/app_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "App",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_api/test/todos_test",
+   "type": "file",
+   "title": "`tests` TodosTest — the example project todos_api (backend)",
+   "summary": "The tests of todos: the database is in memory and empty in each test.",
+   "body": [
+    "`test/todos_test.nuc` of `todos_api`:",
+    "",
+    "```nuclear",
+    "// The tests of todos: the database is in memory and empty in each test.",
+    "tests TodosTest",
+    "  @test(\"adds a todo and finds it\")",
+    "  addsAndFinds() void",
+    "    app = inject<TodosAppComponent>()",
+    "    made = ~app.createTodo(NewTodo(title = \"title\", completed = true))",
+    "    expect(made.isOk)",
+    "    found = ~app.getTodo(made.value.id)",
+    "    expect(found.isOk)",
+    "",
+    "  @test(\"a missing todo is not found\")",
+    "  missing() void",
+    "    app = inject<TodosAppComponent>()",
+    "    found = ~app.getTodo(999)",
+    "    expect(found.error.status == 404)",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api/test/todos_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "TodosTest",
+    "project": "todos_api"
+   }
+  },
+  {
+   "id": "example:todos_app/components/home/domain/usecases/hello_home_usecase",
+   "type": "file",
+   "title": "`usecase` HelloHomeUseCase — the example project todos_app (mobile)",
+   "summary": "A `usecase` of the example project `todos_app`, a mobile project.",
+   "body": [
+    "`components/home/domain/usecases/hello_home_usecase.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "usecase HelloHomeUseCase",
+    "  exec() Result<string, string[]>",
+    "    Ok([\"Hello from home\"])",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/home/domain/usecases/hello_home_usecase.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "HelloHomeUseCase",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/home/home_component",
+   "type": "file",
+   "title": "`appcomponent` HomeComponent — the example project todos_app (mobile)",
+   "summary": "Facade of the home component: the only part other components can use.",
+   "body": [
+    "`components/home/home_component.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// Facade of the home component: the only part other components can use.",
+    "appcomponent HomeComponent",
+    "  hello() = HelloHomeUseCase.exec",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/home/home_component.nuc"
+   ],
+   "meta": {
+    "kind": "appcomponent",
+    "name": "HomeComponent",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/home/presentation/home/home_screen",
+   "type": "file",
+   "title": "`stateless` HomeScreen — the example project todos_app (mobile)",
+   "summary": "A `stateless` of the example project `todos_app`, a mobile project.",
+   "body": [
+    "`components/home/presentation/home/home_screen.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "@screen(route = \"/\", providers = [HomeManager])",
+    "stateless HomeScreen",
+    "  build(context: BuildContext) Widget",
+    "    Scaffold(",
+    "      appBar = AppBar(title = Text(\"Home\")),",
+    "      body = HomeStateBuilder<HomeManager>(",
+    "        loading = () => Center(child = CircularProgressIndicator()),",
+    "        items = (items) => ListView(children = items.map(i => ListTile(title = Text(i)))),",
+    "        error = (message) => Center(child = Text(message)),",
+    "      ),",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/home/presentation/home/home_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "HomeScreen",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/home/presentation/home/managers/home_manager",
+   "type": "file",
+   "title": "`statemanager` HomeManager — the example project todos_app (mobile)",
+   "summary": "A `statemanager` of the example project `todos_app`, a mobile project.",
+   "body": [
+    "`components/home/presentation/home/managers/home_manager.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "@stateModel(HomeState)",
+    "statemanager HomeManager",
+    "  (component: HomeComponent)",
+    "    load()",
+    "",
+    "  @state(HomeState.loading)",
+    "  loading()",
+    "",
+    "  // the screen's data: call a use case of the component here (`component.<alias>()`); a component made by",
+    "  // `gen resource` has no `hello`, so the skeleton assumes none",
+    "  @before(loading)",
+    "  @state(HomeState.items)",
+    "  load() Result<string, string[]>",
+    "    Ok([])",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/home/presentation/home/managers/home_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "HomeManager",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/home/presentation/home/state_models/home_state",
+   "type": "file",
+   "title": "`statemodel` HomeState — the example project todos_app (mobile)",
+   "summary": "Each field is a state of the screen; a boolean state carries no data.",
+   "body": [
+    "`components/home/presentation/home/state_models/home_state.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// Each field is a state of the screen; a boolean state carries no data.",
+    "HomeState",
+    "  (items: string[], error: string, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/home/presentation/home/state_models/home_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "HomeState",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/domain/models/todo",
+   "type": "file",
+   "title": "`model` Todo — the example project todos_app (mobile)",
+   "summary": "Todo, as the API answers it.",
+   "body": [
+    "`components/todos/domain/models/todo.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// Todo, as the API answers it.",
+    "Todo",
+    "  id: int",
+    "  title: string",
+    "  completed: boolean",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/domain/models/todo.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Todo",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/domain/models/todo_error",
+   "type": "file",
+   "title": "`model` TodoError — the example project todos_app (mobile)",
+   "summary": "What failed with todos: Synapsis builds it with the failure's message.",
+   "body": [
+    "`components/todos/domain/models/todo_error.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// What failed with todos: Synapsis builds it with the failure's message.",
+    "TodoError",
+    "  message: string",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/domain/models/todo_error.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "TodoError",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/domain/usecases/get_todo",
+   "type": "file",
+   "title": "`usecase` GetTodo — the example project todos_app (mobile)",
+   "summary": "One todo by its id.",
+   "body": [
+    "`components/todos/domain/usecases/get_todo.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// One todo by its id.",
+    "usecase GetTodo(repository: TodoRepository)",
+    "  exec(id: int) Result<TodoError, Todo>",
+    "    ~repository.one(id)",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/domain/usecases/get_todo.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetTodo",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/domain/usecases/list_todos",
+   "type": "file",
+   "title": "`usecase` ListTodos — the example project todos_app (mobile)",
+   "summary": "One page of todos.",
+   "body": [
+    "`components/todos/domain/usecases/list_todos.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// One page of todos.",
+    "usecase ListTodos(repository: TodoRepository)",
+    "  exec() Result<TodoError, Todo[]>",
+    "    ~repository.all()",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/domain/usecases/list_todos.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListTodos",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/presentation/todos/managers/todos_manager",
+   "type": "file",
+   "title": "`statemanager` TodosManager — the example project todos_app (mobile)",
+   "summary": "The state of the todos screen: it loads the first page when it is created.",
+   "body": [
+    "`components/todos/presentation/todos/managers/todos_manager.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// The state of the todos screen: it loads the first page when it is created.",
+    "@stateModel(TodosState)",
+    "statemanager TodosManager",
+    "  (todos: TodosComponent)",
+    "    load()",
+    "",
+    "  @state(TodosState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(TodosState.full)",
+    "  load() Result<TodoError, Todo[]>",
+    "    ~todos.listTodos()",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/presentation/todos/managers/todos_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "TodosManager",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/presentation/todos/state_models/todos_state",
+   "type": "file",
+   "title": "`statemodel` TodosState — the example project todos_app (mobile)",
+   "summary": "The states of the todos screen: each field is one.",
+   "body": [
+    "`components/todos/presentation/todos/state_models/todos_state.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// The states of the todos screen: each field is one.",
+    "TodosState",
+    "  (full: Todo[], error: TodoError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/presentation/todos/state_models/todos_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "TodosState",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/presentation/todos/todos_screen",
+   "type": "file",
+   "title": "`stateless` TodosScreen — the example project todos_app (mobile)",
+   "summary": "The todos, as a list.",
+   "body": [
+    "`components/todos/presentation/todos/todos_screen.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// The todos, as a list.",
+    "@screen(route = \"/todos\", providers = [TodosManager])",
+    "stateless TodosScreen",
+    "  build(context: BuildContext) Widget",
+    "    Scaffold(",
+    "      appBar = AppBar(title = Text(\"Todos\")),",
+    "      body = TodosStateBuilder<TodosManager>(",
+    "        loading = () => Center(child = CircularProgressIndicator()),",
+    "        full = (items) => ListView.builder(",
+    "          itemCount = items.length,",
+    "          itemBuilder = (context, index) => ListTile(title = Text(items[index].title)),",
+    "        ),",
+    "        error = (e) => Center(child = Text(e.message)),",
+    "      ),",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/presentation/todos/todos_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "TodosScreen",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/components/todos/todos_component",
+   "type": "file",
+   "title": "`appcomponent` TodosComponent — the example project todos_app (mobile)",
+   "summary": "What the screens and the other components see of todos: an alias for each of its use cases.",
+   "body": [
+    "`components/todos/todos_component.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// What the screens and the other components see of todos: an alias for each of its use cases.",
+    "appcomponent TodosComponent",
+    "  listTodos() = ListTodos.exec",
+    "  getTodo() = GetTodo.exec",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/components/todos/todos_component.nuc"
+   ],
+   "meta": {
+    "kind": "appcomponent",
+    "name": "TodosComponent",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/config",
+   "type": "file",
+   "title": "`config` config — the example project todos_app (mobile)",
+   "summary": "A `config` of the example project `todos_app`, a mobile project.",
+   "body": [
+    "`config.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// The project's pubspec: synapsis writes build/app/pubspec.yaml from it.",
+    "// Synapsis adds by itself (not written here): synapsis, flutter_bloc, fpdart, go_router,",
+    "// json_annotation; for code generation and tests: build_runner, json_serializable, mocktail, bloc_test,",
+    "// integration_test (and flutter_native_splash with @splash). Full list: build/app/pubspec.yaml.",
+    "// Only third-party packages the framework does not use (the ones above cannot be added).",
+    "// `nuclear flutter add <package>` adds a package here and generates its type definitions.",
+    "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
+    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
+    "",
+    "app(",
+    "  name = \"todos_app\",",
+    "  description = \"A Synapsis app.\",",
+    "  version = \"1.0.0+1\",",
+    "  usesMaterialDesign = true,",
+    ")",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/config.nuc"
+   ],
+   "meta": {
+    "kind": "config",
+    "name": "config",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/config/project_config",
+   "type": "file",
+   "title": "`appConfig` ProjectConfig — the example project todos_app (mobile)",
+   "summary": "Global configuration: the connections and the services of the whole app.",
+   "body": [
+    "`config/project_config.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// Global configuration: the connections and the services of the whole app.",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    Http(connectionName = \"todos\", baseUrl = \"https://jsonplaceholder.typicode.com\"),",
+    "    Http(",
+    "      baseUrl = \"https://api.example.com/\",",
+    "      connectTimeout = Duration(seconds = 10),",
+    "      receiveTimeout = Duration(seconds = 10),",
+    "      interceptors = [SessionInterceptor(), HttpLogInterceptor()],",
+    "    ),",
+    "  ]",
+    "  globals: Global[] = [",
+    "    Events(),",
+    "    SessionManager(timeout = Duration(minutes = 30)),",
+    "    NetworkManager(),",
+    "  ]",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/config/project_config.nuc"
+   ],
+   "meta": {
+    "kind": "appConfig",
+    "name": "ProjectConfig",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/main",
+   "type": "file",
+   "title": "`stateless` App — the example project todos_app (mobile)",
+   "summary": "A `stateless` of the example project `todos_app`, a mobile project.",
+   "body": [
+    "`main.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "main() void",
+    "  ~startSynapsis()",
+    "  runApp(App())",
+    "",
+    "stateless App",
+    "  build(context: BuildContext) Widget",
+    "    MaterialApp.router(",
+    "      title = \"TodosApp\",",
+    "      routerConfig = appRouter,",
+    "      builder = (context, child) => NetworkWrapper(child = child!),",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/main.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "App",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_app/test/todos_test",
+   "type": "file",
+   "title": "`tests` TodosTest — the example project todos_app (mobile)",
+   "summary": "The tests of todos: the repository is a mock; everything else is the real code.",
+   "body": [
+    "`test/todos_test.nuc` of `todos_app`:",
+    "",
+    "```nuclear",
+    "// The tests of todos: the repository is a mock; everything else is the real code.",
+    "@mock([TodoRepository])",
+    "TodosTest",
+    "  setUp()",
+    "    when(() => TodoRepository.all()).thenReturnAsync(Ok([]))",
+    "",
+    "  @test(\"ListTodos answers the todos of the API\")",
+    "  lists()",
+    "    result = ~ListTodos.exec()",
+    "    expect(result, isOkWith([]))",
+    "```"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app/test/todos_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "TodosTest",
+    "project": "todos_app"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/domain/models/todo",
+   "type": "file",
+   "title": "`model` Todo — the example project todos_web (web)",
+   "summary": "Todo, as the API answers it.",
+   "body": [
+    "`components/todos/domain/models/todo.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// Todo, as the API answers it.",
+    "Todo",
+    "  id: int",
+    "  title: string",
+    "  completed: boolean",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/domain/models/todo.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Todo",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/domain/models/todo_error",
+   "type": "file",
+   "title": "`model` TodoError — the example project todos_web (web)",
+   "summary": "What failed with todos: Synapsis builds it with the failure's message.",
+   "body": [
+    "`components/todos/domain/models/todo_error.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// What failed with todos: Synapsis builds it with the failure's message.",
+    "TodoError",
+    "  message: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/domain/models/todo_error.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "TodoError",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/domain/usecases/get_todo",
+   "type": "file",
+   "title": "`usecase` GetTodo — the example project todos_web (web)",
+   "summary": "One todo by its id.",
+   "body": [
+    "`components/todos/domain/usecases/get_todo.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// One todo by its id.",
+    "usecase GetTodo(repository: TodoRepository)",
+    "  exec(id: int) Result<TodoError, Todo>",
+    "    ~repository.one(id)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/domain/usecases/get_todo.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetTodo",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/domain/usecases/list_todos",
+   "type": "file",
+   "title": "`usecase` ListTodos — the example project todos_web (web)",
+   "summary": "One page of todos.",
+   "body": [
+    "`components/todos/domain/usecases/list_todos.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// One page of todos.",
+    "usecase ListTodos(repository: TodoRepository)",
+    "  exec() Result<TodoError, Todo[]>",
+    "    ~repository.all()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/domain/usecases/list_todos.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListTodos",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/presentation/todos/managers/todos_manager",
+   "type": "file",
+   "title": "`statemanager` TodosManager — the example project todos_web (web)",
+   "summary": "The state of the todos screen: it loads the first page when it is created.",
+   "body": [
+    "`components/todos/presentation/todos/managers/todos_manager.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The state of the todos screen: it loads the first page when it is created.",
+    "@stateModel(TodosState)",
+    "statemanager TodosManager",
+    "  (todos: TodosComponent)",
+    "    load()",
+    "",
+    "  @state(TodosState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(TodosState.full)",
+    "  load() Result<TodoError, Todo[]>",
+    "    ~todos.listTodos()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/presentation/todos/managers/todos_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "TodosManager",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/presentation/todos/state_models/todos_state",
+   "type": "file",
+   "title": "`statemodel` TodosState — the example project todos_web (web)",
+   "summary": "The states of the todos screen: each field is one.",
+   "body": [
+    "`components/todos/presentation/todos/state_models/todos_state.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The states of the todos screen: each field is one.",
+    "TodosState",
+    "  (full: Todo[], error: TodoError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/presentation/todos/state_models/todos_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "TodosState",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/presentation/todos/todos_screen",
+   "type": "file",
+   "title": "`stateless` TodosScreen — the example project todos_web (web)",
+   "summary": "The todos, as a list.",
+   "body": [
+    "`components/todos/presentation/todos/todos_screen.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The todos, as a list.",
+    "@screen(route = \"/todos\", providers = [TodosManager])",
+    "stateless TodosScreen",
+    "  build() Element",
+    "    main(",
+    "      children = [",
+    "        h1(children = \"Todos\"),",
+    "        TodosStateBuilder(",
+    "          loading = () => p(children = \"Loading...\"),",
+    "          full = (items) => ul(children = items.map((item) => li(key = item.id, children = item.title))),",
+    "          error = (e) => p(className = \"error\", children = e.message),",
+    "        ),",
+    "      ],",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/presentation/todos/todos_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "TodosScreen",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/components/todos/todos_component",
+   "type": "file",
+   "title": "`appcomponent` TodosComponent — the example project todos_web (web)",
+   "summary": "What the screens and the other components see of todos: an alias for each of its use cases.",
+   "body": [
+    "`components/todos/todos_component.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// What the screens and the other components see of todos: an alias for each of its use cases.",
+    "appcomponent TodosComponent",
+    "  listTodos() = ListTodos.exec",
+    "  getTodo() = GetTodo.exec",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/components/todos/todos_component.nuc"
+   ],
+   "meta": {
+    "kind": "appcomponent",
+    "name": "TodosComponent",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/config",
+   "type": "file",
+   "title": "`config` config — the example project todos_web (web)",
+   "summary": "A `config` of the example project `todos_web`, a web project.",
+   "body": [
+    "`config.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).",
+    "synapsis(platform = \"web\", dialect = \"react\")",
+    "app(name = \"todos_web\", description = \"A Synapsis web app.\", version = \"0.1.0\")",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/config.nuc"
+   ],
+   "meta": {
+    "kind": "config",
+    "name": "config",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/config/project_config",
+   "type": "file",
+   "title": "`appConfig` ProjectConfig — the example project todos_web (web)",
+   "summary": "The connections and services of the whole app (nuclear help web).",
+   "body": [
+    "`config/project_config.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The connections and services of the whole app (nuclear help web).",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    Http(connectionName = \"todos\", baseUrl = \"https://jsonplaceholder.typicode.com\"),",
+    "    Http(baseUrl = \"http://localhost:8000/\", timeout = 5000),",
+    "  ]",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/config/project_config.nuc"
+   ],
+   "meta": {
+    "kind": "appConfig",
+    "name": "ProjectConfig",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/main",
+   "type": "file",
+   "title": "`stateless` App — the example project todos_web (web)",
+   "summary": "The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.",
+   "body": [
+    "`main.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.",
+    "stateless App",
+    "  build() Element",
+    "    createElement(RouterProvider, router = appRouter())",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/main.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "App",
+    "project": "todos_web"
+   }
+  },
+  {
+   "id": "example:todos_web/test/todos_test",
+   "type": "file",
+   "title": "`tests` TodosTest — the example project todos_web (web)",
+   "summary": "The tests of todos: the repository is a mock; everything else is the real code.",
+   "body": [
+    "`test/todos_test.nuc` of `todos_web`:",
+    "",
+    "```nuclear",
+    "// The tests of todos: the repository is a mock; everything else is the real code.",
+    "@mock([TodoRepository])",
+    "TodosTest",
+    "  beforeEach()",
+    "    when(TodoRepository.all).thenReturn(Ok([]))",
+    "",
+    "  @test(\"ListTodos answers the todos of the API\")",
+    "  lists()",
+    "    result = ~ListTodos.exec()",
+    "    expect(okOf(result)).toEqual([])",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web/test/todos_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "TodosTest",
+    "project": "todos_web"
+   }
+  },
+  {
    "id": "example:website/components/docs/docs_component",
    "type": "file",
    "title": "`appcomponent` DocsComponent — the example project website (web)",
@@ -6555,6 +7801,8 @@
     "  site() = GetSiteUseCase.exec",
     "  home() = GetHomeUseCase.exec",
     "  search() = SearchUseCase.exec",
+    "  listTools() = ListTools.exec",
+    "  listPlatforms() = ListPlatforms.exec",
     "```"
    ],
    "platforms": [
@@ -6599,25 +7847,41 @@
    "id": "example:website/components/docs/domain/models/home",
    "type": "file",
    "title": "`model` Home — the example project website (web)",
-   "summary": "The home page, from site.toml (public/content/home.json): its texts, its sections and the sample with its output in each target, made by the real compiler.",
+   "summary": "The home page, from site.toml (public/content/home.json): its hooks and its interactive blocks. Every output in it was made by the real compiler and the real commands when the site was built.",
    "body": [
     "`components/docs/domain/models/home.nuc` of `website`:",
     "",
     "```nuclear",
-    "// The home page, from site.toml (public/content/home.json): its texts, its sections and the sample with its output",
-    "// in each target, made by the real compiler.",
+    "// The home page, from site.toml (public/content/home.json): its hooks and its interactive blocks. Every output in it",
+    "// was made by the real compiler and the real commands when the site was built.",
     "Home",
     "  title: string",
     "  lead: string",
     "  tagline: string",
     "  actions: Action[]",
-    "  features: Feature[]",
-    "  sampleTitle: string",
-    "  sampleNote: string",
-    "  sample: string",
-    "  outputs: Output[]",
+    "  hooks: Hook[]",
+    "  samplesTitle: string",
+    "  samplesNote: string",
+    "  samples: Sample[]",
+    "  check: CheckDemo",
+    "  generatorTitle: string",
+    "  generatorText: string",
+    "  generatorPlatform: string",
+    "  generator: PlatformSteps[]",
+    "  stats: PlatformStats",
+    "  dialectsTitle: string",
+    "  dialectsText: string",
+    "  dialects: PlatformCode",
     "  platformsTitle: string",
+    "  platformsText: string",
     "  platforms: PlatformCard[]",
+    "  toolsTitle: string",
+    "  toolsText: string",
+    "  tools: ToolCard[]",
+    "  librariesTitle: string",
+    "  librariesText: string",
+    "  librariesCommand: string",
+    "  librariesExample: string",
     "  installTitle: string",
     "  install: string",
     "",
@@ -6626,19 +7890,47 @@
     "  path: string",
     "  primary: boolean",
     "",
-    "Feature",
+    "Hook",
     "  title: string",
     "  text: string",
+    "",
+    "// A sample: its Nuclear and what each target language's dialect writes from it (highlighted HTML).",
+    "Sample",
+    "  title: string",
+    "  nuclear: string",
+    "  outputs: Output[]",
     "",
     "Output",
     "  dialect: string",
     "  html: string",
     "",
-    "PlatformCard",
+    "// An agent's mistake, what `nuclear check --json` answers and what `nuclear fix` makes of it.",
+    "CheckDemo",
     "  title: string",
-    "  dialects: string",
     "  text: string",
-    "  path: string",
+    "  wrong: string",
+    "  diagnostics: Diagnostic[]",
+    "  json: string",
+    "  fixed: string",
+    "",
+    "Diagnostic",
+    "  code: string",
+    "  line: int",
+    "  col: int",
+    "  message: string",
+    "  fix: string",
+    "",
+    "PlatformCard",
+    "  key: string",
+    "  name: string",
+    "  dialects: string",
+    "  tagline: string",
+    "",
+    "ToolCard",
+    "  key: string",
+    "  name: string",
+    "  group: string",
+    "  tagline: string",
     "```"
    ],
    "platforms": [
@@ -6687,6 +7979,296 @@
    "meta": {
     "kind": "model",
     "name": "Page",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform",
+   "type": "file",
+   "title": "`model` Platform — the example project website (web)",
+   "summary": "Platform, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Platform, as the API answers it.",
+    "Platform",
+    "  app: string",
+    "  code: PlatformCode",
+    "  dialects: string",
+    "  example: string",
+    "  key: string",
+    "  levels: PlatformLevels[]",
+    "  name: string",
+    "  pages: PlatformPages[]",
+    "  pitch: string",
+    "  stats: PlatformStats",
+    "  steps: PlatformSteps[]",
+    "  tagline: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Platform",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_boxes",
+   "type": "file",
+   "title": "`model` PlatformBoxes — the example project website (web)",
+   "summary": "PlatformBoxes, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_boxes.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformBoxes, as the API answers it.",
+    "PlatformBoxes",
+    "  kind: string",
+    "  name: string",
+    "  text: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_boxes.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformBoxes",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_code",
+   "type": "file",
+   "title": "`model` PlatformCode — the example project website (web)",
+   "summary": "PlatformCode, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_code.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformCode, as the API answers it.",
+    "PlatformCode",
+    "  html: string",
+    "  outputs: PlatformOutputs[]",
+    "  path: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_code.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformCode",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_error",
+   "type": "file",
+   "title": "`model` PlatformError — the example project website (web)",
+   "summary": "What failed with platforms: Synapsis builds it with the failure's message.",
+   "body": [
+    "`components/docs/domain/models/platform_error.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// What failed with platforms: Synapsis builds it with the failure's message.",
+    "PlatformError",
+    "  message: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_error.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformError",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_flows",
+   "type": "file",
+   "title": "`model` PlatformFlows — the example project website (web)",
+   "summary": "PlatformFlows, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_flows.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformFlows, as the API answers it.",
+    "PlatformFlows",
+    "  source: string",
+    "  target: string",
+    "  text: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_flows.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformFlows",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_levels",
+   "type": "file",
+   "title": "`model` PlatformLevels — the example project website (web)",
+   "summary": "PlatformLevels, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_levels.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformLevels, as the API answers it.",
+    "PlatformLevels",
+    "  boxes: PlatformBoxes[]",
+    "  flows: PlatformFlows[]",
+    "  level: string",
+    "  text: string",
+    "  title: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_levels.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformLevels",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_outputs",
+   "type": "file",
+   "title": "`model` PlatformOutputs — the example project website (web)",
+   "summary": "PlatformOutputs, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_outputs.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformOutputs, as the API answers it.",
+    "PlatformOutputs",
+    "  dialect: string",
+    "  html: string",
+    "  path: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_outputs.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformOutputs",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_pages",
+   "type": "file",
+   "title": "`model` PlatformPages — the example project website (web)",
+   "summary": "PlatformPages, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_pages.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformPages, as the API answers it.",
+    "PlatformPages",
+    "  path: string",
+    "  title: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_pages.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformPages",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_stats",
+   "type": "file",
+   "title": "`model` PlatformStats — the example project website (web)",
+   "summary": "PlatformStats, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_stats.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformStats, as the API answers it.",
+    "PlatformStats",
+    "  nucFiles: int",
+    "  nucLines: int",
+    "  outFiles: int",
+    "  outLines: int",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_stats.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformStats",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/platform_steps",
+   "type": "file",
+   "title": "`model` PlatformSteps — the example project website (web)",
+   "summary": "PlatformSteps, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/platform_steps.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// PlatformSteps, as the API answers it.",
+    "PlatformSteps",
+    "  command: string",
+    "  output: string",
+    "  text: string",
+    "  title: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/platform_steps.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "PlatformSteps",
     "project": "website"
    }
   },
@@ -6762,6 +8344,120 @@
    "meta": {
     "kind": "model",
     "name": "Site",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/tool",
+   "type": "file",
+   "title": "`model` Tool — the example project website (web)",
+   "summary": "Tool, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/tool.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Tool, as the API answers it.",
+    "Tool",
+    "  demo: string",
+    "  group: string",
+    "  highlights: ToolHighlights[]",
+    "  key: string",
+    "  name: string",
+    "  pages: ToolPages[]",
+    "  pitch: string",
+    "  project: string",
+    "  tagline: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/tool.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Tool",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/tool_error",
+   "type": "file",
+   "title": "`model` ToolError — the example project website (web)",
+   "summary": "What failed with tools: Synapsis builds it with the failure's message.",
+   "body": [
+    "`components/docs/domain/models/tool_error.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// What failed with tools: Synapsis builds it with the failure's message.",
+    "ToolError",
+    "  message: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/tool_error.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "ToolError",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/tool_highlights",
+   "type": "file",
+   "title": "`model` ToolHighlights — the example project website (web)",
+   "summary": "ToolHighlights, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/tool_highlights.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// ToolHighlights, as the API answers it.",
+    "ToolHighlights",
+    "  text: string",
+    "  title: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/tool_highlights.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "ToolHighlights",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/tool_pages",
+   "type": "file",
+   "title": "`model` ToolPages — the example project website (web)",
+   "summary": "ToolPages, as the API answers it.",
+   "body": [
+    "`components/docs/domain/models/tool_pages.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// ToolPages, as the API answers it.",
+    "ToolPages",
+    "  path: string",
+    "  title: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/tool_pages.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "ToolPages",
     "project": "website"
    }
   },
@@ -6880,6 +8576,60 @@
    "meta": {
     "kind": "usecase",
     "name": "GetSiteUseCase",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/usecases/list_platforms",
+   "type": "file",
+   "title": "`usecase` ListPlatforms — the example project website (web)",
+   "summary": "One page of platforms.",
+   "body": [
+    "`components/docs/domain/usecases/list_platforms.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// One page of platforms.",
+    "usecase ListPlatforms(repository: PlatformRepository)",
+    "  exec() Result<PlatformError, Platform[]>",
+    "    ~repository.all()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/usecases/list_platforms.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListPlatforms",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/usecases/list_tools",
+   "type": "file",
+   "title": "`usecase` ListTools — the example project website (web)",
+   "summary": "One page of tools.",
+   "body": [
+    "`components/docs/domain/usecases/list_tools.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// One page of tools.",
+    "usecase ListTools(repository: ToolRepository)",
+    "  exec() Result<ToolError, Tool[]>",
+    "    ~repository.all()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/usecases/list_tools.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "ListTools",
     "project": "website"
    }
   },
@@ -7086,89 +8836,146 @@
    "id": "example:website/components/docs/presentation/home/home_screen",
    "type": "file",
    "title": "`stateless` HomeScreen — the example project website (web)",
-   "summary": "The home page: every text and section comes from the site's data (home.json); the sample's outputs are the real compiler's.",
+   "summary": "The home page: the hooks, from the most general to the most concrete, each one a small interactive block that links to where it is explained. Every text comes from site.toml (home.json); every output was made by the real compiler and the real commands when the site was built.",
    "body": [
     "`components/docs/presentation/home/home_screen.nuc` of `website`:",
     "",
     "```nuclear",
-    "// The home page: every text and section comes from the site's data (home.json); the sample's outputs are the real",
-    "// compiler's.",
+    "// The home page: the hooks, from the most general to the most concrete, each one a small interactive block that",
+    "// links to where it is explained. Every text comes from site.toml (home.json); every output was made by the real",
+    "// compiler and the real commands when the site was built.",
     "@screen(route = \"/\", providers = [HomeManager, SiteManager, SearchManager])",
     "stateless HomeScreen",
     "  build() Element",
-    "    div(",
-    "      className = \"site home\",",
-    "      children = [",
-    "        TopBar(),",
-    "        HomeStateBuilder(",
-    "          loading = () => p(className = \"muted center\", children = \"Loading…\"),",
-    "          full = (home) => HomeBody(home = home),",
-    "          error = (e) => p(className = \"error center\", children = e.message),",
-    "        ),",
-    "        Footer(),",
-    "      ],",
+    "    Frame(",
+    "      current = \"/\",",
+    "      content = HomeStateBuilder(",
+    "        loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "        full = (home) => Reveal(child = HomeBody(home = home)),",
+    "        error = (e) => p(className = \"error center\", children = e.message),",
+    "      ),",
     "    )",
     "",
     "stateless HomeBody(home: Home)",
     "  build() Element",
     "    fragment(",
+    "      Hero(home = home),",
     "      section(",
-    "        className = \"hero\",",
-    "        children = [",
-    "          p(className = \"logo big\", children = \"☢\"),",
-    "          h1(children = home.title),",
-    "          p(className = \"lead\", children = home.lead),",
-    "          p(className = \"tagline\", children = home.tagline),",
-    "          div(",
-    "            className = \"actions\",",
-    "            children = home.actions.map((x) => a(key = x.path, className = x.primary ? \"button primary\" : \"button\", href = x.path, children = x.title)),",
-    "          ),",
-    "        ],",
+    "        className = \"hooks\",",
+    "        children = home.hooks.map((h) => article(key = h.title, className = \"hook reveal\", children = [h3(children = h.title), p(children = h.text)])),",
     "      ),",
-    "      section(className = \"features\", children = home.features.map((f) => article(key = f.title, children = [h3(children = f.title), p(children = f.text)]))),",
-    "      Sample(home = home),",
-    "      section(",
-    "        className = \"platforms\",",
-    "        children = [",
-    "          h2(children = home.platformsTitle),",
-    "          div(",
-    "            className = \"cards\",",
-    "            children = home.platforms.map((c) =>",
-    "              a(key = c.title, className = \"card\", href = c.path, children = [h3(children = c.title), small(children = c.dialects), p(children = c.text)])",
-    "            ),",
-    "          ),",
-    "        ],",
-    "      ),",
-    "      section(className = \"install\", children = [h2(children = home.installTitle), pre(children = home.install)]),",
+    "      Samples(home = home),",
+    "      CheckBlock(demo = home.check),",
+    "      GeneratorBlock(home = home),",
+    "      DialectsBlock(home = home),",
+    "      PlatformsBlock(home = home),",
+    "      ToolsBlock(home = home),",
+    "      LibrariesBlock(home = home),",
+    "      section(className = \"install reveal\", children = [h2(children = home.installTitle), pre(children = home.install)]),",
     "    )",
     "",
-    "// The sample and its output in each target, one tab each.",
-    "stateful Sample(home: Home)",
+    "stateless Hero(home: Home)",
+    "  build() Element",
+    "    section(",
+    "      className = \"hero\",",
+    "      children = [",
+    "        div(className = \"glow\"),",
+    "        p(className = \"logo big rise\", children = \"☢\"),",
+    "        h1(className = \"rise\", children = home.title),",
+    "        p(className = \"lead rise\", children = home.lead),",
+    "        p(className = \"tagline rise\", children = home.tagline),",
+    "        div(",
+    "          className = \"actions rise\",",
+    "          children = home.actions.map((x) => a(key = x.path, className = x.primary ? \"button primary\" : \"button\", href = x.path, children = x.title)),",
+    "        ),",
+    "        div(",
+    "          className = \"targets rise\",",
+    "          children = [\"TypeScript\", \"Dart\", \"Python\", \"Flutter\", \"FastAPI\", \"NestJS\", \"React\"].map((t) => span(key = t, className = \"chip\", children = t)),",
+    "        ),",
+    "      ],",
+    "    )",
+    "",
+    "// The samples: pick one, then the target; the Nuclear stays beside what it becomes.",
+    "stateful Samples(home: Home)",
     "  selected: int = 0",
     "",
     "  build() Element",
     "    section(",
-    "      className = \"sample\",",
+    "      className = \"block reveal\",",
     "      children = [",
-    "        h2(children = home.sampleTitle),",
+    "        h2(children = home.samplesTitle),",
     "        div(",
-    "          className = \"tabs\",",
-    "          children = tabs().map((t) =>",
-    "            button(key = t, className = tabs().indexOf(t) == selected ? \"tab active\" : \"tab\", onClick = () => select(tabs().indexOf(t)), children = t)",
+    "          className = \"pills\",",
+    "          children = home.samples.map((s, i) =>",
+    "            button(key = s.title, className = i == selected ? \"pill active\" : \"pill\", onClick = () => select(i), children = s.title)",
     "          ),",
     "        ),",
-    "        div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": selected == 0 ? home.sample : home.outputs[selected - 1].html }),",
-    "        p(className = \"muted\", children = home.sampleNote),",
+    "        CodeTabs(",
+    "          key = home.samples[selected].title,",
+    "          titles = home.samples[selected].outputs.map((o) => o.dialect),",
+    "          panes = home.samples[selected].outputs.map((o) => o.html),",
+    "          pinned = home.samples[selected].nuclear,",
+    "        ),",
+    "        p(className = \"muted\", children = home.samplesNote),",
     "      ],",
     "    )",
-    "",
-    "  tabs() string[]",
-    "    [\"Nuclear\", ...home.outputs.map((o) => o.dialect)]",
     "",
     "  select(index: int) void",
     "    setState(() =>",
     "      selected = index",
     "    )",
+    "",
+    "// An agent's mistake: the code, what the compiler answers, and the code after `nuclear fix`.",
+    "stateful CheckBlock(demo: CheckDemo)",
+    "  fixed: boolean = false",
+    "",
+    "  build() Element",
+    "    section(",
+    "      className = \"block check reveal\",",
+    "      children = [",
+    "        h2(children = demo.title),",
+    "        p(className = \"block-text\", children = demo.text),",
+    "        div(",
+    "          className = \"split\",",
+    "          children = [",
+    "            div(",
+    "              className = \"pane\",",
+    "              children = [",
+    "                div(className = \"pane-title\", children = fixed ? \"after nuclear fix\" : \"what the agent wrote\"),",
+    "                div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": fixed ? demo.fixed : demo.wrong }),",
+    "              ],",
+    "            ),",
+    "            div(",
+    "              className = \"pane\",",
+    "              children = [",
+    "                div(className = \"pane-title\", children = fixed ? \"nuclear check: no errors\" : \"nuclear check --json\"),",
+    "                fixed ? pre(className = \"ok\", children = \"[]\") : div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": demo.json }),",
+    "              ],",
+    "            ),",
+    "          ],",
+    "        ),",
+    "        ul(",
+    "          className = \"diagnostics\",",
+    "          children = demo.diagnostics.map((d) =>",
+    "            li(key = \"${d.line}:${d.col}\", className = fixed ? \"done\" : \"\", children = [span(className = \"diag-code\", children = d.code), span(children = \" line ${d.line}: ${d.message}\")])",
+    "          ),",
+    "        ),",
+    "        button(className = \"button primary\", onClick = () => toggle(), children = fixed ? \"Show the mistake again\" : \"Run nuclear fix\"),",
+    "      ],",
+    "    )",
+    "",
+    "  toggle() void",
+    "    setState(() =>",
+    "      fixed = not fixed",
+    "    )",
+    "",
+    "stateless GeneratorBlock(home: Home)",
+    "  build() Element",
+    "    section(",
+    "      className = \"block reveal\",",
+    "      children = [",
+    "        h2(children = home.generatorTitle),",
+    "// ... (the file goes on)",
     "```"
    ],
    "platforms": [
@@ -7246,6 +9053,132 @@
    }
   },
   {
+   "id": "example:website/components/docs/presentation/layout/code_tabs",
+   "type": "file",
+   "title": "`stateful` CodeTabs — the example project website (web)",
+   "summary": "Code in tabs: one pane at a time (highlighted HTML, made when the site was built). With `pinned` the Nuclear stays on the left and the tabs choose what it becomes on the right.",
+   "body": [
+    "`components/docs/presentation/layout/code_tabs.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Code in tabs: one pane at a time (highlighted HTML, made when the site was built). With `pinned` the Nuclear stays",
+    "// on the left and the tabs choose what it becomes on the right.",
+    "stateful CodeTabs(titles: string[], panes: string[], pinned: string = \"\", pinnedTitle: string = \"Nuclear\")",
+    "  selected: int = 0",
+    "",
+    "  build() Element",
+    "    div(",
+    "      className = pinned == \"\" ? \"code-tabs\" : \"code-tabs compare\",",
+    "      children = [",
+    "        if pinned != \"\" div(className = \"pane pinned\", children = [div(className = \"pane-title\", children = pinnedTitle), div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": pinned })]),",
+    "        div(",
+    "          className = \"pane\",",
+    "          children = [",
+    "            div(",
+    "              className = \"tabs\",",
+    "              role = \"tablist\",",
+    "              children = titles.map((t, i) =>",
+    "                button(key = t, role = \"tab\", className = i == selected ? \"tab active\" : \"tab\", onClick = () => select(i), children = t)",
+    "              ),",
+    "            ),",
+    "            div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": panes[selected] }),",
+    "          ],",
+    "        ),",
+    "      ],",
+    "    )",
+    "",
+    "  select(index: int) void",
+    "    setState(() =>",
+    "      selected = index",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/code_tabs.nuc"
+   ],
+   "meta": {
+    "kind": "stateful",
+    "name": "CodeTabs",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/diagram",
+   "type": "file",
+   "title": "`stateless` Diagram — the example project website (web)",
+   "summary": "One level of a C4 view of a platform: its elements (a person, the system, a container, a component or something outside) and how they talk.",
+   "body": [
+    "`components/docs/presentation/layout/diagram.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// One level of a C4 view of a platform: its elements (a person, the system, a container, a component or something",
+    "// outside) and how they talk.",
+    "stateless Diagram(level: PlatformLevels)",
+    "  build() Element",
+    "    section(",
+    "      className = \"c4 reveal\",",
+    "      children = [",
+    "        div(className = \"c4-head\", children = [span(className = \"c4-level\", children = level.level), h3(children = level.title), p(children = level.text)]),",
+    "        div(",
+    "          className = \"c4-boxes\",",
+    "          children = level.boxes.map((b) =>",
+    "            div(key = b.name, className = \"c4-box kind-${b.kind}\", children = [small(children = b.kind), strong(children = b.name), span(children = b.text)])",
+    "          ),",
+    "        ),",
+    "        ul(",
+    "          className = \"c4-flows\",",
+    "          children = level.flows.map((f) =>",
+    "            li(key = \"${f.source}-${f.target}\", children = [strong(children = f.source), span(className = \"arrow\", children = \"→\"), strong(children = f.target), if f.text != \"\" span(className = \"flow-text\", children = f.text)])",
+    "          ),",
+    "        ),",
+    "      ],",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/diagram.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "Diagram",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/frame",
+   "type": "file",
+   "title": "`stateless` Frame — the example project website (web)",
+   "summary": "The frame of a page without the side menu (the home page, the tools, the platforms): the top bar, the content and the footer. `current` marks the top link of the page.",
+   "body": [
+    "`components/docs/presentation/layout/frame.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The frame of a page without the side menu (the home page, the tools, the platforms): the top bar, the content and",
+    "// the footer. `current` marks the top link of the page.",
+    "stateless Frame(current: string, content: Element)",
+    "  build() Element",
+    "    div(className = \"site wide\", children = [TopBar(current = current), main(className = \"page\", children = content), Footer()])",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/frame.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "Frame",
+    "project": "website"
+   }
+  },
+  {
    "id": "example:website/components/docs/presentation/layout/layout",
    "type": "file",
    "title": "`stateless` Layout — the example project website (web)",
@@ -7260,20 +9193,21 @@
     "    div(",
     "      className = \"site\",",
     "      children = [",
-    "        TopBar(),",
+    "        TopBar(current = current),",
     "        div(className = \"frame\", children = [Sidebar(current = current), main(className = \"content\", children = content)]),",
     "        Footer(),",
     "      ],",
     "    )",
     "",
-    "stateless TopBar",
+    "// The top bar: the brand, the top links (the one of the current area marked), the search and GitHub.",
+    "stateless TopBar(current: string = \"\")",
     "  build() Element",
     "    header(",
     "      className = \"topbar\",",
     "      children = SiteStateBuilder(",
     "        full = (site) => fragment(",
     "          a(className = \"brand\", href = \"/\", children = [span(className = \"logo\", children = \"☢\"), span(children = site.title)]),",
-    "          nav(className = \"links\", children = site.top.map((l) => a(key = l.path, href = l.path, children = l.title))),",
+    "          nav(className = \"links\", children = site.top.map((l) => a(key = l.path, className = area(l.path) == area(current) ? \"active\" : \"\", href = l.path, children = l.title))),",
     "          SearchBox(),",
     "          a(className = \"github\", href = site.org, children = \"GitHub\"),",
     "        ),",
@@ -7316,6 +9250,11 @@
     "        orElse = () => span(),",
     "      ),",
     "    )",
+    "",
+    "// The first part of an address: `/tools/mcp` → `tools`, `/` → ``.",
+    "area(path: string) string",
+    "  parts = path.split(\"/\")",
+    "  parts.length > 1 ? parts[1] : \"\"",
     "```"
    ],
    "platforms": [
@@ -7394,6 +9333,47 @@
    "meta": {
     "kind": "statemanager",
     "name": "SiteManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/reveal",
+   "type": "file",
+   "title": "`stateful` Reveal — the example project website (web)",
+   "summary": "The motion of a page, with the npm package motion (`nuclear add motion`): the blocks of class \"rise\" come up one after the other when the page opens, and the blocks of class \"reveal\" fade in when they scroll into view. It wraps the content once it is loaded, so the blocks are there when it starts. Without animations (a browser that cannot, the tests) every block simply stays visible.",
+   "body": [
+    "`components/docs/presentation/layout/reveal.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The motion of a page, with the npm package motion (`nuclear add motion`): the blocks of class \"rise\" come up one",
+    "// after the other when the page opens, and the blocks of class \"reveal\" fade in when they scroll into view. It wraps",
+    "// the content once it is loaded, so the blocks are there when it starts. Without animations (a browser that cannot,",
+    "// the tests) every block simply stays visible.",
+    "stateful Reveal(child: Element)",
+    "  initState() void",
+    "    try",
+    "      animate(\".rise\", { \"opacity\": [0, 1], \"transform\": [\"translateY(18px)\", \"none\"] }, { \"duration\": 0.7, \"delay\": stagger(0.09) })",
+    "      inView(\".reveal\", (element) => fadeIn(element), { \"amount\": 0.12 })",
+    "    catch e",
+    "      Log.w(\"no animations: ${e}\")",
+    "      animate(\".rise, .reveal\", { \"opacity\": 1 }, { \"duration\": 0 })",
+    "",
+    "  fadeIn(element: any) void",
+    "    animate(element, { \"opacity\": [0, 1], \"transform\": [\"translateY(28px)\", \"none\"] }, { \"duration\": 0.65 })",
+    "",
+    "  build() Element",
+    "    div(className = \"motion\", children = child)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/reveal.nuc"
+   ],
+   "meta": {
+    "kind": "stateful",
+    "name": "Reveal",
     "project": "website"
    }
   },
@@ -7487,6 +9467,598 @@
    }
   },
   {
+   "id": "example:website/components/docs/presentation/layout/terminal",
+   "type": "file",
+   "title": "`stateful` Terminal — the example project website (web)",
+   "summary": "A terminal that replays real commands: each step shows its command and the output it gave when the site was built. \"Run the next command\" shows one more; at the end it starts again (`controls = false`: every step, no buttons).",
+   "body": [
+    "`components/docs/presentation/layout/terminal.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// A terminal that replays real commands: each step shows its command and the output it gave when the site was built.",
+    "// \"Run the next command\" shows one more; at the end it starts again (`controls = false`: every step, no buttons).",
+    "stateful Terminal(steps: PlatformSteps[], title: string = \"terminal\", controls: boolean = true)",
+    "  shown: int = 1",
+    "",
+    "  build() Element",
+    "    div(",
+    "      className = \"terminal\",",
+    "      children = [",
+    "        div(className = \"terminal-bar\", children = [span(className = \"dot red\"), span(className = \"dot amber\"), span(className = \"dot green\"), span(className = \"terminal-title\", children = title)]),",
+    "        div(",
+    "          className = \"terminal-body\",",
+    "          children = steps.slice(0, controls ? shown : steps.length).map((s) =>",
+    "            div(",
+    "              key = s.command,",
+    "              className = \"terminal-step\",",
+    "              children = [",
+    "                pre(className = \"prompt\", children = \"$ ${s.command}\"),",
+    "                if s.output != \"\" pre(className = \"output\", children = s.output),",
+    "              ],",
+    "            )",
+    "          ),",
+    "        ),",
+    "        if controls div(",
+    "          className = \"terminal-actions\",",
+    "          children = [",
+    "            button(className = \"button primary\", onClick = () => next(), children = shown < steps.length ? \"Run the next command\" : \"Start again\"),",
+    "            if shown < steps.length button(className = \"button\", onClick = () => all(), children = \"Run them all\"),",
+    "          ],",
+    "        ),",
+    "      ],",
+    "    )",
+    "",
+    "  next() void",
+    "    setState(() =>",
+    "      shown = shown < steps.length ? shown + 1 : 1",
+    "    )",
+    "",
+    "  all() void",
+    "    setState(() =>",
+    "      shown = steps.length",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/terminal.nuc"
+   ],
+   "meta": {
+    "kind": "stateful",
+    "name": "Terminal",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/platforms/managers/platforms_manager",
+   "type": "file",
+   "title": "`statemanager` PlatformsManager — the example project website (web)",
+   "summary": "The state of the platforms screen: it loads the first page when it is created.",
+   "body": [
+    "`components/docs/presentation/platforms/managers/platforms_manager.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The state of the platforms screen: it loads the first page when it is created.",
+    "@stateModel(PlatformsState)",
+    "statemanager PlatformsManager",
+    "  (docs: DocsComponent)",
+    "    load()",
+    "",
+    "  @state(PlatformsState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(PlatformsState.full)",
+    "  load() Result<PlatformError, Platform[]>",
+    "    ~docs.listPlatforms()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/platforms/managers/platforms_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "PlatformsManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/platforms/platform_screen",
+   "type": "file",
+   "title": "`stateless` PlatformScreen — the example project website (web)",
+   "summary": "The page of one platform (/platforms/backend), from the idea to the code, level by level as in the C4 model: the context, the containers, the components, and the code (a file of its example and what each dialect writes from it).",
+   "body": [
+    "`components/docs/presentation/platforms/platform_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The page of one platform (/platforms/backend), from the idea to the code, level by level as in the C4 model: the",
+    "// context, the containers, the components, and the code (a file of its example and what each dialect writes from it).",
+    "@screen(route = \"/platforms/:name\", providers = [PlatformsManager, SiteManager, SearchManager])",
+    "stateless PlatformScreen(name: string)",
+    "  build() Element",
+    "    Frame(",
+    "      current = \"/platforms\",",
+    "      content = PlatformsStateBuilder(",
+    "        loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "        full = (items) => Reveal(key = name, child = PlatformPage(platforms = items, name = name)),",
+    "        error = (e) => p(className = \"error center\", children = e.message),",
+    "      ),",
+    "    )",
+    "",
+    "stateless PlatformPage(platforms: Platform[], name: string)",
+    "  build() Element",
+    "    platform = platforms.find((p) => p.key == name)",
+    "    if platform == null",
+    "      section(className = \"missing\", children = [h1(children = \"Not found\"), p(children = \"There is no platform named ${name}.\"), a(href = \"/platforms\", children = \"The platforms\")])",
+    "    else",
+    "      fragment(",
+    "        PlatformTabs(platforms = platforms, current = name, base = \"/platforms\"),",
+    "        section(",
+    "          className = \"page-hero\",",
+    "          children = [",
+    "            small(className = \"eyebrow rise\", children = platform.dialects),",
+    "            h1(className = \"rise\", children = platform.name),",
+    "            p(className = \"lead rise\", children = platform.tagline),",
+    "            p(className = \"tagline rise\", children = platform.pitch),",
+    "            div(className = \"actions rise\", children = [a(className = \"button primary\", href = \"/start/${name}\", children = \"Build its example app\"), a(className = \"button\", href = platform.example, children = \"The example on GitHub\")]),",
+    "          ],",
+    "        ),",
+    "        ...platform.levels.map((l) => Diagram(key = l.level, level = l)),",
+    "        section(",
+    "          className = \"c4 reveal\",",
+    "          children = [",
+    "            div(",
+    "              className = \"c4-head\",",
+    "              children = [",
+    "                span(className = \"c4-level\", children = \"4 · Code\"),",
+    "                h3(children = \"One file of the example, and what the dialect writes from it\"),",
+    "                p(children = \"${platform.stats.nucLines} lines of Nuclear in ${platform.stats.nucFiles} files become ${platform.stats.outLines} lines in ${platform.stats.outFiles} files of the target. Built when this site was built.\"),",
+    "              ],",
+    "            ),",
+    "            CodeTabs(",
+    "              titles = platform.code.outputs.map((o) => o.path),",
+    "              panes = platform.code.outputs.map((o) => o.html),",
+    "              pinned = platform.code.html,",
+    "              pinnedTitle = platform.code.path,",
+    "            ),",
+    "          ],",
+    "        ),",
+    "        section(",
+    "          className = \"block reveal\",",
+    "          children = [",
+    "            h2(children = \"Read\"),",
+    "            ul(className = \"doc-index\", children = platform.pages.map((d) => li(key = d.path, children = a(href = d.path, children = d.title)))),",
+    "          ],",
+    "        ),",
+    "      )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/platforms/platform_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "PlatformScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/platforms/platforms_screen",
+   "type": "file",
+   "title": "`stateless` PlatformsScreen — the example project website (web)",
+   "summary": "The index of the platforms: the three of Synapsis, each with its page and its onboarding.",
+   "body": [
+    "`components/docs/presentation/platforms/platforms_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The index of the platforms: the three of Synapsis, each with its page and its onboarding.",
+    "@screen(route = \"/platforms\", providers = [PlatformsManager, SiteManager, SearchManager])",
+    "stateless PlatformsScreen",
+    "  build() Element",
+    "    Frame(",
+    "      current = \"/platforms\",",
+    "      content = PlatformsStateBuilder(",
+    "        loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "        full = (items) => Reveal(child = PlatformsIndex(platforms = items)),",
+    "        error = (e) => p(className = \"error center\", children = e.message),",
+    "      ),",
+    "    )",
+    "",
+    "stateless PlatformsIndex(platforms: Platform[])",
+    "  build() Element",
+    "    fragment(",
+    "      section(",
+    "        className = \"page-hero\",",
+    "        children = [",
+    "          h1(className = \"rise\", children = \"Three platforms, one framework\"),",
+    "          p(className = \"lead rise\", children = \"Synapsis writes a mobile app, a backend or a web app from Nuclear, with the same architecture on the three.\"),",
+    "        ],",
+    "      ),",
+    "      div(",
+    "        className = \"cards three\",",
+    "        children = platforms.map((c) =>",
+    "          article(",
+    "            key = c.key,",
+    "            className = \"card platform-${c.key} reveal\",",
+    "            children = [",
+    "              h3(children = a(href = \"/platforms/${c.key}\", children = c.name)),",
+    "              small(children = c.dialects),",
+    "              p(children = c.pitch),",
+    "              div(className = \"card-links\", children = [a(href = \"/platforms/${c.key}\", children = \"How it works\"), a(href = \"/start/${c.key}\", children = \"Start\")]),",
+    "            ],",
+    "          )",
+    "        ),",
+    "      ),",
+    "    )",
+    "",
+    "// The tabs of the three platforms, the current one marked; `base` is `/platforms` or `/start`.",
+    "stateless PlatformTabs(platforms: Platform[], current: string, base: string)",
+    "  build() Element",
+    "    nav(",
+    "      className = \"pills platform-tabs\",",
+    "      children = platforms.map((p) => a(key = p.key, className = p.key == current ? \"pill active\" : \"pill\", href = \"${base}/${p.key}\", children = p.name)),",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/platforms/platforms_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "PlatformsScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/platforms/start_screen",
+   "type": "file",
+   "title": "`stateless` StartScreen — the example project website (web)",
+   "summary": "The onboarding of a platform (/start/web): the commands that make its example app, one step at a time, each with the output it gave when this site was built (the site runs them again on every build).",
+   "body": [
+    "`components/docs/presentation/platforms/start_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The onboarding of a platform (/start/web): the commands that make its example app, one step at a time, each with",
+    "// the output it gave when this site was built (the site runs them again on every build).",
+    "@screen(route = \"/start/:name\", providers = [PlatformsManager, SiteManager, SearchManager])",
+    "stateless StartScreen(name: string)",
+    "  build() Element",
+    "    Frame(",
+    "      current = \"/platforms\",",
+    "      content = PlatformsStateBuilder(",
+    "        loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "        full = (items) => Reveal(key = name, child = Onboarding(key = name, platforms = items, name = name)),",
+    "        error = (e) => p(className = \"error center\", children = e.message),",
+    "      ),",
+    "    )",
+    "",
+    "stateful Onboarding(platforms: Platform[], name: string)",
+    "  step: int = 0",
+    "",
+    "  build() Element",
+    "    platform = platforms.find((p) => p.key == name)",
+    "    if platform == null",
+    "      section(className = \"missing\", children = [h1(children = \"Not found\"), p(children = \"There is no platform named ${name}.\"), a(href = \"/platforms\", children = \"The platforms\")])",
+    "    else",
+    "      fragment(",
+    "        PlatformTabs(platforms = platforms, current = name, base = \"/start\"),",
+    "        section(",
+    "          className = \"page-hero\",",
+    "          children = [",
+    "            small(className = \"eyebrow rise\", children = \"Onboarding · ${platform.name}\"),",
+    "            h1(className = \"rise\", children = \"Build ${platform.app}\"),",
+    "            p(className = \"lead rise\", children = \"${platform.steps.length} steps. Nothing written by hand: every file comes from the tools.\"),",
+    "          ],",
+    "        ),",
+    "        ol(",
+    "          className = \"stepper rise\",",
+    "          children = platform.steps.map((s, i) =>",
+    "            li(key = s.title, className = i == step ? \"current\" : i < step ? \"done\" : \"\", children = button(onClick = () => go(i), children = [span(className = \"number\", children = \"${i + 1}\"), span(children = s.title)]))",
+    "          ),",
+    "        ),",
+    "        StepCard(key = \"${step}\", step = platform.steps[step]),",
+    "        div(",
+    "          className = \"actions\",",
+    "          children = [",
+    "            if step > 0 button(className = \"button\", onClick = () => go(step - 1), children = \"Back\"),",
+    "            if step < platform.steps.length - 1 button(className = \"button primary\", onClick = () => go(step + 1), children = \"Next\"),",
+    "          ],",
+    "        ),",
+    "        step == platform.steps.length - 1 ? Done(platform = platform) : span(),",
+    "      )",
+    "",
+    "  go(index: int) void",
+    "    setState(() =>",
+    "      step = index",
+    "    )",
+    "",
+    "stateless StepCard(step: PlatformSteps)",
+    "  build() Element",
+    "    section(",
+    "      className = \"step-card\",",
+    "      children = [",
+    "        h2(children = step.title),",
+    "        p(children = step.text),",
+    "        Terminal(key = step.command, steps = [step], title = step.output == \"\" ? \"run it on your machine\" : \"its real output\", controls = false),",
+    "      ],",
+    "    )",
+    "",
+    "// The end of the onboarding: the app is made; its code, the example in the tree and where to read on.",
+    "stateless Done(platform: Platform)",
+    "  build() Element",
+    "    section(",
+    "      className = \"block\",",
+    "      children = [",
+    "        h2(children = \"That is the whole app\"),",
+    "        p(className = \"block-text\", children = \"${platform.stats.nucFiles} .nuc files and ${platform.stats.nucLines} lines of Nuclear, all written by the commands above; the dialect writes ${platform.stats.outLines} lines from them.\"),",
+    "        CodeTabs(",
+    "          titles = platform.code.outputs.map((o) => o.path),",
+    "          panes = platform.code.outputs.map((o) => o.html),",
+    "          pinned = platform.code.html,",
+    "          pinnedTitle = platform.code.path,",
+    "        ),",
+    "        div(",
+    "          className = \"actions\",",
+    "          children = [",
+    "            a(className = \"button primary\", href = platform.example, children = \"The example in the tree\"),",
+    "            a(className = \"button\", href = \"/platforms/${platform.key}\", children = \"How the platform works\"),",
+    "            ...platform.pages.slice(0, 1).map((d) => a(key = d.path, className = \"button\", href = d.path, children = \"The guide\")),",
+    "          ],",
+    "        ),",
+    "      ],",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/platforms/start_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "StartScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/platforms/state_models/platforms_state",
+   "type": "file",
+   "title": "`statemodel` PlatformsState — the example project website (web)",
+   "summary": "The states of the platforms screen: each field is one.",
+   "body": [
+    "`components/docs/presentation/platforms/state_models/platforms_state.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The states of the platforms screen: each field is one.",
+    "PlatformsState",
+    "  (full: Platform[], error: PlatformError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/platforms/state_models/platforms_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "PlatformsState",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/tools/managers/tools_manager",
+   "type": "file",
+   "title": "`statemanager` ToolsManager — the example project website (web)",
+   "summary": "The state of the tools screen: it loads the first page when it is created.",
+   "body": [
+    "`components/docs/presentation/tools/managers/tools_manager.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The state of the tools screen: it loads the first page when it is created.",
+    "@stateModel(ToolsState)",
+    "statemanager ToolsManager",
+    "  (docs: DocsComponent)",
+    "    load()",
+    "",
+    "  @state(ToolsState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(ToolsState.full)",
+    "  load() Result<ToolError, Tool[]>",
+    "    ~docs.listTools()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/tools/managers/tools_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "ToolsManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/tools/state_models/tools_state",
+   "type": "file",
+   "title": "`statemodel` ToolsState — the example project website (web)",
+   "summary": "The states of the tools screen: each field is one.",
+   "body": [
+    "`components/docs/presentation/tools/state_models/tools_state.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The states of the tools screen: each field is one.",
+    "ToolsState",
+    "  (full: Tool[], error: ToolError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/tools/state_models/tools_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "ToolsState",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/tools/tool_screen",
+   "type": "file",
+   "title": "`stateless` ToolScreen — the example project website (web)",
+   "summary": "The page of one tool (/tools/mcp): what it is, why it matters, how it starts, and the index of its documents.",
+   "body": [
+    "`components/docs/presentation/tools/tool_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The page of one tool (/tools/mcp): what it is, why it matters, how it starts, and the index of its documents.",
+    "@screen(route = \"/tools/:name\", providers = [ToolsManager, SiteManager, SearchManager])",
+    "stateless ToolScreen(name: string)",
+    "  build() Element",
+    "    Frame(",
+    "      current = \"/tools\",",
+    "      content = ToolsStateBuilder(",
+    "        loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "        full = (items) => Reveal(key = name, child = ToolPage(tools = items, name = name)),",
+    "        error = (e) => p(className = \"error center\", children = e.message),",
+    "      ),",
+    "    )",
+    "",
+    "stateless ToolPage(tools: Tool[], name: string)",
+    "  build() Element",
+    "    tool = tools.find((t) => t.key == name)",
+    "    if tool == null",
+    "      section(className = \"missing\", children = [h1(children = \"Not found\"), p(children = \"There is no tool named ${name}.\"), a(href = \"/tools\", children = \"Every tool\")])",
+    "    else",
+    "      fragment(",
+    "        section(",
+    "          className = \"page-hero\",",
+    "          children = [",
+    "            small(className = \"eyebrow rise\", children = tool.group),",
+    "            h1(className = \"rise\", children = tool.name),",
+    "            p(className = \"lead rise\", children = tool.tagline),",
+    "            p(className = \"tagline rise\", children = tool.pitch),",
+    "          ],",
+    "        ),",
+    "        section(",
+    "          className = \"hooks\",",
+    "          children = tool.highlights.map((h) => article(key = h.title, className = \"hook reveal\", children = [h3(children = h.title), p(children = h.text)])),",
+    "        ),",
+    "        section(",
+    "          className = \"block reveal\",",
+    "          children = [h2(children = \"Start\"), div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": tool.demo })],",
+    "        ),",
+    "        section(",
+    "          className = \"block reveal\",",
+    "          children = [",
+    "            h2(children = \"Read\"),",
+    "            ul(",
+    "              className = \"doc-index\",",
+    "              children = tool.pages.map((d) => li(key = d.path, children = a(href = d.path, children = d.title))),",
+    "            ),",
+    "            a(className = \"button\", href = tool.project, children = \"The project on GitHub\"),",
+    "          ],",
+    "        ),",
+    "        nav(",
+    "          className = \"siblings reveal\",",
+    "          children = tools.map((t) => a(key = t.key, className = t.key == name ? \"pill active\" : \"pill\", href = \"/tools/${t.key}\", children = t.name)),",
+    "        ),",
+    "      )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/tools/tool_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "ToolScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/tools/tools_screen",
+   "type": "file",
+   "title": "`stateless` ToolsScreen — the example project website (web)",
+   "summary": "The index of the tools: every tool of the tree by what it is for (build, edit, run, AI), each with its page.",
+   "body": [
+    "`components/docs/presentation/tools/tools_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The index of the tools: every tool of the tree by what it is for (build, edit, run, AI), each with its page.",
+    "@screen(route = \"/tools\", providers = [ToolsManager, SiteManager, SearchManager])",
+    "stateless ToolsScreen",
+    "  build() Element",
+    "    Frame(",
+    "      current = \"/tools\",",
+    "      content = ToolsStateBuilder(",
+    "        loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "        full = (items) => Reveal(child = ToolsIndex(tools = items)),",
+    "        error = (e) => p(className = \"error center\", children = e.message),",
+    "      ),",
+    "    )",
+    "",
+    "stateless ToolsIndex(tools: Tool[])",
+    "  build() Element",
+    "    fragment(",
+    "      section(",
+    "        className = \"page-hero\",",
+    "        children = [",
+    "          h1(className = \"rise\", children = \"The tools\"),",
+    "          p(className = \"lead rise\", children = \"Everything around the language: what builds, edits, runs and helps an AI agent write a Nuclear project. Each one has its page and its documents.\"),",
+    "        ],",
+    "      ),",
+    "      ...[\"Build\", \"Edit\", \"Run\", \"AI\"].map((g) =>",
+    "        section(",
+    "          key = g,",
+    "          className = \"block reveal\",",
+    "          children = [",
+    "            h2(children = g),",
+    "            div(",
+    "              className = \"cards tools\",",
+    "              children = tools.filter((t) => t.group == g).map((t) =>",
+    "                a(key = t.key, className = \"card tool\", href = \"/tools/${t.key}\", children = [h3(children = t.name), p(className = \"tagline\", children = t.tagline), p(children = t.pitch)])",
+    "              ),",
+    "            ),",
+    "          ],",
+    "        )",
+    "      ),",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/tools/tools_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "ToolsScreen",
+    "project": "website"
+   }
+  },
+  {
    "id": "example:website/config",
    "type": "file",
    "title": "`config` config — the example project website (web)",
@@ -7495,9 +10067,13 @@
     "`config.nuc` of `website`:",
     "",
     "```nuclear",
-    "// The platform this project is written for and the dialect it is built with (ADR-0093, ADR-0097).",
+    "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).",
     "synapsis(platform = \"web\", dialect = \"react\")",
     "app(name = \"nuclearlang_website\", title = \"NuclearLang\", description = \"A minimal language for AI agents and people, transpiled to TypeScript, Dart and Python; Synapsis, its framework for mobile, backend and web.\", version = \"0.1.0\")",
+    "",
+    "dependencies(",
+    "  motion = \"^14.14.0\",",
+    ")",
     "```"
    ],
    "platforms": [
@@ -7589,7 +10165,78 @@
     "entry(path: string, title: string, headings: string[], words: string) SearchEntry",
     "  SearchEntry(path = path, title = title, headings = headings, words = words)",
     "",
-    "@mock([ContentRepository])",
+    "step(command: string, output: string) PlatformSteps",
+    "  PlatformSteps(title = \"Create the project\", text = \"Only .nuc files.\", command = command, output = output)",
+    "",
+    "code() PlatformCode",
+    "  PlatformCode(path = \"components/todos/api/todos_controller.nuc\", html = \"<pre>nuclear</pre>\", outputs = [PlatformOutputs(dialect = \"fastapi\", path = \"build/app/todos_controller.py\", html = \"<pre>python</pre>\")])",
+    "",
+    "stats() PlatformStats",
+    "  PlatformStats(nucFiles = 14, nucLines = 99, outFiles = 15, outLines = 197)",
+    "",
+    "home() Home",
+    "  Home(",
+    "    title = \"NuclearLang\",",
+    "    lead = \"Write only the logic.\",",
+    "    tagline = \"A language.\",",
+    "    actions = [Action(title = \"Start\", path = \"/start/backend\", primary = true)],",
+    "    hooks = [Hook(title = \"Made for agents\", text = \"One way to write each thing.\")],",
+    "    samplesTitle = \"Write it once\",",
+    "    samplesNote = \"A note.\",",
+    "    samples = [Sample(title = \"Models\", nuclear = \"<pre>nuclear</pre>\", outputs = [Output(dialect = \"typescript\", html = \"<pre>ts</pre>\")])],",
+    "    check = CheckDemo(title = \"Errors an agent can fix\", text = \"Text.\", wrong = \"<pre>let x</pre>\", diagnostics = [Diagnostic(code = \"N0022\", line = 1, col = 1, message = \"declare by assigning\", fix = \"let  → \")], json = \"<pre>[]</pre>\", fixed = \"<pre>x</pre>\"),",
+    "    generatorTitle = \"One command writes the feature\",",
+    "    generatorText = \"Text.\",",
+    "    generatorPlatform = \"backend\",",
+    "    generator = [step(\"nuclear new todos_api -p backend\", \"created config.nuc\")],",
+    "    stats = stats(),",
+    "    dialectsTitle = \"Change the dialect\",",
+    "    dialectsText = \"Text.\",",
+    "    dialects = code(),",
+    "    platformsTitle = \"Three platforms\",",
+    "    platformsText = \"Text.\",",
+    "    platforms = [PlatformCard(key = \"web\", name = \"Web\", dialects = \"react\", tagline = \"In a browser.\")],",
+    "    toolsTitle = \"The tools\",",
+    "    toolsText = \"Text.\",",
+    "    tools = [ToolCard(key = \"mcp\", name = \"MCP server\", group = \"AI\", tagline = \"Nuclear in any client.\")],",
+    "    librariesTitle = \"Any library\",",
+    "    librariesText = \"Text.\",",
+    "    librariesCommand = \"<pre>nuclear add motion</pre>\",",
+    "    librariesExample = \"<pre>example</pre>\",",
+    "    installTitle = \"Install\",",
+    "    install = \"curl -fsSL https://example.org/install.sh | sh\",",
+    "  )",
+    "",
+    "tool() Tool",
+    "  Tool(",
+    "    key = \"mcp\",",
+    "    name = \"MCP server\",",
+    "    group = \"AI\",",
+    "    tagline = \"Nuclear in any client.\",",
+    "    pitch = \"It speaks MCP.\",",
+    "    highlights = [ToolHighlights(title = \"Generate first\", text = \"The generators, as tools.\")],",
+    "    demo = \"<pre>nuclear-mcp tools</pre>\",",
+    "    project = \"https://github.com/example/tree/main/tools/mcp\",",
+    "    pages = [ToolPages(title = \"The MCP server\", path = \"/mcp/guide/mcp\")],",
+    "  )",
+    "",
+    "platform() Platform",
+    "  Platform(",
+    "    key = \"backend\",",
+    "    name = \"Backend\",",
+    "    dialects = \"fastapi · nestjs\",",
+    "    tagline = \"APIs from the same .nuc.\",",
+    "    pitch = \"Controllers and entities.\",",
+    "    levels = [PlatformLevels(level = \"1 · Context\", title = \"Your API and its clients\", text = \"Text.\", boxes = [PlatformBoxes(name = \"Your API\", kind = \"system\", text = \"in Nuclear\")], flows = [PlatformFlows(source = \"Clients\", target = \"Your API\", text = \"HTTP\")])],",
+    "    pages = [PlatformPages(title = \"The backend\", path = \"/backend/reference/backend\")],",
+    "    app = \"todos_api\",",
+    "    example = \"https://github.com/example/tree/main/todos_api\",",
+    "    steps = [step(\"nuclear new todos_api -p backend\", \"created config.nuc\"), step(\"nuclear check --json\", \"[]\")],",
+    "    code = code(),",
+    "    stats = stats(),",
+    "  )",
+    "",
+    "@mock([ContentRepository, ToolRepository, PlatformRepository])",
     "DocsTest",
     "  beforeEach()",
     "    when(ContentRepository.page).thenReturn(Ok(page()))",
@@ -7613,49 +10260,8 @@
     "        entry(\"/d\", \"Lambdas\", [], \"nothing here\"),",
     "      ]),",
     "    )",
-    "    when(ContentRepository.home).thenReturn(",
-    "      Ok(",
-    "        Home(",
-    "          title = \"NuclearLang\",",
-    "          lead = \"Only the program's logic.\",",
-    "          tagline = \"A language.\",",
-    "          actions = [Action(title = \"Guide\", path = \"/nuclearlang/guide/README\", primary = true)],",
-    "          features = [Feature(title = \"Less text\", text = \"No braces.\")],",
-    "          sampleTitle = \"Nuclear in a few lines\",",
-    "          sampleNote = \"A note.\",",
-    "          sample = \"<pre>sample</pre>\",",
-    "          outputs = [Output(dialect = \"typescript\", html = \"<pre>ts</pre>\")],",
-    "          platformsTitle = \"Three platforms\",",
-    "          platforms = [PlatformCard(title = \"Web\", dialects = \"react\", text = \"In a browser.\", path = \"/docs/synapsis/react\")],",
-    "          installTitle = \"Install\",",
-    "          install = \"curl -fsSL https://example.org/install.sh | sh\",",
-    "        ),",
-    "      ),",
-    "    )",
-    "",
-    "  @test(\"the search ranks a title before a heading before a word of the text\")",
-    "  ranks()",
-    "    found = okOf(~SearchUseCase.exec(\"Results\"))",
-    "    expect(found.map((r) => r.path)).toEqual([\"/a\", \"/b\", \"/c\"])",
-    "",
-    "  @test(\"a query of one letter finds nothing\")",
-    "  shortQuery()",
-    "    expect(okOf(~SearchUseCase.exec(\" r \"))).toEqual([])",
-    "",
-    "  @widget(\"a page of the documentation shows its text, its headings and the menu\")",
-    "  showsPage()",
-    "    renderScreen(DocScreen(area = \"spec\", name = \"nuclear-base\"))",
-    "    ~screen.findByText(\"Every rule of Nuclear.\")",
-    "    ~screen.findByText(\"Names and files\")",
-    "    ~screen.findByText(\"Base\")",
-    "    ~screen.findByText(\"Guide\")",
-    "",
-    "  @widget(\"the home page shows the sample with a tab per target\")",
-    "  showsHome()",
-    "    renderScreen(HomeScreen())",
-    "    ~screen.findByText(\"Only the program's logic.\")",
-    "    ~screen.findByText(\"typescript\")",
-    "    ~screen.findByText(\"Three platforms\")",
+    "    when(ContentRepository.home).thenReturn(Ok(home()))",
+    "// ... (the file goes on)",
     "```"
    ],
    "platforms": [

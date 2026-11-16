@@ -65,6 +65,12 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
 10. **No commits unless the user asks**; commits only in the user's name, with no co-author line.
 11. `CodeBuilder/` is teaching material only: never in references, context or code.
 12. Node.js/Express is postponed by the user: do not touch it until asked.
+13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).
+    A product is any software made from Nuclear (an app, a backend, the website, an example). Its code is Nuclear,
+    its target code comes from the transpiler, its standard parts from `nuclear new`/`gen`/`make` and the MCP
+    server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a
+    native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when
+    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it.
 
 ## Commands of the whole tree
 

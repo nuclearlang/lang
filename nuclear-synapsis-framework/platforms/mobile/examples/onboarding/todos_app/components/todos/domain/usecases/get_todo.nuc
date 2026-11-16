@@ -1,0 +1,4 @@
+// One todo by its id.
+usecase GetTodo(repository: TodoRepository)
+  exec(id: int) Result<TodoError, Todo>
+    ~repository.one(id)

@@ -1,0 +1,4 @@
+// One page of todos.
+usecase ListTodos(repository: TodoRepository)
+  exec() Result<TodoError, Todo[]>
+    ~repository.all()

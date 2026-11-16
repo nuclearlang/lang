@@ -12,7 +12,8 @@
 | `stop` | `Stop` | if the session changed anything the knowledge base is made from, it runs `nuclear-graph knowledge check` and does not let the turn end while the base is behind the tree: build, review the rows it names, ingest |
 
 A project is a folder with an `AGENTS.md`; a file belongs to the closest one above it. Code is sources, data of the
-dialects, scripts and manifests; generated folders and type definitions are not counted. The session is marked with
+dialects, scripts and manifests; generated folders, type definitions and every file git ignores (a build's output, the
+website's content) are not counted. The session is marked with
 a file in `$XDG_RUNTIME_DIR` (`nuclear-context-<session_id>`), so `stop` only looks at what changed since it started.
 
 Trying it by hand:

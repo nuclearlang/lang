@@ -1,0 +1,4 @@
+// One page of platforms.
+usecase ListPlatforms(repository: PlatformRepository)
+  exec() Result<PlatformError, Platform[]>
+    ~repository.all()

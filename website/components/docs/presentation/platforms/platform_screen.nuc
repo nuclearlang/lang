@@ -1,0 +1,60 @@
+// The page of one platform (/platforms/backend), from the idea to the code, level by level as in the C4 model: the
+// context, the containers, the components, and the code (a file of its example and what each dialect writes from it).
+@screen(route = "/platforms/:name", providers = [PlatformsManager, SiteManager, SearchManager])
+stateless PlatformScreen(name: string)
+  build() Element
+    Frame(
+      current = "/platforms",
+      content = PlatformsStateBuilder(
+        loading = () => p(className = "muted center", children = "Loading…"),
+        full = (items) => Reveal(key = name, child = PlatformPage(platforms = items, name = name)),
+        error = (e) => p(className = "error center", children = e.message),
+      ),
+    )
+
+stateless PlatformPage(platforms: Platform[], name: string)
+  build() Element
+    platform = platforms.find((p) => p.key == name)
+    if platform == null
+      section(className = "missing", children = [h1(children = "Not found"), p(children = "There is no platform named ${name}."), a(href = "/platforms", children = "The platforms")])
+    else
+      fragment(
+        PlatformTabs(platforms = platforms, current = name, base = "/platforms"),
+        section(
+          className = "page-hero",
+          children = [
+            small(className = "eyebrow rise", children = platform.dialects),
+            h1(className = "rise", children = platform.name),
+            p(className = "lead rise", children = platform.tagline),
+            p(className = "tagline rise", children = platform.pitch),
+            div(className = "actions rise", children = [a(className = "button primary", href = "/start/${name}", children = "Build its example app"), a(className = "button", href = platform.example, children = "The example on GitHub")]),
+          ],
+        ),
+        ...platform.levels.map((l) => Diagram(key = l.level, level = l)),
+        section(
+          className = "c4 reveal",
+          children = [
+            div(
+              className = "c4-head",
+              children = [
+                span(className = "c4-level", children = "4 · Code"),
+                h3(children = "One file of the example, and what the dialect writes from it"),
+                p(children = "${platform.stats.nucLines} lines of Nuclear in ${platform.stats.nucFiles} files become ${platform.stats.outLines} lines in ${platform.stats.outFiles} files of the target. Built when this site was built."),
+              ],
+            ),
+            CodeTabs(
+              titles = platform.code.outputs.map((o) => o.path),
+              panes = platform.code.outputs.map((o) => o.html),
+              pinned = platform.code.html,
+              pinnedTitle = platform.code.path,
+            ),
+          ],
+        ),
+        section(
+          className = "block reveal",
+          children = [
+            h2(children = "Read"),
+            ul(className = "doc-index", children = platform.pages.map((d) => li(key = d.path, children = a(href = d.path, children = d.title)))),
+          ],
+        ),
+      )

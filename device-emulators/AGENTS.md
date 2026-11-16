@@ -53,6 +53,7 @@ Not here: the text layer the terminal reads (`__synapsisTextLayer`) is the `syna
 
 | Read | When |
 |---|---|
+| [docs/08-guides/README.md](docs/08-guides/README.md) | You need what a user reads: the devices, how to start one, the presets, the keys |
 | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is untested (systems, desktops, terminals) or pending in the devices |
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change the crate: the backend, the CDP client, the window placement, the terminal's rendering, the slots and temporary folders |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a device is Flutter web in a browser and not an engine of its own |

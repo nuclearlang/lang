@@ -69,4 +69,5 @@ Each extension has its own; they are in its `AGENTS.md`.
 | How an extension finds or bundles the language server and the dialects | [docs/02-architecture/language-server.md](docs/02-architecture/language-server.md) |
 | Why a rule exists | [docs/03-adr/README.md](docs/03-adr/README.md) |
 | To release the three extensions after a change | [docs/06-runbooks/release.md](docs/06-runbooks/release.md) |
+| What a user reads: what the extensions give, which editor has what, how to install them | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | The server itself: modules, completion, hover, projects | [the language server](../nuclearlang/docs/02-architecture/language-server.md) |

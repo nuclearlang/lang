@@ -1,0 +1,5 @@
+// The platforms of the API (content/platforms.json): each method is an http call.
+@repository(path = "content/platforms.json")
+repository PlatformRepository
+  @get
+  all() Result<PlatformError, Platform[]>

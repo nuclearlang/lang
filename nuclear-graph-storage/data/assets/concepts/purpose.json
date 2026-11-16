@@ -305,6 +305,48 @@
    }
   },
   {
+   "id": "concept:made-with-the-tools",
+   "type": "concept",
+   "title": "A product is made with the tools, never by porting code by hand",
+   "summary": "A product (any software made from Nuclear: an app, a backend, the website, an example) is made with the platform's tools: `nuclear new`, `gen`, `make`, the MCP server, `nuclear add` for a library, `nuclear fix`. No agent writes target code (TypeScript, Dart, Python) for a feature, and no agent translates React, Node.js, Python or Dart code into Nuclear by hand.",
+   "body": [
+    "Every product is a test of the platform: if an agent writes a feature by hand in the target's language, or ports native code into Nuclear by itself, nobody learns whether the tools would have made it.",
+    "",
+    "1. The code is Nuclear; the target code comes from the transpiler. Never edit `build/`.",
+    "2. The standard parts come from the generators (`nuclear gen resource`, `nuclear gen usecase`, `nuclear make <kind>`) and the MCP server's tools.",
+    "3. A library is added with `nuclear add <package>` and used through its generated type definitions.",
+    "4. Only what the tools leave is written by hand, in Nuclear.",
+    "5. By hand outside Nuclear only when strictly necessary (the product cannot work otherwise, or the work is on Nuclear itself): say so, and the missing capability goes to the roadmap of the tool that should have done it."
+   ],
+   "keys": [
+    "made with the tools",
+    "no manual migration",
+    "port by hand"
+   ],
+   "asks": [
+    "can I write the typescript by hand",
+    "should I translate the react code to nuclear myself",
+    "how do I add a feature the generators do not make",
+    "may an agent edit the generated code"
+   ],
+   "links": [
+    {
+     "rel": "of",
+     "to": "concept:nuclearlang"
+    },
+    {
+     "rel": "see",
+     "to": "concept:golden-rule"
+    }
+   ],
+   "sources": [
+    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+   ],
+   "meta": {
+    "topic": "purpose"
+   }
+  },
+  {
    "id": "concept:who-is-it-for",
    "type": "purpose",
    "title": "Who NuclearLang is for",

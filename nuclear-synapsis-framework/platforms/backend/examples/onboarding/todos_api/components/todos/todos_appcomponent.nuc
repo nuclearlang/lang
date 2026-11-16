@@ -1,0 +1,7 @@
+// What the rest of the app sees of todos: an alias for each of its use cases.
+appcomponent TodosAppComponent
+  listTodos() = ListTodos.exec
+  getTodo() = GetTodo.exec
+  createTodo() = CreateTodo.exec
+  updateTodo() = UpdateTodo.exec
+  deleteTodo() = DeleteTodo.exec

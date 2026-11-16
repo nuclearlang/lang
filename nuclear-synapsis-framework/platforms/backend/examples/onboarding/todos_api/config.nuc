@@ -1,0 +1,7 @@
+// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).
+synapsis(platform = "backend", dialect = "fastapi")
+app(name = "todos_api", description = "A Synapsis backend.", version = "0.1.0")
+
+// The optional parts this project uses, only these go to the generated project (nuclear help backend):
+// sqlite, postgres, mysql, mariadb, redis, kafka, events, ai, openai, ollama, chroma
+plugins(sqlite = true)

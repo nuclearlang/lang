@@ -51,7 +51,9 @@ installer/install.sh                         # the user runs the installed copy:
 - `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.
 - `examples/examples-fastapi/rick_api/`: the example of the fastapi check.
 - `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.
-- `examples/expected/{rick_api,tasks_api}/`: the golden output of the two projects.
+- `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the
+  website runs those commands again and fails if they do not give it).
+- `examples/expected/{rick_api,tasks_api,todos_api}/`: the golden output of the projects.
 - `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live run (`smoke.py`, `smoke.mjs`).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
@@ -99,6 +101,7 @@ Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fasta
 | [docs/07-reference/backend.md](docs/07-reference/backend.md) | You need the rules of the platform: the project, every kind, the plugins (`nuclear help backend`) |
 | [docs/07-reference/brief/backend.md](docs/07-reference/brief/backend.md) | You want the short sheet an agent reads before writing a backend |
 | [docs/08-guides/contracts.md](docs/08-guides/contracts.md) | You connect an app to a backend through its contract |
+| [docs/08-guides/onboarding-backend.md](docs/08-guides/onboarding-backend.md) | You need the first steps of a user: the todos API in four commands |
 
 Elsewhere:
 

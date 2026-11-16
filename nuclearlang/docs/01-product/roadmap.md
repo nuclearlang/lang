@@ -30,6 +30,13 @@ The pending work of the language, the compiler and the language server. A done i
 
 ## Pending
 
+### Found building the website (2026-11-16)
+
+- **An arrow passed where a `void` callback is expected passes `nuclear check` and fails `tsc`**: `inView(".x",
+  (element) => animate(element, ...))` (motion) returns a value where the definition says `void |
+  ViewChangeHandler`; the call has to go through a method that returns `void`. The check of a lambda's value against
+  a callback type of the definitions is missing.
+
 ### Language and compiler
 
 Found while writing `nuclear-graph` in Nuclear with the `python` dialect; each cost a wrong program that

@@ -1,0 +1,5 @@
+// The todos of the database: find, findAll, save and remove come with it.
+repository TodoRepository
+  page(page: int, size: int = 20) Page<Todo>
+    orderBy("id")
+    paginate(page, size)

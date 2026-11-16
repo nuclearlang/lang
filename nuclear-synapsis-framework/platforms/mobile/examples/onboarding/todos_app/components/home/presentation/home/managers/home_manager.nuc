@@ -1,0 +1,14 @@
+@stateModel(HomeState)
+statemanager HomeManager
+  (component: HomeComponent)
+    load()
+
+  @state(HomeState.loading)
+  loading()
+
+  // the screen's data: call a use case of the component here (`component.<alias>()`); a component made by
+  // `gen resource` has no `hello`, so the skeleton assumes none
+  @before(loading)
+  @state(HomeState.items)
+  load() Result<string, string[]>
+    Ok([])

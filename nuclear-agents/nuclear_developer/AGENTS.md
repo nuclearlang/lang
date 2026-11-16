@@ -70,6 +70,8 @@ This project is written in NuclearLang (`.nuc`), dialect `fastapi`. Its syntax i
 - **A failure of the evaluation is fixed with a general rule or more knowledge**, never with the answer of its
   task; the held-out tasks never reach the graph.
 - **Tools before models**: what a generator, the compiler's fixes or a rename tool can write, no model writes.
+  No agent writes target code for a feature or translates native code into Nuclear by hand
+  ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).
 - A change to a route or to a request updates `docs/02-architecture/integrations.md`. A structural decision is a
   new ADR in `docs/03-adr/`. What cannot be read from the code or the documents is asked, not invented.
 
@@ -88,4 +90,5 @@ This project is written in NuclearLang (`.nuc`), dialect `fastapi`. Its syntax i
 | test a change, or need how the agents are evaluated and where they stand | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
 | need what a past round changed and measured, or record a new one | [docs/05-standards/evaluation-rounds.md](docs/05-standards/evaluation-rounds.md) |
 | install, start or configure the Developer, or see it fail | [docs/06-runbooks/run.md](docs/06-runbooks/run.md) |
+| need what a user reads: what a task goes through, how to call it, what it needs, its limits | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | run the evaluation or measure another model | [docs/06-runbooks/evaluation.md](docs/06-runbooks/evaluation.md) |

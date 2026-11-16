@@ -86,4 +86,5 @@ In this folder:
 | touch access, tokens, encryption or what is stored in clear | [docs/05-standards/security.md](docs/05-standards/security.md) |
 | write a test, or add a question to `questions.toml` | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
 | install, serve, connect a client, set a variable, or see a failure | [docs/06-runbooks/install-and-serve.md](docs/06-runbooks/install-and-serve.md) |
+| need what a user reads: what the graph holds, how to ask it, how it is kept current | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | changed the ecosystem and must bring the base up to date | [docs/06-runbooks/update-the-knowledge-base.md](docs/06-runbooks/update-the-knowledge-base.md) |

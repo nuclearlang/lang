@@ -47,7 +47,9 @@ Two generic rules of the emitter came with this dialect, usable by any other:
   `synapsis-web/testing`), `vitest` and `@testing-library/react`; the definitions give the rest.
 - `[decorators] consumed`: the platform's decorators are read by the templates, not written as TypeScript
   decorators. A method with `@state` returns nothing to its caller (`void = ["state"]`): its value becomes a state.
-- In a view, a parameter is read as `this.props.<name>` (`param_access`); an optional field of a `stateful` starts
+- In a view, a parameter is read as `this.props.<name>` (`param_access`), one with a default as
+  `(this.props.<name> ?? <default>)` (`param_access` gets the default: a generic variable of the templates, `dialects.md`); a
+  view with no required parameter takes `props = {}` (`params_required`); an optional field of a `stateful` starts
   `null`.
 - `[call_site.Log]`: every `Log.d/i/s/w/e(...)` also receives `at`, the breadcrumb
   `component › kind › Class.method · path.nuc:line`.

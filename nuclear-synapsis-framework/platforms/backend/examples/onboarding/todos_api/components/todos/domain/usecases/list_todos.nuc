@@ -1,0 +1,5 @@
+// One page of todos.
+usecase ListTodos(repository: TodoRepository)
+  exec(page: int) Result<Error, Todo[]>
+    found = ~repository.page(page, 20)
+    Ok(found.items)

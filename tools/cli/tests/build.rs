@@ -40,3 +40,18 @@ fn fix_applies_the_exact_fixes() {
     assert!(std::fs::read_to_string(&file).unwrap().contains("(~books.all()).length"));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// `nuclear check <project> --json` prints one JSON document (an agent parses stdout as a whole).
+#[test]
+fn check_json_is_one_document() {
+    let root = std::env::temp_dir().join(format!("nuclear-check-json-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    std::fs::write(root.join("nuclear.toml"), "[project]\nname = \"one\"\ndialect = \"typescript\"\n").unwrap();
+    std::fs::write(root.join("a.nuc"), "a() int\n  1\n").unwrap();
+    let out = Command::new(env!("CARGO_BIN_EXE_nuclear")).args(["check", ".", "--json"]).current_dir(&root).output().unwrap();
+    assert!(out.status.success());
+    let parsed: serde_json::Value = serde_json::from_slice(&out.stdout).expect("one JSON document");
+    assert_eq!(parsed, serde_json::json!([]));
+    let _ = std::fs::remove_dir_all(&root);
+}

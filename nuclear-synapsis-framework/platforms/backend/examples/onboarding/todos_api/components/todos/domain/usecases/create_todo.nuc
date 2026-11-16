@@ -1,0 +1,4 @@
+// Adds a todo.
+usecase CreateTodo(repository: TodoRepository)
+  exec(input: NewTodo) Result<Error, Todo>
+    Ok(~repository.save(Todo(title = input.title, completed = input.completed)))

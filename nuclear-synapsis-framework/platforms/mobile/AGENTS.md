@@ -50,7 +50,8 @@ covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
   forms, dialogs, translations, splash, test helpers).
 - `packages/synapsis_genkit/`: the runtime of the `genkit` plugin (AI).
 - `examples/examples-flutter-dialect/`: the example projects (`clean-flutter-project`, `genkit-assistant`,
-  `tasks_app`) and four single-file examples; `examples/expected/`: the goldens of the projects.
+  `tasks_app`) and four single-file examples; `examples/onboarding/todos_app/`: the app of the onboarding, made only
+  by `nuclear new` and `nuclear gen` (the website runs those commands again); `examples/expected/`: the goldens.
 - `checks/`: `analyze-flutter.sh`, `spec-check-synapsis.py`.
 - `docs/`: the context documentation (the table below).
 
@@ -96,4 +97,5 @@ covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
 | You need the API of the `synapsis` package | [docs/07-reference/synapsis.md](docs/07-reference/synapsis.md) |
 | You need the short sheet an agent gets to write an app | [docs/07-reference/brief/mobile.md](docs/07-reference/brief/mobile.md) |
 | You use Genkit in an app | [docs/08-guides/genkit.md](docs/08-guides/genkit.md) |
+| You need the first steps of a user: a todos app in four commands | [docs/08-guides/onboarding-mobile.md](docs/08-guides/onboarding-mobile.md) |
 | You need how a kind is written in the target, the generated files, the CLI or the editors | [the flutter reference](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |

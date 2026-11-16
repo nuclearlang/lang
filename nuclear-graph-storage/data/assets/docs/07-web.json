@@ -70,13 +70,14 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#documents.d2f9f8",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#documents.84d672",
    "type": "readme",
    "title": "The web platform — Documents",
    "summary": "Elsewhere: (`docs/07-reference/react.md`, its brief, `docs/08-guides/react.md`).",
    "body": [
     "| [docs/07-reference/web.md](docs/07-reference/web.md) | You need the rules of the platform: the project, every kind, the architecture rules (`nuclear help web`) |",
     "| [docs/07-reference/brief/web.md](docs/07-reference/brief/web.md) | You want the short sheet an agent reads before writing a web app |",
+    "| [docs/08-guides/onboarding-web.md](docs/08-guides/onboarding-web.md) | You need the first steps of a user: a todos list in four commands |",
     "",
     "Elsewhere:",
     "",
@@ -113,7 +114,9 @@
     "- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`).",
     "- `examples/examples-web/characters/`: the complete example (list and detail screens, state, events, a guard,",
     "  tests).",
-    "- `examples/expected/characters/`: its golden output.",
+    "- `examples/onboarding/todos_web/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
+    "  website runs those commands again and fails if they do not give it).",
+    "- `examples/expected/{characters,todos_web}/`: the golden output.",
     "- `checks/react-check/check.sh`: the check.",
     "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.",
     "",
@@ -1342,14 +1345,179 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md#1-create-the-project",
+   "type": "guide",
+   "title": "Your first web app: a todos list in four commands — 1. Create the project",
+   "summary": "nuclear new todos_web -p web cd todos_web `config.nuc` (the platform, the dialect, the app), `main.nuc` (the router with every screen) and `config/project_config.nuc` (the app's HTTP connection).",
+   "body": [
+    "```sh",
+    "nuclear new todos_web -p web",
+    "cd todos_web",
+    "```",
+    "",
+    "`config.nuc` (the platform, the dialect, the app), `main.nuc` (the router with every screen) and",
+    "`config/project_config.nuc` (the app's HTTP connection)."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md#2-generate-the-resource-and-its-screen",
+   "type": "guide",
+   "title": "Your first web app: a todos list in four commands — 2. Generate the resource and its screen",
+   "summary": "nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos \\ `--source rest:<url>` adds a connection to that API to `config/project_config.nuc` and makes the repository an HTTP one; `--path todos` is the API's path (without it the path is the resource's name in…",
+   "body": [
+    "```sh",
+    "nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos \\",
+    "  --fields \"id:int title:string completed:boolean\" --screen todos",
+    "```",
+    "",
+    "`--source rest:<url>` adds a connection to that API to `config/project_config.nuc` and makes the repository an",
+    "HTTP one; `--path todos` is the API's path (without it the path is the resource's name in the singular). It writes,",
+    "in the component `todos`:",
+    "",
+    "| File | What it is |",
+    "|---|---|",
+    "| `domain/models/todo.nuc`, `todo_error.nuc` | the model and its error |",
+    "| `data/todo_repository.nuc` | `GET todos` and `GET todos/:id` over the connection |",
+    "| `domain/usecases/list_todos.nuc`, `get_todo.nuc` | the use cases |",
+    "| `todos_component.nuc` | the component's facade |",
+    "| `presentation/todos/` | the screen (`@screen(route = \"/todos\")`), its state manager and its state model |",
+    "| `test/todos_test.nuc` | a test with the repository mocked |"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md#3-check-it",
+   "type": "guide",
+   "title": "Your first web app: a todos list in four commands — 3. Check it",
+   "summary": "nuclear check --json `[]`: no error.",
+   "body": [
+    "```sh",
+    "nuclear check --json",
+    "```",
+    "",
+    "`[]`: no error."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md#4-build-install-test-and-run",
+   "type": "guide",
+   "title": "Your first web app: a todos list in four commands — 4. Build, install, test and run",
+   "summary": "nuclear build # the React app in build/app nuclear install # npm install nuclear test # 1 passed nuclear run # Vite: open http://localhost:5173/todos The screen shows the todos of the API.",
+   "body": [
+    "```sh",
+    "nuclear build        # the React app in build/app",
+    "nuclear install      # npm install",
+    "nuclear test         # 1 passed",
+    "nuclear run          # Vite: open http://localhost:5173/todos",
+    "```",
+    "",
+    "The screen shows the todos of the API. A new web project has no screen at `/` yet: open `/todos`",
+    "([roadmap](../01-product/roadmap.md))."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md#next",
+   "type": "guide",
+   "title": "Your first web app: a todos list in four commands — Next",
+   "summary": "definitions (this documentation site animates with `motion` that way).",
+   "body": [
+    "- A library of npm in Nuclear: `nuclear add <package>` installs it, writes it in `config.nuc` and generates its type",
+    "  definitions (this documentation site animates with `motion` that way).",
+    "- Every kind of the platform: [the web reference](../07-reference/web.md). The same words on a phone: the mobile",
+    "  onboarding."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md#your-first-web-app-a-todos-list-in-four-commands",
+   "type": "guide",
+   "title": "Your first web app: a todos list in four commands",
+   "summary": "A web app that lists todos from an API, written in Nuclear and built as a React app.",
+   "body": [
+    "A web app that lists todos from an API, written in Nuclear and built as a React app. Every file comes from the",
+    "tools: nothing in it was written by hand. The result is the example",
+    "[`examples/onboarding/todos_web`](../../examples/onboarding/todos_web), and the documentation site runs these same",
+    "commands again each time it is built, so they always work.",
+    "",
+    "You need `nuclear` installed (`curl -fsSL https://nuclearlang.github.io/install.sh | sh`) and, to run the app,",
+    "Node.js 20 or later."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:website/AGENTS.md#agents-md-the-website",
    "type": "readme",
    "title": "AGENTS.md — the website",
-   "summary": "The documentation site of NuclearLang, written in Nuclear with the web platform of Synapsis (dialect `react`).",
+   "summary": "The site of NuclearLang, written in Nuclear with the web platform of Synapsis (dialect `react`).",
    "body": [
-    "The documentation site of NuclearLang, written in Nuclear with the web platform of Synapsis (dialect `react`). The",
-    "app only reads JSON; its content is the reference (`docs/07-reference/`) and the guides (`docs/08-guides/`) of every",
-    "project of the tree, turned into JSON, plain HTML and `llms.txt` by a build script. ADR key: `website`."
+    "The site of NuclearLang, written in Nuclear with the web platform of Synapsis (dialect `react`). It sells the idea",
+    "(a home page of hooks, a page per tool, a page per platform from the context down to the code, an onboarding per",
+    "platform) and publishes the documentation: the reference (`docs/07-reference/`) and the guides (`docs/08-guides/`)",
+    "of every project of the tree. The app only reads JSON, written by a build script that also runs the compiler and",
+    "the onboardings' commands. ADR key: `website`."
    ],
    "sources": [
     "website/AGENTS.md"
@@ -1364,12 +1532,13 @@
    "id": "doc:website/AGENTS.md#commands",
    "type": "readme",
    "title": "AGENTS.md — the website — Commands",
-   "summary": "cd website (cd tools && npm ci) # markdown-it, shiki, smol-toml node tools/content.mjs # public/content, public/static, llms.txt, sitemap, installers (needs `nuclear` installed) nuclear build # the app into build/app (public/ copied) nuclear install # npm install in build/app nuclear test #…",
+   "summary": "cd website (cd tools && npm ci) # markdown-it, shiki, smol-toml node tools/content.mjs # public/content, public/static, llms.txt, sitemap, installers; runs the onboardings (needs `nuclear` installed) UPDATE_EXAMPLES=1 node tools/content.mjs # a generator changed on purpose: write the onboardings'…",
    "body": [
     "```sh",
     "cd website",
     "(cd tools && npm ci)             # markdown-it, shiki, smol-toml",
-    "node tools/content.mjs           # public/content, public/static, llms.txt, sitemap, installers (needs `nuclear` installed)",
+    "node tools/content.mjs           # public/content, public/static, llms.txt, sitemap, installers; runs the onboardings (needs `nuclear` installed)",
+    "UPDATE_EXAMPLES=1 node tools/content.mjs   # a generator changed on purpose: write the onboardings' examples again",
     "nuclear build                    # the app into build/app (public/ copied)",
     "nuclear install                  # npm install in build/app",
     "nuclear test                     # vitest: the tests of test/",
@@ -1398,9 +1567,10 @@
     "| Document | Read when |",
     "|---|---|",
     "| [docs/00-context/vision.md](docs/00-context/vision.md) | you need what the site is for and what it does not do |",
-    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | you change the app: its screens, routes, state and tests |",
-    "| [docs/02-architecture/content.md](docs/02-architecture/content.md) | you change how pages, menus, the home page, the plain pages or `llms.txt` are made |",
-    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | you look for what is pending (publishing, routes) |",
+    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | you change the app: its screens, routes, shared views, motion, state and tests |",
+    "| [docs/02-architecture/content.md](docs/02-architecture/content.md) | you change how pages, menus, the home page, the tools, the platforms, the onboardings, the plain pages or `llms.txt` are made |",
+    "| [docs/03-adr/README.md](docs/03-adr/README.md) | you need why the site sells with hooks, why the onboardings run at build time, why `motion` |",
+    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | you look for what is pending (publishing, routes, plain copies of the screens) |",
     "| [README.md](README.md) | the short introduction |",
     "",
     "<!-- nuclearlang -->"
@@ -1423,10 +1593,11 @@
     "| Folder | Holds |",
     "|---|---|",
     "| `config.nuc`, `main.nuc`, `config/` | the project, the app (the router), the `Http(baseUrl = \"/\")` connection |",
-    "| `components/docs/` | the one component: `data/` (the content repository), `domain/` (models, use cases, the search score), `presentation/` (home, doc and not-found screens, the layout, the search box) |",
-    "| `test/docs_test.nuc` | the search ranking, the pages and the home page (the repository is a mock) |",
+    "| `components/docs/` | the one component: `data/` (the repositories of the content, the tools and the platforms), `domain/` (models, use cases, the search score), `presentation/` (`home/`, `tools/`, `platforms/` with the onboarding, `doc/`, `layout/` with the views the pages share) |",
+    "| `defs/` | the type definitions of `motion` (written by `nuclear add`) |",
+    "| `test/docs_test.nuc` | the search, a page, the home page, a tool, a platform, an onboarding (the repositories are mocks) |",
     "| `public/` | `styles.css`, `favicon.svg`; the rest is written by `tools/content.mjs` (ignored by git) |",
-    "| `site.toml` | every text, menu, link and address of the site |",
+    "| `site.toml` | every text, menu, link and address of the site; the tools, the platforms (their C4 levels) and the onboardings' steps |",
     "| `tools/` | `content.mjs` and its `package.json` |",
     "| `build/` | generated: never edit |"
    ],
@@ -1448,10 +1619,15 @@
     "This project is written in NuclearLang (`.nuc`), dialect `react`. Its syntax is not TypeScript, Dart nor Python.",
     "",
     "- Before writing code, read the sheet: `nuclear spec --brief --dialect react`.",
-    "- After each change: `nuclear check <file>.nuc --dialect react --json` must report no errors; fix exactly what each error says (most carry a `fix`).",
+    "- After each change: `nuclear check --json` must report no errors; fix exactly what each error says (most carry a `fix`).",
     "- Look up instead of guessing: an API `nuclear defs show <Name> --dialect react`; a kind or decorator",
     "  `nuclear help <word> --dialect react` (all: `nuclear help words --dialect react`); a topic `nuclear help <topic>`.",
-    "- Never edit generated code (`build/` and the `.ts`/`.dart`/`.py` built from the `.nuc`): change the `.nuc` files.",
+    "- Create each piece with `nuclear make ...` (`nuclear help`); after `nuclear check`, run `nuclear analyze` and, with tests, `nuclear test`.",
+    "- A library the project does not have (npm, PyPI, pub.dev): `nuclear add <package>` installs it and generates its type definitions; then use its names (they are imported for you). Never install it by hand in `build/`.",
+    "- Never edit generated code (`build/`): change the `.nuc` files.",
+    "- Make it with the tools: `nuclear gen`, `nuclear make`, the MCP server, `nuclear add` for a library. Never write",
+    "  target code for a feature nor translate TypeScript, Dart or Python into Nuclear by hand; when a tool cannot do",
+    "  something, say so instead of working around it.",
     "<!-- /nuclearlang -->"
    ],
    "sources": [
@@ -1464,16 +1640,41 @@
    }
   },
   {
-   "id": "doc:website/AGENTS.md#rules",
+   "id": "doc:website/AGENTS.md#rules.25cb8d",
    "type": "readme",
    "title": "AGENTS.md — the website — Rules",
-   "summary": "in `site.toml`.",
+   "summary": "resource is `nuclear gen resource`, a new view or screen `nuclear make`, a library `nuclear add`; only what they leave is written by hand, in Nuclear.",
    "body": [
+    "- **Made with the tools** ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md)): a new",
+    "  resource is `nuclear gen resource`, a new view or screen `nuclear make`, a library `nuclear add`; only what they",
+    "  leave is written by hand, in Nuclear. A gap of a tool goes to that tool's roadmap.",
+    "- **Every claim is real** ([ADR-website-0001](docs/03-adr/0001-the-site-sells-the-idea.md)): an output comes from",
+    "  the compiler or a command run when the site is built; a number is measured. No claim the reports do not hold.",
+    "- **The onboardings are replayed** ([ADR-website-0002](docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md)):",
+    "  a change of their steps changes the examples of the platforms (`UPDATE_EXAMPLES=1`, then `UPDATE_GOLDEN=1 cargo",
+    "  test`) and their guides (`onboarding-<platform>.md`).",
     "- **No content in the code.** A page is a `.md` of a project's `07-reference/` or `08-guides/`; every other text is",
-    "  in `site.toml`. Change the document in its project, not here.",
+    "  in `site.toml`. Change the document in its project, not here. A tool or a platform lists its pages in",
+    "  `site.toml`; a missing page fails the build.",
     "- A new area of the documentation (a dialect, a platform, a tool with guides) gets a line in `site.toml`'s",
     "  `[[sidebar]]`; a page matched by a `*` pattern needs none.",
-    "- The site is in English ([ADR-platform-0001](../docs/03-adr/0001-english-everywhere.md)).",
+    "- The site is in English ([ADR-platform-0001](../docs/03-adr/0001-english-everywhere.md))."
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/AGENTS.md#rules.5d0bae",
+   "type": "readme",
+   "title": "AGENTS.md — the website — Rules",
+   "summary": "published document changes its address.",
+   "body": [
     "- A page's address is `/<project>/<reference|guide>/<name>` (`route` in `tools/content.mjs`): renaming or moving a",
     "  published document changes its address. An address must keep three parts: the app's screens route no deeper."
    ],
@@ -1493,7 +1694,8 @@
    "summary": "`build/app` (React, Vite, vitest).",
    "body": [
     "- The app: Nuclear (`.nuc`), `config.nuc` = `synapsis(platform = \"web\", dialect = \"react\")`; built into",
-    "  `build/app` (React, Vite, vitest).",
+    "  `build/app` (React, Vite, vitest). The animations: the npm package `motion`, added with `nuclear add motion`",
+    "  (its type definitions in `defs/`).",
     "- The content: `tools/content.mjs` (Node.js) with `markdown-it`, `shiki` and `smol-toml` (`tools/package.json`).",
     "- The texts, menus, links and addresses: `site.toml`.",
     "- CI: `.github/workflows/website.yml` at the root of the tree (content, build, tests, bundle)."
@@ -1543,7 +1745,7 @@
    }
   },
   {
-   "id": "doc:website/README.md#build.ca677b",
+   "id": "doc:website/README.md#build.5baf5f",
    "type": "readme",
    "title": "NuclearLang website — Build",
    "summary": "From the root of the tree, with `nuclear` installed (`installer/install.sh`): cd website (cd tools && npm ci) # markdown-it, shiki and smol-toml node tools/content.mjs # the content, from the tree ([source] tree in site.toml; NUCLEAR_TREE overrides it) nuclear build # the app into build/app…",
@@ -1554,6 +1756,7 @@
     "cd website",
     "(cd tools && npm ci)             # markdown-it, shiki and smol-toml",
     "node tools/content.mjs           # the content, from the tree ([source] tree in site.toml; NUCLEAR_TREE overrides it)",
+    "                                 # (it also runs the onboardings and fails if their result is not the platforms' examples)",
     "nuclear build                    # the app into build/app (public/ copied)",
     "nuclear install                  # npm install in build/app",
     "nuclear test                     # vitest: the tests of test/",
@@ -1564,11 +1767,7 @@
     "Every page's markdown is rendered with the code already highlighted (shiki, with the editors' Nuclear grammar and",
     "their Chernobyl theme), so the browser receives HTML. The home page's sample is transpiled to TypeScript, Dart and",
     "Python by the installed `nuclear` when the site is built. For search engines and agents that read without",
-    "JavaScript, every page also has a plain HTML copy in `/static/` (and the sitemap, `llms.txt`, `llms-full.txt`).",
-    "",
-    "The address of a page is `/<project>/<reference|guide>/<name>`: `/nuclearlang/guide/README` is",
-    "`nuclearlang/docs/08-guides/README.md`, `/dart/reference/flutter` is",
-    "`nuclearlang/dialects/dart/docs/07-reference/flutter.md`."
+    "JavaScript, every page also has a plain HTML copy in `/static/` (and the sitemap, `llms.txt`, `llms-full.txt`)."
    ],
    "sources": [
     "website/README.md"
@@ -1580,11 +1779,15 @@
    }
   },
   {
-   "id": "doc:website/README.md#build.e4c0db",
+   "id": "doc:website/README.md#build.bebef9",
    "type": "readme",
    "title": "NuclearLang website — Build",
-   "summary": "Texts, menus and links: `site.toml`.",
+   "summary": "The address of a page is `/<project>/<reference|guide>/<name>`: `/nuclearlang/guide/README` is `nuclearlang/docs/08-guides/README.md`, `/dart/reference/flutter` is `nuclearlang/dialects/dart/docs/07-reference/flutter.md`.",
    "body": [
+    "The address of a page is `/<project>/<reference|guide>/<name>`: `/nuclearlang/guide/README` is",
+    "`nuclearlang/docs/08-guides/README.md`, `/dart/reference/flutter` is",
+    "`nuclearlang/dialects/dart/docs/07-reference/flutter.md`.",
+    "",
     "Texts, menus and links: `site.toml`. How it is made and what is pending: [AGENTS.md](AGENTS.md). License:",
     "[Apache-2.0](LICENSE)."
    ],
@@ -1601,12 +1804,14 @@
    "id": "doc:website/README.md#nuclearlang-website",
    "type": "readme",
    "title": "NuclearLang website",
-   "summary": "The NuclearLang site, written in Nuclear with the web platform of Synapsis (dialect `react`): its screens, state managers, search and content repository are `.nuc` files.",
+   "summary": "The NuclearLang site, written in Nuclear with the web platform of Synapsis (dialect `react`) and made with its tools: its screens, state managers, search and repositories are `.nuc` files, its animations the npm package `motion` added with `nuclear add`.",
    "body": [
-    "The NuclearLang site, written in **Nuclear** with the web platform of Synapsis (dialect `react`): its screens, state",
-    "managers, search and content repository are `.nuc` files. The content is the reference (`docs/07-reference/`) and",
-    "the guides (`docs/08-guides/`) of every project of the NuclearLang tree, turned into JSON by a build script; the app",
-    "only reads it."
+    "The NuclearLang site, written in **Nuclear** with the web platform of Synapsis (dialect `react`) and made with its",
+    "tools: its screens, state managers, search and repositories are `.nuc` files, its animations the npm package",
+    "`motion` added with `nuclear add`. It has a home page of interactive hooks, a page per tool (`/tools`), a page per",
+    "platform from the context down to the code (`/platforms/<key>`) and an onboarding per platform (`/start/<key>`),",
+    "and the reference (`docs/07-reference/`) and guides (`docs/08-guides/`) of every project of the tree. A build script",
+    "turns them into JSON and runs the compiler and the onboardings' commands, so every output on the site is real."
    ],
    "sources": [
     "website/README.md"
@@ -1621,10 +1826,11 @@
    "id": "doc:website/docs/00-context/vision.md#non-goals",
    "type": "context",
    "title": "Vision — Non-goals",
-   "summary": "published.",
+   "summary": "and the platforms are data (`site.toml`).",
    "body": [
-    "- Holding content: no page is written in this project. A context document (`00-context` … `06-runbooks`) is never",
-    "  published.",
+    "- Holding documentation: no page of documentation is written in this project; the texts of the hooks, the tools",
+    "  and the platforms are data (`site.toml`). A context document (`00-context` … `06-runbooks`) is never published.",
+    "- A claim nobody measured, or an output nobody ran.",
     "- Translations: the site is in English only."
    ],
    "sources": [
@@ -1640,10 +1846,12 @@
    "id": "doc:website/docs/00-context/vision.md#problem",
    "type": "context",
    "title": "Vision — Problem",
-   "summary": "The documentation of NuclearLang is spread over the projects of the tree, each beside the code it describes.",
+   "summary": "NuclearLang is free, but it still has to be chosen: a visitor must see in a minute what it gives (a minimal language, three platforms from one codebase, tools that write the standard code, an AI loop that runs locally) and reach the detail of whatever interests them.",
    "body": [
-    "The documentation of NuclearLang is spread over the projects of the tree, each beside the code it describes. People",
-    "need one site to read it; search engines and agents need it without JavaScript."
+    "NuclearLang is free, but it still has to be chosen: a visitor must see in a minute what it gives (a minimal",
+    "language, three platforms from one codebase, tools that write the standard code, an AI loop that runs locally) and",
+    "reach the detail of whatever interests them. Its documentation is spread over the projects of the tree, each beside",
+    "its code; people need one site to read it, and search engines and agents need it without JavaScript."
    ],
    "sources": [
     "website/docs/00-context/vision.md"
@@ -1660,7 +1868,7 @@
    "title": "Vision — Users",
    "summary": "Users",
    "body": [
-    "- People learning or using Nuclear and Synapsis.",
+    "- People who meet NuclearLang for the first time, and those learning or using it.",
     "- AI agents reading `llms.txt` and the plain pages."
    ],
    "sources": [
@@ -1673,19 +1881,25 @@
    }
   },
   {
-   "id": "doc:website/docs/00-context/vision.md#what-the-site-does",
+   "id": "doc:website/docs/00-context/vision.md#what-the-site-does.04a392",
    "type": "context",
    "title": "Vision — What the site does",
-   "summary": "already highlighted (the editors' Nuclear grammar and Chernobyl theme).",
+   "summary": "the most general to the most concrete, each a small interactive block with real output (the compiler's samples, an agent's mistake and its fix, the commands that make an app, one file built for two dialects).",
    "body": [
+    "- **Sells the idea** ([ADR-website-0001](../03-adr/0001-the-site-sells-the-idea.md)): a home page of hooks, from",
+    "  the most general to the most concrete, each a small interactive block with real output (the compiler's samples,",
+    "  an agent's mistake and its fix, the commands that make an app, one file built for two dialects).",
+    "- **A page per tool** (`/tools/<key>`) and an index of them (`/tools`): the pitch, how it starts, the index of its",
+    "  documents.",
+    "- **A page per platform** (`/platforms/<key>`), from the context down to the code as in the C4 model, and its",
+    "  **onboarding** (`/start/<key>`): the commands that build its example app, run again on every build of the site",
+    "  ([ADR-website-0002](../03-adr/0002-onboardings-are-run-when-the-site-is-built.md)).",
     "- Publishes the reference (`docs/07-reference/`) and the guides (`docs/08-guides/`) of every project, with the code",
-    "  already highlighted (the editors' Nuclear grammar and Chernobyl theme).",
-    "- A home page whose sample is transpiled by the real compiler to TypeScript, Dart and Python at build time.",
-    "- A search over the titles, headings and words of every page.",
-    "- For readers without JavaScript: a plain HTML copy of every page in `/static/`, `llms.txt`, `llms-full.txt`",
-    "  ([ADR-lang-0010](../../../nuclearlang/docs/03-adr/0010-compiler-helps-editors-and-agents.md)), the sitemap.",
+    "  already highlighted (the editors' Nuclear grammar and Chernobyl theme), and a search over all of them.",
+    "- For readers without JavaScript: a plain HTML copy of every documentation page in `/static/`, `llms.txt`,",
+    "  `llms-full.txt`, the sitemap.",
     "- Serves the installers at its root (`curl … /install.sh | sh`, `irm … /install.ps1 | iex`).",
-    "- Proves the web platform: the site is a Synapsis web app written in Nuclear."
+    "- **Proves the platform**: the site is a Synapsis web app written in Nuclear, made with the tools"
    ],
    "sources": [
     "website/docs/00-context/vision.md"
@@ -1697,20 +1911,58 @@
    }
   },
   {
-   "id": "doc:website/docs/02-architecture/content.md#site-toml",
+   "id": "doc:website/docs/00-context/vision.md#what-the-site-does.ee738e",
+   "type": "context",
+   "title": "Vision — What the site does",
+   "summary": "(ADR-platform-0004), and uses a library of the target through `nuclear add` (ADR-website-0003).",
+   "body": [
+    "([ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)), and uses a library of the",
+    "  target through `nuclear add` ([ADR-website-0003](../03-adr/0003-libraries-of-the-target-through-nuclear-add.md))."
+   ],
+   "sources": [
+    "website/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#site-toml.152267",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
+   "summary": "(`title`, `text`, and `run` to replay it or `command` to only show it).",
+   "body": "(`title`, `text`, and `run` to replay it or `command` to only show it).",
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#site-toml.fd1b3c",
    "type": "context",
    "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
    "summary": "name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
    "body": [
     "- `[site]`: title, lead, tagline, `url` (`SITE_URL` overrides it), `org`, `branch`, footer.",
-    "- `[[top]]`: the links of the top bar.",
+    "- `[[top]]`: the links of the top bar (a path in the tree is a page; another, a screen: `/tools`, `/platforms/mobile`).",
     "- `[[sidebar]]`: the side menu; each section lists pages by their path without `.md`. A `*` matches any part of a",
     "  name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
-    "- `[[home.actions]]`, `[[home.features]]`, `[home.platforms]` with its cards, `[home.install]` (`{{site}}` is",
-    "  replaced by the url).",
-    "- `[home.sample]`: the Nuclear `code` and the `targets` (language dialects). Each output is",
-    "  `nuclear build app.nuc --dialect <target>` run by the installed compiler (`NUCLEAR` overrides it), highlighted as",
-    "  that language."
+    "- The home page: `[[home.actions]]`, `[[home.hooks]]`, `[home.samples]` (`targets` and its `items`), `[home.check]`",
+    "  (a mistake and its `dialect`), `[home.generator]` and `[home.dialects]` (the platform whose onboarding they show),",
+    "  `[home.platforms]`, `[home.tools]`, `[home.libraries]`, `[home.install]` (`{{site}}` is replaced by the url).",
+    "- `[[tools]]`: `key` (its address `/tools/<key>`), `name`, `group` (Build, Edit, Run or AI), `tagline`, `pitch`,",
+    "  `highlights`, `demo` (commands), `project` (its folder), `pages` (its documents: each must be a page, or the",
+    "  build fails).",
+    "- `[[platforms]]`: `key`, `name`, `dialects`, `tagline`, `pitch`, `pages`, and `[[platforms.levels]]` (`level`,",
+    "  `title`, `text`, `boxes` with a `kind` of person, system, container, component or external, `flows` written",
+    "  `A → B: what`).",
+    "- `[[onboarding]]`: `platform`, `example` (its folder in the tree), `show` (the file of the code level), `steps`"
    ],
    "sources": [
     "website/docs/02-architecture/content.md"
@@ -1750,11 +2002,40 @@
     "| `content/<key>.json` | one page: path, title, html, headings (levels 2 and 3), its source on GitHub; key = the path with `/` → `--` |",
     "| `content/site.json` | title, url, org, footer, the top links, the side menu |",
     "| `content/search.json` | title, headings and words of every page |",
-    "| `content/home.json` | the home page: texts, actions, features, the sample and its outputs, platforms, install lines |",
+    "| `content/home.json` | the home page: texts, actions, hooks, the samples and their outputs, the agent's fix, the backend onboarding's steps and numbers, one file per dialect, the platforms and tools in short, the library, install lines |",
+    "| `content/tools.json` | every tool: key, name, group, tagline, pitch, highlights, how it starts (highlighted), its project on GitHub, its pages |",
+    "| `content/platforms.json` | every platform: its levels (boxes and flows), its pages, and its onboarding run again: the app, the steps with their real output, the shown file and what each dialect writes from it, the numbers |",
     "| `static/<path>.html` | the plain page, with a canonical link to its route |",
     "| `llms.txt`, `llms-full.txt` | the briefs (`07-reference/brief/`) first, then the side menu's sections; the full file carries the briefs and `nuclearlang/docs/08-guides/reference.md` |",
     "| `sitemap.xml`, `robots.txt` | every route |",
     "| `install.sh`, `install.ps1` | copied from `installer/release/` |"
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#what-runs-when-the-site-is-built",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — What runs when the site is built",
+   "summary": "With the installed `nuclear` (`NUCLEAR` overrides it), in a scratch folder: gives no error); they made are compared with the example of the tree (the build fails on a difference; `UPDATE_EXAMPLES=1` writes the example from them); then the project is copied once per dialect of the platform,…",
+   "body": [
+    "With the installed `nuclear` (`NUCLEAR` overrides it), in a scratch folder:",
+    "",
+    "- each sample: `nuclear build sample.nuc --dialect <target>` for each target;",
+    "- the mistake: `nuclear check mistake.nuc --dialect <d> --json`, then `nuclear fix` (the build fails if the mistake",
+    "  gives no error);",
+    "- each onboarding: its `run` steps in order (`nuclear new <name>` moves into the new folder), then the `.nuc` files",
+    "  they made are compared with the example of the tree (the build fails on a difference; `UPDATE_EXAMPLES=1` writes",
+    "  the example from them); then the project is copied once per dialect of the platform, `config.nuc` set to that",
+    "  dialect, built with `nuclear build .`, the file made from `show` found by its name, and the lines of `.nuc` and of",
+    "  the generated code counted (blank lines left out)",
+    "  ([ADR-website-0002](../03-adr/0002-onboardings-are-run-when-the-site-is-built.md))."
    ],
    "sources": [
     "website/docs/02-architecture/content.md"
@@ -1796,15 +2077,16 @@
    }
   },
   {
-   "id": "doc:website/docs/02-architecture/overview.md#a-page",
+   "id": "doc:website/docs/02-architecture/overview.md#a-page-of-documentation",
    "type": "context",
-   "title": "Architecture of the app — A page",
+   "title": "Architecture of the app — A page of documentation",
    "summary": "`GetPageUseCase` turns an address into a content key: the parts of the path joined by `--` (`/nuclearlang/guide/README` → `content/nuclearlang--guide--README.json`).",
    "body": [
     "`GetPageUseCase` turns an address into a content key: the parts of the path joined by `--`",
     "(`/nuclearlang/guide/README` → `content/nuclearlang--guide--README.json`). Every address has three parts, the depth",
-    "`DocGroupScreen` (`/:area/:group/:name`) routes. The page's HTML comes",
-    "ready (highlighted at build time): the browser never parses markdown.",
+    "`DocGroupScreen` (`/:area/:group/:name`) routes; the screens of the tools, the platforms and the onboardings have",
+    "static first parts, which the router prefers. The page's HTML comes ready (highlighted at build time): the browser",
+    "never parses markdown.",
     "",
     "A link between pages reloads the page (the content is cached by the browser); navigation by address inside the app",
     "is pending in the web platform ([its roadmap](../../../nuclear-synapsis-framework/platforms/web/docs/01-product/roadmap.md))."
@@ -1819,30 +2101,72 @@
    }
   },
   {
-   "id": "doc:website/docs/02-architecture/overview.md#architecture-of-the-app",
+   "id": "doc:website/docs/02-architecture/overview.md#architecture-of-the-app.5dd9b2",
    "type": "context",
    "title": "Architecture of the app",
-   "summary": "A web project of Synapsis (`config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")`, `app(name = \"nuclearlang_website\", ...)`) with one component, `components/docs/`.",
+   "summary": "config/project_config.nuc Http(baseUrl = \"/\", timeout = 10000): the site reads its own public/content/ main.nuc App: the router with every @screen defs/typescript/motion/ the type definitions of motion, generated by `nuclear add motion` components/docs/ data/ ContentRepository (pages, site,…",
    "body": [
-    "A web project of Synapsis (`config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")`, `app(name =",
-    "\"nuclearlang_website\", ...)`) with one component, `components/docs/`. It reads only the JSON that",
-    "[`tools/content.mjs`](content.md) writes into `public/content/`.",
-    "",
     "```",
     "config/project_config.nuc        Http(baseUrl = \"/\", timeout = 10000): the site reads its own public/content/",
     "main.nuc                         App: the router with every @screen",
+    "defs/typescript/motion/          the type definitions of motion, generated by `nuclear add motion`",
     "components/docs/",
-    "  data/content_repository.nuc    @get \":key.json\", \"site.json\", \"search.json\", \"home.json\" (cached)",
-    "  domain/models/                 Page, Site, SearchEntry, Home, ContentError",
-    "  domain/usecases/               GetPage, GetSite, GetHome, Search",
+    "  data/                          ContentRepository (pages, site, search, home), ToolRepository (tools.json),",
+    "                                 PlatformRepository (platforms.json)",
+    "  domain/models/                 Page, Site, SearchEntry, Home, Tool*, Platform*, ContentError, ToolError, PlatformError",
+    "  domain/usecases/               GetPage, GetSite, GetHome, Search, ListTools, ListPlatforms",
     "  domain/services/search_score   the ranking of the search",
-    "  presentation/home/             HomeScreen \"/\" + HomeManager",
-    "  presentation/doc/              DocScreen \"/:area/:name\", DocGroupScreen \"/:area/:group/:name\",",
-    "                                 NotFoundScreen; PageManager",
-    "  presentation/layout/           the layout (top bar, menu, footer), the search box; SiteManager, SearchManager",
+    "  presentation/home/             HomeScreen \"/\" and its blocks + HomeManager",
+    "  presentation/tools/            ToolsScreen \"/tools\", ToolScreen \"/tools/:name\" + ToolsManager",
+    "  presentation/platforms/        PlatformsScreen \"/platforms\", PlatformScreen \"/platforms/:name\",",
+    "                                 StartScreen \"/start/:name\" (the onboarding) + PlatformsManager",
+    "  presentation/doc/              DocScreen \"/:area/:name\", DocGroupScreen \"/:area/:group/:name\", NotFoundScreen",
+    "  presentation/layout/           Layout (with the side menu), Frame (without), TopBar, Footer, SearchBox, and the"
+   ],
+   "sources": [
+    "website/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/overview.md#architecture-of-the-app.d80526",
+   "type": "context",
+   "title": "Architecture of the app",
+   "summary": "views the pages share: Reveal, CodeTabs, Terminal, Diagram; SiteManager, SearchManager public/styles.css, favicon.svg the look: the Chernobyl palette of the editors (dark) and a light theme test/docs_test.nuc the search, a page, the home page, a tool, a platform, an onboarding (repositories…",
+   "body": [
+    "views the pages share: Reveal, CodeTabs, Terminal, Diagram; SiteManager, SearchManager",
     "public/styles.css, favicon.svg   the look: the Chernobyl palette of the editors (dark) and a light theme",
-    "test/docs_test.nuc               the search ranking, the pages and the home page (the repository is a mock)",
-    "```"
+    "test/docs_test.nuc               the search, a page, the home page, a tool, a platform, an onboarding (repositories mocked)",
+    "```",
+    "",
+    "The tools' and platforms' models, repositories, use cases, managers and first screens were written by",
+    "`nuclear gen resource docs Tool|Platform --source rest --path content/<file>.json --from-json public/content/<file>.json",
+    "--actions list --screen <screen>`; the other views by `nuclear make stateful|stateless docs <Name> --screen <screen>`",
+    "and then filled. The Home model is written by hand: the generator has no resource of one object."
+   ],
+   "sources": [
+    "website/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/overview.md#architecture-of-the-app.ecd08c",
+   "type": "context",
+   "title": "Architecture of the app",
+   "summary": "A web project of Synapsis (`config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")`, `app(name = \"nuclearlang_website\", ...)`, `dependencies(motion = ...)`) with one component, `components/docs/`: the whole site is one feature, and its views share the top bar and the site's managers, which a…",
+   "body": [
+    "A web project of Synapsis (`config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")`, `app(name =",
+    "\"nuclearlang_website\", ...)`, `dependencies(motion = ...)`) with one component, `components/docs/`: the whole site",
+    "is one feature, and its views share the top bar and the site's managers, which a component keeps private (N0302).",
+    "It reads only the JSON that [`tools/content.mjs`](content.md) writes into `public/content/`."
    ],
    "sources": [
     "website/docs/02-architecture/overview.md"
@@ -1862,6 +2186,31 @@
     "`nuclear build` writes the app into `build/app` (with `public/` copied), `nuclear install` runs `npm install` there,",
     "`nuclear test` runs vitest over `test/`, `npx vite build` in `build/app` writes the bundle to `build/app/dist`. The",
     "CI (`.github/workflows/website.yml`) installs `nuclear` from the tree and runs the same steps."
+   ],
+   "sources": [
+    "website/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/overview.md#the-screens",
+   "type": "context",
+   "title": "Architecture of the app — The screens",
+   "summary": "target; the Nuclear stays beside it), `CheckBlock` (an agent's mistake; \"Run nuclear fix\" switches to the fixed code), `GeneratorBlock` (a `Terminal` that replays the backend onboarding, and its numbers), `DialectsBlock` (one file, a tab per dialect), the platforms, the tools, the library, install.",
+   "body": [
+    "- **The home page** is a column of blocks, each its own view: `Hero`, the hooks, `Samples` (pick a sample, then a",
+    "  target; the Nuclear stays beside it), `CheckBlock` (an agent's mistake; \"Run nuclear fix\" switches to the fixed",
+    "  code), `GeneratorBlock` (a `Terminal` that replays the backend onboarding, and its numbers), `DialectsBlock` (one",
+    "  file, a tab per dialect), the platforms, the tools, the library, install.",
+    "- **A tool** and **a platform** are read from the list their manager loads (`find` by key); an unknown key shows",
+    "  \"Not found\". A platform's page is its `Diagram`s (one per C4 level) and the code level (`CodeTabs`).",
+    "- **The onboarding** is a stateful stepper: one step at a time, its real output in a `Terminal`, then the app's code.",
+    "- **Motion**: `Reveal` wraps the content once it is loaded and runs `motion` on its blocks",
+    "  ([ADR-website-0003](../03-adr/0003-libraries-of-the-target-through-nuclear-add.md))."
    ],
    "sources": [
     "website/docs/02-architecture/overview.md"

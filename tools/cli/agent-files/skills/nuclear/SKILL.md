@@ -12,6 +12,12 @@ is its framework: three platforms written in Nuclear — `mobile` (dialect `flut
 the standard library of Nuclear is used on strings, lists and maps (`nuclear help library`), never the target's. Its
 syntax is NOT TypeScript, Dart nor Python: read the sheet before writing.
 
+**Make it with the tools.** A product (any software made from Nuclear) is made with the platform's tools:
+`nuclear new`, `nuclear gen`, `nuclear make`, the MCP server's tools, `nuclear add` for a library, `nuclear fix`; only
+what they leave is written by hand, in Nuclear. Never write target code (`.ts`, `.dart`, `.py`) for a feature, and
+never translate React, Node.js, Python or Dart code into Nuclear by hand. Only when strictly necessary, and then say
+so: the tool that should have done it is missing something.
+
 ## 1. Load the sheet (once per task, ~3k tokens)
 
 ```sh

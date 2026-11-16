@@ -8,7 +8,8 @@ related: [tools/cli/src/main.rs, tools/cli/docs/02-architecture/agent-support.md
 
 One file of commands over the language crates; a command line `framework::claims` takes is the framework's
 ([overview.md](overview.md), ADR-cli-0003). The text a user sees is the `USAGE` constant: `nuclear help`
-prints it, and `nuclear help <command>` prints its lines of it.
+prints it, and `nuclear help <command>` prints its lines of it; for a command of the framework (`help gen`,
+`framework::is_command`) it prints the framework's usage.
 
 ## Commands
 
@@ -18,7 +19,7 @@ prints it, and `nuclear help <command>` prints its lines of it.
 | `help <word>\|words\|layout --dialect <d>` | A kind, decorator or header word of the dialect (`docs.toml` of its chain); `words` lists them all; `layout` says where each kind's file goes (only a platform's dialect has one) | `dialect_word` |
 | `build <file.nuc> --dialect <name\|path> [-o <out>]` | Transpiles a file (stdout without `-o`) | `file_command` |
 | `build <folder> [-o <out>]` | Transpiles a project (a folder with `nuclear.toml` or `config.nuc`); the output of a removed `.nuc` is removed, from the previous line map | `project_command` |
-| `check <folder\|file.nuc> [--dialect] [--json]` | The errors of a file or of every file of a project; JSON for agents and the language server | `file_command`, `project_command`, `report` |
+| `check <folder\|file.nuc> [--dialect] [--json]` | The errors of a file or of every file of a project; JSON for agents and the language server: one document on stdout (the dialect's own report is printed only when it stops the command, `load_dialect`) | `file_command`, `project_command`, `report` |
 | `fix <folder\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |
 | `fmt <file.nuc\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |
 | `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |

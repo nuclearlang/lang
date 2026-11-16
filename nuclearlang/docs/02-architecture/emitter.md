@@ -23,7 +23,7 @@ options a dialect sets and what the targets without braces needed are in [emitte
 - Implicit return of the last line in functions, methods and block lambdas, except with return type `void`
   and in setters. An assignment as last line returns the created variable. A modifier with `void = true`
   (`set`) never returns.
-- Implicit `this` (`implicit_self`); in kinds, `param_access` (e.g. `widget.{{name}}`).
+- Implicit `this` (`implicit_self`); in kinds, `param_access` (e.g. `widget.{{name}}`; it gets the parameter's `default`, written in the target, from `ModCtx.ctor_defaults`).
 - async is automatic when there is a `~call()`.
 - `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.
 - Named arguments: `named_args = "native"` uses `named_arg`; otherwise they are reordered by position.

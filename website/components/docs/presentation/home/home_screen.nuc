@@ -1,78 +1,231 @@
-// The home page: every text and section comes from the site's data (home.json); the sample's outputs are the real
-// compiler's.
+// The home page: the hooks, from the most general to the most concrete, each one a small interactive block that
+// links to where it is explained. Every text comes from site.toml (home.json); every output was made by the real
+// compiler and the real commands when the site was built.
 @screen(route = "/", providers = [HomeManager, SiteManager, SearchManager])
 stateless HomeScreen
   build() Element
-    div(
-      className = "site home",
-      children = [
-        TopBar(),
-        HomeStateBuilder(
-          loading = () => p(className = "muted center", children = "Loading…"),
-          full = (home) => HomeBody(home = home),
-          error = (e) => p(className = "error center", children = e.message),
-        ),
-        Footer(),
-      ],
+    Frame(
+      current = "/",
+      content = HomeStateBuilder(
+        loading = () => p(className = "muted center", children = "Loading…"),
+        full = (home) => Reveal(child = HomeBody(home = home)),
+        error = (e) => p(className = "error center", children = e.message),
+      ),
     )
 
 stateless HomeBody(home: Home)
   build() Element
     fragment(
+      Hero(home = home),
       section(
-        className = "hero",
-        children = [
-          p(className = "logo big", children = "☢"),
-          h1(children = home.title),
-          p(className = "lead", children = home.lead),
-          p(className = "tagline", children = home.tagline),
-          div(
-            className = "actions",
-            children = home.actions.map((x) => a(key = x.path, className = x.primary ? "button primary" : "button", href = x.path, children = x.title)),
-          ),
-        ],
+        className = "hooks",
+        children = home.hooks.map((h) => article(key = h.title, className = "hook reveal", children = [h3(children = h.title), p(children = h.text)])),
       ),
-      section(className = "features", children = home.features.map((f) => article(key = f.title, children = [h3(children = f.title), p(children = f.text)]))),
-      Sample(home = home),
-      section(
-        className = "platforms",
-        children = [
-          h2(children = home.platformsTitle),
-          div(
-            className = "cards",
-            children = home.platforms.map((c) =>
-              a(key = c.title, className = "card", href = c.path, children = [h3(children = c.title), small(children = c.dialects), p(children = c.text)])
-            ),
-          ),
-        ],
-      ),
-      section(className = "install", children = [h2(children = home.installTitle), pre(children = home.install)]),
+      Samples(home = home),
+      CheckBlock(demo = home.check),
+      GeneratorBlock(home = home),
+      DialectsBlock(home = home),
+      PlatformsBlock(home = home),
+      ToolsBlock(home = home),
+      LibrariesBlock(home = home),
+      section(className = "install reveal", children = [h2(children = home.installTitle), pre(children = home.install)]),
     )
 
-// The sample and its output in each target, one tab each.
-stateful Sample(home: Home)
+stateless Hero(home: Home)
+  build() Element
+    section(
+      className = "hero",
+      children = [
+        div(className = "glow"),
+        p(className = "logo big rise", children = "☢"),
+        h1(className = "rise", children = home.title),
+        p(className = "lead rise", children = home.lead),
+        p(className = "tagline rise", children = home.tagline),
+        div(
+          className = "actions rise",
+          children = home.actions.map((x) => a(key = x.path, className = x.primary ? "button primary" : "button", href = x.path, children = x.title)),
+        ),
+        div(
+          className = "targets rise",
+          children = ["TypeScript", "Dart", "Python", "Flutter", "FastAPI", "NestJS", "React"].map((t) => span(key = t, className = "chip", children = t)),
+        ),
+      ],
+    )
+
+// The samples: pick one, then the target; the Nuclear stays beside what it becomes.
+stateful Samples(home: Home)
   selected: int = 0
 
   build() Element
     section(
-      className = "sample",
+      className = "block reveal",
       children = [
-        h2(children = home.sampleTitle),
+        h2(children = home.samplesTitle),
         div(
-          className = "tabs",
-          children = tabs().map((t) =>
-            button(key = t, className = tabs().indexOf(t) == selected ? "tab active" : "tab", onClick = () => select(tabs().indexOf(t)), children = t)
+          className = "pills",
+          children = home.samples.map((s, i) =>
+            button(key = s.title, className = i == selected ? "pill active" : "pill", onClick = () => select(i), children = s.title)
           ),
         ),
-        div(className = "code", dangerouslySetInnerHTML = { "__html": selected == 0 ? home.sample : home.outputs[selected - 1].html }),
-        p(className = "muted", children = home.sampleNote),
+        CodeTabs(
+          key = home.samples[selected].title,
+          titles = home.samples[selected].outputs.map((o) => o.dialect),
+          panes = home.samples[selected].outputs.map((o) => o.html),
+          pinned = home.samples[selected].nuclear,
+        ),
+        p(className = "muted", children = home.samplesNote),
       ],
     )
-
-  tabs() string[]
-    ["Nuclear", ...home.outputs.map((o) => o.dialect)]
 
   select(index: int) void
     setState(() =>
       selected = index
+    )
+
+// An agent's mistake: the code, what the compiler answers, and the code after `nuclear fix`.
+stateful CheckBlock(demo: CheckDemo)
+  fixed: boolean = false
+
+  build() Element
+    section(
+      className = "block check reveal",
+      children = [
+        h2(children = demo.title),
+        p(className = "block-text", children = demo.text),
+        div(
+          className = "split",
+          children = [
+            div(
+              className = "pane",
+              children = [
+                div(className = "pane-title", children = fixed ? "after nuclear fix" : "what the agent wrote"),
+                div(className = "code", dangerouslySetInnerHTML = { "__html": fixed ? demo.fixed : demo.wrong }),
+              ],
+            ),
+            div(
+              className = "pane",
+              children = [
+                div(className = "pane-title", children = fixed ? "nuclear check: no errors" : "nuclear check --json"),
+                fixed ? pre(className = "ok", children = "[]") : div(className = "code", dangerouslySetInnerHTML = { "__html": demo.json }),
+              ],
+            ),
+          ],
+        ),
+        ul(
+          className = "diagnostics",
+          children = demo.diagnostics.map((d) =>
+            li(key = "${d.line}:${d.col}", className = fixed ? "done" : "", children = [span(className = "diag-code", children = d.code), span(children = " line ${d.line}: ${d.message}")])
+          ),
+        ),
+        button(className = "button primary", onClick = () => toggle(), children = fixed ? "Show the mistake again" : "Run nuclear fix"),
+      ],
+    )
+
+  toggle() void
+    setState(() =>
+      fixed = not fixed
+    )
+
+stateless GeneratorBlock(home: Home)
+  build() Element
+    section(
+      className = "block reveal",
+      children = [
+        h2(children = home.generatorTitle),
+        p(className = "block-text", children = home.generatorText),
+        div(
+          className = "split",
+          children = [
+            Terminal(steps = home.generator, title = home.generatorPlatform),
+            div(
+              className = "stats",
+              children = [
+                Stat(value = "${home.stats.nucFiles}", label = ".nuc files, made by the commands"),
+                Stat(value = "${home.stats.nucLines}", label = "lines of Nuclear"),
+                Stat(value = "${home.stats.outLines}", label = "lines of code the dialect writes from them"),
+                a(className = "button", href = "/start/${home.generatorPlatform}", children = "Follow the whole onboarding"),
+              ],
+            ),
+          ],
+        ),
+      ],
+    )
+
+stateless Stat(value: string, label: string)
+  build() Element
+    div(className = "stat", children = [strong(children = value), span(children = label)])
+
+stateless DialectsBlock(home: Home)
+  build() Element
+    section(
+      className = "block reveal",
+      children = [
+        h2(children = home.dialectsTitle),
+        p(className = "block-text", children = home.dialectsText),
+        CodeTabs(
+          titles = home.dialects.outputs.map((o) => o.dialect),
+          panes = home.dialects.outputs.map((o) => o.html),
+          pinned = home.dialects.html,
+          pinnedTitle = home.dialects.path,
+        ),
+      ],
+    )
+
+stateless PlatformsBlock(home: Home)
+  build() Element
+    section(
+      className = "block reveal",
+      children = [
+        h2(children = home.platformsTitle),
+        p(className = "block-text", children = home.platformsText),
+        div(
+          className = "cards three",
+          children = home.platforms.map((c) =>
+            article(
+              key = c.key,
+              className = "card platform-${c.key}",
+              children = [
+                h3(children = a(href = "/platforms/${c.key}", children = c.name)),
+                small(children = c.dialects),
+                p(children = c.tagline),
+                div(className = "card-links", children = [a(href = "/platforms/${c.key}", children = "How it works"), a(href = "/start/${c.key}", children = "Start")]),
+              ],
+            )
+          ),
+        ),
+      ],
+    )
+
+stateless ToolsBlock(home: Home)
+  build() Element
+    section(
+      className = "block reveal",
+      children = [
+        h2(children = home.toolsTitle),
+        p(className = "block-text", children = home.toolsText),
+        div(
+          className = "cards tools",
+          children = home.tools.map((t) =>
+            a(key = t.key, className = "card tool", href = "/tools/${t.key}", children = [small(children = t.group), h3(children = t.name), p(children = t.tagline)])
+          ),
+        ),
+        a(className = "button", href = "/tools", children = "Every tool"),
+      ],
+    )
+
+stateless LibrariesBlock(home: Home)
+  build() Element
+    section(
+      className = "block reveal",
+      children = [
+        h2(children = home.librariesTitle),
+        p(className = "block-text", children = home.librariesText),
+        div(
+          className = "split",
+          children = [
+            div(className = "code", dangerouslySetInnerHTML = { "__html": home.librariesCommand }),
+            div(className = "code", dangerouslySetInnerHTML = { "__html": home.librariesExample }),
+          ],
+        ),
+      ],
     )

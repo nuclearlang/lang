@@ -64,4 +64,7 @@ To develop: open this folder in VS Code and press F5; then *Preferences: Color T
 | What the tests cover and how to try something without the editor | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
 | The pending work of this extension | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | Nuclear Builder, Nuclear Connector, the chat, the devices | [`../tools/`](../AGENTS.md) |
+| What a user reads: install, the commands, keys and settings, troubleshooting | [docs/08-guides/README.md](docs/08-guides/README.md) |
+| What a user reads about the strip, the actions, the file tree and the settings page | [docs/08-guides/workspace.md](docs/08-guides/workspace.md) |
+| What a user reads about the tasks, run, hot reload and `.nuc` debugging | [docs/08-guides/run-and-debug.md](docs/08-guides/run-and-debug.md) |
 | Why the workspace is as it is | [ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md) |

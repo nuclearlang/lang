@@ -1,21 +1,31 @@
-# The site's data: what tools/content.mjs turns into public/content/site.json and home.json, and the app shows. The
-# pages themselves are the .md of the nuclearlang repositories; nothing of the site is written in its code.
+# The site's data: what tools/content.mjs turns into public/content/*.json and the app shows. The pages themselves
+# are the .md of the projects of the tree (their docs/07-reference and docs/08-guides); nothing of the site is
+# written in its code. Every number the site shows is measured when it is built (the onboarding runs the real
+# commands), never written here.
 
 [site]
 title = "NuclearLang"
-lead = "Only the program's logic."
-tagline = "A minimal language, made so agents and people write it fast, transpiled to TypeScript, Dart and Python through declarative dialects. Synapsis is its framework for mobile, backend and web."
+lead = "Write only the logic."
+tagline = "A minimal language for AI agents and people. One codebase, transpiled to TypeScript, Dart and Python by declarative dialects; Synapsis, its framework, builds mobile apps, backends and web apps from the same Nuclear."
 # where the site is published, the organization of its repositories and their branch
 url = "https://nuclearlang.github.io"
 org = "https://github.com/nuclearlang"
 branch = "main"
-footer = "NuclearLang and Synapsis · Apache-2.0 · this site is written in Nuclear (Synapsis web, react)"
+footer = "NuclearLang and Synapsis · free and open source, Apache-2.0 · this site is written in Nuclear (Synapsis web)"
 
 [source]
 # the NuclearLang tree this project is a folder of; NUCLEAR_TREE overrides it
 tree = ".."
 
-# the links of the top bar
+# the links of the top bar (a path in the tree is a page; another path is a screen of the app)
+[[top]]
+title = "Platforms"
+path = "/platforms/mobile"
+
+[[top]]
+title = "Tools"
+path = "/tools"
+
 [[top]]
 title = "Guide"
 path = "/nuclearlang/docs/08-guides/README"
@@ -24,18 +34,11 @@ path = "/nuclearlang/docs/08-guides/README"
 title = "Reference"
 path = "/nuclearlang/docs/08-guides/reference"
 
-[[top]]
-title = "Synapsis"
-path = "/nuclear-synapsis-framework/docs/08-guides/README"
-
-[[top]]
-title = "Dialects"
-path = "/nuclearlang/docs/07-reference/dialects"
-
-# the side menu: pages by their path in the tree, without .md; `*` matches any part of a name, in order
+# the side menu of the documentation: pages by their path in the tree, without .md; `*` matches any part of a name,
+# in order (a pattern leaves out the READMEs: list them by name)
 [[sidebar]]
 title = "Start"
-pages = ["nuclear-synapsis-framework/docs/08-guides/README", "nuclear-synapsis-framework/docs/08-guides/tutorial"]
+pages = ["nuclear-synapsis-framework/docs/08-guides/README", "nuclear-synapsis-framework/docs/08-guides/tutorial", "nuclear-synapsis-framework/platforms/*/docs/08-guides/onboarding-*"]
 
 [[sidebar]]
 title = "Language guide"
@@ -50,60 +53,69 @@ title = "Synapsis"
 pages = ["nuclear-synapsis-framework/docs/08-guides/README", "nuclear-synapsis-framework/docs/08-guides/*", "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis"]
 
 [[sidebar]]
-title = "AI"
-pages = ["installer/docs/08-guides/ai-setup", "extensions/tools/nuclear-builder/docs/08-guides/*", "tools/mcp/docs/08-guides/mcp"]
-
-[[sidebar]]
 title = "Platforms and dialects"
 pages = ["nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile", "nuclearlang/dialects/dart/docs/07-reference/flutter", "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend", "nuclearlang/dialects/python/docs/07-reference/fastapi", "nuclearlang/dialects/typescript/docs/07-reference/nestjs", "nuclear-synapsis-framework/platforms/web/docs/07-reference/web", "nuclearlang/dialects/typescript/docs/07-reference/react", "nuclearlang/dialects/typescript/docs/07-reference/typescript", "nuclearlang/dialects/nodejs/docs/07-reference/nodejs", "nuclearlang/dialects/dart/docs/07-reference/dart", "nuclearlang/dialects/python/docs/07-reference/python", "nuclearlang/docs/07-reference/dialects", "nuclearlang/docs/07-reference/definitions", "nuclearlang/docs/07-reference/projects", "nuclearlang/docs/08-guides/create-a-dialect-with-an-agent", "nuclear-synapsis-framework/platforms/*/docs/08-guides/*", "nuclearlang/dialects/*/docs/08-guides/*"]
+
+[[sidebar]]
+title = "Tools"
+pages = ["tools/cli/docs/08-guides/README", "tools/cli/docs/08-guides/commands", "tools/code_generator/docs/08-guides/README", "tools/mcp/docs/08-guides/mcp", "installer/docs/08-guides/ai-setup", "nuclear-graph-storage/docs/08-guides/README", "nuclear-agents/nuclear_developer/docs/08-guides/README", "device-emulators/docs/08-guides/README"]
+
+[[sidebar]]
+title = "Editors"
+pages = ["extensions/docs/08-guides/README", "extensions/vscode/docs/08-guides/README", "extensions/vscode/docs/08-guides/*", "extensions/jetbrains/docs/08-guides/README", "extensions/zed/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/*", "extensions/tools/nuclear-connector/docs/08-guides/README", "extensions/tools/nuclear-device-manager/docs/08-guides/README", "extensions/tools/nuclear-ai-chat/docs/08-guides/README"]
 
 [[sidebar]]
 title = "Internals"
 pages = ["nuclearlang/docs/08-guides/architecture"]
 
-# the home page
+# --- the home page: the hooks, from the most general to the most concrete; each one links to where it is explained ---
+
 [[home.actions]]
-title = "Language guide"
-path = "/nuclearlang/docs/08-guides/README"
+title = "Start with a platform"
+path = "/start/backend"
 primary = true
 
 [[home.actions]]
-title = "Synapsis"
-path = "/nuclear-synapsis-framework/docs/08-guides/README"
+title = "See the tools"
+path = "/tools"
 
 [[home.actions]]
-title = "Reference"
-path = "/nuclearlang/docs/08-guides/reference"
+title = "Language guide"
+path = "/nuclearlang/docs/08-guides/README"
 
-[[home.features]]
-title = "Less text, fewer tokens"
-text = "No ;, no braces, no return, no new, no async. What is not logic is written by the transpiler."
+# why Nuclear, in one line each
+[[home.hooks]]
+title = "Only the logic"
+text = "No semicolons, braces, new or async, and no mandatory return. Imports, wiring, JSON, routes and dependency injection are written by the transpiler."
 
-[[home.features]]
-title = "One way to do each thing"
-text = "An agent never hesitates between two syntaxes. Errors come out as JSON with a code, a position and the fix."
+[[home.hooks]]
+title = "Made for agents"
+text = "One way to write each thing, so an agent never hesitates. Every error comes as JSON with a code, a position and the exact fix."
 
-[[home.features]]
-title = "Declarative dialects"
-text = "TypeScript, Dart, Python, Flutter, FastAPI, NestJS and React. A dialect is TOML and templates; the parser never changes."
+[[home.hooks]]
+title = "As fast as an expert's code"
+text = "The output passes tsc --strict, flutter analyze and pyright --strict. Measured against hand-written programs: between 0.98× and 1.11× their run time."
 
-[[home.features]]
-title = "Expert code"
-text = "The output runs as fast as an expert's and passes tsc --strict, flutter analyze and pyright --strict."
+[[home.hooks]]
+title = "Tools write the standard code"
+text = "One command writes a whole resource: models, repository, use cases, the controller or the screen, and its tests, compiling."
 
-[[home.features]]
-title = "Three platforms"
-text = "Mobile, backend and web with the same architecture, kinds and errors as values: the Nuclear of a project never changes with its dialect."
+[[home.hooks]]
+title = "One codebase, any dialect"
+text = "The Nuclear of a backend is the same for FastAPI and for NestJS. Change one word of config.nuc, build again."
 
-[[home.features]]
-title = "AI built in"
-text = "Agents, tools and graphs with LangChain and LangGraph in the backends; Genkit chats, flows and RAG in mobile apps."
+[[home.hooks]]
+title = "Free, open and local"
+text = "Apache-2.0. The knowledge base and the small agents run on your machine; your code never has to leave it."
 
-[home.sample]
-title = "Nuclear in a few lines"
-note = "An enum, a module with its constructor in the header and a function whose last line is its value. The outputs are made by the real compiler when the site is built."
-# the language dialects the sample is built with
+# the samples of the first interactive block: the same Nuclear, built by the real compiler to each target
+[home.samples]
+title = "Write it once. Read it in TypeScript, Dart and Python."
+note = "Every output is made by the real compiler when the site is built."
 targets = ["typescript", "dart", "python"]
+
+[[home.samples.items]]
+title = "Models and functions"
 code = '''
 Role
   user
@@ -123,26 +135,95 @@ greet(user: User) string
   '${title} ${user.name}'
 '''
 
+[[home.samples.items]]
+title = "Errors as values"
+code = '''
+ParseError(message: string)
+
+parseAge(text: string) Result<ParseError, int>
+  age = int.tryParse(text)
+  if age == null
+    Err(ParseError(message = "not a number: ${text}"))
+  else if age < 0
+    Err(ParseError(message = "an age is never negative"))
+  else
+    Ok(age)
+
+describe(text: string) string
+  match parseAge(text)
+    Ok(age) -> "${age} years"
+    Err(e) -> "invalid: ${e.message}"
+'''
+
+[[home.samples.items]]
+title = "Async without async"
+code = '''
+Weather(city: string, celsius: double)
+
+WeatherApi()
+  current(city: string) Weather
+    Weather(city = city, celsius = 21.5)
+
+report(api: WeatherApi, cities: string[]) string[]
+  lines: string[] = []
+  for city in cities
+    w = ~api.current(city)
+    lines.add("${w.city}: ${w.celsius}°C")
+  lines
+'''
+
+# the second block: an agent's mistake, what the compiler answers, and the fix it applies (`nuclear check`, `nuclear fix`)
+[home.check]
+title = "Errors an agent can fix by itself"
+text = "An agent used to TypeScript writes its habits. The compiler answers with the code, the position and the exact fix; nuclear fix applies it."
+dialect = "typescript"
+code = '''
+Cart()
+  items: double[] = []
+
+  total() double
+    let sum = 0.0
+    for price in items
+      if price > 0 && price < 1000
+        sum = sum + price
+    sum
+'''
+
+# the third block: the onboarding of one platform, replayed (its real commands and output)
+[home.generator]
+title = "One command writes the feature"
+text = "The commands that made the example API, run again while the site was built. Every file they wrote compiles and is tested."
+platform = "backend"
+
+# the fourth block: the same Nuclear, built for each dialect of the platform
+[home.dialects]
+title = "Change the dialect, keep the code"
+text = "The controller of the example API, built for FastAPI and for NestJS. The .nuc file is the same."
+platform = "backend"
+
 [home.platforms]
 title = "Synapsis: one framework, three platforms"
+text = "The same architecture, the same words and errors as values on a phone, a server and a browser. Pick one: each page goes from the idea to the code, level by level."
 
-[[home.platforms.cards]]
-title = "Mobile"
-dialects = "flutter"
-text = "Apps for Android, iOS, desktop and web, with a local database, events, sessions and Genkit AI."
-path = "/nuclear-synapsis-framework/docs/08-guides/tutorial"
+[home.tools]
+title = "Everything around the language"
+text = "A command, generators, an MCP server for any AI client, editors, a private knowledge base and local agents. Each one has its page."
 
-[[home.platforms.cards]]
-title = "Backend"
-dialects = "fastapi · nestjs"
-text = "APIs with entities, relations, pagination, transactions, events and AI agents."
-path = "/nuclearlang/dialects/python/docs/08-guides/fastapi"
+[home.libraries]
+title = "Any library of the target"
+text = "This site animates with the npm package motion: nuclear add motion installed it, wrote it in config.nuc and generated its type definitions, so the Nuclear code calls it checked, like its own."
+code = '''
+nuclear add motion
+'''
+example = '''
+// Fades in every block with the class "reveal" when it scrolls into view.
+stateful Reveal(child: Element)
+  initState() void
+    inView(".reveal", (element) => fadeIn(element))
 
-[[home.platforms.cards]]
-title = "Web"
-dialects = "react"
-text = "The mobile platform in a browser: screens, state managers and repositories. This site is one."
-path = "/nuclearlang/dialects/typescript/docs/08-guides/react"
+  fadeIn(element: any) void
+    animate(element, { "opacity": [0, 1], "transform": ["translateY(24px)", "none"] }, { "duration": 0.6 })
+'''
 
 [home.install]
 title = "Install"
@@ -150,6 +231,342 @@ title = "Install"
 lines = [
   "curl -fsSL {{site}}/install.sh | sh                 # Linux and macOS",
   "irm {{site}}/install.ps1 | iex                      # Windows (PowerShell)",
+  "nuclear new my_api -p backend                       # a project of a platform: mobile, backend or web",
   "nuclear help                                        # documentation topics, also offline",
-  "nuclear spec --dialect flutter                      # the whole spec, for an agent",
+]
+
+# --- the tools: the index (/tools) and one page each (/tools/<key>). `pages` are the tool's documents in the tree ---
+
+[[tools]]
+key = "cli"
+name = "The nuclear command"
+group = "Build"
+tagline = "One binary for the compiler and the framework."
+pitch = "nuclear builds, checks, fixes and formats .nuc files, and creates, generates, runs, tests and migrates the projects of the three platforms. It knows no target language: what it runs for a platform comes from the dialect."
+highlights = [
+  { title = "Compiler commands", text = "build, check --json, fix, fmt, spec --brief, defs show: everything an editor or an agent needs, offline." },
+  { title = "Project commands", text = "new, make, gen, run, test, install, migrate, add: the same words for mobile, backend and web." },
+  { title = "Documentation inside", text = "nuclear help <topic> prints the guide and the references, also without network." },
+]
+demo = '''
+nuclear new shop -p backend          # a project: only .nuc files
+nuclear gen resource orders Order --fields "id:int total:double"
+nuclear check --json                 # every error, with its exact fix
+nuclear build && nuclear test
+'''
+project = "tools/cli"
+pages = ["tools/cli/docs/08-guides/README", "tools/cli/docs/08-guides/commands", "nuclearlang/docs/08-guides/README"]
+
+[[tools]]
+key = "generator"
+name = "Code generator"
+group = "Build"
+tagline = "The standard code is written by a tool, not by a model."
+pitch = "nuclear gen writes a finished resource from its fields, an example answer of an API or a spec: models, repository, a use case per action, the facade, the controller or the screen, and the tests. nuclear make writes one piece of any kind in its right folder. A generator never overwrites a file."
+highlights = [
+  { title = "From what you have", text = "--fields, --from-json <url|file> or --from-spec <spec.md>; nested objects become models." },
+  { title = "For every platform", text = "A database resource on a backend, an HTTP one on a phone or in a browser, with its screen." },
+  { title = "Safe to run twice", text = "A file that exists is kept; only the members a facade lacks are added." },
+]
+demo = '''
+nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character
+nuclear gen usecase orders CancelOrder --route "POST orders/{id}/cancel"
+nuclear make stateful home Counter
+'''
+project = "tools/code_generator"
+pages = ["tools/code_generator/docs/08-guides/README", "nuclear-synapsis-framework/docs/08-guides/generators"]
+
+[[tools]]
+key = "mcp"
+name = "MCP server"
+group = "AI"
+tagline = "NuclearLang inside Claude Code, Codex, Cursor and OpenCode."
+pitch = "nuclear-mcp speaks the Model Context Protocol. It gives a frontier model the generators that write the standard code, the local developer that writes what is left, the Smart Graph to look things up instead of guessing, and the compiler to check everything. Its instructions make every client work the same way."
+highlights = [
+  { title = "Generate first", text = "generate_resource and generate_usecase are the generators, as tools." },
+  { title = "Validate always", text = "nuclear_check and the project's tests decide when a change is done." },
+  { title = "Local or remote", text = "With the local services it delegates to the small agents; without them the model writes what is left." },
+]
+demo = '''
+claude mcp add --scope user nuclear -- nuclear-mcp
+nuclear-mcp tools          # its instructions and every tool, as JSON
+'''
+project = "tools/mcp"
+pages = ["tools/mcp/docs/08-guides/mcp", "installer/docs/08-guides/ai-setup"]
+
+[[tools]]
+key = "extensions"
+name = "Editor extensions"
+group = "Edit"
+tagline = "VS Code, Android Studio / IntelliJ and Zed."
+pitch = "The language server gives every editor the compiler's diagnostics with their fixes, completion from the type definitions, hover, go to definition and semantic colors. VS Code adds the Nuclear workspace: one strip with the project's actions and the tools (Connector, Devices, Builder, the agent, settings), tasks, debugging in .nuc and hot reload."
+highlights = [
+  { title = "The compiler as you type", text = "Every error underlined with its quick fix, the same ones nuclear fix applies." },
+  { title = "The Nuclear workspace", text = "Run, debug, test and build any platform from one strip; each tool one key away (Ctrl+Alt+H, V, P, A, S)." },
+  { title = "Chernobyl themes", text = "Vivid, radioactive colors for Nuclear, the same in the three editors and on this site." },
+]
+demo = '''
+nuclear code               # open the project in VS Code with its tasks and devices
+'''
+project = "extensions"
+pages = ["extensions/docs/08-guides/README", "extensions/vscode/docs/08-guides/README", "extensions/vscode/docs/08-guides/workspace", "extensions/vscode/docs/08-guides/run-and-debug", "extensions/jetbrains/docs/08-guides/README", "extensions/zed/docs/08-guides/README"]
+
+[[tools]]
+key = "builder"
+name = "Nuclear Builder"
+group = "AI"
+tagline = "From a spec to a feature, stage by stage."
+pitch = "The Builder runs a spec through a pipeline of agents: it plans, writes the tests first, generates and writes the code, runs the checks and the tests, reviews security and keeps a journal of everything. You follow each run in the editor or from the terminal."
+highlights = [
+  { title = "Spec in, feature out", text = "A Markdown spec with its acceptance criteria starts a run." },
+  { title = "Every stage visible", text = "Each step, its files and its result, in the editor's panel." },
+  { title = "The tools first", text = "What a generator can write, no model writes." },
+]
+demo = '''
+nuclear-builder run spec.md
+'''
+project = "extensions/tools/nuclear-builder"
+pages = ["extensions/tools/nuclear-builder/docs/08-guides/README", "extensions/tools/nuclear-builder/docs/08-guides/write-a-spec", "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run", "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands"]
+
+[[tools]]
+key = "connector"
+name = "Nuclear Connector"
+group = "Edit"
+tagline = "Call the project's API from the editor."
+pitch = "The Connector reads the routes of a backend project and lists them in a tree: pick one, fill its parameters and body, send it, read the answer. No collection to keep by hand: the project is the collection."
+highlights = [
+  { title = "From the code", text = "The routes come from the project, so they are never out of date." },
+  { title = "Colored by method", text = "GET, POST, PUT, PATCH and DELETE, each with its color of the theme." },
+  { title = "Inside the workspace", text = "Ctrl+Alt+H opens it next to the code." },
+]
+demo = '''
+Ctrl+Alt+H                 # VS Code: the Connector of the open project
+'''
+project = "extensions/tools/nuclear-connector"
+pages = ["extensions/tools/nuclear-connector/docs/08-guides/README"]
+
+[[tools]]
+key = "devices"
+name = "Devices"
+group = "Run"
+tagline = "Phones and tablets in a window, without an emulator."
+pitch = "nuclear device shows a mobile app in a window shaped like a phone (pixel7, iphone14pro, ipadair...), with hot reload; several at once. nuclear terminal-device draws the app inside the terminal. In VS Code the device manager keeps them next to the code."
+highlights = [
+  { title = "Light", text = "No Android emulator, no simulator: the app runs as Flutter web in a device frame." },
+  { title = "Many at once", text = "nuclear device 1, 2, 3: one window each." },
+  { title = "Even in a terminal", text = "nuclear terminal-device renders the app with characters." },
+]
+demo = '''
+nuclear device pixel7
+nuclear terminal-device
+'''
+project = "device-emulators"
+pages = ["device-emulators/docs/08-guides/README", "extensions/tools/nuclear-device-manager/docs/08-guides/README"]
+
+[[tools]]
+key = "graph"
+name = "Smart Graph"
+group = "AI"
+tagline = "A private knowledge base every agent reads."
+pitch = "The Smart Graph holds what the tree knows (the tools, every error and its fix, the platforms, the documents, the playbooks) as rows an agent can ask. It runs on your machine: agents look things up instead of guessing, and nothing leaves it."
+highlights = [
+  { title = "Ask instead of guess", text = "nuclear-graph answer \"how do I create a screen\" gives the cards that answer it." },
+  { title = "Always current", text = "It is rebuilt from the tree: a document or a tool that changes changes its rows." },
+  { title = "Yours", text = "Local-first, with tokens per client: you decide who reads it." },
+]
+demo = '''
+nuclear-graph answer "how do I add a database to a backend"
+'''
+project = "nuclear-graph-storage"
+pages = ["nuclear-graph-storage/docs/08-guides/README", "installer/docs/08-guides/ai-setup"]
+
+[[tools]]
+key = "developer"
+name = "Nuclear Developer"
+group = "AI"
+tagline = "Small local agents that write what the generators leave."
+pitch = "The Nuclear Developer is a team of small models (3B parameters or less) on your machine. A frontier model leads through the MCP server; the local agents plan, write the tests first, write the code, run it and review it, and return a journal."
+highlights = [
+  { title = "Cheap and private", text = "Small models on your hardware do the long work." },
+  { title = "Tests first", text = "Every task starts from its acceptance criteria." },
+  { title = "A journal of everything", text = "What it did, why, and what failed, for the lead to review." },
+]
+demo = '''
+# from an MCP client: developer_task(project, title, description, criteria)
+'''
+project = "nuclear-agents/nuclear_developer"
+pages = ["nuclear-agents/nuclear_developer/docs/08-guides/README", "extensions/tools/nuclear-ai-chat/docs/08-guides/README"]
+
+# --- the platforms: one page each (/platforms/<key>, its levels from the hook to the code) and an onboarding
+# (/start/<key>): the commands that make its example app, run again when the site is built ---
+
+[[platforms]]
+key = "mobile"
+name = "Mobile"
+dialects = ["flutter"]
+tagline = "Apps for Android, iOS, desktop and the web, from .nuc."
+pitch = "Screens, state managers, forms, a local database, events, sessions and Genkit AI, written as the business logic only. The dialect writes a complete Flutter app on the Synapsis runtime."
+pages = ["nuclear-synapsis-framework/platforms/mobile/docs/08-guides/onboarding-mobile", "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile", "nuclearlang/dialects/dart/docs/07-reference/flutter", "nuclear-synapsis-framework/platforms/mobile/docs/08-guides/genkit"]
+
+[[platforms.levels]]
+level = "1 · Context"
+title = "Your app, its users and what it talks to"
+text = "People use the app on a phone, a tablet, a desktop or a browser. The app reads APIs (a Synapsis backend or any other), keeps data on the device and can call AI models through Genkit."
+boxes = [
+  { name = "User", kind = "person", text = "uses the app" },
+  { name = "Your app", kind = "system", text = "written in Nuclear" },
+  { name = "APIs", kind = "external", text = "a Synapsis backend or any REST API" },
+  { name = "AI models", kind = "external", text = "through Genkit" },
+]
+flows = ["User → Your app: taps, reads, types", "Your app → APIs: HTTP with cache and retries", "Your app → AI models: chats, flows, RAG"]
+
+[[platforms.levels]]
+level = "2 · Containers"
+title = "From .nuc to a running app"
+text = "You write the project in Nuclear. nuclear transpiles it with the flutter dialect into build/app, a complete Flutter app on the synapsis runtime package. You never edit build/."
+boxes = [
+  { name = "Nuclear project", kind = "container", text = "config.nuc, main.nuc, components/, test/" },
+  { name = "nuclear + dialect", kind = "container", text = "the transpiler and the flutter dialect (TOML and templates)" },
+  { name = "build/app", kind = "container", text = "the generated Flutter app" },
+  { name = "synapsis runtime", kind = "container", text = "the Dart package the app runs on" },
+]
+flows = ["Nuclear project → nuclear + dialect: nuclear build", "nuclear + dialect → build/app: Dart code, pubspec, assets", "build/app → synapsis runtime: state, http, events, session"]
+
+[[platforms.levels]]
+level = "3 · Components"
+title = "Inside a component"
+text = "Each feature is a component with three layers. A screen asks its state manager; the manager calls the component's facade; the facade runs a use case; only the use case calls the repository. The compiler enforces it (N0301, N0302)."
+boxes = [
+  { name = "Screen", kind = "component", text = "@screen: a view and its route" },
+  { name = "State manager", kind = "component", text = "emits the states the screen builds" },
+  { name = "App component", kind = "component", text = "the component's facade" },
+  { name = "Use case", kind = "component", text = "one exec, returns Result" },
+  { name = "Repository", kind = "component", text = "@get, @post... over a connection" },
+]
+flows = ["Screen → State manager", "State manager → App component", "App component → Use case", "Use case → Repository"]
+
+[[platforms]]
+key = "backend"
+name = "Backend"
+dialects = ["fastapi", "nestjs"]
+tagline = "APIs in Python or TypeScript, from the same .nuc."
+pitch = "Controllers, entities with relations, migrations, pagination, transactions, events, Kafka and Redis, and AI agents and graphs, written once. The fastapi dialect writes Python, the nestjs dialect TypeScript; the Nuclear does not change."
+pages = ["nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend", "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend", "nuclearlang/dialects/python/docs/07-reference/fastapi", "nuclearlang/dialects/typescript/docs/07-reference/nestjs", "nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts"]
+
+[[platforms.levels]]
+level = "1 · Context"
+title = "Your API, its clients and its data"
+text = "Apps (mobile, web or any HTTP client) call the API. The API keeps its data in a database and can publish events and run AI agents. It publishes its contract, so a Synapsis client generates its models from it."
+boxes = [
+  { name = "Client apps", kind = "person", text = "mobile, web or any HTTP client" },
+  { name = "Your API", kind = "system", text = "written in Nuclear" },
+  { name = "Database", kind = "external", text = "SQLite, PostgreSQL, MySQL, MariaDB" },
+  { name = "Brokers and models", kind = "external", text = "Kafka, Redis, OpenAI, Ollama, Chroma" },
+]
+flows = ["Client apps → Your API: HTTP and JSON", "Your API → Database: entities and migrations", "Your API → Brokers and models: events, agents"]
+
+[[platforms.levels]]
+level = "2 · Containers"
+title = "One project, two languages"
+text = "config.nuc names the dialect. nuclear builds the same project into a FastAPI app (on synapsis-py) or a NestJS app (on synapsis-nest). Only the plugins the project names go to the generated app."
+boxes = [
+  { name = "Nuclear project", kind = "container", text = "config.nuc, components/, test/" },
+  { name = "nuclear + dialect", kind = "container", text = "fastapi or nestjs" },
+  { name = "build/", kind = "container", text = "the generated Python or TypeScript app" },
+  { name = "runtime", kind = "container", text = "synapsis-py or synapsis-nest" },
+]
+flows = ["Nuclear project → nuclear + dialect: nuclear build", "nuclear + dialect → build/: the app, its tests, its migrations", "build/ → runtime: database, events, http"]
+
+[[platforms.levels]]
+level = "3 · Components"
+title = "Inside a component"
+text = "A controller exposes the routes; the facade gives it the use cases; a use case uses the repositories and their entities. Errors are values: a Result becomes the right HTTP status."
+boxes = [
+  { name = "Controller", kind = "component", text = "@controller, @get, @post..." },
+  { name = "App component", kind = "component", text = "the component's facade" },
+  { name = "Use case", kind = "component", text = "one exec, returns Result" },
+  { name = "Repository", kind = "component", text = "queries over the entities" },
+  { name = "Entity", kind = "component", text = "@entity: a table" },
+]
+flows = ["Controller → App component", "App component → Use case", "Use case → Repository", "Repository → Entity"]
+
+[[platforms]]
+key = "web"
+name = "Web"
+dialects = ["react"]
+tagline = "The mobile platform, in a browser."
+pitch = "The same words as the mobile platform (screens, state managers, repositories, events, guards), so an app's domain reads the same on a phone and on the web. The react dialect writes React without JSX, React Router and Vite. This site is one."
+pages = ["nuclear-synapsis-framework/platforms/web/docs/08-guides/onboarding-web", "nuclear-synapsis-framework/platforms/web/docs/07-reference/web", "nuclearlang/dialects/typescript/docs/07-reference/react"]
+
+[[platforms.levels]]
+level = "1 · Context"
+title = "Your web app, its users and what it talks to"
+text = "People open the app in a browser. It reads APIs over HTTP and keeps the session in the browser's storage."
+boxes = [
+  { name = "User", kind = "person", text = "in a browser" },
+  { name = "Your web app", kind = "system", text = "written in Nuclear" },
+  { name = "APIs", kind = "external", text = "a Synapsis backend or any REST API" },
+]
+flows = ["User → Your web app: clicks, reads, types", "Your web app → APIs: HTTP with cache and retries"]
+
+[[platforms.levels]]
+level = "2 · Containers"
+title = "From .nuc to a page"
+text = "nuclear transpiles the project with the react dialect into build/app: TypeScript, React components, the router and a Vite project, on the synapsis-web runtime."
+boxes = [
+  { name = "Nuclear project", kind = "container", text = "config.nuc, main.nuc, components/, public/" },
+  { name = "nuclear + dialect", kind = "container", text = "the react dialect" },
+  { name = "build/app", kind = "container", text = "TypeScript, React, Vite" },
+  { name = "synapsis-web", kind = "container", text = "views, state, http, router, tests" },
+]
+flows = ["Nuclear project → nuclear + dialect: nuclear build", "nuclear + dialect → build/app: components and routes", "build/app → synapsis-web: state, http, session"]
+
+[[platforms.levels]]
+level = "3 · Components"
+title = "Inside a component"
+text = "The same layers as on a phone: a screen with its route asks its state manager, the manager calls the facade, a use case calls the repository."
+boxes = [
+  { name = "Screen", kind = "component", text = "@screen(route)" },
+  { name = "State manager", kind = "component", text = "emits the states" },
+  { name = "App component", kind = "component", text = "the facade" },
+  { name = "Use case", kind = "component", text = "returns Result" },
+  { name = "Repository", kind = "component", text = "@get over Http" },
+]
+flows = ["Screen → State manager", "State manager → App component", "App component → Use case", "Use case → Repository"]
+
+# the onboarding of each platform: the steps that make its example app (`example`, a folder of the tree). The site
+# runs every `run` again in a scratch folder when it is built, shows its real output, and fails when the result is
+# not the example of the tree (UPDATE_EXAMPLES=1 writes the example from it). `show` is the file of the level
+# "4 · Code": its Nuclear and what each dialect writes from it.
+[[onboarding]]
+platform = "backend"
+example = "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api"
+show = "components/todos/api/todos_controller.nuc"
+steps = [
+  { title = "Create the project", text = "A backend project: config.nuc, the app's configuration and a first test. Only .nuc files.", run = "nuclear new todos_api -p backend" },
+  { title = "Generate the resource", text = "The entity, its repository, a use case per action, the facade, the controller with its routes and the tests, in one command.", run = "nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\"" },
+  { title = "Check it", text = "Every file, as an agent reads it: an empty list is no error.", run = "nuclear check --json" },
+  { title = "Build, install, test, run", text = "The Python app in build/, its virtual environment, the tests, and the server on http://localhost:8000 (its docs at /docs).", command = "nuclear build && nuclear install && nuclear test && nuclear run" },
+]
+
+[[onboarding]]
+platform = "web"
+example = "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web"
+show = "components/todos/presentation/todos/todos_screen.nuc"
+steps = [
+  { title = "Create the project", text = "A web project: config.nuc, main.nuc (the router) and the app's configuration.", run = "nuclear new todos_web -p web" },
+  { title = "Generate the resource and its screen", text = "The model, an HTTP repository over the API, the use cases, the facade, a screen that lists the todos with its state manager, and a test.", run = "nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos --fields \"id:int title:string completed:boolean\" --screen todos" },
+  { title = "Check it", text = "Every file, as an agent reads it: an empty list is no error.", run = "nuclear check --json" },
+  { title = "Build, install, test, run", text = "The React app in build/app, its packages, the tests, and Vite on http://localhost:5173/todos.", command = "nuclear build && nuclear install && nuclear test && nuclear run" },
+]
+
+[[onboarding]]
+platform = "mobile"
+example = "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app"
+show = "components/todos/presentation/todos/todos_screen.nuc"
+steps = [
+  { title = "Create the project", text = "A mobile app: config.nuc, main.nuc, a home component and its screen, and the Flutter app in build/app.", run = "nuclear new todos_app -p mobile" },
+  { title = "Generate the resource and its screen", text = "The model, an HTTP repository over the API, the use cases, the facade, a screen that lists the todos with its state manager, and a test.", run = "nuclear gen resource todos Todo --source rest:https://jsonplaceholder.typicode.com --path todos --fields \"id:int title:string completed:boolean\" --screen todos" },
+  { title = "Check it", text = "Every file, as an agent reads it: an empty list is no error.", run = "nuclear check --json" },
+  { title = "Build, test, run", text = "The Flutter app, its tests, and the app on a device: a phone window with nuclear device, or nuclear run.", command = "nuclear build && nuclear test && nuclear device pixel7" },
 ]

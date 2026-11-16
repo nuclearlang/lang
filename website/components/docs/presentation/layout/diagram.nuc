@@ -1,0 +1,22 @@
+// One level of a C4 view of a platform: its elements (a person, the system, a container, a component or something
+// outside) and how they talk.
+stateless Diagram(level: PlatformLevels)
+  build() Element
+    section(
+      className = "c4 reveal",
+      children = [
+        div(className = "c4-head", children = [span(className = "c4-level", children = level.level), h3(children = level.title), p(children = level.text)]),
+        div(
+          className = "c4-boxes",
+          children = level.boxes.map((b) =>
+            div(key = b.name, className = "c4-box kind-${b.kind}", children = [small(children = b.kind), strong(children = b.name), span(children = b.text)])
+          ),
+        ),
+        ul(
+          className = "c4-flows",
+          children = level.flows.map((f) =>
+            li(key = "${f.source}-${f.target}", children = [strong(children = f.source), span(className = "arrow", children = "→"), strong(children = f.target), if f.text != "" span(className = "flow-text", children = f.text)])
+          ),
+        ),
+      ],
+    )

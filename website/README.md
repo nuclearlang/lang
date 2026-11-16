@@ -1,9 +1,11 @@
 # NuclearLang website
 
-The NuclearLang site, written in **Nuclear** with the web platform of Synapsis (dialect `react`): its screens, state
-managers, search and content repository are `.nuc` files. The content is the reference (`docs/07-reference/`) and
-the guides (`docs/08-guides/`) of every project of the NuclearLang tree, turned into JSON by a build script; the app
-only reads it.
+The NuclearLang site, written in **Nuclear** with the web platform of Synapsis (dialect `react`) and made with its
+tools: its screens, state managers, search and repositories are `.nuc` files, its animations the npm package
+`motion` added with `nuclear add`. It has a home page of interactive hooks, a page per tool (`/tools`), a page per
+platform from the context down to the code (`/platforms/<key>`) and an onboarding per platform (`/start/<key>`),
+and the reference (`docs/07-reference/`) and guides (`docs/08-guides/`) of every project of the tree. A build script
+turns them into JSON and runs the compiler and the onboardings' commands, so every output on the site is real.
 
 ## Build
 
@@ -13,6 +15,7 @@ From the root of the tree, with `nuclear` installed (`installer/install.sh`):
 cd website
 (cd tools && npm ci)             # markdown-it, shiki and smol-toml
 node tools/content.mjs           # the content, from the tree ([source] tree in site.toml; NUCLEAR_TREE overrides it)
+                                 # (it also runs the onboardings and fails if their result is not the platforms' examples)
 nuclear build                    # the app into build/app (public/ copied)
 nuclear install                  # npm install in build/app
 nuclear test                     # vitest: the tests of test/

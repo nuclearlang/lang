@@ -1,0 +1,42 @@
+// A terminal that replays real commands: each step shows its command and the output it gave when the site was built.
+// "Run the next command" shows one more; at the end it starts again (`controls = false`: every step, no buttons).
+stateful Terminal(steps: PlatformSteps[], title: string = "terminal", controls: boolean = true)
+  shown: int = 1
+
+  build() Element
+    div(
+      className = "terminal",
+      children = [
+        div(className = "terminal-bar", children = [span(className = "dot red"), span(className = "dot amber"), span(className = "dot green"), span(className = "terminal-title", children = title)]),
+        div(
+          className = "terminal-body",
+          children = steps.slice(0, controls ? shown : steps.length).map((s) =>
+            div(
+              key = s.command,
+              className = "terminal-step",
+              children = [
+                pre(className = "prompt", children = "$ ${s.command}"),
+                if s.output != "" pre(className = "output", children = s.output),
+              ],
+            )
+          ),
+        ),
+        if controls div(
+          className = "terminal-actions",
+          children = [
+            button(className = "button primary", onClick = () => next(), children = shown < steps.length ? "Run the next command" : "Start again"),
+            if shown < steps.length button(className = "button", onClick = () => all(), children = "Run them all"),
+          ],
+        ),
+      ],
+    )
+
+  next() void
+    setState(() =>
+      shown = shown < steps.length ? shown + 1 : 1
+    )
+
+  all() void
+    setState(() =>
+      shown = steps.length
+    )

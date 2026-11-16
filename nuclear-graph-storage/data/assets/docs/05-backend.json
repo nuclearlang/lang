@@ -41,33 +41,6 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.6b0b34",
-   "type": "readme",
-   "title": "The backend platform — Documents",
-   "summary": "Elsewhere:",
-   "body": [
-    "| [docs/04-specs/README.md](docs/04-specs/README.md) | You continue backend parity (auth, jobs, uploads, deploy) |",
-    "| [docs/05-standards/testing.md](docs/05-standards/testing.md) | You run or change a check, a golden or a runtime test |",
-    "| [docs/06-runbooks/change-a-runtime.md](docs/06-runbooks/change-a-runtime.md) | You changed a runtime and need the steps after it |",
-    "| [docs/07-reference/backend.md](docs/07-reference/backend.md) | You need the rules of the platform: the project, every kind, the plugins (`nuclear help backend`) |",
-    "| [docs/07-reference/brief/backend.md](docs/07-reference/brief/backend.md) | You want the short sheet an agent reads before writing a backend |",
-    "| [docs/08-guides/contracts.md](docs/08-guides/contracts.md) | You connect an app to a backend through its contract |",
-    "",
-    "Elsewhere:"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.a0b395",
    "type": "readme",
    "title": "The backend platform — Documents",
@@ -82,6 +55,34 @@
     "  `build`, `run`, `test`, `migrate`): [the command line tools](../../../tools/cli/AGENTS.md). `nuclear make` and",
     "  `gen`: [the code generator](../../../tools/code_generator/AGENTS.md).",
     "- The compiler, the loader and the format of a dialect and of a project: [the language](../../../nuclearlang/AGENTS.md)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.dfa64d",
+   "type": "readme",
+   "title": "The backend platform — Documents",
+   "summary": "Elsewhere:",
+   "body": [
+    "| [docs/04-specs/README.md](docs/04-specs/README.md) | You continue backend parity (auth, jobs, uploads, deploy) |",
+    "| [docs/05-standards/testing.md](docs/05-standards/testing.md) | You run or change a check, a golden or a runtime test |",
+    "| [docs/06-runbooks/change-a-runtime.md](docs/06-runbooks/change-a-runtime.md) | You changed a runtime and need the steps after it |",
+    "| [docs/07-reference/backend.md](docs/07-reference/backend.md) | You need the rules of the platform: the project, every kind, the plugins (`nuclear help backend`) |",
+    "| [docs/07-reference/brief/backend.md](docs/07-reference/brief/backend.md) | You want the short sheet an agent reads before writing a backend |",
+    "| [docs/08-guides/contracts.md](docs/08-guides/contracts.md) | You connect an app to a backend through its contract |",
+    "| [docs/08-guides/onboarding-backend.md](docs/08-guides/onboarding-backend.md) | You need the first steps of a user: the todos API in four commands |",
+    "",
+    "Elsewhere:"
    ],
    "platforms": [
     "backend"
@@ -125,7 +126,29 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.81e09f",
+   "type": "readme",
+   "title": "The backend platform — Folders",
+   "summary": "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`, `nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes (`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`).",
+   "body": [
+    "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,",
+    "`nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes",
+    "(`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.d54de2",
    "type": "readme",
    "title": "The backend platform — Folders",
    "summary": "`nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/backend/generators.toml`.",
@@ -138,13 +161,11 @@
     "- `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.",
     "- `examples/examples-fastapi/rick_api/`: the example of the fastapi check.",
     "- `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.",
-    "- `examples/expected/{rick_api,tasks_api}/`: the golden output of the two projects.",
+    "- `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
+    "  website runs those commands again and fails if they do not give it).",
+    "- `examples/expected/{rick_api,tasks_api,todos_api}/`: the golden output of the projects.",
     "- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live run (`smoke.py`, `smoke.mjs`).",
-    "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.",
-    "",
-    "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,",
-    "`nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes",
-    "(`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`)."
+    "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user."
    ],
    "platforms": [
     "backend"
@@ -1928,6 +1949,197 @@
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#1-create-the-project",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands — 1. Create the project",
+   "summary": "nuclear new todos_api -p backend cd todos_api The project is only `.nuc` files: `config.nuc` (the platform, the dialect, the app and its plugins), `config/project_config.nuc` (the database connection, SQLite by default) and `test/app_test.nuc`.",
+   "body": [
+    "```sh",
+    "nuclear new todos_api -p backend",
+    "cd todos_api",
+    "```",
+    "",
+    "The project is only `.nuc` files: `config.nuc` (the platform, the dialect, the app and its plugins),",
+    "`config/project_config.nuc` (the database connection, SQLite by default) and `test/app_test.nuc`. `-d nestjs` picks",
+    "TypeScript instead of the default `fastapi`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#2-generate-the-resource",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands — 2. Generate the resource",
+   "summary": "nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\" One command writes the whole resource of the component `todos`: The fields can also come from an example answer of an API (`--from-json <url|file>`) or a spec (`--from-spec",
+   "body": [
+    "```sh",
+    "nuclear gen resource todos Todo --fields \"id:int title:string completed:boolean\"",
+    "```",
+    "",
+    "One command writes the whole resource of the component `todos`:",
+    "",
+    "| File | What it is |",
+    "|---|---|",
+    "| `data/entities/todo.nuc` | the entity: the table `todos` (`@primary(generated = true) id`) |",
+    "| `domain/models/new_todo.nuc` | what a client sends to create or change one |",
+    "| `data/repositories/todo_repository.nuc` | the queries |",
+    "| `domain/usecases/{list,get,create,update,delete}_todo(s).nuc` | one use case per action, each returning `Result` |",
+    "| `todos_appcomponent.nuc` | the component's facade, with an alias per use case |",
+    "| `api/todos_controller.nuc` | the routes: `GET /todos`, `GET /todos/{id}`, `POST`, `PUT`, `DELETE` |",
+    "| `test/todos_test.nuc` | the tests, over an in-memory database |",
+    "",
+    "The fields can also come from an example answer of an API (`--from-json <url|file>`) or a spec (`--from-spec",
+    "<spec.md>`); [the code generator's guide](../../../../../tools/code_generator/docs/08-guides/README.md) has every option."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#3-check-it",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands — 3. Check it",
+   "summary": "nuclear check --json `[]`: no error.",
+   "body": [
+    "```sh",
+    "nuclear check --json",
+    "```",
+    "",
+    "`[]`: no error. An error comes with its code, its position and, most of the time, the exact fix; `nuclear fix`",
+    "applies them."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#4-build-install-test-and-run",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands — 4. Build, install, test and run",
+   "summary": "nuclear build # the Python app in build/ nuclear install # its virtual environment nuclear test # 3 passed nuclear run # http://localhost:8000, its OpenAPI docs at /docs curl -X POST localhost:8000/todos -H 'content-type: application/json' -d '{\"title\":\"Write the logic only\",\"completed\":false}'",
+   "body": [
+    "```sh",
+    "nuclear build        # the Python app in build/",
+    "nuclear install      # its virtual environment",
+    "nuclear test         # 3 passed",
+    "nuclear run          # http://localhost:8000, its OpenAPI docs at /docs",
+    "```",
+    "",
+    "```sh",
+    "curl -X POST localhost:8000/todos -H 'content-type: application/json' -d '{\"title\":\"Write the logic only\",\"completed\":false}'",
+    "# {\"id\":1,\"title\":\"Write the logic only\",\"completed\":false}",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#next",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands — Next",
+   "summary": "build apps that list todos.",
+   "body": [
+    "- A client of this API, generated from its contract: [contracts](contracts.md); the web and mobile onboardings",
+    "  build apps that list todos.",
+    "- Every kind of the platform (relations, pagination, transactions, events, Kafka, Redis, AI agents):",
+    "  [the backend reference](../07-reference/backend.md).",
+    "- A browser on another origin cannot call this API yet: the platform has no CORS setting",
+    "  ([roadmap](../01-product/roadmap.md))."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#the-same-code-in-typescript",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands — The same code in TypeScript",
+   "summary": "Change one word of `config.nuc`, `dialect = \"fastapi\"` to `dialect = \"nestjs\"`, and build again: the same `.nuc` files become a NestJS app.",
+   "body": [
+    "Change one word of `config.nuc`, `dialect = \"fastapi\"` to `dialect = \"nestjs\"`, and build again: the same `.nuc`",
+    "files become a NestJS app. The Nuclear of a platform never changes with its dialect."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md#your-first-backend-a-todos-api-in-four-commands",
+   "type": "guide",
+   "title": "Your first backend: a todos API in four commands",
+   "summary": "A REST API with a database, written in Nuclear and built for Python (FastAPI) or TypeScript (NestJS).",
+   "body": [
+    "A REST API with a database, written in Nuclear and built for Python (FastAPI) or TypeScript (NestJS). Every file",
+    "comes from the tools: nothing in it was written by hand. The result is the example",
+    "[`examples/onboarding/todos_api`](../../examples/onboarding/todos_api), and the documentation site runs these same",
+    "commands again each time it is built, so they always work.",
+    "",
+    "You need `nuclear` installed (`curl -fsSL https://nuclearlang.github.io/install.sh | sh`) and, to run the app,",
+    "Python 3.12 or later."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/onboarding-backend.md"
    ],
    "meta": {
     "section": "05-backend",

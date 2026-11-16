@@ -11,7 +11,78 @@ page() Page
 entry(path: string, title: string, headings: string[], words: string) SearchEntry
   SearchEntry(path = path, title = title, headings = headings, words = words)
 
-@mock([ContentRepository])
+step(command: string, output: string) PlatformSteps
+  PlatformSteps(title = "Create the project", text = "Only .nuc files.", command = command, output = output)
+
+code() PlatformCode
+  PlatformCode(path = "components/todos/api/todos_controller.nuc", html = "<pre>nuclear</pre>", outputs = [PlatformOutputs(dialect = "fastapi", path = "build/app/todos_controller.py", html = "<pre>python</pre>")])
+
+stats() PlatformStats
+  PlatformStats(nucFiles = 14, nucLines = 99, outFiles = 15, outLines = 197)
+
+home() Home
+  Home(
+    title = "NuclearLang",
+    lead = "Write only the logic.",
+    tagline = "A language.",
+    actions = [Action(title = "Start", path = "/start/backend", primary = true)],
+    hooks = [Hook(title = "Made for agents", text = "One way to write each thing.")],
+    samplesTitle = "Write it once",
+    samplesNote = "A note.",
+    samples = [Sample(title = "Models", nuclear = "<pre>nuclear</pre>", outputs = [Output(dialect = "typescript", html = "<pre>ts</pre>")])],
+    check = CheckDemo(title = "Errors an agent can fix", text = "Text.", wrong = "<pre>let x</pre>", diagnostics = [Diagnostic(code = "N0022", line = 1, col = 1, message = "declare by assigning", fix = "let  → ")], json = "<pre>[]</pre>", fixed = "<pre>x</pre>"),
+    generatorTitle = "One command writes the feature",
+    generatorText = "Text.",
+    generatorPlatform = "backend",
+    generator = [step("nuclear new todos_api -p backend", "created config.nuc")],
+    stats = stats(),
+    dialectsTitle = "Change the dialect",
+    dialectsText = "Text.",
+    dialects = code(),
+    platformsTitle = "Three platforms",
+    platformsText = "Text.",
+    platforms = [PlatformCard(key = "web", name = "Web", dialects = "react", tagline = "In a browser.")],
+    toolsTitle = "The tools",
+    toolsText = "Text.",
+    tools = [ToolCard(key = "mcp", name = "MCP server", group = "AI", tagline = "Nuclear in any client.")],
+    librariesTitle = "Any library",
+    librariesText = "Text.",
+    librariesCommand = "<pre>nuclear add motion</pre>",
+    librariesExample = "<pre>example</pre>",
+    installTitle = "Install",
+    install = "curl -fsSL https://example.org/install.sh | sh",
+  )
+
+tool() Tool
+  Tool(
+    key = "mcp",
+    name = "MCP server",
+    group = "AI",
+    tagline = "Nuclear in any client.",
+    pitch = "It speaks MCP.",
+    highlights = [ToolHighlights(title = "Generate first", text = "The generators, as tools.")],
+    demo = "<pre>nuclear-mcp tools</pre>",
+    project = "https://github.com/example/tree/main/tools/mcp",
+    pages = [ToolPages(title = "The MCP server", path = "/mcp/guide/mcp")],
+  )
+
+platform() Platform
+  Platform(
+    key = "backend",
+    name = "Backend",
+    dialects = "fastapi · nestjs",
+    tagline = "APIs from the same .nuc.",
+    pitch = "Controllers and entities.",
+    levels = [PlatformLevels(level = "1 · Context", title = "Your API and its clients", text = "Text.", boxes = [PlatformBoxes(name = "Your API", kind = "system", text = "in Nuclear")], flows = [PlatformFlows(source = "Clients", target = "Your API", text = "HTTP")])],
+    pages = [PlatformPages(title = "The backend", path = "/backend/reference/backend")],
+    app = "todos_api",
+    example = "https://github.com/example/tree/main/todos_api",
+    steps = [step("nuclear new todos_api -p backend", "created config.nuc"), step("nuclear check --json", "[]")],
+    code = code(),
+    stats = stats(),
+  )
+
+@mock([ContentRepository, ToolRepository, PlatformRepository])
 DocsTest
   beforeEach()
     when(ContentRepository.page).thenReturn(Ok(page()))
@@ -35,25 +106,9 @@ DocsTest
         entry("/d", "Lambdas", [], "nothing here"),
       ]),
     )
-    when(ContentRepository.home).thenReturn(
-      Ok(
-        Home(
-          title = "NuclearLang",
-          lead = "Only the program's logic.",
-          tagline = "A language.",
-          actions = [Action(title = "Guide", path = "/nuclearlang/guide/README", primary = true)],
-          features = [Feature(title = "Less text", text = "No braces.")],
-          sampleTitle = "Nuclear in a few lines",
-          sampleNote = "A note.",
-          sample = "<pre>sample</pre>",
-          outputs = [Output(dialect = "typescript", html = "<pre>ts</pre>")],
-          platformsTitle = "Three platforms",
-          platforms = [PlatformCard(title = "Web", dialects = "react", text = "In a browser.", path = "/docs/synapsis/react")],
-          installTitle = "Install",
-          install = "curl -fsSL https://example.org/install.sh | sh",
-        ),
-      ),
-    )
+    when(ContentRepository.home).thenReturn(Ok(home()))
+    when(ToolRepository.all).thenReturn(Ok([tool()]))
+    when(PlatformRepository.all).thenReturn(Ok([platform()]))
 
   @test("the search ranks a title before a heading before a word of the text")
   ranks()
@@ -72,9 +127,38 @@ DocsTest
     ~screen.findByText("Base")
     ~screen.findByText("Guide")
 
-  @widget("the home page shows the sample with a tab per target")
+  @widget("the home page shows its hooks, a tab per target, the agent's fix and the replayed commands")
   showsHome()
     renderScreen(HomeScreen())
-    ~screen.findByText("Only the program's logic.")
+    ~screen.findByText("Write only the logic.")
+    ~screen.findByText("Made for agents")
     ~screen.findByText("typescript")
-    ~screen.findByText("Three platforms")
+    ~screen.findByText("Run nuclear fix")
+    ~screen.findByText("\$ nuclear new todos_api -p backend")
+    ~screen.findByText("Every tool")
+
+  @widget("the page of a tool shows its pitch, how it starts and the index of its documents")
+  showsTool()
+    renderScreen(ToolScreen(name = "mcp"))
+    ~screen.findByText("It speaks MCP.")
+    ~screen.findByText("Generate first")
+    ~screen.findByText("The MCP server")
+
+  @widget("a tool that does not exist says so")
+  missingTool()
+    renderScreen(ToolScreen(name = "nope"))
+    ~screen.findByText("There is no tool named nope.")
+
+  @widget("the page of a platform shows its levels down to the code")
+  showsPlatform()
+    renderScreen(PlatformScreen(name = "backend"))
+    ~screen.findByText("Your API and its clients")
+    ~screen.findByText("4 · Code")
+    ~screen.findByText("build/app/todos_controller.py")
+
+  @widget("the onboarding of a platform shows its first step and its real output")
+  showsOnboarding()
+    renderScreen(StartScreen(name = "backend"))
+    ~screen.findByText("Build todos_api")
+    ~screen.findAllByText("\$ nuclear new todos_api -p backend")
+    ~screen.findByText("Next")

@@ -26,7 +26,7 @@ Generated once per project:
 
 | Kind | TypeScript |
 |---|---|
-| `stateless Name(params)` | `export function Name(props: NameProps): Element` → `createElement(NameView, props)`; `NameProps` interface (`key?` added); `NameView = statelessOf(class extends StatelessView<NameProps> { build() })`; params read as `this.props.x`; with `@screen(providers)` the function wraps the view in `Providers` |
+| `stateless Name(params)` | `export function Name(props: NameProps): Element` → `createElement(NameView, props)`; `NameProps` interface (`key?` added); `NameView = statelessOf(class extends StatelessView<NameProps> { build() })`; params read as `this.props.x`, a param with a default as `(this.props.x ?? default)` (it is optional in `NameProps`); when no param is required, `props` defaults to `{}` so the view is called with none; with `@screen(providers)` the function wraps the view in `Providers` |
 | `stateful Name(params)` + fields | the same over `statefulOf(class extends StatefulView<NameProps>)`: fields are class fields (`x: T \| null = null` when optional), `setState`, `initState`, `dispose` |
 | `appConfig`, `config` | `class extends AppConfig` / `ComponentConfig` with `override readonly connections`, `globals` |
 | model | `class` with `readonly` fields, `constructor(init: {...})`, `static fromJson(json: Json)`, `toJson()`, `copyWith()`; a generic model's `fromJson(json, fromJsonT)` |

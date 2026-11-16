@@ -1,0 +1,4 @@
+// One todo by its id; NotFound (404) when there is none.
+usecase GetTodo(repository: TodoRepository)
+  exec(id: int) Result<Error, Todo>
+    ~repository.find(id)

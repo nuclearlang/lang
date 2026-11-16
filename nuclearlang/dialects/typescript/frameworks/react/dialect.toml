@@ -70,7 +70,7 @@ inherits = ["StatelessView"]
 imports = ["StatelessView", "statelessOf", "createElement", "Element"]
 requires = ["build"]
 named_params = true
-param_access = "this.props.{{name}}"
+param_access = "{{#default}}(this.props.{{name}} ?? {{default}}){{/default}}{{^default}}this.props.{{name}}{{/default}}"
 # a view inside a screen reads the managers the screen provides (`SearchManager.find(q)` in the screen's views)
 provide = { template = "this.manager({{name}})", kinds = ["statemanager"] }
 template = { file = "templates/stateless.tpl" }
@@ -85,7 +85,7 @@ inherits = ["StatefulView"]
 imports = ["StatefulView", "statefulOf", "createElement", "Element"]
 requires = ["build"]
 named_params = true
-param_access = "this.props.{{name}}"
+param_access = "{{#default}}(this.props.{{name}} ?? {{default}}){{/default}}{{^default}}this.props.{{name}}{{/default}}"
 # a view inside a screen reads the managers the screen provides (`SearchManager.find(q)` in the screen's views)
 provide = { template = "this.manager({{name}})", kinds = ["statemanager"] }
 template = { file = "templates/stateful.tpl" }

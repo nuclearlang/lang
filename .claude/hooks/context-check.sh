@@ -41,7 +41,9 @@ stale() {
   while IFS= read -r q; do
     [ "$q" != "$p" ] && case "$q" in "$p"/*) inner+=(-o -path "$q") ;; esac
   done <<<"$all"
-  find "$p" \( "${skip[@]}" "${inner[@]}" \) -prune -o -type f \( "${code[@]}" \) -newer "$doc" ${since:+-newer "$since"} -print 2>/dev/null
+  # what git ignores is generated (a build's output, a site's content): only the files git keeps count
+  find "$p" \( "${skip[@]}" "${inner[@]}" \) -prune -o -type f \( "${code[@]}" \) -newer "$doc" ${since:+-newer "$since"} -print 2>/dev/null |
+    git check-ignore --stdin --non-matching --verbose 2>/dev/null | awk -F '\t' '$1 == "::" { print $2 }'
 }
 
 # What the knowledge base is made from (sources, documents, dialects, the agents) and was changed after $1.

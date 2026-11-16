@@ -1,0 +1,22 @@
+// The routes of todos.
+@controller("todos")
+controller TodosController(app: TodosAppComponent)
+  @get
+  list(page: int = 1) Result<Error, Todo[]>
+    ~app.listTodos(page)
+
+  @get("{id}")
+  one(id: int) Result<Error, Todo>
+    ~app.getTodo(id)
+
+  @post
+  create(input: NewTodo) Result<Error, Todo>
+    ~app.createTodo(input)
+
+  @put("{id}")
+  update(id: int, input: NewTodo) Result<Error, Todo>
+    ~app.updateTodo(id, input)
+
+  @delete("{id}")
+  remove(id: int) Result<Error, boolean>
+    ~app.deleteTodo(id)

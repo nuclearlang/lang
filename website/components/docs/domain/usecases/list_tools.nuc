@@ -1,0 +1,4 @@
+// One page of tools.
+usecase ListTools(repository: ToolRepository)
+  exec() Result<ToolError, Tool[]>
+    ~repository.all()

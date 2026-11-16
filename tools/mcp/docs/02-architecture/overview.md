@@ -51,7 +51,9 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 | `local` | all | `LEAD` + `GENERATORS` + `LOCAL`: call `graph_strategy` first; generate; give `developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed; `developer_review` |
 | `remote` (remote agents only) | every tool whose name does not start with `graph_` or `developer_` | `REMOTE_LEAD` + `GENERATORS` + `REMOTE`: generate; the model writes what is left after reading `nuclear_brief` and `nuclear_help`; validate and correct |
 
-The generators' part of the instructions (`GENERATORS`) is the same in both.
+The generators' part of the instructions (`GENERATORS`) is the same in both. Both leads open with the rule that a
+product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand
+([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).
 
 ## The groups
 

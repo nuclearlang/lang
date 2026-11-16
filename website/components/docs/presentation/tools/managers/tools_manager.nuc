@@ -1,0 +1,13 @@
+// The state of the tools screen: it loads the first page when it is created.
+@stateModel(ToolsState)
+statemanager ToolsManager
+  (docs: DocsComponent)
+    load()
+
+  @state(ToolsState.loading)
+  loading()
+
+  @before(loading)
+  @state(ToolsState.full)
+  load() Result<ToolError, Tool[]>
+    ~docs.listTools()

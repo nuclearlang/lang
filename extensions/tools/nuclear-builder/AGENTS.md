@@ -53,6 +53,7 @@ The tool window: in `extensions/jetbrains/`, `IDE_HOME=/opt/android-studio ./bui
 | The words: spec, run, stage, step, actor, journal, ledger, strategy | [docs/00-context/domain.md](docs/00-context/domain.md) |
 | The files, the agents it calls, what it writes in a project, the JetBrains window, the command | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
 | How the engine runs, retries, undoes and survives a crash | [docs/02-architecture/engine.md](docs/02-architecture/engine.md) |
+| The index of the user's guides | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | To write a spec (VS Code, JetBrains, a terminal) | [docs/08-guides/write-a-spec.md](docs/08-guides/write-a-spec.md) |
 | To follow a run, run something again, read a failure | [docs/08-guides/follow-a-run.md](docs/08-guides/follow-a-run.md) |
 | The commands of each stage, the CI export | [docs/08-guides/pipeline-commands.md](docs/08-guides/pipeline-commands.md) |

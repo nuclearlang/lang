@@ -1,0 +1,15 @@
+// The todos, as a list.
+@screen(route = "/todos", providers = [TodosManager])
+stateless TodosScreen
+  build(context: BuildContext) Widget
+    Scaffold(
+      appBar = AppBar(title = Text("Todos")),
+      body = TodosStateBuilder<TodosManager>(
+        loading = () => Center(child = CircularProgressIndicator()),
+        full = (items) => ListView.builder(
+          itemCount = items.length,
+          itemBuilder = (context, index) => ListTile(title = Text(items[index].title)),
+        ),
+        error = (e) => Center(child = Text(e.message)),
+      ),
+    )

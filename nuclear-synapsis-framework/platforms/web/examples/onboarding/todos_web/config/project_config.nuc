@@ -1,0 +1,6 @@
+// The connections and services of the whole app (nuclear help web).
+appConfig ProjectConfig
+  connections: Connection[] = [
+    Http(connectionName = "todos", baseUrl = "https://jsonplaceholder.typicode.com"),
+    Http(baseUrl = "http://localhost:8000/", timeout = 5000),
+  ]

@@ -36,6 +36,7 @@
    "body": [
     "| Read | When |",
     "|---|---|",
+    "| [docs/08-guides/README.md](docs/08-guides/README.md) | You need what a user reads: the devices, how to start one, the presets, the keys |",
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is untested (systems, desktops, terminals) or pending in the devices |",
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change the crate: the backend, the CDP client, the window placement, the terminal's rendering, the slots and temporary folders |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a device is Flutter web in a browser and not an engine of its own |",
@@ -296,6 +297,238 @@
    ],
    "sources": [
     "device-emulators/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#a-device-in-its-own-window",
+   "type": "readme",
+   "title": "The Synapsis devices — A device in its own window",
+   "summary": "nuclear device # a Pixel 7 nuclear dv iphone14pro # an iPhone 14 Pro, in a second window beside the first nuclear device ipadair --landscape side by side.",
+   "body": [
+    "```sh",
+    "nuclear device                 # a Pixel 7",
+    "nuclear dv iphone14pro         # an iPhone 14 Pro, in a second window beside the first",
+    "nuclear device ipadair --landscape",
+    "```",
+    "",
+    "- The window has no browser bars, takes the device's ratio and at most 85 % of the screen's height. Several stay",
+    "  side by side. On Hyprland, Sway and i3 it floats instead of filling a tile.",
+    "- Its title is `Synapsis device N · <device> · <app>`. The mouse is a finger.",
+    "- The terminal behaves like `flutter run`'s: `r` hot reload, `R` hot restart, `q` quit. Closing the window also",
+    "  ends it."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#in-the-editor",
+   "type": "readme",
+   "title": "The Synapsis devices — In the editor",
+   "summary": "VS Code shows the same kind of device in a panel beside the code (the *Synapsis device*, with breakpoints and hot reload), and a web project gets a web device driven over CDP the same way.",
+   "body": [
+    "VS Code shows the same kind of device in a panel beside the code (the *Synapsis device*, with breakpoints and hot",
+    "reload), and a web project gets a web device driven over CDP the same way. Those are the editor's code:",
+    "[the extensions](../../../extensions/AGENTS.md)."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#the-commands",
+   "type": "readme",
+   "title": "The Synapsis devices — The commands",
+   "summary": "device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at once: device 1, 2, 3) device list the running devices and the devices it can be terminal-device [<device>] [--render kitty|sixel|text|blocks] (td) the…",
+   "body": [
+    "```",
+    "device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,",
+    "                                             iphone14pro, ipadair...; several at once: device 1, 2, 3)",
+    "device list                                the running devices and the devices it can be",
+    "terminal-device [<device>] [--render kitty|sixel|text|blocks]",
+    "                                      (td) the Synapsis Terminal device: the app inside this terminal",
+    "```",
+    "",
+    "- `<device>`: a preset, by id or name (case, spaces and dashes are ignored). Default: `pixel7`.",
+    "- `--landscape`: start rotated.",
+    "- `-- <args>`: everything after `--` goes to `flutter run` (for example `-- --release`).",
+    "- `--render` (terminal device): how it draws; see below."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#the-presets",
+   "type": "readme",
+   "title": "The Synapsis devices — The presets",
+   "summary": "`nuclear device list`, in a mobile project: $ nuclear device list no Synapsis device is running devices: pixel7 Pixel 7 (412×915) iphone14pro iPhone 14 Pro (393×852) iphonese iPhone SE (375×667) iphone15promax iPhone 15 Pro Max (430×932) galaxys20 Samsung Galaxy S20 Ultra (412×915) galaxya51…",
+   "body": [
+    "`nuclear device list`, in a mobile project:",
+    "",
+    "```sh",
+    "$ nuclear device list",
+    "no Synapsis device is running",
+    "",
+    "devices:",
+    "  pixel7           Pixel 7 (412×915)",
+    "  iphone14pro      iPhone 14 Pro (393×852)",
+    "  iphonese         iPhone SE (375×667)",
+    "  iphone15promax   iPhone 15 Pro Max (430×932)",
+    "  galaxys20        Samsung Galaxy S20 Ultra (412×915)",
+    "  galaxya51        Samsung Galaxy A51/71 (412×914)",
+    "  ipadmini         iPad Mini (768×1024)",
+    "  ipadair          iPad Air (820×1180)",
+    "  ipadpro          iPad Pro (1024×1366)",
+    "  tabs7            Galaxy Tab S7 (800×1280)",
+    "  responsive       Responsive (400×800)",
+    "  laptop           Laptop (1280×800)",
+    "  desktop          Desktop (1920×1080)",
+    "```",
+    "",
+    "The sizes are CSS pixels in portrait, the same list as the browsers' device toolbar and the editor's device panel.",
+    "Each preset also carries its density and its identity (an Android or iOS user agent)."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#the-synapsis-devices",
+   "type": "readme",
+   "title": "The Synapsis devices",
+   "summary": "A Synapsis device runs a mobile app with the size, density, touch and identity of a phone or a tablet, without an emulator.",
+   "body": [
+    "A Synapsis device runs a mobile app with the size, density, touch and identity of a phone or a tablet, without an",
+    "emulator. The app runs as Flutter web in a Chromium browser, and the device is emulated and driven over the Chrome",
+    "DevTools Protocol (CDP). From the command line a device is:",
+    "",
+    "- **a window of its own** (`nuclear device`), like an emulator;",
+    "- **the terminal device** (`nuclear terminal-device`), the device's screen inside your terminal.",
+    "",
+    "Both run inside a mobile project (a folder with `config.nuc`), build the app first, and can run several at once:",
+    "device 1, 2, 3. When a device ends, nothing stays alive: neither `flutter run` nor the browser.",
+    "",
+    "A device is Flutter web: no native plugins, no `dart:io`. It is a fast test device, not a replacement for a real",
+    "phone. Why it is built this way: [ADR-devices-0001](../03-adr/0001-a-device-is-the-app-as-flutter-web-in-chromium-driven-over-cdp.md)."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#the-terminal-device",
+   "type": "readme",
+   "title": "The Synapsis devices — The terminal device",
+   "summary": "nuclear terminal-device # the best drawing the terminal supports nuclear td iphonese --render blocks The device's screen, with a frame, a status bar and Flutter's last message, inside the terminal: Arrows, Enter and Tab go to the app.",
+   "body": [
+    "```sh",
+    "nuclear terminal-device                  # the best drawing the terminal supports",
+    "nuclear td iphonese --render blocks",
+    "```",
+    "",
+    "The device's screen, with a frame, a status bar and Flutter's last message, inside the terminal:",
+    "",
+    "| `--render` | Where |",
+    "|---|---|",
+    "| `kitty` | images in kitty, Ghostty and WezTerm |",
+    "| `sixel` | images in foot, Konsole, Windows Terminal, iTerm2 and mlterm |",
+    "| `text` | colored blocks (two pixels per cell) with the app's texts written as letters in their place, readable at any size: what GNOME Terminal, XFCE, LXQt, Alacritty, Terminal.app, the Linux console, Zed and VS Code get |",
+    "| `blocks` | the colored blocks alone, without the texts |",
+    "",
+    "| Key or mouse | What it does |",
+    "|---|---|",
+    "| click and drag | tap and drag |",
+    "| wheel | scroll |",
+    "| right click, `b` | back |",
+    "| `r` / `R` | hot reload / hot restart |",
+    "| `o` | rotate |",
+    "| `d` / `D` | another device |",
+    "| `m` | another drawing mode |",
+    "| `s` | a screenshot, in the project's `build/screenshots/` |",
+    "| `l` | Flutter's log |",
+    "| `?` | help |",
+    "| `q`, Ctrl+C | quit |",
+    "",
+    "Arrows, Enter and Tab go to the app. With a text field focused, keys are text (pasting too) and the commands go",
+    "with Alt (`Alt+r`); Esc leaves the field."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#what-it-needs",
+   "type": "readme",
+   "title": "The Synapsis devices — What it needs",
+   "summary": "export CHROME_EXECUTABLE=/path/to/chrome Linux each device's temporary files (about 500 MB) go to `~/.cache/dfly/<n>`, not to `/tmp`, and are deleted on close.",
+   "body": [
+    "- Flutter (`flutter run -d chrome`).",
+    "- A Chromium browser: Chrome, Chromium, Edge, Brave or Vivaldi. `CHROME_EXECUTABLE` chooses one:",
+    "",
+    "  ```sh",
+    "  export CHROME_EXECUTABLE=/path/to/chrome",
+    "  ```",
+    "",
+    "- Memory: in debug, about 1.4 GB for `flutter run` with its compiler and 0.9 GB for the browser, per device. On",
+    "  Linux each device's temporary files (about 500 MB) go to `~/.cache/dfly/<n>`, not to `/tmp`, and are deleted on",
+    "  close."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/08-guides/README.md#what-ran",
+   "type": "readme",
+   "title": "The Synapsis devices — What ran",
+   "summary": "Tested on Linux with Hyprland.",
+   "body": [
+    "Tested on Linux with Hyprland. On macOS and Windows the devices compile but never ran; GNOME and KDE (the window's",
+    "placement) and real sixel terminals are untested: [the roadmap](../01-product/roadmap.md)."
+   ],
+   "sources": [
+    "device-emulators/docs/08-guides/README.md"
    ],
    "meta": {
     "section": "08-cli",
@@ -1213,6 +1446,35 @@
    }
   },
   {
+   "id": "doc:tools/cli/AGENTS.md#documents.4b5371",
+   "type": "readme",
+   "title": "The command line tool — Documents",
+   "summary": "Elsewhere: the flutter reference (§11).",
+   "body": [
+    "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, why there is one command, or why agents are supported the way they are |",
+    "| [docs/04-specs/README.md](docs/04-specs/README.md) | You continue the agent support plan |",
+    "| [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: what the command is, a quick start, the commands by job, how agents use it |",
+    "| [docs/08-guides/commands.md](docs/08-guides/commands.md) | You need every command and option as `nuclear help` prints them (regenerate it when a `USAGE` text changes) |",
+    "",
+    "Elsewhere:",
+    "",
+    "- What a user reads about the commands: `nuclear help` and the CLI section of",
+    "  [the flutter reference](../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (§11).",
+    "- `new`, `make` and `gen`: [the code generator](../code_generator/AGENTS.md). `device` and `terminal-device`:",
+    "  [the devices](../../device-emulators/AGENTS.md). Installing: [the installer](../../installer/AGENTS.md).",
+    "- The format of a dialect (`[toolchain]`, `[project.manifest]`) and of a project:",
+    "  `nuclearlang/docs/07-reference/dialects.md`, `projects.md`."
+   ],
+   "sources": [
+    "tools/cli/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/AGENTS.md#documents.ba967c",
    "type": "readme",
    "title": "The command line tool — Documents",
@@ -1227,33 +1489,6 @@
     "| [docs/02-architecture/build.md](docs/02-architecture/build.md) | You change `nuclear build` / `run` / `test` / `watch` / `repair` / `explain` of a mobile app, the markers in `.dart_tool`, or the VS Code workspace |",
     "| [docs/02-architecture/packages.md](docs/02-architecture/packages.md) | You change `config.nuc` handling, `nuclear add` / `remove`, generated type definitions or assets |",
     "| [docs/02-architecture/landing.md](docs/02-architecture/landing.md) | You change the landing page, the animation, the header, the help or the colors of the output |"
-   ],
-   "sources": [
-    "tools/cli/AGENTS.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/AGENTS.md#documents.bb9546",
-   "type": "readme",
-   "title": "The command line tool — Documents",
-   "summary": "Elsewhere: the flutter reference (§11).",
-   "body": [
-    "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, why there is one command, or why agents are supported the way they are |",
-    "| [docs/04-specs/README.md](docs/04-specs/README.md) | You continue the agent support plan |",
-    "",
-    "Elsewhere:",
-    "",
-    "- What a user reads about the commands: `nuclear help` and the CLI section of",
-    "  [the flutter reference](../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (§11).",
-    "- `new`, `make` and `gen`: [the code generator](../code_generator/AGENTS.md). `device` and `terminal-device`:",
-    "  [the devices](../../device-emulators/AGENTS.md). Installing: [the installer](../../installer/AGENTS.md).",
-    "- The format of a dialect (`[toolchain]`, `[project.manifest]`) and of a project:",
-    "  `nuclearlang/docs/07-reference/dialects.md`, `projects.md`."
    ],
    "sources": [
     "tools/cli/AGENTS.md"
@@ -1411,12 +1646,14 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.3e3a2e",
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.4ff17a",
    "type": "context",
    "title": "What a project and a machine get for AI agents — `nuclear agent init [--dialect <d>]` (`agent::init`)",
    "summary": "Run in a project folder; `nuclear agent init` and every `nuclear new` call it.",
    "body": [
-    "Run in a project folder; `nuclear agent init` and every `nuclear new` call it. It writes four things and keeps",
+    "Run in a project folder; `nuclear agent init` and every `nuclear new` call it. Inside a project of the framework",
+    "(`framework::agent_init`) it runs in the same process: starting `nuclear agent init` again there would be claimed by",
+    "the framework again, a loop. It writes four things and keeps",
     "everything else of the project's files:",
     "",
     "1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.",
@@ -1498,7 +1735,11 @@
     "| The project's `AGENTS.md` section and the Cursor rule | `tools/cli/agent-files/project/AGENTS.md`, `nuclear.mdc`, embedded in the binary | `nuclear agent init` |",
     "| The check hook | `.claude/settings.json` of the project | `nuclear agent init`; it runs `nuclear agent hook` |",
     "",
-    "The skill does not copy the brief: it asks the installed binary for it, so it is never out of date."
+    "The skill does not copy the brief: it asks the installed binary for it, so it is never out of date.",
+    "",
+    "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,",
+    "the MCP server, `add`), never by writing target code or translating native code by hand",
+    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/agent-support.md"
@@ -1690,7 +1931,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.54b323",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.22c53f",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Commands",
@@ -1701,10 +1942,9 @@
     "| `help <word>\\|words\\|layout --dialect <d>` | A kind, decorator or header word of the dialect (`docs.toml` of its chain); `words` lists them all; `layout` says where each kind's file goes (only a platform's dialect has one) | `dialect_word` |",
     "| `build <file.nuc> --dialect <name\\|path> [-o <out>]` | Transpiles a file (stdout without `-o`) | `file_command` |",
     "| `build <folder> [-o <out>]` | Transpiles a project (a folder with `nuclear.toml` or `config.nuc`); the output of a removed `.nuc` is removed, from the previous line map | `project_command` |",
-    "| `check <folder\\|file.nuc> [--dialect] [--json]` | The errors of a file or of every file of a project; JSON for agents and the language server | `file_command`, `project_command`, `report` |",
+    "| `check <folder\\|file.nuc> [--dialect] [--json]` | The errors of a file or of every file of a project; JSON for agents and the language server: one document on stdout (the dialect's own report is printed only when it stops the command, `load_dialect`) | `file_command`, `project_command`, `report` |",
     "| `fix <folder\\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |",
-    "| `fmt <file.nuc\\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |",
-    "| `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |"
+    "| `fmt <file.nuc\\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -1735,11 +1975,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.d4327b",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.cff106",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Commands",
    "body": [
+    "| `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |",
     "| `dialect list`, `dialect check <name\\|path> [--json]` | The dialects found; a dialect's files validated | `dialect_check`, `print_report` |",
     "| `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |",
     "| `spec [--dialect <d>\\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet | `spec`, `brief`, `dialect_spec` |",
@@ -1790,7 +2031,8 @@
    "body": [
     "One file of commands over the language crates; a command line `framework::claims` takes is the framework's",
     "([overview.md](overview.md), ADR-cli-0003). The text a user sees is the `USAGE` constant: `nuclear help`",
-    "prints it, and `nuclear help <command>` prints its lines of it."
+    "prints it, and `nuclear help <command>` prints its lines of it; for a command of the framework (`help gen`,",
+    "`framework::is_command`) it prints the framework's usage."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -2280,6 +2522,688 @@
    }
   },
   {
+   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.3bd47c",
+   "type": "readme",
+   "title": "The `nuclear` command — Five minutes: a backend",
+   "summary": "`nuclear check` prints an error the way a compiler does: error[N0106]: 'undefinedThing' is not defined 3 | x = undefinedThing and `nuclear check --json` prints the same error with its code, position, explanation and, when there is one, the exact `fix` (every code: the diagnostics): { \"code\":…",
+   "body": [
+    "`nuclear check` prints an error the way a compiler does:",
+    "",
+    "```text",
+    "error[N0106]: 'undefinedThing' is not defined",
+    " --> components/books/domain/usecases/broken.nuc:3:9",
+    "  |",
+    "3 |     x = undefinedThing",
+    "  |         ^^^^^^^^^^^^^^",
+    "```",
+    "",
+    "and `nuclear check --json` prints the same error with its code, position, explanation and, when there is one, the",
+    "exact `fix` (every code: [the diagnostics](../../../../nuclearlang/docs/07-reference/diagnostics.md)):",
+    "",
+    "```json",
+    "{",
+    "  \"code\": \"N0106\",",
+    "  \"col\": 9, \"end_col\": 23, \"line\": 3, \"end_line\": 3,",
+    "  \"explanation-context\": \"Line 3, column 9: The name is not a variable, parameter, member, declaration or import of this file.\",",
+    "  \"file\": \"components/books/domain/usecases/broken.nuc\",",
+    "  \"fix\": null,",
+    "  \"message\": \"'undefinedThing' is not defined\",",
+    "  \"severity\": \"error\"",
+    "}",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.4131de",
+   "type": "readme",
+   "title": "The `nuclear` command — Five minutes: a backend",
+   "summary": "nuclear new demo -p backend # a project of the backend platform (dialect fastapi by default) cd demo nuclear gen resource books Book --fields \"id:int title:string author:string?\" nuclear build # demo: 19 files → ./build nuclear install # the runtime and the packages (a venv, for fastapi) nuclear…",
+   "body": [
+    "```sh",
+    "nuclear new demo -p backend                  # a project of the backend platform (dialect fastapi by default)",
+    "cd demo",
+    "nuclear gen resource books Book --fields \"id:int title:string author:string?\"",
+    "nuclear build                                # demo: 19 files → ./build",
+    "nuclear install                              # the runtime and the packages (a venv, for fastapi)",
+    "nuclear run                                  # Uvicorn running on http://127.0.0.1:8000",
+    "nuclear test                                 # 3 passed",
+    "nuclear check --json                         # every error, as JSON, for an agent or a script",
+    "nuclear fix .                                # apply every exact fix, then report what is left",
+    "```",
+    "",
+    "`new` writes only `.nuc` files: for a backend, `config.nuc`, `config/project_config.nuc` and `test/app_test.nuc`.",
+    "`gen resource` writes the entity, the input model, the repository, a use case per action, the component's facade,",
+    "the controller and the tests, as finished code ([the generators' guide](../../../code_generator/docs/08-guides/README.md)).",
+    "The other platforms start the same way: `nuclear new shop -p web` (dialect `react`) and `nuclear new shop -p mobile`",
+    "(dialect `flutter`; it also creates the Flutter app in `build/app`). Pick another dialect with `-d`, for example",
+    "`-d nestjs`. The Nuclear of a project does not change with its dialect."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#go-deeper",
+   "type": "readme",
+   "title": "The `nuclear` command — Go deeper",
+   "summary": "the compiler's commands.",
+   "body": [
+    "- [Every command and option](commands.md), verbatim from `nuclear help`.",
+    "- [The generators' guide](../../../code_generator/docs/08-guides/README.md): what `new`, `make` and `gen` write.",
+    "- [The Synapsis tutorial](../../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
+    "- How the command is built: [the overview](../02-architecture/overview.md) and",
+    "  [the compiler's commands](../02-architecture/nuclear-command.md)."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#how-ai-agents-use-it",
+   "type": "readme",
+   "title": "The `nuclear` command — How AI agents use it",
+   "summary": "An agent learns Nuclear from the command, not from guessing (ADR-cli-0002): 1. Read the short sheet: `nuclear spec --brief --platform backend` (or `--dialect <name>`): only what differs from TypeScript and Dart, then the platform's brief.",
+   "body": [
+    "An agent learns Nuclear from the command, not from guessing",
+    "([ADR-cli-0002](../03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md)):",
+    "",
+    "1. **Read the short sheet**: `nuclear spec --brief --platform backend` (or `--dialect <name>`): only what",
+    "   differs from TypeScript and Dart, then the platform's brief.",
+    "2. **Generate before writing**: `nuclear gen` and `nuclear make` write the standard code; the agent writes by hand",
+    "   only what they leave. A product is made with the tools, never by writing or porting target code by hand",
+    "   ([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
+    "3. **Use a library through its definitions**: `nuclear add <package>` installs it and generates its definitions;",
+    "   `nuclear defs show <Name|Name.member> --dialect <name> [--json]` prints its API, for example",
+    "   `nuclear defs show FastAPI --dialect fastapi`.",
+    "4. **Check every file**: `nuclear check --json` after each change, `nuclear fix` for the exact fixes, then",
+    "   `nuclear fmt`.",
+    "5. **Set the project up once**: `nuclear agent init` writes the agents' files and a hook (`nuclear agent hook`)",
+    "   that checks each `.nuc` an agent edits ([what it writes](../02-architecture/agent-support.md))."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#install",
+   "type": "readme",
+   "title": "The `nuclear` command — Install",
+   "summary": "curl -fsSL https://nuclearlang.github.io/install.sh | sh # Linux, macOS irm https://nuclearlang.github.io/install.ps1 | iex # Windows (PowerShell) What the installer puts on the machine, and the optional AI services it asks about at its end: the AI set-up guide.",
+   "body": [
+    "```sh",
+    "curl -fsSL https://nuclearlang.github.io/install.sh | sh        # Linux, macOS",
+    "irm https://nuclearlang.github.io/install.ps1 | iex             # Windows (PowerShell)",
+    "```",
+    "",
+    "What the installer puts on the machine, and the optional AI services it asks about at its end:",
+    "[the AI set-up guide](../../../../installer/docs/08-guides/ai-setup.md). Then `nuclear doctor` lists what the",
+    "platforms still need (the CLIs of each dialect, Flutter, VS Code)."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.584908",
+   "type": "readme",
+   "title": "The `nuclear` command — The commands, by job",
+   "summary": "`nuclear help <topic>` prints a chapter of the guide or a reference: `nuclear help generators`, `nuclear help backend`, `nuclear help tutorial`, `nuclear help diagnostics`.",
+   "body": [
+    "| | `install` | the runtime and the app's packages (backend, web) |",
+    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
+    "| | `test [--integration]` | the tests written in Nuclear |",
+    "| | `watch` | transpile each time a `.nuc` changes |",
+    "| | `migrate make <message>` / `migrate` / `migrate down` | the database migrations (backend) |",
+    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
+    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |",
+    "| Learn | `help [<topic>]`, `spec [--brief]` | the documentation embedded in the binary; the language for agents |",
+    "| Machine | `doctor`, `setup` | what is missing; install Flutter step by step |",
+    "",
+    "`nuclear help <topic>` prints a chapter of the guide or a reference: `nuclear help generators`, `nuclear help",
+    "backend`, `nuclear help tutorial`, `nuclear help diagnostics`. `nuclear help <word> --dialect <name>` explains a",
+    "kind or decorator of a dialect, and `nuclear help layout --platform <p>` where each kind's file goes."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.c9bc73",
+   "type": "readme",
+   "title": "The `nuclear` command — The commands, by job",
+   "summary": "`nuclear help` prints every one; the exact usage text is in commands.md.",
+   "body": "`nuclear help` prints every one; the exact usage text is in [commands.md](commands.md).",
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.d41e34",
+   "type": "readme",
+   "title": "The `nuclear` command — The commands, by job",
+   "summary": "The commands, by job",
+   "body": [
+    "| Job | Command | What it does |",
+    "|---|---|---|",
+    "| Start | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files |",
+    "| | `agent init` | `AGENTS.md`, `CLAUDE.md`, a Cursor rule and a check hook for AI agents |",
+    "| | `code` | open the project in VS Code (run, debug, devices, hot reload) |",
+    "| Write code | `gen resource <component> <Name>` | finished models, repository, use cases, controller or screen, tests |",
+    "| | `gen usecase <component> <Name>` | a use case wired into its component (and its route, `--route`) |",
+    "| | `make <kind> <component> <Name>` (`g`) | one skeleton of a kind, at the platform's place, to fill in |",
+    "| | `gen inspect` | what the project has: components and declarations, as JSON |",
+    "| Libraries | `add <package>[@version]` | install a package of the target, write it in `config.nuc`, generate its type definitions |",
+    "| | `remove <package>` | the reverse |",
+    "| | `defs list` / `defs show` / `defs search` | read the type definitions of a library |",
+    "| Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |",
+    "| | `fix <folder\\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |",
+    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |",
+    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-nuclear-command",
+   "type": "readme",
+   "title": "The `nuclear` command",
+   "summary": "`nuclear` is the one command of NuclearLang.",
+   "body": [
+    "`nuclear` is the one command of NuclearLang. The same binary is the compiler (`build`, `check`, `fix`, `fmt`,",
+    "`spec`, `defs`, the documentation) and the framework, Synapsis (`new`, `make`, `gen`, `run`, `test`, `install`,",
+    "`migrate`, `add`, the devices). A person, an AI agent, an editor and the MCP server all run it, so what works in",
+    "one works in all of them ([ADR-cli-0003](../03-adr/0003-one-command-nuclear.md)).",
+    "",
+    "You write only `.nuc` files. `nuclear` writes the target project (Python, TypeScript or Dart) into `build/` and",
+    "runs the target's own tools there for you: you never call `pip`, `npm` or `flutter` yourself."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#every-command-of-nuclear",
+   "type": "guide",
+   "title": "Every command of `nuclear`",
+   "summary": "The usage text of the command, verbatim (`nuclear help`, `nuclear gen` and `nuclear make` print it).",
+   "body": [
+    "The usage text of the command, verbatim (`nuclear help`, `nuclear gen` and `nuclear make` print it). What the",
+    "commands are for, and a quick start: [the guide](README.md)."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#nuclear-gen.bae62f",
+   "type": "guide",
+   "title": "Every command of `nuclear` — `nuclear gen`",
+   "summary": "usage: nuclear gen inspect what the project has: components and declarations (JSON) nuclear gen component <component> a component: its facade and its config nuclear gen resource <component> <Name> [options] models, repository, a use case per action, the facade's aliases, the controller (backend)…",
+   "body": [
+    "```text",
+    "usage:",
+    "  nuclear gen inspect                                   what the project has: components and declarations (JSON)",
+    "  nuclear gen component <component>                     a component: its facade and its config",
+    "  nuclear gen resource <component> <Name> [options]     models, repository, a use case per action, the facade's",
+    "                                                          aliases, the controller (backend) or the screen (mobile,",
+    "                                                          web), the tests",
+    "options of gen resource:",
+    "  --from-json <file|url>     the fields from an example answer of the API (a url also gives --source rest)",
+    "  --from-spec <spec.md>      the fields from the spec's Key | Type | Description table",
+    "  --fields \"id:int name:string origin:Origin?\"",
+    "  --source rest:<base url> | rest | db     another API (an HTTP repository) or the database (default: db; rest with a url)",
+    "  --path <path>              the API's path of the resource (default: the url's last segment, or the name)",
+    "  --actions list,get,search,create,update,delete   (default: list,get for rest; every one for db)",
+    "  --screen <screen>          mobile and web: a screen that lists the resource",
+    "  --plural <Names>           when the English plural is not the right one",
+    "  --dry-run                  show the files, write nothing"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#nuclear-gen.d463d6",
+   "type": "guide",
+   "title": "Every command of `nuclear` — `nuclear gen`",
+   "summary": "nuclear gen usecase <component> <Name> [options] a use case wired into its component: its alias in the facade and, with --route, its route in the controller (backend) options of gen usecase: declares (without it <Name> is a use case the project has: its rules are written by hand) `orders` gets it,…",
+   "body": [
+    "nuclear gen usecase <component> <Name> [options]      a use case wired into its component: its alias in the facade",
+    "                                                          and, with --route, its route in the controller (backend)",
+    "options of gen usecase:",
+    "  --calls <Repository>.<method>   write the use case too: it only calls that method, which a repository of the project",
+    "                             declares (without it <Name> is a use case the project has: its rules are written by hand)",
+    "  --route \"<VERB> <prefix>[/<path>]\"   backend: the route that calls it (\"POST orders/{id}/cancel\": the controller of",
+    "                             `orders` gets it, created when missing; a {name} of the path is a parameter of the use case)",
+    "  --dry-run                  show the files, write nothing",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#nuclear-make-in-a-backend-or-web-project",
+   "type": "guide",
+   "title": "Every command of `nuclear` — `nuclear make` in a backend or web project",
+   "summary": "`make` names the kinds of the project's platform; where each file goes: `nuclear help layout --platform <p>`.",
+   "body": [
+    "`make` names the kinds of the project's platform; where each file goes: `nuclear help layout --platform <p>`.",
+    "",
+    "```text",
+    "usage: nuclear make <kind> <component> <Name> [--screen <screen>]",
+    "kinds of the backend platform: agent, aggregate, appcomponent, config, controller, entity, listener, model, repository, service, state, tests, tools, usecase",
+    "kinds of the web platform: appcomponent, event, model, repository, service, stateful, stateless, statemodel, tests, usecase",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.4edf7a",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "only lists the files that would change (exit 1) nuclear tokens <file.nuc> print the tokens produced by the lexer nuclear ast <file.nuc> print the syntax tree nuclear dialect list list the dialects found nuclear dialect check <name|path> [--json] validate a dialect's files nuclear kind new <name>…",
+   "body": [
+    "only lists the files that would change (exit 1)",
+    "  nuclear tokens <file.nuc>                                   print the tokens produced by the lexer",
+    "  nuclear ast <file.nuc>                                      print the syntax tree",
+    "  nuclear dialect list                                        list the dialects found",
+    "  nuclear dialect check <name|path> [--json]                  validate a dialect's files",
+    "  nuclear kind new <name> -p <platform> -d <dialect>          a kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
+    "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);",
+    "                                                              with --dialect, also the spec of the dialect and its parents;",
+    "                                                              --brief: the short sheet (what changes from TS/Dart)",
+    "  nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
+    "  nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
+    "  nuclear contracts list                                      the contracts the project (current folder) declares and their state"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.d9e9c7",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "usage: nuclear help [<topic>|<command>] this help, a documentation topic or the usage of a command nuclear help <word>|words|layout --dialect <name> a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes) nuclear build <file.nuc> --dialect <name|path> [-o…",
+   "body": [
+    "```text",
+    "usage:",
+    "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
+    "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
+    "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
+    "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
+    "  nuclear check <folder> [--json]                             report the errors of every file of a project",
+    "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
+    "  nuclear fix <folder|file.nuc> [--dialect|--platform]        apply every exact fix of the errors (the editor's quick",
+    "                                                              fixes), then report what is left",
+    "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
+    "                                                              (the Nuclear of a platform is the same in all of them)",
+    "  nuclear fmt <file.nuc|folder>... [--check]                  rewrite the files in the canonical layout (spacing,",
+    "                                                              indentation, blank lines; never reorders); --check"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.f417a2",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "nuclear contracts update [<name>...] fetch each contract (a url: GET <url>/.nuclear/contract.json; a path: its .nuclear/contract.json) and regenerate contracts/<name>/*.nuc nuclear defs list [--dialect <name>] list the type definitions packages (all, or the dialect's) nuclear defs show…",
+   "body": [
+    "nuclear contracts update [<name>...]                        fetch each contract (a url: GET <url>/.nuclear/contract.json; a path:",
+    "                                                              its .nuclear/contract.json) and regenerate contracts/<name>/*.nuc",
+    "  nuclear defs list [--dialect <name>]                        list the type definitions packages (all, or the dialect's)",
+    "  nuclear defs show <Name|Name.member> --dialect <name> [--json] [--inherited]",
+    "                                                              print a declaration of the type definitions",
+    "  nuclear defs search <text> --dialect <name>                 find declarations whose name contains <text>",
+    "",
+    "options:",
+    "  --dialect-path <dir>   extra directory with dialects (repeatable; also $NUCLEAR_DIALECT_PATH, ':'-separated)",
+    "  --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/",
+    "                         folder next to each dialects/ folder is always searched",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-compiler-s-commands.fbe9b9",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The compiler's commands",
+   "summary": "These take a file or a folder, and work outside a project of the framework too.",
+   "body": "These take a file or a folder, and work outside a project of the framework too.",
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.1ba849",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "options FLUTTER the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)",
+   "body": [
+    "options",
+    "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
+    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.6c5fb5",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "These work inside a project made with `nuclear new` (the folder with `config.nuc` or `main.nuc`, here or above).",
+   "body": [
+    "These work inside a project made with `nuclear new` (the folder with `config.nuc` or `main.nuc`, here or above).",
+    "`nuclear help <command>` of any of them prints this list.",
+    "",
+    "```text",
+    "usage: nuclear <command> [arguments]          (names in any case: user_profile, UserProfile)"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.7e573b",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "analyze build and run flutter analyze on the generated app check [--json] errors and architecture rules of every .nuc (no Flutter needed)",
+   "body": [
+    "analyze                                    build and run flutter analyze on the generated app",
+    "  check [--json]                             errors and architecture rules of every .nuc (no Flutter needed)"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.917886",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "project new <name> [-p mobile] [-d flutter] (n) new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): [--org com.example] only .nuc files (+ the Flutter app in build/app for mobile) code open the project in VS Code (Flutter run, debug, devices, hot reload) watch…",
+   "body": [
+    "project",
+    "  new <name> [-p mobile] [-d flutter]   (n)  new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react):",
+    "      [--org com.example]                    only .nuc files (+ the Flutter app in build/app for mobile)",
+    "  code                                       open the project in VS Code (Flutter run, debug, devices, hot reload)",
+    "  watch                                      transpile every time a .nuc changes (VS Code starts it by itself)",
+    "  build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
+    "                                             transpile, pub get and build_runner (and flutter build <target>)",
+    "  run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)",
+    "  device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,",
+    "                                             iphone14pro, ipadair...; several at once: device 1, 2, 3)",
+    "  device list                                the running devices and the devices it can be",
+    "  terminal-device [<device>] [--render kitty|sixel|text|blocks]",
+    "                                        (td) the Synapsis Terminal device: the app inside this terminal",
+    "  test [--integration] [-- <args>]           build and run test/, or integration_test/ on a device"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.99e95b",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "code generation: nuclear make <what> ... (alias: nuclear g <alias> ...) component <component> (c) facade + an example use case screen <component> <screen> (s) screen + state manager + state model [--manager|-m Name] [--state|-st Name] [--route /path] statemanager <component> <screen> <name> (sm) a…",
+   "body": [
+    "code generation: nuclear make <what> ...   (alias: nuclear g <alias> ...)",
+    "  component <component>                 (c)  facade + an example use case",
+    "  screen <component> <screen>           (s)  screen + state manager + state model",
+    "      [--manager|-m Name] [--state|-st Name] [--route /path]",
+    "  statemanager <component> <screen> <name> (sm) a state manager (Cubit) + its state model, in a screen",
+    "  statemodel <component> <screen> <name> (smo) a state model, in a screen",
+    "  stateful <name>                       (sf) a stateful widget in shared/widgets",
+    "  usecase <component> <name>            (uc) a use case",
+    "  repository <component> <name>         (r)  a repository and its model",
+    "  model <component> <name>              (mo) a model",
+    "  service <component> <name>            (sv) a service",
+    "  aggregate <component> <name>          (ag) an aggregate",
+    "  config <component>                    (cf) the config of a component",
+    "  test <component>                      (t)  test/<component>_test.nuc",
+    "  event <name>                          (e)  a global event in shared/events",
+    "  widget <name>                         (w)  a shared widget in shared/widgets",
+    "  guard <name>                          (gd) an access check (canActivate) in shared/guards",
+    "  global <name>                         (gl) a global component (@on an event) + its event"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.a44c2a",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "page <name> [--route /x|--not-found] (pg) a screen shared by the app in shared/screens integration <name> (it) an integration test in integration_test/ backend and web projects: <kind> <component> <Name> [--screen <screen>] any kind of the platform, at its place (`nuclear help layout --platform…",
+   "body": [
+    "page <name> [--route /x|--not-found]  (pg) a screen shared by the app in shared/screens",
+    "  integration <name>                    (it) an integration test in integration_test/",
+    "  backend and web projects: <kind> <component> <Name> [--screen <screen>]   any kind of the platform, at its",
+    "      place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.b9c887",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "finished code from a resource's data (every platform; ADR-codegen-0001): nuclear gen <what> ... inspect what the project has (components, declarations by kind), as JSON component <component> a component and its facade resource <component> <Name> models, repository, a use case per action, the…",
+   "body": [
+    "finished code from a resource's data (every platform; ADR-codegen-0001): nuclear gen <what> ...",
+    "  inspect                               what the project has (components, declarations by kind), as JSON",
+    "  component <component>                 a component and its facade",
+    "  resource <component> <Name>           models, repository, a use case per action, the facade's aliases, the",
+    "                                        controller (backend) or the screen (mobile, web), the tests",
+    "      --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\"",
+    "      [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete]",
+    "      [--screen <screen>] [--plural Names] [--dry-run]       (nuclear gen alone prints every option)",
+    "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
+    "                                        --route, its route in the controller (backend)",
+    "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.c1e35f",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "backend (fastapi, nestjs; the dialect's [toolchain] runs in build/) build transpile (nuclear build .) install the runtime and the app's packages (a venv, npm install) run [-- <args>] the server (uvicorn, npm run dev) test [-- <args>] the tests written in Nuclear (pytest, node:test) migrate make…",
+   "body": [
+    "backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)",
+    "  build                                      transpile (nuclear build .)",
+    "  install                                    the runtime and the app's packages (a venv, npm install)",
+    "  run [-- <args>]                            the server (uvicorn, npm run dev)",
+    "  test [-- <args>]                           the tests written in Nuclear (pytest, node:test)",
+    "  migrate make <message>                     one migration of the database: the entities minus the last one",
+    "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
+    "  add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
+    "  agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
+    "  clean                                      flutter clean in the app",
+    "  repair                                     when the build or the app fails: build, then pub get + build_runner",
+    "                                             from scratch, then flutter clean + everything again, until",
+    "                                             flutter analyze finds no errors (exit 2: the .nuc have errors)",
+    "  explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.f816a1",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008) add <package>[@version]... [--module <m>] install it with the dialect's package manager, write it in config.nuc (dependencies) and generate its type definitions: its names are then known to the…",
+   "body": [
+    "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008)",
+    "  add <package>[@version]... [--module <m>]  install it with the dialect's package manager, write it in config.nuc",
+    "                                             (dependencies) and generate its type definitions: its names are then",
+    "                                             known to the compiler, the editor and the dialect, which imports them",
+    "                                             (backend, web: definitions in the project's defs/; mobile: cached in",
+    "                                             ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`)",
+    "  remove <package>...                        out of config.nuc, the generated project and its definitions",
+    "",
+    "packages and devices (flutter, inside the app)",
+    "  pub get|upgrade|outdated                   (pub add|remove = flutter add|remove)",
+    "  devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "  flutter <any flutter command>              run any flutter command inside the app",
+    "",
+    "setup",
+    "  doctor                                     what NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
+    "  setup [--dir ~/develop]                    install Flutter step by step (system packages, SDK, PATH)",
+    "  credits | author                           the intro animation, the author and the repository"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/code_generator/AGENTS.md#commands",
    "type": "readme",
    "title": "The code generator — Commands",
@@ -2314,6 +3238,7 @@
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what the generators do not write yet, or what is untested |",
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `generate.rs` or `scaffold.rs`, add a piece to a `generators.toml`, or need how fields become files |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the generators exist and why they never write placeholders |",
+    "| [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: why generators, what `new`, `gen` and `make` write on each platform |",
     "",
     "Elsewhere:",
     "",
@@ -2653,6 +3578,327 @@
    ],
    "sources": [
     "tools/code_generator/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#go-deeper",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — Go deeper",
+   "summary": "how each source is read, and every refusal.",
+   "body": [
+    "- [The generators in Synapsis](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md): every option,",
+    "  how each source is read, and every refusal.",
+    "- [The `nuclear` command](../../../cli/docs/08-guides/README.md): the rest of the commands.",
+    "- How the generators work and how to add a piece: [the overview](../02-architecture/overview.md)."
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-gen-component-component-and-nuclear-gen-inspect",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear gen component <component>` and `nuclear gen inspect`",
+   "summary": "`gen component orders` writes the component's facade (backend: `components/orders/orders_appcomponent.nuc`; mobile and web: `components/<c>/<c>_component.nuc`).",
+   "body": [
+    "`gen component orders` writes the component's facade (backend: `components/orders/orders_appcomponent.nuc`;",
+    "mobile and web: `components/<c>/<c>_component.nuc`). `gen inspect` prints what the project has, as JSON: each",
+    "component and its declarations (`file`, `kind`, `name`). An agent reads it before it generates.",
+    "",
+    "TODO(human): `nuclear gen` says `gen component` writes \"its facade and its config\"; a backend dry run lists only",
+    "the facade. Which is right?"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-gen-resource-component-name.49c235",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear gen resource <component> <Name>`",
+   "summary": "components/books/domain/models/book.nuc components/books/domain/models/book_error.nuc components/books/data/book_repository.nuc components/books/domain/usecases/list_books.nuc components/books/domain/usecases/get_book.nuc components/books/books_component.nuc…",
+   "body": [
+    "```text",
+    "components/books/domain/models/book.nuc",
+    "components/books/domain/models/book_error.nuc",
+    "components/books/data/book_repository.nuc",
+    "components/books/domain/usecases/list_books.nuc",
+    "components/books/domain/usecases/get_book.nuc",
+    "components/books/books_component.nuc",
+    "components/books/presentation/catalog/state_models/books_state.nuc",
+    "components/books/presentation/catalog/managers/books_manager.nuc",
+    "components/books/presentation/catalog/books_screen.nuc",
+    "test/books_test.nuc",
+    "```",
+    "",
+    "Run the same command twice and nothing changes:",
+    "",
+    "```text",
+    "    created  components/books/data/entities/book.nuc        (first run)",
+    "       kept  components/books/data/entities/book.nuc        (second run)",
+    "```"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-gen-resource-component-name.57ed53",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear gen resource <component> <Name>`",
+   "summary": "A resource is something the app lists, reads and changes.",
+   "body": [
+    "A resource is something the app lists, reads and changes. The fields come from one of three sources:",
+    "",
+    "```sh",
+    "nuclear gen resource books Book --fields \"id:int title:string author:string?\"",
+    "nuclear gen resource users User --from-json users.json          # an example answer of an API (a file or a url)",
+    "nuclear gen resource episodes Episode --from-spec episodes.md    # the spec's Key | Type | Description table",
+    "```",
+    "",
+    "From `--from-spec`, a `GET https://...` line gives the API, and a snake_case key keeps its name with `@key`:",
+    "",
+    "",
+    "The other options:",
+    "",
+    "| Option | Meaning |",
+    "|---|---|",
+    "| `--source rest:<base url>` \\| `rest` \\| `db` | another API (an HTTP repository) or the database (default: `db`; `rest` with a url). The web platform has no `db` |",
+    "| `--actions list,get,search,create,update,delete` | one use case each. Default: `list,get` for `rest`, every one for `db` |",
+    "| `--path <path>` | the API's path of the resource (default: the url's last segment, or the name) |",
+    "| `--screen <screen>` | mobile and web: a screen that lists the resource |",
+    "| `--plural <Names>` | when the English plural is not the right one |",
+    "| `--dry-run` | print the files and their code, write nothing |",
+    "",
+    "What it writes, per platform (from `--dry-run`):"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-gen-resource-component-name.eeaa32",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear gen resource <component> <Name>`",
+   "summary": "components/books/data/entities/book.nuc components/books/domain/models/new_book.nuc components/books/data/repositories/book_repository.nuc components/books/domain/usecases/list_books.nuc components/books/domain/usecases/get_book.nuc components/books/domain/usecases/create_book.nuc…",
+   "body": [
+    "**backend, `--source db`** (the default): `nuclear gen resource books Book --fields \"id:int title:string author:string?\"`",
+    "",
+    "```text",
+    "components/books/data/entities/book.nuc",
+    "components/books/domain/models/new_book.nuc",
+    "components/books/data/repositories/book_repository.nuc",
+    "components/books/domain/usecases/list_books.nuc",
+    "components/books/domain/usecases/get_book.nuc",
+    "components/books/domain/usecases/create_book.nuc",
+    "components/books/domain/usecases/update_book.nuc",
+    "components/books/domain/usecases/delete_book.nuc",
+    "components/books/books_appcomponent.nuc",
+    "components/books/api/books_controller.nuc",
+    "test/books_test.nuc",
+    "```",
+    "",
+    "**backend, `--source rest`**: `nuclear gen resource weather Forecast --fields \"id:int city:string\" --source rest:https://api.example.com --actions list,get`",
+    "",
+    "```text",
+    "components/weather/domain/models/forecast.nuc",
+    "components/weather/data/repositories/forecast_repository.nuc",
+    "components/weather/domain/usecases/list_forecasts.nuc",
+    "components/weather/domain/usecases/get_forecast.nuc",
+    "components/weather/weather_appcomponent.nuc",
+    "components/weather/api/forecasts_controller.nuc",
+    "```",
+    "",
+    "**mobile and web** (the same files): `nuclear gen resource books Book --fields \"id:int title:string\" --source rest:https://api.example.com --screen catalog`"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-gen-usecase-component-name",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear gen usecase <component> <Name>`",
+   "summary": "Wires a use case into its component: its alias in the facade and, with `--route`, its route in the controller (backend; the controller is created when missing, and a `{name}` of the path is a parameter of the use case).",
+   "body": [
+    "Wires a use case into its component: its alias in the facade and, with `--route`, its route in the controller",
+    "(backend; the controller is created when missing, and a `{name}` of the path is a parameter of the use case).",
+    "",
+    "```sh",
+    "nuclear gen usecase books CountBooks --calls BookRepository.page --route \"GET books/count\"",
+    "```",
+    "",
+    "With `--calls <Repository>.<method>` the use case is written too: it only calls that method, which a repository of",
+    "the project must declare. Without it, the use case has rules of its own: write it first, by hand, then run the",
+    "command to wire it. Otherwise it refuses:",
+    "",
+    "```text",
+    "✗ ArchiveBook is not declared. A use case with rules of its own is written first",
+    "  (components/books/domain/usecases/archive_book.nuc: `usecase ArchiveBook(...)` with `exec(...) Result<Error, T>`),",
+    "  then this command wires it; one that only calls a repository is written here: --calls <Repository>.<method>",
+    "```"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-make-kind-component-name.0b46ac",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear make <kind> <component> <Name>`",
+   "summary": "$ nuclear make entity books Author (backend) created components/books/data/entities/author.nuc $ nuclear g service books Pricing created components/books/domain/services/pricing.nuc $ nuclear make stateless shop Cart --screen cart (web) created components/shop/presentation/cart/cart.nuc $ nuclear…",
+   "body": [
+    "```text",
+    "$ nuclear make entity books Author          (backend)",
+    "  created components/books/data/entities/author.nuc",
+    "$ nuclear g service books Pricing",
+    "  created components/books/domain/services/pricing.nuc",
+    "$ nuclear make stateless shop Cart --screen cart          (web)",
+    "  created components/shop/presentation/cart/cart.nuc",
+    "$ nuclear make screen shop cart --route /cart          (mobile)",
+    "  created components/shop/presentation/cart/state_models/cart_state.nuc",
+    "  created components/shop/presentation/cart/managers/cart_manager.nuc",
+    "  created components/shop/presentation/cart/cart_screen.nuc",
+    "note: the component 'shop' has no facade yet; create it with: nuclear g c shop",
+    "```"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-make-kind-component-name.4ac79c",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear make <kind> <component> <Name>`",
+   "summary": "A skeleton of one kind, at the platform's place, to fill in by hand.",
+   "body": [
+    "A skeleton of one kind, at the platform's place, to fill in by hand. `nuclear make` alone lists the kinds of the",
+    "project's platform; `nuclear help layout --platform <p>` prints where each one goes.",
+    "",
+    "| Platform | Kinds |",
+    "|---|---|",
+    "| backend | agent, aggregate, appcomponent, config, controller, entity, listener, model, repository, service, state, tests, tools, usecase |",
+    "| web | appcomponent, event, model, repository, service, stateful, stateless, statemodel, tests, usecase (`--screen <screen>` for the screen's pieces) |",
+    "| mobile | component, screen, statemanager, statemodel, stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page, integration (`nuclear help` lists their aliases and options) |"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-new",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear new`",
+   "summary": "The `.nuc` files `new` writes (the output of a real run):",
+   "body": [
+    "The `.nuc` files `new` writes (the output of a real run):",
+    "",
+    "| Platform | Files |",
+    "|---|---|",
+    "| `backend` (`fastapi`, `nestjs`) | `config.nuc`, `config/project_config.nuc`, `test/app_test.nuc` |",
+    "| `web` (`react`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` |",
+    "| `mobile` (`flutter`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` and a `home` component: `home_component.nuc`, `domain/usecases/hello_home_usecase.nuc`, `presentation/home/home_screen.nuc`, `presentation/home/managers/home_manager.nuc`, `presentation/home/state_models/home_state.nuc`; then the Flutter app in `build/app` |"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#the-generators-nuclear-new-gen-and-make.165d1a",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make`",
+   "summary": "Most of an app is standard code: an entity, a repository, a use case that only calls it, a controller, a screen that lists a resource, their tests.",
+   "body": [
+    "Most of an app is standard code: an entity, a repository, a use case that only calls it, a controller, a screen",
+    "that lists a resource, their tests. In NuclearLang that code is written by a tool, not by a person and not by a",
+    "model: the result is the same every time, it compiles as written, and it costs no model tokens. A person, an AI",
+    "agent, the MCP server and the Nuclear Builder all call the same generators.",
+    "",
+    "This is how products are made on the platform: `nuclear new`, `nuclear gen` and `nuclear make` come first, and only",
+    "what they leave is written by hand, in Nuclear",
+    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md),",
+    "[ADR-codegen-0001](../03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md)).",
+    "",
+    "The three commands:",
+    "",
+    "| Command | Writes |",
+    "|---|---|",
+    "| `nuclear new <name> -p <platform>` | the files of a new project |",
+    "| `nuclear gen resource` / `gen usecase` / `gen component` | finished code that compiles, or a refusal that says what to do |",
+    "| `nuclear make <kind> <component> <Name>` (`nuclear g`) | one skeleton of a kind, to fill in |"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/README.md#the-generators-nuclear-new-gen-and-make.5137ec",
+   "type": "readme",
+   "title": "The generators: `nuclear new`, `gen` and `make`",
+   "summary": "What each writes is the platform's data (`platforms/<platform>/generators.toml` in this project), so it is the same Nuclear for every dialect of the platform.",
+   "body": [
+    "What each writes is the platform's data (`platforms/<platform>/generators.toml` in this project), so it is the",
+    "same Nuclear for every dialect of the platform. **A generator never overwrites a file**: a file that exists is",
+    "kept, a facade or a controller only gets the members it lacks, and a name another file declares stops the command",
+    "before it writes anything."
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/README.md"
    ],
    "meta": {
     "section": "08-cli",

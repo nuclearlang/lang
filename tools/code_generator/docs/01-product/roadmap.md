@@ -24,6 +24,16 @@ The pending work of `nuclear gen` and `nuclear make`. A done item is deleted.
 
 ## Pending
 
+- **Found building the website and the onboardings (2026-11-16):**
+  - a generated screen keys its list by `item.id` even when the model has no `id` (a resource from JSON whose
+    objects have a `key`): `nuclear check` accepts it and `tsc` fails (`Property 'id' does not exist`);
+  - `--source rest:<url>` without `--path` calls the resource's name in the singular (`GET todo`), while the
+    database table is plural (`todos`): the default path should be the plural;
+  - no resource of one object: `--actions get` always takes an `id`, so a JSON document that is one object (a home
+    page's data) gets no repository method without one;
+  - no generator for a view shared by the whole app: `make stateless shared X` writes a component `shared` whose
+    views are private (N0302), while the views of the top-level `shared/` folder are visible everywhere;
+  - `gen component` says it writes "its facade and its config"; a backend dry run lists only the facade.
 - **The plural of a table**: `gen resource shelves Shelf --source db` names the table `shelfs` (`@entity("shelfs")`):
   the plural is the name plus `s` unless `--plural` is given. Found by the functional tests of 2026-11-16.
 - **A resource that reads another API gets no test.** Seen with the user's run

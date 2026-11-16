@@ -541,6 +541,121 @@
    }
   },
   {
+   "id": "doc:docs/03-adr/0004-products-are-made-with-the-tools.md#consequences",
+   "type": "adr",
+   "title": "ADR-platform-0004: A product is made with the platform's tools, never by porting code by hand — Consequences",
+   "summary": "code; the generated code stays as fast and as uniform as the generators make it.",
+   "body": [
+    "- Positive: every product is a test of the tools; a gap shows up as a roadmap item instead of hidden hand-written",
+    "  code; the generated code stays as fast and as uniform as the generators make it.",
+    "- Negative: a feature a tool cannot make yet waits for the tool, or is written by hand with the gap recorded."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0004-products-are-made-with-the-tools.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-platform-0004: A product is made with the platform's tools, never by porting code by hand — Context and problem",
+   "summary": "NuclearLang exists to prove that a language, its framework and its tools let people and agents build software.",
+   "body": [
+    "NuclearLang exists to prove that a language, its framework and its tools let people and agents build software.",
+    "An agent that writes a feature by hand in the target's language (React, Node.js, Python/FastAPI, Dart), or that",
+    "translates such code into Nuclear by itself, proves nothing: the product works, but nobody learns whether the",
+    "transpiler, the generators, the MCP server or the type definitions would have made it. It also hides every gap of",
+    "the tools behind work no one sees.",
+    "",
+    "A **product** is any software made from Nuclear: an app, a backend, the website of the tree, an example, a tool of",
+    "the tree written in Nuclear."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0004-products-are-made-with-the-tools.md#decision",
+   "type": "adr",
+   "title": "ADR-platform-0004: A product is made with the platform's tools, never by porting code by hand — Decision",
+   "summary": "A product is made with the tools of the platform, and every agent (Claude Code, the local Nuclear Developer, any agent reading the MCP server) follows it: 1. The code is Nuclear and the target code comes from the transpiler.",
+   "body": [
+    "A product is made with the tools of the platform, and every agent (Claude Code, the local Nuclear Developer, any",
+    "agent reading the MCP server) follows it:",
+    "",
+    "1. **The code is Nuclear and the target code comes from the transpiler.** No agent writes, edits or patches target",
+    "   code (`.ts`, `.dart`, `.py` of `build/`, or any native file of a product) to make a feature.",
+    "2. **No agent migrates code by hand.** Code of a native dialect (React, Node.js, Python/FastAPI, Dart) is never",
+    "   translated into Nuclear by the agent itself. What exists as a library is added with `nuclear add <package>` and",
+    "   used through its generated type definitions; what is standard is written by the generators.",
+    "3. **The tools come first, in this order:** `nuclear new`, `nuclear gen` and `nuclear make` (the code generator),",
+    "   the MCP server's tools, `nuclear add` (a library and its definitions), `nuclear fix` (the compiler's exact fixes);",
+    "   only what they leave is written by hand, in Nuclear.",
+    "4. **By hand, outside Nuclear, only when strictly necessary**: when a product cannot work otherwise, or when the",
+    "   work is on Nuclear itself (the compiler, a dialect, a runtime package, a tool that cannot yet be written in",
+    "   Nuclear: the root `AGENTS.md`, rule 9). The agent says so, and the missing capability becomes an item of the roadmap",
+    "   of the tool that should have done it, in the same change."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0004-products-are-made-with-the-tools.md#options-considered",
+   "type": "adr",
+   "title": "ADR-platform-0004: A product is made with the platform's tools, never by porting code by hand — Options considered",
+   "summary": "1. The tools first, by hand only when strictly necessary, every gap recorded (chosen).",
+   "body": [
+    "1. The tools first, by hand only when strictly necessary, every gap recorded (chosen).",
+    "2. Let agents write whatever is fastest: products ship sooner, and the platform is never tested."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0004-products-are-made-with-the-tools.md#references",
+   "type": "adr",
+   "title": "ADR-platform-0004: A product is made with the platform's tools, never by porting code by hand — References",
+   "summary": "the skill), `tools/mcp/server.nuc`, `nuclear-agents/nuclear_developer/AGENTS.md`.",
+   "body": [
+    "- The root `AGENTS.md`, hard rule 13; the agents' instructions: `tools/cli/agent-files/` (the project section and",
+    "  the skill), `tools/mcp/server.nuc`, `nuclear-agents/nuclear_developer/AGENTS.md`."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0004-products-are-made-with-the-tools.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/03-adr/README.md#decisions-of-the-platform",
    "type": "adr",
    "title": "Decisions of the platform",
@@ -555,6 +670,7 @@
     "| [ADR-platform-0001](0001-english-everywhere.md) | Everything is written in English | accepted |",
     "| [ADR-platform-0002](0002-one-repository-a-project-per-folder.md) | One repository; each project in its folder, with its own documents | accepted |",
     "| [ADR-platform-0003](0003-the-ai-loop.md) | The AI loop: a private knowledge base, local agents, one MCP server and a pipeline tool | accepted |",
+    "| [ADR-platform-0004](0004-products-are-made-with-the-tools.md) | A product is made with the platform's tools, never by porting code by hand | accepted |",
     "",
     "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
    ],
@@ -11253,6 +11369,375 @@
    "agents": false,
    "sources": [
     "tools/mcp/docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0001-the-site-sells-the-idea.md#consequences",
+   "type": "adr",
+   "title": "ADR-website-0001: The site sells the idea: hooks first, then a page per tool and per platform — Consequences",
+   "summary": "user guide; the site cannot claim what the tools do not do, since it runs them.",
+   "body": [
+    "- Positive: a visitor sees the value in one scroll and reaches any tool or platform in one click; every tool got a",
+    "  user guide; the site cannot claim what the tools do not do, since it runs them.",
+    "- Negative: `site.toml` grows (the tools and the platforms are data); the pages of the tools and the platforms are",
+    "  screens of the app, so they have no plain HTML copy in `/static/` yet ([roadmap](../01-product/roadmap.md))."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0001-the-site-sells-the-idea.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0001-the-site-sells-the-idea.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-website-0001: The site sells the idea: hooks first, then a page per tool and per platform — Context and problem",
+   "summary": "The site published the documentation well, but its home page only compared a sample in three languages.",
+   "body": [
+    "The site published the documentation well, but its home page only compared a sample in three languages. Everything",
+    "else NuclearLang offers (the generators, the MCP server, the editors, the Smart Graph, the local agents, three",
+    "platforms from one codebase) was not shown, so a visitor could not see the value. NuclearLang is free: \"selling\"",
+    "means making the value proposition obvious and leading each interested visitor to where it is explained."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0001-the-site-sells-the-idea.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0001-the-site-sells-the-idea.md#decision.12814f",
+   "type": "adr",
+   "title": "ADR-website-0001: The site sells the idea: hooks first, then a page per tool and per platform — Decision",
+   "summary": "1. The home page is a series of hooks, from the most general to the most concrete, each a small interactive block that links to its page: why Nuclear (six one-line hooks), the same code in TypeScript, Dart and Python, an agent's mistake fixed by `nuclear fix`, the commands that make an app…",
+   "body": [
+    "1. **The home page is a series of hooks**, from the most general to the most concrete, each a small interactive",
+    "   block that links to its page: why Nuclear (six one-line hooks), the same code in TypeScript, Dart and Python, an",
+    "   agent's mistake fixed by `nuclear fix`, the commands that make an app replayed in a terminal with the numbers",
+    "   they give, the same file built for two dialects, the platforms, the tools, a library of the target, install.",
+    "2. **Each tool has a page** (`/tools/<key>`) with its pitch, three highlights, how it starts, and the index of its",
+    "   documents (its user guides, `docs/08-guides/`, which every tool now has); `/tools` is the index of the tools by",
+    "   job (build, edit, run, AI). The detail lives in the tool's own guides; the page only leads to them.",
+    "3. **Each platform has a page** (`/platforms/<key>`) that goes down level by level, as in the C4 model: the context",
+    "   (the app, its users and what it talks to), the containers (the project, the compiler and dialect, the generated",
+    "   app, the runtime), the components (the layers of a component), and the code (a real file of its example and what",
+    "   each dialect writes from it). Its onboarding (`/start/<key>`) builds the example app step by step.",
+    "4. **Every claim is real.** A number is measured when the site is built (lines written by the tools, lines the"
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0001-the-site-sells-the-idea.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0001-the-site-sells-the-idea.md#decision.a7f0b3",
+   "type": "adr",
+   "title": "ADR-website-0001: The site sells the idea: hooks first, then a page per tool and per platform — Decision",
+   "summary": "dialect writes) or comes from a measured report (the run time of generated code, 0.98× to 1.11× of an expert's); an output is the compiler's or a command's, never written by hand.",
+   "body": [
+    "dialect writes) or comes from a measured report (the run time of generated code, 0.98× to 1.11× of an expert's);",
+    "   an output is the compiler's or a command's, never written by hand. A claim that does not hold is not made (the",
+    "   thesis that Nuclear is shorter than hand-written code for a small program does not hold, so it is not sold).",
+    "5. **The texts stay data**: every word of the hooks, the tools and the platforms is in `site.toml`; the pages of",
+    "   documentation stay the projects' `.md`."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0001-the-site-sells-the-idea.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0001-the-site-sells-the-idea.md#options-considered",
+   "type": "adr",
+   "title": "ADR-website-0001: The site sells the idea: hooks first, then a page per tool and per platform — Options considered",
+   "summary": "1. Hooks, then pages per tool and per platform, every claim measured (chosen).",
+   "body": [
+    "1. Hooks, then pages per tool and per platform, every claim measured (chosen).",
+    "2. A longer home page with everything on it: one page to scroll, but nothing to link to and no place for detail.",
+    "3. Marketing copy written freely: faster, and impossible to keep true."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0001-the-site-sells-the-idea.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0001-the-site-sells-the-idea.md#references",
+   "type": "adr",
+   "title": "ADR-website-0001: The site sells the idea: hooks first, then a page per tool and per platform — References",
+   "summary": "References",
+   "body": "- [ADR-website-0002](0002-onboardings-are-run-when-the-site-is-built.md), [ADR-website-0003](0003-libraries-of-the-target-through-nuclear-add.md).",
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0001-the-site-sells-the-idea.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md#consequences",
+   "type": "adr",
+   "title": "ADR-website-0002: Each onboarding is run when the site is built, and gives the example of the tree — Consequences",
+   "summary": "diff; the onboardings are a test of `new`, `gen` and `check` on the three platforms.",
+   "body": [
+    "- Positive: the onboarding can never lie; a change of a generator shows up as a failed site build or a golden",
+    "  diff; the onboardings are a test of `new`, `gen` and `check` on the three platforms.",
+    "- Negative: the site build runs the compiler a dozen times (a few seconds); a deliberate change of a generator",
+    "  means `UPDATE_EXAMPLES=1` and `UPDATE_GOLDEN=1`."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-website-0002: Each onboarding is run when the site is built, and gives the example of the tree — Context and problem",
+   "summary": "Each platform needed an onboarding and an example app.",
+   "body": [
+    "Each platform needed an onboarding and an example app. A tutorial written by hand drifts from the tools: a command",
+    "changes its output or its options, and the page keeps showing the old one. And an example app written by hand",
+    "proves nothing about the tools ([ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md#decision",
+   "type": "adr",
+   "title": "ADR-website-0002: Each onboarding is run when the site is built, and gives the example of the tree — Decision",
+   "summary": "1. Each example app is made only by commands: `nuclear new`, `nuclear gen resource`, `nuclear check`.",
+   "body": [
+    "1. **Each example app is made only by commands**: `nuclear new`, `nuclear gen resource`, `nuclear check`. The steps",
+    "   are data in `site.toml` (`[[onboarding]]`); the apps are the platforms' `examples/onboarding/` (`todos_api`,",
+    "   `todos_web`, `todos_app`), one story: an API of todos and two clients that list them.",
+    "2. **The site runs the steps again on every build** (`tools/content.mjs`), in a scratch folder, with the installed",
+    "   `nuclear`. It shows each step's real output, builds the shown file with every dialect of the platform, and",
+    "   measures the lines. **The build fails** when a step fails or when the `.nuc` files the steps make are not the",
+    "   example of the tree; `UPDATE_EXAMPLES=1` writes the example from them when a tool changes on purpose.",
+    "3. **The examples are also goldens** of the compiler's conformance test (`nuclear-transpile/tests/projects.rs`) and",
+    "   each platform has a user guide of the same steps (`docs/08-guides/onboarding-<platform>.md`).",
+    "4. The steps need no network and no target toolchain (no Flutter, Node.js or Python): a step that needs one (build,",
+    "   install, run) is shown as a command to run, not replayed."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md#options-considered",
+   "type": "adr",
+   "title": "ADR-website-0002: Each onboarding is run when the site is built, and gives the example of the tree — Options considered",
+   "summary": "1. Replayed steps, the example checked against them (chosen).",
+   "body": [
+    "1. Replayed steps, the example checked against them (chosen).",
+    "2. Outputs recorded once in a file: no cost at build time, and silently stale.",
+    "3. Examples written by hand: against ADR-platform-0004."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md#references",
+   "type": "adr",
+   "title": "ADR-website-0002: Each onboarding is run when the site is built, and gives the example of the tree — References",
+   "summary": "References",
+   "body": "- [ADR-website-0001](0001-the-site-sells-the-idea.md); ADR-codegen-0001 (the generators).",
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0002-onboardings-are-run-when-the-site-is-built.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md#consequences",
+   "type": "adr",
+   "title": "ADR-website-0003: A library of the target comes through `nuclear add`; the site stays 100% Nuclear — Consequences",
+   "summary": "(no DOM globals such as `window` or `document` in the react dialect's definitions; an arrow whose value is not `void` cannot be passed where a callback returns `void`, so the call goes through a method).",
+   "body": [
+    "- Positive: the site is a working example of a target library used from Nuclear; the gaps it found are recorded",
+    "  (no DOM globals such as `window` or `document` in the react dialect's definitions; an arrow whose value is not",
+    "  `void` cannot be passed where a callback returns `void`, so the call goes through a method).",
+    "- Negative: the bundle grows by the library; the type definitions in `defs/` are regenerated when its version changes."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-website-0003: A library of the target comes through `nuclear add`; the site stays 100% Nuclear — Context and problem",
+   "summary": "The site should look and move better than a plain documentation page, and it is the place to prove that any library of a dialect can be used, tested and built from Nuclear.",
+   "body": [
+    "The site should look and move better than a plain documentation page, and it is the place to prove that any",
+    "library of a dialect can be used, tested and built from Nuclear. The web platform has no animation words, and",
+    "writing TypeScript by hand would break both the site's promise (written in Nuclear) and",
+    "[ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md#decision",
+   "type": "adr",
+   "title": "ADR-website-0003: A library of the target comes through `nuclear add`; the site stays 100% Nuclear — Decision",
+   "summary": "1. Animations come from the npm package `motion`, added with `nuclear add motion`: it installs the package, writes it in `config.nuc` (`dependencies(motion = \"^14.14.0\")`) and generates its type definitions into `defs/`, so the Nuclear calls `animate`, `inView` and `stagger` checked like its own…",
+   "body": [
+    "1. **Animations come from the npm package `motion`, added with `nuclear add motion`**: it installs the package,",
+    "   writes it in `config.nuc` (`dependencies(motion = \"^14.14.0\")`) and generates its type definitions into `defs/`,",
+    "   so the Nuclear calls `animate`, `inView` and `stagger` checked like its own code.",
+    "2. **One view moves a page**: `Reveal` wraps the content once it is loaded; blocks of class `rise` come up one after",
+    "   the other, blocks of class `reveal` fade in when they scroll into view. Where animations cannot run (the tests,",
+    "   an old browser) it catches the error and leaves every block visible; a reader who asks for less motion gets none.",
+    "3. **Only the styles are not Nuclear**: `public/styles.css`, a static file the web platform serves as it is (the",
+    "   platform has no styling words). Everything else of the app is `.nuc`."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md#options-considered",
+   "type": "adr",
+   "title": "ADR-website-0003: A library of the target comes through `nuclear add`; the site stays 100% Nuclear — Options considered",
+   "summary": "1. `motion` through `nuclear add`, one view that runs it (chosen).",
+   "body": [
+    "1. `motion` through `nuclear add`, one view that runs it (chosen).",
+    "2. CSS animations only: no library to prove, and no scroll-triggered motion without script.",
+    "3. React's motion components (`motion.div`): need the `motion/react` entry, which `nuclear add` does not describe",
+    "   (it generates the package's main entry)."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md#references",
+   "type": "adr",
+   "title": "ADR-website-0003: A library of the target comes through `nuclear add`; the site stays 100% Nuclear — References",
+   "summary": "References",
+   "body": "- [ADR-website-0001](0001-the-site-sells-the-idea.md); ADR-lang-0008 (packages of the target in a project).",
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/0003-libraries-of-the-target-through-nuclear-add.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/03-adr/README.md#decisions-of-the-website",
+   "type": "adr",
+   "title": "Decisions of the website",
+   "summary": "A decision of this project is cited `ADR-website-NNNN`.",
+   "body": [
+    "A decision of this project is cited `ADR-website-NNNN`. For a new one, copy",
+    "[the template](../../../docs/03-adr/0000-template.md) with the next number. An accepted decision is not edited: a",
+    "change is a new ADR, and the old one is marked `superseded by ADR-website-NNNN`.",
+    "",
+    "| ADR | Decision | Status | Date |",
+    "|---|---|---|---|",
+    "| [0001](0001-the-site-sells-the-idea.md) | The site sells the idea: hooks on the home page, a page per tool, a page per platform from the context down to the code | accepted | 2026-11-16 |",
+    "| [0002](0002-onboardings-are-run-when-the-site-is-built.md) | Each platform's onboarding is run again when the site is built, and must give the example of the tree | accepted | 2026-11-16 |",
+    "| [0003](0003-libraries-of-the-target-through-nuclear-add.md) | A library of the target (the animations) comes through `nuclear add`, and the site stays 100% Nuclear | accepted | 2026-11-16 |",
+    "",
+    "Decided elsewhere and binding here: a product is made with the platform's tools",
+    "([ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)); everything in English",
+    "(ADR-platform-0001); the web platform and its words (ADR-web-0001); packages of the target in a project",
+    "(ADR-lang-0008); the generators (ADR-codegen-0001)."
+   ],
+   "agents": false,
+   "sources": [
+    "website/docs/03-adr/README.md"
    ],
    "meta": {
     "section": "11-decisions",

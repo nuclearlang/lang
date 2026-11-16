@@ -36,6 +36,7 @@ templates, the history and the token estimate).
 | You need… | Read |
 |---|---|
 | How a question and an order travel, the sessions, what the page draws | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
+| What a user reads: what the chat needs, questions, `/task`, sessions | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | The pending work | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | The Nuclear Builder run behind `/task` | [`nuclear-builder`](../nuclear-builder/AGENTS.md) |
 | The notices, the checked connections, the context setting | [the VS Code extension](../../vscode/docs/02-architecture/ai-services.md) |

@@ -1,0 +1,53 @@
+// The page of one tool (/tools/mcp): what it is, why it matters, how it starts, and the index of its documents.
+@screen(route = "/tools/:name", providers = [ToolsManager, SiteManager, SearchManager])
+stateless ToolScreen(name: string)
+  build() Element
+    Frame(
+      current = "/tools",
+      content = ToolsStateBuilder(
+        loading = () => p(className = "muted center", children = "Loading…"),
+        full = (items) => Reveal(key = name, child = ToolPage(tools = items, name = name)),
+        error = (e) => p(className = "error center", children = e.message),
+      ),
+    )
+
+stateless ToolPage(tools: Tool[], name: string)
+  build() Element
+    tool = tools.find((t) => t.key == name)
+    if tool == null
+      section(className = "missing", children = [h1(children = "Not found"), p(children = "There is no tool named ${name}."), a(href = "/tools", children = "Every tool")])
+    else
+      fragment(
+        section(
+          className = "page-hero",
+          children = [
+            small(className = "eyebrow rise", children = tool.group),
+            h1(className = "rise", children = tool.name),
+            p(className = "lead rise", children = tool.tagline),
+            p(className = "tagline rise", children = tool.pitch),
+          ],
+        ),
+        section(
+          className = "hooks",
+          children = tool.highlights.map((h) => article(key = h.title, className = "hook reveal", children = [h3(children = h.title), p(children = h.text)])),
+        ),
+        section(
+          className = "block reveal",
+          children = [h2(children = "Start"), div(className = "code", dangerouslySetInnerHTML = { "__html": tool.demo })],
+        ),
+        section(
+          className = "block reveal",
+          children = [
+            h2(children = "Read"),
+            ul(
+              className = "doc-index",
+              children = tool.pages.map((d) => li(key = d.path, children = a(href = d.path, children = d.title))),
+            ),
+            a(className = "button", href = tool.project, children = "The project on GitHub"),
+          ],
+        ),
+        nav(
+          className = "siblings reveal",
+          children = tools.map((t) => a(key = t.key, className = t.key == name ? "pill active" : "pill", href = "/tools/${t.key}", children = t.name)),
+        ),
+      )

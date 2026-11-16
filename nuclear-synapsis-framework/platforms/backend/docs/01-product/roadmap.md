@@ -31,6 +31,9 @@ commands of `nuclear` is in [the command line tools](../../../../../tools/cli/AG
 
 ## Pending
 
+- **No CORS**: a web app on another origin cannot call a backend (the browser blocks it); the platform has no word to
+  allow the origins of its clients. Found building the onboardings (2026-11-16): `todos_web` reads a public API for
+  that reason.
 - **A repository whose name implies an entity nobody declares compiles** (found by a rename, ADR-developer-0001). With
   `Supplier` renamed to `Vendor` and `SupplierRepository` left, `nuclear check .` reports nothing and the generated
   Python fails when imported (`NameError: name 'Supplier' is not defined`). The repository kind takes its entity

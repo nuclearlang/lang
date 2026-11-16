@@ -44,7 +44,9 @@ npx tsc -p tsconfig.json && npx vitest run
 - `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`).
 - `examples/examples-web/characters/`: the complete example (list and detail screens, state, events, a guard,
   tests).
-- `examples/expected/characters/`: its golden output.
+- `examples/onboarding/todos_web/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the
+  website runs those commands again and fails if they do not give it).
+- `examples/expected/{characters,todos_web}/`: the golden output.
 - `checks/react-check/check.sh`: the check.
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
@@ -86,6 +88,7 @@ Outside this folder: the dialect (`nuclearlang/dialects/typescript/frameworks/re
 | [docs/06-runbooks/change-the-runtime.md](docs/06-runbooks/change-the-runtime.md) | You changed the runtime and need the steps after it |
 | [docs/07-reference/web.md](docs/07-reference/web.md) | You need the rules of the platform: the project, every kind, the architecture rules (`nuclear help web`) |
 | [docs/07-reference/brief/web.md](docs/07-reference/brief/web.md) | You want the short sheet an agent reads before writing a web app |
+| [docs/08-guides/onboarding-web.md](docs/08-guides/onboarding-web.md) | You need the first steps of a user: a todos list in four commands |
 
 Elsewhere:
 

@@ -1,0 +1,11 @@
+@screen(route = "/", providers = [HomeManager])
+stateless HomeScreen
+  build(context: BuildContext) Widget
+    Scaffold(
+      appBar = AppBar(title = Text("Home")),
+      body = HomeStateBuilder<HomeManager>(
+        loading = () => Center(child = CircularProgressIndicator()),
+        items = (items) => ListView(children = items.map(i => ListTile(title = Text(i)))),
+        error = (message) => Center(child = Text(message)),
+      ),
+    )

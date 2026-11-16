@@ -1,0 +1,7 @@
+// Changes a todo; NotFound (404) when there is none.
+usecase UpdateTodo(repository: TodoRepository)
+  exec(id: int, input: NewTodo) Result<Error, Todo>
+    found = ~repository.find(id)
+    found.title = input.title
+    found.completed = input.completed
+    Ok(~repository.save(found))

@@ -63,6 +63,7 @@ The command side (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN
 | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what the generators do not write yet, or what is untested |
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `generate.rs` or `scaffold.rs`, add a piece to a `generators.toml`, or need how fields become files |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the generators exist and why they never write placeholders |
+| [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: why generators, what `new`, `gen` and `make` write on each platform |
 
 Elsewhere:
 

@@ -1,0 +1,10 @@
+// The tests of todos: the repository is a mock; everything else is the real code.
+@mock([TodoRepository])
+TodosTest
+  setUp()
+    when(() => TodoRepository.all()).thenReturnAsync(Ok([]))
+
+  @test("ListTodos answers the todos of the API")
+  lists()
+    result = ~ListTodos.exec()
+    expect(result, isOkWith([]))
