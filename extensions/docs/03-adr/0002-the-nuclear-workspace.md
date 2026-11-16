@@ -37,21 +37,21 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
    (asked by the user), each with a shortcut VS Code shows in its tooltip. Each platform has its own set and nothing
    of one platform is offered to another (context key `nuclear.platform`; no buttons while a tool is the active tab):
    - mobile: ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, Build, Test, Check;
-   - backend: ▷ Serve (`dragonfly run`; the server restarts on each build), ◉ Debug (debugpy for fastapi, node with
-     source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the HTTP tool);
-   - web: ▷ Serve (`dragonfly run`, Vite), ▭ Device, ◉ Debug, ↻ Reload, Build, Test, Check.
+   - backend: ▷ Serve (`nuclear run`; the server restarts on each build), ◉ Debug (debugpy for fastapi, node with
+     source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the Connector tool);
+   - web: ▷ Serve (`nuclear run`, Vite), ▭ Device, ◉ Debug, ↻ Reload, Build, Test, Check.
 7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web
    project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app
-   has no packages. `dragonfly build` writes `build/<name>.code-workspace` for every platform (the tasks build,
+   has no packages. `nuclear build` writes `build/<name>.code-workspace` for every platform (the tasks build,
    install, run, test, check and the dialect's debug launch), and every `nuclear build` writes `.nuclear/lines.json`,
    so a breakpoint in a `.nuc` stops in every debugger and the paused line shows in the `.nuc`.
 8. **The tools are workspaces too, independent of the projects.**
-   - The HTTP tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts
+   - The Connector tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts
      / components → endpoints, OpenAPI documents, the environment); a component is an editor tab and each endpoint a
      tab inside it, so the tab bar never fills with requests. A component panel keeps its tabs, forms and responses
      while its workspace is left. Environments belong to the window (`<first folder>/.nuclear/http.json`, else the
      extension's storage).
-   - The Devices tool lists the open Dragonfly devices with their state and opens as many as wanted (a preset each),
+   - The Devices tool lists the open Synapsis devices with their state and opens as many as wanted (a preset each),
      each in its own locked editor group tiled horizontally with its own app, so several users can be signed in at
      once. A project's ▭ Device offers the open devices, a new one or the Devices workspace; ▷ Run and ◉ Debug of a
      mobile project offer the same plus *Other Flutter device…* (Flutter's own picker). A run that names no device
@@ -76,7 +76,7 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
     a short toast with its shortcut, so the mouse teaches the keys. The user may rebind any of them.
 12. **A welcome page at startup** (`nuclear.workspace.welcome`, on by default, only when the window restored no
     editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.
-13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP tool window,
+13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the Connector tool window,
     `Alt+Shift+H`). Zed cannot contribute keybindings or views.
 
 ## Options considered
@@ -107,4 +107,4 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
 
 ## References
 - Replaces: ADR-0099
-- The contract the HTTP tool reads: ADR-synapsis-0006. The Dragonfly device: ADR-devices-0001.
+- The contract the Connector tool reads: ADR-synapsis-0006. The Synapsis device: ADR-devices-0001.

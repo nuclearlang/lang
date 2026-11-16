@@ -2,25 +2,26 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [nuclear-synapsis-framework/cli/src/generate.rs, nuclear-synapsis-framework/cli/src/scaffold.rs, nuclearlang/docs/07-reference/dialects.md, nuclear-synapsis-framework/docs/08-guides/generators.md]
+related: [tools/code_generator/src/generate.rs, tools/code_generator/src/scaffold.rs, tools/code_generator/platforms/, nuclearlang/docs/07-reference/dialects.md, nuclear-synapsis-framework/docs/08-guides/generators.md]
 ---
 # The code generator: overview
 
-Two commands write files into a project. `dragonfly gen` writes finished code from data; `dragonfly make` writes a
-skeleton of one kind. Both write Nuclear only, and neither overwrites a file. What a user types and gets is in
+The crate `nuclear-codegen` writes files into a project for three commands. `nuclear gen` writes finished code
+from data; `nuclear make` writes a skeleton of one kind; `nuclear new` the files of a new project. The crate writes
+and reports `(Wrote::Created | Kept, path)`; the command (`tools/cli/src/framework/mod.rs`) parses and prints. Both write Nuclear only, and neither overwrites a file. What a user types and gets is in
 [the generators' guide](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md).
 
 ## `gen`: from a resource's data to files
 
 ```
- --fields | --from-json | --from-spec        platform.toml of the project's platform
-        │ fields, models, page                [[generators.<what>]]  [gen]  [layout]
+ --fields | --from-json | --from-spec        generators.toml of the platform  +  [layout] of its platform.toml
+        │ fields, models, page                [[generators.<what>]]  [gen]
         ▼                                              │
    Resource / UseCase ──► context (values) ──► plan: one (path, text, merge) per piece ──► write
                                                                                            created | kept | added to
 ```
 
-1. **The fields** (`gen_command` in `main.rs`, `generate.rs`):
+1. **The fields** (`gen_command` of the command, `generate.rs`):
    - `--fields "id:int name:string origin:Origin?"` → `parse_fields`.
    - `--from-json <file|url>` → `from_json`: a nested object becomes a model `<Name><Key>` (`object_model`,
      `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not
@@ -65,20 +66,21 @@ the place and the form to write it.
 
 | Project | Where the skeleton is | Code |
 |---|---|---|
-| Mobile | Rust templates in `scaffold.rs`: project, component, screen (`--manager`, `--state`, `--route`), statemanager / statemodel (`presentation`), stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page (`--route`, `--not-found`), integration | `make` in `main.rs`; `component`, `screen`, `config`, `in_component`, `test`, `shared`, `presentation`, `app_wide` |
-| Backend, web | The platform's `[skeletons]` entry of the kind, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` in `main.rs` |
+| Mobile | Rust templates in `scaffold.rs`: project, component, screen (`--manager`, `--state`, `--route`), statemanager / statemodel (`presentation`), stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page (`--route`, `--not-found`), integration | `make` of the command; `component`, `screen`, `config`, `in_component`, `test`, `shared`, `presentation`, `app_wide` of `scaffold.rs` |
+| Backend, web | The `[skeletons]` entry of the kind in the platform's `generators.toml`, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` of the command |
 
 `scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`), the name helpers
 `snake` / `pascal`, and `write`, which never overwrites. Names are given in any case and normalized.
 
 ## The data of a platform
 
-In `nuclear-synapsis-framework/platforms/<platform>/platform.toml` today; in
-`tools/code_generator/platforms/<platform>/` after spec 008, T4.2.
+`tools/code_generator/platforms/<platform>/generators.toml`, found by the loader through `Home.generators` /
+`Loader::generators_file` (an installation: `<install>/generators/`). The place of every kind's file is `[layout]`
+of the platform's own `platform.toml` (`nuclear-synapsis-framework/platforms/<platform>/`), which keeps only
+`[platform]`, the decorators' tables and `[layout]`.
 
-| Section | What it gives | Backend | Mobile | Web |
+| Section of `generators.toml` | What it gives | Backend | Mobile | Web |
 |---|---|---|---|---|
-| `[layout]` | the place of every kind's file | yes | yes | yes |
 | `[skeletons]` | what `make <kind>` writes | yes | no (`scaffold.rs`) | yes |
 | `[gen]` | the forms of the `Http` connection (`http`, `http_named`) | yes | yes | yes |
 | `[[generators.component]]`, `[[generators.resource]]`, `[[generators.usecase]]` | the pieces of each `gen` command | yes | yes | yes |
@@ -90,16 +92,17 @@ The templates are Nuclear, the same for every dialect of the platform: nothing h
 - `generate.rs`: `a_spec_gives_its_example_answer_and_its_url`, `plurals_and_fields`,
   `an_example_answer_gives_the_models_and_the_page`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`,
   `a_merge_adds_whole_members`, `a_spec_table_gives_the_fields_or_says_what_is_missing`.
-- `main.rs`: `a_generated_resource_compiles_with_every_dialect`, `make_writes_every_kind_where_the_platform_says`.
+- `tools/cli/src/framework/mod.rs` (crate `nuclear-cli`): `a_generated_resource_compiles_with_every_dialect`,
+  `make_writes_every_kind_where_the_platform_says`.
 - `scaffold.rs`: `names`, `every_skeleton_parses`, `every_new_project_compiles_with_its_dialect`.
 
 ## Who calls it
 
-- A person or an agent in a shell: `dragonfly gen`, `dragonfly make` ([the CLI](../../../cli/AGENTS.md)).
+- A person or an agent in a shell: `nuclear gen`, `nuclear make` ([the CLI](../../../cli/AGENTS.md)).
 - The MCP server: `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`,
   `generate_screen` and `api_inspect` run these commands ([the MCP server](../../../mcp/AGENTS.md)).
-- The Loop's *Generate* stage: `dragonfly gen resource` for each resource a spec names, before any agent works
-  ([the extensions](../../../../extensions/AGENTS.md)).
+- The Nuclear Builder's *Generate* stage: `nuclear gen resource` for each resource a spec names, before any agent works
+  ([the Nuclear Builder](../../../../extensions/tools/nuclear-builder/AGENTS.md)).
 
 The state manager that `make screen` (and `make statemanager`) writes loads `Ok([])`: it calls no use case,
 because a component made by `gen resource` has none of the skeleton's (`hello` exists only in a component made by

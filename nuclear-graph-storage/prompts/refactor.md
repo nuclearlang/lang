@@ -2,7 +2,7 @@
 
 Change the structure of the code named in the spec without changing what it does.
 
-1. Run `dragonfly_test` first: the tests that pass now must pass at the end, and none may be deleted.
+1. Run `synapsis_test` first: the tests that pass now must pass at the end, and none may be deleted.
 2. Find every caller of what you move or rename (search the project; `nuclear_check` after each step tells you
    what broke). Keep the architecture of the platform: a use case is only used from its appcomponent; other
    components only see the appcomponent.

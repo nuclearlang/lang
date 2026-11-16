@@ -17,8 +17,8 @@
     "(cd nuclearlang/tools/node && npm install)                     # the shared Node tools of the checks",
     "python3 -m venv nuclearlang/tools/python/.venv",
     "nuclearlang/tools/python/.venv/bin/pip install -r nuclearlang/tools/python/requirements.txt",
-    "nuclearlang/tools/python/.venv/bin/pip install -e nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py --config-settings editable_mode=compat",
-    "(cd nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest && npm install)",
+    "nuclearlang/tools/python/.venv/bin/pip install -e nuclear-synapsis-framework/platforms/backend/packages/synapsis-py --config-settings editable_mode=compat",
+    "(cd nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest && npm install)",
     "",
     "# before a change is done",
     "cargo test                                   # the examples with both dialects, the goldens",
@@ -27,34 +27,6 @@
     "UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff",
     "installer/install.sh                         # the user runs the installed copy: install after a change",
     "```"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.1e082f",
-   "type": "readme",
-   "title": "The backend platform — Documents",
-   "summary": "(`fastapi`: `docs/07-reference/fastapi.md`, `docs/08-guides/fastapi.md`) and the TypeScript dialect (`nestjs`: `docs/07-reference/nestjs.md`, `docs/08-guides/nestjs.md`).",
-   "body": [
-    "- How each dialect writes the platform: [the Python dialect](../../../nuclearlang/dialects/python/AGENTS.md)",
-    "  (`fastapi`: `docs/07-reference/fastapi.md`, `docs/08-guides/fastapi.md`) and",
-    "  [the TypeScript dialect](../../../nuclearlang/dialects/typescript/AGENTS.md) (`nestjs`:",
-    "  `docs/07-reference/nestjs.md`, `docs/08-guides/nestjs.md`).",
-    "- What the three platforms share (the format of `platform.toml`, what the loader checks, the common tests):",
-    "  [the platforms](../AGENTS.md). The philosophy: [the framework](../../AGENTS.md). The commands (`dragonfly new`,",
-    "  `build`, `run`, `test`, `migrate`): [the command line tools](../../../tools/cli/AGENTS.md). `dragonfly make` and",
-    "  `gen`: [the code generator](../../../tools/code_generator/AGENTS.md).",
-    "- The compiler, the loader and the format of a dialect and of a project: [the language](../../../nuclearlang/AGENTS.md)."
    ],
    "platforms": [
     "backend"
@@ -96,7 +68,35 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.947aae",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.a0b395",
+   "type": "readme",
+   "title": "The backend platform — Documents",
+   "summary": "(`fastapi`: `docs/07-reference/fastapi.md`, `docs/08-guides/fastapi.md`) and the TypeScript dialect (`nestjs`: `docs/07-reference/nestjs.md`, `docs/08-guides/nestjs.md`).",
+   "body": [
+    "- How each dialect writes the platform: [the Python dialect](../../../nuclearlang/dialects/python/AGENTS.md)",
+    "  (`fastapi`: `docs/07-reference/fastapi.md`, `docs/08-guides/fastapi.md`) and",
+    "  [the TypeScript dialect](../../../nuclearlang/dialects/typescript/AGENTS.md) (`nestjs`:",
+    "  `docs/07-reference/nestjs.md`, `docs/08-guides/nestjs.md`).",
+    "- What the three platforms share (the format of `platform.toml`, what the loader checks, the common tests):",
+    "  [the platforms](../AGENTS.md). The philosophy: [the framework](../../AGENTS.md). The commands (`nuclear new`,",
+    "  `build`, `run`, `test`, `migrate`): [the command line tools](../../../tools/cli/AGENTS.md). `nuclear make` and",
+    "  `gen`: [the code generator](../../../tools/code_generator/AGENTS.md).",
+    "- The compiler, the loader and the format of a dialect and of a project: [the language](../../../nuclearlang/AGENTS.md)."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#documents.f28669",
    "type": "readme",
    "title": "The backend platform — Documents",
    "summary": "Documents",
@@ -107,8 +107,8 @@
     "| [docs/00-context/glossary.md](docs/00-context/glossary.md) | A word has two meanings here (contract, component, runtime, plugin) |",
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done, untested or pending in the platform and its runtimes |",
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You need the shape: how a project becomes a running app, each section of `platform.toml`, the dialects, the examples |",
-    "| [docs/02-architecture/runtime-python.md](docs/02-architecture/runtime-python.md) | You change `packages/dragonfly-py` (modules, relations, transactions, migrations) |",
-    "| [docs/02-architecture/runtime-typescript.md](docs/02-architecture/runtime-typescript.md) | You change `packages/dragonfly-nest` (entry points, relations, transactions, migrations, how it is installed) |",
+    "| [docs/02-architecture/runtime-python.md](docs/02-architecture/runtime-python.md) | You change `packages/synapsis-py` (modules, relations, transactions, migrations) |",
+    "| [docs/02-architecture/runtime-typescript.md](docs/02-architecture/runtime-typescript.md) | You change `packages/synapsis-nest` (entry points, relations, transactions, migrations, how it is installed) |",
     "| [docs/02-architecture/dependencies.md](docs/02-architecture/dependencies.md) | You add or move a library of a runtime, or need who depends on this folder |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the data words (`@primary`, relations, `paginate`, `@transactional`, migrations) are as they are |"
    ],
@@ -128,12 +128,13 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders",
    "type": "readme",
    "title": "The backend platform — Folders",
-   "summary": "`[skeletons]`, `[[generators.*]]`.",
+   "summary": "`nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/backend/generators.toml`.",
    "body": [
-    "- `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`,",
-    "  `[skeletons]`, `[[generators.*]]`.",
-    "- `packages/dragonfly-py/`: the runtime of the Python dialect (`src/dragonfly/`, `tests/`).",
-    "- `packages/dragonfly-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).",
+    "- `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`. What",
+    "  `nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is",
+    "  `tools/code_generator/platforms/backend/generators.toml`.",
+    "- `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).",
+    "- `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).",
     "- `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.",
     "- `examples/examples-fastapi/rick_api/`: the example of the fastapi check.",
     "- `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.",
@@ -143,7 +144,7 @@
     "",
     "Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,",
     "`nuclearlang/dialects/typescript/frameworks/nestjs/`) and the type definitions of the runtimes",
-    "(`nuclearlang/dialects/python/defs/dragonfly/`, `nuclearlang/dialects/typescript/defs/dragonfly-nest/`)."
+    "(`nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/`)."
    ],
    "platforms": [
     "backend"
@@ -182,7 +183,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#rules.0e7f39",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#rules.43f55b",
    "type": "readme",
    "title": "The backend platform — Rules",
    "summary": "1. The platform names no dialect.",
@@ -197,7 +198,7 @@
     "   loader refuses the dialect (N0305). The rules of a decorator are data there (`[decorators.args]`,",
     "   `[decorators.fields]`): no decorator name is written in Rust.",
     "4. **The runtimes behave the same.** A behaviour added to one is added to the other, with the same test in both",
-    "   (`packages/dragonfly-py/tests/test_data.py`, `packages/dragonfly-nest/test/data.test.ts`).",
+    "   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
     "5. **A changed public API of a runtime** means its type definitions are regenerated",
     "   ([runbook](docs/06-runbooks/change-a-runtime.md)).",
     "6. **The examples are goldens.** Output that changed on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff."
@@ -225,8 +226,8 @@
     "  - `fastapi` (Python 3.12+): FastAPI, SQLAlchemy 2 async, pydantic, Alembic, LangChain / LangGraph, pytest.",
     "  - `nestjs` (TypeScript, ES modules): NestJS 12, sequelize-typescript, class-validator, LangChain.js /",
     "    LangGraph.js, `node:test`.",
-    "- The runtimes: `packages/dragonfly-py` (Python, imported as `dragonfly`, setuptools) and",
-    "  `packages/dragonfly-nest` (npm, ESM, TypeScript 5.9).",
+    "- The runtimes: `packages/synapsis-py` (Python, imported as `synapsis`, setuptools) and",
+    "  `packages/synapsis-nest` (npm, ESM, TypeScript 5.9).",
     "- The checks: `sh` scripts over `nuclearlang/tools/python/.venv` (pyright, pytest) and `nuclearlang/tools/node`",
     "  (tsc, `node:test`). CI: `.github/workflows/platform-backend.yml`."
    ],
@@ -246,9 +247,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#the-backend-platform",
    "type": "readme",
    "title": "The backend platform",
-   "summary": "The backend platform of Dragonfly: HTTP APIs, databases with relations, migrations and transactions, events, AI agents and graphs, written once in Nuclear and built with any of its dialects.",
+   "summary": "The backend platform of Synapsis: HTTP APIs, databases with relations, migrations and transactions, events, AI agents and graphs, written once in Nuclear and built with any of its dialects.",
    "body": [
-    "The backend platform of Dragonfly: HTTP APIs, databases with relations, migrations and transactions, events, AI",
+    "The backend platform of Synapsis: HTTP APIs, databases with relations, migrations and transactions, events, AI",
     "agents and graphs, written once in Nuclear and built with any of its dialects. This folder holds what is the same",
     "for every dialect: the contract (`platform.toml`), the runtime packages the generated code runs on, the examples",
     "and the checks. The Nuclear of a backend project never changes when its dialect changes.",
@@ -273,8 +274,8 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#changelog",
    "type": "changelog",
    "title": "Changelog",
-   "summary": "All notable changes to dragonfly-backend are written here; versions follow Semantic Versioning.",
-   "body": "All notable changes to dragonfly-backend are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "summary": "All notable changes to synapsis-backend are written here; versions follow Semantic Versioning.",
+   "body": "All notable changes to synapsis-backend are written here; versions follow [Semantic Versioning](https://semver.org).",
    "platforms": [
     "backend"
    ],
@@ -288,18 +289,36 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.c0508d",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.3031d4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "`dragonfly add|remove <package>` (ADR-lang-0008).",
+   "summary": "Unreleased",
+   "body": "- nestjs: `npm test` (what `nuclear test` runs) removes `dist/test` before compiling: `tsc` never deletes the output of a source that is gone, so a test that was deleted or renamed kept running from its old `.js` and failed the project.",
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.fdd6b2",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`nuclear add|remove <package>` (ADR-lang-0008).",
    "body": [
     "- `[toolchain] package_*` in fastapi (pip) and nestjs (npm, with the `@types` package of one that ships no types):",
-    "  `dragonfly add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,",
+    "  `nuclear add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,",
     "  `koa` are added with a word on what the platform already gives.",
     "- First public version.",
-    "- HTTP repositories (`Http` connection, bodiless `@get`/`@post`...) in fastapi and nestjs; `@key` for a JSON key that differs from the field; `[[generators]]` for `dragonfly gen` (ADR-codegen-0001).",
-    "- `[[generators.usecase]]`: `dragonfly gen usecase` writes a use case over a repository method, its alias in the facade and its route (ADR-codegen-0001).",
-    "- The order of a controller's routes no longer matters, in both dialects: a fixed segment wins over a parameter. Before, fastapi added the routes by method name (`GET <prefix>/search` of a generated resource answered 400, taken by `{id}`) and nestjs in the order written (`dragonfly-py` `router_of`, `dragonfly-nest` `configureApp`; `spec/backend.md` §2.7).",
+    "- HTTP repositories (`Http` connection, bodiless `@get`/`@post`...) in fastapi and nestjs; `@key` for a JSON key that differs from the field; `[[generators]]` for `nuclear gen` (ADR-codegen-0001).",
+    "- `[[generators.usecase]]`: `nuclear gen usecase` writes a use case over a repository method, its alias in the facade and its route (ADR-codegen-0001).",
+    "- The order of a controller's routes no longer matters, in both dialects: a fixed segment wins over a parameter. Before, fastapi added the routes by method name (`GET <prefix>/search` of a generated resource answered 400, taken by `{id}`) and nestjs in the order written (`synapsis-py` `router_of`, `synapsis-nest` `configureApp`; `spec/backend.md` §2.7).",
     "- `[[generators.resource]]`: the repository and the controller are merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001)."
    ],
    "platforms": [
@@ -315,16 +334,16 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.dc0bc5",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- nestjs: `npm test` (what `dragonfly test` runs) removes `dist/test` before compiling: `tsc` never deletes the output of a source that is gone, so a test that was deleted or renamed kept running from its old `.js` and failed the project.",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#license",
+   "type": "readme",
+   "title": "Synapsis backend — License",
+   "summary": "Apache-2.0. By contributing you agree that your contribution is licensed under it.",
+   "body": "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it.",
    "platforms": [
     "backend"
    ],
    "sources": [
-    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+    "nuclear-synapsis-framework/platforms/backend/README.md"
    ],
    "meta": {
     "section": "05-backend",
@@ -333,12 +352,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#dragonfly-backend",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#synapsis-backend",
    "type": "readme",
-   "title": "Dragonfly backend",
-   "summary": "The backend platform of Dragonfly: HTTP APIs, databases with relations, migrations and transactions, events, AI agents and graphs, written once in Nuclear and built with either dialect: `fastapi` (Python: FastAPI, SQLAlchemy, Alembic, LangGraph) or `nestjs` (TypeScript: NestJS, Sequelize,…",
+   "title": "Synapsis backend",
+   "summary": "The backend platform of Synapsis: HTTP APIs, databases with relations, migrations and transactions, events, AI agents and graphs, written once in Nuclear and built with either dialect: `fastapi` (Python: FastAPI, SQLAlchemy, Alembic, LangGraph) or `nestjs` (TypeScript: NestJS, Sequelize,…",
    "body": [
-    "The backend platform of Dragonfly: HTTP APIs, databases with relations, migrations and transactions, events, AI",
+    "The backend platform of Synapsis: HTTP APIs, databases with relations, migrations and transactions, events, AI",
     "agents and graphs, written once in Nuclear and built with either dialect: `fastapi` (Python: FastAPI, SQLAlchemy,",
     "Alembic, LangGraph) or `nestjs` (TypeScript: NestJS, Sequelize, LangChain.js).",
     "",
@@ -360,30 +379,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#license",
-   "type": "readme",
-   "title": "Dragonfly backend — License",
-   "summary": "Apache-2.0. By contributing you agree that your contribution is licensed under it.",
-   "body": "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it.",
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/README.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#what-is-inside",
    "type": "readme",
-   "title": "Dragonfly backend — What is inside",
-   "summary": "`platform.toml` (the contract every backend dialect implements), `packages/{dragonfly-py,dragonfly-nest}` (the runtimes), `examples/` (`tasks_api` builds with both dialects), `checks/{fastapi,nestjs}-check`, `docs/`.",
+   "title": "Synapsis backend — What is inside",
+   "summary": "`platform.toml` (the contract every backend dialect implements), `packages/{synapsis-py,synapsis-nest}` (the runtimes), `examples/` (`tasks_api` builds with both dialects), `checks/{fastapi,nestjs}-check`, `docs/`.",
    "body": [
-    "`platform.toml` (the contract every backend dialect implements), `packages/{dragonfly-py,dragonfly-nest}` (the",
+    "`platform.toml` (the contract every backend dialect implements), `packages/{synapsis-py,synapsis-nest}` (the",
     "runtimes), `examples/` (`tasks_api` builds with both dialects), `checks/{fastapi,nestjs}-check`, `docs/`.",
     "",
     "The dialects are in `nuclearlang/dialects/python/frameworks/fastapi/` and",
@@ -404,10 +405,10 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/README.md#working-on-it",
    "type": "readme",
-   "title": "Dragonfly backend — Working on it",
-   "summary": "It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree.",
+   "title": "Synapsis backend — Working on it",
+   "summary": "It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree.",
    "body": [
-    "It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree. From the root of the tree:",
+    "It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree. From the root of the tree:",
     "",
     "```sh",
     "(cd nuclearlang/tools/node && npm install)                    # the shared Node tools of the checks",
@@ -423,32 +424,6 @@
    ],
    "sources": [
     "nuclear-synapsis-framework/platforms/backend/README.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/00-context/glossary.md#glossary.1c3af0",
-   "type": "context",
-   "title": "Glossary",
-   "summary": "Glossary",
-   "body": [
-    "| facade | The `appcomponent` of a component: an alias for each of its use cases, the only thing another component calls | — | `components/<name>/<name>_appcomponent.nuc` |",
-    "| connection | A database, a broker, a model or another API the app declares in its `appConfig`: `SQLite`, `Postgres`, `MySQL`, `MariaDB`, `Redis`, `Kafka`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma`, `Http` | a plugin | `config/project_config.nuc` |",
-    "| plugin | An optional part of the platform a project turns on (`plugins(sqlite = true)`): only the enabled ones reach the generated project's dependencies | a connection (a database connection needs its plugin) | `[platform] plugins` |",
-    "| runtime | The package the generated code imports: `dragonfly-py`, `dragonfly-nest` | the dialect (templates and TOML) | `packages/` |",
-    "| resource | What `dragonfly gen resource` writes for one name: models or entity, repository, use cases, facade aliases, controller, tests | an entity | `[[generators.resource]]` |",
-    "| conformance example | `tasks_api`: one project built with every dialect from the same `.nuc` files | a golden of one dialect | `examples/examples-backend/tasks_api/` |",
-    "| golden | The expected generated output of an example, compared by `cargo test` | — | `examples/expected/` |"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/00-context/glossary.md"
    ],
    "meta": {
     "section": "05-backend",
@@ -478,7 +453,33 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/00-context/glossary.md#glossary.ff3ed4",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/00-context/glossary.md#glossary.c2cec2",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Glossary",
+   "body": [
+    "| facade | The `appcomponent` of a component: an alias for each of its use cases, the only thing another component calls | — | `components/<name>/<name>_appcomponent.nuc` |",
+    "| connection | A database, a broker, a model or another API the app declares in its `appConfig`: `SQLite`, `Postgres`, `MySQL`, `MariaDB`, `Redis`, `Kafka`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma`, `Http` | a plugin | `config/project_config.nuc` |",
+    "| plugin | An optional part of the platform a project turns on (`plugins(sqlite = true)`): only the enabled ones reach the generated project's dependencies | a connection (a database connection needs its plugin) | `[platform] plugins` |",
+    "| runtime | The package the generated code imports: `synapsis-py`, `synapsis-nest` | the dialect (templates and TOML) | `packages/` |",
+    "| resource | What `nuclear gen resource` writes for one name: models or entity, repository, use cases, facade aliases, controller, tests | an entity | `[[generators.resource]]` |",
+    "| conformance example | `tasks_api`: one project built with every dialect from the same `.nuc` files | a golden of one dialect | `examples/examples-backend/tasks_api/` |",
+    "| golden | The expected generated output of an example, compared by `cargo test` | — | `examples/expected/` |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/00-context/glossary.md#glossary.fb148e",
    "type": "context",
    "title": "Glossary",
    "summary": "Glossary",
@@ -486,7 +487,7 @@
     "| Term | Meaning | Not to be confused with | Where it is |",
     "|---|---|---|---|",
     "| platform | What a project writes: kinds, decorators, folders, `config.nuc`, plugins, tests. Identical for every dialect | a dialect | `platform.toml` |",
-    "| dialect | The language and framework the code comes out in: `fastapi`, `nestjs`. Chosen in `config.nuc`: `dragonfly(platform = \"backend\", dialect = ...)` | the platform | `nuclearlang/dialects/<language>/frameworks/<dialect>/` |",
+    "| dialect | The language and framework the code comes out in: `fastapi`, `nestjs`. Chosen in `config.nuc`: `synapsis(platform = \"backend\", dialect = ...)` | the platform | `nuclearlang/dialects/<language>/frameworks/<dialect>/` |",
     "| contract of the platform | `platform.toml`: what every backend dialect must implement | the contract of an API | `platform.toml` |",
     "| contract of an API | `.nuclear/contract.json`: the controllers, routes and models of one backend, written by its build and served by the running app; an app generates its models and repositories from it | the OpenAPI document (`.nuclear/openapi.json`, written and served beside it) | [the guide](../08-guides/contracts.md) |",
     "| kind | The word of a declaration: `entity`, `repository`, `model`, `usecase`, `appcomponent`, `service`, `aggregate`, `controller`, `listener`, `tools`, `agent`, `state`, `graph`, `tests`, `appConfig`, `config` | a type | `[platform] kinds` |",
@@ -567,7 +568,7 @@
     "  using that dialect's type definitions (a library that exists only in its language).",
     "- It never loads a relation by itself: no lazy query, no eager loading by default",
     "  ([ADR-backend-0001](../03-adr/0001-backend-data.md)).",
-    "- It is not the `dragonfly` command: what `new`, `build`, `run`, `test` and `migrate` do is the dialect's",
+    "- It is not the `nuclear` command: what `new`, `build`, `run`, `test` and `migrate` do is the dialect's",
     "  `[toolchain]`, run by [the command line tools](../../../../../tools/cli/AGENTS.md).",
     "- Not there yet ([roadmap](../01-product/roadmap.md)): authentication, guards and sessions; background jobs; file",
     "  uploads; a Dockerfile; observability."
@@ -612,25 +613,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#inside-the-tree.0b6b74",
-   "type": "context",
-   "title": "Dependencies — Inside the tree",
-   "summary": "Inside the tree",
-   "body": "| The installer | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `dragonfly-nest` first |",
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#inside-the-tree.f65bcd",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#inside-the-tree.177791",
    "type": "context",
    "title": "Dependencies — Inside the tree",
    "summary": "Inside the tree",
@@ -638,8 +621,8 @@
     "| Who | Depends on | How | Notes |",
     "|---|---|---|---|",
     "| The dialects `fastapi` and `nestjs` | `platform.toml` | data, merged by the loader | `platform = \"backend\"` in each `dialect.toml` |",
-    "| A built backend | `dragonfly-py` or `dragonfly-nest` | a library | the generated `pyproject.toml` / `package.json` asks for it by name; the dialect's `[toolchain] install` installs it from the installation's `packages/` |",
-    "| The compiler and the editors | the type definitions of the runtimes | `nuclearlang/dialects/python/defs/dragonfly/`, `nuclearlang/dialects/typescript/defs/dragonfly-nest/` | generated from the runtimes ([runbook](../06-runbooks/change-a-runtime.md)) |",
+    "| A built backend | `synapsis-py` or `synapsis-nest` | a library | the generated `pyproject.toml` / `package.json` asks for it by name; the dialect's `[toolchain] install` installs it from the installation's `packages/` |",
+    "| The compiler and the editors | the type definitions of the runtimes | `nuclearlang/dialects/python/defs/synapsis/`, `nuclearlang/dialects/typescript/defs/synapsis-nest/` | generated from the runtimes ([runbook](../06-runbooks/change-a-runtime.md)) |",
     "| The checks | `nuclearlang/tools/python/.venv`, `nuclearlang/tools/node/node_modules`, the `nuclear` command (`cargo run -p nuclear-cli`) | tools | the versions the checks and the type definitions are made with are those installed there (`requirements.txt`, `package.json`) |",
     "| The compiler's tests | `examples/` and `examples/expected/` | goldens | `nuclearlang/crates/nuclear-transpile/tests/projects.rs`, `golden.rs` |",
     "| The mobile and web platforms | a backend's contract (`.nuclear/contract.json`) | generated models and repositories | ADR-synapsis-0006; the mobile example `tasks_app` is generated against `tasks_api` |"
@@ -657,9 +640,27 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#outside-dragonfly-nest-packages-dragonfly-nest-package-json",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#inside-the-tree.b536dd",
    "type": "context",
-   "title": "Dependencies — Outside: `dragonfly-nest` (`packages/dragonfly-nest/package.json`)",
+   "title": "Dependencies — Inside the tree",
+   "summary": "Inside the tree",
+   "body": "| The installer | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-nest` first |",
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#outside-synapsis-nest-packages-synapsis-nest-package-json",
+   "type": "context",
+   "title": "Dependencies — Outside: `synapsis-nest` (`packages/synapsis-nest/package.json`)",
    "summary": "Peers the app brings: Optional peers, loaded only by the entry point that needs them: `@langchain/community` is not used: its peers conflict with zod 4 and ioredis 6. The runtime's own `devDependencies` (TypeScript 5.9, sqlite3, `@nestjs/platform-express`, the libraries above) build and test it.",
    "body": [
     "Peers the app brings:",
@@ -675,11 +676,11 @@
     "",
     "| Library | Version | Entry point |",
     "|---|---|---|",
-    "| ioredis | ≥ 5 | `dragonfly-nest/events` (Redis, the cache) |",
-    "| kafkajs | ≥ 2 | `dragonfly-nest/events` (Kafka) |",
-    "| langchain, @langchain/core, @langchain/langgraph, @langchain/ollama, @langchain/openai | ≥ 1 | `dragonfly-nest/ai` |",
-    "| chromadb | ≥ 3 | `dragonfly-nest/ai` (`ChromaStore`) |",
-    "| @nestjs/testing | ≥ 10 | `dragonfly-nest/testing` |",
+    "| ioredis | ≥ 5 | `synapsis-nest/events` (Redis, the cache) |",
+    "| kafkajs | ≥ 2 | `synapsis-nest/events` (Kafka) |",
+    "| langchain, @langchain/core, @langchain/langgraph, @langchain/ollama, @langchain/openai | ≥ 1 | `synapsis-nest/ai` |",
+    "| chromadb | ≥ 3 | `synapsis-nest/ai` (`ChromaStore`) |",
+    "| @nestjs/testing | ≥ 10 | `synapsis-nest/testing` |",
     "",
     "`@langchain/community` is not used: its peers conflict with zod 4 and ioredis 6. The runtime's own",
     "`devDependencies` (TypeScript 5.9, sqlite3, `@nestjs/platform-express`, the libraries above) build and test it."
@@ -697,9 +698,9 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#outside-dragonfly-py-packages-dragonfly-py-pyproject-toml",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/dependencies.md#outside-synapsis-py-packages-synapsis-py-pyproject-toml",
    "type": "context",
-   "title": "Dependencies — Outside: `dragonfly-py` (`packages/dragonfly-py/pyproject.toml`)",
+   "title": "Dependencies — Outside: `synapsis-py` (`packages/synapsis-py/pyproject.toml`)",
    "summary": "Python 3.12 or later.",
    "body": [
     "Python 3.12 or later. Always installed:",
@@ -709,7 +710,7 @@
     "| fastapi | ≥ 0.115 | the HTTP API |",
     "| pydantic | ≥ 2.9 | models, validation |",
     "| sqlalchemy[asyncio] | ≥ 2.0.36 | entities, repositories |",
-    "| alembic | ≥ 1.14 | the migrations of the database schema (`dragonfly migrate`) |",
+    "| alembic | ≥ 1.14 | the migrations of the database schema (`nuclear migrate`) |",
     "| httpx | ≥ 0.27 | HTTP repositories: a backend that calls another API |",
     "",
     "The extras, one per plugin of the platform. The generated `pyproject.toml` lists the extras the project uses;",
@@ -766,11 +767,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#from-a-project-to-a-running-app",
    "type": "context",
    "title": "Architecture — From a project to a running app",
-   "summary": "a backend project (.nuc, config.nuc) │ nuclear build . / dragonfly build ▼ the compiler ── loads ──► the dialect nuclearlang/dialects/<language>/frameworks/<dialect>/ │ └─ platform = \"backend\" ──► platform.toml (this folder: the contract) ▼ build/ the dialect's project, never edited ── imports ──►…",
+   "summary": "a backend project (.nuc, config.nuc) │ nuclear build . / nuclear build ▼ the compiler ── loads ──► the dialect nuclearlang/dialects/<language>/frameworks/<dialect>/ │ └─ platform = \"backend\" ──► platform.toml (this folder: the contract) ▼ build/ the dialect's project, never edited ── imports ──►…",
    "body": [
     "```",
     "a backend project (.nuc, config.nuc)",
-    "   │  nuclear build .  /  dragonfly build",
+    "   │  nuclear build .  /  nuclear build",
     "   ▼",
     "the compiler ── loads ──► the dialect   nuclearlang/dialects/<language>/frameworks/<dialect>/",
     "   │                        └─ platform = \"backend\" ──► platform.toml   (this folder: the contract)",
@@ -783,7 +784,7 @@
     "",
     "A project has only `.nuc` files: components with `data/` (entities, repositories), `domain/` (models, use cases),",
     "`api/` (controllers), `ai/` (tools, agents, states, graphs), `events/` (listeners) and the `appcomponent` facade;",
-    "`config/project_config.nuc` with the connections; `config.nuc` with `dragonfly(platform = \"backend\", dialect =",
+    "`config/project_config.nuc` with the connections; `config.nuc` with `synapsis(platform = \"backend\", dialect =",
     "...)`, `app(...)` and `plugins(...)`; tests in `test/*_test.nuc`; errors as `Result`; Nuclear's standard library.",
     "The rules are [the reference](../07-reference/backend.md)."
    ],
@@ -826,6 +827,60 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#the-contract-platform-toml.14662a",
+   "type": "context",
+   "title": "Architecture — The contract: `platform.toml`",
+   "summary": "The contract: `platform.toml`",
+   "body": [
+    "| Section | In the backend contract |",
+    "|---|---|",
+    "| `[platform]` | `default_dialect = \"fastapi\"`. Kinds: `appConfig`, `config`, `entity`, `repository`, `model`, `usecase`, `appcomponent`, `service`, `aggregate`, `controller`, `listener`, `tools`, `agent`, `state`, `graph`, `tests`. Decorators: data (`entity`, `primary`, `column`, `created`, `updated`, `repository`, the relations, `transactional`), the API (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), events and graphs (`consumer`, `start`, `next`, `state`), tests (`test`), validation (`required`, `email`, `url`, `minLength`, `maxLength`, `min`, `max`, `pattern`) and `key` (a model field's name in the JSON). Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma` |",
+    "| `[decorators.args]`, `[decorators.fields]` | the arguments of `@primary` and of the relation decorators and the rules behind N0308 (below) |",
+    "| `[decorators.replaced]` | `generated` → `@primary(generated = true)` (N0309) |",
+    "| `[layout]` | a path per kind: `config/project_config.nuc`, `test/`, and under `components/{component}/`: `data/entities/`, `data/repositories/`, `domain/{models,usecases,services,aggregates}/`, `api/`, `events/`, `ai/`, `ai/states/`, `config/`, and the facade `{component}_appcomponent.nuc` |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#the-contract-platform-toml.6a3789",
+   "type": "context",
+   "title": "Architecture — The contract: `platform.toml`",
+   "summary": "What `nuclear make` and `nuclear gen` write for the platform is not in the contract: it is `tools/code_generator/platforms/backend/generators.toml`, read by the loader with the contract: What the generators do for a user is in the reference (§2.13); how they work is the code generator's.",
+   "body": [
+    "What `nuclear make` and `nuclear gen` write for the platform is not in the contract: it is",
+    "`tools/code_generator/platforms/backend/generators.toml`, read by the loader with the contract:",
+    "",
+    "| Section | In the backend generators |",
+    "|---|---|",
+    "| `[skeletons]` | one per kind, except `appConfig` and `graph` |",
+    "| `[gen]`, `[[generators.*]]` | `component` (the facade); `resource`: from another API (`when = \"rest\"`: the models, an HTTP repository) or from the database (`when = \"db\"`: the entity, `New<Name>`, a repository with `page`, the tests), and for both a use case per action, the facade's aliases and the controller; `usecase`: a use case over a repository method, its alias and its route |",
+    "",
+    "What the generators do for a user is in the reference (§2.13); how they work is",
+    "[the code generator](../../../../../tools/code_generator/AGENTS.md)'s."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#the-contract-platform-toml.6f03c8",
    "type": "context",
    "title": "Architecture — The contract: `platform.toml`",
@@ -847,66 +902,17 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#the-contract-platform-toml.abd939",
-   "type": "context",
-   "title": "Architecture — The contract: `platform.toml`",
-   "summary": "What the generators do for a user is in the reference (§2.13); how they work is the code generator's.",
-   "body": [
-    "| `[gen]`, `[[generators.*]]` | `component` (the facade); `resource`: from another API (`when = \"rest\"`: the models, an HTTP repository) or from the database (`when = \"db\"`: the entity, `New<Name>`, a repository with `page`, the tests), and for both a use case per action, the facade's aliases and the controller; `usecase`: a use case over a repository method, its alias and its route |",
-    "",
-    "What the generators do for a user is in the reference (§2.13); how they work is",
-    "[the code generator](../../../../../tools/code_generator/AGENTS.md)'s."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#the-contract-platform-toml.d69d54",
-   "type": "context",
-   "title": "Architecture — The contract: `platform.toml`",
-   "summary": "The contract: `platform.toml`",
-   "body": [
-    "| Section | In the backend contract |",
-    "|---|---|",
-    "| `[platform]` | `default_dialect = \"fastapi\"`. Kinds: `appConfig`, `config`, `entity`, `repository`, `model`, `usecase`, `appcomponent`, `service`, `aggregate`, `controller`, `listener`, `tools`, `agent`, `state`, `graph`, `tests`. Decorators: data (`entity`, `primary`, `column`, `created`, `updated`, `repository`, the relations, `transactional`), the API (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), events and graphs (`consumer`, `start`, `next`, `state`), tests (`test`), validation (`required`, `email`, `url`, `minLength`, `maxLength`, `min`, `max`, `pattern`) and `key` (a model field's name in the JSON). Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma` |",
-    "| `[decorators.args]`, `[decorators.fields]` | the arguments of `@primary` and of the relation decorators and the rules behind N0308 (below) |",
-    "| `[decorators.replaced]` | `generated` → `@primary(generated = true)` (N0309) |",
-    "| `[layout]` | a path per kind: `config/project_config.nuc`, `test/`, and under `components/{component}/`: `data/entities/`, `data/repositories/`, `domain/{models,usecases,services,aggregates}/`, `api/`, `events/`, `ai/`, `ai/states/`, `config/`, and the facade `{component}_appcomponent.nuc` |",
-    "| `[skeletons]` | one per kind, except `appConfig` and `graph` |"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#the-dialects-that-implement-it",
    "type": "context",
    "title": "Architecture — The dialects that implement it",
-   "summary": "Each dialect has one runtime here: `dragonfly-py`, `dragonfly-nest`.",
+   "summary": "Each dialect has one runtime here: `synapsis-py`, `synapsis-nest`.",
    "body": [
     "| Dialect | Language | Built on | Folder | Its documents |",
     "|---|---|---|---|---|",
     "| `fastapi` | Python 3.12+ | FastAPI, SQLAlchemy 2 async, pydantic, Alembic, LangChain / LangGraph, pytest | `nuclearlang/dialects/python/frameworks/fastapi/` | [reference](../../../../../nuclearlang/dialects/python/docs/07-reference/fastapi.md), [guide](../../../../../nuclearlang/dialects/python/docs/08-guides/fastapi.md) |",
     "| `nestjs` | TypeScript (ES modules) | NestJS 12, sequelize-typescript, class-validator, LangChain.js / LangGraph.js, `node:test` | `nuclearlang/dialects/typescript/frameworks/nestjs/` | [reference](../../../../../nuclearlang/dialects/typescript/docs/07-reference/nestjs.md), [guide](../../../../../nuclearlang/dialects/typescript/docs/08-guides/nestjs.md) |",
     "",
-    "Each dialect has one runtime here: [`dragonfly-py`](runtime-python.md), [`dragonfly-nest`](runtime-typescript.md).",
+    "Each dialect has one runtime here: [`synapsis-py`](runtime-python.md), [`synapsis-nest`](runtime-typescript.md).",
     "In both, `Result` comes from the runtime, not from the generated code."
    ],
    "platforms": [
@@ -952,11 +958,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/overview.md#what-every-built-app-serves",
    "type": "context",
    "title": "Architecture — What every built app serves",
-   "summary": "Both runtimes serve the two documents the compiler wrote next to the app: `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json` (`_serve_contract` in `packages/dragonfly-py/src/dragonfly/app.py`, `serveContract` in `packages/dragonfly-nest/src/web.ts`).",
+   "summary": "Both runtimes serve the two documents the compiler wrote next to the app: `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json` (`_serve_contract` in `packages/synapsis-py/src/synapsis/app.py`, `serveContract` in `packages/synapsis-nest/src/web.ts`).",
    "body": [
     "Both runtimes serve the two documents the compiler wrote next to the app: `GET /.nuclear/contract.json` and",
-    "`GET /.nuclear/openapi.json` (`_serve_contract` in `packages/dragonfly-py/src/dragonfly/app.py`, `serveContract` in",
-    "`packages/dragonfly-nest/src/web.ts`). A mobile or web project declares the backend in its `config.nuc` and gets its",
+    "`GET /.nuclear/openapi.json` (`_serve_contract` in `packages/synapsis-py/src/synapsis/app.py`, `serveContract` in",
+    "`packages/synapsis-nest/src/web.ts`). A mobile or web project declares the backend in its `config.nuc` and gets its",
     "models and repositories generated from the contract (ADR-synapsis-0006): the files and the flow are in",
     "[shared contracts](../../../../docs/02-architecture/shared-contracts.md), the steps for a user in",
     "[the guide](../08-guides/contracts.md)."
@@ -976,7 +982,7 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#data",
    "type": "context",
-   "title": "The Python runtime: `dragonfly-py` — Data",
+   "title": "The Python runtime: `synapsis-py` — Data",
    "summary": "How the data words of ADR-backend-0001 are built: relation that was not asked for is never queried.",
    "body": [
     "How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are built:",
@@ -1008,16 +1014,16 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#migrations",
    "type": "context",
-   "title": "The Python runtime: `dragonfly-py` — Migrations",
-   "summary": "`dragonfly.migrate` runs Alembic for `dragonfly migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`): python -m dragonfly.migrate make \"add done to tasks\" --dir <migrations> # one migration: the entities minus the last one python -m dragonfly.migrate up --dir…",
+   "title": "The Python runtime: `synapsis-py` — Migrations",
+   "summary": "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`): python -m synapsis.migrate make \"add done to tasks\" --dir <migrations> # one migration: the entities minus the last one python -m synapsis.migrate up --dir…",
    "body": [
-    "`dragonfly.migrate` runs Alembic for `dragonfly migrate` (the dialect's `[toolchain]` keys `migrate_make`,",
+    "`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`,",
     "`migrate`, `migrate_down`):",
     "",
     "```sh",
-    "python -m dragonfly.migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
-    "python -m dragonfly.migrate up --dir <migrations>                         # applies the pending ones",
-    "python -m dragonfly.migrate down --dir <migrations>                       # reverts the last one",
+    "python -m synapsis.migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
+    "python -m synapsis.migrate up --dir <migrations>                         # applies the pending ones",
+    "python -m synapsis.migrate down --dir <migrations>                       # reverts the last one",
     "```",
     "",
     "- `make` never reads the database: it brings an empty SQLite in memory to the last migration and lets Alembic's",
@@ -1043,7 +1049,7 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.6e20eb",
    "type": "context",
-   "title": "The Python runtime: `dragonfly-py` — Modules",
+   "title": "The Python runtime: `synapsis-py` — Modules",
    "summary": "Behaviour worth knowing: reference §2.7).",
    "body": [
     "| `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |",
@@ -1076,7 +1082,7 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.afec4a",
    "type": "context",
-   "title": "The Python runtime: `dragonfly-py` — Modules",
+   "title": "The Python runtime: `synapsis-py` — Modules",
    "summary": "Modules",
    "body": [
     "| Module | Holds |",
@@ -1106,15 +1112,15 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#tests-and-type-definitions",
    "type": "context",
-   "title": "The Python runtime: `dragonfly-py` — Tests and type definitions",
+   "title": "The Python runtime: `synapsis-py` — Tests and type definitions",
    "summary": "`test_http.py`, `test_migrate.py`; pytest with `asyncio_mode = \"auto\"`.",
    "body": [
     "- `tests/test_runtime.py`, `test_data.py` (the same cases as the TypeScript runtime's `data.test.ts`),",
     "  `test_http.py`, `test_migrate.py`; pytest with `asyncio_mode = \"auto\"`. The fastapi check runs them",
     "  ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
-    "  `nuclearlang/dialects/python/defs/dragonfly/<version>/` (modules `dragonfly`, `dragonfly.ai`, `dragonfly.events`,",
-    "  `dragonfly.testing`, `dragonfly.validators`): regenerated after a change of the public API",
+    "  `nuclearlang/dialects/python/defs/synapsis/<version>/` (modules `synapsis`, `synapsis.ai`, `synapsis.events`,",
+    "  `synapsis.testing`, `synapsis.validators`): regenerated after a change of the public API",
     "  ([runbook](../06-runbooks/change-a-runtime.md))."
    ],
    "platforms": [
@@ -1130,13 +1136,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#the-python-runtime-dragonfly-py",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#the-python-runtime-synapsis-py",
    "type": "context",
-   "title": "The Python runtime: `dragonfly-py`",
-   "summary": "`packages/dragonfly-py` (distribution `dragonfly-py`, imported as `dragonfly`, Python 3.12+): what the code of the `fastapi` dialect imports.",
+   "title": "The Python runtime: `synapsis-py`",
+   "summary": "`packages/synapsis-py` (distribution `synapsis-py`, imported as `synapsis`, Python 3.12+): what the code of the `fastapi` dialect imports.",
    "body": [
-    "`packages/dragonfly-py` (distribution `dragonfly-py`, imported as `dragonfly`, Python 3.12+): what the code of the",
-    "`fastapi` dialect imports. Sources in `src/dragonfly/`, tests in `tests/`."
+    "`packages/synapsis-py` (distribution `synapsis-py`, imported as `synapsis`, Python 3.12+): what the code of the",
+    "`fastapi` dialect imports. Sources in `src/synapsis/`, tests in `tests/`."
    ],
    "platforms": [
     "backend"
@@ -1153,7 +1159,7 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#data",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest` — Data",
+   "title": "The TypeScript runtime: `synapsis-nest` — Data",
    "summary": "How the data words of ADR-backend-0001 are built: `save` writes a `@manyToOne` that is set to a row and `$set`s a `@manyToMany` list.",
    "body": [
     "How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are built:",
@@ -1180,20 +1186,24 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.45fa54",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.924969",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest` — Entry points and modules",
-   "summary": "Behaviour worth knowing: client still loads the base (they are optional peers: dependencies).",
+   "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
+   "summary": "Entry points and modules",
    "body": [
-    "Behaviour worth knowing:",
-    "",
-    "- The entry points are apart so a production install without `@nestjs/testing`, the AI libraries or a broker's",
-    "  client still loads the base (they are optional peers: [dependencies](dependencies.md)).",
-    "- `ChromaStore` is chromadb's client behind a LangChain `VectorStore`. `@langchain/community` was rejected: its",
-    "  peers conflict with zod 4 and ioredis 6.",
-    "- The order of a controller's routes does not matter: a fixed segment wins over a parameter (`configureApp`;",
-    "  reference §2.7).",
-    "- In the tests the databases are SQLite in memory (`DRAGONFLY_DATABASE=memory`, set by `startTestApp`)."
+    "| Import | Module | Holds |",
+    "|---|---|---|",
+    "| `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |",
+    "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
+    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
+    "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
+    "| | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |",
+    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |",
+    "| | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |",
+    "| `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`) |",
+    "| `synapsis-nest/ai` | `ai` | `ChatModel` / `Ollama` / `OpenAI`, `Embeddings` (`'provider:model'`), `Chroma` + `ChromaStore`, `vectorStore`, `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `StateOf`, `FakeModel` |",
+    "| `synapsis-nest/testing` | `testing` | `startTestApp`, `stopTestApp`, `useConnection` |",
+    "| `synapsis-nest/migrate` | `migrate` | the migrations (below); also the bin `synapsis-nest-migrate` |"
    ],
    "platforms": [
     "backend"
@@ -1208,24 +1218,20 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.b1cd93",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.c65b4b",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest` — Entry points and modules",
-   "summary": "Entry points and modules",
+   "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
+   "summary": "Behaviour worth knowing: client still loads the base (they are optional peers: dependencies).",
    "body": [
-    "| Import | Module | Holds |",
-    "|---|---|---|",
-    "| `dragonfly-nest` | `result` | `Result`, `Ok`, `Err` |",
-    "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
-    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
-    "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
-    "| | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |",
-    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |",
-    "| | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |",
-    "| `dragonfly-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`) |",
-    "| `dragonfly-nest/ai` | `ai` | `ChatModel` / `Ollama` / `OpenAI`, `Embeddings` (`'provider:model'`), `Chroma` + `ChromaStore`, `vectorStore`, `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `StateOf`, `FakeModel` |",
-    "| `dragonfly-nest/testing` | `testing` | `startTestApp`, `stopTestApp`, `useConnection` |",
-    "| `dragonfly-nest/migrate` | `migrate` | the migrations (below); also the bin `dragonfly-nest-migrate` |"
+    "Behaviour worth knowing:",
+    "",
+    "- The entry points are apart so a production install without `@nestjs/testing`, the AI libraries or a broker's",
+    "  client still loads the base (they are optional peers: [dependencies](dependencies.md)).",
+    "- `ChromaStore` is chromadb's client behind a LangChain `VectorStore`. `@langchain/community` was rejected: its",
+    "  peers conflict with zod 4 and ioredis 6.",
+    "- The order of a controller's routes does not matter: a fixed segment wins over a parameter (`configureApp`;",
+    "  reference §2.7).",
+    "- In the tests the databases are SQLite in memory (`SYNAPSIS_DATABASE=memory`, set by `startTestApp`)."
    ],
    "platforms": [
     "backend"
@@ -1242,14 +1248,14 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#how-it-is-installed",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest` — How it is installed",
+   "title": "The TypeScript runtime: `synapsis-nest` — How it is installed",
    "summary": "Its own `devDependencies` build it (`npm install` in its folder).",
    "body": [
     "Its own `devDependencies` build it (`npm install` in its folder). An app, and `nuclearlang/tools/node`, install it",
     "as a copy, never as a link:",
     "",
     "```sh",
-    "npm install --no-save --install-links <path to>/packages/dragonfly-nest",
+    "npm install --no-save --install-links <path to>/packages/synapsis-nest",
     "```",
     "",
     "A symlink resolves the runtime's peers in its own `node_modules`, and two copies of `@nestjs/common` break `tsc`.",
@@ -1271,16 +1277,16 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#migrations",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest` — Migrations",
-   "summary": "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `dragonfly-nest-migrate`), run by `dragonfly migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`): npx dragonfly-nest-migrate make \"add done to tasks\" --dir <migrations>…",
+   "title": "The TypeScript runtime: `synapsis-nest` — Migrations",
+   "summary": "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`): npx synapsis-nest-migrate make \"add done to tasks\" --dir <migrations> #…",
    "body": [
-    "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `dragonfly-nest-migrate`), run",
-    "by `dragonfly migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`):",
+    "Sequelize has no autogenerate, so the runtime brings its own (`src/migrate.ts`, bin `synapsis-nest-migrate`), run",
+    "by `nuclear migrate` after `tsc` (the dialect's `[toolchain]` keys `migrate_make`, `migrate`, `migrate_down`):",
     "",
     "```sh",
-    "npx dragonfly-nest-migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
-    "npx dragonfly-nest-migrate up --dir <migrations>                         # applies the pending ones",
-    "npx dragonfly-nest-migrate down --dir <migrations>                       # reverts the last one",
+    "npx synapsis-nest-migrate make \"add done to tasks\" --dir <migrations>   # one migration: the entities minus the last one",
+    "npx synapsis-nest-migrate up --dir <migrations>                         # applies the pending ones",
+    "npx synapsis-nest-migrate down --dir <migrations>                       # reverts the last one",
     "```",
     "",
     "- It reads the `entities` and the `config` the app module exports.",
@@ -1303,15 +1309,15 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#tests-and-type-definitions",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest` — Tests and type definitions",
+   "title": "The TypeScript runtime: `synapsis-nest` — Tests and type definitions",
    "summary": "`migrate.test.ts`; `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`.",
    "body": [
     "- `test/runtime.test.ts`, `data.test.ts` (the same cases as the Python runtime's `test_data.py`),",
     "  `migrate.test.ts`; `npm test` = `tsc -p tsconfig.test.json && node --test dist-test/test/`. The nestjs check runs",
     "  them ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
-    "  `nuclearlang/dialects/typescript/defs/dragonfly-nest/<version>/` (modules `dragonfly-nest`, `dragonfly-nest/ai`,",
-    "  `dragonfly-nest/events`, `dragonfly-nest/testing`): regenerated after a change of the public API",
+    "  `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,",
+    "  `synapsis-nest/events`, `synapsis-nest/testing`): regenerated after a change of the public API",
     "  ([runbook](../06-runbooks/change-a-runtime.md))."
    ],
    "platforms": [
@@ -1327,12 +1333,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#the-typescript-runtime-dragonfly-nest",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#the-typescript-runtime-synapsis-nest",
    "type": "context",
-   "title": "The TypeScript runtime: `dragonfly-nest`",
-   "summary": "`packages/dragonfly-nest` (npm `dragonfly-nest`, ES modules): what the code of the `nestjs` dialect imports.",
+   "title": "The TypeScript runtime: `synapsis-nest`",
+   "summary": "`packages/synapsis-nest` (npm `synapsis-nest`, ES modules): what the code of the `nestjs` dialect imports.",
    "body": [
-    "`packages/dragonfly-nest` (npm `dragonfly-nest`, ES modules): what the code of the `nestjs` dialect imports. Sources",
+    "`packages/synapsis-nest` (npm `synapsis-nest`, ES modules): what the code of the `nestjs` dialect imports. Sources",
     "in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfig.json`)."
    ],
    "platforms": [
@@ -1373,11 +1379,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#conventions",
    "type": "context",
    "title": "Testing — Conventions",
-   "summary": "dialect runs with its own runner; a behaviour of the runtimes has the same test in both (`packages/dragonfly-py/tests/test_data.py`, `packages/dragonfly-nest/test/data.test.ts`).",
+   "summary": "dialect runs with its own runner; a behaviour of the runtimes has the same test in both (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
    "body": [
     "- **One feature, both dialects.** A feature has a test in Nuclear in the example (`test/*_test.nuc`), which each",
     "  dialect runs with its own runner; a behaviour of the runtimes has the same test in both",
-    "  (`packages/dragonfly-py/tests/test_data.py`, `packages/dragonfly-nest/test/data.test.ts`).",
+    "  (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
     "- **Goldens.** When the generated output changes on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff. An",
     "  expected file the build no longer produces is a failure too.",
     "- **No network, no real service.** The checks use SQLite (in memory or a temporary file) and fake chat models",
@@ -1398,7 +1404,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.7c69f5",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.8a7cc2",
    "type": "context",
    "title": "Testing — Running the checks",
    "summary": "cargo test sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh Both scripts find the tree from their own place (`NUCLEAR_ROOT` overrides it), build with `cargo run -p nuclear-cli -- build` and…",
@@ -1418,10 +1424,10 @@
     "2. pyright over the generated project, then its tests (pytest: the project's `test/*_test.nuc`).",
     "3. `smoke.py`: the REST API over an in-memory database (201, 409, 400, 404, the list), the agent with its tools and",
     "   the graph with a fake chat model (no network), and `/openapi.json`.",
-    "4. The runtime's tests: `packages/dragonfly-py/tests`.",
+    "4. The runtime's tests: `packages/synapsis-py/tests`.",
     "5. **Conformance**: copies `examples/examples-backend/tasks_api` (written for `nestjs`), switches its `config.nuc`",
     "   to `dialect = \"fastapi\"`, builds it, runs pyright and its tests.",
-    "6. **Migrations**: on that copy, with `DATABASE` set to a fresh SQLite file, `dragonfly.migrate make \"first\"`,",
+    "6. **Migrations**: on that copy, with `DATABASE` set to a fresh SQLite file, `synapsis.migrate make \"first\"`,",
     "   `up`, then `make \"again\"` must answer \"no changes\".",
     "",
     "**`nestjs-check/check.sh`**, in order:"
@@ -1439,7 +1445,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.f15362",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/05-standards/testing.md#running-the-checks.8f5eca",
    "type": "context",
    "title": "Testing — Running the checks",
    "summary": "1. Builds the runtime with `tsc` and copies it fresh into `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`).",
@@ -1450,7 +1456,7 @@
     "   installs its own again.",
     "2. Builds `examples/examples-backend/tasks_api` and links `node_modules` into its `build/`.",
     "3. `tsc --strict`, then the project's tests (`node --test \"dist/test/**/*.js\"`).",
-    "4. `smoke.mjs`: the REST CRUD over SQLite in memory (`DRAGONFLY_DATABASE=memory`), validation (400 with two",
+    "4. `smoke.mjs`: the REST CRUD over SQLite in memory (`SYNAPSIS_DATABASE=memory`), validation (400 with two",
     "   messages), the errors of a `Result` (409, 404).",
     "5. **Migrations**: with `DATABASE` set to a fresh SQLite file, `migrate make \"first\"`, `up`, then `make \"again\"`",
     "   must answer \"no changes\".",
@@ -1480,8 +1486,8 @@
     "(cd nuclearlang/tools/node && npm install)",
     "python3 -m venv nuclearlang/tools/python/.venv",
     "nuclearlang/tools/python/.venv/bin/pip install -r nuclearlang/tools/python/requirements.txt",
-    "nuclearlang/tools/python/.venv/bin/pip install -e nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py --config-settings editable_mode=compat",
-    "(cd nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest && npm install)",
+    "nuclearlang/tools/python/.venv/bin/pip install -e nuclear-synapsis-framework/platforms/backend/packages/synapsis-py --config-settings editable_mode=compat",
+    "(cd nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest && npm install)",
     "```"
    ],
    "platforms": [
@@ -1526,7 +1532,7 @@
     "| Level | What it covers | Run by |",
     "|---|---|---|",
     "| The compiler's tests | Every example built and compared with its golden: `examples/expected/rick_api/`, `examples/expected/tasks_api/` (`nuclearlang/crates/nuclear-transpile/tests/projects.rs`), `examples/examples-nestjs/users.ts` (`golden.rs`); conformance: `tasks_api` built with `nestjs` and `fastapi` (`backend_example_builds_with_every_backend_dialect`); `tasks_api` also as the backend of the mobile `tasks_app` | `cargo test` at the root of the tree |",
-    "| The runtimes' tests | `packages/dragonfly-py/tests/` (pytest), `packages/dragonfly-nest/test/` (`node:test`) | the two checks |",
+    "| The runtimes' tests | `packages/synapsis-py/tests/` (pytest), `packages/synapsis-nest/test/` (`node:test`) | the two checks |",
     "| The fastapi check | `rick_api` built; pyright `--strict` and the project's own tests on the generated code; a live run; then the conformance example | `checks/fastapi-check/check.sh` |",
     "| The nestjs check | the runtime built; `tasks_api` built; `tsc --strict` and the project's own tests; a live run; the migrations | `checks/nestjs-check/check.sh` |",
     "| The references' equivalences | each dialect's reference against the real output (the dialects' projects own them) | `nuclearlang/tools/spec-check/check.py` |"
@@ -1547,10 +1553,10 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/06-runbooks/change-a-runtime.md#1-the-same-behaviour-in-both-runtimes",
    "type": "context",
    "title": "After changing a runtime — 1. The same behaviour in both runtimes",
-   "summary": "A behaviour of the platform exists in both packages, with the same test in both (`packages/dragonfly-py/tests/test_data.py`, `packages/dragonfly-nest/test/data.test.ts`).",
+   "summary": "A behaviour of the platform exists in both packages, with the same test in both (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
    "body": [
     "A behaviour of the platform exists in both packages, with the same test in both",
-    "(`packages/dragonfly-py/tests/test_data.py`, `packages/dragonfly-nest/test/data.test.ts`)."
+    "(`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`)."
    ],
    "platforms": [
     "backend"
@@ -1570,13 +1576,13 @@
    "title": "After changing a runtime — 2. Build and install the changed runtime",
    "summary": "sources, nothing to repeat.",
    "body": [
-    "- **`dragonfly-py`** is installed in `nuclearlang/tools/python/.venv` with `pip install -e`: the venv reads the",
+    "- **`synapsis-py`** is installed in `nuclearlang/tools/python/.venv` with `pip install -e`: the venv reads the",
     "  sources, nothing to repeat.",
-    "- **`dragonfly-nest`** is compiled and copied, never linked. The nestjs check does both; by hand:",
+    "- **`synapsis-nest`** is compiled and copied, never linked. The nestjs check does both; by hand:",
     "",
     "```sh",
-    "(cd nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest && npm install && npx tsc -p tsconfig.json)",
-    "(cd nuclearlang/tools/node && npm install --no-save --install-links ../../../nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest)",
+    "(cd nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest && npm install && npx tsc -p tsconfig.json)",
+    "(cd nuclearlang/tools/node && npm install --no-save --install-links ../../../nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest)",
     "```",
     "",
     "  The install is repeated after every rebuild: a symlink would resolve the runtime's peers in its own",
@@ -1631,7 +1637,7 @@
     "```",
     "",
     "Each script regenerates every package of its language with the versions installed there, the runtime among them",
-    "(`dragonfly`, `dragonfly-nest`). If a version changed, update the `defs` lists of the dialects",
+    "(`synapsis`, `synapsis-nest`). If a version changed, update the `defs` lists of the dialects",
     "(`nuclearlang/dialects/python/dialect.toml` and `frameworks/fastapi/dialect.toml`;",
     "`nuclearlang/dialects/typescript/frameworks/nestjs/dialect.toml`). Then `cargo test`."
    ],
@@ -1656,7 +1662,7 @@
     "- The generated output changed: `UPDATE_GOLDEN=1 cargo test`, and review the diff.",
     "- A change a user can see: `docs/07-reference/backend.md` gets the Nuclear, each dialect's reference its output,",
     "  `CHANGELOG.md` a line.",
-    "- `installer/install.sh`: the installed `dragonfly` installs the runtimes into a project from the installation's",
+    "- `installer/install.sh`: the installed `nuclear` installs the runtimes into a project from the installation's",
     "  `packages/`, so a project of the user sees the change only after it.",
     "",
     "Publishing the packages (PyPI, npm) is not set up yet: [roadmap](../01-product/roadmap.md)."
@@ -1677,9 +1683,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/06-runbooks/change-a-runtime.md#after-changing-a-runtime",
    "type": "context",
    "title": "After changing a runtime",
-   "summary": "The steps after a change in `packages/dragonfly-py` or `packages/dragonfly-nest`.",
+   "summary": "The steps after a change in `packages/synapsis-py` or `packages/synapsis-nest`.",
    "body": [
-    "The steps after a change in `packages/dragonfly-py` or `packages/dragonfly-nest`. Commands run from the root of the",
+    "The steps after a change in `packages/synapsis-py` or `packages/synapsis-nest`. Commands run from the root of the",
     "tree; the set-up is in [testing](../05-standards/testing.md)."
    ],
    "platforms": [
@@ -1700,7 +1706,7 @@
    "title": "Contracts: one backend, its apps generated — 1. The backend publishes its contract",
    "summary": "Nothing to write.",
    "body": [
-    "Nothing to write. Building the backend (`nuclear build .`, `dragonfly build`, or the editor when it checks the",
+    "Nothing to write. Building the backend (`nuclear build .`, `nuclear build`, or the editor when it checks the",
     "project) writes two files next to the project card:",
     "",
     "| File | Holds |",
@@ -1741,13 +1747,13 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts.md#2-the-app-declares-the-backend",
    "type": "guide",
    "title": "Contracts: one backend, its apps generated — 2. The app declares the backend",
-   "summary": "One line in the app's `config.nuc`, and a connection with the same name: // tasks_app/config.nuc dragonfly(platform = \"mobile\", dialect = \"flutter\") app(name = \"tasks_app\", version = \"1.0.0+1\") contracts(tasks_api = \"../tasks_api\") // the backend checked out next to the app //…",
+   "summary": "One line in the app's `config.nuc`, and a connection with the same name: // tasks_app/config.nuc synapsis(platform = \"mobile\", dialect = \"flutter\") app(name = \"tasks_app\", version = \"1.0.0+1\") contracts(tasks_api = \"../tasks_api\") // the backend checked out next to the app //…",
    "body": [
     "One line in the app's `config.nuc`, and a connection with the same name:",
     "",
     "```nuclear",
     "// tasks_app/config.nuc",
-    "dragonfly(platform = \"mobile\", dialect = \"flutter\")",
+    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
     "app(name = \"tasks_app\", version = \"1.0.0+1\")",
     "contracts(tasks_api = \"../tasks_api\")              // the backend checked out next to the app",
     "",
@@ -1884,9 +1890,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts.md#5-in-the-editor",
    "type": "guide",
    "title": "Contracts: one backend, its apps generated — 5. In the editor",
-   "summary": "The Nuclear HTTP view of the VS Code extension lists every project of the workspace by platform, its components and endpoints (from the contracts), the contracts an app declares with an *Update* action, and OpenAPI documents of APIs that are not Nuclear.",
+   "summary": "The Nuclear Connector view of the VS Code extension lists every project of the workspace by platform, its components and endpoints (from the contracts), the contracts an app declares with an *Update* action, and OpenAPI documents of APIs that are not Nuclear.",
    "body": [
-    "The **Nuclear HTTP** view of the VS Code extension lists every project of the workspace by platform, its",
+    "The **Nuclear Connector** view of the VS Code extension lists every project of the workspace by platform, its",
     "components and endpoints (from the contracts), the contracts an app declares with an *Update* action, and OpenAPI",
     "documents of APIs that are not Nuclear. Clicking an endpoint opens a request panel with the active environment's",
     "variables and headers (`.nuclear/http.json`), a sample body built from the model, and the pretty-printed response.",

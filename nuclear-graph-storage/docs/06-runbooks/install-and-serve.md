@@ -9,7 +9,7 @@ related: [update-the-knowledge-base.md, ../05-standards/security.md, ../02-archi
 ## Install
 
 The set-up of the AI services installs the graph, loads the knowledge base and starts it at every login
-(`nuclear-loop setup`, the installer's last step, or the wizard of VS Code:
+(`nuclear-builder setup`, the installer's last step, or the wizard of VS Code:
 [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md)).
 
 From the working tree, `installer/install.sh --ai` installs the platform and then runs the same set-up: the graph
@@ -27,9 +27,11 @@ nuclear-graph knowledge build                                     # the knowledg
 nuclear-graph ingest                                              # the graph learns it (≈2 min the first time)
 nuclear-graph stats                                               # the rows of each shelf and the revision it holds
 nuclear-graph knowledge ask                                       # the questions people ask: each finds its row
+(cd tools/mcp && nuclear build .) && uv tool install tools/mcp    # nuclear-mcp, the MCP server, on the PATH
 ```
 
-A machine set up for remote agents only installs the MCP server alone (the `mcp` extra): no graph runs on it.
+A machine set up for remote agents only installs the MCP server alone (`uv tool install tools/mcp`): no graph runs
+on it.
 
 ## Give the programs access
 
@@ -39,7 +41,7 @@ nuclear-graph connect nuclear-developer --scopes read,write   # the local agents
 ```
 
 Every access command: [security](../05-standards/security.md#who-may-read-it). Adding the MCP server to a client
-(`claude mcp add nuclear -- nuclear-graph mcp`): the project [`tools/mcp`](../../../tools/mcp/AGENTS.md).
+(`claude mcp add nuclear -- nuclear-mcp`): the project [`tools/mcp`](../../../tools/mcp/AGENTS.md).
 
 ## Ask it from a terminal
 

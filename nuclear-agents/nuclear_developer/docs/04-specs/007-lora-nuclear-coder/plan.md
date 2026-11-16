@@ -5,9 +5,9 @@ updated: 2026-11-16
 related: [../../05-standards/testing.md, ../../05-standards/evaluation-rounds.md, ../../01-product/roadmap.md]
 ---
 
-# 007 — A LoRA of the local coder trained on Nuclear and Dragonfly
+# 007 — A LoRA of the local coder trained on Nuclear and Synapsis
 
-Goal: a model of at most 3B parameters (the user's rule) that writes Nuclear and Dragonfly as its first language, so
+Goal: a model of at most 3B parameters (the user's rule) that writes Nuclear and Synapsis as its first language, so
 the local developer passes whole features, not only single files. Today the coder is `qwen2.5-coder:3b` taught by
 retrieval (the Smart Graph's `nuclear` collection, prompts, distilled examples): at Sonnet's level on single files,
 behind it on features (`nuclear-agents/nuclear_developer/eval/results/REPORT.md`).

@@ -24,7 +24,7 @@ AppliesIn: BaseModel
   platform: string = ""
 
 // `existing` and `new`: the declarations the request names that the project has, and the ones it has not (null: no
-// project was read); `runnable`: the caller is a run of the Loop (a strategy without stages comes first only when an
+// project was read); `runnable`: the caller is a run of the Builder (a strategy without stages comes first only when an
 // exact sign chose it); `only`: the strategy the request itself names, when it names one.
 StrategyIn: BaseModel
   text: string = Field(minLength = 1, maxLength = 40000)
@@ -126,7 +126,7 @@ Api
     items = ~asyncio.toThread(Retrieve.search, db(), body.query, among, body.k, body.platform, body.agents, body.where, body.expand)
     { "items": items }
 
-  // One row of the knowledge base by its id (`error:N0114`, `kind:backend.usecase`, `tool:dragonfly.gen.resource`),
+  // One row of the knowledge base by its id (`error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.resource`),
   // with the title and summary of the rows it links to.
   card(cardId: string, request: Request) <string, any>
     allowed(request, "read")

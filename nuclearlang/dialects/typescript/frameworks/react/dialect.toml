@@ -1,18 +1,18 @@
-# react dialect: Dragonfly for React (nuclearlang/dialects/typescript/docs/07-reference/react.md, ADR-web-0001).
+# react dialect: Synapsis for React (nuclearlang/dialects/typescript/docs/07-reference/react.md, ADR-web-0001).
 # The web platform's architecture (components, use cases, an appcomponent facade, http repositories, state managers,
 # screens with routes, events, guards, tests) on React 19 + React Router 7, built by Vite, tested by Vitest.
-# No JSX: a view is a class with build() that returns elements made with div(...), button(...) (dragonfly-web/html)
-# and createElement(Component, props); the runtime is packages/dragonfly-web.
+# No JSX: a view is a class with build() that returns elements made with div(...), button(...) (synapsis-web/html)
+# and createElement(Component, props); the runtime is packages/synapsis-web.
 
 [dialect]
 name = "react"
 platform = "web"
 extends = "typescript"
-description = "Dragonfly for React: screens, state managers, http repositories, use cases, events and tests written for you"
+description = "Synapsis for React: screens, state managers, http repositories, use cases, events and tests written for you"
 # type definitions (nuclearlang/docs/07-reference/definitions.md): generated from the .d.ts by nuclearlang/tools/defs/typescript (defs/typescript/)
 defs = [
   "typescript@5.9.3",
-  "dragonfly-web@0.1.0",
+  "synapsis-web@0.1.0",
   "react@19.3.1",
   "react_router@7.18.5",
   "vitest@4.1.12",
@@ -26,7 +26,7 @@ replaces = ["auto_imports.createElement", "auto_imports.useState", "auto_imports
 project_import = "{{relative}}"
 
 [options]
-builtin_result = false             # Result, Ok and Err are the runtime's (dragonfly-web)
+builtin_result = false             # Result, Ok and Err are the runtime's (synapsis-web)
 type_args_as_args = ["inject"]     # inject<Repo>() → inject(Repo): the class is the token
 
 [types]
@@ -37,7 +37,7 @@ DateTime = "Date"
 written = ["Result", "Ok", "Err", "AppError", "AppConfig", "ComponentConfig", "Repository", "HttpMethod", "Decode",
   "Cache", "Json", "StateManager", "StatelessView", "StatefulView", "statelessOf", "statefulOf", "Providers",
   "useManager", "useStateOf", "createElement", "Element", "inject", "register", "Guards", "Guard", "AppEvent",
-  "Events", "Dragonfly", "buildRouter", "AnyRoute", "DragonflyTest", "describe", "test", "beforeEach", "expect",
+  "Events", "Synapsis", "buildRouter", "AnyRoute", "SynapsisTest", "describe", "test", "beforeEach", "expect",
   "when", "verify", "renderScreen", "statesOf", "okOf", "errOf", "screen", "act"]
 
 [decorators]
@@ -210,14 +210,14 @@ template = { file = "templates/tests.tpl" }
 results = "keep"
 void_methods = true
 provide = { template = "inject({{name}})", kinds = ["repository", "usecase", "appcomponent", "service", "aggregate", "statemanager"] }
-imports = ["DragonflyTest", "dragonflyConfig", "registerDragonfly", "describe", "test", "beforeEach", "expect", "inject", "statesOf"]
+imports = ["SynapsisTest", "synapsisConfig", "registerSynapsis", "describe", "test", "beforeEach", "expect", "inject", "statesOf"]
 [kinds.tests.syntax]
 method = { file = "templates/tests_method.tpl" }
 
-# what the dragonfly CLI runs in build/app (ADR-synapsis-0001): install the runtime and the app, run it, test it
+# what the `nuclear` CLI runs in build/app (ADR-synapsis-0001): install the runtime and the app, run it, test it
 [toolchain]
 # then Vite's dependency cache goes: it would keep serving the runtime it pre-bundled before (same version, new code)
-install = "npm install {{packages}}/dragonfly-web && npm install && node -e \"require('fs').rmSync('node_modules/.vite', { recursive: true, force: true })\""
+install = "npm install {{packages}}/synapsis-web && npm install && node -e \"require('fs').rmSync('node_modules/.vite', { recursive: true, force: true })\""
 run = "npm run dev -- --port {{port}} --strictPort"
 test = "npm test"
 url = "http://localhost:5173"
@@ -225,7 +225,7 @@ installed = "node_modules"
 ready = "Local:"
 # the dev server the editor's web device runs on a port and host it picks
 serve = "npx vite --port {{port}} --strictPort --host {{host}} --clearScreen false"
-# `dragonfly add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the
+# `nuclear add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the
 # package's type definitions, written into the project's defs/
 package_add = "npm install {{requirement}}"
 package_remove = "npm uninstall {{name}}"
@@ -236,25 +236,25 @@ package_version = '''node -p "JSON.parse(require('fs').readFileSync('node_module
 package_companion = '''node -e "const n = process.argv[1], fs = require('fs'), dir = 'node_modules/' + n, p = JSON.parse(fs.readFileSync(dir + '/package.json', 'utf8')); const own = p.types || p.typings || fs.existsSync(dir + '/index.d.ts') || JSON.stringify(p.exports || '').includes('.d.'); if (!own) console.log('@types/' + n.replace(/^@/, '').replace('/', '__'))" {{name}}'''
 package_defs = "node {{tools}}/defs/typescript/gen.js {{defs_name}} {{version}} {{defs}} {{modules}} --package {{name}} --from . --depends {{depends}}"
 
-# the editor's debug launch: the dev server (task `dragonfly: run`), then the browser with the debugger
+# the editor's debug launch: the dev server (task `synapsis: run`), then the browser with the debugger
 [[toolchain.launch]]
 name = "{{name}} (debug)"
 type = "chrome"
 request = "launch"
 url = "{{url}}"
 webRoot = "{{app}}"
-preLaunchTask = "dragonfly: run"
+preLaunchTask = "synapsis: run"
 
 [project]
 sources = "src"
-# a Dragonfly project has no nuclear.toml: the folder with main.nuc is a web project, built in build/app
+# a Synapsis project has no nuclear.toml: the folder with main.nuc is a web project, built in build/app
 marker = "main.nuc"
 output = "build/app"
 assets = ["public"]
 
 [project.manifest]
 file = "config.nuc"
-sections = ["dragonfly", "app", "plugins", "contracts", "dependencies"]
+sections = ["synapsis", "app", "plugins", "contracts", "dependencies"]
 # dependencies(name = "version") adds a package of the target's package manager; a version that starts with . or / is a folder
 packages = ["dependencies"]
 
@@ -271,9 +271,9 @@ packages = ["dependencies"]
 [project.outputs]
 "test" = "test"
 
-[project.files."src/dragonfly.g.ts"]
-names = ["startDragonfly", "appRouter", "routes", "dragonflyConfig", "registerDragonfly"]
-template = { file = "templates/dragonfly_g.tpl" }
+[project.files."src/synapsis.g.ts"]
+names = ["startSynapsis", "appRouter", "routes", "synapsisConfig", "registerSynapsis"]
+template = { file = "templates/synapsis_g.tpl" }
 
 [project.files."src/index.ts"]
 template = { file = "templates/index_ts.tpl" }
@@ -314,9 +314,9 @@ repository = ["usecase", "aggregate"]
 
 [auto_imports]
 # the runtime's names: the definitions give the rest; these choose the module when two packages export a name
-"dragonfly-web" = ["Result", "Ok", "Err", "AppError", "inject", "register", "createElement", "Element", "Fragment",
+"synapsis-web" = ["Result", "Ok", "Err", "AppError", "inject", "register", "createElement", "Element", "Fragment",
   "useState", "useEffect", "useMemo", "useRef", "useCallback", "goTo", "pushTo", "goBack", "pathTo"]
-"dragonfly-web/testing" = ["DragonflyTest", "when", "verify", "renderScreen", "statesOf", "okOf", "errOf"]
+"synapsis-web/testing" = ["SynapsisTest", "when", "verify", "renderScreen", "statesOf", "okOf", "errOf"]
 "vitest" = ["describe", "test", "it", "expect", "beforeEach", "afterEach", "beforeAll", "afterAll", "vi"]
 "@testing-library/react" = ["screen", "act", "fireEvent", "waitFor", "render", "cleanup"]
 

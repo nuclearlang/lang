@@ -1,6 +1,6 @@
-# Dragonfly: three platforms, one code per platform
+# Synapsis: three platforms, one code per platform
 
-Dragonfly is the framework of NuclearLang. You write a **platform** — `mobile`, `backend` or `web` — in Nuclear:
+Synapsis is the framework of NuclearLang. You write a **platform** — `mobile`, `backend` or `web` — in Nuclear:
 entities, use cases, screens, endpoints, agents. A **dialect** is the language and framework it comes out in, and
 the Nuclear code of a project never changes when its dialect changes: a backend written once builds as a Python
 service or as a TypeScript service from the same files. Only a use of a dialect's type definitions (`numpy` exists
@@ -63,8 +63,8 @@ Encryption (AES-256, key in the device's secure storage) is on by default and is
 `local: LocalDatabase = LocalDatabase(encrypted = true)` in the project's `appConfig`, or in a component's `config`
 for its own tables.
 
-Rules and the generated Dart: [flutter.md §6.3](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md); the package API: [dragonfly.md
-§3.2](../../platforms/mobile/docs/07-reference/dragonfly.md).
+Rules and the generated Dart: [flutter.md §6.3](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md); the package API: [synapsis.md
+§3.2](../../platforms/mobile/docs/07-reference/synapsis.md).
 
 ## Plugins: only what the project uses
 
@@ -93,20 +93,20 @@ The native kinds of each platform, and how to write your own kind without touchi
 
 ## Generators: the finished code of a resource
 
-`dragonfly gen resource <component> <Name>` writes, for any platform, the models, the repository (REST over an `Http`
+`nuclear gen resource <component> <Name>` writes, for any platform, the models, the repository (REST over an `Http`
 connection or a database), one use case per action, the component's facade, the controller (backend) or the screen
 with its state manager (mobile, web) and their tests; everything compiles as written. The fields come from
 `--fields "id:int name:string"`, from an answer (`--from-json <url|file>`: nested models and pages included, `@key`
 for snake_case keys) or from a spec (`--from-spec spec.md`: its example answer, its `Key | Type` table, its
-`GET <url>` line). `dragonfly gen inspect` lists what the project has; nothing is ever overwritten.
+`GET <url>` line). `nuclear gen inspect` lists what the project has; nothing is ever overwritten.
 
-`dragonfly gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, on the
+`nuclear gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, on the
 backend, `--route "POST orders/{id}/cancel"` adds its route to the controller of `orders` (made when missing). A use
 case with rules of its own is written first and then wired, with the signature the project gives it; one that only
 calls a repository method is written by the command too: `--calls OrderRepository.pending`.
 
 Every option, what each platform gets, the refusals and worked examples: [Generators](generators.md). The MCP server
-gives the same tools to an agent, and the editor's Loop runs them before planning. Why: ADR-codegen-0001.
+gives the same tools to an agent, and the editor's Builder runs them before planning. Why: ADR-codegen-0001.
 
 ## Writing with an AI agent
 

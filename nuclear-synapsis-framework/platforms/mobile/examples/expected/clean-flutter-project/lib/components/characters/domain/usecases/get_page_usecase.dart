@@ -3,8 +3,8 @@ import 'package:clean_flutter_project/components/characters/domain/models/charac
 import 'package:clean_flutter_project/components/characters/domain/models/character_error.dart';
 import 'package:clean_flutter_project/components/characters/domain/services/character_names.dart';
 import 'package:clean_flutter_project/shared/models/page.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 class GetPageUseCase {
   GetPageUseCase(this.repository, this.names);

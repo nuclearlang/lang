@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart' hide Summary;
-import 'package:genkit_assistant/dragonfly.g.dart';
+import 'package:genkit_assistant/synapsis.g.dart';
 
 Future<void> main() async {
-  await startDragonfly();
+  await startSynapsis();
   runApp(App());
 }
 

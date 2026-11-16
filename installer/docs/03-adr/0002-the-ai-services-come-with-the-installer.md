@@ -8,7 +8,7 @@ deciders: Julian Molina
 ## Context and problem
 The Smart Graph and the Nuclear Developer were installed from the source tree only, followed by nine commands
 typed by hand: pull three models, start the graph, build and ingest the knowledge base, connect two clients, start
-the Developer. The release installers brought `nuclear-loop` and nothing else. The services were processes started
+the Developer. The release installers brought `nuclear-builder` and nothing else. The services were processes started
 by hand: after a restart of the machine nothing answered. And there was one set of models for every machine: 9.7
 GB, of which the assistant's model is 7.2 GB and leaves a 16 GB machine with under 1 GB of memory.
 
@@ -24,7 +24,7 @@ who does not want it choosing the remote agents alone.
    (about 550 MB) and the models. Nothing of a model fits a release (a release file is at most 2 GB).
 2. **One set-up, two fronts.** `aiSetup.ts` reads the machine, finds what is installed and runs the steps. The
    editor shows it as a wizard (*Nuclear: Set Up the AI Services*; offered once on a machine never set up; a button
-   in *Settings and integrations*); a terminal as `nuclear-loop setup`, which the installers call at their end.
+   in *Settings and integrations*); a terminal as `nuclear-builder setup`, which the installers call at their end.
    Nothing is downloaded before the user presses Install or answers the question.
 3. **The wizard's steps**: this machine (processor, memory, GPU, free disk) and where the agents run; the profile;
    what it needs; the installation, with the progress of each step and *Try again* from the step that failed.
@@ -51,7 +51,7 @@ who does not want it choosing the remote agents alone.
    the internet tools, takes away the tools that need the graph or the local developer, and its instructions ask
    the model to write what the generators do not. The wizard says what that costs: every line is paid tokens.
 8. **The choice is one file**: `~/.config/nuclearlang/ai.env` (`%APPDATA%\nuclearlang\ai.env`), `KEY=value` lines:
-   the mode, the profile, its models. The services start with it; the Loop and the editor take their default models
+   the mode, the profile, its models. The services start with it; the Builder and the editor take their default models
    from it; the MCP server reads the mode from it. A model set in the editor's settings wins there and is written
    to the file when the editor restarts a service.
 9. **The services start at every login**, with the system's own means and no administrator rights: two systemd
@@ -69,7 +69,7 @@ who does not want it choosing the remote agents alone.
     it runs the set-up again with the profile the machine has, without questions. `--no-ai` skips it,
     `--profile <id>` takes one without questions, and without a terminal (CI) nothing is asked or downloaded.
 12. **Uninstalling** takes away what starts the services, the graph's tool, the Developer's launcher and the file
-    of the choice (`nuclear-loop setup --remove`, called by `--uninstall`). Ollama, its models and the graph's data
+    of the choice (`nuclear-builder setup --remove`, called by `--uninstall`). Ollama, its models and the graph's data
     stay: they are the user's.
 
 ## Options considered
@@ -82,10 +82,10 @@ who does not want it choosing the remote agents alone.
 - Positive: one command installs everything (`curl -fsSL https://nuclearlang.github.io/install.sh | sh`, then the
   questions of the set-up); from VS Code alone, the wizard installs NuclearLang too. A machine with 8 GB gets local
   agents that fit it, instead of a set that does not load. The services survive a restart of the machine and work
-  with the editor closed (MCP clients, `nuclear-loop`). From the source tree, `installer/install.sh --ai` is the
+  with the editor closed (MCP clients, `nuclear-builder`). From the source tree, `installer/install.sh --ai` is the
   same set-up over the tree's own folders (the graph installed editable, the Developer built in place).
 - Negative, the limits:
-  - The set-up is in VS Code and in a terminal. Android Studio has no wizard: `nuclear-loop setup`.
+  - The set-up is in VS Code and in a terminal. Android Studio has no wizard: `nuclear-builder setup`.
   - macOS and Windows are written and not run: the launch agents, the Startup script, `winget` and Homebrew for
     Ollama. Only Linux with systemd ran.
   - No GPU is recognised except NVIDIA's (`nvidia-smi`) and Apple silicon: on other machines the set-up says that
@@ -98,3 +98,4 @@ who does not want it choosing the remote agents alone.
 - Replaces: ADR-0106
 - The release archives and the installers that call the set-up: ADR-installer-0001.
 - The AI loop the services belong to: `ADR-platform-0003`; the Smart Graph: `ADR-graph-0001`.
+- Its point on the graph's `mcp` extra: superseded by ADR-mcp-0001 (the MCP server is `tools/mcp`, `nuclear-mcp`).

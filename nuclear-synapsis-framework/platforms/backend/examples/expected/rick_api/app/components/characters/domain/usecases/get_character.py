@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.components.characters.data.entities.character import Character
 from app.components.characters.data.repositories.character_repository import CharacterRepository
-from dragonfly import AppError, Result
+from synapsis import AppError, Result
 
 
 class GetCharacter:

@@ -60,11 +60,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Debugging `.nuc` code of a Dragonfly project on top of the Dart plugin. `dragonfly build` writes
+ * Debugging `.nuc` code of a Synapsis project on top of the Dart plugin. `nuclear build` writes
  * `build/app/.dart_tool/nuclear_lines.json` (for each generated `.dart`: its `.nuc` and the pairs (dart line, nuc
  * line)). With it a `.nuc` breakpoint gets a mirror Dart breakpoint in the generated file, a pause shows and
  * highlights the `.nuc` line, and a Dart error printed by Flutter is marked at its `.nuc` line with the
- * "Nuclear Error" tool window explaining it (`dragonfly explain`).
+ * "Nuclear Error" tool window explaining it (`nuclear explain`).
  */
 public final class NuclearDebug {
     private static final String MAP_FILE = ".dart_tool/nuclear_lines.json";
@@ -85,7 +85,7 @@ public final class NuclearDebug {
     private static long cachedTime;
     private static JsonObject cachedFiles;
 
-    private static synchronized @Nullable JsonObject files(NuclearDragonfly.Info d) {
+    private static synchronized @Nullable JsonObject files(NuclearSynapsis.Info d) {
         Path file = d.app().resolve(MAP_FILE);
         try {
             long time = Files.getLastModifiedTime(file).toMillis();
@@ -105,7 +105,7 @@ public final class NuclearDebug {
     }
 
     /** The `.dart` line of a `.nuc` line: its first statement there, else the next one below. */
-    static @Nullable Place toDart(NuclearDragonfly.Info d, Path nuc, int line) {
+    static @Nullable Place toDart(NuclearSynapsis.Info d, Path nuc, int line) {
         JsonObject files = files(d);
         if (files == null) return null;
         String source = rel(d.root(), nuc);
@@ -127,7 +127,7 @@ public final class NuclearDebug {
     }
 
     /** The `.nuc` line of a `.dart` line: the closest mapped line at or above it. */
-    static @Nullable Place toNuc(NuclearDragonfly.Info d, Path dart, int line) {
+    static @Nullable Place toNuc(NuclearSynapsis.Info d, Path dart, int line) {
         JsonObject files = files(d);
         if (files == null || !dart.startsWith(d.app())) return null;
         JsonElement entry = files.get(rel(d.app(), dart));
@@ -142,7 +142,7 @@ public final class NuclearDebug {
 
     // ------------------------------------------------------------------ breakpoints
 
-    /** Line breakpoints in `.nuc` files of a Dragonfly project; they stop through their mirror in the `.dart`. */
+    /** Line breakpoints in `.nuc` files of a Synapsis project; they stop through their mirror in the `.dart`. */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static final class BreakpointType extends XLineBreakpointType {
         public BreakpointType() {
@@ -151,7 +151,7 @@ public final class NuclearDebug {
 
         @Override
         public boolean canPutAt(@NotNull VirtualFile file, int line, @NotNull Project project) {
-            return "nuc".equals(file.getExtension()) && NuclearDragonfly.find(project) != null;
+            return "nuc".equals(file.getExtension()) && NuclearSynapsis.find(project) != null;
         }
 
         @Override
@@ -174,7 +174,7 @@ public final class NuclearDebug {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     static void sync(@NotNull Project project) {
-        NuclearDragonfly.Info d = NuclearDragonfly.find(project);
+        NuclearSynapsis.Info d = NuclearSynapsis.find(project);
         XLineBreakpointType dart = type("Dart"), nuc = type("nuclear-line");
         if (d == null || dart == null || nuc == null || project.isDisposed()) return;
         PropertiesComponent props = PropertiesComponent.getInstance(project);
@@ -239,7 +239,7 @@ public final class NuclearDebug {
         }
     }
 
-    /** A new line map (every `dragonfly build` that changed it): the lines moved, old errors no longer apply. */
+    /** A new line map (every `nuclear build` that changed it): the lines moved, old errors no longer apply. */
     public static final class MapWatcher implements BulkFileListener {
         private final Project project;
 
@@ -269,14 +269,14 @@ public final class NuclearDebug {
 
         @Override
         public void processStarted(@NotNull XDebugProcess process) {
-            if (NuclearDragonfly.find(project) == null) return;
+            if (NuclearSynapsis.find(project) == null) return;
             XDebugSession session = process.getSession();
             session.addSessionListener(new XDebugSessionListener() {
                 @Override
                 public void sessionPaused() {
                     if (!NuclearSettings.followInNuclear()) return;
                     XSourcePosition pos = session.getCurrentPosition();
-                    NuclearDragonfly.Info d = NuclearDragonfly.find(project);
+                    NuclearSynapsis.Info d = NuclearSynapsis.find(project);
                     if (pos == null || d == null) return;
                     Place nuc = toNuc(d, Path.of(pos.getFile().getPath()), pos.getLine() + 1);
                     if (nuc != null) ApplicationManager.getApplication().invokeLater(() -> showCurrent(project, nuc));
@@ -352,16 +352,16 @@ public final class NuclearDebug {
                 text = buffer.toString();
                 buffer.setLength(0);
             }
-            NuclearDragonfly.Info d = NuclearDragonfly.find(project);
+            NuclearSynapsis.Info d = NuclearSynapsis.find(project);
             JsonObject r = d == null ? null : explain(d, text);
             if (r != null) ApplicationManager.getApplication().invokeLater(() -> showError(project, r, text), project.getDisposed());
         }
     }
 
-    /** `dragonfly explain --json`: the message, an explanation and the `.nuc` frames of a Dart error text. */
-    private static @Nullable JsonObject explain(NuclearDragonfly.Info d, String text) {
+    /** `nuclear explain --json`: the message, an explanation and the `.nuc` frames of a Dart error text. */
+    private static @Nullable JsonObject explain(NuclearSynapsis.Info d, String text) {
         try {
-            ProcessBuilder pb = new ProcessBuilder(d.dragonfly(), "explain", "--json").directory(d.root().toFile());
+            ProcessBuilder pb = new ProcessBuilder(d.synapsis(), "explain", "--json").directory(d.root().toFile());
             pb.environment().putAll(d.env());
             pb.environment().put("NO_COLOR", "1");
             pb.redirectError(ProcessBuilder.Redirect.DISCARD);
@@ -467,11 +467,11 @@ public final class NuclearDebug {
         project.putUserData(ERRORS, null);
     }
 
-    /** The "Nuclear Error" tool window (only in Dragonfly projects): the last run-time error, explained. */
+    /** The "Nuclear Error" tool window (only in Synapsis projects): the last run-time error, explained. */
     public static final class ErrorWindow implements ToolWindowFactory {
         @Override
         public boolean shouldBeAvailable(@NotNull Project project) {
-            return NuclearDragonfly.find(project) != null;
+            return NuclearSynapsis.find(project) != null;
         }
 
         @Override

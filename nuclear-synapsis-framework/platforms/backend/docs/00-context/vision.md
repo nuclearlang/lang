@@ -35,7 +35,7 @@ and a cache, and AI (tools, agents, states, graphs).
   using that dialect's type definitions (a library that exists only in its language).
 - It never loads a relation by itself: no lazy query, no eager loading by default
   ([ADR-backend-0001](../03-adr/0001-backend-data.md)).
-- It is not the `dragonfly` command: what `new`, `build`, `run`, `test` and `migrate` do is the dialect's
+- It is not the `nuclear` command: what `new`, `build`, `run`, `test` and `migrate` do is the dialect's
   `[toolchain]`, run by [the command line tools](../../../../../tools/cli/AGENTS.md).
 - Not there yet ([roadmap](../01-product/roadmap.md)): authentication, guards and sessions; background jobs; file
   uploads; a Dockerfile; observability.

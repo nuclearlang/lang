@@ -1,4 +1,4 @@
-import 'package:dragonfly_genkit/dragonfly_genkit.dart';
+import 'package:synapsis_genkit/synapsis_genkit.dart';
 
 /// What the assistant knows about the app, searched by meaning.
 class Faq extends Knowledge {

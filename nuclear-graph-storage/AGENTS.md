@@ -1,6 +1,6 @@
 # Nuclear Smart Graph
 
-The private library of everything NuclearLang and Dragonfly are, on the developer's machine (the RAG of the
+The private library of everything NuclearLang and Synapsis are, on the developer's machine (the RAG of the
 platform): shelves of typed, linked, versioned cards, the exact facts of the base in a relational database, the
 knowledge base those are made from (`data/`), and an HTTP server with access control. Agents (frontier models over
 MCP, the local agents of the Nuclear Developer) ask it instead of guessing. ADR key: `graph`.
@@ -15,8 +15,9 @@ The platform's rules are the root [`AGENTS.md`](../AGENTS.md).
   Ollama; the exact facts in SQLite, in memory only.
 - **Server:** FastAPI + uvicorn on `127.0.0.1:7878`, a token on every route. The client (`nuclear_graph.client`)
   needs only `httpx`.
-- **The MCP server** (`nuclear-graph mcp`, `mcp_server.nuc`) lives in this folder and is the project
-  [`tools/mcp`](../tools/mcp/AGENTS.md).
+- **The MCP server** is not here: it is the project [`tools/mcp`](../tools/mcp/AGENTS.md) (command `nuclear-mcp`),
+  which imports this package. `nuclear-graph mcp` runs `nuclear-mcp`; `knowledge build` reads its tools with
+  `nuclear-mcp tools`.
 
 ## Commands
 
@@ -32,7 +33,7 @@ In this folder:
 | The knowledge base | `nuclear-graph knowledge build`, `knowledge check`, `knowledge review [id...]`, `ingest`, `knowledge ask [word...]`, `knowledge examples` |
 | Ask | `nuclear-graph search "<query>"`, `card <id>`, `answer "<question>"`, `strategy "<request>"`, `stats` |
 | Access | `nuclear-graph connect <client> --scopes read,write`, `requests`, `allow <request>`, `deny <request>`, `revoke <client>` |
-| The MCP server, the agents' search engine | `nuclear-graph mcp`, `nuclear-graph web-key brave` |
+| The MCP server (runs `nuclear-mcp`), the agents' search engine | `nuclear-graph mcp`, `nuclear-graph web-key brave` |
 
 ## Folders
 

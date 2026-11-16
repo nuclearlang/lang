@@ -8,12 +8,12 @@ deciders: Julian Molina
 ## Context and problem
 
 The user asked for the TypeScript dialect of the backend with NestJS and Sequelize as the ORM, and decided: the
-official integration (`@nestjs/sequelize` + `sequelize-typescript`), the `nestjs` dialect as Dragonfly's, and the
+official integration (`@nestjs/sequelize` + `sequelize-typescript`), the `nestjs` dialect as Synapsis's, and the
 scope of the Python backend dialect: CRUD, Redis and Kafka, LangChain.js.
 
 ## Decision
 
-**The same Dragonfly as the Python backend dialect** (ADR-python-0002): `entity`, `repository` (CRUD and one query
+**The same Synapsis as the Python backend dialect** (ADR-python-0002): `entity`, `repository` (CRUD and one query
 per method call, `self_member = "q.{{name}}"`), `model`, `usecase`, `appcomponent`, `service`, `aggregate`,
 `controller`, `appConfig` / `config`, `listener`, `tools`, `agent`, `state`, `graph`, `tests`; the same query names
 (`where`, `orderBy`, `getOne`...), errors (`AppError` with HTTP statuses) and decorators. Names stay as written:

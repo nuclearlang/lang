@@ -1,7 +1,7 @@
 import 'package:clean_flutter_project/components/characters/domain/models/character.dart';
 import 'package:clean_flutter_project/components/characters/presentation/detail/character_detail_screen.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/material.dart' hide Page;
+import 'package:synapsis/synapsis.dart';
 
 class CharacterTile extends StatelessWidget {
   const CharacterTile({super.key, required this.character});

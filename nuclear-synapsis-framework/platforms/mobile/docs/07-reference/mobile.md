@@ -1,4 +1,4 @@
-# The `mobile` platform of Dragonfly
+# The `mobile` platform of Synapsis
 
 > Inherits every rule of [nuclear-base.md](../../../../../nuclearlang/docs/07-reference/nuclear-base.md) and the standard library ([library.md](../../../../../nuclearlang/docs/07-reference/library.md)).
 > This document defines the mobile platform (ADR-synapsis-0002): apps for Android, iOS, desktop and web through one UI
@@ -11,7 +11,7 @@
 
 ```
 my_store/
-├── config.nuc                         dragonfly(...), app(...), plugins(...), dependencies(...)
+├── config.nuc                         synapsis(...), app(...), plugins(...), dependencies(...)
 ├── main.nuc                           main() + the App widget
 ├── config/project_config.nuc          appConfig: the connections of the app
 ├── components/<name>/                 appcomponent, config/, data/, domain/, presentation/, ai/
@@ -21,12 +21,12 @@ my_store/
 ```
 
 `config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1; [flutter.md](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) §3.1): the platform and
-dialect, the app, the plugins and the third-party packages. The CLI (`dragonfly`, [flutter.md](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) §11)
+dialect, the app, the plugins and the third-party packages. The CLI (`nuclear`, [flutter.md](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) §11)
 creates, builds, runs and tests the project; `build/` is the dialect's app, never edited.
 
 ```nuclear
-dragonfly(platform = "mobile", dialect = "flutter")
-app(name = "my_store", description = "A Dragonfly app.", version = "1.0.0+1")
+synapsis(platform = "mobile", dialect = "flutter")
+app(name = "my_store", description = "A Synapsis app.", version = "1.0.0+1")
 plugins(genkit = true, googleAI = true)
 ```
 
@@ -61,22 +61,22 @@ Rules of the platform: §3; architecture (who uses whom, what a component shows)
 
 ### Generators
 
-`dragonfly gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models
+`nuclear gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models
 (nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (an HTTP repository over the app's `Http` connection, a named one added when the app has another), one use
 case per action (`--actions list,get,search,create,update,delete`), their aliases in the facade, with `--screen <screen>` a screen that lists it with its state manager and state model, and a test with the repository mocked. The fields
 come from an example answer (`--from-json <file|url>`), a spec (`--from-spec <spec.md>`: its example answer, else its
 `Key | Type` table; a `GET https://...` line gives the API) or `--fields "id:int name:string"`. A file that exists is
 never overwritten (the facade and the repository get only the members they lack, so an action added to a resource that exists is finished); a name another file declares stops it before it writes.
-`dragonfly gen inspect` answers what the project has. The agent writes only what is not standard: a use case with
+`nuclear gen inspect` answers what the project has. The agent writes only what is not standard: a use case with
 its own rules, a view's details.
 
-`dragonfly gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's
+`nuclear gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's
 facade; with `--calls <Repository>.<method>` it writes the use case too, when all it does is call that method of a
 repository. What a screen shows of it (a state manager's method and its state) is written by hand.
 
 ```sh
-dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character
-dragonfly gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares
+nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character
+nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares
 ```
 
 ## 3. Rules

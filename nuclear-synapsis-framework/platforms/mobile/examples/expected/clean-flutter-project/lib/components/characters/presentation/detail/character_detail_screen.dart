@@ -1,5 +1,5 @@
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/material.dart' hide Page;
+import 'package:synapsis/synapsis.dart';
 
 /// /characters/7 opens this screen with id = 7; so does context.pushTo(CharacterDetailScreen(id = 7)).
 class CharacterDetailScreen extends StatelessWidget {

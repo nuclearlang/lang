@@ -1,7 +1,7 @@
 {
  "shelf": "concepts",
  "origin": "curated",
- "about": "What NuclearLang and Dragonfly are for: the problem, the idea, the advantages and how it works. What a person asks first.",
+ "about": "What NuclearLang and Synapsis are for: the problem, the idea, the advantages and how it works. What a person asks first.",
  "rows": [
   {
    "id": "concept:nuclearlang",
@@ -17,9 +17,9 @@
     "",
     "- **The base language**: indentation instead of braces, types after the name, `~` to await, `Result<E, T>` for errors, one standard library of its own. One way to write each thing.",
     "- **Dialects**: data files (TOML and templates) that say how Nuclear is written in a target. A dialect is added without changing the compiler.",
-    "- **Dragonfly**: the framework. Three platforms (`backend`, `mobile`, `web`), each written once in Nuclear and built by its dialects (`fastapi`, `nestjs`, `flutter`, `react`).",
+    "- **Synapsis**: the framework. Three platforms (`backend`, `mobile`, `web`), each written once in Nuclear and built by its dialects (`fastapi`, `nestjs`, `flutter`, `react`).",
     "",
-    "Around it there is a full toolchain: the `nuclear` and `dragonfly` command lines, a language server, extensions for VS Code, Android Studio and Zed, a private knowledge base with an MCP server (the Nuclear Smart Graph), local AI agents (the Nuclear Developer) and a pipeline from a spec to deployed code (the Loop).",
+    "Around it there is a full toolchain: the `nuclear` and `nuclear` command lines, a language server, extensions for VS Code, Android Studio and Zed, a private knowledge base with an MCP server (the Nuclear Smart Graph), local AI agents (the Nuclear Developer) and a pipeline from a spec to deployed code (the Builder).",
     "",
     "It is open source (Apache-2.0), in the spirit of Rust, Deno, Gleam and Bun."
    ],
@@ -55,7 +55,7 @@
     },
     {
      "rel": "framework",
-     "to": "concept:dragonfly"
+     "to": "concept:synapsis"
     },
     {
      "rel": "parts",
@@ -87,7 +87,7 @@
     "What NuclearLang does about it:",
     "",
     "- You write **only the logic**, in a language with one way to write each thing. The transpiler writes the rest as an expert would in the target.",
-    "- The **framework is inside the dialect** (Dragonfly): the architecture, the wiring and the tests are the same in every project, so there is nothing to choose and nothing to wire.",
+    "- The **framework is inside the dialect** (Synapsis): the architecture, the wiring and the tests are the same in every project, so there is nothing to choose and nothing to wire.",
     "- The **compiler answers with exact fixes**: every error has a code, a position and usually the corrected text, so an agent repairs its own code without reading documentation.",
     "- The **same Nuclear builds with every dialect of a platform**: a backend written once comes out as a Python service or as a TypeScript one.",
     "",
@@ -136,7 +136,7 @@
   {
    "id": "concept:advantages",
    "type": "purpose",
-   "title": "The advantages of NuclearLang and Dragonfly",
+   "title": "The advantages of NuclearLang and Synapsis",
    "summary": "Fewer tokens and less text, one way to write each thing, errors that come with their fix, the framework generated for you, one code for several target technologies, local AI agents that work on your machine, and generated code as fast as an expert's.",
    "body": [
     "**For an AI agent**",
@@ -145,13 +145,13 @@
     "- One way to write each thing, so there is less to guess and less to get wrong.",
     "- Diagnostics with a code, a position and usually the exact `fix` (`nuclear check --json`, `nuclear fix`): the agent repairs its code by itself.",
     "- Type definitions of the target's libraries: an invented class or argument is an error with \"did you mean\", not a bug found at run time.",
-    "- Generators write the standard code of a feature, finished and compiling (`dragonfly gen resource`), so the agent writes only what is special.",
+    "- Generators write the standard code of a feature, finished and compiling (`nuclear gen resource`), so the agent writes only what is special.",
     "",
     "**For a developer**",
     "",
-    "- You write business logic; Dragonfly writes dependency injection, routing, JSON, validation, state classes and tests.",
+    "- You write business logic; Synapsis writes dependency injection, routing, JSON, validation, state classes and tests.",
     "- The same architecture in every project and on every platform: components, use cases, repositories, one facade per component. The compiler enforces it.",
-    "- One CLI builds, runs, tests, migrates and repairs the project (`dragonfly`).",
+    "- One CLI builds, runs, tests, migrates and repairs the project (`synapsis`).",
     "- Editor support like a native language: completion, hover, rename, debugging of `.nuc` lines, devices, an HTTP client.",
     "- A backend publishes its contract and its apps get their models and repositories generated: a renamed field breaks the build, not the phone.",
     "",
@@ -175,7 +175,7 @@
     "what are the advantages of nuclear",
     "ventajas de nuclear",
     "why should I use nuclear",
-    "what do I gain with dragonfly",
+    "what do I gain with synapsis",
     "is nuclear better than writing flutter by hand",
     "benefits of nuclearlang"
    ],
@@ -225,7 +225,7 @@
     "- A new target or framework is a new dialect: data files, never a change in the compiler.",
     "- The generated code is never edited: change the `.nuc` and build again.",
     "",
-    "The commands: `nuclear check` (errors), `nuclear build` (transpile), `nuclear fix` (apply the exact fixes), `nuclear fmt` (canonical layout); for a Dragonfly project, `dragonfly build | run | test`."
+    "The commands: `nuclear check` (errors), `nuclear build` (transpile), `nuclear fix` (apply the exact fixes), `nuclear fmt` (canonical layout); for a Synapsis project, `nuclear build | run | test`."
    ],
    "keys": [
     "transpile",
@@ -350,7 +350,7 @@
    "summary": "It does not read or convert target code into Nuclear, it does not replace the platform's own tools (Flutter still builds and runs the app), and it leaves out features that cannot be written the same in every target.",
    "body": [
     "- **No reverse direction.** Nuclear never reads or converts TypeScript, Dart or Python into `.nuc`.",
-    "- **No replacement of the platform's tools.** Flutter's CLI still builds and runs a mobile app, `uvicorn` or `npm` still serve a backend; Dragonfly drives them.",
+    "- **No replacement of the platform's tools.** Flutter's CLI still builds and runs a mobile app, `uvicorn` or `npm` still serve a backend; Synapsis drives them.",
     "- **No feature that only one target has.** Records, operator overloading and Dart 3 pattern `switch` are not part of the language.",
     "- **No magic.** No inferred parameters, no hoisting: when in doubt, explicit wins and the compiler says what is missing."
    ],
@@ -387,7 +387,7 @@
    "body": [
     "**Against writing Flutter, NestJS or FastAPI by hand.** By hand, each feature is its logic plus imports, annotations, registration, serializers, state classes and tests wired to the framework. In Nuclear the same feature is its logic; the rest is generated on every build, the same way in every project. The generated code is what an expert writes, so nothing is lost at run time.",
     "",
-    "**Against a framework's generators** (Rails scaffolds, `phx.gen`, `artisan make`, `nest g`). Those write files once; from then on the boilerplate is yours to read and keep in step. In Nuclear the boilerplate is never in your sources: it lives in `build/` and is written again each time. `dragonfly gen` also writes finished Nuclear from a resource's data, but what it writes is logic-level code, short enough to read.",
+    "**Against a framework's generators** (Rails scaffolds, `phx.gen`, `artisan make`, `nest g`). Those write files once; from then on the boilerplate is yours to read and keep in step. In Nuclear the boilerplate is never in your sources: it lives in `build/` and is written again each time. `nuclear gen` also writes finished Nuclear from a resource's data, but what it writes is logic-level code, short enough to read.",
     "",
     "**Against a cross-platform language** (Kotlin Multiplatform, Dart everywhere). Those run one runtime everywhere. Nuclear has no runtime of its own: each platform gets the native stack of its target (Flutter for mobile, React for web, FastAPI or NestJS for a backend).",
     "",

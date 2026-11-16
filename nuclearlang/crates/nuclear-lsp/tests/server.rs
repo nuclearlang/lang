@@ -580,7 +580,7 @@ fn deprecated_names_are_marked() {
 
 const PROJECT: &str = "examples/examples-flutter-dialect/clean-flutter-project";
 
-/// A file of the Dragonfly example project (on disk or not), opened with `text`.
+/// A file of the Synapsis example project (on disk or not), opened with `text`.
 fn project_file(rel: &str, text: &str) -> Session {
     let path = repo()
         .join(PROJECT)
@@ -615,7 +615,7 @@ fn a_project_file_sees_the_other_files() {
 #[test]
 fn unsaved_project_files_know_the_other_names() {
     // a name of a generated file (`[project.files] names`) and a type of another file
-    let src = "load() void\n  startDragonfly()\n  c: Character? = null\n";
+    let src = "load() void\n  startSynapsis()\n  c: Character? = null\n";
     let s = project_file("components/characters/unsaved.nuc", src);
     let undefined: Vec<_> = s.diagnostics().into_iter().filter(|d| d["code"] == "N0106").collect();
     assert!(undefined.is_empty(), "{undefined:?}");
@@ -699,7 +699,7 @@ fn arguments_of_a_decorator() {
 }
 
 #[test]
-fn every_file_of_the_dragonfly_example_is_clean() {
+fn every_file_of_the_synapsis_example_is_clean() {
     let root = in_tree(PROJECT);
     let files = nuclear_transpile::project::sources(&root, &root.join("build/app"));
     assert!(files.len() > 20);
@@ -711,13 +711,13 @@ fn every_file_of_the_dragonfly_example_is_clean() {
     }
 }
 
-/// The packages a project adds (`dragonfly flutter add`, listed in `build/defs.lock`) bring their type
+/// The packages a project adds (`nuclear flutter add`, listed in `build/defs.lock`) bring their type
 /// definitions: imports, hover and completion; a package whose definitions are missing is a warning on
 /// config.nuc.
-/// A backend project (`config.nuc` with `dragonfly(platform = "backend", dialect = "fastapi")`) is checked with
+/// A backend project (`config.nuc` with `synapsis(platform = "backend", dialect = "fastapi")`) is checked with
 /// its own dialect, whatever `nuclear.dialect` says, and gets its project card.
 #[test]
-fn a_dragonfly_project_uses_the_dialect_of_its_config() {
+fn a_synapsis_project_uses_the_dialect_of_its_config() {
     let root = std::env::temp_dir().join(format!("nuclear-lsp-backend-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
     copy_tree(&in_tree("examples/examples-backend/tasks_api"), &root);
@@ -790,7 +790,7 @@ fn project_packages_bring_their_definitions() {
 
     let s = Session::open_uri(&nuclear_lsp::project::path_to_uri(&root.join("config.nuc")), config, "flutter");
     let warnings: Vec<String> = s.diagnostics().iter().map(|d| d["message"].as_str().unwrap().to_string()).collect();
-    assert!(warnings.iter().any(|m| m.contains("ghost@0.0.1") && m.contains("dragonfly build")), "{warnings:?}");
+    assert!(warnings.iter().any(|m| m.contains("ghost@0.0.1") && m.contains("nuclear build")), "{warnings:?}");
     assert!(!warnings.iter().any(|m| m.contains("vault")), "{warnings:?}");
     let _ = std::fs::remove_dir_all(&root);
 }

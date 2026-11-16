@@ -11,13 +11,13 @@ Status: **decided, not started** (2026-10-27; ADR-synapsis-0001 and ADR-lang-000
 
 ## 1. Goal
 
-A developer tells a coding agent (Claude, Codex, OpenCode) "turn Crystal and Amber into Dragonfly", the agent
+A developer tells a coding agent (Claude, Codex, OpenCode) "turn Crystal and Amber into Synapsis", the agent
 creates the dialect following Nuclear's rules as we did with `flutter` and `nestjs`, pushes it to a repository,
-and anyone uses it with `dragonfly crystal/amber new`.
+and anyone uses it with `nuclear new -d amber`.
 
 - The user **does not program nor edit the dialect by hand**: they describe the *what for* and review.
   Everything goes through the agent.
-- The agent **cannot leave** the rules, philosophy nor restrictions of Nuclear and Dragonfly
+- The agent **cannot leave** the rules, philosophy nor restrictions of Nuclear and Synapsis
   (`docs/07-reference/dialects.md` §8.4). What cannot be expressed is reported; it is not faked.
 
 **Out of scope (postponed):** kinds, decorators and shortcuts of each project (detecting repeated code,
@@ -36,10 +36,10 @@ format of `docs/07-reference/dialects.md` §7 stays the same and is not extended
 
 ### Gaps
 
-1. **The `dragonfly` CLI has Flutter written in Rust** (`Manifest::infer(root, "flutter", ...)`, `doctor`, the
-   SDK, the pubspec, build/run/test). A new dialect cannot have its own `dragonfly <d> new`.
-2. **Dragonfly's rules as a concept are mixed with Flutter** in `dialects/dart/docs/07-reference/flutter.md` (§1, §3, §4, §6). An agent
-   building `crystal/amber` has no neutral spec of what Dragonfly is.
+1. **The `nuclear` CLI has Flutter written in Rust** (`Manifest::infer(root, "flutter", ...)`, `doctor`, the
+   SDK, the pubspec, build/run/test). A new dialect cannot have its own `nuclear new -d <d>`.
+2. **Synapsis's rules as a concept are mixed with Flutter** in `dialects/dart/docs/07-reference/flutter.md` (§1, §3, §4, §6). An agent
+   building `crystal/amber` has no neutral spec of what Synapsis is.
 3. **There is no example checking outside the repository**: a user's agent has no `spec-check`.
 4. **Agents do not load the rules by themselves**: the tutorial's prompt has to be pasted.
 5. **A dialect cannot be shared**: there is no way to install it from a repository.
@@ -63,23 +63,24 @@ side empty. The agent completes it; `dialect test` says how much is left.
 
 ### D3. The rules reach the agent by themselves
 
-No MCP server for now: the CLI already answers everything through the shell and an MCP adds fixed tokens to
-every session (`../tools/cli/docs/04-specs/001-agent-support/plan.md` §4). Instead:
+The CLI answers everything through the shell (`../tools/cli/docs/04-specs/001-agent-support/plan.md` §4). For
+agents with MCP there is now the MCP server [`../tools/mcp/`](../../../../tools/mcp/AGENTS.md) (`nuclear-mcp`).
+Besides:
 
 - **A Claude Code skill** `nuclear-dialect` (installed by `../installer/install.sh` in `~/.claude/skills/`): it loads only
   when the task is creating or fixing a dialect; it says "read `nuclear spec`, follow §8, use
   `dialect new/check/test`".
 - **`AGENTS.md`** with the same short content for Codex and OpenCode (`nuclear dialect new` writes it in the
   dialect's folder).
-- **MCP (later):** a thin layer over the same commands, for agents without a shell. Same rules.
+- **MCP:** `../tools/mcp/` (`nuclear-mcp`), a layer over the same commands. Same rules.
 
-### D4. Dragonfly as a concept: one spec per platform (`../nuclear-synapsis-framework/platforms/<platform>/docs/07-reference/{mobile,backend}.md`; ADR-synapsis-0002)
+### D4. Synapsis as a concept: one spec per platform (`../nuclear-synapsis-framework/platforms/<platform>/docs/07-reference/{mobile,backend}.md`; ADR-synapsis-0002)
 
-Separates from the `flutter` reference what Dragonfly is in any language (components, layers, facade, architecture
+Separates from the `flutter` reference what Synapsis is in any language (components, layers, facade, architecture
 kinds and their meaning, `[architecture]` rules, project structure) and leaves in `flutter.md` only how it is
-written in Flutter. A new Dragonfly dialect implements that document.
+written in Flutter. A new Synapsis dialect implements that document.
 
-### D5. Dragonfly language independent (ADR-synapsis-0001)
+### D5. Synapsis language independent (ADR-synapsis-0001)
 
 The dialect declares what the CLI has in Rust today:
 
@@ -92,15 +93,15 @@ run = ["flutter run -d {{device}}"]
 test = ["flutter test"]
 add_package = "flutter pub add {{package}}"
 manifest = { file = "config.nuc", writes = "pubspec.yaml" }
-skeleton = "skeleton/"                           # files of `dragonfly <d> new`
+skeleton = "skeleton/"                           # files of `nuclear new -d <d>`
 ```
 
-`dragonfly flutter` stays the same: its section says what is in the code today. It goes in `../nuclear-synapsis-framework/cli/` and in the dialect
+`nuclear flutter` stays the same: its section says what is in the code today. It goes in `../tools/cli/src/framework/` and in the dialect
 loader.
 
 ### D6. Dialects installable from a repository
 
-`dragonfly dialect add github.com/x/crystal-amber@1.2.0`: downloads the dialect (TOML, templates, spec,
+`nuclear dialect add github.com/x/crystal-amber@1.2.0`: downloads the dialect (TOML, templates, spec,
 skeleton, `[toolchain]`), runs `dialect check` and `dialect test` before accepting it, and leaves it in the
 dialect cache. The project stores the version it uses, so another developer or agent gets the same one.
 
@@ -117,11 +118,11 @@ Python (`hoist_block_lambdas`, `empty_block`).
 | 1 | D1 `dialect test` | `../tools/cli/` (replaces `tools/spec-check/check.py`) |
 | 2 | D2 `dialect new` | `../tools/cli/`, `crates/nuclear-dialect/src/contract.rs` |
 | 3 | D3 skill + `AGENTS.md` | `../installer/install.sh`, `../tools/cli/` |
-| 4 | D4 neutral Dragonfly spec | `../nuclear-synapsis-framework/platforms/<platform>/docs/07-reference/`, `../nuclear-synapsis-framework/docs/` |
-| 5 | D5 `[toolchain]` | `crates/nuclear-dialect` (format), `../nuclear-synapsis-framework/cli/`, `dialects/dart/frameworks/flutter` |
-| 6 | D6 install from a repository | `../nuclear-synapsis-framework/cli/`, `crates/nuclear-dialect` (lookup) |
+| 4 | D4 neutral Synapsis spec | `../nuclear-synapsis-framework/platforms/<platform>/docs/07-reference/`, `../nuclear-synapsis-framework/docs/` |
+| 5 | D5 `[toolchain]` | `crates/nuclear-dialect` (format), `../tools/cli/src/framework/`, `dialects/dart/frameworks/flutter` |
+| 6 | D6 install from a repository | `../tools/cli/src/framework/`, `crates/nuclear-dialect` (lookup) |
 | 7 | A real test: an agent creates `crystal` + `amber` with only the tutorial | count how many times it stops because of §8.4.1 |
-| 8 | D3 MCP | a new project, if needed |
+| 8 | D3 MCP | `../tools/mcp/` (exists: its dialect tools, if needed) |
 
 Each phase updates specs, ADRs, diagnostics, the tutorial and the README (`../docs/05-standards/coding.md`), with
 `cargo test` and `cargo clippy` green. When D1–D3 exist, the tutorial replaces the "compare by hand" step with

@@ -16,9 +16,8 @@ read, with the fewest tokens. It is not compiled to machine code. A transpiler w
 the code of another technology through **declarative dialects** (TOML and templates loaded at run time), one way
 only: `.nuc` → `.ts` / `.dart` / `.py`. It never reads target code.
 
-The language comes with its framework (`nuclear-synapsis-framework/`, called Dragonfly in the code today), as Rust
-has Actix: three platforms (`web`, `mobile`, `backend`) written once in Nuclear. The framework brings the
-architecture; in Nuclear only the business logic is written, and the transpiler generates the rest.
+The language comes with its framework, Synapsis (`nuclear-synapsis-framework/`), as Rust has
+Actix: three platforms (`web`, `mobile`, `backend`) written once in Nuclear. The framework brings the architecture; in Nuclear only the business logic is written, and the transpiler generates the rest.
 
 Open source, in the spirit of Rust, Deno, Gleam and Bun.
 
@@ -37,7 +36,7 @@ readable Nuclear. A rule, kind or shortcut that breaks one of the three is rejec
 ## Non-goals
 - Reading or converting target code into Nuclear.
 - Records, operator overloading, pattern `switch` of Dart 3 (`nuclearlang/docs/02-architecture/limits.md`).
-- Replacing the target's own tools: Flutter's command still builds and runs; the framework drives it.
+- Replacing the target's own tools: Flutter's command still builds and runs; `nuclear` drives it.
 
 ## Constraints
 - Technical: the parser never changes per dialect; Rust decides what is emitted, the dialect how.

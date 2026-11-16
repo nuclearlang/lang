@@ -75,12 +75,12 @@
    "id": "example:characters/components/characters/domain/models/character_error",
    "type": "file",
    "title": "`model` CharacterError — the example project characters (web)",
-   "summary": "Business error of the component: dragonfly builds it with the failure message.",
+   "summary": "Business error of the component: synapsis builds it with the failure message.",
    "body": [
     "`components/characters/domain/models/character_error.nuc` of `characters`:",
     "",
     "```nuclear",
-    "// Business error of the component: dragonfly builds it with the failure message.",
+    "// Business error of the component: synapsis builds it with the failure message.",
     "CharacterError",
     "  message: string",
     "```"
@@ -480,13 +480,13 @@
     "",
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).",
-    "dragonfly(platform = \"web\", dialect = \"react\")",
+    "synapsis(platform = \"web\", dialect = \"react\")",
     "",
-    "// The project's package.json: dragonfly writes build/app/package.json from it (react, react-router, vite,",
-    "// vitest and dragonfly-web are added by itself).",
+    "// The project's package.json: synapsis writes build/app/package.json from it (react, react-router, vite,",
+    "// vitest and synapsis-web are added by itself).",
     "app(",
     "  name = \"characters\",",
-    "  description = \"Dragonfly web example: the characters of an API, their state and tests.\",",
+    "  description = \"Synapsis web example: the characters of an API, their state and tests.\",",
     "  version = \"1.0.0\",",
     ")",
     "```"
@@ -539,12 +539,12 @@
    "id": "example:characters/main",
    "type": "file",
    "title": "`stateless` App — the example project characters (web)",
-   "summary": "The app: the router with every @screen. index.ts (generated) starts Dragonfly and mounts App in #root.",
+   "summary": "The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.",
    "body": [
     "`main.nuc` of `characters`:",
     "",
     "```nuclear",
-    "// The app: the router with every @screen. index.ts (generated) starts Dragonfly and mounts App in #root.",
+    "// The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.",
     "stateless App",
     "  build() Element",
     "    createElement(RouterProvider, router = appRouter())",
@@ -886,12 +886,12 @@
    "id": "example:clean-flutter-project/components/characters/domain/models/character_error",
    "type": "file",
    "title": "`model` CharacterError — the example project clean-flutter-project (mobile)",
-   "summary": "Business error of the component: dragonfly builds it with the failure message.",
+   "summary": "Business error of the component: synapsis builds it with the failure message.",
    "body": [
     "`components/characters/domain/models/character_error.nuc` of `clean-flutter-project`:",
     "",
     "```nuclear",
-    "// Business error of the component: dragonfly builds it with the failure message.",
+    "// Business error of the component: synapsis builds it with the failure message.",
     "CharacterError",
     "  message: string",
     "```"
@@ -1147,7 +1147,7 @@
     "",
     "  // a warning dialog with the Close / Accept footer (onAccept)",
     "  confirmLogout(context: BuildContext) void",
-    "    DragonflyDialog.warning(",
+    "    SynapsisDialog.warning(",
     "      header = Text(\"session.logout.title\".tr()),",
     "      onAccept = () => inject<SessionComponent>().logout(),",
     "      child = Text(\"session.logout.message\".tr()),",
@@ -1542,12 +1542,12 @@
    "id": "example:clean-flutter-project/components/session/presentation/login/login_screen",
    "type": "file",
    "title": "`stateless` LoginScreen — the example project clean-flutter-project (mobile)",
-   "summary": "DragonflyForm binds its fields to LoginForm by name and validates with LoginFormManager; with a valid form, onSubmit passes the form model to LoginManager (the business logic).",
+   "summary": "SynapsisForm binds its fields to LoginForm by name and validates with LoginFormManager; with a valid form, onSubmit passes the form model to LoginManager (the business logic).",
    "body": [
     "`components/session/presentation/login/login_screen.nuc` of `clean-flutter-project`:",
     "",
     "```nuclear",
-    "// DragonflyForm binds its fields to LoginForm by name and validates with LoginFormManager; with a",
+    "// SynapsisForm binds its fields to LoginForm by name and validates with LoginFormManager; with a",
     "// valid form, onSubmit passes the form model to LoginManager (the business logic).",
     "@screen(route = \"/login\", providers = [LoginManager, LoginFormManager])",
     "stateless LoginScreen",
@@ -1557,7 +1557,7 @@
     "      body = LoginStateBuilder<LoginManager>(",
     "        initial = () => Padding(",
     "          padding = EdgeInsets.all(24),",
-    "          child = DragonflyForm(",
+    "          child = SynapsisForm(",
     "            manager = LoginFormManager,",
     "            onSubmit = (form) => LoginManager.login(form),",
     "            child = Column(",
@@ -1730,16 +1730,16 @@
     "",
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
-    "dragonfly(platform = \"mobile\", dialect = \"flutter\")",
+    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
     "",
-    "// The project's pubspec: dragonfly writes build/app/pubspec.yaml from it.",
-    "// Dragonfly adds by itself (not written here): dragonfly, flutter_bloc, fpdart, go_router,",
+    "// The project's pubspec: synapsis writes build/app/pubspec.yaml from it.",
+    "// Synapsis adds by itself (not written here): synapsis, flutter_bloc, fpdart, go_router,",
     "// json_annotation; for code generation and tests: build_runner, json_serializable, mocktail, bloc_test,",
     "// integration_test (and flutter_native_splash with @splash). Full list: build/app/pubspec.yaml.",
-    "// `dragonfly flutter add <package>` adds a package here and generates its type definitions.",
+    "// `nuclear flutter add <package>` adds a package here and generates its type definitions.",
     "app(",
     "  name = \"clean_flutter_project\",",
-    "  description = \"Dragonfly example: characters, episodes, session, forms and translations.\",",
+    "  description = \"Synapsis example: characters, episodes, session, forms and translations.\",",
     "  version = \"1.0.0+1\",",
     "  usesMaterialDesign = true,",
     ")",
@@ -1810,16 +1810,16 @@
    "id": "example:clean-flutter-project/integration_test/app_test",
    "type": "file",
    "title": "`integration` AppTest — the example project clean-flutter-project (mobile)",
-   "summary": "Integration test: the real app on a device or emulator (dragonfly test --integration).",
+   "summary": "Integration test: the real app on a device or emulator (nuclear test --integration).",
    "body": [
     "`integration_test/app_test.nuc` of `clean-flutter-project`:",
     "",
     "```nuclear",
-    "// Integration test: the real app on a device or emulator (dragonfly test --integration).",
+    "// Integration test: the real app on a device or emulator (nuclear test --integration).",
     "AppTest",
     "  @widget(\"the app starts on the splash, then the list of characters; favorites asks for a session\")",
     "  starts(tester: WidgetTester)",
-    "    ~startDragonfly()",
+    "    ~startSynapsis()",
     "    ~tester.pumpWidget(App())",
     "    ~tester.pumpAndSettle()",
     "    expect(find.byType(StartScreen), findsOneWidget)",
@@ -1852,7 +1852,7 @@
     "",
     "```nuclear",
     "main() void",
-    "  ~startDragonfly()",
+    "  ~startSynapsis()",
     "  runApp(App())",
     "",
     "stateless App",
@@ -2615,12 +2615,12 @@
     "",
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
-    "dragonfly(platform = \"mobile\", dialect = \"flutter\")",
+    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
     "",
     "// The project's pubspec (build/app/pubspec.yaml is written from it).",
     "app(",
     "  name = \"genkit_assistant\",",
-    "  description = \"Dragonfly example: Genkit in the app (chat with tools, a flow, a knowledge base, a remote flow).\",",
+    "  description = \"Synapsis example: Genkit in the app (chat with tools, a flow, a knowledge base, a remote flow).\",",
     "  version = \"1.0.0+1\",",
     "  usesMaterialDesign = true,",
     ")",
@@ -2679,7 +2679,7 @@
     "",
     "```nuclear",
     "main() void",
-    "  ~startDragonfly()",
+    "  ~startSynapsis()",
     "  runApp(App())",
     "",
     "stateless App",
@@ -2824,12 +2824,12 @@
    "id": "example:nuclear_developer/components/developer/ai/acceptor",
    "type": "file",
    "title": "`graph` Acceptor — the example project nuclear_developer (backend)",
-   "summary": "The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Loop (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.",
+   "summary": "The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Builder (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.",
    "body": [
     "`components/developer/ai/acceptor.nuc` of `nuclear_developer`:",
     "",
     "```nuclear",
-    "// The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Loop (the",
+    "// The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Builder (the",
     "// files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether",
     "// they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate.",
     "// Prompt: agents/accept.md.",
@@ -2922,11 +2922,11 @@
     "        calls = commands(~bench.ask(\"default\", ~bench.prompt(\"analyze\", { \"task\": \"${task}\\n\\n(The request names ${wants} fields: write all ${wants}, and no other.)\" })), state.platform).filter((c) => fieldsOf(c) == wants)",
     "        trace.add(bench.step(\"faithful\", \"the request lists ${wants} fields and the answer had ${first}: asked again, ${calls.length > 0 ? \"now it has them\" : \"still not: left out\"}\"))",
     "      for args in calls",
-    "        out: string = ~toolchain.dragonfly(state.root, [\"gen\"] + args + [\"--dry-run\"])",
+    "        out: string = ~toolchain.project(state.root, [\"gen\"] + args + [\"--dry-run\"])",
     "        accepted = out.startsWith(\"exit 0\")",
     "        if accepted",
     "          generate.add(args)",
-    "        trace.add(bench.step(\"generator\", \"dragonfly gen ${args.join(\" \")}: ${accepted ? \"accepted\" : bench.firstLine(out.split(\"\\n\").slice(1).join(\"\\n\").trim())}\"))",
+    "        trace.add(bench.step(\"generator\", \"nuclear gen ${args.join(\" \")}: ${accepted ? \"accepted\" : bench.firstLine(out.split(\"\\n\").slice(1).join(\"\\n\").trim())}\"))",
     "    // a rename is done by a tool: every file that writes the name, with the new one in its place",
     "    if source == \"naming\" and state.root.length > 0",
     "      names = renameOf(task, state.existing)",
@@ -2964,7 +2964,7 @@
     "// whole (`facts`), and the rest the cards of the shelves closest to it (`knowledge`). The model writes the answer",
     "// from both, the project's map and the last messages of the session; the rows then end the answer as the graph gave",
     "// them, put there by this code: a model retells a long list in part, so the list never depends on it. It explains",
-    "// and proposes Nuclear; it changes no file (an order to change the project is a Loop run). Prompt:",
+    "// and proposes Nuclear; it changes no file (an order to change the project is a Builder run). Prompt:",
     "// agents/chat.md.",
     "@state(PieceState)",
     "graph Assistant(bench: Workbench)",
@@ -3051,13 +3051,13 @@
    "id": "example:nuclear_developer/components/developer/ai/diagnoser",
    "type": "file",
    "title": "`graph` Diagnoser — the example project nuclear_developer (backend)",
-   "summary": "The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `dragonfly doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.",
+   "summary": "The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `nuclear doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.",
    "body": [
     "`components/developer/ai/diagnoser.nuc` of `nuclear_developer`:",
     "",
     "```nuclear",
     "// The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed",
-    "// rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `dragonfly doctor` for",
+    "// rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `nuclear doctor` for",
     "// the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.",
     "@state(PieceState)",
     "graph Diagnoser(bench: Workbench, toolchain: Toolchain)",
@@ -3069,7 +3069,7 @@
     "    if kind == \"code\" and state.path.length > 0",
     "      evidence = ~toolchain.checkProject(state.path)",
     "    else if kind == \"environment\" and state.path.length > 0",
-    "      evidence = ~toolchain.dragonfly(state.path, [\"doctor\"], timeout = 120)",
+    "      evidence = ~toolchain.project(state.path, [\"doctor\"], timeout = 120)",
     "    // what the graph knows of it: the card of each diagnostic the output names, and the closest known failures",
     "    known = bench.sections([~bench.explain(state.context), ~bench.failures(tail(state.context, 600), state.platform)])",
     "    { \"failure\": kind, \"knowledge\": evidence, \"examples\": known, \"trace\": state.trace + [bench.step(\"classify\", \"${kind}: ${actionOf(kind)}\")] }",
@@ -3351,7 +3351,7 @@
     "  limits: string[]",
     "  // the analyst: the project's declarations (name → file), the ones the request names, the names new to the project,",
     "  // the strategy the request itself asks for, the strategy the graph gave (its fields as texts), the generator calls",
-    "  // (the arguments of `dragonfly gen`) and the questions for the user",
+    "  // (the arguments of `nuclear gen`) and the questions for the user",
     "  declared: <string, string> = {}",
     "  existing: string[]",
     "  fresh: string[]",
@@ -3663,7 +3663,7 @@
     "  strategy: string = \"\"",
     "",
     "// The strategy of a request (ADR-developer-0001) and what it asks of the run: the stages that run, the generator calls (the",
-    "// arguments of `dragonfly gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code`",
+    "// arguments of `nuclear gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code`",
     "// is written as it is) and the facts the request lacks.",
     "Analysis",
     "  strategy: string",
@@ -3726,7 +3726,7 @@
     "",
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
-    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
     "app(name = \"nuclear_developer\", description = \"Nuclear Developer: local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, assistant) on small models, fed by the Nuclear Smart Graph.\", version = \"0.1.0\")",
     "",
     "// The optional parts this project uses (nuclear help backend).",
@@ -3901,7 +3901,7 @@
     "  @test(\"a step names the cards it read\")",
     "  read() void",
     "    bench = inject<Workbench>()",
-    "    expect(bench.read(\"[concepts/concept] The MCP\\n\\nbody\\n\\n[tools/command] dragonfly make\") == \"concept: The MCP; command: dragonfly make\")",
+    "    expect(bench.read(\"[concepts/concept] The MCP\\n\\nbody\\n\\n[tools/command] nuclear make\") == \"concept: The MCP; command: nuclear make\")",
     "    expect(bench.read(\"\") == \"nothing\")",
     "",
     "  @test(\"the compiler accepts valid Nuclear and explains invalid Nuclear\")",
@@ -4315,7 +4315,7 @@
     "",
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
-    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
     "app(name = \"rick_api\", description = \"Characters of the show: a REST API and a guide agent.\", version = \"0.1.0\")",
     "",
     "// The optional parts this project uses: only these go to the generated project.",
@@ -4788,7 +4788,7 @@
     "  print(\"replace\", \"a-b-c\".replace(\"-\", \"+\"), \"all\", \"a-b-c\".replaceAll(\"-\", \"+\"))",
     "  print(\"repeat\", \"ab\".repeat(3), \"pad\", \"7\".padStart(3, \"0\"), \"7\".padEnd(3, \".\"))",
     "  print(\"reverse\", \"nuclear\".chars().reversed().join(\"\"))",
-    "  print(\"capitalize\", capitalize(\"dragonfly\"))",
+    "  print(\"capitalize\", capitalize(\"synapsis\"))",
     "  print(\"points\", \"ok👍\".chars().length)",
     "  print(\"from code\", String.fromCodes([78, 117, 99]))",
     "  print(\"compare\", \"apple\".compareTo(\"banana\") < 0, \"a\" == \"a\", \"\".isEmpty)",
@@ -5609,7 +5609,7 @@
     "",
     "```nuclear",
     "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).",
-    "dragonfly(platform = \"backend\", dialect = \"nestjs\")",
+    "synapsis(platform = \"backend\", dialect = \"nestjs\")",
     "app(name = \"tasks_api\", description = \"Tasks and an assistant.\", version = \"0.1.0\")",
     "",
     "// The optional parts this project uses: only these go to the generated project.",
@@ -5936,8 +5936,8 @@
     "```nuclear",
     "// A mobile app over the tasks_api backend (examples/examples-backend/tasks_api): its models and the client of its",
     "// routes come from the backend's contract (ADR-synapsis-0006), generated into contracts/tasks_api/ by the build.",
-    "dragonfly(platform = \"mobile\", dialect = \"flutter\")",
-    "app(name = \"tasks_app\", description = \"Dragonfly example: a client generated from a backend's contract.\", version = \"1.0.0+1\")",
+    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
+    "app(name = \"tasks_app\", description = \"Synapsis example: a client generated from a backend's contract.\", version = \"1.0.0+1\")",
     "contracts(tasks_api = \"../../../../backend/examples/examples-backend/tasks_api\")",
     "```"
    ],
@@ -6484,7 +6484,7 @@
     "",
     "```nuclear",
     "main() void",
-    "  ~startDragonfly()",
+    "  ~startSynapsis()",
     "  runApp(App())",
     "",
     "stateless App",
@@ -6517,14 +6517,14 @@
     "TasksTest",
     "  @test(\"pending tasks come from GET /tasks?done=false\")",
     "  pending()",
-    "    DragonflyTest.respondWith([{ \"id\": 1, \"title\": \"Write the contract\", \"done\": false, \"priority\": 1 }])",
+    "    SynapsisTest.respondWith([{ \"id\": 1, \"title\": \"Write the contract\", \"done\": false, \"priority\": 1 }])",
     "    result = ~TasksComponent.pending()",
     "    expect(result, isOkWith([Task(id = 1, title = \"Write the contract\", done = false, priority = 1)]))",
-    "    expect(DragonflyTest.requests.first.uri.toString(), \"http://localhost:3000/tasks?done=false\")",
+    "    expect(SynapsisTest.requests.first.uri.toString(), \"http://localhost:3000/tasks?done=false\")",
     "",
     "  @test(\"a failed call is the contract's error\")",
     "  failure()",
-    "    DragonflyTest.respondWith({ \"message\": \"not found\" }, status = 404)",
+    "    SynapsisTest.respondWith({ \"message\": \"not found\" }, status = 404)",
     "    expect(~TasksComponent.add(\"x\"), isErr)",
     "```"
    ],
@@ -6538,6 +6538,1136 @@
     "kind": "tests",
     "name": "TasksTest",
     "project": "tasks_app"
+   }
+  },
+  {
+   "id": "example:website/components/docs/docs_component",
+   "type": "file",
+   "title": "`appcomponent` DocsComponent — the example project website (web)",
+   "summary": "The documentation: its pages, the menu, the home page and the search. The screens use only these.",
+   "body": [
+    "`components/docs/docs_component.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The documentation: its pages, the menu, the home page and the search. The screens use only these.",
+    "appcomponent DocsComponent",
+    "  page() = GetPageUseCase.exec",
+    "  site() = GetSiteUseCase.exec",
+    "  home() = GetHomeUseCase.exec",
+    "  search() = SearchUseCase.exec",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/docs_component.nuc"
+   ],
+   "meta": {
+    "kind": "appcomponent",
+    "name": "DocsComponent",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/content_error",
+   "type": "file",
+   "title": "`model` ContentError — the example project website (web)",
+   "summary": "A page or a list that could not be read.",
+   "body": [
+    "`components/docs/domain/models/content_error.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// A page or a list that could not be read.",
+    "ContentError",
+    "  message: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/content_error.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "ContentError",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/home",
+   "type": "file",
+   "title": "`model` Home — the example project website (web)",
+   "summary": "The home page, from site.toml (public/content/home.json): its texts, its sections and the sample with its output in each target, made by the real compiler.",
+   "body": [
+    "`components/docs/domain/models/home.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The home page, from site.toml (public/content/home.json): its texts, its sections and the sample with its output",
+    "// in each target, made by the real compiler.",
+    "Home",
+    "  title: string",
+    "  lead: string",
+    "  tagline: string",
+    "  actions: Action[]",
+    "  features: Feature[]",
+    "  sampleTitle: string",
+    "  sampleNote: string",
+    "  sample: string",
+    "  outputs: Output[]",
+    "  platformsTitle: string",
+    "  platforms: PlatformCard[]",
+    "  installTitle: string",
+    "  install: string",
+    "",
+    "Action",
+    "  title: string",
+    "  path: string",
+    "  primary: boolean",
+    "",
+    "Feature",
+    "  title: string",
+    "  text: string",
+    "",
+    "Output",
+    "  dialect: string",
+    "  html: string",
+    "",
+    "PlatformCard",
+    "  title: string",
+    "  dialects: string",
+    "  text: string",
+    "  path: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/home.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Home",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/page",
+   "type": "file",
+   "title": "`model` Page — the example project website (web)",
+   "summary": "One page of the documentation, as the content build writes it (public/content/<key>.json): its html is rendered from the markdown of a repository, with the code already highlighted.",
+   "body": [
+    "`components/docs/domain/models/page.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// One page of the documentation, as the content build writes it (public/content/<key>.json): its html is",
+    "// rendered from the markdown of a repository, with the code already highlighted.",
+    "Page",
+    "  path: string",
+    "  title: string",
+    "  html: string",
+    "  headings: Heading[]",
+    "  source: string",
+    "",
+    "// A heading of a page (levels 2 and 3), for the \"On this page\" list.",
+    "Heading",
+    "  level: int",
+    "  id: string",
+    "  text: string",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/page.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Page",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/search",
+   "type": "file",
+   "title": "`model` SearchEntry — the example project website (web)",
+   "summary": "A page in the search index: its title, its headings and the words of its text.",
+   "body": [
+    "`components/docs/domain/models/search.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// A page in the search index: its title, its headings and the words of its text.",
+    "SearchEntry",
+    "  path: string",
+    "  title: string",
+    "  headings: string[]",
+    "  words: string",
+    "",
+    "// A page found by a search; a higher score is a better match.",
+    "SearchResult",
+    "  path: string",
+    "  title: string",
+    "  score: int",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/search.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "SearchEntry",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/models/site",
+   "type": "file",
+   "title": "`model` Site — the example project website (web)",
+   "summary": "The site, from site.toml (public/content/site.json): its title, the links of the top bar, the side menu, the footer and the organization of its repositories.",
+   "body": [
+    "`components/docs/domain/models/site.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The site, from site.toml (public/content/site.json): its title, the links of the top bar, the side menu, the",
+    "// footer and the organization of its repositories.",
+    "Site",
+    "  title: string",
+    "  url: string",
+    "  org: string",
+    "  footer: string",
+    "  top: Link[]",
+    "  sections: NavSection[]",
+    "",
+    "Link",
+    "  title: string",
+    "  path: string",
+    "",
+    "NavSection",
+    "  title: string",
+    "  items: Link[]",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/models/site.nuc"
+   ],
+   "meta": {
+    "kind": "model",
+    "name": "Site",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/services/search_score",
+   "type": "file",
+   "title": "`service` SearchScore — the example project website (web)",
+   "summary": "How well a page matches a query: its title first, then its headings, then any word of its text.",
+   "body": [
+    "`components/docs/domain/services/search_score.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// How well a page matches a query: its title first, then its headings, then any word of its text.",
+    "service SearchScore",
+    "  of(entry: SearchEntry, query: string) int",
+    "    if query in entry.title.lower()",
+    "      return 3",
+    "    if entry.headings.any((h) => query in h.lower())",
+    "      return 2",
+    "    if query in entry.words",
+    "      return 1",
+    "    0",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/services/search_score.nuc"
+   ],
+   "meta": {
+    "kind": "service",
+    "name": "SearchScore",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/usecases/get_home_usecase",
+   "type": "file",
+   "title": "`usecase` GetHomeUseCase — the example project website (web)",
+   "summary": "A `usecase` of the example project `website`, a web project.",
+   "body": [
+    "`components/docs/domain/usecases/get_home_usecase.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "usecase GetHomeUseCase",
+    "  (content: ContentRepository)",
+    "",
+    "  exec() Result<ContentError, Home>",
+    "    ~content.home()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/usecases/get_home_usecase.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetHomeUseCase",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/usecases/get_page_usecase",
+   "type": "file",
+   "title": "`usecase` GetPageUseCase — the example project website (web)",
+   "summary": "The page of an address of the site: /nuclearlang/guide/01-syntax is content/nuclearlang--guide--01-syntax.json.",
+   "body": [
+    "`components/docs/domain/usecases/get_page_usecase.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The page of an address of the site: /nuclearlang/guide/01-syntax is content/nuclearlang--guide--01-syntax.json.",
+    "usecase GetPageUseCase",
+    "  (content: ContentRepository)",
+    "",
+    "  exec(path: string) Result<ContentError, Page>",
+    "    ~content.page(path.split(\"/\").filter((part) => part.length > 0).join(\"--\"))",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/usecases/get_page_usecase.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetPageUseCase",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/usecases/get_site_usecase",
+   "type": "file",
+   "title": "`usecase` GetSiteUseCase — the example project website (web)",
+   "summary": "A `usecase` of the example project `website`, a web project.",
+   "body": [
+    "`components/docs/domain/usecases/get_site_usecase.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "usecase GetSiteUseCase",
+    "  (content: ContentRepository)",
+    "",
+    "  exec() Result<ContentError, Site>",
+    "    ~content.site()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/usecases/get_site_usecase.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "GetSiteUseCase",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/domain/usecases/search_usecase",
+   "type": "file",
+   "title": "`usecase` SearchUseCase — the example project website (web)",
+   "summary": "The ten pages that best match a query (two letters at least), the best first.",
+   "body": [
+    "`components/docs/domain/usecases/search_usecase.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The ten pages that best match a query (two letters at least), the best first.",
+    "usecase SearchUseCase",
+    "  (content: ContentRepository, score: SearchScore)",
+    "",
+    "  exec(query: string) Result<ContentError, SearchResult[]>",
+    "    text = query.trim().lower()",
+    "    if text.length < 2",
+    "      return Ok([])",
+    "    entries = ~content.index()",
+    "    found = entries.map((e) => SearchResult(path = e.path, title = e.title, score = score.of(e, text)))",
+    "    Ok(found.filter((r) => r.score > 0).sortedBy((r) => -r.score).take(10))",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/domain/usecases/search_usecase.nuc"
+   ],
+   "meta": {
+    "kind": "usecase",
+    "name": "SearchUseCase",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/doc/doc_screen",
+   "type": "file",
+   "title": "`stateful` DocScreen — the example project website (web)",
+   "summary": "A page of the documentation at its address: /<project>/<reference|guide>/<name>, such as /nuclearlang/guide/README or /dart/reference/flutter (tools/content.mjs gives every page one).",
+   "body": [
+    "`components/docs/presentation/doc/doc_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// A page of the documentation at its address: /<project>/<reference|guide>/<name>, such as /nuclearlang/guide/README",
+    "// or /dart/reference/flutter (tools/content.mjs gives every page one).",
+    "@screen(route = \"/:area/:name\", providers = [PageManager, SiteManager, SearchManager])",
+    "stateful DocScreen(area: string, name: string)",
+    "  initState() void",
+    "    PageManager.load(\"/${area}/${name}\")",
+    "",
+    "  build() Element",
+    "    DocBody(current = \"/${area}/${name}\")",
+    "",
+    "@screen(route = \"/:area/:group/:name\", providers = [PageManager, SiteManager, SearchManager])",
+    "stateful DocGroupScreen(area: string, group: string, name: string)",
+    "  initState() void",
+    "    PageManager.load(\"/${area}/${group}/${name}\")",
+    "",
+    "  build() Element",
+    "    DocBody(current = \"/${area}/${group}/${name}\")",
+    "",
+    "stateless DocBody(current: string)",
+    "  build() Element",
+    "    Layout(",
+    "      current = current,",
+    "      content = PageStateBuilder(",
+    "        loading = () => p(className = \"muted\", children = \"Loading…\"),",
+    "        full = (page) => DocPage(page = page),",
+    "        error = (e) => Missing(),",
+    "      ),",
+    "    )",
+    "",
+    "// The page: its text, and beside it the list of its headings and a link to its source.",
+    "stateless DocPage(page: Page)",
+    "  build() Element",
+    "    div(",
+    "      className = \"doc\",",
+    "      children = [",
+    "        article(className = \"markdown\", dangerouslySetInnerHTML = { \"__html\": page.html }),",
+    "        aside(",
+    "          className = \"outline\",",
+    "          children = [",
+    "            if page.headings.length > 0 h4(children = \"On this page\"),",
+    "            ul(children = page.headings.map((h) => li(key = h.id, className = \"level-${h.level}\", children = a(href = \"#${h.id}\", children = h.text)))),",
+    "            a(className = \"edit\", href = page.source, children = \"Edit this page on GitHub\"),",
+    "          ],",
+    "        ),",
+    "      ],",
+    "    )",
+    "",
+    "stateless Missing",
+    "  build() Element",
+    "    section(",
+    "      className = \"missing\",",
+    "      children = [h1(children = \"Not found\"), p(children = \"There is no page at this address.\"), a(href = \"/\", children = \"Go to the home page\")],",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/doc/doc_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateful",
+    "name": "DocScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/doc/managers/page_manager",
+   "type": "file",
+   "title": "`statemanager` PageManager — the example project website (web)",
+   "summary": "Loads the page of the screen's address.",
+   "body": [
+    "`components/docs/presentation/doc/managers/page_manager.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Loads the page of the screen's address.",
+    "@stateModel(PageState)",
+    "statemanager PageManager",
+    "  (docs: DocsComponent)",
+    "",
+    "  @state(PageState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(PageState.full)",
+    "  load(path: string) Result<ContentError, Page>",
+    "    ~docs.page(path)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/doc/managers/page_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "PageManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/doc/not_found_screen",
+   "type": "file",
+   "title": "`stateless` NotFoundScreen — the example project website (web)",
+   "summary": "Any other address.",
+   "body": [
+    "`components/docs/presentation/doc/not_found_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Any other address.",
+    "@screen(notFound = true, providers = [SiteManager, SearchManager])",
+    "stateless NotFoundScreen",
+    "  build() Element",
+    "    div(className = \"site\", children = [TopBar(), Missing(), Footer()])",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/doc/not_found_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "NotFoundScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/doc/state_models/page_state",
+   "type": "file",
+   "title": "`statemodel` PageState — the example project website (web)",
+   "summary": "The states of a documentation page.",
+   "body": [
+    "`components/docs/presentation/doc/state_models/page_state.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The states of a documentation page.",
+    "PageState",
+    "  (full: Page, error: ContentError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/doc/state_models/page_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "PageState",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/home/home_screen",
+   "type": "file",
+   "title": "`stateless` HomeScreen — the example project website (web)",
+   "summary": "The home page: every text and section comes from the site's data (home.json); the sample's outputs are the real compiler's.",
+   "body": [
+    "`components/docs/presentation/home/home_screen.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The home page: every text and section comes from the site's data (home.json); the sample's outputs are the real",
+    "// compiler's.",
+    "@screen(route = \"/\", providers = [HomeManager, SiteManager, SearchManager])",
+    "stateless HomeScreen",
+    "  build() Element",
+    "    div(",
+    "      className = \"site home\",",
+    "      children = [",
+    "        TopBar(),",
+    "        HomeStateBuilder(",
+    "          loading = () => p(className = \"muted center\", children = \"Loading…\"),",
+    "          full = (home) => HomeBody(home = home),",
+    "          error = (e) => p(className = \"error center\", children = e.message),",
+    "        ),",
+    "        Footer(),",
+    "      ],",
+    "    )",
+    "",
+    "stateless HomeBody(home: Home)",
+    "  build() Element",
+    "    fragment(",
+    "      section(",
+    "        className = \"hero\",",
+    "        children = [",
+    "          p(className = \"logo big\", children = \"☢\"),",
+    "          h1(children = home.title),",
+    "          p(className = \"lead\", children = home.lead),",
+    "          p(className = \"tagline\", children = home.tagline),",
+    "          div(",
+    "            className = \"actions\",",
+    "            children = home.actions.map((x) => a(key = x.path, className = x.primary ? \"button primary\" : \"button\", href = x.path, children = x.title)),",
+    "          ),",
+    "        ],",
+    "      ),",
+    "      section(className = \"features\", children = home.features.map((f) => article(key = f.title, children = [h3(children = f.title), p(children = f.text)]))),",
+    "      Sample(home = home),",
+    "      section(",
+    "        className = \"platforms\",",
+    "        children = [",
+    "          h2(children = home.platformsTitle),",
+    "          div(",
+    "            className = \"cards\",",
+    "            children = home.platforms.map((c) =>",
+    "              a(key = c.title, className = \"card\", href = c.path, children = [h3(children = c.title), small(children = c.dialects), p(children = c.text)])",
+    "            ),",
+    "          ),",
+    "        ],",
+    "      ),",
+    "      section(className = \"install\", children = [h2(children = home.installTitle), pre(children = home.install)]),",
+    "    )",
+    "",
+    "// The sample and its output in each target, one tab each.",
+    "stateful Sample(home: Home)",
+    "  selected: int = 0",
+    "",
+    "  build() Element",
+    "    section(",
+    "      className = \"sample\",",
+    "      children = [",
+    "        h2(children = home.sampleTitle),",
+    "        div(",
+    "          className = \"tabs\",",
+    "          children = tabs().map((t) =>",
+    "            button(key = t, className = tabs().indexOf(t) == selected ? \"tab active\" : \"tab\", onClick = () => select(tabs().indexOf(t)), children = t)",
+    "          ),",
+    "        ),",
+    "        div(className = \"code\", dangerouslySetInnerHTML = { \"__html\": selected == 0 ? home.sample : home.outputs[selected - 1].html }),",
+    "        p(className = \"muted\", children = home.sampleNote),",
+    "      ],",
+    "    )",
+    "",
+    "  tabs() string[]",
+    "    [\"Nuclear\", ...home.outputs.map((o) => o.dialect)]",
+    "",
+    "  select(index: int) void",
+    "    setState(() =>",
+    "      selected = index",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/home/home_screen.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "HomeScreen",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/home/managers/home_manager",
+   "type": "file",
+   "title": "`statemanager` HomeManager — the example project website (web)",
+   "summary": "The home page's sample and its outputs, read when the home page opens.",
+   "body": [
+    "`components/docs/presentation/home/managers/home_manager.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The home page's sample and its outputs, read when the home page opens.",
+    "@stateModel(HomeState)",
+    "statemanager HomeManager",
+    "  (docs: DocsComponent)",
+    "    load()",
+    "",
+    "  @state(HomeState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(HomeState.full)",
+    "  load() Result<ContentError, Home>",
+    "    ~docs.home()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/home/managers/home_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "HomeManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/home/state_models/home_state",
+   "type": "file",
+   "title": "`statemodel` HomeState — the example project website (web)",
+   "summary": "The states of the home page's sample.",
+   "body": [
+    "`components/docs/presentation/home/state_models/home_state.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The states of the home page's sample.",
+    "HomeState",
+    "  (full: Home, error: ContentError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/home/state_models/home_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "HomeState",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/layout",
+   "type": "file",
+   "title": "`stateless` Layout — the example project website (web)",
+   "summary": "The frame of every page: the top bar, the side menu, the page and the footer, all from the site's data.",
+   "body": [
+    "`components/docs/presentation/layout/layout.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The frame of every page: the top bar, the side menu, the page and the footer, all from the site's data.",
+    "stateless Layout(current: string, content: Element)",
+    "  build() Element",
+    "    div(",
+    "      className = \"site\",",
+    "      children = [",
+    "        TopBar(),",
+    "        div(className = \"frame\", children = [Sidebar(current = current), main(className = \"content\", children = content)]),",
+    "        Footer(),",
+    "      ],",
+    "    )",
+    "",
+    "stateless TopBar",
+    "  build() Element",
+    "    header(",
+    "      className = \"topbar\",",
+    "      children = SiteStateBuilder(",
+    "        full = (site) => fragment(",
+    "          a(className = \"brand\", href = \"/\", children = [span(className = \"logo\", children = \"☢\"), span(children = site.title)]),",
+    "          nav(className = \"links\", children = site.top.map((l) => a(key = l.path, href = l.path, children = l.title))),",
+    "          SearchBox(),",
+    "          a(className = \"github\", href = site.org, children = \"GitHub\"),",
+    "        ),",
+    "        orElse = () => SearchBox(),",
+    "      ),",
+    "    )",
+    "",
+    "// The menu of the documentation; the page shown is marked.",
+    "stateless Sidebar(current: string)",
+    "  build() Element",
+    "    aside(",
+    "      className = \"sidebar\",",
+    "      children = SiteStateBuilder(",
+    "        loading = () => p(className = \"muted\", children = \"Loading…\"),",
+    "        full = (site) => div(children = site.sections.map((s) => NavGroup(key = s.title, group = s, current = current))),",
+    "        error = (e) => p(className = \"error\", children = e.message),",
+    "      ),",
+    "    )",
+    "",
+    "stateless NavGroup(group: NavSection, current: string)",
+    "  build() Element",
+    "    section(",
+    "      className = \"group\",",
+    "      children = [",
+    "        h4(children = group.title),",
+    "        ul(",
+    "          children = group.items.map((item) =>",
+    "            li(key = item.path, children = a(className = item.path == current ? \"active\" : \"\", href = item.path, children = item.title))",
+    "          ),",
+    "        ),",
+    "      ],",
+    "    )",
+    "",
+    "stateless Footer",
+    "  build() Element",
+    "    footer(",
+    "      className = \"footer\",",
+    "      children = SiteStateBuilder(",
+    "        full = (site) => fragment(span(children = \"${site.footer} · \"), a(href = site.org, children = site.org.replaceAll(\"https://\", \"\"))),",
+    "        orElse = () => span(),",
+    "      ),",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/layout.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "Layout",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/managers/search_manager",
+   "type": "file",
+   "title": "`statemanager` SearchManager — the example project website (web)",
+   "summary": "The search box: every change of the text looks for the pages again.",
+   "body": [
+    "`components/docs/presentation/layout/managers/search_manager.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The search box: every change of the text looks for the pages again.",
+    "@stateModel(SearchState)",
+    "statemanager SearchManager",
+    "  (docs: DocsComponent)",
+    "",
+    "  @state(SearchState.results)",
+    "  find(query: string) Result<ContentError, SearchResult[]>",
+    "    ~docs.search(query)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/managers/search_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "SearchManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/managers/site_manager",
+   "type": "file",
+   "title": "`statemanager` SiteManager — the example project website (web)",
+   "summary": "The site's frame, read once.",
+   "body": [
+    "`components/docs/presentation/layout/managers/site_manager.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The site's frame, read once.",
+    "@stateModel(SiteState)",
+    "statemanager SiteManager",
+    "  (docs: DocsComponent)",
+    "    load()",
+    "",
+    "  @state(SiteState.loading)",
+    "  loading()",
+    "",
+    "  @before(loading)",
+    "  @state(SiteState.full)",
+    "  load() Result<ContentError, Site>",
+    "    ~docs.site()",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/managers/site_manager.nuc"
+   ],
+   "meta": {
+    "kind": "statemanager",
+    "name": "SiteManager",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/search_box",
+   "type": "file",
+   "title": "`stateless` SearchBox — the example project website (web)",
+   "summary": "Search in the documentation: the results open below the box while it has text.",
+   "body": [
+    "`components/docs/presentation/layout/search_box.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Search in the documentation: the results open below the box while it has text.",
+    "stateless SearchBox",
+    "  build() Element",
+    "    div(",
+    "      className = \"search\",",
+    "      children = [",
+    "        input(type = \"search\", placeholder = \"Search the docs\", onChange = (e) => SearchManager.find(e.target.value)),",
+    "        SearchStateBuilder(",
+    "          results = (found) => found.length == 0 ? span() : ul(className = \"results\", children = found.map((r) => li(key = r.path, children = a(href = r.path, children = r.title)))),",
+    "          error = (e) => span(className = \"error\", children = e.message),",
+    "          orElse = () => span(),",
+    "        ),",
+    "      ],",
+    "    )",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/search_box.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "SearchBox",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/state_models/search_state",
+   "type": "file",
+   "title": "`statemodel` SearchState — the example project website (web)",
+   "summary": "What the search box shows.",
+   "body": [
+    "`components/docs/presentation/layout/state_models/search_state.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// What the search box shows.",
+    "SearchState",
+    "  (results: SearchResult[], error: ContentError)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/state_models/search_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "SearchState",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/components/docs/presentation/layout/state_models/site_state",
+   "type": "file",
+   "title": "`statemodel` SiteState — the example project website (web)",
+   "summary": "The states of the site's frame (top bar, menu, footer).",
+   "body": [
+    "`components/docs/presentation/layout/state_models/site_state.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The states of the site's frame (top bar, menu, footer).",
+    "SiteState",
+    "  (full: Site, error: ContentError, loading: boolean)",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/components/docs/presentation/layout/state_models/site_state.nuc"
+   ],
+   "meta": {
+    "kind": "statemodel",
+    "name": "SiteState",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/config",
+   "type": "file",
+   "title": "`config` config — the example project website (web)",
+   "summary": "A `config` of the example project `website`, a web project.",
+   "body": [
+    "`config.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The platform this project is written for and the dialect it is built with (ADR-0093, ADR-0097).",
+    "synapsis(platform = \"web\", dialect = \"react\")",
+    "app(name = \"nuclearlang_website\", title = \"NuclearLang\", description = \"A minimal language for AI agents and people, transpiled to TypeScript, Dart and Python; Synapsis, its framework for mobile, backend and web.\", version = \"0.1.0\")",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/config.nuc"
+   ],
+   "meta": {
+    "kind": "config",
+    "name": "config",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/config/project_config",
+   "type": "file",
+   "title": "`appConfig` ProjectConfig — the example project website (web)",
+   "summary": "The site reads its own content: tools/content.mjs builds public/content/ from the repositories' docs.",
+   "body": [
+    "`config/project_config.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The site reads its own content: tools/content.mjs builds public/content/ from the repositories' docs.",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    Http(baseUrl = \"/\", timeout = 10000),",
+    "  ]",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/config/project_config.nuc"
+   ],
+   "meta": {
+    "kind": "appConfig",
+    "name": "ProjectConfig",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/main",
+   "type": "file",
+   "title": "`stateless` App — the example project website (web)",
+   "summary": "The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.",
+   "body": [
+    "`main.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root.",
+    "stateless App",
+    "  build() Element",
+    "    createElement(RouterProvider, router = appRouter())",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/main.nuc"
+   ],
+   "meta": {
+    "kind": "stateless",
+    "name": "App",
+    "project": "website"
+   }
+  },
+  {
+   "id": "example:website/test/docs_test",
+   "type": "file",
+   "title": "`tests` DocsTest — the example project website (web)",
+   "summary": "A `tests` of the example project `website`, a web project.",
+   "body": [
+    "`test/docs_test.nuc` of `website`:",
+    "",
+    "```nuclear",
+    "// Tests of the site: the content repository is a mock; the use cases, managers and screens are the real code.",
+    "page() Page",
+    "  Page(",
+    "    path = \"/nuclearlang/reference/nuclear-base\",",
+    "    title = \"The base language\",",
+    "    html = \"<h1>The base language</h1><p>Every rule of Nuclear.</p>\",",
+    "    headings = [Heading(level = 2, id = \"names\", text = \"Names and files\")],",
+    "    source = \"https://github.com/nuclearlang/nuclear/blob/main/nuclearlang/docs/07-reference/nuclear-base.md\",",
+    "  )",
+    "",
+    "entry(path: string, title: string, headings: string[], words: string) SearchEntry",
+    "  SearchEntry(path = path, title = title, headings = headings, words = words)",
+    "",
+    "@mock([ContentRepository])",
+    "DocsTest",
+    "  beforeEach()",
+    "    when(ContentRepository.page).thenReturn(Ok(page()))",
+    "    when(ContentRepository.site).thenReturn(",
+    "      Ok(",
+    "        Site(",
+    "          title = \"NuclearLang\",",
+    "          url = \"https://example.org\",",
+    "          org = \"https://github.com/example\",",
+    "          footer = \"Footer text\",",
+    "          top = [Link(title = \"Guide\", path = \"/nuclearlang/guide/README\")],",
+    "          sections = [NavSection(title = \"Reference\", items = [Link(title = \"Base\", path = \"/nuclearlang/reference/nuclear-base\")])],",
+    "        ),",
+    "      ),",
+    "    )",
+    "    when(ContentRepository.index).thenReturn(",
+    "      Ok([",
+    "        entry(\"/c\", \"Operators\", [], \"results of every operation\"),",
+    "        entry(\"/b\", \"Errors\", [\"Results and errors\"], \"\"),",
+    "        entry(\"/a\", \"Results\", [], \"\"),",
+    "        entry(\"/d\", \"Lambdas\", [], \"nothing here\"),",
+    "      ]),",
+    "    )",
+    "    when(ContentRepository.home).thenReturn(",
+    "      Ok(",
+    "        Home(",
+    "          title = \"NuclearLang\",",
+    "          lead = \"Only the program's logic.\",",
+    "          tagline = \"A language.\",",
+    "          actions = [Action(title = \"Guide\", path = \"/nuclearlang/guide/README\", primary = true)],",
+    "          features = [Feature(title = \"Less text\", text = \"No braces.\")],",
+    "          sampleTitle = \"Nuclear in a few lines\",",
+    "          sampleNote = \"A note.\",",
+    "          sample = \"<pre>sample</pre>\",",
+    "          outputs = [Output(dialect = \"typescript\", html = \"<pre>ts</pre>\")],",
+    "          platformsTitle = \"Three platforms\",",
+    "          platforms = [PlatformCard(title = \"Web\", dialects = \"react\", text = \"In a browser.\", path = \"/docs/synapsis/react\")],",
+    "          installTitle = \"Install\",",
+    "          install = \"curl -fsSL https://example.org/install.sh | sh\",",
+    "        ),",
+    "      ),",
+    "    )",
+    "",
+    "  @test(\"the search ranks a title before a heading before a word of the text\")",
+    "  ranks()",
+    "    found = okOf(~SearchUseCase.exec(\"Results\"))",
+    "    expect(found.map((r) => r.path)).toEqual([\"/a\", \"/b\", \"/c\"])",
+    "",
+    "  @test(\"a query of one letter finds nothing\")",
+    "  shortQuery()",
+    "    expect(okOf(~SearchUseCase.exec(\" r \"))).toEqual([])",
+    "",
+    "  @widget(\"a page of the documentation shows its text, its headings and the menu\")",
+    "  showsPage()",
+    "    renderScreen(DocScreen(area = \"spec\", name = \"nuclear-base\"))",
+    "    ~screen.findByText(\"Every rule of Nuclear.\")",
+    "    ~screen.findByText(\"Names and files\")",
+    "    ~screen.findByText(\"Base\")",
+    "    ~screen.findByText(\"Guide\")",
+    "",
+    "  @widget(\"the home page shows the sample with a tab per target\")",
+    "  showsHome()",
+    "    renderScreen(HomeScreen())",
+    "    ~screen.findByText(\"Only the program's logic.\")",
+    "    ~screen.findByText(\"typescript\")",
+    "    ~screen.findByText(\"Three platforms\")",
+    "```"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "website/test/docs_test.nuc"
+   ],
+   "meta": {
+    "kind": "tests",
+    "name": "DocsTest",
+    "project": "website"
    }
   }
  ]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.components.characters.data.entities.character import Character
 from app.components.characters.data.repositories.character_repository import CharacterRepository
 from app.components.characters.domain.models.new_character import NewCharacter
-from dragonfly import AppError, Conflict, Err, Ok, Result
+from synapsis import AppError, Conflict, Err, Ok, Result
 
 
 class CreateCharacter:

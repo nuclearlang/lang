@@ -8,7 +8,7 @@ related: [../03-adr/0001-web-platform.md, ../07-reference/web.md]
 
 The pending work of the web platform, its contract and its runtime package. A done item is deleted. What is pending
 in how the `react` dialect writes its target is in the TypeScript dialect's project; what is pending in the
-`dragonfly` command is in [the command line tools](../../../../../tools/cli/AGENTS.md).
+`nuclear` command is in [the command line tools](../../../../../tools/cli/AGENTS.md).
 
 ## Half done
 
@@ -31,7 +31,7 @@ From the analysis of ADR-web-0001:
 
 ## Pending
 
-- **A new project fails its tests**: `dragonfly new <name> -p web` writes no test, and `dragonfly test` exits 1
+- **A new project fails its tests**: `nuclear new <name> -p web` writes no test, and `nuclear test` exits 1
   (vitest: "No test files found"). A generated resource brings its test, and then they pass. The skeleton should
   bring one test, as the backend's does. Found by the functional tests of 2026-11-16.
 - **Not in the first version** (the same words as mobile): `form` / `formmanager` (react-hook-form + zod

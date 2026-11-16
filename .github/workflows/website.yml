@@ -1,0 +1,36 @@
+# The website: its content from the reference and the guides of every project, the app built and tested, the bundle.
+# Publishing it at nuclearlang.github.io (served only from the `nuclearlang.github.io` repository) is not wired from
+# here yet: website/docs/01-product/roadmap.md.
+name: website
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Install nuclear
+        run: |
+          installer/release/build-runtimes.sh && installer/install.sh --no-vscode --no-zed --no-agent
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: "Content, build, tests, bundle"
+        working-directory: website
+        run: |
+          (cd tools && npm ci --no-audit --no-fund)
+          node tools/content.mjs
+          nuclear build
+          nuclear install
+          nuclear test
+          (cd build/app && npx vite build)

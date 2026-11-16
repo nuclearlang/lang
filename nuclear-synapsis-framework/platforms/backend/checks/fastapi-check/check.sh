@@ -1,7 +1,7 @@
 #!/bin/sh
 # Builds the fastapi example (examples/examples-fastapi/rick_api) and checks the generated Python:
 # pyright --strict, its tests in Nuclear (pytest) and an end-to-end run (smoke.py: HTTP, agent, graph).
-# Needs nuclearlang/tools/python/.venv (its requirements.txt + pip install -e packages/dragonfly-py).
+# Needs nuclearlang/tools/python/.venv (its requirements.txt + pip install -e packages/synapsis-py).
 set -e
 # `here` is this platform's folder, `root` the working tree (or NUCLEAR_ROOT)
 here=$(cd "$(dirname "$0")/../.." && pwd)
@@ -16,7 +16,7 @@ cd "$p/build"
 last "$V/pyright" --pythonpath "$V/python"
 last "$V/python" -m pytest -q -p no:warnings
 PYTHONPATH=. "$V/python" "$here/checks/fastapi-check/smoke.py"
-last "$V/python" -m pytest -q -p no:warnings "$here/packages/dragonfly-py/tests"
+last "$V/python" -m pytest -q -p no:warnings "$here/packages/synapsis-py/tests"
 # ADR-synapsis-0002: the backend example (examples/examples-backend/tasks_api, written for nestjs) builds with fastapi too
 c=$(mktemp -d)
 cp -r "$here/examples/examples-backend/tasks_api/." "$c" && rm -rf "$c/build"
@@ -27,9 +27,9 @@ last "$V/pyright" --pythonpath "$V/python"
 last "$V/python" -m pytest -q -p no:warnings
 # ADR-backend-0001: its migrations, made from the entities and applied to a fresh SQLite; then nothing is left to make
 export DATABASE="$c/fresh.sqlite"
-last "$V/python" -m dragonfly.migrate make "first" --dir "$c/migrations"
-last "$V/python" -m dragonfly.migrate up --dir "$c/migrations"
-"$V/python" -m dragonfly.migrate make "again" --dir "$c/migrations" | grep -q "no changes"
+last "$V/python" -m synapsis.migrate make "first" --dir "$c/migrations"
+last "$V/python" -m synapsis.migrate up --dir "$c/migrations"
+"$V/python" -m synapsis.migrate make "again" --dir "$c/migrations" | grep -q "no changes"
 unset DATABASE
 echo "migrations: made, applied, nothing left"
 rm -rf "$c"

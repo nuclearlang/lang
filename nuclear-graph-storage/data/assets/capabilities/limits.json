@@ -1,7 +1,7 @@
 {
  "shelf": "capabilities",
  "origin": "curated",
- "about": "What NuclearLang and Dragonfly cannot do yet, their known limits, and the limits of the local agents: what is beyond them and who takes it.",
+ "about": "What NuclearLang and Synapsis cannot do yet, their known limits, and the limits of the local agents: what is beyond them and who takes it.",
  "rows": [
   {
    "id": "cannot:read-target-code",
@@ -108,7 +108,7 @@
    "title": "Cannot: Node.js with Express (postponed)",
    "summary": "Everything about plain Node.js and Express is postponed by the project's owner. A TypeScript backend is written on the backend platform and built with the `nestjs` dialect.",
    "body": [
-    "`use express as \"express\"` does not parse and there is no Express dialect. For an HTTP service in TypeScript: `dragonfly new <name> -p backend -d nestjs`."
+    "`use express as \"express\"` does not parse and there is no Express dialect. For an HTTP service in TypeScript: `nuclear new <name> -p backend -d nestjs`."
    ],
    "keys": [
     "express",
@@ -151,7 +151,7 @@
     "- No `@acl` or guards on a controller's routes, and no sessions (the mobile and web platforms have them).",
     "- No kind for background jobs, file uploads, a command-line program or an MCP server.",
     "- No generated Dockerfile; no observability (metrics, traces).",
-    "- `dragonfly watch` does not exist for backend projects.",
+    "- `nuclear watch` does not exist for backend projects.",
     "- A `@transactional` use case uses the default database only.",
     "- The join table of a `@manyToMany` is always named `<owner table>_<field>`.",
     "",
@@ -362,22 +362,22 @@
    "title": "Limit: what the generators do not write",
    "summary": "The generators write what follows from a resource's data and wire a use case into its component. They do not write the rules of a use case, the details of a view, what a screen shows of a use case, relations between entities, nor the tests of a backend resource that reads another API (the backend has no `@mock` yet).",
    "body": [
-    "- A use case with rules of its own is written by hand (or by the coder); `dragonfly gen usecase` then wires it: its alias in the facade and, on the backend, its route. Only a use case that just calls a repository method is written by the generator (`--calls`).",
-    "- `dragonfly gen usecase` refuses a use case that is neither declared in the project nor given `--calls`: it never writes a use case with a hole in it.",
+    "- A use case with rules of its own is written by hand (or by the coder); `nuclear gen usecase` then wires it: its alias in the facade and, on the backend, its route. Only a use case that just calls a repository method is written by the generator (`--calls`).",
+    "- `nuclear gen usecase` refuses a use case that is neither declared in the project nor given `--calls`: it never writes a use case with a hole in it.",
     "- On mobile and web, what a screen shows of a use case (the state manager's method and its state) is written by hand.",
-    "- A screen that is not a resource's list: `dragonfly make screen`, then its view by hand.",
+    "- A screen that is not a resource's list: `nuclear make screen`, then its view by hand.",
     "- Relations (`@manyToOne`...) are added by hand to the generated entity.",
     "- A REST resource on the backend gets no generated tests: the test would call the real API.",
     "- A database resource is backend only; mobile and web read APIs.",
     "- `gen` refuses a name another file already declares: remove the old file or choose another name.",
-    "- A stored resource gets no `search`: which column is searched is a decision. It is a query written in the repository, then wired with `dragonfly gen usecase <component> Search<Names> --calls <Name>Repository.<method>`.",
-    "- An action added to a resource that exists (`dragonfly gen resource ... --actions list,get,search` on one that had `list,get`) is finished: its use case, its alias, the repository's method and its route. Fields added to a resource that exists are not: the files are kept, so a field is added by hand (`strategy:member`)."
+    "- A stored resource gets no `search`: which column is searched is a decision. It is a query written in the repository, then wired with `nuclear gen usecase <component> Search<Names> --calls <Name>Repository.<method>`.",
+    "- An action added to a resource that exists (`nuclear gen resource ... --actions list,get,search` on one that had `list,get`) is finished: its use case, its alias, the repository's method and its route. Fields added to a resource that exists are not: the files are kept, so a field is added by hand (`strategy:member`)."
    ],
    "keys": [
     "generator limits"
    ],
    "asks": [
-    "what does dragonfly gen not do",
+    "what does nuclear gen not do",
     "can the generator write my business logic"
    ],
    "links": [
@@ -624,7 +624,7 @@
     "- Features of 4 to 6 files, planned and written by the local agents alone: one or two of three, depending on the round. What fails: a piece renames a method the spec writes, or two pieces declare the same thing.",
     "- Known weak points: the tester may copy a solved example close to its task instead of testing the task; the planner names a component in the singular.",
     "",
-    "What makes a feature pass: its resources generated (`dragonfly gen resource`), its spec written with the platform's words and one sentence per declaration, and a frontier model leading when it is not standard."
+    "What makes a feature pass: its resources generated (`nuclear gen resource`), its spec written with the platform's words and one sentence per declaration, and a frontier model leading when it is not standard."
    ],
    "keys": [
     "how good",
@@ -663,7 +663,7 @@
     "- It names a platform, never a dialect.",
     "- It never edits generated code; a problem there is a problem of the `.nuc` or of the dialect.",
     "- It does not read the dialects underneath, the runtimes or the target languages' rules.",
-    "- A task that asks for target code (a Python script, a Dart widget by hand, a CI file by hand) is not for it: `nuclear-loop export` writes CI files; a frontier model or the user writes the rest."
+    "- A task that asks for target code (a Python script, a Dart widget by hand, a CI file by hand) is not for it: `nuclear-builder export` writes CI files; a frontier model or the user writes the rest."
    ],
    "keys": [
     "nuclear only"
@@ -738,13 +738,13 @@
    "id": "limit:remote-agents-only",
    "type": "limit",
    "title": "Limit: a machine set up for remote agents only",
-   "summary": "With the profile `remote` nothing runs on the machine: no Smart Graph, no local agents, no models. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line and the internet tools; the `graph_*` and `developer_*` tools are absent, and the Loop panel and the *Nuclear agent* chat of the editor do not work.",
+   "summary": "With the profile `remote` nothing runs on the machine: no Smart Graph, no local agents, no models. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line and the internet tools; the `graph_*` and `developer_*` tools are absent, and the Builder panel and the *Nuclear agent* chat of the editor do not work.",
    "body": [
     "- The remote agent writes every line the generators do not write, and all of it is paid tokens. With a local profile the local agents write it and the remote agent only leads, validates and corrects.",
     "- No strategy for a request (`graph_strategy`) and no search of the knowledge base: the agent reads `nuclear_brief` and `nuclear_help` instead.",
-    "- `nuclear-loop run` needs the Nuclear Developer: it fails its first check on such a machine.",
+    "- `nuclear-builder run` needs the Nuclear Developer: it fails its first check on such a machine.",
     "- It is the choice for a machine too small for the lightest local profile, or for a user who does not want Ollama.",
-    "- To get the local agents later: `nuclear-loop setup` again, with a local profile."
+    "- To get the local agents later: `nuclear-builder setup` again, with a local profile."
    ],
    "keys": [
     "remote agents only",

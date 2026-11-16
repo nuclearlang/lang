@@ -7,14 +7,14 @@ related: [../../../docs/01-product/roadmap.md, ../02-architecture/workspace.md, 
 # Roadmap of the VS Code extension
 
 What is common to the three editors: [the editors' roadmap](../../../docs/01-product/roadmap.md). Each tool has its
-own: [the Loop](../../../tools/nuclear-builder/docs/01-product/roadmap.md),
-[Nuclear HTTP](../../../tools/nuclear-connector/docs/01-product/roadmap.md),
+own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md),
+[Nuclear Connector](../../../tools/nuclear-connector/docs/01-product/roadmap.md),
 [the chat](../../../tools/nuclear-ai-chat/docs/01-product/roadmap.md),
 [the devices](../../../tools/nuclear-device-manager/docs/01-product/roadmap.md).
 
 ## Untested
 
-Done, and never tried in a running VS Code (only headless renders, node checks, HTTP calls and `nuclear-loop`):
+Done, and never tried in a running VS Code (only headless renders, node checks, HTTP calls and `nuclear-builder`):
 
 - **The Nuclear workspace** (ADR-extensions-0002): the icon theme on the file tree, the editors swapped per
   workspace (a dirty editor stays open), the terminals of build / test / serve and the web commands, the toolbar

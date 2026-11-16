@@ -2,11 +2,11 @@ import 'package:clean_flutter_project/components/characters/presentation/favorit
 import 'package:clean_flutter_project/components/session/presentation/login/managers/login_form_manager.dart';
 import 'package:clean_flutter_project/components/session/presentation/login/managers/login_manager.dart';
 import 'package:clean_flutter_project/components/session/presentation/login/state_models/login_state.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:synapsis/synapsis.dart';
 
-/// DragonflyForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
+/// SynapsisForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
 /// valid form, onSubmit passes the form model to LoginManager (the business logic).
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -31,7 +31,7 @@ class _LoginScreenView extends StatelessWidget {
       body: LoginStateBuilder<LoginManager>(
         initial: () => Padding(
           padding: EdgeInsets.all(24),
-          child: DragonflyForm(
+          child: SynapsisForm(
             manager: context.read<LoginFormManager>(),
             onSubmit: (form) => context.read<LoginManager>().login(form),
             child: Column(

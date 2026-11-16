@@ -2,8 +2,8 @@ import 'package:clean_flutter_project/components/characters/domain/models/charac
 import 'package:clean_flutter_project/components/characters/domain/models/character_error.dart';
 import 'package:clean_flutter_project/components/characters/domain/models/character_params.dart';
 import 'package:clean_flutter_project/shared/models/page.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Repository: each method is an http call. The path is appended to the connection's baseUrl;
 /// `:id` takes the value of the `id` parameter, and the other parameters go to the query (GET) or the body.

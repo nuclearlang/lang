@@ -1,7 +1,7 @@
 import { Project } from '../entities/project.js';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { AppError, Repository, Result } from 'dragonfly-nest';
+import { AppError, Repository, Result } from 'synapsis-nest';
 
 /** The projects table. */
 @Injectable()

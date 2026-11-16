@@ -22,7 +22,7 @@ holds the kinds, the decorators, `[architecture]`, `[project]`, `[project.manife
 | `@screen(providers = [...])` on a view | the same templates | the widget wraps a private `_<Name>View` in a `MultiBlocProvider` with one `BlocProvider<Manager>(create: (_) => inject<Manager>())` per provider; `Manager.load()` in the view is `context.read<Manager>().load()` |
 | `appConfig`, `config` | `appconfig.tpl`, `config.tpl` | a subclass of `AppConfig` / `ComponentConfig` with `final` fields |
 | `model` | `model.tpl` | an immutable class with a `const` constructor, `fromJson` / `toJson` written by json_serializable (`@JsonSerializable(explicitToJson: true)`, `part '<file>.g.dart';`) and equality. A generic model (`Page<T>`) uses `genericArgumentFactories`. `@key("json_name")` is the field's name in the JSON; `@Converter` on a field is the converter that reads and writes it |
-| `model` with `@primary` | `model.tpl` (`field_decor`) | `static final LocalTable<M> table`, named by `@entity("table")` (`decor.entity.arg`; the model's name in `snake_case` without it); `@created` / `@updated` are stamped by the table. It is registered with its component in `registerDragonfly` (`Local.register(M.table, component: ...)`) |
+| `model` with `@primary` | `model.tpl` (`field_decor`) | `static final LocalTable<M> table`, named by `@entity("table")` (`decor.entity.arg`; the model's name in `snake_case` without it); `@created` / `@updated` are stamped by the table. It is registered with its component in `registerSynapsis` (`Local.register(M.table, component: ...)`) |
 | `converter` | `converter.tpl` | a `JsonConverter<T, J>`; `T` and `J` come from the `fromJson` signature; `sample()` is optional, for the generated tests |
 | `repository` | `repository.tpl`, `repository_method.tpl` | a `Repository` subclass; each method without a body and with `@get` / `@post` / `@put` / `@patch` / `@delete` is a `send(...)` call (path, query or body from the parameters, `Decode`, `Cache`, `retry`). A cached method also generates `purge<Method>()`. A method with a body is a plain Dart method |
 | `usecase` | `injectable.tpl`, `usecase_method.tpl` | a class with its injected dependencies and one `exec`; `@requires(...)` → `Guards.check(...)` and `@acl(...)` → `await Guards.verify(...)` (`Guards.check(...)` when `exec` is not async) at the start of `exec`, returning `Left(...)` when denied |
@@ -51,9 +51,9 @@ The generated tests call the twin.
 
 ## Files generated once per project
 
-- `lib/dragonfly.g.dart` (`dragonfly_g.tpl`): `startDragonfly`, `dragonflyConfig`, `registerDragonfly`,
+- `lib/synapsis.g.dart` (`synapsis_g.tpl`): `startSynapsis`, `synapsisConfig`, `registerSynapsis`,
   `buildRouter`, `appRouter`.
-- `test/dragonfly_generated_test.dart` (`generated_tests.tpl`): the JSON round trip of models, the requests of
+- `test/synapsis_generated_test.dart` (`generated_tests.tpl`): the JSON round trip of models, the requests of
   repositories, the route guards, the forms and a smoke test of each screen. A field's JSON comes from its
   converter (`const Conv().toJson(DateTime(2000))`, or `sample()` when it has one); an enum field gets
   `Enum.values.first.name`.

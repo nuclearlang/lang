@@ -11,8 +11,8 @@
    "summary": "What this dialect adds to the platform's sheet: the app is generated as React 19 (no JSX) + React Router 7 + Vite + Vitest in `build/app` (never edit it).",
    "body": [
     "What this dialect adds to the platform's sheet: the app is generated as React 19 (no JSX) + React Router 7 + Vite +",
-    "Vitest in `build/app` (never edit it). `dragonfly build`, `dragonfly install` (npm), `dragonfly run` (Vite),",
-    "`dragonfly test` (Vitest + Testing Library). Full rules: `nuclear help react`."
+    "Vitest in `build/app` (never edit it). `nuclear build`, `nuclear install` (npm), `nuclear run` (Vite),",
+    "`nuclear test` (Vitest + Testing Library). Full rules: `nuclear help react`."
    ],
    "platforms": [
     "web"
@@ -31,20 +31,20 @@
    "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#1-project",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 1. Project",
-   "summary": "A folder with `config.nuc` (`dragonfly(platform = \"web\", dialect = \"react\")`) and `main.nuc`; `nuclear build .` writes `build/app`: `src/` (the app; `src/dragonfly.g.ts` and `src/index.ts` generated), `test/`, `index.html`, `package.json`, `tsconfig.json`, `vite.config.ts`.",
+   "summary": "A folder with `config.nuc` (`synapsis(platform = \"web\", dialect = \"react\")`) and `main.nuc`; `nuclear build .` writes `build/app`: `src/` (the app; `src/synapsis.g.ts` and `src/index.ts` generated), `test/`, `index.html`, `package.json`, `tsconfig.json`, `vite.config.ts`.",
    "body": [
-    "A folder with `config.nuc` (`dragonfly(platform = \"web\", dialect = \"react\")`) and `main.nuc`; `nuclear build .`",
-    "writes `build/app`: `src/` (the app; `src/dragonfly.g.ts` and `src/index.ts` generated), `test/`, `index.html`,",
+    "A folder with `config.nuc` (`synapsis(platform = \"web\", dialect = \"react\")`) and `main.nuc`; `nuclear build .`",
+    "writes `build/app`: `src/` (the app; `src/synapsis.g.ts` and `src/index.ts` generated), `test/`, `index.html`,",
     "`package.json`, `tsconfig.json`, `vite.config.ts`. In `build/app`: `npm install`, `npm run dev` (Vite, port 5173),",
-    "`npm test` (Vitest), `npm run build` (tsc + Vite). The `[toolchain]` of the dialect gives the `dragonfly` CLI those",
+    "`npm test` (Vitest), `npm run build` (tsc + Vite). The `[toolchain]` of the dialect gives the `nuclear` CLI those",
     "commands.",
     "",
     "Generated once per project:",
     "",
     "| File | Holds |",
     "|---|---|",
-    "| `src/dragonfly.g.ts` | `startDragonfly()`, `dragonflyConfig()`, `registerModels()`, `registerDragonfly()` (configs, the injector, the `@on` subscriptions), `routes` (one `AppRoute` per `@screen`, props from the url parameters), `appRouter()` |",
-    "| `src/index.ts` | starts Dragonfly, mounts the `App` of `main.nuc` in `#root` |",
+    "| `src/synapsis.g.ts` | `startSynapsis()`, `synapsisConfig()`, `registerModels()`, `registerSynapsis()` (configs, the injector, the `@on` subscriptions), `routes` (one `AppRoute` per `@screen`, props from the url parameters), `appRouter()` |",
+    "| `src/index.ts` | starts Synapsis, mounts the `App` of `main.nuc` in `#root` |",
     "| `index.html`, `vite.config.ts`, `tsconfig.json`, `package.json`, `.npmrc` | Vite's entry (title, description, the project's `public/styles.css` and `favicon.svg`), the test environment (jsdom, `test/**/*_test.ts`), TypeScript strict, the dependencies, `install-links=true` (npm copies the runtime instead of linking it, so TypeScript and Vite resolve React from the app) |"
    ],
    "platforms": [
@@ -89,7 +89,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.8dca9d",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#2-how-each-kind-is-written.80ed01",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 2. How each kind is written",
    "summary": "2. How each kind is written",
@@ -99,7 +99,7 @@
     "| `guard` | `class extends Guard` with `canActivate()` |",
     "| state model `Name(a: A, flag: boolean)` | `enum NameStatus`, `class Name` (`status`, optional data fields, `static initial()`, `static a(a)`, `static flag()`), `interface NameBuilders`, `function NameBuilder(builders)` → a component that reads `useStateOf(Name)` and calls the builder of the current status |",
     "| `@stateModel(S) statemanager` | `class extends StateManager<S>`; `@state(S.x)` methods become `async x(...): Promise<void>` that `emit` (`result.match(S.error, S.x)` for a `Result`) around a private `_x` with the body; `@before`/`@after` call the named method |",
-    "| `tests` | `describe(name, () => { beforeEach(DragonflyTest.start(...), DragonflyTest.mock(X)); ... })`; `@test` → `test(desc, async () => ...)`; `@states` → `statesOf(manager, ...)` + `expect(states).toEqual(...)`; `@widget` → `test` |"
+    "| `tests` | `describe(name, () => { beforeEach(SynapsisTest.start(...), SynapsisTest.mock(X)); ... })`; `@test` → `test(desc, async () => ...)`; `@states` → `statesOf(manager, ...)` + `expect(states).toEqual(...)`; `@widget` → `test` |"
    ],
    "platforms": [
     "web"
@@ -231,13 +231,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.b1b4f4",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#3-equivalences.ad47f2",
    "type": "spec",
    "title": "Dialect `react`: the `web` platform in TypeScript with React — 3. Equivalences",
-   "summary": "import { AppEvent, Json } from 'dragonfly-web'; export class Pinged extends AppEvent { readonly n: number; constructor(init: { n: number }) { super(); this.n = init.n; } static fromJson(json: Json): Pinged { return new Pinged({ n: json['n'] as number, }); } get eventName(): string { return…",
+   "summary": "import { AppEvent, Json } from 'synapsis-web'; export class Pinged extends AppEvent { readonly n: number; constructor(init: { n: number }) { super(); this.n = init.n; } static fromJson(json: Json): Pinged { return new Pinged({ n: json['n'] as number, }); } get eventName(): string { return…",
    "body": [
     "```typescript",
-    "import { AppEvent, Json } from 'dragonfly-web';",
+    "import { AppEvent, Json } from 'synapsis-web';",
     "",
     "export class Pinged extends AppEvent {",
     "  readonly n: number;",
@@ -283,14 +283,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#4-runtime-dragonfly-web.7e0d38",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#4-runtime-synapsis-web.5b5efe",
    "type": "spec",
-   "title": "Dialect `react`: the `web` platform in TypeScript with React — 4. Runtime (`dragonfly-web`)",
-   "summary": "4. Runtime (`dragonfly-web`)",
+   "title": "Dialect `react`: the `web` platform in TypeScript with React — 4. Runtime (`synapsis-web`)",
+   "summary": "4. Runtime (`synapsis-web`)",
    "body": [
     "| `buildRouter`, `goTo`, `pushTo`, `goBack`, `pathTo`, `RouterProvider`, `AppRoute` | routes from `@screen`, navigation by screen |",
     "| `Log` (`d`, `i`, `s`, `w`, `e`, `sink`) | logs with the call site the transpiler passes (`at`) |",
-    "| `dragonfly-web/testing`: `DragonflyTest` (`start`, `respondWith`, `respond`, `requests`, `replace`, `mock`, `of`), `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` | tests |"
+    "| `synapsis-web/testing`: `SynapsisTest` (`start`, `respondWith`, `respond`, `requests`, `replace`, `mock`, `of`), `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` | tests |"
    ],
    "platforms": [
     "web"
@@ -306,17 +306,17 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#4-runtime-dragonfly-web.e53d26",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/react.md#4-runtime-synapsis-web.d0a6a7",
    "type": "spec",
-   "title": "Dialect `react`: the `web` platform in TypeScript with React — 4. Runtime (`dragonfly-web`)",
-   "summary": "4. Runtime (`dragonfly-web`)",
+   "title": "Dialect `react`: the `web` platform in TypeScript with React — 4. Runtime (`synapsis-web`)",
+   "summary": "4. Runtime (`synapsis-web`)",
    "body": [
     "| Export | What it does |",
     "|---|---|",
     "| `Result`, `Ok`, `Err`, `AppError`, `HttpError`, `NotFound` | the platform's Result and errors (`Error(message)` in Nuclear is `new AppError(message)`) |",
     "| `register`, `inject`, `replace`, `resetInjector` | the injector (`{ singleton: false }` for use cases and managers) |",
     "| `AppConfig`, `ComponentConfig`, `Connection`, `Http`, `HttpInterceptor`, `Global` | configuration |",
-    "| `Dragonfly.start/addConfig/connection/reset` | the runtime's entry point |",
+    "| `Synapsis.start/addConfig/connection/reset` | the runtime's entry point |",
     "| `Repository` (`send`, `result`, `attempt`, `target`, `purgeCache`), `Decode`, `Cache`, `HttpMethod` | http calls over fetch; GET/PUT/DELETE retry transient failures twice |",
     "| `StateManager<S>` (`state`, `emit`, `subscribe`, `close`) | the state of a screen |",
     "| `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, `useManager`, `useStateOf`, `useManagerState`, `Element` | views as classes over React components; the provided managers |",
@@ -346,8 +346,8 @@
     "> The React dialect of the [web platform](../../../../../nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md) (ADR-web-0001), extending [typescript](typescript.md). The platform's",
     "> rules, kinds and Nuclear are in `web.md`; this document holds only how this dialect writes them: **React 19**",
     "> without JSX (`createElement` and the runtime's HTML functions), **React Router 7**, **Vite 7** to build and run,",
-    "> **Vitest 4** + jsdom + Testing Library to test. Files: `nuclearlang/dialects/typescript/frameworks/react/`; runtime: `packages/dragonfly-web`",
-    "> (npm `dragonfly-web`). Checked by `tools/react-check/check.sh` (tsc --strict, vitest, vite build)."
+    "> **Vitest 4** + jsdom + Testing Library to test. Files: `nuclearlang/dialects/typescript/frameworks/react/`; runtime: `packages/synapsis-web`",
+    "> (npm `synapsis-web`). Checked by `tools/react-check/check.sh` (tsc --strict, vitest, vite build)."
    ],
    "platforms": [
     "web"
@@ -365,7 +365,7 @@
   {
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#1-a-project-in-vs-code-the-web-device",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — In VS Code: the web device",
+   "title": "Synapsis for React: a web app in Nuclear — In VS Code: the web device",
    "summary": "A web project's toolbar has ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, Build, Test and Check.",
    "body": [
     "A web project's toolbar has ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, Build, Test and Check. **▭ Device** opens the app",
@@ -397,9 +397,41 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#1-a-project.30d5bd",
+   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#1-a-project.7f4c86",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 1. A project",
+   "title": "Synapsis for React: a web app in Nuclear — 1. A project",
+   "summary": "nuclear new characters -p web -d react cd characters nuclear check # nuclear check . nuclear build # writes build/app (src/, test/, index.html, package.json, vite.config.ts) nuclear install # npm install in build/app (with the synapsis-web runtime) nuclear run # npm run dev → http://localhost:5173…",
+   "body": [
+    "```sh",
+    "nuclear new characters -p web -d react",
+    "cd characters",
+    "nuclear check            # nuclear check .",
+    "nuclear build            # writes build/app (src/, test/, index.html, package.json, vite.config.ts)",
+    "nuclear install          # npm install in build/app (with the synapsis-web runtime)",
+    "nuclear run              # npm run dev → http://localhost:5173",
+    "nuclear test             # vitest (jsdom)",
+    "```",
+    "",
+    "Without the CLI, `nuclear build .` writes the same `build/app`; then `npm install`, `npm run dev` and `npm test`",
+    "there."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/08-guides/react.md"
+   ],
+   "meta": {
+    "section": "07-web-dialects",
+    "repo": "nuclearlang",
+    "dialect": "react"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#1-a-project.8161c9",
+   "type": "guide",
+   "title": "Synapsis for React: a web app in Nuclear — 1. A project",
    "summary": "characters/ ├── config.nuc ├── main.nuc ├── config/project_config.nuc ├── components/characters/ │ ├── characters_component.nuc │ ├── data/character_repository.nuc │ ├── domain/models/character.nuc │ ├── domain/usecases/get_page_usecase.nuc │ └── presentation/list/ │ ├── character_list_screen.nuc…",
    "body": [
     "```",
@@ -421,7 +453,7 @@
     "",
     "```nuclear",
     "// config.nuc",
-    "dragonfly(platform = \"web\", dialect = \"react\")",
+    "synapsis(platform = \"web\", dialect = \"react\")",
     "app(name = \"characters\", description = \"The characters of an API.\", version = \"1.0.0\")",
     "",
     "// config/project_config.nuc",
@@ -434,40 +466,8 @@
     "    createElement(RouterProvider, router = appRouter())",
     "```",
     "",
-    "Create, build and run it with the `dragonfly` CLI (it writes `config.nuc`, `main.nuc` and",
+    "Create, build and run it with the `nuclear` CLI (it writes `config.nuc`, `main.nuc` and",
     "`config/project_config.nuc` as above):"
-   ],
-   "platforms": [
-    "web"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/08-guides/react.md"
-   ],
-   "meta": {
-    "section": "07-web-dialects",
-    "repo": "nuclearlang",
-    "dialect": "react"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#1-a-project.676dd1",
-   "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 1. A project",
-   "summary": "dragonfly new characters -p web -d react cd characters dragonfly check # nuclear check . dragonfly build # writes build/app (src/, test/, index.html, package.json, vite.config.ts) dragonfly install # npm install in build/app (with the dragonfly-web runtime) dragonfly run # npm run dev →…",
-   "body": [
-    "```sh",
-    "dragonfly new characters -p web -d react",
-    "cd characters",
-    "dragonfly check            # nuclear check .",
-    "dragonfly build            # writes build/app (src/, test/, index.html, package.json, vite.config.ts)",
-    "dragonfly install          # npm install in build/app (with the dragonfly-web runtime)",
-    "dragonfly run              # npm run dev → http://localhost:5173",
-    "dragonfly test             # vitest (jsdom)",
-    "```",
-    "",
-    "Without the CLI, `nuclear build .` writes the same `build/app`; then `npm install`, `npm run dev` and `npm test`",
-    "there."
    ],
    "platforms": [
     "web"
@@ -485,7 +485,7 @@
   {
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#2-data-and-domain-the-mobile-words",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 2. Data and domain, the mobile words",
+   "title": "Synapsis for React: a web app in Nuclear — 2. Data and domain, the mobile words",
    "summary": "// domain/models/character.nuc Character id: int name: string status: string image: string // data/character_repository.nuc @repository(path = \"character\") repository CharacterRepository @get(path = \":id\") getOne(id: int) Result<CharacterError, Character> @get(cache = true, ttl = 600000)…",
    "body": [
     "```nuclear",
@@ -538,7 +538,7 @@
   {
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#3-state-and-screens.3d4c2c",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 3. State and screens",
+   "title": "Synapsis for React: a web app in Nuclear — 3. State and screens",
    "summary": "Elements are HTML functions (`div`, `ul`, `li`, `button`, `input`, `img`...) with the attributes as named arguments and `children`; a view is called like a function.",
    "body": [
     "Elements are HTML functions (`div`, `ul`, `li`, `button`, `input`, `img`...) with the attributes as named arguments",
@@ -585,7 +585,7 @@
   {
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#3-state-and-screens.525dc3",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 3. State and screens",
+   "title": "Synapsis for React: a web app in Nuclear — 3. State and screens",
    "summary": "// presentation/list/state_models/characters_state.nuc CharactersState (full: Character[], error: CharacterError, loading: boolean) // presentation/list/managers/characters_manager.nuc @stateModel(CharactersState) statemanager CharactersManager (characters: CharactersComponent) loadPage(1)…",
    "body": [
     "```nuclear",
@@ -646,7 +646,7 @@
   {
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#4-tests",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 4. Tests",
+   "title": "Synapsis for React: a web app in Nuclear — 4. Tests",
    "summary": "@mock([CharacterRepository]) CharactersTest beforeEach() when(CharacterRepository.getPage).thenReturn(Ok(page())) @test(\"GetPageUseCase keeps only the alive characters\") aliveOnly() result = ~GetPageUseCase.exec(1) expect(okOf(result)).toEqual([character(\"Rick\", \"Alive\")]) @states(\"the manager…",
    "body": [
     "```nuclear",
@@ -670,7 +670,7 @@
     "    ~screen.findByText(\"Rick\")",
     "```",
     "",
-    "The app starts with its real config; every request answers what the test prepares (`DragonflyTest.respondWith`), or",
+    "The app starts with its real config; every request answers what the test prepares (`SynapsisTest.respondWith`), or",
     "a mock answers (`@mock`, `when`, `verify`); a screen renders in a memory router and Testing Library reads it."
    ],
    "platforms": [
@@ -689,7 +689,7 @@
   {
    "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#5-what-is-not-there-yet-and-the-react-ecosystem",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear — 5. What is not there yet, and the React ecosystem",
+   "title": "Synapsis for React: a web app in Nuclear — 5. What is not there yet, and the React ecosystem",
    "summary": "This first version has the mobile kinds a browser needs; forms, converters, translations, the local database and the AI kinds come next with the same words.",
    "body": [
     "This first version has the mobile kinds a browser needs; forms, converters, translations, the local database and",
@@ -715,9 +715,9 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#dragonfly-for-react-a-web-app-in-nuclear",
+   "id": "doc:nuclearlang/dialects/typescript/docs/08-guides/react.md#synapsis-for-react-a-web-app-in-nuclear",
    "type": "guide",
-   "title": "Dragonfly for React: a web app in Nuclear",
+   "title": "Synapsis for React: a web app in Nuclear",
    "summary": "The web platform is the mobile platform in a browser (ADR-web-0001): the same kinds and words, so an app's domain, state and tests read the same on a phone and on the web.",
    "body": [
     "The web platform is the mobile platform in a browser (ADR-web-0001): the same kinds and words, so an app's domain,",

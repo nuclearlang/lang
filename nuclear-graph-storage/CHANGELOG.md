@@ -4,7 +4,7 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
-- MCP: the `dragonfly` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the
+- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the
   project added (ADR-lang-0008).
 - The planner runs a query of the exact facts only when its exact question is closer to what was asked than the
   closest card of the shelves (ADR-graph-0002): "que es nuclear lang?" was answered with every command of `nuclear`,
@@ -48,7 +48,7 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 - MCP server: the graph, the Nuclear Developer's agents (`developer_*`, local first, `developer_review`), and the
   generators (ADR-codegen-0001): `project_inspect`, `generate_component|resource|screen`, `api_inspect`, `web_search`,
   `web_read`.
-- MCP `generate_usecase(project, component, name, calls, route, dry_run)`: `dragonfly gen usecase` for a client; the instructions tell it to wire each use case the local developer wrote (ADR-codegen-0001).
+- MCP `generate_usecase(project, component, name, calls, route, dry_run)`: `nuclear gen usecase` for a client; the instructions tell it to wire each use case the local developer wrote (ADR-codegen-0001).
 - The README's tool table has `developer_retry`; a test holds every MCP tool to the README and to the documentation's
   page (`docs/ai/mcp.md` of `nuclear`), so a new tool is documented in the same change.
 - Strategies (ADR-developer-0001): the row type `strategy` on the playbooks shelf (`meta`: `family`, `scope`, `triggers`; `data`: `signals`,

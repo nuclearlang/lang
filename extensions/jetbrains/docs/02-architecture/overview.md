@@ -6,7 +6,8 @@ related: [../01-product/roadmap.md, ../../../docs/02-architecture/overview.md, .
 ---
 # The JetBrains plugin: its classes
 
-Everything is in `src/dev/nuclearlang/editor/`. The plugin is built into a zip by `build.sh` and installed unpacked
+The plugin's own classes are in `src/dev/nuclearlang/editor/`; the tool windows' classes are in
+`../tools/<tool>/jetbrains/src/dev/nuclearlang/editor/`, compiled with them by `build.sh`. The plugin is built into a zip by `build.sh` and installed unpacked
 in `~/.local/share/Google/AndroidStudio2026.2.1/nuclearlang`.
 
 ## The base
@@ -20,15 +21,15 @@ in `~/.local/share/Google/AndroidStudio2026.2.1/nuclearlang`.
 | `NuclearCommentEnter` | Enter inside a `//` comment continues it with ` * `; Enter on an empty ` *` line ends the comment |
 | `NuclearCodeMetrics`, `NuclearCodeLensSupport`, `NuclearCodeMetricsMarkers`, `NuclearCodeMetricsConfigurable`, `NuclearCodeMetricsActions` | the code metrics the server computes: the code lens and its list of entries, the colored mark per level and on the error stripe, *Settings → Tools → NuclearLang → Code Metrics*, the two toggles; only the values the user changed are stored |
 
-## Dragonfly projects (`NuclearDragonfly.java`)
+## Synapsis projects (`NuclearSynapsis.java`)
 
-A Dragonfly project is a folder with `build/<name>.code-workspace`. *File → Open* → the project folder.
+A Synapsis project is a folder with `build/<name>.code-workspace`. *File → Open* → the project folder.
 
-- `Startup` runs `dragonfly build` and, if the app is not a module yet, loads
+- `Startup` runs `nuclear build` and, if the app is not a module yet, loads
   `build/app/<name>_flutter_app.iml` and offers *Reopen Project*. On reopening, the Flutter plugin gives the device
   picker, the `main.dart` configuration, Run / Debug, hot reload and DevTools.
 - `OnSave` of a `.nuc` → build + `Flutter.Toolbar.ReloadAllAction`.
-- `BeforeRun` (an `ExecutionListener`) → `dragonfly build` with a modal progress; `repair` if it failed with a code
+- `BeforeRun` (an `ExecutionListener`) → `nuclear build` with a modal progress; `repair` if it failed with a code
   other than 2.
 - `processTerminated` with a code other than 0 and without `TERMINATION_REQUESTED`, or a compile error after a
   reload → `repairAndRestart` (at most once per 5 minutes).
@@ -40,7 +41,7 @@ On top of the Dart plugin, with the line map `build/app/.dart_tool/nuclear_lines
 
 - a `BreakpointType` (`nuclear-line`) with `Dart` mirrors in the generated file (`Breakpoints`, `MapWatcher`);
 - `Sessions`: a pause shows the `.nuc` line with `EXECUTIONPOINT_ATTRIBUTES`;
-- `OutputErrors`: a Dart error in the console → `dragonfly explain --json` → a red line at the `.nuc` and the tool
+- `OutputErrors`: a Dart error in the console → `nuclear explain --json` → a red line at the `.nuc` and the tool
   window *Nuclear Error*.
 
 Mixed stepping is not done here.
@@ -49,8 +50,8 @@ Mixed stepping is not done here.
 
 | Tool window | Class | Shortcut | Project |
 |---|---|---|---|
-| *Nuclear HTTP* (left) | `NuclearHttp.java` | `Alt+Shift+H` | [`tools/nuclear-connector`](../../../tools/nuclear-connector/docs/02-architecture/overview.md) |
-| *Nuclear Loop* (bottom) | `NuclearLoop.java` | `Alt+Shift+P` | [`tools/nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/overview.md) |
+| *Nuclear Connector* (left) | `../tools/nuclear-connector/jetbrains/src/…/NuclearConnector.java` | `Alt+Shift+H` | [`tools/nuclear-connector`](../../../tools/nuclear-connector/docs/02-architecture/overview.md) |
+| *Nuclear Builder* (bottom) | `../tools/nuclear-builder/jetbrains/src/…/NuclearBuilder.java` | `Alt+Shift+P` | [`tools/nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/overview.md) |
 | *Nuclear Error* (right) | `NuclearDebug.java` | — | above |
 
 ## What the build changes
@@ -63,8 +64,8 @@ stays comment gray) and the `language-configuration.json` without `onEnterRules`
 
 - The Nuclear workspace: it has tool windows and actions with shortcuts instead (ADR-extensions-0002).
 - The project card in the status bar: only the tool windows read `.nuclear/project.json`, to find the projects.
-- The devices inside the editor: the Dragonfly device is a Flutter custom device of VS Code only.
-- The chat, the settings page, the notifications and the Retry buttons of the Loop.
+- The devices inside the editor: the Synapsis device is a Flutter custom device of VS Code only.
+- The chat, the settings page, the notifications and the Retry buttons of Nuclear Builder.
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../../docs/03-adr/old-numbers.md).

@@ -3,7 +3,7 @@ status: accepted
 date: 2026-11-16
 deciders: Julian Molina
 ---
-# ADR-0001: Dragonfly is Nuclear's framework: a concept independent of the target language, and a project is only `.nuc`
+# ADR-0001: Synapsis is Nuclear's framework: a concept independent of the target language, and a project is only `.nuc`
 
 ## Context and problem
 Writing an app usually means choosing and wiring many packages: state, JSON, injection, http, routing,
@@ -12,14 +12,14 @@ and it cannot be different in every target the transpiler writes. Two things had
 (the companion of one target, or part of the language), and what a project made with it holds.
 
 ## Decision
-**The framework is called Dragonfly and it comes with the language.** It is to Nuclear what Actix is to Rust: no
+**The framework is called Synapsis and it comes with the language.** It is to Nuclear what Actix is to Rust: no
 other framework is needed. In Nuclear only the business logic is written; constructors, overrides, injection,
 JSON, http, states, modules and imports are written by the transpiler. What a target framework lacks is added by a
-runtime package of Dragonfly in the target language (the first one: the Dart package `dragonfly`, with the classes
+runtime package of Synapsis in the target language (the first one: the Dart package `synapsis`, with the classes
 and features Flutter lacks).
 
-**It is a framework concept, not a target.** Dragonfly is components, layers and architecture kinds; each dialect
-applies it to its technology. The `dragonfly` command knows no language: what it needs from each one (how to
+**It is a framework concept, not a target.** Synapsis is components, layers and architecture kinds; each dialect
+applies it to its technology. The `nuclear` command knows no language: what it needs from each one (how to
 install, run, test, migrate, add a package) is declared by the dialect in `[toolchain]`.
 
 **The `.nuc` files are a project of their own.** They are separate from the target app, which is generated complete
@@ -30,9 +30,9 @@ translations in `assets/` (ADR-synapsis-0005). The manifest is Nuclear too: `con
 Everything generated goes to `build/`.
 
 ## Options considered
-1. Dragonfly as the framework of the `flutter` dialect only, with its Dart package: the first form of the decision,
+1. Synapsis as the framework of the `flutter` dialect only, with its Dart package: the first form of the decision,
    generalized.
-2. Dragonfly as a framework concept every dialect applies to its technology: chosen.
+2. Synapsis as a framework concept every dialect applies to its technology: chosen.
 
 ## Consequences
 - Positive: one architecture to learn for every target; a project is read and reviewed as Nuclear only; nothing

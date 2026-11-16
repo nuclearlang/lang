@@ -1,6 +1,6 @@
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:go_router/go_router.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Screens with shell = { widget: MainShell, tab: n } are its tabs; each one keeps its own stack.
 class MainShell extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:clean_flutter_project/components/session/data/auth_repository.dart';
 import 'package:clean_flutter_project/components/session/domain/models/auth.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Starts the session: the token goes in every request and the ACL checks the roles. session.start publishes
 /// SessionStarted, and every screen with GlobalEvents or @screen(loggedIn) is notified.

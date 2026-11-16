@@ -1,4 +1,4 @@
-# Editor documentation of the flutter dialect (Dragonfly): what the editor shows for each kind,
+# Editor documentation of the flutter dialect (Synapsis): what the editor shows for each kind,
 # decorator and header word. Markdown, in English. It is not part of the dialect's rules: the loader
 # skips docs.toml and a build never reads it (Dialect::doc, nuclearlang/docs/07-reference/dialects.md §5.7). Rules: nuclearlang/dialects/dart/docs/07-reference/flutter.md.
 
@@ -105,7 +105,7 @@ appConfig ProjectConfig
 - Each connection has a `connectionName` (`""` is the default one); names do not repeat.
 - `Http(...)` takes `baseUrl`, `connectTimeout`, `receiveTimeout`, `headers`,
   `interceptors`...
-- `~startDragonfly()` (in `main.nuc`) starts it before `runApp`.
+- `~startSynapsis()` (in `main.nuc`) starts it before `runApp`.
 - A component adds its own with `config`.
 - `local: LocalDatabase = LocalDatabase(encrypted = true)` says how the local database (the tables of the models
   with `@primary`) is kept: encrypted (the default: AES-256, key in the device's secure storage) or plain.
@@ -145,11 +145,11 @@ Character
 ```
 
 Generates `@JsonSerializable class Character` with a `const` constructor, `fromJson`, `toJson`,
-`==` and `hashCode`; `dragonfly build` runs build_runner.
+`==` and `hashCode`; `nuclear build` runs build_runner.
 
 - Generic models: `Page<T>` + `results: T[]`; each use says which: `Page<Character>`.
 - `ApiFailure > Exception` implements an interface.
-- The error type of a dragonfly `Result` (repositories, guards) has a `message: string` field.
+- The error type of a synapsis `Result` (repositories, guards) has a `message: string` field.
 - A model is visible from every component (`N0302` does not apply).
 '''
 
@@ -422,7 +422,7 @@ formmanager LoginFormManager
 ```
 
 - A `@validate("field")` method receives the value and returns the error message or `null`.
-- The screen lists it in `providers`; `DragonflyForm(manager = LoginFormManager, onSubmit = ...)`
+- The screen lists it in `providers`; `SynapsisForm(manager = LoginFormManager, onSubmit = ...)`
   finds its fields by name.
 - Also: `X.change("user", v)`, `~X.submit((form) => ...)`, `X.reset()`, `X.state.errorOf("user")`.
 '''
@@ -526,7 +526,7 @@ CharactersTest
 | `X.method()` | the instance of the injector (the mock or the real one) |
 
 A `Result` does not propagate here: compare it with `isOk`, `isErr`, `isOkWith(v)`, `isErrWith(e)`.
-Run them with `dragonfly test`.
+Run them with `nuclear test`.
 '''
 
 integration = '''
@@ -536,13 +536,13 @@ integration = '''
 AppTest
   @widget("the app opens on the list")
   opens(tester: WidgetTester)
-    ~startDragonfly()
+    ~startSynapsis()
     ~tester.pumpWidget(App())
     ~tester.pumpAndSettle()
     expect(find.byType(CharacterListScreen), findsOneWidget)
 ```
 
-Run them with `dragonfly test --integration -- -d <device>`.
+Run them with `nuclear test --integration -- -d <device>`.
 '''
 
 tools = '''

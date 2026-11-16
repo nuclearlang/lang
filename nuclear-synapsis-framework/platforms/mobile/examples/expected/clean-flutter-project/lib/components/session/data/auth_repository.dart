@@ -1,6 +1,6 @@
 import 'package:clean_flutter_project/components/session/domain/models/auth.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 class AuthRepository extends Repository {
   AuthRepository() : super(path: 'auth');

@@ -4,16 +4,16 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [follow-a-run.md, pipeline-commands.md, ../../../../../installer/docs/08-guides/ai-setup.md]
 ---
-# Write a spec and start the Loop
+# Write a spec and start the Builder
 
-The Loop takes a spec to tested, reviewed code on your machine, with local agents; the same pipeline can run on a
+The Builder takes a spec to tested, reviewed code on your machine, with local agents; the same pipeline can run on a
 server.
 
 ## 1. Set up once
 
 ```sh
 curl -fsSL https://nuclearlang.github.io/install.sh | sh    # NuclearLang, then the set-up of the AI services
-nuclear-loop setup                                           # the set-up alone, any time
+nuclear-builder setup                                           # the set-up alone, any time
 ```
 
 The set-up reads your machine, suggests a set of models that fits it (`lite`, `medium` or `hard`, or remote agents
@@ -23,8 +23,8 @@ Up the AI Services*). Every step, the profiles and what to do when one fails:
 [Set up the AI services](../../../../../installer/docs/08-guides/ai-setup.md).
 
 ```sh
-nuclear-loop setup --status                              # what is installed and running
-claude mcp add --scope user nuclear -- nuclear-graph mcp # optional: Claude leads
+nuclear-builder setup --status                              # what is installed and running
+claude mcp add --scope user nuclear -- nuclear-mcp          # optional: Claude leads
 ```
 
 No program can read the graph until you allow it with `connect` or `allow` (the set-up allows the Developer and the
@@ -72,7 +72,7 @@ What is wanted.
 
 ## Resources
 
-- `the arguments of one dragonfly gen resource call`
+- `the arguments of one nuclear gen resource call`
 
 ## Pieces
 
@@ -83,23 +83,23 @@ What is wanted.
   `claude`.
 - `- Strategy:`, `## Context`, `## Resources` and `## Pieces` are optional.
 
-- **JetBrains** (Android Studio, IntelliJ): the *Nuclear Loop* tool window (`Alt+Shift+P`) lists every project's
+- **JetBrains** (Android Studio, IntelliJ): the *Nuclear Builder* tool window (`Alt+Shift+P`) lists every project's
   specs and runs. *New Spec* writes the file, *Run the Spec* (local agents or Claude leading) runs it, and each run
   unfolds into its stages and steps, with the trace, code and output of the selected step.
-- **A terminal**: `nuclear-loop run specs/<id>/spec.md [--lead local|claude]`, `nuclear-loop runs`.
+- **A terminal**: `nuclear-builder run specs/<id>/spec.md [--lead local|claude]`, `nuclear-builder runs`.
 - **A frontier model over MCP**: the Nuclear MCP server tells every frontier model to generate first
   (`generate_resource`, `generate_usecase`) and to let the local developer work on what is left. `developer_task`
   runs this pipeline with the local agents and answers the journal; the frontier model validates (`nuclear_check`,
-  `dragonfly test`), corrects only what is wrong and records it with `developer_review`, whose corrected files
+  `nuclear test`), corrects only what is wrong and records it with `developer_review`, whose corrected files
   become examples in the graph for the local developer ([the MCP server](../../../../../tools/mcp/AGENTS.md)).
 
-Every run is kept in `.nuclear/loop/runs/<id>.json`, the same file each editor draws.
+Every run is kept in `.nuclear/builder/runs/<id>.json`, the same file each editor draws.
 
 ## 4. Name the resources and let the generators write them
 
-*Generate* comes before any agent. `dragonfly gen resource` writes, already compiling:
+*Generate* comes before any agent. `nuclear gen resource` writes, already compiling:
 
-- every resource the spec names: a `## Resources` section with one `dragonfly gen resource` argument line per item,
+- every resource the spec names: a `## Resources` section with one `nuclear gen resource` argument line per item,
   or else each `GET <url>` line of the description (`GET https://rickandmortyapi.com/api/character` is
   `characters Character`);
 - every resource the analysis read in plain words ("each supplier has a name and a phone; we add and list them").

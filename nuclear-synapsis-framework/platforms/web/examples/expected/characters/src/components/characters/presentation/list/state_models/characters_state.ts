@@ -1,6 +1,6 @@
 import { Character } from '../../../domain/models/character';
 import { CharacterError } from '../../../domain/models/character_error';
-import { Element, createElement, useStateOf } from 'dragonfly-web';
+import { Element, createElement, useStateOf } from 'synapsis-web';
 
 /** State model: each field is a state of the screen. */
 export enum CharactersStateStatus {

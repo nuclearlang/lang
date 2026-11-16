@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 interface Make {
   /** Where the kind's files go, relative to the project root; `{c}` component, `{s}` screen. */
   dir: string;
-  /** The arguments of `dragonfly` for a (component, screen, name). */
+  /** The arguments of `synapsis` for a (component, screen, name). */
   args: (c: string, s: string, n: string) => string[];
 }
 
@@ -20,7 +20,7 @@ const screened = (kind: string) => (c: string, s: string, n: string) => ['make',
 const shared = (kind: string) => (_c: string, _s: string, n: string) => ['make', kind, n];
 const C = (dir: string) => `components/{c}/${dir}`;
 
-/** What each platform can make and where (dragonfly help, `nuclear help layout --platform <p>`). */
+/** What each platform can make and where (nuclear help, `nuclear help layout --platform <p>`). */
 const MAKES: Record<string, Record<string, Make>> = {
   backend: Object.fromEntries(
     Object.entries({ usecase: 'domain/usecases', model: 'domain/models', service: 'domain/services', aggregate: 'domain/aggregates', repository: 'data/repositories', entity: 'data/entities', controller: 'api', listener: 'events', agent: 'ai', graph: 'ai', tools: 'ai', state: 'ai/states' }).map(([k, d]) => [k, { dir: C(d), args: generic(k) }]),
@@ -99,7 +99,7 @@ interface Ctx {
 
 const run = (cwd: string, args: string[]) =>
   new Promise<{ ok: boolean; out: string }>((resolve) =>
-    execFile('dragonfly', args, { cwd }, (err, stdout, stderr) => resolve({ ok: !err, out: (stdout + stderr).trim() })),
+    execFile('nuclear', args, { cwd }, (err, stdout, stderr) => resolve({ ok: !err, out: (stdout + stderr).trim() })),
   );
 
 async function make(id: string, x: Ctx): Promise<void> {
@@ -111,7 +111,7 @@ async function make(id: string, x: Ctx): Promise<void> {
   const args = makeArgs(x.nuclearPlatform, id, x.nuclearC ?? '', x.nuclearS ?? '', name ?? '', fields);
   if (!args) return;
   const r = await run(x.nuclearRoot, args);
-  if (!r.ok) return void vscode.window.showErrorMessage(`dragonfly ${args.join(' ')}: ${r.out}`);
+  if (!r.ok) return void vscode.window.showErrorMessage(`nuclear ${args.join(' ')}: ${r.out}`);
   const created = /created\s+(\S+\.nuc)/.exec(r.out)?.[1];
   if (created) void vscode.commands.executeCommand('vscode.open', vscode.Uri.file(path.join(x.nuclearRoot, created)));
   else void vscode.window.showInformationMessage(r.out || 'Nothing to create.');

@@ -1,7 +1,7 @@
 import { CharactersComponent } from '../../characters_component';
 import { Character } from '../../domain/models/character';
 import { CharacterError } from '../../domain/models/character_error';
-import { Element, Result, StatefulView, StatelessView, article, button, createElement, goBack, h2, img, inject, p, section, small, statefulOf, statelessOf } from 'dragonfly-web';
+import { Element, Result, StatefulView, StatelessView, article, button, createElement, goBack, h2, img, inject, p, section, small, statefulOf, statelessOf } from 'synapsis-web';
 
 /** One character, loaded when the screen is shown (a stateful keeps what it loaded between renders). */
 export function CharacterDetailScreen(props: CharacterDetailScreenProps): Element {

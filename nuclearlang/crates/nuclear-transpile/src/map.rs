@@ -14,7 +14,7 @@ use std::path::Path;
 pub const MAP_FILE: &str = ".nuclear/map.md";
 
 /// The map of the project in `root`.
-/// One declaration of the project: its component (or `""` outside one), file, kind and name (`dragonfly gen inspect`).
+/// One declaration of the project: its component (or `""` outside one), file, kind and name (`nuclear gen inspect`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Declared {
     pub component: String,
@@ -42,7 +42,7 @@ pub fn inventory(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Vec<Dec
     out
 }
 
-/// A declaration as its source writes it: its file, its header's parameters and its methods (`dragonfly gen usecase`
+/// A declaration as its source writes it: its file, its header's parameters and its methods (`nuclear gen usecase`
 /// reads what it wires).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Shape {

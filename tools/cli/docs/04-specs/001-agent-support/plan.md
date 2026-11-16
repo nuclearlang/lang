@@ -5,17 +5,17 @@ updated: 2026-11-16
 related: [tools/cli/docs/03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md, tools/cli/docs/02-architecture/agent-support.md]
 ---
 
-# Plan: agents master Nuclear and Dragonfly without spending tokens
+# Plan: agents master Nuclear and Synapsis without spending tokens
 
 Status: **F1–F4 done** (2026-11-03, ADR-cli-0002): `nuclear-synapsis-framework/eval/agent-eval/` with its baseline,
 the briefs (`docs/07-reference/brief/` of the language, each language dialect and each platform) and
-`nuclear spec --brief`, the `nuclear` skill + `nuclear agent init` / `dragonfly agent init`, the check hook.
+`nuclear spec --brief`, the `nuclear` skill + `nuclear agent init` / `nuclear agent init`, the check hook.
 F5 and F6 done (2026-11-03, `ADR-lang-0010`: N0022 habits of TS/Dart/Python with fixes; N0219/N0220 from the type
 definitions, in projects). F7 pending (see [the specs' index](../README.md)).
 
 ## 1. Goal
 
-An agent (Claude Code or another) writes correct Nuclear/Dragonfly on the first or second try, without having
+An agent (Claude Code or another) writes correct Nuclear/Synapsis on the first or second try, without having
 been trained on the language, and the cost of "teaching" it is much lower than the token savings of the `.nuc`
 itself.
 
@@ -60,12 +60,12 @@ reference for humans and for the transpiler; the agent needs something else.
 
 **What already exists and works as it is** (no need to reinvent it):
 
-- `nuclear check <file|folder> --json` and `dragonfly check --json`: errors + architecture rules.
-- `nuclear defs show|search <Name> --dialect flutter`: the API of Flutter, Dragonfly and the packages in Nuclear
+- `nuclear check <file|folder> --json` and `nuclear check --json`: errors + architecture rules.
+- `nuclear defs show|search <Name> --dialect flutter`: the API of Flutter, Synapsis and the packages in Nuclear
   notation. `defs show Text` takes about 700 tokens: a cheap, precise lookup.
 - `nuclear help <topic>`: a guide split into chapters of 1–4k tokens.
 - `nuclearlang/tools/spec-check/check.py`: checks that the Nuclear → target examples are the real output.
-- `dragonfly make`: generates the skeleton of each piece (screen, usecase, repository...), so the agent does not
+- `nuclear make`: generates the skeleton of each piece (screen, usecase, repository...), so the agent does not
   write the structure from scratch.
 - LSP + VS Code extension (`nuclearlang/crates/nuclear-lsp`, `extensions/`).
 
@@ -86,7 +86,7 @@ reference for humans and for the transpiler; the agent needs something else.
 The last two are the most serious: the error shows up only in `flutter analyze`, on the generated Dart and with
 lines the agent never wrote.
 
-There is no agent integration either: `dragonfly new` generates no `CLAUDE.md`, `AGENTS.md`, skill nor hooks.
+There is no agent integration either: `nuclear new` generates no `CLAUDE.md`, `AGENTS.md`, skill nor hooks.
 
 ## 3. Features
 
@@ -113,9 +113,9 @@ knows Dart/TypeScript**. It includes only what changes:
   `f() = Module.method`, constructors `(dep: Type)`, kinds instead of `class`.
 - 10–15 **Nuclear → Dart pairs** chosen from what is used most, generated from the transpiler's real output
   (checked with `spec-check`, as today).
-- Dragonfly kinds in one line each (`repository`, `usecase`, `statemanager`, `stateless`, `appcomponent`...) and
+- Synapsis kinds in one line each (`repository`, `usecase`, `statemanager`, `stateless`, `appcomponent`...) and
   the architecture rules (screen → component → usecase → repository).
-- "How to look up the rest": `nuclear help <topic>`, `nuclear defs show X`, `dragonfly make`.
+- "How to look up the rest": `nuclear help <topic>`, `nuclear defs show X`, `nuclear make`.
 
 Source: `docs/07-reference/brief/<dialect>.md` next to each reference, embedded with `include_str!` like the other
 topics.
@@ -128,15 +128,15 @@ topics.
 
 - A `nuclear` skill (folder `SKILL.md` + references). Its body is short: when it applies (`*.nuc`,
   `nuclear.toml`) and the work cycle:
-  1. `dragonfly make ...` for the skeleton.
+  1. `nuclear make ...` for the skeleton.
   2. Write following the brief.
-  3. `dragonfly check --json` → fix until green.
+  3. `nuclear check --json` → fix until green.
   4. On a doubtful API: `nuclear defs show/search`, never guess.
 - The brief **is not copied** into the skill: the skill asks for `nuclear spec --brief --dialect <d>`, so it is
   never out of date with the installed binary.
 - `installer/install.sh` installs the skill in `~/.claude/skills/nuclear/` (option `--no-agent` to skip it).
-- `dragonfly new` generates in the project an `AGENTS.md` of 10–20 lines (it works for any agent, not only
-  Claude) and a `CLAUDE.md` that imports it with `@AGENTS.md`. A `dragonfly agent init` command is added for
+- `nuclear new` generates in the project an `AGENTS.md` of 10–20 lines (it works for any agent, not only
+  Claude) and a `CLAUDE.md` that imports it with `@AGENTS.md`. A `nuclear agent init` command is added for
   existing projects like `rick_and_morty`.
 - **Done when:** in a new project, Claude Code activates the skill by itself when it touches a `.nuc`, and the F1
   tasks have fewer errors than the baseline.
@@ -147,7 +147,7 @@ A Claude Code `PostToolUse` hook for `Edit|Write` on `*.nuc`: it runs `nuclear c
 project's) and, if there are errors, gives them back to the agent in the same turn. The agent does not have to
 remember to check.
 
-- Installed with the skill (F3) inside the project's `.claude/settings.json` through `dragonfly agent init`.
+- Installed with the skill (F3) inside the project's `.claude/settings.json` through `nuclear agent init`.
 - Compact output: only code, line, message and `fix`, without the source code block. Few tokens.
 - **Done when:** a `.nuc` with an error, edited by the agent, gets the diagnostic without the agent asking.
 
@@ -182,7 +182,7 @@ also used to validate:
 Available base (`ADR-mobile-0001` to `ADR-mobile-0001`): project defs are added with
 `Loader::add_defs(&mut Dialect, &project::defs_lock(root))` (reads `build/defs.lock`, refs `name@version`),
 `nuclear_dialect::defs_cache_dir()` and `Package::from_project`. The validation must look up the dialect
-**after** `add_defs`; otherwise the project's third-party packages (`dragonfly flutter add`) would give false
+**after** `add_defs`; otherwise the project's third-party packages (`nuclear flutter add`) would give false
 positives. The LSP already calls `add_defs` before `project::build`.
 
 Care:
@@ -213,7 +213,7 @@ missing line in the brief or a missing `fix` in a diagnostic.
 |---|---|---|---|
 | 1 | F1 baseline | `nuclear-synapsis-framework/eval/agent-eval/` | before touching anything |
 | 2 | F2 brief | `docs/07-reference/brief/` of each project, `tools/cli` | `spec-check` on the briefs |
-| 3 | F3 skill + AGENTS.md | `installer/install.sh`, `tools/cli/agent-files/`, `nuclear-synapsis-framework/cli/` | `dragonfly agent init` |
+| 3 | F3 skill + AGENTS.md | `installer/install.sh`, `tools/cli/agent-files/`, `tools/cli/src/framework/` | `nuclear agent init` |
 | 4 | F4 hook | `tools/cli/src/agent.rs` (writes `.claude/settings.json`) | compact output |
 | 5 | F5 diagnostics | `nuclearlang/crates/nuclear-syntax`, `nuclear-diag`, `nuclearlang/docs/07-reference/diagnostics.md` | tests per pattern |
 | 6 | F6 defs validation | `nuclearlang/crates/nuclear-transpile` (resolver/emit), `defs.rs` | zero false positives |

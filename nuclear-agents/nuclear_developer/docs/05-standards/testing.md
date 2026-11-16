@@ -14,8 +14,8 @@ project's own tests check the code; the evaluation checks what the agents answer
 | What | Command | Needs |
 |---|---|---|
 | The compiler | `nuclear check . --json` reports no errors | — |
-| The tests in Nuclear (`test/analyst_test.nuc`, `test/workbench_test.nuc`) | `dragonfly test` | the graph running (`nuclear-graph serve`) |
-| The generated Python, strict | `cd build && ../../../nuclearlang/tools/python/.venv/bin/pyright --pythonpath .venv/bin/python app` → 0 errors | `dragonfly install` |
+| The tests in Nuclear (`test/analyst_test.nuc`, `test/workbench_test.nuc`) | `nuclear test` | the graph running (`nuclear-graph serve`) |
+| The generated Python, strict | `cd build && ../../../nuclearlang/tools/python/.venv/bin/pyright --pythonpath .venv/bin/python app` → 0 errors | `nuclear install` |
 
 ## Evaluation: how it was trained
 
@@ -24,7 +24,7 @@ and distillation**, measured by `eval/run.py` over the tasks of `eval/tasks.toml
 (`must`): 42 tasks of one file (every backend kind, and the mobile and web platforms) and 3 **features**
 (`[[feature]]`) of 4–6 files that the planner splits, the coder writes piece by piece (each with the pieces before
 it as context, and one repair pass with the project's errors) and the compiler checks together as a fresh
-`dragonfly new` project:
+`nuclear new` project:
 
 1. `reference`: Claude Sonnet answers every task once, with the same guide and the dialect's sheet, and one repair
    with the compiler's errors (USD 0.89 for the 45). A feature is one answer with every file.
@@ -41,7 +41,7 @@ The local agents write Nuclear for a platform; the dialect of a task only builds
 
 **The analyst** (`ADR-developer-0001`) is measured apart: `run.py analyze` gives eleven requests, as a user writes
 them in English and Spanish, to `/developer/analyze` in a fresh project (`[[analysis]]` in `tasks.toml`) and checks
-the strategy each gets, the `dragonfly gen` call a request in plain words becomes, the pieces the tools give, the
+the strategy each gets, the `nuclear gen` call a request in plain words becomes, the pieces the tools give, the
 questions it asks and the stages that run. Which strategy a request gets asks no model: it is tested with the
 knowledge base (`nuclear-graph knowledge ask`: 62 requests, all to their strategy).
 

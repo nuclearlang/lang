@@ -5,9 +5,9 @@ import { NewProject, NewTask, TaskChanges } from '../src/components/tasks/domain
 import { TaskEvents } from '../src/components/tasks/events/task_events.js';
 import { TasksAppComponent } from '../src/components/tasks/tasks_appcomponent.js';
 import { INestApplication } from '@nestjs/common';
-import { inject } from 'dragonfly-nest';
-import { startTestApp, stopTestApp } from 'dragonfly-nest/testing';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { inject } from 'synapsis-nest';
+import { startTestApp, stopTestApp } from 'synapsis-nest/testing';
 
 import assert from 'node:assert/strict';
 

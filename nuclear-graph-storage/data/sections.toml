@@ -12,11 +12,9 @@
 # target languages, the dialects underneath, the runtimes, the decisions and the state are for people and frontier
 # models). In a section they read, the code blocks of a target language are left out of the rows.
 
-# The website's checkout (a repository of its own, outside the working tree).
-website = "~/Documents/projects/nuc/react/nuclearlang_website"
-
 exclude = [
   "**/CLAUDE.md",                 # one line that imports AGENTS.md
+  "website/public/**",            # the site's generated pages
   "**/icon-themes/**", "**/icons/atom/**", "**/vendor/**",
   "nuclearlang/tools/defs/flutter_project/**",
   "nuclear-graph-storage/data/**",    # this folder
@@ -43,7 +41,7 @@ files = [
 
 [[section]]
 id = "01-introduction"
-title = "What NuclearLang and Dragonfly are"
+title = "What NuclearLang and Synapsis are"
 files = [
   "README.md",
   "AGENTS.md",
@@ -118,8 +116,8 @@ files = [
 ]
 
 [[section]]
-id = "04-dragonfly"
-title = "Dragonfly: the framework, its platforms, its kinds, the tutorial"
+id = "04-synapsis"
+title = "Synapsis: the framework, its platforms, its kinds, the tutorial"
 files = [
   "nuclear-synapsis-framework/AGENTS.md",
   "nuclear-synapsis-framework/README.md",
@@ -181,7 +179,7 @@ files = [
   "nuclearlang/dialects/dart/docs/07-reference/flutter.md",
   "nuclearlang/dialects/dart/docs/07-reference/brief/flutter.md",
   "nuclearlang/dialects/dart/docs/08-guides/**",
-  "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md",
+  "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md",
   "nuclear-synapsis-framework/platforms/mobile/docs/08-guides/**",
   "nuclear-synapsis-framework/platforms/mobile/packages/**",
   "nuclear-synapsis-framework/platforms/mobile/checks/**",

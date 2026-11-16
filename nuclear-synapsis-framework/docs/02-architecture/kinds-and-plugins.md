@@ -42,10 +42,10 @@ kinds/jobs/
   (`Loader::apply_packages`), as a layer named after the package.
 - Its implementation for a project is the folder named after the project's dialect, or after a dialect that one
   extends. Without one, the package is a gap (`package_gaps`): N0306 when the project enables it.
-- A project enables it with `plugins(<name> = true)` in `config.nuc` and keeps its `dragonfly(platform, dialect)`.
+- A project enables it with `plugins(<name> = true)` in `config.nuc` and keeps its `synapsis(platform, dialect)`.
 - The loader looks in `<project>/kinds/` and in the install's `kinds/`. A platform may ship packages in
   `platforms/<platform>/kinds/`, which the installer copies; none does today.
-- `nuclear kind new <name> -p <platform> -d <dialect>` writes the skeleton in the project; `dragonfly add <folder>`
+- `nuclear kind new <name> -p <platform> -d <dialect>` writes the skeleton in the project; `nuclear add <folder>`
   installs a package for every project.
 
 ## A plugin

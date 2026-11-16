@@ -7,5 +7,5 @@ This project is written in NuclearLang (`.nuc`), dialect `{dialect}`. Its syntax
 - After each change: `{check}` must report no errors; fix exactly what each error says (most carry a `fix`).
 - Look up instead of guessing: an API `nuclear defs show <Name> --dialect {dialect}`; a kind or decorator
   `nuclear help <word> --dialect {dialect}` (all: `nuclear help words --dialect {dialect}`); a topic `nuclear help <topic>`.
-{dragonfly}{packages}- Never edit generated code ({generated}): change the `.nuc` files.
+{synapsis}{packages}- Never edit generated code ({generated}): change the `.nuc` files.
 <!-- /nuclearlang -->

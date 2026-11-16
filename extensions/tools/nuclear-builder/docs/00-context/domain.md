@@ -13,17 +13,17 @@ related: [vision.md, ../02-architecture/engine.md, ../08-guides/follow-a-run.md]
 | Spec | What is asked: a title, a use case, who leads, a description, the acceptance criteria, optional context files, pieces and strategy | `Spec`; `specs/<id>/spec.md` |
 | Use case | The kind of work the form offers: a feature, a refactor, a bug, tests, a security review, documentation, a diagram | `- Use case:` of the spec |
 | Lead | Who decides: Claude, or the local agents only | `- Lead:`; `--lead local\|claude` |
-| Run | One execution of a spec through the pipeline | `Run`; `.nuclear/loop/runs/<id>.json` |
+| Run | One execution of a spec through the pipeline | `Run`; `.nuclear/builder/runs/<id>.json` |
 | Stage | A column of the pipeline | `Stage` |
 | Step | One thing one actor did inside a stage, with its trace, input, output, code and decisions | `Step`, `Decision` |
 | Actor | Who did a step: you, claude, planner, coder, tester, security, shell, graph | `Actor` |
 | Piece | One file to write, with its task | the plan; `## Pieces` of a spec |
 | Strategy | The kind of request and the plan of that kind; it decides the stages that run | `Run.analysis`; `- Strategy:` of the spec |
-| Journal | The readable record of a run | `.nuclear/loop/runs/<id>.md`; a reviewer's notes in `<id>.review.md` |
-| Trace log | Every event of a run, append-only | `.nuclear/loop/runs/<id>.log` |
+| Journal | The readable record of a run | `.nuclear/builder/runs/<id>.md`; a reviewer's notes in `<id>.review.md` |
+| Trace log | Every event of a run, append-only | `.nuclear/builder/runs/<id>.log` |
 | Ledger | Every file a run wrote, with what was there before | `Run.writes` |
 | Project map | Every declaration of the project with its kind, description and members, written by the transpiler | `.nuclear/map.md` |
-| Pipeline settings | The commands of each stage | `.nuclear/loop.json` |
+| Pipeline settings | The commands of each stage | `.nuclear/builder.json` |
 
 ## The stages, in order
 
@@ -41,7 +41,7 @@ The specification ends with the **analysis**, which names the strategy; a strate
 | Coder (qwen2.5-coder:3b) | writes one file at a time and repairs it with the compiler | choose names, data or architecture |
 | Tester | writes the tests first, from the criteria and the plan; fixes a test file the project's check rejects | delete or weaken a failing test |
 | Security | reviews each new file | change the code |
-| Shell | runs the project's commands | run anything not in `.nuclear/loop.json` |
+| Shell | runs the project's commands | run anything not in `.nuclear/builder.json` |
 
 The local **documenter** writes the top of the journal; the local **diagnoser** tells why a stage failed; the local
 **analyst** picks the strategy.
@@ -56,7 +56,7 @@ So that the local 3B models only think the business logic:
 3. **Code**: the coder writes each piece at its place (`nuclear help layout --platform <p>`), with the card of its
    kind, the mistakes to avoid with that kind, examples of it and the project's files that declare the names its
    task writes (it reads them by itself). The compiler checks it, then the whole project.
-4. **Verification**: every test runs. A failing test goes back to the coder told in Nuclear (`dragonfly explain`:
+4. **Verification**: every test runs. A failing test goes back to the coder told in Nuclear (`nuclear explain`:
    the message, a hint and the `.nuc` lines), up to three rounds; when Claude leads, it fixes what is left.
 
 ## Invariants

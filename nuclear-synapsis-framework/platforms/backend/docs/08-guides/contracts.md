@@ -7,7 +7,7 @@ over HTTP: what travels is a JSON description, as OpenAPI or a `.proto` file wou
 
 ## 1. The backend publishes its contract
 
-Nothing to write. Building the backend (`nuclear build .`, `dragonfly build`, or the editor when it checks the
+Nothing to write. Building the backend (`nuclear build .`, `nuclear build`, or the editor when it checks the
 project) writes two files next to the project card:
 
 | File | Holds |
@@ -38,7 +38,7 @@ One line in the app's `config.nuc`, and a connection with the same name:
 
 ```nuclear
 // tasks_app/config.nuc
-dragonfly(platform = "mobile", dialect = "flutter")
+synapsis(platform = "mobile", dialect = "flutter")
 app(name = "tasks_app", version = "1.0.0+1")
 contracts(tasks_api = "../tasks_api")              // the backend checked out next to the app
 
@@ -129,7 +129,7 @@ error[N0116]: 'done' is not a member of Task
 
 ## 5. In the editor
 
-The **Nuclear HTTP** view of the VS Code extension lists every project of the workspace by platform, its
+The **Nuclear Connector** view of the VS Code extension lists every project of the workspace by platform, its
 components and endpoints (from the contracts), the contracts an app declares with an *Update* action, and OpenAPI
 documents of APIs that are not Nuclear. Clicking an endpoint opens a request panel with the active environment's
 variables and headers (`.nuclear/http.json`), a sample body built from the model, and the pretty-printed response.

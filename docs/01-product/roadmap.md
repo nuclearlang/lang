@@ -11,9 +11,9 @@ What is left for the platform as a whole. The pending work of a project is in th
 
 ## Half done
 
-- **The tree restructure** (`04-specs/008-restructure/tasks.md` says what each phase has left): one repository, a
-  project per folder with its own documents, Synapsis for Dragonfly, one `nuclear` command.
-- **The GitHub side of one repository**: the workflows of `.github/workflows/` were rewritten and have not run; the
+- **The tree restructure**: its phases 1 to 4 are done; what is left (the reinstall, the user's projects outside the
+  tree, the old repositories archived) is in `04-specs/008-restructure/tasks.md`.
+- **The GitHub side of one repository**: the workflows of `.github/workflows/` were rewritten and have not run (each platform's and the VS Code one also run when `tools/code_generator/` or `device-emulators/` change; `website.yml` builds and tests the site); the
   nine repositories that are now folders are still public (archived only when the user says so); the Zed
   extension's grammar is still fetched from the old `nuclear-zed` repository (`extensions/zed/extension.toml`).
 

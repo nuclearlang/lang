@@ -7,7 +7,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project-plugins",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — Plugins",
+   "title": "The `backend` platform of Synapsis — Plugins",
    "summary": "The optional parts of the platform (projects.md §3.3), the same list in every dialect: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma`.",
    "body": [
     "The optional parts of the platform ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §3.3), the same list in every dialect:",
@@ -24,9 +24,9 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.93edc6",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.7306a9",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 1. Project",
+   "title": "The `backend` platform of Synapsis — 1. Project",
    "summary": "A backend's build also writes its contract (`.nuclear/contract.json`: controllers, routes, models) and its `/.nuclear/openapi.json`; a mobile or web project generates its models and repositories from it (projects.md §1.2, ADR-synapsis-0006).",
    "body": [
     "A backend's build also writes its **contract** (`.nuclear/contract.json`: controllers, routes, models) and its",
@@ -36,7 +36,7 @@
     "",
     "```",
     "tasks_api/",
-    "├── config.nuc                         dragonfly(...), app(...), plugins(...), dependencies(...)",
+    "├── config.nuc                         synapsis(...), app(...), plugins(...), dependencies(...)",
     "├── config/project_config.nuc          appConfig: the connections of the app",
     "├── components/tasks/",
     "│   ├── tasks_appcomponent.nuc         appcomponent: what the rest of the app sees",
@@ -62,7 +62,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.b5b380",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 1. Project",
+   "title": "The `backend` platform of Synapsis — 1. Project",
    "summary": "Kinds by folder: the file's folder gives the kind when the declaration does not name it (`data/entities/` → entity, `data/repositories/` → repository, `domain/models/` → model, `domain/usecases/` → usecase, `api/` → controller, `events/` → listener, `ai/` → the header word).",
    "body": [
     "Kinds by folder: the file's folder gives the kind when the declaration does not name it (`data/entities/` →",
@@ -83,22 +83,22 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.f9c9b4",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.c07e7e",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 1. Project",
+   "title": "The `backend` platform of Synapsis — 1. Project",
    "summary": "`config.nuc` is the only manifest (projects.md §1): the platform and dialect, the app and the plugins it uses, and `dependencies(name = \"version\")` for a package the framework does not bring: any package of the dialect's technology.",
    "body": [
     "`config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app and the",
     "plugins it uses, and `dependencies(name = \"version\")` for a package the framework does not bring: any package of the",
-    "dialect's technology. `dragonfly add <package>[@version]` installs it with the dialect's package manager, writes it",
+    "dialect's technology. `nuclear add <package>[@version]` installs it with the dialect's package manager, writes it",
     "there (`\"name@version\"` when the name is not an identifier) and generates its type definitions into the project's",
-    "`defs/`, so its names are known to the compiler and the editor and imported where they are used; `dragonfly remove",
+    "`defs/`, so its names are known to the compiler and the editor and imported where they are used; `nuclear remove",
     "<package>` takes it out (ADR-lang-0008, projects.md §3.2). A package the platform already covers is added with a word of",
     "advice. A version that starts with `.` or `/` is a folder on disk, which brings its definitions by hand. `nuclear build",
-    ".` (or the `dragonfly` CLI) writes `build/`: the dialect's project, never edited.",
+    ".` (or the `nuclear` CLI) writes `build/`: the dialect's project, never edited.",
     "",
     "```nuclear",
-    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
     "app(name = \"tasks_api\", description = \"Tasks and an assistant.\", version = \"0.1.0\")",
     "plugins(sqlite = true, events = true, ollama = true)",
     "```"
@@ -113,7 +113,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.2915be",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.1 Entity",
+   "title": "The `backend` platform of Synapsis — 2.1 Entity",
    "summary": "`onDelete`: `\"cascade\"`, `\"set null\"`, `\"restrict\"` (default: the database's).",
    "body": [
     "`onDelete`: `\"cascade\"`, `\"set null\"`, `\"restrict\"` (default: the database's). A relation field is optional: it is",
@@ -154,7 +154,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-1-entity.ca0201",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.1 Entity",
+   "title": "The `backend` platform of Synapsis — 2.1 Entity",
    "summary": "A table.",
    "body": [
     "A table. `@entity(\"name\")` names it (default: the class name in snake_case, plural not added). Fields are",
@@ -198,7 +198,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-10-tools",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.10 Tools",
+   "title": "The `backend` platform of Synapsis — 2.10 Tools",
    "summary": "Functions a model can call.",
    "body": [
     "Functions a model can call. A method with a doc comment is a tool: the comment is its description, the",
@@ -224,7 +224,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-11-agent",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.11 Agent",
+   "title": "The `backend` platform of Synapsis — 2.11 Agent",
    "summary": "A model with tools and a prompt, with memory per conversation: `~agent.ask(text, thread = \"default\")` answers.",
    "body": [
     "A model with tools and a prompt, with memory per conversation: `~agent.ask(text, thread = \"default\")` answers.",
@@ -245,7 +245,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-12-state-and-graph",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.12 State and graph",
+   "title": "The `backend` platform of Synapsis — 2.12 State and graph",
    "summary": "A `state` is the state of a graph (a model; `messages: Messages` keeps a conversation).",
    "body": [
     "A `state` is the state of a graph (a model; `messages: Messages` keeps a conversation). A `graph` runs nodes over",
@@ -286,19 +286,19 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-13-generators.2eb26c",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-13-generators.700314",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.13 Generators",
-   "summary": "`dragonfly gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models (nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (`--source rest:<base url>`: an HTTP repository over `Http(baseUrl)`,…",
+   "title": "The `backend` platform of Synapsis — 2.13 Generators",
+   "summary": "`nuclear gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models (nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (`--source rest:<base url>`: an HTTP repository over `Http(baseUrl)`, the…",
    "body": [
-    "`dragonfly gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models",
+    "`nuclear gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models",
     "(nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (`--source rest:<base url>`: an HTTP repository over `Http(baseUrl)`, the app's connection added when missing; `--source db`: an entity, a `New<Name>` model and a paged query), one use",
     "case per action (`--actions list,get,search,create,update,delete`), their aliases in the facade, and the controller with the routes; a database resource also gets its tests. The fields",
     "come from an example answer (`--from-json <file|url>`), a spec (`--from-spec <spec.md>`: its example answer, else its",
     "`Key | Type` table; a `GET https://...` line gives the API) or `--fields \"id:int name:string\"`. A file that exists is",
     "never overwritten (the facade, the repository and the controller get only the members they lack, so an action added to a resource that exists is finished); a name another file declares stops it before it writes.",
-    "`dragonfly gen inspect` answers what the project has. A stored resource gets no `search`: which column is searched is",
-    "a decision, so it is a query of the repository wired with `dragonfly gen usecase --calls`. The agent writes only what",
+    "`nuclear gen inspect` answers what the project has. A stored resource gets no `search`: which column is searched is",
+    "a decision, so it is a query of the repository wired with `nuclear gen usecase --calls`. The agent writes only what",
     "is not standard: a use case with its own rules, a view's details."
    ],
    "platforms": [
@@ -309,12 +309,12 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-13-generators.74d099",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-13-generators.b546d9",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.13 Generators",
-   "summary": "`dragonfly gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, with `--route \"POST orders/{id}/cancel\"`, its route in the controller of the route's prefix (`OrdersController`, made when missing; a `{name}` of the path is a parameter of the use case).",
+   "title": "The `backend` platform of Synapsis — 2.13 Generators",
+   "summary": "`nuclear gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, with `--route \"POST orders/{id}/cancel\"`, its route in the controller of the route's prefix (`OrdersController`, made when missing; a `{name}` of the path is a parameter of the use case).",
    "body": [
-    "`dragonfly gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, with",
+    "`nuclear gen usecase <component> <Name>` wires a use case into its component: its alias in the facade and, with",
     "`--route \"POST orders/{id}/cancel\"`, its route in the controller of the route's prefix (`OrdersController`, made",
     "when missing; a `{name}` of the path is a parameter of the use case). The use case is one the project declares (its",
     "rules are written first; its signature is read, and its route calls it with `~` when its `exec` awaits), or, with",
@@ -322,9 +322,9 @@
     "project declares (an answer that is not a `Result` goes inside an `Ok`).",
     "",
     "```sh",
-    "dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character",
-    "dragonfly gen usecase orders CancelOrder --route \"POST orders/{id}/cancel\"       # CancelOrder is in the project",
-    "dragonfly gen usecase catalog PageBooks --calls BookRepository.page --route \"GET shelves/{page}\"",
+    "nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character",
+    "nuclear gen usecase orders CancelOrder --route \"POST orders/{id}/cancel\"       # CancelOrder is in the project",
+    "nuclear gen usecase catalog PageBooks --calls BookRepository.page --route \"GET shelves/{page}\"",
     "```"
    ],
    "platforms": [
@@ -337,7 +337,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-14-tests",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.14 Tests",
+   "title": "The `backend` platform of Synapsis — 2.14 Tests",
    "summary": "In `test/*_test.nuc`: `tests Name` + `@test(\"what it checks\")` methods.",
    "body": [
     "In `test/*_test.nuc`: `tests Name` + `@test(\"what it checks\")` methods. Every test runs with the project's",
@@ -364,7 +364,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.b1a580",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.2 Repository",
+   "title": "The `backend` platform of Synapsis — 2.2 Repository",
    "summary": "A repository can also be another API, with the mobile platform's words: `@repository(path = \"...\")` and methods without a body that carry `@get`, `@post`, `@put`, `@patch` or `@delete` (`path = \":id\"`).",
    "body": [
     "A repository can also be another API, with the mobile platform's words: `@repository(path = \"...\")` and methods",
@@ -394,7 +394,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-2-repository.ee7697",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.2 Repository",
+   "title": "The `backend` platform of Synapsis — 2.2 Repository",
    "summary": "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`).",
    "body": [
     "The data of one entity: `NameRepository` works on `Name` (or `@repository(Entity)`). It brings `find(id)`",
@@ -434,10 +434,10 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-3-model",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.3 Model",
+   "title": "The `backend` platform of Synapsis — 2.3 Model",
    "summary": "What the API reads and answers, in `domain/models/`.",
    "body": [
-    "What the API reads and answers, in `domain/models/`. The field decorators of Dragonfly's forms are its validation:",
+    "What the API reads and answers, in `domain/models/`. The field decorators of Synapsis's forms are its validation:",
     "`@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An",
     "invalid body answers **400** with the reasons. `NewTask(title = \"x\")` builds one; optional fields (`T?`) may be",
     "left out.",
@@ -467,7 +467,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-4-use-case",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.4 Use case",
+   "title": "The `backend` platform of Synapsis — 2.4 Use case",
    "summary": "One business operation: `exec` returns `Result<E, T>`.",
    "body": [
     "One business operation: `exec` returns `Result<E, T>`. `Error` is the platform's error, with an HTTP status:",
@@ -508,7 +508,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-5-appcomponent",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.5 Appcomponent",
+   "title": "The `backend` platform of Synapsis — 2.5 Appcomponent",
    "summary": "The facade of a component: aliases to its use cases (nuclear-base.md §4.1.2).",
    "body": [
     "The facade of a component: aliases to its use cases ([nuclear-base.md](../../../../../nuclearlang/docs/07-reference/nuclear-base.md) §4.1.2). Other",
@@ -531,7 +531,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-6-service-and-aggregate",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.6 Service and aggregate",
+   "title": "The `backend` platform of Synapsis — 2.6 Service and aggregate",
    "summary": "A `service` is logic shared by use cases (an external API, a calculation); an `aggregate` composes several repositories or services for one use case.",
    "body": [
     "A `service` is logic shared by use cases (an external API, a calculation); an `aggregate` composes several",
@@ -547,7 +547,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-7-controller",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.7 Controller",
+   "title": "The `backend` platform of Synapsis — 2.7 Controller",
    "summary": "HTTP routes.",
    "body": [
     "HTTP routes. `@controller(\"tasks\")` is the prefix; `@get`, `@post`, `@put`, `@patch`, `@delete` take a path",
@@ -587,7 +587,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.57f491",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.8 Configuration and connections",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
    "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`, `components/<c>/config/`): opened at start, closed at stop, never opened by hand.",
    "body": [
     "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`,",
@@ -614,7 +614,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.83e7ed",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.8 Configuration and connections",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
    "summary": "column shows as a drop and an add (`make` warns of every drop), so edit it into a rename to keep the data.",
    "body": [
     "- `make` compares the entities with the last migration, never with a database; with no change it writes nothing.",
@@ -633,9 +633,9 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.c7ef05",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.b43570",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.8 Configuration and connections",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
    "summary": "appConfig ProjectConfig connections: Connection[] = [ SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true), Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")), ] `createTables` is for development and tests.",
    "body": [
     "```nuclear",
@@ -652,9 +652,9 @@
     "project's `migrations/` folder (with the sources, not in `build/`):",
     "",
     "```sh",
-    "dragonfly migrate make \"notes on tasks\"   # one migration: what the entities changed since the last migration",
-    "dragonfly migrate                         # applies the pending ones to the default database",
-    "dragonfly migrate down                    # reverts the last one applied",
+    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the last migration",
+    "nuclear migrate                         # applies the pending ones to the default database",
+    "nuclear migrate down                    # reverts the last one applied",
     "```"
    ],
    "platforms": [
@@ -667,7 +667,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 2.9 Listener, events and cache",
+   "title": "The `backend` platform of Synapsis — 2.9 Listener, events and cache",
    "summary": "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka` connection exists (plugin `kafka`).",
    "body": [
     "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka`",
@@ -694,7 +694,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#3-what-the-dialect-decides",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly — 3. What the dialect decides",
+   "title": "The `backend` platform of Synapsis — 3. What the dialect decides",
    "summary": "Only how it is written: the language, the framework, the packages, the generated project's files and how to run it.",
    "body": [
     "Only how it is written: the language, the framework, the packages, the generated project's files and how to",
@@ -710,10 +710,10 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#the-backend-platform-of-dragonfly",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#the-backend-platform-of-synapsis",
    "type": "spec",
-   "title": "The `backend` platform of Dragonfly",
-   "summary": "The `backend` platform of Dragonfly",
+   "title": "The `backend` platform of Synapsis",
+   "summary": "The `backend` platform of Synapsis",
    "body": [
     "> Inherits every rule of [nuclear-base.md](../../../../../nuclearlang/docs/07-reference/nuclear-base.md) and the standard library ([library.md](../../../../../nuclearlang/docs/07-reference/library.md)).",
     "> This document defines the backend platform (ADR-synapsis-0002): HTTP APIs, data, events and AI agents, written in Nuclear",
@@ -731,7 +731,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.83279c",
    "type": "spec",
-   "title": "Platform `backend` brief: Dragonfly backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "summary": "Dependencies are constructor parameters, injected by type.",
    "body": [
     "| `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next(\"node\")` above the node it leaves |",
@@ -774,7 +774,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.9d093e",
    "type": "spec",
-   "title": "Platform `backend` brief: Dragonfly backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "summary": "@controller(\"characters\") controller CharactersController(characters: CharactersAppComponent) @get(\"name/{name}\") one(name: string) Result<Error, Character> ~characters.byName(name) `config.nuc` enables the optional parts: `plugins(sqlite = true, ollama = true)` (sqlite, postgres, mysql, mariadb,…",
    "body": [
     "@controller(\"characters\")",
@@ -798,7 +798,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.f68f1f",
    "type": "spec",
-   "title": "Platform `backend` brief: Dragonfly backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "body": [
     "| Where | Kind | What it is |",
@@ -819,9 +819,9 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#platform-backend-brief-dragonfly-backends",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#platform-backend-brief-synapsis-backends",
    "type": "spec",
-   "title": "Platform `backend` brief: Dragonfly backends",
+   "title": "Platform `backend` brief: Synapsis backends",
    "summary": "A backend has only `.nuc` files: HTTP APIs, data, events and AI agents.",
    "body": [
     "A backend has only `.nuc` files: HTTP APIs, data, events and AI agents. You write the business logic; the kinds write",
@@ -839,13 +839,13 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#work-cycle",
    "type": "spec",
-   "title": "Platform `backend` brief: Dragonfly backends — Work cycle",
-   "summary": "1. Read the project's `config.nuc` (`dragonfly(platform = \"backend\", ...)`, `app(...)`, `plugins(...)`) and the doc comments of the declarations you will use: they say what each one is for.",
+   "title": "Platform `backend` brief: Synapsis backends — Work cycle",
+   "summary": "1. Read the project's `config.nuc` (`synapsis(platform = \"backend\", ...)`, `app(...)`, `plugins(...)`) and the doc comments of the declarations you will use: they say what each one is for.",
    "body": [
-    "1. Read the project's `config.nuc` (`dragonfly(platform = \"backend\", ...)`, `app(...)`, `plugins(...)`) and the",
+    "1. Read the project's `config.nuc` (`synapsis(platform = \"backend\", ...)`, `app(...)`, `plugins(...)`) and the",
     "   doc comments of the declarations you will use: they say what each one is for.",
     "2. Write the tests first (`test/*_test.nuc`), then the pieces, one file at a time.",
-    "3. `nuclear check . --json` until `[]`, then `dragonfly test`. Never edit `build/`."
+    "3. `nuclear check . --json` until `[]`, then `nuclear test`. Never edit `build/`."
    ],
    "platforms": [
     "backend"

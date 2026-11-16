@@ -1,8 +1,8 @@
 {
   "name": "nuclearlang",
   "displayName": "NuclearLang",
-  "description": "NuclearLang (.nuc) support: the Nuclear workspace (projects as tabs, tools full screen, keyboard first), language server, semantic highlighting, code metrics, the Dragonfly dialects (flutter, fastapi, nestjs, react) and the Chernobyl theme",
-  "version": "0.50.0",
+  "description": "NuclearLang (.nuc) support: the Nuclear workspace (projects as tabs, tools full screen, keyboard first), language server, semantic highlighting, code metrics, the Synapsis dialects (flutter, fastapi, nestjs, react) and the Chernobyl theme",
+  "version": "0.51.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
@@ -110,10 +110,10 @@
               "base"
             ],
             "enumDescriptions": [
-              "Dragonfly mobile: Flutter widgets, Dart output",
-              "Dragonfly backend: FastAPI, Python output",
-              "Dragonfly backend: NestJS, TypeScript output",
-              "Dragonfly web: React, TypeScript output",
+              "Synapsis mobile: Flutter widgets, Dart output",
+              "Synapsis backend: FastAPI, Python output",
+              "Synapsis backend: NestJS, TypeScript output",
+              "Synapsis web: React, TypeScript output",
               "Dart language only",
               "Python language only",
               "TypeScript language only",
@@ -149,12 +149,12 @@
           "nuclear.debug.followInNuclear": {
             "type": "boolean",
             "default": true,
-            "description": "When a Dragonfly app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code."
+            "description": "When a Synapsis app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code."
           },
           "nuclear.debug.explainErrors": {
             "type": "boolean",
             "default": true,
-            "description": "Show Dart run-time errors of a Dragonfly app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error."
+            "description": "Show Dart run-time errors of a Synapsis app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error."
           },
           "nuclear.workspace.welcome": {
             "type": "boolean",
@@ -164,7 +164,7 @@
           "nuclear.buildOnSave": {
             "type": "boolean",
             "default": true,
-            "markdownDescription": "Saving a `.nuc` of a backend or web project runs `dragonfly build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session."
+            "markdownDescription": "Saving a `.nuc` of a backend or web project runs `nuclear build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session."
           },
           "nuclear.ai.developerUrl": {
             "type": "string",
@@ -204,12 +204,17 @@
               "haiku"
             ],
             "default": "sonnet",
-            "description": "Claude's model when Claude leads a Loop run."
+            "description": "Claude's model when Claude leads a Builder run."
           },
           "nuclear.ai.mcpCommand": {
             "type": "string",
+            "default": "nuclear-mcp",
+            "description": "The program that serves the Nuclear MCP server (an AI client starts it with no argument)."
+          },
+          "nuclear.ai.graphCommand": {
+            "type": "string",
             "default": "nuclear-graph",
-            "description": "The program that serves the Nuclear MCP server (`<command> mcp`) and the graph."
+            "description": "The Smart Graph's program (serve, connect, requests, revoke)."
           },
           "nuclear.ai.retry.attempts": {
             "type": "number",
@@ -239,13 +244,13 @@
           "nuclear.ai.claude.command": {
             "type": "string",
             "default": "claude",
-            "description": "Claude Code's command: the Loop's lead when Claude leads, checked before every such run."
+            "description": "Claude Code's command: the Builder's lead when Claude leads, checked before every such run."
           },
           "nuclear.ai.claude.maxBudgetUsd": {
             "type": "number",
             "default": 2,
             "minimum": 0,
-            "description": "The most a Loop run led by Claude may spend, in USD (0: no limit)."
+            "description": "The most a Builder run led by Claude may spend, in USD (0: no limit)."
           },
           "nuclear.ai.codex.enabled": {
             "type": "boolean",
@@ -280,12 +285,12 @@
           "nuclear.ai.github.command": {
             "type": "string",
             "default": "gh",
-            "description": "GitHub's command line (issues imported as Loop specs), checked with `gh auth status`."
+            "description": "GitHub's command line (issues imported as Builder specs), checked with `gh auth status`."
           },
           "nuclear.ai.jira.site": {
             "type": "string",
             "default": "",
-            "description": "Your Jira site (https://your-team.atlassian.net): issues imported as Loop specs. The API token is kept in the secret storage."
+            "description": "Your Jira site (https://your-team.atlassian.net): issues imported as Builder specs. The API token is kept in the secret storage."
           },
           "nuclear.ai.jira.email": {
             "type": "string",
@@ -313,12 +318,12 @@
             "type": "number",
             "default": 500,
             "minimum": 50,
-            "description": "Free disk space (the project and the temporary folder) a Loop run needs before it starts."
+            "description": "Free disk space (the project and the temporary folder) a Builder run needs before it starts."
           },
           "nuclear.ai.resumeInterrupted": {
             "type": "boolean",
             "default": true,
-            "description": "A Loop run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped."
+            "description": "A Builder run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped."
           },
           "nuclear.ai.checkEveryMinutes": {
             "type": "number",
@@ -330,7 +335,7 @@
             "type": "number",
             "default": 20,
             "minimum": 1,
-            "description": "A command of the Loop (a build, the tests) that runs longer is killed with its children and the step fails."
+            "description": "A command of the Builder (a build, the tests) that runs longer is killed with its children and the step fails."
           }
         }
       },
@@ -877,8 +882,8 @@
     ],
     "debuggers": [
       {
-        "type": "dragonfly",
-        "label": "Dragonfly (Flutter app)",
+        "type": "synapsis",
+        "label": "Synapsis (Flutter app)",
         "languages": [
           "nuclear"
         ]
@@ -926,33 +931,33 @@
         "category": "Nuclear"
       },
       {
-        "command": "nuclear.http.refresh",
+        "command": "nuclear.connector.refresh",
         "title": "Refresh",
-        "category": "Nuclear HTTP",
+        "category": "Nuclear Connector",
         "icon": "$(refresh)"
       },
       {
-        "command": "nuclear.http.selectEnvironment",
+        "command": "nuclear.connector.selectEnvironment",
         "title": "Select Environment",
-        "category": "Nuclear HTTP",
+        "category": "Nuclear Connector",
         "icon": "$(server-environment)"
       },
       {
-        "command": "nuclear.http.editEnvironments",
+        "command": "nuclear.connector.editEnvironments",
         "title": "Edit Environments (variables, headers, base urls)",
-        "category": "Nuclear HTTP",
+        "category": "Nuclear Connector",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "nuclear.http.addOpenApi",
+        "command": "nuclear.connector.addOpenApi",
         "title": "Add an OpenAPI Document",
-        "category": "Nuclear HTTP",
+        "category": "Nuclear Connector",
         "icon": "$(add)"
       },
       {
-        "command": "nuclear.http.open",
+        "command": "nuclear.connector.open",
         "title": "Open Request",
-        "category": "Nuclear HTTP"
+        "category": "Nuclear Connector"
       },
       {
         "command": "nuclear.contracts.update",
@@ -1005,14 +1010,14 @@
       },
       {
         "command": "nuclear.openDevice",
-        "title": "Open Dragonfly Device",
-        "category": "Dragonfly",
+        "title": "Open Synapsis Device",
+        "category": "Synapsis",
         "icon": "$(device-mobile)"
       },
       {
         "command": "nuclear.runOnDevice",
-        "title": "Run on Dragonfly Device",
-        "category": "Dragonfly",
+        "title": "Run on Synapsis Device",
+        "category": "Synapsis",
         "icon": "$(device-mobile)"
       },
       {
@@ -1070,7 +1075,7 @@
       },
       {
         "command": "nuclear.action.device",
-        "title": "Run on a Dragonfly Device",
+        "title": "Run on a Synapsis Device",
         "category": "Nuclear workspace",
         "icon": "$(device-mobile)"
       },
@@ -1094,7 +1099,7 @@
       },
       {
         "command": "nuclear.action.api",
-        "title": "Routes in Nuclear HTTP",
+        "title": "Routes in Nuclear Connector",
         "category": "Nuclear workspace",
         "icon": "$(arrow-swap)"
       },
@@ -1119,137 +1124,137 @@
       {
         "command": "nuclear.tree.make.usecase",
         "title": "New Use case",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.model",
         "title": "New Model",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.service",
         "title": "New Service",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.aggregate",
         "title": "New Aggregate",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.repository",
         "title": "New Repository",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.entity",
         "title": "New Entity",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.controller",
         "title": "New Controller",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.listener",
         "title": "New Listener",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.agent",
         "title": "New Agent",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.graph",
         "title": "New Graph",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.tools",
         "title": "New Tools",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.state",
         "title": "New State",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.stateful",
         "title": "New Stateful widget",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.stateless",
         "title": "New Stateless widget",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.statemodel",
         "title": "New State model",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.statemanager",
         "title": "New State manager",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.widget",
         "title": "New Shared widget",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.guard",
         "title": "New Guard",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.event",
         "title": "New Event",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.global",
         "title": "New Global component",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.page",
         "title": "New Page",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.integration",
         "title": "New Integration test",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.component",
         "title": "New Component",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.screen",
         "title": "New Screen",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.config",
         "title": "New Config",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.test",
         "title": "New Test",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.make.resource",
         "title": "New Resource (from fields)",
-        "category": "Dragonfly"
+        "category": "Synapsis"
       },
       {
         "command": "nuclear.tree.newFile",
@@ -1750,12 +1755,12 @@
       },
       {
         "command": "nuclear.workspace.tool",
-        "args": "http",
+        "args": "connector",
         "key": "ctrl+alt+h"
       },
       {
         "command": "nuclear.workspace.tool",
-        "args": "loop",
+        "args": "builder",
         "key": "ctrl+alt+p"
       },
       {
@@ -1831,8 +1836,8 @@
     ],
     "colors": [
       {
-        "id": "nuclearHttp.get",
-        "description": "Nuclear HTTP: a GET endpoint",
+        "id": "nuclearConnector.get",
+        "description": "Nuclear Connector: a GET endpoint",
         "defaults": {
           "dark": "#4EC9B0",
           "light": "#2E8B57",
@@ -1841,8 +1846,8 @@
         }
       },
       {
-        "id": "nuclearHttp.post",
-        "description": "Nuclear HTTP: a POST endpoint",
+        "id": "nuclearConnector.post",
+        "description": "Nuclear Connector: a POST endpoint",
         "defaults": {
           "dark": "#569CD6",
           "light": "#1E6FD9",
@@ -1851,8 +1856,8 @@
         }
       },
       {
-        "id": "nuclearHttp.put",
-        "description": "Nuclear HTTP: a PUT endpoint",
+        "id": "nuclearConnector.put",
+        "description": "Nuclear Connector: a PUT endpoint",
         "defaults": {
           "dark": "#DCDCAA",
           "light": "#B8860B",
@@ -1861,8 +1866,8 @@
         }
       },
       {
-        "id": "nuclearHttp.patch",
-        "description": "Nuclear HTTP: a PATCH endpoint",
+        "id": "nuclearConnector.patch",
+        "description": "Nuclear Connector: a PATCH endpoint",
         "defaults": {
           "dark": "#CE9178",
           "light": "#C46A2B",
@@ -1871,8 +1876,8 @@
         }
       },
       {
-        "id": "nuclearHttp.delete",
-        "description": "Nuclear HTTP: a DELETE endpoint",
+        "id": "nuclearConnector.delete",
+        "description": "Nuclear Connector: a DELETE endpoint",
         "defaults": {
           "dark": "#F14C4C",
           "light": "#D32F2F",
@@ -1881,8 +1886,8 @@
         }
       },
       {
-        "id": "nuclearHttp.platform",
-        "description": "Nuclear HTTP: a platform (backend, mobile, web) or an OpenAPI document",
+        "id": "nuclearConnector.platform",
+        "description": "Nuclear Connector: a platform (backend, mobile, web) or an OpenAPI document",
         "defaults": {
           "dark": "#FFD600",
           "light": "#B59400",
@@ -1891,8 +1896,8 @@
         }
       },
       {
-        "id": "nuclearHttp.project",
-        "description": "Nuclear HTTP: a project and its contracts",
+        "id": "nuclearConnector.project",
+        "description": "Nuclear Connector: a project and its contracts",
         "defaults": {
           "dark": "#C586C0",
           "light": "#8A4FAE",
@@ -1901,8 +1906,8 @@
         }
       },
       {
-        "id": "nuclearHttp.component",
-        "description": "Nuclear HTTP: a component",
+        "id": "nuclearConnector.component",
+        "description": "Nuclear Connector: a component",
         "defaults": {
           "dark": "#9CDCFE",
           "light": "#2B6CB0",
@@ -1941,18 +1946,18 @@
     "submenus": [
       {
         "id": "nuclear.tree.new",
-        "label": "New with Dragonfly"
+        "label": "New with Synapsis"
       }
     ]
   },
   "scripts": {
-    "compile": "tsc -p . --noEmit && esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node18 --sourcemap && npm run loop",
-    "loop": "esbuild src/loopCli.ts --bundle --outfile=out/nuclear-loop.js --format=cjs --platform=node --target=node18",
+    "compile": "tsc -p . --noEmit && esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node18 --sourcemap && npm run builder",
+    "builder": "esbuild ../tools/nuclear-builder/src/cli.ts --bundle --outfile=out/nuclear-builder.js --format=cjs --platform=node --target=node18",
     "watch": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node18 --sourcemap --watch",
     "theme": "node theme/build.mjs && node theme/icons.mjs",
     "server": "node scripts/bundle-server.mjs",
     "package": "npm run theme && npm run compile && npm run server && vsce package --no-dependencies --allow-missing-repository",
-    "test": "esbuild test/loop.test.ts test/setup.test.ts --bundle --platform=node --target=node18 --external:vscode --outdir=out/test && node --test out/test/loop.test.js out/test/setup.test.js"
+    "test": "esbuild test/setup.test.ts ../tools/nuclear-builder/test/engine.test.ts --bundle --platform=node --target=node18 --external:vscode --outdir=out/test --entry-names=[name] && node --test out/test/setup.test.js out/test/engine.test.js"
   },
   "dependencies": {
     "vscode-languageclient": "9.0.1"

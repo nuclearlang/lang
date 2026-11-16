@@ -4,9 +4,9 @@ name: platform-backend
 on:
   push:
     branches: [main]
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/backend/**', '.github/workflows/platform-backend.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/backend/**', '.github/workflows/platform-backend.yml']
   pull_request:
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/backend/**', '.github/workflows/platform-backend.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/backend/**', '.github/workflows/platform-backend.yml']
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
         run: |
           python -m venv nuclearlang/tools/python/.venv
           nuclearlang/tools/python/.venv/bin/pip install -q -r nuclearlang/tools/python/requirements.txt
-          nuclearlang/tools/python/.venv/bin/pip install -q -e nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py
+          nuclearlang/tools/python/.venv/bin/pip install -q -e nuclear-synapsis-framework/platforms/backend/packages/synapsis-py
       - name: "The references' equivalences"
         working-directory: nuclearlang
         run: |

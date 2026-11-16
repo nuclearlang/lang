@@ -2,21 +2,21 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [tools/cli/docs/02-architecture/packages.md, nuclearlang/dialects/dart/docs/07-reference/flutter.md]
+related: [tools/cli/src/framework/mod.rs, tools/cli/docs/02-architecture/packages.md, nuclearlang/dialects/dart/docs/07-reference/flutter.md]
 ---
-# The build of a mobile app (`dragonfly build`, `run`, `test`, `watch`, `repair`, `explain`)
+# The build of a mobile app (`nuclear build`, `run`, `test`, `watch`, `repair`, `explain`)
 
-The code is `nuclear-synapsis-framework/cli/src/main.rs` (`build`), `watch.rs`, `explain.rs` and `vscode.rs`. A
+The code is `tools/cli/src/framework/`: `mod.rs` (`build`), `watch.rs`, `explain.rs` and `vscode.rs`. A
 backend or web project is not built here: [overview.md](overview.md), "Backend and web projects".
 
 ## The pipeline
 
-`dragonfly build` leaves the app ready to compile and repeats nothing without changes (~40 ms):
+`nuclear build` leaves the app ready to compile and repeats nothing without changes (~40 ms):
 
 1. Creates the app if missing; syncs `config.nuc` → pubspec and loads the definitions BEFORE transpiling
    ([packages.md](packages.md)).
 2. Transpiles the project; writes only what changed and deletes orphans (`.dart_tool/nuclear_files`).
-3. `ensure_packages` (Dragonfly's own; with `@splash` also `flutter_native_splash`, detected by the line prefix
+3. `ensure_packages` (Synapsis's own; with `@splash` also `flutter_native_splash`, detected by the line prefix
    `name:`), copies `out.copies`, `assets::write`.
 4. `pub get` when `.dart_tool/package_config.json` is missing (after `flutter clean`) or the pubspec is newer than
    the lock AND than `.dart_tool/nuclear_pub_get` (`pub get` does not touch an unchanged lock).
@@ -34,7 +34,7 @@ backend or web project is not built here: [overview.md](overview.md), "Backend a
   that fails → 1. `run`, `test` and the devices call Flutter with `--no-pub`: `build` already resolved the packages.
 - `repair`: build + analyze → markers deleted + pub get + build → flutter clean + build; each step only if the
   previous one left `flutter analyze` with errors. The editors run it only when something fails.
-- `explain`: maps a run-time error to its `.nuc` lines; `--json` for the editors and the Loop.
+- `explain`: maps a run-time error to its `.nuc` lines; `--json` for the editors and the Nuclear Builder.
 - `watch` rebuilds the whole project and does not see dialect or definitions changes (restart it).
 - Flutter is found in `FLUTTER`, `FLUTTER_ROOT`, `.fvm/flutter_sdk` (the project's or above), the PATH,
   `~/fvm/default` and the typical folders (`find_flutter`); `NO_FLUTTER` explains where it looked.
@@ -42,7 +42,7 @@ backend or web project is not built here: [overview.md](overview.md), "Backend a
 ## The VS Code workspace (`vscode.rs`)
 
 `build/<name>.code-workspace` has the Nuclear folder and the Flutter app (the Flutter extension treats the app as a
-normal project: devices, F5, hot reload, DevTools), the tasks `dragonfly: watch/build/test/analyze` (no problem
+normal project: devices, F5, hot reload, DevTools), the tasks `nuclear: watch/build/test/analyze` (no problem
 patterns: the language server gives the errors; errors of closed `.nuc` files only show in the task's terminal), the
 launch entries debug/profile/release with `preLaunchTask`, and `dart.flutterSdkPath`.
 
@@ -54,5 +54,5 @@ launch entries debug/profile/release with `preLaunchTask`, and `dart.flutterSdkP
 - For a backend or web project the workspace's tasks, launch entries and settings come from the dialect's
   `[toolchain]` (`[[toolchain.launch]]`, `[toolchain.settings]`, `extensions`; ADR-cli-0001).
 
-What a user reads about these commands: the `dragonfly` CLI section (§11) of
+What a user reads about these commands: the `nuclear` CLI section (§11) of
 [the flutter reference](../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md).

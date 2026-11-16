@@ -7,8 +7,8 @@ related: [../04-specs/004-backend-parity/plan.md, ../03-adr/0001-backend-data.md
 # Roadmap
 
 The pending work of the backend platform, its contract and its runtime packages. A done item is deleted. What is
-pending in how one dialect writes its target is in that dialect's project; what is pending in the `dragonfly`
-command is in [the command line tools](../../../../../tools/cli/AGENTS.md).
+pending in how one dialect writes its target is in that dialect's project; what is pending in the framework's
+commands of `nuclear` is in [the command line tools](../../../../../tools/cli/AGENTS.md).
 
 ## Half done
 
@@ -16,13 +16,13 @@ command is in [the command line tools](../../../../../tools/cli/AGENTS.md).
   [spec 004](../04-specs/004-backend-parity/plan.md)). In place, in both dialects
   ([ADR-backend-0001](../03-adr/0001-backend-data.md)): `@primary(generated)`, the relations with
   `relations(...)`, `paginate` → `Page<T>` (also on the mobile local tables), `@transactional`, and the migrations
-  (`dragonfly migrate`). Left: auth / guards and sessions, background jobs, file uploads, a Dockerfile,
-  observability. `dragonfly make` / `check` / `watch` for backend projects belong to the command.
+  (`nuclear migrate`). Left: auth / guards and sessions, background jobs, file uploads, a Dockerfile,
+  observability. `nuclear make` / `check` / `watch` for backend projects belong to the command.
 
 ## Untested
 
 - The migrations (ADR-backend-0001) against PostgreSQL, MySQL and MariaDB: only SQLite ran.
-- `dragonfly migrate` on Windows (`cmd /C` quoting).
+- `nuclear migrate` on Windows (`cmd /C` quoting).
 
 ## To decide with the user
 
@@ -41,13 +41,13 @@ command is in [the command line tools](../../../../../tools/cli/AGENTS.md).
 - **Limits of the data words** (ADR-backend-0001):
   - the join table's name is always `<owner table>_<field>` (no custom name);
   - `@transactional` uses the default database only (nestjs: the database of the last repository made, a
-    `shortcut:` comment in `packages/dragonfly-nest/src/repository.ts`);
+    `shortcut:` comment in `packages/synapsis-nest/src/repository.ts`);
   - the members of `Page<T>` are untyped in Nuclear (type definitions carry no member types:
     `items: Task[] = page.items`);
-  - pyright over `packages/dragonfly-py/src` shows 4 errors (`events.py`, the `Select` typing of
+  - pyright over `packages/synapsis-py/src` shows 4 errors (`events.py`, the `Select` typing of
     `repository.py`).
-- **Publish `dragonfly-py`** on PyPI: the generated `pyproject.toml` asks for `dragonfly-py` by name.
-- **Publish `dragonfly-nest`** on npm: the generated `package.json` asks for it by name.
+- **Publish `synapsis-py`** on PyPI: the generated `pyproject.toml` asks for `synapsis-py` by name.
+- **Publish `synapsis-nest`** on npm: the generated `package.json` asks for it by name.
 - The user's project `~/Documents/projects/nuc/python/nuclear_langgraph_agent` still writes `@generated()` in
   `components/tasks/data/entities/task.nuc`: it is N0309 now; the fix is `@primary(generated = true)` (not changed:
   it is the user's project).

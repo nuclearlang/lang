@@ -1,6 +1,6 @@
 #!/bin/sh
 # Builds the JavaScript runtimes of every platform (platforms/<platform>/packages/<name>/ with a "build" script:
-# dragonfly-nest, dragonfly-web...): their dist/ is what stage.sh copies into an installation. Run before
+# synapsis-nest, synapsis-web...): their dist/ is what stage.sh copies into an installation. Run before
 # installer/install.sh or installer/release/package.sh on a fresh checkout (a developer's tree already has them built by the check scripts).
 set -eu
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
@@ -12,8 +12,8 @@ for p in "$REPO"/nuclear-synapsis-framework/platforms/*/packages/*/package.json;
   else (cd "$d" && npm install --no-audit --no-fund >/dev/null); fi
   (cd "$d" && npm run --silent build)
 done
-# nuclear-loop (ADR-platform-0003): the Loop engine of the VS Code extension bundled for node; stage.sh copies it into bin/
+# nuclear-builder (ADR-platform-0003): the Builder engine of the VS Code extension bundled for node; stage.sh copies it into bin/
 if [ -f "$REPO/extensions/vscode/package.json" ]; then
-  echo "building nuclear-loop"
-  (cd "$REPO/extensions/vscode" && npm ci --no-audit --no-fund >/dev/null && npm run --silent loop >/dev/null)
+  echo "building nuclear-builder"
+  (cd "$REPO/extensions/vscode" && npm ci --no-audit --no-fund >/dev/null && npm run --silent builder >/dev/null)
 fi

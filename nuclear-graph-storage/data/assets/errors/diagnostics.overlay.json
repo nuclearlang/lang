@@ -124,7 +124,7 @@
   {"id": "error:N0218", "tags": ["kinds", "generics"], "meta": {"kinds": ["statemanager"]}},
   {"id": "error:N0219", "links": [{"rel": "concept", "to": "concept:type-definitions"}, {"rel": "same-family", "to": "error:N0220"}], "tags": ["type-definitions"]},
   {"id": "error:N0220", "links": [{"rel": "concept", "to": "concept:type-definitions"}, {"rel": "same-family", "to": "error:N0219"}, {"rel": "see-also", "to": "error:N0106"}, {"rel": "in-a-run", "to": "failure:a-test-names-a-class-nobody-planned"}], "tags": ["names", "type-definitions"],
-   "add": ["**Check.** A typo in a class of a library (the message gives the closest one); or a class of the project that no file declares: `inject<BooksAppComponent>()` needs a file that declares `appcomponent BooksAppComponent`. In a run of the Loop this means the plan missed a piece."]},
+   "add": ["**Check.** A typo in a class of a library (the message gives the closest one); or a class of the project that no file declares: `inject<BooksAppComponent>()` needs a file that declares `appcomponent BooksAppComponent`. In a run of the Builder this means the plan missed a piece."]},
   {"id": "error:N0221", "links": [{"rel": "kind", "to": "kind:backend.appcomponent"}, {"rel": "same-family", "to": "error:N0112"}, {"rel": "pitfall", "to": "pitfall:appcomponent-only-aliases"}], "tags": ["kinds", "appcomponent"], "meta": {"kinds": ["appcomponent"]},
    "add": [
     "**Right.** An application component is only aliases to use cases:",
@@ -175,7 +175,7 @@
     "**Right.** The message says the line. In `config.nuc`:",
     "",
     "```nuclear",
-    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
     "app(name = \"books_api\")",
     "plugins(sqlite = true, ai = true, ollama = true)",
     "```"

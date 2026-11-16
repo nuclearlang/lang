@@ -1,6 +1,7 @@
 //! `nuclear`: the transpiler's command line.
 
 mod agent;
+mod framework;
 
 use nuclear_diag::{Diagnostic, SourceFile, json_items, render_text};
 use nuclear_dialect::{Dialect, Loader, Report};
@@ -176,7 +177,8 @@ fn help(l: &Loader) -> String {
             out.push_str(&format!("  {name:<13} {} — {}\n", d.chain.join(" → "), d.description));
         }
     }
-    out.push_str("\nProjects of the framework (new, generators, run, test, devices): the dragonfly CLI, dragonfly help\n");
+    out.push_str("\nprojects of the framework (`nuclear new`, then inside the project):\n\n");
+    out.push_str(&framework::usage());
     out
 }
 
@@ -307,6 +309,11 @@ fn loader(args: &Args) -> Loader {
 }
 
 fn main() -> ExitCode {
+    // the framework's commands (`new`, `make`, `gen`, `run`, `test`...) and `build` / `check` inside a project
+    let raw: Vec<String> = std::env::args().skip(1).collect();
+    if framework::claims(&raw) {
+        return framework::main(raw);
+    }
     let args = match parse_args() {
         Ok(a) => a,
         Err(e) => {

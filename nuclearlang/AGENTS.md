@@ -34,8 +34,9 @@ tools/defs/python/generate.sh      # dialects/python/defs/
 tools/defs/typescript/generate.sh  # dialects/typescript/defs/
 ```
 
-The `nuclear` command (`build`, `check`, `fmt`, `spec`, `defs`, `help`...) is another project:
-[`../tools/cli/`](../tools/cli/AGENTS.md).
+The `nuclear` command (`build`, `check`, `fmt`, `spec`, `defs`, `help`..., and the framework's `new`, `make`, `gen`,
+`run`...) is another project: [`../tools/cli/`](../tools/cli/AGENTS.md); what `make` and `gen` write is
+[`../tools/code_generator/`](../tools/code_generator/AGENTS.md).
 
 ## Folders
 
@@ -62,7 +63,7 @@ The `nuclear` command (`build`, `check`, `fmt`, `spec`, `defs`, `help`...) is an
   language. What a new target needs is a generic `[options]` option, never a case of one language.
 - No inferred parameters, no hoisting, no `type`.
 - A changed variant of `crates/nuclear-syntax/src/ast.rs` or a public API of a crate breaks its users (the language
-  server, `../tools/cli/`, `../nuclear-synapsis-framework/cli/`): the workspace's `cargo test` must stay green.
+  server, `../tools/cli/`, `../tools/code_generator/`): the workspace's `cargo test` must stay green.
 - Every new diagnostic code is documented in `docs/07-reference/diagnostics.md`; every word of a dialect in its
   `docs.toml` (two tests check it).
 - `docs/07-reference/nuclear-base.md` holds only final rules and only Nuclear: no dialect, no target language, no

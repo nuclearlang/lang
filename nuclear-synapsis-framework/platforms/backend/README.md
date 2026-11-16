@@ -1,6 +1,6 @@
-# Dragonfly backend
+# Synapsis backend
 
-The backend platform of Dragonfly: HTTP APIs, databases with relations, migrations and transactions, events, AI
+The backend platform of Synapsis: HTTP APIs, databases with relations, migrations and transactions, events, AI
 agents and graphs, written once in Nuclear and built with either dialect: `fastapi` (Python: FastAPI, SQLAlchemy,
 Alembic, LangGraph) or `nestjs` (TypeScript: NestJS, Sequelize, LangChain.js).
 
@@ -11,7 +11,7 @@ models and repositories generated: [docs/08-guides/contracts.md](docs/08-guides/
 
 ## What is inside
 
-`platform.toml` (the contract every backend dialect implements), `packages/{dragonfly-py,dragonfly-nest}` (the
+`platform.toml` (the contract every backend dialect implements), `packages/{synapsis-py,synapsis-nest}` (the
 runtimes), `examples/` (`tasks_api` builds with both dialects), `checks/{fastapi,nestjs}-check`, `docs/`.
 
 The dialects are in `nuclearlang/dialects/python/frameworks/fastapi/` and
@@ -19,7 +19,7 @@ The dialects are in `nuclearlang/dialects/python/frameworks/fastapi/` and
 
 ## Working on it
 
-It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree. From the root of the tree:
+It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree. From the root of the tree:
 
 ```sh
 (cd nuclearlang/tools/node && npm install)                    # the shared Node tools of the checks

@@ -10,8 +10,8 @@ its own `AGENTS.md` and `docs/`. Today there is one.
 ## Rules of every agent here
 
 - Open the `AGENTS.md` of the agent the task touches; this file holds nothing else.
-- An agent is written in Nuclear, with Dragonfly when one of its platforms fits (the root
-  [`AGENTS.md`](../AGENTS.md), "Nuclear and Dragonfly first").
+- An agent is written in Nuclear, with Synapsis when one of its platforms fits (the root
+  [`AGENTS.md`](../AGENTS.md), "Nuclear and Synapsis first").
 - What an agent knows is a row of the knowledge base of the [Smart Graph](../nuclear-graph-storage/AGENTS.md),
   and every prompt a model reads is a file of the graph's `prompts/`: never a text inside the agent's code.
 - The local models have at most 3B parameters, and the local agents write only Nuclear (the founding decision of
@@ -23,5 +23,5 @@ its own `AGENTS.md` and `docs/`. Today there is one.
 |---|---|
 | The knowledge the agents read, the prompts | [`nuclear-graph-storage/`](../nuclear-graph-storage/AGENTS.md) |
 | The tools a frontier model calls the agents with | [`tools/mcp/`](../tools/mcp/AGENTS.md) |
-| The Loop and the chat of the editors, `nuclear-loop` | [`extensions/`](../extensions/AGENTS.md) |
+| The Builder and the chat of the editors, `nuclear-builder` | [`extensions/`](../extensions/AGENTS.md) |
 | The set-up that installs and starts the agents | [`installer/`](../installer/AGENTS.md) |

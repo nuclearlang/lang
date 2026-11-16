@@ -35,7 +35,7 @@ public final class NuclearSettings {
         PropertiesComponent.getInstance().setValue(SERVER_PATH, value, "");
     }
 
-    /** When a Dragonfly app pauses, show and highlight the `.nuc` line of the paused code. */
+    /** When a Synapsis app pauses, show and highlight the `.nuc` line of the paused code. */
     public static boolean followInNuclear() {
         return PropertiesComponent.getInstance().getBoolean(FOLLOW, true);
     }

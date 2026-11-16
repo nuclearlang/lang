@@ -1,4 +1,4 @@
-//! Projects of several files (nuclearlang/docs/07-reference/projects.md): the folder with `nuclear.toml`, a Dragonfly project (the
+//! Projects of several files (nuclearlang/docs/07-reference/projects.md): the folder with `nuclear.toml`, a Synapsis project (the
 //! folder with `config.nuc` naming its platform and dialect) or a Flutter app (the folder with `main.nuc`). The whole project is transpiled from disk with
 //! `nuclear_transpile::project::build` (a few ms) when a file is opened or saved; each open file then sees the
 //! top-level names of the other files.
@@ -33,15 +33,15 @@ pub struct Project {
     /// Index of each file as on disk: members and parameters of the other files' declarations (completion).
     indexes: HashMap<String, Index>,
     names: Vec<Name>,
-    /// Names of the files the dialect generates (`[project.files] names`: `startDragonfly`).
+    /// Names of the files the dialect generates (`[project.files] names`: `startSynapsis`).
     generated: HashSet<String>,
     /// `[project.outputs]` folders (test, integration_test): what they declare is only seen inside them.
     isolated: Vec<String>,
     kinds: Vec<(String, String)>,
     /// The dialect plus the definitions of the packages the project adds (`build/defs.lock`, written by
-    /// `dragonfly flutter add`); `None` when it adds none.
+    /// `nuclear flutter add`); `None` when it adds none.
     pub dialect: Option<Arc<Dialect>>,
-    /// `build/defs.lock` when the project was built: a new package (`dragonfly flutter add`) rebuilds it.
+    /// `build/defs.lock` when the project was built: a new package (`nuclear flutter add`) rebuilds it.
     pub defs_lock: Vec<String>,
 }
 
@@ -60,7 +60,7 @@ fn with_project_defs(root: &Path, dialect: &Dialect) -> (Option<Dialect>, Vec<Di
         .diags
         .iter()
         .map(|(_, d)| {
-            let msg = format!("{} (run `dragonfly build` to generate them)", d.message);
+            let msg = format!("{} (run `nuclear build` to generate them)", d.message);
             Diagnostic::warning(d.code, Span::default(), msg)
         })
         .collect();
@@ -68,7 +68,7 @@ fn with_project_defs(root: &Path, dialect: &Dialect) -> (Option<Dialect>, Vec<Di
 }
 
 /// The project that contains `file`: the closest folder with `nuclear.toml`, with `config.nuc` naming
-/// `dragonfly(platform, dialect)` (ADR-synapsis-0002: a backend or mobile project), or with `main.nuc` (a Flutter app
+/// `synapsis(platform, dialect)` (ADR-synapsis-0002: a backend or mobile project), or with `main.nuc` (a Flutter app
 /// before that line; same order as `Manifest::find`). The manifest is an error when `nuclear.toml` cannot be
 /// read (N0303).
 pub fn find(file: &Path) -> Option<(PathBuf, Result<Manifest, String>)> {
@@ -77,7 +77,7 @@ pub fn find(file: &Path) -> Option<(PathBuf, Result<Manifest, String>)> {
             return Some((dir.to_path_buf(), Manifest::read(dir)));
         }
         if dir.join(project::CONFIG_FILE).is_file()
-            && let Ok(m) = Manifest::read_dragonfly(dir)
+            && let Ok(m) = Manifest::read_synapsis(dir)
         {
             return Some((dir.to_path_buf(), Ok(m)));
         }

@@ -1,0 +1,20 @@
+[package]
+name = "nuclear-codegen"
+description = "What `nuclear new`, `nuclear make` and `nuclear gen` write: the skeletons of each platform and the finished code of a resource"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nuclear-dialect.workspace = true
+nuclear-syntax.workspace = true
+nuclear-transpile.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+nuclear-diag.workspace = true

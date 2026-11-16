@@ -2,16 +2,17 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [nuclear-synapsis-framework/cli/src/device/, nuclearlang/dialects/dart/docs/07-reference/flutter.md, device-emulators/docs/03-adr/0001-a-device-is-the-app-as-flutter-web-in-chromium-driven-over-cdp.md]
+related: [device-emulators/src/, nuclearlang/dialects/dart/docs/07-reference/flutter.md, device-emulators/docs/03-adr/0001-a-device-is-the-app-as-flutter-web-in-chromium-driven-over-cdp.md]
 ---
 # The devices: overview
 
-`dragonfly device` (dv, `window.rs`) and `dragonfly terminal-device` (td, `terminal/`) run on the same backend. The
-command builds the app first (`dragonfly build`), then `device::run` takes a slot and starts the front. Several run
+`nuclear device` (dv, `window.rs`) and `nuclear terminal-device` (td, `terminal/`) run on the same backend. The
+command (`tools/cli/src/framework/mod.rs`) builds the app first, then `nuclear_devices::run` takes a slot and starts
+the front. Several run
 at the same time: device 1, 2, 3.
 
 ```
- mod.rs    parse (<device> --landscape --render -- <flutter args>), list, run
+ lib.rs    parse (<device> --landscape --render -- <flutter args>), list, run
    │
    ├── window.rs      the device in its own window          ┐
    ├── terminal/      the device inside the terminal        ┘ fronts
@@ -20,12 +21,12 @@ at the same time: device 1, 2, 3.
                        presets.rs (size, density, touch, user agent)     system.rs (browser, ports, slots, processes)
 ```
 
-## Modules (`nuclear-synapsis-framework/cli/src/device/`)
+## Modules (`device-emulators/src/`, crate `nuclear-devices`)
 
 - **`backend.rs`**: `flutter run -d chrome` with `--web-launch-url` to an empty 404 page marked
-  `__dragonfly_device_<n>_<pid>__` (the window is named so on Wayland, and the mark names the processes); the CDP
+  `__synapsis_device_<n>_<pid>__` (the window is named so on Wayland, and the mark names the processes); the CDP
   connection to that page; `emulate` (size, density, touch, orientation, user agent of `presets.rs`); `open_app`;
-  input (`touch`, `wheel`, `insert_text`, `key`, `back`); `text_layer` (`__dragonflyTextLayer` of the `dragonfly`
+  input (`touch`, `wheel`, `insert_text`, `key`, `back`); `text_layer` (`__synapsisTextLayer` of the `synapsis`
   package, in debug); `typing`, `screenshot`, `start_frames` (a PNG screencast), `reload` (the terminal device:
   `flutter run --machine`, `app.restart`), `close` (`Browser.close` + `kill_tree`).
 - **`cdp.rs`**: a minimal Chrome DevTools Protocol client. One thread owns the WebSocket (tungstenite is not
@@ -39,7 +40,7 @@ at the same time: device 1, 2, 3.
 - **`system.rs`**: what depends on the operating system. `device_tmp` (Linux: Flutter's `TMPDIR` is
   `~/.cache/dfly/<n>`, about 500 MB kept off a `/tmp` that is often in RAM; the path is short because the socket of
   the browser's profile allows at most 108 bytes); the browser per system (`CHROME_EXECUTABLE`, the PATH, flatpak,
-  `/Applications`, `Program Files`); free ports; `Slot` (the numbers, in `temp/dragonfly-devices/<n>` with the pid;
+  `/Applications`, `Program Files`); free ports; `Slot` (the numbers, in `temp/synapsis-devices/<n>` with the pid;
   a dead one is reused); `alive`, `kill_tree`.
 - **`window.rs`**: the browser in app mode (no tabs, no address bar). It waits 1.2 s for the browser's bars
   (`--enable-automation`), measures the page and the window WITHOUT emulation, computes `fit_scale` (the device's
@@ -62,7 +63,7 @@ Tested on Linux with Hyprland: two windows at once, a real kitty, blocks with te
 → back → rotate; closing the window, `q` or SIGHUP leaves no process. Windows and macOS: only
 `cargo check --target`. What did not run is in the [roadmap](../01-product/roadmap.md).
 
-Unit tests: `arguments` (`mod.rs`), `presets_are_found_by_id_or_name`, `slots_take_the_lowest_free_number`,
+Unit tests (`cargo test -p nuclear-devices`): `arguments` (`lib.rs`), `presets_are_found_by_id_or_name`, `slots_take_the_lowest_free_number`,
 `this_process_is_alive`, `machine_lines_become_events`, `the_window_keeps_the_aspect_and_fits_the_screen`,
 `visible_width_ignores_escape_codes`, and in `render.rs` `the_area_keeps_the_device_aspect`,
 `blocks_use_two_pixels_per_cell_and_texts_replace_them`, `unreadable_text_colors_become_black_or_white`,
@@ -70,6 +71,6 @@ Unit tests: `arguments` (`mod.rs`), `presets_are_found_by_id_or_name`, `slots_ta
 
 ## The editors' devices
 
-The VS Code extension has its own device panel for a mobile app (a Flutter custom device `dragonfly` over a
+The VS Code extension has its own device panel for a mobile app (a Flutter custom device `synapsis` over a
 headless Chromium, the same presets) and a web device for a web project; they are the extension's code, described
 with [the extensions](../../../extensions/AGENTS.md).

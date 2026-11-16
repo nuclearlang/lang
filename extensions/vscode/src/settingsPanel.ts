@@ -122,7 +122,7 @@ export class SettingsPanel {
 
   private async state(): Promise<void> {
     const s = aiSettings();
-    const access = await run(s.mcpCommand, ['requests']);
+    const access = await run(s.graphCommand, ['requests']);
     let graphAccess: { requests: Record<string, { client: string; scopes: string[]; reason: string; status: string }>; clients: Record<string, { scopes: string[] }> } | null = null;
     try {
       graphAccess = JSON.parse(access.out.slice(access.out.indexOf('{')));
@@ -180,20 +180,20 @@ export class SettingsPanel {
       case 'mcp':
         return this.addMcp(m.client);
       case 'connectMcp': {
-        const r = await run(aiSettings().mcpCommand, ['connect', 'mcp', '--scopes', 'read,write']);
+        const r = await run(aiSettings().graphCommand, ['connect', 'mcp', '--scopes', 'read,write']);
         void vscode.window.showInformationMessage(r.out.trim() || 'done');
         return this.state();
       }
       case 'allow':
       case 'deny': {
-        const r = await run(aiSettings().mcpCommand, [m.type, m.id]);
+        const r = await run(aiSettings().graphCommand, [m.type, m.id]);
         void vscode.window.showInformationMessage(r.out.trim());
         return this.state();
       }
       case 'revoke': {
         const ok = await vscode.window.showWarningMessage(`Take the graph's access away from '${m.client}'?`, { modal: true }, 'Revoke');
         if (ok !== 'Revoke') return;
-        await run(aiSettings().mcpCommand, ['revoke', m.client]);
+        await run(aiSettings().graphCommand, ['revoke', m.client]);
         return this.state();
       }
       case 'jira':
@@ -214,7 +214,7 @@ export class SettingsPanel {
   /** Starts (or restarts, when the editor started it) the graph or the Developer with the settings' models. */
   private async start(service: 'graph' | 'developer'): Promise<void> {
     const s = aiSettings();
-    const [cmd, args, url] = service === 'graph' ? [s.mcpCommand, ['serve'], s.graphUrl + '/v1/health'] : ['nuclear-developer', [], s.developerUrl + '/docs'];
+    const [cmd, args, url] = service === 'graph' ? [s.graphCommand, ['serve'], s.graphUrl + '/v1/health'] : ['nuclear-developer', [], s.developerUrl + '/docs'];
     // the services the set-up left in this system (ADR-installer-0002) start with the machine's file: the models chosen here go
     // there, and the system's manager starts the service again
     if (readMachine().NUCLEAR_AI_MODE === 'local') writeMachine({ CODER_MODEL: s.coderModel, ASSISTANT_MODEL: s.assistantModel, NUCLEAR_GRAPH_EMBED: s.embeddingsModel });
@@ -275,7 +275,7 @@ export class SettingsPanel {
       } catch {
         if (fs.existsSync(file)) throw new Error(`${file} is not valid JSON: fix it first`);
       }
-      json.mcp = { ...(json.mcp ?? {}), nuclear: { type: 'local', command: [cmd, 'mcp'], enabled: true } };
+      json.mcp = { ...(json.mcp ?? {}), nuclear: { type: 'local', command: [cmd], enabled: true } };
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
     } else if (client === 'cursor') {
@@ -286,11 +286,11 @@ export class SettingsPanel {
       } catch {
         if (fs.existsSync(file)) throw new Error(`${file} is not valid JSON: fix it first`);
       }
-      json.mcpServers = { ...(json.mcpServers ?? {}), nuclear: { command: cmd, args: ['mcp'] } };
+      json.mcpServers = { ...(json.mcpServers ?? {}), nuclear: { command: cmd, args: [] } };
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
     } else {
-      const args = client === 'claude' ? ['mcp', 'add', '--scope', 'user', 'nuclear', '--', cmd, 'mcp'] : ['mcp', 'add', 'nuclear', '--', cmd, 'mcp'];
+      const args = client === 'claude' ? ['mcp', 'add', '--scope', 'user', 'nuclear', '--', cmd] : ['mcp', 'add', 'nuclear', '--', cmd];
       const r = await run(client === 'claude' ? c.get('claude.command', 'claude') : c.get('codex.command', 'codex'), args);
       if (r.code !== 0) throw new Error(`${client} ${args.join(' ')}: ${r.out.trim()}`);
     }
@@ -317,7 +317,7 @@ export function html(webview: vscode.Webview): string {
   .over { color: var(--vscode-errorForeground); } .badge { font-size: 11px; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--vscode-panel-border); }
 </style></head><body>
 <h1>Settings and integrations</h1>
-<div class="muted">The AI loop of NuclearLang: everything here is a setting of the editor (<a href="#" id="openSettings">nuclear.ai</a>); a project's <code>.nuclear/loop.json</code> still wins for its own pipeline.</div>
+<div class="muted">The AI loop of NuclearLang: everything here is a setting of the editor (<a href="#" id="openSettings">nuclear.ai</a>); a project's <code>.nuclear/builder.json</code> still wins for its own pipeline.</div>
 <div id="root">Loading…</div>
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
@@ -359,18 +359,18 @@ function draw() {
     + modelSelect('models.assistant', 'Assistant', s.assistantModel, 'plans, reviews, documents, diagnoses, chats')
     + modelSelect('models.embeddings', 'Embeddings', s.embeddingsModel, 'the graph\\'s search (re-ingest after a change)')
     + '</div>' + (typeof S.models === 'string' ? '<p class="over">' + esc(S.models) + '</p>' : '<details style="margin-top:8px"><summary>Installed models (' + models.length + ')</summary><table><tr><th>Model</th><th>Parameters</th><th>Size</th><th></th></tr>' + models.map((m) => '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.parameters) + '</td><td>' + gb(m.size) + '</td><td>' + (m.billions > S.max ? '<span class="over">over 3B</span>' : '<span class="badge">allowed</span>') + '</td></tr>').join('') + '</table></details>')
-    + '<h2>MCP server</h2><div class="muted">The Nuclear MCP server (<code>' + esc(s.mcpCommand) + ' mcp</code>) lets Claude, Codex or Cursor give each task to the local developer first, then validate and correct.</div>'
+    + '<h2>MCP server</h2><div class="muted">The Nuclear MCP server (<code>' + esc(s.mcpCommand) + '</code>) lets Claude, Codex or Cursor give each task to the local developer first, then validate and correct.</div>'
     + Object.keys(mcpName).map((c) => '<div class="card"><span class="dot ' + (S.mcp[c] === 'added' ? 'on' : 'off') + '"></span><div class="grow"><b>' + mcpName[c] + '</b> <span class="muted">' + esc(S.mcp[c]) + '</span></div>' + (S.mcp[c] === 'not added' ? '<button class="primary" data-mcp="' + c + '">Add</button>' : '') + '</div>').join('')
-    + '<div class="grid">' + field('mcpCommand', 'MCP command', s.mcpCommand, 'the program that serves it') + '</div>'
+    + '<div class="grid">' + field('mcpCommand', 'MCP command', s.mcpCommand, 'the program that serves it') + field('graphCommand', 'Graph command', s.graphCommand, 'the Smart Graph\'s program') + '</div>'
     + '<h2>Connections</h2>'
     + '<div class="card"><div class="grow"><b>Smart Graph clients</b> <span class="muted">programs that may read the graph</span></div>' + (access && !access.clients.mcp ? '<button data-act="connectMcp">Allow MCP clients</button>' : '') + '</div>'
     + (access ? '<table>' + Object.entries(access.clients).map(([name, c]) => '<tr><td>' + esc(name) + '</td><td>' + esc(c.scopes.join(', ')) + '</td><td><button data-revoke="' + esc(name) + '">Revoke</button></td></tr>').join('')
       + Object.entries(access.requests).filter(([, r]) => r.status === 'pending').map(([id, r]) => '<tr><td><b>' + esc(r.client) + '</b> asks</td><td>' + esc(r.scopes.join(', ')) + ' · ' + esc(r.reason) + '</td><td><button class="primary" data-allow="' + esc(id) + '">Allow</button> <button data-deny="' + esc(id) + '">Deny</button></td></tr>').join('') + '</table>' : '<p class="muted">The graph\\'s access list is not readable (is nuclear-graph installed?).</p>')
-    + '<div class="card"><span class="dot ' + (S.jira ? 'on' : 'off') + '"></span><div class="grow"><b>Jira</b> <span class="muted">import issues as specs in the Loop · secret storage</span></div><button data-act="jira">' + (S.jira ? 'Change' : 'Connect') + '</button>' + (S.jira ? '<button data-act="jiraOff">Disconnect</button>' : '') + '</div>'
+    + '<div class="card"><span class="dot ' + (S.jira ? 'on' : 'off') + '"></span><div class="grow"><b>Jira</b> <span class="muted">import issues as specs in the Builder · secret storage</span></div><button data-act="jira">' + (S.jira ? 'Change' : 'Connect') + '</button>' + (S.jira ? '<button data-act="jiraOff">Disconnect</button>' : '') + '</div>'
     + '<div class="card"><span class="dot ' + (S.github ? 'on' : 'off') + '"></span><div class="grow"><b>GitHub</b> <span class="muted">' + (S.github ? 'gh is signed in' : 'run gh auth login in a terminal') + '</span></div></div>'
     + '<h2>Integrations</h2><div class="grid">'
-    + field('claude.command', 'Claude Code: command', I.claude.command, 'the lead of a Loop run when Claude leads')
-    + field('claude.maxBudgetUsd', 'Claude: budget per run (USD)', I.claude.maxBudgetUsd, 'the most a Loop run led by Claude may spend; 0: no limit', 'number')
+    + field('claude.command', 'Claude Code: command', I.claude.command, 'the lead of a Builder run when Claude leads')
+    + field('claude.maxBudgetUsd', 'Claude: budget per run (USD)', I.claude.maxBudgetUsd, 'the most a Builder run led by Claude may spend; 0: no limit', 'number')
     + toggle('codex.enabled', 'Codex', I.codex.enabled, 'its MCP entry and its regular check') + field('codex.command', 'Codex: command', I.codex.command, '')
     + toggle('opencode.enabled', 'OpenCode', I.opencode.enabled, 'its MCP entry and its regular check') + field('opencode.command', 'OpenCode: command', I.opencode.command, '') + field('opencode.configFile', 'OpenCode: config file', I.opencode.configFile, 'where the MCP server is added')
     + field('cursor.mcpFile', 'Cursor: MCP file', I.cursor.mcpFile, 'where the MCP server is added')
@@ -385,7 +385,7 @@ function draw() {
     + field('checkEveryMinutes', 'Check connections every (min)', I.checkEveryMinutes, '0: only before each task', 'number')
     + '</div>'
     + '<h2>Pipeline</h2><div class="grid">'
-    + '<label>Claude\\'s model<div class="muted">when Claude leads a Loop run</div></label><select data-key="claudeModel">' + ['sonnet', 'opus', 'haiku'].map((m) => '<option' + (m === s.claudeModel ? ' selected' : '') + '>' + m + '</option>').join('') + '</select>'
+    + '<label>Claude\\'s model<div class="muted">when Claude leads a Builder run</div></label><select data-key="claudeModel">' + ['sonnet', 'opus', 'haiku'].map((m) => '<option' + (m === s.claudeModel ? ' selected' : '') + '>' + m + '</option>').join('') + '</select>'
     + field('retry.attempts', 'Tries of a call', s.retry.attempts, 'a call to the local agents that fails for a passing reason (down, busy, 5xx) is retried', 'number')
     + field('retry.baseMs', 'First wait (ms)', s.retry.baseMs, 'doubles at each retry, with random jitter', 'number')
     + field('retry.maxMs', 'Longest wait (ms)', s.retry.maxMs, 'the cap of a wait', 'number')

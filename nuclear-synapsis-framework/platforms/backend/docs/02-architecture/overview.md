@@ -10,7 +10,7 @@ related: [runtime-python.md, runtime-typescript.md, dependencies.md, ../07-refer
 
 ```
 a backend project (.nuc, config.nuc)
-   │  nuclear build .  /  dragonfly build
+   │  nuclear build .  /  nuclear build
    ▼
 the compiler ── loads ──► the dialect   nuclearlang/dialects/<language>/frameworks/<dialect>/
    │                        └─ platform = "backend" ──► platform.toml   (this folder: the contract)
@@ -23,7 +23,7 @@ the running app: its routes, GET /.nuclear/contract.json, GET /.nuclear/openapi.
 
 A project has only `.nuc` files: components with `data/` (entities, repositories), `domain/` (models, use cases),
 `api/` (controllers), `ai/` (tools, agents, states, graphs), `events/` (listeners) and the `appcomponent` facade;
-`config/project_config.nuc` with the connections; `config.nuc` with `dragonfly(platform = "backend", dialect =
+`config/project_config.nuc` with the connections; `config.nuc` with `synapsis(platform = "backend", dialect =
 ...)`, `app(...)` and `plugins(...)`; tests in `test/*_test.nuc`; errors as `Result`; Nuclear's standard library.
 The rules are [the reference](../07-reference/backend.md).
 
@@ -38,6 +38,12 @@ platforms: [the contract of a platform](../../../docs/02-architecture/contract.m
 | `[decorators.args]`, `[decorators.fields]` | the arguments of `@primary` and of the relation decorators and the rules behind N0308 (below) |
 | `[decorators.replaced]` | `generated` → `@primary(generated = true)` (N0309) |
 | `[layout]` | a path per kind: `config/project_config.nuc`, `test/`, and under `components/{component}/`: `data/entities/`, `data/repositories/`, `domain/{models,usecases,services,aggregates}/`, `api/`, `events/`, `ai/`, `ai/states/`, `config/`, and the facade `{component}_appcomponent.nuc` |
+
+What `nuclear make` and `nuclear gen` write for the platform is not in the contract: it is
+`tools/code_generator/platforms/backend/generators.toml`, read by the loader with the contract:
+
+| Section | In the backend generators |
+|---|---|
 | `[skeletons]` | one per kind, except `appConfig` and `graph` |
 | `[gen]`, `[[generators.*]]` | `component` (the facade); `resource`: from another API (`when = "rest"`: the models, an HTTP repository) or from the database (`when = "db"`: the entity, `New<Name>`, a repository with `page`, the tests), and for both a use case per action, the facade's aliases and the controller; `usecase`: a use case over a repository method, its alias and its route |
 
@@ -51,14 +57,14 @@ What the generators do for a user is in the reference (§2.13); how they work is
 | `fastapi` | Python 3.12+ | FastAPI, SQLAlchemy 2 async, pydantic, Alembic, LangChain / LangGraph, pytest | `nuclearlang/dialects/python/frameworks/fastapi/` | [reference](../../../../../nuclearlang/dialects/python/docs/07-reference/fastapi.md), [guide](../../../../../nuclearlang/dialects/python/docs/08-guides/fastapi.md) |
 | `nestjs` | TypeScript (ES modules) | NestJS 12, sequelize-typescript, class-validator, LangChain.js / LangGraph.js, `node:test` | `nuclearlang/dialects/typescript/frameworks/nestjs/` | [reference](../../../../../nuclearlang/dialects/typescript/docs/07-reference/nestjs.md), [guide](../../../../../nuclearlang/dialects/typescript/docs/08-guides/nestjs.md) |
 
-Each dialect has one runtime here: [`dragonfly-py`](runtime-python.md), [`dragonfly-nest`](runtime-typescript.md).
+Each dialect has one runtime here: [`synapsis-py`](runtime-python.md), [`synapsis-nest`](runtime-typescript.md).
 In both, `Result` comes from the runtime, not from the generated code.
 
 ## What every built app serves
 
 Both runtimes serve the two documents the compiler wrote next to the app: `GET /.nuclear/contract.json` and
-`GET /.nuclear/openapi.json` (`_serve_contract` in `packages/dragonfly-py/src/dragonfly/app.py`, `serveContract` in
-`packages/dragonfly-nest/src/web.ts`). A mobile or web project declares the backend in its `config.nuc` and gets its
+`GET /.nuclear/openapi.json` (`_serve_contract` in `packages/synapsis-py/src/synapsis/app.py`, `serveContract` in
+`packages/synapsis-nest/src/web.ts`). A mobile or web project declares the backend in its `config.nuc` and gets its
 models and repositories generated from the contract (ADR-synapsis-0006): the files and the flow are in
 [shared contracts](../../../../docs/02-architecture/shared-contracts.md), the steps for a user in
 [the guide](../08-guides/contracts.md).

@@ -1,28 +1,28 @@
 # Generators: the standard code, written by a command
 
 Most of a feature is the same every time: a model, a repository, a use case per action, the facade's aliases, the
-routes or the screen, the tests. `dragonfly gen` writes that part, finished and compiling, on the three platforms.
+routes or the screen, the tests. `nuclear gen` writes that part, finished and compiling, on the three platforms.
 A person or an agent writes only what is particular to the app: a use case with rules of its own, the details of a
 view.
 
-`dragonfly make` is the other command that creates files: one nearly empty declaration of a kind, to fill in.
-`dragonfly gen` writes code that is already done.
+`nuclear make` is the other command that creates files: one nearly empty declaration of a kind, to fill in.
+`nuclear gen` writes code that is already done.
 
 | Command | What it writes |
 |---|---|
-| `dragonfly gen inspect` | nothing: what the project has (platform, dialect, components, every declaration by kind), as JSON |
-| `dragonfly gen component <component>` | a component: its facade and its config |
-| `dragonfly gen resource <component> <Name>` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests |
-| `dragonfly gen usecase <component> <Name>` | a use case wired into its component: its alias in the facade and, on the backend, its route |
+| `nuclear gen inspect` | nothing: what the project has (platform, dialect, components, every declaration by kind), as JSON |
+| `nuclear gen component <component>` | a component: its facade and its config |
+| `nuclear gen resource <component> <Name>` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests |
+| `nuclear gen usecase <component> <Name>` | a use case wired into its component: its alias in the facade and, on the backend, its route |
 
 Every command runs inside a project and takes `--dry-run`, which shows the files and writes nothing.
 
 ## 1. A resource
 
 ```sh
-dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character
-dragonfly gen resource orders Order --fields "id:int total:double status:string" --source db
-dragonfly gen resource episodes Episode --from-spec specs/episodes/spec.md --screen episode_list
+nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character
+nuclear gen resource orders Order --fields "id:int total:double status:string" --source db
+nuclear gen resource episodes Episode --from-spec specs/episodes/spec.md --screen episode_list
 ```
 
 The fields come from one of three places:
@@ -60,7 +60,7 @@ A resource brings the standard use cases. `gen usecase` is for the next one, and
 **A use case that only calls a repository method** is written by the command, because there is nothing to decide:
 
 ```sh
-dragonfly gen usecase orders PageOrders --calls OrderRepository.page --route "GET orders/pages/{page}"
+nuclear gen usecase orders PageOrders --calls OrderRepository.page --route "GET orders/pages/{page}"
 ```
 
 ```
@@ -94,7 +94,7 @@ usecase CancelOrder(repository: OrderRepository)
 ```
 
 ```sh
-dragonfly gen usecase orders CancelOrder --route "POST orders/{id}/cancel"
+nuclear gen usecase orders CancelOrder --route "POST orders/{id}/cancel"
 ```
 
 It adds the alias to the facade and the route to the controller, with the signature `exec` has in the project:
@@ -123,7 +123,7 @@ a method of its state manager and the state it emits, is written by hand.
 
 - **Nothing is overwritten.** A file that exists is kept. The facade, the repository and the controller get only the
   members they lack, each one whole (a route with its decorator and its body). So an action added to a resource that
-  exists (`dragonfly gen resource orders Order ... --actions list,get,search` on one that had `list,get`) adds its use
+  exists (`nuclear gen resource orders Order ... --actions list,get,search` on one that had `list,get`) adds its use
   case, its alias, the repository's method and its route, and what is written still compiles. Running a command twice changes nothing: the second
   time every file says `kept`.
 - **Nothing is declared twice.** A name another file of the project declares stops the command before it writes.
@@ -135,13 +135,13 @@ a method of its state manager and the state it emits, is written by hand.
 | It says | What to do |
 |---|---|
 | `<Name> is not declared. A use case with rules of its own is written first ...` | write the use case in the file it names, then run the command again; or give `--calls` when it only calls a repository |
-| the repository, or its method, is not declared | `--calls` names a method a repository of the project has: `dragonfly gen inspect` lists the repositories and their files |
+| the repository, or its method, is not declared | `--calls` names a method a repository of the project has: `nuclear gen inspect` lists the repositories and their files |
 | a `{name}` of the route is not a parameter of the use case | name the path's parameter like the one `exec` takes |
 | the use case belongs to another component | give the component that declares it |
 | the platform has no routes | `--route` is backend only: on mobile and web leave it out |
 | a type of `--fields` is not declared | declare the model first, or take the fields from an answer (`--from-json`), which writes the nested models too |
 | the name is declared in another file | pick another name, or remove the old declaration when it is a leftover |
-| a database resource has no generated search | which column is searched is yours to say: write the query in the repository, then `dragonfly gen usecase <component> Search<Names> --calls <Name>Repository.<method>` |
+| a database resource has no generated search | which column is searched is yours to say: write the query in the repository, then `nuclear gen usecase <component> Search<Names> --calls <Name>Repository.<method>` |
 
 ## 5. From an AI agent and from the editor
 
@@ -151,12 +151,12 @@ to generate first and write only what is left:
 
 | Command | MCP tool |
 |---|---|
-| `dragonfly gen inspect` | `project_inspect` |
-| `dragonfly gen component` | `generate_component` |
-| `dragonfly gen resource` | `generate_resource` (and `api_inspect`, which shows an API's shape first) |
-| `dragonfly gen usecase` | `generate_usecase` |
+| `nuclear gen inspect` | `project_inspect` |
+| `nuclear gen component` | `generate_component` |
+| `nuclear gen resource` | `generate_resource` (and `api_inspect`, which shows an API's shape first) |
+| `nuclear gen usecase` | `generate_usecase` |
 
-The editor's Loop has a *Generate* stage before any agent works: it runs `dragonfly gen resource` for every resource
+The editor's Builder has a *Generate* stage before any agent works: it runs `nuclear gen resource` for every resource
 the spec names, and the planner plans only what is left
 ([the AI loop](../../../extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md)).
 
@@ -165,7 +165,7 @@ the spec names, and the planner plans only what is left
 - A database resource has no relations to other entities, and no search: add them by hand.
 - A backend resource over another API (`rest`) gets no tests.
 - On mobile and web, what a screen shows of a use case added with `gen usecase`.
-- The Loop's *Generate* stage writes resources only: it does not call `gen usecase`.
+- The Builder's *Generate* stage writes resources only: it does not call `gen usecase`.
 
 How a platform declares its generators (`[[generators.<what>]]` in its `platform.toml`: templates, never code in the
 CLI) is in [the dialects' spec](../../../nuclearlang/docs/07-reference/dialects.md). Why they exist:

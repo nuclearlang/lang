@@ -26,7 +26,7 @@ Every dialect (target, framework or project) follows NuclearLang's golden rule
 | Kind | What it defines | Examples |
 |---|---|---|
 | **Language** | How each construct of the base language and each member of the standard library ([library.md](library.md)) is written in a language: all the templates of `[syntax]`, `[types]`, `[operators]` and `[library]`. It has no `extends`. | `typescript`, `dart`, `python` |
-| **Dragonfly dialect** | Implements a **platform** of Dragonfly (`web`, `mobile`, `backend`; ADR-synapsis-0002) in a language and framework: extends a language dialect with the platform's kinds, shortcuts, automatic imports and its own templates. `[dialect] platform` names the platform; the folder is `dialects/<platform>/<dialect>/`. | `backend/fastapi`, `backend/nestjs`, `mobile/flutter` |
+| **Synapsis dialect** | Implements a **platform** of Synapsis (`web`, `mobile`, `backend`; ADR-synapsis-0002) in a language and framework: extends a language dialect with the platform's kinds, shortcuts, automatic imports and its own templates. `[dialect] platform` names the platform; the folder is `dialects/<platform>/<dialect>/`. | `backend/fastapi`, `backend/nestjs`, `mobile/flutter` |
 | **Project** | Extends a dialect with the shortcuts and kinds of a concrete project. Its kinds are extension kinds (ADR-synapsis-0004): they exist in the dialect it extends only, so they tie the project to that dialect; they are not part of the platform contract. | `dialects/myapp/` with `extends = "flutter"` |
 
 ```
@@ -35,7 +35,7 @@ python ─────► backend/fastapi
 dart ───────► mobile/flutter ──► myapp
 ```
 
-A platform is a contract, `dialects/<platform>/platform.toml`: the kinds (name and header syntax), the consumed
+A platform is a contract, `platforms/<platform>/platform.toml`: the kinds (name and header syntax), the consumed
 decorators, the plugins, the folders of a project and the editor docs that every dialect of the platform must
 implement, identically. The loader refuses a dialect that misses one of them, and a dialect may not add a kind,
 decorator or plugin the platform does not declare: the Nuclear of a project never changes with its dialect. Only
@@ -45,7 +45,7 @@ to that dialect (ADR-synapsis-0004).
 ```toml
 # nuclear-synapsis-framework/platforms/backend/platform.toml
 [platform]
-default_dialect = "fastapi"     # what `dragonfly new -p backend` uses without `-d`
+default_dialect = "fastapi"     # what `nuclear new -p backend` uses without `-d`
 name = "backend"
 kinds = ["entity", "repository", "model", "usecase", "appcomponent", "service", "aggregate", "controller",
   "listener", "tools", "agent", "state", "graph", "appConfig", "config", "tests"]
@@ -74,7 +74,12 @@ appcomponent = "components/{component}/{component}_appcomponent.nuc"
 --dialect <d>` prints it, and agents (the Nuclear Developer's planner) build a piece's path from it instead of
 guessing a folder.
 
-`[[generators.<what>]]` (ADR-codegen-0001) is what `dragonfly gen <what>` writes: `component` (a component's facade),
+What `nuclear make` and `nuclear gen` write for a platform is not in its contract: it is the code generator's
+`<platform>/generators.toml` (`tools/code_generator/platforms/` in the tree, `generators/` in an install, found by
+`Loader::generators_file` and merged into the dialect with the contract), with `[skeletons]` (kind → the smallest
+file of the kind that compiles), `[gen]` and `[[generators.<what>]]`.
+
+`[[generators.<what>]]` (ADR-codegen-0001) is what `nuclear gen <what>` writes: `component` (a component's facade),
 `resource` (models, repository, a use case per action, the facade's aliases, the platform's entry: a controller, or a
 screen with its state manager and state model, the tests) and `usecase` (a use case that only calls a repository
 method, the alias of a use case in the facade, its route). Each entry is one file at its kind's `[layout]` place:
@@ -105,7 +110,7 @@ a list shows of an item), `listParam`/`listArg`, `sample`/`pageSample` (values f
 an `Ok`); with `--route`, `route`, `verb`, `prefix`, `path`, `Controller` and `app` (the controller's name for the
 facade). A platform without a piece for a case refuses it (`--route` where no piece has `when = "route"`). The Nuclear
 a generator writes is the same for every dialect of the platform (rule 11); a test builds a generated resource and
-its use cases with every dialect (`a_generated_resource_compiles_with_every_dialect`, dragonfly).
+its use cases with every dialect (`a_generated_resource_compiles_with_every_dialect`, `tools/cli/src/framework/mod.rs`).
 
 A field rule: `optional` (the field is `x?: T`), `list` (its type is a list, or not), `target` (its type, or its
 items, is a declaration with that decorator), `sibling` (a field of the same declaration must exist; `{name}` is the
@@ -135,7 +140,7 @@ nuclearlang/dialects/dart/frameworks/flutter/
 The transpiler looks for dialects, in order, in: the directories of `--dialect-path`, those of the
 `NUCLEAR_DIALECT_PATH` variable (separated by `:`), `./dialects` and the dialects shipped with NuclearLang. In each
 directory it looks at `<name>/` and `<platform>/<name>/`. `--dialect` accepts a name or a path to the folder or
-file; a Dragonfly project names its dialect in `config.nuc` ([projects.md](projects.md) §1).
+file; a Synapsis project names its dialect in `config.nuc` ([projects.md](projects.md) §1).
 
 ## 3. Sections
 
@@ -152,7 +157,7 @@ file; a Dragonfly project names its dialect in `config.nuc` ([projects.md](proje
 | `[reexports]` | Modules that fully include others (`material.dart` includes `widgets.dart`) |
 | `[exports]` | Names a module exports besides the auto-imported ones (`Task` of fpdart): a declaration of the project with that name hides it from the import (`hide` clause of `import_default`); the type definitions give the rest |
 | `[functions]` | Function shortcuts |
-| `[toolchain]` | What the `dragonfly` CLI and the editors run in the generated project (`build/` or the dialect's output): shell commands `install`, `compile`, `run`, `test`, `serve` (the editor's own server), and `url` (where the app answers), `ready` (the line of `run` that means it is up), `installed` (the folder that means `install` ran), `install_local` (run by `install` once per dependency of `config.nuc` that is a folder, `{{path}}`: a package manager keeps the old copy of a folder whose version did not change); placeholders `{{packages}}` (the installation's runtimes), `{{url}}`, `{{port}}`, `{{host}}`; `migrate_make`, `migrate`, `migrate_down` for `dragonfly migrate` with `{{message}}` and `{{migrations}}` (the project's `migrations/` folder), quoted for the shell (ADR-backend-0001); for `dragonfly add|remove <package>` (ADR-lang-0008): `package_add` (`{{requirement}}`), `package_remove` (`{{name}}`), `package_version` (prints the installed version of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depends}}` the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement: `{{name}}@{{version}}`), `package_constraint` (what `config.nuc` writes for the resolved `{{version}}`: `^{{version}}`) and `package_exact` (what a version written bare gets before it: `==`). `[toolchain.linux|macos|windows]` override a key on that system. `[[toolchain.launch]]` are the editor's debug configurations, `[toolchain.settings]` its settings and `extensions` the editor extensions it recommends, with `{{name}}`, `{{app}}`, `{{url}}`, `{{port}}` (ADR-synapsis-0001, ADR-cli-0001) |
+| `[toolchain]` | What the `nuclear` CLI and the editors run in the generated project (`build/` or the dialect's output): shell commands `install`, `compile`, `run`, `test`, `serve` (the editor's own server), and `url` (where the app answers), `ready` (the line of `run` that means it is up), `installed` (the folder that means `install` ran), `install_local` (run by `install` once per dependency of `config.nuc` that is a folder, `{{path}}`: a package manager keeps the old copy of a folder whose version did not change); placeholders `{{packages}}` (the installation's runtimes), `{{url}}`, `{{port}}`, `{{host}}`; `migrate_make`, `migrate`, `migrate_down` for `nuclear migrate` with `{{message}}` and `{{migrations}}` (the project's `migrations/` folder), quoted for the shell (ADR-backend-0001); for `nuclear add|remove <package>` (ADR-lang-0008): `package_add` (`{{requirement}}`), `package_remove` (`{{name}}`), `package_version` (prints the installed version of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depends}}` the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement: `{{name}}@{{version}}`), `package_constraint` (what `config.nuc` writes for the resolved `{{version}}`: `^{{version}}`) and `package_exact` (what a version written bare gets before it: `==`). `[toolchain.linux|macos|windows]` override a key on that system. `[[toolchain.launch]]` are the editor's debug configurations, `[toolchain.settings]` its settings and `extensions` the editor extensions it recommends, with `{{name}}`, `{{app}}`, `{{url}}`, `{{port}}` (ADR-synapsis-0001, ADR-cli-0001) |
 | `[call_site]` | `Module.method(...)` calls that receive where they are written (§5.3.1) |
 | `[names]` | `globals` (names of the environment), `not_constructors` (PascalCase names called without `new`) and `written` (names templates write, like `Right`/`Left`: imported if the generated code contains them) |
 | `[kinds.<word>]` | Header words that generate whole declarations: `stateless`, `controller`... |
@@ -576,10 +581,10 @@ template = { file = "templates/job.tpl" }
 ```
 
 - `nuclear kind new <name> -p <platform> -d <dialect>` writes the skeleton in `kinds/<name>/` of the project.
-- The loader reads the packages of `<project>/kinds/` and of the install folder (`dragonfly add <folder>` installs
+- The loader reads the packages of `<project>/kinds/` and of the install folder (`nuclear add <folder>` installs
   one for every project). A package of the project's platform is a **plugin** of the dialect: `config.nuc` enables
   it with `plugins(jobs = true)`, its kinds and names need it (N0304), its runtime packages reach the generated
-  manifest, and the project keeps `dragonfly(platform = "backend", dialect = "fastapi")`.
+  manifest, and the project keeps `synapsis(platform = "backend", dialect = "fastapi")`.
 - The implementation is the folder named after the dialect, or after a dialect it extends. A package without one
   for the project's dialect is N0306 when enabled: enabling a package implemented for some dialects ties the project
   to them, exactly as a dialect's type definitions do. The Nuclear of the kind is the same in every dialect that
@@ -590,8 +595,8 @@ template = { file = "templates/job.tpl" }
 
 A **project dialect** (`dialects/myapp/` with `extends = "flutter"`) is still read for a project's own shortcuts
 (`imports`, `auto_imports`, `functions`); its kinds are extension kinds of that project with the same rule (tied to
-the dialect it extends, source "package" without a version), and a Dragonfly project names it in `config.nuc`
-(`dragonfly(platform = "mobile", dialect = "myapp")`). A kind package is the portable form.
+the dialect it extends, source "package" without a version), and a Synapsis project names it in `config.nuc`
+(`synapsis(platform = "mobile", dialect = "myapp")`). A kind package is the portable form.
 
 ## 8. Creating a new dialect with an agent
 
@@ -656,7 +661,7 @@ An agent creating a dialect **cannot**:
 7. **Leave a rule without an example**, nor an example whose output is not the transpiler's real one.
 8. **Write in `spec.md` anything that is not a final rule**: no questions, assumptions, pending items nor
    history. Doubts are asked to whoever requested the dialect.
-9. **Leave Dragonfly's rules** in a Dragonfly dialect: components, layers, architecture kinds and
+9. **Leave Synapsis's rules** in a Synapsis dialect: components, layers, architecture kinds and
    `[architecture]` rules are those of [flutter.md](../../dialects/dart/docs/07-reference/flutter.md) §1, §3, §4 and §6, applied to its technology.
 10. **Write in a language other than English**: the dialect's files (comments and `note` of the `.toml`,
     templates, the `.nuc` test examples) and its documentation (`.md`).
@@ -678,7 +683,7 @@ active dialect: unknown kinds with a suggestion (`N0201`), kinds without their r
 invalid `use` clauses (`N0211`) and missing templates (`N0203`).
 
 Editors have a base extension for every dialect (Language Server, highlighting, theme, metrics, line map) and
-one extension per framework to run and debug with its tools (Dragonfly for Flutter). The base knows no
+one extension per framework to run and debug with its tools (Synapsis for Flutter). The base knows no
 language: a file's dialect comes from its project (`nuclear.toml` or the dialect's `[project] marker`) and the
 links to the API reference from `[docs]`:
 

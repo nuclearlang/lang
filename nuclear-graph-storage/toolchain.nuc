@@ -103,7 +103,7 @@ layoutPath(layout: <string, string>, kind: string, name: string, component: stri
 target(name: string) string[]
   name in PLATFORM_NAMES ? ["--platform", name] : ["--dialect", name]
 
-// The NuclearLang command line tools, for agents: check, build and format a piece of Nuclear, and run the Dragonfly
+// The NuclearLang command line tools, for agents: check, build and format a piece of Nuclear, and run the Synapsis
 // commands of a project. Answers are short texts a small model can read.
 Toolchain
   // The errors of a piece of Nuclear (`ok` when it has none).
@@ -176,7 +176,8 @@ Toolchain
     ran = ~runTool(["nuclear", "spec", "--brief", ...target(platform)])
     ran.out
 
-  // A `dragonfly` command in a project (build, test, check, make, migrate...): its exit code and output.
-  dragonfly(root: string, args: string[], timeout: int = 900) string
-    ran = ~runTool(["dragonfly", ...args], cwd = root, timeout = timeout)
+  // A `nuclear` command in a project of the framework (new, build, test, check, make, gen, migrate...): its exit code
+  // and output.
+  project(root: string, args: string[], timeout: int = 900) string
+    ran = ~runTool(["nuclear", ...args], cwd = root, timeout = timeout)
     "exit ${ran.code}\n${ran.out.substring(Math.max(0, ran.out.length - 6000))}"

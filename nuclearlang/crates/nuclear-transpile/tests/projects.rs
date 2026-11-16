@@ -21,8 +21,8 @@ fn expected_of(project: &Path) -> PathBuf {
     project.parent().unwrap().parent().unwrap().join("expected").join(project.file_name().unwrap())
 }
 
-/// Every project of examples/projects/<name>/ and the Dragonfly example against examples/expected/<name>/.
-/// A Dragonfly project has only .nuc files: without nuclear.toml it is a flutter project named like its folder.
+/// Every project of examples/projects/<name>/ and the Synapsis example against examples/expected/<name>/.
+/// A Synapsis project has only .nuc files: without nuclear.toml it is a flutter project named like its folder.
 #[test]
 fn projects_match_expected_output() {
     let update = std::env::var("UPDATE_GOLDEN").is_ok();
@@ -460,10 +460,10 @@ fn a_nested_repository_is_not_part_of_the_project() {
     assert_eq!(build_codes(&root, &dialects), []);
 }
 
-/// The flutter dialect's reference (`flutter.md`) shows the real output of the Dragonfly example: each of its ```dart blocks with a
+/// The flutter dialect's reference (`flutter.md`) shows the real output of the Synapsis example: each of its ```dart blocks with a
 /// project caption is part of a file of the example's expected folder.
 #[test]
-fn dragonfly_spec_shows_the_real_output() {
+fn synapsis_spec_shows_the_real_output() {
     let (spec, expected) = (tree("docs/07-reference/flutter.md"), tree("examples/expected/clean-flutter-project"));
     let spec = std::fs::read_to_string(spec).unwrap();
     let mut files = Vec::new();
@@ -628,7 +628,7 @@ fn kind_package_builds_with_its_dialects_only() {
     let root = std::env::temp_dir().join(format!("nuclear-kind-package-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
     let files = [
-        ("config.nuc", "dragonfly(platform = \"backend\", dialect = \"fastapi\")\napp(name = \"demo\")\nplugins(jobs = true)\n"),
+        ("config.nuc", "synapsis(platform = \"backend\", dialect = \"fastapi\")\napp(name = \"demo\")\nplugins(jobs = true)\n"),
         ("config/project_config.nuc", "appConfig ProjectConfig\n  connections: Connection[] = []\n"),
         ("components/cleanup/jobs/purge_job.nuc", "job PurgeJob\n  run() int\n    0\n"),
         ("kinds/jobs/kind.toml", "[package]\nname = \"jobs\"\nversion = \"0.1.0\"\nplatform = \"backend\"\n"),
@@ -666,7 +666,7 @@ fn a_backend_project_adds_a_package_with_its_own_definitions() {
     let _ = std::fs::remove_dir_all(&root);
     let defs = "defs/python/probe_lib/1.0.0";
     let files = [
-        ("config.nuc", "dragonfly(platform = \"backend\", dialect = \"fastapi\")\napp(name = \"demo\")\ndependencies(probe_lib = \">=1.0\", local_lib = \"../local_lib\")\n"),
+        ("config.nuc", "synapsis(platform = \"backend\", dialect = \"fastapi\")\napp(name = \"demo\")\ndependencies(probe_lib = \">=1.0\", local_lib = \"../local_lib\")\n"),
         ("config/project_config.nuc", "appConfig ProjectConfig\n  connections: Connection[] = []\n"),
         ("components/probes/domain/services/probe_service.nuc", "service ProbeService\n  make() Probe\n    Probe()\n"),
         (&format!("{defs}/package.toml") as &str, "[package]\nname = \"probe_lib\"\nversion = \"1.0.0\"\nlanguage = \"python\"\ndepends = []\nlibraries = [\"probe_lib\"]\n"),
@@ -706,7 +706,7 @@ fn a_package_name_is_imported_by_name_and_a_default_export_as_the_default() {
     for (dialect, language, scoped, by_name, by_default, manifest_file, manifest_line) in cases {
         let root = std::env::temp_dir().join(format!("nuclear-package-names-{dialect}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
-        let config = format!("dragonfly(platform = \"backend\", dialect = \"{dialect}\")\napp(name = \"demo\")\ndependencies(probe = \"1.0.0\", stamp = \"1.0.0\", {scoped})\n");
+        let config = format!("synapsis(platform = \"backend\", dialect = \"{dialect}\")\napp(name = \"demo\")\ndependencies(probe = \"1.0.0\", stamp = \"1.0.0\", {scoped})\n");
         let package = |name: &str| format!("[package]\nname = \"{name}\"\nversion = \"1.0.0\"\nlanguage = \"{language}\"\ndepends = []\nlibraries = [\"{name}\"]\n");
         let api = |name: &str| format!("{{\"format\": 1, \"declarations\": [{{\"name\": \"{name}\", \"library\": \"{name}\", \"kind\": \"function\", \"params\": [], \"returns\": \"string\"}}]}}");
         let files = [
@@ -752,7 +752,7 @@ fn a_member_the_runtime_lacks_is_an_error_named_as_the_source_writes_it() {
     for dialect in ["fastapi", "nestjs"] {
         let root = std::env::temp_dir().join(format!("nuclear-runtime-member-{dialect}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
-        let config = format!("dragonfly(platform = \"backend\", dialect = \"{dialect}\")\napp(name = \"loans\")\nplugins(sqlite = true)\n");
+        let config = format!("synapsis(platform = \"backend\", dialect = \"{dialect}\")\napp(name = \"loans\")\nplugins(sqlite = true)\n");
         let files = [
             ("config.nuc", config.as_str()),
             ("config/project_config.nuc", "appConfig ProjectConfig\n  connections: Connection[] = [SQLite(file = \"loans.sqlite\")]\n"),

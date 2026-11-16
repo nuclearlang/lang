@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dragonfly import AppConfig, Connection, Ollama, SQLite, env
+from synapsis import AppConfig, Connection, Ollama, SQLite, env
 
 
 class ProjectConfig(AppConfig):

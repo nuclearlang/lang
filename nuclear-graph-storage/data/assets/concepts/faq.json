@@ -14,11 +14,11 @@
     "irm https://nuclearlang.github.io/install.ps1 | iex             # Windows (PowerShell)",
     "```",
     "",
-    "It brings `nuclear`, `dragonfly`, the language server and `nuclear-loop`, with the dialects and type definitions, into your user folders. No Rust needed.",
+    "It brings `nuclear`, `synapsis`, the language server and `nuclear-builder`, with the dialects and type definitions, into your user folders. No Rust needed.",
     "",
     "From the source tree: `./install.sh` builds and installs everything and the VS Code and Zed extensions (it needs Rust; `--no-vscode`, `--no-zed`, `--uninstall`). `./install.sh --ai` then runs the set-up of the AI services over the tree's own folders.",
     "",
-    "Then check the machine: `dragonfly doctor` says what is missing. For mobile apps, `dragonfly setup` installs Flutter step by step."
+    "Then check the machine: `nuclear doctor` says what is missing. For mobile apps, `nuclear setup` installs Flutter step by step."
    ],
    "keys": [
     "install",
@@ -35,11 +35,11 @@
    "links": [
     {
      "rel": "command",
-     "to": "tool:dragonfly.doctor"
+     "to": "tool:nuclear.doctor"
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.setup"
+     "to": "tool:nuclear.setup"
     },
     {
      "rel": "next",
@@ -62,21 +62,21 @@
    "id": "faq:start-a-project",
    "type": "faq",
    "title": "How do I start a project?",
-   "summary": "`dragonfly new <name> -p backend` (or `-p mobile`, `-p web`) makes a project of `.nuc` files; `-d` picks a dialect. Then `dragonfly build`, `dragonfly install`, `dragonfly run` and `dragonfly test`.",
+   "summary": "`nuclear new <name> -p backend` (or `-p mobile`, `-p web`) makes a project of `.nuc` files; `-d` picks a dialect. Then `nuclear build`, `nuclear install`, `nuclear run` and `nuclear test`.",
    "body": [
     "```sh",
-    "dragonfly new tasks_api -p backend            # a backend (fastapi; -d nestjs for TypeScript)",
-    "dragonfly new tasks_app                       # a mobile app (flutter)",
-    "dragonfly new site -p web                     # a web app (react)",
+    "nuclear new tasks_api -p backend            # a backend (fastapi; -d nestjs for TypeScript)",
+    "nuclear new tasks_app                       # a mobile app (flutter)",
+    "nuclear new site -p web                     # a web app (react)",
     "cd tasks_api",
-    "dragonfly build && dragonfly install          # transpile, then the runtime and the packages",
-    "dragonfly test                                # the tests written in Nuclear",
-    "dragonfly run                                 # the server, or the app on a device",
+    "nuclear build && nuclear install          # transpile, then the runtime and the packages",
+    "nuclear test                                # the tests written in Nuclear",
+    "nuclear run                                 # the server, or the app on a device",
     "```",
     "",
-    "Then add what the product needs, generators first: `dragonfly gen resource <component> <Name> --fields \"id:int name:string\"` writes a whole resource; `dragonfly make <kind> <component> <Name>` writes one file of a kind. `nuclear check .` (or `dragonfly check`) reports every error.",
+    "Then add what the product needs, generators first: `nuclear gen resource <component> <Name> --fields \"id:int name:string\"` writes a whole resource; `nuclear make <kind> <component> <Name>` writes one file of a kind. `nuclear check .` (or `nuclear check`) reports every error.",
     "",
-    "For an AI agent working in the project: `dragonfly agent init` writes its `AGENTS.md` and the check hook."
+    "For an AI agent working in the project: `nuclear agent init` writes its `AGENTS.md` and the check hook."
    ],
    "keys": [
     "new project",
@@ -89,12 +89,12 @@
     "how do I start a backend",
     "como creo un proyecto",
     "how do I create a mobile app with nuclear",
-    "what do I do after dragonfly new"
+    "what do I do after nuclear new"
    ],
    "links": [
     {
      "rel": "command",
-     "to": "tool:dragonfly.new"
+     "to": "tool:nuclear.new"
     },
     {
      "rel": "playbook",
@@ -118,7 +118,7 @@
    "title": "Which models do the local agents use, and can I change them?",
    "summary": "On Ollama, by the profile the set-up installed. `hard`: `qwen2.5-coder:3b` writes code and `gemma4:e2b` plans, reviews and answers; `medium`: `qwen2.5-coder:3b`; `lite`: `qwen2.5-coder:1.5b`. `embeddinggemma` makes the graph's vectors in all three. None is larger than 3B parameters of effective size, and no GPU is needed.",
    "body": [
-    "- Which set a machine gets: `nuclear-loop setup` suggests one for its memory and disk (`concept:ai-setup` has what each downloads and how far it works); `nuclear-loop setup --status` says which one is installed.",
+    "- Which set a machine gets: `nuclear-builder setup` suggests one for its memory and disk (`concept:ai-setup` has what each downloads and how far it works); `nuclear-builder setup --status` says which one is installed.",
     "- Another profile: run the set-up again. One model by hand: `CODER_MODEL`, `ASSISTANT_MODEL` and `NUCLEAR_GRAPH_EMBED` in `~/.config/nuclearlang/ai.env`, then restart the services.",
     "- In VS Code: the *Settings and integrations* page (`Ctrl+Alt+S`) lists the Ollama models under the 3B rule, pulls one and restarts the services with it.",
     "- A model over 3B parameters is not accepted: the agents are built for small models (fixed steps, the graph as memory, the compiler as judge).",
@@ -210,8 +210,8 @@
    "title": "Where is the generated code, and can I edit it?",
    "summary": "The generated project is in `build/` (`build/app` for a mobile or web app). It is written again on every build, so it is never edited: change the `.nuc` files. To see what a piece becomes, `nuclear build <file.nuc> --platform <p>` prints it.",
    "body": [
-    "- `dragonfly build` (or `nuclear build .`) writes `build/`: the target's sources, its manifest with only the packages of the enabled plugins, the wiring and the tests.",
-    "- Debugging works on the `.nuc` lines: the build keeps a line map, and `dragonfly explain` tells a run-time error or a test failure at its Nuclear lines.",
+    "- `nuclear build` (or `nuclear build .`) writes `build/`: the target's sources, its manifest with only the packages of the enabled plugins, the wiring and the tests.",
+    "- Debugging works on the `.nuc` lines: the build keeps a line map, and `nuclear explain` tells a run-time error or a test failure at its Nuclear lines.",
     "- When something in the generated code looks wrong, it is a bug of the dialect or a value without a type in the `.nuc`: fix the source or report it; a hand edit is lost on the next build."
    ],
    "keys": [
@@ -232,7 +232,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.explain"
+     "to": "tool:nuclear.explain"
     },
     {
      "rel": "theory",
@@ -247,12 +247,12 @@
    "id": "faq:ask-the-agent",
    "type": "faq",
    "title": "How do I ask the local agent to do something?",
-   "summary": "In VS Code open the chat (`Ctrl+Alt+A`): a question is answered from the project's map and the Smart Graph; `/task <what to do>` is an order, run as a Loop by the local agents. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
+   "summary": "In VS Code open the chat (`Ctrl+Alt+A`): a question is answered from the project's map and the Smart Graph; `/task <what to do>` is an order, run as a Builder by the local agents. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
    "body": [
     "- **A question** (\"what does `BooksAppComponent` expose?\", \"how do I add a route?\"): the assistant answers and changes nothing.",
-    "- **An order** (`/task add a use case that lists the books of an author`): a run of the Loop with the local agents; its journal says what was done.",
-    "- **A feature**: the Loop's spec page. Name each piece with the platform's words (a model `Book`, a repository `BookRepository`, a use case `ListBooks`) and add one acceptance criterion per behaviour. For a resource of an API, add its `GET <url>` line or an example answer and the generators write it.",
-    "- **From a terminal**: `nuclear-loop run specs/<id>/spec.md --lead local`.",
+    "- **An order** (`/task add a use case that lists the books of an author`): a run of the Builder with the local agents; its journal says what was done.",
+    "- **A feature**: the Builder's spec page. Name each piece with the platform's words (a model `Book`, a repository `BookRepository`, a use case `ListBooks`) and add one acceptance criterion per behaviour. For a resource of an API, add its `GET <url>` line or an example answer and the generators write it.",
+    "- **From a terminal**: `nuclear-builder run specs/<id>/spec.md --lead local`.",
     "- **From Claude Code, Codex or Cursor**: the MCP tool `developer_task`.",
     "",
     "The agent tells you when a task is beyond it; then let a frontier model lead or split the task."
@@ -296,7 +296,7 @@
    "id": "faq:what-comes-out",
    "type": "faq",
    "title": "Which languages and frameworks does NuclearLang produce?",
-   "summary": "TypeScript, Dart and Python as plain languages; and through Dragonfly: FastAPI (Python) or NestJS (TypeScript) for a backend, Flutter (Dart) for a mobile app, React (TypeScript) for a web app.",
+   "summary": "TypeScript, Dart and Python as plain languages; and through Synapsis: FastAPI (Python) or NestJS (TypeScript) for a backend, Flutter (Dart) for a mobile app, React (TypeScript) for a web app.",
    "body": [
     "| You write | Dialect | Comes out |",
     "|---|---|---|",

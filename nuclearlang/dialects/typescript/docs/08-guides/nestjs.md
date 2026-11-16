@@ -1,9 +1,9 @@
-# Dragonfly for NestJS: a TypeScript backend with Sequelize
+# Synapsis for NestJS: a TypeScript backend with Sequelize
 
 The `nestjs` dialect turns Nuclear into a **NestJS 12** backend (ES modules): **Sequelize** repositories
 (`@nestjs/sequelize` + `sequelize-typescript`), DTOs validated with **class-validator**, Kafka events, Redis cache, and
 **LangChain.js / LangGraph.js** tools, agents and graphs. The Nest modules are written for you. The generated code
-passes `tsc --strict`. It uses the same kinds and query API as [Dragonfly for Python](../../../python/docs/08-guides/fastapi.md), so a project moves
+passes `tsc --strict`. It uses the same kinds and query API as [Synapsis for Python](../../../python/docs/08-guides/fastapi.md), so a project moves
 between the two almost line by line.
 
 This guide follows the example `examples/examples-backend/tasks_api`: a tasks CRUD, an event listener and an assistant
@@ -13,7 +13,7 @@ that reads and changes tasks. The full rules are in [nestjs.md](../07-reference/
 
 ```
 tasks_api/
-├── config.nuc                      dragonfly(platform = "backend", dialect = "nestjs"), app(...), plugins(...)
+├── config.nuc                      synapsis(platform = "backend", dialect = "nestjs"), app(...), plugins(...)
 ├── config/project_config.nuc       the connections
 ├── components/tasks/               data/, domain/, api/, events/, tasks_appcomponent.nuc
 ├── components/assistant/           ai/ (tools, agent, graph), api/
@@ -128,9 +128,9 @@ The same Nuclear builds with the other backend dialect, and `paginate` works the
 the schema with migrations in the project's `migrations/` folder:
 
 ```sh
-dragonfly migrate make "notes on tasks"   # what the entities changed since the last migration
-dragonfly migrate                         # applies the pending ones
-dragonfly migrate down                    # reverts the last one
+nuclear migrate make "notes on tasks"   # what the entities changed since the last migration
+nuclear migrate                         # applies the pending ones
+nuclear migrate down                    # reverts the last one
 ```
 
 They are Sequelize migrations (`migrations/<time>_<name>.js` over `queryInterface`, `SequelizeMeta` in the database);
@@ -220,14 +220,14 @@ the model of the config. See `components/assistant/ai/planner.nuc` in the exampl
 ## 6. Build, run and test
 
 ```sh
-dragonfly build                    # nuclear build .: writes build/ (src/, test/, package.json, tsconfig.json); compiles once installed
-dragonfly install                  # npm install with the runtime (copied: build/.npmrc has install-links=true)
-dragonfly run                      # npm run dev: http://localhost:3000 (PORT); restarts on every build (node --watch)
-dragonfly test                     # npm test: the tests written in Nuclear
+nuclear build                    # nuclear build .: writes build/ (src/, test/, package.json, tsconfig.json); compiles once installed
+nuclear install                  # npm install with the runtime (copied: build/.npmrc has install-links=true)
+nuclear run                      # npm run dev: http://localhost:3000 (PORT); restarts on every build (node --watch)
+nuclear test                     # npm test: the tests written in Nuclear
 ```
 
-The same by hand, from `build/`: `npm install ~/.local/share/nuclearlang/packages/dragonfly-nest && npm install`,
-`npm run dev`, `npm test`. While `dragonfly run` serves, `dragonfly build` (or saving a `.nuc` in VS Code) restarts the
+The same by hand, from `build/`: `npm install ~/.local/share/nuclearlang/packages/synapsis-nest && npm install`,
+`npm run dev`, `npm test`. While `nuclear run` serves, `nuclear build` (or saving a `.nuc` in VS Code) restarts the
 server with the new code. ◉ Debug in VS Code (or F5 with `build/tasks_api.code-workspace`) runs the server under
 the node debugger with its source maps: a breakpoint in a `.nuc` stops there.
 

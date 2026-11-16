@@ -11,7 +11,7 @@ The format: [../../../../docs/07-reference/definitions.md](../../../../docs/07-r
 
 ## Regenerate the standard library and the `nestjs` packages
 
-When a version in `nuclearlang/tools/node/package.json` changes, or the public API of the runtime `dragonfly-nest`
+When a version in `nuclearlang/tools/node/package.json` changes, or the public API of the runtime `synapsis-nest`
 changes.
 
 1. `nuclearlang/tools/node` is installed and has the current runtime in it: the backend platform's `nestjs` check
@@ -20,7 +20,7 @@ changes.
    versions installed in `nuclearlang/tools/node/node_modules` and copies the result into `defs/`:
    `typescript@<version>` (`--lib es2022`: the standard library, implicit), `rxjs`, `nestjs_common`, `nestjs_core`, `sequelize`,
    `sequelize_typescript`, `nestjs_sequelize`, `class_validator`, `class_transformer`, `nestjs_testing` and
-   `dragonfly-nest` (`dragonfly-nest`, `dragonfly-nest/ai`, `dragonfly-nest/events`, `dragonfly-nest/testing`).
+   `synapsis-nest` (`synapsis-nest`, `synapsis-nest/ai`, `synapsis-nest/events`, `synapsis-nest/testing`).
 3. If a version changed, update `defs` in `frameworks/nestjs/dialect.toml` (and `typescript@...` in
    `frameworks/react/dialect.toml`).
 4. `cargo test` from the root of the tree: it validates the dialects, and the goldens show whether an import
@@ -28,10 +28,10 @@ changes.
 
 ## The `react` packages
 
-`react`, `react_router`, `vitest`, `testing_library_react` and `dragonfly-web` are not written by `generate.sh`.
+`react`, `react_router`, `vitest`, `testing_library_react` and `synapsis-web` are not written by `generate.sh`.
 They are generated with `gen.js`, one call each in the style of `generate.sh`, from
 `nuclearlang/tools/node/node_modules` (react and the test libraries are installed there; the runtime after its
-build, copied in by the web platform's `react` check). Regenerate `dragonfly-web` after changing its public API;
+build, copied in by the web platform's `react` check). Regenerate `synapsis-web` after changing its public API;
 the web platform's side of that procedure is
 `nuclear-synapsis-framework/platforms/web/docs/06-runbooks/change-the-runtime.md`.
 
@@ -57,6 +57,6 @@ uses it. Its place in the list matters: the first package that exports a name gi
 
 ## A project's own packages
 
-Nothing here changes. `dragonfly add <package>` in a `nestjs` or `react` project runs the dialect's `[toolchain]`
+Nothing here changes. `nuclear add <package>` in a `nestjs` or `react` project runs the dialect's `[toolchain]`
 (`package_add`, `package_version`, `package_companion`: the `@types/<name>` package of one that ships no types,
 `package_defs`) and writes the package's definitions into the project's `defs/`.

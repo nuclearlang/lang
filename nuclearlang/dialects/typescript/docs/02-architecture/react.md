@@ -10,8 +10,8 @@ related: [../07-reference/react.md, overview.md, dependencies.md]
 and tests, in Nuclear) is [the web platform's](../../../../../nuclear-synapsis-framework/platforms/web/AGENTS.md);
 its contract is `nuclear-synapsis-framework/platforms/web/platform.toml`. This dialect holds only how each of those
 is written: React 19 without JSX, React Router 7, built by Vite 7, tested by Vitest 4 + jsdom + Testing Library.
-The generated code calls the platform's runtime package `dragonfly-web`
-(`nuclear-synapsis-framework/platforms/web/packages/dragonfly-web`). The decision is the web platform's (old
+The generated code calls the platform's runtime package `synapsis-web`
+(`nuclear-synapsis-framework/platforms/web/packages/synapsis-web`). The decision is the web platform's (old
 ADR-web-0001). How each kind is written, the generated files and the equivalences are normative in
 [../07-reference/react.md](../07-reference/react.md) (§1, §2, §3); this document says how the dialect gets there.
 
@@ -43,8 +43,8 @@ Two generic rules of the emitter came with this dialect, usable by any other:
 - `replaces` drops the definitions' automatic imports of `createElement`, `useState`, `useEffect`, `useMemo`,
   `useRef`, `useCallback` and `Fragment`: the runtime re-exports what a view needs from react, and `Element` is the
   runtime's alias (`ReactElement | null`).
-- `[auto_imports]` choose the module when two packages export a name: the runtime (`dragonfly-web`,
-  `dragonfly-web/testing`), `vitest` and `@testing-library/react`; the definitions give the rest.
+- `[auto_imports]` choose the module when two packages export a name: the runtime (`synapsis-web`,
+  `synapsis-web/testing`), `vitest` and `@testing-library/react`; the definitions give the rest.
 - `[decorators] consumed`: the platform's decorators are read by the templates, not written as TypeScript
   decorators. A method with `@state` returns nothing to its caller (`void = ["state"]`): its value becomes a state.
 - In a view, a parameter is read as `this.props.<name>` (`param_access`); an optional field of a `stateful` starts
@@ -54,13 +54,13 @@ Two generic rules of the emitter came with this dialect, usable by any other:
 
 ## Project files
 
-A folder with `config.nuc` (`dragonfly(platform = "web", dialect = "react")`) and `main.nuc` (the project
+A folder with `config.nuc` (`synapsis(platform = "web", dialect = "react")`) and `main.nuc` (the project
 `marker`: there is no `nuclear.toml`); `nuclear build .` writes `build/app` (`output`). `[project] sources = "src"`,
 `assets = ["public"]`; the platform's `test/` stays `test/`, outside `src/`.
 
 | File | Template |
 |---|---|
-| `src/dragonfly.g.ts` | `dragonfly_g.tpl` (`startDragonfly`, `dragonflyConfig`, `registerModels`, `registerDragonfly`, `routes`, `appRouter`) |
+| `src/synapsis.g.ts` | `synapsis_g.tpl` (`startSynapsis`, `synapsisConfig`, `registerModels`, `registerSynapsis`, `routes`, `appRouter`) |
 | `src/index.ts`, `index.html` | `index_ts.tpl`, `index_html.tpl` |
 | `package.json` | `package_json.tpl`: `"type": "module"`; scripts `dev` (`vite`), `build` (`tsc` + `vite build`), `preview`, `test` (`vitest run`) |
 | `tsconfig.json`, `vite.config.ts` | `tsconfig.tpl` (ES2022, `bundler`, strict, `noEmit`), `vite_config.tpl` (jsdom, `test/**/*_test.ts`) |
@@ -69,23 +69,23 @@ A folder with `config.nuc` (`dragonfly(platform = "web", dialect = "react")`) an
 What each generated file holds: [../07-reference/react.md](../07-reference/react.md) §1. Kind by folder
 (`[project.kinds]`): `components/*/domain/models`, `contracts/*/models` and `shared/models` → `model`;
 `components/*/presentation/*/state_models` and `components/*/presentation/state_models` → `statemodel`; `test` →
-`tests`. `config.nuc` sections: `dragonfly`, `app`, `plugins`, `contracts`, `dependencies`. The dialect declares no
+`tests`. `config.nuc` sections: `synapsis`, `app`, `plugins`, `contracts`, `dependencies`. The dialect declares no
 plugins.
 
 ## Toolchain
 
-What the `dragonfly` command runs in `build/app` (`[toolchain]`):
+What the `nuclear` command runs in `build/app` (`[toolchain]`):
 
 | Key | Command |
 |---|---|
-| `install` | `npm install {{packages}}/dragonfly-web && npm install`, then Vite's dependency cache (`node_modules/.vite`) is removed: it would keep serving the runtime it pre-bundled before (same version, new code) |
+| `install` | `npm install {{packages}}/synapsis-web && npm install`, then Vite's dependency cache (`node_modules/.vite`) is removed: it would keep serving the runtime it pre-bundled before (same version, new code) |
 | `run` | `npm run dev -- --port {{port}} --strictPort` (`url = "http://localhost:5173"`, `ready = "Local:"`, `installed = "node_modules"`) |
 | `serve` | `npx vite --port {{port}} --strictPort --host {{host}} --clearScreen false`: the dev server the editor's web device runs on a port and host it picks |
 | `test` | `npm test` |
 | `package_add`, `package_remove`, `package_version`, `package_companion`, `package_defs` | the same as `nestjs` ([nestjs.md](nestjs.md)) |
 
 The editor's debug launch (`[[toolchain.launch]]`, type `chrome`) opens the browser with the debugger after the
-task `dragonfly: run`.
+task `nuclear: run`.
 
 ## Architecture rules
 

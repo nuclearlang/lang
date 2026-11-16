@@ -2,8 +2,8 @@
 
 > The Dart dialect of the [mobile platform](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) (ADR-synapsis-0002). Inherits every rule of
 > [nuclear-base.md](../../../../docs/07-reference/nuclear-base.md) and of the [dart](dart.md) dialect. It generates Flutter apps with a light
-> clean architecture (Dragonfly): in Nuclear you write the business logic and the transpiler writes the rest. The code it generates uses the Dart package **`dragonfly`**
-> ([dragonfly.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md), `packages/dragonfly`) for what does not exist in Flutter. Files:
+> clean architecture (Synapsis): in Nuclear you write the business logic and the transpiler writes the rest. The code it generates uses the Dart package **`synapsis`**
+> ([synapsis.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md), `packages/synapsis`) for what does not exist in Flutter. Files:
 > `nuclearlang/dialects/dart/frameworks/flutter/`. Examples: [widgets_tour.nuc](../../../../../nuclear-synapsis-framework/platforms/mobile/examples/examples-flutter-dialect/widgets_tour.nuc)
 > (one file) and [clean-flutter-project](../../../../../nuclear-synapsis-framework/platforms/mobile/examples/examples-flutter-dialect/clean-flutter-project)
 > (a project). Multi-file projects: [projects.md](../../../../docs/07-reference/projects.md).
@@ -14,13 +14,13 @@
 Rules 1–4 are the mobile platform's ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §3: golden rule, only the business logic in Nuclear,
 light clean architecture, closed components). What Flutter adds:
 
-5. **The `dragonfly` package and official ecosystem libraries:** what does not exist in Flutter (http
-   connections with cache and retries, session, events, network, ACL) is in the Dart package `dragonfly`
-   ([dragonfly.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md)); the rest, in `bloc`/`flutter_bloc` (state), `json_serializable` +
+5. **The `synapsis` package and official ecosystem libraries:** what does not exist in Flutter (http
+   connections with cache and retries, session, events, network, ACL) is in the Dart package `synapsis`
+   ([synapsis.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md)); the rest, in `bloc`/`flutter_bloc` (state), `json_serializable` +
    `json_annotation` (JSON), `get_it` (dependency injection), `dio` (http), `go_router` (routes),
    `connectivity_plus` (network), `flutter_secure_storage` (session).
 6. **The Flutter CLI underneath:** creating the app, packages, building and running on devices is done by
-   `flutter`; the `dragonfly` CLI calls it inside the generated app (§11).
+   `flutter`; the `nuclear` CLI calls it inside the generated app (§11).
 
 ## 2. Libraries and type definitions
 
@@ -28,7 +28,7 @@ light clean architecture, closed components). What Flutter adds:
 
 | Need | Library | Names imported automatically |
 |---|---|---|
-| Dragonfly runtime | `dragonfly` (`packages/dragonfly`) | `Http`, `WebSocket`, `Repository`, `Events`, `SessionManager`, `NetworkManager`, `Acl`, `Log`, `FormManager`, `DragonflyForm`, `DragonflyDialog`, `Popups`, `Translations`, `inject`... |
+| Synapsis runtime | `synapsis` (`packages/synapsis`) | `Http`, `WebSocket`, `Repository`, `Events`, `SessionManager`, `NetworkManager`, `Acl`, `Log`, `FormManager`, `SynapsisForm`, `SynapsisDialog`, `Popups`, `Translations`, `inject`... |
 | State | `bloc` + `flutter_bloc` | `Cubit`, `Bloc`, `Emitter`, `BlocProvider`, `BlocBuilder`, `BlocListener`, `BlocConsumer`, `BlocSelector`, `MultiBlocProvider`... |
 | Dependency injection | `get_it` | `GetIt` |
 | Network | `dio` | `Dio`, `BaseOptions`, `Options`, `Response`, `Interceptor`, `DioException`, `CancelToken`, `FormData`... |
@@ -38,7 +38,7 @@ light clean architecture, closed components). What Flutter adds:
 
 Their type definitions (§2.2) are part of the dialect: their names are imported automatically, their classes
 can be extended (`Counter: Cubit<int>`) and their inherited members are used without declaring them (`emit`,
-`state`). In Dragonfly, `WebSocket` is the connection of the project config (not the one of `dart:io`).
+`state`). In Synapsis, `WebSocket` is the connection of the project config (not the one of `dart:io`).
 
 ```nuclear
 CounterCubit: Cubit<int>
@@ -85,7 +85,7 @@ Besides `dart@3.13.5` (from [dart](dart.md)), `flutter` uses these type definiti
 
 ```toml
 defs = [
-  "flutter@3.47.7", "dragonfly@0.1.0", "flutter_bloc@9.1.1", "get_it@9.3.0", "dio@5.11.1",
+  "flutter@3.47.7", "synapsis@0.1.0", "flutter_bloc@9.1.1", "get_it@9.3.0", "dio@5.11.1",
   "go_router@18.1.1", "connectivity_plus@7.3.2", "flutter_secure_storage@11.2.0", "json_annotation@4.12.0",
 ]
 ```
@@ -99,7 +99,7 @@ nuclear defs search Button --dialect flutter
 ```
 
 The packages the project adds (`dependencies` of `config.nuc`, §3.1) get their definitions generated by
-`dragonfly flutter add` (§11) into the shared cache `~/.cache/nuclearlang/defs/dart/`
+`nuclear flutter add` (§11) into the shared cache `~/.cache/nuclearlang/defs/dart/`
 (`$XDG_CACHE_HOME/nuclearlang/defs`), with the version the app resolved (`pubspec.lock`). The ones the project
 uses are listed in `build/defs.lock` (`hive@2.2.3`, one per line) and are added to the dialect's on every
 `build` and `check`. A package the dialect already knows (dio, go_router...) uses the dialect's.
@@ -107,14 +107,14 @@ uses are listed in `build/defs.lock` (`hive@2.2.3`, one per line) and are added 
 ## 3. Structure of a project
 
 
-A Dragonfly project has **only `.nuc` files** and `assets/` (the translation dictionaries, §6.16, and the
+A Synapsis project has **only `.nuc` files** and `assets/` (the translation dictionaries, §6.16, and the
 images, like the splash one). Everything generated (the Flutter app, its `pubspec.yaml`, the Dart code,
 `android/`, `ios/`...) goes to `build/`. The dialect is `flutter`. The manifest is `config.nuc` (§3.1): the
 package name is its `app(name)` or, without it, the project folder's (in snake_case).
 
 ```
 {project_name}/
-  main.nuc                main(): ~startDragonfly() and runApp(...)
+  main.nuc                main(): ~startSynapsis() and runApp(...)
   config.nuc              the project's pubspec: app, environment, dependencies, devDependencies (§3.1)
   config/                 project config: kind appConfig
   shared/                 what every component shares:
@@ -160,23 +160,23 @@ structure; `test/` and `integration_test/` go to the app's folders of the same n
 ### 3.1 `config.nuc`
 
 Its first line names the platform the project is written for and the dialect it is built with (ADR-synapsis-0002,
-[projects.md](../../../../docs/07-reference/projects.md) §1): `dragonfly(platform = "mobile", dialect = "flutter")`. `plugins(genkit = true,
-googleAI = true)` enables the optional parts of Dragonfly (§6.20, [projects.md](../../../../docs/07-reference/projects.md) §3.3): the CLI adds
+[projects.md](../../../../docs/07-reference/projects.md) §1): `synapsis(platform = "mobile", dialect = "flutter")`. `plugins(genkit = true,
+googleAI = true)` enables the optional parts of Synapsis (§6.20, [projects.md](../../../../docs/07-reference/projects.md) §3.3): the CLI adds
 their packages to the app only when they are enabled.
 
-The project's pubspec written in Nuclear. It is not transpiled: `dragonfly` writes the app's `pubspec.yaml`
+The project's pubspec written in Nuclear. It is not transpiled: `synapsis` writes the app's `pubspec.yaml`
 with it and loads the type definitions of its packages. They are calls with named arguments; each value is a
 string, a number or a boolean:
 
 ```nuclear
 app(
   name = "shop",
-  description = "A Dragonfly app.",
+  description = "A Synapsis app.",
   version = "1.0.0+1",
   usesMaterialDesign = true,
 )
 
-// optional: Dragonfly already pins the versions it needs
+// optional: Synapsis already pins the versions it needs
 environment(
   sdk = "^3.9.0",
 )
@@ -199,31 +199,31 @@ devDependencies(
 
 - `config.nuc` has no assets section: fonts, shaders, images and audio are taken from `assets/` by
   convention (§3.2).
-- An empty section is not written: `dragonfly flutter add` creates `dependencies` or `devDependencies` with
-  its first package and `dragonfly flutter remove` deletes it when the last one goes. A new project has only
+- An empty section is not written: `nuclear flutter add` creates `dependencies` or `devDependencies` with
+  its first package and `nuclear flutter remove` deletes it when the last one goes. A new project has only
   `app(...)`.
-- Only the project's own packages are written. Dragonfly adds its own: `dragonfly`, `flutter_bloc`, `fpdart`,
+- Only the project's own packages are written. Synapsis adds its own: `synapsis`, `flutter_bloc`, `fpdart`,
   `go_router`, `json_annotation`; `build_runner`, `json_serializable`, `mocktail`, `bloc_test` and
   `integration_test` to generate code and for tests; `flutter_native_splash` with `@splash`. The full list is
   in `build/app/pubspec.yaml`.
 - **Only third-party packages the framework does not use.** A package of the dialect (those of `defs`: dio,
-  go_router, flutter_bloc, get_it...) or of Dragonfly (`[project.manifest] reserved`: fpdart, build_runner,
+  go_router, flutter_bloc, get_it...) or of Synapsis (`[project.manifest] reserved`: fpdart, build_runner,
   json_serializable, mocktail...) cannot be written in `config.nuc` (`N0303` on its line, in `check`, `build`
-  and the editor) nor added with `dragonfly flutter add`, which rejects it before changing anything: it is
+  and the editor) nor added with `nuclear flutter add`, which rejects it before changing anything: it is
   used directly.
-- A package deleted from `config.nuc` is removed from the app on the next `build` (dragonfly records in
-  `build/app/.dragonfly_deps` the packages that come from `config.nuc`). Its definitions stay in the cache.
+- A package deleted from `config.nuc` is removed from the app on the next `build` (synapsis records in
+  `build/app/.synapsis_deps` the packages that come from `config.nuc`). Its definitions stay in the cache.
 - Another section, an unnamed argument or a value that is not a literal is error `N0303`; `check` and the
   editor check it with the rest of the project.
 - A project without `config.nuc` gets one on its first `check` or `build`: the project name, the description
   and version of the app's `pubspec.yaml`, and the third-party packages the app already has.
 - The editor (LSP) loads the same definitions (`build/defs.lock`): imports, hover, completion and signatures of
   the added packages; one whose definitions are missing from the cache is a warning in `config.nuc` (they are
-  generated with `dragonfly build`).
+  generated with `nuclear build`).
 
 ### 3.2 Assets
 
-Assets are configured **by convention**: they are not written in `config.nuc`. `dragonfly build` copies
+Assets are configured **by convention**: they are not written in `config.nuc`. `nuclear build` copies
 `assets/` to the app and writes the keys `assets:`, `fonts:` and `shaders:` of its `pubspec.yaml` from the
 files it finds. Those three keys are rebuilt on every build: a deleted file leaves the pubspec.
 
@@ -266,7 +266,7 @@ In code the family is the folder's name: `ThemeData(fontFamily = "Roboto")`,
 
 - Two files of a family with the same weight and style, or a font outside its family's folder, are an error
   of `check` and `build` (before writing anything), with the name it should have.
-- The project's assets belong only to the project: Dragonfly adds no assets nor fonts of its own, and the rest
+- The project's assets belong only to the project: Synapsis adds no assets nor fonts of its own, and the rest
   of the `flutter:` key (`uses-material-design`) is written by `config.nuc`.
 
 ## 4. Architecture
@@ -457,10 +457,10 @@ class ProjectConfig extends AppConfig {
 ### 6.2 Models
 
 A model is only its definition. The transpiler writes the immutable class with `fromJson`/`toJson`
-(json_serializable; `dragonfly build` runs `build_runner`). A field `name?: T` is optional.
+(json_serializable; `nuclear build` runs `build_runner`). A field `name?: T` is optional.
 
 ```nuclear
-// Business error of the component: dragonfly builds it with the failure message.
+// Business error of the component: synapsis builds it with the failure message.
 CharacterError
   message: string
 ```
@@ -470,7 +470,7 @@ Output (`lib/components/characters/domain/models/character_error.dart`, without 
 ```dart
 part 'character_error.g.dart';
 
-/// Business error of the component: dragonfly builds it with the failure message.
+/// Business error of the component: synapsis builds it with the failure message.
 @JsonSerializable(explicitToJson: true)
 class CharacterError {
   const CharacterError({required this.message});
@@ -492,7 +492,7 @@ class CharacterError {
 }
 ```
 
-An error type of a dragonfly `Result` (repositories, guards) has a field `message: string`: dragonfly builds it
+An error type of a synapsis `Result` (repositories, guards) has a field `message: string`: synapsis builds it
 with `E(message = ...)`. A `Result<string, T>` gets the message directly.
 
 **Generic models.** A shape that repeats with another model inside (an API page) is declared once with a type
@@ -679,7 +679,7 @@ with the same words as a backend entity; `@created` and `@updated` (a `DateTime?
 the table. The JSON name of the field (`@key`) is the column, and `@entity("characters")` on the model names the
 table (default: the model's name in snake_case); the other column options of a backend entity (`@column`) have no
 meaning in the device's document store. One key per model; a generic model has no table. The model gets
-`static final LocalTable<Character> table` (§6.3, [dragonfly.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md) §3.2) and `registerDragonfly`
+`static final LocalTable<Character> table` (§6.3, [synapsis.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md) §3.2) and `registerSynapsis`
 registers it with its component, whose `config` may say how it is kept (§6.1 `local`). The database is the same on
 Android, iOS, Linux, macOS, Windows and web.
 
@@ -1213,7 +1213,7 @@ stateless FavoritesScreen
 
   // a warning dialog with the Close / Accept footer (onAccept)
   confirmLogout(context: BuildContext) void
-    DragonflyDialog.warning(
+    SynapsisDialog.warning(
       header = Text("session.logout.title".tr()),
       onAccept = () => inject<SessionComponent>().logout(),
       child = Text("session.logout.message".tr()),
@@ -1246,7 +1246,7 @@ class FavoritesScreen extends StatelessWidget {
 
   /// a warning dialog with the Close / Accept footer (onAccept)
   void confirmLogout(BuildContext context) {
-    DragonflyDialog.warning(
+    SynapsisDialog.warning(
       header: Text('session.logout.title'.tr()),
       onAccept: () => inject<SessionComponent>().logout(),
       child: Text('session.logout.message'.tr()),
@@ -1362,15 +1362,15 @@ class CharacterDetailScreen extends StatelessWidget {
 
 A splash has two parts that look the same, and the user does not notice the step from one to the other:
 
-1. **The native screen**, which the platform shows while Flutter starts and runs `startDragonfly()`. It comes
+1. **The native screen**, which the platform shows while Flutter starts and runs `startSynapsis()`. It comes
    from `@splash(color, image)` on the splash screen: `color` (required) is the background and `image`, an
    image of `assets/` at 4x size (512 px looks like 128 px). With it, the project generates
-   `flutter_native_splash.yaml` and `dragonfly build` runs `flutter_native_splash:create`, which writes the
+   `flutter_native_splash.yaml` and `nuclear build` runs `flutter_native_splash:create`, which writes the
    native splash of Android (also Android 12+), iOS and web. On Linux and Windows the window opens only with
-   Flutter's first frame, so the first thing seen is already the `SplashScreen`. `startDragonfly()` removes
+   Flutter's first frame, so the first thing seen is already the `SplashScreen`. `startSynapsis()` removes
    the native splash on the app's first frame, whatever its route (a direct link on web also removes it). A
    project has a single `@splash`, and its route becomes the initial one (`buildRouter`).
-2. **`SplashScreen`** (from the package, `nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md` §6), the widget of that screen: it shows `child`
+2. **`SplashScreen`** (from the package, `nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md` §6), the widget of that screen: it shows `child`
    for at least `minDuration` (3 s by default) while `onLoad` prepares the app (call the backend, fill the
    local database) and then goes to `next` with the router (`goTo`: "back" does not return to the splash). If
    `onLoad` takes longer than `minDuration`, the splash stays until it finishes. If it fails, it shows
@@ -1479,7 +1479,7 @@ class ForceLogout extends AppEvent {
 
 An `event` is written with `fromJson`/`toJson` (json_serializable, like a model) and its name, because another
 Flutter engine (a workmanager task, a notification handler) shares no objects with the app: from there the event
-travels as its name and its JSON, and `registerModels` of `dragonfly.g.dart` reads it back
+travels as its name and its JSON, and `registerModels` of `synapsis.g.dart` reads it back
 (`Events.decoder("ForceLogout", ForceLogout.fromJson)`). So the fields of an event are JSON types: basic types,
 `DateTime`, enums, models and lists of them (`@key` and converters work as in a model).
 
@@ -1664,7 +1664,7 @@ them again when it runs.
 |---|---|---|
 | `form` (form model) | `presentation/<p>/forms/` (kind by folder) | the fields and their rules, like zod or class-validator |
 | `formmanager` | `presentation/<p>/managers/` | the form's state (`FormManager<F>`, a Cubit): values, errors, remote validations |
-| `DragonflyForm` + fields | the screen | the widgets; each field is bound to the form model's **by its name** |
+| `SynapsisForm` + fields | the screen | the widgets; each field is bound to the form model's **by its name** |
 
 Rules of a field of the form model (decorators on the field; all accept `message = ...`):
 
@@ -1679,7 +1679,7 @@ Rules of a field of the form model (decorators on the field; all accept `message
 
 An `int` or `double` field also validates that it is a number; an empty optional one (`field?: T`) passes every
 rule except `@required`. A `message` is a key of the dictionary (§6.16) or the text; without `message`,
-Dragonfly's text in the app's language. A field's error shows when the user leaves it or when the form is sent.
+Synapsis's text in the app's language. A field's error shows when the user leaves it or when the form is sent.
 
 ```nuclear
 // Form model: the login fields and their rules. Each form field (FormTextField("user"))
@@ -1786,7 +1786,7 @@ class LoginFormManager extends FormManager<LoginForm> {
 }
 ```
 
-On the screen, the form manager goes in `providers` like any manager. `DragonflyForm(manager = X)` finds its
+On the screen, the form manager goes in `providers` like any manager. `SynapsisForm(manager = X)` finds its
 fields by name: `FormTextField("field", label, obscureText, keyboardType, textInputAction, autofillHints,
 decoration...)`, `FormCheckbox("field", label = ...)`, `FormInput<T>("field", builder = (context, value,
 error, change) => ...)` for any other widget (dropdown, date) and `FormSubmit(child = ...)`, which validates
@@ -1795,7 +1795,7 @@ Each field rebuilds only when its own part changes. `TextInputAction.done` sends
 (logging in) stays in the `statemanager`, which receives the form model:
 
 ```nuclear
-// DragonflyForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
+// SynapsisForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
 // valid form, onSubmit passes the form model to LoginManager (the business logic).
 @screen(route = "/login", providers = [LoginManager, LoginFormManager])
 stateless LoginScreen
@@ -1805,7 +1805,7 @@ stateless LoginScreen
       body = LoginStateBuilder<LoginManager>(
         initial = () => Padding(
           padding = EdgeInsets.all(24),
-          child = DragonflyForm(
+          child = SynapsisForm(
             manager = LoginFormManager,
             onSubmit = (form) => LoginManager.login(form),
             child = Column(
@@ -1838,7 +1838,7 @@ stateless LoginScreen
 Output (`lib/components/session/presentation/login/login_screen.dart`):
 
 ```dart
-/// DragonflyForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
+/// SynapsisForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
 /// valid form, onSubmit passes the form model to LoginManager (the business logic).
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -1863,7 +1863,7 @@ class _LoginScreenView extends StatelessWidget {
       body: LoginStateBuilder<LoginManager>(
         initial: () => Padding(
           padding: EdgeInsets.all(24),
-          child: DragonflyForm(
+          child: SynapsisForm(
             manager: context.read<LoginFormManager>(),
             onSubmit: (form) => context.read<LoginManager>().login(form),
             child: Column(
@@ -1936,8 +1936,8 @@ class MockCharacterRepository extends Mock implements CharacterRepository {}
 void main() {
   group('LoginFormTest', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
-      DragonflyTest.replace<CharacterRepository>(MockCharacterRepository());
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis);
+      SynapsisTest.replace<CharacterRepository>(MockCharacterRepository());
     });
 
     setUp(() async {
@@ -1963,7 +1963,7 @@ void main() {
 
 ### 6.15 Dialogs and popups
 
-`DragonflyDialog` is a dialog in three parts, like a Bootstrap modal: **header** (the icon of its type,
+`SynapsisDialog` is a dialog in three parts, like a Bootstrap modal: **header** (the icon of its type,
 `header` and a close button), **body** (`child`) and **footer**. It adapts to what it receives:
 
 | Receives | Shows |
@@ -1975,10 +1975,10 @@ void main() {
 | `footer` | that widget in the footer, with Close (and Accept with `onAccept`) |
 | `onClose` | the lambda runs when it closes, in any way |
 | `autoClose = Duration(seconds = 3)` | closes by itself |
-| `size = DragonflyDialog.small` / `medium` / `large` | the width (default `medium`) |
+| `size = SynapsisDialog.small` / `medium` / `large` | the width (default `medium`) |
 | `color`, `icon` | replace the type's in this dialog |
 
-Types: `DragonflyDialog(...)` (= `.info`), `DragonflyDialog.success`, `.warning`, `.danger`, each with its icon
+Types: `SynapsisDialog(...)` (= `.info`), `SynapsisDialog.success`, `.warning`, `.danger`, each with its icon
 and color, taken from the app's theme (info = `primary`, danger = `error`, success green, warning amber).
 Accept and Close are translated (§6.16). It opens with `.show(context)`:
 
@@ -2003,7 +2003,7 @@ stateless FavoritesScreen
 
   // a warning dialog with the Close / Accept footer (onAccept)
   confirmLogout(context: BuildContext) void
-    DragonflyDialog.warning(
+    SynapsisDialog.warning(
       header = Text("session.logout.title".tr()),
       onAccept = () => inject<SessionComponent>().logout(),
       child = Text("session.logout.message".tr()),
@@ -2036,7 +2036,7 @@ class FavoritesScreen extends StatelessWidget {
 
   /// a warning dialog with the Close / Accept footer (onAccept)
   void confirmLogout(BuildContext context) {
-    DragonflyDialog.warning(
+    SynapsisDialog.warning(
       header: Text('session.logout.title'.tr()),
       onAccept: () => inject<SessionComponent>().logout(),
       child: Text('session.logout.message'.tr()),
@@ -2075,7 +2075,7 @@ The app's texts are in JSON dictionaries, **one per component and per language**
 So each dictionary is small and is deleted with its component; in memory there are only the current language
 and the fallback one (`fallback`), in a flat map (each `tr` is a lookup). No third-party libraries: the files
 are read with Flutter's `AssetManifest`, on every platform. A missing text is looked up in the `fallback`, then
-in Dragonfly's (`dragonfly.dialog.accept`, `dragonfly.form.required`...; a `dragonfly.json` dictionary
+in Synapsis's (`synapsis.dialog.accept`, `synapsis.form.required`...; a `synapsis.json` dictionary
 replaces them) and otherwise the key is shown.
 
 `Translations` goes in the `globals` of the appConfig (§6.1). It chooses the stored language, else the
@@ -2147,13 +2147,13 @@ usecase GetPageUseCase
   blank line separates each block. Every color is from the xterm-256 palette (24-bit colors look gray in some
   debug consoles, like VS Code's).
 - In the breadcrumb, the component has its color: always the same for the same name, or the `logColor` of its
-  `config` (`LogColor.mint`, `sky`, `peach`, `lemon`, `rose`, `aqua`, `lime`, `indigo`); Dragonfly's own logs
+  `config` (`LogColor.mint`, `sky`, `peach`, `lemon`, `rose`, `aqua`, `lime`, `indigo`); Synapsis's own logs
   are purple. The rest uses code colors (VS Code Dark+): kind, Class, method, and in `data` keys, strings and
   numbers. The message keeps the console's color.
 - Only the exact place of an error blinks: in the stack of `Log.e` and of exceptions, the app's first line (not
-  Dart's, Flutter's nor Dragonfly's), marked with `▶`. It is ANSI's slow blink; the console decides its speed.
-- Outside `components/` the component is `app`; the package's logs say `dragonfly › http`,
-  `dragonfly › translations`...
+  Dart's, Flutter's nor Synapsis's), marked with `▶`. It is ANSI's slow blink; the console decides its speed.
+- Outside `components/` the component is `app`; the package's logs say `synapsis › http`,
+  `synapsis › translations`...
 - `data` is any value; in a map, `token`, `password`, `authorization`, `secret` and `cookie` are masked
   (`***`). `Log.e(message, error = e, stackTrace = s)` adds the error and the first lines of the stack.
 - In release only `w` and `e` are written. `Log.level`, `Log.colors = false` (plain text), `Log.console =
@@ -2165,7 +2165,7 @@ usecase GetPageUseCase
   the message (what is code in code colors, long text split in lines), `at <file:line>` and the stack in columns
   (package, file:line, method): the app's frames highlighted, the first one with `▶` (the only thing that
   blinks), Flutter's dimmed and the Dart SDK's hidden (`· 2 Dart SDK frames`). If the same error repeats (an
-  overflow on each frame) a single line comes out. `startDragonfly()` turns it on with
+  overflow on each frame) a single line comes out. `startSynapsis()` turns it on with
   `Log.catchFlutterErrors(app: '<project>')`; they also reach `Log.sink`.
 
 ```text
@@ -2216,21 +2216,21 @@ appConfig ProjectConfig
 | `remote` | `@remote("https://server") remote StoryFlows` + `@flow("path")` / `@stream("path")` methods without body | flows of a Genkit server (Node, Go, Python, Dart), typed |
 | `knowledge` | `knowledge Faq(deps)` + `documents() string[]` | texts searched by meaning (embeddings): `~faq.search(q, k = 4)`, `~faq.context(q)` for a prompt (RAG) |
 
-The generated `lib/dragonfly_genkit.g.dart` (only with the plugin) turns each provider into its plugin and registers
-the schema of every model of the app (from its fields) for flows and structured output; `startDragonfly` calls
+The generated `lib/synapsis_genkit.g.dart` (only with the plugin) turns each provider into its plugin and registers
+the schema of every model of the app (from its fields) for flows and structured output; `startSynapsis` calls
 `startGenkit()` and the injector gets the kinds (a chat as a factory). Tests: `startFakeGenkit(["answer"])` (a model
 with fixed answers and an embedder without network). Example: `examples/examples-flutter-dialect/genkit-assistant`.
 
 ## 7. Startup
 
 
-`main.nuc` calls `~startDragonfly()` before `runApp`. The transpiler writes `lib/dragonfly.g.dart` with
-`startDragonfly()` (starts the project config and the components' configs, registers each class in the
+`main.nuc` calls `~startSynapsis()` before `runApp`. The transpiler writes `lib/synapsis.g.dart` with
+`startSynapsis()` (starts the project config and the components' configs, registers each class in the
 injector and subscribes the `@on`s of the global components) and `appRouter` (the screens with `@screen`).
 
 ```nuclear
 main() void
-  ~startDragonfly()
+  ~startSynapsis()
   runApp(App())
 
 stateless App
@@ -2249,7 +2249,7 @@ Output (`lib/main.dart`, without the imports, which are written automatically):
 
 ```dart
 Future<void> main() async {
-  await startDragonfly();
+  await startSynapsis();
   runApp(App());
 }
 
@@ -2270,14 +2270,14 @@ class App extends StatelessWidget {
 }
 ```
 
-Generated (`lib/dragonfly.g.dart`):
+Generated (`lib/synapsis.g.dart`):
 
 ```dart
-// Generated by NuclearLang for Dragonfly. Do not edit: it changes when the .nuc files change.
-// startDragonfly() starts the runtime: the project config (dragonflyConfig) and every class of the
-// injector (registerDragonfly). appRouter has every screen with @screen. Tests use the same pieces with
-// DragonflyTest.start(dragonflyConfig(), registerDragonfly).
-import 'package:dragonfly/dragonfly.dart';
+// Generated by NuclearLang for Synapsis. Do not edit: it changes when the .nuc files change.
+// startSynapsis() starts the runtime: the project config (synapsisConfig) and every class of the
+// injector (registerSynapsis). appRouter has every screen with @screen. Tests use the same pieces with
+// SynapsisTest.start(synapsisConfig(), registerSynapsis).
+import 'package:synapsis/synapsis.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
@@ -2319,19 +2319,19 @@ import 'package:clean_flutter_project/shared/screens/not_found_screen.dart';
 import 'package:clean_flutter_project/shared/screens/start_screen.dart';
 import 'package:clean_flutter_project/shared/widgets/main_shell.dart';
 
-/// Starts Dragonfly: main calls it before runApp.
-Future<void> startDragonfly() async {
+/// Starts Synapsis: main calls it before runApp.
+Future<void> startSynapsis() async {
   await registerModels();
-  // Flutter's errors with Dragonfly's format: the app's frames first in sight
+  // Flutter's errors with Synapsis's format: the app's frames first in sight
   Log.catchFlutterErrors(app: 'clean_flutter_project');
-  await Dragonfly.start(dragonflyConfig());
-  await registerDragonfly();
+  await Synapsis.start(synapsisConfig());
+  await registerSynapsis();
   // the native splash (@splash of StartScreen) stays until the first frame of the app, whatever its route
   WidgetsBinding.instance.addPostFrameCallback((_) => FlutterNativeSplash.remove());
 }
 
 /// The project config (kind appConfig).
-AppConfig dragonflyConfig() => ProjectConfig();
+AppConfig synapsisConfig() => ProjectConfig();
 
 /// How a session saved by a previous run reads back its model, and an event published in another engine
 /// (workmanager) reads back its JSON.
@@ -2351,9 +2351,9 @@ Future<void> registerModels() async {
 }
 
 /// The components' configs, every class of the injector, and the global components' events.
-Future<void> registerDragonfly() async {
-  await Dragonfly.addConfig(CharactersConfig(), component: 'characters');
-  final di = Dragonfly.di;
+Future<void> registerSynapsis() async {
+  await Synapsis.addConfig(CharactersConfig(), component: 'characters');
+  final di = Synapsis.di;
   Local.register(Character.table, component: 'characters');
   di.registerLazySingleton(() => CharacterRepository());
   di.registerLazySingleton(() => EpisodeRepository());
@@ -2378,7 +2378,7 @@ Future<void> registerDragonfly() async {
 }
 
 /// A new router with every screen with @screen: its route and parameters, loggedIn, ACL and shell.
-GoRouter buildRouter({String initial = '/start'}) => dragonflyRouter(initial: initial, [
+GoRouter buildRouter({String initial = '/start'}) => synapsisRouter(initial: initial, [
       AppRoute<CharacterDetailScreen>(
         path: '/characters/:id',
         build: (state) => CharacterDetailScreen(id: state.arg('id')),
@@ -2436,11 +2436,11 @@ final GoRouter appRouter = buildRouter();
 
 Tests are written in Nuclear, in `test/` (unit, states, widgets) and `integration_test/` (the real app on a
 device). They use [mocktail](https://pub.dev/packages/mocktail) for mocks and
-[bloc_test](https://pub.dev/packages/bloc_test) for states. `dragonfly test` runs them;
-`dragonfly test --integration -- -d <device>` runs the integration ones.
+[bloc_test](https://pub.dev/packages/bloc_test) for states. `nuclear test` runs them;
+`nuclear test --integration -- -d <device>` runs the integration ones.
 
 A file of `test/` is a group (kind `tests`, without a header word). Before each test, the app starts as in
-`main` but without network nor device (`DragonflyTest.start`): http connections answer what the test says (404
+`main` but without network nor device (`SynapsisTest.start`): http connections answer what the test says (404
 if it says nothing), the session lives in memory and the network is connected.
 
 | Inside a group | What it is |
@@ -2538,8 +2538,8 @@ class MockCharacterRepository extends Mock implements CharacterRepository {}
 void main() {
   group('CharactersTest', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
-      DragonflyTest.replace<CharacterRepository>(MockCharacterRepository());
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis);
+      SynapsisTest.replace<CharacterRepository>(MockCharacterRepository());
     });
 
     setUp(() async {
@@ -2579,12 +2579,12 @@ void main() {
 
 - A test file has a single group. Helper functions (`character(...)`) are declared in the same file.
 - The states of a statemanager are compared by value: state models and models have `==`.
-- An integration test (`integration_test/`) uses the real app: it calls `~startDragonfly()` and
+- An integration test (`integration_test/`) uses the real app: it calls `~startSynapsis()` and
   `~tester.pumpWidget(App())`.
 
 ### 8.1 Generated tests
 
-Each app also gets `test/dragonfly_generated_test.dart`, without writing it:
+Each app also gets `test/synapsis_generated_test.dart`, without writing it:
 
 | What it tests | How |
 |---|---|
@@ -2634,46 +2634,46 @@ A model field whose type is an enum of the project gets its first value in the s
 | `Stream` for a `StreamBuilder` | a function with `yield` and `~`: `ticks() int` → `Stream<int> ticks() async*` |
 | Configuring an object (`Paint`, `Path`) | a cascade: `brush = Paint()` + lines `..color = Colors.indigo` |
 | Several values from a function | return a map and destructure: `{ min, max } = bounds(xs)` |
-## 11. The `dragonfly` CLI
+## 11. The `nuclear` CLI
 
-The CLI is the `dragonfly` repository. Names are written in any form (`user_profile`, `UserProfile`) and normalized.
+The CLI is the `nuclear` command (the framework's commands: `tools/cli/src/framework/`). Names are written in any form (`user_profile`, `UserProfile`) and normalized.
 
 ```sh
-dragonfly                                    # landing page (the first time, with an animation)
-dragonfly credits | author                   # the full animation, the author and the repository
+nuclear                                     # landing page (the first time, with an animation)
+nuclear credits | author                   # the full animation, the author and the repository
                                              # the other commands start with a line with the logos
-dragonfly new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example]
+nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example]
                                             # (n) new project of a platform (ADR-synapsis-0002): mobile/flutter gets its
                                             #     Flutter app in build/app; backend/fastapi|nestjs and web/react
                                             #     only their .nuc, built with `nuclear build .` and the dialect's
                                             #     [toolchain] (install/run/test); `check` delegates to `nuclear check .`;
                                             #     `-d` alone gives its platform (-d nestjs is backend), `-p` alone its
                                             #     default dialect; a stray word or an option glued to the name is refused
-dragonfly code                               # opens the project in VS Code
-dragonfly watch                              # transpiles every time a .nuc changes
-dragonfly build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build arguments>]
-dragonfly run [-- -d <device>]
-dragonfly device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator
-dragonfly device list                        # the open devices and the devices it can be
-dragonfly terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal
-dragonfly test [--integration] [-- <flutter test arguments>]
-dragonfly analyze | check [--json] | clean
-dragonfly repair                             # when the build or the app fails: repairs in steps (see below)
-dragonfly explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained
-dragonfly add <package>[@version]...                   # into config.nuc and the app, and generates its definitions
-dragonfly remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)
-dragonfly flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)
-dragonfly flutter remove <package>...
-dragonfly pub get|upgrade|outdated                     # pub add|remove = flutter add|remove
-dragonfly doctor                             # what NuclearLang and Dragonfly need (CLIs, dialect, package, Flutter, VS Code)
-dragonfly setup [--dir ~/develop]            # installs Flutter step by step (system packages, SDK, PATH)
-dragonfly devices | emulators | logs | install | screenshot | attach | gen-l10n
-dragonfly flutter <any other flutter command>   # runs flutter inside the app
+nuclear code                               # opens the project in VS Code
+nuclear watch                              # transpiles every time a .nuc changes
+nuclear build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build arguments>]
+nuclear run [-- -d <device>]
+nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator
+nuclear device list                        # the open devices and the devices it can be
+nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal
+nuclear test [--integration] [-- <flutter test arguments>]
+nuclear analyze | check [--json] | clean
+nuclear repair                             # when the build or the app fails: repairs in steps (see below)
+nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained
+nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions
+nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)
+nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)
+nuclear flutter remove <package>...
+nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove
+nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, Flutter, VS Code)
+nuclear setup [--dir ~/develop]            # installs Flutter step by step (system packages, SDK, PATH)
+nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n
+nuclear flutter <any other flutter command>   # runs flutter inside the app
 ```
 
-Whole resources (models, repository, use cases, facade, screen, tests; every platform): `dragonfly gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).
+Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).
 
-Generators: `dragonfly make <what> ...` or with an alias `dragonfly g <alias> ...`. They never overwrite a file.
+Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file.
 
 | Command | Alias | Creates |
 |---|---|---|
@@ -2696,7 +2696,7 @@ Generators: `dragonfly make <what> ...` or with an alias `dragonfly g <alias> ..
 
 - The project root is the folder with `main.nuc` (the current one or one above).
 - `build` transpiles (it only rewrites the files that change and deletes those that no longer have a `.nuc`),
-  adds to the app the packages it needs (dragonfly, flutter_bloc, fpdart, go_router, json_annotation;
+  adds to the app the packages it needs (synapsis, flutter_bloc, fpdart, go_router, json_annotation;
   build_runner, json_serializable, mocktail, bloc_test and integration_test for tests), runs `flutter pub get`
   if the `pubspec.yaml` changed since the last one (marker `.dart_tool/nuclear_pub_get`) and `build_runner` if
   a model changed. `run`, `test` and the devices call Flutter with `--no-pub`: `build` already resolved the
@@ -2730,15 +2730,15 @@ Generators: `dragonfly make <what> ...` or with an alias `dragonfly g <alias> ..
 - `build` starts with `config.nuc`: it takes its fields and packages to the app's `pubspec.yaml`, generates the
   missing definitions and writes `build/defs.lock`; then it transpiles. `check` uses only the definitions
   already in the cache (it does not need Flutter).
-- A dialect's own commands go under its name (`dragonfly flutter add`); the other subcommands of
-  `dragonfly flutter` go to Flutter as they are.
+- A dialect's own commands go under its name (`nuclear flutter add`); the other subcommands of
+  `nuclear flutter` go to Flutter as they are.
 - `--project <folder>` (on any command) chooses the project instead of looking for `main.nuc`.
 - Flutter is looked for in `FLUTTER`, `FLUTTER_ROOT`, the project's fvm version (`.fvm/flutter_sdk`), the PATH,
   the global fvm version (`~/fvm/default`) and the typical install folders; if it is not there, the CLI explains
-  how to install it. `NUCLEAR_DIALECT_PATH` and `DRAGONFLY_PACKAGE` say where the dialects and the dragonfly
+  how to install it. `NUCLEAR_DIALECT_PATH` and `SYNAPSIS_PACKAGE` say where the dialects and the synapsis
   package are (by default, those of the `install.sh` installation).
-- `dragonfly code` needs VS Code's `code` command on the PATH.
-- **Dragonfly devices** (`device` and `terminal-device`): the app as Flutter web in a Chromium browser (Chrome,
+- `nuclear code` needs VS Code's `code` command on the PATH.
+- **Synapsis devices** (`device` and `terminal-device`): the app as Flutter web in a Chromium browser (Chrome,
   Chromium, Edge, Brave or Vivaldi; `CHROME_EXECUTABLE` chooses one) with the device's screen, density, touch
   and identity (Android, iOS). Devices: `pixel7` (the default), `iphone14pro`, `iphonese`, `iphone15promax`,
   `galaxys20`, `galaxya51`, `ipadmini`, `ipadair`, `ipadpro`, `tabs7`, `responsive`, `laptop`, `desktop`.
@@ -2749,9 +2749,9 @@ Generators: `dragonfly make <what> ...` or with an alias `dragonfly g <alias> ..
   compiler and ~0.9 GB the browser.
   - `device`: a window without browser bars with the device's ratio and at most 85 % of the screen height
     (smaller if it does not fit); several stay side by side. On Hyprland, Sway and i3 the window floats instead
-    of filling a tile. The title says `Dragonfly device N · <device> · <app>`. The mouse is a finger. The
+    of filling a tile. The title says `Synapsis device N · <device> · <app>`. The mouse is a finger. The
     terminal stays like `flutter run`'s: `r` hot reload, `R` hot restart, `q` quit; closing the window also ends it.
-  - `terminal-device` (Dragonfly Terminal device): the device's screen inside the terminal, with a frame, a
+  - `terminal-device` (Synapsis Terminal device): the device's screen inside the terminal, with a frame, a
     status bar and Flutter's last message. It draws with images in kitty, Ghostty and WezTerm (kitty protocol)
     and in foot, Konsole, Windows Terminal, iTerm2 and mlterm (sixel); in the others (GNOME Terminal, XFCE, LXQt,
     Alacritty, Terminal.app, the Linux console, Zed, VS Code) with colored blocks and the app's texts written as
@@ -2761,21 +2761,22 @@ Generators: `dragonfly make <what> ...` or with an alias `dragonfly g <alias> ..
     `s` screenshot (`build/screenshots/`), `l` Flutter's log, `?` help, `q` or Ctrl+C quit; arrows, Enter and
     Tab go to the app. With a text field focused, keys are text (pasting too) and commands go with Alt
     (`Alt+r`); Esc leaves the field.
-- Logos, colors and the animation only come out in a terminal: through a pipe (`dragonfly check --json`,
-  `dragonfly help | grep`) the output is plain text. `NO_COLOR` removes them in the terminal too.
+- Logos, colors and the animation only come out in a terminal: through a pipe (`nuclear check --json`,
+  `nuclear help | grep`) the output is plain text. `NO_COLOR` removes them in the terminal too.
 
 ### 11.1 VS Code
 
-`build/<name>.code-workspace` (opened by `dragonfly code`) has two folders: the `.nuc` files and the Flutter
+`build/<name>.code-workspace` (opened by `nuclear code`) has two folders: the `.nuc` files and the Flutter
 app (`build/app`). With the app as a workspace folder, the Flutter extension treats it as a normal project:
 device picker, run and debug (F5, debug/profile/release), hot reload and restart, DevTools, emulators and tests.
 
-- The `dragonfly: watch` task starts by itself when the workspace opens and transpiles each saved `.nuc`; the
+- The `nuclear: watch` task starts by itself when the workspace opens and transpiles each saved `.nuc`; the
   Dart extension reloads the running app when the generated `.dart` files change. Saving a `.nuc` is enough to
   see the change.
-- `dragonfly: build` runs before running the app. The errors of the `.nuc` files are shown by the Nuclear
+- `nuclear: build` runs before running the app. The errors of the `.nuc` files are shown by the Nuclear
   extension in the Problems panel (the tasks do not repeat them).
-- Tasks: `dragonfly: watch`, `build` (Ctrl+Shift+B), `test`, `test --integration`, `analyze`.
+- Tasks: `nuclear: watch`, `nuclear: build` (Ctrl+Shift+B), `nuclear: test`, `nuclear: test --integration`,
+  `nuclear: analyze`.
 - It recommends the Nuclear, Dart and Flutter extensions.
 - `build` rewrites the workspace: changes made to it by hand are lost.
 
@@ -2783,15 +2784,15 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
 (0.15.0 or newer), which reads `build/<name>.code-workspace`:
 
 - The Flutter extension finds the app in `build/app` and shows the device picker in the status bar. If the app
-  is created with the window already open (the first `dragonfly build`), the Nuclear extension offers *Reload
+  is created with the window already open (the first `nuclear build`), the Nuclear extension offers *Reload
   Window*: Flutter's only looks for apps when the window opens.
 - ▷ Run / Debug in the editor bar of a `.nuc`, and F5 / Ctrl+F5 without `launch.json` (debug type
-  `dragonfly`): runs `dragonfly build` and launches the app with the workspace's `<name> (debug)`
-  configuration on the chosen device. The build's errors show in the *Dragonfly* panel.
-- Hot reload: saving a `.nuc` of the project (Ctrl+S) with the app running runs `dragonfly build`, which
-  rewrites only the `.dart` files that changed, and `flutter.hotReload`, also in the `dragonfly code` workspace.
+  `synapsis`): runs `nuclear build` and launches the app with the workspace's `<name> (debug)`
+  configuration on the chosen device. The build's errors show in the *Synapsis* panel.
+- Hot reload: saving a `.nuc` of the project (Ctrl+S) with the app running runs `nuclear build`, which
+  rewrites only the `.dart` files that changed, and `flutter.hotReload`, also in the `nuclear code` workspace.
 - When something fails (0.17.0 or newer) without the `.nuc` files having errors, the extension runs
-  `dragonfly repair` (§11, with a progress notice; the output goes to the *Dragonfly* panel) and, if it ends
+  `nuclear repair` (§11, with a progress notice; the output goes to the *Synapsis* panel) and, if it ends
   well, launches the app again with the same configuration:
   - the build before launching or on save fails (pub get, build_runner, splash);
   - the session ends before the app starts (event `flutter.appStarted`) and the user did not stop it (Gradle,
@@ -2806,7 +2807,7 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
     stays "unverified"; the mirror is the one that stops the app. Mirrors are rebuilt after each build (lines
     move) and when the window opens.
   - On each pause (breakpoint, step, exception) the `.nuc` opens with the pause's line highlighted, in the editor
-    group left of the paused `.dart`: `.nuc | .dart | Dragonfly device` (0.23.1 or newer). If that group does not
+    group left of the paused `.dart`: `.nuc | .dart | Synapsis device` (0.23.1 or newer). If that group does not
     exist, it is created by splitting only the `.dart`'s group: the others, like the device's, keep their width.
     Variables, watch and evaluation use Nuclear's names (they are the same in Dart). Setting
     `nuclear.debug.followInNuclear`.
@@ -2826,7 +2827,7 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
       `widget.x`, and Dart's reserved words are escaped.
   - Dart run-time errors (setting `nuclear.debug.explainErrors`, on by default): a pause on an exception or an
     error Flutter prints is marked on its `.nuc` line (Problems panel) and opens beside it the window *Nuclear:
-    runtime error* with the message, the explanation of `dragonfly explain`, the piece of the `.nuc`, the stack in
+    runtime error* with the message, the explanation of `nuclear explain`, the piece of the `.nuc`, the stack in
     Nuclear (each line opens the `.nuc`) and the original Dart error. The mark is cleared by the next build.
 
 - *Nuclear workspace* (0.31.0 or newer, ADR-extensions-0002): one *Nuclear* container in the activity bar (`Ctrl+Alt+N`) with a
@@ -2839,13 +2840,13 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
   project's pane shows its files (with the Chernobyl icon theme, honouring `files.exclude`); **the actions of its
   platform are the toolbar of the editor title bar** (the row of the editor tabs, since 0.34.0): mobile Run
   `Ctrl+Alt+R`, Debug `Ctrl+Alt+G`, Hot reload `Ctrl+Alt+L`, Device, Build `Ctrl+Alt+B`, Test `Ctrl+Alt+T`, Check
-  `Ctrl+Alt+C`; backend Serve, Test, Build, Check, API (its routes in the HTTP tool); web Serve, Build, Test, Check.
+  `Ctrl+Alt+C`; backend Serve, Test, Build, Check, API (its routes in the Connector tool); web Serve, Build, Test, Check.
   Clicking a tab shows the shortcut that does the same; the toolbar tooltips show theirs. Run, Debug and Device of a
   mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only
   there): the window reloads once and the action continues. A welcome page (`Ctrl+Alt+W`; at startup when no editor is open, setting
   `nuclear.workspace.welcome`) lists the projects, the tools and the keys. *Nuclear: Add the Active Project to the VS
   Code Workspace* adds a tab's folder to the explorer, search and git when wanted.
-- *Nuclear HTTP* (0.29.0 or newer, ADR-synapsis-0006; a workspace of its own since 0.33.0, `Ctrl+Alt+H`): its pane is the
+- *Nuclear Connector* (0.29.0 or newer, ADR-synapsis-0006; a workspace of its own since 0.33.0, `Ctrl+Alt+H`): its pane is the
   endpoints tree of every project of the window, by platform, project and component like the code (backend routes,
   mobile and web calls, read from `.nuclear/contract.json`), the contracts an app declares with *↓ Update*
   (`nuclear contracts update`), the OpenAPI documents of APIs that are not Nuclear (*+*), and the environment
@@ -2853,20 +2854,20 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
   component is an editor tab and each endpoint a tab inside it: method, url with path and query parameters, headers, a
   sample body from the model, the pretty-printed response and *copy as curl*; a component keeps its tabs when the
   workspace is left.
-- *Devices* (0.33.0 or newer, `Ctrl+Alt+V`): the Dragonfly devices open in the window with their state, *+ New device*
+- *Devices* (0.33.0 or newer, `Ctrl+Alt+V`): the Synapsis devices open in the window with their state, *+ New device*
   (a preset: size, pixel ratio, identity) opens one more beside the others, in its own locked group, so several
   clients run at once like several emulators (each with its own session: two signed-in users of a chat); each has its
   own app (▷ run on it), hot reload and stop (ADR-devices-0001 for the device itself). A project's ▷ Run, ◉ Debug and ▭ Device
-  ask which device to run on: the Dragonfly devices (shown or hidden), a new one, any other Flutter device (emulators,
+  ask which device to run on: the Synapsis devices (shown or hidden), a new one, any other Flutter device (emulators,
   phones, Chrome, desktop) or the Devices workspace; a run never replaces a running device. Closing a device tab only
   hides it (its app and session go on; the Devices workspace shows it again); ✕ in the Devices workspace, the panel's
   ■ or the end of its session end it at once; a device nobody looked at for 30 minutes ends by itself, and a watchdog
   kills every Flutter or browser process the window no longer owns. Devices take the lowest free number; the debug
   sessions carry the device's name. The devices show only in mobile workspaces and the Devices tool. The first run
   builds Flutter web and takes about a minute; the next ones are incremental.
-- *Dragonfly device* (0.20.0 or newer), the app inside VS Code like Android Studio's *Running Devices*:
+- *Synapsis device* (0.20.0 or newer), the app inside VS Code like Android Studio's *Running Devices*:
   - It comes with the extension and exists only in VS Code: the extension registers a Flutter custom device
-    `dragonfly` ("Dragonfly device") and turns on custom devices only for VS Code's Flutter processes (it adds
+    `synapsis` ("Synapsis device") and turns on custom devices only for VS Code's Flutter processes (it adds
     `FLUTTER_CUSTOM_DEVICES=true` to VS Code's user `dart.env` and restarts the Dart extension, whose daemon reads
     the environment and the devices when it starts). It appears in the Dart extension's device picker;
     `flutter devices` in a terminal and Android Studio do not see it.
@@ -2882,10 +2883,10 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
     that connection drops while the app runs, the panel reconnects and applies it again, and a frame that arrives
     with a size other than the device's also applies it again (0.23.2 or newer). Files, debugger pauses and the
     generated code go to another group. The padlock is removed and set again from the group's bar.
-  - Run/Debug with that device chosen (or *Dragonfly: Run on Dragonfly Device*, the phone icon of a `.nuc`'s
+  - Run/Debug with that device chosen (or *Synapsis: Run on Synapsis Device*, the phone icon of a `.nuc`'s
     editor bar) runs the app on Flutter's `chrome` device with a windowless Chromium browser (headless: Chrome,
     Chromium, Brave, Edge or Vivaldi; if Flutter does not find Chrome, the extension points it to another one
-    with `CHROME_EXECUTABLE` in `dart.env`). Like Android Studio's device view, the *Dragonfly device* panel shows
+    with `CHROME_EXECUTABLE` in `dart.env`). Like Android Studio's device view, the *Synapsis device* panel shows
     that browser's screen and sends it taps, clicks, wheel and keyboard (Chrome DevTools Protocol). Breakpoints,
     steps, hot reload and hot restart work as in Chrome.
   - The panel's bar is the browsers' one: device (Responsive, iPhone SE/14 Pro/15 Pro Max, Pixel 7, Galaxy S20
@@ -2903,10 +2904,10 @@ Opening only the project folder (`code .`, *File → Open Folder*) works the sam
   - Processes (0.27.1 or newer): when the session ends, when VS Code closes or if VS Code crashes, the app's
     `flutter run` and its headless browser close (they carry a mark in the startup URL and a separate watcher
     ends them when VS Code no longer exists; before, they stayed alive, hundreds of MB each). Closing the
-    *Dragonfly device* panel stops the app after 5 minutes if the panel does not open again (not if it was opened
+    *Synapsis device* panel stops the app after 5 minutes if the panel does not open again (not if it was opened
     in the browser). The language server stops 5 minutes after the last `.nuc` closes and starts with the next
-    one; `dragonfly watch` ends if the process that started it dies. In Android Studio the IDE manages
-    `flutter run` and the language server (the plugin only runs `dragonfly build`/`explain`, which end by themselves).
+    one; `nuclear watch` ends if the process that started it dies. In Android Studio the IDE manages
+    `flutter run` and the language server (the plugin only runs `nuclear build`/`explain`, which end by themselves).
   - Flutter's `web-server` device does not work for this: its WebSocket debug service has no breakpoints (DWDS 27).
 
 ### 11.2 Android Studio / IntelliJ
@@ -2917,12 +2918,12 @@ With the Nuclear plugin (0.16.0 or newer) and the Flutter one, open the project 
   (`build/app/<name>_flutter_app.iml`, a copy of `flutter create`'s `.iml`) and offers *Reopen Project*. On
   reopening, the Flutter plugin configures it like any Flutter project: device picker, `main.dart`
   configuration, Run / Debug, hot reload and restart, DevTools.
-- `dragonfly build` runs when the project opens, so the app that runs has the code of the `.nuc` files.
-- Run and Debug (any configuration, also `main.dart`) run `dragonfly build` before launching the app (0.16.2 or
+- `nuclear build` runs when the project opens, so the app that runs has the code of the `.nuc` files.
+- Run and Debug (any configuration, also `main.dart`) run `nuclear build` before launching the app (0.16.2 or
   newer): the app gets the packages, assets and native splash before Gradle compiles it. If the build fails, a
   notice shows the end of its output.
-- Saving a `.nuc` (Ctrl+S) runs `dragonfly build` and *Hot Reload* of the running apps.
-- When something fails (0.17.0 or newer) without errors in the `.nuc` files, as in VS Code: `dragonfly repair`
+- Saving a `.nuc` (Ctrl+S) runs `nuclear build` and *Hot Reload* of the running apps.
+- When something fails (0.17.0 or newer) without errors in the `.nuc` files, as in VS Code: `nuclear repair`
   in the background and, if it ends well, the same Run/Debug again. It triggers when the build fails (before
   launching or on save), when the app ends with an error code without the user stopping it (Stop), or when the
   Ctrl+S hot reload gives a compile error. A rejected hot reload does a *Hot Restart*. It repairs at most once
@@ -2930,10 +2931,10 @@ With the Nuclear plugin (0.16.0 or newer) and the Flutter one, open the project 
 - Debugging the `.nuc` (0.18.0 or newer), as in VS Code: a `.nuc` breakpoint (type *Nuclear line breakpoints*)
   has a mirror Dart breakpoint in the `.dart`; each pause opens the `.nuc` with the line highlighted; an error
   Flutter prints in the console is marked in red on its `.nuc` line (icon and mark in the bar) and the *Nuclear
-  Error* window (on the right, only in Dragonfly projects) explains it, with the stack in Nuclear and the Dart
+  Error* window (on the right, only in Synapsis projects) explains it, with the stack in Nuclear and the Dart
   error. Both options in *Settings → Tools → NuclearLang*.
 
-- *Nuclear HTTP* tool window (0.30.0 or newer, ADR-synapsis-0006; Alt+Shift+H, also under *Tools → NuclearLang*): the same
+- *Nuclear Connector* tool window (0.30.0 or newer, ADR-synapsis-0006; Alt+Shift+H, also under *Tools → NuclearLang*): the same
   as the VS Code view: every project of the workspace by platform, its components and endpoints from the contract,
   the contracts a client declares with *Update*, OpenAPI documents, environments in `.nuclear/http.json` and a
   request panel with the response pretty-printed and *copy as curl*.
@@ -2960,16 +2961,16 @@ The server's settings (the same `nuclear.*` of VS Code, without the prefix) go i
 `"lsp": { "nuclear-lsp": { "settings": { "dialect": "flutter", "codemetrics": { ... } } } }`; the server's path,
 in `"lsp": { "nuclear-lsp": { "binary": { "path": "..." } } }`.
 
-In the gutter, ▷ next to `main()` runs the app (**Dragonfly: run**) and ▷ next to each `@test("…")`, `@widget(…)`
-or `@states(…)` runs only that test (`dragonfly test -- --plain-name "…"`). The rest of a Dragonfly project is
-handled with tasks (*task: spawn*, `alt-shift-t`), run from any `.nuc` of the project: **Dragonfly: run**
+In the gutter, ▷ next to `main()` runs the app (**Synapsis: run**) and ▷ next to each `@test("…")`, `@widget(…)`
+or `@states(…)` runs only that test (`nuclear test -- --plain-name "…"`). The rest of a Synapsis project is
+handled with tasks (*task: spawn*, `alt-shift-t`), run from any `.nuc` of the project: **Synapsis: run**
 (`flutter run` in a terminal: `r` = hot reload, `R` = hot restart), **device** and **terminal device** (the
-Dragonfly devices of §11, also from the ▷ of `main()`), **build**, **watch** (transpiles on each save), **test**,
-**analyze**, **repair** and **explain the error in the clipboard** (`dragonfly explain`), besides **Nuclear:
+Synapsis devices of §11, also from the ▷ of `main()`), **build**, **watch** (transpiles on each save), **test**,
+**analyze**, **repair** and **explain the error in the clipboard** (`nuclear explain`), besides **Nuclear:
 generated code** and **Nuclear: check** of the open file.
 
-Zed does not allow an extension web panels, own views nor actions on save. So it does not have: the Dragonfly
-device inside the editor (`dragonfly device` opens it in its own window), the run-time error window, the bar's
+Zed does not allow an extension web panels, own views nor actions on save. So it does not have: the Synapsis
+device inside the editor (`nuclear device` opens it in its own window), the run-time error window, the bar's
 Run/Debug with a build first, save → build + automatic hot reload (with **watch** + **run**, the reload is the
 `r` key), the automatic repair, breakpoints in `.nuc` files and mixed debugging, nor the generated code view
 beside it (the task prints it in the terminal).

@@ -56,7 +56,7 @@ transpiler feature is built there, never copied into the server.
 
 ## Projects
 
-- The root is the closest folder with `nuclear.toml`, a `config.nuc` naming `dragonfly(platform, dialect)`, or
+- The root is the closest folder with `nuclear.toml`, a `config.nuc` naming `synapsis(platform, dialect)`, or
   `main.nuc` (the same order as `Manifest::find`).
 - The project's dialect is loaded with the kind packages of `<project>/kinds` and `<install>/kinds`
   (`dialects::load`), cached by name, or by `name@root` when the project has `kinds/`.

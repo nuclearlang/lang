@@ -38,6 +38,6 @@ None recorded.
 ## References
 
 - What runs where: [testing.md](../05-standards/testing.md); the test helpers of the runtime:
-  [dragonfly.md §7](../07-reference/dragonfly.md).
+  [synapsis.md §7](../07-reference/synapsis.md).
 - Of the eleven rules accepted together, this ADR holds one: the values of a generated test.
 - Replaces: ADR-0049, ADR-0085

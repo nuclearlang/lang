@@ -1,13 +1,13 @@
 import 'package:clean_flutter_project/components/session/data/auth_repository.dart';
 import 'package:clean_flutter_project/components/session/domain/models/auth.dart';
 import 'package:clean_flutter_project/components/session/session_component.dart';
-import 'package:clean_flutter_project/dragonfly.g.dart';
 import 'package:clean_flutter_project/shared/events/force_logout.dart';
-import 'package:dragonfly/dragonfly.dart';
-import 'package:dragonfly/testing.dart';
+import 'package:clean_flutter_project/synapsis.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:synapsis/synapsis.dart';
+import 'package:synapsis/testing.dart';
 
 /// Session tests: the repository is a mock; the session, the ACL and the events are the real ones.
 Auth rick() {
@@ -19,8 +19,8 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 void main() {
   group('SessionTest', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
-      DragonflyTest.replace<AuthRepository>(MockAuthRepository());
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis);
+      SynapsisTest.replace<AuthRepository>(MockAuthRepository());
     });
 
     setUp(() async {

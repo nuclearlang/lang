@@ -46,7 +46,7 @@ expect = ["concept:why-nuclear"]
 ask = "ventajas"
 expect = ["concept:advantages"]
 top = 1
-says = ["dragonfly"]
+says = ["synapsis"]
 
 [[question]]
 ask = "why should I use nuclear instead of writing flutter by hand"
@@ -62,9 +62,9 @@ ask = "how does the compiler turn a nuc file into typescript"
 expect = ["concept:how-it-works", "concept:transpiler"]
 
 [[question]]
-ask = "what is dragonfly"
+ask = "what is synapsis"
 exact = false
-expect = ["concept:dragonfly"]
+expect = ["concept:synapsis"]
 top = 1
 
 [[question]]
@@ -82,7 +82,7 @@ exact = false
 expect = ["concept:kinds"]
 
 [[question]]
-ask = "how is a dragonfly project organized"
+ask = "how is a synapsis project organized"
 exact = false
 expect = ["concept:project-architecture"]
 
@@ -111,7 +111,7 @@ expect = ["faq:install"]
 [[question]]
 ask = "como creo un proyecto"
 expect = ["faq:start-a-project", "playbook:new-project"]
-says = ["dragonfly new"]
+says = ["nuclear new"]
 
 [[question]]
 ask = "where is the generated code and can I edit it"
@@ -187,7 +187,7 @@ expect = ["can:backend-api"]
 
 [[question]]
 ask = "does nuclear have database migrations"
-expect = ["can:backend-data", "playbook:migrate-the-database", "tool:dragonfly.migrate"]
+expect = ["can:backend-data", "playbook:migrate-the-database", "tool:synapsis.migrate"]
 
 [[question]]
 ask = "can nuclear convert my existing flutter app"
@@ -244,7 +244,7 @@ expect = ["playbook:decompose-a-spec"]
 [[question]]
 ask = "implement the endpoint that lists the characters of the rick and morty api"
 expect = ["playbook:resource-from-an-api"]
-says = ["dragonfly gen resource"]
+says = ["nuclear gen resource"]
 
 [[question]]
 ask = "how do I make a crud with a database"
@@ -270,7 +270,7 @@ expect = ["role:*", "concept:nuclear-developer"]
 
 [[question]]
 ask = "how do I deploy and export the ci file"
-expect = ["playbook:deploy", "tool:nuclear-loop.export"]
+expect = ["playbook:deploy", "tool:nuclear-builder.export"]
 
 # ---- errors and failures ----
 
@@ -307,7 +307,7 @@ ask = "xs.push(x) is not allowed"
 expect = ["error:N0114", "lib:list", "concept:standard-library", "pitfall:library-names-of-other-languages"]
 
 [[question]]
-ask = "dragonfly: command not found"
+ask = "synapsis: command not found"
 exact = false
 expect = ["failure:a-command-is-not-found"]
 top = 1
@@ -392,8 +392,8 @@ ask = "how do I check my code for errors"
 expect = ["tool:nuclear.check", "can:check-fix-format", "playbook:fix-compiler-errors"]
 
 [[question]]
-ask = "dragonfly gen resource"
-expect = ["tool:dragonfly.gen.resource"]
+ask = "nuclear gen resource"
+expect = ["tool:synapsis.gen.resource"]
 top = 1
 
 [[question]]
@@ -403,8 +403,8 @@ expect = ["mcp:generate_resource"]
 top = 1
 
 [[question]]
-ask = "dragonfly gen usecase"
-expect = ["tool:dragonfly.gen.usecase"]
+ask = "nuclear gen usecase"
+expect = ["tool:synapsis.gen.usecase"]
 top = 1
 
 [[question]]
@@ -415,7 +415,7 @@ top = 1
 
 [[question]]
 ask = "como agrego un caso de uso con su ruta"
-expect = ["playbook:add-a-use-case", "tool:dragonfly.gen.usecase"]
+expect = ["playbook:add-a-use-case", "tool:synapsis.gen.usecase"]
 
 [[question]]
 ask = "que herramientas tiene el servidor MCP"
@@ -423,15 +423,15 @@ expect = ["mcp:server", "concept:mcp"]
 
 [[question]]
 ask = "how do I retry a failed run"
-expect = ["tool:nuclear-loop.retry", "concept:loop"]
+expect = ["tool:nuclear-builder.retry", "concept:loop"]
 
 [[question]]
 ask = "which keyboard shortcut opens the chat with the agent"
 expect = ["editor:vscode.commands", "faq:ask-the-agent"]
 
 [[question]]
-ask = "what version is dragonfly"
-expect = ["component:dragonfly"]
+ask = "what version is synapsis"
+expect = ["component:synapsis"]
 
 [[question]]
 ask = "what does the planner agent do"
@@ -820,9 +820,9 @@ exact = false
 expect = ["concept:mcp"]
 
 [[question]]
-ask = "que es nuclear-loop?"
+ask = "que es nuclear-builder?"
 exact = false
-expect = ["concept:loop", "tool:nuclear-loop"]
+expect = ["concept:loop", "tool:nuclear-builder"]
 
 [[question]]
 ask = "que hace el mcp"
@@ -858,17 +858,17 @@ ask = "como creo un caso de uso"
 platform = "backend"
 exact = true
 expect = ["query:kind.create"]
-says = ["dragonfly make usecase", "dragonfly gen usecase"]
+says = ["nuclear make usecase", "nuclear gen usecase"]
 
 [[question]]
 ask = "how do I create a repository"
 platform = "backend"
 exact = true
 expect = ["query:kind.create"]
-says = ["dragonfly make repository"]
+says = ["nuclear make repository"]
 
 [[question]]
-ask = "cuales son los comandos de dragonfly"
+ask = "cuales son los comandos de synapsis"
 exact = true
 expect = ["query:cli.commands"]
 

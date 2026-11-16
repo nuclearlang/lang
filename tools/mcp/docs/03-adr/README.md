@@ -3,7 +3,11 @@
 Cited as `ADR-mcp-NNNN`. The format is `docs/03-adr/0000-template.md` of the tree's root. An accepted ADR is not
 edited: a new one replaces it and the old one is marked `superseded by ADR-mcp-NNNN`.
 
-No decision has been recorded here yet. The decisions that created the server are kept by other projects:
+| ADR | Decision | Status |
+|---|---|---|
+| [ADR-mcp-0001](0001-the-mcp-server-is-a-project-of-its-own.md) | The MCP server is a Nuclear project of its own, `nuclear-mcp` | accepted |
+
+The decisions that created the server are kept by other projects:
 
 | Decision | What it says of the server |
 |---|---|
@@ -11,7 +15,7 @@ No decision has been recorded here yet. The decisions that created the server ar
 | `ADR-codegen-0001` | The server exposes the generators and what a model needs to fill them (`project_inspect`, `generate_*`, `api_inspect`, `web_search`, `web_read`), and tells every client to generate first |
 
 The server installed alone on a machine of remote agents only, without the `graph_*` and `developer_*` tools:
-ADR-installer-0002.
+ADR-installer-0002 (its point on the graph's `mcp` extra is replaced by ADR-mcp-0001).
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../../docs/03-adr/old-numbers.md).

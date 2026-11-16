@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.components.characters.ai.character_tools import CharacterTools
-from dragonfly.ai import Agent
+from synapsis.ai import Agent
 
 
 class Guide(Agent):

@@ -1,7 +1,7 @@
-import { appRouter } from './dragonfly.g';
-import { Element, RouterProvider, StatelessView, createElement, statelessOf } from 'dragonfly-web';
+import { appRouter } from './synapsis.g';
+import { Element, RouterProvider, StatelessView, createElement, statelessOf } from 'synapsis-web';
 
-/** The app: the router with every @screen. index.ts (generated) starts Dragonfly and mounts App in #root. */
+/** The app: the router with every @screen. index.ts (generated) starts Synapsis and mounts App in #root. */
 export function App(props: AppProps = {}): Element {
   return createElement(AppView, props);
 }

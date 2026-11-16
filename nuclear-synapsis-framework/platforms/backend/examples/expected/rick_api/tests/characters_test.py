@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.components.characters.characters_appcomponent import CharactersAppComponent
 from app.components.characters.domain.models.new_character import NewCharacter
-from dragonfly import inject
+from synapsis import inject
 
 
 class TestCharacters:

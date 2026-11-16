@@ -1,7 +1,7 @@
 import { Task } from '../../data/entities/task.js';
 import { TaskRepository } from '../../data/repositories/task_repository.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Result } from 'dragonfly-nest';
+import { AppError, Result } from 'synapsis-nest';
 
 @Injectable()
 export class GetTask {

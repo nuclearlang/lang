@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dragonfly import Entity, Mapped, column, primary
+from synapsis import Entity, Mapped, column, primary
 
 
 class Character(Entity):

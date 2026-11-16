@@ -21,11 +21,11 @@ example, so the junior gets it right next time.
 |---|---|---|
 | Nuclear Smart Graph | A private library of the whole ecosystem, as cards on shelves: what it is for, how each thing is written, every kind, tool and error, what can and cannot be done, how each task is done, validated code. Plus the MCP server of NuclearLang for Claude Code, Codex or Cursor | `nuclear-graph-storage/`, `tools/mcp/` |
 | Nuclear Developer | Local agents on 3B models: a coder, a tester, a security reviewer and a planner. They search the graph and check their answers with the compiler | `nuclear-agents/nuclear_developer/` |
-| The Loop | The pipeline: a spec goes through its stages, and every step shows who did it | this project |
+| Nuclear Builder | The pipeline: a spec goes through its stages, and every step shows who did it | this project |
 
 ## Users
 - A developer in VS Code (`Ctrl+Alt+P`) or Android Studio / IntelliJ (`Alt+Shift+P`).
-- A terminal or a CI job: `nuclear-loop`.
+- A terminal or a CI job: `nuclear-builder`.
 - A frontier model over MCP: `developer_task` runs this pipeline with the local agents and answers the journal
   ([the MCP server](../../../../../tools/mcp/AGENTS.md)).
 
@@ -40,6 +40,6 @@ every task are in [the Developer's README](../../../../../nuclear-agents/nuclear
 
 ## What it does not do
 - It does not run in Zed.
-- The shell runs nothing that is not in `.nuclear/loop.json`.
+- The shell runs nothing that is not in `.nuclear/builder.json`.
 - The agent stages do not run on a server: the server checks their result with the deterministic stages.
 - The acceptance step informs; it never fails a run.

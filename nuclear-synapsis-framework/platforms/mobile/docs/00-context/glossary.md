@@ -30,6 +30,6 @@ Use these words, with these meanings, in code, documents and conversations.
 | Converter | The kind `converter`: how a field's value is read from and written to JSON | `shared/converters/` |
 | Local table | The table on the device of a model that has `@primary` | [local-database.md](../02-architecture/local-database.md) |
 | Twin | `<method>AsLocal()`: the copy of a repository's GET method that answers from the device and never sends a request | [local-database.md](../02-architecture/local-database.md) |
-| Runtime | The packages an app runs on: `dragonfly`, and `dragonfly_genkit` with the `genkit` plugin | `packages/` |
+| Runtime | The packages an app runs on: `synapsis`, and `synapsis_genkit` with the `genkit` plugin | `packages/` |
 | Generated tests | The tests the build writes by itself for models, repositories, routes and screens | [testing.md](../05-standards/testing.md) |
 | Golden | The expected output of an example, compared by `cargo test` | `examples/expected/`, the `.dart` beside a single-file example |

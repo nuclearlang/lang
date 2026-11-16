@@ -18,7 +18,7 @@ stateless FavoritesScreen
 
   // a warning dialog with the Close / Accept footer (onAccept)
   confirmLogout(context: BuildContext) void
-    DragonflyDialog.warning(
+    SynapsisDialog.warning(
       header = Text("session.logout.title".tr()),
       onAccept = () => inject<SessionComponent>().logout(),
       child = Text("session.logout.message".tr()),

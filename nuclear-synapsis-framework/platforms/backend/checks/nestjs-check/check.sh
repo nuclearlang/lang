@@ -9,9 +9,9 @@ root=${NUCLEAR_ROOT:-$(cd "$here/../../.." && pwd)}
 nm="$root/nuclearlang/tools/node/node_modules"
 # build the runtime, then copy it fresh (npm keeps an old copy of the same version; a `--no-save` install also
 # prunes the other runtime linked the same way)
-(cd "$here/packages/dragonfly-nest" && node "$nm/typescript/bin/tsc" -p tsconfig.json)
-rm -rf "$nm/dragonfly-nest"
-(cd "$root/nuclearlang/tools/node" && npm install --no-save --no-audit --no-fund --install-links "$here/packages/dragonfly-nest" >/dev/null 2>&1)
+(cd "$here/packages/synapsis-nest" && node "$nm/typescript/bin/tsc" -p tsconfig.json)
+rm -rf "$nm/synapsis-nest"
+(cd "$root/nuclearlang/tools/node" && npm install --no-save --no-audit --no-fund --install-links "$here/packages/synapsis-nest" >/dev/null 2>&1)
 p="$here/examples/examples-backend/tasks_api"
 rm -rf "$p/build"
 (cd "$root" && cargo run -q -p nuclear-cli -- build "$p")
@@ -25,9 +25,9 @@ node "$here/checks/nestjs-check/smoke.mjs" "$p/build"
 # left to make
 m=$(mktemp -d)
 export DATABASE="$m/fresh.sqlite"
-migrate() { node node_modules/dragonfly-nest/dist/migrate.js "$@" --dir "$m/migrations"; }
+migrate() { node node_modules/synapsis-nest/dist/migrate.js "$@" --dir "$m/migrations"; }
 migrate make "first" >/dev/null && migrate up >/dev/null && migrate make "again" | grep -q "no changes"
 unset DATABASE
 rm -rf "$m"
 echo "migrations: made, applied, nothing left"
-cd "$here/packages/dragonfly-nest" && node "$nm/typescript/bin/tsc" -p tsconfig.test.json && tests "dist-test/test/**/*.js"
+cd "$here/packages/synapsis-nest" && node "$nm/typescript/bin/tsc" -p tsconfig.test.json && tests "dist-test/test/**/*.js"

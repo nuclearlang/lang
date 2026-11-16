@@ -9,16 +9,17 @@ the set-up of the AI services the installers call at their end.
 - POSIX `sh` scripts and one PowerShell script (5.1 or 7); no dependency but `curl` or `wget`, `tar`, a SHA-256 tool.
 - GitHub Actions for the release (`.github/workflows/release.yml`); static Linux binaries (musl).
 - The AI set-up is not code of this folder: its engine is `extensions/vscode/src/aiSetup.ts` (profiles in
-  `aiSetup.json`), run in a terminal as `nuclear-loop setup`.
+  `aiSetup.json`), run in a terminal as `nuclear-builder setup`; it builds and installs the Smart Graph, the Nuclear
+  Developer and the MCP server (`uv tool install` of `ai/nuclear-graph-storage` and `ai/tools/mcp`).
 
 ## Commands
 
 ```sh
 installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)
 installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall
-installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-loop
+installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder
 installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256
-nuclear-loop setup [--profile <id> --yes | --status | --remove]   # the AI services
+nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services
 ```
 
 The public one-liners (they need a published release):
@@ -30,8 +31,9 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 
 ## Folders
 
-- `install.sh`: the installer from the source tree (builds the three binaries, stages, links, installs the skill
-  and the editor extensions).
+- `install.sh`: the installer from the source tree (builds `nuclear` and `nuclear-lsp`, stages, links `nuclear`,
+  `nuclear-builder` and `nuclear-lsp`, removes the old `dragonfly` and `nuclear-loop` links, installs the skill and
+  the editor extensions).
 - `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`
   and `package.sh`.
 - `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.
@@ -73,4 +75,4 @@ Elsewhere:
   [the CLI's agent support](../tools/cli/docs/02-architecture/agent-support.md).
 - The services the set-up installs: [the Smart Graph](../nuclear-graph-storage/AGENTS.md),
   [the agents](../nuclear-agents/AGENTS.md); the MCP server: [tools/mcp](../tools/mcp/AGENTS.md).
-- The wizard of the editor and `nuclear-loop`: [the extensions](../extensions/AGENTS.md).
+- The wizard of the editor and `nuclear-builder`: [the extensions](../extensions/AGENTS.md).

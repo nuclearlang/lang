@@ -240,7 +240,7 @@ For a dialect to include a pub.dev package (`go_router`...): add it to
 `nuclearlang/tools/defs/flutter_project/pubspec.yaml`, add its line in `nuclearlang/tools/defs/generate.sh`, generate it and name it
 in the dialect's `defs`.
 
-For a package of a single project, the framework's CLI generates it: `dragonfly add <package>[@version]` installs
+For a package of a single project, the framework's CLI generates it: `nuclear add <package>[@version]` installs
 the package with the dialect's package manager, writes it in `config.nuc` and runs the language's generator over
 what is installed (ADR-lang-0008). `install.sh` installs the generators in `<install>/tools/defs`.
 
@@ -248,7 +248,7 @@ what is installed (ADR-lang-0008). `install.sh` installs the generators in `<ins
   ([dialects.md](dialects.md)); the definitions go to the project, `defs/<language>/<name>/<version>/` (a scoped
   package is one folder: `@nestjs/axios` → `nestjs__axios`), in place of the ones of another version. `--module <m>`
   names the modules to describe when they are not the package's own (`date-fns/locale`, `sklearn.linear_model`).
-  `dragonfly install` generates the ones a package of `config.nuc` lacks; `dragonfly remove <package>` deletes them.
+  `nuclear install` generates the ones a package of `config.nuc` lacks; `nuclear remove <package>` deletes them.
 - **Mobile** (`dart`): `bin/defs.dart` over the app (`--project build/app`) with the resolved version, excluding the
   packages the dialect already loads (`--exclude`); it describes `package:<n>/<n>.dart` (or each file of `lib/` if it
   does not exist). The result goes to the cache (§1) and is reused by every project; removing the package does not

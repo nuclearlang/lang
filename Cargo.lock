@@ -153,21 +153,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dragonfly"
-version = "0.1.0"
-dependencies = [
- "base64",
- "crossterm",
- "nuclear-diag",
- "nuclear-dialect",
- "nuclear-syntax",
- "nuclear-transpile",
- "png",
- "serde_json",
- "tungstenite",
-]
-
-[[package]]
 name = "equivalent"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -338,11 +323,39 @@ dependencies = [
 name = "nuclear-cli"
 version = "0.1.0"
 dependencies = [
+ "base64",
+ "crossterm",
+ "nuclear-codegen",
+ "nuclear-devices",
+ "nuclear-diag",
+ "nuclear-dialect",
+ "nuclear-syntax",
+ "nuclear-transpile",
+ "png",
+ "serde_json",
+ "tungstenite",
+]
+
+[[package]]
+name = "nuclear-codegen"
+version = "0.1.0"
+dependencies = [
  "nuclear-diag",
  "nuclear-dialect",
  "nuclear-syntax",
  "nuclear-transpile",
  "serde_json",
+]
+
+[[package]]
+name = "nuclear-devices"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "crossterm",
+ "png",
+ "serde_json",
+ "tungstenite",
 ]
 
 [[package]]

@@ -4,9 +4,9 @@ name: extension-vscode
 on:
   push:
     branches: [main]
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
   pull_request:
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
   workflow_dispatch:
 
 permissions:

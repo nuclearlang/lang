@@ -1,4 +1,4 @@
-import { Element, StatelessView, createElement, p, statelessOf } from 'dragonfly-web';
+import { Element, StatelessView, createElement, p, statelessOf } from 'synapsis-web';
 
 export function NotFoundScreen(props: NotFoundScreenProps = {}): Element {
   return createElement(NotFoundScreenView, props);

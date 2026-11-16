@@ -42,6 +42,8 @@ pub struct Home {
     pub platforms: PathBuf,
     /// The folder of the framework's own `docs/`.
     pub framework: PathBuf,
+    /// `<platform>/generators.toml`: what the code generator writes in a project of each platform.
+    pub generators: PathBuf,
 }
 
 impl Home {
@@ -49,13 +51,15 @@ impl Home {
     pub fn tree() -> Home {
         let root = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../.."));
         let framework = root.join("nuclear-synapsis-framework");
-        Home { dialects: root.join("nuclearlang/dialects"), platforms: framework.join("platforms"), framework }
+        let generators = root.join("tools/code_generator/platforms");
+        Home { dialects: root.join("nuclearlang/dialects"), platforms: framework.join("platforms"), framework, generators }
     }
 
-    /// An install: `dialects/` and `platforms/` next to each other.
+    /// An install: `dialects/`, `platforms/` and `generators/` next to each other.
     pub fn install() -> Option<Home> {
         let dir = install_dir()?;
-        Some(Home { dialects: dir.join("dialects"), platforms: dir.join("platforms"), framework: dir })
+        let generators = dir.join("generators");
+        Some(Home { dialects: dir.join("dialects"), platforms: dir.join("platforms"), framework: dir, generators })
     }
 
     /// Every folder that may hold a `docs/` or an `examples/`: the framework's, each language's, each platform's.
@@ -76,7 +80,7 @@ pub fn homes() -> Vec<Home> {
     Home::install().into_iter().chain(Some(Home::tree()).filter(|h| h.dialects.is_dir())).collect()
 }
 
-/// The definitions generated for the packages a project adds (`dragonfly flutter add hive`), shared by every
+/// The definitions generated for the packages a project adds (`nuclear flutter add hive`), shared by every
 /// project: `$XDG_CACHE_HOME/nuclearlang/defs`, or `~/.cache/nuclearlang/defs`, as `<language>/<package>/<version>/`.
 pub fn defs_cache_dir() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_CACHE_HOME")

@@ -1,0 +1,4 @@
+// What a test holds true: it fails at the line that says it when it is not.
+expect(held: boolean) void
+  if not held
+    throw AssertionError("it does not hold")

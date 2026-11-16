@@ -42,15 +42,15 @@ with the language's call syntax. It is not transpiled; its errors are `N0303`.
 
 | Line | What |
 |---|---|
-| `dragonfly(platform = "mobile", dialect = ...)` | the platform the project is written for and the dialect it is built with (ADR-synapsis-0002) |
+| `synapsis(platform = "mobile", dialect = ...)` | the platform the project is written for and the dialect it is built with (ADR-synapsis-0002) |
 | `app(...)` and the sections of the app's package manifest | the dialect's: their names and arguments are in the flutter reference §3.1 |
 | `plugins(genkit = true, ...)` | the optional parts; a kind or a class of a plugin not enabled is `N0304` |
 | `dependencies(package = "version")`, `devDependencies(...)` | third-party packages only |
 | `contracts(name = "path or url")` | a backend's contract: `contracts/<name>/` is generated at every build (ADR-synapsis-0006) |
 
 - An empty section is not written: a new project has only the app.
-- Only third-party packages the framework does not use. The dialect's and Dragonfly's own are added by themselves
-  and are visible in the generated app's manifest; listing one is `N0303` on its line and `dragonfly add` rejects
+- Only third-party packages the framework does not use. The dialect's and Synapsis's own are added by themselves
+  and are visible in the generated app's manifest; listing one is `N0303` on its line and `nuclear add` rejects
   it before changing anything.
 - A project without `config.nuc` gets one on its first `check` or `build`.
 

@@ -21,4 +21,4 @@ themselves (their kinds, their runtime packages, their commands) is in each plat
 
 - **Vector stores (Chroma) for LangChain.js**, like the `Chroma` connection of the `fastapi` dialect.
   TODO(human): `frameworks/nestjs/dialect.toml` already has the plugin `chroma` (`chromadb`) and imports `Chroma`
-  and `vectorStore` from `dragonfly-nest/ai`. What is still missing, or can this item be deleted?
+  and `vectorStore` from `synapsis-nest/ai`. What is still missing, or can this item be deleted?

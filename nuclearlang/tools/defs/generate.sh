@@ -52,17 +52,17 @@ DEPS="$FDEP" pub go_router "go_router: declarative routing (GoRouter, GoRoute, r
 DEPS="$FDEP" pub connectivity_plus "connectivity_plus: connection type (wifi, mobile...) and its changes" package:connectivity_plus/connectivity_plus.dart
 DEPS="$FDEP" pub flutter_secure_storage "flutter_secure_storage: Keychain / Keystore storage" package:flutter_secure_storage/flutter_secure_storage.dart
 
-# dragonfly: the framework's runtime (packages/dragonfly), after every package it uses
+# synapsis: the framework's runtime (packages/synapsis), after every package it uses
 D=""
 for p in flutter_bloc bloc dio get_it go_router connectivity_plus flutter_secure_storage json_annotation; do
   v=$(pv "$p"); D="$D --depends $p@$v --exclude $POUT/$p/$v"
 done
-DEPS="$FDEP $D" pub dragonfly "dragonfly: runtime of the NuclearLang framework for Flutter (packages/dragonfly)" package:dragonfly/dragonfly.dart package:dragonfly/testing.dart
+DEPS="$FDEP $D" pub synapsis "synapsis: runtime of the NuclearLang framework for Flutter (packages/synapsis)" package:synapsis/synapsis.dart package:synapsis/testing.dart
 
-# the genkit plugin (dialects/mobile/flutter [project.plugins.genkit]): Genkit Dart and the runtime packages/dragonfly_genkit
+# the genkit plugin (dialects/mobile/flutter [project.plugins.genkit]): Genkit Dart and the runtime packages/synapsis_genkit
 DEPS="" pub schemantic "schemantic: typed schemas (SchemanticType) of Genkit Dart" package:schemantic/schemantic.dart
 SV=$(pv schemantic)
 DEPS="--depends schemantic@$SV --exclude $POUT/schemantic/$SV" pub genkit "Genkit Dart: generate, tools, flows, embedders, remote actions" package:genkit/genkit.dart package:genkit/client.dart
-GV=$(pv genkit); DFV=$(pv dragonfly)
-DEPS="$FDEP --depends genkit@$GV --exclude $POUT/genkit/$GV --depends schemantic@$SV --exclude $POUT/schemantic/$SV --depends dragonfly@$DFV --exclude $POUT/dragonfly/$DFV" \
-  pub dragonfly_genkit "dragonfly_genkit: Genkit for Dragonfly apps (packages/dragonfly_genkit)" package:dragonfly_genkit/dragonfly_genkit.dart package:dragonfly_genkit/testing.dart
+GV=$(pv genkit); DFV=$(pv synapsis)
+DEPS="$FDEP --depends genkit@$GV --exclude $POUT/genkit/$GV --depends schemantic@$SV --exclude $POUT/schemantic/$SV --depends synapsis@$DFV --exclude $POUT/synapsis/$DFV" \
+  pub synapsis_genkit "synapsis_genkit: Genkit for Synapsis apps (packages/synapsis_genkit)" package:synapsis_genkit/synapsis_genkit.dart package:synapsis_genkit/testing.dart

@@ -56,31 +56,28 @@ which variables each one receives) so an agent can write a new dialect.
 ## 4. Organization in Rust
 
 ```
-nuclearlang/
-├── Cargo.toml                 # workspace
-├── nuclearlang/base/nuclear.toml     # reserved words of the base language
-├── dialects/                  # the language dialects: typescript, nodejs, dart, python
-├── defs/                      # type definitions (like .d.ts): defs/<language>/<package>/<version>/
-├── crates/
-│   ├── nuclear-diag/          # diagnostics: codes, positions, text and JSON
-│   ├── nuclear-syntax/        # lexer, AST, parser and formatter
-│   ├── nuclear-dialect/       # template engine, contract, dialect loading and validation
-│   ├── nuclear-transpile/     # resolver + dialect-driven emitter; projects (project.rs); API for CLI and LSP
-│   ├── nuclear-cli/           # the `nuclear` binary (build, check, fmt, spec, defs, help)
-│   └── nuclear-lsp/           # the language server
-├── spec/                      # base language, grammar, library, dialects, diagnostics
-├── examples/                  # each .nuc with its expected output; examples/projects/, stdlib/
-├── tools/                     # spec checks, type-definition generators, release (installers, archives)
-├── install.sh                 # installs nuclear, dragonfly and nuclear-lsp in ~/.local (files in share/nuclearlang)
-│
-│  the other repositories, each a folder with its own git (plan 006):
-├── dragonfly/                 # the `dragonfly` CLI and the platforms' philosophy
-├── dragonfly-mobile/          # the mobile platform: dialect flutter, the Dart runtime
-├── dragonfly-backend/         # the backend platform: dialects fastapi and nestjs, their runtimes
-├── dragonfly-web/             # the web platform: dialect react, its runtime
-├── extensions/vscode/            # the VS Code extension (and the shared theme)
-├── extensions/jetbrains/         # the Android Studio / IntelliJ plugin
-└── extensions/zed/               # the Zed extension
+nuclearlang/                         # the tree: one repository, one Cargo workspace (Cargo.toml)
+├── nuclearlang/                     # the language
+│   ├── base/                        # nuclear.toml (reserved words), docs.toml (their editor documentation)
+│   ├── crates/
+│   │   ├── nuclear-diag/            # diagnostics: codes, positions, text and JSON
+│   │   ├── nuclear-syntax/          # lexer, AST, parser and formatter
+│   │   ├── nuclear-dialect/         # template engine, contract, dialect loading and validation
+│   │   ├── nuclear-transpile/       # resolver + dialect-driven emitter; projects (project.rs); API for the tools
+│   │   └── nuclear-lsp/             # the language server
+│   ├── dialects/<language>/         # typescript, dart, python, nodejs: dialect files, frameworks/, defs/, docs/
+│   ├── examples/                    # each .nuc with its expected output; projects/, stdlib/
+│   ├── tools/                       # reference checks, type-definition generators
+│   └── docs/                        # the language's documents: 07-reference (the rules), 08-guides (this guide)
+├── nuclear-synapsis-framework/      # Synapsis, the framework, and its platforms (mobile, backend, web)
+├── tools/cli/                       # the `nuclear` command (crate nuclear-cli; the framework's commands in framework/)
+├── tools/code_generator/            # what `nuclear make` and `nuclear gen` write (crate nuclear-codegen)
+├── tools/mcp/                       # the MCP server (`nuclear-mcp`)
+├── device-emulators/                # the devices (crate nuclear-devices)
+├── extensions/                      # VS Code, JetBrains, Zed, and the editors' tools
+├── nuclear-graph-storage/           # the Smart Graph; nuclear-agents/: the local agents
+├── installer/                       # install.sh and the release: installs nuclear and nuclear-lsp in ~/.local
+└── website/                         # the documentation site
 ```
 
 | Crate | Input → output |

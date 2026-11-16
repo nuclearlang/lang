@@ -4,22 +4,22 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [overview.md, ../01-product/roadmap.md, ../../../../vscode/docs/02-architecture/debugging.md]
 ---
-# The web device (`webDevice.ts`, `webSession.ts`, `cdp.ts`)
+# The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`)
 
-A web app of the web platform shown in the editor, beside its code, the way the Dragonfly device shows a mobile
+A web app of the web platform shown in the editor, beside its code, the way the Synapsis device shows a mobile
 app (ADR-extensions-0002). One panel per project. Only its engine ran; the panel was never opened in a running
 VS Code ([roadmap](../01-product/roadmap.md)).
 
 Commands: `nuclear.webDevice.{open,debug,reload}`: ▭ Device, ◉ Debug and ↻ Reload of a web project.
 
-## The engine (`webSession.ts`)
+## The engine (`web-session.ts`)
 
 No `vscode` import. It:
 
 - runs the app's dev server: `build/app/node_modules/.bin/vite`, on a free port of `127.0.0.1`;
 - starts a headless Chromium with a profile of its own. `browserExecutable()` looks for `CHROME_EXECUTABLE`,
   Chrome, Chromium, Brave, Edge, Vivaldi;
-- drives the page over CDP (`cdp.ts`, shared with `device.ts`):
+- drives the page over CDP (`cdp.ts`, shared with `mobile-device.ts`):
   - `Emulation.setDeviceMetricsOverride`, touch and user agent per `WEB_PRESETS` (desktop, laptops, tablets,
     phones);
   - `setEmulatedMedia` (`prefers-color-scheme`);
@@ -29,7 +29,7 @@ No `vscode` import. It:
   - history, `captureScreenshot`, the url of the DevTools frontend;
 - reports `Runtime.consoleAPICalled`, `exceptionThrown`, `Log.entryAdded` and the `Network.*` events.
 
-## The panel (`webDevice.ts`)
+## The panel (`web-device.ts`)
 
 - The address bar: back, forward, reload (Shift: without cache), the app's address, the page in the user's browser,
   Chrome's DevTools of the page.
@@ -47,4 +47,4 @@ No `vscode` import. It:
 
 ## Trying it without VS Code
 
-Bundle a script that imports `webSession.ts` with esbuild and run it with node against a built app.
+Bundle a script that imports `web-session.ts` with esbuild and run it with node against a built app.

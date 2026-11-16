@@ -1,9 +1,10 @@
 # VS Code extension
 
-The NuclearLang extension for VS Code (`nuclearlang`, 0.50.0): the client of the language server, semantic
-highlighting, code metrics, the Nuclear workspace, run and debug of Dragonfly projects of every platform, the tools
-(the Loop, Nuclear HTTP, the chat, the devices) and the Chernobyl themes. Its `theme/` also generates the themes and
-icons of the JetBrains and Zed extensions. What the three extensions share: [`../AGENTS.md`](../AGENTS.md).
+The NuclearLang extension for VS Code (`nuclearlang`, 0.51.0): the client of the language server, semantic
+highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the
+Chernobyl themes, and it bundles the tools (Nuclear Builder, Nuclear Connector, the chat, the devices), whose code is
+in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What
+the three extensions share: [`../AGENTS.md`](../AGENTS.md).
 
 ## Stack
 - TypeScript 5.5, bundled with esbuild (CommonJS, node 18); `vscode-languageclient` 9; VS Code 1.90 or newer
@@ -14,10 +15,10 @@ icons of the JetBrains and Zed extensions. What the three extensions share: [`..
 ## Commands
 ```sh
 npm install
-npm run compile     # tsc --noEmit, then out/extension.js and out/nuclear-loop.js
+npm run compile     # tsc --noEmit, then out/extension.js and out/nuclear-builder.js
 npm run watch       # out/extension.js on every change
-npm test            # test/loop.test.ts and test/setup.test.ts with node:test
-npm run loop        # only out/nuclear-loop.js (the nuclear-loop command)
+npm test            # test/setup.test.ts and ../tools/nuclear-builder/test/engine.test.ts with node:test
+npm run builder     # only out/nuclear-builder.js (the nuclear-builder command)
 npm run theme       # the themes and icons, also of ../jetbrains and ../zed
 npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)
 npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix
@@ -27,8 +28,9 @@ code --install-extension nuclearlang-<version>.vsix
 To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → **Chernobyl**.
 
 ## Folders
-- `src/`: the extension ([the map of its files](docs/02-architecture/overview.md))
-- `test/`: `loop.test.ts`, `setup.test.ts`
+- `src/`: the extension ([the map of its files](docs/02-architecture/overview.md)); `tsconfig.json` also compiles
+  `../tools/*/src` and `../tools/*/test`, which esbuild bundles from `src/extension.ts`
+- `test/`: `setup.test.ts`
 - `theme/`: `palette.json` and the generators (`build.mjs`, `icons.mjs`, `vendor-atom-icons.mjs`); `theme/README.md`
   has the color tables
 - `scripts/`: `bundle-server.mjs` (`npm run server`), `codemetrics-settings.mjs`
@@ -41,10 +43,10 @@ To develop: open this folder in VS Code and press F5; then *Preferences: Color T
 ## Rules
 - Never edit what is generated: `themes/`, `icon-themes/`, `icons/`, `syntaxes/nuclear-example.tmLanguage.json`,
   `server/`, `out/`, and the `nuclear.codemetrics.*` settings of `package.json`.
-- The engines have no `vscode` import, so a node script, `nuclear-loop` and the tests drive them: `loopEngine.ts`,
-  `loopSafety.ts`, `loopCli.ts`, `aiSetup.ts`, `chat.ts`, `cdp.ts`, `webSession.ts`. Keep it so.
-- A page is only a view. A Loop run or a chat job belongs to the extension (module-level), so closing its page or
-  switching tools leaves the work running.
+- The engines have no `vscode` import, so a node script, `nuclear-builder` and the tests drive them: `aiSetup.ts`
+  here, and the tools' `engine.ts`, `safety.ts`, `cli.ts`, `chat.ts`, `cdp.ts`, `web-session.ts`. Keep it so.
+- A page is only a view. A Nuclear Builder run or a chat job belongs to the extension (module-level), so closing
+  its page or switching tools leaves the work running.
 - An installer runs in a terminal the user sees, never hidden.
 - A tool is documented in `../tools/<tool>/`, not here.
 - After a change, release: [`../docs/06-runbooks/release.md`](../docs/06-runbooks/release.md). The user must quit
@@ -54,12 +56,12 @@ To develop: open this folder in VS Code and press F5; then *Preferences: Color T
 | You need… | Read |
 |---|---|
 | Which file of `src/` does what, and what `package.json` contributes | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
-| The client, the status bar, run / save / repair of a Dragonfly project | [docs/02-architecture/client.md](docs/02-architecture/client.md) |
+| The client, the status bar, run / save / repair of a Synapsis project | [docs/02-architecture/client.md](docs/02-architecture/client.md) |
 | Debugging a `.nuc`: mirrors, the paused line, mixed stepping | [docs/02-architecture/debugging.md](docs/02-architecture/debugging.md) |
 | The Nuclear workspace: the strip, the tabs, the actions, the file tree | [docs/02-architecture/workspace.md](docs/02-architecture/workspace.md) |
 | The set-up wizard, the settings page, the checked connections, the notifications | [docs/02-architecture/ai-services.md](docs/02-architecture/ai-services.md) |
 | Colors, the Chernobyl themes, the icons, how to test a theme | [docs/02-architecture/theme.md](docs/02-architecture/theme.md) |
 | What the tests cover and how to try something without the editor | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
 | The pending work of this extension | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
-| The Loop, Nuclear HTTP, the chat, the devices | [`../tools/`](../AGENTS.md) |
+| Nuclear Builder, Nuclear Connector, the chat, the devices | [`../tools/`](../AGENTS.md) |
 | Why the workspace is as it is | [ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md) |

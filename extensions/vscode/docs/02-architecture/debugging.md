@@ -13,7 +13,7 @@ debug session of each dialect (ADR-lang-0011, ADR-lang-0011). Never tried with a
 ## The line map
 
 - `<app>/.nuclear/lines.json`: written by every `nuclear build` of a project.
-- `build/app/.dart_tool/nuclear_lines.json`: written by `dragonfly build` of a mobile app; for each generated
+- `build/app/.dart_tool/nuclear_lines.json`: written by `nuclear build` of a mobile app; for each generated
   `.dart`, its `.nuc` and the pairs (dart line, nuc line).
 
 `toDart` / `toNuc` translate a place; `built()` reads the map again after each build.
@@ -30,8 +30,8 @@ errors are Dart-only.
   in `workspaceState`, to delete the ones VS Code restores).
 - **The paused line**: `stopped` → `stackTrace` → the `.nuc` line highlighted (`showPaused`, in the editor group to
   the left of the paused generated file).
-- **Errors (Dart)**: an exception, or an error block in the `output`, → `dragonfly explain --json` → a diagnostic
-  `dragonfly-runtime` at the `.nuc` line (Problems panel) and the webview *Nuclear: runtime error*, with the Nuclear
+- **Errors (Dart)**: an exception, or an error block in the `output`, → `nuclear explain --json` → a diagnostic
+  `synapsis-runtime` at the `.nuc` line (Problems panel) and the webview *Nuclear: runtime error*, with the Nuclear
   call stack and the original Dart error.
 - **Mixed debugging**: `nucStep` for F10 / F11 / Shift+F11 when `nuclear.pausedInNuc && (editorLangId == nuclear ||
   nuclear.nucStepping)`: it repeats `next` / `stepIn` while the `.nuc` line and the stack depth do not change (at

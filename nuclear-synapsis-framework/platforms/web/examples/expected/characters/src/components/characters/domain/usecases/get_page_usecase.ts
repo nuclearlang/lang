@@ -2,7 +2,7 @@ import { CharacterRepository } from '../../data/character_repository';
 import { Character } from '../models/character';
 import { CharacterError } from '../models/character_error';
 import { CharacterNames } from '../services/character_names';
-import { Err, Guards, Log, Ok, Result } from 'dragonfly-web';
+import { Err, Guards, Log, Ok, Result } from 'synapsis-web';
 
 export class GetPageUseCase {
   constructor(

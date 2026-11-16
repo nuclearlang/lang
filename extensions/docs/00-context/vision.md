@@ -14,7 +14,7 @@ feature in one place, so working on a backend and its apps does not need several
 ## Users
 - A developer who writes Nuclear by hand: live diagnostics, completion, hover, go to definition, the generated code
   beside the `.nuc`, run and debug of a project of any platform.
-- A developer who works with agents: the Loop, the chat and their settings, on the developer's machine.
+- A developer who works with agents: Nuclear Builder, the chat and their settings, on the developer's machine.
 
 ## What each editor has
 
@@ -25,11 +25,11 @@ feature in one place, so working on a backend and its apps does not need several
 | Chernobyl themes and icons | yes | yes | yes |
 | Code metrics | code lens and colors | code lens and markers | the list, as a message |
 | The Nuclear workspace (projects and tools as tabs) | yes | tool windows with shortcuts | no (Zed has no views nor keybindings for extensions) |
-| Run, hot reload on save, repair of a Dragonfly project | yes | yes (the Flutter plugin runs the app) | tasks and ▷ runnables |
+| Run, hot reload on save, repair of a Synapsis project | yes | yes (the Flutter plugin runs the app) | tasks and ▷ runnables |
 | Debugging a `.nuc` | every platform, with mixed stepping | breakpoints, the paused line, error explanations | no |
-| The devices inside the editor | the Dragonfly device and the web device | no | no |
-| Nuclear HTTP | yes | yes | no |
-| The Loop | yes | yes, through `nuclear-loop` | no |
+| The devices inside the editor | the Synapsis device and the web device | no | no |
+| Nuclear Connector | yes | yes | no |
+| Nuclear Builder | yes | yes, through `nuclear-builder` | no |
 | The chat, the settings page, the notifications | yes | no | no |
 
 ## What it does not do
@@ -37,5 +37,5 @@ feature in one place, so working on a backend and its apps does not need several
   `nuclearlang/crates/nuclear-lsp`.
 - It does not describe a dialect: the kinds, the documentation of each word and where a project's output goes come
   from the dialect and from the project card the server writes.
-- No Loop for Zed (decided by the user).
+- No Nuclear Builder for Zed (decided by the user).
 - Zed does not allow the device, `.nuc` debugging nor build on save.

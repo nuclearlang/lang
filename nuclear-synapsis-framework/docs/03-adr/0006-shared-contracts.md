@@ -13,7 +13,7 @@ turns transcribing. Backend and app stay two projects, deployed apart and talkin
 the description of the API traveling from one to the other, the way OpenAPI, `.proto` files or tRPC do it.
 
 ## Decision
-1. **Every project writes its contract.** `nuclear build`, `nuclear check`, `dragonfly build` and the editors (the
+1. **Every project writes its contract.** `nuclear build`, `nuclear check`, `nuclear build` and the editors (the
    same call that writes the project card, `project::write_metadata`) write `.nuclear/contract.json`: the models
    (fields, Nuclear types, optionality, defaults, JSON names, validation rules, the key field, doc comments) and,
    for a backend, the controllers with their routes (verb, path, parameters with where they go, body, answer,

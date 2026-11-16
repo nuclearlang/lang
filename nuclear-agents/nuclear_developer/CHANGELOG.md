@@ -18,7 +18,7 @@
   language; the diagnoser gets the cards of the codes in a log and the closest known failures. `defs/` regenerated for
   the new client (`search(shelves, platform, kind, type, agents, expand, kinds)`, `card(id)`).
 - The coder holds its answer to the task's own words (quoted texts, decorators, calls, status codes; prompt
-  `agents/faithful.md`) and, given the project's folder (`root` in a request; the Loop and the chat send it), reads by
+  `agents/faithful.md`) and, given the project's folder (`root` in a request; the Builder and the chat send it), reads by
   itself the files that declare the names of its task (`nuclear_graph.workspace.Workspace`, read-only).
 - The planner reads how people write each kind from the graph ("application component" is `appcomponent`), answers the
   plan also as a tree (parts, tasks, pieces) and says what of the spec is beyond the platform or the local agents
@@ -59,6 +59,6 @@
   planner's). `eval/run.py chat` asks the `says` questions of the catalogue. `defs/` regenerated for
   `nuclear_graph` 0.2.0 (the graph is written in Nuclear).
 - `POST /developer/accept` (the acceptor, prompt `agents/accept.md`): each acceptance criterion of a spec held
-  against what a run left (met or not, with the evidence), for the Loop's last step; it informs, it never gates.
+  against what a run left (met or not, with the evidence), for the Builder's last step; it informs, it never gates.
 - The planner keeps every piece a spec in plain words needs: only the test rows are left to the tester (it had kept
   one piece of ten for "implements list character feature").

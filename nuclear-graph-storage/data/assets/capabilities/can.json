@@ -1,7 +1,7 @@
 {
  "shelf": "capabilities",
  "origin": "curated",
- "about": "What NuclearLang, Dragonfly and their tools can do today, by area. Each row names the kinds and commands that do it.",
+ "about": "What NuclearLang, Synapsis and their tools can do today, by area. Each row names the kinds and commands that do it.",
  "rows": [
   {
    "id": "can:backend-api",
@@ -62,7 +62,7 @@
     "- Relations: `@manyToOne` (with its column `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn`; loaded with `relations(\"tasks\")`.",
     "- `repository`: `find`, `findAll`, `save`, `remove` come with it; a method's lines build one query: `where({...})` with `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`; `orderBy`, `limit`, `offset`; then `getOne()`, `getMany()`, `paginate(page, size)`, `count()`, `exists()`, `update({...})`, `delete()`.",
     "- `@transactional` on a use case's `exec`: one transaction; an `Err` rolls it back.",
-    "- Migrations: `dragonfly migrate make \"<message>\"`, `dragonfly migrate`, `dragonfly migrate down`.",
+    "- Migrations: `nuclear migrate make \"<message>\"`, `nuclear migrate`, `nuclear migrate down`.",
     "- Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`. Tests run on an in-memory database.",
     "",
     "Checked on SQLite; the other databases were not run against a real server yet."
@@ -96,7 +96,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.migrate"
+     "to": "tool:nuclear.migrate"
     },
     {
      "rel": "playbook",
@@ -133,7 +133,7 @@
     "- The connection is `Http(baseUrl = \"https://...\")` in `appConfig`.",
     "- A JSON key that is not the field's name gets `@key(\"air_date\")` on the model's field.",
     "- On mobile and web, `cache`, `ttl` and `retry` are options of the request; on mobile, `saveLocal = true` keeps the answers in the device's database.",
-    "- `dragonfly gen resource ... --from-json <url>` writes the whole resource from the API's own answer."
+    "- `nuclear gen resource ... --from-json <url>` writes the whole resource from the API's own answer."
    ],
    "keys": [
     "http client",
@@ -242,14 +242,14 @@
    "body": [
     "- Views: `stateless` and `stateful` with the UI toolkit's classes; `@screen(route, providers, acl, transition)`; navigation by screen (`context.goTo`, `pushTo`, `goBack`).",
     "- State: `statemanager` + state model, `<State>Builder` in the view.",
-    "- Forms: a form model with rules, a `formmanager`, `DragonflyForm` in the view.",
+    "- Forms: a form model with rules, a `formmanager`, `SynapsisForm` in the view.",
     "- Texts: `\"component.screen.key\".tr()` from `assets/i18n/<locale>/<component>.json`.",
     "- Session and access: `SessionManager`, `guard`, `@acl(roles = [...])`, `@screen(acl = {...})`.",
     "- Events: `event`, `Events.publish`, `@on(Event)`.",
     "- Data: HTTP repositories (`cache`, `ttl`, `retry`), and a local database: `@primary` on a model gives it an encrypted table, `saveLocal = true` keeps what a GET answers.",
     "- AI (plugin `genkit`): `tools`, `chat`, `flow`, `remote`, `knowledge`.",
     "- Tests: `@mock`, `@test`, `@states`, `@widget`, integration tests.",
-    "- Run and debug: `dragonfly run`, `dragonfly device` (a test device in its own window), breakpoints on `.nuc` lines in VS Code."
+    "- Run and debug: `nuclear run`, `nuclear device` (a test device in its own window), breakpoints on `.nuc` lines in VS Code."
    ],
    "keys": [
     "mobile app",
@@ -282,7 +282,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.device"
+     "to": "tool:nuclear.device"
     },
     {
      "rel": "playbook",
@@ -312,7 +312,7 @@
     "- `statemanager` + state model, `<State>Builder` with one callback per state.",
     "- `repository` over HTTP (`cache`, `ttl`, `retry`), `usecase`, `appcomponent`, `service`, `event`, `guard`.",
     "- Tests: `@mock`, `@test`, `@states`, `@widget` with `renderScreen`.",
-    "- `dragonfly new <name> -p web`, `dragonfly build | install | run | test`.",
+    "- `nuclear new <name> -p web`, `nuclear build | install | run | test`.",
     "",
     "The NuclearLang website is written with it."
    ],
@@ -361,15 +361,15 @@
    "id": "can:generate-code",
    "type": "can",
    "title": "Can: generate the finished code of a resource from its data",
-   "summary": "`dragonfly gen resource` writes, on any platform, the models, the repository, a use case per action, the facade, the controller or the screen and the tests of a resource, all compiling; the fields come from a list, from an example answer of an API (a file or a URL) or from a spec.",
+   "summary": "`nuclear gen resource` writes, on any platform, the models, the repository, a use case per action, the facade, the controller or the screen and the tests of a resource, all compiling; the fields come from a list, from an example answer of an API (a file or a URL) or from a spec.",
    "body": [
     "- `--fields \"id:int name:string origin:Origin?\"`, `--from-json <file|url>` (nested objects become models, a list under `results` a page, `null` an optional field) or `--from-spec <spec.md>` (its example answer, its `Key | Type` table, its `GET <url>` line).",
     "- `--source rest[:<base url>]` (an API) or `--source db` (an entity and its queries, backend only).",
     "- `--actions list,get,search,create,update,delete`; `--screen <screen>` on mobile and web; `--dry-run` shows the files.",
     "- It refuses, before writing, a field type nobody declared, a name another file declares and a source the platform has no pieces for. Nothing is overwritten.",
-    "- `dragonfly gen usecase <component> <Name>` wires a use case the project declares: its alias in the facade and, on the backend, `--route \"POST orders/{id}/cancel\"` adds its route to the controller of `orders` (made when missing). With `--calls <Repository>.<method>` it also writes the use case, when all it does is call that method.",
-    "- `dragonfly make <kind> <component> <Name>` writes the smallest file of any kind of the platform.",
-    "- The same generators are MCP tools and the first stage of the Loop."
+    "- `nuclear gen usecase <component> <Name>` wires a use case the project declares: its alias in the facade and, on the backend, `--route \"POST orders/{id}/cancel\"` adds its route to the controller of `orders` (made when missing). With `--calls <Repository>.<method>` it also writes the use case, when all it does is call that method.",
+    "- `nuclear make <kind> <component> <Name>` writes the smallest file of any kind of the platform.",
+    "- The same generators are MCP tools and the first stage of the Builder."
    ],
    "keys": [
     "generate code",
@@ -380,7 +380,7 @@
    "asks": [
     "can nuclear generate a crud",
     "can it create code from a json",
-    "what can dragonfly gen write"
+    "what can nuclear gen write"
    ],
    "links": [
     {
@@ -389,7 +389,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.gen.resource"
+     "to": "tool:nuclear.gen.resource"
     },
     {
      "rel": "mcp",
@@ -415,10 +415,10 @@
    "summary": "A backend written once builds as FastAPI (Python) or as NestJS (TypeScript): change `dialect` in `config.nuc` and build. No other file changes, because kinds, decorators, the library and the tests belong to the platform.",
    "body": [
     "```nuclear",
-    "dragonfly(platform = \"backend\", dialect = \"nestjs\")   // was \"fastapi\"",
+    "synapsis(platform = \"backend\", dialect = \"nestjs\")   // was \"fastapi\"",
     "```",
     "",
-    "Then `dragonfly build && dragonfly install && dragonfly test`. The example `tasks_api` is built and tested with both.",
+    "Then `nuclear build && nuclear install && nuclear test`. The example `tasks_api` is built and tested with both.",
     "",
     "The exception: code that uses a library of one target through its type definitions is tied to that target's dialect. Mobile and web have one dialect each today."
    ],
@@ -484,14 +484,14 @@
    "id": "can:check-fix-format",
    "type": "can",
    "title": "Can: check a project, apply the exact fixes and format it",
-   "summary": "`nuclear check` reports every error of a file or a project with its code, place and fix (JSON for agents); `nuclear fix` applies the exact fixes; `nuclear fmt` rewrites the layout; `dragonfly explain` tells a run-time error or a failing test at its `.nuc` lines.",
+   "summary": "`nuclear check` reports every error of a file or a project with its code, place and fix (JSON for agents); `nuclear fix` applies the exact fixes; `nuclear fmt` rewrites the layout; `nuclear explain` tells a run-time error or a failing test at its `.nuc` lines.",
    "body": [
     "- `nuclear check . --json`: syntax, names, results, the library, the kinds' rules and the project's architecture, all at once. It also writes the project map (`.nuclear/map.md`).",
     "- `nuclear fix <folder|file>`: applies every exact fix, then reports what is left.",
     "- `nuclear fmt <file|folder> [--check]`: spacing, indentation and blank lines; it never reorders.",
-    "- `dragonfly explain`: reads a stack or a test's output and answers the message, a hint and the `.nuc` lines.",
-    "- `dragonfly repair` (mobile): rebuilds from scratch until the target's analyzer finds no errors.",
-    "- `dragonfly doctor`: what the machine lacks."
+    "- `nuclear explain`: reads a stack or a test's output and answers the message, a hint and the `.nuc` lines.",
+    "- `nuclear repair` (mobile): rebuilds from scratch until the target's analyzer finds no errors.",
+    "- `nuclear doctor`: what the machine lacks."
    ],
    "keys": [
     "lint",
@@ -520,7 +520,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.explain"
+     "to": "tool:nuclear.explain"
     },
     {
      "rel": "playbook",
@@ -536,13 +536,13 @@
    "id": "can:ai-workflow",
    "type": "can",
    "title": "Can: take a spec to tested code with AI agents, on your machine or under a frontier model",
-   "summary": "The Loop runs a spec through generate, plan, tests first, code, verification, security, artifacts and deploy with the local agents; any MCP client (Claude Code, Codex, Cursor) can lead it; every run is documented, retried from where it failed and exportable as CI.",
+   "summary": "The Builder runs a spec through generate, plan, tests first, code, verification, security, artifacts and deploy with the local agents; any MCP client (Claude Code, Codex, Cursor) can lead it; every run is documented, retried from where it failed and exportable as CI.",
    "body": [
-    "- Local only: `nuclear-loop run specs/<id>/spec.md --lead local`, or `/task` in the chat.",
+    "- Local only: `nuclear-builder run specs/<id>/spec.md --lead local`, or `/task` in the chat.",
     "- Under a lead: `--lead claude`, or the MCP tools `developer_task`, `developer_retry`, `developer_review`.",
     "- Specs imported from Jira or a GitHub issue (VS Code).",
     "- The internet for facts: `web_search`, `web_read`, `api_inspect` (MCP tools).",
-    "- CI: `nuclear-loop export github|gitlab|bitbucket`; `nuclear-loop ci` runs the same commands locally.",
+    "- CI: `nuclear-builder export github|gitlab|bitbucket`; `nuclear-builder ci` runs the same commands locally.",
     "- A chat about the project with the local assistant (VS Code)."
    ],
    "keys": [
@@ -583,8 +583,8 @@
    "title": "Can: add your own kinds, definitions and dialects without touching the compiler",
    "summary": "A project or the community adds a kind as a package (`kinds/<name>/` with TOML, templates and a runtime), brings type definitions of a library in `<project>/defs/`, and a new target is a new dialect: all data, never Rust.",
    "body": [
-    "- `nuclear kind new <name> -p <platform> -d <dialect>` writes a kind package's skeleton; `dragonfly add <folder>` installs it. A package implemented for some dialects ties the project to them (`N0306`).",
-    "- `dragonfly add <package>` adds any package of the target with its type definitions (`can:packages`).",
+    "- `nuclear kind new <name> -p <platform> -d <dialect>` writes a kind package's skeleton; `nuclear add <folder>` installs it. A package implemented for some dialects ties the project to them (`N0306`).",
+    "- `nuclear add <package>` adds any package of the target with its type definitions (`can:packages`).",
     "- `nuclear dialect check <name|path>` validates a dialect's files."
    ],
    "keys": [
@@ -627,10 +627,10 @@
    "id": "can:packages",
    "type": "can",
    "title": "Can: use any library of the target (npm, PyPI, pub.dev) through Nuclear",
-   "summary": "`dragonfly add <package>` installs any package of the project's dialect with that technology's package manager, writes it in `config.nuc` and generates its type definitions: its names are then known to the compiler and the editor, and imported where they are used.",
+   "summary": "`nuclear add <package>` installs any package of the project's dialect with that technology's package manager, writes it in `config.nuc` and generates its type definitions: its names are then known to the compiler and the editor, and imported where they are used.",
    "body": [
-    "- `dragonfly add lodash` (nestjs, react: npm), `dragonfly add humanize` (fastapi: pip), `dragonfly add cached_network_image` (flutter: pub). A version: `dragonfly add lodash@4.17.21`. Out again: `dragonfly remove lodash`.",
-    "- The package goes to `dependencies(...)` of `config.nuc`: `lodash = \"^4.18.1\"`, or `\"date-fns@^4.4.0\"` when the name is not an identifier. A package written there by hand gets its definitions with `dragonfly install`.",
+    "- `nuclear add lodash` (nestjs, react: npm), `nuclear add humanize` (fastapi: pip), `nuclear add cached_network_image` (flutter: pub). A version: `nuclear add lodash@4.17.21`. Out again: `nuclear remove lodash`.",
+    "- The package goes to `dependencies(...)` of `config.nuc`: `lodash = \"^4.18.1\"`, or `\"date-fns@^4.4.0\"` when the name is not an identifier. A package written there by hand gets its definitions with `nuclear install`.",
     "- A backend or web project keeps the definitions in its `defs/` folder, with the sources; a mobile app in the shared cache (`build/defs.lock`).",
     "- Then the names are used directly, without `use`: `nanoid(8)` writes `import { nanoid } from 'nanoid'`, `slugify(title)` writes `from slugify import slugify`. A package's default export is one name: `dayjs()`, `lodash.chunk(list, 2)`.",
     "- Look a name up inside the project: `nuclear defs search <text> --dialect <d>`, `nuclear defs show <Name> --dialect <d>`.",
@@ -647,7 +647,7 @@
     "pypi",
     "pub.dev",
     "install a library",
-    "dragonfly add",
+    "nuclear add",
     "type definitions"
    ],
    "asks": [
@@ -660,7 +660,7 @@
    "links": [
     {
      "rel": "command",
-     "to": "tool:dragonfly.add"
+     "to": "tool:nuclear.add"
     },
     {
      "rel": "missing-is",

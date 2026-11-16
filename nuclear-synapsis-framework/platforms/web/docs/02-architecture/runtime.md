@@ -4,20 +4,20 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [overview.md, dependencies.md, ../06-runbooks/change-the-runtime.md]
 ---
-# The runtime: `dragonfly-web`
+# The runtime: `synapsis-web`
 
-`packages/dragonfly-web` (npm `dragonfly-web`, ES modules): what the code of the `react` dialect imports. Sources in
+`packages/synapsis-web` (npm `synapsis-web`, ES modules): what the code of the `react` dialect imports. Sources in
 `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfig.json`).
 
 ## Entry points and modules
 
 | Import | Module | Holds |
 |---|---|---|
-| `dragonfly-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `dragonfly-nest` exports |
+| `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |
 | | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |
 | | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |
 | | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, the `Http` connection and `HttpInterceptor` |
-| | `app` | `Dragonfly`: the entry point (the connections, the global services, the injector) |
+| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector) |
 | | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |
 | | `state` | `StateManager` |
 | | `react` | `View`, `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, the hooks `useManager`, `useStateOf`, `useManagerState`, the type `Element` |
@@ -26,7 +26,7 @@ related: [overview.md, dependencies.md, ../06-runbooks/change-the-runtime.md]
 | | `session` | `SessionManager`, `SessionStarted`, `SessionEnded`, `Acl`, `Guard`, `Guards`, `NetworkManager` |
 | | `router` | `buildRouter`, `goTo`, `pushTo`, `goBack`, `pathTo`, `RouterProvider` |
 | | `log` | `Log` |
-| `dragonfly-web/testing` | `testing` | `DragonflyTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |
+| `synapsis-web/testing` | `testing` | `SynapsisTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |
 
 The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`,
 `useMemo`, `useRef`, `useCallback`).
@@ -55,7 +55,7 @@ The base entry also re-exports what a view needs from React (`createElement`, `F
   `Guards.verify` is asynchronous.
 - **Logs.** `Log` writes with the place it is called from; the transpiler passes it (component › kind ›
   Class.method · file:line).
-- **Tests.** `DragonflyTest` starts the app with its real config and replaces `fetch` by canned answers; any
+- **Tests.** `SynapsisTest` starts the app with its real config and replaces `fetch` by canned answers; any
   registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;
   `statesOf` collects the states a manager emits.
 
@@ -71,6 +71,6 @@ new code). The dialect's `[toolchain] install` does both.
 - `test/runtime.test.ts`: 7 vitest tests (repository, cache, mocks, states, views, events), in jsdom
   (`vitest.config.ts`). The check runs them ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
-  `nuclearlang/dialects/typescript/defs/dragonfly-web/<version>/` (modules `dragonfly-web`,
-  `dragonfly-web/testing`): regenerated after a change of the public API
+  `nuclearlang/dialects/typescript/defs/synapsis-web/<version>/` (modules `synapsis-web`,
+  `synapsis-web/testing`): regenerated after a change of the public API
   ([runbook](../06-runbooks/change-the-runtime.md)).

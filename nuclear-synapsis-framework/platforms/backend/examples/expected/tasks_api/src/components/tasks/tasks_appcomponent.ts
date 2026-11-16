@@ -11,7 +11,7 @@ import { ListTasks } from './domain/usecases/list_tasks.js';
 import { PageTasks } from './domain/usecases/page_tasks.js';
 import { UpdateTask } from './domain/usecases/update_task.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Page, Result } from 'dragonfly-nest';
+import { AppError, Page, Result } from 'synapsis-nest';
 
 /** What the rest of the app (the API and the assistant) sees of tasks. */
 @Injectable()

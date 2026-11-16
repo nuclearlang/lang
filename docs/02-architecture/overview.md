@@ -13,7 +13,9 @@ How the projects fit together. What is inside each is in that project's `docs/02
 ```
  editors      extensions/{vscode,jetbrains,zed}  +  extensions/tools/<tool>
                     │ LSP protocol                      │ run
- tools        nuclearlang/crates/nuclear-lsp      tools/cli   tools/mcp   device-emulators
+ tools        nuclearlang/crates/nuclear-lsp      tools/cli: `nuclear`         tools/mcp: `nuclear-mcp`
+                    │                             ├ tools/code_generator (nuclear-codegen)
+                    │                             └ device-emulators (nuclear-devices)
                     │ Rust API (crates)                 │
  compiler     nuclearlang/crates: nuclear-syntax → nuclear-transpile ← nuclear-dialect, nuclear-diag
                     │ data: TOML, templates, type definitions
@@ -21,7 +23,7 @@ How the projects fit together. What is inside each is in that project's `docs/02
                     │ implement
  framework    nuclear-synapsis-framework/platforms/<platform>/: the contract, the runtime packages
  AI           nuclear-graph-storage (what every agent reads)  ←  nuclear-agents/nuclear_developer
- delivery     installer/
+ delivery     installer/, website/ (the documentation site)
 ```
 
 ## From `.nuc` to the target
@@ -52,12 +54,16 @@ Each stage knows only the one before. Diagnostics accumulate in all of them and 
 ## Borders that hold
 
 - An extension talks to the language server only through the LSP protocol and its documented `nuclear/*` requests.
-- The command line tool uses the compiler crates as a library; what it needs from a platform comes from the
+- One command line tool, `nuclear`: the compiler's commands and the framework's. It uses the compiler crates, the
+  code generator and the devices as libraries; what it needs from a platform comes from the
   dialect's data (`[toolchain]`), never from a name written in Rust.
 - A framework dialect lives with its language; the platform it implements lives with the framework. Neither
   describes the other.
 - The local agents reach the graph and the compiler only through the graph's client and the tools it gives them.
-- The website (a repository of its own) copies its content from the documents of this tree at build time.
+- The MCP server is a Nuclear project of its own (`python` dialect); it reaches the graph through the graph's
+  package and runs `nuclear` for a project's commands.
+- The website (`website/`) reads the reference and the guides of every project at build time; no page is written
+  in it.
 
 ## Qualities and how they are reached
 

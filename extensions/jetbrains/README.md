@@ -4,16 +4,16 @@ The NuclearLang plugin for JetBrains IDEs: the language server (`nuclear-lsp`, f
 
 ```sh
 cd extensions/jetbrains       # beside extensions/vscode, inside the NuclearLang tree
-IDE_HOME=/opt/android-studio ./build.sh     # → build/nuclearlang-0.37.0.zip
+IDE_HOME=/opt/android-studio ./build.sh     # → build/nuclearlang-<version>.zip
 ```
 
 Install: *Settings → Plugins → ⚙ → Install Plugin from Disk…* → the zip. Then: *Settings → Appearance → Theme* →
 **Chernobyl** (it includes the editor's color scheme). Settings in *Settings → Tools → NuclearLang* (dialect and
 server path).
 
-A Dragonfly project: *File → Open* → the project folder. The first time, the plugin adds the app (`build/app`) as
+A Synapsis project: *File → Open* → the project folder. The first time, the plugin adds the app (`build/app`) as
 a module and offers *Reopen Project*; on reopening, the Flutter plugin gives the device picker, the `main.dart`
-configuration, Run / Debug, hot reload and DevTools. Opening the project runs `dragonfly build`, and **Ctrl+S on a
+configuration, Run / Debug, hot reload and DevTools. Opening the project runs `nuclear build`, and **Ctrl+S on a
 `.nuc`** transpiles and does a *Hot Reload* of the running app.
 
 It uses the platform's native LSP API (`com.intellij.modules.lsp`, present in Android Studio 2026.2) and the

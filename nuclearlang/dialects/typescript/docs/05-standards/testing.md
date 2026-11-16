@@ -31,7 +31,7 @@ node nuclearlang/tools/node/node_modules/typescript/bin/tsc --strict --noEmit --
 
 ## The `nestjs` check, step by step
 
-1. compiles the runtime `packages/dragonfly-nest` of the backend platform and copies it fresh into
+1. compiles the runtime `packages/synapsis-nest` of the backend platform and copies it fresh into
    `nuclearlang/tools/node/node_modules` (`npm install --no-save --install-links`);
 2. builds `examples/examples-backend/tasks_api` and links those `node_modules` into its `build/`;
 3. `tsc -p tsconfig.json` (strict);
@@ -42,7 +42,7 @@ node nuclearlang/tools/node/node_modules/typescript/bin/tsc --strict --noEmit --
 
 ## The `react` check, step by step
 
-1. compiles the runtime `packages/dragonfly-web` of the web platform and copies it fresh into
+1. compiles the runtime `packages/synapsis-web` of the web platform and copies it fresh into
    `nuclearlang/tools/node/node_modules`;
 2. builds `examples/examples-web/characters` and links those `node_modules` into its `build/app`;
 3. `tsc -p tsconfig.json` (strict);
@@ -55,8 +55,8 @@ node nuclearlang/tools/node/node_modules/typescript/bin/tsc --strict --noEmit --
 ```sh
 (cd nuclearlang/tools/node && npm install)
 # each runtime builds with its own devDependencies
-(cd nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest && npm install)
-(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install)
+(cd nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest && npm install)
+(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install)
 ```
 
 - A runtime is installed into `nuclearlang/tools/node` as a copy, never a link: a symlink resolves its peers in

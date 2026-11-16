@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.components.characters.data.repositories.character_repository import CharacterRepository
-from dragonfly.ai import Tools
+from synapsis.ai import Tools
 
 
 class CharacterTools(Tools):

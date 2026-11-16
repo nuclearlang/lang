@@ -21,7 +21,7 @@ time and no stack reading.
 
 Each component has a stable pastel color (xterm-256); its `config` changes it with `logColor`. A thick frame and a
 level badge use the colors of Bootstrap's dark-mode alerts; the breadcrumb and the data use code colors;
-Dragonfly's own logs are purple. Only the exact place of an error blinks.
+Synapsis's own logs are purple. Only the exact place of an error blinks.
 
 Flutter exceptions use their own format: a double red frame, a `✖ EXCEPTION` bar, the stack in columns with the
 app's frames highlighted.

@@ -2,7 +2,7 @@ import { Project } from '../../data/entities/project.js';
 import { ProjectRepository } from '../../data/repositories/project_repository.js';
 import { NewProject } from '../models/task_models.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Ok, Result } from 'dragonfly-nest';
+import { AppError, Ok, Result } from 'synapsis-nest';
 
 @Injectable()
 export class CreateProject {

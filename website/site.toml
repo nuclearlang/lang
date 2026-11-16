@@ -1,0 +1,155 @@
+# The site's data: what tools/content.mjs turns into public/content/site.json and home.json, and the app shows. The
+# pages themselves are the .md of the nuclearlang repositories; nothing of the site is written in its code.
+
+[site]
+title = "NuclearLang"
+lead = "Only the program's logic."
+tagline = "A minimal language, made so agents and people write it fast, transpiled to TypeScript, Dart and Python through declarative dialects. Synapsis is its framework for mobile, backend and web."
+# where the site is published, the organization of its repositories and their branch
+url = "https://nuclearlang.github.io"
+org = "https://github.com/nuclearlang"
+branch = "main"
+footer = "NuclearLang and Synapsis · Apache-2.0 · this site is written in Nuclear (Synapsis web, react)"
+
+[source]
+# the NuclearLang tree this project is a folder of; NUCLEAR_TREE overrides it
+tree = ".."
+
+# the links of the top bar
+[[top]]
+title = "Guide"
+path = "/nuclearlang/docs/08-guides/README"
+
+[[top]]
+title = "Reference"
+path = "/nuclearlang/docs/08-guides/reference"
+
+[[top]]
+title = "Synapsis"
+path = "/nuclear-synapsis-framework/docs/08-guides/README"
+
+[[top]]
+title = "Dialects"
+path = "/nuclearlang/docs/07-reference/dialects"
+
+# the side menu: pages by their path in the tree, without .md; `*` matches any part of a name, in order
+[[sidebar]]
+title = "Start"
+pages = ["nuclear-synapsis-framework/docs/08-guides/README", "nuclear-synapsis-framework/docs/08-guides/tutorial"]
+
+[[sidebar]]
+title = "Language guide"
+pages = ["nuclearlang/docs/08-guides/README", "nuclearlang/docs/08-guides/[0-9][0-9]-*"]
+
+[[sidebar]]
+title = "Reference"
+pages = ["nuclearlang/docs/08-guides/reference", "nuclearlang/docs/07-reference/nuclear-base", "nuclearlang/docs/07-reference/library", "nuclearlang/docs/07-reference/grammar", "nuclearlang/docs/07-reference/reserved-words", "nuclearlang/docs/07-reference/diagnostics", "nuclearlang/docs/07-reference/decisions"]
+
+[[sidebar]]
+title = "Synapsis"
+pages = ["nuclear-synapsis-framework/docs/08-guides/README", "nuclear-synapsis-framework/docs/08-guides/*", "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis"]
+
+[[sidebar]]
+title = "AI"
+pages = ["installer/docs/08-guides/ai-setup", "extensions/tools/nuclear-builder/docs/08-guides/*", "tools/mcp/docs/08-guides/mcp"]
+
+[[sidebar]]
+title = "Platforms and dialects"
+pages = ["nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile", "nuclearlang/dialects/dart/docs/07-reference/flutter", "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend", "nuclearlang/dialects/python/docs/07-reference/fastapi", "nuclearlang/dialects/typescript/docs/07-reference/nestjs", "nuclear-synapsis-framework/platforms/web/docs/07-reference/web", "nuclearlang/dialects/typescript/docs/07-reference/react", "nuclearlang/dialects/typescript/docs/07-reference/typescript", "nuclearlang/dialects/nodejs/docs/07-reference/nodejs", "nuclearlang/dialects/dart/docs/07-reference/dart", "nuclearlang/dialects/python/docs/07-reference/python", "nuclearlang/docs/07-reference/dialects", "nuclearlang/docs/07-reference/definitions", "nuclearlang/docs/07-reference/projects", "nuclearlang/docs/08-guides/create-a-dialect-with-an-agent", "nuclear-synapsis-framework/platforms/*/docs/08-guides/*", "nuclearlang/dialects/*/docs/08-guides/*"]
+
+[[sidebar]]
+title = "Internals"
+pages = ["nuclearlang/docs/08-guides/architecture"]
+
+# the home page
+[[home.actions]]
+title = "Language guide"
+path = "/nuclearlang/docs/08-guides/README"
+primary = true
+
+[[home.actions]]
+title = "Synapsis"
+path = "/nuclear-synapsis-framework/docs/08-guides/README"
+
+[[home.actions]]
+title = "Reference"
+path = "/nuclearlang/docs/08-guides/reference"
+
+[[home.features]]
+title = "Less text, fewer tokens"
+text = "No ;, no braces, no return, no new, no async. What is not logic is written by the transpiler."
+
+[[home.features]]
+title = "One way to do each thing"
+text = "An agent never hesitates between two syntaxes. Errors come out as JSON with a code, a position and the fix."
+
+[[home.features]]
+title = "Declarative dialects"
+text = "TypeScript, Dart, Python, Flutter, FastAPI, NestJS and React. A dialect is TOML and templates; the parser never changes."
+
+[[home.features]]
+title = "Expert code"
+text = "The output runs as fast as an expert's and passes tsc --strict, flutter analyze and pyright --strict."
+
+[[home.features]]
+title = "Three platforms"
+text = "Mobile, backend and web with the same architecture, kinds and errors as values: the Nuclear of a project never changes with its dialect."
+
+[[home.features]]
+title = "AI built in"
+text = "Agents, tools and graphs with LangChain and LangGraph in the backends; Genkit chats, flows and RAG in mobile apps."
+
+[home.sample]
+title = "Nuclear in a few lines"
+note = "An enum, a module with its constructor in the header and a function whose last line is its value. The outputs are made by the real compiler when the site is built."
+# the language dialects the sample is built with
+targets = ["typescript", "dart", "python"]
+code = '''
+Role
+  user
+  admin("administrator")
+
+User(name: string, role: Role = Role.user)
+  visits: int = 0
+
+  isAdmin() boolean
+    role == Role.admin
+
+greet(user: User) string
+  title = if user.isAdmin()
+    'Admin'
+  else
+    'User'
+  '${title} ${user.name}'
+'''
+
+[home.platforms]
+title = "Synapsis: one framework, three platforms"
+
+[[home.platforms.cards]]
+title = "Mobile"
+dialects = "flutter"
+text = "Apps for Android, iOS, desktop and web, with a local database, events, sessions and Genkit AI."
+path = "/nuclear-synapsis-framework/docs/08-guides/tutorial"
+
+[[home.platforms.cards]]
+title = "Backend"
+dialects = "fastapi · nestjs"
+text = "APIs with entities, relations, pagination, transactions, events and AI agents."
+path = "/nuclearlang/dialects/python/docs/08-guides/fastapi"
+
+[[home.platforms.cards]]
+title = "Web"
+dialects = "react"
+text = "The mobile platform in a browser: screens, state managers and repositories. This site is one."
+path = "/nuclearlang/dialects/typescript/docs/08-guides/react"
+
+[home.install]
+title = "Install"
+# {{site}}: the site's url
+lines = [
+  "curl -fsSL {{site}}/install.sh | sh                 # Linux and macOS",
+  "irm {{site}}/install.ps1 | iex                      # Windows (PowerShell)",
+  "nuclear help                                        # documentation topics, also offline",
+  "nuclear spec --dialect flutter                      # the whole spec, for an agent",
+]

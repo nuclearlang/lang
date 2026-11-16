@@ -37,7 +37,7 @@
     "   - never `inject<X>()` a class the task does not name; when only models are declared, build them and check their fields;",
     "   - mobile and web: `@mock([Repository])` on the group and `when(...).thenReturn(Ok(x))`;",
     "   - an agent's model in a test: `FakeModel([\"answer\"])`.",
-    "4. `nuclear check .` (the tests compile with the code); `dragonfly test`.",
+    "4. `nuclear check .` (the tests compile with the code); `nuclear test`.",
     "5. A test that fails because the code is wrong is reported, never deleted or weakened."
    ],
    "keys": [
@@ -63,7 +63,7 @@
     },
     {
      "rel": "tool",
-     "to": "tool:dragonfly.test"
+     "to": "tool:nuclear.test"
     },
     {
      "rel": "pitfall",
@@ -159,15 +159,15 @@
    "id": "playbook:fix-a-failing-test",
    "type": "playbook",
    "title": "Playbook: fix a failing test",
-   "summary": "Run `dragonfly test`, give its output to `dragonfly explain` to get the message and the `.nuc` lines, decide whether the code or the test is wrong, fix that one file and run again. Three rounds at most; then report.",
+   "summary": "Run `nuclear test`, give its output to `nuclear explain` to get the message and the `.nuc` lines, decide whether the code or the test is wrong, fix that one file and run again. Three rounds at most; then report.",
    "body": [
-    "1. `dragonfly test` → the output. `dragonfly explain` (the output on stdin) answers the message, a hint and the `.nuc` lines, never the generated code's.",
+    "1. `nuclear test` → the output. `nuclear explain` (the output on stdin) answers the message, a hint and the `.nuc` lines, never the generated code's.",
     "2. Decide which side is wrong:",
     "   - the test reads a row nobody created → the test (`pitfall:test-reads-an-empty-database`);",
     "   - the test expects what the spec does not say → the test;",
     "   - the code answers something else than the criterion → the code.",
     "3. Fix that one file: the piece the lines name.",
-    "4. `nuclear check .`, `dragonfly test` again.",
+    "4. `nuclear check .`, `nuclear test` again.",
     "5. After three rounds on the same test, stop: report the test, what was tried and why it still fails."
    ],
    "keys": [
@@ -183,11 +183,11 @@
    "links": [
     {
      "rel": "tool",
-     "to": "tool:dragonfly.test"
+     "to": "tool:nuclear.test"
     },
     {
      "rel": "tool",
-     "to": "tool:dragonfly.explain"
+     "to": "tool:nuclear.explain"
     },
     {
      "rel": "failure",
@@ -235,7 +235,7 @@
     },
     {
      "rel": "tool",
-     "to": "tool:dragonfly.explain"
+     "to": "tool:nuclear.explain"
     },
     {
      "rel": "limit",
@@ -256,7 +256,7 @@
    "title": "Playbook: refactor without changing behaviour",
    "summary": "Run the tests first; move or rename in small steps, each one checked by the compiler; keep the platform's architecture; hand mechanical rewrites to the local developer one file at a time; no test is deleted.",
    "body": [
-    "1. `dragonfly test`: what passes now must pass at the end.",
+    "1. `nuclear test`: what passes now must pass at the end.",
     "2. Find every caller of what moves (the project map; `nuclear check .` after each step).",
     "3. Small steps, each green.",
     "4. Keep the architecture: a use case is used only from its `appcomponent`; other components see only the `appcomponent`.",
@@ -388,12 +388,12 @@
    "id": "playbook:migrate-the-database",
    "type": "playbook",
    "title": "Playbook: change the database's schema (backend)",
-   "summary": "Change the entity, then `dragonfly migrate make \"<message>\"` writes one migration (the entities minus the last migration), `dragonfly migrate` applies it and `dragonfly migrate down` reverts the last one.",
+   "summary": "Change the entity, then `nuclear migrate make \"<message>\"` writes one migration (the entities minus the last migration), `nuclear migrate` applies it and `nuclear migrate down` reverts the last one.",
    "body": [
     "1. Change the entity's `.nuc` (a new field, a length, a relation).",
-    "2. `dragonfly build`.",
-    "3. `dragonfly migrate make \"add the year of a book\"`: one migration file.",
-    "4. `dragonfly migrate` (or `migrate up`); `dragonfly migrate down` to revert.",
+    "2. `nuclear build`.",
+    "3. `nuclear migrate make \"add the year of a book\"`: one migration file.",
+    "4. `nuclear migrate` (or `migrate up`); `nuclear migrate down` to revert.",
     "",
     "A new column that is not optional needs a default: the rows that exist need a value. In development, `createTables = true` on the connection creates the tables without migrations."
    ],
@@ -414,7 +414,7 @@
    "links": [
     {
      "rel": "tool",
-     "to": "tool:dragonfly.migrate"
+     "to": "tool:nuclear.migrate"
     },
     {
      "rel": "kind",
@@ -437,13 +437,13 @@
    "id": "playbook:deploy",
    "type": "playbook",
    "title": "Playbook: the pipeline's commands, locally and on a server",
-   "summary": "`.nuclear/loop.json` holds the commands of each stage; add `seed`, `integration` and `deploy` for the deploy stage. `nuclear-loop ci` runs them where you are, and `nuclear-loop export github|gitlab|bitbucket` writes the CI file that runs the same ones on every push.",
+   "summary": "`.nuclear/builder.json` holds the commands of each stage; add `seed`, `integration` and `deploy` for the deploy stage. `nuclear-builder ci` runs them where you are, and `nuclear-builder export github|gitlab|bitbucket` writes the CI file that runs the same ones on every push.",
    "body": [
     "```json",
     "{",
     "  \"commands\": {",
-    "    \"seed\": [\"dragonfly migrate\"],",
-    "    \"integration\": [\"dragonfly test -- -m integration\"],",
+    "    \"seed\": [\"nuclear migrate\"],",
+    "    \"integration\": [\"nuclear test -- -m integration\"],",
     "    \"deploy\": [\"docker compose up -d --build\"]",
     "  },",
     "  \"branches\": [\"main\", \"feature/**\"]",
@@ -451,9 +451,9 @@
     "```",
     "",
     "- The defaults (check, build, install, test) come from the platform's CLI.",
-    "- `nuclear-loop ci [check|test|security|artifacts|deploy]` runs the server's stages locally: see what the server will see before pushing.",
+    "- `nuclear-builder ci [check|test|security|artifacts|deploy]` runs the server's stages locally: see what the server will see before pushing.",
     "- The agent stages run on your machine; the server checks their result.",
-    "- The shell of the Loop runs nothing that is not in `.nuclear/loop.json`.",
+    "- The shell of the Builder runs nothing that is not in `.nuclear/builder.json`.",
     "- There is no generated Dockerfile yet: the deploy command is yours."
    ],
    "keys": [
@@ -471,11 +471,11 @@
    "links": [
     {
      "rel": "tool",
-     "to": "tool:nuclear-loop.ci"
+     "to": "tool:nuclear-builder.ci"
     },
     {
      "rel": "tool",
-     "to": "tool:nuclear-loop.export"
+     "to": "tool:nuclear-builder.export"
     },
     {
      "rel": "stage",
@@ -522,7 +522,7 @@
     "4. the options:",
     "   - **split it**: the pieces the agent can do now;",
     "   - **give the facts**: the exact question (which fields? which rule when X?);",
-    "   - **a lead**: `nuclear-loop run <spec> --lead claude`, or from Claude Code, Codex or Cursor the tool `developer_task`: the frontier model plans and reviews, the local agents write each small piece;",
+    "   - **a lead**: `nuclear-builder run <spec> --lead claude`, or from Claude Code, Codex or Cursor the tool `developer_task`: the frontier model plans and reviews, the local agents write each small piece;",
     "   - **not possible yet**: the platform's limit and what exists instead.",
     "",
     "**Never**: guess a name, a field or a rule; write the easy half and call it done; delete or weaken a test."
@@ -581,7 +581,7 @@
     "1. `project_inspect`; for every resource the spec names, `generate_resource` (fields from the spec, `api_inspect`, or the documentation with `web_search` and `web_read`; ask the user when none gives them).",
     "2. `developer_task(project, title, description, criteria)` with only what the generators did not write. Write each piece as an order a junior can follow: the path, the kind, every name and signature, the pieces it uses, the acceptance criterion it serves. A use case it wrote is wired with `generate_usecase` (its alias in the facade; backend: its route), not by another order.",
     "3. Read the journal it returns: what each agent did, the files, what is left.",
-    "4. Validate: `nuclear_check(path = <project>)` says `ok`; `dragonfly(command = \"test\")` passes.",
+    "4. Validate: `nuclear_check(path = <project>)` says `ok`; `synapsis(command = \"test\")` passes.",
     "5. Correct only what failed or is wrong; never rewrite what passed. Before writing `.nuc`: `nuclear_brief(<platform>)` and `graph_search`.",
     "6. A failed run: read its *Why it failed*; `developer_retry` when the cause was passing or is fixed.",
     "7. `developer_review(project, run, notes, files)`: the corrected files become examples for the local developer.",
@@ -631,7 +631,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc",
+    "tools/mcp/server.nuc",
     "nuclear-graph-storage/prompts/plan.md",
     "nuclear-graph-storage/prompts/feature.md"
    ],
@@ -647,7 +647,7 @@
    "summary": "Set up the AI services, then add `nuclear-graph mcp` to the client as an MCP server named `nuclear`. The client then has the graph, the compiler, the generators and the local developer as tools.",
    "body": [
     "```sh",
-    "nuclear-loop setup                                           # once: the services, and the MCP server's access to the graph",
+    "nuclear-builder setup                                           # once: the services, and the MCP server's access to the graph",
     "claude mcp add --scope user nuclear -- nuclear-graph mcp     # Claude Code",
     "codex mcp add nuclear -- nuclear-graph mcp                   # Codex",
     "```",
@@ -704,13 +704,13 @@
    "id": "playbook:set-up-the-ai-services",
    "type": "playbook",
    "title": "Playbook: set up the AI services (the Smart Graph, the local agents, the models)",
-   "summary": "Run the set-up: `nuclear-loop setup` in a terminal, *Nuclear: Set Up the AI Services* in VS Code, or the last step of the installer. It reads the machine, suggests a profile of models, installs what is missing and starts the Smart Graph and the Nuclear Developer, now and at every login. Nothing is downloaded before you choose.",
+   "summary": "Run the set-up: `nuclear-builder setup` in a terminal, *Nuclear: Set Up the AI Services* in VS Code, or the last step of the installer. It reads the machine, suggests a profile of models, installs what is missing and starts the Smart Graph and the Nuclear Developer, now and at every login. Nothing is downloaded before you choose.",
    "body": [
     "```sh",
-    "nuclear-loop setup                          # asks where the agents run and which profile",
-    "nuclear-loop setup --profile medium --yes   # no questions",
-    "nuclear-loop setup --status                 # what is installed and running",
-    "nuclear-loop setup --remove                 # takes the services away (Ollama and its models stay)",
+    "nuclear-builder setup                          # asks where the agents run and which profile",
+    "nuclear-builder setup --profile medium --yes   # no questions",
+    "nuclear-builder setup --status                 # what is installed and running",
+    "nuclear-builder setup --remove                 # takes the services away (Ollama and its models stay)",
     "```",
     "",
     "1. **This machine**: its processor, memory, GPU and free disk; and where the agents run: on this machine (suggested: it saves tokens) or remote agents only.",
@@ -724,7 +724,7 @@
     "- From the source tree: `./install.sh --ai`."
    ],
    "keys": [
-    "nuclear-loop setup",
+    "nuclear-builder setup",
     "set up the ai services",
     "install the local agents",
     "wizard",
@@ -746,7 +746,7 @@
     },
     {
      "rel": "tool",
-     "to": "tool:nuclear-loop.setup"
+     "to": "tool:nuclear-builder.setup"
     },
     {
      "rel": "playbook",
@@ -767,7 +767,7 @@
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md#2. The steps",
-    "extensions/vscode/src/loopCli.ts"
+    "extensions/tools/nuclear-builder/src/cli.ts"
    ],
    "platforms": [],
    "meta": {

@@ -46,7 +46,7 @@ GraphClient(client: string = "nuclear-developer", url: string = "")
     found["items"]
 
   // The closest pieces of knowledge, as one text for a prompt. A local agent searches with `agents = true` and its
-  // `platform`: Nuclear and Dragonfly only, nothing of a target language.
+  // `platform`: Nuclear and Synapsis only, nothing of a target language.
   search(query: string, shelves: string = "", k: int = 5, platform: string = "", kind: string = "", type: string = "", agents: boolean = false, expand: boolean = false, kinds: string = "") string
     asText(~items(query, shelves, k, platform, kind, type, agents, expand, kinds))
 
@@ -95,11 +95,11 @@ GraphClient(client: string = "nuclear-developer", url: string = "")
 
   // The strategy of a request (which kind of request it is, and the plan of that kind), each field a text: `id`,
   // `title`, `summary`, `why` (the signs that chose it), `plan` (the card), `mode` (write, repair, verify, review,
-  // answer, commands, lead), `stages` (the Loop's stages it runs) and `generators`, separated by commas, `pieces`
+  // answer, commands, lead), `stages` (the Builder's stages it runs) and `generators`, separated by commas, `pieces`
   // (where its pieces come from: plan, declaring, naming, none), `lead` (local or frontier), `needs` (the facts it
   // cannot start without, one `name=question` per line) and `second` (the next closest). `existing` and `new`: the
   // declarations the request names that the project has, and the ones it has not. `runnable`: for a run of the
-  // Loop. `only`: the strategy the request itself names. {} when the graph has no strategy.
+  // Builder. `only`: the strategy the request itself names. {} when the graph has no strategy.
   strategy(text: string, platform: string = "", existing: string[]? = null, new: string[]? = null, runnable: boolean = false, only: string = "") <string, string>
     body: <string, any> = { "text": text.substring(0, Math.min(40000, text.length)), "platform": platform, "existing": existing, "new": new, "runnable": runnable, "only": only }
     reply: <string, any> = ~call("POST", "/v1/strategy", body)

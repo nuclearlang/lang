@@ -32,7 +32,7 @@ rewrites the reference's blocks that differ: review them too.
 3. `pytest`: the project's tests written in Nuclear;
 4. `smoke.py`: an end-to-end run over an in-memory database with a fake chat model, no network (REST CRUD, 409,
    400, 404, the agent over HTTP, its tools, the graph, OpenAPI);
-5. the runtime's own tests (`packages/dragonfly-py/tests`);
+5. the runtime's own tests (`packages/synapsis-py/tests`);
 6. conformance: copies `examples/examples-backend/tasks_api` (written for `nestjs`), sets `dialect = "fastapi"` in
    its `config.nuc`, builds it, and runs `pyright` and `pytest` again;
 7. migrations of that copy: made from the entities, applied to a fresh SQLite, then nothing is left to make.
@@ -44,7 +44,7 @@ From `nuclearlang/`:
 ```sh
 python3 -m venv tools/python/.venv
 tools/python/.venv/bin/pip install -r tools/python/requirements.txt
-tools/python/.venv/bin/pip install -e ../nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py \
+tools/python/.venv/bin/pip install -e ../nuclear-synapsis-framework/platforms/backend/packages/synapsis-py \
   --config-settings editable_mode=compat
 ```
 

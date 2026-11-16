@@ -32,7 +32,8 @@ echo "== plugin classes (against $ide)"
 rm -rf "$out"
 mkdir -p "$out/classes" "$dist/lib" "$dist/server" "$dist/textmate/nuclear/syntaxes"
 cp_ide="$ide/lib/*:$ide/plugins/textmate-plugin/lib/*:$ide/plugins/textmate-plugin/lib/modules/*"
-javac --release 21 -nowarn -cp "$cp_ide" -d "$out/classes" $(find "$here/src" -name '*.java')
+# the plugin's own sources and the JetBrains part of each tool (../tools/<tool>/jetbrains/src)
+javac --release 21 -nowarn -cp "$cp_ide" -d "$out/classes" $(find "$here/src" "$here"/../tools/*/jetbrains/src -name '*.java')
 cp -r "$here/resources/." "$out/classes/"
 (cd "$out/classes" && jar --create --file "$dist/lib/nuclearlang.jar" .)
 

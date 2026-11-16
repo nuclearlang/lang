@@ -5,17 +5,17 @@
 > how this dialect writes them: **NestJS 12** (ES modules) controllers, repositories over tables with **Sequelize**
 > (`@nestjs/sequelize` + `sequelize-typescript`), DTOs validated with **class-validator**, **Kafka** listeners and the
 > **Redis** cache, **LangChain.js / LangGraph.js** tools, agents and graphs, and the Nest modules written for you.
-> Files: `nuclearlang/dialects/typescript/frameworks/nestjs/`; runtime: `packages/dragonfly-nest` (npm `dragonfly-nest`).
+> Files: `nuclearlang/dialects/typescript/frameworks/nestjs/`; runtime: `packages/synapsis-nest` (npm `synapsis-nest`).
 
 ## 1. Project
 
-A folder with `config.nuc` (`dragonfly(platform = "backend", dialect = "nestjs")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);
+A folder with `config.nuc` (`synapsis(platform = "backend", dialect = "nestjs")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);
 `nuclear build .` writes `build/`: `src/` (the app), `test/`, `package.json`, `tsconfig.json`. In `build/`: `npm install`, `npm run dev` (port `PORT`, default 3000), `npm test`.
 The output is ES modules (NestJS 12): relative imports name the `.js` file.
 
 ```
 tasks_api/
-├── config.nuc                         dragonfly(platform = "backend", dialect = "nestjs"), app(...), plugins(...)
+├── config.nuc                         synapsis(platform = "backend", dialect = "nestjs"), app(...), plugins(...)
 ├── config/project_config.nuc          appConfig: the database and the other connections
 ├── components/tasks/
 │   ├── tasks_appcomponent.nuc         appcomponent: what the rest of the app sees
@@ -41,7 +41,7 @@ nestjs`): an invented class is N0220.
 
 The optional parts are plugins ([projects.md](../../../../docs/07-reference/projects.md) §3.3): `plugins(sqlite = true, postgres = true, mysql =
 true, mariadb = true, redis = true, kafka = true, events = true, ai = true, openai = true, ollama = true)`. Only the
-enabled ones go to `package.json`, and the runtime loads them only then (`dragonfly-nest/ai`, `dragonfly-nest/events`).
+enabled ones go to `package.json`, and the runtime loads them only then (`synapsis-nest/ai`, `synapsis-nest/events`).
 A kind or a name of a plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `listener` and
 `publish` need `events` (Kafka with `kafka`).
 
@@ -64,8 +64,8 @@ entity Task()
 ```
 
 ```typescript
-import { Entity } from 'dragonfly-nest';
 import { AutoIncrement, Column, CreatedAt, DataType, PrimaryKey, Table } from 'sequelize-typescript';
+import { Entity } from 'synapsis-nest';
 
 @Table({
   tableName: 'tasks',
@@ -128,8 +128,8 @@ entity Tag()
 ```
 
 ```typescript
-import { Entity, Related, joinTable } from 'dragonfly-nest';
 import { AutoIncrement, BelongsTo, BelongsToMany, Column, DataType, HasMany, PrimaryKey, Table } from 'sequelize-typescript';
+import { Entity, Related, joinTable } from 'synapsis-nest';
 
 @Table({
   tableName: 'projects',
@@ -204,7 +204,7 @@ repository TaskRepository
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { AppError, Repository, Result, lte } from 'dragonfly-nest';
+import { AppError, Repository, Result, lte } from 'synapsis-nest';
 
 @Injectable()
 export class TaskRepository extends Repository<Task> {
@@ -246,7 +246,7 @@ repository TaskRepository
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { AppError, Page, Repository, Result } from 'dragonfly-nest';
+import { AppError, Page, Repository, Result } from 'synapsis-nest';
 
 @Injectable()
 export class ProjectRepository extends Repository<Project> {
@@ -288,7 +288,7 @@ repository CharacterRepository
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { AppError, HttpRepository, Result } from 'dragonfly-nest';
+import { AppError, HttpRepository, Result } from 'synapsis-nest';
 
 @Injectable()
 export class CharacterRepository extends HttpRepository {
@@ -302,7 +302,7 @@ export class CharacterRepository extends HttpRepository {
 
 ### 2.3 Model
 
-What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Dragonfly's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. `NewTask(title = "x")` builds one.
+What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. `NewTask(title = "x")` builds one.
 
 ```nuclear
 model NewTask
@@ -366,8 +366,8 @@ usecase CompleteTask(tasks: TaskRepository)
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { AppError, Entity, Err, Ok, Repository, Result } from 'dragonfly-nest';
 import { AutoIncrement, Column, DataType, PrimaryKey, Table } from 'sequelize-typescript';
+import { AppError, Entity, Err, Ok, Repository, Result } from 'synapsis-nest';
 
 export class TaskChanges {
   @IsOptional()
@@ -431,7 +431,7 @@ usecase CloseProject(tasks: TaskRepository, projects: ProjectRepository)
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { AppError, Ok, Result, transactional } from 'dragonfly-nest';
+import { AppError, Ok, Result, transactional } from 'synapsis-nest';
 
 @Injectable()
 export class CloseProject {
@@ -501,7 +501,7 @@ controller TasksController(tasks: TasksAppComponent)
 ```typescript
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Query } from '@nestjs/common';
 import { IsBoolean, IsOptional } from 'class-validator';
-import { AppError, Result } from 'dragonfly-nest';
+import { AppError, Result } from 'synapsis-nest';
 
 export class TaskChanges {
   @IsOptional()
@@ -546,7 +546,7 @@ appConfig ProjectConfig
 ```
 
 ```typescript
-import { AppConfig, Connection, Postgres, env } from 'dragonfly-nest';
+import { AppConfig, Connection, Postgres, env } from 'synapsis-nest';
 
 export class ProjectConfig extends AppConfig {
   readonly connections: Connection[] = [new Postgres({ url: env('DATABASE_URL', 'postgres://localhost/tasks') })];
@@ -568,7 +568,7 @@ listener TaskEvents
 
 ```typescript
 import { Injectable } from '@nestjs/common';
-import { Listener, consumer } from 'dragonfly-nest/events';
+import { Listener, consumer } from 'synapsis-nest/events';
 
 @Injectable()
 export class TaskEvents extends Listener {
@@ -598,8 +598,8 @@ tools TaskTools
 ```typescript
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { Injectable } from '@nestjs/common';
-import { Tools } from 'dragonfly-nest/ai';
 import { tool } from 'langchain';
+import { Tools } from 'synapsis-nest/ai';
 import { z } from 'zod';
 
 @Injectable()
@@ -643,8 +643,8 @@ agent AssistantAgent(tools: TaskTools)
 ```typescript
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { Injectable } from '@nestjs/common';
-import { Agent, Tools } from 'dragonfly-nest/ai';
 import { tool } from 'langchain';
+import { Agent, Tools } from 'synapsis-nest/ai';
 import { z } from 'zod';
 
 @Injectable()
@@ -696,7 +696,7 @@ graph Planner
 ```typescript
 import { Annotation } from '@langchain/langgraph';
 import { Injectable } from '@nestjs/common';
-import { Graph, next, start } from 'dragonfly-nest/ai';
+import { Graph, next, start } from 'synapsis-nest/ai';
 
 export const PlanState = Annotation.Root({
   goal: Annotation<string>,
@@ -731,9 +731,9 @@ tests Tasks
 
 ```typescript
 import { INestApplication } from '@nestjs/common';
-import { inject } from 'dragonfly-nest';
-import { startTestApp, stopTestApp } from 'dragonfly-nest/testing';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { inject } from 'synapsis-nest';
+import { startTestApp, stopTestApp } from 'synapsis-nest/testing';
 
 import assert from 'node:assert/strict';
 
@@ -759,10 +759,10 @@ describe('Tasks', () => {
 ### Migrations
 
 Migrations of the database schema (ADR-backend-0001): `migrations/<time>_<name>.js` over Sequelize's `queryInterface`,
-diffed by `dragonfly-nest-migrate` from the entities and the `schema` the last migration exports; `SequelizeMeta`. The
+diffed by `synapsis-nest-migrate` from the entities and the `schema` the last migration exports; `SequelizeMeta`. The
 commands and the rules: `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8.
 
 ## 3. What is not there yet
 
-- `dragonfly make` generators for the backend kinds, `dragonfly check` and `watch` (the CLI has `new`, `build`,
+- `nuclear make` generators for the backend kinds, `nuclear check` and `watch` (the CLI has `new`, `build`,
   `install`, `run`, `test` and `migrate`).

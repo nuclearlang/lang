@@ -75,9 +75,9 @@ without umzug). The example below is the first idea.
 Today `createTables = true` creates tables at start (development only). A real database changes by migrations:
 
 ```sh
-dragonfly migrate make "add done to tasks"     # compares the entities with the migrations folder, writes one
-dragonfly migrate                              # applies the pending ones
-dragonfly migrate down                         # reverts the last one
+nuclear migrate make "add done to tasks"     # compares the entities with the migrations folder, writes one
+nuclear migrate                              # applies the pending ones
+nuclear migrate down                         # reverts the last one
 ```
 
 The migration is written in the dialect's tool (Alembic for `fastapi`, umzug + Sequelize for `nestjs`), under
@@ -193,7 +193,7 @@ S3-compatible) as a plugin. Done when: a test uploads a file through the test cl
 
 ### F8 — Deploy and operations
 
-- `dragonfly build` writes a `Dockerfile` and a `.dockerignore` for the dialect (multi-stage, non-root user, the
+- `nuclear build` writes a `Dockerfile` and a `.dockerignore` for the dialect (multi-stage, non-root user, the
   `PORT` convention), and `compose.yaml` with the databases the config names (dev only).
 - Health route `GET /health` (database ping) and readiness, written by the dialect.
 - Metrics (`GET /metrics`, Prometheus) and request logs with a request id: `Log` of the platform with the call site
@@ -206,9 +206,10 @@ user's machine, recorded in the roadmap's *Untested* if docker is not on CI).
 
 ### F9 — The backend CLI at parity with mobile
 
-- `dragonfly make controller|entity|model|usecase|repository|listener|job <name>` for backend projects (the
-  generators live in `nuclear-synapsis-framework/cli/src/scaffold.rs`; today only mobile kinds).
-- `dragonfly check` and `dragonfly watch` for backend projects (today `manifest()` refuses them).
+- `nuclear make <kind>` for backend projects: done for every kind of the platform (the skeletons are `[skeletons]`
+  of `tools/code_generator/platforms/backend/generators.toml`); a `job` kind waits for F6.
+- `nuclear check` for backend projects: done. `nuclear watch` for backend projects: TODO(human): is it done? (the
+  framework's `watch` command in `tools/cli/src/framework/watch.rs` does not say it is mobile only).
 - `[toolchain]` for mobile too, so the command has no hard-coded `flutter` (the roadmap of `tools/cli/`).
 
 Owned by the command line tools (`tools/cli/`): this plan only lists it; the request goes by message.

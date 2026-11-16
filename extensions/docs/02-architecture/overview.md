@@ -13,7 +13,7 @@ flowchart LR
   editor[Editor] --> ext[Extension: client and tools]
   ext -- "LSP + nuclear/* over stdio" --> lsp[nuclear-lsp]
   lsp --> dialects[Dialects and platform contracts]
-  ext -- "commands in a terminal or a process" --> cli[nuclear / dragonfly / nuclear-loop]
+  ext -- "commands in a terminal or a process" --> cli[nuclear / nuclear-builder]
   ext -- HTTP --> ai[Nuclear Developer, Smart Graph, Ollama]
   ext -- CDP --> browser[Headless Chromium: the devices]
   lsp -- writes --> files[".nuclear/ of the project"]
@@ -25,9 +25,9 @@ flowchart LR
 |---|---|---|
 | The language server | `nuclearlang/crates/nuclear-lsp` ([the language project](../../../nuclearlang/AGENTS.md)) | everything about the language: diagnostics, completion, hover, semantic tokens, the project rules, the code metrics |
 | The VS Code extension | [`vscode/`](../../vscode/AGENTS.md) | the client, the Nuclear workspace, run and debug of every platform, the tools, the generators of the themes and icons |
-| The JetBrains plugin | [`jetbrains/`](../../jetbrains/AGENTS.md) | the client, Dragonfly projects, `.nuc` breakpoints, two tool windows |
+| The JetBrains plugin | [`jetbrains/`](../../jetbrains/AGENTS.md) | the client, Synapsis projects, `.nuc` breakpoints, two tool windows |
 | The Zed extension | [`zed/`](../../zed/AGENTS.md) | the client, a tree-sitter grammar, tasks and runnables |
-| The tools | [`tools/`](../../AGENTS.md) | one project per tool; their code is inside `vscode/src/` and `jetbrains/src/` today |
+| The tools | [`tools/`](../../AGENTS.md) | one project per tool, with its code: `src/` bundled by the VS Code extension, `jetbrains/src/` compiled with the plugin |
 
 An extension never reads the compiler's crates: it starts `nuclear-lsp` and talks to it through LSP and the
 `nuclear/*` requests (`nuclear/transpile` gives a file's generated code, `nuclear/codeMetrics` its metrics). How each
@@ -54,10 +54,10 @@ The extensions read files; they do not assume a path, a port or a command of a d
 | File of the project | Written by | Read by |
 |---|---|---|
 | `.nuclear/project.json` (the project card: platform, dialect, output folder, toolchain; [projects §1.1](../../../nuclearlang/docs/07-reference/projects.md)) | the server (`Project::build`) and the CLIs | the VS Code status bar, the workspace, the tools |
-| `.nuclear/contract.json` (the endpoints) | the same, next to the card | Nuclear HTTP |
-| `.nuclear/lines.json`; `build/app/.dart_tool/nuclear_lines.json` for a mobile app | every `nuclear build` of a project; `dragonfly build` | `.nuc` debugging |
-| `build/<name>.code-workspace` (the tasks and the dialect's debug launch) | `dragonfly build` (`nuclear-synapsis-framework/cli/src/vscode.rs`) | run and debug in VS Code and JetBrains |
-| `.nuclear/map.md` (every declaration with its kind, description and members) | the transpiler | the chat and the Loop's agents |
+| `.nuclear/contract.json` (the endpoints) | the same, next to the card | Nuclear Connector |
+| `.nuclear/lines.json`; `build/app/.dart_tool/nuclear_lines.json` for a mobile app | every `nuclear build` of a project; `nuclear build` | `.nuc` debugging |
+| `build/<name>.code-workspace` (the tasks and the dialect's debug launch) | `nuclear build` (`tools/cli/src/framework/vscode.rs`) | run and debug in VS Code and JetBrains |
+| `.nuclear/map.md` (every declaration with its kind, description and members) | the transpiler | the chat and Nuclear Builder's agents |
 
 The JetBrains and Zed clients do not show the project card yet (the JetBrains tool windows read it only to find
 the projects); the server is the same, so their diagnostics are right.

@@ -1,0 +1,6 @@
+// The page of an address of the site: /nuclearlang/guide/01-syntax is content/nuclearlang--guide--01-syntax.json.
+usecase GetPageUseCase
+  (content: ContentRepository)
+
+  exec(path: string) Result<ContentError, Page>
+    ~content.page(path.split("/").filter((part) => part.length > 0).join("--"))

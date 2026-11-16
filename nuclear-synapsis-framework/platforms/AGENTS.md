@@ -1,4 +1,4 @@
-# The platforms of Dragonfly
+# The platforms of Synapsis
 
 What is common to the three platforms of the framework, and only that: what a platform is, the contract file
 (`platform.toml`) every dialect of a platform implements, the shape of a platform folder, and how the promise "the
@@ -21,6 +21,8 @@ in [`../AGENTS.md`](../AGENTS.md), the rules of the whole tree in [the root `AGE
 ## Stack
 
 - The contract of each platform: TOML (`<platform>/platform.toml`), read by `nuclearlang/crates/nuclear-dialect`.
+  What `make` and `gen` write per platform is the code generator's:
+  `tools/code_generator/platforms/<platform>/generators.toml`.
 - The dialects that implement a platform: TOML and templates in
   `nuclearlang/dialects/<language>/frameworks/<dialect>/` (`flutter`, `fastapi`, `nestjs`, `react`).
 - Runtime packages in the target languages: Dart (`mobile/packages/`), Python and TypeScript

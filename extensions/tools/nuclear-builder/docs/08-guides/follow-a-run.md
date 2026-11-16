@@ -23,7 +23,7 @@ The run is drawn as a graph, left to right:
 
 - **Specification** ends with the **analysis**: which kind of request the spec is and the strategy the run follows.
   The step says what it understood and why; a fact it lacks is asked there, before anything is written.
-- **Generate** runs `dragonfly gen` for the resources the spec names
+- **Generate** runs `nuclear gen` for the resources the spec names
   ([write a spec, §4](write-a-spec.md)). A crash undoes the generated files like an agent's.
 - **Plan** shows the work as a tree: the big parts (one per component), the tasks of each (a layer: data, domain,
   the facade, the entry points, the tests) and the pieces of each task (one file). It also says, before any code,
@@ -45,19 +45,19 @@ The run is drawn as a graph, left to right:
 - *Run again from scratch*, on the run: the whole pipeline from the specification.
 
 What the steps left out wrote is undone first. A file you changed since the run wrote it is kept, and the page says
-so. The attempt left behind stays under the run with its reason. A run made by an older version of the Loop starts
+so. The attempt left behind stays under the run with its reason. A run made by an older version of the Builder starts
 from scratch at any retry.
 
 ```sh
-nuclear-loop retry <run> [--from <stage> | --step <id>]
-nuclear-loop restart <run>
+nuclear-builder retry <run> [--from <stage> | --step <id>]
+nuclear-builder restart <run>
 ```
 
 Over MCP: `developer_retry`.
 
 ## The journal
 
-Every run keeps `.nuclear/loop/runs/<id>.md` beside its `.json`: the files written, what is left for the reviewer,
+Every run keeps `.nuclear/builder/runs/<id>.md` beside its `.json`: the files written, what is left for the reviewer,
 and every step with its agent, its trace and what the agent read. At the end the local **documenter** reads it and
 writes, at its top, what was built, how it was checked and what is left. A reviewer's notes go to
 `<id>.review.md`.
@@ -67,7 +67,7 @@ writes, at its top, what was built, how it was checked and what is left. A revie
 - A call to the local agents that fails for a passing reason (the service starting, busy, a 5xx) is retried with
   exponential backoff; the settings say how many times and how long. Each retry is in the step's trace.
 - When a stage fails, the local diagnoser tells why and what to do. *↻ Retry from <stage>* (or
-  `nuclear-loop retry <run>`) runs it again from there, keeping every step that passed.
+  `nuclear-builder retry <run>`) runs it again from there, keeping every step that passed.
 
 ## It survives the editor, and it keeps working
 
@@ -107,7 +107,7 @@ What a strategy changes in a run:
   gives every file that writes the name, already rewritten: no model writes.
 - **What is asked first.** A stored resource without its fields, a rename without its two names, a bug without what
   should happen: the analysis stops the run with the question. Nothing is guessed.
-- **The wiring.** After *Code*, each use case the coder wrote is wired by `dragonfly gen usecase`: its alias in the
+- **The wiring.** After *Code*, each use case the coder wrote is wired by `nuclear gen usecase`: its alias in the
   facade and, when the spec's sentence gives it (`POST orders/{id}/cancel`), its route.
 - **A bug's repair** goes to the file the failure names, whoever wrote it, and never to the test.
 

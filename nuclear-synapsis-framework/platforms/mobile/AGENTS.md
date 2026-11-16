@@ -1,8 +1,8 @@
-# The mobile platform of Dragonfly
+# The mobile platform of Synapsis
 
 Apps for Android, iOS, desktop and web through one UI toolkit, written once in Nuclear by the user and the agent.
 This project holds what is the same for every dialect of the platform: its contract (`platform.toml`: kinds,
-decorators, plugins, layout, generators), its runtime packages (`dragonfly`, `dragonfly_genkit`), its examples and
+decorators, plugins, layout), its runtime packages (`synapsis`, `synapsis_genkit`), its examples and
 its checks. ADR key: `mobile`.
 
 Its only dialect today is `flutter`. It lives in `nuclearlang/dialects/dart/frameworks/flutter/` and is documented
@@ -14,7 +14,7 @@ whole tree are the root [`AGENTS.md`](../../../AGENTS.md).
 ## Stack
 
 - Contract: TOML (`platform.toml`), read by the compiler's loader (`nuclearlang/crates/nuclear-dialect`).
-- Runtime: two packages for Flutter in Dart, `packages/dragonfly` 0.1.0 and `packages/dragonfly_genkit` 0.1.0
+- Runtime: two packages for Flutter in Dart, `packages/synapsis` 0.1.0 and `packages/synapsis_genkit` 0.1.0
   (Dart SDK `^3.12.0`, Flutter `>=3.44.0`).
 - Examples: Nuclear projects and single files with their expected output.
 - Checks: one bash script, one Python script. CI: `.github/workflows/platform-mobile.yml`.
@@ -26,31 +26,32 @@ From the root of the tree:
 ```sh
 cargo test                           # builds the examples, compares the goldens
 UPDATE_GOLDEN=1 cargo test           # rewrites the goldens after a wanted change; review the diff
-python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py         # the 27 Dragonfly examples of the flutter reference
-python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py --fix   # rewrites them from the example project
+python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-synapsis.py         # the 27 Synapsis examples of the flutter reference
+python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-synapsis.py --fix   # rewrites them from the example project
 FLUTTER=<sdk>/bin/flutter nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]   # single-file examples through `flutter analyze`
 ```
 
 From this folder:
 
 ```sh
-(cd packages/dragonfly && flutter pub get && flutter test && flutter analyze)    # the runtime: 64 tests
-(cd examples/examples-flutter-dialect/tasks_app && dragonfly build && dragonfly test)
+(cd packages/synapsis && flutter pub get && flutter test && flutter analyze)    # the runtime: 64 tests
+(cd examples/examples-flutter-dialect/tasks_app && nuclear build && nuclear test)
 ```
 
-The last one needs the installed `nuclear` and `dragonfly` (`installer/install.sh`) and the backend example built
+The last one needs the installed `nuclear` (`installer/install.sh`) and the backend example built
 (`nuclear build nuclear-synapsis-framework/platforms/backend/examples/examples-backend/tasks_api`). What each check
 covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
 
 ## Folders
 
-- `platform.toml`: the contract of the platform and what `dragonfly gen` writes.
-- `packages/dragonfly/`: the runtime of an app (http, local database, events, session, ACL, network, routes, logs,
+- `platform.toml`: the contract of the platform. What `nuclear gen` writes is
+  `tools/code_generator/platforms/mobile/generators.toml`.
+- `packages/synapsis/`: the runtime of an app (http, local database, events, session, ACL, network, routes, logs,
   forms, dialogs, translations, splash, test helpers).
-- `packages/dragonfly_genkit/`: the runtime of the `genkit` plugin (AI).
+- `packages/synapsis_genkit/`: the runtime of the `genkit` plugin (AI).
 - `examples/examples-flutter-dialect/`: the example projects (`clean-flutter-project`, `genkit-assistant`,
   `tasks_app`) and four single-file examples; `examples/expected/`: the goldens of the projects.
-- `checks/`: `analyze-flutter.sh`, `spec-check-dragonfly.py`.
+- `checks/`: `analyze-flutter.sh`, `spec-check-synapsis.py`.
 - `docs/`: the context documentation (the table below).
 
 ## Rules of this project
@@ -63,7 +64,7 @@ covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
   generic mechanism belongs in the compiler; nothing specific to this platform or to its toolkit ever does.
 - **The runtime works on web**: no `dart:isolate` nor `dart:io` without a `kIsWeb` guard.
 - **Never edit by hand**: `docs/07-reference/` and `docs/08-guides/` without their tools (they are checked and
-  embedded in binaries), the Dragonfly blocks of the flutter reference (`--fix` writes them), `examples/expected/`
+  embedded in binaries), the Synapsis blocks of the flutter reference (`--fix` writes them), `examples/expected/`
   (`UPDATE_GOLDEN=1`), any `build/` folder.
 - A change of the public API of a runtime package regenerates its type definitions
   ([docs/06-runbooks/runtime-release.md](docs/06-runbooks/runtime-release.md)).
@@ -84,7 +85,7 @@ covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
 | You touch a library, a version, the type definitions or who uses this project | [docs/02-architecture/dependencies.md](docs/02-architecture/dependencies.md) |
 | You work on a project's layout, `config.nuc`, assets, kind by folder or the architecture rules | [docs/02-architecture/project.md](docs/02-architecture/project.md) |
 | You need what a kind or a decorator does | [docs/02-architecture/kinds.md](docs/02-architecture/kinds.md) |
-| You change or use a service of the `dragonfly` package, or the `genkit` runtime | [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) |
+| You change or use a service of the `synapsis` package, or the `genkit` runtime | [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) |
 | You touch `@primary`, `saveLocal`, `<method>AsLocal()` or the local tables | [docs/02-architecture/local-database.md](docs/02-architecture/local-database.md) |
 | You ask why something is the way it is | [docs/03-adr/README.md](docs/03-adr/README.md) |
 | You change this project: conventions of the contract, the runtime and the docs | [docs/05-standards/coding.md](docs/05-standards/coding.md) |
@@ -92,7 +93,7 @@ covers: [docs/05-standards/testing.md](docs/05-standards/testing.md).
 | You add networking, storage, logging, events or tokens, or review for security and performance | [docs/05-standards/security.md](docs/05-standards/security.md) |
 | You changed the runtime's public API, an example's output, or publish a package | [docs/06-runbooks/runtime-release.md](docs/06-runbooks/runtime-release.md) |
 | You need the platform's normative rules (project, kinds, architecture, generators) | [docs/07-reference/mobile.md](docs/07-reference/mobile.md) |
-| You need the API of the `dragonfly` package | [docs/07-reference/dragonfly.md](docs/07-reference/dragonfly.md) |
+| You need the API of the `synapsis` package | [docs/07-reference/synapsis.md](docs/07-reference/synapsis.md) |
 | You need the short sheet an agent gets to write an app | [docs/07-reference/brief/mobile.md](docs/07-reference/brief/mobile.md) |
 | You use Genkit in an app | [docs/08-guides/genkit.md](docs/08-guides/genkit.md) |
 | You need how a kind is written in the target, the generated files, the CLI or the editors | [the flutter reference](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |

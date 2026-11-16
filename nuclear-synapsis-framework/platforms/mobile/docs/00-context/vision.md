@@ -23,7 +23,7 @@ own rules are the normative text: [mobile.md §3](../07-reference/mobile.md).
   tests, identical for every dialect of the platform. The agent's short sheet is
   [brief/mobile.md](../07-reference/brief/mobile.md).
 - **The author of a dialect**, who implements the contract (`platform.toml`) for a language and a UI toolkit.
-- **A Flutter developer**, who may use the `dragonfly` package by hand in any Flutter app: it is an independent
+- **A Flutter developer**, who may use the `synapsis` package by hand in any Flutter app: it is an independent
   package.
 
 ## What it is
@@ -33,7 +33,7 @@ Apps for Android, iOS, desktop and web through one UI toolkit. Three parts (ADR-
 1. the **contract and its dialects**: `platform.toml` here; `flutter`, the only dialect today, in the
    [`dart` dialect project](../../../../../nuclearlang/dialects/dart/AGENTS.md). Kinds and decorators add
    behaviour: a `repository` with `@get` is the http call, the mapping and the cache;
-2. the **runtime**: the `dragonfly` package, and `dragonfly_genkit` for the `genkit` plugin;
+2. the **runtime**: the `synapsis` package, and `synapsis_genkit` for the `genkit` plugin;
 3. the **CLI and the editor extensions**, each its own project
    ([`tools/cli/`](../../../../../tools/cli/AGENTS.md), [`extensions/`](../../../../../extensions/AGENTS.md)).
 

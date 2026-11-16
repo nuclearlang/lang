@@ -1,6 +1,6 @@
 # Genkit in a Flutter app
 
-The `genkit` plugin of the `flutter` dialect brings **Genkit Dart** into a Dragonfly app: chats with memory and
+The `genkit` plugin of the `flutter` dialect brings **Genkit Dart** into a Synapsis app: chats with memory and
 tools, typed flows with structured output, search by meaning (RAG) and flows of a Genkit server, all written in
 Nuclear. This guide follows `examples/examples-flutter-dialect/genkit-assistant`, a chat assistant that keeps notes
 and runs on a local Ollama. The full rules are in [flutter.md §6.20](../../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md).
@@ -8,7 +8,7 @@ and runs on a local Ollama. The full rules are in [flutter.md §6.20](../../../.
 ## 1. Enable it
 
 Genkit is a plugin: an app that does not enable it does not carry its packages. Enable `genkit` and one provider in
-`config.nuc`; `dragonfly build` adds their packages to the app:
+`config.nuc`; `nuclear build` adds their packages to the app:
 
 ```nuclear
 plugins(genkit = true, openAI = true)
@@ -182,6 +182,6 @@ tests AssistantTests
 
 ```sh
 ollama pull qwen3.5:4b && ollama pull embeddinggemma   # for the example's local provider
-dragonfly build && dragonfly test
-dragonfly run
+nuclear build && nuclear test
+nuclear run
 ```

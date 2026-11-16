@@ -29,8 +29,8 @@ esac
 EXE=""
 [ "$os" = windows ] && EXE=".exe"
 
-# the three binaries
-cargo build --release --quiet --manifest-path "$REPO/Cargo.toml" -p nuclear-cli -p nuclear-lsp -p dragonfly ${TARGET:+--target "$TARGET"}
+# the two binaries
+cargo build --release --quiet --manifest-path "$REPO/Cargo.toml" -p nuclear-cli -p nuclear-lsp ${TARGET:+--target "$TARGET"}
 out=release
 [ -n "$TARGET" ] && out="$TARGET/release"
 
@@ -39,7 +39,7 @@ dist="$REPO/installer/dist"
 stage="$dist/$name/nuclearlang"
 rm -rf "$dist/$name"
 "$REPO/installer/release/stage.sh" "$stage" \
-  "$REPO/target/$out/nuclear$EXE" "$REPO/target/$out/dragonfly$EXE" "$REPO/target/$out/nuclear-lsp$EXE"
+  "$REPO/target/$out/nuclear$EXE" "$REPO/target/$out/nuclear-lsp$EXE"
 echo "$VERSION" > "$stage/VERSION"
 
 cd "$dist/$name"

@@ -4,7 +4,7 @@
 # from the working tree. Used by installer/install.sh (from source) and by installer/release/package.sh (the archives
 # the installers download).
 #
-#   installer/release/stage.sh <dest> <binary>...      the binaries: nuclear, dragonfly, nuclear-lsp (built before)
+#   installer/release/stage.sh <dest> <binary>...      the binaries: nuclear, nuclear-lsp (built before)
 set -eu
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 DEST=$1
@@ -14,19 +14,23 @@ FRAMEWORK="$REPO/nuclear-synapsis-framework"
 VSCODE="$REPO/extensions/vscode"
 GRAPH="$REPO/nuclear-graph-storage"
 DEVELOPER="$REPO/nuclear-agents/nuclear_developer"
+GENERATORS="$REPO/tools/code_generator/platforms"
+MCP="$REPO/tools/mcp"
 
 rm -rf "$DEST"
 mkdir -p "$DEST/bin" "$DEST/packages"
 for b in "$@"; do cp "$b" "$DEST/bin/"; done
-# nuclear-loop (ADR-platform-0003): the Loop engine bundled for node by the VS Code extension (`npm run loop`)
-if [ -f "$VSCODE/out/nuclear-loop.js" ]; then
-  cp "$VSCODE/out/nuclear-loop.js" "$DEST/bin/"
-  printf '#!/bin/sh\nexec node "$(dirname "$(readlink -f "$0")")/nuclear-loop.js" "$@"\n' > "$DEST/bin/nuclear-loop"
-  chmod +x "$DEST/bin/nuclear-loop"
-  printf '@node "%%~dp0nuclear-loop.js" %%*\r\n' > "$DEST/bin/nuclear-loop.cmd"
+# nuclear-builder (ADR-platform-0003): the Builder engine bundled for node by the VS Code extension (`npm run builder`)
+if [ -f "$VSCODE/out/nuclear-builder.js" ]; then
+  cp "$VSCODE/out/nuclear-builder.js" "$DEST/bin/"
+  printf '#!/bin/sh\nexec node "$(dirname "$(readlink -f "$0")")/nuclear-builder.js" "$@"\n' > "$DEST/bin/nuclear-builder"
+  chmod +x "$DEST/bin/nuclear-builder"
+  printf '@node "%%~dp0nuclear-builder.js" %%*\r\n' > "$DEST/bin/nuclear-builder.cmd"
 fi
 # the dialects (each language with its frameworks, definitions and docs) and the framework's guides
 cp -R "$LANGUAGE/dialects" "$DEST/dialects"
+# what the code generator writes per platform (`<platform>/generators.toml`)
+cp -R "$GENERATORS" "$DEST/generators"
 mkdir -p "$DEST/docs"
 cp -R "$FRAMEWORK/docs/08-guides" "$DEST/docs/"
 for r in "$FRAMEWORK"/platforms/*/; do
@@ -55,7 +59,7 @@ done
 find "$DEST/packages" -depth \( -name build -o -name .dart_tool -o -name node_modules -o -name __pycache__ \
   -o -name .pytest_cache -o -name '*.egg-info' -o -name dist-test \) -type d -exec rm -rf {} +
 find "$DEST/packages" -name pubspec.lock -type f -exec rm -f {} +
-# the definitions generator `dragonfly flutter add` runs (its `dart pub get` happens on first use)
+# the definitions generator `nuclear flutter add` runs (its `dart pub get` happens on first use)
 mkdir -p "$DEST/tools/defs"
 for f in bin pubspec.yaml pubspec.lock python typescript; do
   if [ -e "$LANGUAGE/tools/defs/$f" ]; then cp -R "$LANGUAGE/tools/defs/$f" "$DEST/tools/defs/"; fi
@@ -64,7 +68,7 @@ done
 mkdir -p "$DEST/agents"
 cp -R "$REPO/tools/cli/agent-files/skills" "$DEST/agents/"
 # the AI services (ADR-installer-0002): the code of the Smart Graph with its knowledge base, and of the Nuclear Developer. Their
-# set-up (nuclear-loop setup, the editor) makes the environments, downloads the models and starts them.
+# set-up (nuclear-builder setup, the editor) makes the environments, downloads the models and starts them.
 if [ -f "$GRAPH/pyproject.toml" ] && [ -f "$DEVELOPER/config.nuc" ]; then
   # the same folders as in the working tree (the Developer names the graph by a relative path)
   G="$DEST/ai/nuclear-graph-storage"
@@ -75,5 +79,10 @@ if [ -f "$GRAPH/pyproject.toml" ] && [ -f "$DEVELOPER/config.nuc" ]; then
   cp "$GRAPH"/*.nuc "$REPO/LICENSE" "$G/"
   for f in config.nuc components config defs README.md; do cp -R "$DEVELOPER/$f" "$D/"; done
   cp "$REPO/LICENSE" "$D/"
+  # the MCP server, a project of its own that names the graph by a relative path (../../nuclear-graph-storage)
+  M="$DEST/ai/tools/mcp"
+  mkdir -p "$M"
+  for f in pyproject.toml nuclear.toml defs tests; do cp -R "$MCP/$f" "$M/"; done
+  cp "$MCP"/*.nuc "$REPO/LICENSE" "$M/"
   find "$DEST/ai" -name __pycache__ -type d -exec rm -rf {} +
 fi

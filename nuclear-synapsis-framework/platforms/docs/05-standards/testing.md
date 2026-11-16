@@ -13,13 +13,13 @@ that start with `nuclearlang/`, `nuclear-synapsis-framework/` or `.github/` star
 
 | Level | What it covers | Where |
 |---|---|---|
-| The contract | Every framework dialect loads, names its platform and matches its `platform.toml`; a dialect that names a platform nobody declares, or adds a kind, is refused | `dragonfly_dialects_implement_their_platform` in `nuclearlang/crates/nuclear-dialect/tests/loader.rs` |
+| The contract | Every framework dialect loads, names its platform and matches its `platform.toml`; a dialect that names a platform nobody declares, or adds a kind, is refused | `synapsis_dialects_implement_their_platform` in `nuclearlang/crates/nuclear-dialect/tests/loader.rs` |
 | The layout | Every kind of every platform has a `.nuc` path in `[layout]` | `every_platform_kind_has_a_place_in_the_layout`, same file |
 | Editor docs | Every word of a dialect has its entry in `docs.toml` | `every_dialect_word_has_editor_docs`, same file |
 | Kind packages | A package of a platform extends a dialect of that platform | `kind_packages_extend_a_platform_dialect`, same file |
 | Conformance | One example of a platform, built from the same `.nuc` files with every dialect of the platform | `backend_example_builds_with_every_backend_dialect` in `nuclearlang/crates/nuclear-transpile/tests/projects.rs` (`tasks_api` with `nestjs` and `fastapi`) |
 | Goldens | Each example's generated output equals `<platform>/examples/expected/<project>/` | `nuclearlang/crates/nuclear-transpile/tests/projects.rs` |
-| Generators | A generated resource and its use cases compile with every dialect; a new project compiles with its dialect | `a_generated_resource_compiles_with_every_dialect` (`nuclear-synapsis-framework/cli/src/main.rs`), `every_new_project_compiles_with_its_dialect` (`cli/src/scaffold.rs`) |
+| Generators | A generated resource and its use cases compile with every dialect; a new project compiles with its dialect | `a_generated_resource_compiles_with_every_dialect` (`tools/cli/src/framework/mod.rs`), `every_new_project_compiles_with_its_dialect` (`tools/code_generator/src/scaffold.rs`) |
 | The target's own tools | The generated project passes its analyzer, its test runner and a live run | each platform's `checks/` |
 
 ## How to run them
@@ -27,14 +27,14 @@ that start with `nuclearlang/`, `nuclear-synapsis-framework/` or `.github/` star
 ```sh
 cargo test -p nuclear-dialect --test loader       # the contracts, the layout, the editor docs, kind packages
 cargo test -p nuclear-transpile --test projects   # the examples: goldens and conformance
-cargo test -p dragonfly                           # the generators and the new projects
+cargo test -p nuclear-cli -p nuclear-codegen     # the generators and the new projects
 UPDATE_GOLDEN=1 cargo test                        # generated output changed on purpose: regenerate, review the diff
 
 sh nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh   # pyright --strict, pytest, a live run
 sh nuclear-synapsis-framework/platforms/backend/checks/nestjs-check/check.sh    # tsc --strict, node:test, a live run
 sh nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh         # tsc --strict, vitest, vite build
 nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh           # flutter analyze of the examples
-python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py   # the flutter reference's blocks equal the example
+python3 nuclear-synapsis-framework/platforms/mobile/checks/spec-check-synapsis.py   # the flutter reference's blocks equal the example
 ```
 
 What each check needs installed (`nuclearlang/tools/node`, `nuclearlang/tools/python/.venv`, the Flutter SDK) is in

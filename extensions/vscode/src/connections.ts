@@ -1,13 +1,13 @@
 // Every external connection of the extension, checked (ADR-platform-0003): the Nuclear Developer, the Smart Graph, Ollama and
 // the local models, and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira). Before
-// every task (a Loop run checks its own: loopEngine `preflight`; a chat question: `checkForChat`) and every
+// every task (a Builder run checks its own: builderEngine `preflight`; a chat question: `checkForChat`) and every
 // `nuclear.ai.checkEveryMinutes`: a connection that stops answering, or answers again, is a notification.
 import { execFile } from 'node:child_process';
 import * as os from 'node:os';
 import * as vscode from 'vscode';
 import { aiSettings, JIRA_SECRET } from './aiSettings';
-import { toolEnv } from './loopEngine';
-import { Check, checkConnections } from './loopSafety';
+import { toolEnv } from '../../tools/nuclear-builder/src/engine';
+import { Check, checkConnections } from '../../tools/nuclear-builder/src/safety';
 import { notices } from './notifications';
 
 function run(cmd: string, args: string[]): Promise<{ ok: boolean; out: string }> {

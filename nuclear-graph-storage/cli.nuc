@@ -1,4 +1,5 @@
 use os
+use json
 use sys
 use shutil
 use argparse
@@ -100,7 +101,7 @@ checkExamples(out: Path) int
         for at in 1..pieces.length
           code: string = pieces[at].split("```")[0]
           // a project's manifest (config.nuc) is not a file to check alone
-          if Regex(r"^dragonfly\(", multiline = true).test(code)
+          if Regex(r"^synapsis\(", multiline = true).test(code)
             continue
           blocks += 1
           file.writeText(code)
@@ -167,9 +168,18 @@ graphHelp() string
   os.environ["COLUMNS"] = "100"
   graphParser().formatHelp()
 
+// The instructions and the tools of the MCP server (`nuclear-mcp tools`, a project of its own), as data for the
+// knowledge base; nothing when it is not installed.
+mcpServed() <string, any>
+  server = shutil.which("nuclear-mcp")
+  if server == null
+    return { "instructions": "", "tools": [] }
+  out = subprocess.run([server!, "tools"], captureOutput = true, text = true, timeout = 120, check = true)
+  json.loads(out.stdout)
+
 // What the knowledge base reads of this machine: the MCP server's tools and the HTTP routes, each from its module.
 knowledgeContext(tree: Path, out: Path) Context
-  Knowledge.context(tree, out, () => graphPart("mcp_server").mcpTools(), graphHelp, () => graphPart("server").graphRoutes())
+  Knowledge.context(tree, out, () => mcpServed(), graphHelp, () => graphPart("server").graphRoutes())
 
 knowledgeCommand(args: any) void
   tree: Path = Path(args.tree).resolve()
@@ -224,7 +234,11 @@ main(argv: string[]? = null) void
     // the web server is a library of its own, loaded only to serve
     importlib.importModule("uvicorn").run(graphPart("server").graphApp(), host = "127.0.0.1", port = graphPort(), logLevel = "warning")
   else if cmd == "mcp"
-    graphPart("mcp_server").mcpMain()
+    // the MCP server is a project of its own (tools/mcp): an agent set up with `nuclear-graph mcp` still reaches it
+    server = shutil.which("nuclear-mcp")
+    if server == null
+      sys.exit("the MCP server is `nuclear-mcp` (tools/mcp of NuclearLang), which is not installed: run the AI set-up")
+    os.execv(server!, [server!])
   else if cmd == "ingest"
     given = "${args.folder}"
     folder: Path = given.length > 0 ? Path(given).resolve() : Path(treeRoot()).resolve().joinpath("nuclear-graph-storage", "data")

@@ -4,10 +4,10 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/change-a-runtime.md]
 ---
-# The Python runtime: `dragonfly-py`
+# The Python runtime: `synapsis-py`
 
-`packages/dragonfly-py` (distribution `dragonfly-py`, imported as `dragonfly`, Python 3.12+): what the code of the
-`fastapi` dialect imports. Sources in `src/dragonfly/`, tests in `tests/`.
+`packages/synapsis-py` (distribution `synapsis-py`, imported as `synapsis`, Python 3.12+): what the code of the
+`fastapi` dialect imports. Sources in `src/synapsis/`, tests in `tests/`.
 
 ## Modules
 
@@ -55,13 +55,13 @@ How the data words of [ADR-backend-0001](../03-adr/0001-backend-data.md) are bui
 
 ## Migrations
 
-`dragonfly.migrate` runs Alembic for `dragonfly migrate` (the dialect's `[toolchain]` keys `migrate_make`,
+`synapsis.migrate` runs Alembic for `nuclear migrate` (the dialect's `[toolchain]` keys `migrate_make`,
 `migrate`, `migrate_down`):
 
 ```sh
-python -m dragonfly.migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the last one
-python -m dragonfly.migrate up --dir <migrations>                         # applies the pending ones
-python -m dragonfly.migrate down --dir <migrations>                       # reverts the last one
+python -m synapsis.migrate make "add done to tasks" --dir <migrations>   # one migration: the entities minus the last one
+python -m synapsis.migrate up --dir <migrations>                         # applies the pending ones
+python -m synapsis.migrate down --dir <migrations>                       # reverts the last one
 ```
 
 - `make` never reads the database: it brings an empty SQLite in memory to the last migration and lets Alembic's
@@ -78,6 +78,6 @@ python -m dragonfly.migrate down --dir <migrations>                       # reve
   `test_http.py`, `test_migrate.py`; pytest with `asyncio_mode = "auto"`. The fastapi check runs them
   ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
-  `nuclearlang/dialects/python/defs/dragonfly/<version>/` (modules `dragonfly`, `dragonfly.ai`, `dragonfly.events`,
-  `dragonfly.testing`, `dragonfly.validators`): regenerated after a change of the public API
+  `nuclearlang/dialects/python/defs/synapsis/<version>/` (modules `synapsis`, `synapsis.ai`, `synapsis.events`,
+  `synapsis.testing`, `synapsis.validators`): regenerated after a change of the public API
   ([runbook](../06-runbooks/change-a-runtime.md)).

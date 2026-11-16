@@ -5,9 +5,9 @@ use pathlib{ Path }
 factRows() <string, <string, any>[]>
   {
     "tools": [
-      Testing.row("mcp:generate_resource", { "type": "mcp", "title": "generate_resource", "summary": "The finished code of a resource.", "body": "SECRET BODY", "keys": ["generate_resource", "generate resource"], "meta": { "tool": "mcp", "name": "generate_resource" }, "data": { "group": "generate", "runs": "dragonfly gen resource", "params": [{ "name": "project", "type": "string", "required": true, "default": "" }, { "name": "actions", "type": "array", "required": false, "default": "null" }] } }),
+      Testing.row("mcp:generate_resource", { "type": "mcp", "title": "generate_resource", "summary": "The finished code of a resource.", "body": "SECRET BODY", "keys": ["generate_resource", "generate resource"], "meta": { "tool": "mcp", "name": "generate_resource" }, "data": { "group": "generate", "runs": "nuclear gen resource", "params": [{ "name": "project", "type": "string", "required": true, "default": "" }, { "name": "actions", "type": "array", "required": false, "default": "null" }] } }),
       Testing.row("mcp:graph_search", { "type": "mcp", "title": "graph_search", "summary": "Searches the graph.", "keys": ["graph_search"], "meta": { "tool": "mcp", "name": "graph_search" }, "data": { "group": "graph", "runs": "", "params": [{ "name": "query", "type": "string", "required": true, "default": "" }] } }),
-      Testing.row("tool:dragonfly.make", { "type": "cli", "title": "dragonfly make", "summary": "Writes a file of a kind.", "keys": ["dragonfly make"], "meta": { "tool": "dragonfly", "name": "make" }, "data": { "command": "dragonfly make", "entries": [{ "what": "usecase", "usage": "dragonfly make usecase <component> <name>", "alias": "uc", "note": "", "does": "A use case" }, { "what": "model", "usage": "dragonfly make model <component> <name>", "alias": "mo", "note": "", "does": "A model" }] } }),
+      Testing.row("tool:nuclear.make", { "type": "cli", "title": "nuclear make", "summary": "Writes a file of a kind.", "keys": ["nuclear make"], "meta": { "tool": "synapsis", "name": "make" }, "data": { "command": "nuclear make", "entries": [{ "what": "usecase", "usage": "nuclear make usecase <component> <name>", "alias": "uc", "note": "", "does": "A use case" }, { "what": "model", "usage": "nuclear make model <component> <name>", "alias": "mo", "note": "", "does": "A model" }] } }),
     ],
     "platforms": [
       Testing.row("kind:backend.usecase", { "type": "kind", "title": "usecase", "summary": "One business operation.", "platforms": ["backend"], "keys": ["usecase", "use case", "caso de uso"], "asks": ["que es un caso de uso"], "meta": { "kind": "usecase", "name": "usecase" }, "data": { "platform": "backend", "file": "components/{component}/domain/usecases/{file}.nuc", "decorators": ["transactional"] } }),
@@ -69,12 +69,12 @@ testAnExactQuestionIsAnsweredByItsQueryAndTheRestByTheShelves(tmpPath: Path) voi
   plan = Planner.answer(store, facts, "que servicios ofrece el mcp")
   exact: <string, any>[] = plan["exact"]!
   expect(exact.length == 1 and exact[0]["id"] == "query:mcp.tools" and exact[0]["total"] == 2)
-  expect("- generate | generate_resource | The finished code of a resource. | dragonfly gen resource" in "${plan["facts"]}")
+  expect("- generate | generate_resource | The finished code of a resource. | nuclear gen resource" in "${plan["facts"]}")
   // the names the question writes fill the query's parameters, also as people say them
   made = Planner.answer(store, facts, "como creo un caso de uso")
   runs: <string, any>[] = made["exact"]!
   expect(runs[0]["id"] == "query:kind.create" and runs[0]["params"] == { "kind": "usecase" })
-  expect(runs[0]["rows"] == [{ "run": "dragonfly make usecase <component> <name>", "writes": "A use case" }])
+  expect(runs[0]["rows"] == [{ "run": "nuclear make usecase <component> <name>", "writes": "A use case" }])
   // a follow-up takes the name it leaves out from the message before it
   after = Planner.answer(store, facts, "which command creates it", history = "you: what is a model\nagent: what the API reads")
   followed: <string, any>[] = after["exact"]!
@@ -100,11 +100,11 @@ testAnExactQuestionIsAnsweredByItsQueryAndTheRestByTheShelves(tmpPath: Path) voi
   told = http.post("/v1/answer", json = { "question": "que servicios ofrece el mcp" }, headers = Testing.auth()).json()
   expect(told["exact"][0]["id"] == "query:mcp.tools" and told["exact"][0]["total"] == 2)
   again = http.post("/v1/answer", json = { "question": "como creo un caso de uso" }, headers = Testing.auth()).json()
-  expect(again["exact"][0]["rows"] == [{ "run": "dragonfly make usecase <component> <name>", "writes": "A use case" }])
+  expect(again["exact"][0]["rows"] == [{ "run": "nuclear make usecase <component> <name>", "writes": "A use case" }])
   for file in tmpPath.rglob("*")
     if file.isFile()
       raw: Bytes = file.readBytes()
-      expect(not ("dragonfly make usecase".toBytes() in raw))
+      expect(not ("nuclear make usecase".toBytes() in raw))
 
 testTheCatalogueOfThisTreeIsValid() void
   file = Path(treeRoot()).joinpath("nuclear-graph-storage", "data", "assets", "queries", "exact.json")

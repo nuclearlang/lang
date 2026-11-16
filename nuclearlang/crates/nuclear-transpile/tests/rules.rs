@@ -295,7 +295,7 @@ fn stateful_params_are_read_through_widget() {
 
 #[test]
 fn nest_kinds_inject_and_route() {
-    // Dragonfly for NestJS: names stay as written, dependencies are injected, @get is Nest's @Get, the route of the
+    // Synapsis for NestJS: names stay as written, dependencies are injected, @get is Nest's @Get, the route of the
     // controller is its name without the suffix, and a route parameter is read and parsed by itself
     let code = build(
         "service UsersService\n  all() string[]\n    []\ncontroller UsersController(users: UsersService)\n  @get(\":id\")\n  one(id: int) string[]\n    users.all()\n",

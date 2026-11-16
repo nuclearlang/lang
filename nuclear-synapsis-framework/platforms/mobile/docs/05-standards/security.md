@@ -6,7 +6,7 @@ related: [02-architecture/runtime.md, 02-architecture/local-database.md, 08-guid
 ---
 # Security and performance rules
 
-Dragonfly must warn when code breaks one of these.
+Synapsis must warn when code breaks one of these.
 
 | Topic | Rule |
 |---|---|

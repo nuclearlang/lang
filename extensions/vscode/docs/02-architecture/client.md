@@ -4,7 +4,7 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [overview.md, debugging.md, ../../../docs/02-architecture/language-server.md]
 ---
-# The client and Dragonfly projects (`src/extension.ts`, `src/card.ts`)
+# The client and Synapsis projects (`src/extension.ts`, `src/card.ts`)
 
 ## The client
 
@@ -23,35 +23,35 @@ of a dialect.
 Settings: `nuclear.dialect` (`flutter` by default; `base` checks only the base language), `nuclear.dialectPaths`,
 `nuclear.server.path`, `nuclear.trace.server`.
 
-## A Dragonfly project
+## A Synapsis project
 
-`findDragonfly(root?)` reads `build/<name>.code-workspace`, which `dragonfly build` writes; it works with the
-workspace file open (`dragonfly code`) and with only the folder open (`code .`). It takes a project's root, so a tab
-of the Nuclear workspace runs its own project; `dragonflyOf(file)` walks up from a file for the hot reload on save.
+`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes; it works with the
+workspace file open (`nuclear code`) and with only the folder open (`code .`). It takes a project's root, so a tab
+of the Nuclear workspace runs its own project; `synapsisOf(file)` walks up from a file for the hot reload on save.
 
 ### Mobile
 
 - **▷ Run / Debug** (`editor/title/run`, context `nuclear.canRun`) and **F5 without `launch.json`** (the debugger
-  `dragonfly` resolves to a `dart` configuration): both run `dragonfly build` first (the queue `buildQueue`, the
-  output panel *Dragonfly*) and launch the `<project> (debug)` configuration of the workspace file.
+  `synapsis` resolves to a `dart` configuration): both run `nuclear build` first (the queue `buildQueue`, the
+  output panel *Synapsis*) and launch the `<project> (debug)` configuration of the workspace file.
   `runApp(noDebug, deviceId, extra, root)`.
 - **Ctrl+S on a `.nuc`** → build + `flutter.hotReload` when a `dart` session is running.
 - *Reload Window* is offered when the app appears with the window already open: the Dart extension ignores a new
   app inside `build/` until the window opens again.
 - **Repair**, only when something fails:
-  - a build that exits with a code other than 0 and 2 → `dragonfly repair`;
+  - a build that exits with a code other than 0 and 2 → `nuclear repair`;
   - `watchSession` (a `DebugAdapterTracker` of `dart`) marks `flutter.appStarted` and the user's stops, and reads the
     output: `Hot reload was rejected` → `flutter.hotRestart`; a compile error → `repairAndRelaunch`;
   - a session that ends without starting and without Stop → repair, then launch again.
-  - Once per launch (`dragonflyRepaired`). A relaunch from `repairAndRelaunch` is a new launch
-    (`dragonflyToolArgs`).
+  - Once per launch (`synapsisRepaired`). A relaunch from `repairAndRelaunch` is a new launch
+    (`synapsisToolArgs`).
 
 ### Backend and web
 
 `extension.ts` reads any `(debug)` launch of `build/<name>.code-workspace`: the CLI writes debugpy for fastapi, node
-with source maps for nestjs and chrome for react (`nuclear-synapsis-framework/cli/src/vscode.rs`, `write_platform`).
+with source maps for nestjs and chrome for react (`tools/cli/src/framework/vscode.rs`, `write`).
 `runPlatformApp` builds and starts it (a react app's dev server first, in its terminal). Saving a `.nuc` of a
-backend or web project runs `dragonfly build` (`nuclear.buildOnSave`), and the server or the page reloads by itself
+backend or web project runs `nuclear build` (`nuclear.buildOnSave`), and the server or the page reloads by itself
 (uvicorn `--reload`, `node --watch`, Vite).
 
 The buttons of each platform and their shortcuts are the workspace's: [workspace.md](workspace.md).

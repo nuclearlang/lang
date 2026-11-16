@@ -6,7 +6,7 @@ deciders: Julian Molina
 # ADR-0005: Every app gets the same services from the framework: events, session, ACL, forms, translations and generic models
 
 ## Context and problem
-With Dragonfly a project does not choose and wire packages: what an app always needs comes with the framework, as
+With Synapsis a project does not choose and wire packages: what an app always needs comes with the framework, as
 the same concepts in every platform, implemented natively by each one. These are the decisions on what those
 services are and how they are written in Nuclear.
 
@@ -25,7 +25,7 @@ optional.
 
 **Forms.** Format validation belongs to presentation: a form model (kind `form`, in `presentation/<p>/forms/`)
 with the rules as decorators on its fields (`@required`, `@email`, `@minLength(n)`...), a form manager (kind
-`formmanager`, `@form(F)`) that only validates, and widgets (`DragonflyForm`, `FormTextField`...) bound by field
+`formmanager`, `@form(F)`) that only validates, and widgets (`SynapsisForm`, `FormTextField`...) bound by field
 name. Business rules stay in the domain; `@validate("field")` asks the component.
 
 **Translations.** Native JSON dictionaries (no third-party libraries), one per component and language in

@@ -10,7 +10,7 @@
    "title": "Acceptor — a local agent of the Nuclear Developer",
    "summary": "The acceptor: holds each acceptance criterion of a spec against what a run left.",
    "body": [
-    "The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Loop (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.",
+    "The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Builder (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.",
     "",
     "Its steps, always in this order: judge.",
     "",
@@ -78,7 +78,7 @@
    "title": "Assistant — a local agent of the Nuclear Developer",
    "summary": "The assistant: answers a message of the chat about the project or about NuclearLang.",
    "body": [
-    "The assistant: answers a message of the chat about the project or about NuclearLang. The graph's query planner reads the message first, without a model: a question with one right answer (every command of a tool, the tools of the MCP server and their parameters, the commands that write a kind...) gets the rows of the graph's database, whole (`facts`), and the rest the cards of the shelves closest to it (`knowledge`). The model writes the answer from both, the project's map and the last messages of the session; the rows then end the answer as the graph gave them, put there by this code: a model retells a long list in part, so the list never depends on it. It explains and proposes Nuclear; it changes no file (an order to change the project is a Loop run). Prompt: agents/chat.md.",
+    "The assistant: answers a message of the chat about the project or about NuclearLang. The graph's query planner reads the message first, without a model: a question with one right answer (every command of a tool, the tools of the MCP server and their parameters, the commands that write a kind...) gets the rows of the graph's database, whole (`facts`), and the rest the cards of the shelves closest to it (`knowledge`). The model writes the answer from both, the project's map and the last messages of the session; the rows then end the answer as the graph gave them, put there by this code: a model retells a long list in part, so the list never depends on it. It explains and proposes Nuclear; it changes no file (an order to change the project is a Builder run). Prompt: agents/chat.md.",
     "",
     "Its steps, always in this order: recall → answer.",
     "",
@@ -146,7 +146,7 @@
    "title": "Diagnoser — a local agent of the Nuclear Developer",
    "summary": "The diagnoser: tells why a step of the pipeline failed and what to do next.",
    "body": [
-    "The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `dragonfly doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.",
+    "The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `nuclear doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.",
     "",
     "Its steps, always in this order: gather → explain.",
     "",

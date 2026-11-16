@@ -2,8 +2,8 @@ import 'package:clean_flutter_project/components/characters/characters_component
 import 'package:clean_flutter_project/components/characters/domain/models/character.dart';
 import 'package:clean_flutter_project/components/characters/domain/models/character_error.dart';
 import 'package:clean_flutter_project/components/characters/presentation/list/state_models/characters_state.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 class CharactersManager extends StateManager<CharactersState> {
   CharactersManager(this.characters) : super(const CharactersState.initial()) {

@@ -98,9 +98,9 @@
    "id": "query:can",
    "type": "query",
    "title": "Exact: what can be done",
-   "summary": "Everything NuclearLang and Dragonfly can do today, by area; for one platform when it is named.",
+   "summary": "Everything NuclearLang and Synapsis can do today, by area; for one platform when it is named.",
    "body": [
-    "Everything NuclearLang and Dragonfly can do today, by area; for one platform when it is named.",
+    "Everything NuclearLang and Synapsis can do today, by area; for one platform when it is named.",
     "",
     "It reads `capabilities`, `platforms` of the exact facts; its parameters: `platform`.",
     "",
@@ -119,7 +119,7 @@
     "que puede hacer",
     "que soporta el backend",
     "funcionalidades",
-    "que se puede hacer con dragonfly"
+    "que se puede hacer con synapsis"
    ],
    "sources": [
     "nuclear-graph-storage/facts.nuc"
@@ -149,9 +149,9 @@
    "id": "query:cannot",
    "type": "query",
    "title": "Exact: what cannot be done yet, and the limits",
-   "summary": "Everything NuclearLang, Dragonfly or the local agents cannot do yet and their known limits, by area; for one platform when it is named.",
+   "summary": "Everything NuclearLang, Synapsis or the local agents cannot do yet and their known limits, by area; for one platform when it is named.",
    "body": [
-    "Everything NuclearLang, Dragonfly or the local agents cannot do yet and their known limits, by area; for one platform when it is named.",
+    "Everything NuclearLang, Synapsis or the local agents cannot do yet and their known limits, by area; for one platform when it is named.",
     "",
     "It reads `capabilities`, `platforms` of the exact facts; its parameters: `platform`.",
     "",
@@ -213,13 +213,13 @@
     "```"
    ],
    "asks": [
-    "how do I use dragonfly gen resource",
+    "how do I use nuclear gen resource",
     "options of nuclear check",
     "usage of the build command",
-    "como se usa dragonfly gen resource",
+    "como se usa nuclear gen resource",
     "que opciones tiene nuclear check",
     "como uso el comando make",
-    "que hace dragonfly migrate"
+    "que hace nuclear migrate"
    ],
    "sources": [
     "nuclear-graph-storage/facts.nuc"
@@ -247,9 +247,9 @@
    "id": "query:cli.commands",
    "type": "query",
    "title": "Exact: every command of a command line tool",
-   "summary": "Every command of a command line tool (nuclear, dragonfly, nuclear-loop, nuclear-graph), each with its usage line and what it does; of every tool when none is named.",
+   "summary": "Every command of a command line tool (nuclear, synapsis, nuclear-builder, nuclear-graph), each with its usage line and what it does; of every tool when none is named.",
    "body": [
-    "Every command of a command line tool (nuclear, dragonfly, nuclear-loop, nuclear-graph), each with its usage line and what it does; of every tool when none is named.",
+    "Every command of a command line tool (nuclear, synapsis, nuclear-builder, nuclear-graph), each with its usage line and what it does; of every tool when none is named.",
     "",
     "It reads `commands` of the exact facts; its parameters: `tool`.",
     "",
@@ -262,13 +262,13 @@
     "comandos"
    ],
    "asks": [
-    "list the commands of dragonfly",
+    "list the commands of synapsis",
     "what commands does nuclear have",
     "all the commands",
-    "lista los comandos de dragonfly",
+    "lista los comandos de synapsis",
     "que comandos tiene nuclear",
     "cuales son todos los comandos que puedo usar",
-    "comandos de nuclear-loop",
+    "comandos de nuclear-builder",
     "comandos de nuclear-graph"
    ],
    "sources": [
@@ -297,9 +297,9 @@
    "id": "query:cli.tools",
    "type": "query",
    "title": "Exact: the command line tools of the ecosystem",
-   "summary": "The command line tools of NuclearLang and Dragonfly (nuclear, dragonfly, nuclear-loop, nuclear-graph) and what each one is for.",
+   "summary": "The command line tools of NuclearLang and Synapsis (nuclear, synapsis, nuclear-builder, nuclear-graph) and what each one is for.",
    "body": [
-    "The command line tools of NuclearLang and Dragonfly (nuclear, dragonfly, nuclear-loop, nuclear-graph) and what each one is for.",
+    "The command line tools of NuclearLang and Synapsis (nuclear, synapsis, nuclear-builder, nuclear-graph) and what each one is for.",
     "",
     "It reads `cards`, `field` of the exact facts.",
     "",
@@ -315,7 +315,7 @@
     "which command line tools are there",
     "what CLIs does nuclear have",
     "que herramientas de linea de comandos hay",
-    "cuales son los CLI de nuclear y dragonfly",
+    "cuales son los CLI de nuclear y synapsis",
     "que programas instala nuclearlang"
    ],
    "sources": [
@@ -337,9 +337,9 @@
    "id": "query:components",
    "type": "query",
    "title": "Exact: every component of the ecosystem and its version",
-   "summary": "Every component of the ecosystem (the compiler, the Dragonfly CLI, the Smart Graph, the local agents, the editor extensions, the runtimes) with its version and the file that says it; or one of them.",
+   "summary": "Every component of the ecosystem (the compiler, the `nuclear` command, the Smart Graph, the local agents, the editor extensions, the runtimes) with its version and the file that says it; or one of them.",
    "body": [
-    "Every component of the ecosystem (the compiler, the Dragonfly CLI, the Smart Graph, the local agents, the editor extensions, the runtimes) with its version and the file that says it; or one of them.",
+    "Every component of the ecosystem (the compiler, the `nuclear` command, the Smart Graph, the local agents, the editor extensions, the runtimes) with its version and the file that says it; or one of them.",
     "",
     "It reads `components` of the exact facts; its parameters: `component`.",
     "",
@@ -354,10 +354,10 @@
    "asks": [
     "what version is nuclear",
     "versions of everything",
-    "which version of dragonfly",
+    "which version of synapsis",
     "que version es nuclear",
     "versiones de todo",
-    "que version tengo de dragonfly",
+    "que version tengo de synapsis",
     "componentes del ecosistema"
    ],
    "sources": [
@@ -387,14 +387,14 @@
    "id": "query:create.commands",
    "type": "query",
    "title": "Exact: the commands that create or generate code",
-   "summary": "Every command that creates a project or writes code: `dragonfly new`, each `dragonfly make <what>` (a file from the platform's skeleton) and each `dragonfly gen <what>` (finished, compiling code from a resource's data), with what each writes.",
+   "summary": "Every command that creates a project or writes code: `nuclear new`, each `nuclear make <what>` (a file from the platform's skeleton) and each `nuclear gen <what>` (finished, compiling code from a resource's data), with what each writes.",
    "body": [
-    "Every command that creates a project or writes code: `dragonfly new`, each `dragonfly make <what>` (a file from the platform's skeleton) and each `dragonfly gen <what>` (finished, compiling code from a resource's data), with what each writes.",
+    "Every command that creates a project or writes code: `nuclear new`, each `nuclear make <what>` (a file from the platform's skeleton) and each `nuclear gen <what>` (finished, compiling code from a resource's data), with what each writes.",
     "",
     "It reads `commands` of the exact facts.",
     "",
     "```text",
-    "SELECT usage, does FROM commands WHERE tool = 'dragonfly' AND (usage LIKE 'dragonfly make %' OR usage LIKE 'dragonfly gen %' OR usage LIKE 'dragonfly new %') ORDER BY CASE WHEN usage LIKE 'dragonfly new %' THEN 0 WHEN usage LIKE 'dragonfly gen %' THEN 1 ELSE 2 END, usage",
+    "SELECT usage, does FROM commands WHERE tool = 'synapsis' AND (usage LIKE 'nuclear make %' OR usage LIKE 'nuclear gen %' OR usage LIKE 'nuclear new %') ORDER BY CASE WHEN usage LIKE 'nuclear new %' THEN 0 WHEN usage LIKE 'nuclear gen %' THEN 1 ELSE 2 END, usage",
     "```"
    ],
    "keys": [
@@ -418,7 +418,7 @@
     "entity": "command"
    },
    "data": {
-    "sql": "SELECT usage, does FROM commands WHERE tool = 'dragonfly' AND (usage LIKE 'dragonfly make %' OR usage LIKE 'dragonfly gen %' OR usage LIKE 'dragonfly new %') ORDER BY CASE WHEN usage LIKE 'dragonfly new %' THEN 0 WHEN usage LIKE 'dragonfly gen %' THEN 1 ELSE 2 END, usage",
+    "sql": "SELECT usage, does FROM commands WHERE tool = 'synapsis' AND (usage LIKE 'nuclear make %' OR usage LIKE 'nuclear gen %' OR usage LIKE 'nuclear new %') ORDER BY CASE WHEN usage LIKE 'nuclear new %' THEN 0 WHEN usage LIKE 'nuclear gen %' THEN 1 ELSE 2 END, usage",
     "columns": [
      "command",
      "what it writes"
@@ -647,7 +647,7 @@
    "asks": [
     "keyboard shortcuts",
     "list the vscode commands",
-    "what is the shortcut for the loop",
+    "what is the shortcut for nuclear builder",
     "atajos de teclado",
     "lista los comandos de vscode",
     "cual es el atajo para abrir el loop",
@@ -852,7 +852,7 @@
     "params": [
      {
       "name": "command",
-      "values": "SELECT DISTINCT replace(command, 'dragonfly ', ''), command FROM generator_pieces UNION SELECT DISTINCT 'generate_' || replace(command, 'dragonfly gen ', ''), command FROM generator_pieces",
+      "values": "SELECT DISTINCT replace(command, 'synapsis ', ''), command FROM generator_pieces UNION SELECT DISTINCT 'generate_' || replace(command, 'nuclear gen ', ''), command FROM generator_pieces",
       "required": true
      },
      {
@@ -868,9 +868,9 @@
    "id": "query:generators",
    "type": "query",
    "title": "Exact: what each generator writes on each platform",
-   "summary": "Every generator (`dragonfly gen component`, `gen resource`, `gen usecase`) on each platform, with the kinds of the files it writes.",
+   "summary": "Every generator (`nuclear gen component`, `gen resource`, `gen usecase`) on each platform, with the kinds of the files it writes.",
    "body": [
-    "Every generator (`dragonfly gen component`, `gen resource`, `gen usecase`) on each platform, with the kinds of the files it writes.",
+    "Every generator (`nuclear gen component`, `gen resource`, `gen usecase`) on each platform, with the kinds of the files it writes.",
     "",
     "It reads `generator_pieces` of the exact facts; its parameters: `platform`.",
     "",
@@ -888,7 +888,7 @@
     "what does gen resource create",
     "que escribe cada generador",
     "lista los generadores",
-    "que genera dragonfly gen",
+    "que genera nuclear gen",
     "que archivos crea gen resource"
    ],
    "sources": [
@@ -1065,14 +1065,14 @@
    "id": "query:kind.create",
    "type": "query",
    "title": "Exact: how a kind is created (commands, generators and MCP tools)",
-   "summary": "Every way to create a declaration of a kind (a use case, an entity, a repository, a model, a controller, a screen...): the `dragonfly make` command that writes its file, the generators that write it finished, and the MCP tools that run them.",
+   "summary": "Every way to create a declaration of a kind (a use case, an entity, a repository, a model, a controller, a screen...): the `nuclear make` command that writes its file, the generators that write it finished, and the MCP tools that run them.",
    "body": [
-    "Every way to create a declaration of a kind (a use case, an entity, a repository, a model, a controller, a screen...): the `dragonfly make` command that writes its file, the generators that write it finished, and the MCP tools that run them.",
+    "Every way to create a declaration of a kind (a use case, an entity, a repository, a model, a controller, a screen...): the `nuclear make` command that writes its file, the generators that write it finished, and the MCP tools that run them.",
     "",
     "It reads `commands`, `generator_pieces`, `mcp_tools` of the exact facts; its parameters: `kind` (needed), `platform`.",
     "",
     "```text",
-    "SELECT 'command' AS how, c.usage AS run, c.does AS writes FROM commands c WHERE c.tool = 'dragonfly' AND c.what = :kind UNION ALL SELECT 'command (any kind)', c.usage, c.does FROM commands c WHERE c.what = 'kind' AND c.usage LIKE 'dragonfly make %' UNION ALL SELECT 'generator on ' || g.platform, g.command, 'writes the ' || g.kind || ' ' || g.name || CASE WHEN g.each != '' THEN ', one per ' || g.each ELSE '' END || CASE WHEN g.condition != '' THEN ' (when ' || g.condition || ')' ELSE '' END FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform) UNION ALL SELECT 'MCP tool', t.tool, 'runs `' || t.runs || '`: ' || t.does FROM mcp_tools t WHERE t.runs != '' AND (t.runs = 'dragonfly make ' || :kind OR t.runs IN (SELECT g.command FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform)))",
+    "SELECT 'command' AS how, c.usage AS run, c.does AS writes FROM commands c WHERE c.tool = 'synapsis' AND c.what = :kind UNION ALL SELECT 'command (any kind)', c.usage, c.does FROM commands c WHERE c.what = 'kind' AND c.usage LIKE 'nuclear make %' UNION ALL SELECT 'generator on ' || g.platform, g.command, 'writes the ' || g.kind || ' ' || g.name || CASE WHEN g.each != '' THEN ', one per ' || g.each ELSE '' END || CASE WHEN g.condition != '' THEN ' (when ' || g.condition || ')' ELSE '' END FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform) UNION ALL SELECT 'MCP tool', t.tool, 'runs `' || t.runs || '`: ' || t.does FROM mcp_tools t WHERE t.runs != '' AND (t.runs = 'nuclear make ' || :kind OR t.runs IN (SELECT g.command FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform)))",
     "```"
    ],
    "asks": [
@@ -1093,7 +1093,7 @@
     "entity": "kind"
    },
    "data": {
-    "sql": "SELECT 'command' AS how, c.usage AS run, c.does AS writes FROM commands c WHERE c.tool = 'dragonfly' AND c.what = :kind UNION ALL SELECT 'command (any kind)', c.usage, c.does FROM commands c WHERE c.what = 'kind' AND c.usage LIKE 'dragonfly make %' UNION ALL SELECT 'generator on ' || g.platform, g.command, 'writes the ' || g.kind || ' ' || g.name || CASE WHEN g.each != '' THEN ', one per ' || g.each ELSE '' END || CASE WHEN g.condition != '' THEN ' (when ' || g.condition || ')' ELSE '' END FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform) UNION ALL SELECT 'MCP tool', t.tool, 'runs `' || t.runs || '`: ' || t.does FROM mcp_tools t WHERE t.runs != '' AND (t.runs = 'dragonfly make ' || :kind OR t.runs IN (SELECT g.command FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform)))",
+    "sql": "SELECT 'command' AS how, c.usage AS run, c.does AS writes FROM commands c WHERE c.tool = 'synapsis' AND c.what = :kind UNION ALL SELECT 'command (any kind)', c.usage, c.does FROM commands c WHERE c.what = 'kind' AND c.usage LIKE 'nuclear make %' UNION ALL SELECT 'generator on ' || g.platform, g.command, 'writes the ' || g.kind || ' ' || g.name || CASE WHEN g.each != '' THEN ', one per ' || g.each ELSE '' END || CASE WHEN g.condition != '' THEN ' (when ' || g.condition || ')' ELSE '' END FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform) UNION ALL SELECT 'MCP tool', t.tool, 'runs `' || t.runs || '`: ' || t.does FROM mcp_tools t WHERE t.runs != '' AND (t.runs = 'nuclear make ' || :kind OR t.runs IN (SELECT g.command FROM generator_pieces g WHERE g.kind = :kind AND (:platform = '' OR g.platform = :platform)))",
     "columns": [
      "how",
      "run",
@@ -1354,10 +1354,10 @@
   {
    "id": "query:loop.stages",
    "type": "query",
-   "title": "Exact: the stages of the Nuclear Loop, in order",
-   "summary": "The stages of the Nuclear Loop in the order they run (specification, generate, plan, tests first, code, verification, security, artifacts, deploy): who takes part in each and what it does.",
+   "title": "Exact: the stages of the Nuclear Builder, in order",
+   "summary": "The stages of the Nuclear Builder in the order they run (specification, generate, plan, tests first, code, verification, security, artifacts, deploy): who takes part in each and what it does.",
    "body": [
-    "The stages of the Nuclear Loop in the order they run (specification, generate, plan, tests first, code, verification, security, artifacts, deploy): who takes part in each and what it does.",
+    "The stages of the Nuclear Builder in the order they run (specification, generate, plan, tests first, code, verification, security, artifacts, deploy): who takes part in each and what it does.",
     "",
     "It reads `stages` of the exact facts.",
     "",
@@ -1401,9 +1401,9 @@
    "id": "query:mcp.commands",
    "type": "query",
    "title": "Exact: each MCP tool and the command line it is the same as",
-   "summary": "The MCP tools that run a command line, each with that command: `generate_resource` is `dragonfly gen resource`, `nuclear_check` is `nuclear check`, `developer_task` is `nuclear-loop run`.",
+   "summary": "The MCP tools that run a command line, each with that command: `generate_resource` is `nuclear gen resource`, `nuclear_check` is `nuclear check`, `developer_task` is `nuclear-builder run`.",
    "body": [
-    "The MCP tools that run a command line, each with that command: `generate_resource` is `dragonfly gen resource`, `nuclear_check` is `nuclear check`, `developer_task` is `nuclear-loop run`.",
+    "The MCP tools that run a command line, each with that command: `generate_resource` is `nuclear gen resource`, `nuclear_check` is `nuclear check`, `developer_task` is `nuclear-builder run`.",
     "",
     "It reads `mcp_tools` of the exact facts.",
     "",
@@ -1533,9 +1533,9 @@
    "id": "query:mcp.tools",
    "type": "query",
    "title": "Exact: every tool of the Nuclear MCP server",
-   "summary": "Every tool the Nuclear MCP server (`nuclear-graph mcp`) offers an AI client, by group (graph, nuclear, dragonfly, project, generate, api, web, developer), with what each does and the command it runs.",
+   "summary": "Every tool the Nuclear MCP server (`nuclear-graph mcp`) offers an AI client, by group (graph, nuclear, synapsis, project, generate, api, web, developer), with what each does and the command it runs.",
    "body": [
-    "Every tool the Nuclear MCP server (`nuclear-graph mcp`) offers an AI client, by group (graph, nuclear, dragonfly, project, generate, api, web, developer), with what each does and the command it runs.",
+    "Every tool the Nuclear MCP server (`nuclear-graph mcp`) offers an AI client, by group (graph, nuclear, synapsis, project, generate, api, web, developer), with what each does and the command it runs.",
     "",
     "It reads `mcp_tools` of the exact facts.",
     "",
@@ -1621,10 +1621,10 @@
   {
    "id": "query:platforms",
    "type": "query",
-   "title": "Exact: the platforms of Dragonfly and the dialects that build each",
-   "summary": "The three platforms of Dragonfly (backend, mobile, web) and the dialects each one is built with, the default one marked.",
+   "title": "Exact: the platforms of Synapsis and the dialects that build each",
+   "summary": "The three platforms of Synapsis (backend, mobile, web) and the dialects each one is built with, the default one marked.",
    "body": [
-    "The three platforms of Dragonfly (backend, mobile, web) and the dialects each one is built with, the default one marked.",
+    "The three platforms of Synapsis (backend, mobile, web) and the dialects each one is built with, the default one marked.",
     "",
     "It reads `dialects` of the exact facts.",
     "",
@@ -1802,9 +1802,9 @@
    "id": "query:strategies",
    "type": "query",
    "title": "Exact: the strategies, one per kind of request",
-   "summary": "Every strategy the graph has, one per kind of request a user makes (a whole system, a resource, a use case, a rename, a failing test, a question...): its family, its scope, how the Loop runs it, who leads and its stages.",
+   "summary": "Every strategy the graph has, one per kind of request a user makes (a whole system, a resource, a use case, a rename, a failing test, a question...): its family, its scope, how the Builder runs it, who leads and its stages.",
    "body": [
-    "Every strategy the graph has, one per kind of request a user makes (a whole system, a resource, a use case, a rename, a failing test, a question...): its family, its scope, how the Loop runs it, who leads and its stages.",
+    "Every strategy the graph has, one per kind of request a user makes (a whole system, a resource, a use case, a rename, a failing test, a question...): its family, its scope, how the Builder runs it, who leads and its stages.",
     "",
     "It reads `stages`, `strategies` of the exact facts; its parameters: `family`.",
     "",

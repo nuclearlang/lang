@@ -1,4 +1,4 @@
-# Tutorial: a Flutter app from scratch with Dragonfly
+# Tutorial: a Flutter app from scratch with Synapsis
 
 We are going to build **my_store**, an app that shows the products of a public API (fakestoreapi.com): a
 component with its repository, a use case, the screen's state, the screen, navigation and its tests. Everything
@@ -11,21 +11,21 @@ The full rules are in [nuclearlang/dialects/dart/docs/07-reference/flutter.md](.
 ```sh
 curl -fsSL https://nuclearlang.github.io/install.sh | sh   # Windows: irm https://nuclearlang.github.io/install.ps1 | iex
 # or, from the source tree: installer/install.sh (needs Rust)
-dragonfly doctor             # checks everything: CLIs, dialect, dragonfly package, Flutter, VS Code
-dragonfly setup              # only if doctor says Flutter is missing: installs it step by step
+nuclear doctor             # checks everything: the command, the dialect, the Synapsis package, Flutter, VS Code
+nuclear setup              # only if doctor says Flutter is missing: installs it step by step
 ```
 
-`dragonfly` finds Flutter by itself (on the PATH, `~/development/flutter`, fvm...); `FLUTTER`
+`nuclear` finds Flutter by itself (on the PATH, `~/development/flutter`, fvm...); `FLUTTER`
 chooses another one.
 
-From the source tree the installation is a copy: after changing the transpiler, the dialects or the dragonfly
+From the source tree the installation is a copy: after changing the transpiler, the dialects or the Synapsis
 package, run `installer/install.sh` again.
 
 ## 1. Create the project
 
 ```sh
 cd ~/Documents/projects      # wherever you want
-dragonfly new my_store
+nuclear new my_store
 cd my_store
 ```
 
@@ -33,16 +33,16 @@ It creates only `.nuc` files: `main.nuc`, `config.nuc`, `config/project_config.n
 its screen at `/`. The Flutter app goes to `build/app`, which is never edited by hand.
 
 `config.nuc` is the project's manifest, written in Nuclear: the platform it is written for and the dialect it is
-built with (`dragonfly new -p mobile -d flutter` wrote them), then the pubspec: name, description, version and
-its own packages. Those Dragonfly uses (bloc, go_router, json_serializable...) are added automatically and are
+built with (`nuclear new -p mobile -d flutter` wrote them), then the pubspec: name, description, version and
+its own packages. Those Synapsis uses (bloc, go_router, json_serializable...) are added automatically and are
 not written:
 
 ```nuclear
-dragonfly(platform = "mobile", dialect = "flutter")
+synapsis(platform = "mobile", dialect = "flutter")
 
 app(
   name = "my_store",
-  description = "A Dragonfly app.",
+  description = "A Synapsis app.",
   version = "1.0.0+1",
   usesMaterialDesign = true,
 )
@@ -53,14 +53,14 @@ so the transpiler writes its imports by itself. `dependencies` and `devDependenc
 package and disappear when the last one is removed:
 
 ```sh
-dragonfly add hive                      # hive@^2.2.0 to pin the version (the same command on every platform)
-dragonfly remove hive
-dragonfly flutter add hive --dev        # for devDependencies; hive:^2.2.0 as Flutter writes it
+nuclear add hive                      # hive@^2.2.0 to pin the version (the same command on every platform)
+nuclear remove hive
+nuclear flutter add hive --dev        # for devDependencies; hive:^2.2.0 as Flutter writes it
 ```
 
 ```nuclear
 main() void
-  ~startDragonfly()
+  ~startSynapsis()
   Hive.init("data")                     // import 'package:hive/hive.dart' comes out by itself
   runApp(App())
 ```
@@ -68,9 +68,9 @@ main() void
 The definitions are stored once in `~/.cache/nuclearlang/defs` and serve all your projects; removing the
 package does not delete them. The editor uses them too: completion, hover and imports of `Hive`.
 
-Only third-party packages Dragonfly does not use are added. `dragonfly flutter add dio` (or `go_router`,
+Only third-party packages Synapsis does not use are added. `nuclear flutter add dio` (or `go_router`,
 `fpdart`...) is rejected: those already come with the framework and are used directly. A project created before
-`config.nuc` gets one on its first `dragonfly check`.
+`config.nuc` gets one on its first `nuclear check`.
 
 Images, audio, fonts and shaders are not configured: they go in `assets/` and the build adds them to the app. A
 font goes in its family's folder and its name says the weight and style:
@@ -85,25 +85,25 @@ assets/shaders/wave.frag                     FragmentProgram.fromAsset("assets/s
 ## 2. Generate the pieces
 
 ```sh
-dragonfly g c products                  # component: its facade (appcomponent)
-dragonfly g r products product          # repository + Product model
-dragonfly g s products product_list     # screen + manager + state model
-dragonfly g sm products product_list cart_manager  # one more state manager + its state model
-dragonfly g sf rating_stars             # a stateful widget in shared/widgets
-dragonfly g t products                  # tests file
+nuclear g c products                  # component: its facade (appcomponent)
+nuclear g r products product          # repository + Product model
+nuclear g s products product_list     # screen + manager + state model
+nuclear g sm products product_list cart_manager  # one more state manager + its state model
+nuclear g sf rating_stars             # a stateful widget in shared/widgets
+nuclear g t products                  # tests file
 rm components/products/domain/usecases/hello_products_usecase.nuc   # the sample use case
 ```
 
-`dragonfly help` lists every generator and its aliases.
+`nuclear help` lists every generator and its aliases.
 
 A resource that follows from its data is generated whole, already compiling: its models, the repository, a use case
 per action, the facade's aliases and the screen (mobile, web) or the controller (backend). The fields come from an
 example answer of the API, from the spec's table, or from `--fields`:
 
 ```sh
-dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character --screen characters
-dragonfly gen resource catalog Book --fields "title:string author:string year:int" --source db   # backend
-dragonfly gen inspect                   # what the project has, as JSON
+nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character --screen characters
+nuclear gen resource catalog Book --fields "title:string author:string year:int" --source db   # backend
+nuclear gen inspect                   # what the project has, as JSON
 ```
 
 Write by hand only what is yours: a use case with its own rules, the details of a view. A use case you wrote is wired
@@ -111,8 +111,8 @@ by its generator (its alias in the facade; on the backend, its route), and one t
 is written by it too:
 
 ```sh
-dragonfly gen usecase catalog LendBook --route "POST books/{bookId}/lend"   # backend: LendBook is in the project
-dragonfly gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares
+nuclear gen usecase catalog LendBook --route "POST books/{bookId}/lend"   # backend: LendBook is in the project
+nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares
 ```
 
 ## 3. Write the business logic
@@ -247,7 +247,7 @@ stateless ProductListScreen
     )
 ```
 
-- `dragonfly g s` gives it the route of its name (`/product-list`); two screens cannot have the same one.
+- `nuclear g s` gives it the route of its name (`/product-list`); two screens cannot have the same one.
 - An image inside a `ListTile` needs a fixed size (`SizedBox`): if it fails to load, it takes the whole row.
 
 **Navigation**: in `components/home/presentation/home/home_screen.nuc`, inside the `Scaffold`:
@@ -290,36 +290,36 @@ generated tests (JSON of the models, requests of the repositories, screens).
 ## 5. Check, test and run
 
 ```sh
-dragonfly check              # errors and architecture rules (does not need Flutter)
-dragonfly test               # written + generated tests
-dragonfly code               # VS Code: choose a device and press F5
-dragonfly run -- -d linux    # or from the terminal
-dragonfly device iphone14pro # a test phone in its own window (several at once)
-dragonfly terminal-device    # or inside the terminal
-dragonfly build apk          # build to publish
+nuclear check              # errors and architecture rules (does not need Flutter)
+nuclear test               # written + generated tests
+nuclear code               # VS Code: choose a device and press F5
+nuclear run -- -d linux    # or from the terminal
+nuclear device iphone14pro # a test phone in its own window (several at once)
+nuclear terminal-device    # or inside the terminal
+nuclear build apk          # build to publish
 ```
 
-In VS Code (with `dragonfly code` or opening the folder with `code .`) you choose the device in the status bar
+In VS Code (with `nuclear code` or opening the folder with `code .`) you choose the device in the status bar
 and run with ▷ or F5 from any `.nuc`, as in a Flutter project. Saving a `.nuc` transpiles and hot reloads the
 running app; the errors of the `.nuc` files show in Problems while you type. In Android Studio you open the
 project folder; the first time the Nuclear plugin asks for *Reopen Project* and then there is a device picker,
-`main.dart` ▷ and hot reload when saving a `.nuc` (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.2). In Zed, the task **Dragonfly: run**
+`main.dart` ▷ and hot reload when saving a `.nuc` (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.2). In Zed, the task **Synapsis: run**
 (*task: spawn*) runs the app in a terminal, where `r` does a hot reload (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.3).
 
 More things the editors do (nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.1 and §11.2):
 
 - **Debugging in Nuclear:** a breakpoint in a `.nuc` stops the app on that line (with Debug), the pause
   highlights the `.nuc` line, and a Dart run-time error is marked on its `.nuc` line with a window beside it that
-  explains it. From the terminal: `dragonfly explain < error.txt`. In VS Code, after a `.nuc` breakpoint, F10
+  explains it. From the terminal: `nuclear explain < error.txt`. In VS Code, after a `.nuc` breakpoint, F10
   advances one Nuclear line (not a Dart one), the mouse over a name shows its value and the *Nuclear Call Stack*
   view gives the stack in Nuclear.
 - **If something fails without errors in the `.nuc` files** (packages, stale generated code, a broken build),
-  the extensions run `dragonfly repair` by themselves and relaunch the app; you can also run it by hand:
-  `dragonfly repair`.
-- **Dragonfly devices from the terminal:** `dragonfly device` opens the app in a phone-shaped window, like an
-  emulator (with another device name, another one: device 2, 3...), and `dragonfly terminal-device` shows it
+  the extensions run `nuclear repair` by themselves and relaunch the app; you can also run it by hand:
+  `nuclear repair`.
+- **Synapsis devices from the terminal:** `nuclear device` opens the app in a phone-shaped window, like an
+  emulator (with another device name, another one: device 2, 3...), and `nuclear terminal-device` shows it
   inside the terminal, with mouse and keyboard (`?` shows the keys). See nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.
-- **Dragonfly device (VS Code):** choose "Dragonfly device" in the device picker (it comes with the extension;
+- **Synapsis device (VS Code):** choose "Synapsis device" in the device picker (it comes with the extension;
   the first time it asks for *Reload Window*) and the app runs inside VS Code, on an emulated iPhone, Pixel, iPad
   or desktop, with hot reload on save. It is Flutter web: native features (camera, files) are tested on a real
   device.
@@ -335,14 +335,14 @@ More things the editors do (nuclearlang/dialects/dart/docs/07-reference/flutter.
 | Tabs | `shell = { widget: MainShell, tab: 0 }` | §6.9 |
 | A global event | `event ForceLogout` + `Events.publish(ForceLogout())` | §6.10 |
 | Something that runs with each event | a `component` in `shared/components/` with `@on(Event)` | §6.11 |
-| A form with validations | a form model in `presentation/<p>/forms/` (`@required`, `@email`, `@minLength(6)`...), `@form(XForm) formmanager XFormManager`, `DragonflyForm(manager = XFormManager, onSubmit = (form) => ...)` + `FormTextField("field")` + `FormSubmit` | §6.14 |
+| A form with validations | a form model in `presentation/<p>/forms/` (`@required`, `@email`, `@minLength(6)`...), `@form(XForm) formmanager XFormManager`, `SynapsisForm(manager = XFormManager, onSubmit = (form) => ...)` + `FormTextField("field")` + `FormSubmit` | §6.14 |
 | Validating a field against the API | in the form manager, `@validate("field")` on a method that calls the component and returns the message or `null` | §6.14 |
-| A dialog | `DragonflyDialog.success(child = Text("Saved")).show(context)`; with `onAccept = () => ...`, Close / Accept | §6.15 |
+| A dialog | `SynapsisDialog.success(child = Text("Saved")).show(context)`; with `onAccept = () => ...`, Close / Accept | §6.15 |
 | A short message | `Popups.toast(context, "Copied")`, `Popups.snackbar(context, "No network", type = PopupType.danger)` | §6.15 |
 | Texts in several languages | `assets/i18n/<language>/<component>.json`, `Translations(locales = ["en", "es"])` in the config, `"products.list.title".tr()` | §6.16 |
 
 The complete example project (login with a form and remote validation, dialogs, translations in English and
 Spanish, global events, ACL, tabs, an error page) is in `examples/examples-flutter-dialect/clean-flutter-project/`.
 
-`dragonfly new` does not create the translation dictionaries yet; the folders of `assets/i18n/` you add are
+`nuclear new` does not create the translation dictionaries yet; the folders of `assets/i18n/` you add are
 declared in the app's pubspec by the build (nuclearlang/dialects/dart/docs/07-reference/flutter.md §3.2).

@@ -3,7 +3,7 @@
 How Nuclear is written in TypeScript, and in the frameworks built on TypeScript. The same Nuclear code is written
 once and the transpiler turns it into each language and framework: this dialect only decides HOW the output is
 written in TypeScript (templates, imports, the standard library), never what the Nuclear code is. Its framework
-dialects implement platforms of Dragonfly: `nestjs` the
+dialects implement platforms of Synapsis: `nestjs` the
 [backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md), `react` the
 [web platform](../../../nuclear-synapsis-framework/platforms/web/AGENTS.md). What a platform is (kinds, decorators,
 layout) is the platform's, not described here.
@@ -17,9 +17,9 @@ project ([its AGENTS.md](../../AGENTS.md)); `../../../` is the root of the tree.
 - The dialect: TOML tables and Mustache-subset templates, read at run time by `../../crates/nuclear-dialect`.
 - `nestjs` (platform `backend`; extends [`nodejs`](../nodejs/AGENTS.md), which extends this dialect): NestJS 12
   (ES modules), Sequelize (`@nestjs/sequelize` + `sequelize-typescript`), class-validator, kafkajs, ioredis,
-  LangChain.js / LangGraph.js, `node:test`. Runtime: the platform's package `dragonfly-nest`.
+  LangChain.js / LangGraph.js, `node:test`. Runtime: the platform's package `synapsis-nest`.
 - `react` (platform `web`): React 19 without JSX, React Router 7, Vite 7, Vitest 4 + jsdom + Testing Library.
-  Runtime: the platform's package `dragonfly-web`.
+  Runtime: the platform's package `synapsis-web`.
 - Type definitions: generated from `.d.ts` files by `../../tools/defs/typescript/` over
   `../../tools/node/node_modules`.
 

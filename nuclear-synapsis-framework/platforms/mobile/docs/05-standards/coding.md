@@ -28,7 +28,7 @@ same for the three platforms: [changing a contract](../../../docs/02-architectur
 - The arguments of the data decorators are the same as the backend platform's (`[decorators.args]`).
 - A removed decorator gets its line in `[decorators.replaced]`, so a project that still writes it is told what
   replaces it (`N0309`).
-- A generator template writes finished, compiling Nuclear, each declaration under a comment that says what it is
+- A generator template (`tools/code_generator/platforms/mobile/generators.toml`) writes finished, compiling Nuclear, each declaration under a comment that says what it is
   for; `merge = true` on a declaration a later run may complete.
 - Every new diagnostic code is documented in the language's
   [diagnostics.md](../../../../../nuclearlang/docs/07-reference/diagnostics.md).
@@ -36,7 +36,7 @@ same for the three platforms: [changing a contract](../../../docs/02-architectur
 ## The runtime packages
 
 - **They work on web**: no `dart:isolate` nor `dart:io` without a `kIsWeb` guard.
-- The `dragonfly` package re-exports nothing of the libraries it uses: each name is imported from its own, so no
+- The `synapsis` package re-exports nothing of the libraries it uses: each name is imported from its own, so no
   import is left over.
 - It stays an independent package: usable by hand in any Flutter app, with its README, CHANGELOG and `example/`.
 - An app-wide service is a `Global` (`register`, `init`, `dispose`).
@@ -44,7 +44,7 @@ same for the three platforms: [changing a contract](../../../docs/02-architectur
   generated code calls the package's classes, so the engine can change in the package alone.
 - The package logs its own work through `Log` (http, the splash's failures, translations).
 - Lints: `flutter_lints`; `flutter analyze` reports nothing.
-- A change of the public API updates [dragonfly.md](../07-reference/dragonfly.md) and regenerates the type
+- A change of the public API updates [synapsis.md](../07-reference/synapsis.md) and regenerates the type
   definitions in the same change ([runbook](../06-runbooks/runtime-release.md)).
 
 ## The documents

@@ -1,12 +1,12 @@
 // The set-up of the AI services (ADR-installer-0002): what this machine has, what each profile needs and how far it works, and
-// the steps that install it. No editor here: the wizard (setupPanel.ts) and `nuclear-loop setup` (loopCli.ts) are two
+// the steps that install it. No editor here: the wizard (setupPanel.ts) and `nuclear-builder setup` (builderCli.ts) are two
 // fronts of this file. The requirements and the profiles are data (aiSetup.json).
 import { execFile, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import setup from './aiSetup.json';
-import { toolEnv } from './loopEngine';
+import { toolEnv } from '../../tools/nuclear-builder/src/engine';
 
 /** A set of local models (or none: `remote`), what it downloads, the memory it wants and how far it works. */
 export interface Profile {
@@ -59,6 +59,7 @@ export function binDir(env: NodeJS.ProcessEnv = process.env): string {
  * other by a relative path (the Developer's `dependencies(nuclear_graph = ...)`) holds in an installation too. */
 const GRAPH = 'nuclear-graph-storage';
 const DEVELOPER = path.join('nuclear-agents', 'nuclear_developer');
+const MCP = path.join('tools', 'mcp');
 
 /** The folder with the code of the services (the graph with its knowledge base, the Developer), as the
  * installers leave it; undefined when NuclearLang is not installed. */
@@ -68,7 +69,7 @@ export function aiRoot(env: NodeJS.ProcessEnv = process.env): string | undefined
 }
 
 /** What the set-up chose on this machine (`KEY=value` lines): the mode, the profile and its models. The services
- * start with it, `nuclear-loop` and the editor take their defaults from it. */
+ * start with it, `nuclear-builder` and the editor take their defaults from it. */
 export function machineFile(env: NodeJS.ProcessEnv = process.env): string {
   const base = process.platform === 'win32' ? (env.APPDATA ?? os.homedir()) : env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
   return path.join(base, 'nuclearlang', 'ai.env');
@@ -86,7 +87,7 @@ export function readMachine(file = machineFile()): Record<string, string> {
 export function writeMachine(values: Record<string, string>, file = machineFile()): void {
   const all = { ...readMachine(file), ...values };
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const head = '# The AI services of NuclearLang on this machine, written by their set-up (nuclear-loop setup, the editor).\n';
+  const head = '# The AI services of NuclearLang on this machine, written by their set-up (nuclear-builder setup, the editor).\n';
   fs.writeFileSync(file, head + Object.entries(all).map(([k, v]) => `${k}=${v}\n`).join(''));
 }
 
@@ -441,7 +442,11 @@ export function steps(p: Profile, root: string, u: Urls = urls()): Step[] {
     run: async (say) => {
       // the graph is written in Nuclear: its Python package is what `nuclear build` writes, so it is built first
       await run('nuclear', ['build', path.join(root, GRAPH)], say, { env: toolEnv() });
-      await run('uv', ['tool', 'install', '--force', '--no-progress', ...(editable ? ['--editable'] : []), `${path.join(root, GRAPH)}[${p.coder ? 'server' : 'mcp'}]`], (line) => /^[+~-] /.test(line) || say(line), { env: { UV_TOOL_BIN_DIR: binDir() } });
+      const uv = (target: string) => run('uv', ['tool', 'install', '--force', '--no-progress', ...(editable ? ['--editable'] : []), target], (line) => /^[+~-] /.test(line) || say(line), { env: { UV_TOOL_BIN_DIR: binDir() } });
+      // the graph's server only with the local agents; the MCP server (a project of its own) always
+      if (p.coder) await uv(`${path.join(root, GRAPH)}[server]`);
+      await run('nuclear', ['build', path.join(root, MCP)], say, { env: toolEnv() });
+      await uv(path.join(root, MCP));
     },
   };
   if (!p.coder) {
@@ -464,7 +469,7 @@ export function steps(p: Profile, root: string, u: Urls = urls()): Step[] {
       run: async (say) => {
         const env = toolEnv();
         const python = await pythonDir(path.join(dev, 'build'), say);
-        await run('dragonfly', ['install'], say, { cwd: dev, env: { PATH: `${python}${path.delimiter}${env.PATH ?? ''}` } });
+        await run('nuclear', ['install'], say, { cwd: dev, env: { PATH: `${python}${path.delimiter}${env.PATH ?? ''}` } });
         const l = launcher(root);
         fs.mkdirSync(binDir(), { recursive: true });
         fs.writeFileSync(path.join(binDir(), l.name), l.text, { mode: 0o755 });
@@ -514,7 +519,7 @@ export function steps(p: Profile, root: string, u: Urls = urls()): Step[] {
  * models and Ollama stay (they are the user's), and so does the graph's data. */
 export async function remove(say: Say = () => undefined): Promise<void> {
   await removeServices(say);
-  if (which('uv')) await capture('uv', ['tool', 'uninstall', 'nuclear-graph']);
+  if (which('uv')) for (const tool of ['nuclear-graph', 'nuclear-mcp']) await capture('uv', ['tool', 'uninstall', tool]);
   for (const f of [path.join(binDir(), launcher('').name), machineFile()]) {
     if (fs.existsSync(f)) say(`removed ${f}`);
     fs.rmSync(f, { force: true });

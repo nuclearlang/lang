@@ -1,4 +1,4 @@
-# Platform `backend` brief: Dragonfly backends
+# Platform `backend` brief: Synapsis backends
 
 A backend has only `.nuc` files: HTTP APIs, data, events and AI agents. You write the business logic; the kinds write
 the framework code, the dependencies, the JSON, the validation and the routes. The same Nuclear builds with every
@@ -7,10 +7,10 @@ file goes: `nuclear help layout --platform backend`.
 
 ## Work cycle
 
-1. Read the project's `config.nuc` (`dragonfly(platform = "backend", ...)`, `app(...)`, `plugins(...)`) and the
+1. Read the project's `config.nuc` (`synapsis(platform = "backend", ...)`, `app(...)`, `plugins(...)`) and the
    doc comments of the declarations you will use: they say what each one is for.
 2. Write the tests first (`test/*_test.nuc`), then the pieces, one file at a time.
-3. `nuclear check . --json` until `[]`, then `dragonfly test`. Never edit `build/`.
+3. `nuclear check . --json` until `[]`, then `nuclear test`. Never edit `build/`.
 
 ## Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)
 

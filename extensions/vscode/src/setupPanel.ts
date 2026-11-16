@@ -4,7 +4,7 @@
 // The page asks and shows; everything it does is aiSetup.ts. Plain HTML and script, no framework.
 import * as vscode from 'vscode';
 import { PROFILES, Step, aiRoot, fit, hardware, Hardware, profileOf, readMachine, recommend, requirements, steps } from './aiSetup';
-import { toolEnv } from './loopEngine';
+import { toolEnv } from '../../tools/nuclear-builder/src/engine';
 
 type Message =
   | { type: 'ready' | 'check' | 'settings' }

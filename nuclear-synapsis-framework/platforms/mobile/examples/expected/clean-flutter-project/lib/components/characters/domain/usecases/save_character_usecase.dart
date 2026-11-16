@@ -2,8 +2,8 @@ import 'package:clean_flutter_project/components/characters/data/character_repos
 import 'package:clean_flutter_project/components/characters/domain/models/character.dart';
 import 'package:clean_flutter_project/components/characters/domain/models/character_error.dart';
 import 'package:clean_flutter_project/components/characters/domain/models/character_params.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 class SaveCharacterUseCase {
   SaveCharacterUseCase(this.repository);

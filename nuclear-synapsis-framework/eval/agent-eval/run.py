@@ -3,7 +3,7 @@
 copy of its project, then checks the result. See README.md.
 
     tools/agent-eval/run.py --mode baseline            # no skill, no AGENTS.md, no hook
-    tools/agent-eval/run.py --mode agent               # skill + `dragonfly agent init` in the copy
+    tools/agent-eval/run.py --mode agent               # skill + `nuclear agent init` in the copy
     tools/agent-eval/run.py --mode agent --only ts-stats,dart-csv
 """
 import argparse, json, os, shutil, subprocess, sys, time, tomllib
@@ -11,7 +11,7 @@ import argparse, json, os, shutil, subprocess, sys, time, tomllib
 here = os.path.dirname(os.path.abspath(__file__))
 root = os.path.normpath(os.path.join(here, "..", "..", ".."))
 projects = {"rick_and_morty": os.path.expanduser("~/Documents/projects/nuc/flutter/rick_and_morty")}
-preamble = ("This folder is a NuclearLang project (.nuc files). The `nuclear` and `dragonfly` command line tools are "
+preamble = ("This folder is a NuclearLang project (.nuc files). The `nuclear` and `nuclear` command line tools are "
             "installed. Do the task completely without asking questions; when you finish, the code must have no "
             "errors.\n\nTask: ")
 
@@ -25,7 +25,7 @@ def run_task(task, mode, work, env, timeout):
     else:
         os.makedirs(dst)
     if mode == "agent" and src:
-        subprocess.run(["dragonfly", "agent", "init"], cwd=dst, env=env, capture_output=True)
+        subprocess.run(["synapsis", "agent", "init"], cwd=dst, env=env, capture_output=True)
     if mode == "agent" and not src:
         subprocess.run(["nuclear", "agent", "init", "--dialect", task["dialect"]], cwd=dst, env=env, capture_output=True)
     if mode == "agent":

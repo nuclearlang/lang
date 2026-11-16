@@ -1,7 +1,7 @@
 import { Project } from '../../data/entities/project.js';
 import { ProjectRepository } from '../../data/repositories/project_repository.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Result } from 'dragonfly-nest';
+import { AppError, Result } from 'synapsis-nest';
 
 /** A project with its tasks and their tags. */
 @Injectable()

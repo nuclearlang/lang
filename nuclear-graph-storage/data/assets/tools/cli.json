@@ -2,1204 +2,13 @@
  "shelf": "tools",
  "origin": "generated",
  "generator": "cli",
- "about": "The commands of nuclear, dragonfly, nuclear-loop and nuclear-graph, as their help prints them.",
+ "about": "The commands of nuclear, synapsis, nuclear-builder and nuclear-graph, as their help prints them.",
  "rows": [
-  {
-   "id": "tool:dragonfly",
-   "type": "cli",
-   "title": "`dragonfly` — the command line of Dragonfly projects",
-   "summary": "Creates, generates, builds, runs, tests and repairs a Dragonfly project of any platform. Commands: add, agent, analyze, build, check, clean, code, credits, device, doctor, explain, gen, install, make, migrate, new, packages, repair, run, setup, terminal-device, test, watch.",
-   "body": [
-    "```text",
-    "usage: dragonfly <command> [arguments]          (names in any case: user_profile, UserProfile)",
-    "",
-    "options",
-    "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
-    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)",
-    "```",
-    "",
-    "Every command has its own row (`dragonfly new`, `dragonfly gen resource`...)."
-   ],
-   "keys": [
-    "dragonfly cli",
-    "dragonfly command"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": ""
-   }
-  },
-  {
-   "id": "tool:dragonfly.add",
-   "type": "cli",
-   "title": "`dragonfly add` — Install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
-   "summary": "Install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
-   "body": [
-    "```text",
-    "  add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
-    "```"
-   ],
-   "keys": [
-    "dragonfly add"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "add"
-   },
-   "data": {
-    "command": "dragonfly add",
-    "entries": [
-     {
-      "what": "add",
-      "usage": "dragonfly add <folder>",
-      "alias": "",
-      "note": "",
-      "does": "Install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.agent",
-   "type": "cli",
-   "title": "`dragonfly agent` — AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
-   "summary": "AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
-   "body": [
-    "```text",
-    "  agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
-    "```"
-   ],
-   "keys": [
-    "dragonfly agent"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "agent"
-   },
-   "data": {
-    "command": "dragonfly agent",
-    "entries": [
-     {
-      "what": "agent",
-      "usage": "dragonfly agent init",
-      "alias": "",
-      "note": "",
-      "does": "AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.analyze",
-   "type": "cli",
-   "title": "`dragonfly analyze` — Build and run flutter analyze on the generated app",
-   "summary": "Build and run flutter analyze on the generated app",
-   "body": [
-    "```text",
-    "  analyze                                    build and run flutter analyze on the generated app",
-    "```"
-   ],
-   "keys": [
-    "dragonfly analyze"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "analyze"
-   },
-   "data": {
-    "command": "dragonfly analyze",
-    "entries": [
-     {
-      "what": "analyze",
-      "usage": "dragonfly analyze",
-      "alias": "",
-      "note": "",
-      "does": "Build and run flutter analyze on the generated app"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.build",
-   "type": "cli",
-   "title": "`dragonfly build` — Transpile, pub get and build_runner (and flutter build <target>); Transpile (nuclear build .)",
-   "summary": "Transpile, pub get and build_runner (and flutter build <target>); Transpile (nuclear build .)",
-   "body": [
-    "```text",
-    "  build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
-    "                                             transpile, pub get and build_runner (and flutter build <target>)",
-    "  build                                      transpile (nuclear build .)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly build"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "build"
-   },
-   "data": {
-    "command": "dragonfly build",
-    "entries": [
-     {
-      "what": "build",
-      "usage": "dragonfly build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
-      "alias": "",
-      "note": "",
-      "does": "Transpile, pub get and build_runner (and flutter build <target>)"
-     },
-     {
-      "what": "build",
-      "usage": "dragonfly build",
-      "alias": "",
-      "note": "",
-      "does": "Transpile (nuclear build .)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.check",
-   "type": "cli",
-   "title": "`dragonfly check` — Errors and architecture rules of every .nuc (no Flutter needed)",
-   "summary": "Errors and architecture rules of every .nuc (no Flutter needed)",
-   "body": [
-    "```text",
-    "  check [--json]                             errors and architecture rules of every .nuc (no Flutter needed)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly check"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "check"
-   },
-   "data": {
-    "command": "dragonfly check",
-    "entries": [
-     {
-      "what": "check",
-      "usage": "dragonfly check [--json]",
-      "alias": "",
-      "note": "",
-      "does": "Errors and architecture rules of every .nuc (no Flutter needed)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.clean",
-   "type": "cli",
-   "title": "`dragonfly clean` — Flutter clean in the app",
-   "summary": "Flutter clean in the app",
-   "body": [
-    "```text",
-    "  clean                                      flutter clean in the app",
-    "```"
-   ],
-   "keys": [
-    "dragonfly clean"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "clean"
-   },
-   "data": {
-    "command": "dragonfly clean",
-    "entries": [
-     {
-      "what": "clean",
-      "usage": "dragonfly clean",
-      "alias": "",
-      "note": "",
-      "does": "Flutter clean in the app"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.code",
-   "type": "cli",
-   "title": "`dragonfly code` — Open the project in VS Code (Flutter run, debug, devices, hot reload)",
-   "summary": "Open the project in VS Code (Flutter run, debug, devices, hot reload)",
-   "body": [
-    "```text",
-    "  code                                       open the project in VS Code (Flutter run, debug, devices, hot reload)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly code"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "code"
-   },
-   "data": {
-    "command": "dragonfly code",
-    "entries": [
-     {
-      "what": "code",
-      "usage": "dragonfly code",
-      "alias": "",
-      "note": "",
-      "does": "Open the project in VS Code (Flutter run, debug, devices, hot reload)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.credits",
-   "type": "cli",
-   "title": "`dragonfly credits` — The intro animation, the author and the repository",
-   "summary": "The intro animation, the author and the repository",
-   "body": [
-    "```text",
-    "  credits | author                           the intro animation, the author and the repository",
-    "```"
-   ],
-   "keys": [
-    "dragonfly credits"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "credits"
-   },
-   "data": {
-    "command": "dragonfly credits",
-    "entries": [
-     {
-      "what": "credits",
-      "usage": "dragonfly credits | author",
-      "alias": "",
-      "note": "",
-      "does": "The intro animation, the author and the repository"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.device",
-   "type": "cli",
-   "title": "`dragonfly device` — A test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at…",
-   "summary": "A test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at once: device 1, 2, 3); The running devices and the devices it can be",
-   "body": [
-    "```text",
-    "  device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,",
-    "                                             iphone14pro, ipadair...; several at once: device 1, 2, 3)",
-    "  device list                                the running devices and the devices it can be",
-    "```"
-   ],
-   "keys": [
-    "dragonfly device"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "device"
-   },
-   "data": {
-    "command": "dragonfly device",
-    "entries": [
-     {
-      "what": "device",
-      "usage": "dragonfly device [<device>] [--landscape] [-- <args>]",
-      "alias": "dv",
-      "note": "",
-      "does": "A test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at once: device 1, 2, 3)"
-     },
-     {
-      "what": "device",
-      "usage": "dragonfly device list",
-      "alias": "",
-      "note": "",
-      "does": "The running devices and the devices it can be"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.doctor",
-   "type": "cli",
-   "title": "`dragonfly doctor` — What NuclearLang and Dragonfly need: CLIs, dialect, package, Flutter, VS Code",
-   "summary": "What NuclearLang and Dragonfly need: CLIs, dialect, package, Flutter, VS Code",
-   "body": [
-    "```text",
-    "  doctor                                     what NuclearLang and Dragonfly need: CLIs, dialect, package, Flutter, VS Code",
-    "```"
-   ],
-   "keys": [
-    "dragonfly doctor"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "doctor"
-   },
-   "data": {
-    "command": "dragonfly doctor",
-    "entries": [
-     {
-      "what": "doctor",
-      "usage": "dragonfly doctor",
-      "alias": "",
-      "note": "",
-      "does": "What NuclearLang and Dragonfly need: CLIs, dialect, package, Flutter, VS Code"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.explain",
-   "type": "cli",
-   "title": "`dragonfly explain` — A run-time error or a test's output (stdin) at its .nuc lines, explained",
-   "summary": "A run-time error or a test's output (stdin) at its .nuc lines, explained",
-   "body": [
-    "```text",
-    "  explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained",
-    "```"
-   ],
-   "keys": [
-    "dragonfly explain"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "explain"
-   },
-   "data": {
-    "command": "dragonfly explain",
-    "entries": [
-     {
-      "what": "explain",
-      "usage": "dragonfly explain [--json]",
-      "alias": "",
-      "note": "",
-      "does": "A run-time error or a test's output (stdin) at its .nuc lines, explained"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.gen",
-   "type": "cli",
-   "title": "`dragonfly gen` — What the project has (components, declarations by kind), as JSON; A component and its facade;…",
-   "summary": "What the project has (components, declarations by kind), as JSON; A component and its facade; Models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions…",
-   "body": [
-    "```text",
-    "finished code from a resource's data (every platform; ADR-codegen-0001): dragonfly gen <what> ...",
-    "  inspect                               what the project has (components, declarations by kind), as JSON",
-    "  component <component>                 a component and its facade",
-    "  resource <component> <Name>           models, repository, a use case per action, the facade's aliases, the",
-    "                                        controller (backend) or the screen (mobile, web), the tests",
-    "      --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\"",
-    "      [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete]",
-    "      [--screen <screen>] [--plural Names] [--dry-run]       (dragonfly gen alone prints every option)",
-    "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
-    "                                        --route, its route in the controller (backend)",
-    "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]",
-    "```"
-   ],
-   "keys": [
-    "dragonfly gen"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "gen"
-   },
-   "data": {
-    "command": "dragonfly gen",
-    "entries": [
-     {
-      "what": "inspect",
-      "usage": "dragonfly gen inspect",
-      "alias": "",
-      "note": "",
-      "does": "What the project has (components, declarations by kind), as JSON"
-     },
-     {
-      "what": "component",
-      "usage": "dragonfly gen component <component>",
-      "alias": "",
-      "note": "",
-      "does": "A component and its facade"
-     },
-     {
-      "what": "resource",
-      "usage": "dragonfly gen resource <component> <Name>",
-      "alias": "",
-      "note": "",
-      "does": "Models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete] (dragonfly gen alone prints every option)"
-     },
-     {
-      "what": "usecase",
-      "usage": "dragonfly gen usecase <component> <Name>",
-      "alias": "",
-      "note": "",
-      "does": "A use case wired into its component: its alias in the facade and, with --route, its route in the controller (backend) [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.gen.component",
-   "type": "cli",
-   "title": "`dragonfly gen component` — A component and its facade",
-   "summary": "A component and its facade",
-   "body": [
-    "```text",
-    "  component <component>                 a component and its facade",
-    "```"
-   ],
-   "keys": [
-    "dragonfly gen component",
-    "gen component"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "gen component"
-   },
-   "data": {
-    "command": "dragonfly gen component",
-    "entries": [
-     {
-      "what": "component",
-      "usage": "dragonfly gen component <component>",
-      "alias": "",
-      "note": "",
-      "does": "A component and its facade"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.gen.inspect",
-   "type": "cli",
-   "title": "`dragonfly gen inspect` — What the project has (components, declarations by kind), as JSON",
-   "summary": "What the project has (components, declarations by kind), as JSON",
-   "body": [
-    "```text",
-    "  inspect                               what the project has (components, declarations by kind), as JSON",
-    "```"
-   ],
-   "keys": [
-    "dragonfly gen inspect",
-    "gen inspect"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "gen inspect"
-   },
-   "data": {
-    "command": "dragonfly gen inspect",
-    "entries": [
-     {
-      "what": "inspect",
-      "usage": "dragonfly gen inspect",
-      "alias": "",
-      "note": "",
-      "does": "What the project has (components, declarations by kind), as JSON"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.gen.resource",
-   "type": "cli",
-   "title": "`dragonfly gen resource` — Models, repository, a use case per action, the facade's aliases, the controller (backend) or the…",
-   "summary": "Models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete] (dragonfly gen alone prints every option)",
-   "body": [
-    "```text",
-    "  resource <component> <Name>           models, repository, a use case per action, the facade's aliases, the",
-    "                                        controller (backend) or the screen (mobile, web), the tests",
-    "      --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\"",
-    "      [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete]",
-    "      [--screen <screen>] [--plural Names] [--dry-run]       (dragonfly gen alone prints every option)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly gen resource",
-    "gen resource"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "gen resource"
-   },
-   "data": {
-    "command": "dragonfly gen resource",
-    "entries": [
-     {
-      "what": "resource",
-      "usage": "dragonfly gen resource <component> <Name>",
-      "alias": "",
-      "note": "",
-      "does": "Models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete] (dragonfly gen alone prints every option)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.gen.usecase",
-   "type": "cli",
-   "title": "`dragonfly gen usecase` — A use case wired into its component: its alias in the facade and, with --route, its route in the…",
-   "summary": "A use case wired into its component: its alias in the facade and, with --route, its route in the controller (backend) [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]",
-   "body": [
-    "```text",
-    "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
-    "                                        --route, its route in the controller (backend)",
-    "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]",
-    "```"
-   ],
-   "keys": [
-    "dragonfly gen usecase",
-    "gen usecase"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "gen usecase"
-   },
-   "data": {
-    "command": "dragonfly gen usecase",
-    "entries": [
-     {
-      "what": "usecase",
-      "usage": "dragonfly gen usecase <component> <Name>",
-      "alias": "",
-      "note": "",
-      "does": "A use case wired into its component: its alias in the facade and, with --route, its route in the controller (backend) [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.install",
-   "type": "cli",
-   "title": "`dragonfly install` — The runtime and the app's packages (a venv, npm install)",
-   "summary": "The runtime and the app's packages (a venv, npm install)",
-   "body": [
-    "```text",
-    "  install                                    the runtime and the app's packages (a venv, npm install)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly install"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "install"
-   },
-   "data": {
-    "command": "dragonfly install",
-    "entries": [
-     {
-      "what": "install",
-      "usage": "dragonfly install",
-      "alias": "",
-      "note": "",
-      "does": "The runtime and the app's packages (a venv, npm install)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.make",
-   "type": "cli",
-   "title": "`dragonfly make` — (alias: dragonfly g <alias> ...); Facade + an example use case; Screen + state manager + state…",
-   "summary": "(alias: dragonfly g <alias> ...); Facade + an example use case; Screen + state manager + state model [--manager|-m Name] [--state|-st Name] [--route /path]; A state manager (Cubit) + its state model, in a screen; A state model, in a screen; A stateful widget in shared/widgets; A use case; A repository and its model; A model; A service; An aggregate; The config of a component;…",
-   "body": [
-    "```text",
-    "code generation: dragonfly make <what> ...   (alias: dragonfly g <alias> ...)",
-    "  component <component>                 (c)  facade + an example use case",
-    "  screen <component> <screen>           (s)  screen + state manager + state model",
-    "      [--manager|-m Name] [--state|-st Name] [--route /path]",
-    "  statemanager <component> <screen> <name> (sm) a state manager (Cubit) + its state model, in a screen",
-    "  statemodel <component> <screen> <name> (smo) a state model, in a screen",
-    "  stateful <name>                       (sf) a stateful widget in shared/widgets",
-    "  usecase <component> <name>            (uc) a use case",
-    "  repository <component> <name>         (r)  a repository and its model",
-    "  model <component> <name>              (mo) a model",
-    "  service <component> <name>            (sv) a service",
-    "  aggregate <component> <name>          (ag) an aggregate",
-    "  config <component>                    (cf) the config of a component",
-    "  test <component>                      (t)  test/<component>_test.nuc",
-    "  event <name>                          (e)  a global event in shared/events",
-    "  widget <name>                         (w)  a shared widget in shared/widgets",
-    "  guard <name>                          (gd) an access check (canActivate) in shared/guards",
-    "  global <name>                         (gl) a global component (@on an event) + its event",
-    "  page <name> [--route /x|--not-found]  (pg) a screen shared by the app in shared/screens",
-    "  integration <name>                    (it) an integration test in integration_test/",
-    "  backend and web projects: <kind> <component> <Name> [--screen <screen>]   any kind of the platform, at its",
-    "      place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly make"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "make"
-   },
-   "data": {
-    "command": "dragonfly make",
-    "entries": [
-     {
-      "what": "component",
-      "usage": "dragonfly make component <component>",
-      "alias": "c",
-      "note": "",
-      "does": "Facade + an example use case"
-     },
-     {
-      "what": "screen",
-      "usage": "dragonfly make screen <component> <screen>",
-      "alias": "s",
-      "note": "",
-      "does": "Screen + state manager + state model [--manager|-m Name] [--state|-st Name] [--route /path]"
-     },
-     {
-      "what": "statemanager",
-      "usage": "dragonfly make statemanager <component> <screen> <name>",
-      "alias": "sm",
-      "note": "",
-      "does": "A state manager (Cubit) + its state model, in a screen"
-     },
-     {
-      "what": "statemodel",
-      "usage": "dragonfly make statemodel <component> <screen> <name>",
-      "alias": "smo",
-      "note": "",
-      "does": "A state model, in a screen"
-     },
-     {
-      "what": "stateful",
-      "usage": "dragonfly make stateful <name>",
-      "alias": "sf",
-      "note": "",
-      "does": "A stateful widget in shared/widgets"
-     },
-     {
-      "what": "usecase",
-      "usage": "dragonfly make usecase <component> <name>",
-      "alias": "uc",
-      "note": "",
-      "does": "A use case"
-     },
-     {
-      "what": "repository",
-      "usage": "dragonfly make repository <component> <name>",
-      "alias": "r",
-      "note": "",
-      "does": "A repository and its model"
-     },
-     {
-      "what": "model",
-      "usage": "dragonfly make model <component> <name>",
-      "alias": "mo",
-      "note": "",
-      "does": "A model"
-     },
-     {
-      "what": "service",
-      "usage": "dragonfly make service <component> <name>",
-      "alias": "sv",
-      "note": "",
-      "does": "A service"
-     },
-     {
-      "what": "aggregate",
-      "usage": "dragonfly make aggregate <component> <name>",
-      "alias": "ag",
-      "note": "",
-      "does": "An aggregate"
-     },
-     {
-      "what": "config",
-      "usage": "dragonfly make config <component>",
-      "alias": "cf",
-      "note": "",
-      "does": "The config of a component"
-     },
-     {
-      "what": "test",
-      "usage": "dragonfly make test <component>",
-      "alias": "t",
-      "note": "",
-      "does": "Test/<component>_test.nuc"
-     },
-     {
-      "what": "event",
-      "usage": "dragonfly make event <name>",
-      "alias": "e",
-      "note": "",
-      "does": "A global event in shared/events"
-     },
-     {
-      "what": "widget",
-      "usage": "dragonfly make widget <name>",
-      "alias": "w",
-      "note": "",
-      "does": "A shared widget in shared/widgets"
-     },
-     {
-      "what": "guard",
-      "usage": "dragonfly make guard <name>",
-      "alias": "gd",
-      "note": "",
-      "does": "An access check (canActivate) in shared/guards"
-     },
-     {
-      "what": "global",
-      "usage": "dragonfly make global <name>",
-      "alias": "gl",
-      "note": "",
-      "does": "A global component (@on an event) + its event"
-     },
-     {
-      "what": "page",
-      "usage": "dragonfly make page <name> [--route /x|--not-found]",
-      "alias": "pg",
-      "note": "",
-      "does": "A screen shared by the app in shared/screens"
-     },
-     {
-      "what": "integration",
-      "usage": "dragonfly make integration <name>",
-      "alias": "it",
-      "note": "",
-      "does": "An integration test in integration_test/"
-     },
-     {
-      "what": "kind",
-      "usage": "dragonfly make <kind> <component> <Name> [--screen <screen>]",
-      "alias": "",
-      "note": "backend and web projects",
-      "does": "Any kind of the platform, at its place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.migrate",
-   "type": "cli",
-   "title": "`dragonfly migrate` — One migration of the database: the entities minus the last one; Applies the pending migrations, or…",
-   "summary": "One migration of the database: the entities minus the last one; Applies the pending migrations, or reverts the last one",
-   "body": [
-    "```text",
-    "  migrate make <message>                     one migration of the database: the entities minus the last one",
-    "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
-    "```"
-   ],
-   "keys": [
-    "dragonfly migrate"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "migrate"
-   },
-   "data": {
-    "command": "dragonfly migrate",
-    "entries": [
-     {
-      "what": "migrate",
-      "usage": "dragonfly migrate make <message>",
-      "alias": "",
-      "note": "",
-      "does": "One migration of the database: the entities minus the last one"
-     },
-     {
-      "what": "migrate",
-      "usage": "dragonfly migrate [up] | migrate down",
-      "alias": "",
-      "note": "",
-      "does": "Applies the pending migrations, or reverts the last one"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.new",
-   "type": "cli",
-   "title": "`dragonfly new` — New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files…",
-   "summary": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile)",
-   "body": [
-    "```text",
-    "  new <name> [-p mobile] [-d flutter]   (n)  new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react):",
-    "      [--org com.example]                    only .nuc files (+ the Flutter app in build/app for mobile)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly new"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "new"
-   },
-   "data": {
-    "command": "dragonfly new",
-    "entries": [
-     {
-      "what": "new",
-      "usage": "dragonfly new <name> [-p mobile] [-d flutter]",
-      "alias": "n",
-      "note": "",
-      "does": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.packages",
-   "type": "cli",
-   "title": "`dragonfly packages` — Install it with the dialect's package manager, write it in config.nuc (dependencies) and generate…",
-   "summary": "Install it with the dialect's package manager, write it in config.nuc (dependencies) and generate its type definitions: its names are then known to the compiler, the editor and the dialect, which imports them (backend, web: definitions in the project's defs/; mobile: cached in ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`); Out of config.nuc, the generated project and…",
-   "body": [
-    "```text",
-    "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008)",
-    "  add <package>[@version]... [--module <m>]  install it with the dialect's package manager, write it in config.nuc",
-    "                                             (dependencies) and generate its type definitions: its names are then",
-    "                                             known to the compiler, the editor and the dialect, which imports them",
-    "                                             (backend, web: definitions in the project's defs/; mobile: cached in",
-    "                                             ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`)",
-    "  remove <package>...                        out of config.nuc, the generated project and its definitions",
-    "packages and devices (flutter, inside the app)",
-    "  pub get|upgrade|outdated                   (pub add|remove = flutter add|remove)",
-    "  devices | emulators | logs | install | screenshot | attach | gen-l10n",
-    "  flutter <any flutter command>              run any flutter command inside the app",
-    "```"
-   ],
-   "keys": [
-    "dragonfly packages"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "packages"
-   },
-   "data": {
-    "command": "dragonfly packages",
-    "entries": [
-     {
-      "what": "add",
-      "usage": "dragonfly add <package>[@version]... [--module <m>]",
-      "alias": "",
-      "note": "",
-      "does": "Install it with the dialect's package manager, write it in config.nuc (dependencies) and generate its type definitions: its names are then known to the compiler, the editor and the dialect, which imports them (backend, web: definitions in the project's defs/; mobile: cached in ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`)"
-     },
-     {
-      "what": "remove",
-      "usage": "dragonfly remove <package>...",
-      "alias": "",
-      "note": "",
-      "does": "Out of config.nuc, the generated project and its definitions"
-     },
-     {
-      "what": "pub",
-      "usage": "dragonfly pub get|upgrade|outdated",
-      "alias": "",
-      "note": "",
-      "does": "(pub add|remove = flutter add|remove)"
-     },
-     {
-      "what": "devices",
-      "usage": "dragonfly devices | emulators | logs | install | screenshot | attach | gen-l10n",
-      "alias": "",
-      "note": "",
-      "does": ""
-     },
-     {
-      "what": "flutter",
-      "usage": "dragonfly flutter <any flutter command>",
-      "alias": "",
-      "note": "",
-      "does": "Run any flutter command inside the app"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.repair",
-   "type": "cli",
-   "title": "`dragonfly repair` — When the build or the app fails: build, then pub get + build_runner from scratch, then flutter…",
-   "summary": "When the build or the app fails: build, then pub get + build_runner from scratch, then flutter clean + everything again, until flutter analyze finds no errors (exit 2: the .nuc have errors)",
-   "body": [
-    "```text",
-    "  repair                                     when the build or the app fails: build, then pub get + build_runner",
-    "                                             from scratch, then flutter clean + everything again, until",
-    "                                             flutter analyze finds no errors (exit 2: the .nuc have errors)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly repair"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "repair"
-   },
-   "data": {
-    "command": "dragonfly repair",
-    "entries": [
-     {
-      "what": "repair",
-      "usage": "dragonfly repair",
-      "alias": "",
-      "note": "",
-      "does": "When the build or the app fails: build, then pub get + build_runner from scratch, then flutter clean + everything again, until flutter analyze finds no errors (exit 2: the .nuc have errors)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.run",
-   "type": "cli",
-   "title": "`dragonfly run` — Build and run on a device (flutter run, -d <device>); The server (uvicorn, npm run dev)",
-   "summary": "Build and run on a device (flutter run, -d <device>); The server (uvicorn, npm run dev)",
-   "body": [
-    "```text",
-    "  run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)",
-    "  run [-- <args>]                            the server (uvicorn, npm run dev)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly run"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "run"
-   },
-   "data": {
-    "command": "dragonfly run",
-    "entries": [
-     {
-      "what": "run",
-      "usage": "dragonfly run [-- <flutter run args>]",
-      "alias": "",
-      "note": "",
-      "does": "Build and run on a device (flutter run, -d <device>)"
-     },
-     {
-      "what": "run",
-      "usage": "dragonfly run [-- <args>]",
-      "alias": "",
-      "note": "",
-      "does": "The server (uvicorn, npm run dev)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.setup",
-   "type": "cli",
-   "title": "`dragonfly setup` — Install Flutter step by step (system packages, SDK, PATH)",
-   "summary": "Install Flutter step by step (system packages, SDK, PATH)",
-   "body": [
-    "```text",
-    "  setup [--dir ~/develop]                    install Flutter step by step (system packages, SDK, PATH)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly setup"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "setup"
-   },
-   "data": {
-    "command": "dragonfly setup",
-    "entries": [
-     {
-      "what": "setup",
-      "usage": "dragonfly setup [--dir ~/develop]",
-      "alias": "",
-      "note": "",
-      "does": "Install Flutter step by step (system packages, SDK, PATH)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.terminal-device",
-   "type": "cli",
-   "title": "`dragonfly terminal-device` — The Dragonfly Terminal device: the app inside this terminal",
-   "summary": "The Dragonfly Terminal device: the app inside this terminal",
-   "body": [
-    "```text",
-    "  terminal-device [<device>] [--render kitty|sixel|text|blocks]",
-    "                                        (td) the Dragonfly Terminal device: the app inside this terminal",
-    "```"
-   ],
-   "keys": [
-    "dragonfly terminal-device"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "terminal-device"
-   },
-   "data": {
-    "command": "dragonfly terminal-device",
-    "entries": [
-     {
-      "what": "terminal-device",
-      "usage": "dragonfly terminal-device [<device>] [--render kitty|sixel|text|blocks]",
-      "alias": "",
-      "note": "",
-      "does": "The Dragonfly Terminal device: the app inside this terminal"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.test",
-   "type": "cli",
-   "title": "`dragonfly test` — Build and run test/, or integration_test/ on a device; The tests written in Nuclear (pytest,…",
-   "summary": "Build and run test/, or integration_test/ on a device; The tests written in Nuclear (pytest, node:test)",
-   "body": [
-    "```text",
-    "  test [--integration] [-- <args>]           build and run test/, or integration_test/ on a device",
-    "  test [-- <args>]                           the tests written in Nuclear (pytest, node:test)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly test"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "test"
-   },
-   "data": {
-    "command": "dragonfly test",
-    "entries": [
-     {
-      "what": "test",
-      "usage": "dragonfly test [--integration] [-- <args>]",
-      "alias": "",
-      "note": "",
-      "does": "Build and run test/, or integration_test/ on a device"
-     },
-     {
-      "what": "test",
-      "usage": "dragonfly test [-- <args>]",
-      "alias": "",
-      "note": "",
-      "does": "The tests written in Nuclear (pytest, node:test)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:dragonfly.watch",
-   "type": "cli",
-   "title": "`dragonfly watch` — Transpile every time a .nuc changes (VS Code starts it by itself)",
-   "summary": "Transpile every time a .nuc changes (VS Code starts it by itself)",
-   "body": [
-    "```text",
-    "  watch                                      transpile every time a .nuc changes (VS Code starts it by itself)",
-    "```"
-   ],
-   "keys": [
-    "dragonfly watch"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/cli/src/main.rs"
-   ],
-   "meta": {
-    "tool": "dragonfly",
-    "name": "watch"
-   },
-   "data": {
-    "command": "dragonfly watch",
-    "entries": [
-     {
-      "what": "watch",
-      "usage": "dragonfly watch",
-      "alias": "",
-      "note": "",
-      "does": "Transpile every time a .nuc changes (VS Code starts it by itself)"
-     }
-    ]
-   }
-  },
   {
    "id": "tool:nuclear",
    "type": "cli",
-   "title": "`nuclear` — the compiler's command line",
-   "summary": "NuclearLang: a minimal language for AI agents, transpiled to other technologies through declarative dialects (.nuc → .ts / .dart / .py). Commands: agent, ast, build, check, contracts, defs, dialect, fix, fmt, help, kind, spec, tokens.",
+   "title": "`nuclear` — the command line of NuclearLang",
+   "summary": "NuclearLang: a minimal language for AI agents, transpiled to other technologies through declarative dialects (.nuc → .ts / .dart / .py). Commands: add, agent, analyze, ast, build, check, clean, code, contracts, credits, defs, device, dialect, doctor, explain, fix, fmt, gen, help, install, kind, make, migrate, new, packages, repair, run, setup, spec, terminal-device, test, tokens, watch.",
    "body": [
     "```text",
     "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
@@ -1209,7 +18,7 @@
     "                         folder next to each dialects/ folder is always searched",
     "```",
     "",
-    "Every command has its own row (`nuclear build`, `nuclear check`...). The documentation it prints:",
+    "Every command has its own row (`nuclear build`, `nuclear new`, `nuclear gen resource`...). The documentation it prints:",
     "",
     "```text",
     "documentation: nuclear help <topic>",
@@ -1244,19 +53,19 @@
     "  dart          dialect dart",
     "  python        dialect python (Python 3.12+, typed)",
     "  decisions     every design decision and why",
-    "  backend       The backend platform of Dragonfly",
+    "  backend       The backend platform of Synapsis",
     "  contracts     Contracts: one backend, its apps generated",
-    "  dragonfly     dragonfly (Dart package)",
     "  fastapi       Dialect fastapi (→ fastapi): the backend platform in Python",
     "  flutter       Dialect flutter: the mobile platform in Dart",
     "  generators    Generators: the standard code, written by a command",
     "  genkit        Genkit in a Flutter app",
-    "  kinds         Kinds: the libraries of Dragonfly",
-    "  mobile        The mobile platform of Dragonfly",
+    "  kinds         Kinds: the libraries of Synapsis",
+    "  mobile        The mobile platform of Synapsis",
     "  nestjs        Dialect nestjs: the backend platform in TypeScript",
     "  react         Dialect react: the web platform in TypeScript with React",
-    "  tutorial      Tutorial: a Flutter app from scratch with Dragonfly",
-    "  web           The web platform of Dragonfly",
+    "  synapsis      synapsis (Dart package)",
+    "  tutorial      Tutorial: a Flutter app from scratch with Synapsis",
+    "  web           The web platform of Synapsis",
     "```"
    ],
    "keys": [
@@ -1264,11 +73,308 @@
     "nuclear command"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
     "name": ""
+   }
+  },
+  {
+   "id": "tool:nuclear-builder",
+   "type": "cli",
+   "title": "`nuclear-builder` — the Nuclear Builder without the editor",
+   "summary": "Runs a spec through the pipeline (generate, plan, tests first, code, verification, security, artifacts, deploy), retries a run from any of its steps or from scratch, and exports the CI file.",
+   "body": [
+    "```text",
+    "nuclear-builder — the Nuclear Builder without the editor",
+    "",
+    "  nuclear-builder run [spec.md] [--lead local|claude]   spec → generate → plan → tests → code → verify → security →",
+    "                                                     artifacts → deploy",
+    "                                                     (no file: the spec of specs/ changed last)",
+    "  nuclear-builder retry <run> [--from <stage> | --step <id>]",
+    "                                                     a run again from the step that failed (the steps that passed are",
+    "                                                     kept); --from runs that whole stage again; --step runs that step",
+    "                                                     (`code-3`: passed or failed) and every step after it. What the",
+    "                                                     steps left out wrote is undone first. Calls to the local agents",
+    "                                                     already retry by themselves (.nuclear/builder.json \"retry\")",
+    "  nuclear-builder restart <run>                         the whole pipeline again from the specification: every file the",
+    "                                                     run wrote goes back to what it was, then every stage runs",
+    "  nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json (all by default)",
+    "  nuclear-builder export github|gitlab|bitbucket        writes the CI file that runs `nuclear-builder ci`",
+    "  nuclear-builder runs                                  the runs kept in .nuclear/builder/runs",
+    "  nuclear-builder setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
+    "                                                     the AI services of this machine, step by step: it reads the",
+    "                                                     hardware, suggests a profile (which models are downloaded and how",
+    "                                                     far each works), installs what is missing (uv, Ollama), the",
+    "                                                     Smart Graph and the Nuclear Developer, downloads the models, loads",
+    "                                                     the knowledge base and starts the services, now and at every login",
+    "                                                     (--yes: no questions, the suggested profile; --status: what is",
+    "                                                     installed and running; --remove: takes the services away, Ollama",
+    "                                                     and its models stay)",
+    "",
+    "Run it in the project or any folder inside it (the project is the closest folder up with config.nuc). The agent stages need the Nuclear Developer",
+    "(127.0.0.1:7879) and, when Claude leads, Claude Code with the Nuclear MCP server.",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder",
+    "loop cli"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": ""
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.ci",
+   "type": "cli",
+   "title": "`nuclear-builder ci` — The commands of .nuclear/builder.json (all by default)",
+   "summary": "The commands of .nuclear/builder.json (all by default)",
+   "body": [
+    "```text",
+    "  nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json (all by default)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder ci"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "ci"
+   },
+   "data": {
+    "command": "nuclear-builder ci",
+    "entries": [
+     {
+      "what": "ci",
+      "usage": "nuclear-builder ci [check|test|security|artifacts|deploy ...]",
+      "alias": "",
+      "note": "",
+      "does": "The commands of .nuclear/builder.json (all by default)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.export",
+   "type": "cli",
+   "title": "`nuclear-builder export` — Writes the CI file that runs `nuclear-builder ci`",
+   "summary": "Writes the CI file that runs `nuclear-builder ci`",
+   "body": [
+    "```text",
+    "  nuclear-builder export github|gitlab|bitbucket        writes the CI file that runs `nuclear-builder ci`",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder export"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "export"
+   },
+   "data": {
+    "command": "nuclear-builder export",
+    "entries": [
+     {
+      "what": "export",
+      "usage": "nuclear-builder export github|gitlab|bitbucket",
+      "alias": "",
+      "note": "",
+      "does": "Writes the CI file that runs `nuclear-builder ci`"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.restart",
+   "type": "cli",
+   "title": "`nuclear-builder restart` — The whole pipeline again from the specification: every file the run wrote goes back to what it…",
+   "summary": "The whole pipeline again from the specification: every file the run wrote goes back to what it was, then every stage runs",
+   "body": [
+    "```text",
+    "  nuclear-builder restart <run>                         the whole pipeline again from the specification: every file the",
+    "                                                     run wrote goes back to what it was, then every stage runs",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder restart"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "restart"
+   },
+   "data": {
+    "command": "nuclear-builder restart",
+    "entries": [
+     {
+      "what": "restart",
+      "usage": "nuclear-builder restart <run>",
+      "alias": "",
+      "note": "",
+      "does": "The whole pipeline again from the specification: every file the run wrote goes back to what it was, then every stage runs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.retry",
+   "type": "cli",
+   "title": "`nuclear-builder retry` — A run again from the step that failed (the steps that passed are kept); --from runs that whole…",
+   "summary": "A run again from the step that failed (the steps that passed are kept); --from runs that whole stage again; --step runs that step (`code-3`: passed or failed) and every step after it. What the steps left out wrote is undone first. Calls to the local agents already retry by themselves (.nuclear/builder.json \"retry\")",
+   "body": [
+    "```text",
+    "  nuclear-builder retry <run> [--from <stage> | --step <id>]",
+    "                                                     a run again from the step that failed (the steps that passed are",
+    "                                                     kept); --from runs that whole stage again; --step runs that step",
+    "                                                     (`code-3`: passed or failed) and every step after it. What the",
+    "                                                     steps left out wrote is undone first. Calls to the local agents",
+    "                                                     already retry by themselves (.nuclear/builder.json \"retry\")",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder retry"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "retry"
+   },
+   "data": {
+    "command": "nuclear-builder retry",
+    "entries": [
+     {
+      "what": "retry",
+      "usage": "nuclear-builder retry <run> [--from <stage> | --step <id>]",
+      "alias": "",
+      "note": "",
+      "does": "A run again from the step that failed (the steps that passed are kept); --from runs that whole stage again; --step runs that step (`code-3`: passed or failed) and every step after it. What the steps left out wrote is undone first. Calls to the local agents already retry by themselves (.nuclear/builder.json \"retry\")"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.run",
+   "type": "cli",
+   "title": "`nuclear-builder run` — Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec…",
+   "summary": "Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec of specs/ changed last)",
+   "body": [
+    "```text",
+    "  nuclear-builder run [spec.md] [--lead local|claude]   spec → generate → plan → tests → code → verify → security →",
+    "                                                     artifacts → deploy",
+    "                                                     (no file: the spec of specs/ changed last)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder run"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "run"
+   },
+   "data": {
+    "command": "nuclear-builder run",
+    "entries": [
+     {
+      "what": "run",
+      "usage": "nuclear-builder run [spec.md] [--lead local|claude]",
+      "alias": "",
+      "note": "",
+      "does": "Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec of specs/ changed last)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.runs",
+   "type": "cli",
+   "title": "`nuclear-builder runs` — The runs kept in .nuclear/builder/runs",
+   "summary": "The runs kept in .nuclear/builder/runs",
+   "body": [
+    "```text",
+    "  nuclear-builder runs                                  the runs kept in .nuclear/builder/runs",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder runs"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "runs"
+   },
+   "data": {
+    "command": "nuclear-builder runs",
+    "entries": [
+     {
+      "what": "runs",
+      "usage": "nuclear-builder runs",
+      "alias": "",
+      "note": "",
+      "does": "The runs kept in .nuclear/builder/runs"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.setup",
+   "type": "cli",
+   "title": "`nuclear-builder setup` — The AI services of this machine, step by step: it reads the hardware, suggests a profile (which…",
+   "summary": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (uv, Ollama), the Smart Graph and the Nuclear Developer, downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile; --status: what is installed and…",
+   "body": [
+    "```text",
+    "  nuclear-builder setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
+    "                                                     the AI services of this machine, step by step: it reads the",
+    "                                                     hardware, suggests a profile (which models are downloaded and how",
+    "                                                     far each works), installs what is missing (uv, Ollama), the",
+    "                                                     Smart Graph and the Nuclear Developer, downloads the models, loads",
+    "                                                     the knowledge base and starts the services, now and at every login",
+    "                                                     (--yes: no questions, the suggested profile; --status: what is",
+    "                                                     installed and running; --remove: takes the services away, Ollama",
+    "                                                     and its models stay)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder setup"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/src/cli.ts"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "setup"
+   },
+   "data": {
+    "command": "nuclear-builder setup",
+    "entries": [
+     {
+      "what": "setup",
+      "usage": "nuclear-builder setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
+      "alias": "",
+      "note": "",
+      "does": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (uv, Ollama), the Smart Graph and the Nuclear Developer, downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile; --status: what is installed and running; --remove: takes the services away, Ollama and its models stay)"
+     }
+    ]
    }
   },
   {
@@ -1716,297 +822,35 @@
    }
   },
   {
-   "id": "tool:nuclear-loop",
+   "id": "tool:nuclear.add",
    "type": "cli",
-   "title": "`nuclear-loop` — the Nuclear Loop without the editor",
-   "summary": "Runs a spec through the pipeline (generate, plan, tests first, code, verification, security, artifacts, deploy), retries a run from any of its steps or from scratch, and exports the CI file.",
+   "title": "`nuclear add` — Install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
+   "summary": "Install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
    "body": [
     "```text",
-    "nuclear-loop — the Nuclear Loop without the editor",
-    "",
-    "  nuclear-loop run [spec.md] [--lead local|claude]   spec → generate → plan → tests → code → verify → security →",
-    "                                                     artifacts → deploy",
-    "                                                     (no file: the spec of specs/ changed last)",
-    "  nuclear-loop retry <run> [--from <stage> | --step <id>]",
-    "                                                     a run again from the step that failed (the steps that passed are",
-    "                                                     kept); --from runs that whole stage again; --step runs that step",
-    "                                                     (`code-3`: passed or failed) and every step after it. What the",
-    "                                                     steps left out wrote is undone first. Calls to the local agents",
-    "                                                     already retry by themselves (.nuclear/loop.json \"retry\")",
-    "  nuclear-loop restart <run>                         the whole pipeline again from the specification: every file the",
-    "                                                     run wrote goes back to what it was, then every stage runs",
-    "  nuclear-loop ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/loop.json (all by default)",
-    "  nuclear-loop export github|gitlab|bitbucket        writes the CI file that runs `nuclear-loop ci`",
-    "  nuclear-loop runs                                  the runs kept in .nuclear/loop/runs",
-    "  nuclear-loop setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
-    "                                                     the AI services of this machine, step by step: it reads the",
-    "                                                     hardware, suggests a profile (which models are downloaded and how",
-    "                                                     far each works), installs what is missing (uv, Ollama), the",
-    "                                                     Smart Graph and the Nuclear Developer, downloads the models, loads",
-    "                                                     the knowledge base and starts the services, now and at every login",
-    "                                                     (--yes: no questions, the suggested profile; --status: what is",
-    "                                                     installed and running; --remove: takes the services away, Ollama",
-    "                                                     and its models stay)",
-    "",
-    "Run it in the project or any folder inside it (the project is the closest folder up with config.nuc). The agent stages need the Nuclear Developer",
-    "(127.0.0.1:7879) and, when Claude leads, Claude Code with the Nuclear MCP server.",
+    "  add <folder>                               install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project",
     "```"
    ],
    "keys": [
-    "nuclear-loop",
-    "loop cli"
+    "nuclear add"
    ],
    "sources": [
-    "extensions/vscode/src/loopCli.ts"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
-    "tool": "nuclear-loop",
-    "name": ""
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.ci",
-   "type": "cli",
-   "title": "`nuclear-loop ci` — The commands of .nuclear/loop.json (all by default)",
-   "summary": "The commands of .nuclear/loop.json (all by default)",
-   "body": [
-    "```text",
-    "  nuclear-loop ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/loop.json (all by default)",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop ci"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "ci"
+    "tool": "nuclear",
+    "name": "add"
    },
    "data": {
-    "command": "nuclear-loop ci",
+    "command": "nuclear add",
     "entries": [
      {
-      "what": "ci",
-      "usage": "nuclear-loop ci [check|test|security|artifacts|deploy ...]",
+      "what": "add",
+      "usage": "nuclear add <folder>",
       "alias": "",
       "note": "",
-      "does": "The commands of .nuclear/loop.json (all by default)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.export",
-   "type": "cli",
-   "title": "`nuclear-loop export` — Writes the CI file that runs `nuclear-loop ci`",
-   "summary": "Writes the CI file that runs `nuclear-loop ci`",
-   "body": [
-    "```text",
-    "  nuclear-loop export github|gitlab|bitbucket        writes the CI file that runs `nuclear-loop ci`",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop export"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "export"
-   },
-   "data": {
-    "command": "nuclear-loop export",
-    "entries": [
-     {
-      "what": "export",
-      "usage": "nuclear-loop export github|gitlab|bitbucket",
-      "alias": "",
-      "note": "",
-      "does": "Writes the CI file that runs `nuclear-loop ci`"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.restart",
-   "type": "cli",
-   "title": "`nuclear-loop restart` — The whole pipeline again from the specification: every file the run wrote goes back to what it…",
-   "summary": "The whole pipeline again from the specification: every file the run wrote goes back to what it was, then every stage runs",
-   "body": [
-    "```text",
-    "  nuclear-loop restart <run>                         the whole pipeline again from the specification: every file the",
-    "                                                     run wrote goes back to what it was, then every stage runs",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop restart"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "restart"
-   },
-   "data": {
-    "command": "nuclear-loop restart",
-    "entries": [
-     {
-      "what": "restart",
-      "usage": "nuclear-loop restart <run>",
-      "alias": "",
-      "note": "",
-      "does": "The whole pipeline again from the specification: every file the run wrote goes back to what it was, then every stage runs"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.retry",
-   "type": "cli",
-   "title": "`nuclear-loop retry` — A run again from the step that failed (the steps that passed are kept); --from runs that whole…",
-   "summary": "A run again from the step that failed (the steps that passed are kept); --from runs that whole stage again; --step runs that step (`code-3`: passed or failed) and every step after it. What the steps left out wrote is undone first. Calls to the local agents already retry by themselves (.nuclear/loop.json \"retry\")",
-   "body": [
-    "```text",
-    "  nuclear-loop retry <run> [--from <stage> | --step <id>]",
-    "                                                     a run again from the step that failed (the steps that passed are",
-    "                                                     kept); --from runs that whole stage again; --step runs that step",
-    "                                                     (`code-3`: passed or failed) and every step after it. What the",
-    "                                                     steps left out wrote is undone first. Calls to the local agents",
-    "                                                     already retry by themselves (.nuclear/loop.json \"retry\")",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop retry"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "retry"
-   },
-   "data": {
-    "command": "nuclear-loop retry",
-    "entries": [
-     {
-      "what": "retry",
-      "usage": "nuclear-loop retry <run> [--from <stage> | --step <id>]",
-      "alias": "",
-      "note": "",
-      "does": "A run again from the step that failed (the steps that passed are kept); --from runs that whole stage again; --step runs that step (`code-3`: passed or failed) and every step after it. What the steps left out wrote is undone first. Calls to the local agents already retry by themselves (.nuclear/loop.json \"retry\")"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.run",
-   "type": "cli",
-   "title": "`nuclear-loop run` — Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec…",
-   "summary": "Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec of specs/ changed last)",
-   "body": [
-    "```text",
-    "  nuclear-loop run [spec.md] [--lead local|claude]   spec → generate → plan → tests → code → verify → security →",
-    "                                                     artifacts → deploy",
-    "                                                     (no file: the spec of specs/ changed last)",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop run"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "run"
-   },
-   "data": {
-    "command": "nuclear-loop run",
-    "entries": [
-     {
-      "what": "run",
-      "usage": "nuclear-loop run [spec.md] [--lead local|claude]",
-      "alias": "",
-      "note": "",
-      "does": "Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec of specs/ changed last)"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.runs",
-   "type": "cli",
-   "title": "`nuclear-loop runs` — The runs kept in .nuclear/loop/runs",
-   "summary": "The runs kept in .nuclear/loop/runs",
-   "body": [
-    "```text",
-    "  nuclear-loop runs                                  the runs kept in .nuclear/loop/runs",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop runs"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "runs"
-   },
-   "data": {
-    "command": "nuclear-loop runs",
-    "entries": [
-     {
-      "what": "runs",
-      "usage": "nuclear-loop runs",
-      "alias": "",
-      "note": "",
-      "does": "The runs kept in .nuclear/loop/runs"
-     }
-    ]
-   }
-  },
-  {
-   "id": "tool:nuclear-loop.setup",
-   "type": "cli",
-   "title": "`nuclear-loop setup` — The AI services of this machine, step by step: it reads the hardware, suggests a profile (which…",
-   "summary": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (uv, Ollama), the Smart Graph and the Nuclear Developer, downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile; --status: what is installed and…",
-   "body": [
-    "```text",
-    "  nuclear-loop setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
-    "                                                     the AI services of this machine, step by step: it reads the",
-    "                                                     hardware, suggests a profile (which models are downloaded and how",
-    "                                                     far each works), installs what is missing (uv, Ollama), the",
-    "                                                     Smart Graph and the Nuclear Developer, downloads the models, loads",
-    "                                                     the knowledge base and starts the services, now and at every login",
-    "                                                     (--yes: no questions, the suggested profile; --status: what is",
-    "                                                     installed and running; --remove: takes the services away, Ollama",
-    "                                                     and its models stay)",
-    "```"
-   ],
-   "keys": [
-    "nuclear-loop setup"
-   ],
-   "sources": [
-    "extensions/vscode/src/loopCli.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-loop",
-    "name": "setup"
-   },
-   "data": {
-    "command": "nuclear-loop setup",
-    "entries": [
-     {
-      "what": "setup",
-      "usage": "nuclear-loop setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
-      "alias": "",
-      "note": "",
-      "does": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (uv, Ollama), the Smart Graph and the Nuclear Developer, downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile; --status: what is installed and running; --remove: takes the services away, Ollama and its models stay)"
+      "does": "Install a kind package (kinds/<name>/, ADR-synapsis-0004) for every project"
      }
     ]
    }
@@ -2015,18 +859,20 @@
    "id": "tool:nuclear.agent",
    "type": "cli",
    "title": "`nuclear agent` — AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents; (the hook: checks the…",
-   "summary": "AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents; (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
+   "summary": "AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents; (the hook: checks the .nuc an agent edited; reads the tool call on stdin); AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
    "body": [
     "```text",
     "  nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents",
     "  nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)",
+    "  agent init                                 AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents",
     "```"
    ],
    "keys": [
     "nuclear agent"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2048,6 +894,47 @@
       "alias": "",
       "note": "",
       "does": "(the hook: checks the .nuc an agent edited; reads the tool call on stdin)"
+     },
+     {
+      "what": "agent",
+      "usage": "nuclear agent init",
+      "alias": "",
+      "note": "",
+      "does": "AGENTS.md, CLAUDE.md, a Cursor rule and a check hook for AI agents"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.analyze",
+   "type": "cli",
+   "title": "`nuclear analyze` — Build and run flutter analyze on the generated app",
+   "summary": "Build and run flutter analyze on the generated app",
+   "body": [
+    "```text",
+    "  analyze                                    build and run flutter analyze on the generated app",
+    "```"
+   ],
+   "keys": [
+    "nuclear analyze"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "analyze"
+   },
+   "data": {
+    "command": "nuclear analyze",
+    "entries": [
+     {
+      "what": "analyze",
+      "usage": "nuclear analyze",
+      "alias": "",
+      "note": "",
+      "does": "Build and run flutter analyze on the generated app"
      }
     ]
    }
@@ -2066,7 +953,8 @@
     "nuclear ast"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2088,19 +976,23 @@
   {
    "id": "tool:nuclear.build",
    "type": "cli",
-   "title": "`nuclear build` — Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml)",
-   "summary": "Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml)",
+   "title": "`nuclear build` — Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml);…",
+   "summary": "Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml); Transpile, pub get and build_runner (and flutter build <target>); Transpile (nuclear build .)",
    "body": [
     "```text",
     "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
     "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
+    "  build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
+    "                                             transpile, pub get and build_runner (and flutter build <target>)",
+    "  build                                      transpile (nuclear build .)",
     "```"
    ],
    "keys": [
     "nuclear build"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2122,6 +1014,20 @@
       "alias": "",
       "note": "",
       "does": "Transpile a project (folder with nuclear.toml)"
+     },
+     {
+      "what": "build",
+      "usage": "nuclear build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
+      "alias": "",
+      "note": "",
+      "does": "Transpile, pub get and build_runner (and flutter build <target>)"
+     },
+     {
+      "what": "build",
+      "usage": "nuclear build",
+      "alias": "",
+      "note": "",
+      "does": "Transpile (nuclear build .)"
      }
     ]
    }
@@ -2129,19 +1035,21 @@
   {
    "id": "tool:nuclear.check",
    "type": "cli",
-   "title": "`nuclear check` — Report the errors of every file of a project; Report errors (JSON for agents and the LSP)",
-   "summary": "Report the errors of every file of a project; Report errors (JSON for agents and the LSP)",
+   "title": "`nuclear check` — Report the errors of every file of a project; Report errors (JSON for agents and the LSP); Errors…",
+   "summary": "Report the errors of every file of a project; Report errors (JSON for agents and the LSP); Errors and architecture rules of every .nuc (no Flutter needed)",
    "body": [
     "```text",
     "  nuclear check <folder> [--json]                             report the errors of every file of a project",
     "  nuclear check <file.nuc> [--dialect <name|path>] [--json]   report errors (JSON for agents and the LSP)",
+    "  check [--json]                             errors and architecture rules of every .nuc (no Flutter needed)",
     "```"
    ],
    "keys": [
     "nuclear check"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2163,6 +1071,81 @@
       "alias": "",
       "note": "",
       "does": "Report errors (JSON for agents and the LSP)"
+     },
+     {
+      "what": "check",
+      "usage": "nuclear check [--json]",
+      "alias": "",
+      "note": "",
+      "does": "Errors and architecture rules of every .nuc (no Flutter needed)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.clean",
+   "type": "cli",
+   "title": "`nuclear clean` — Flutter clean in the app",
+   "summary": "Flutter clean in the app",
+   "body": [
+    "```text",
+    "  clean                                      flutter clean in the app",
+    "```"
+   ],
+   "keys": [
+    "nuclear clean"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "clean"
+   },
+   "data": {
+    "command": "nuclear clean",
+    "entries": [
+     {
+      "what": "clean",
+      "usage": "nuclear clean",
+      "alias": "",
+      "note": "",
+      "does": "Flutter clean in the app"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.code",
+   "type": "cli",
+   "title": "`nuclear code` — Open the project in VS Code (Flutter run, debug, devices, hot reload)",
+   "summary": "Open the project in VS Code (Flutter run, debug, devices, hot reload)",
+   "body": [
+    "```text",
+    "  code                                       open the project in VS Code (Flutter run, debug, devices, hot reload)",
+    "```"
+   ],
+   "keys": [
+    "nuclear code"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "code"
+   },
+   "data": {
+    "command": "nuclear code",
+    "entries": [
+     {
+      "what": "code",
+      "usage": "nuclear code",
+      "alias": "",
+      "note": "",
+      "does": "Open the project in VS Code (Flutter run, debug, devices, hot reload)"
      }
     ]
    }
@@ -2183,7 +1166,8 @@
     "nuclear contracts"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2210,6 +1194,40 @@
    }
   },
   {
+   "id": "tool:nuclear.credits",
+   "type": "cli",
+   "title": "`nuclear credits` — The intro animation, the author and the repository",
+   "summary": "The intro animation, the author and the repository",
+   "body": [
+    "```text",
+    "  credits | author                           the intro animation, the author and the repository",
+    "```"
+   ],
+   "keys": [
+    "nuclear credits"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "credits"
+   },
+   "data": {
+    "command": "nuclear credits",
+    "entries": [
+     {
+      "what": "credits",
+      "usage": "nuclear credits | author",
+      "alias": "",
+      "note": "",
+      "does": "The intro animation, the author and the repository"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.defs",
    "type": "cli",
    "title": "`nuclear defs` — List the type definitions packages (all, or the dialect's); Print a declaration of the type…",
@@ -2226,7 +1244,8 @@
     "nuclear defs"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2260,6 +1279,49 @@
    }
   },
   {
+   "id": "tool:nuclear.device",
+   "type": "cli",
+   "title": "`nuclear device` — A test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at…",
+   "summary": "A test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at once: device 1, 2, 3); The running devices and the devices it can be",
+   "body": [
+    "```text",
+    "  device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,",
+    "                                             iphone14pro, ipadair...; several at once: device 1, 2, 3)",
+    "  device list                                the running devices and the devices it can be",
+    "```"
+   ],
+   "keys": [
+    "nuclear device"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "device"
+   },
+   "data": {
+    "command": "nuclear device",
+    "entries": [
+     {
+      "what": "device",
+      "usage": "nuclear device [<device>] [--landscape] [-- <args>]",
+      "alias": "dv",
+      "note": "",
+      "does": "A test device in its own window, like an emulator (pixel7, iphone14pro, ipadair...; several at once: device 1, 2, 3)"
+     },
+     {
+      "what": "device",
+      "usage": "nuclear device list",
+      "alias": "",
+      "note": "",
+      "does": "The running devices and the devices it can be"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.dialect",
    "type": "cli",
    "title": "`nuclear dialect` — List the dialects found; Validate a dialect's files",
@@ -2274,7 +1336,8 @@
     "nuclear dialect"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2301,6 +1364,74 @@
    }
   },
   {
+   "id": "tool:nuclear.doctor",
+   "type": "cli",
+   "title": "`nuclear doctor` — What NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
+   "summary": "What NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
+   "body": [
+    "```text",
+    "  doctor                                     what NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
+    "```"
+   ],
+   "keys": [
+    "nuclear doctor"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "doctor"
+   },
+   "data": {
+    "command": "nuclear doctor",
+    "entries": [
+     {
+      "what": "doctor",
+      "usage": "nuclear doctor",
+      "alias": "",
+      "note": "",
+      "does": "What NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.explain",
+   "type": "cli",
+   "title": "`nuclear explain` — A run-time error or a test's output (stdin) at its .nuc lines, explained",
+   "summary": "A run-time error or a test's output (stdin) at its .nuc lines, explained",
+   "body": [
+    "```text",
+    "  explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained",
+    "```"
+   ],
+   "keys": [
+    "nuclear explain"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "explain"
+   },
+   "data": {
+    "command": "nuclear explain",
+    "entries": [
+     {
+      "what": "explain",
+      "usage": "nuclear explain [--json]",
+      "alias": "",
+      "note": "",
+      "does": "A run-time error or a test's output (stdin) at its .nuc lines, explained"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.fix",
    "type": "cli",
    "title": "`nuclear fix` — Apply every exact fix of the errors (the editor's quick fixes), then report what is left",
@@ -2315,7 +1446,8 @@
     "nuclear fix"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2350,7 +1482,8 @@
     "nuclear fmt"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2370,6 +1503,188 @@
    }
   },
   {
+   "id": "tool:nuclear.gen",
+   "type": "cli",
+   "title": "`nuclear gen` — What the project has (components, declarations by kind), as JSON a component and its facade…",
+   "summary": "What the project has (components, declarations by kind), as JSON a component and its facade models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions…",
+   "body": [
+    "```text",
+    "finished code from a resource's data (every platform; ADR-codegen-0001): nuclear gen <what> ...",
+    "  inspect                               what the project has (components, declarations by kind), as JSON",
+    "  component <component>                 a component and its facade",
+    "  resource <component> <Name>           models, repository, a use case per action, the facade's aliases, the",
+    "                                        controller (backend) or the screen (mobile, web), the tests",
+    "      --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\"",
+    "      [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete]",
+    "      [--screen <screen>] [--plural Names] [--dry-run]       (nuclear gen alone prints every option)",
+    "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
+    "                                        --route, its route in the controller (backend)",
+    "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]",
+    "```"
+   ],
+   "keys": [
+    "nuclear gen"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "gen"
+   },
+   "data": {
+    "command": "nuclear gen",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear.gen.component",
+   "type": "cli",
+   "title": "`nuclear gen component` — A component and its facade",
+   "summary": "A component and its facade",
+   "body": [
+    "```text",
+    "  component <component>                 a component and its facade",
+    "```"
+   ],
+   "keys": [
+    "gen component",
+    "nuclear gen component"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "gen component"
+   },
+   "data": {
+    "command": "nuclear gen component",
+    "entries": [
+     {
+      "what": "component",
+      "usage": "nuclear gen component <component>",
+      "alias": "",
+      "note": "",
+      "does": "A component and its facade"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.gen.inspect",
+   "type": "cli",
+   "title": "`nuclear gen inspect` — What the project has (components, declarations by kind), as JSON",
+   "summary": "What the project has (components, declarations by kind), as JSON",
+   "body": [
+    "```text",
+    "  inspect                               what the project has (components, declarations by kind), as JSON",
+    "```"
+   ],
+   "keys": [
+    "gen inspect",
+    "nuclear gen inspect"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "gen inspect"
+   },
+   "data": {
+    "command": "nuclear gen inspect",
+    "entries": [
+     {
+      "what": "inspect",
+      "usage": "nuclear gen inspect",
+      "alias": "",
+      "note": "",
+      "does": "What the project has (components, declarations by kind), as JSON"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.gen.resource",
+   "type": "cli",
+   "title": "`nuclear gen resource` — Models, repository, a use case per action, the facade's aliases, the controller (backend) or the…",
+   "summary": "Models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete] (nuclear gen alone prints every option)",
+   "body": [
+    "```text",
+    "  resource <component> <Name>           models, repository, a use case per action, the facade's aliases, the",
+    "                                        controller (backend) or the screen (mobile, web), the tests",
+    "      --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\"",
+    "      [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete]",
+    "      [--screen <screen>] [--plural Names] [--dry-run]       (nuclear gen alone prints every option)",
+    "```"
+   ],
+   "keys": [
+    "gen resource",
+    "nuclear gen resource"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "gen resource"
+   },
+   "data": {
+    "command": "nuclear gen resource",
+    "entries": [
+     {
+      "what": "resource",
+      "usage": "nuclear gen resource <component> <Name>",
+      "alias": "",
+      "note": "",
+      "does": "Models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests --from-json <file|url> | --from-spec <spec.md> | --fields \"id:int name:string origin:Origin?\" [--source rest[:<base url>]|db] [--path p] [--actions list,get,search,create,update,delete] (nuclear gen alone prints every option)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.gen.usecase",
+   "type": "cli",
+   "title": "`nuclear gen usecase` — A use case wired into its component: its alias in the facade and, with --route, its route in the…",
+   "summary": "A use case wired into its component: its alias in the facade and, with --route, its route in the controller (backend) [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]",
+   "body": [
+    "```text",
+    "  usecase <component> <Name>            a use case wired into its component: its alias in the facade and, with",
+    "                                        --route, its route in the controller (backend)",
+    "      [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]",
+    "```"
+   ],
+   "keys": [
+    "gen usecase",
+    "nuclear gen usecase"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "gen usecase"
+   },
+   "data": {
+    "command": "nuclear gen usecase",
+    "entries": [
+     {
+      "what": "usecase",
+      "usage": "nuclear gen usecase <component> <Name>",
+      "alias": "",
+      "note": "",
+      "does": "A use case wired into its component: its alias in the facade and, with --route, its route in the controller (backend) [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"] [--dry-run]"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.help",
    "type": "cli",
    "title": "`nuclear help` — This help, a documentation topic or the usage of a command; A kind, decorator or header word of…",
@@ -2384,7 +1699,8 @@
     "nuclear help"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2411,6 +1727,40 @@
    }
   },
   {
+   "id": "tool:nuclear.install",
+   "type": "cli",
+   "title": "`nuclear install` — The runtime and the app's packages (a venv, npm install)",
+   "summary": "The runtime and the app's packages (a venv, npm install)",
+   "body": [
+    "```text",
+    "  install                                    the runtime and the app's packages (a venv, npm install)",
+    "```"
+   ],
+   "keys": [
+    "nuclear install"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "install"
+   },
+   "data": {
+    "command": "nuclear install",
+    "entries": [
+     {
+      "what": "install",
+      "usage": "nuclear install",
+      "alias": "",
+      "note": "",
+      "does": "The runtime and the app's packages (a venv, npm install)"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.kind",
    "type": "cli",
    "title": "`nuclear kind` — A kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)",
@@ -2424,7 +1774,8 @@
     "nuclear kind"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2439,6 +1790,278 @@
       "alias": "",
       "note": "",
       "does": "A kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.make",
+   "type": "cli",
+   "title": "`nuclear make` — (alias: nuclear g <alias> ...) facade + an example use case screen + state manager + state model…",
+   "summary": "(alias: nuclear g <alias> ...) facade + an example use case screen + state manager + state model [--manager|-m Name] [--state|-st Name] [--route /path] statemanager <component> <screen> <name> (sm) a state manager (Cubit) + its state model, in a screen statemodel <component> <screen> <name> (smo) a state model, in a screen (sf) a stateful widget in shared/widgets (uc) a use case a repository and…",
+   "body": [
+    "```text",
+    "code generation: nuclear make <what> ...   (alias: nuclear g <alias> ...)",
+    "  component <component>                 (c)  facade + an example use case",
+    "  screen <component> <screen>           (s)  screen + state manager + state model",
+    "      [--manager|-m Name] [--state|-st Name] [--route /path]",
+    "  statemanager <component> <screen> <name> (sm) a state manager (Cubit) + its state model, in a screen",
+    "  statemodel <component> <screen> <name> (smo) a state model, in a screen",
+    "  stateful <name>                       (sf) a stateful widget in shared/widgets",
+    "  usecase <component> <name>            (uc) a use case",
+    "  repository <component> <name>         (r)  a repository and its model",
+    "  model <component> <name>              (mo) a model",
+    "  service <component> <name>            (sv) a service",
+    "  aggregate <component> <name>          (ag) an aggregate",
+    "  config <component>                    (cf) the config of a component",
+    "  test <component>                      (t)  test/<component>_test.nuc",
+    "  event <name>                          (e)  a global event in shared/events",
+    "  widget <name>                         (w)  a shared widget in shared/widgets",
+    "  guard <name>                          (gd) an access check (canActivate) in shared/guards",
+    "  global <name>                         (gl) a global component (@on an event) + its event",
+    "  page <name> [--route /x|--not-found]  (pg) a screen shared by the app in shared/screens",
+    "  integration <name>                    (it) an integration test in integration_test/",
+    "  backend and web projects: <kind> <component> <Name> [--screen <screen>]   any kind of the platform, at its",
+    "      place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)",
+    "```"
+   ],
+   "keys": [
+    "nuclear make"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "make"
+   },
+   "data": {
+    "command": "nuclear make",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear.migrate",
+   "type": "cli",
+   "title": "`nuclear migrate` — One migration of the database: the entities minus the last one; Applies the pending migrations, or…",
+   "summary": "One migration of the database: the entities minus the last one; Applies the pending migrations, or reverts the last one",
+   "body": [
+    "```text",
+    "  migrate make <message>                     one migration of the database: the entities minus the last one",
+    "  migrate [up] | migrate down                applies the pending migrations, or reverts the last one",
+    "```"
+   ],
+   "keys": [
+    "nuclear migrate"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "migrate"
+   },
+   "data": {
+    "command": "nuclear migrate",
+    "entries": [
+     {
+      "what": "migrate",
+      "usage": "nuclear migrate make <message>",
+      "alias": "",
+      "note": "",
+      "does": "One migration of the database: the entities minus the last one"
+     },
+     {
+      "what": "migrate",
+      "usage": "nuclear migrate [up] | migrate down",
+      "alias": "",
+      "note": "",
+      "does": "Applies the pending migrations, or reverts the last one"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.new",
+   "type": "cli",
+   "title": "`nuclear new` — New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files…",
+   "summary": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile)",
+   "body": [
+    "```text",
+    "  new <name> [-p mobile] [-d flutter]   (n)  new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react):",
+    "      [--org com.example]                    only .nuc files (+ the Flutter app in build/app for mobile)",
+    "```"
+   ],
+   "keys": [
+    "nuclear new"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "new"
+   },
+   "data": {
+    "command": "nuclear new",
+    "entries": [
+     {
+      "what": "new",
+      "usage": "nuclear new <name> [-p mobile] [-d flutter]",
+      "alias": "n",
+      "note": "",
+      "does": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.packages",
+   "type": "cli",
+   "title": "`nuclear packages` — Install it with the dialect's package manager, write it in config.nuc (dependencies) and generate…",
+   "summary": "Install it with the dialect's package manager, write it in config.nuc (dependencies) and generate its type definitions: its names are then known to the compiler, the editor and the dialect, which imports them (backend, web: definitions in the project's defs/; mobile: cached in ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`) out of config.nuc, the generated project and…",
+   "body": [
+    "```text",
+    "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008)",
+    "  add <package>[@version]... [--module <m>]  install it with the dialect's package manager, write it in config.nuc",
+    "                                             (dependencies) and generate its type definitions: its names are then",
+    "                                             known to the compiler, the editor and the dialect, which imports them",
+    "                                             (backend, web: definitions in the project's defs/; mobile: cached in",
+    "                                             ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`)",
+    "  remove <package>...                        out of config.nuc, the generated project and its definitions",
+    "packages and devices (flutter, inside the app)",
+    "  pub get|upgrade|outdated                   (pub add|remove = flutter add|remove)",
+    "  devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "  flutter <any flutter command>              run any flutter command inside the app",
+    "```"
+   ],
+   "keys": [
+    "nuclear packages"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "packages"
+   },
+   "data": {
+    "command": "nuclear packages",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear.repair",
+   "type": "cli",
+   "title": "`nuclear repair` — When the build or the app fails: build, then pub get + build_runner from scratch, then flutter…",
+   "summary": "When the build or the app fails: build, then pub get + build_runner from scratch, then flutter clean + everything again, until flutter analyze finds no errors (exit 2: the .nuc have errors)",
+   "body": [
+    "```text",
+    "  repair                                     when the build or the app fails: build, then pub get + build_runner",
+    "                                             from scratch, then flutter clean + everything again, until",
+    "                                             flutter analyze finds no errors (exit 2: the .nuc have errors)",
+    "```"
+   ],
+   "keys": [
+    "nuclear repair"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "repair"
+   },
+   "data": {
+    "command": "nuclear repair",
+    "entries": [
+     {
+      "what": "repair",
+      "usage": "nuclear repair",
+      "alias": "",
+      "note": "",
+      "does": "When the build or the app fails: build, then pub get + build_runner from scratch, then flutter clean + everything again, until flutter analyze finds no errors (exit 2: the .nuc have errors)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.run",
+   "type": "cli",
+   "title": "`nuclear run` — Build and run on a device (flutter run, -d <device>); The server (uvicorn, npm run dev)",
+   "summary": "Build and run on a device (flutter run, -d <device>); The server (uvicorn, npm run dev)",
+   "body": [
+    "```text",
+    "  run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)",
+    "  run [-- <args>]                            the server (uvicorn, npm run dev)",
+    "```"
+   ],
+   "keys": [
+    "nuclear run"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "run"
+   },
+   "data": {
+    "command": "nuclear run",
+    "entries": [
+     {
+      "what": "run",
+      "usage": "nuclear run [-- <flutter run args>]",
+      "alias": "",
+      "note": "",
+      "does": "Build and run on a device (flutter run, -d <device>)"
+     },
+     {
+      "what": "run",
+      "usage": "nuclear run [-- <args>]",
+      "alias": "",
+      "note": "",
+      "does": "The server (uvicorn, npm run dev)"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.setup",
+   "type": "cli",
+   "title": "`nuclear setup` — Install Flutter step by step (system packages, SDK, PATH)",
+   "summary": "Install Flutter step by step (system packages, SDK, PATH)",
+   "body": [
+    "```text",
+    "  setup [--dir ~/develop]                    install Flutter step by step (system packages, SDK, PATH)",
+    "```"
+   ],
+   "keys": [
+    "nuclear setup"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "setup"
+   },
+   "data": {
+    "command": "nuclear setup",
+    "entries": [
+     {
+      "what": "setup",
+      "usage": "nuclear setup [--dir ~/develop]",
+      "alias": "",
+      "note": "",
+      "does": "Install Flutter step by step (system packages, SDK, PATH)"
      }
     ]
    }
@@ -2459,7 +2082,8 @@
     "nuclear spec"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2479,6 +2103,83 @@
    }
   },
   {
+   "id": "tool:nuclear.terminal-device",
+   "type": "cli",
+   "title": "`nuclear terminal-device` — The Synapsis Terminal device: the app inside this terminal",
+   "summary": "The Synapsis Terminal device: the app inside this terminal",
+   "body": [
+    "```text",
+    "  terminal-device [<device>] [--render kitty|sixel|text|blocks]",
+    "                                        (td) the Synapsis Terminal device: the app inside this terminal",
+    "```"
+   ],
+   "keys": [
+    "nuclear terminal-device"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "terminal-device"
+   },
+   "data": {
+    "command": "nuclear terminal-device",
+    "entries": [
+     {
+      "what": "terminal-device",
+      "usage": "nuclear terminal-device [<device>] [--render kitty|sixel|text|blocks]",
+      "alias": "",
+      "note": "",
+      "does": "The Synapsis Terminal device: the app inside this terminal"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.test",
+   "type": "cli",
+   "title": "`nuclear test` — Build and run test/, or integration_test/ on a device; The tests written in Nuclear (pytest,…",
+   "summary": "Build and run test/, or integration_test/ on a device; The tests written in Nuclear (pytest, node:test)",
+   "body": [
+    "```text",
+    "  test [--integration] [-- <args>]           build and run test/, or integration_test/ on a device",
+    "  test [-- <args>]                           the tests written in Nuclear (pytest, node:test)",
+    "```"
+   ],
+   "keys": [
+    "nuclear test"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "test"
+   },
+   "data": {
+    "command": "nuclear test",
+    "entries": [
+     {
+      "what": "test",
+      "usage": "nuclear test [--integration] [-- <args>]",
+      "alias": "",
+      "note": "",
+      "does": "Build and run test/, or integration_test/ on a device"
+     },
+     {
+      "what": "test",
+      "usage": "nuclear test [-- <args>]",
+      "alias": "",
+      "note": "",
+      "does": "The tests written in Nuclear (pytest, node:test)"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.tokens",
    "type": "cli",
    "title": "`nuclear tokens` — Print the tokens produced by the lexer",
@@ -2492,7 +2193,8 @@
     "nuclear tokens"
    ],
    "sources": [
-    "tools/cli/src/main.rs"
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
    ],
    "meta": {
     "tool": "nuclear",
@@ -2507,6 +2209,40 @@
       "alias": "",
       "note": "",
       "does": "Print the tokens produced by the lexer"
+     }
+    ]
+   }
+  },
+  {
+   "id": "tool:nuclear.watch",
+   "type": "cli",
+   "title": "`nuclear watch` — Transpile every time a .nuc changes (VS Code starts it by itself)",
+   "summary": "Transpile every time a .nuc changes (VS Code starts it by itself)",
+   "body": [
+    "```text",
+    "  watch                                      transpile every time a .nuc changes (VS Code starts it by itself)",
+    "```"
+   ],
+   "keys": [
+    "nuclear watch"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "watch"
+   },
+   "data": {
+    "command": "nuclear watch",
+    "entries": [
+     {
+      "what": "watch",
+      "usage": "nuclear watch",
+      "alias": "",
+      "note": "",
+      "does": "Transpile every time a .nuc changes (VS Code starts it by itself)"
      }
     ]
    }

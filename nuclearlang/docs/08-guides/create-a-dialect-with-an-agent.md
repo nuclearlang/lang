@@ -46,12 +46,12 @@ reference for backend kinds (controller, service). Each kind must remove repeate
 with an example in dialects/amber/spec.md. Validate with `nuclear dialect check amber --json`.
 ```
 
-### A Dragonfly framework
+### A Synapsis framework
 
-If you want it to be Dragonfly (components, layers, use cases, repositories...), say so:
+If you want it to be Synapsis (components, layers, use cases, repositories...), say so:
 
 ```
-Create `amber` as a Dragonfly dialect: apply to Amber the Dragonfly rules of nuclearlang/dialects/dart/docs/07-reference/flutter.md
+Create `amber` as a Synapsis dialect: apply to Amber the Synapsis rules of nuclearlang/dialects/dart/docs/07-reference/flutter.md
 §1, §3, §4 and §6 (components, layers, architecture kinds), written as an Amber expert would
 write them. Do not copy anything from Flutter that makes no sense in a backend; ask me when in doubt.
 ```
@@ -131,4 +131,4 @@ To use it from another folder: `--dialect-path <folder>/dialects` or the `NUCLEA
 
 What comes next (`specs/002-dialects-with-agents/plan.md`): `nuclear dialect new` and `nuclear dialect test`, a
 skill that loads these rules by itself in Claude Code and an `AGENTS.md` for Codex and OpenCode, and dialects
-installable from a repository with `dragonfly <dialect> new`.
+installable from a repository with `nuclear <dialect> new`.

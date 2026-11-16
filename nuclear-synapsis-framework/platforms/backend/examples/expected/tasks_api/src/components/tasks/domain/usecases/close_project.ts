@@ -2,7 +2,7 @@ import { ProjectRepository } from '../../data/repositories/project_repository.js
 import { TaskRepository } from '../../data/repositories/task_repository.js';
 import { Moved } from '../models/task_models.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Err, NotFound, Ok, Result, transactional } from 'dragonfly-nest';
+import { AppError, Err, NotFound, Ok, Result, transactional } from 'synapsis-nest';
 
 /** Closes a project: its tasks move to another one and it is removed, all in one transaction. */
 @Injectable()

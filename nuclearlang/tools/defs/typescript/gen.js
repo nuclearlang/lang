@@ -29,7 +29,7 @@ const [name, version, outRoot, ...given] = args;
 const modules = given.length || lib ? given : [pkg || name];
 const ts = require(require.resolve('typescript', { paths: [from] }));
 
-// Bundler resolution reads the `exports` of package.json (subpath entry points: 'dragonfly-nest/ai')
+// Bundler resolution reads the `exports` of package.json (subpath entry points: 'synapsis-nest/ai')
 const options = { strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler, experimentalDecorators: true, skipLibCheck: true,
   types: [], lib: [`lib.${lib || 'es2022'}.d.ts`] };

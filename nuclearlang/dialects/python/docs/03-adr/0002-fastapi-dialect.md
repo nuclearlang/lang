@@ -7,7 +7,7 @@ deciders: Julian Molina
 
 ## Context and problem
 
-The user asked for Dragonfly on Python with LangChain / LangGraph, based on the domain kinds of the Flutter
+The user asked for Synapsis on Python with LangChain / LangGraph, based on the domain kinds of the Flutter
 framework: REST APIs with `@controller`, `@get`, `@post` like NestJS; repositories that reach tables through an ORM
 instead of an HTTP API but read almost the same; CRUD like TypeORM with a model; connections to external systems
 (Kafka, Redis, Postgres, MySQL) in the config; pydantic; and the most used library for each basic need, without
@@ -40,8 +40,8 @@ an answer goes through a pydantic schema built from its columns (`schema_of`). A
 **Messaging and cache.** `listener` with `@consumer("topic")` (aiokafka), `publish`, `cacheGet` / `cacheSet`
 (`redis.asyncio`).
 
-**Runtime.** The package `dragonfly-py` (import name `dragonfly`,
-`nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py`): the injector, the connections opened by the
+**Runtime.** The package `synapsis-py` (import name `synapsis`,
+`nuclear-synapsis-framework/platforms/backend/packages/synapsis-py`): the injector, the connections opened by the
 app's lifespan, `create_app`, testing helpers (`running`, `client`, `FakeModel`, in-memory databases). The build
 writes `app/main.py`, `tests/conftest.py` and `pyproject.toml`; the optional parts are plugins of `config.nuc` (old
 ADR-0092).

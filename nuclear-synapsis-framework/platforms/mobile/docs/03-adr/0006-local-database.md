@@ -22,7 +22,7 @@ the Nuclear of a project never names the storage engine; the runtime must work o
 **A model with `@primary` has a local table.** The same words as a backend entity: `@primary` on the key field,
 `@primary(generated = true)` for a key the table gives (an auto-increment: the field is `T?`; ADR-backend-0001),
 `@created` and `@updated` for stamps the table writes, `@entity("characters")` for the table's name (default: the
-model's name in snake_case; the box is `dragonfly_<name>`). `@column` has no meaning in a document store (the JSON
+model's name in snake_case; the box is `synapsis_<name>`). `@column` has no meaning in a document store (the JSON
 name, `@key`, is the column) and is not part of the platform. The dialect writes
 `static final LocalTable<M> table` in the model and registers it at startup with its component.
 
@@ -92,5 +92,5 @@ package.
 ## References
 
 - How it works: [local-database.md](../02-architecture/local-database.md); the rule:
-  [mobile.md §3](../07-reference/mobile.md); the classes: [dragonfly.md §3.2](../07-reference/dragonfly.md).
+  [mobile.md §3](../07-reference/mobile.md); the classes: [synapsis.md §3.2](../07-reference/synapsis.md).
 - Replaces: ADR-0096

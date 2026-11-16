@@ -8,7 +8,7 @@ related: [glossary.md, ../01-product/roadmap.md, ../03-adr/0001-web-platform.md,
 
 ## The problem
 
-Dragonfly names three platforms, and the web one is built on what the mobile platform already does, so the
+Synapsis names three platforms, and the web one is built on what the mobile platform already does, so the
 knowledge of one carries to the other. The web platform is the mobile platform in a browser: the same words for the
 same things (`appConfig`, `repository` with `@get`, `usecase`, `appcomponent`, state models and `statemanager`,
 `@screen`, events, guards, tests), so an app's domain and state read the same on a phone and on the web, and a
@@ -24,7 +24,7 @@ calls, state handling, routes and imports are written by the transpiler.
 - **Whoever already has the mobile app**: the `characters` example here is the mobile one minus the widgets of the
   mobile dialect.
 - **The author of a dialect**: `platform.toml` says what a web dialect must implement.
-- **Whoever changes the runtime** (`packages/dragonfly-web`): the code every generated app runs on.
+- **Whoever changes the runtime** (`packages/synapsis-web`): the code every generated app runs on.
 
 ## What it does not do
 

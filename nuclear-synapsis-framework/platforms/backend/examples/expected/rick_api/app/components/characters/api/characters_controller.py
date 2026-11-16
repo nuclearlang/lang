@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.components.characters.characters_appcomponent import CharactersAppComponent
 from app.components.characters.data.entities.character import Character
 from app.components.characters.domain.models.new_character import NewCharacter
-from dragonfly import AppError, Result, controller, get, post
+from synapsis import AppError, Result, controller, get, post
 
 
 @controller("characters")

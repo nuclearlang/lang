@@ -1,5 +1,5 @@
-import { AppConfig, Connection, Http, SQLite, env } from 'dragonfly-nest';
-import { Ollama } from 'dragonfly-nest/ai';
+import { AppConfig, Connection, Http, SQLite, env } from 'synapsis-nest';
+import { Ollama } from 'synapsis-nest/ai';
 
 /** The connections of the app: the tasks database, the local Ollama model and the public holidays API. */
 export class ProjectConfig extends AppConfig {

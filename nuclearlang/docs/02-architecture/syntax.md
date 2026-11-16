@@ -42,7 +42,7 @@ documentation (`DocComment`). Decisions: ADR-lang-0002 (the ` * ` lines), ADR-la
 `Call.type_args`, `ExprKind::{Spread, ListIf, Cascade, CascadeSelf}`, destructuring patterns. `BinaryOp` has
 `IntDiv Pow BitOr BitXor BitAnd Shl Shr UShr`, `UnaryOp::BitNot`, `AssignOp::{Rem, BitAnd, BitOr, BitXor, Shl,
 Shr, UShr}`. The language server and the command line tools walk the AST themselves: changing variants breaks
-`crates/nuclear-lsp`, `../tools/cli/` and `../nuclear-synapsis-framework/cli/`.
+`crates/nuclear-lsp`, `../tools/cli/` and `../tools/code_generator/`.
 
 ## Habits of other languages
 

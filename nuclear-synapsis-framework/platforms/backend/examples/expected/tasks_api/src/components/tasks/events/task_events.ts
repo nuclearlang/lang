@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Listener, consumer } from 'dragonfly-nest/events';
+import { Listener, consumer } from 'synapsis-nest/events';
 
 /** Listens to the new tasks (Kafka when it is configured; in this process otherwise). */
 @Injectable()

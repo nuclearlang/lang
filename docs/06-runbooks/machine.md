@@ -7,7 +7,7 @@ related: []
 # This machine
 
 - **Flutter SDK**: `~/develop/flutter` (on the PATH). Older documents say `~/development/flutter`: outdated.
-- **The installation**: `installer/install.sh` → `~/.local/bin/{nuclear,dragonfly,nuclear-lsp,nuclear-loop}`,
+- **The installation**: `installer/install.sh` → `~/.local/bin/{nuclear,synapsis,nuclear-lsp,nuclear-builder}`,
   files in `~/.local/share/nuclearlang` (`nuclear_dialect::install_dir`, `NUCLEAR_HOME`). Run it again after every
   change the user should get. `cargo install` puts binaries in `~/.cargo/bin`, which is not on the user's PATH.
 - **The AI services**: the systemd user units `nuclear-graph` and `nuclear-developer`

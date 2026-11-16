@@ -23,11 +23,14 @@ or how dialects are found. This is a summary for who changes the loader: the ful
   `Loader::load("flutter")` finds it wherever it is; `Loader::available()` lists every one.
 - A framework dialect names its platform (`platform = "backend"` in `dialect.toml`, `Dialect.platform`); the
   platform's contract is `platforms/<platform>/platform.toml`, searched in `Loader.platform_paths` (N0305).
-  `Loader::default_dialect(platform)` reads the contract's `default_dialect`.
-- `nuclear_dialect::Home` is where the files are: an install (`$NUCLEAR_HOME/dialects` and
-  `$NUCLEAR_HOME/platforms`) or the source tree (`nuclearlang/dialects` and
-  `nuclear-synapsis-framework/platforms`). `homes()` gives the install first, then the tree while it is on disk.
-- `Loader::new(search_paths)` adds the `platforms/` next to each search path; `Loader::of(first, homes)` puts a
+  `Loader::default_dialect(platform)` reads the contract's `default_dialect`. What the code generator writes for
+  the platform (`[gen]`, `[skeletons]`, `[[generators.<what>]]`) is not in the contract: it is
+  `<platform>/generators.toml`, found by `Loader::generators_file(platform)` in `Loader.generator_paths` and merged
+  into the loaded dialect with the contract.
+- `nuclear_dialect::Home` is where the files are: an install (`$NUCLEAR_HOME/dialects`, `$NUCLEAR_HOME/platforms`
+  and `$NUCLEAR_HOME/generators`) or the source tree (`nuclearlang/dialects`, `nuclear-synapsis-framework/platforms`
+  and `tools/code_generator/platforms`): `Home.dialects`, `Home.platforms`, `Home.generators`. `homes()` gives the install first, then the tree while it is on disk.
+- `Loader::new(search_paths)` adds the `platforms/` and the `generators/` next to each search path; `Loader::of(first, homes)` puts a
   caller's own folders (a flag, a project's `dialects/`) before the homes.
 - The command line tool's flags and the server's settings that add search paths are theirs: `../tools/cli/` and
   [language-server.md](language-server.md).

@@ -4,9 +4,9 @@ name: platform-web
 on:
   push:
     branches: [main]
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/web/**', '.github/workflows/platform-web.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/web/**', '.github/workflows/platform-web.yml']
   pull_request:
-    paths: ['nuclearlang/**', 'tools/cli/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/web/**', '.github/workflows/platform-web.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'nuclear-synapsis-framework/platforms/web/**', '.github/workflows/platform-web.yml']
   workflow_dispatch:
 
 permissions:

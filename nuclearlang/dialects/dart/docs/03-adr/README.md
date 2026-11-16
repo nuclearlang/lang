@@ -12,7 +12,7 @@ Cited from other documents as `ADR-dart-NNNN`. A new decision is the next number
 
 | ADR | Decision | Status | Date |
 |---|---|---|---|
-| [0001](0001-flutter-dialect-as-a-framework.md) | The `flutter` dialect is a framework: it generates the app over official libraries and the independent Dart package `dragonfly` | accepted | 2026-11-03 |
+| [0001](0001-flutter-dialect-as-a-framework.md) | The `flutter` dialect is a framework: it generates the app over official libraries and the independent Dart package `synapsis` | accepted | 2026-11-03 |
 
 What each kind of the mobile platform is, and why, was decided with the platform (its ADRs:
 `nuclear-synapsis-framework/platforms/mobile/docs/03-adr/`).

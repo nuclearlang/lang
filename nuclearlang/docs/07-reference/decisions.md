@@ -45,14 +45,14 @@ An accepted decision is not edited: a new one replaces it. This page is the inde
 
 | ADR | Decision |
 |---|---|
-| [ADR-dart-0001](../../dialects/dart/docs/03-adr/0001-flutter-dialect-as-a-framework.md) | The `flutter` dialect is a framework: it generates the app over official libraries and the independent Dart package `dragonfly` |
+| [ADR-dart-0001](../../dialects/dart/docs/03-adr/0001-flutter-dialect-as-a-framework.md) | The `flutter` dialect is a framework: it generates the app over official libraries and the independent Dart package `synapsis` |
 
-## The framework (`synapsis`)
+## The framework, Synapsis (`synapsis`)
 
 | ADR | Decision |
 |---|---|
-| [ADR-synapsis-0001](../../../nuclear-synapsis-framework/docs/03-adr/0001-the-framework-comes-with-the-language.md) | Dragonfly is Nuclear's framework: a concept independent of the target language, and a project is only `.nuc` |
-| [ADR-synapsis-0002](../../../nuclear-synapsis-framework/docs/03-adr/0002-three-platforms-dialects-under-them.md) | Dragonfly has exactly three platforms; dialects are grouped under them and never show in the Nuclear code |
+| [ADR-synapsis-0001](../../../nuclear-synapsis-framework/docs/03-adr/0001-the-framework-comes-with-the-language.md) | Synapsis is Nuclear's framework: a concept independent of the target language, and a project is only `.nuc` |
+| [ADR-synapsis-0002](../../../nuclear-synapsis-framework/docs/03-adr/0002-three-platforms-dialects-under-them.md) | Synapsis has exactly three platforms; dialects are grouped under them and never show in the Nuclear code |
 | [ADR-synapsis-0003](../../../nuclear-synapsis-framework/docs/03-adr/0003-components-injection-and-architecture-rules.md) | An app is closed components with layers and a facade; dependencies are injected by header; the transpiler checks the architecture |
 | [ADR-synapsis-0004](../../../nuclear-synapsis-framework/docs/03-adr/0004-kinds-and-plugins-are-libraries.md) | Kinds are Nuclear's libraries: native kinds in the platform, extension kinds as packages, optional parts as plugins of `config.nuc` |
 | [ADR-synapsis-0005](../../../nuclear-synapsis-framework/docs/03-adr/0005-the-services-every-app-gets.md) | Every app gets the same services from the framework: events, session, ACL, forms, translations and generic models |
@@ -82,18 +82,25 @@ An accepted decision is not edited: a new one replaces it. This page is the inde
 |---|---|
 | [ADR-web-0001](../../../nuclear-synapsis-framework/platforms/web/docs/03-adr/0001-web-platform.md) | The web platform is the mobile platform in a browser, and its first dialect is `react` |
 
-## The command line tools (`cli`)
+## The command line tool (`cli`)
 
 | ADR | Decision |
 |---|---|
 | [ADR-cli-0001](../../../tools/cli/docs/03-adr/0001-a-projects-commands-come-from-its-dialects-data.md) | A project's commands come from its dialect's data; a dialect's own commands go under its name |
 | [ADR-cli-0002](../../../tools/cli/docs/03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md) | Agents learn Nuclear from a short brief, one skill, a project's agent files and the compiler's errors |
+| [ADR-cli-0003](../../../tools/cli/docs/03-adr/0003-one-command-nuclear.md) | One command line tool, `nuclear`, with the framework's commands |
 
 ## The code generator (`codegen`)
 
 | ADR | Decision |
 |---|---|
 | [ADR-codegen-0001](../../../tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md) | The CLI and the MCP generate the standard code; an agent writes only what is not standard |
+
+## The MCP server (`mcp`)
+
+| ADR | Decision |
+|---|---|
+| [ADR-mcp-0001](../../../tools/mcp/docs/03-adr/0001-the-mcp-server-is-a-project-of-its-own.md) | The MCP server is a Nuclear project of its own, `nuclear-mcp` |
 
 ## The devices (`devices`)
 

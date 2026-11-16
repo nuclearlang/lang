@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.components.characters.ai.guide import Guide
 from app.components.characters.domain.models.question import Answer, Question
-from dragonfly import controller, post
+from synapsis import controller, post
 
 
 @controller("guide")

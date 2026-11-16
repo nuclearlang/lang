@@ -13,7 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "dragonfly-web": "^0.1.0",
+    "synapsis-web": "^0.1.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^7.18.0"{{#plugins.packages}},

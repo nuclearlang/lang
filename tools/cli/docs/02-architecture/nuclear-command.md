@@ -4,9 +4,10 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [tools/cli/src/main.rs, tools/cli/docs/02-architecture/agent-support.md, nuclearlang/docs/07-reference/dialects.md]
 ---
-# The `nuclear` binary (`tools/cli/src/main.rs`)
+# The compiler's commands (`tools/cli/src/main.rs`)
 
-One file of commands over the language crates. The text a user sees is the `USAGE` constant: `nuclear help`
+One file of commands over the language crates; a command line `framework::claims` takes is the framework's
+([overview.md](overview.md), ADR-cli-0003). The text a user sees is the `USAGE` constant: `nuclear help`
 prints it, and `nuclear help <command>` prints its lines of it.
 
 ## Commands
@@ -69,6 +70,6 @@ platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--
   `the_hook_reads_the_type_definitions_of_the_project`.
 - `tests/build.rs`: `a_removed_source_takes_its_output_with_it`, `fix_applies_the_exact_fixes`.
 
-`nuclear help` names the targets `.ts / .dart / .py` and points to the `dragonfly` command for the framework's
-projects; the topics `architecture` and `new-dialect` print the language's guides of the same names; a dialect with
+`nuclear help` names the targets `.ts / .dart / .py` and ends with the framework's usage, under "projects of the
+framework"; the topics `architecture` and `new-dialect` print the language's guides of the same names; a dialect with
 no reference prints the heading `# Dialect <name>` and where its reference would be.

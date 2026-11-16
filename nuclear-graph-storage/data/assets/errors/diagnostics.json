@@ -2636,7 +2636,7 @@
     "",
     "**Fix.** the closest known name (`Column`); `nuclear defs search`",
     "",
-    "**Check.** A typo in a class of a library (the message gives the closest one); or a class of the project that no file declares: `inject<BooksAppComponent>()` needs a file that declares `appcomponent BooksAppComponent`. In a run of the Loop this means the plan missed a piece."
+    "**Check.** A typo in a class of a library (the message gives the closest one); or a class of the project that no file declares: `inject<BooksAppComponent>()` needs a file that declares `appcomponent BooksAppComponent`. In a run of the Builder this means the plan missed a piece."
    ],
    "keys": [
     "n0220",
@@ -3011,7 +3011,7 @@
     "**Right.** The message says the line. In `config.nuc`:",
     "",
     "```nuclear",
-    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
     "app(name = \"books_api\")",
     "plugins(sqlite = true, ai = true, ollama = true)",
     "```"
@@ -3059,11 +3059,11 @@
    "id": "error:N0305",
    "type": "diagnostic",
    "title": "N0305 — a dialect does not match its platform",
-   "summary": "A dialect does not match its platform's contract (`dialects/<platform>/platform.toml`, ADR-synapsis-0002): a kind missing or added, a consumed decorator or a plugin the platform does not declare (a plugin the dialect does not bring yet is a warning)",
+   "summary": "A dialect does not match its platform's contract (`platforms/<platform>/platform.toml`, ADR-synapsis-0002): a kind missing or added, a consumed decorator or a plugin the platform does not declare (a plugin the dialect does not bring yet is a warning)",
    "body": [
     "`N0305` · projects and architecture · error",
     "",
-    "**What it is.** A dialect does not match its platform's contract (`dialects/<platform>/platform.toml`, ADR-synapsis-0002): a kind missing or added, a consumed decorator or a plugin the platform does not declare (a plugin the dialect does not bring yet is a warning)",
+    "**What it is.** A dialect does not match its platform's contract (`platforms/<platform>/platform.toml`, ADR-synapsis-0002): a kind missing or added, a consumed decorator or a plugin the platform does not declare (a plugin the dialect does not bring yet is a warning)",
     "",
     "**Why.** A dialect in dialects/<platform>/ must implement that platform's contract (platform.toml, ADR-synapsis-0002): the same kinds, and no consumed decorator or plugin the platform does not declare, so the Nuclear of a project never changes with its dialect. A platform plugin the dialect does not bring yet is a warning.",
     "",
@@ -3087,7 +3087,7 @@
    "data": {
     "stage": "projects and architecture",
     "title": "a dialect does not match its platform",
-    "what": "A dialect does not match its platform's contract (`dialects/<platform>/platform.toml`, ADR-synapsis-0002): a kind missing or added, a consumed decorator or a plugin the platform does not declare (a plugin the dialect does not bring yet is a warning)",
+    "what": "A dialect does not match its platform's contract (`platforms/<platform>/platform.toml`, ADR-synapsis-0002): a kind missing or added, a consumed decorator or a plugin the platform does not declare (a plugin the dialect does not bring yet is a warning)",
     "fix": "declare it in `platform.toml` and implement it in every dialect of the platform, or drop it",
     "example": "`[kinds.widget]` in a backend dialect"
    },

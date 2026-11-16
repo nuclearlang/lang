@@ -1,0 +1,18 @@
+[package]
+name = "nuclear-devices"
+description = "The devices of NuclearLang: an app of the mobile platform run with the size, touch and identity of a phone or a tablet, in its own window or inside the terminal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+base64 = "0.22"
+crossterm = "0.29"
+png = "0.18"
+serde_json.workspace = true
+tungstenite = "0.27"

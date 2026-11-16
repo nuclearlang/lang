@@ -1,6 +1,6 @@
 import { Task } from './task.js';
-import { Entity } from 'dragonfly-nest';
 import { AutoIncrement, Column, DataType, HasMany, PrimaryKey, Table } from 'sequelize-typescript';
+import { Entity } from 'synapsis-nest';
 
 /** A project groups tasks (table projects); removing it removes its tasks. */
 @Table({

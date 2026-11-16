@@ -1,4 +1,4 @@
-# Editor documentation of the fastapi dialect (Dragonfly for Python): what the editor and `nuclear help <word>
+# Editor documentation of the fastapi dialect (Synapsis for Python): what the editor and `nuclear help <word>
 # --dialect fastapi` show for each kind and decorator. Rules: nuclearlang/dialects/python/docs/07-reference/fastapi.md.
 
 [kinds]
@@ -423,7 +423,7 @@ On a model field: the value must be an http(s) URL; otherwise a 422.
 
 key = '''
 On a model field: `@key("air_date")`, the field's name in the JSON when it is not the field's (an API that writes
-snake_case): the answer is read by it and written back with it. `dragonfly gen` writes it.
+snake_case): the answer is read by it and written back with it. `nuclear gen` writes it.
 
 ```nuclear
 Episode
@@ -464,7 +464,7 @@ tools = "LangChain tools: the doc comment is the tool's description."
 agent = 'a LangChain agent (`create_agent`).'
 state = 'a LangGraph state: a TypedDict.'
 graph = 'a LangGraph StateGraph; its state is a TypedDict.'
-tests = 'a pytest class written to `tests/`; the databases in memory come from `tests/conftest.py`; `expect` is `assert`; `FakeModel` is `dragonfly.testing.FakeModel`.'
+tests = 'a pytest class written to `tests/`; the databases in memory come from `tests/conftest.py`; `expect` is `assert`; `FakeModel` is `synapsis.testing.FakeModel`.'
 
 [underneath.decorators]
 key = 'pydantic `Field(validation_alias=AliasChoices(...), serialization_alias=...)`.'

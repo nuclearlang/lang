@@ -1,7 +1,7 @@
-import 'package:dragonfly/dragonfly.dart';
-import 'package:dragonfly_genkit/dragonfly_genkit.dart';
 import 'package:flutter/material.dart' hide Summary;
 import 'package:genkit_assistant/components/assistant/ai/assistant.dart';
+import 'package:synapsis/synapsis.dart';
+import 'package:synapsis_genkit/synapsis_genkit.dart';
 
 /// The chat: the messages as they stream, and a box to write.
 class ChatScreen extends StatefulWidget {

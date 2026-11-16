@@ -1,6 +1,6 @@
 import { Character } from '../../domain/models/character';
 import { CharacterDetailScreen } from '../detail/character_detail_screen';
-import { Element, StatelessView, createElement, goTo, img, li, small, span, statelessOf } from 'dragonfly-web';
+import { Element, StatelessView, createElement, goTo, img, li, small, span, statelessOf } from 'synapsis-web';
 
 /** A row of the list: the character's picture, name and species; a click opens its detail. */
 export function CharacterTile(props: CharacterTileProps): Element {

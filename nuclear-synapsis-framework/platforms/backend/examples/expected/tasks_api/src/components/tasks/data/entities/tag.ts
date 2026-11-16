@@ -1,6 +1,6 @@
 import { Task } from './task.js';
-import { Entity, joinTable } from 'dragonfly-nest';
 import { AutoIncrement, BelongsToMany, Column, DataType, PrimaryKey, Table } from 'sequelize-typescript';
+import { Entity, joinTable } from 'synapsis-nest';
 
 /** A label of tasks (table tags); a task has many tags and a tag many tasks (table tasks_tags). */
 @Table({

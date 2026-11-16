@@ -25,8 +25,9 @@
     "tools/defs/typescript/generate.sh  # dialects/typescript/defs/",
     "```",
     "",
-    "The `nuclear` command (`build`, `check`, `fmt`, `spec`, `defs`, `help`...) is another project:",
-    "[`../tools/cli/`](../tools/cli/AGENTS.md)."
+    "The `nuclear` command (`build`, `check`, `fmt`, `spec`, `defs`, `help`..., and the framework's `new`, `make`, `gen`,",
+    "`run`...) is another project: [`../tools/cli/`](../tools/cli/AGENTS.md); what `make` and `gen` write is",
+    "[`../tools/code_generator/`](../tools/code_generator/AGENTS.md)."
    ],
    "agents": false,
    "sources": [
@@ -189,7 +190,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/AGENTS.md#rules-of-this-project.5d1ef4",
+   "id": "doc:nuclearlang/AGENTS.md#rules-of-this-project.5cd96e",
    "type": "readme",
    "title": "NuclearLang — the language — Rules of this project",
    "summary": "words, shortcuts and imports live in `dialects/`.",
@@ -200,7 +201,7 @@
     "  language. What a new target needs is a generic `[options]` option, never a case of one language.",
     "- No inferred parameters, no hoisting, no `type`.",
     "- A changed variant of `crates/nuclear-syntax/src/ast.rs` or a public API of a crate breaks its users (the language",
-    "  server, `../tools/cli/`, `../nuclear-synapsis-framework/cli/`): the workspace's `cargo test` must stay green.",
+    "  server, `../tools/cli/`, `../tools/code_generator/`): the workspace's `cargo test` must stay green.",
     "- Every new diagnostic code is documented in `docs/07-reference/diagnostics.md`; every word of a dialect in its",
     "  `docs.toml` (two tests check it).",
     "- `docs/07-reference/nuclear-base.md` holds only final rules and only Nuclear: no dialect, no target language, no",
@@ -358,30 +359,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.485b7a",
-   "type": "readme",
-   "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
-   "summary": "What the server does",
-   "body": [
-    "| Signature help | Parameters of the file's functions and widgets and of external constructors, functions and methods (`Scaffold({key?: Key, appBar?: ...})`, positional ones first); highlights the current argument. |",
-    "| Navigation | Go to definition, find references, highlight uses, rename (it does not allow switching PascalCase ↔ camelCase). |",
-    "| Structure | Outline (modules, kinds, fields, methods) and folding by indentation. |",
-    "| Projects | A file inside a folder with `nuclear.toml` or `main.nuc` (Dragonfly) sees the names of the other files (completion, hover, go to definition), takes the kind of its folder (`domain/models` → `model`) and, saved, the project's diagnostics (N0301/N0302/N0303). What is in `test/` is only seen by `test/`. |",
-    "| Decorators | Completion after `@` (the dialect's: `@screen`, `@on`, `@test`...) and, inside `@screen(...)`, its arguments (`route = `) and the fields of an object argument (`loggedIn = { forward: `) from `[decorators.args]`, required ones first; hover with the list of arguments. Guide: `nuclear help tutorial` and `dialects/dart/docs/07-reference/flutter.md` §6.9–6.13. |",
-    "| Generated code | The `nuclear/transpile` request: VS Code shows it with **Nuclear: Show Generated Code**. |",
-    "| Code metrics | Complexity (an approximation of the cyclomatic one) on each function, method, module...: see below. |"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/crates/nuclear-lsp/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.51938e",
    "type": "readme",
    "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
@@ -417,6 +394,30 @@
     "`<workspace>/dialects`, `dialects/` next to the binary (so it finds them in the packages), the install's and the",
     "source tree's `nuclearlang/dialects/`. Type definitions (`../../docs/07-reference/definitions.md`) are looked for in",
     "the `<language>/defs/` folder of each dialects folder and in the `defs/` folder next to it; the full `api.json` is read once per loaded dialect."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/crates/nuclear-lsp/README.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/crates/nuclear-lsp/README.md#what-the-server-does.710575",
+   "type": "readme",
+   "title": "nuclear-lsp — the language server of NuclearLang — What the server does",
+   "summary": "What the server does",
+   "body": [
+    "| Signature help | Parameters of the file's functions and widgets and of external constructors, functions and methods (`Scaffold({key?: Key, appBar?: ...})`, positional ones first); highlights the current argument. |",
+    "| Navigation | Go to definition, find references, highlight uses, rename (it does not allow switching PascalCase ↔ camelCase). |",
+    "| Structure | Outline (modules, kinds, fields, methods) and folding by indentation. |",
+    "| Projects | A file inside a folder with `nuclear.toml` or `main.nuc` (Synapsis) sees the names of the other files (completion, hover, go to definition), takes the kind of its folder (`domain/models` → `model`) and, saved, the project's diagnostics (N0301/N0302/N0303). What is in `test/` is only seen by `test/`. |",
+    "| Decorators | Completion after `@` (the dialect's: `@screen`, `@on`, `@test`...) and, inside `@screen(...)`, its arguments (`route = `) and the fields of an object argument (`loggedIn = { forward: `) from `[decorators.args]`, required ones first; hover with the list of arguments. Guide: `nuclear help tutorial` and `dialects/dart/docs/07-reference/flutter.md` §6.9–6.13. |",
+    "| Generated code | The `nuclear/transpile` request: VS Code shows it with **Nuclear: Show Generated Code**. |",
+    "| Code metrics | Complexity (an approximation of the cyclomatic one) on each function, method, module...: see below. |"
    ],
    "agents": false,
    "sources": [
@@ -746,7 +747,7 @@
     "",
     "- `tools/defs/generate.sh` defaults to a Flutter SDK in `~/development/flutter`: pass `FLUTTER_ROOT=<the SDK>`. To",
     "  regenerate only one package without moving the others to the installed Flutter, run `bin/defs.dart` with the",
-    "  version wanted (`FV=3.47.7`, the `pub dragonfly` line of `generate.sh`).",
+    "  version wanted (`FV=3.47.7`, the `pub synapsis` line of `generate.sh`).",
     "- `tools/stdlib-check.sh` takes `tsc` from the PATH or from `tools/node/node_modules/typescript/bin/tsc`",
     "  (`TSC=<path>` for another), Python and pyright from `tools/python/.venv` (`PY=<python>`, `PYRIGHT=<pyright>`),",
     "  `dart` from the PATH or `$FLUTTER_ROOT/bin/dart` (`DART=<path>`).",
@@ -773,7 +774,7 @@
     "| User | Uses | How |",
     "|---|---|---|",
     "| `../tools/cli/` (the `nuclear` command) | the four compiler crates | Rust library; it embeds `docs/07-reference/` and `docs/08-guides/` with `include_str!` |",
-    "| `../nuclear-synapsis-framework/cli/` (the `dragonfly` command) | `nuclear-transpile` (`project`, `map`), `nuclear-dialect::Loader` | Rust library |",
+    "| `../tools/code_generator/` (the crate `nuclear-codegen`: what `nuclear make` and `nuclear gen` write) | `nuclear-dialect`, `nuclear-syntax`, `nuclear-transpile` | Rust library |",
     "| `../extensions/{vscode,jetbrains,zed}/` | the `nuclear-lsp` binary, `dialects/` | VS Code and JetBrains bundle the binary with every dialect, Zed runs the installed one; they talk to it only through LSP |",
     "| The platforms' checks (`../nuclear-synapsis-framework/platforms/<platform>/checks/`) | `tools/defs/flutter_project/`, `tools/node/`, `tools/python/.venv` | the host project and the installed target libraries |"
    ],
@@ -963,7 +964,26 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/dialects.md#where-a-dialect-is-found",
+   "id": "doc:nuclearlang/docs/02-architecture/dialects.md#where-a-dialect-is-found.157f8e",
+   "type": "context",
+   "title": "Dialects: format and loading — Where a dialect is found",
+   "summary": "language-server.md.",
+   "body": [
+    "- The command line tool's flags and the server's settings that add search paths are theirs: `../tools/cli/` and",
+    "  [language-server.md](language-server.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/02-architecture/dialects.md#where-a-dialect-is-found.4985dc",
    "type": "context",
    "title": "Dialects: format and loading — Where a dialect is found",
    "summary": "`Loader::load(\"flutter\")` finds it wherever it is; `Loader::available()` lists every one.",
@@ -972,14 +992,15 @@
     "  `Loader::load(\"flutter\")` finds it wherever it is; `Loader::available()` lists every one.",
     "- A framework dialect names its platform (`platform = \"backend\"` in `dialect.toml`, `Dialect.platform`); the",
     "  platform's contract is `platforms/<platform>/platform.toml`, searched in `Loader.platform_paths` (N0305).",
-    "  `Loader::default_dialect(platform)` reads the contract's `default_dialect`.",
-    "- `nuclear_dialect::Home` is where the files are: an install (`$NUCLEAR_HOME/dialects` and",
-    "  `$NUCLEAR_HOME/platforms`) or the source tree (`nuclearlang/dialects` and",
-    "  `nuclear-synapsis-framework/platforms`). `homes()` gives the install first, then the tree while it is on disk.",
-    "- `Loader::new(search_paths)` adds the `platforms/` next to each search path; `Loader::of(first, homes)` puts a",
-    "  caller's own folders (a flag, a project's `dialects/`) before the homes.",
-    "- The command line tool's flags and the server's settings that add search paths are theirs: `../tools/cli/` and",
-    "  [language-server.md](language-server.md)."
+    "  `Loader::default_dialect(platform)` reads the contract's `default_dialect`. What the code generator writes for",
+    "  the platform (`[gen]`, `[skeletons]`, `[[generators.<what>]]`) is not in the contract: it is",
+    "  `<platform>/generators.toml`, found by `Loader::generators_file(platform)` in `Loader.generator_paths` and merged",
+    "  into the loaded dialect with the contract.",
+    "- `nuclear_dialect::Home` is where the files are: an install (`$NUCLEAR_HOME/dialects`, `$NUCLEAR_HOME/platforms`",
+    "  and `$NUCLEAR_HOME/generators`) or the source tree (`nuclearlang/dialects`, `nuclear-synapsis-framework/platforms`",
+    "  and `tools/code_generator/platforms`): `Home.dialects`, `Home.platforms`, `Home.generators`. `homes()` gives the install first, then the tree while it is on disk.",
+    "- `Loader::new(search_paths)` adds the `platforms/` and the `generators/` next to each search path; `Loader::of(first, homes)` puts a",
+    "  caller's own folders (a flag, a project's `dialects/`) before the homes."
    ],
    "agents": false,
    "sources": [
@@ -1388,7 +1409,7 @@
    "body": [
     "- Only the base registers the language, the grammar and the server in an editor; a framework's editor features",
     "  activate on their dialect's `[project] marker`.",
-    "- The `dragonfly` command uses the crates as a library; what it needs from a platform comes from the dialect",
+    "- The `nuclear` command uses the crates as a library; what it needs from a platform comes from the dialect",
     "  (`[toolchain]`); its mobile path still calls Flutter from its own code.",
     "- The same data files feed the command line tool, the language server and the MCP server."
    ],
@@ -1412,14 +1433,14 @@
     "|---|---|---|",
     "| `.nuclear/project.json` (the project card) | `project::write_metadata` (`METADATA_FILE`) | the editors (the VS Code status bar) |",
     "| `.nuclear/map.md` (the project map) | `map::write`, with the card | an agent before it writes |",
-    "| `.nuclear/contract.json` | `contract::write` (`CONTRACT_FILE`), under the project and its output folder | a client project that declares it in `contracts(...)`; the HTTP tool of the editors |",
+    "| `.nuclear/contract.json` | `contract::write` (`CONTRACT_FILE`), under the project and its output folder | a client project that declares it in `contracts(...)`; the Nuclear Connector of the editors |",
     "| `.nuclear/openapi.json` | `contract::write`, only for a `backend` project | any OpenAPI tool |",
     "| `contracts/<name>/` | `contract::sync`, at the start of `project::build` | the client project's own build |",
     "| `<output>/.nuclear/lines.json` (the line map) | the command line tools, from `project::line_map` (`LINE_MAP_FILE`) | the editors' debuggers |",
     "",
     "The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).",
     "The commands that write them (`nuclear build`, `nuclear contracts list|update`) are documented in `../tools/cli/`.",
-    "A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` (the `dragonfly` command)."
+    "A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` (the `nuclear` command)."
    ],
    "agents": false,
    "sources": [
@@ -1512,6 +1533,7 @@
     "|---|---|",
     "| Dialects | the `dialects/` of each home (`nuclear_dialect::homes`: the install, then the source tree), plus the paths its caller gives |",
     "| Platform contracts | `platforms/<platform>/platform.toml` next to each `dialects/` (in the tree: `../nuclear-synapsis-framework/platforms/`) |",
+    "| The platforms' generators | `generators/<platform>/generators.toml` next to each `dialects/` (in the tree: `../tools/code_generator/platforms/`; `Loader::generators_file`) |",
     "| Kind packages | `<project>/kinds`, `<install>/kinds` (`Loader.packages`) |",
     "| Type definitions | `<language>/defs/` of each dialects folder, the `defs/` next to it, extra roots, the cache → [type-definitions.md](type-definitions.md) |",
     "| Environment | `NUCLEAR_HOME` (the install), `NUCLEAR_DIALECT_PATH` (extra dialect folders, `:`-separated), `XDG_CACHE_HOME` (the definitions cache) |"
@@ -1677,7 +1699,7 @@
    "title": "The language server (`crates/nuclear-lsp`) — Projects",
    "summary": "`main.nuc` (the same order as `Manifest::find`).",
    "body": [
-    "- The root is the closest folder with `nuclear.toml`, a `config.nuc` naming `dragonfly(platform, dialect)`, or",
+    "- The root is the closest folder with `nuclear.toml`, a `config.nuc` naming `synapsis(platform, dialect)`, or",
     "  `main.nuc` (the same order as `Manifest::find`).",
     "- The project's dialect is loaded with the kind packages of `<project>/kinds` and `<install>/kinds`",
     "  (`dialects::load`), cached by name, or by `name@root` when the project has `kinds/`.",
@@ -1991,9 +2013,9 @@
    "id": "doc:nuclearlang/docs/02-architecture/type-definitions.md#project-packages-adr-lang-0008-adr-mobile-0001-adr-mobile-0001",
    "type": "context",
    "title": "Type definitions — Project packages (ADR-lang-0008; ADR-mobile-0001, ADR-mobile-0001)",
-   "summary": "`dragonfly add <package>` gives a project the definitions of any package of its target.",
+   "summary": "`nuclear add <package>` gives a project the definitions of any package of its target.",
    "body": [
-    "`dragonfly add <package>` gives a project the definitions of any package of its target. Backend and web: generated",
+    "`nuclear add <package>` gives a project the definitions of any package of its target. Backend and web: generated",
     "into `<project>/defs/<language>/<name>/<version>/` (`project::project_defs`). Mobile: generated once into the cache",
     "and listed in `build/defs.lock` (`project::defs_lock`). Both are loaded with `project::with_project_defs`",
     "(`Loader::add_defs`) by `nuclear build|check`, `nuclear defs` (inside the project) and the language server.",
@@ -2023,10 +2045,10 @@
     "`defaults`) and `api.json` (the full API in Nuclear notation, read lazily: the language server, `nuclear defs`,",
     "agents). GENERATED: never edit.",
     "",
-    "Packages of the `dart` language today: `dart@3.13.5`, `flutter@3.47.7`, `dragonfly@0.1.0`, `flutter_bloc@9.1.1`,",
+    "Packages of the `dart` language today: `dart@3.13.5`, `flutter@3.47.7`, `synapsis@0.1.0`, `flutter_bloc@9.1.1`,",
     "`bloc@9.2.1`, `dio@5.11.1`, `get_it@9.3.0`, `go_router@18.1.1`, `connectivity_plus@7.3.2`,",
     "`flutter_secure_storage@11.2.0`, `json_annotation@4.12.0`, and for the genkit plugin `genkit@1.0.1`,",
-    "`schemantic@1.0.0`, `dragonfly_genkit@0.1.0`. `python` and `typescript` have theirs under their own `defs/`; the",
+    "`schemantic@1.0.0`, `synapsis_genkit@0.1.0`. `python` and `typescript` have theirs under their own `defs/`; the",
     "list a dialect uses is its `[dialect] defs`."
    ],
    "agents": false,
@@ -2171,7 +2193,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/05-standards/coding.md#the-compiler.8a81be",
+   "id": "doc:nuclearlang/docs/05-standards/coding.md#the-compiler.710fe9",
    "type": "context",
    "title": "How code and documents are written in this project — The compiler",
    "summary": "block\"); framework words, shortcuts and imports live in `dialects/`.",
@@ -2189,7 +2211,7 @@
     "  `Span`.",
     "- **The generated text does not change for a tool:** the line map is recorded beside it, not by aligning lines.",
     "- **`ast.rs` and the public API are shared.** A changed variant or signature is announced by the workspace build:",
-    "  the language server, `../tools/cli/` and `../nuclear-synapsis-framework/cli/` walk the AST themselves."
+    "  the language server, `../tools/cli/` and `../tools/code_generator/` walk the AST themselves."
    ],
    "agents": false,
    "sources": [
@@ -2682,12 +2704,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/definitions.md#6-generating-packages.dc0222",
+   "id": "doc:nuclearlang/docs/07-reference/definitions.md#6-generating-packages.65636c",
    "type": "spec",
    "title": "Type definitions — 6. Generating packages",
-   "summary": "For a package of a single project, the framework's CLI generates it: `dragonfly add <package>[@version]` installs the package with the dialect's package manager, writes it in `config.nuc` and runs the language's generator over what is installed (ADR-lang-0008).",
+   "summary": "For a package of a single project, the framework's CLI generates it: `nuclear add <package>[@version]` installs the package with the dialect's package manager, writes it in `config.nuc` and runs the language's generator over what is installed (ADR-lang-0008).",
    "body": [
-    "For a package of a single project, the framework's CLI generates it: `dragonfly add <package>[@version]` installs",
+    "For a package of a single project, the framework's CLI generates it: `nuclear add <package>[@version]` installs",
     "the package with the dialect's package manager, writes it in `config.nuc` and runs the language's generator over",
     "what is installed (ADR-lang-0008). `install.sh` installs the generators in `<install>/tools/defs`.",
     "",
@@ -2695,7 +2717,7 @@
     "  ([dialects.md](dialects.md)); the definitions go to the project, `defs/<language>/<name>/<version>/` (a scoped",
     "  package is one folder: `@nestjs/axios` → `nestjs__axios`), in place of the ones of another version. `--module <m>`",
     "  names the modules to describe when they are not the package's own (`date-fns/locale`, `sklearn.linear_model`).",
-    "  `dragonfly install` generates the ones a package of `config.nuc` lacks; `dragonfly remove <package>` deletes them.",
+    "  `nuclear install` generates the ones a package of `config.nuc` lacks; `nuclear remove <package>` deletes them.",
     "- **Mobile** (`dart`): `bin/defs.dart` over the app (`--project build/app`) with the resolved version, excluding the",
     "  packages the dialect already loads (`--exclude`); it describes `package:<n>/<n>.dart` (or each file of `lib/` if it",
     "  does not exist). The result goes to the cache (§1) and is reused by every project; removing the package does not",
@@ -2743,38 +2765,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.065e19",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.224b1f",
    "type": "spec",
    "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "[[generators.resource]] kind = \"usecase\" each = \"each_action\" # one file per item of the list when = \"rest\" # a value that must be true (rest, db, screen, paged, actions.<action>) name = \"{{UseCase}}\" # the declaration; the file is it in snake_case merge = false # true: a file that exists gets…",
+   "summary": "A platform is a contract, `platforms/<platform>/platform.toml`: the kinds (name and header syntax), the consumed decorators, the plugins, the folders of a project and the editor docs that every dialect of the platform must implement, identically.",
    "body": [
-    "[[generators.resource]]",
-    "kind = \"usecase\"",
-    "each = \"each_action\"          # one file per item of the list",
-    "when = \"rest\"                 # a value that must be true (rest, db, screen, paged, actions.<action>)",
-    "name = \"{{UseCase}}\"          # the declaration; the file is it in snake_case",
-    "merge = false                 # true: a file that exists gets only the members it lacks, each one whole (a facade's",
-    "                              # alias; a controller's route with its decorator and its body), told by its head line",
-    "template = \"\"\"...\"\"\"",
-    "```"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/07-reference/dialects.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.4d67f3",
-   "type": "spec",
-   "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "A platform is a contract, `dialects/<platform>/platform.toml`: the kinds (name and header syntax), the consumed decorators, the plugins, the folders of a project and the editor docs that every dialect of the platform must implement, identically.",
-   "body": [
-    "A platform is a contract, `dialects/<platform>/platform.toml`: the kinds (name and header syntax), the consumed",
+    "A platform is a contract, `platforms/<platform>/platform.toml`: the kinds (name and header syntax), the consumed",
     "decorators, the plugins, the folders of a project and the editor docs that every dialect of the platform must",
     "implement, identically. The loader refuses a dialect that misses one of them, and a dialect may not add a kind,",
     "decorator or plugin the platform does not declare: the Nuclear of a project never changes with its dialect. Only",
@@ -2792,43 +2788,15 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.77c6e9",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.29af4a",
    "type": "spec",
    "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "typescript ──► nodejs ──► backend/nestjs python ─────► backend/fastapi dart ───────► mobile/flutter ──► myapp",
-   "body": [
-    "| Kind | What it defines | Examples |",
-    "|---|---|---|",
-    "| **Language** | How each construct of the base language and each member of the standard library ([library.md](library.md)) is written in a language: all the templates of `[syntax]`, `[types]`, `[operators]` and `[library]`. It has no `extends`. | `typescript`, `dart`, `python` |",
-    "| **Dragonfly dialect** | Implements a **platform** of Dragonfly (`web`, `mobile`, `backend`; ADR-synapsis-0002) in a language and framework: extends a language dialect with the platform's kinds, shortcuts, automatic imports and its own templates. `[dialect] platform` names the platform; the folder is `dialects/<platform>/<dialect>/`. | `backend/fastapi`, `backend/nestjs`, `mobile/flutter` |",
-    "| **Project** | Extends a dialect with the shortcuts and kinds of a concrete project. Its kinds are extension kinds (ADR-synapsis-0004): they exist in the dialect it extends only, so they tie the project to that dialect; they are not part of the platform contract. | `dialects/myapp/` with `extends = \"flutter\"` |",
-    "",
-    "```",
-    "typescript ──► nodejs ──► backend/nestjs",
-    "python ─────► backend/fastapi",
-    "dart ───────► mobile/flutter ──► myapp",
-    "```"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/07-reference/dialects.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.784122",
-   "type": "spec",
-   "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "[platform] default_dialect = \"fastapi\" # what `dragonfly new -p backend` uses without `-d` name = \"backend\" kinds = [\"entity\", \"repository\", \"model\", \"usecase\", \"appcomponent\", \"service\", \"aggregate\", \"controller\", \"listener\", \"tools\", \"agent\", \"state\", \"graph\", \"appConfig\", \"config\", \"tests\"]…",
+   "summary": "[platform] default_dialect = \"fastapi\" # what `nuclear new -p backend` uses without `-d` name = \"backend\" kinds = [\"entity\", \"repository\", \"model\", \"usecase\", \"appcomponent\", \"service\", \"aggregate\", \"controller\", \"listener\", \"tools\", \"agent\", \"state\", \"graph\", \"appConfig\", \"config\", \"tests\"]…",
    "body": [
     "```toml",
     "# nuclear-synapsis-framework/platforms/backend/platform.toml",
     "[platform]",
-    "default_dialect = \"fastapi\"     # what `dragonfly new -p backend` uses without `-d`",
+    "default_dialect = \"fastapi\"     # what `nuclear new -p backend` uses without `-d`",
     "name = \"backend\"",
     "kinds = [\"entity\", \"repository\", \"model\", \"usecase\", \"appcomponent\", \"service\", \"aggregate\", \"controller\",",
     "  \"listener\", \"tools\", \"agent\", \"state\", \"graph\", \"appConfig\", \"config\", \"tests\"]",
@@ -2858,23 +2826,30 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.a01aa3",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.7ea85c",
    "type": "spec",
    "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "The values: `Name`/`name`, `Names`/`names` (the plural), `component`/`Component`, `fields` (`name`, `type`, `optional`, `id`, `last`, `sample`), `data` (the fields without the key), `models` (`Model`, `fields`, `main`), `rest`, `db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items` (the…",
+   "summary": "[layout] usecase = \"components/{component}/domain/usecases/{file}.nuc\" appcomponent = \"components/{component}/{component}_appcomponent.nuc\" `[layout]` gives every kind of the platform its place (a kind it does not declare is an error): `nuclear help layout guessing a folder.",
    "body": [
-    "The values: `Name`/`name`, `Names`/`names` (the plural), `component`/`Component`, `fields` (`name`, `type`,",
-    "`optional`, `id`, `last`, `sample`), `data` (the fields without the key), `models` (`Model`, `fields`, `main`), `rest`,",
-    "`db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items` (the page's field with the list), `idType`, `label` (what",
-    "a list shows of an item), `listParam`/`listArg`, `sample`/`pageSample` (values for the tests), `actions.<action>`,",
-    "`each_action` (`action`, `UseCase`, `alias`, `is.<action>`), `screen`/`Screen`. The values of `usecase`: `UseCase`,",
-    "`alias`, `component`/`Component`, `params` (`id: int, input: Order`, as the project writes them), `args` (`id, input`),",
-    "`error` and `value` (the two types of its `Result`), `async` (its `exec` awaits: what calls it writes `~`); with",
-    "`--calls`, `Repository`, `method` and either `result` (the method answers a `Result`) or `plain` (its answer goes inside",
-    "an `Ok`); with `--route`, `route`, `verb`, `prefix`, `path`, `Controller` and `app` (the controller's name for the",
-    "facade). A platform without a piece for a case refuses it (`--route` where no piece has `when = \"route\"`). The Nuclear",
-    "a generator writes is the same for every dialect of the platform (rule 11); a test builds a generated resource and",
-    "its use cases with every dialect (`a_generated_resource_compiles_with_every_dialect`, dragonfly)."
+    "# where each kind's file goes: {component}, {screen} (folders) and {file} (the name in snake_case)",
+    "[layout]",
+    "usecase = \"components/{component}/domain/usecases/{file}.nuc\"",
+    "appcomponent = \"components/{component}/{component}_appcomponent.nuc\"",
+    "```",
+    "",
+    "`[layout]` gives every kind of the platform its place (a kind it does not declare is an error): `nuclear help layout",
+    "--dialect <d>` prints it, and agents (the Nuclear Developer's planner) build a piece's path from it instead of",
+    "guessing a folder.",
+    "",
+    "What `nuclear make` and `nuclear gen` write for a platform is not in its contract: it is the code generator's",
+    "`<platform>/generators.toml` (`tools/code_generator/platforms/` in the tree, `generators/` in an install, found by",
+    "`Loader::generators_file` and merged into the dialect with the contract), with `[skeletons]` (kind → the smallest",
+    "file of the kind that compiles), `[gen]` and `[[generators.<what>]]`.",
+    "",
+    "`[[generators.<what>]]` (ADR-codegen-0001) is what `nuclear gen <what>` writes: `component` (a component's facade),",
+    "`resource` (models, repository, a use case per action, the facade's aliases, the platform's entry: a controller, or a",
+    "screen with its state manager and state model, the tests) and `usecase` (a use case that only calls a repository",
+    "method, the alias of a use case in the facade, its route). Each entry is one file at its kind's `[layout]` place:"
    ],
    "agents": false,
    "sources": [
@@ -2887,11 +2862,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.a72413",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.804f63",
    "type": "spec",
    "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "A field rule: `optional` (the field is `x?: T`), `list` (its type is a list, or not), `target` (its type, or its items, is a declaration with that decorator), `sibling` (a field of the same declaration must exist; `{name}` is the decorated field's name), `inverse` (the argument whose value names a…",
+   "summary": "its use cases with every dialect (`a_generated_resource_compiles_with_every_dialect`, `tools/cli/src/framework/mod.rs`).",
    "body": [
+    "its use cases with every dialect (`a_generated_resource_compiles_with_every_dialect`, `tools/cli/src/framework/mod.rs`).",
+    "",
     "A field rule: `optional` (the field is `x?: T`), `list` (its type is a list, or not), `target` (its type, or its",
     "items, is a declaration with that decorator), `sibling` (a field of the same declaration must exist; `{name}` is the",
     "decorated field's name), `inverse` (the argument whose value names a field of the field's type), `with` (this field,",
@@ -2913,30 +2890,81 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.f0b2fa",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.8b0048",
    "type": "spec",
    "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
-   "summary": "[layout] usecase = \"components/{component}/domain/usecases/{file}.nuc\" appcomponent = \"components/{component}/{component}_appcomponent.nuc\" `[layout]` gives every kind of the platform its place (a kind it does not declare is an error): `nuclear help layout guessing a folder.",
+   "summary": "The values: `Name`/`name`, `Names`/`names` (the plural), `component`/`Component`, `fields` (`name`, `type`, `optional`, `id`, `last`, `sample`), `data` (the fields without the key), `models` (`Model`, `fields`, `main`), `rest`, `db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items` (the…",
    "body": [
-    "# where each kind's file goes: {component}, {screen} (folders) and {file} (the name in snake_case)",
-    "[layout]",
-    "usecase = \"components/{component}/domain/usecases/{file}.nuc\"",
-    "appcomponent = \"components/{component}/{component}_appcomponent.nuc\"",
+    "The values: `Name`/`name`, `Names`/`names` (the plural), `component`/`Component`, `fields` (`name`, `type`,",
+    "`optional`, `id`, `last`, `sample`), `data` (the fields without the key), `models` (`Model`, `fields`, `main`), `rest`,",
+    "`db`, `path`, `baseUrl`, `connection`, `paged`, `Page`, `items` (the page's field with the list), `idType`, `label` (what",
+    "a list shows of an item), `listParam`/`listArg`, `sample`/`pageSample` (values for the tests), `actions.<action>`,",
+    "`each_action` (`action`, `UseCase`, `alias`, `is.<action>`), `screen`/`Screen`. The values of `usecase`: `UseCase`,",
+    "`alias`, `component`/`Component`, `params` (`id: int, input: Order`, as the project writes them), `args` (`id, input`),",
+    "`error` and `value` (the two types of its `Result`), `async` (its `exec` awaits: what calls it writes `~`); with",
+    "`--calls`, `Repository`, `method` and either `result` (the method answers a `Result`) or `plain` (its answer goes inside",
+    "an `Ok`); with `--route`, `route`, `verb`, `prefix`, `path`, `Controller` and `app` (the controller's name for the",
+    "facade). A platform without a piece for a case refuses it (`--route` where no piece has `when = \"route\"`). The Nuclear",
+    "a generator writes is the same for every dialect of the platform (rule 11); a test builds a generated resource and"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.9070cc",
+   "type": "spec",
+   "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
+   "summary": "typescript ──► nodejs ──► backend/nestjs python ─────► backend/fastapi dart ───────► mobile/flutter ──► myapp",
+   "body": [
+    "| Kind | What it defines | Examples |",
+    "|---|---|---|",
+    "| **Language** | How each construct of the base language and each member of the standard library ([library.md](library.md)) is written in a language: all the templates of `[syntax]`, `[types]`, `[operators]` and `[library]`. It has no `extends`. | `typescript`, `dart`, `python` |",
+    "| **Synapsis dialect** | Implements a **platform** of Synapsis (`web`, `mobile`, `backend`; ADR-synapsis-0002) in a language and framework: extends a language dialect with the platform's kinds, shortcuts, automatic imports and its own templates. `[dialect] platform` names the platform; the folder is `dialects/<platform>/<dialect>/`. | `backend/fastapi`, `backend/nestjs`, `mobile/flutter` |",
+    "| **Project** | Extends a dialect with the shortcuts and kinds of a concrete project. Its kinds are extension kinds (ADR-synapsis-0004): they exist in the dialect it extends only, so they tie the project to that dialect; they are not part of the platform contract. | `dialects/myapp/` with `extends = \"flutter\"` |",
+    "",
     "```",
-    "",
-    "`[layout]` gives every kind of the platform its place (a kind it does not declare is an error): `nuclear help layout",
-    "--dialect <d>` prints it, and agents (the Nuclear Developer's planner) build a piece's path from it instead of",
-    "guessing a folder.",
-    "",
-    "`[[generators.<what>]]` (ADR-codegen-0001) is what `dragonfly gen <what>` writes: `component` (a component's facade),",
-    "`resource` (models, repository, a use case per action, the facade's aliases, the platform's entry: a controller, or a",
-    "screen with its state manager and state model, the tests) and `usecase` (a use case that only calls a repository",
-    "method, the alias of a use case in the facade, its route). Each entry is one file at its kind's `[layout]` place:",
-    "",
+    "typescript ──► nodejs ──► backend/nestjs",
+    "python ─────► backend/fastapi",
+    "dart ───────► mobile/flutter ──► myapp",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#1-kinds-of-dialect-and-inheritance.cc826b",
+   "type": "spec",
+   "title": "NuclearLang dialects — 1. Kinds of dialect and inheritance",
+   "summary": "[gen] http = 'Http(baseUrl = \"{{baseUrl}}\")' # the connection a REST resource adds http_named = 'Http(connectionName = \"{{name}}\", baseUrl = \"{{baseUrl}}\")' # when the app already has one [[generators.resource]] kind = \"usecase\" each = \"each_action\" # one file per item of the list when = \"rest\" #…",
+   "body": [
     "```toml",
     "[gen]",
     "http = 'Http(baseUrl = \"{{baseUrl}}\")'                                   # the connection a REST resource adds",
-    "http_named = 'Http(connectionName = \"{{name}}\", baseUrl = \"{{baseUrl}}\")'  # when the app already has one"
+    "http_named = 'Http(connectionName = \"{{name}}\", baseUrl = \"{{baseUrl}}\")'  # when the app already has one",
+    "",
+    "[[generators.resource]]",
+    "kind = \"usecase\"",
+    "each = \"each_action\"          # one file per item of the list",
+    "when = \"rest\"                 # a value that must be true (rest, db, screen, paged, actions.<action>)",
+    "name = \"{{UseCase}}\"          # the declaration; the file is it in snake_case",
+    "merge = false                 # true: a file that exists gets only the members it lacks, each one whole (a facade's",
+    "                              # alias; a controller's route with its decorator and its body), told by its head line",
+    "template = \"\"\"...\"\"\"",
+    "```"
    ],
    "agents": false,
    "sources": [
@@ -2970,7 +2998,7 @@
     "The transpiler looks for dialects, in order, in: the directories of `--dialect-path`, those of the",
     "`NUCLEAR_DIALECT_PATH` variable (separated by `:`), `./dialects` and the dialects shipped with NuclearLang. In each",
     "directory it looks at `<name>/` and `<platform>/<name>/`. `--dialect` accepts a name or a path to the folder or",
-    "file; a Dragonfly project names its dialect in `config.nuc` ([projects.md](projects.md) §1)."
+    "file; a Synapsis project names its dialect in `config.nuc` ([projects.md](projects.md) §1)."
    ],
    "agents": false,
    "sources": [
@@ -3011,14 +3039,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.27e55c",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.b376bc",
    "type": "spec",
    "title": "NuclearLang dialects — 3. Sections",
    "summary": "3. Sections",
    "body": [
     "| `[exports]` | Names a module exports besides the auto-imported ones (`Task` of fpdart): a declaration of the project with that name hides it from the import (`hide` clause of `import_default`); the type definitions give the rest |",
     "| `[functions]` | Function shortcuts |",
-    "| `[toolchain]` | What the `dragonfly` CLI and the editors run in the generated project (`build/` or the dialect's output): shell commands `install`, `compile`, `run`, `test`, `serve` (the editor's own server), and `url` (where the app answers), `ready` (the line of `run` that means it is up), `installed` (the folder that means `install` ran), `install_local` (run by `install` once per dependency of `config.nuc` that is a folder, `{{path}}`: a package manager keeps the old copy of a folder whose version did not change); placeholders `{{packages}}` (the installation's runtimes), `{{url}}`, `{{port}}`, `{{host}}`; `migrate_make`, `migrate`, `migrate_down` for `dragonfly migrate` with `{{message}}` and `{{migrations}}` (the project's `migrations/` folder), quoted for the shell (ADR-backend-0001); for `dragonfly add|remove <package>` (ADR-lang-0008): `package_add` (`{{requirement}}`), `package_remove` (`{{name}}`), `package_version` (prints the installed version of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depen"
+    "| `[toolchain]` | What the `nuclear` CLI and the editors run in the generated project (`build/` or the dialect's output): shell commands `install`, `compile`, `run`, `test`, `serve` (the editor's own server), and `url` (where the app answers), `ready` (the line of `run` that means it is up), `installed` (the folder that means `install` ran), `install_local` (run by `install` once per dependency of `config.nuc` that is a folder, `{{path}}`: a package manager keeps the old copy of a folder whose version did not change); placeholders `{{packages}}` (the installation's runtimes), `{{url}}`, `{{port}}`, `{{host}}`; `migrate_make`, `migrate`, `migrate_down` for `nuclear migrate` with `{{message}}` and `{{migrations}}` (the project's `migrations/` folder), quoted for the shell (ADR-backend-0001); for `nuclear add|remove <package>` (ADR-lang-0008): `package_add` (`{{requirement}}`), `package_remove` (`{{name}}`), `package_version` (prints the installed version of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depends}}`"
    ],
    "agents": false,
    "sources": [
@@ -3031,12 +3059,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.9964e2",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.cf8937",
    "type": "spec",
    "title": "NuclearLang dialects — 3. Sections",
-   "summary": "ds}}` the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement:…",
+   "summary": "the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement:…",
    "body": [
-    "ds}}` the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement: `{{name}}@{{version}}`), `package_constraint` (what `config.nuc` writes for the resolved `{{version}}`: `^{{version}}`) and `package_exact` (what a version written bare gets before it: `==`). `[toolchain.linux|macos|windows]` override a key on that system. `[[toolchain.launch]]` are the editor's debug configurations, `[toolchain.settings]` its settings and `extensions` the editor extensions it recommends, with `{{name}}`, `{{app}}`, `{{url}}`, `{{port}}` (ADR-synapsis-0001, ADR-cli-0001) |",
+    "the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement: `{{name}}@{{version}}`), `package_constraint` (what `config.nuc` writes for the resolved `{{version}}`: `^{{version}}`) and `package_exact` (what a version written bare gets before it: `==`). `[toolchain.linux|macos|windows]` override a key on that system. `[[toolchain.launch]]` are the editor's debug configurations, `[toolchain.settings]` its settings and `extensions` the editor extensions it recommends, with `{{name}}`, `{{app}}`, `{{url}}`, `{{port}}` (ADR-synapsis-0001, ADR-cli-0001) |",
     "| `[call_site]` | `Module.method(...)` calls that receive where they are written (§5.3.1) |",
     "| `[names]` | `globals` (names of the environment), `not_constructors` (PascalCase names called without `new`) and `written` (names templates write, like `Right`/`Left`: imported if the generated code contains them) |",
     "| `[kinds.<word>]` | Header words that generate whole declarations: `stateless`, `controller`... |",
@@ -3781,23 +3809,15 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#7-extension-kinds-kind-packages.44c6d3",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#7-extension-kinds-kind-packages.3fc81d",
    "type": "spec",
    "title": "NuclearLang dialects — 7. Extension kinds: kind packages",
-   "summary": "one for every project).",
+   "summary": "A project dialect (`dialects/myapp/` with `extends = \"flutter\"`) is still read for a project's own shortcuts (`imports`, `auto_imports`, `functions`); its kinds are extension kinds of that project with the same rule (tied to the dialect it extends, source \"package\" without a version), and a…",
    "body": [
-    "- `nuclear kind new <name> -p <platform> -d <dialect>` writes the skeleton in `kinds/<name>/` of the project.",
-    "- The loader reads the packages of `<project>/kinds/` and of the install folder (`dragonfly add <folder>` installs",
-    "  one for every project). A package of the project's platform is a **plugin** of the dialect: `config.nuc` enables",
-    "  it with `plugins(jobs = true)`, its kinds and names need it (N0304), its runtime packages reach the generated",
-    "  manifest, and the project keeps `dragonfly(platform = \"backend\", dialect = \"fastapi\")`.",
-    "- The implementation is the folder named after the dialect, or after a dialect it extends. A package without one",
-    "  for the project's dialect is N0306 when enabled: enabling a package implemented for some dialects ties the project",
-    "  to them, exactly as a dialect's type definitions do. The Nuclear of the kind is the same in every dialect that",
-    "  implements it.",
-    "- The platform contract does not list extension kinds; the loader records where each kind comes from",
-    "  (`Dialect.kind_sources`: the language's, native of the platform, or a package with its version and dialects) so",
-    "  the editor can show it."
+    "A **project dialect** (`dialects/myapp/` with `extends = \"flutter\"`) is still read for a project's own shortcuts",
+    "(`imports`, `auto_imports`, `functions`); its kinds are extension kinds of that project with the same rule (tied to",
+    "the dialect it extends, source \"package\" without a version), and a Synapsis project names it in `config.nuc`",
+    "(`synapsis(platform = \"mobile\", dialect = \"myapp\")`). A kind package is the portable form."
    ],
    "agents": false,
    "sources": [
@@ -3858,15 +3878,23 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#7-extension-kinds-kind-packages.fd29f8",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#7-extension-kinds-kind-packages.c8d198",
    "type": "spec",
    "title": "NuclearLang dialects — 7. Extension kinds: kind packages",
-   "summary": "A project dialect (`dialects/myapp/` with `extends = \"flutter\"`) is still read for a project's own shortcuts (`imports`, `auto_imports`, `functions`); its kinds are extension kinds of that project with the same rule (tied to the dialect it extends, source \"package\" without a version), and a…",
+   "summary": "one for every project).",
    "body": [
-    "A **project dialect** (`dialects/myapp/` with `extends = \"flutter\"`) is still read for a project's own shortcuts",
-    "(`imports`, `auto_imports`, `functions`); its kinds are extension kinds of that project with the same rule (tied to",
-    "the dialect it extends, source \"package\" without a version), and a Dragonfly project names it in `config.nuc`",
-    "(`dragonfly(platform = \"mobile\", dialect = \"myapp\")`). A kind package is the portable form."
+    "- `nuclear kind new <name> -p <platform> -d <dialect>` writes the skeleton in `kinds/<name>/` of the project.",
+    "- The loader reads the packages of `<project>/kinds/` and of the install folder (`nuclear add <folder>` installs",
+    "  one for every project). A package of the project's platform is a **plugin** of the dialect: `config.nuc` enables",
+    "  it with `plugins(jobs = true)`, its kinds and names need it (N0304), its runtime packages reach the generated",
+    "  manifest, and the project keeps `synapsis(platform = \"backend\", dialect = \"fastapi\")`.",
+    "- The implementation is the folder named after the dialect, or after a dialect it extends. A package without one",
+    "  for the project's dialect is N0306 when enabled: enabling a package implemented for some dialects ties the project",
+    "  to them, exactly as a dialect's type definitions do. The Nuclear of the kind is the same in every dialect that",
+    "  implements it.",
+    "- The platform contract does not list extension kinds; the loader records where each kind comes from",
+    "  (`Dialect.kind_sources`: the language's, native of the platform, or a package with its version and dialects) so",
+    "  the editor can show it."
    ],
    "agents": false,
    "sources": [
@@ -3980,7 +4008,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#8-creating-a-new-dialect-with-an-agent-8-4-restrictions.4c1e25",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#8-creating-a-new-dialect-with-an-agent-8-4-restrictions.03f4b6",
    "type": "spec",
    "title": "NuclearLang dialects — 8.4 Restrictions",
    "summary": "1. Touch the transpiler (`crates/`, the parser, the AST, the emitter) nor Nuclear's grammar.",
@@ -3999,7 +4027,7 @@
     "7. **Leave a rule without an example**, nor an example whose output is not the transpiler's real one.",
     "8. **Write in `spec.md` anything that is not a final rule**: no questions, assumptions, pending items nor",
     "   history. Doubts are asked to whoever requested the dialect.",
-    "9. **Leave Dragonfly's rules** in a Dragonfly dialect: components, layers, architecture kinds and"
+    "9. **Leave Synapsis's rules** in a Synapsis dialect: components, layers, architecture kinds and"
    ],
    "agents": false,
    "sources": [
@@ -4066,7 +4094,7 @@
     "invalid `use` clauses (`N0211`) and missing templates (`N0203`).",
     "",
     "Editors have a base extension for every dialect (Language Server, highlighting, theme, metrics, line map) and",
-    "one extension per framework to run and debug with its tools (Dragonfly for Flutter). The base knows no",
+    "one extension per framework to run and debug with its tools (Synapsis for Flutter). The base knows no",
     "language: a file's dialect comes from its project (`nuclear.toml` or the dialect's `[project] marker`) and the",
     "links to the API reference from `[docs]`:",
     "",
@@ -4232,31 +4260,58 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/08-guides/architecture.md#4-organization-in-rust.68cd1e",
+   "id": "doc:nuclearlang/docs/08-guides/architecture.md#4-organization-in-rust.563a23",
    "type": "guide",
    "title": "Transpiler architecture — 4. Organization in Rust",
-   "summary": "nuclearlang/ ├── Cargo.toml # workspace ├── nuclearlang/base/nuclear.toml # reserved words of the base language ├── dialects/ # the language dialects: typescript, nodejs, dart, python ├── defs/ # type definitions (like .d.ts): defs/<language>/<package>/<version>/ ├── crates/ │ ├── nuclear-diag/ #…",
+   "summary": "├── tools/code_generator/ # what `nuclear make` and `nuclear gen` write (crate nuclear-codegen) ├── tools/mcp/ # the MCP server (`nuclear-mcp`) ├── device-emulators/ # the devices (crate nuclear-devices) ├── extensions/ # VS Code, JetBrains, Zed, and the editors' tools ├── nuclear-graph-storage/ #…",
+   "body": [
+    "├── tools/code_generator/            # what `nuclear make` and `nuclear gen` write (crate nuclear-codegen)",
+    "├── tools/mcp/                       # the MCP server (`nuclear-mcp`)",
+    "├── device-emulators/                # the devices (crate nuclear-devices)",
+    "├── extensions/                      # VS Code, JetBrains, Zed, and the editors' tools",
+    "├── nuclear-graph-storage/           # the Smart Graph; nuclear-agents/: the local agents",
+    "├── installer/                       # install.sh and the release: installs nuclear and nuclear-lsp in ~/.local",
+    "└── website/                         # the documentation site",
+    "```",
+    "",
+    "| Crate | Input → output |",
+    "|---|---|",
+    "| `nuclear-syntax` | text → `Lexed` (tokens) → `Parsed` (AST + diagnostics) |",
+    "| `nuclear-dialect` | `dialects/<name>/*.toml` + `defs/` packages → `Dialect` + `Report` (diagnostics per file). `Dialect.typedefs` gives the full API of the libraries (lazy read of `api.json`) |",
+    "| `nuclear-transpile` | text + `Dialect` → `Output` (code + diagnostics + Dart → Nuclear line map for debuggers). `check()` for the LSP. `project::build(folder, manifest, dialect)` → one file per `.nuc` + project files (nuclearlang/docs/07-reference/projects.md) |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/08-guides/architecture.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/08-guides/architecture.md#4-organization-in-rust.8d9a62",
+   "type": "guide",
+   "title": "Transpiler architecture — 4. Organization in Rust",
+   "summary": "nuclearlang/ # the tree: one repository, one Cargo workspace (Cargo.toml) ├── nuclearlang/ # the language │ ├── base/ # nuclear.toml (reserved words), docs.toml (their editor documentation) │ ├── crates/ │ │ ├── nuclear-diag/ # diagnostics: codes, positions, text and JSON │ │ ├── nuclear-syntax/ #…",
    "body": [
     "```",
-    "nuclearlang/",
-    "├── Cargo.toml                 # workspace",
-    "├── nuclearlang/base/nuclear.toml     # reserved words of the base language",
-    "├── dialects/                  # the language dialects: typescript, nodejs, dart, python",
-    "├── defs/                      # type definitions (like .d.ts): defs/<language>/<package>/<version>/",
-    "├── crates/",
-    "│   ├── nuclear-diag/          # diagnostics: codes, positions, text and JSON",
-    "│   ├── nuclear-syntax/        # lexer, AST, parser and formatter",
-    "│   ├── nuclear-dialect/       # template engine, contract, dialect loading and validation",
-    "│   ├── nuclear-transpile/     # resolver + dialect-driven emitter; projects (project.rs); API for CLI and LSP",
-    "│   ├── nuclear-cli/           # the `nuclear` binary (build, check, fmt, spec, defs, help)",
-    "│   └── nuclear-lsp/           # the language server",
-    "├── spec/                      # base language, grammar, library, dialects, diagnostics",
-    "├── examples/                  # each .nuc with its expected output; examples/projects/, stdlib/",
-    "├── tools/                     # spec checks, type-definition generators, release (installers, archives)",
-    "├── install.sh                 # installs nuclear, dragonfly and nuclear-lsp in ~/.local (files in share/nuclearlang)",
-    "│",
-    "│  the other repositories, each a folder with its own git (plan 006):",
-    "├── dragonfly/                 # the `dragonfly` CLI and the platforms' philosophy"
+    "nuclearlang/                         # the tree: one repository, one Cargo workspace (Cargo.toml)",
+    "├── nuclearlang/                     # the language",
+    "│   ├── base/                        # nuclear.toml (reserved words), docs.toml (their editor documentation)",
+    "│   ├── crates/",
+    "│   │   ├── nuclear-diag/            # diagnostics: codes, positions, text and JSON",
+    "│   │   ├── nuclear-syntax/          # lexer, AST, parser and formatter",
+    "│   │   ├── nuclear-dialect/         # template engine, contract, dialect loading and validation",
+    "│   │   ├── nuclear-transpile/       # resolver + dialect-driven emitter; projects (project.rs); API for the tools",
+    "│   │   └── nuclear-lsp/             # the language server",
+    "│   ├── dialects/<language>/         # typescript, dart, python, nodejs: dialect files, frameworks/, defs/, docs/",
+    "│   ├── examples/                    # each .nuc with its expected output; projects/, stdlib/",
+    "│   ├── tools/                       # reference checks, type-definition generators",
+    "│   └── docs/                        # the language's documents: 07-reference (the rules), 08-guides (this guide)",
+    "├── nuclear-synapsis-framework/      # Synapsis, the framework, and its platforms (mobile, backend, web)",
+    "├── tools/cli/                       # the `nuclear` command (crate nuclear-cli; the framework's commands in framework/)"
    ],
    "agents": false,
    "sources": [
@@ -4284,36 +4339,6 @@
     "`tools/analyze-flutter.sh` also compiles the Flutter examples with the real SDK (`flutter analyze`). There is",
     "also one test per language rule (`nuclearlang/crates/nuclear-transpile/tests/rules.rs`) and per dialect validation rule",
     "(`nuclearlang/crates/nuclear-dialect/tests/loader.rs`)."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/08-guides/architecture.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/08-guides/architecture.md#4-organization-in-rust.e1408d",
-   "type": "guide",
-   "title": "Transpiler architecture — 4. Organization in Rust",
-   "summary": "├── dragonfly-mobile/ # the mobile platform: dialect flutter, the Dart runtime ├── dragonfly-backend/ # the backend platform: dialects fastapi and nestjs, their runtimes ├── dragonfly-web/ # the web platform: dialect react, its runtime ├── extensions/vscode/ # the VS Code extension (and the shared…",
-   "body": [
-    "├── dragonfly-mobile/          # the mobile platform: dialect flutter, the Dart runtime",
-    "├── dragonfly-backend/         # the backend platform: dialects fastapi and nestjs, their runtimes",
-    "├── dragonfly-web/             # the web platform: dialect react, its runtime",
-    "├── extensions/vscode/            # the VS Code extension (and the shared theme)",
-    "├── extensions/jetbrains/         # the Android Studio / IntelliJ plugin",
-    "└── extensions/zed/               # the Zed extension",
-    "```",
-    "",
-    "| Crate | Input → output |",
-    "|---|---|",
-    "| `nuclear-syntax` | text → `Lexed` (tokens) → `Parsed` (AST + diagnostics) |",
-    "| `nuclear-dialect` | `dialects/<name>/*.toml` + `defs/` packages → `Dialect` + `Report` (diagnostics per file). `Dialect.typedefs` gives the full API of the libraries (lazy read of `api.json`) |",
-    "| `nuclear-transpile` | text + `Dialect` → `Output` (code + diagnostics + Dart → Nuclear line map for debuggers). `check()` for the LSP. `project::build(folder, manifest, dialect)` → one file per `.nuc` + project files (nuclearlang/docs/07-reference/projects.md) |"
    ],
    "agents": false,
    "sources": [
@@ -4390,30 +4415,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/08-guides/create-a-dialect-with-an-agent.md#2-what-to-ask-the-agent-a-dragonfly-framework",
-   "type": "guide",
-   "title": "Creating a dialect with an agent — A Dragonfly framework",
-   "summary": "If you want it to be Dragonfly (components, layers, use cases, repositories...), say so: Create `amber` as a Dragonfly dialect: apply to Amber the Dragonfly rules of nuclearlang/dialects/dart/docs/07-reference/flutter.md §1, §3, §4 and §6 (components, layers, architecture kinds), written as an…",
-   "body": [
-    "If you want it to be Dragonfly (components, layers, use cases, repositories...), say so:",
-    "",
-    "```",
-    "Create `amber` as a Dragonfly dialect: apply to Amber the Dragonfly rules of nuclearlang/dialects/dart/docs/07-reference/flutter.md",
-    "§1, §3, §4 and §6 (components, layers, architecture kinds), written as an Amber expert would",
-    "write them. Do not copy anything from Flutter that makes no sense in a backend; ask me when in doubt.",
-    "```"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/08-guides/create-a-dialect-with-an-agent.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/docs/08-guides/create-a-dialect-with-an-agent.md#2-what-to-ask-the-agent-a-framework-a-dialect-that-extends-another",
    "type": "guide",
    "title": "Creating a dialect with an agent — A framework (a dialect that extends another)",
@@ -4451,6 +4452,30 @@
     "`nuclear build <file.nuc> --dialect crystal` and compile it with `crystal build --no-codegen`.",
     "Respect the restrictions of §8.4: if something of the base language cannot be written with templates,",
     "stop and tell me, do not fake it. At the end give me the list of covered constructs and the missing ones.",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/08-guides/create-a-dialect-with-an-agent.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/08-guides/create-a-dialect-with-an-agent.md#2-what-to-ask-the-agent-a-synapsis-framework",
+   "type": "guide",
+   "title": "Creating a dialect with an agent — A Synapsis framework",
+   "summary": "If you want it to be Synapsis (components, layers, use cases, repositories...), say so: Create `amber` as a Synapsis dialect: apply to Amber the Synapsis rules of nuclearlang/dialects/dart/docs/07-reference/flutter.md §1, §3, §4 and §6 (components, layers, architecture kinds), written as an Amber…",
+   "body": [
+    "If you want it to be Synapsis (components, layers, use cases, repositories...), say so:",
+    "",
+    "```",
+    "Create `amber` as a Synapsis dialect: apply to Amber the Synapsis rules of nuclearlang/dialects/dart/docs/07-reference/flutter.md",
+    "§1, §3, §4 and §6 (components, layers, architecture kinds), written as an Amber expert would",
+    "write them. Do not copy anything from Flutter that makes no sense in a backend; ask me when in doubt.",
     "```"
    ],
    "agents": false,
@@ -4584,7 +4609,7 @@
     "",
     "What comes next (`specs/002-dialects-with-agents/plan.md`): `nuclear dialect new` and `nuclear dialect test`, a",
     "skill that loads these rules by itself in Claude Code and an `AGENTS.md` for Codex and OpenCode, and dialects",
-    "installable from a repository with `dragonfly <dialect> new`."
+    "installable from a repository with `nuclear <dialect> new`."
    ],
    "agents": false,
    "sources": [
@@ -4644,9 +4669,9 @@
    "id": "doc:nuclearlang/tools/defs/README.md#a-project-s-packages",
    "type": "readme",
    "title": "tools/defs — A project's packages",
-   "summary": "`dragonfly add <package>` (ADR-lang-0008) uses these same generators, installed by `../installer/install.sh` in `~/.local/share/nuclearlang/tools/defs`, on what the project has installed (docs/07-reference/definitions.md §6).",
+   "summary": "`nuclear add <package>` (ADR-lang-0008) uses these same generators, installed by `../installer/install.sh` in `~/.local/share/nuclearlang/tools/defs`, on what the project has installed (docs/07-reference/definitions.md §6).",
    "body": [
-    "`dragonfly add <package>` (ADR-lang-0008) uses these same generators, installed by `../installer/install.sh` in",
+    "`nuclear add <package>` (ADR-lang-0008) uses these same generators, installed by `../installer/install.sh` in",
     "`~/.local/share/nuclearlang/tools/defs`, on what the project has installed",
     "([docs/07-reference/definitions.md](../../docs/07-reference/definitions.md) §6). There is no need to touch `generate.sh` nor the dialect.",
     "",
@@ -4742,7 +4767,7 @@
     "| `dart@<Dart version>` | `dart:core` (implicit), `dart:async`, `dart:math`, `dart:convert`, `dart:collection`, `dart:io`, `dart:typed_data`, `dart:isolate`, `dart:developer` |",
     "| `flutter@<Flutter version>` | `package:flutter/{widgets,material,cupertino,services,foundation,painting,rendering,gestures,animation,scheduler,semantics,physics}.dart` (in that order: each name goes to the most basic library) |",
     "| `dio`, `get_it`, `json_annotation`, `bloc`, `flutter_bloc`, `go_router`, `connectivity_plus`, `flutter_secure_storage` | the main library of each package, with the version of `flutter_project/pubspec.lock` |",
-    "| `dragonfly` | `package:dragonfly/dragonfly.dart` and `testing.dart` (the runtime of `../nuclear-synapsis-framework/platforms/mobile/packages/dragonfly`, a path dependency) |",
+    "| `synapsis` | `package:synapsis/synapsis.dart` and `testing.dart` (the runtime of `../nuclear-synapsis-framework/platforms/mobile/packages/synapsis`, a path dependency) |",
     "",
     "Then:",
     "",

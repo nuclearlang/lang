@@ -6,7 +6,7 @@ deciders: Julian Molina
 # ADR-0004: Kinds are Nuclear's libraries: native kinds in the platform, extension kinds as packages, optional parts as plugins of `config.nuc`
 
 ## Context and problem
-Kinds are to Dragonfly what libraries are to a language. There are native kinds and kinds written by a project or
+Kinds are to Synapsis what libraries are to a language. There are native kinds and kinds written by a project or
 by the community, as extensions of the dialect a developer uses; a developer must never have to touch the parser,
 the lexer or the emitter to write one. And a project must not get heavier with what it does not use: full Genkit
 support for the mobile platform, database drivers, Kafka or LangChain are wanted only by the projects that ask for
@@ -23,17 +23,17 @@ generic emitter capabilities, because templates have no expressions, only sectio
    names, requires); `config.nuc` enables them with `plugins(name = true)`. A kind or a name of a plugin that is
    not enabled is N0304, with the line to add; an unknown plugin or value is N0303. Project templates get
    `plugins.<name>`, `plugins.packages` and `plugins.dev_packages`, so a generated manifest lists only the enabled
-   packages; the `dragonfly` command adds and removes the Flutter packages of the plugins (`.dragonfly_plugins`).
+   packages; the `nuclear` command adds and removes the Flutter packages of the plugins (`.synapsis_plugins`).
    The plugins' type definitions are always loaded (their index only), so editors know them. The plugins of a
    platform are a list of its contract, the same in every dialect (ADR-synapsis-0002).
 2. **Catalogs.** Mobile: `genkit` and one plugin per provider. Backend: `sqlite`, `postgres`, `mysql`, `mariadb`,
    `redis`, `kafka`, `events` (in-process publish), `ai`, `openai`, `ollama`, `chroma`. The runtimes keep the
-   optional parts in their own modules (`dragonfly.ai`, `dragonfly.events`; `dragonfly-nest/ai`,
-   `dragonfly-nest/events`, kafkajs and ioredis loaded when opened), so a project without a plugin does not need
+   optional parts in their own modules (`synapsis.ai`, `synapsis.events`; `synapsis-nest/ai`,
+   `synapsis-nest/events`, kafkajs and ioredis loaded when opened), so a project without a plugin does not need
    its package.
-3. **Genkit for the mobile platform** (the runtime package `dragonfly_genkit`): Genkit in the app and remote
+3. **Genkit for the mobile platform** (the runtime package `synapsis_genkit`): Genkit in the app and remote
    flows, with the providers Firebase AI, Google AI, Vertex AI, OpenAI and Anthropic. Providers are connections of
-   the project config (descriptors without plugin imports); the generated `lib/dragonfly_genkit.g.dart` (only with
+   the project config (descriptors without plugin imports); the generated `lib/synapsis_genkit.g.dart` (only with
    the plugin) turns them into plugins and registers a schema per model of the app (`SchemanticType.from` with its
    fields and `fromJson`, no schemantic codegen). Kinds: `tools` (doc comment = description, parameters = JSON
    schema), `chat` (history, `send`, `stream`, `ChatController`), `flow` (`GenkitFlow`, `generateObject` with a
@@ -48,7 +48,7 @@ generic emitter capabilities, because templates have no expressions, only sectio
    it supports (`fastapi/kind.toml` with `[plugin]`, the dialect sections and the templates). A package belongs to
    exactly one platform: its kinds never appear in a project of another platform, even when the word exists there
    with another meaning (`repository` is table queries in backend and HTTP calls in mobile). A project enables it
-   with `plugins(<name> = true)`, exactly like a shipped plugin, and keeps `dragonfly(platform = "backend", dialect
+   with `plugins(<name> = true)`, exactly like a shipped plugin, and keeps `synapsis(platform = "backend", dialect
    = "fastapi")`: the dialect is always the platform's dialect, never a child dialect that wraps it.
 6. **Portability.** A package declares the dialects it implements; the Nuclear of the kind is the same in all of
    them. A project that enables a package implemented for only some dialects of its platform is tied to those
@@ -61,7 +61,7 @@ generic emitter capabilities, because templates have no expressions, only sectio
    every kind; never a case for one kind or one language.
 8. **Project dialects** keep their shortcuts. The kinds they add are extension kinds of that project: allowed,
    tied to the dialect they extend, not checked by the platform contract. A kind package is the portable form.
-9. **Owed to kind authors:** `nuclear kind new <name>` (the skeleton), `dragonfly add <source>` (installs a
+9. **Owed to kind authors:** `nuclear kind new <name>` (the skeleton), `nuclear add <source>` (installs a
    package), one `docs.toml` per package read by the editors, the missing-implementation diagnostic, the guide
    `docs/08-guides/kinds.md`; and, not delivered yet, `nuclear dialect test` over a package and installing from a
    repository with a pinned version.

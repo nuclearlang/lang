@@ -1,4 +1,4 @@
-import { Json } from 'dragonfly-web';
+import { Json } from 'synapsis-web';
 
 export class Origin {
   readonly name: string;

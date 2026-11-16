@@ -3,16 +3,15 @@
 [project]
 name = "nuclear-graph"
 version = "0.2.0"
-description = "Nuclear Smart Graph: the local, private knowledge base of NuclearLang and Dragonfly (shelves of cards and a table of exact facts), and their MCP server."
+description = "Nuclear Smart Graph: the local, private knowledge base of NuclearLang and Synapsis (shelves of cards and a table of exact facts), and their MCP server."
 license = "Apache-2.0"
 requires-python = ">=3.12"
-# the client and the tools for agents need only httpx; the MCP server alone (remote agents only, ADR-installer-0002) is the
-# `mcp` extra; the graph's server, its store and the MCP server are the `server` extra
+# the client and the tools for agents need only httpx; the graph's server and its store are the `server` extra (the MCP
+# server is a project of its own: tools/mcp)
 dependencies = ["httpx>=0.28"]
 
 [project.optional-dependencies]
-mcp = ["mcp>=2.3"]
-server = ["chromadb>=1.5", "numpy>=2", "ollama>=0.6", "fastapi>=0.115", "uvicorn>=0.30", "cryptography>=44", "mcp>=2.3"]
+server = ["chromadb>=1.5", "numpy>=2", "ollama>=0.6", "fastapi>=0.115", "uvicorn>=0.30", "cryptography>=44"]
 test = ["pytest>=8"]
 
 [project.scripts]

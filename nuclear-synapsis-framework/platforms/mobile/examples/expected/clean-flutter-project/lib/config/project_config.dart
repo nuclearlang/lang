@@ -1,5 +1,5 @@
 import 'package:clean_flutter_project/shared/events/force_logout.dart';
-import 'package:dragonfly/dragonfly.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Global configuration: connections and services of the whole app, and how the local database is kept
 /// (encrypted = true is the default; a component's config may set `local` for the tables of its own models).

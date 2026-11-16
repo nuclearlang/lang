@@ -1,16 +1,16 @@
-# fastapi dialect: Dragonfly for Python backends and AI agents (nuclearlang/dialects/python/docs/07-reference/fastapi.md).
-# The same architecture as Dragonfly for Flutter (components, use cases, an appcomponent facade, repositories,
+# fastapi dialect: Synapsis for Python backends and AI agents (nuclearlang/dialects/python/docs/07-reference/fastapi.md).
+# The same architecture as Synapsis for Flutter (components, use cases, an appcomponent facade, repositories,
 # config), with REST controllers like NestJS (@controller, @get, @post) on FastAPI, repositories over tables with
 # SQLAlchemy 2 async (entities declared like TypeORM), pydantic models, and LangChain / LangGraph kinds (tools,
-# agent, state, graph). The runtime is packages/dragonfly-py (import name: dragonfly).
+# agent, state, graph). The runtime is packages/synapsis-py (import name: synapsis).
 
 [dialect]
 name = "fastapi"
 platform = "backend"
 extends = "python"
-description = "Dragonfly for Python: FastAPI controllers, SQLAlchemy repositories, LangChain/LangGraph agents and graphs"
+description = "Synapsis for Python: FastAPI controllers, SQLAlchemy repositories, LangChain/LangGraph agents and graphs"
 defs = [
-  "dragonfly@0.1.0",
+  "synapsis@0.1.0",
   "pydantic@2.14.2",
   "fastapi@0.162.0",
   "starlette@1.10.0",
@@ -29,7 +29,7 @@ defs = [
   "aiokafka@0.15.0",
   "pydantic_settings@2.16.2",
 ]
-# Result, Ok and Err are the runtime's (dragonfly.result), shared by the app and the framework
+# Result, Ok and Err are the runtime's (synapsis.result), shared by the app and the framework
 replaces = ["auto_imports.Result", "auto_imports.Ok", "auto_imports.Err", "auto_imports.Field"]
 
 [options]
@@ -44,7 +44,7 @@ written = ["Result", "Ok", "Err", "AppError", "Awaitable", "Annotated", "MinLen"
   "AfterValidator", "Field", "AliasChoices", "is_email", "is_url", "Repository", "Mapped", "BaseModel", "TypedDict", "AppConfig", "ComponentConfig"]
 
 [auto_imports]
-"dragonfly" = [
+"synapsis" = [
   "Result", "Ok", "Err", "AppError", "NotFound", "Invalid", "Conflict", "Forbidden", "Unauthorized",
   "inject", "provide", "bind", "env", "connection",
   "AppConfig", "ComponentConfig", "Postgres", "MySQL", "MariaDB", "SQLite", "Redis", "Kafka", "OpenAI", "Ollama", "Embeddings", "Chroma",
@@ -54,10 +54,10 @@ written = ["Result", "Ok", "Err", "AppError", "Awaitable", "Annotated", "MinLen"
   "controller", "get", "post", "put", "patch", "delete", "status",
 ]
 # the optional parts of the runtime: only a project that enables their plugin imports them
-"dragonfly.ai" = ["Tools", "Agent", "Graph", "Messages", "start", "next", "chat_model", "vector_store", "text_of"]
-"dragonfly.events" = ["Listener", "consumer", "publish", "cache_get", "cache_set"]
-"dragonfly.testing" = ["FakeModel", "memory_database"]
-"dragonfly.validators" = ["is_email", "is_url"]
+"synapsis.ai" = ["Tools", "Agent", "Graph", "Messages", "start", "next", "chat_model", "vector_store", "text_of"]
+"synapsis.events" = ["Listener", "consumer", "publish", "cache_get", "cache_set"]
+"synapsis.testing" = ["FakeModel", "memory_database"]
+"synapsis.validators" = ["is_email", "is_url"]
 # in a model, Field is pydantic's (not the dataclasses class)
 "pydantic" = ["Field", "AfterValidator", "AliasChoices"]
 "annotated_types" = ["MinLen", "MaxLen", "Ge", "Le"]
@@ -117,7 +117,7 @@ description = "Name + fields in domain/models → a pydantic model (validated; w
 imports = ["BaseModel"]
 template = { file = "templates/model.tpl" }
 [kinds.model.syntax]
-# Dragonfly's rule decorators (the same as the nestjs dialect and Flutter's forms) become pydantic constraints
+# Synapsis's rule decorators (the same as the nestjs dialect and Flutter's forms) become pydantic constraints
 field = { file = "templates/model_field.tpl" }
 constructor = ""
 
@@ -195,10 +195,10 @@ method = { file = "templates/tests_method.tpl" }
 # expect(condition) in a test → assert condition
 expect = { template = "assert {{args}}" }
 
-# what the dragonfly CLI runs in build/ (ADR-synapsis-0001): install the runtime and the app, run it, test it
+# what the `nuclear` CLI runs in build/ (ADR-synapsis-0001): install the runtime and the app, run it, test it
 [toolchain]
-install = "python3 -m venv .venv && .venv/bin/pip install -q {{packages}}/dragonfly-py && .venv/bin/pip install -q -e '.[test]'"
-# a dependency that is a folder, installed again by `dragonfly install` (its version does not change with its code)
+install = "python3 -m venv .venv && .venv/bin/pip install -q {{packages}}/synapsis-py && .venv/bin/pip install -q -e '.[test]'"
+# a dependency that is a folder, installed again by `nuclear install` (its version does not change with its code)
 install_local = ".venv/bin/pip install -q --no-deps --force-reinstall {{path}}"
 run = ".venv/bin/uvicorn app.main:app --reload --port {{port}}"
 test = ".venv/bin/python -m pytest -q"
@@ -206,7 +206,7 @@ test = ".venv/bin/python -m pytest -q"
 url = "http://localhost:8000"
 installed = ".venv"
 ready = "Uvicorn running"
-# `dragonfly add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the
+# `nuclear add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the
 # package's type definitions, written into the project's defs/. A version written bare (`4.17.0`) is exact (`==`)
 package_add = ".venv/bin/pip install -q {{requirement}}"
 package_remove = ".venv/bin/pip uninstall -q -y {{name}}"
@@ -215,23 +215,23 @@ package_defs = ".venv/bin/python {{tools}}/defs/python/gen.py {{defs_name}} {{ve
 package_requirement = "{{name}}{{version}}"
 package_exact = "=="
 package_constraint = ">={{version}}"
-# `dragonfly migrate make "<message>"` / `migrate` / `migrate down` (ADR-backend-0001): Alembic over the project's
+# `nuclear migrate make "<message>"` / `migrate` / `migrate down` (ADR-backend-0001): Alembic over the project's
 # migrations/ folder
-migrate_make = ".venv/bin/python -m dragonfly.migrate make {{message}} --dir {{migrations}}"
-migrate = ".venv/bin/python -m dragonfly.migrate up --dir {{migrations}}"
-migrate_down = ".venv/bin/python -m dragonfly.migrate down --dir {{migrations}}"
+migrate_make = ".venv/bin/python -m synapsis.migrate make {{message}} --dir {{migrations}}"
+migrate = ".venv/bin/python -m synapsis.migrate up --dir {{migrations}}"
+migrate_down = ".venv/bin/python -m synapsis.migrate down --dir {{migrations}}"
 
 [toolchain.windows]
-install = "python -m venv .venv && .venv\\Scripts\\pip install -q {{packages}}/dragonfly-py && .venv\\Scripts\\pip install -q -e .[test]"
+install = "python -m venv .venv && .venv\\Scripts\\pip install -q {{packages}}/synapsis-py && .venv\\Scripts\\pip install -q -e .[test]"
 run = ".venv\\Scripts\\uvicorn app.main:app --reload --port {{port}}"
 test = ".venv\\Scripts\\python -m pytest -q"
 package_add = ".venv\\Scripts\\pip install -q {{requirement}}"
 package_remove = ".venv\\Scripts\\pip uninstall -q -y {{name}}"
 package_version = '''.venv\Scripts\python -c "import importlib.metadata as m, sys; print(m.version(sys.argv[1]))" {{name}}'''
 package_defs = ".venv\\Scripts\\python {{tools}}/defs/python/gen.py {{defs_name}} {{version}} {{defs}} {{modules}} --distribution {{name}} --depends {{depends}}"
-migrate_make = ".venv\\Scripts\\python -m dragonfly.migrate make {{message}} --dir {{migrations}}"
-migrate = ".venv\\Scripts\\python -m dragonfly.migrate up --dir {{migrations}}"
-migrate_down = ".venv\\Scripts\\python -m dragonfly.migrate down --dir {{migrations}}"
+migrate_make = ".venv\\Scripts\\python -m synapsis.migrate make {{message}} --dir {{migrations}}"
+migrate = ".venv\\Scripts\\python -m synapsis.migrate up --dir {{migrations}}"
+migrate_down = ".venv\\Scripts\\python -m synapsis.migrate down --dir {{migrations}}"
 
 # the editor's debug launch: the server under debugpy with the app's virtual environment (no --reload: the debugger
 # owns the process)
@@ -244,7 +244,7 @@ args = ["app.main:app", "--port", "{{port}}"]
 cwd = "{{app}}"
 python = "{{app}}/.venv/bin/python"
 justMyCode = true
-preLaunchTask = "dragonfly: build"
+preLaunchTask = "synapsis: build"
 windows = { python = "{{app}}/.venv/Scripts/python.exe" }
 
 [project]
@@ -255,7 +255,7 @@ assets = []
 # carries (pyproject.toml) only what it enables
 [project.manifest]
 file = "config.nuc"
-sections = ["dragonfly", "app", "plugins", "contracts", "dependencies"]
+sections = ["synapsis", "app", "plugins", "contracts", "dependencies"]
 # dependencies(name = "version") adds a package of the target's package manager; a version that starts with . or / is a folder
 packages = ["dependencies"]
 

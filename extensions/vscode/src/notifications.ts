@@ -1,9 +1,9 @@
-// The notifications of the extension: what the local agents did while you were elsewhere (a chat answered, a Loop run
+// The notifications of the extension: what the local agents did while you were elsewhere (a chat answered, a Builder run
 // passed, failed or needs you). Each one is a toast with *Open* (unless you are looking at that tool), a count on the
 // tool's tab of the Nuclear strip and a badge on the strip's icon in the activity bar; opening the tool reads them.
 import * as vscode from 'vscode';
 
-export type NoticeTool = 'agent' | 'loop' | 'settings';
+export type NoticeTool = 'agent' | 'builder' | 'settings';
 
 export interface Notice {
   id: number;

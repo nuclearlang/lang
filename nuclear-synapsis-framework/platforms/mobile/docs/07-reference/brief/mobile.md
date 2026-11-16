@@ -1,17 +1,17 @@
-# Platform `mobile` brief: Dragonfly apps
+# Platform `mobile` brief: Synapsis apps
 
-A Dragonfly app has only `.nuc` files and `assets/`; the app is generated in `build/app` (never edit it). You write
+A Synapsis app has only `.nuc` files and `assets/`; the app is generated in `build/app` (never edit it). You write
 the business logic; the framework writes the rest (DI, routing, JSON, states, tests). The views use the UI toolkit's
 classes from the type definitions (`Text`, `Scaffold`, `Icons.add`), with `name = value` arguments.
 
 ## Work cycle
 
-1. Skeleton first: `dragonfly make component|screen|usecase|repository|model|event|guard|widget|page|test ...`
-   (`dragonfly help`). It puts each file in its folder with its kind.
+1. Skeleton first: `nuclear make component|screen|usecase|repository|model|event|guard|widget|page|test ...`
+   (`nuclear help`). It puts each file in its folder with its kind.
 2. Write following this sheet. Unsure about an API: `nuclear defs show <Name> --platform mobile`; a topic:
    `nuclear help mobile`; where each file goes: `nuclear help layout --platform mobile`. Never guess a constructor
    or an argument.
-3. `dragonfly check --json` until `[]`, then `dragonfly test`.
+3. `nuclear check --json` until `[]`, then `nuclear test`.
 
 ## Layout and kinds (the folder gives the kind of a declaration without a header word)
 
@@ -103,7 +103,7 @@ stateless CharacterListScreen
   state (`initial`, `orElse` optional). A `stateful` has `initState()` and fields.
 - Navigation (views only): `context.goTo(Screen(...))`, `~context.pushTo(Screen())`, `context.goBack(value)`.
 - Texts: `"component.screen.key".tr()` / `.tr({"n": 2})` from `assets/i18n/<locale>/<component>.json`.
-- Logs: `Log.d/i/s/w/e("message", data = {...})`. Popups: `DragonflyDialog(header = ..., child = ...).show(context)`,
+- Logs: `Log.d/i/s/w/e("message", data = {...})`. Popups: `SynapsisDialog(header = ..., child = ...).show(context)`,
   `Popups.toast(context, text)`.
 - Session: `SessionManager` (`~session.start(auth, roles = [...])`, `session.get<Auth>()`, `~session.destroy()`).
 - Events: `event Name` + fields in `shared/events/`; `Events.publish(Name(...))`; a `component` in
@@ -112,7 +112,7 @@ stateless CharacterListScreen
   `@screen(acl = { roles: ["fan"], guards: [Name], forward: DeniedScreen })`; `@acl(roles = [...])` on a use case.
 - Forms: a form model in `forms/` (`@required @email @minLength(n) @matches("field")` on fields), a
   `@form(F) formmanager` in `managers/` (`@validate("field")` = remote check), and in the view
-  `DragonflyForm(manager = M, onSubmit = (form) => ..., child = ...)` with `FormTextField("field", label = ...)`
+  `SynapsisForm(manager = M, onSubmit = (form) => ..., child = ...)` with `FormTextField("field", label = ...)`
   and `FormSubmit(child = ...)`.
 - Tests (`test/`, no word): `@mock([Repo])` on a group; `@test("...")`, `@states("...", expect = [...])`,
   `@widget("...")` on methods; `when(() => Repo.m(1)).thenReturnAsync(Ok(x))`, `expect(r, isOkWith(x))`,

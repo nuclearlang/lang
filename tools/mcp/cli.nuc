@@ -1,0 +1,13 @@
+use sys
+use json
+
+// `nuclear-mcp`: the MCP server on stdio (what an AI client starts); `nuclear-mcp tools`: its instructions and tools
+// as JSON (what the knowledge base records).
+main(argv: string[]? = null) void
+  args: string[] = argv ?? sys.argv.slice(1)
+  if args.length > 0 and args[0] == "tools"
+    print(json.dumps(mcpTools(), indent = 1))
+  else if args.length > 0
+    sys.exit("usage: nuclear-mcp [tools]")
+  else
+    mcpMain()

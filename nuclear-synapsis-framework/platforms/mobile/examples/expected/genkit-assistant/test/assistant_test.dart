@@ -1,15 +1,15 @@
-import 'package:dragonfly/testing.dart';
-import 'package:dragonfly_genkit/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genkit_assistant/components/assistant/ai/assistant.dart';
 import 'package:genkit_assistant/components/assistant/ai/faq.dart';
 import 'package:genkit_assistant/components/assistant/ai/note_tools.dart';
-import 'package:genkit_assistant/dragonfly.g.dart';
+import 'package:genkit_assistant/synapsis.g.dart';
+import 'package:synapsis/testing.dart';
+import 'package:synapsis_genkit/testing.dart';
 
 void main() {
   group('AssistantTests', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis);
     });
 
     setUp(() async {

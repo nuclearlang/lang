@@ -138,7 +138,7 @@ Done when: `backend_example_builds_with_every_backend_dialect` checks the contra
 
 ### F2 — A client declares the backends it talks to
 
-In `config.nuc` of the client, next to `dragonfly(...)` and `app(...)`:
+In `config.nuc` of the client, next to `synapsis(...)` and `app(...)`:
 
 ```nuclear
 contracts(tasks_api = "../tasks_api")              // a path (monorepo) ...
@@ -159,7 +159,7 @@ Done when: `Manifest` reads `contracts(...)`; N0303 names a missing path or a na
 
 ### F3 — The client's build writes the contract as Nuclear
 
-Before building, `nuclear build` (and `dragonfly build`) writes `contracts/<name>/` from the contract:
+Before building, `nuclear build` (and `nuclear build`) writes `contracts/<name>/` from the contract:
 
 ```nuclear
 // contracts/tasks_api/models/task.nuc — generated from tasks_api 1.0.0; do not edit
@@ -229,7 +229,7 @@ Done when: the tutorial has a chapter "one backend, one app" that builds both fr
 ### F5 — Versions and drift
 
 The contract carries the backend's `app(version)`. A client build prints `contract tasks_api 1.0.0` and, with a
-path contract, regenerates when the backend's contract is newer; with a URL contract, `dragonfly contracts update`
+path contract, regenerates when the backend's contract is newer; with a URL contract, `nuclear contracts update`
 fetches it (never at every build: a build must not need the network).
 
 Done when: a stale contract is a warning (N03xx) with the two versions.

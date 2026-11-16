@@ -7,8 +7,8 @@ import asyncio
 from app.components.characters.ai.review import Review
 from app.config.project_config import ProjectConfig
 from app.main import app
-from dragonfly import inject
-from dragonfly.testing import FakeModel, client
+from synapsis import inject
+from synapsis.testing import FakeModel, client
 
 
 async def main() -> None:

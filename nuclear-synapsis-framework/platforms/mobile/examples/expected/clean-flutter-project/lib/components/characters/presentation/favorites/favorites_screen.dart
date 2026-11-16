@@ -1,6 +1,6 @@
 import 'package:clean_flutter_project/components/session/session_component.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/material.dart' hide Page;
+import 'package:synapsis/synapsis.dart';
 
 /// Tab 1 of MainShell. Without a session the router goes to LoginScreen; with a session, the role "fan"
 /// (or one that inherits it, like "admin") and PremiumGuard's approval are required; otherwise, DeniedScreen.
@@ -25,7 +25,7 @@ class FavoritesScreen extends StatelessWidget {
 
   /// a warning dialog with the Close / Accept footer (onAccept)
   void confirmLogout(BuildContext context) {
-    DragonflyDialog.warning(
+    SynapsisDialog.warning(
       header: Text('session.logout.title'.tr()),
       onAccept: () => inject<SessionComponent>().logout(),
       child: Text('session.logout.message'.tr()),

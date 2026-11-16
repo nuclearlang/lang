@@ -26,7 +26,7 @@ asking. The three extensions share one version; Zed's follows VS Code's.
    ```
 
 4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`), rebuilds
-   `nuclear-loop`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).
+   `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).
 5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip
    in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*).
 

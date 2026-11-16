@@ -1,6 +1,6 @@
-import { Json } from 'dragonfly-web';
+import { Json } from 'synapsis-web';
 
-/** Business error of the component: dragonfly builds it with the failure message. */
+/** Business error of the component: synapsis builds it with the failure message. */
 export class CharacterError {
   readonly message: string;
 

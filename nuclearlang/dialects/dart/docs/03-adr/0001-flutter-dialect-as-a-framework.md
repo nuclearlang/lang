@@ -3,7 +3,7 @@ status: accepted
 date: 2026-11-03
 deciders: Julian Molina
 ---
-# ADR-0001: The `flutter` dialect is a framework: it generates the app over official libraries and the independent Dart package `dragonfly`
+# ADR-0001: The `flutter` dialect is a framework: it generates the app over official libraries and the independent Dart package `synapsis`
 
 ## Context and problem
 
@@ -23,13 +23,13 @@ structure, architecture rules and tests (`nuclearlang/dialects/dart/docs/07-refe
 Later decisions added, on the same rule, `fpdart` for `Result` (ADR-lang-0006) and `hive_ce` for the local database
 (ADR-mobile-0006); the dialect also relies on `go_router` (routes), `connectivity_plus` and `flutter_secure_storage`.
 
-**The Flutter CLI underneath.** The SDK, packages, builds and devices are handled by `flutter`; the `dragonfly`
+**The Flutter CLI underneath.** The SDK, packages, builds and devices are handled by `flutter`; the `synapsis`
 command calls it inside the generated app.
 
-**`dragonfly` is an independent Dart package.** What does not exist in Flutter lives in the package `dragonfly`
-(`nuclear-synapsis-framework/platforms/mobile/packages/dragonfly`), publishable on pub.dev and also usable by
+**`synapsis` is an independent Dart package.** What does not exist in Flutter lives in the package `synapsis`
+(`nuclear-synapsis-framework/platforms/mobile/packages/synapsis`), publishable on pub.dev and also usable by
 hand, without Nuclear; its API is
-`nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md`. The `flutter` dialect generates code
+`nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md`. The `flutter` dialect generates code
 that uses it.
 
 ## Options considered
@@ -41,7 +41,7 @@ No alternative was recorded.
 - Positive: a Nuclear app holds only business logic; the generated Dart is a Flutter app over official ecosystem
   libraries.
 - Positive: the package can be used and published on its own.
-- The dialect knows the package through its type definitions (`dragonfly@0.1.0` in `defs`): they are regenerated
+- The dialect knows the package through its type definitions (`synapsis@0.1.0` in `defs`): they are regenerated
   when the package's public API changes.
 - Negative: none recorded.
 

@@ -12,7 +12,7 @@
    "body": [
     "`POST /developer/accept` → `accept(input: PieceRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/accept",
@@ -47,7 +47,7 @@
    "body": [
     "`POST /developer/analyze` → `analyze(input: AnalyzeRequest) Analysis`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/analyze",
@@ -82,7 +82,7 @@
    "body": [
     "`POST /developer/chat` → `chat(input: ChatRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/chat",
@@ -117,7 +117,7 @@
    "body": [
     "`POST /developer/code` → `code(input: PieceRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/code",
@@ -152,7 +152,7 @@
    "body": [
     "`POST /developer/diagnose` → `diagnose(input: PieceRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/diagnose",
@@ -187,7 +187,7 @@
    "body": [
     "`POST /developer/document` → `document(input: PieceRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/document",
@@ -222,7 +222,7 @@
    "body": [
     "`POST /developer/plan` → `plan(input: PlanRequest) PlanReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/plan",
@@ -257,7 +257,7 @@
    "body": [
     "`POST /developer/security` → `review(input: PieceRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/security",
@@ -292,7 +292,7 @@
    "body": [
     "`POST /developer/test` → `test(input: PieceRequest) PieceReply`.",
     "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder)."
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder)."
    ],
    "keys": [
     "post /developer/test",
@@ -407,9 +407,9 @@
    "id": "http:graph.get.v1-cards-card-id-path",
    "type": "http",
    "title": "`GET /v1/cards/{card_id:path}` — the Smart Graph's HTTP API",
-   "summary": "One row of the knowledge base by its id (`error:N0114`, `kind:backend.usecase`, `tool:dragonfly.gen.resource`), with the title and summary of the rows it links to.",
+   "summary": "One row of the knowledge base by its id (`error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.resource`), with the title and summary of the rows it links to.",
    "body": [
-    "One row of the knowledge base by its id (`error:N0114`, `kind:backend.usecase`, `tool:dragonfly.gen.resource`), with the title and summary of the rows it links to.",
+    "One row of the knowledge base by its id (`error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.resource`), with the title and summary of the rows it links to.",
     "",
     "Scope: `read`. The graph listens on `127.0.0.1:7878` only; every route but the health and the access request needs `Authorization: Bearer <token>`."
    ],

@@ -53,7 +53,7 @@ are copied into the output folder, and the backend runtimes serve them at `GET /
 ## Where the code is
 
 `nuclear_transpile::contract` (writing the contract, generating the Nuclear: `contract::generate`), the `nuclear
-contracts` command in `tools/cli/`, the runtimes `dragonfly-py` and `dragonfly-nest` (serving the two files). The
+contracts` command in `tools/cli/`, the runtimes `synapsis-py` and `synapsis-nest` (serving the two files). The
 example: `nuclear-synapsis-framework/platforms/mobile/examples/examples-flutter-dialect/tasks_app` over
 `nuclear-synapsis-framework/platforms/backend/examples/examples-backend/tasks_api`. The limits are in
 [the roadmap](../01-product/roadmap.md).

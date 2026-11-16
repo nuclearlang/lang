@@ -1,6 +1,6 @@
 // The Nuclear workspace (ADR-extensions-0002): one activity bar container where everything of Nuclear meets. A strip of tabs
 // (projects on top, tools at the bottom; keyboard first: Ctrl+1..9 and Ctrl+Alt+<letter>) beside a pane that
-// depends on the tab: the files of a project (its platform's actions sit in the editor title bar), the endpoints tree of the HTTP tool, the
+// depends on the tab: the files of a project (its platform's actions sit in the editor title bar), the endpoints tree of the Connector tool, the
 // open devices. Every tab is a workspace of its own: switching swaps the editor area (the editors of one are
 // remembered and closed, those of the other reopened); only the devices stay, like emulators beside the code. A
 // welcome page at startup lists the projects and the shortcuts. VS Code's own explorer, search and git are not
@@ -10,14 +10,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { isInstalled } from './card';
-import { devices, devicesChanged, PRESETS, revealDevice } from './device';
-import { ChatPanel } from './chatPanel';
+import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
+import { ChatPanel } from '../../tools/nuclear-ai-chat/src/panel';
 import { Notice, notices } from './notifications';
 import { SettingsPanel } from './settingsPanel';
 import { watchConnections } from './connections';
-import { LoopPanel, resumeOrphans } from './loopPanel';
-import { findProjects, HttpModel, NodeAction, Project, readProject } from './http';
-import { ComponentPanel } from './httpPanel';
+import { BuilderPanel, resumeOrphans } from '../../tools/nuclear-builder/src/panel';
+import { findProjects, HttpModel, NodeAction, Project, readProject } from '../../tools/nuclear-connector/src/connector';
+import { ComponentPanel } from '../../tools/nuclear-connector/src/panel';
 import { contextFor, registerTreeCommands } from './treeMenu';
 
 interface Tool {
@@ -33,9 +33,9 @@ interface Tool {
 
 export const TOOLS: Tool[] = [
   {
-    id: 'http',
-    label: 'HTTP client',
-    short: 'HTTP',
+    id: 'connector',
+    label: 'Nuclear Connector',
+    short: 'CONN',
     key: 'Ctrl+Alt+H',
     about: 'Every endpoint of every project as a tree by platform, project and component; a component is a tab, each endpoint a tab inside it; environments (ADR-synapsis-0006).',
     planned: [],
@@ -45,13 +45,13 @@ export const TOOLS: Tool[] = [
     label: 'Devices',
     short: 'DEV',
     key: 'Ctrl+Alt+V',
-    about: 'The Dragonfly devices: as many as you want at once, like emulators, each with its own size and identity; they stay beside the code in every workspace.',
+    about: 'The Synapsis devices: as many as you want at once, like emulators, each with its own size and identity; they stay beside the code in every workspace.',
     planned: [],
   },
   {
-    id: 'loop',
-    label: 'Loop',
-    short: 'LOOP',
+    id: 'builder',
+    label: 'Nuclear Builder',
+    short: 'BUILD',
     key: 'Ctrl+Alt+P',
     about: 'Spec-driven work as a pipeline (ADR-platform-0003): a spec written here or imported from Jira or GitHub goes through plan, code, tests, security, artifacts and deploy; Claude plans, the local developer writes, every step shows who did what.',
     planned: [],
@@ -102,37 +102,37 @@ const ACTION_KEYS: Record<string, string> = { run: 'Ctrl+Alt+R', debug: 'Ctrl+Al
 const action = (id: string, label: string, title: string): Action => ({ id, label, key: ACTION_KEYS[id], title });
 const PLATFORM_ACTIONS: Record<string, Action[]> = {
   mobile: [
-    action('run', '▷ Run', 'dragonfly build, then the app on the selected Flutter device (no debugger)'),
+    action('run', '▷ Run', 'nuclear build, then the app on the selected Flutter device (no debugger)'),
     action('debug', '◉ Debug', 'the app with the debugger: breakpoints and steps in the .nuc'),
     action('reload', '↻ Reload', 'hot reload of the running app (saving a .nuc does it too)'),
-    action('device', '▭ Device', 'run on a Dragonfly device inside the editor (the newest one, or a new one)'),
-    action('build', '⚒ Build', 'dragonfly build: transpile and prepare the Flutter app'),
-    action('test', '✓ Test', 'dragonfly test'),
-    action('check', '☑ Check', 'dragonfly check: the .nuc files and the architecture rules'),
+    action('device', '▭ Device', 'run on a Synapsis device inside the editor (the newest one, or a new one)'),
+    action('build', '⚒ Build', 'nuclear build: transpile and prepare the Flutter app'),
+    action('test', '✓ Test', 'nuclear test'),
+    action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
   ],
   backend: [
-    action('run', '▷ Serve', 'dragonfly run: build, then the server (it restarts on every build: saving a .nuc does it)'),
+    action('run', '▷ Serve', 'nuclear run: build, then the server (it restarts on every build: saving a .nuc does it)'),
     action('debug', '◉ Debug', "the server under the dialect's debugger (debugpy, node): breakpoints and steps in the .nuc"),
-    action('test', '✓ Test', 'dragonfly test'),
-    action('build', '⚒ Build', 'dragonfly build: transpile into build/ (and compile a TypeScript server)'),
-    action('check', '☑ Check', 'dragonfly check: the .nuc files and the architecture rules'),
-    action('api', '⇄ API', 'the routes of this backend in the HTTP tool'),
+    action('test', '✓ Test', 'nuclear test'),
+    action('build', '⚒ Build', 'nuclear build: transpile into build/ (and compile a TypeScript server)'),
+    action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
+    action('api', '⇄ API', 'the routes of this backend in the Connector tool'),
   ],
   web: [
-    action('run', '▷ Serve', 'dragonfly run: build, then the dev server (Vite); saving a .nuc updates the page'),
+    action('run', '▷ Serve', 'nuclear run: build, then the dev server (Vite); saving a .nuc updates the page'),
     action('device', '▭ Device', 'the app in the web device beside the code: desktop, tablet and phone sizes, console, network'),
     action('debug', '◉ Debug', 'the web device with the debugger attached: breakpoints and steps in the .nuc'),
     action('reload', '↻ Reload', 'reload the page of the web device'),
-    action('build', '⚒ Build', 'dragonfly build'),
-    action('test', '✓ Test', 'dragonfly test: the tests of the app (vitest)'),
-    action('check', '☑ Check', 'dragonfly check: the .nuc files and the architecture rules'),
+    action('build', '⚒ Build', 'nuclear build'),
+    action('test', '✓ Test', 'nuclear test: the tests of the app (vitest)'),
+    action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
   ],
 };
 // what an action runs in the project's terminal; `install` first when the generated app has no packages yet
 const TERMINAL_COMMANDS: Record<string, Record<string, string>> = {
-  mobile: { build: 'dragonfly build', test: 'dragonfly test', check: 'dragonfly check' },
-  backend: { run: 'dragonfly run', test: 'dragonfly test', build: 'dragonfly build', check: 'dragonfly check' },
-  web: { run: 'dragonfly run', build: 'dragonfly build', test: 'dragonfly test', check: 'dragonfly check' },
+  mobile: { build: 'nuclear build', test: 'nuclear test', check: 'nuclear check' },
+  backend: { run: 'nuclear run', test: 'nuclear test', build: 'nuclear build', check: 'nuclear check' },
+  web: { run: 'nuclear run', build: 'nuclear build', test: 'nuclear test', check: 'nuclear check' },
 };
 
 const SAVED = 'nuclear.workspace.projects';
@@ -185,7 +185,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
       const pending = context.globalState.get<PendingAction>(PENDING);
       if (pending && inFolders(pending.root)) void vscode.commands.executeCommand('workbench.action.reloadWindow');
     }),
-    http.onDidChange(() => ws.activeKey() === TOOL_PREFIX + 'http' && ws.refresh()),
+    http.onDidChange(() => ws.activeKey() === TOOL_PREFIX + 'connector' && ws.refresh()),
     devicesChanged.event(() => ws.activeKey() === TOOL_PREFIX + 'devices' && ws.refresh()),
     vscode.commands.registerCommand('nuclear.workspace.show', () => vscode.commands.executeCommand(CONTAINER)),
     vscode.commands.registerCommand('nuclear.workspace.project', (index?: number) => ws.selectProject(index)),
@@ -252,7 +252,7 @@ class Workspace implements vscode.WebviewViewProvider {
   /** The active tab: a project's root, or `tool:<id>`. */
   activeKey(): string {
     const key = this.context.workspaceState.get<string>(ACTIVE);
-    if (key?.startsWith(TOOL_PREFIX)) return TOOLS.some((t) => TOOL_PREFIX + t.id === key) ? key : TOOL_PREFIX + 'http';
+    if (key?.startsWith(TOOL_PREFIX)) return TOOLS.some((t) => TOOL_PREFIX + t.id === key) ? key : TOOL_PREFIX + 'connector';
     const all = this.projects();
     return all.find((p) => p.root === key)?.root ?? all[0]?.root ?? '';
   }
@@ -282,7 +282,7 @@ class Workspace implements vscode.WebviewViewProvider {
 
   /** Each tab has its own editors: leaving remembers and closes them, entering reopens its own. The devices stay. */
   private async switchTabs(from: string, to: string): Promise<boolean> {
-    const isDevice = (t: vscode.Tab) => t.input instanceof vscode.TabInputWebview && t.input.viewType.endsWith('dragonflyDevice');
+    const isDevice = (t: vscode.Tab) => t.input instanceof vscode.TabInputWebview && t.input.viewType.endsWith('synapsisDevice');
     const open = vscode.window.tabGroups.all.flatMap((g) => g.tabs).filter((t) => !isDevice(t));
     const saved = this.context.workspaceState.get<Record<string, SavedTab[]>>(TABS, {});
     if (from) {
@@ -290,7 +290,7 @@ class Workspace implements vscode.WebviewViewProvider {
         .filter((t) => t.input instanceof vscode.TabInputText)
         .map((t) => ({ path: (t.input as vscode.TabInputText).uri.fsPath, column: t.group.viewColumn, active: t.isActive && t.group.isActive }));
       await this.context.workspaceState.update(TABS, saved);
-      if (from === TOOL_PREFIX + 'http') this.http.reopen = ComponentPanel.openKeys();
+      if (from === TOOL_PREFIX + 'connector') this.http.reopen = ComponentPanel.openKeys();
     }
     // an unsaved editor is never closed (VS Code would ask to save, as if the window closed): it stays until saved
     const closable = open.filter((t) => !t.isDirty);
@@ -302,9 +302,9 @@ class Workspace implements vscode.WebviewViewProvider {
     await vscode.commands.executeCommand('nuclear.parkDevices');
     const tool = TOOLS.find((t) => TOOL_PREFIX + t.id === to);
     if (tool) {
-      if (tool.id === 'http') ComponentPanel.restore(this.context, this.http, this.http.reopen);
+      if (tool.id === 'connector') ComponentPanel.restore(this.context, this.http, this.http.reopen);
       else if (tool.id === 'devices') await vscode.commands.executeCommand('nuclear.unparkDevices');
-      else if (tool.id === 'loop') LoopPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.id === 'builder') BuilderPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
       else if (tool.id === 'agent') ChatPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
@@ -362,7 +362,7 @@ class Workspace implements vscode.WebviewViewProvider {
   /** *Open* on a notification: its tool, on the run or the chat session it is about. */
   async openNotice(n: Notice): Promise<void> {
     await this.go(TOOL_PREFIX + n.tool);
-    if (n.tool === 'loop') LoopPanel.show(this.context, () => this.projects(), n.root, n.ref);
+    if (n.tool === 'builder') BuilderPanel.show(this.context, () => this.projects(), n.root, n.ref);
     else if (n.tool === 'settings') SettingsPanel.show(this.context);
     else ChatPanel.show(this.context, () => this.projects(), n.root, n.ref);
   }
@@ -404,10 +404,10 @@ class Workspace implements vscode.WebviewViewProvider {
     if (a.id === 'debug') return vscode.commands.executeCommand('nuclear.debug', p.root);
     if (a.id === 'reload') return vscode.commands.executeCommand('flutter.hotReload');
     if (a.id === 'device') return this.pickDevice(p, 'device');
-    if (a.id === 'api') return this.openTool('http');
+    if (a.id === 'api') return this.openTool('connector');
     let cmd = TERMINAL_COMMANDS[p.platform ?? '']?.[a.id];
     if (!cmd) return;
-    if (p.platform !== 'mobile' && (a.id === 'run' || a.id === 'test') && !isInstalled(p.root)) cmd = `dragonfly install && ${cmd}`;
+    if (p.platform !== 'mobile' && (a.id === 'run' || a.id === 'test') && !isInstalled(p.root)) cmd = `nuclear install && ${cmd}`;
     const name = `${p.name} · ${a.id}`;
     const terminal = vscode.window.terminals.find((t) => t.name === name) ?? vscode.window.createTerminal({ name, cwd: p.root });
     terminal.show(true);
@@ -424,14 +424,14 @@ class Workspace implements vscode.WebviewViewProvider {
     return false;
   }
 
-  /** ▷ Run, ◉ Debug and ▭ Device of a mobile project: the Dragonfly devices (shown or hidden) to run on, a new
+  /** ▷ Run, ◉ Debug and ▭ Device of a mobile project: the Synapsis devices (shown or hidden) to run on, a new
    * one, any other Flutter device (emulators, phones, Chrome, desktop: Flutter's own picker), or the Devices
    * workspace. */
   private async pickDevice(p: Project, mode: 'run' | 'debug' | 'device'): Promise<void> {
     type Item = vscode.QuickPickItem & { id: string };
     const items: Item[] = [
       ...devices().map((d) => ({ label: `$(device-mobile) ${d.title}`, description: d.status === 'idle' ? 'free' : d.status === 'hidden' ? 'running, hidden' : `${d.status} · runs again`, id: d.id })),
-      { label: '$(add) New Dragonfly device…', description: 'one more, beside the others', id: 'new' },
+      { label: '$(add) New Synapsis device…', description: 'one more, beside the others', id: 'new' },
       ...(mode === 'device'
         ? [{ label: '$(layout) Devices workspace', description: TOOLS.find((t) => t.id === 'devices')?.key, id: 'tool' }]
         : [{ label: '$(vm) Other Flutter device…', description: 'emulators, phones, Chrome, desktop', id: 'flutter' }]),
@@ -488,11 +488,11 @@ class Workspace implements vscode.WebviewViewProvider {
     const envs = this.http.environments();
     const pane = !tool
       ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect } }
-      : tool.id === 'http'
+      : tool.id === 'connector'
         ? { kind: 'tree', nodes: this.http.tree(), environment: envs.active }
         : tool.id === 'devices'
           ? { kind: 'devices', devices: devices(), project: this.active()?.name }
-          : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key }, notices: tool.id === 'agent' || tool.id === 'loop' || tool.id === 'settings' ? notices.all().filter((n) => n.tool === tool.id).map((n) => ({ id: n.id, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })) : [] };
+          : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key }, notices: tool.id === 'agent' || tool.id === 'builder' || tool.id === 'settings' ? notices.all().filter((n) => n.tool === tool.id).map((n) => ({ id: n.id, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })) : [] };
     void webview.postMessage({
       type: 'state',
       projects: this.projects().map((p) => ({
@@ -505,7 +505,7 @@ class Workspace implements vscode.WebviewViewProvider {
         dialectIcon: DIALECT_ICONS[p.dialect] ? this.icons.uri(webview, 'icon-themes', 'atom', 'files', `${DIALECT_ICONS[p.dialect]}.svg`) : undefined,
       })),
       active: key,
-      tools: TOOLS.map((t) => ({ id: t.id, label: t.label, short: t.short, key: t.key, unread: t.id === 'agent' || t.id === 'loop' || t.id === 'settings' ? notices.unread(t.id) : 0 })),
+      tools: TOOLS.map((t) => ({ id: t.id, label: t.label, short: t.short, key: t.key, unread: t.id === 'agent' || t.id === 'builder' || t.id === 'settings' ? notices.unread(t.id) : 0 })),
       pane,
     });
   }
@@ -561,7 +561,7 @@ class Workspace implements vscode.WebviewViewProvider {
           void this.action(m.id);
           break;
         case 'endpoint':
-          if (m.endpoint) void vscode.commands.executeCommand('nuclear.http.open', m.endpoint);
+          if (m.endpoint) void vscode.commands.executeCommand('nuclear.connector.open', m.endpoint);
           break;
         case 'nodeAction':
           if (m.action?.type === 'updateContracts') void this.http.updateContracts(m.action.root, m.action.name);
@@ -763,8 +763,8 @@ function stripHtml(webview: vscode.Webview): string {
   .tab img.pi { width: 20px; height: 20px; }
   .tab img.di { position: absolute; right: -3px; bottom: -3px; width: 14px; height: 14px; border-radius: 3px; background: var(--vscode-sideBar-background); padding: 1px; }
   .tab svg.g { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-  .tab.t-http { color: var(--vscode-nuclearHttp-get); } .tab.t-devices { color: var(--vscode-nuclearHttp-platform); }
-  .tab.t-designer { color: var(--vscode-nuclearHttp-put); } .tab.t-docs { color: var(--vscode-nuclearHttp-component); } .tab.t-agent { color: var(--vscode-nuclearHttp-post); }
+  .tab.t-http { color: var(--vscode-nuclearConnector-get); } .tab.t-devices { color: var(--vscode-nuclearConnector-platform); }
+  .tab.t-designer { color: var(--vscode-nuclearConnector-put); } .tab.t-docs { color: var(--vscode-nuclearConnector-component); } .tab.t-agent { color: var(--vscode-nuclearConnector-post); }
   .tab.add { opacity: .5; font-size: 16px; font-weight: 300; border: 1px dashed currentColor; }
   .tab.add:hover { opacity: 1; }
   .pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -789,13 +789,13 @@ function stripHtml(webview: vscode.Webview): string {
   .row .btn { margin-left: auto; font-size: 11px; padding: 0 6px; border-radius: 3px; opacity: 0; background: var(--vscode-toolbar-hoverBackground); }
   .row:hover .btn { opacity: 1; }
   .row.dir .name { font-weight: 500; }
-  .row.nuc .name { color: var(--vscode-nuclearHttp-project); }
-  .c-platform { color: var(--vscode-nuclearHttp-platform); } .c-project { color: var(--vscode-nuclearHttp-project); } .c-component { color: var(--vscode-nuclearHttp-component); }
-  .c-get { color: var(--vscode-nuclearHttp-get); } .c-post { color: var(--vscode-nuclearHttp-post); } .c-put { color: var(--vscode-nuclearHttp-put); } .c-patch { color: var(--vscode-nuclearHttp-patch); } .c-delete { color: var(--vscode-nuclearHttp-delete); }
+  .row.nuc .name { color: var(--vscode-nuclearConnector-project); }
+  .c-platform { color: var(--vscode-nuclearConnector-platform); } .c-project { color: var(--vscode-nuclearConnector-project); } .c-component { color: var(--vscode-nuclearConnector-component); }
+  .c-get { color: var(--vscode-nuclearConnector-get); } .c-post { color: var(--vscode-nuclearConnector-post); } .c-put { color: var(--vscode-nuclearConnector-put); } .c-patch { color: var(--vscode-nuclearConnector-patch); } .c-delete { color: var(--vscode-nuclearConnector-delete); }
   .row.ep .name { font-family: var(--vscode-editor-font-family); font-size: 12px; }
   .row.ep .verb { font-weight: 700; font-size: 11px; width: 44px; flex: none; }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin: 0 6px 0 4px; background: var(--vscode-disabledForeground); }
-  .dot.live { background: var(--vscode-testing-iconPassed); } .dot.starting { background: var(--vscode-nuclearHttp-put); } .dot.hidden { background: var(--vscode-nuclearHttp-platform); opacity: .6; }
+  .dot.live { background: var(--vscode-testing-iconPassed); } .dot.starting { background: var(--vscode-nuclearConnector-put); } .dot.hidden { background: var(--vscode-nuclearConnector-platform); opacity: .6; }
   .empty { padding: 12px 10px; opacity: .7; line-height: 1.5; }
   .empty a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   .toast { position: fixed; left: 48px; bottom: 10px; max-width: calc(100% - 60px); padding: 6px 10px; border-radius: 4px; font-size: 12px; background: var(--vscode-notifications-background); color: var(--vscode-notifications-foreground); border: 1px solid var(--vscode-notifications-border, var(--vscode-widget-border, transparent)); box-shadow: 0 2px 8px rgba(0,0,0,.3); opacity: 0; transition: opacity .15s; pointer-events: none; z-index: 2; }
@@ -940,7 +940,7 @@ function stripHtml(webview: vscode.Webview): string {
     }
   }
 
-  // the endpoints tree of the HTTP tool
+  // the endpoints tree of the Connector tool
   function renderHttp(pane, p) {
     head(pane, 'HTTP', 'every project');
     const bar = el('div', 'envbar');
@@ -953,7 +953,7 @@ function stripHtml(webview: vscode.Webview): string {
     pane.appendChild(bar);
     const tree = el('div', 'tree');
     pane.appendChild(tree);
-    if (!p.nodes.length) tree.appendChild(el('div', 'empty', 'No Nuclear project found: build one (nuclear build / dragonfly build) or add an OpenAPI document.'));
+    if (!p.nodes.length) tree.appendChild(el('div', 'empty', 'No Nuclear project found: build one (nuclear build / nuclear build) or add an OpenAPI document.'));
     const walk = (nodes, depth) => {
       for (const n of nodes) {
         const kids = n.children && n.children.length ? n.children : null;
@@ -989,7 +989,7 @@ function stripHtml(webview: vscode.Webview): string {
     head(pane, 'Devices', p.project ? 'runs ' + p.project : '');
     const bar = el('div', 'actions');
     const add = el('button', 'primary', '+ New device');
-    add.title = 'One more Dragonfly device beside the code (pick its size and identity)';
+    add.title = 'One more Synapsis device beside the code (pick its size and identity)';
     add.addEventListener('click', () => vscode.postMessage({ type: 'newDevice' }));
     bar.appendChild(add);
     pane.appendChild(bar);

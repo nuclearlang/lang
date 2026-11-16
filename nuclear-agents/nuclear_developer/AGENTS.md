@@ -1,6 +1,6 @@
 # Nuclear Developer
 
-The local agents of NuclearLang and Dragonfly (coder, tester, security reviewer, planner, analyst, documenter,
+The local agents of NuclearLang and Synapsis (coder, tester, security reviewer, planner, analyst, documenter,
 diagnoser, acceptor, assistant) on models of at most 3B parameters, as the junior developer of a frontier model.
 What a small model cannot hold comes from the Nuclear Smart Graph (a library of cards); what it writes is checked
 by the Nuclear compiler before it answers. ADR key: `developer`.
@@ -10,7 +10,7 @@ The platform's rules are the root [`AGENTS.md`](../../AGENTS.md); the agents' in
 
 ## Stack
 
-- **Source:** Nuclear, a Dragonfly backend (platform `backend`, dialect `fastapi`; `config.nuc`). `build/` is the
+- **Source:** Nuclear, a Synapsis backend (platform `backend`, dialect `fastapi`; `config.nuc`). `build/` is the
   generated FastAPI + LangGraph application.
 - **Models:** two, on Ollama: `qwen2.5-coder:3b` (the coder) and `gemma4:e2b` (the default); `CODER_MODEL`,
   `ASSISTANT_MODEL`, `OLLAMA_URL`, `CONTEXT_TOKENS`.
@@ -26,10 +26,10 @@ In this folder:
 | | |
 |---|---|
 | Check and build | `nuclear check . && nuclear build .` |
-| Build with its environment | `dragonfly install` |
+| Build with its environment | `nuclear install` |
 | Run by hand | `cd build && .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 7879` |
-| Run as installed | `nuclear-loop setup` (once), then the `nuclear-developer` service; `nuclear-loop setup --status` |
-| Tests | `dragonfly test` (needs the graph running: `nuclear-graph serve`) |
+| Run as installed | `nuclear-builder setup` (once), then the `nuclear-developer` service; `nuclear-builder setup --status` |
+| Tests | `nuclear test` (needs the graph running: `nuclear-graph serve`) |
 | Types of the generated code | `cd build && ../../../nuclearlang/tools/python/.venv/bin/pyright --pythonpath .venv/bin/python app` (0 errors, strict) |
 | The evaluation | `cd eval && ../../../nuclear-graph-storage/.venv/bin/python run.py local` (also `reference`, `distill`, `analyze`, `chat`, `report`) |
 

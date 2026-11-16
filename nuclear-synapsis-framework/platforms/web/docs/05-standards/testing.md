@@ -15,7 +15,7 @@ platform has no conformance test yet: it gets one with its second dialect.
 | Level | What it covers | Run by |
 |---|---|---|
 | The compiler's tests | `examples/examples-web/characters/` built and compared with its golden `examples/expected/characters/` (`nuclearlang/crates/nuclear-transpile/tests/projects.rs`) | `cargo test` at the root of the tree |
-| The runtime's tests | `packages/dragonfly-web/test/runtime.test.ts`: 7 vitest tests in jsdom (repository, cache, mocks, states, views, events) | the check; `npx vitest run` in the package |
+| The runtime's tests | `packages/synapsis-web/test/runtime.test.ts`: 7 vitest tests in jsdom (repository, cache, mocks, states, views, events) | the check; `npx vitest run` in the package |
 | The check | the runtime built; the example built; `tsc --strict`, the example's own tests and a production bundle of the generated app; the runtime's tests | `checks/react-check/check.sh` |
 | The reference's equivalences | the `react` reference against the real output (the TypeScript dialect's project owns it) | `nuclearlang/tools/spec-check/check.py` |
 
@@ -25,7 +25,7 @@ From the root of the tree:
 
 ```sh
 (cd nuclearlang/tools/node && npm install)
-(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install)
+(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install)
 ```
 
 ## Running the check
@@ -47,7 +47,7 @@ order:
 3. `tsc --strict` over the generated app.
 4. The example's own tests with vitest in jsdom (4 tests, written in Nuclear in `test/characters_test.nuc`).
 5. `vite build`: a production bundle.
-6. The runtime's tests, in `packages/dragonfly-web`.
+6. The runtime's tests, in `packages/synapsis-web`.
 
 ## Conventions
 

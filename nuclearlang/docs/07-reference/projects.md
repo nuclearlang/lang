@@ -7,22 +7,22 @@ example, the [flutter](../../dialects/dart/docs/07-reference/flutter.md) dialect
 
 ## 1. Manifest
 
-A Dragonfly project (a platform of ADR-synapsis-0002) has only `.nuc` files; its manifest is `config.nuc`:
+A Synapsis project (a platform of ADR-synapsis-0002) has only `.nuc` files; its manifest is `config.nuc`:
 
 ```nuclear
 // config.nuc
-dragonfly(platform = "backend", dialect = "fastapi")   // the platform written, the dialect it is built with
+synapsis(platform = "backend", dialect = "fastapi")   // the platform written, the dialect it is built with
 app(name = "tasks_api", description = "Tasks and an assistant.", version = "0.1.0")
 plugins(sqlite = true, ollama = true)                   // §3.3
 ```
 
-`dragonfly(...)` is required: `platform` is `web`, `mobile` or `backend`; `dialect` one of the platform's dialects
+`synapsis(...)` is required: `platform` is `web`, `mobile` or `backend`; `dialect` one of the platform's dialects
 (N0303 otherwise). `app(...)` names the generated package (`name`, in snake_case) and its description and
 version; `title` is the app's name as people read it (`title = "NuclearLang"`: the window or tab title; the name
 when absent); a platform may take more fields (`usesMaterialDesign` in mobile). The output folder is the dialect's
 (`[project] output`, §3). Changing `dialect` changes nothing else in the project.
 
-A project of a language dialect without Dragonfly uses `nuclear.toml`:
+A project of a language dialect without Synapsis uses `nuclear.toml`:
 
 ```toml
 # nuclear.toml
@@ -48,12 +48,12 @@ An error in any file stops writing: nothing is written.
 
 `nuclear.toml` is optional when the dialect declares a file that marks its projects (`[project] marker`, §3):
 the folder that has it is a project of that dialect, its name is the folder's (in snake_case) unless `app(name)`
-says otherwise, and its output, `[project] output`. Every Dragonfly dialect marks its projects with `config.nuc`,
-whose `dragonfly(...)` names the dialect (§3.1).
+says otherwise, and its output, `[project] output`. Every Synapsis dialect marks its projects with `config.nuc`,
+whose `synapsis(...)` names the dialect (§3.1).
 
 ### 1.1 The project card: `.nuclear/project.json`
 
-Every tool that builds a project (`nuclear build`, `nuclear check`, `dragonfly build`, the editors when a file of the
+Every tool that builds a project (`nuclear build`, `nuclear check`, `nuclear build`, the editors when a file of the
 project is opened or saved) writes `.nuclear/project.json`, the card of the project: what it is, for an editor
 client or a script that must not read Nuclear or load the dialect. It is derived from the manifest and the dialect
 (never edited by hand; rewritten when it changes):
@@ -97,7 +97,7 @@ runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.
 A client declares the backends it talks to in its manifest, with the name of the connection its calls use:
 
 ```nuclear
-dragonfly(platform = "mobile", dialect = "flutter")
+synapsis(platform = "mobile", dialect = "flutter")
 app(name = "tasks_app", version = "1.0.0+1")
 contracts(tasks_api = "../tasks_api")              // a backend built next to this project (its .nuclear/contract.json)
 contracts(tasks_api = "https://api.example.com")   // or the running API: nuclear contracts update fetches it
@@ -193,7 +193,7 @@ to write the target's manifest (the `pubspec.yaml` in Flutter).
 A `packages` section only lists third-party packages the framework does not use: a package of the dialect
 (its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line
 (`project::check_config`, `project::reserved_package`). A package of `advice` is never refused: the CLI says the
-advice when the package is added (`dragonfly add express`), and adds it.
+advice when the package is added (`nuclear add express`), and adds it.
 
 A backend dialect has the `dependencies` section too (`dependencies(nuclear_graph = ">=0.1")`): each package goes to
 the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,
@@ -203,11 +203,11 @@ the generated manifest (`pyproject.toml`, `package.json`) as the template variab
 ### 3.2 Type definitions of the project: `build/defs.lock` and `defs/`
 
 The packages a project adds (besides the dialect's `defs`) are kept in the project itself under
-`defs/<language>/<name>/<version>/` (a backend or web project: written by `dragonfly add <package>`, kept with the
+`defs/<language>/<name>/<version>/` (a backend or web project: written by `nuclear add <package>`, kept with the
 sources, so a project just cloned compiles before anything is installed), or listed in `build/defs.lock`, one per line
 (`hive@2.2.3`: a mobile project, whose CLI resolves the versions and generates the missing definitions into the cache,
 `~/.cache/nuclearlang/defs`, [definitions.md](definitions.md) §1 and §6). Every tool that transpiles or checks the
-project (`nuclear build|check`, `nuclear defs`, `dragonfly`, the LSP) adds both to the dialect with
+project (`nuclear build|check`, `nuclear defs`, the framework's commands of `nuclear`, the LSP) adds both to the dialect with
 `project::with_project_defs(root, dialect)` (`project_defs` lists them); a package that cannot be loaded is a
 warning.
 
@@ -243,7 +243,7 @@ sections = ["plugins"]                 # Flutter: also app, environment, depende
 
 [project.plugins.genkit]
 description = "Genkit Dart in the app"
-packages = { genkit = "^1.0.1", dragonfly_genkit = "local" }   # "local": a package of NuclearLang's packages/
+packages = { genkit = "^1.0.1", synapsis_genkit = "local" }   # "local": a package of NuclearLang's packages/
 dev_packages = {}
 defs = ["genkit@1.0.1"]                # type definitions: their names need the plugin
 kinds = ["flow", "chat"]               # kinds that need it
@@ -271,7 +271,7 @@ plugins(genkit = true, googleAI = true)
   table gives the packages, defs and names; its kinds are the kinds it defines. One without an implementation for
   the project's dialect is N0306 when enabled.
 - The framework's CLI adds the packages of the enabled plugins to the target's manifest and removes those of a
-  plugin turned off (Flutter: `dragonfly build`, `build/app/.dragonfly_plugins`). `project::enabled_plugins(root,
+  plugin turned off (Flutter: `nuclear build`, `build/app/.synapsis_plugins`). `project::enabled_plugins(root,
   dialect)` gives the list.
 
 Other variables of `[project.files]` templates: `components` (each component, `name`, with its declarations by kind:

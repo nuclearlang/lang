@@ -2,7 +2,7 @@ import { NewTask } from '../../tasks/domain/models/task_models.js';
 import { TasksAppComponent } from '../../tasks/tasks_appcomponent.js';
 import { PlanState } from './states/plan_state.js';
 import { Injectable } from '@nestjs/common';
-import { Graph, chatModel, next, start, textOf } from 'dragonfly-nest/ai';
+import { Graph, chatModel, next, start, textOf } from 'synapsis-nest/ai';
 
 function _replaceWith(s: string, re: RegExp, f: (m: RegExpMatchArray) => string): string {
   let out = '';

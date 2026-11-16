@@ -112,7 +112,7 @@ testARequestGetsTheStrategyOfItsKindAndASpecItsLimits(tmpPath: Path) void
   best = Retrieve.strategy(store, "renombra Book a Title", "backend", ["Book"], [])
   expect(best[0]["id"] == "strategy:refactor-rename" and "it writes \"renombra Book a Title\"" in "${best[0]["why"]}" and "Book: the project has it" in "${best[0]["why"]}")
   expect(Retrieve.strategy(store, "un crud de pedidos", "backend", [], ["Order", "NewOrder"])[0]["id"] == "strategy:resource-db")
-  // a run of the Loop is not given a strategy without stages unless an exact sign chose it; a named one comes first
+  // a run of the Builder is not given a strategy without stages unless an exact sign chose it; a named one comes first
   expect(Retrieve.strategy(store, "que es un caso de uso", runnable = true)[0]["id"] != "strategy:question")
   expect(Retrieve.strategy(store, "anything at all", only = "question")[0]["id"] == "strategy:question")
   told: <string, any>[] = Retrieve.applies(store, "An api with guards on every route", "backend")

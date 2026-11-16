@@ -24,7 +24,7 @@ CREATE INDEX items_value ON items(list, field, value);
 """
 // The model the exact questions read: one view per thing of the ecosystem that has a name and fields of its own (a
 // command, a tool of the MCP server and its parameters, a route, a kind, a decorator, a plugin, a dialect, what a
-// generator writes, where a kind's file goes, a diagnostic, a habit, a member of the library, a stage of the Loop, a
+// generator writes, where a kind's file goes, a diagnostic, a habit, a member of the library, a stage of the Builder, a
 // local agent, a component's version, an editor command, a strategy, a capability). The catalogue of the base
 // (the `queries` shelf) reads these names; `field` is a row's first value of a field.
 VIEWS_SQL = """

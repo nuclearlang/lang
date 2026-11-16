@@ -98,10 +98,10 @@ usecase MoveTasks(tasks: TaskRepository, projects: ProjectRepository)
     Ok(moved)
 ```
 
-**Migrations are generated from the entities.** `dragonfly migrate make "<message>"` writes one migration from the
+**Migrations are generated from the entities.** `nuclear migrate make "<message>"` writes one migration from the
 difference between the entities and the last migration, never a live database, in the dialect's tool, under
-`migrations/` of the project (kept with the sources, not in `build/`). `dragonfly migrate` applies the pending
-ones to the default database; `dragonfly migrate down` reverts the last. They are the dialect's `[toolchain]` keys
+`migrations/` of the project (kept with the sources, not in `build/`). `nuclear migrate` applies the pending
+ones to the default database; `nuclear migrate down` reverts the last. They are the dialect's `[toolchain]` keys
 `migrate_make`, `migrate`, `migrate_down` (placeholders `{{message}}`, `{{migrations}}`), so the command names no
 tool. `SQLite(createTables = true)` stays for tests and development. A field default (`done: boolean = false`) is
 also the column's SQL default, so a non-null column can be added to a table with rows. A rename shows as a drop
@@ -116,7 +116,7 @@ and an add; `make` warns of every drop; the file is the project's to edit.
 | `@manyToMany` | `relationship(secondary=...)` | `@BelongsToMany(..., through)` |
 | `@oneToOne` | `relationship(uselist=False)` | `@BelongsTo` / `@HasOne` |
 | Transaction | an `AsyncSession` in a `ContextVar` | a sequelize transaction in an `AsyncLocalStorage` |
-| Migrations | Alembic: `make` brings an empty SQLite in memory to the last migration and lets autogenerate write the difference, in batch mode (SQLite cannot alter a column; the other databases run the same file); the folder's `env.py` is written once; `alembic_version` lists what is applied | the runtime's `dragonfly-nest-migrate`: it reads the entities' attributes, diffs them with the `schema` the last migration exports and writes `up` / `down` over `queryInterface`; `SequelizeMeta` lists what is applied |
+| Migrations | Alembic: `make` brings an empty SQLite in memory to the last migration and lets autogenerate write the difference, in batch mode (SQLite cannot alter a column; the other databases run the same file); the folder's `env.py` is written once; `alembic_version` lists what is applied | the runtime's `synapsis-nest-migrate`: it reads the entities' attributes, diffs them with the `schema` the last migration exports and writes `up` / `down` over `queryInterface`; `SequelizeMeta` lists what is applied |
 
 In fastapi related entities are imported only for the type checker; in nestjs a single relation is typed
 `Related<T>` and the runtime's `Entity` keeps the relations given to the constructor. In Dart `Page<T>` is the

@@ -5,7 +5,7 @@ import { GetOneCharacterUseCase } from './domain/usecases/get_one_character_usec
 import { GetPageUseCase } from './domain/usecases/get_page_usecase';
 import { SaveCharacterUseCase } from './domain/usecases/save_character_usecase';
 import { SearchCharactersUseCase } from './domain/usecases/search_characters_usecase';
-import { Result, inject } from 'dragonfly-web';
+import { Result, inject } from 'synapsis-web';
 
 /**
  * Application component: the facade of the component. Other components and the screens use

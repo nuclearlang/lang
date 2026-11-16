@@ -54,7 +54,7 @@ planner must run no query for it. The entries with `says` are also asked to the 
 **The Smart Graph is a Nuclear project** of the `python` dialect. Its `.nuc` files are the source; `nuclear build`
 writes the package `build/nuclear_graph` that `pyproject.toml` packages; the set-up builds before it installs; the
 tests are `tests/*.nuc`. `[project] package` of `nuclear.toml` names the package the files are emitted into. This
-came with the platform's rule "Nuclear and Dragonfly first" (the root `AGENTS.md`): what the language could not
+came with the platform's rule "Nuclear and Synapsis first" (the root `AGENTS.md`): what the language could not
 express while the graph was written is a finding of the compiler, kept in the roadmap of the language
 (`nuclearlang/docs/01-product/roadmap.md`), never a reason to write a piece in the target language.
 
@@ -66,7 +66,7 @@ express while the graph was written is a finding of the compiler, kept in the ro
 
 ## Consequences
 - Positive: "which tools does the MCP have", "the parameters of `generate_resource`", "how is a use case created",
-  "what does N0114 mean", "the stages of the Loop" are answered with every row, the same on every run, whatever
+  "what does N0114 mean", "the stages of the Builder" are answered with every row, the same on every run, whatever
   the model.
 - Positive: a new kind of fact is a view; a new question is a row of the catalogue with an entry of
   `questions.toml`: no code.

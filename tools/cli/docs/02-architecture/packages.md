@@ -6,19 +6,19 @@ related: [tools/cli/docs/02-architecture/build.md, nuclearlang/docs/07-reference
 ---
 # Packages, type definitions and assets
 
-The code is in `nuclear-synapsis-framework/cli/src/`.
+The code is in `tools/cli/src/framework/`.
 
-## `packages.rs`: a mobile app (`ADR-mobile-0001` to `ADR-mobile-0001`)
+## `packages.rs`: a mobile app (`ADR-mobile-0001`)
 
 - `read` (the sections come from the dialect's `[project.manifest]`), `sync` (the `app` / `environment` fields and
-  the packages → `build/app/pubspec.yaml` by editing lines; `flutter pub add/remove`; `build/app/.dragonfly_deps` =
-  the packages that come from `config.nuc`, so only those are removed; it never removes Dragonfly's own, `OWN` +
+  the packages → `build/app/pubspec.yaml` by editing lines; `flutter pub add/remove`; `build/app/.synapsis_deps` =
+  the packages that come from `config.nuc`, so only those are removed; it never removes Synapsis's own, `OWN` +
   `PACKAGES`).
 - `load_defs`: the version from `pubspec.lock` → `~/.cache/nuclearlang/defs/dart/<p>/<v>`; if missing,
   `generate_defs` runs `dart run bin/defs.dart` of the definitions generator (`nuclearlang/tools/defs`,
   `<install>/tools/defs`) with `--exclude` of the dialect's packages; `Loader::add_defs`; writes `build/defs.lock`;
   skips packages the dialect knows.
-- `add` / `remove` (`dragonfly flutter add|remove`, also `pub add|remove`): edit `config.nuc` with `set_entry` /
+- `add` / `remove` (`nuclear flutter add|remove`, also `pub add|remove`): edit `config.nuc` with `set_entry` /
   `remove_entry`, one entry per line; `add` rejects reserved packages (`project::reserved_package`) before running
   flutter; `sync` never adds a reserved one.
 - `ensure_config`: `check` and `build` create `config.nuc` if missing (the name, description / version, the app's
@@ -35,7 +35,7 @@ types re-exported from another project package repeat (the first wins). `devDepe
 
 ## `dependencies.rs`: backend and web (`ADR-lang-0008`)
 
-`dragonfly add|remove <package>` (`package_command` in `main.rs`; a mobile app goes to `packages::add|remove`, a
+`nuclear add|remove <package>` (`package_command` in `framework/mod.rs`; a mobile app goes to `packages::add|remove`, a
 folder to the kind packages). Nothing here knows a package manager: every step is a `[toolchain] package_*` command
 of the dialect, filled by `fill_command` (`{{tools}}` = `<install>/tools`) and run in the generated project.
 
@@ -47,7 +47,7 @@ of the dialect, filled by `fill_command` (`{{tools}}` = `<install>/tools`) and r
   `nestjs__axios`).
 - `remove`: the package and its companion out of `config.nuc` and of the generated project, its `defs/` folder
   deleted.
-- `ensure_defs`: after `dragonfly install`, the definitions of every dependency that has none (not a folder
+- `ensure_defs`: after `nuclear install`, the definitions of every dependency that has none (not a folder
   dependency, not a companion); a failure is a line, the install stands.
 
 Limits: no `--dev` (a backend or web manifest has one section); a package is added with the project generated, so

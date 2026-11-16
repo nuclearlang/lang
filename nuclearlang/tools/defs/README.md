@@ -20,7 +20,7 @@ It writes, with the installed versions:
 | `dart@<Dart version>` | `dart:core` (implicit), `dart:async`, `dart:math`, `dart:convert`, `dart:collection`, `dart:io`, `dart:typed_data`, `dart:isolate`, `dart:developer` |
 | `flutter@<Flutter version>` | `package:flutter/{widgets,material,cupertino,services,foundation,painting,rendering,gestures,animation,scheduler,semantics,physics}.dart` (in that order: each name goes to the most basic library) |
 | `dio`, `get_it`, `json_annotation`, `bloc`, `flutter_bloc`, `go_router`, `connectivity_plus`, `flutter_secure_storage` | the main library of each package, with the version of `flutter_project/pubspec.lock` |
-| `dragonfly` | `package:dragonfly/dragonfly.dart` and `testing.dart` (the runtime of `../nuclear-synapsis-framework/platforms/mobile/packages/dragonfly`, a path dependency) |
+| `synapsis` | `package:synapsis/synapsis.dart` and `testing.dart` (the runtime of `../nuclear-synapsis-framework/platforms/mobile/packages/synapsis`, a path dependency) |
 
 Then:
 
@@ -39,7 +39,7 @@ Then:
 
 ## A project's packages
 
-`dragonfly add <package>` (ADR-lang-0008) uses these same generators, installed by `../installer/install.sh` in
+`nuclear add <package>` (ADR-lang-0008) uses these same generators, installed by `../installer/install.sh` in
 `~/.local/share/nuclearlang/tools/defs`, on what the project has installed
 ([docs/07-reference/definitions.md](../../docs/07-reference/definitions.md) §6). There is no need to touch `generate.sh` nor the dialect.
 

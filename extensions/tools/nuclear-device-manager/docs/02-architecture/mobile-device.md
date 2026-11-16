@@ -4,7 +4,7 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [overview.md, ../01-product/roadmap.md, ../../../../vscode/docs/02-architecture/client.md]
 ---
-# The Dragonfly device (`device.ts`)
+# The Synapsis device (`mobile-device.ts`)
 
 The app running inside VS Code, like Android Studio's Running Devices (ADR-devices-0001). Flutter runs it on its
 `chrome` device with a headless Chromium, so it is debugged like any web app (breakpoints, hot reload, hot
@@ -12,9 +12,9 @@ restart); the panel shows the browser's screen and sends the user's input back.
 
 ## The custom device
 
-Only VS Code lists it: a Flutter custom device with the id `dragonfly`, which the extension registers by itself.
+Only VS Code lists it: a Flutter custom device with the id `synapsis`, which the extension registers by itself.
 
-- `ensureDevice`: `dragonfly flutter custom-devices add --json` with `FLUTTER_CUSTOM_DEVICES=true`.
+- `ensureDevice`: `nuclear flutter custom-devices add --json` with `FLUTTER_CUSTOM_DEVICES=true`.
 - Custom devices are on only where `FLUTTER_CUSTOM_DEVICES=true`: the extension adds it to the user's `dart.env`
   (and `CHROME_EXECUTABLE` if needed), then `_dart.reloadExtension`. A `configurationDefaults` value for `dart.env`
   does NOT reach the Dart extension, so it is written. `flutter devices` in a terminal and other IDEs do not show
@@ -26,7 +26,7 @@ Only VS Code lists it: a Flutter custom device with the id `dragonfly`, which th
 
 - `deviceId: 'chrome'`, `--web-port`, `--web-browser-debug-port`;
 - `--web-browser-flag=--headless=new`, `--enable-unsafe-swiftshader`;
-- `--web-launch-url http://127.0.0.1:<port>/assets/__dragonfly_device__`: an empty 404 page that carries the
+- `--web-launch-url http://127.0.0.1:<port>/assets/__synapsis_device__`: an empty 404 page that carries the
   process marker (`about:blank` does not work).
 
 Flutter's `web-server` device is rejected: its debug service has no breakpoints.

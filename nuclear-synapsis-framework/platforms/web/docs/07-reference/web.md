@@ -1,4 +1,4 @@
-# The `web` platform of Dragonfly
+# The `web` platform of Synapsis
 
 > Inherits every rule of [nuclear-base.md](../../../../../nuclearlang/docs/07-reference/nuclear-base.md) and the standard library ([library.md](../../../../../nuclearlang/docs/07-reference/library.md)).
 > This document defines the web platform (ADR-synapsis-0002, ADR-web-0001): apps that run in the browser, written in Nuclear
@@ -16,7 +16,7 @@ here; what it needs and a phone does not (HTML elements, a url bar) is.
 
 ```
 my_store/
-├── config.nuc                         dragonfly(platform = "web", dialect = "react"), app(...), dependencies(...)
+├── config.nuc                         synapsis(platform = "web", dialect = "react"), app(...), dependencies(...)
 ├── main.nuc                           the App view: the router with every screen
 ├── config/project_config.nuc          appConfig: the connections and global services of the app
 ├── components/<name>/                 appcomponent, config/, data/, domain/, presentation/
@@ -28,13 +28,13 @@ my_store/
 `config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app (name,
 description, version) and the backends it talks to (`contracts(tasks_api = "../tasks_api")`: their models and
 repositories are generated into `contracts/`, [projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1.2) and
-`dependencies(name = "version")` for a package the framework does not bring: `dragonfly add <package>[@version]`
+`dependencies(name = "version")` for a package the framework does not bring: `nuclear add <package>[@version]`
 installs it with the dialect's package manager, writes it there and generates its type definitions into the project's
-`defs/`; `dragonfly remove <package>` takes it out (ADR-lang-0008). `build/app` is the dialect's app, never edited.
+`defs/`; `nuclear remove <package>` takes it out (ADR-lang-0008). `build/app` is the dialect's app, never edited.
 
 ```nuclear
-dragonfly(platform = "web", dialect = "react")
-app(name = "my_store", title = "My Store", description = "A Dragonfly web app.", version = "1.0.0")
+synapsis(platform = "web", dialect = "react")
+app(name = "my_store", title = "My Store", description = "A Synapsis web app.", version = "1.0.0")
 ```
 
 `title` is the browser tab's title and `description` the page's description. `public/` is served as it is: a
@@ -138,28 +138,28 @@ after `timeout`; `Acl` gives role inheritance; a `guard` is a custom check for `
 
 ### Generators
 
-`dragonfly gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models
+`nuclear gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models
 (nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (an HTTP repository over the app's `Http` connection, a named one added when the app has another), one use
 case per action (`--actions list,get,search,create,update,delete`), their aliases in the facade, with `--screen <screen>` a screen that lists it with its state manager and state model, and a test with the repository mocked. The fields
 come from an example answer (`--from-json <file|url>`), a spec (`--from-spec <spec.md>`: its example answer, else its
 `Key | Type` table; a `GET https://...` line gives the API) or `--fields "id:int name:string"`. A file that exists is
 never overwritten (the facade and the repository get only the members they lack, so an action added to a resource that exists is finished); a name another file declares stops it before it writes.
-`dragonfly gen inspect` answers what the project has. The agent writes only what is not standard: a use case with
+`nuclear gen inspect` answers what the project has. The agent writes only what is not standard: a use case with
 its own rules, a view's details.
 
-`dragonfly gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's
+`nuclear gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's
 facade; with `--calls <Repository>.<method>` it writes the use case too, when all it does is call that method of a
 repository. What a screen shows of it (a state manager's method and its state) is written by hand.
 
 ```sh
-dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character
-dragonfly gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares
+nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character
+nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares
 ```
 
 ## 4. Tests
 
 `tests` in `test/`: the app starts with its real config and every request answers what the test prepares
-(`DragonflyTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`,
+(`SynapsisTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`,
 `verify`); `@test`, `@states` (the states a manager emits) and `@widget` (a screen rendered in a memory router,
 read with Testing Library's `screen`) as in the mobile platform; `beforeEach()`/`afterEach()` methods are the hooks.
 

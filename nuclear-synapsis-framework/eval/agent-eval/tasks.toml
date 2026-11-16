@@ -1,5 +1,5 @@
 # Tasks of the agent evaluation (README.md). Each runs in a fresh copy of its project.
-#   project: "rick_and_morty" (a Dragonfly app, copied with its build/app) or "empty" (an empty folder, with
+#   project: "rick_and_morty" (a Synapsis app, copied with its build/app) or "empty" (an empty folder, with
 #            `dialect` for `nuclear agent init` in the agent mode)
 #   prompt:  what the agent is asked, the same in every mode
 #   verify:  shell commands run in the copy after the agent; all must exit 0 for the task to be green
@@ -13,8 +13,8 @@ dimension and how many residents it has, loaded with a new use case of the locat
 location in the list opens it."""
 verify = [
   "grep -rq '/locations/:id' components/locations",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "! dragonfly analyze 2>&1 | grep -q ' error • '",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "! nuclear analyze 2>&1 | grep -q ' error • '",
 ]
 
 [[task]]
@@ -25,8 +25,8 @@ reloads the current page skipping the cache."""
 verify = [
   "grep -rqE 'minutes = 5' components/episodes/data",
   "grep -rq 'RefreshIndicator' components/episodes/presentation",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "! dragonfly analyze 2>&1 | grep -q ' error • '",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "! nuclear analyze 2>&1 | grep -q ' error • '",
 ]
 
 [[task]]
@@ -38,8 +38,8 @@ that says thanks. Put it in a new component called feedback."""
 verify = [
   "test -d components/feedback",
   "grep -rq '@email' components/feedback",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "! dragonfly analyze 2>&1 | grep -q ' error • '",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "! nuclear analyze 2>&1 | grep -q ' error • '",
 ]
 
 [[task]]
@@ -51,8 +51,8 @@ Log.i."""
 verify = [
   "grep -rq 'FavoriteAdded' shared",
   "grep -rq '@on(FavoriteAdded)' shared",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "! dragonfly analyze 2>&1 | grep -q ' error • '",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "! nuclear analyze 2>&1 | grep -q ' error • '",
 ]
 
 [[task]]
@@ -62,8 +62,8 @@ prompt = """Write tests in Nuclear for GetRandomCharacterUseCase: mock Character
 successful character and an error from the repository. Run them."""
 verify = [
   "ls test/*.nuc",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "dragonfly test 2>&1 | grep -q 'All tests passed'",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "nuclear test 2>&1 | grep -q 'All tests passed'",
 ]
 
 [[task]]
@@ -74,8 +74,8 @@ send everyone else to a new shared page /denied that explains why."""
 verify = [
   "ls shared/guards/*.nuc",
   "grep -rq '/denied' shared",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "! dragonfly analyze 2>&1 | grep -q ' error • '",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "! nuclear analyze 2>&1 | grep -q ' error • '",
 ]
 
 [[task]]
@@ -85,8 +85,8 @@ prompt = """In the characters list, add chips to filter by status (all, alive, d
 The API accepts a status query parameter in GET /character."""
 verify = [
   "grep -rq 'status' components/characters/data",
-  "dragonfly check --json | grep -qx '\\[\\]'",
-  "! dragonfly analyze 2>&1 | grep -q ' error • '",
+  "nuclear check --json | grep -qx '\\[\\]'",
+  "! nuclear analyze 2>&1 | grep -q ' error • '",
 ]
 
 [[task]]

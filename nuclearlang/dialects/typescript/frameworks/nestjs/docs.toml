@@ -1,4 +1,4 @@
-# Editor documentation of the nestjs dialect (Dragonfly for NestJS): what the editor and `nuclear help <word>
+# Editor documentation of the nestjs dialect (Synapsis for NestJS): what the editor and `nuclear help <word>
 # --dialect nestjs` show for each kind and decorator. Rules: nuclearlang/dialects/typescript/docs/07-reference/nestjs.md.
 
 [kinds]
@@ -56,7 +56,7 @@ Full rules: `nuclear help backend`.
 model = '''
 A **DTO** validated with class-validator: what the API reads and answers.
 
-What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Dragonfly's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. `NewTask(title = "x")` builds one.
+What the API reads and answers (a DTO): class-validator checks it (an invalid body is a 400 with the reasons). The type gives the basic check (`IsString`, `IsInt`, `IsNumber`, `IsBoolean`, `IsArray`, a nested model); the same decorators as Synapsis's forms add rules: `@required`, `@email`, `@url`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`. `NewTask(title = "x")` builds one.
 
 ```nuclear
 model NewTask
@@ -174,7 +174,7 @@ Full rules: `nuclear help backend`.
 tests = '''
 A group of **tests** (in `test/`) with the app running and the databases in memory.
 
-In `test/`: `tests Name` + `@test("what it checks")` methods. Each test starts the app with the databases in memory; `inject<X>()` gives the instances; `expect(condition)` checks. `dragonfly test` runs them.
+In `test/`: `tests Name` + `@test("what it checks")` methods. Each test starts the app with the databases in memory; `inject<X>()` gives the instances; `expect(condition)` checks. `nuclear test` runs them.
 
 ```nuclear
 tests Tasks
@@ -416,7 +416,7 @@ On a model field: the value must be a URL (class-validator `IsUrl`); otherwise a
 
 key = '''
 On a model field: `@key("air_date")`, the field's name in the JSON when it is not the field's (an API that writes
-snake_case): the answer is read by it and written back with it. `dragonfly gen` writes it.
+snake_case): the answer is read by it and written back with it. `nuclear gen` writes it.
 
 ```nuclear
 Episode

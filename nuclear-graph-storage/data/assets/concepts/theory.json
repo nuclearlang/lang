@@ -41,8 +41,8 @@
   {
    "id": "concept:clean-architecture",
    "type": "theory",
-   "title": "Theory: clean architecture, as Dragonfly applies it",
-   "summary": "Business rules sit in the middle and depend on nothing outside: a use case is one operation, a repository hides where data comes from, and entry points (a controller, a screen) only call inward. Dragonfly makes these rules kinds, and the compiler enforces them.",
+   "title": "Theory: clean architecture, as Synapsis applies it",
+   "summary": "Business rules sit in the middle and depend on nothing outside: a use case is one operation, a repository hides where data comes from, and entry points (a controller, a screen) only call inward. Synapsis makes these rules kinds, and the compiler enforces them.",
    "body": [
     "- **Use case**: one business operation with one entry (`exec`). It knows the rules, not the HTTP route nor the screen that called it. It is the unit that is tested.",
     "- **Repository**: the data of one entity behind an interface of meaningful queries (`byAuthor`, `availableSince`). The use case does not know whether the data comes from a database or another API.",
@@ -283,7 +283,7 @@
     "- The test is written from the spec and the plan's names, before the code exists. It may not compile alone; it compiles with the code.",
     "- The code is written until the tests pass. A failing test is evidence, given back to whoever wrote the code.",
     "- A test is never deleted or weakened to make a run pass; a test that is itself wrong is corrected and that is said.",
-    "- In the Loop this is the stage *Tests first*, before *Code*, and *Verification* runs them."
+    "- In the Builder this is the stage *Tests first*, before *Code*, and *Verification* runs them."
    ],
    "keys": [
     "tdd",

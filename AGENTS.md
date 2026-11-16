@@ -15,16 +15,17 @@ of the one project the task touches, then only the document whose line there mat
 |---|---|---|
 | `nuclearlang/` | The language: the compiler crates, the language server, the base words, the examples | [AGENTS.md](nuclearlang/AGENTS.md) |
 | `nuclearlang/dialects/<language>/` | A dialect of a target language (`python`, `typescript`, `dart`, `nodejs`) with its `frameworks/`, `defs/` and docs | [README.md](nuclearlang/dialects/README.md) |
-| `nuclear-synapsis-framework/` | The framework (Dragonfly in the code today): what it adds to Nuclear | [AGENTS.md](nuclear-synapsis-framework/AGENTS.md) |
+| `nuclear-synapsis-framework/` | The framework, Synapsis: what it adds to Nuclear | [AGENTS.md](nuclear-synapsis-framework/AGENTS.md) |
 | `nuclear-synapsis-framework/platforms/<platform>/` | A platform (`mobile`, `backend`, `web`): its contract, runtime packages, examples, checks | [AGENTS.md](nuclear-synapsis-framework/platforms/AGENTS.md) |
-| `tools/cli/` | The command line tools | [AGENTS.md](tools/AGENTS.md) |
-| `tools/code_generator/` | What `gen` and `make` write | [AGENTS.md](tools/code_generator/AGENTS.md) |
-| `tools/mcp/` | The MCP server | [AGENTS.md](tools/mcp/AGENTS.md) |
+| `tools/cli/` | The `nuclear` command: the compiler's commands and the framework's | [AGENTS.md](tools/cli/AGENTS.md) |
+| `tools/code_generator/` | What `nuclear new`, `make` and `gen` write: the crate `nuclear-codegen` | [AGENTS.md](tools/code_generator/AGENTS.md) |
+| `tools/mcp/` | The MCP server, `nuclear-mcp` (a Nuclear project, `python` dialect) | [AGENTS.md](tools/mcp/AGENTS.md) |
 | `extensions/` | The editors: `vscode/`, `jetbrains/`, `zed/`, and their tools in `tools/<tool>/` | [AGENTS.md](extensions/AGENTS.md) |
-| `device-emulators/` | The devices the command line tool and the editors start | [AGENTS.md](device-emulators/AGENTS.md) |
+| `device-emulators/` | The devices (`nuclear device`, `nuclear terminal-device`): the crate `nuclear-devices` | [AGENTS.md](device-emulators/AGENTS.md) |
 | `nuclear-graph-storage/` | The Smart Graph: the knowledge base every agent reads | [AGENTS.md](nuclear-graph-storage/AGENTS.md) |
 | `nuclear-agents/` | The agents (`nuclear_developer/`) | [AGENTS.md](nuclear-agents/AGENTS.md) |
 | `installer/` | The installers and the release | [AGENTS.md](installer/AGENTS.md) |
+| `website/` | The documentation site, written in Nuclear (web platform, `react`) | [AGENTS.md](website/AGENTS.md) |
 | `docs/` | Only what is about the whole platform | [README.md](docs/README.md) |
 
 `github-profile/` is the organization's profile: a repository of its own inside the tree.
@@ -78,6 +79,7 @@ A project's own commands are in its `AGENTS.md`.
 
 ## In progress
 
-The tree is being restructured ([docs/04-specs/008-restructure/tasks.md](docs/04-specs/008-restructure/tasks.md)):
-the code still says "Dragonfly", `dragonfly`, `nuclear-loop` and "Nuclear HTTP" where the folders already say
-Synapsis, `nuclear-builder` and `nuclear-connector`.
+The restructure of the tree: its phases 1 to 4 are done (one repository, a project per folder with its own
+documents, one `nuclear` command, the code generator, the devices, the MCP server and the editors' tools in folders
+of their own). The names in the code are Synapsis, `nuclear`, `nuclear-builder` and Nuclear Connector. What is left
+is in [docs/04-specs/008-restructure/tasks.md](docs/04-specs/008-restructure/tasks.md).

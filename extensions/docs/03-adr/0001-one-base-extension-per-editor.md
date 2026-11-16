@@ -27,7 +27,7 @@ What an editor needs from a language is declared by the dialect: `[docs]` and `[
 ## Consequences
 - Positive: the base extension serves any dialect, because what it needs from one is data of the dialect.
 - Negative: until the framework extensions exist, the base extensions of VS Code and JetBrains carry the run, debug,
-  device and hot reload parts of Dragonfly projects (`../01-product/roadmap.md`).
+  device and hot reload parts of Synapsis projects (`../01-product/roadmap.md`).
 
 ## References
 - Replaces: ADR-0077

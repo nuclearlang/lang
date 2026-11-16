@@ -75,7 +75,7 @@ explains the rows, and the rows themselves end the answer, put there by code: a 
 ## Consequences
 
 - "Which tools does the MCP have", "the parameters of `generate_resource`", "how is a use case created", "what does
-  N0114 mean", "the stages of the Loop" are answered with every row, the same on every run, whatever the model.
+  N0114 mean", "the stages of the Builder" are answered with every row, the same on every run, whatever the model.
 - A new kind of fact is a view; a new question is a row of the catalogue with an entry of `questions.toml`
   (`exact = true`): no code.
 - The facts are only as complete as the structured fields of the generated rows: what only a curated card's prose

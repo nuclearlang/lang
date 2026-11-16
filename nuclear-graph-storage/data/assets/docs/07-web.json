@@ -8,14 +8,14 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#commands",
    "type": "readme",
    "title": "The web platform — Commands",
-   "summary": "From the root of the tree: (cd nuclearlang/tools/node && npm install) # the shared Node tools of the check (cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install) cargo test # the example, its golden sh…",
+   "summary": "From the root of the tree: (cd nuclearlang/tools/node && npm install) # the shared Node tools of the check (cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install) cargo test # the example, its golden sh nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh…",
    "body": [
     "From the root of the tree:",
     "",
     "```sh",
     "# once",
     "(cd nuclearlang/tools/node && npm install)                     # the shared Node tools of the check",
-    "(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install)",
+    "(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install)",
     "",
     "# before a change is done",
     "cargo test                                   # the example, its golden",
@@ -23,7 +23,7 @@
     "UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff",
     "installer/install.sh                         # the user runs the installed copy: install after a change",
     "",
-    "# the runtime alone, in packages/dragonfly-web",
+    "# the runtime alone, in packages/synapsis-web",
     "npx tsc -p tsconfig.json && npx vitest run",
     "```"
    ],
@@ -40,7 +40,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#documents.1b63ea",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#documents.3a2c84",
    "type": "readme",
    "title": "The web platform — Documents",
    "summary": "Documents",
@@ -51,7 +51,7 @@
     "| [docs/00-context/glossary.md](docs/00-context/glossary.md) | A word has two meanings here (component, view, screen, contract) |",
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done, untested or pending in the platform and its runtime |",
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You need the shape: how a project becomes an app, each section of `platform.toml`, the dialect, the example, what the command reads here |",
-    "| [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) | You change `packages/dragonfly-web` (views, state, http, session, router, tests) |",
+    "| [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) | You change `packages/synapsis-web` (views, state, http, session, router, tests) |",
     "| [docs/02-architecture/dependencies.md](docs/02-architecture/dependencies.md) | You add or move a library of the runtime, or need who depends on this folder |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the platform copies mobile, why React without JSX, or what React's libraries could replace |",
     "| [docs/05-standards/testing.md](docs/05-standards/testing.md) | You run or change the check, the golden or a runtime test |",
@@ -70,7 +70,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#documents.d3a281",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#documents.d2f9f8",
    "type": "readme",
    "title": "The web platform — Documents",
    "summary": "Elsewhere: (`docs/07-reference/react.md`, its brief, `docs/08-guides/react.md`).",
@@ -85,8 +85,8 @@
     "- The same words on a phone: [the mobile platform](../mobile/AGENTS.md). The backend an app talks to and the",
     "  contract it is generated from: [the backend platform](../backend/AGENTS.md).",
     "- What the three platforms share (the format of `platform.toml`, what the loader checks, the common tests):",
-    "  [the platforms](../AGENTS.md). The philosophy: [the framework](../../AGENTS.md). The commands (`dragonfly new -p",
-    "  web`, `build`, `run`, `test`): [the command line tools](../../../tools/cli/AGENTS.md). `dragonfly make` and `gen`:",
+    "  [the platforms](../AGENTS.md). The philosophy: [the framework](../../AGENTS.md). The commands (`nuclear new -p",
+    "  web`, `build`, `run`, `test`): [the command line tools](../../../tools/cli/AGENTS.md). `nuclear make` and `gen`:",
     "  [the code generator](../../../tools/code_generator/AGENTS.md).",
     "- The compiler, the loader and the format of a dialect and of a project: [the language](../../../nuclearlang/AGENTS.md)."
    ],
@@ -106,10 +106,11 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#folders",
    "type": "readme",
    "title": "The web platform — Folders",
-   "summary": "tests).",
+   "summary": "(`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/web/generators.toml`.",
    "body": [
-    "- `platform.toml`: the contract: kinds, decorators, `[layout]`, `[skeletons]`, `[[generators.*]]`.",
-    "- `packages/dragonfly-web/`: the runtime (`src/`, `test/runtime.test.ts`).",
+    "- `platform.toml`: the contract: kinds, decorators, `[layout]`. What `nuclear make` and `gen` write",
+    "  (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/web/generators.toml`.",
+    "- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`).",
     "- `examples/examples-web/characters/`: the complete example (list and detail screens, state, events, a guard,",
     "  tests).",
     "- `examples/expected/characters/`: its golden output.",
@@ -117,7 +118,7 @@
     "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.",
     "",
     "Outside this folder: the dialect (`nuclearlang/dialects/typescript/frameworks/react/`) and the type definitions",
-    "(`nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,dragonfly-web}/`)."
+    "(`nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/`)."
    ],
    "platforms": [
     "web"
@@ -193,7 +194,7 @@
     "- The contract: `platform.toml`, TOML read by the compiler's loader (`nuclearlang/crates/nuclear-dialect`).",
     "- The one dialect that implements it today, documented by the TypeScript dialect project: `react` (React 19 without",
     "  JSX, React Router 7, Vite 7, Vitest 4 + jsdom + Testing Library).",
-    "- The runtime: `packages/dragonfly-web` (npm, ESM, TypeScript 5.9; peers `react`, `react-dom`, `react-router`).",
+    "- The runtime: `packages/synapsis-web` (npm, ESM, TypeScript 5.9; peers `react`, `react-dom`, `react-router`).",
     "- The check: an `sh` script over `nuclearlang/tools/node` (tsc, vitest, vite). CI:",
     "  `.github/workflows/platform-web.yml`."
    ],
@@ -213,9 +214,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/AGENTS.md#the-web-platform",
    "type": "readme",
    "title": "The web platform",
-   "summary": "The web platform of Dragonfly: apps that run in the browser, written in Nuclear with the same words as the mobile platform.",
+   "summary": "The web platform of Synapsis: apps that run in the browser, written in Nuclear with the same words as the mobile platform.",
    "body": [
-    "The web platform of Dragonfly: apps that run in the browser, written in Nuclear with the same words as the mobile",
+    "The web platform of Synapsis: apps that run in the browser, written in Nuclear with the same words as the mobile",
     "platform. This folder holds what is the same for every dialect: the contract (`platform.toml`), the runtime package",
     "the generated app runs on, the example and the check. The Nuclear of a web project never changes when its dialect",
     "changes.",
@@ -240,8 +241,8 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#changelog",
    "type": "changelog",
    "title": "Changelog",
-   "summary": "All notable changes to dragonfly-web are written here; versions follow Semantic Versioning.",
-   "body": "All notable changes to dragonfly-web are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "summary": "All notable changes to synapsis-web are written here; versions follow Semantic Versioning.",
+   "body": "All notable changes to synapsis-web are written here; versions follow [Semantic Versioning](https://semver.org).",
    "platforms": [
     "web"
    ],
@@ -260,11 +261,11 @@
    "title": "Changelog — Unreleased",
    "summary": "any npm package and generates its type definitions (ADR-lang-0008).",
    "body": [
-    "- `dependencies(...)` in `config.nuc` and `[toolchain] package_*` in react: `dragonfly add|remove <package>` installs",
+    "- `dependencies(...)` in `config.nuc` and `[toolchain] package_*` in react: `nuclear add|remove <package>` installs",
     "  any npm package and generates its type definitions (ADR-lang-0008).",
     "- First public version.",
-    "- `[[generators]]` in the platform: `dragonfly gen` writes a resource's models, repository, use cases, view with its state manager and tests (ADR-codegen-0001).",
-    "- `[[generators.usecase]]`: `dragonfly gen usecase` adds a use case's alias to its component's facade and, with `--calls`, writes a use case over a repository method (ADR-codegen-0001).",
+    "- `[[generators]]` in the platform: `nuclear gen` writes a resource's models, repository, use cases, view with its state manager and tests (ADR-codegen-0001).",
+    "- `[[generators.usecase]]`: `nuclear gen usecase` adds a use case's alias to its component's facade and, with `--calls`, writes a use case over a repository method (ADR-codegen-0001).",
     "- `[[generators.resource]]`: the repository is merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001)."
    ],
    "platforms": [
@@ -280,13 +281,31 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#dragonfly-web",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#license",
    "type": "readme",
-   "title": "Dragonfly web",
-   "summary": "The web platform of Dragonfly: single-page apps written in Nuclear with the same words as the mobile platform.",
+   "title": "Synapsis web — License",
+   "summary": "Apache-2.0. By contributing you agree that your contribution is licensed under it.",
+   "body": "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it.",
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/README.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#synapsis-web",
+   "type": "readme",
+   "title": "Synapsis web",
+   "summary": "The web platform of Synapsis: single-page apps written in Nuclear with the same words as the mobile platform.",
    "body": [
-    "The web platform of Dragonfly: single-page apps written in Nuclear with the same words as the mobile platform. Its",
-    "dialect `react` (React 19, React Router, Vite, Vitest) and its TypeScript runtime `dragonfly-web`.",
+    "The web platform of Synapsis: single-page apps written in Nuclear with the same words as the mobile platform. Its",
+    "dialect `react` (React 19, React Router, Vite, Vitest) and its TypeScript runtime `synapsis-web`.",
     "",
     "Start with the rules of the platform, [docs/07-reference/web.md](docs/07-reference/web.md), and the guide of the",
     "dialect, [react](../../../nuclearlang/dialects/typescript/docs/08-guides/react.md)."
@@ -304,30 +323,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#license",
-   "type": "readme",
-   "title": "Dragonfly web — License",
-   "summary": "Apache-2.0. By contributing you agree that your contribution is licensed under it.",
-   "body": "[Apache-2.0](../../../LICENSE). By contributing you agree that your contribution is licensed under it.",
-   "platforms": [
-    "web"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/web/README.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#what-is-inside",
    "type": "readme",
-   "title": "Dragonfly web — What is inside",
-   "summary": "`platform.toml` (the contract every web dialect implements), `packages/dragonfly-web` (the runtime), `examples/` (the `characters` app), `checks/react-check`, `docs/`.",
+   "title": "Synapsis web — What is inside",
+   "summary": "`platform.toml` (the contract every web dialect implements), `packages/synapsis-web` (the runtime), `examples/` (the `characters` app), `checks/react-check`, `docs/`.",
    "body": [
-    "`platform.toml` (the contract every web dialect implements), `packages/dragonfly-web` (the runtime), `examples/`",
+    "`platform.toml` (the contract every web dialect implements), `packages/synapsis-web` (the runtime), `examples/`",
     "(the `characters` app), `checks/react-check`, `docs/`.",
     "",
     "The dialect is in `nuclearlang/dialects/typescript/frameworks/react/`, with the type definitions of React and its",
@@ -348,10 +349,10 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/web/README.md#working-on-it",
    "type": "readme",
-   "title": "Dragonfly web — Working on it",
-   "summary": "It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree.",
+   "title": "Synapsis web — Working on it",
+   "summary": "It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree.",
    "body": [
-    "It is built by the `nuclear` compiler and the `dragonfly` CLI of the same tree. From the root of the tree:",
+    "It is built by the `nuclear` compiler and the `nuclear` CLI of the same tree. From the root of the tree:",
     "",
     "```sh",
     "(cd nuclearlang/tools/node && npm install)                    # the shared Node tools of the check",
@@ -374,18 +375,19 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/00-context/glossary.md#glossary.2023ae",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/00-context/glossary.md#glossary.002cb0",
    "type": "context",
    "title": "Glossary",
    "summary": "Glossary",
    "body": [
-    "| facade | The `appcomponent` of a component: an alias for each use case, the only thing a screen or another component calls. Its file is `{component}_component.nuc` (in the backend platform it is `{component}_appcomponent.nuc`) | the kind `component` | `components/<name>/<name>_component.nuc` |",
-    "| view | A `stateless` or a `stateful`: parameters are its props, `build()` returns an `Element` | a screen | `presentation/{screen}/` |",
-    "| screen | A view with `@screen(route, ...)`: it has an address and the router shows it | any view | `presentation/{screen}/`, `shared/screens/` |",
-    "| state model | The states of a screen, each field one state | a model of the domain | `presentation/{screen}/state_models/` |",
-    "| state manager | A `statemanager`: holds one state model and emits a new one | a use case | `presentation/{screen}/managers/` |",
-    "| runtime | The package the generated app imports: `dragonfly-web` | the dialect (templates and TOML) | `packages/dragonfly-web/` |",
-    "| golden | The expected generated output of the example, compared by `cargo test` | — | `examples/expected/characters/` |"
+    "| Term | Meaning | Not to be confused with | Where it is |",
+    "|---|---|---|---|",
+    "| platform | What a project writes: kinds, decorators, folders, `config.nuc`, tests. Identical for every dialect | a dialect | `platform.toml` |",
+    "| dialect | The language and UI library the app comes out in: `react` today. Chosen in `config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")` | the platform | `nuclearlang/dialects/typescript/frameworks/react/` |",
+    "| contract of the platform | `platform.toml`: what every web dialect must implement | the contract of a backend | `platform.toml` |",
+    "| contract of a backend | The description of an API a web project names with `contracts(...)` in `config.nuc`; its models and repositories are generated into `contracts/` | the platform's contract | [the backend platform's guide](../../../backend/docs/08-guides/contracts.md) |",
+    "| component (a folder) | `components/<name>/` of a project: `config/`, `data/`, `domain/`, `presentation/`, closed behind its facade | the kind `component`; a component of the UI library | `[layout]` |",
+    "| `component` (the kind) | A global piece in `shared/components/` that reacts to events with `@on(Event)` | a folder of `components/`; a view | `shared/components/{file}.nuc` |"
    ],
    "platforms": [
     "web"
@@ -421,19 +423,18 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/00-context/glossary.md#glossary.b1d5e2",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/00-context/glossary.md#glossary.9d15f4",
    "type": "context",
    "title": "Glossary",
    "summary": "Glossary",
    "body": [
-    "| Term | Meaning | Not to be confused with | Where it is |",
-    "|---|---|---|---|",
-    "| platform | What a project writes: kinds, decorators, folders, `config.nuc`, tests. Identical for every dialect | a dialect | `platform.toml` |",
-    "| dialect | The language and UI library the app comes out in: `react` today. Chosen in `config.nuc`: `dragonfly(platform = \"web\", dialect = \"react\")` | the platform | `nuclearlang/dialects/typescript/frameworks/react/` |",
-    "| contract of the platform | `platform.toml`: what every web dialect must implement | the contract of a backend | `platform.toml` |",
-    "| contract of a backend | The description of an API a web project names with `contracts(...)` in `config.nuc`; its models and repositories are generated into `contracts/` | the platform's contract | [the backend platform's guide](../../../backend/docs/08-guides/contracts.md) |",
-    "| component (a folder) | `components/<name>/` of a project: `config/`, `data/`, `domain/`, `presentation/`, closed behind its facade | the kind `component`; a component of the UI library | `[layout]` |",
-    "| `component` (the kind) | A global piece in `shared/components/` that reacts to events with `@on(Event)` | a folder of `components/`; a view | `shared/components/{file}.nuc` |"
+    "| facade | The `appcomponent` of a component: an alias for each use case, the only thing a screen or another component calls. Its file is `{component}_component.nuc` (in the backend platform it is `{component}_appcomponent.nuc`) | the kind `component` | `components/<name>/<name>_component.nuc` |",
+    "| view | A `stateless` or a `stateful`: parameters are its props, `build()` returns an `Element` | a screen | `presentation/{screen}/` |",
+    "| screen | A view with `@screen(route, ...)`: it has an address and the router shows it | any view | `presentation/{screen}/`, `shared/screens/` |",
+    "| state model | The states of a screen, each field one state | a model of the domain | `presentation/{screen}/state_models/` |",
+    "| state manager | A `statemanager`: holds one state model and emits a new one | a use case | `presentation/{screen}/managers/` |",
+    "| runtime | The package the generated app imports: `synapsis-web` | the dialect (templates and TOML) | `packages/synapsis-web/` |",
+    "| golden | The expected generated output of the example, compared by `cargo test` | — | `examples/expected/characters/` |"
    ],
    "platforms": [
     "web"
@@ -476,9 +477,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/00-context/vision.md#the-problem",
    "type": "context",
    "title": "Vision — The problem",
-   "summary": "Dragonfly names three platforms, and the web one is built on what the mobile platform already does, so the knowledge of one carries to the other.",
+   "summary": "Synapsis names three platforms, and the web one is built on what the mobile platform already does, so the knowledge of one carries to the other.",
    "body": [
-    "Dragonfly names three platforms, and the web one is built on what the mobile platform already does, so the",
+    "Synapsis names three platforms, and the web one is built on what the mobile platform already does, so the",
     "knowledge of one carries to the other. The web platform is the mobile platform in a browser: the same words for the",
     "same things (`appConfig`, `repository` with `@get`, `usecase`, `appcomponent`, state models and `statemanager`,",
     "`@screen`, events, guards, tests), so an app's domain and state read the same on a phone and on the web, and a",
@@ -539,7 +540,7 @@
     "- **Whoever already has the mobile app**: the `characters` example here is the mobile one minus the widgets of the",
     "  mobile dialect.",
     "- **The author of a dialect**: `platform.toml` says what a web dialect must implement.",
-    "- **Whoever changes the runtime** (`packages/dragonfly-web`): the code every generated app runs on."
+    "- **Whoever changes the runtime** (`packages/synapsis-web`): the code every generated app runs on."
    ],
    "platforms": [
     "web"
@@ -554,7 +555,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.508f5b",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.201f4e",
    "type": "context",
    "title": "Dependencies — Inside the tree",
    "summary": "Inside the tree",
@@ -562,8 +563,8 @@
     "| Who | Depends on | How | Notes |",
     "|---|---|---|---|",
     "| The dialect `react` | `platform.toml` | data, merged by the loader | `platform = \"web\"` in its `dialect.toml` |",
-    "| A built web app | `dragonfly-web` | a library | the dialect's `[toolchain] install` installs it from the installation's `packages/`, as a copy |",
-    "| The compiler and the editors | the type definitions of the runtime and of the libraries a view uses | `nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,dragonfly-web}/` | generated from `nuclearlang/tools/node/node_modules` ([runbook](../06-runbooks/change-the-runtime.md)) |",
+    "| A built web app | `synapsis-web` | a library | the dialect's `[toolchain] install` installs it from the installation's `packages/`, as a copy |",
+    "| The compiler and the editors | the type definitions of the runtime and of the libraries a view uses | `nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/` | generated from `nuclearlang/tools/node/node_modules` ([runbook](../06-runbooks/change-the-runtime.md)) |",
     "| The check | `nuclearlang/tools/node/node_modules`, the `nuclear` command (`cargo run -p nuclear-cli`) | tools | the versions the check and the type definitions are made with are those installed there (`package.json`) |",
     "| The compiler's tests | `examples/examples-web/characters/` and `examples/expected/characters/` | a golden | `nuclearlang/crates/nuclear-transpile/tests/projects.rs` |",
     "| A web project | a backend's contract | generated models and repositories (`contracts(...)` in `config.nuc`) | ADR-synapsis-0006; [the backend platform's guide](../../../backend/docs/08-guides/contracts.md) |"
@@ -581,13 +582,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.76afa4",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#inside-the-tree.e6c62d",
    "type": "context",
    "title": "Dependencies — Inside the tree",
    "summary": "Inside the tree",
    "body": [
-    "| The installer | `platform.toml`, `docs/07-reference/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `dragonfly-web` first |",
-    "| The website of NuclearLang | this platform | a Dragonfly web project | its own repository |"
+    "| The installer | `platform.toml`, `docs/07-reference/`, `packages/` | copied into an installation | `installer/release/stage.sh`; `installer/release/build-runtimes.sh` builds `synapsis-web` first |",
+    "| The website of NuclearLang | this platform | a Synapsis web project | its own repository |"
    ],
    "platforms": [
     "web"
@@ -602,10 +603,10 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#outside-dragonfly-web-packages-dragonfly-web-package-json",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/dependencies.md#outside-synapsis-web-packages-synapsis-web-package-json",
    "type": "context",
-   "title": "Dependencies — Outside: `dragonfly-web` (`packages/dragonfly-web/package.json`)",
-   "summary": "Peers the app brings: Its own `devDependencies` build and test it: TypeScript 5.9, vitest 4, jsdom 28, React 19.3, React Router 7.18. The type definitions in the tree are of `react@19.3.1`, `react_router@7.18.5`, `vitest@4.1.12`, `testing_library_react@16.3.3` and `dragonfly-web@0.1.0`.",
+   "title": "Dependencies — Outside: `synapsis-web` (`packages/synapsis-web/package.json`)",
+   "summary": "Peers the app brings: Its own `devDependencies` build and test it: TypeScript 5.9, vitest 4, jsdom 28, React 19.3, React Router 7.18. The type definitions in the tree are of `react@19.3.1`, `react_router@7.18.5`, `vitest@4.1.12`, `testing_library_react@16.3.3` and `synapsis-web@0.1.0`.",
    "body": [
     "Peers the app brings:",
     "",
@@ -613,13 +614,13 @@
     "|---|---|---|",
     "| react, react-dom | ≥ 19 | views, hooks, rendering |",
     "| react-router | ≥ 7 | the router behind `@screen`, `goTo`, `goBack` |",
-    "| vitest | ≥ 3 (optional) | `dragonfly-web/testing` |",
-    "| @testing-library/react | ≥ 16 (optional) | `dragonfly-web/testing` (`renderScreen`) |",
+    "| vitest | ≥ 3 (optional) | `synapsis-web/testing` |",
+    "| @testing-library/react | ≥ 16 (optional) | `synapsis-web/testing` (`renderScreen`) |",
     "",
     "Its own `devDependencies` build and test it: TypeScript 5.9, vitest 4, jsdom 28, React 19.3, React Router 7.18.",
     "",
     "The type definitions in the tree are of `react@19.3.1`, `react_router@7.18.5`, `vitest@4.1.12`,",
-    "`testing_library_react@16.3.3` and `dragonfly-web@0.1.0`."
+    "`testing_library_react@16.3.3` and `synapsis-web@0.1.0`."
    ],
    "platforms": [
     "web"
@@ -659,22 +660,22 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#from-a-project-to-an-app-in-the-browser",
    "type": "context",
    "title": "Architecture — From a project to an app in the browser",
-   "summary": "a web project (.nuc, config.nuc, public/) │ nuclear build . / dragonfly build ▼ the compiler ── loads ──► the dialect nuclearlang/dialects/typescript/frameworks/react/ │ └─ platform = \"web\" ──► platform.toml (this folder: the contract) ▼ build/app the dialect's app, never edited ── imports ──► the…",
+   "summary": "a web project (.nuc, config.nuc, public/) │ nuclear build . / nuclear build ▼ the compiler ── loads ──► the dialect nuclearlang/dialects/typescript/frameworks/react/ │ └─ platform = \"web\" ──► platform.toml (this folder: the contract) ▼ build/app the dialect's app, never edited ── imports ──► the…",
    "body": [
     "```",
     "a web project (.nuc, config.nuc, public/)",
-    "   │  nuclear build .  /  dragonfly build",
+    "   │  nuclear build .  /  nuclear build",
     "   ▼",
     "the compiler ── loads ──► the dialect   nuclearlang/dialects/typescript/frameworks/react/",
     "   │                        └─ platform = \"web\" ──► platform.toml   (this folder: the contract)",
     "   ▼",
-    "build/app   the dialect's app, never edited ── imports ──► the runtime   (packages/dragonfly-web)",
+    "build/app   the dialect's app, never edited ── imports ──► the runtime   (packages/synapsis-web)",
     "   │        public/ copied as it is",
     "   ▼",
     "the app in the browser: one route per screen",
     "```",
     "",
-    "A project has only `.nuc` files and `public/`: `config.nuc` (`dragonfly(platform = \"web\", dialect = ...)`,",
+    "A project has only `.nuc` files and `public/`: `config.nuc` (`synapsis(platform = \"web\", dialect = ...)`,",
     "`app(...)`, `contracts(...)`, `dependencies(...)`), `main.nuc` (the App view: the router with every screen),",
     "`config/project_config.nuc`, components with `config/`, `data/`, `domain/` and `presentation/`, `shared/`, tests in",
     "`test/*_test.nuc`. The rules are [the reference](../07-reference/web.md)."
@@ -692,57 +693,17 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#the-contract-platform-toml.034235",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#the-contract-platform-toml.15f52e",
    "type": "context",
    "title": "Architecture — The contract: `platform.toml`",
-   "summary": "The contract: `platform.toml`",
+   "summary": "What `nuclear make` and `nuclear gen` write for the platform is not in the contract: it is `tools/code_generator/platforms/web/generators.toml`, read by the loader with the contract: What the generators do for a user is in the reference (§3, \"Generators\"); how they work is the code generator's.",
    "body": [
-    "| Section | In the web contract |",
+    "What `nuclear make` and `nuclear gen` write for the platform is not in the contract: it is",
+    "`tools/code_generator/platforms/web/generators.toml`, read by the loader with the contract:",
+    "",
+    "| Section | In the web generators |",
     "|---|---|",
-    "| `[platform]` | `default_dialect = \"react\"`. Kinds, the mobile platform's that make sense in a browser: `stateless`, `stateful`, `appConfig`, `config`, `repository`, `usecase`, `appcomponent`, `service`, `aggregate`, `statemanager`, `statemodel`, `model`, `component`, `guard`, `event`, `tests`. Decorators: http (`repository`, `get`, `post`, `put`, `patch`, `delete`, `path`, `query`, `body`), state (`stateModel`, `state`, `before`, `after`), screens, events and access (`screen`, `on`, `requires`, `acl`), tests (`mock`, `test`, `widget`, `states`) and `key`. No plugins |",
-    "| `[decorators.*]` | none |",
-    "| `[layout]` | a path per kind: `config/project_config.nuc`, `test/`, `shared/{components,guards,events}/`, and under `components/{component}/`: `config/`, `data/`, `domain/{models,usecases,services,aggregates}/`, `presentation/{screen}/` (views), `presentation/{screen}/managers/`, `presentation/{screen}/state_models/`, and the facade `{component}_component.nuc` |",
-    "| `[skeletons]` | `repository`, `model`, `usecase`, `service`, `appcomponent`, `statemodel`, `stateless`, `stateful`, `event`, `tests` |"
-   ],
-   "platforms": [
-    "web"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#the-contract-platform-toml.6f03c8",
-   "type": "context",
-   "title": "Architecture — The contract: `platform.toml`",
-   "summary": "The format of a contract, how a dialect implements it and what the loader checks (N0305) are the same for the three platforms: the contract of a platform.",
-   "body": [
-    "The format of a contract, how a dialect implements it and what the loader checks (N0305) are the same for the three",
-    "platforms: [the contract of a platform](../../../docs/02-architecture/contract.md). What this one holds:"
-   ],
-   "platforms": [
-    "web"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#the-contract-platform-toml.ac3841",
-   "type": "context",
-   "title": "Architecture — The contract: `platform.toml`",
-   "summary": "What the generators do for a user is in the reference (§3, \"Generators\"); how they work is the code generator's.",
-   "body": [
+    "| `[skeletons]` | `repository`, `model`, `usecase`, `service`, `appcomponent`, `statemodel`, `stateless`, `stateful`, `event`, `tests` |",
     "| `[gen]`, `[[generators.*]]` | `component` (the facade); `resource`, always from another API (`--source rest`: the web platform reads APIs, and its local database is the repositories' `saveLocal`, not a resource): the models, `<Name>Error`, an HTTP repository, a use case per action, the facade's aliases, with a screen (`when = \"screen\"`) its state model, state manager and view, and a test with the repository mocked; `usecase`: a use case over a repository method and its alias |",
     "",
     "What the generators do for a user is in the reference (§3, \"Generators\"); how they work is",
@@ -761,16 +722,43 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#the-contract-platform-toml.1e933f",
+   "type": "context",
+   "title": "Architecture — The contract: `platform.toml`",
+   "summary": "The format of a contract, how a dialect implements it and what the loader checks (N0305) are the same for the three platforms: the contract of a platform.",
+   "body": [
+    "The format of a contract, how a dialect implements it and what the loader checks (N0305) are the same for the three",
+    "platforms: [the contract of a platform](../../../docs/02-architecture/contract.md). What this one holds:",
+    "",
+    "| Section | In the web contract |",
+    "|---|---|",
+    "| `[platform]` | `default_dialect = \"react\"`. Kinds, the mobile platform's that make sense in a browser: `stateless`, `stateful`, `appConfig`, `config`, `repository`, `usecase`, `appcomponent`, `service`, `aggregate`, `statemanager`, `statemodel`, `model`, `component`, `guard`, `event`, `tests`. Decorators: http (`repository`, `get`, `post`, `put`, `patch`, `delete`, `path`, `query`, `body`), state (`stateModel`, `state`, `before`, `after`), screens, events and access (`screen`, `on`, `requires`, `acl`), tests (`mock`, `test`, `widget`, `states`) and `key`. No plugins |",
+    "| `[decorators.*]` | none |",
+    "| `[layout]` | a path per kind: `config/project_config.nuc`, `test/`, `shared/{components,guards,events}/`, and under `components/{component}/`: `config/`, `data/`, `domain/{models,usecases,services,aggregates}/`, `presentation/{screen}/` (views), `presentation/{screen}/managers/`, `presentation/{screen}/state_models/`, and the facade `{component}_component.nuc` |"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#the-dialect-that-implements-it",
    "type": "context",
    "title": "Architecture — The dialect that implements it",
-   "summary": "Its runtime is `dragonfly-web`; `Result` comes from the runtime, not from the generated code.",
+   "summary": "Its runtime is `synapsis-web`; `Result` comes from the runtime, not from the generated code.",
    "body": [
     "| Dialect | Language | Built on | Folder | Its documents |",
     "|---|---|---|---|---|",
     "| `react` | TypeScript | React 19 without JSX, React Router 7, Vite 7, Vitest 4 + jsdom + Testing Library | `nuclearlang/dialects/typescript/frameworks/react/` | [reference](../../../../../nuclearlang/dialects/typescript/docs/07-reference/react.md), [brief](../../../../../nuclearlang/dialects/typescript/docs/07-reference/brief/react.md), [guide](../../../../../nuclearlang/dialects/typescript/docs/08-guides/react.md) |",
     "",
-    "Its runtime is [`dragonfly-web`](runtime.md); `Result` comes from the runtime, not from the generated code. Why",
+    "Its runtime is [`synapsis-web`](runtime.md); `Result` comes from the runtime, not from the generated code. Why",
     "React, and why without JSX: [ADR-web-0001](../03-adr/0001-web-platform.md)."
    ],
    "platforms": [
@@ -809,19 +797,20 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#what-the-dragonfly-command-does-with-a-web-project",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/overview.md#what-the-nuclear-command-does-with-a-web-project",
    "type": "context",
-   "title": "Architecture — What the `dragonfly` command does with a web project",
-   "summary": "The command is another project.",
+   "title": "Architecture — What the `nuclear` command does with a web project",
+   "summary": "The framework's commands of `nuclear` are another project (`tools/cli/src/framework/`).",
    "body": [
-    "The command is [another project](../../../../../tools/cli/AGENTS.md). What it takes from here:",
+    "The framework's commands of `nuclear` are [another project](../../../../../tools/cli/AGENTS.md)",
+    "(`tools/cli/src/framework/`). What they take from here:",
     "",
-    "- `dragonfly new <name> -p web -d react` writes the skeleton of a project (`web_project` in",
-    "  `nuclear-synapsis-framework/cli/src/scaffold.rs`).",
+    "- `nuclear new <name> -p web -d react` writes the skeleton of a project (`web_project` in",
+    "  `tools/code_generator/src/scaffold.rs`).",
     "- `build`, `install`, `run` and `test` go through the dialect's `[toolchain]`, and `check` runs `nuclear check .`,",
-    "  as for backend projects (`non_mobile_manifest` in `nuclear-synapsis-framework/cli/src/main.rs`).",
-    "- `dragonfly make` reads `[layout]` and `[skeletons]`; `dragonfly gen resource` writes a resource's models,",
-    "  repository, use cases, view and tests from the `[[generators.*]]` (ADR-codegen-0001)."
+    "  as for backend projects (`non_mobile_manifest` in `tools/cli/src/framework/mod.rs`).",
+    "- `nuclear make` reads `[layout]` and the `[skeletons]` of the web generators; `nuclear gen resource` writes a",
+    "  resource's models, repository, use cases, view and tests from their `[[generators.*]]` (ADR-codegen-0001)."
    ],
    "platforms": [
     "web"
@@ -836,12 +825,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.2def9b",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.2fca80",
    "type": "context",
-   "title": "The runtime: `dragonfly-web` — Entry points and modules",
+   "title": "The runtime: `synapsis-web` — Entry points and modules",
    "summary": "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`).",
    "body": [
-    "| `dragonfly-web/testing` | `testing` | `DragonflyTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |",
+    "| `synapsis-web/testing` | `testing` | `SynapsisTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |",
     "",
     "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`,",
     "`useMemo`, `useRef`, `useCallback`)."
@@ -859,18 +848,18 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.f61032",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.c29a23",
    "type": "context",
-   "title": "The runtime: `dragonfly-web` — Entry points and modules",
+   "title": "The runtime: `synapsis-web` — Entry points and modules",
    "summary": "Entry points and modules",
    "body": [
     "| Import | Module | Holds |",
     "|---|---|---|",
-    "| `dragonfly-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `dragonfly-nest` exports |",
+    "| `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |",
     "| | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |",
     "| | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |",
     "| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, the `Http` connection and `HttpInterceptor` |",
-    "| | `app` | `Dragonfly`: the entry point (the connections, the global services, the injector) |",
+    "| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector) |",
     "| | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |",
     "| | `state` | `StateManager` |",
     "| | `react` | `View`, `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, the hooks `useManager`, `useStateOf`, `useManagerState`, the type `Element` |",
@@ -895,7 +884,7 @@
   {
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-it-is-installed",
    "type": "context",
-   "title": "The runtime: `dragonfly-web` — How it is installed",
+   "title": "The runtime: `synapsis-web` — How it is installed",
    "summary": "An app gets the runtime as a copy, never as a link: from a link, TypeScript and Vite resolve the runtime's imports (`react`) next to the runtime's own folder, not the app's; the types become `any` and the bundle fails.",
    "body": [
     "An app gets the runtime as a copy, never as a link: from a link, TypeScript and Vite resolve the runtime's imports",
@@ -916,38 +905,9 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.2a0f4c",
-   "type": "context",
-   "title": "The runtime: `dragonfly-web` — How the pieces work",
-   "summary": "(`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.",
-   "body": [
-    "- **Router.** One route per `@screen(route = \"/path/:id\")`, built by the transpiler; navigation is by screen",
-    "  (`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.",
-    "- **Session and access.** `SessionManager` keeps who is signed in; `Acl` the roles, permissions and guards;",
-    "  `Guards` runs the checks a use case asks for (`@requires(session = true)`, `@acl(roles = [...])`).",
-    "  `Guards.verify` is asynchronous.",
-    "- **Logs.** `Log` writes with the place it is called from; the transpiler passes it (component › kind ›",
-    "  Class.method · file:line).",
-    "- **Tests.** `DragonflyTest` starts the app with its real config and replaces `fetch` by canned answers; any",
-    "  registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;",
-    "  `statesOf` collects the states a manager emits."
-   ],
-   "platforms": [
-    "web"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.32f103",
    "type": "context",
-   "title": "The runtime: `dragonfly-web` — How the pieces work",
+   "title": "The runtime: `synapsis-web` — How the pieces work",
    "summary": "`statefulOf`), so hooks work inside `build`.",
    "body": [
     "- **Views.** A view is a class (`StatelessView` / `StatefulView`) shown through `createElement` (`statelessOf` /",
@@ -979,16 +939,45 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.a3e417",
+   "type": "context",
+   "title": "The runtime: `synapsis-web` — How the pieces work",
+   "summary": "(`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.",
+   "body": [
+    "- **Router.** One route per `@screen(route = \"/path/:id\")`, built by the transpiler; navigation is by screen",
+    "  (`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.",
+    "- **Session and access.** `SessionManager` keeps who is signed in; `Acl` the roles, permissions and guards;",
+    "  `Guards` runs the checks a use case asks for (`@requires(session = true)`, `@acl(roles = [...])`).",
+    "  `Guards.verify` is asynchronous.",
+    "- **Logs.** `Log` writes with the place it is called from; the transpiler passes it (component › kind ›",
+    "  Class.method · file:line).",
+    "- **Tests.** `SynapsisTest` starts the app with its real config and replaces `fetch` by canned answers; any",
+    "  registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;",
+    "  `statesOf` collects the states a manager emits."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#tests-and-type-definitions",
    "type": "context",
-   "title": "The runtime: `dragonfly-web` — Tests and type definitions",
+   "title": "The runtime: `synapsis-web` — Tests and type definitions",
    "summary": "(`vitest.config.ts`).",
    "body": [
     "- `test/runtime.test.ts`: 7 vitest tests (repository, cache, mocks, states, views, events), in jsdom",
     "  (`vitest.config.ts`). The check runs them ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
-    "  `nuclearlang/dialects/typescript/defs/dragonfly-web/<version>/` (modules `dragonfly-web`,",
-    "  `dragonfly-web/testing`): regenerated after a change of the public API",
+    "  `nuclearlang/dialects/typescript/defs/synapsis-web/<version>/` (modules `synapsis-web`,",
+    "  `synapsis-web/testing`): regenerated after a change of the public API",
     "  ([runbook](../06-runbooks/change-the-runtime.md))."
    ],
    "platforms": [
@@ -1004,12 +993,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#the-runtime-dragonfly-web",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#the-runtime-synapsis-web",
    "type": "context",
-   "title": "The runtime: `dragonfly-web`",
-   "summary": "`packages/dragonfly-web` (npm `dragonfly-web`, ES modules): what the code of the `react` dialect imports.",
+   "title": "The runtime: `synapsis-web`",
+   "summary": "`packages/synapsis-web` (npm `synapsis-web`, ES modules): what the code of the `react` dialect imports.",
    "body": [
-    "`packages/dragonfly-web` (npm `dragonfly-web`, ES modules): what the code of the `react` dialect imports. Sources in",
+    "`packages/synapsis-web` (npm `synapsis-web`, ES modules): what the code of the `react` dialect imports. Sources in",
     "`src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfig.json`)."
    ],
    "platforms": [
@@ -1094,7 +1083,7 @@
     "3. `tsc --strict` over the generated app.",
     "4. The example's own tests with vitest in jsdom (4 tests, written in Nuclear in `test/characters_test.nuc`).",
     "5. `vite build`: a production bundle.",
-    "6. The runtime's tests, in `packages/dragonfly-web`."
+    "6. The runtime's tests, in `packages/synapsis-web`."
    ],
    "platforms": [
     "web"
@@ -1112,13 +1101,13 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/05-standards/testing.md#set-up-once",
    "type": "context",
    "title": "Testing — Set up, once",
-   "summary": "From the root of the tree: (cd nuclearlang/tools/node && npm install) (cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install)",
+   "summary": "From the root of the tree: (cd nuclearlang/tools/node && npm install) (cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install)",
    "body": [
     "From the root of the tree:",
     "",
     "```sh",
     "(cd nuclearlang/tools/node && npm install)",
-    "(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install)",
+    "(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install)",
     "```"
    ],
    "platforms": [
@@ -1164,7 +1153,7 @@
     "| Level | What it covers | Run by |",
     "|---|---|---|",
     "| The compiler's tests | `examples/examples-web/characters/` built and compared with its golden `examples/expected/characters/` (`nuclearlang/crates/nuclear-transpile/tests/projects.rs`) | `cargo test` at the root of the tree |",
-    "| The runtime's tests | `packages/dragonfly-web/test/runtime.test.ts`: 7 vitest tests in jsdom (repository, cache, mocks, states, views, events) | the check; `npx vitest run` in the package |",
+    "| The runtime's tests | `packages/synapsis-web/test/runtime.test.ts`: 7 vitest tests in jsdom (repository, cache, mocks, states, views, events) | the check; `npx vitest run` in the package |",
     "| The check | the runtime built; the example built; `tsc --strict`, the example's own tests and a production bundle of the generated app; the runtime's tests | `checks/react-check/check.sh` |",
     "| The reference's equivalences | the `react` reference against the real output (the TypeScript dialect's project owns it) | `nuclearlang/tools/spec-check/check.py` |"
    ],
@@ -1184,10 +1173,10 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/06-runbooks/change-the-runtime.md#1-build-and-test-the-runtime-alone",
    "type": "context",
    "title": "After changing the runtime — 1. Build and test the runtime alone",
-   "summary": "(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install && npx tsc -p tsconfig.json && npx vitest run)",
+   "summary": "(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install && npx tsc -p tsconfig.json && npx vitest run)",
    "body": [
     "```sh",
-    "(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install && npx tsc -p tsconfig.json && npx vitest run)",
+    "(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install && npx tsc -p tsconfig.json && npx vitest run)",
     "```"
    ],
    "platforms": [
@@ -1212,7 +1201,7 @@
     "every rebuild. The check does it; by hand:",
     "",
     "```sh",
-    "(cd nuclearlang/tools/node && npm install && npm install --no-save --install-links ../../../nuclear-synapsis-framework/platforms/web/packages/dragonfly-web)",
+    "(cd nuclearlang/tools/node && npm install && npm install --no-save --install-links ../../../nuclear-synapsis-framework/platforms/web/packages/synapsis-web)",
     "```"
    ],
    "platforms": [
@@ -1271,13 +1260,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/06-runbooks/change-the-runtime.md#4-a-changed-public-api-regenerate-the-type-definitions.abed1a",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/06-runbooks/change-the-runtime.md#4-a-changed-public-api-regenerate-the-type-definitions.dff24c",
    "type": "context",
    "title": "After changing the runtime — 4. A changed public API: regenerate the type definitions",
-   "summary": "The compiler and the editors know the names of the runtime, of React and of the test libraries from `nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,dragonfly-web}/<version>/`.",
+   "summary": "The compiler and the editors know the names of the runtime, of React and of the test libraries from `nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/<version>/`.",
    "body": [
     "The compiler and the editors know the names of the runtime, of React and of the test libraries from",
-    "`nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,dragonfly-web}/<version>/`.",
+    "`nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/<version>/`.",
     "They are generated by `nuclearlang/tools/defs/typescript/gen.js` from `nuclearlang/tools/node/node_modules` (React",
     "and the test libraries are installed there; the runtime by step 2, after its build):",
     "",
@@ -1287,12 +1276,12 @@
     "```",
     "",
     "The arguments each of the five packages was generated with can be read back from its `package.toml` (`name`,",
-    "`version`, `libraries` = the modules, `depends`, `description`); for the runtime: modules `dragonfly-web` and",
-    "`dragonfly-web/testing`, depends `typescript@<v>,react@<v>`. `nuclearlang/tools/defs/typescript/generate.sh`",
+    "`version`, `libraries` = the modules, `depends`, `description`); for the runtime: modules `synapsis-web` and",
+    "`synapsis-web/testing`, depends `typescript@<v>,react@<v>`. `nuclearlang/tools/defs/typescript/generate.sh`",
     "regenerates the TypeScript standard library and the backend's packages only.",
     "",
     "TODO(human): the five `gen.js` commands of the web packages (`react`, `react_router`, `vitest`,",
-    "`testing_library_react`, `dragonfly-web`) are in no script; should they be added to",
+    "`testing_library_react`, `synapsis-web`) are in no script; should they be added to",
     "`nuclearlang/tools/defs/typescript/generate.sh`?"
    ],
    "platforms": [
@@ -1316,7 +1305,7 @@
     "- The generated output changed: `UPDATE_GOLDEN=1 cargo test`, and review the diff.",
     "- A change a user can see: `docs/07-reference/web.md` gets the Nuclear, the dialect's reference its output,",
     "  `CHANGELOG.md` a line.",
-    "- `installer/install.sh`: the installed `dragonfly` installs the runtime into a project from the installation's",
+    "- `installer/install.sh`: the installed `nuclear` installs the runtime into a project from the installation's",
     "  `packages/`, so a project of the user sees the change only after it."
    ],
    "platforms": [
@@ -1335,9 +1324,9 @@
    "id": "doc:nuclear-synapsis-framework/platforms/web/docs/06-runbooks/change-the-runtime.md#after-changing-the-runtime",
    "type": "context",
    "title": "After changing the runtime",
-   "summary": "The steps after a change in `packages/dragonfly-web`.",
+   "summary": "The steps after a change in `packages/synapsis-web`.",
    "body": [
-    "The steps after a change in `packages/dragonfly-web`. Commands run from the root of the tree; the set-up is in",
+    "The steps after a change in `packages/synapsis-web`. Commands run from the root of the tree; the set-up is in",
     "[testing](../05-standards/testing.md)."
    ],
    "platforms": [
@@ -1353,9 +1342,107 @@
    }
   },
   {
+   "id": "doc:website/AGENTS.md#agents-md-the-website",
+   "type": "readme",
+   "title": "AGENTS.md — the website",
+   "summary": "The documentation site of NuclearLang, written in Nuclear with the web platform of Synapsis (dialect `react`).",
+   "body": [
+    "The documentation site of NuclearLang, written in Nuclear with the web platform of Synapsis (dialect `react`). The",
+    "app only reads JSON; its content is the reference (`docs/07-reference/`) and the guides (`docs/08-guides/`) of every",
+    "project of the tree, turned into JSON, plain HTML and `llms.txt` by a build script. ADR key: `website`."
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/AGENTS.md#commands",
+   "type": "readme",
+   "title": "AGENTS.md — the website — Commands",
+   "summary": "cd website (cd tools && npm ci) # markdown-it, shiki, smol-toml node tools/content.mjs # public/content, public/static, llms.txt, sitemap, installers (needs `nuclear` installed) nuclear build # the app into build/app (public/ copied) nuclear install # npm install in build/app nuclear test #…",
+   "body": [
+    "```sh",
+    "cd website",
+    "(cd tools && npm ci)             # markdown-it, shiki, smol-toml",
+    "node tools/content.mjs           # public/content, public/static, llms.txt, sitemap, installers (needs `nuclear` installed)",
+    "nuclear build                    # the app into build/app (public/ copied)",
+    "nuclear install                  # npm install in build/app",
+    "nuclear test                     # vitest: the tests of test/",
+    "nuclear run                      # vite dev, http://localhost:5173",
+    "(cd build/app && npx vite build) # the published site in build/app/dist",
+    "```",
+    "",
+    "`NUCLEAR_TREE` overrides the source tree (`site.toml` `[source] tree = \"..\"`), `SITE_URL` the site's address,",
+    "`NUCLEAR` the compiler that transpiles the home page's sample."
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/AGENTS.md#documents",
+   "type": "readme",
+   "title": "AGENTS.md — the website — Documents",
+   "summary": "Documents",
+   "body": [
+    "| Document | Read when |",
+    "|---|---|",
+    "| [docs/00-context/vision.md](docs/00-context/vision.md) | you need what the site is for and what it does not do |",
+    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | you change the app: its screens, routes, state and tests |",
+    "| [docs/02-architecture/content.md](docs/02-architecture/content.md) | you change how pages, menus, the home page, the plain pages or `llms.txt` are made |",
+    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | you look for what is pending (publishing, routes) |",
+    "| [README.md](README.md) | the short introduction |",
+    "",
+    "<!-- nuclearlang -->"
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/AGENTS.md#folders",
+   "type": "readme",
+   "title": "AGENTS.md — the website — Folders",
+   "summary": "Folders",
+   "body": [
+    "| Folder | Holds |",
+    "|---|---|",
+    "| `config.nuc`, `main.nuc`, `config/` | the project, the app (the router), the `Http(baseUrl = \"/\")` connection |",
+    "| `components/docs/` | the one component: `data/` (the content repository), `domain/` (models, use cases, the search score), `presentation/` (home, doc and not-found screens, the layout, the search box) |",
+    "| `test/docs_test.nuc` | the search ranking, the pages and the home page (the repository is a mock) |",
+    "| `public/` | `styles.css`, `favicon.svg`; the rest is written by `tools/content.mjs` (ignored by git) |",
+    "| `site.toml` | every text, menu, link and address of the site |",
+    "| `tools/` | `content.mjs` and its `package.json` |",
+    "| `build/` | generated: never edit |"
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:website/AGENTS.md#nuclearlang",
    "type": "readme",
-   "title": "AGENTS.md — NuclearLang",
+   "title": "AGENTS.md — the website — NuclearLang",
    "summary": "This project is written in NuclearLang (`.nuc`), dialect `react`.",
    "body": [
     "This project is written in NuclearLang (`.nuc`), dialect `react`. Its syntax is not TypeScript, Dart nor Python.",
@@ -1372,7 +1459,51 @@
    ],
    "meta": {
     "section": "07-web",
-    "repo": "website",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/AGENTS.md#rules",
+   "type": "readme",
+   "title": "AGENTS.md — the website — Rules",
+   "summary": "in `site.toml`.",
+   "body": [
+    "- **No content in the code.** A page is a `.md` of a project's `07-reference/` or `08-guides/`; every other text is",
+    "  in `site.toml`. Change the document in its project, not here.",
+    "- A new area of the documentation (a dialect, a platform, a tool with guides) gets a line in `site.toml`'s",
+    "  `[[sidebar]]`; a page matched by a `*` pattern needs none.",
+    "- The site is in English ([ADR-platform-0001](../docs/03-adr/0001-english-everywhere.md)).",
+    "- A page's address is `/<project>/<reference|guide>/<name>` (`route` in `tools/content.mjs`): renaming or moving a",
+    "  published document changes its address. An address must keep three parts: the app's screens route no deeper."
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/AGENTS.md#stack",
+   "type": "readme",
+   "title": "AGENTS.md — the website — Stack",
+   "summary": "`build/app` (React, Vite, vitest).",
+   "body": [
+    "- The app: Nuclear (`.nuc`), `config.nuc` = `synapsis(platform = \"web\", dialect = \"react\")`; built into",
+    "  `build/app` (React, Vite, vitest).",
+    "- The content: `tools/content.mjs` (Node.js) with `markdown-it`, `shiki` and `smol-toml` (`tools/package.json`).",
+    "- The texts, menus, links and addresses: `site.toml`.",
+    "- CI: `.github/workflows/website.yml` at the root of the tree (content, build, tests, bundle)."
+   ],
+   "sources": [
+    "website/AGENTS.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
     "dialect": ""
    }
   },
@@ -1387,7 +1518,7 @@
    ],
    "meta": {
     "section": "07-web",
-    "repo": "website",
+    "repo": "nuclearlang",
     "dialect": ""
    }
   },
@@ -1399,7 +1530,7 @@
    "body": [
     "- First public version.",
     "- Deploy to GitHub Pages (`nuclearlang.github.io`) from CI, with the SPA `404.html` fallback.",
-    "- The AI menu has the MCP server's page (`docs/ai/mcp`); the Dragonfly menu gets the generators' guide by its pattern.",
+    "- The AI menu has the MCP server's page (`docs/ai/mcp`); the Synapsis menu gets the generators' guide by its pattern.",
     "- The AI menu starts with the set-up of the AI services (`docs/ai/setup`)."
    ],
    "sources": [
@@ -1407,192 +1538,337 @@
    ],
    "meta": {
     "section": "07-web",
-    "repo": "website",
+    "repo": "nuclearlang",
     "dialect": ""
    }
   },
   {
-   "id": "doc:website/CONTRIBUTING.md#before-a-pull-request",
-   "type": "readme",
-   "title": "Contributing to website — Before a pull request",
-   "summary": "(cd tools && npm install) && node tools/content.mjs dragonfly build && dragonfly install && dragonfly test (cd build/app && npx vite build) the area, the guide, `docs/context/` for agents and contributors).",
-   "body": [
-    "```sh",
-    "(cd tools && npm install) && node tools/content.mjs",
-    "dragonfly build && dragonfly install && dragonfly test",
-    "(cd build/app && npx vite build)",
-    "```",
-    "",
-    "- Everything is written in English: code, comments, docs and messages.",
-    "- A change that the user of NuclearLang can see updates its documentation in the same pull request (the spec of",
-    "  the area, the guide, `docs/context/` for agents and contributors).",
-    "- Rules and the reasons behind them: the [nuclear repository's AGENTS.md](https://github.com/nuclearlang/nuclear/blob/main/AGENTS.md) and its",
-    "  [decision records](https://github.com/nuclearlang/nuclear/tree/main/docs/adr).",
-    "",
-    "By contributing you agree that your contribution is licensed under the [Apache License 2.0](LICENSE)."
-   ],
-   "sources": [
-    "website/CONTRIBUTING.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "website",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:website/CONTRIBUTING.md#contributing-to-website",
-   "type": "readme",
-   "title": "Contributing to website",
-   "summary": "Thank you for helping.",
-   "body": [
-    "Thank you for helping. This repository is part of [NuclearLang](https://github.com/nuclearlang): the language is the",
-    "[nuclear](https://github.com/nuclearlang/nuclear) repository, and the other repositories live as folders inside a clone of it, each with its",
-    "own git (the tools find each other that way)."
-   ],
-   "sources": [
-    "website/CONTRIBUTING.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "website",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:website/CONTRIBUTING.md#set-up",
-   "type": "readme",
-   "title": "Contributing to website — Set up",
-   "summary": "git clone https://github.com/nuclearlang/nuclear && cd nuclear for r in dragonfly dragonfly-mobile dragonfly-backend dragonfly-web nuclear-vscode; do git clone https://github.com/nuclearlang/$r; done ./install.sh && cd .. git clone https://github.com/nuclearlang/website && cd website export…",
-   "body": [
-    "```sh",
-    "git clone https://github.com/nuclearlang/nuclear && cd nuclear",
-    "for r in dragonfly dragonfly-mobile dragonfly-backend dragonfly-web nuclear-vscode; do git clone https://github.com/nuclearlang/$r; done",
-    "./install.sh && cd ..",
-    "git clone https://github.com/nuclearlang/website && cd website",
-    "export NUCLEAR_TREE=../nuclear                     # the working tree (site.toml's [source] tree is the author's)",
-    "```"
-   ],
-   "sources": [
-    "website/CONTRIBUTING.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "website",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:website/README.md#build",
+   "id": "doc:website/README.md#build.ca677b",
    "type": "readme",
    "title": "NuclearLang website — Build",
-   "summary": "(cd tools && npm install) # markdown-it, shiki and smol-toml, once node tools/content.mjs # the content, from the tree site.toml names ([source] tree; NUCLEAR_TREE overrides it) dragonfly build # the app into build/app (public/ copied) dragonfly install # npm install in build/app dragonfly test #…",
+   "summary": "From the root of the tree, with `nuclear` installed (`installer/install.sh`): cd website (cd tools && npm ci) # markdown-it, shiki and smol-toml node tools/content.mjs # the content, from the tree ([source] tree in site.toml; NUCLEAR_TREE overrides it) nuclear build # the app into build/app…",
    "body": [
+    "From the root of the tree, with `nuclear` installed (`installer/install.sh`):",
+    "",
     "```sh",
-    "(cd tools && npm install)        # markdown-it, shiki and smol-toml, once",
-    "node tools/content.mjs           # the content, from the tree site.toml names ([source] tree; NUCLEAR_TREE overrides it)",
-    "dragonfly build                  # the app into build/app (public/ copied)",
-    "dragonfly install                # npm install in build/app",
-    "dragonfly test                   # vitest: the tests of test/",
-    "dragonfly run                    # vite dev, http://localhost:5173",
+    "cd website",
+    "(cd tools && npm ci)             # markdown-it, shiki and smol-toml",
+    "node tools/content.mjs           # the content, from the tree ([source] tree in site.toml; NUCLEAR_TREE overrides it)",
+    "nuclear build                    # the app into build/app (public/ copied)",
+    "nuclear install                  # npm install in build/app",
+    "nuclear test                     # vitest: the tests of test/",
+    "nuclear run                      # vite dev, http://localhost:5173",
     "(cd build/app && npx vite build) # the published site in build/app/dist",
     "```",
     "",
-    "`tools/content.mjs` renders every page's markdown with the code already highlighted (shiki, with the Nuclear grammar",
-    "of the editors and their Chernobyl theme), so the browser receives HTML and never parses markdown. The home page's",
-    "sample is transpiled to TypeScript, Dart and Python by the installed `nuclear` when the site is built. For search",
-    "engines and agents that read without JavaScript, every page also has a plain HTML copy in `/static/` (and the",
-    "sitemap, `llms.txt`, `llms-full.txt`).",
+    "Every page's markdown is rendered with the code already highlighted (shiki, with the editors' Nuclear grammar and",
+    "their Chernobyl theme), so the browser receives HTML. The home page's sample is transpiled to TypeScript, Dart and",
+    "Python by the installed `nuclear` when the site is built. For search engines and agents that read without",
+    "JavaScript, every page also has a plain HTML copy in `/static/` (and the sitemap, `llms.txt`, `llms-full.txt`).",
     "",
-    "The addresses are the paths of the repositories' files: `/docs/language/01-syntax` is `docs/language/01-syntax.md`.",
-    "A link between pages reloads the page (the content is cached by the browser); navigation by address inside the app is",
-    "a later step of the web platform."
+    "The address of a page is `/<project>/<reference|guide>/<name>`: `/nuclearlang/guide/README` is",
+    "`nuclearlang/docs/08-guides/README.md`, `/dart/reference/flutter` is",
+    "`nuclearlang/dialects/dart/docs/07-reference/flutter.md`."
    ],
    "sources": [
     "website/README.md"
    ],
    "meta": {
     "section": "07-web",
-    "repo": "website",
+    "repo": "nuclearlang",
     "dialect": ""
    }
   },
   {
-   "id": "doc:website/README.md#nuclearlang-website.6b02a6",
+   "id": "doc:website/README.md#build.e4c0db",
+   "type": "readme",
+   "title": "NuclearLang website — Build",
+   "summary": "Texts, menus and links: `site.toml`.",
+   "body": [
+    "Texts, menus and links: `site.toml`. How it is made and what is pending: [AGENTS.md](AGENTS.md). License:",
+    "[Apache-2.0](LICENSE)."
+   ],
+   "sources": [
+    "website/README.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/README.md#nuclearlang-website",
    "type": "readme",
    "title": "NuclearLang website",
-   "summary": "config.nuc dragonfly(platform = \"web\", dialect = \"react\"), app(title, description) config/project_config.nuc Http(baseUrl = \"/\"): the site reads its own public/content/ components/docs/ data/content_repository.nuc page, site, search index and home (public/content/*.json) domain/ models, use cases…",
+   "summary": "The NuclearLang site, written in Nuclear with the web platform of Synapsis (dialect `react`): its screens, state managers, search and content repository are `.nuc` files.",
    "body": [
+    "The NuclearLang site, written in **Nuclear** with the web platform of Synapsis (dialect `react`): its screens, state",
+    "managers, search and content repository are `.nuc` files. The content is the reference (`docs/07-reference/`) and",
+    "the guides (`docs/08-guides/`) of every project of the NuclearLang tree, turned into JSON by a build script; the app",
+    "only reads it."
+   ],
+   "sources": [
+    "website/README.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/00-context/vision.md#non-goals",
+   "type": "context",
+   "title": "Vision — Non-goals",
+   "summary": "published.",
+   "body": [
+    "- Holding content: no page is written in this project. A context document (`00-context` … `06-runbooks`) is never",
+    "  published.",
+    "- Translations: the site is in English only."
+   ],
+   "sources": [
+    "website/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/00-context/vision.md#problem",
+   "type": "context",
+   "title": "Vision — Problem",
+   "summary": "The documentation of NuclearLang is spread over the projects of the tree, each beside the code it describes.",
+   "body": [
+    "The documentation of NuclearLang is spread over the projects of the tree, each beside the code it describes. People",
+    "need one site to read it; search engines and agents need it without JavaScript."
+   ],
+   "sources": [
+    "website/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/00-context/vision.md#users",
+   "type": "context",
+   "title": "Vision — Users",
+   "summary": "Users",
+   "body": [
+    "- People learning or using Nuclear and Synapsis.",
+    "- AI agents reading `llms.txt` and the plain pages."
+   ],
+   "sources": [
+    "website/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/00-context/vision.md#what-the-site-does",
+   "type": "context",
+   "title": "Vision — What the site does",
+   "summary": "already highlighted (the editors' Nuclear grammar and Chernobyl theme).",
+   "body": [
+    "- Publishes the reference (`docs/07-reference/`) and the guides (`docs/08-guides/`) of every project, with the code",
+    "  already highlighted (the editors' Nuclear grammar and Chernobyl theme).",
+    "- A home page whose sample is transpiled by the real compiler to TypeScript, Dart and Python at build time.",
+    "- A search over the titles, headings and words of every page.",
+    "- For readers without JavaScript: a plain HTML copy of every page in `/static/`, `llms.txt`, `llms-full.txt`",
+    "  ([ADR-lang-0010](../../../nuclearlang/docs/03-adr/0010-compiler-helps-editors-and-agents.md)), the sitemap.",
+    "- Serves the installers at its root (`curl … /install.sh | sh`, `irm … /install.ps1 | iex`).",
+    "- Proves the web platform: the site is a Synapsis web app written in Nuclear."
+   ],
+   "sources": [
+    "website/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#site-toml",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — `site.toml`",
+   "summary": "name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
+   "body": [
+    "- `[site]`: title, lead, tagline, `url` (`SITE_URL` overrides it), `org`, `branch`, footer.",
+    "- `[[top]]`: the links of the top bar.",
+    "- `[[sidebar]]`: the side menu; each section lists pages by their path without `.md`. A `*` matches any part of a",
+    "  name; a pattern expands to the matching pages in order, without `README`s, each page once per section.",
+    "- `[[home.actions]]`, `[[home.features]]`, `[home.platforms]` with its cards, `[home.install]` (`{{site}}` is",
+    "  replaced by the url).",
+    "- `[home.sample]`: the Nuclear `code` and the `targets` (language dialects). Each output is",
+    "  `nuclear build app.nuc --dialect <target>` run by the installed compiler (`NUCLEAR` overrides it), highlighted as",
+    "  that language."
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#the-content-tools-content-mjs-and-site-toml",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml`",
+   "summary": "`node tools/content.mjs` reads the tree named by `site.toml` `[source] tree` (`..`; `NUCLEAR_TREE` overrides it) and fails if `nuclearlang/docs/07-reference/nuclear-base.md` is not there.",
+   "body": [
+    "`node tools/content.mjs` reads the tree named by `site.toml` `[source] tree` (`..`; `NUCLEAR_TREE` overrides it) and",
+    "fails if `nuclearlang/docs/07-reference/nuclear-base.md` is not there."
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#what-it-writes-into-public-ignored-by-git",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — What it writes (into `public/`, ignored by git)",
+   "summary": "What it writes (into `public/`, ignored by git)",
+   "body": [
+    "| File | Holds |",
+    "|---|---|",
+    "| `content/<key>.json` | one page: path, title, html, headings (levels 2 and 3), its source on GitHub; key = the path with `/` → `--` |",
+    "| `content/site.json` | title, url, org, footer, the top links, the side menu |",
+    "| `content/search.json` | title, headings and words of every page |",
+    "| `content/home.json` | the home page: texts, actions, features, the sample and its outputs, platforms, install lines |",
+    "| `static/<path>.html` | the plain page, with a canonical link to its route |",
+    "| `llms.txt`, `llms-full.txt` | the briefs (`07-reference/brief/`) first, then the side menu's sections; the full file carries the briefs and `nuclearlang/docs/08-guides/reference.md` |",
+    "| `sitemap.xml`, `robots.txt` | every route |",
+    "| `install.sh`, `install.ps1` | copied from `installer/release/` |"
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/content.md#which-files-are-pages",
+   "type": "context",
+   "title": "The content: `tools/content.mjs` and `site.toml` — Which files are pages",
+   "summary": "Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of the tree.",
+   "body": [
+    "Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of the tree. Skipped folders:",
+    "`node_modules`, `target`, `build`, `dist`, `out`, `.git`, `.venv`, `.dart_tool`, `website`, `github-profile`,",
+    "`aprende`, `work`. The grammar page is made from `nuclearlang/docs/07-reference/grammar.ebnf`.",
+    "",
+    "- **Route** = `/<project>/<reference|guide>/<name>`: the project is the folder that holds the page's `docs/`",
+    "  (`nuclear-synapsis-framework` is `synapsis`), the layer `07-reference` is `reference` and `08-guides` is `guide`, and",
+    "  the rest of the path is joined by `-` (`brief/dart` → `brief-dart`). `/nuclearlang/guide/README`,",
+    "  `/dart/reference/flutter`, `/mobile/reference/brief-mobile`. An address of `site.toml` is written as the page's path",
+    "  in the tree and turned into its route. The page's content file is the route with `--` for `/`.",
+    "- **Title** = the first `# ` heading.",
+    "- **Links**: a relative link to another page becomes its route; to any other file of the tree, its url on GitHub",
+    "  (`site.org` + `site.branch`); a GitHub url of the organization that is a page becomes its route.",
+    "- **Highlighting**: shiki, with `extensions/vscode/syntaxes/nuclear.tmLanguage.json` and the theme",
+    "  `extensions/vscode/themes/chernobyl-color-theme.json` (dark) and `github-light`."
+   ],
+   "sources": [
+    "website/docs/02-architecture/content.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/overview.md#a-page",
+   "type": "context",
+   "title": "Architecture of the app — A page",
+   "summary": "`GetPageUseCase` turns an address into a content key: the parts of the path joined by `--` (`/nuclearlang/guide/README` → `content/nuclearlang--guide--README.json`).",
+   "body": [
+    "`GetPageUseCase` turns an address into a content key: the parts of the path joined by `--`",
+    "(`/nuclearlang/guide/README` → `content/nuclearlang--guide--README.json`). Every address has three parts, the depth",
+    "`DocGroupScreen` (`/:area/:group/:name`) routes. The page's HTML comes",
+    "ready (highlighted at build time): the browser never parses markdown.",
+    "",
+    "A link between pages reloads the page (the content is cached by the browser); navigation by address inside the app",
+    "is pending in the web platform ([its roadmap](../../../nuclear-synapsis-framework/platforms/web/docs/01-product/roadmap.md))."
+   ],
+   "sources": [
+    "website/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:website/docs/02-architecture/overview.md#architecture-of-the-app",
+   "type": "context",
+   "title": "Architecture of the app",
+   "summary": "A web project of Synapsis (`config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")`, `app(name = \"nuclearlang_website\", ...)`) with one component, `components/docs/`.",
+   "body": [
+    "A web project of Synapsis (`config.nuc`: `synapsis(platform = \"web\", dialect = \"react\")`, `app(name =",
+    "\"nuclearlang_website\", ...)`) with one component, `components/docs/`. It reads only the JSON that",
+    "[`tools/content.mjs`](content.md) writes into `public/content/`.",
+    "",
     "```",
-    "config.nuc                       dragonfly(platform = \"web\", dialect = \"react\"), app(title, description)",
-    "config/project_config.nuc        Http(baseUrl = \"/\"): the site reads its own public/content/",
+    "config/project_config.nuc        Http(baseUrl = \"/\", timeout = 10000): the site reads its own public/content/",
+    "main.nuc                         App: the router with every @screen",
     "components/docs/",
-    "  data/content_repository.nuc    page, site, search index and home (public/content/*.json)",
-    "  domain/                        models, use cases (GetPage, GetSite, GetHome, Search), the search score",
-    "  presentation/                  HomeScreen \"/\", DocScreen \"/:area/:name\", DocGroupScreen \"/:area/:group/:name\",",
-    "                                 NotFoundScreen; the layout (top bar, menu, footer) and the search box",
+    "  data/content_repository.nuc    @get \":key.json\", \"site.json\", \"search.json\", \"home.json\" (cached)",
+    "  domain/models/                 Page, Site, SearchEntry, Home, ContentError",
+    "  domain/usecases/               GetPage, GetSite, GetHome, Search",
+    "  domain/services/search_score   the ranking of the search",
+    "  presentation/home/             HomeScreen \"/\" + HomeManager",
+    "  presentation/doc/              DocScreen \"/:area/:name\", DocGroupScreen \"/:area/:group/:name\",",
+    "                                 NotFoundScreen; PageManager",
+    "  presentation/layout/           the layout (top bar, menu, footer), the search box; SiteManager, SearchManager",
     "public/styles.css, favicon.svg   the look: the Chernobyl palette of the editors (dark) and a light theme",
     "test/docs_test.nuc               the search ranking, the pages and the home page (the repository is a mock)",
-    "site.toml                        every text, menu, link and address: site, top bar, side menu (paths or * patterns),",
-    "                                 home page (actions, features, sample and its targets, platforms, install)",
-    "tools/content.mjs                public/content, public/static, llms.txt, llms-full.txt, sitemap.xml, robots.txt and",
-    "                                 the installers (install.sh, install.ps1 from the tree's tools/release/)",
     "```"
    ],
    "sources": [
-    "website/README.md"
+    "website/docs/02-architecture/overview.md"
    ],
    "meta": {
     "section": "07-web",
-    "repo": "website",
+    "repo": "nuclearlang",
     "dialect": ""
    }
   },
   {
-   "id": "doc:website/README.md#nuclearlang-website.87200b",
-   "type": "readme",
-   "title": "NuclearLang website",
-   "summary": "The NuclearLang site, written in Nuclear with Dragonfly's web platform (dialect `react`): its screens, state managers, search and content repository are `.nuc` files.",
-   "body": [
-    "The NuclearLang site, written in **Nuclear** with Dragonfly's web platform (dialect `react`): its screens, state",
-    "managers, search and content repository are `.nuc` files. The content is the documentation of the `nuclearlang`",
-    "repositories (`docs/`, `spec/` of `nuclear`, `dragonfly-mobile`, `dragonfly-backend`, `dragonfly-web`), turned into",
-    "JSON by a build script; the app only reads it."
-   ],
-   "sources": [
-    "website/README.md"
-   ],
-   "meta": {
-    "section": "07-web",
-    "repo": "website",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:website/docs/context/website/CONTEXT.md#website",
+   "id": "doc:website/docs/02-architecture/overview.md#build-and-test",
    "type": "context",
-   "title": "Website",
-   "summary": "Its own repository, `website` (today `~/Documents/projects/nuc/react/nuclearlang_website`; ADR-0083): only the site, written in Nuclear with Dragonfly web (react); the content stays with the code it documents.",
+   "title": "Architecture of the app — Build and test",
+   "summary": "`nuclear build` writes the app into `build/app` (with `public/` copied), `nuclear install` runs `npm install` there, `nuclear test` runs vitest over `test/`, `npx vite build` in `build/app` writes the bundle to `build/app/dist`.",
    "body": [
-    "Its own repository, `website` (today `~/Documents/projects/nuc/react/nuclearlang_website`; ADR-0083): only the site, written in Nuclear with",
-    "Dragonfly web (react); the content stays with the code it documents. Its README has the details.",
-    "",
-    "- `site.toml` holds every text, menu, link and address of the site (ADR-0101); the side menu lists pages by path or",
-    "  `*` pattern of the source tree.",
-    "- `tools/content.mjs` reads the `.md` files of the source roots (`nuclear`, `dragonfly-*`), skipping",
-    "  `[source] internal` (`docs/aprende/`, `docs/context/`), and writes `public/content/` (pages as JSON with shiki",
-    "  highlighting, `site.json`, `home.json`, the search index), `/static/` plain pages, `llms.txt` / `llms-full.txt`",
-    "  (ADR-0088), the sitemap, and copies `tools/release/install.sh` / `install.ps1` to the root.",
-    "- A new dialect or framework feature gets its user guide (a `.md` in its repository) and, if it is a new area, a",
-    "  line in `site.toml`'s sidebar.",
-    "- Language: English (ADR-0082). Deploy (GitHub Pages, SPA fallback) is pending (STATUS.md)."
+    "`nuclear build` writes the app into `build/app` (with `public/` copied), `nuclear install` runs `npm install` there,",
+    "`nuclear test` runs vitest over `test/`, `npx vite build` in `build/app` writes the bundle to `build/app/dist`. The",
+    "CI (`.github/workflows/website.yml`) installs `nuclear` from the tree and runs the same steps."
    ],
    "sources": [
-    "website/docs/context/website/CONTEXT.md"
+    "website/docs/02-architecture/overview.md"
    ],
    "meta": {
     "section": "07-web",
-    "repo": "website",
+    "repo": "nuclearlang",
     "dialect": ""
    }
   }

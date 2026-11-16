@@ -11,7 +11,7 @@ Paths start at the root of the tree.
 ## The parts
 
 ```
- a project (.nuc only)             config.nuc: dragonfly(platform = "backend", dialect = "fastapi")
+ a project (.nuc only)             config.nuc: synapsis(platform = "backend", dialect = "fastapi")
         │ written for a
         ▼
  PLATFORM  web · mobile · backend  nuclear-synapsis-framework/platforms/<platform>/platform.toml   (the contract)
@@ -33,23 +33,25 @@ Paths start at the root of the tree.
 | A platform: its contract, reference, runtime packages, examples, checks | `nuclear-synapsis-framework/platforms/{mobile,backend,web}/` | that platform |
 | A framework dialect: kinds, decorators, templates, `[toolchain]`, type definitions | `nuclearlang/dialects/<language>/frameworks/<dialect>/` | its language's dialect project |
 | The loader and the transpiler that read all of it | `nuclearlang/crates/` | `nuclearlang/` |
-| The `dragonfly` command | `nuclear-synapsis-framework/cli/` until it is merged into `tools/cli/` | `tools/cli/` |
+| The framework's commands of `nuclear` (`new`, `make`, `gen`, `run`, `test`, `migrate`...) | `tools/cli/src/framework/` | `tools/cli/` |
+| What `make` and `gen` write per platform | `tools/code_generator/` (`platforms/<platform>/generators.toml`) | `tools/code_generator/` |
+| The devices (`nuclear device`, `nuclear terminal-device`) | `device-emulators/` | `device-emulators/` |
 | The evaluations | `nuclear-synapsis-framework/eval/` | this project (`AGENTS.md`) |
 
 ## A project
 
-A Dragonfly project is a folder of `.nuc` files with `config.nuc` at its root, the only manifest:
+A Synapsis project is a folder of `.nuc` files with `config.nuc` at its root, the only manifest:
 
 ```nuclear
-dragonfly(platform = "backend", dialect = "fastapi")
+synapsis(platform = "backend", dialect = "fastapi")
 app(name = "tasks_api", description = "Tasks and an assistant.", version = "0.1.0")
 plugins(sqlite = true, events = true, ollama = true)
 ```
 
-`dragonfly new -p <platform> -d <dialect> <name>` creates it; without `-d` it gets the platform's
+`nuclear new -p <platform> -d <dialect> <name>` creates it; without `-d` it gets the platform's
 `default_dialect`. The code lives in `components/<c>/` by layer, with `config/`, `shared/` and `test/` beside them;
 the place of each kind's file is the platform's `[layout]`. Everything generated goes to `build/` and is never
-edited. `nuclear.toml` is for projects of a language dialect without Dragonfly.
+edited. `nuclear.toml` is for projects of a language dialect without Synapsis.
 
 What every project looks like, and why, is in [rules.md](rules.md).
 
@@ -61,7 +63,7 @@ What every project looks like, and why, is in [rules.md](rules.md).
 2. The transpiler (`nuclear-transpile::project`) reads `config.nuc`, generates `contracts/<name>/` when the project
    declares contracts ([shared-contracts.md](shared-contracts.md)), checks the architecture rules of the dialect
    (N0301, N0302) and writes the target project into `build/` with the dialect's templates.
-3. The `dragonfly` command runs what the dialect's `[toolchain]` declares in the generated project: install, run,
+3. The `nuclear` command runs what the dialect's `[toolchain]` declares in the generated project: install, run,
    test, migrate, add a package. It uses `nuclear-transpile::project` and `nuclear-dialect::Loader` as a library
    and knows no language (its mobile path still calls Flutter directly: [rules.md](rules.md), rule 9).
 4. The generated code imports the platform's runtime package, which the generated manifest adds by itself; a
@@ -69,9 +71,11 @@ What every project looks like, and why, is in [rules.md](rules.md).
 
 ## Where the files are found
 
-The loader reads two folders that have the same shape in the source tree and in an install
-(`nuclear_dialect::Home`): `dialects/` and `platforms/`. In the tree they are `nuclearlang/dialects/` and
-`nuclear-synapsis-framework/platforms/`; in an install, `$NUCLEAR_HOME/dialects` and `$NUCLEAR_HOME/platforms`.
+The loader reads three folders that have the same shape in the source tree and in an install
+(`nuclear_dialect::Home`): `dialects/`, `platforms/` and `generators/`. In the tree they are `nuclearlang/dialects/`,
+`nuclear-synapsis-framework/platforms/` and `tools/code_generator/platforms/`; in an install,
+`$NUCLEAR_HOME/dialects`, `$NUCLEAR_HOME/platforms` and `$NUCLEAR_HOME/generators`.
 `installer/release/stage.sh` builds an install from this project: each platform's `platform.toml`, its
 `docs/07-reference/` and `docs/08-guides/`, its `kinds/` when it has one and every folder of its `packages/`, plus
-the framework's `docs/08-guides/` (what `nuclear help tutorial` prints).
+the framework's `docs/08-guides/` (what `nuclear help tutorial` prints); the generators come from
+`tools/code_generator/platforms/`.

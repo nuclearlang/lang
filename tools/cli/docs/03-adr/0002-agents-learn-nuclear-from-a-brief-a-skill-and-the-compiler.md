@@ -21,11 +21,11 @@ run the check.
    installed by the installers in `~/.claude/skills` (Claude Code; Cursor and OpenCode also read it),
    `~/.agents/skills` (Codex, Cursor, OpenCode) and `~/.codex/skills` (older Codex). It does not copy the brief: it
    asks the installed binary for it.
-3. **Per project.** `nuclear agent init` (and `dragonfly agent init`, also run by `dragonfly new`) writes the
+3. **Per project.** `nuclear agent init` (and `nuclear agent init`, also run by `nuclear new`) writes the
    NuclearLang section of `AGENTS.md` (between markers, the rest kept), `CLAUDE.md` with `@AGENTS.md`,
    `.cursor/rules/nuclear.mdc` and a Claude Code `PostToolUse` hook (`nuclear agent hook`) that checks each edited
    `.nuc` with its project and gives the errors back, one line each, with exit code 2.
-4. **The evaluation.** `nuclear-synapsis-framework/eval/agent-eval/` (10 tasks: 7 Dragonfly on a copy of an app, 2
+4. **The evaluation.** `nuclear-synapsis-framework/eval/agent-eval/` (10 tasks: 7 Synapsis on a copy of an app, 2
    TypeScript, 1 Dart) runs `claude -p` headless with the user's account, in the modes `baseline` (no skill) and
    `agent`; the results are `results/<mode>.json`.
 

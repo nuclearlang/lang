@@ -1,0 +1,13 @@
+# The MCP server of NuclearLang, written in Nuclear and built with the `python` dialect: `nuclear build .` writes the
+# Python package `build/nuclear_mcp`, which `pyproject.toml` packages. Never edit `build/`: change the `.nuc` files.
+# It reaches the Smart Graph through the graph's package (its type definitions are in `defs/`).
+[project]
+name = "nuclear_mcp"
+dialect = "python"
+package = "nuclear_mcp"
+version = "0.1.0"
+description = "The MCP server of NuclearLang: the generators, the compiler, the command line, the Smart Graph, the local developer and the internet, for any AI client."
+out = "build"
+
+[dependencies]
+httpx = ">=0.28"

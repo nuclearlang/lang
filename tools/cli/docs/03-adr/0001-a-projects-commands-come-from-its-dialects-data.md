@@ -6,26 +6,26 @@ deciders: Julian Molina
 # ADR-0001: A project's commands come from its dialect's data; a dialect's own commands go under its name
 
 ## Context and problem
-The `dragonfly` CLI, the VS Code extension and the website each carried their own copy of how a dialect's generated
+The `nuclear` CLI, the VS Code extension and the website each carried their own copy of how a dialect's generated
 project is installed, run, debugged and served: ports, urls, framework commands and dialect names written in Rust
 and TypeScript. A new dialect needed code in three places. The CLI also needs one shape for its commands that holds
 for every dialect: some commands are the same in all of them, some belong to one.
 
 ## Decision
 1. **Common commands stay at the first level** (`build`, `check`, `make`, `run`, `test`...): the project already
-   says its dialect. **A dialect's own commands go under its name**: `dragonfly <dialect> <command>`
-   (`dragonfly flutter add`). A subcommand the dialect does not define goes to its own CLI as it is
-   (`dragonfly flutter doctor` → `flutter doctor`).
+   says its dialect. **A dialect's own commands go under its name**: `nuclear <dialect> <command>`
+   (`nuclear flutter add`). A subcommand the dialect does not define goes to its own CLI as it is
+   (`nuclear flutter doctor` → `flutter doctor`).
 2. **A dialect's `[toolchain]` is the only source** of how its generated project is installed, compiled, run,
    tested, served by an editor and debugged: the commands, `url`, `ready`, `installed`, `[[toolchain.launch]]`,
    `[toolchain.settings]`, `extensions`, with `[toolchain.<os>]` overrides (the format is in
-   `nuclearlang/docs/07-reference/dialects.md`). `dragonfly` runs those commands and writes the editor workspace
+   `nuclearlang/docs/07-reference/dialects.md`). `synapsis` runs those commands and writes the editor workspace
    from them; nothing in Rust or TypeScript names a port or a framework command.
 3. **A platform names its default dialect** (`[platform] default_dialect` of its `platform.toml`):
-   `dragonfly new -p <platform>` uses it, and so does an older Flutter app whose `config.nuc` has no
-   `dragonfly(...)` line.
+   `nuclear new -p <platform>` uses it, and so does an older Flutter app whose `config.nuc` has no
+   `synapsis(...)` line.
 4. **The project card carries `toolchain`** (`url`, `serve`, `installed` in `.nuclear/project.json`): an editor
-   reads it instead of loading the dialect (the web device's server, the base urls of the HTTP tool, "needs
+   reads it instead of loading the dialect (the web device's server, the base urls of the Connector tool, "needs
    install").
 5. **`nuclear build` removes the output of a removed `.nuc`**, from the previous build's line map.
 

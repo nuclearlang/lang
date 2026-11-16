@@ -1,4 +1,4 @@
-# Dragonfly for React: a web app in Nuclear
+# Synapsis for React: a web app in Nuclear
 
 The web platform is the mobile platform in a browser (ADR-web-0001): the same kinds and words, so an app's domain,
 state and tests read the same on a phone and on the web. The `react` dialect writes React 19 (no JSX), React
@@ -26,7 +26,7 @@ characters/
 
 ```nuclear
 // config.nuc
-dragonfly(platform = "web", dialect = "react")
+synapsis(platform = "web", dialect = "react")
 app(name = "characters", description = "The characters of an API.", version = "1.0.0")
 
 // config/project_config.nuc
@@ -39,17 +39,17 @@ stateless App
     createElement(RouterProvider, router = appRouter())
 ```
 
-Create, build and run it with the `dragonfly` CLI (it writes `config.nuc`, `main.nuc` and
+Create, build and run it with the `nuclear` CLI (it writes `config.nuc`, `main.nuc` and
 `config/project_config.nuc` as above):
 
 ```sh
-dragonfly new characters -p web -d react
+nuclear new characters -p web -d react
 cd characters
-dragonfly check            # nuclear check .
-dragonfly build            # writes build/app (src/, test/, index.html, package.json, vite.config.ts)
-dragonfly install          # npm install in build/app (with the dragonfly-web runtime)
-dragonfly run              # npm run dev → http://localhost:5173
-dragonfly test             # vitest (jsdom)
+nuclear check            # nuclear check .
+nuclear build            # writes build/app (src/, test/, index.html, package.json, vite.config.ts)
+nuclear install          # npm install in build/app (with the synapsis-web runtime)
+nuclear run              # npm run dev → http://localhost:5173
+nuclear test             # vitest (jsdom)
 ```
 
 Without the CLI, `nuclear build .` writes the same `build/app`; then `npm install`, `npm run dev` and `npm test`
@@ -203,7 +203,7 @@ CharactersTest
     ~screen.findByText("Rick")
 ```
 
-The app starts with its real config; every request answers what the test prepares (`DragonflyTest.respondWith`), or
+The app starts with its real config; every request answers what the test prepares (`SynapsisTest.respondWith`), or
 a mock answers (`@mock`, `when`, `verify`); a screen renders in a memory router and Testing Library reads it.
 
 ## 5. What is not there yet, and the React ecosystem

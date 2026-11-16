@@ -22,7 +22,7 @@ last round is `eval/results/REPORT.md`.
 
 | Round | What changed | Local / Sonnet (all 45) | Local / Sonnet (18 held out) |
 |---|---|---|---|
-| 4 | + 10 mobile and web tasks, 3 features; the web platform's brief (Sonnet 0/4 → 4/4 on web); `dragonfly new`'s mobile skeleton fixed; N0116 through runtime classes, N0013 for a dangling decorator | 38 / 39 | 14 / 17 |
+| 4 | + 10 mobile and web tasks, 3 features; the web platform's brief (Sonnet 0/4 → 4/4 on web); `nuclear new`'s mobile skeleton fixed; N0116 through runtime classes, N0013 for a dangling decorator | 38 / 39 | 14 / 17 |
 | 5–7 | the planner: paths from the platform's `[layout]`, kinds and forgotten pieces from the spec's words, the spec's sentence in each task; the coder's rule "only what the task declares" | 38 / 39 | 14 / 17 |
 | 8–9 | a feature distilled as one example per file (a whole-feature example made the coder write every file into each piece) | 37 / 39 | 14 / 17 |
 | 10–11 | the agents write only Nuclear (`platform`, the graph's `nuclear` collection, the platform sheets); each piece's task is the spec's own sentence; few-shots (aliases, columns, `replaceAll`, state models, a test file); the entity by folder accepted | 37 / 39, first feature passed | 13 / 17 |
@@ -48,7 +48,7 @@ last round is `eval/results/REPORT.md`.
   a lead.
 - Holding the answer to the order's words fired four times in round 19 and changed no answer: it exists for the
   short orders of a lead, where a renamed call breaks the next piece.
-- Measured and discarded: giving the coder the file `dragonfly make` writes (29 of 42 against 37); the coder's
+- Measured and discarded: giving the coder the file `nuclear make` writes (29 of 42 against 37); the coder's
   guide without its general rules (rounds 20–21).
 - Each local answer takes 1.5–10 s on the CPU, a feature 1–1.5 min.
 - The references cost USD 0.89 for the 45 tasks.

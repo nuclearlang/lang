@@ -22,7 +22,7 @@ limit is in the [roadmap](../01-product/roadmap.md) and in [spec 005](../04-spec
 ## Behaviour limits
 
 - External classes that are not in the type definitions (third-party packages like provider) leave the module
-  open: no `@override`, no N0106. Fix: generate the package with `tools/defs` (or `dragonfly add <package>` in a
+  open: no `@override`, no N0106. Fix: generate the package with `tools/defs` (or `nuclear add <package>` in a
   project) and list it in `defs`.
 - `Result` only propagates through Nuclear functions with a `Result` return (see [result.md](result.md)).
 - The `typescript` and `nodejs` dialects list no type definitions (the `typescript@5.9.3` package exists and the

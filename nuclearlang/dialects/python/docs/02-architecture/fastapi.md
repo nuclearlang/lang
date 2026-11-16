@@ -11,13 +11,13 @@ related: [../07-reference/fastapi.md, ../03-adr/0002-fastapi-dialect.md, overvie
 [the backend platform's](../../../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md); its contract is
 `nuclear-synapsis-framework/platforms/backend/platform.toml`. This dialect holds only how each of those is written:
 FastAPI controllers, SQLAlchemy 2 async repositories, pydantic models, LangChain / LangGraph tools, agents and
-graphs. The generated code calls the platform's runtime package `dragonfly-py` (import name `dragonfly`,
-`nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py`). Normative equivalences:
+graphs. The generated code calls the platform's runtime package `synapsis-py` (import name `synapsis`,
+`nuclear-synapsis-framework/platforms/backend/packages/synapsis-py`). Normative equivalences:
 [../07-reference/fastapi.md](../07-reference/fastapi.md). Decision: ADR-python-0002.
 
 ## What it changes of `python`
 
-- `builtin_result = false`: `Result`, `Ok` and `Err` are the runtime's (`dragonfly.result`), shared by the app and
+- `builtin_result = false`: `Result`, `Ok` and `Err` are the runtime's (`synapsis.result`), shared by the app and
   the framework; `replaces` drops the parent's automatic imports of `Result`, `Ok`, `Err` and `Field`.
 - `[types] Error = "AppError"`: a use case fails with an `AppError` (`NotFound`, `Invalid`, `Conflict`...) whose
   status is the HTTP answer. Nuclear's `Error(message)` is `AppError(message)`; `e.message` goes through the helper
@@ -59,7 +59,7 @@ What the runtime does with them (`many_to_one`, `one_to_many`, `many_to_many`, `
 
 ## Project files
 
-A folder with `config.nuc` (`dragonfly(platform = "backend", dialect = "fastapi")`); `nuclear build .` writes
+A folder with `config.nuc` (`synapsis(platform = "backend", dialect = "fastapi")`); `nuclear build .` writes
 `build/`. `[project] sources = "app"`; the platform's `test/` is written to pytest's `tests/`
 (`[project.outputs]`).
 
@@ -67,16 +67,16 @@ A folder with `config.nuc` (`dragonfly(platform = "backend", dialect = "fastapi"
 |---|---|---|
 | `app/main.py` | `main.tpl` | the FastAPI `app`: `create_app` with the project config, every component config, controller, listener and entity |
 | `tests/conftest.py` | `conftest.tpl` | a fixture that runs every test with the project's connections, the databases replaced by a fresh in-memory SQLite and the listeners created |
-| `pyproject.toml` | `pyproject.tpl` | name, version and description of `app(...)`; `requires-python = ">=3.12"`; `dragonfly-py`, `uvicorn` and the packages of the enabled plugins and of `dependencies(...)`; pytest (`asyncio_mode = "auto"`) and pyright strict settings |
+| `pyproject.toml` | `pyproject.tpl` | name, version and description of `app(...)`; `requires-python = ">=3.12"`; `synapsis-py`, `uvicorn` and the packages of the enabled plugins and of `dependencies(...)`; pytest (`asyncio_mode = "auto"`) and pyright strict settings |
 
-`config.nuc` sections: `dragonfly`, `app`, `plugins`, `contracts`, `dependencies`. `dependencies(name = "version")`
+`config.nuc` sections: `synapsis`, `app`, `plugins`, `contracts`, `dependencies`. `dependencies(name = "version")`
 adds a package of pip; a version that starts with `.` or `/` is a folder. `[project.manifest.advice]` says, when
 `flask` or `django` is added, what the platform already gives in its place (the project may add it all the same).
 
 ## Plugins
 
 The optional parts of the runtime; only the enabled ones go to `pyproject.toml`, and only then are their names
-imported (`dragonfly.ai`, `dragonfly.events`).
+imported (`synapsis.ai`, `synapsis.events`).
 
 | Plugin | Packages | Gives |
 |---|---|---|
@@ -93,21 +93,21 @@ imported (`dragonfly.ai`, `dragonfly.events`).
 
 ## Toolchain
 
-What the `dragonfly` command runs in `build/` (`[toolchain]`; `[toolchain.windows]` has the same with
+What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]` has the same with
 `.venv\Scripts\`):
 
 | Key | Command |
 |---|---|
-| `install` | `python3 -m venv .venv`, then pip installs the runtime from `{{packages}}/dragonfly-py` and the app (`-e '.[test]'`) |
+| `install` | `python3 -m venv .venv`, then pip installs the runtime from `{{packages}}/synapsis-py` and the app (`-e '.[test]'`) |
 | `install_local` | reinstalls a dependency that is a folder (`--no-deps --force-reinstall`) |
 | `run` | `.venv/bin/uvicorn app.main:app --reload --port {{port}}` (`url = "http://localhost:8000"`, `ready = "Uvicorn running"`, `installed = ".venv"`) |
 | `test` | `.venv/bin/python -m pytest -q` |
 | `package_add`, `package_remove`, `package_version`, `package_defs` | pip, the version it resolved, and `tools/defs/python/gen.py --distribution` for the package's type definitions, written into the project's `defs/`. A bare version (`4.17.0`) is exact (`==`); a constraint is `>=` |
-| `migrate_make`, `migrate`, `migrate_down` | `python -m dragonfly.migrate make\|up\|down --dir {{migrations}}` (Alembic over the project's `migrations/`) |
+| `migrate_make`, `migrate`, `migrate_down` | `python -m synapsis.migrate make\|up\|down --dir {{migrations}}` (Alembic over the project's `migrations/`) |
 
 There is no `analyze` key ([roadmap](../01-product/roadmap.md)). The editor's debug launch (`[[toolchain.launch]]`)
 runs `uvicorn` under debugpy with the app's virtual environment, without `--reload` (the debugger owns the
-process), after the task `dragonfly: build`.
+process), after the task `nuclear: build`.
 
 ## Architecture rules
 

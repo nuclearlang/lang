@@ -2,8 +2,8 @@ import { Task } from '../../data/entities/task.js';
 import { TaskRepository } from '../../data/repositories/task_repository.js';
 import { NewTask } from '../models/task_models.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Conflict, Err, Ok, Result } from 'dragonfly-nest';
-import { publish } from 'dragonfly-nest/events';
+import { AppError, Conflict, Err, Ok, Result } from 'synapsis-nest';
+import { publish } from 'synapsis-nest/events';
 
 /** Creates a task; two tasks cannot have the same title. Every new task is published on "tasks.created". */
 @Injectable()

@@ -1,31 +1,31 @@
 {
  "shelf": "concepts",
  "origin": "curated",
- "about": "The parts of the ecosystem and the ideas a reader needs to work with it: Dragonfly, platforms and dialects, kinds, the architecture of a project, results, the library, type definitions, contracts, plugins, generators, diagnostics, tests, the editors.",
+ "about": "The parts of the ecosystem and the ideas a reader needs to work with it: Synapsis, platforms and dialects, kinds, the architecture of a project, results, the library, type definitions, contracts, plugins, generators, diagnostics, tests, the editors.",
  "rows": [
   {
-   "id": "concept:dragonfly",
+   "id": "concept:synapsis",
    "type": "concept",
-   "title": "What Dragonfly is: the framework of NuclearLang",
-   "summary": "Dragonfly is the framework built into the dialects: three platforms (`backend`, `mobile`, `web`), each written once in Nuclear. You write the business logic with kinds (`usecase`, `repository`, `controller`, a screen); the dialect writes the framework's code.",
+   "title": "What Synapsis is: the framework of NuclearLang",
+   "summary": "Synapsis is the framework built into the dialects: three platforms (`backend`, `mobile`, `web`), each written once in Nuclear. You write the business logic with kinds (`usecase`, `repository`, `controller`, a screen); the dialect writes the framework's code.",
    "body": [
-    "Writing an app usually means choosing and wiring many packages: state, JSON, dependency injection, HTTP, routing, translations, tests. With Dragonfly the dialect already brings that architecture. In Nuclear you write only the business logic and the transpiler generates the rest.",
+    "Writing an app usually means choosing and wiring many packages: state, JSON, dependency injection, HTTP, routing, translations, tests. With Synapsis the dialect already brings that architecture. In Nuclear you write only the business logic and the transpiler generates the rest.",
     "",
     "- **Three platforms**: `backend` (HTTP APIs, data, events, AI agents), `mobile` (apps for Android, iOS, desktop and web) and `web` (web apps). A platform is what you write: its kinds, decorators, folders, `config.nuc`, plugins and tests.",
     "- **Dialects** build a platform: `fastapi` and `nestjs` build `backend`, `flutter` builds `mobile`, `react` builds `web`. The Nuclear of a project never changes when its dialect changes.",
     "- **The same way to think on every platform**: components by feature, kinds that say what a declaration is, one facade per component (`appcomponent`), errors as values (`Result`), connections listed in the configuration, tests written in Nuclear.",
-    "- **One CLI**: `dragonfly new`, `gen`, `make`, `build`, `run`, `test`, `migrate`, `check`, `repair`, `explain`.",
+    "- **One CLI**: `nuclear new`, `gen`, `make`, `build`, `run`, `test`, `migrate`, `check`, `repair`, `explain`.",
     "",
-    "A new project: `dragonfly new <name> -p backend` (or `-p mobile`, `-p web`; `-d` picks a dialect)."
+    "A new project: `nuclear new <name> -p backend` (or `-p mobile`, `-p web`; `-d` picks a dialect)."
    ],
    "keys": [
-    "dragonfly",
+    "synapsis",
     "framework"
    ],
    "asks": [
-    "what is dragonfly",
-    "que es dragonfly",
-    "what is the difference between nuclear and dragonfly",
+    "what is synapsis",
+    "que es synapsis",
+    "what is the difference between nuclear and synapsis",
     "how do I build an app with nuclear"
    ],
    "links": [
@@ -51,7 +51,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly"
+     "to": "tool:nuclear"
     }
    ],
    "sources": [
@@ -59,7 +59,7 @@
     "docs/01-product/prd.md"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
@@ -75,7 +75,7 @@
     "| `web` | `react` | a React web app |",
     "",
     "- A platform is its kinds, decorators, folders, `config.nuc`, plugins and tests, identical for every dialect of that platform. Kinds and features may differ between platforms, never between the dialects of one platform.",
-    "- The project names both in `config.nuc`: `dragonfly(platform = \"backend\", dialect = \"fastapi\")`. To move a backend to TypeScript, change `dialect` to `\"nestjs\"` and build: no other file changes.",
+    "- The project names both in `config.nuc`: `synapsis(platform = \"backend\", dialect = \"fastapi\")`. To move a backend to TypeScript, change `dialect` to `\"nestjs\"` and build: no other file changes.",
     "- The only exception: code that uses a dialect's type definitions (a library that exists in one target only) is tied to that dialect.",
     "- The standard library is Nuclear's own, so `xs.length` or `text.upper()` are written the same everywhere.",
     "- The base language also has language dialects without a framework: `typescript`, `dart`, `python`.",
@@ -123,7 +123,7 @@
     "nuclear-synapsis-framework/docs/08-guides/README.md"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
@@ -190,7 +190,7 @@
     "- **Native kinds** belong to a platform: the backend has 16 (entity, repository, model, usecase, appcomponent, service, aggregate, controller, listener, tools, agent, state, graph, tests, appConfig, config); mobile and web have their own, with views and state managers.",
     "- **Extension kinds** are packages (`kinds/<name>/`) written with TOML and templates on top of a dialect, never touching the compiler.",
     "- Look one up instead of guessing: `nuclear help <kind> --platform <p>`; all of them: `nuclear help words --platform <p>`.",
-    "- `dragonfly make <kind> <component> <Name>` writes the smallest file of a kind at its place."
+    "- `nuclear make <kind> <component> <Name>` writes the smallest file of a kind at its place."
    ],
    "keys": [
     "kind",
@@ -221,7 +221,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.make"
+     "to": "tool:nuclear.make"
     }
    ],
    "sources": [
@@ -229,13 +229,13 @@
     "nuclear-synapsis-framework/platforms/backend/platform.toml"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
    "id": "concept:project-architecture",
    "type": "architecture",
-   "title": "The architecture of a Dragonfly project",
+   "title": "The architecture of a Synapsis project",
    "summary": "A project is components by feature. Each component has its data (entities, repositories), its domain (models, use cases, services) and its entry points (a controller, a screen, an agent), and shows the rest of the app one facade: its `appcomponent`. The compiler enforces who may call whom.",
    "body": [
     "```text",
@@ -259,7 +259,7 @@
     "- **Connections are configuration.** A database, an HTTP API, a chat model, Kafka or Redis is listed in `appConfig`, never opened by hand.",
     "- **Each file declares one thing** at the place its kind has in the layout, so anyone (a person, an agent, a generator) knows where everything is.",
     "",
-    "`nuclear check .` (or `dragonfly check`) verifies all of it and writes the project map `.nuclear/map.md`: every declaration with its kind, its description and its members."
+    "`nuclear check .` (or `nuclear check`) verifies all of it and writes the project map `.nuclear/map.md`: every declaration with its kind, its description and its members."
    ],
    "keys": [
     "architecture",
@@ -269,7 +269,7 @@
     "folder structure"
    ],
    "asks": [
-    "how is a dragonfly project organized",
+    "how is a synapsis project organized",
     "what is the structure of a project",
     "where does each file go",
     "what is a component",
@@ -312,7 +312,7 @@
     "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
@@ -323,16 +323,16 @@
    "body": [
     "```nuclear",
     "// config.nuc",
-    "dragonfly(platform = \"backend\", dialect = \"fastapi\")",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
     "app(name = \"tasks_api\", description = \"The tasks API\", version = \"0.1.0\")",
     "plugins(sqlite = true, ollama = true)",
     "```",
     "",
-    "- `dragonfly(platform, dialect)`: what the project is written for and what it is built with.",
+    "- `synapsis(platform, dialect)`: what the project is written for and what it is built with.",
     "- `app(name, description, version)`: they reach the generated manifest.",
     "- `plugins(...)`: the optional parts; a kind or a name of a plugin that is not enabled is `N0304`.",
     "- `contracts(name = \"../backend\" | \"https://...\")`: a backend whose models and repositories are generated for this app.",
-    "- `dependencies(name = \"version\")`: extra packages of the target's package manager, written by `dragonfly add <package>`; a name that is not an identifier is one text, `\"date-fns@^4.4.0\"`.",
+    "- `dependencies(name = \"version\")`: extra packages of the target's package manager, written by `nuclear add <package>`; a name that is not an identifier is one text, `\"date-fns@^4.4.0\"`.",
     "",
     "The connections live in `config/project_config.nuc`, in the `appConfig`:",
     "",
@@ -382,7 +382,7 @@
     "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
@@ -510,7 +510,7 @@
     "- They are why an agent does not hallucinate APIs: a name that the definitions do not have is an error, with \"did you mean\".",
     "- Imports are automatic: using a class of a library the dialect knows adds its import.",
     "- Look instead of guessing: `nuclear defs show <Name> --dialect <d>` prints a declaration; `nuclear defs search <text> --dialect <d>` finds names; `nuclear defs list` lists the packages.",
-    "- A project gets the definitions of any package of its target with `dragonfly add <package>` (`can:packages`); a backend or web project keeps them in `<project>/defs/`. Inside the project, `nuclear defs` shows them too.",
+    "- A project gets the definitions of any package of its target with `nuclear add <package>` (`can:packages`); a backend or web project keeps them in `<project>/defs/`. Inside the project, `nuclear defs` shows them too.",
     "- A name is imported as what it is: by name (`import { nanoid } from 'nanoid'`, `from tqdm import tqdm`), or as the package's default export (`import dayjs from 'dayjs'`).",
     "- Code that uses a library of one target is tied to the dialect of that target."
    ],
@@ -593,7 +593,7 @@
     "nuclear-synapsis-framework/docs/08-guides/README.md#Contracts: one backend, its apps generated"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
@@ -642,26 +642,26 @@
     "nuclear-synapsis-framework/docs/08-guides/README.md#Plugins: only what the project uses"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
    "id": "concept:generators",
    "type": "concept",
    "title": "Generators: the tools write the standard code, the agent writes what is special",
-   "summary": "`dragonfly gen resource` writes the finished, compiling code of a resource from its data: the models, the repository, a use case per action, the facade, the controller or the screen, and the tests. An agent generates first and writes by hand only the logic no generator can know.",
+   "summary": "`nuclear gen resource` writes the finished, compiling code of a resource from its data: the models, the repository, a use case per action, the facade, the controller or the screen, and the tests. An agent generates first and writes by hand only the logic no generator can know.",
    "body": [
     "A feature such as \"list the characters of an API, paged\" is mostly code that follows from its data. That code is generated, not written by a model:",
     "",
-    "- `dragonfly gen inspect`: what the project has (components, declarations by kind), so nothing is declared twice.",
-    "- `dragonfly gen component <component>`: a component and its facade.",
-    "- `dragonfly gen resource <component> <Name>`: everything of a resource. The fields come from `--fields \"id:int name:string\"`, from an example answer (`--from-json <file|url>`) or from a spec (`--from-spec spec.md`). `--source rest:<base url>` reads an API; `--source db` makes an entity and its queries (backend). `--actions list,get,search,create,update,delete` chooses the use cases. `--screen <screen>` adds a screen on mobile and web. `--dry-run` shows the files without writing them.",
-    "- `dragonfly gen usecase <component> <Name>`: a use case wired into its component. The use case is one the project declares (its rules are written first; its signature is read from it): the command adds its alias to the facade and, on the backend, with `--route \"POST orders/{id}/cancel\"`, its route to the controller of `orders`. With `--calls <Repository>.<method>` the use case is written too, because all it does is call that method.",
-    "- `dragonfly make <kind> <component> <Name>`: the smallest file of one kind.",
+    "- `nuclear gen inspect`: what the project has (components, declarations by kind), so nothing is declared twice.",
+    "- `nuclear gen component <component>`: a component and its facade.",
+    "- `nuclear gen resource <component> <Name>`: everything of a resource. The fields come from `--fields \"id:int name:string\"`, from an example answer (`--from-json <file|url>`) or from a spec (`--from-spec spec.md`). `--source rest:<base url>` reads an API; `--source db` makes an entity and its queries (backend). `--actions list,get,search,create,update,delete` chooses the use cases. `--screen <screen>` adds a screen on mobile and web. `--dry-run` shows the files without writing them.",
+    "- `nuclear gen usecase <component> <Name>`: a use case wired into its component. The use case is one the project declares (its rules are written first; its signature is read from it): the command adds its alias to the facade and, on the backend, with `--route \"POST orders/{id}/cancel\"`, its route to the controller of `orders`. With `--calls <Repository>.<method>` the use case is written too, because all it does is call that method.",
+    "- `nuclear make <kind> <component> <Name>`: the smallest file of one kind.",
     "",
     "Nothing is overwritten; a name declared elsewhere stops the generator before it writes. The templates belong to each platform, so the Nuclear a generator writes is the same for every dialect.",
     "",
-    "The same generators are MCP tools (`project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`) and the first stage of the Loop. The order of work is always: inspect, generate, write only what is left, then wire it."
+    "The same generators are MCP tools (`project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`) and the first stage of the Builder. The order of work is always: inspect, generate, write only what is left, then wire it."
    ],
    "keys": [
     "generators",
@@ -671,8 +671,8 @@
     "gen"
    ],
    "asks": [
-    "how do I generate code with dragonfly",
-    "what does dragonfly gen do",
+    "how do I generate code with synapsis",
+    "what does nuclear gen do",
     "can nuclear generate a crud",
     "how do I create a resource from an api",
     "what is the difference between make and gen"
@@ -680,15 +680,15 @@
    "links": [
     {
      "rel": "command",
-     "to": "tool:dragonfly.gen.resource"
+     "to": "tool:nuclear.gen.resource"
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.gen.inspect"
+     "to": "tool:nuclear.gen.inspect"
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.make"
+     "to": "tool:nuclear.make"
     },
     {
      "rel": "mcp",
@@ -764,7 +764,7 @@
    "id": "concept:tests-in-nuclear",
    "type": "concept",
    "title": "Tests are written in Nuclear, and first",
-   "summary": "A test is Nuclear too: `tests Name` with `@test(\"what it checks\")` methods in `test/`, built for the target's test runner. `dragonfly test` runs them. The work order is tests first: the test says what the code must do before the code exists.",
+   "summary": "A test is Nuclear too: `tests Name` with `@test(\"what it checks\")` methods in `test/`, built for the target's test runner. `nuclear test` runs them. The work order is tests first: the test says what the code must do before the code exists.",
    "body": [
     "```nuclear",
     "tests Books",
@@ -780,7 +780,7 @@
     "- `inject<X>()` gives an instance; `~` awaits; `expect(condition)` checks.",
     "- Backend: the databases are in memory and start empty in every test, so a test first creates the rows it reads. An agent's model is `FakeModel([\"answer\"])`.",
     "- Mobile and web: `@mock([Repository])`, `@states(...)` for a state manager, `@widget(...)` for a screen.",
-    "- A failing test is explained at its `.nuc` lines by `dragonfly explain`.",
+    "- A failing test is explained at its `.nuc` lines by `nuclear explain`.",
     "- A test that fails because of a bug in the code is reported, never deleted or weakened."
    ],
    "keys": [
@@ -801,11 +801,11 @@
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.test"
+     "to": "tool:nuclear.test"
     },
     {
      "rel": "command",
-     "to": "tool:dragonfly.explain"
+     "to": "tool:nuclear.explain"
     },
     {
      "rel": "playbook",
@@ -821,32 +821,32 @@
     "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
    ],
    "meta": {
-    "topic": "dragonfly"
+    "topic": "synapsis"
    }
   },
   {
    "id": "concept:ecosystem",
    "type": "architecture",
    "title": "The parts of the NuclearLang ecosystem",
-   "summary": "The compiler with its CLI and language server; Dragonfly with its CLI and three platforms; the editor extensions; and the AI pieces: the Smart Graph (knowledge base and MCP server), the Nuclear Developer (local agents), the knowledge base itself and the Loop.",
+   "summary": "The compiler with its CLI and language server; Synapsis with its CLI and three platforms; the editor extensions; and the AI pieces: the Smart Graph (knowledge base and MCP server), the Nuclear Developer (local agents), the knowledge base itself and the Builder.",
    "body": [
     "| Part | What it is | Repository |",
     "|---|---|---|",
     "| `nuclear` | the language: compiler, the `nuclear` CLI, the language server, the language dialects (TypeScript, Dart, Python), the specs | `nuclearlang/nuclear` |",
-    "| `dragonfly` | the framework's CLI and the platforms' philosophy | `nuclearlang/dragonfly` |",
-    "| `dragonfly-backend` | the backend platform: dialects `fastapi` and `nestjs`, their runtimes | `nuclearlang/dragonfly-backend` |",
-    "| `dragonfly-mobile` | the mobile platform: dialect `flutter`, its runtime | `nuclearlang/dragonfly-mobile` |",
-    "| `dragonfly-web` | the web platform: dialect `react`, its runtime | `nuclearlang/dragonfly-web` |",
-    "| `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-zed` | the editor extensions; VS Code also has the workspace, the devices, the HTTP tool, the Loop and the agent's chat | one each |",
+    "| `synapsis` | the framework's CLI and the platforms' philosophy | `nuclearlang/synapsis` |",
+    "| `synapsis-backend` | the backend platform: dialects `fastapi` and `nestjs`, their runtimes | `nuclearlang/synapsis-backend` |",
+    "| `synapsis-mobile` | the mobile platform: dialect `flutter`, its runtime | `nuclearlang/synapsis-mobile` |",
+    "| `synapsis-web` | the web platform: dialect `react`, its runtime | `nuclearlang/synapsis-web` |",
+    "| `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-zed` | the editor extensions; VS Code also has the workspace, the devices, the Connector tool, the Builder and the agent's chat | one each |",
     "| `nuclear-graph` | the Nuclear Smart Graph: the private knowledge base and the MCP server | `nuclearlang/nuclear-graph` |",
     "| `nuclear-developer` | the local AI agents | `nuclearlang/nuclear-developer` |",
     "| `nuclear-knowledge` | the knowledge base the graph ingests: its asset files | `nuclearlang/nuclear-knowledge` |",
-    "| `nuclear-loop` | the pipeline from a spec to deployed code, without the editor (it ships with the VS Code extension) | `nuclearlang/nuclear-vscode` |",
+    "| `nuclear-builder` | the pipeline from a spec to deployed code, without the editor (it ships with the VS Code extension) | `nuclearlang/nuclear-vscode` |",
     "| `website` | the website, written in Nuclear on the web platform | `nuclearlang/website` |",
     "",
-    "How they fit: you write `.nuc`; `nuclear` checks and builds it; `dragonfly` runs the project's life (new, gen, build, run, test); the editor shows it all; the graph knows everything written here; the local agents use the graph and the compiler to write code; the Loop takes a spec through them; an MCP client (Claude Code, Codex, Cursor) reaches all of it through `nuclear-graph mcp`.",
+    "How they fit: you write `.nuc`; `nuclear` checks and builds it; `synapsis` runs the project's life (new, gen, build, run, test); the editor shows it all; the graph knows everything written here; the local agents use the graph and the compiler to write code; the Builder takes a spec through them; an MCP client (Claude Code, Codex, Cursor) reaches all of it through `nuclear-graph mcp`.",
     "",
-    "Each component's version has a row: `component:nuclear`, `component:dragonfly`, `component:nuclear-vscode`..."
+    "Each component's version has a row: `component:nuclear`, `component:synapsis`, `component:nuclear-vscode`..."
    ],
    "keys": [
     "ecosystem",
@@ -866,7 +866,7 @@
     },
     {
      "rel": "part",
-     "to": "tool:dragonfly"
+     "to": "tool:nuclear"
     },
     {
      "rel": "part",
@@ -901,11 +901,11 @@
    "id": "concept:editors",
    "type": "concept",
    "title": "The editors: VS Code, Android Studio (JetBrains) and Zed",
-   "summary": "One language server gives the three editors diagnostics, completion, hover, rename and the documentation of every word. VS Code adds the Nuclear workspace: run and debug `.nuc`, devices, an HTTP client, the Loop, the agent's chat and the settings of the AI pieces.",
+   "summary": "One language server gives the three editors diagnostics, completion, hover, rename and the documentation of every word. VS Code adds the Nuclear workspace: run and debug `.nuc`, devices, an HTTP client, the Builder, the agent's chat and the settings of the AI pieces.",
    "body": [
     "- **The language server** (`nuclear-lsp`): diagnostics with quick fixes, completion, hover with the documentation of a kind or decorator, signature help, rename. It follows the platform and dialect of the project's `config.nuc`.",
-    "- **VS Code** (`nuclear-vscode`): the Nuclear workspace with a tab per project and tools; the actions of the active project in the editor's title bar (run, debug, hot reload, device, build, test, check); breakpoints in `.nuc` lines; Dragonfly devices for a mobile app and a web device; the Nuclear HTTP client; the Loop (`Ctrl+Alt+P`); the chat with the local agents (`Ctrl+Alt+A`); the settings and integrations page (`Ctrl+Alt+S`).",
-    "- **Android Studio and IntelliJ** (`nuclear-jetbrains`): the language, the Nuclear HTTP tool window and the Nuclear Loop tool window (`Alt+Shift+P`).",
+    "- **VS Code** (`nuclear-vscode`): the Nuclear workspace with a tab per project and tools; the actions of the active project in the editor's title bar (run, debug, hot reload, device, build, test, check); breakpoints in `.nuc` lines; Synapsis devices for a mobile app and a web device; the Nuclear Connector client; the Builder (`Ctrl+Alt+P`); the chat with the local agents (`Ctrl+Alt+A`); the settings and integrations page (`Ctrl+Alt+S`).",
+    "- **Android Studio and IntelliJ** (`nuclear-jetbrains`): the language, the Nuclear Connector tool window and the Nuclear Builder tool window (`Alt+Shift+P`).",
     "- **Zed** (`nuclear-zed`): the language with a tree-sitter grammar and the same server.",
     "",
     "The commands and shortcuts of VS Code are in the row `editor:vscode.commands`; its settings in `editor:vscode.settings.ai` and `editor:vscode.settings.editor`."
@@ -954,7 +954,7 @@
    "id": "concept:open-source",
    "type": "concept",
    "title": "NuclearLang is open source",
-   "summary": "Everything is open source under Apache-2.0, in one repository of the `nuclearlang` organization on GitHub: the language and its dialects, Dragonfly and its platforms, the tools, the editor extensions, the Smart Graph, the Nuclear Developer and the knowledge base.",
+   "summary": "Everything is open source under Apache-2.0, in one repository of the `nuclearlang` organization on GitHub: the language and its dialects, Synapsis and its platforms, the tools, the editor extensions, the Smart Graph, the Nuclear Developer and the knowledge base.",
    "body": [
     "- License: Apache-2.0 for the whole tree and every runtime package.",
     "- Home: `https://github.com/nuclearlang/nuclear`, one repository; each folder is a project with its own `AGENTS.md` and `docs/`. The organization's profile is its own `.github` repository.",

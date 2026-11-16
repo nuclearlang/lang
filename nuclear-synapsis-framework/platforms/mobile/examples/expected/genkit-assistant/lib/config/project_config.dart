@@ -1,5 +1,5 @@
-import 'package:dragonfly/dragonfly.dart';
-import 'package:dragonfly_genkit/dragonfly_genkit.dart';
+import 'package:synapsis/synapsis.dart';
+import 'package:synapsis_genkit/synapsis_genkit.dart';
 
 /// The AI provider of the app: a local Ollama through its OpenAI-compatible API (no API key in the app).
 class ProjectConfig extends AppConfig {

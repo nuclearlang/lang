@@ -5,10 +5,10 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
 ## Component `developer`
 
 - `components/developer/ai/acceptor.nuc`
-  - graph `Acceptor(bench: Workbench)` — The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Loop (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.
+  - graph `Acceptor(bench: Workbench)` — The acceptor: holds each acceptance criterion of a spec against what a run left. The facts come from the Builder (the files of the run, how many tests they declare, the commands that passed); the model says, per criterion, whether they show it met and where. It changes nothing, and its verdict is evidence for the reviewer, never a gate. Prompt: agents/accept.md.
     - `@start @next("end") judge(state: PieceState) <string, any>`
 - `components/developer/ai/analyst.nuc`
-  - graph `Analyst(bench: Workbench, toolchain: Toolchain)` — The analyst: before anything is generated or planned, says which kind of request a spec is and what the strategy of that kind asks of the run (ADR-0105). Tools decide, in a fixed order: the project's files say which names of the request the project has; the graph's strategy rows say which kind of request it is, by its exact signs first; the strategy says which stages run, where the pieces come from and which facts it cannot start without. A model is asked for one thing only, the resources a request in plain words describes, and the generator's dry run accepts or refuses each. Prompt: agents/analyze.md.
+  - graph `Analyst(bench: Workbench, toolchain: Toolchain)` — The analyst: before anything is generated or planned, says which kind of request a spec is and what the strategy of that kind asks of the run (ADR-developer-0001). Tools decide, in a fixed order: the project's files say which names of the request the project has; the graph's strategy rows say which kind of request it is, by its exact signs first; the strategy says which stages run, where the pieces come from and which facts it cannot start without. A model is asked for one thing only, the resources a request in plain words describes, and the generator's dry run accepts or refuses each. Prompt: agents/analyze.md.
     - `@start @next("classify") read(state: PieceState) <string, any>`
     - `@next("derive") classify(state: PieceState) <string, any>`
     - `@next("end") derive(state: PieceState) <string, any>`
@@ -16,11 +16,11 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `listed(task: string) int` — How many fields a request lists for a thing: the items of its first list after `has`, `with`, `con`, `tiene` or a colon ("a name, a phone and an email" is 3). 0: it lists none, and nobody may invent them.
     - `fieldsOf(args: string[]) int` — The fields of a generator call besides its key (0 for a call that takes them from an API's answer).
     - `explicit(task: string) boolean` — A request that already says its resources the way the Generate stage reads them: a `GET <url>` line or a Resources section.
-    - `commands(raw: string, platform: string) string[][]` — The lines `component | Name | fields | source | actions` a model answered → the arguments of `dragonfly gen` for each (`resource orders Order --fields "..." --source db --actions list,create`). A line without a name, or with no field besides the key and no url, is left out: nothing is generated from a guess.
+    - `commands(raw: string, platform: string) string[][]` — The lines `component | Name | fields | source | actions` a model answered → the arguments of `nuclear gen` for each (`resource orders Order --fields "..." --source db --actions list,create`). A line without a name, or with no field besides the key and no url, is left out: nothing is generated from a guess.
     - `renameOf(task: string, existing: string[]) string[]` — The two names of a rename: the declaration of the project the request names first, and the name it gets (the first one after it that follows `to`, `a`, `por`, an arrow or `called`). [] when one is missing.
     - `unmet(need: string, task: string, why: string, inProject: boolean, generated: int, tooled: int, designed: boolean) boolean` — Whether the request lacks a fact its strategy cannot start without. `why`: the signs that chose the strategy; `inProject`: a project was read; `generated` and `tooled`: the generator calls and the pieces the tools gave; `designed`: the request introduces a declaration with its kind's word (its fields are in its own words).
 - `components/developer/ai/assistant.nuc`
-  - graph `Assistant(bench: Workbench)` — The assistant: answers a message of the chat about the project or about NuclearLang. The graph's query planner reads the message first, without a model: a question with one right answer (every command of a tool, the tools of the MCP server and their parameters, the commands that write a kind...) gets the rows of the graph's database, whole (`facts`), and the rest the cards of the shelves closest to it (`knowledge`). The model writes the answer from both, the project's map and the last messages of the session; the rows then end the answer as the graph gave them, put there by this code: a model retells a long list in part, so the list never depends on it. It explains and proposes Nuclear; it changes no file (an order to change the project is a Loop run). Prompt: agents/chat.md.
+  - graph `Assistant(bench: Workbench)` — The assistant: answers a message of the chat about the project or about NuclearLang. The graph's query planner reads the message first, without a model: a question with one right answer (every command of a tool, the tools of the MCP server and their parameters, the commands that write a kind...) gets the rows of the graph's database, whole (`facts`), and the rest the cards of the shelves closest to it (`knowledge`). The model writes the answer from both, the project's map and the last messages of the session; the rows then end the answer as the graph gave them, put there by this code: a model retells a long list in part, so the list never depends on it. It explains and proposes Nuclear; it changes no file (an order to change the project is a Builder run). Prompt: agents/chat.md.
     - `@start @next("answer") recall(state: PieceState) <string, any>`
     - `@next("end") answer(state: PieceState) <string, any>`
 - `components/developer/ai/coder.nuc`
@@ -28,7 +28,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `@start @next("write") recall(state: PieceState) <string, any>`
     - `@next("end") write(state: PieceState) <string, any>`
 - `components/developer/ai/diagnoser.nuc`
-  - graph `Diagnoser(bench: Workbench, toolchain: Toolchain)` — The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `dragonfly doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.
+  - graph `Diagnoser(bench: Workbench, toolchain: Toolchain)` — The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `nuclear doctor` for the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.
     - `@start @next("explain") gather(state: PieceState) <string, any>`
     - `@next("end") explain(state: PieceState) <string, any>`
     - `classify(text: string) string` — The kind of a failure from its text, the first rule that matches: disk (no room left: no retry helps until some is freed), transient (the services or the network: retrying helps), environment (a tool or a package is missing), code (the compiler's errors), test (a test failed), spec (nothing to do was understood), else unknown.
@@ -72,7 +72,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `pieces: <string, string>[]`
     - `tree: string` — the planner: the plan as a tree, and what of the spec is beyond the platform or the local agents
     - `limits: string[]`
-    - `declared: <string, string>` — the analyst: the project's declarations (name → file), the ones the request names, the names new to the project, the strategy the request itself asks for, the strategy the graph gave (its fields as texts), the generator calls (the arguments of `dragonfly gen`) and the questions for the user
+    - `declared: <string, string>` — the analyst: the project's declarations (name → file), the ones the request names, the names new to the project, the strategy the request itself asks for, the strategy the graph gave (its fields as texts), the generator calls (the arguments of `nuclear gen`) and the questions for the user
     - `existing: string[]`
     - `fresh: string[]`
     - `designed: int` — how many declarations the request introduces with their kind's word (a request already designed)
@@ -146,7 +146,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `platform: string`
     - `root: string` — the project's folder: with it the analyst knows which names of the request the project has
     - `strategy: string` — the strategy the request itself names (`usecase`), when it names one
-  - model `Analysis` — The strategy of a request (ADR-0105) and what it asks of the run: the stages that run, the generator calls (the arguments of `dragonfly gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code` is written as it is) and the facts the request lacks.
+  - model `Analysis` — The strategy of a request (ADR-developer-0001) and what it asks of the run: the stages that run, the generator calls (the arguments of `nuclear gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code` is written as it is) and the facts the request lacks.
     - `strategy: string`
     - `title: string`
     - `why: string`

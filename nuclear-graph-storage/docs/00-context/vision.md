@@ -14,7 +14,7 @@ is for, what it can and cannot do, which tool does what, how a task is done or w
 And a search by meaning gives the closest cards, never *all* of something: asked for every tool of the MCP server,
 it gives four and a model fills in the rest from memory.
 
-The Smart Graph is the local, private library of everything NuclearLang and Dragonfly are. Agents ask it instead of
+The Smart Graph is the local, private library of everything NuclearLang and Synapsis are. Agents ask it instead of
 guessing: what Nuclear is for, how each thing is written, every kind and decorator, every tool, every error and its
 fix, what can and cannot be done, how a task is done step by step, and validated code.
 
@@ -26,7 +26,7 @@ fix, what can and cannot be done, how a task is done step by step, and validated
 - **People**, from a terminal (`nuclear-graph search`, `card`, `answer`, `strategy`) and through the chat of the
   editor, whose assistant is one of the local agents.
 
-The Loop of the editors reads it through those two: the Developer and the MCP server.
+The Builder of the editors reads it through those two: the Developer and the MCP server.
 
 ## What it must be
 

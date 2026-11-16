@@ -17,10 +17,10 @@ const HOOK: &str = "nuclear agent hook";
 
 /// Writes or updates AGENTS.md (its NuclearLang section), CLAUDE.md (`@AGENTS.md`), the Cursor rule and the
 /// Claude Code hook. Files of the project are kept: only NuclearLang's parts change. Returns what it did.
-/// `mobile_default`: the mobile platform's default dialect (an older Dragonfly app without `dragonfly(...)` is one).
+/// `mobile_default`: the mobile platform's default dialect (an older Synapsis app without `synapsis(...)` is one).
 pub fn init(dir: &Path, dialect: Option<&str>, mobile_default: Option<String>) -> Result<Vec<String>, String> {
-    // a Dragonfly project (config.nuc or main.nuc) is built with the dragonfly CLI, whatever its platform
-    let dragonfly = dir.join("config.nuc").is_file() || dir.join("main.nuc").is_file();
+    // a Synapsis project (config.nuc or main.nuc) is built with the `nuclear` CLI, whatever its platform
+    let synapsis = dir.join("config.nuc").is_file() || dir.join("main.nuc").is_file();
     let older = || mobile_default.clone().ok_or_else(|| "no default dialect for the mobile platform".to_string());
     let dialect = match dialect {
         Some(d) => d.to_string(),
@@ -33,8 +33,8 @@ pub fn init(dir: &Path, dialect: Option<&str>, mobile_default: Option<String>) -
         None if dir.join("main.nuc").is_file() => older()?,
         None => return Err("which dialect? nuclear agent init --dialect <name>".into()),
     };
-    let check = if dragonfly {
-        "dragonfly check --json".to_string()
+    let check = if synapsis {
+        "nuclear check --json".to_string()
     } else if dir.join("nuclear.toml").is_file() {
         "nuclear check . --json".to_string()
     } else {
@@ -43,25 +43,25 @@ pub fn init(dir: &Path, dialect: Option<&str>, mobile_default: Option<String>) -
     let fill = |t: &str| {
         t.replace("{dialect}", &dialect).replace("{check}", &check)
             .replace(
-                "{dragonfly}",
-                if dragonfly {
-                    "- Create each piece with `dragonfly make ...` (`dragonfly help`); after `dragonfly check`, run \
-                     `dragonfly analyze` and, with tests, `dragonfly test`.\n"
+                "{synapsis}",
+                if synapsis {
+                    "- Create each piece with `nuclear make ...` (`nuclear help`); after `nuclear check`, run \
+                     `nuclear analyze` and, with tests, `nuclear test`.\n"
                 } else {
                     ""
                 },
             )
             .replace(
                 "{packages}",
-                if dragonfly {
-                    "- A library the project does not have (npm, PyPI, pub.dev): `dragonfly add <package>` installs it and \
+                if synapsis {
+                    "- A library the project does not have (npm, PyPI, pub.dev): `nuclear add <package>` installs it and \
                      generates its type definitions; then use its names (they are imported for you). Never install it by \
                      hand in `build/`.\n"
                 } else {
                     ""
                 },
             )
-            .replace("{generated}", if dragonfly { "`build/`" } else { "`build/` and the `.ts`/`.dart`/`.py` built from the `.nuc`" })
+            .replace("{generated}", if synapsis { "`build/`" } else { "`build/` and the `.ts`/`.dart`/`.py` built from the `.nuc`" })
     };
     let mut done = Vec::new();
 
@@ -198,7 +198,7 @@ mod tests {
         let agents = std::fs::read_to_string(dir.join("AGENTS.md")).unwrap();
         assert!(agents.starts_with("# Mine\n\nkeep this"), "{agents}");
         assert_eq!(agents.matches(START).count(), 1, "{agents}");
-        assert!(agents.contains("--dialect flutter") && agents.contains("dragonfly check --json"), "{agents}");
+        assert!(agents.contains("--dialect flutter") && agents.contains("nuclear check --json"), "{agents}");
         let settings: Value = serde_json::from_str(&std::fs::read_to_string(dir.join(".claude/settings.json")).unwrap()).unwrap();
         assert_eq!(settings["model"], "x");
         assert_eq!(settings["hooks"]["PostToolUse"].as_array().unwrap().len(), 1);

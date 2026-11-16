@@ -113,14 +113,14 @@ dart ───────► flutter
 | Dialect | Target | What it adds |
 |---|---|---|
 | `dart` | Dart | kinds `extension`, `mixin`, `data`; `Result<E, T>` with fpdart |
-| `flutter` | Dart + Flutter | `stateless`, `stateful` and the Dragonfly framework: `@screen` (routes, providers, session, ACL), `repository`, `usecase`, `statemanager`, `event`, `component`, `guard` and tests in Nuclear |
+| `flutter` | Dart + Flutter | `stateless`, `stateful` and the Synapsis framework: `@screen` (routes, providers, session, ACL), `repository`, `usecase`, `statemanager`, `event`, `component`, `guard` and tests in Nuclear |
 | `typescript` | TypeScript | the base language over strict TS |
 | `nodejs` | TypeScript for Node.js | Node APIs |
 | `nestjs` | NestJS | kinds `controller` and `service` |
 
 The extension brings every dialect of the repository (`flutter`, `fastapi`, `nestjs`, `dart`, `python`,
 `typescript`) with their type definitions. A project is checked with the dialect its manifest names (`config.nuc`
-with `dragonfly(platform, dialect)`, or `nuclear.toml`): a backend project never sees Flutter's kinds, and the
+with `synapsis(platform, dialect)`, or `nuclear.toml`): a backend project never sees Flutter's kinds, and the
 status bar shows its platform and dialect (`backend · fastapi`), read from the project card `.nuclear/project.json`
 the server writes. `nuclear.dialect` only applies to `.nuc` files outside a project. To use a dialect of your own,
 add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects` folder is always searched.
@@ -133,9 +133,9 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
   to override, decorators and the arguments of `@screen`.
 - **Hover and signature help** from the type definitions, with a link to Flutter's API.
 - **Go to definition, references, rename, outline and folding.**
-- **Multi-file projects** (`nuclear.toml`, or a folder with `main.nuc` in a Dragonfly project): the names of the
+- **Multi-file projects** (`nuclear.toml`, or a folder with `main.nuc` in a Synapsis project): the names of the
   other files are visible and the architecture rules apply.
-- **A Dragonfly project like a Flutter project**, opened with `dragonfly code` or as a folder (`code .`): the
+- **A Synapsis project like a Flutter project**, opened with `nuclear code` or as a folder (`code .`): the
   Flutter extension's device picker, a ▷ Run / Debug button and F5 on a `.nuc` (transpiles and launches the app
   with the `<project> (debug)` configuration of `build/<project>.code-workspace`), and **hot reload on saving a
   `.nuc`** while the app runs. If the Flutter app is created with the window already open, the extension offers to
@@ -144,8 +144,8 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
   F10/F11/Shift+F11 by Nuclear line, variable values in the `.nuc`, the *Nuclear Call Stack* view and *Go to the
   Same Line in the generated code*, under the Dart debugger (mobile; also Dart errors on their `.nuc` line), node
   (nestjs, with source maps), debugpy (fastapi) and Chrome (react, also on the web device). ◉ Debug or F5 with
-  `build/<project>.code-workspace`, which `dragonfly build` writes for every platform with its tasks and launch.
-- **Backend and web apps reload on save:** saving a `.nuc` runs `dragonfly build` and the running server or page
+  `build/<project>.code-workspace`, which `nuclear build` writes for every platform with its tasks and launch.
+- **Backend and web apps reload on save:** saving a `.nuc` runs `nuclear build` and the running server or page
   takes it (uvicorn `--reload`, `node --watch`, Vite); `nuclear.buildOnSave`.
 - **The web device** (▭ Device of a web project): the app beside the code at the size of a desktop, a laptop, a
   tablet or a phone (user agent, touch, rotation, any size), with an address bar, Chrome's DevTools of the page, the
@@ -160,22 +160,22 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
   there): one reload, then the action continues. The tools at the bottom
   (`Ctrl+Alt+<letter>`). Clicking a tab or an action shows the shortcut that does the same. A welcome page
   (`Ctrl+Alt+W`, and at startup when no editor is open) lists the projects, the tools and the keys.
-- **Loop** (`Ctrl+Alt+P`): spec-driven work as a pipeline. The first page is the spec: what you want (a feature, a
+- **Nuclear Builder** (`Ctrl+Alt+P`): spec-driven work as a pipeline. The first page is the spec: what you want (a feature, a
   refactor, a bug, tests, a security review, documentation, a diagram), written here or imported from Jira or a GitHub
   issue, its acceptance criteria, the context files the agents get (suggested from the project and your skills) and
   who leads (Claude with the local Nuclear Developer, or the local agents only). A run is drawn like a GitHub pipeline
   that zooms like a C4 diagram: the stages (spec, generate, plan, code, tests, security, artifacts, deploy; the *Specification* ends with the
   **analysis**: which kind of request the spec is (a whole system, one screen, a rename, a failing test...: its
   strategy, ADR-developer-0001), which decides the stages that run, what the generators write and what is asked of you first;
-  *Generate* runs `dragonfly gen` for the
+  *Generate* runs `nuclear gen` for the
   resources the spec names, also in plain words, so the agents write only what is left; *Plan* shows the work as parts, tasks and pieces
   and says what of the spec is beyond the platform or the local agents; *Tests first* is skipped when the generators
   wrote every file), then the steps of a stage, then what each agent did (its trace, its code, its output). Every
   call to an agent carries the project's folder, so the agent reads by itself the files its task names. The commands of each stage are
-  `.nuclear/loop.json`; *Export CI* writes them for GitHub Actions, GitLab CI or Bitbucket Pipelines. Needs the
+  `.nuclear/builder.json`; *Export CI* writes them for GitHub Actions, GitLab CI or Bitbucket Pipelines. Needs the
   [Nuclear Smart Graph](https://github.com/nuclearlang/nuclear-graph) and the
   [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer) running. The same engine runs without the
-  editor as `nuclear-loop` (`run` a spec file, `ci` the server stages, `export`, `runs`), installed by
+  editor as `nuclear-builder` (`run` a spec file, `ci` the server stages, `export`, `runs`), installed by
   `installer/install.sh`.
 - **Nuclear agent** (`Ctrl+Alt+A`): a chat with the local agents of the
   [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer), like the chats of Claude or Cursor, over the
@@ -192,15 +192,15 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
   the user's. It finds what the services need (NuclearLang, uv, Ollama) by itself once installed, or installs it in a
   terminal. Then it installs the Smart Graph, the Nuclear Developer, the models and the knowledge base, with the
   progress of each step and *Try again* from the one that failed, and leaves both services starting at every login.
-  The same set-up in a terminal: `nuclear-loop setup`
+  The same set-up in a terminal: `nuclear-builder setup`
   ([Set up the AI services](../../installer/docs/08-guides/ai-setup.md)).
-- **Settings and integrations** (`Ctrl+Alt+S`): every setting of the AI loop in one page, kept as the editor's
+- **Settings and integrations** (`Ctrl+Alt+S`): every setting of the AI services in one page, kept as the editor's
   `nuclear.ai.*` settings: the services (Smart Graph, Nuclear Developer, Ollama) with their state and *Start* /
   *Restart* with the chosen models; the local models (installed ones with their size, a warning over the 3B rule,
-  *Pull*); the Nuclear MCP server added to Claude Code, Codex or Cursor in one click; the connections (the graph's
+  *Pull*); the Nuclear MCP server (`nuclear-mcp`) added to Claude Code, Codex, Cursor or OpenCode in one click; the connections (the graph's
   clients and pending access requests with *Allow* / *Deny* / *Revoke*, Jira, GitHub); Claude's model and the retry
-  policy. A project's `.nuclear/loop.json` still wins for its own pipeline.
-- **Work that does not stop, and notifications**: a Loop run or a chat question belongs to the extension, not to its
+  policy. A project's `.nuclear/builder.json` still wins for its own pipeline.
+- **Work that does not stop, and notifications**: a Nuclear Builder run or a chat question belongs to the extension, not to its
   page: switch tools or close the page and it keeps working. When it ends (a chat answered, a run passed or failed) a
   notification says so (*Open* goes to that run or session) unless you are looking at it; the Nuclear icon of the
   activity bar shows a badge with the unread ones, each tool's tab its count, and the tool's pane lists them.
@@ -208,7 +208,7 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
   it read); a context meter shows how full the local model's window is (`nuclear.ai.contextTokens`) and tells you to
   start a new session when it is near; ↑ / ↓ in the input go through the questions you asked before; a question that
   failed has *↻ Retry*, an order that failed *↻ Retry from the step that failed*.
-- **A run survives the editor**: every run writes a trace log (`.nuclear/loop/runs/<id>.log`), a heartbeat and a ledger
+- **A run survives the editor**: every run writes a trace log (`.nuclear/builder/runs/<id>.log`), a heartbeat and a ledger
   of the files it writes. Close or crash VS Code in the middle of a run and, when it opens again, the run is found
   interrupted: what its unfinished step wrote is undone and it goes on from that step by itself (a notification says
   so; `nuclear.ai.resumeInterrupted`). A call nothing is working on (the Developer silent, Ollama holding no model) is
@@ -220,18 +220,18 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
 - **When a run fails**: a call to the local agents that fails for a passing reason (the service starting, busy, a
   5xx) is retried by itself with exponential backoff and jitter (*Settings*: tries, first wait, longest wait); each
   retry is written in the step's trace. When a stage fails, the local **diagnoser** tells why (the kind of failure by
-  rules, the evidence from the compiler or `dragonfly doctor`, the next step), shown on the run and in the chat;
+  rules, the evidence from the compiler or `nuclear doctor`, the next step), shown on the run and in the chat;
   *↻ Retry* goes on from the step that failed (on the run and on the failed step itself), keeping every step that
-  passed; *Restart <stage>* runs the whole stage again (`nuclear-loop retry <run> [--from <stage>]` without the editor).
-- **Nuclear HTTP** (`Ctrl+Alt+H`): a workspace like Bruno. Its pane is the endpoints tree of every project by platform,
+  passed; *Restart <stage>* runs the whole stage again (`nuclear-builder retry <run> [--from <stage>]` without the editor).
+- **Nuclear Connector** (`Ctrl+Alt+H`): a workspace like Bruno. Its pane is the endpoints tree of every project by platform,
   project and component (from the contract the compiler writes, `.nuclear/contract.json`), the contracts an app
   declares with *↓ Update* (`nuclear contracts update`), OpenAPI documents of APIs that are not Nuclear, and the
   environment (`.nuclear/http.json`: variables, headers, base urls). A component is an editor tab and each endpoint a
   tab inside it: path and query parameters, headers, a sample body from the model, the pretty-printed response and
   *copy as curl*.
-- **Devices** (`Ctrl+Alt+V`): the open Dragonfly devices and *+ New device*: as many as you want at once, like
+- **Devices** (`Ctrl+Alt+V`): the open Synapsis devices and *+ New device*: as many as you want at once, like
   emulators, tiled side by side, each with its own size, identity, app and session; ▷ Run, ◉ Debug and ▭ Device ask
-  which device to run on (Dragonfly, new, or any Flutter device); a run never replaces a running device. Closing a
+  which device to run on (Synapsis, new, or any Flutter device); a run never replaces a running device. Closing a
   device tab only hides it (the app goes on); ✕ in the Devices workspace ends it now; a device nobody looks at for 30
   minutes ends by itself and a watchdog frees orphan processes. They belong to the mobile workspaces.
 - **Show Generated Code:** shows beside it the Dart or TypeScript the file generates.
@@ -242,11 +242,13 @@ add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects`
 
 | Setting | What it does |
 |---|---|
-| `nuclear.buildOnSave` | saving a `.nuc` of a backend or web project runs `dragonfly build` (the server or page reloads by itself); on by default |
+| `nuclear.buildOnSave` | saving a `.nuc` of a backend or web project runs `nuclear build` (the server or page reloads by itself); on by default |
 | `nuclear.dialect` | the dialect of files outside a project (`flutter` by default; `base` checks only the base language) |
 | `nuclear.dialectPaths` | extra folders with dialects |
 | `nuclear.server.path` | another `nuclear-lsp` binary (empty: the one the extension brings) |
 | `nuclear.workspace.welcome` | the welcome page of the Nuclear workspace at startup (default on) |
+| `nuclear.ai.mcpCommand` | the program that serves the Nuclear MCP server, started with no argument (`nuclear-mcp`) |
+| `nuclear.ai.graphCommand` | the Smart Graph's program: serve, connect, requests, revoke (`nuclear-graph`) |
 | `nuclear.codemetrics.*` | costs and thresholds of the metrics |
 
 Commands (category **Nuclear**): **Show the Nuclear Workspace**, **Go to Project Tab**, **Open a Project as a Tab**,

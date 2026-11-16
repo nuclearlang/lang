@@ -22,8 +22,8 @@ the full API for the language server and the agents. Types in Nuclear notation. 
 `[dialect] defs`; they give the automatic imports, the inherited members and the overrides. One generator per
 language (`tools/defs/`).
 
-**One command on every platform.** `dragonfly add <package>[@version]... [--module <module>]...` and
-`dragonfly remove <package>...`. A folder is still a kind package (ADR-synapsis-0004); a name is a package of the target.
+**One command on every platform.** `nuclear add <package>[@version]... [--module <module>]...` and
+`nuclear remove <package>...`. A folder is still a kind package (ADR-synapsis-0004); a name is a package of the target.
 The package is installed in the generated project, written in `dependencies(...)` of `config.nuc` with the version
 the package manager resolved, and described: its definitions are generated from what is installed.
 
@@ -35,7 +35,7 @@ definitions by Dart's analyzer).
 
 **Where a project's definitions live.** A backend or web project keeps them in the project,
 `defs/<language>/<name>/<version>/`, with the sources: a project just cloned compiles before anything is installed.
-`dragonfly install` generates the ones that are missing (a package written by hand in `config.nuc`). Mobile keeps
+`nuclear install` generates the ones that are missing (a package written by hand in `config.nuc`). Mobile keeps
 the shared cache and `build/defs.lock`.
 
 **A name is imported as what it is.** `index.json` has `defaults`: the symbols that are the default export of their
@@ -56,8 +56,8 @@ uses stays refused (`reserved`, the dialect's `defs`).
 **The tools read the project's packages.** `nuclear defs show|list|search` inside a project include them, as
 `nuclear check`, `nuclear build` and the language server do.
 
-**Through the agent.** The MCP tool `dragonfly` runs `add` and `remove`; `nuclear_defs` takes the project's folder;
-the skill and a project's `AGENTS.md` say that a missing library is added with `dragonfly add`, never by hand in
+**Through the agent.** The MCP tool `synapsis` runs `add` and `remove`; `nuclear_defs` takes the project's folder;
+the skill and a project's `AGENTS.md` say that a missing library is added with `nuclear add`, never by hand in
 `build/`.
 
 **Not decided: a library of another language** (a Python library inside a project of the TypeScript dialect). It is
@@ -87,7 +87,7 @@ decide when a project needs it.
   - A dialect without `package_*` commands cannot add packages; the command says which key is missing.
   - Projects with a `nuclear.toml` (the base dialects, built with `nuclear build`) have no command: they have no
     environment of their own to install into. They still keep definitions by hand in `defs/`.
-  - The definitions describe the version installed when the package was added; `dragonfly add <package>` again
+  - The definitions describe the version installed when the package was added; `nuclear add <package>` again
     regenerates them after an upgrade.
   - TypeScript: what a CommonJS package hangs from its exported value is reached through the default export
     (`lodash.chunk(...)`), not by name; a module other than the package's own is named with `--module`

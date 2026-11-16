@@ -22,11 +22,11 @@ rows: `{shelf, origin, about, rows}`. The files of the folder and an example row
 | the habits of other languages | the table of the base brief (`nuclearlang/docs/07-reference/brief/nuclear-base.md`) |
 | the standard library, and the names of other languages it replaces | `nuclearlang/crates/nuclear-dialect/src/library.rs` |
 | each platform's kinds, decorators, layout and plugins | `nuclear-synapsis-framework/platforms/<platform>/platform.toml`, and the `docs.toml` and `dialect.toml` of the platform's default dialect |
-| what each generator writes | the `generators` table of each platform's `platform.toml` |
-| the commands of `nuclear`, `dragonfly`, `nuclear-loop` and `nuclear-graph` | their help, read from the installed binaries |
-| the MCP tools and the server's instructions | `mcp_server.nuc` |
+| what each generator writes | the `generators` table of `tools/code_generator/platforms/<platform>/generators.toml` (the extractor still reads `platform.toml`: [roadmap](../01-product/roadmap.md)) |
+| the commands of `nuclear`, `nuclear-builder` and `nuclear-graph` | their help, read from the installed binaries |
+| the MCP tools and the server's instructions | `nuclear-mcp tools` (the project `tools/mcp`), read from the installed command |
 | the HTTP routes of the graph and of the Nuclear Developer | `server.nuc`, the Developer's controller |
-| the Loop's stages, the editor's commands and settings | `extensions/vscode/src/loopEngine.ts`, `extensions/vscode/package.json` |
+| the Builder's stages, the editor's commands and settings | `extensions/tools/nuclear-builder/src/engine.ts`, `extensions/vscode/package.json` |
 | the local agents | their own sources in `nuclear-agents/nuclear_developer/` |
 | each component's version | its manifest |
 | the examples | every `.nuc` of the example projects, by kind and platform |
@@ -85,10 +85,10 @@ a change there asks for their review.
 
 ## Limits
 
-- The help of `nuclear`, `dragonfly` and `nuclear-loop` is read from the installed binaries: after changing a
+- The help of `nuclear` and `nuclear-builder`, and the tools of `nuclear-mcp`, are read from the installed commands: after changing a
   command, install it (`installer/install.sh`) before building the base.
 - A curated row without `sources` is never asked for a review; one whose source is a long section is asked often.
 
-The help of every command the build records (`nuclear`, `dragonfly`, `nuclear-loop`, `nuclear-graph` itself) is
+The help of every command the build records (`nuclear`, `nuclear-builder`, `nuclear-graph` itself) is
 rendered 100 columns wide, whatever the terminal of whoever runs the build: the rows are the same in a shell, in
 the end-of-turn hook and in CI.

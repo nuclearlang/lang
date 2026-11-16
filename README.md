@@ -34,7 +34,7 @@ irm https://nuclearlang.github.io/install.ps1 | iex             # Windows (Power
 From the source tree (it needs Rust; for Flutter apps, Flutter: `FLUTTER` or `FLUTTER_ROOT` if it is not on the PATH):
 
 ```sh
-installer/install.sh                 # builds and installs nuclear, dragonfly and nuclear-lsp in ~/.local/bin + the VS Code and Zed extensions
+installer/install.sh                 # builds and installs nuclear and nuclear-lsp in ~/.local/bin (and nuclear-builder) + the VS Code and Zed extensions
 installer/install.sh --no-vscode     # without the VS Code extension (--no-zed: without the Zed one)
 installer/install.sh --uninstall     # uninstalls
 PREFIX=/usr/local installer/install.sh
@@ -52,16 +52,14 @@ One repository. Each folder is a project with its own `AGENTS.md` and `docs/`:
 | [nuclearlang/](nuclearlang/AGENTS.md) | the language: the compiler, the language server, the base words, the examples |
 | [nuclearlang/dialects/](nuclearlang/dialects/README.md) | the dialects: `python` (with `fastapi`), `typescript` (with `nestjs`, `react`), `dart` (with `flutter`), `nodejs` |
 | [nuclear-synapsis-framework/](nuclear-synapsis-framework/AGENTS.md) | the framework and its three platforms: `mobile`, `backend`, `web` |
-| [tools/](tools/AGENTS.md) | the command line tools, the code generator, the MCP server |
+| [tools/](tools/AGENTS.md) | the `nuclear` command, the code generator, the MCP server |
 | [extensions/](extensions/AGENTS.md) | the VS Code, JetBrains and Zed extensions and their tools |
 | [device-emulators/](device-emulators/AGENTS.md) | the devices the tools and the editors start |
 | [nuclear-graph-storage/](nuclear-graph-storage/AGENTS.md) | the Smart Graph: the local, private knowledge base every agent reads |
 | [nuclear-agents/](nuclear-agents/AGENTS.md) | the local agents |
 | [installer/](installer/AGENTS.md) | the installers and the release |
+| [website/](website/AGENTS.md) | the documentation site, written in Nuclear: it reads the `.md` files of this tree at build time |
 | [docs/](docs/README.md) | what is about the whole platform: vision, architecture, decisions, standards |
-
-The documentation site is a repository of its own, `website`, written in Nuclear: it reads the `.md` files of this
-tree at build time.
 
 How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md). License: [Apache-2.0](LICENSE).
 

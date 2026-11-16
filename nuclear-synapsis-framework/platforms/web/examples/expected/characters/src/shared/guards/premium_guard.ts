@@ -1,4 +1,4 @@
-import { Guard, SessionManager } from 'dragonfly-web';
+import { Guard, SessionManager } from 'synapsis-web';
 
 /** Guard: a custom access check, like NestJS CanActivate. */
 export class PremiumGuard extends Guard {

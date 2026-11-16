@@ -1,5 +1,5 @@
-import 'package:dragonfly_genkit/dragonfly_genkit.dart';
 import 'package:genkit_assistant/components/assistant/ai/note_tools.dart';
+import 'package:synapsis_genkit/synapsis_genkit.dart';
 
 /// The assistant of the chat screen: it keeps notes with its tools.
 class Assistant extends Chat {

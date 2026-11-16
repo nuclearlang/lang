@@ -5,8 +5,8 @@ import 'package:clean_flutter_project/components/characters/domain/usecases/get_
 import 'package:clean_flutter_project/components/characters/domain/usecases/get_page_usecase.dart';
 import 'package:clean_flutter_project/components/characters/domain/usecases/save_character_usecase.dart';
 import 'package:clean_flutter_project/components/characters/domain/usecases/search_characters_usecase.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Application component: the facade of the component. Other components and the screens use
 /// characters only through these functions.

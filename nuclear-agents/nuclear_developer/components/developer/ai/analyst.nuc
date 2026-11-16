@@ -56,11 +56,11 @@ graph Analyst(bench: Workbench, toolchain: Toolchain)
         calls = commands(~bench.ask("default", ~bench.prompt("analyze", { "task": "${task}\n\n(The request names ${wants} fields: write all ${wants}, and no other.)" })), state.platform).filter((c) => fieldsOf(c) == wants)
         trace.add(bench.step("faithful", "the request lists ${wants} fields and the answer had ${first}: asked again, ${calls.length > 0 ? "now it has them" : "still not: left out"}"))
       for args in calls
-        out: string = ~toolchain.dragonfly(state.root, ["gen"] + args + ["--dry-run"])
+        out: string = ~toolchain.project(state.root, ["gen"] + args + ["--dry-run"])
         accepted = out.startsWith("exit 0")
         if accepted
           generate.add(args)
-        trace.add(bench.step("generator", "dragonfly gen ${args.join(" ")}: ${accepted ? "accepted" : bench.firstLine(out.split("\n").slice(1).join("\n").trim())}"))
+        trace.add(bench.step("generator", "nuclear gen ${args.join(" ")}: ${accepted ? "accepted" : bench.firstLine(out.split("\n").slice(1).join("\n").trim())}"))
     // a rename is done by a tool: every file that writes the name, with the new one in its place
     if source == "naming" and state.root.length > 0
       names = renameOf(task, state.existing)
@@ -87,7 +87,7 @@ graph Analyst(bench: Workbench, toolchain: Toolchain)
       cut = line.indexOf("=")
       if cut > 0 and unmet(line.substring(0, cut), task, chosen["why"] ?? "", state.root.length > 0, generate.length, pieces.length, state.designed > 0)
         questions.add(line.substring(cut + 1))
-    shown = generate.map((args) => "- dragonfly gen ${args.join(" ")}")
+    shown = generate.map((args) => "- nuclear gen ${args.join(" ")}")
     files = pieces.map((p) => "- ${p["path"]!}")
     report = bench.sections(["${chosen["title"] ?? "No strategy"}\n\n${chosen["summary"] ?? ""}", shown.length > 0 ? "The generators write\n\n${shown.join("\n")}" : "", files.length > 0 ? "The files it changes\n\n${files.join("\n")}" : "", questions.length > 0 ? "The request does not say (ask the user)\n\n${questions.map((q) => "- ${q}").join("\n")}" : "", state.limits.length > 0 ? "Beyond the platform or the local agents (tell the user)\n\n${state.limits.map((l) => "- ${l}").join("\n")}" : ""])
     { "generate": generate, "pieces": pieces, "questions": questions, "report": report, "trace": trace }
@@ -134,7 +134,7 @@ graph Analyst(bench: Workbench, toolchain: Toolchain)
   explicit(task: string) boolean
     Regex(r"^\s*GET\s+https?://\S+\s*$", multiLine = true).test(task) or "## Resources" in task
 
-  // The lines `component | Name | fields | source | actions` a model answered → the arguments of `dragonfly gen`
+  // The lines `component | Name | fields | source | actions` a model answered → the arguments of `nuclear gen`
   // for each (`resource orders Order --fields "..." --source db --actions list,create`). A line without a name, or
   // with no field besides the key and no url, is left out: nothing is generated from a guess.
   commands(raw: string, platform: string) string[][]

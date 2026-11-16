@@ -6,7 +6,7 @@ read-when: you split the working tree into the public repositories (step 1 of th
 
 # 006 — Public repositories: the organization `nuclearlang`
 
-Progress: stage 1 in progress; `dragonfly-web/` moved (STATUS.md "Half done").
+Progress: stage 1 in progress; `synapsis-web/` moved (STATUS.md "Half done").
 
 Step 1 of the competitiveness plan (STATUS.md "Next"). Decided by the user (2026-11-10): the GitHub organization
 **`nuclearlang`** (it exists, created 2026-10-18, with an empty repository `nuclear`), repositories **public from the
@@ -21,10 +21,10 @@ own release cycle), done **in stages**.
 | `nuclear-vscode` | `editors/vscode`, `editors/theme`, `editors/scripts` (it downloads the LSP binary of a `nuclear` release) |
 | `nuclear-jetbrains` | `editors/jetbrains` |
 | `nuclear-zed` | `editors/zed` |
-| `dragonfly` | `cli/` (the `dragonfly` CLI), `docs/dragonfly/{README,kinds,tutorial}.md`, `spec/dragonfly.md` |
-| `dragonfly-mobile` | `dialects/mobile`, `packages/{dragonfly,dragonfly_genkit}`, `defs/dart/*` except `dart`, `spec/{mobile,flutter}.md`, `examples/examples-flutter-dialect`, `tools/analyze-flutter.sh`, `docs/dragonfly/genkit.md` |
-| `dragonfly-backend` | `dialects/backend`, `packages/{dragonfly-py,dragonfly-nest}`, `defs/python/*` except `python`, `defs/typescript/*` of the backend, `spec/{backend,fastapi,nestjs}.md`, `examples/{examples-backend,examples-fastapi,examples-nestjs}`, `tools/{fastapi-check,nestjs-check,python,node}`, `docs/dragonfly/{python,nestjs,contracts}.md` |
-| `dragonfly-web` | `dialects/web`, `packages/dragonfly-web`, `defs/typescript/{react,react_router,vitest,testing_library_react,dragonfly-web}`, `spec/{web,react}.md`, `examples/examples-web`, `tools/react-check`, `docs/dragonfly/react.md` |
+| `synapsis` | `cli/` (the `nuclear` CLI), `docs/synapsis/{README,kinds,tutorial}.md`, `spec/synapsis.md` |
+| `synapsis-mobile` | `dialects/mobile`, `packages/{synapsis,synapsis_genkit}`, `defs/dart/*` except `dart`, `spec/{mobile,flutter}.md`, `examples/examples-flutter-dialect`, `tools/analyze-flutter.sh`, `docs/synapsis/genkit.md` |
+| `synapsis-backend` | `dialects/backend`, `packages/{synapsis-py,synapsis-nest}`, `defs/python/*` except `python`, `defs/typescript/*` of the backend, `spec/{backend,fastapi,nestjs}.md`, `examples/{examples-backend,examples-fastapi,examples-nestjs}`, `tools/{fastapi-check,nestjs-check,python,node}`, `docs/synapsis/{python,nestjs,contracts}.md` |
+| `synapsis-web` | `dialects/web`, `packages/synapsis-web`, `defs/typescript/{react,react_router,vitest,testing_library_react,synapsis-web}`, `spec/{web,react}.md`, `examples/examples-web`, `tools/react-check`, `docs/synapsis/react.md` |
 | `website` | `~/Documents/projects/nuc/react/nuclearlang_website` (the site in Nuclear; it reads the docs of the other repositories at build time; the old VitePress `website/` was removed 2026-11-10) |
 | `.github` | the organization's profile (`profile/README.md`) |
 
@@ -37,9 +37,9 @@ stay out unless the user says otherwise; `tools/thesis/results` and `tools/agent
 published numbers).
 
 **Layout of the working tree (decided 2026-11-10 with the pilot):** the root folder is the `nuclear` repository and
-every other repository is a folder inside it (`dragonfly-web/`, `dragonfly-backend/`, `editors/`…), ignored by the
+every other repository is a folder inside it (`synapsis-web/`, `synapsis-backend/`, `editors/`…), ignored by the
 root's git, as `editors/` and `cli/` are today. `nuclear_dialect::source_roots(root)` lists the root and each
-`dragonfly-*` folder with `dialects/`; the CLI, the LSP, the tests, `install.sh`, the editors' bundles and the website
+`synapsis-*` folder with `dialects/`; the CLI, the LSP, the tests, `install.sh`, the editors' bundles and the website
 merge the `dialects/`, `defs/`, `spec/`, `docs/` and `examples/` of every source root. A CI of a platform repository
 checks out `nuclear` and places itself inside it.
 

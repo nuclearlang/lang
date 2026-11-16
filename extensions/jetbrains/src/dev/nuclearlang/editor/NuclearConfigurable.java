@@ -40,7 +40,7 @@ public final class NuclearConfigurable implements Configurable {
         c.gridx = 1; c.gridy = 2;
         form.add(new JLabel("<html><small>Empty: the server bundled with the plugin, then nuclear-lsp on the PATH.<br>"
             + "'base' checks only the base language.</small></html>"), c);
-        follow = new JCheckBox("Debugging a Dragonfly app: show the .nuc line where it pauses");
+        follow = new JCheckBox("Debugging a Synapsis app: show the .nuc line where it pauses");
         explain = new JCheckBox("Dart run-time errors: mark their .nuc line and explain them (Nuclear Error window)");
         c.gridx = 0; c.gridy = 3; c.gridwidth = 2;
         form.add(follow, c);

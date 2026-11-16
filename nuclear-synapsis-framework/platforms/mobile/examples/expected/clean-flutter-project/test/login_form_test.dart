@@ -2,13 +2,13 @@ import 'package:clean_flutter_project/components/characters/data/character_repos
 import 'package:clean_flutter_project/components/characters/domain/models/character.dart';
 import 'package:clean_flutter_project/components/characters/domain/models/character_error.dart';
 import 'package:clean_flutter_project/components/session/presentation/login/managers/login_form_manager.dart';
-import 'package:clean_flutter_project/dragonfly.g.dart';
 import 'package:clean_flutter_project/shared/models/page.dart';
-import 'package:dragonfly/dragonfly.dart';
-import 'package:dragonfly/testing.dart';
+import 'package:clean_flutter_project/synapsis.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:synapsis/synapsis.dart';
+import 'package:synapsis/testing.dart';
 
 /// The login form: the LoginForm rules and the remote validation of the user (the characters
 /// repository is a mock). The messages come from assets/i18n/en.
@@ -17,8 +17,8 @@ class MockCharacterRepository extends Mock implements CharacterRepository {}
 void main() {
   group('LoginFormTest', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
-      DragonflyTest.replace<CharacterRepository>(MockCharacterRepository());
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis);
+      SynapsisTest.replace<CharacterRepository>(MockCharacterRepository());
     });
 
     setUp(() async {

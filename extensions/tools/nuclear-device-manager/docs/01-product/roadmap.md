@@ -6,7 +6,7 @@ related: [../02-architecture/overview.md, ../../../../vscode/docs/01-product/roa
 ---
 # Roadmap of the devices in the editor
 
-The CLI's devices (`dragonfly device`, a real phone, macOS and Windows) are the pending work of
+The CLI's devices (`nuclear device`, a real phone, macOS and Windows) are the pending work of
 [`device-emulators/`](../../../../../device-emulators/AGENTS.md).
 
 ## Untested

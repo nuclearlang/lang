@@ -1,6 +1,6 @@
 # The web platform
 
-The web platform of Dragonfly: apps that run in the browser, written in Nuclear with the same words as the mobile
+The web platform of Synapsis: apps that run in the browser, written in Nuclear with the same words as the mobile
 platform. This folder holds what is the same for every dialect: the contract (`platform.toml`), the runtime package
 the generated app runs on, the example and the check. The Nuclear of a web project never changes when its dialect
 changes.
@@ -14,7 +14,7 @@ of the tree. The rules of the whole platform are in [the root `AGENTS.md`](../..
 - The contract: `platform.toml`, TOML read by the compiler's loader (`nuclearlang/crates/nuclear-dialect`).
 - The one dialect that implements it today, documented by the TypeScript dialect project: `react` (React 19 without
   JSX, React Router 7, Vite 7, Vitest 4 + jsdom + Testing Library).
-- The runtime: `packages/dragonfly-web` (npm, ESM, TypeScript 5.9; peers `react`, `react-dom`, `react-router`).
+- The runtime: `packages/synapsis-web` (npm, ESM, TypeScript 5.9; peers `react`, `react-dom`, `react-router`).
 - The check: an `sh` script over `nuclearlang/tools/node` (tsc, vitest, vite). CI:
   `.github/workflows/platform-web.yml`.
 
@@ -25,7 +25,7 @@ From the root of the tree:
 ```sh
 # once
 (cd nuclearlang/tools/node && npm install)                     # the shared Node tools of the check
-(cd nuclear-synapsis-framework/platforms/web/packages/dragonfly-web && npm install)
+(cd nuclear-synapsis-framework/platforms/web/packages/synapsis-web && npm install)
 
 # before a change is done
 cargo test                                   # the example, its golden
@@ -33,14 +33,15 @@ sh nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh   # tsc 
 UPDATE_GOLDEN=1 cargo test                   # the generated output changed on purpose: regenerate, review the diff
 installer/install.sh                         # the user runs the installed copy: install after a change
 
-# the runtime alone, in packages/dragonfly-web
+# the runtime alone, in packages/synapsis-web
 npx tsc -p tsconfig.json && npx vitest run
 ```
 
 ## Folders
 
-- `platform.toml`: the contract: kinds, decorators, `[layout]`, `[skeletons]`, `[[generators.*]]`.
-- `packages/dragonfly-web/`: the runtime (`src/`, `test/runtime.test.ts`).
+- `platform.toml`: the contract: kinds, decorators, `[layout]`. What `nuclear make` and `gen` write
+  (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/web/generators.toml`.
+- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`).
 - `examples/examples-web/characters/`: the complete example (list and detail screens, state, events, a guard,
   tests).
 - `examples/expected/characters/`: its golden output.
@@ -48,7 +49,7 @@ npx tsc -p tsconfig.json && npx vitest run
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
 Outside this folder: the dialect (`nuclearlang/dialects/typescript/frameworks/react/`) and the type definitions
-(`nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,dragonfly-web}/`).
+(`nuclearlang/dialects/typescript/defs/{react,react_router,vitest,testing_library_react,synapsis-web}/`).
 
 ## Rules
 
@@ -78,7 +79,7 @@ Outside this folder: the dialect (`nuclearlang/dialects/typescript/frameworks/re
 | [docs/00-context/glossary.md](docs/00-context/glossary.md) | A word has two meanings here (component, view, screen, contract) |
 | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done, untested or pending in the platform and its runtime |
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You need the shape: how a project becomes an app, each section of `platform.toml`, the dialect, the example, what the command reads here |
-| [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) | You change `packages/dragonfly-web` (views, state, http, session, router, tests) |
+| [docs/02-architecture/runtime.md](docs/02-architecture/runtime.md) | You change `packages/synapsis-web` (views, state, http, session, router, tests) |
 | [docs/02-architecture/dependencies.md](docs/02-architecture/dependencies.md) | You add or move a library of the runtime, or need who depends on this folder |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the platform copies mobile, why React without JSX, or what React's libraries could replace |
 | [docs/05-standards/testing.md](docs/05-standards/testing.md) | You run or change the check, the golden or a runtime test |
@@ -93,7 +94,7 @@ Elsewhere:
 - The same words on a phone: [the mobile platform](../mobile/AGENTS.md). The backend an app talks to and the
   contract it is generated from: [the backend platform](../backend/AGENTS.md).
 - What the three platforms share (the format of `platform.toml`, what the loader checks, the common tests):
-  [the platforms](../AGENTS.md). The philosophy: [the framework](../../AGENTS.md). The commands (`dragonfly new -p
-  web`, `build`, `run`, `test`): [the command line tools](../../../tools/cli/AGENTS.md). `dragonfly make` and `gen`:
+  [the platforms](../AGENTS.md). The philosophy: [the framework](../../AGENTS.md). The commands (`nuclear new -p
+  web`, `build`, `run`, `test`): [the command line tools](../../../tools/cli/AGENTS.md). `nuclear make` and `gen`:
   [the code generator](../../../tools/code_generator/AGENTS.md).
 - The compiler, the loader and the format of a dialect and of a project: [the language](../../../nuclearlang/AGENTS.md).

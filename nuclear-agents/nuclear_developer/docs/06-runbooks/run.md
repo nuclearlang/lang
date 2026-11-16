@@ -12,8 +12,8 @@ The set-up of the AI services installs the Developer, with the Smart Graph and t
 starts it at every login ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)):
 
 ```sh
-nuclear-loop setup            # or the installer's last step, or VS Code: Nuclear: Set Up the AI Services
-nuclear-loop setup --status   # what is installed and running
+nuclear-builder setup            # or the installer's last step, or VS Code: Nuclear: Set Up the AI Services
+nuclear-builder setup --status   # what is installed and running
 ```
 
 From the working tree, `installer/install.sh --ai` installs the platform and then runs the same set-up: the
@@ -31,7 +31,7 @@ In this folder (what the set-up does):
 ollama pull qwen2.5-coder:3b && ollama pull gemma4:e2b
 nuclear-graph serve &                                   # the Smart Graph
 nuclear-graph connect nuclear-developer --scopes read,write
-dragonfly install                                       # build/ from the .nuc files, and its environment
+nuclear install                                       # build/ from the .nuc files, and its environment
 cd build && .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 7879
 ```
 
@@ -72,8 +72,8 @@ change to an agent is measured: [evaluation.md](evaluation.md).
 
 | What is seen | What to do |
 |---|---|
-| a caller says `the local developer is not running at ...` | `nuclear-loop setup --status` says what is missing; restart the service, or start it by hand as above |
+| a caller says `the local developer is not running at ...` | `nuclear-builder setup --status` says what is missing; restart the service, or start it by hand as above |
 | `'nuclear-developer' has no access to the Nuclear Smart Graph` | `nuclear-graph connect nuclear-developer --scopes read,write`, with the graph running |
 | a call is answered 408, 425, 429 or 5xx, or the Developer is busy | a passing reason: the caller retries it with backoff (5 tries, 1–30 s by default) |
 | every call waits and none answers | a model entered an answer without end: it holds the Developer and every call after it until the process is killed. Restart the Developer |
-| a run of the Loop stops at a stage | the diagnoser says the kind of failure (transient, environment, code, test, spec), the evidence and the next step; the run goes on from the step that failed with a retry |
+| a run of the Builder stops at a stage | the diagnoser says the kind of failure (transient, environment, code, test, spec), the evidence and the next step; the run goes on from the step that failed with a retry |

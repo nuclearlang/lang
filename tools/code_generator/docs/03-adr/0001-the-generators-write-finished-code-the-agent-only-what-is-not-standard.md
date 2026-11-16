@@ -10,8 +10,8 @@ A feature such as "list the characters of an API, paged" is mostly code that fol
 the models of the answer, a repository over the API, one use case per action, the aliases of the component's facade,
 a controller or a screen with its state manager, the tests. Frameworks generate that code (Phoenix
 `mix phx.gen.json`, Laravel `artisan make:model -mcr`, Symfony `make:crud`), and NuclearLang exists so that the
-deterministic work is done by a tool. Yet `dragonfly make` wrote one nearly empty file per kind (no fields, nothing
-wired, no REST in the backend) and the Loop asked a 3B model to write every file: it failed on what is plain
+deterministic work is done by a tool. Yet `nuclear make` wrote one nearly empty file per kind (no fields, nothing
+wired, no REST in the backend) and the Builder asked a 3B model to write every file: it failed on what is plain
 procedure.
 
 The user's rule: the CLI and the MCP do most of the code; the agent writes only use cases with their own logic and
@@ -19,7 +19,7 @@ the interface; a frontier model (whatever the user has) understands the global c
 know where the fields come from (the spec, the API's answer, the API's documentation) and look them up, or ask.
 
 ## Decision
-1. **`dragonfly gen` generates finished code that compiles, never placeholders.**
+1. **`nuclear gen` generates finished code that compiles, never placeholders.**
    - `gen component <component>`: the component's folder, its facade (`appcomponent`) and its config.
    - `gen resource <component> <Name>`: the models (with their fields; nested objects become models), the
      repository (`--source rest:<base url> --path <path>`: an HTTP repository; `--source db`: an entity and its
@@ -47,7 +47,7 @@ know where the fields come from (the spec, the API's answer, the API's documenta
      place and the form to write it: a use case with a hole in it would be a placeholder. What a screen shows of a
      use case (a state manager's method and its state) is the interface, written by hand.
    - `gen inspect`: what the project has (components, declarations by kind) as JSON, so an agent checks before it
-     generates. A screen that is not a resource's list is `dragonfly make screen` (mobile, web); a resource's list
+     generates. A screen that is not a resource's list is `nuclear make screen` (mobile, web); a resource's list
      screen comes with `gen resource --screen`.
 2. **The templates are the platform's** (`[[generators.<what>]]` of its `platform.toml`), never the CLI's code: the
    Nuclear a generator writes is the same for every dialect of a platform. The CLI only reads the fields, picks the
@@ -63,14 +63,14 @@ know where the fields come from (the spec, the API's answer, the API's documenta
    `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect` (fetches a url and answers its JSON's
    shape and the files it implies), `web_search` and `web_read` (the API's documentation). Its instructions tell
    the client to generate first and give `developer_task` only what is left.
-6. **The Loop generates before it writes**: a *Generate* stage between the spec and the plan runs
-   `dragonfly gen resource` for each resource the spec names (a `## Resources` section, else each `GET <url>` line
+6. **The Builder generates before it writes**: a *Generate* stage between the spec and the plan runs
+   `nuclear gen resource` for each resource the spec names (a `## Resources` section, else each `GET <url>` line
    of the description). The planner is told what was generated and plans only the rest (a piece that repeats a
    generated file is dropped), the agents write only that, and the tests check the whole. The generated files go to
    the run's write ledger, so a crash undoes them like an agent's.
 
 ## Options considered
-1. Skeletons with placeholders for the model to fill (what `dragonfly make` did). Measured: worse than writing from
+1. Skeletons with placeholders for the model to fill (what `nuclear make` did). Measured: worse than writing from
    scratch, 29 of 42 against 37: the model copies the holes.
 2. Generators written in each dialect: the Nuclear would differ between the dialects of a platform.
 3. Letting the model write the standard code with more examples: it costs tokens and fails on procedure a command
@@ -79,7 +79,7 @@ know where the fields come from (the spec, the API's answer, the API's documenta
 
 ## Consequences
 - Positive: a standard feature costs no model tokens; the local 3B model only fills what is specific, where it does
-  well. The backend has an HTTP client in both runtimes (`dragonfly-py` over httpx, `dragonfly-nest` over fetch).
+  well. The backend has an HTTP client in both runtimes (`synapsis-py` over httpx, `synapsis-nest` over fetch).
 - Negative: each platform keeps generator templates next to its kinds, and a new kind or decorator must update
   them (a test builds a generated resource with every dialect of every platform).
 - Limits known when it was delivered: the backend platform has no `@mock`, so a REST resource of the backend gets
@@ -90,5 +90,5 @@ know where the fields come from (the spec, the API's answer, the API's documenta
 ## References
 - Replaces: ADR-0103
 - The platforms and the rule that their Nuclear is the same for every dialect: `ADR-synapsis-0002`.
-- The MCP server and the Loop it is used from: `ADR-platform-0003`.
+- The MCP server and the Builder it is used from: `ADR-platform-0003`.
 - The user guide: `nuclear-synapsis-framework/docs/08-guides/generators.md`.

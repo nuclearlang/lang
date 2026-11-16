@@ -20,16 +20,16 @@ query planner is in [the Smart Graph's roadmap](../../../../nuclear-graph-storag
     the coder);
   - tests for a backend REST resource (needs `@mock` in the backend platform);
   - on mobile and web, what a screen shows of a use case;
-  - the Loop writes files and never deletes or moves one (`strategy:remove` is by hand; a renamed declaration's
+  - the Builder writes files and never deletes or moves one (`strategy:remove` is by hand; a renamed declaration's
     file keeps its path);
   - a rename covers declarations, not fields or methods.
 - **The planner is still asked when the generators wrote everything**, twice (no pieces → `plan-again`): two long
   answers of the 2B model, 15 minutes on a machine short of memory. A strategy whose generator calls cover the
   request could skip it, but only a model can tell that nothing is left.
-- **The Loop's form in the editor has no field for the strategy** (the spec file's `- Strategy:` line and
-  `nuclear-loop run` read it).
+- **The Builder's form in the editor has no field for the strategy** (the spec file's `- Strategy:` line and
+  `nuclear-builder run` read it).
 - **The internet tools** (`web.nuc` of the graph) wired into the local planner: today only over MCP.
-- **The frontier model as manager**: `graph_strategy` gives it the plan of each kind of request; the Loop's
+- **The frontier model as manager**: `graph_strategy` gives it the plan of each kind of request; the Builder's
   Claude-led plan still pastes context.
 - **The planner still names a component in the singular** (the analyst corrects it in a generator call).
 - **The local security reviewer stops a backend run that changes data.** It reports "missing authorization check"
@@ -67,7 +67,7 @@ query planner is in [the Smart Graph's roadmap](../../../../nuclear-graph-storag
 - **The local tester copies a solved graph example close to its task** (a models-only spec got an appcomponent
   test): such a local-only run now fails at *Tests first* with the diagnosis. The tester's retrieval needs examples
   filtered by what the plan declares.
-- **The local planner on a spec in plain words** (no Dragonfly words: "an author has a name; POST /authors adds
+- **The local planner on a spec in plain words** (no Synapsis words: "an author has a name; POST /authors adds
   one") planned two pieces in a component named `data` (`components/data/data/entities/author.nuc` and a test);
   Sonnet then wrote the rest (two MCP runs). Specs written with the platform's words plan well (rounds 10–11 of the
   evaluation).
@@ -75,5 +75,5 @@ query planner is in [the Smart Graph's roadmap](../../../../nuclear-graph-storag
   are always right and whole, the model's explanation above them is not always (asked for "a repository that calls
   an endpoint" it explained routes; given 27 tools it named six groups). An answer with facts is long (the
   explanation, then every row): the chat's panel could fold the rows.
-- **`eval/run.py` is Python**, not Nuclear ("Nuclear and Dragonfly first" of the root `AGENTS.md`): decided by the
+- **`eval/run.py` is Python**, not Nuclear ("Nuclear and Synapsis first" of the root `AGENTS.md`): decided by the
   user to stay as it is for now.

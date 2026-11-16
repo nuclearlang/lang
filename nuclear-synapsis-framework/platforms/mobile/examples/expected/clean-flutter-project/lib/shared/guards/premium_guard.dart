@@ -1,4 +1,4 @@
-import 'package:dragonfly/dragonfly.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Guard: a custom access check, like NestJS CanActivate.
 class PremiumGuard extends Guard {

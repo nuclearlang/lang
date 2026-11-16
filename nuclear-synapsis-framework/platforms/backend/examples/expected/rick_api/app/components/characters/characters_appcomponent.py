@@ -5,7 +5,7 @@ from app.components.characters.domain.models.new_character import NewCharacter
 from app.components.characters.domain.usecases.alive_characters import AliveCharacters
 from app.components.characters.domain.usecases.create_character import CreateCharacter
 from app.components.characters.domain.usecases.get_character import GetCharacter
-from dragonfly import AppError, Result, inject
+from synapsis import AppError, Result, inject
 
 
 class CharactersAppComponent:

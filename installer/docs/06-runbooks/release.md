@@ -50,7 +50,7 @@ its `.sha256` and `installer/dist/latest`.
 
 ## After a change in the tree
 
-`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,dragonfly,nuclear-lsp}`,
+`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,nuclear-lsp,nuclear-builder}`,
 files in `~/.local/share/nuclearlang`). `cargo install` puts binaries in `~/.cargo/bin`, which is not on the user's
 PATH. After a change to a service's code on Linux: `systemctl --user restart nuclear-developer` (or
 `nuclear-graph`); its output: `journalctl --user -u nuclear-developer -n 50`.

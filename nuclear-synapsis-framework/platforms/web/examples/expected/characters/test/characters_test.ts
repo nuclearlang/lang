@@ -6,11 +6,11 @@ import { GetPageUseCase } from '../src/components/characters/domain/usecases/get
 import { CharacterListScreen } from '../src/components/characters/presentation/list/character_list_screen';
 import { CharactersManager } from '../src/components/characters/presentation/list/managers/characters_manager';
 import { CharactersState } from '../src/components/characters/presentation/list/state_models/characters_state';
-import { dragonflyConfig, registerDragonfly } from '../src/dragonfly.g';
 import { Page, PageInfo } from '../src/shared/models/page';
+import { registerSynapsis, synapsisConfig } from '../src/synapsis.g';
 import { screen } from '@testing-library/react';
-import { Err, Ok, inject } from 'dragonfly-web';
-import { DragonflyTest, errOf, okOf, renderScreen, statesOf, when } from 'dragonfly-web/testing';
+import { Err, Ok, inject } from 'synapsis-web';
+import { SynapsisTest, errOf, okOf, renderScreen, statesOf, when } from 'synapsis-web/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 /** Tests of the characters component: the repository is a mock; everything else is the real code. */
@@ -37,8 +37,8 @@ export function page(): Page<Character> {
 
 describe('CharactersTest', () => {
   beforeEach(async () => {
-    await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
-    DragonflyTest.mock(CharacterRepository);
+    await SynapsisTest.start(synapsisConfig(), registerSynapsis);
+    SynapsisTest.mock(CharacterRepository);
   });
 
   beforeEach(async () => {

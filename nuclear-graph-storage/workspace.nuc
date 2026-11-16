@@ -8,7 +8,7 @@ SKIP = ["build", "node_modules", ".git", ".venv", ".nuclear", ".dart_tool", "dis
 // writes a name with another name in its place (a rename). Nothing outside the project is reached; generated,
 // vendored and hidden folders are never read. Answers are short texts a small model can read.
 //
-// It only reads: an agent's files are written by the Loop, which keeps the ledger that undoes them.
+// It only reads: an agent's files are written by the Builder, which keeps the ledger that undoes them.
 Workspace(root: string = ".")
   base: Path = Path(root).resolve()
 
@@ -137,7 +137,7 @@ Workspace(root: string = ".")
 
   // A rename done by a tool, not by a model: every `.nuc` file that writes one of the names the rename changes
   // (`renames`) as a word, as its path → its whole text with the new names. Nothing is written: the caller writes
-  // the files (the Loop, which can undo them) and the compiler and the tests say whether a use was missed.
+  // the files (the Builder, which can undo them) and the compiler and the tests say whether a use was missed.
   renamed(old: string, new: string) <string, string>
     names: <string, string> = renames(old, new)
     longest = names.keys.sortedBy((n) => -n.length)

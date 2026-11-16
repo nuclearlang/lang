@@ -3,9 +3,9 @@ import { NewTask, TaskChanges } from '../../tasks/domain/models/task_models.js';
 import { TasksAppComponent } from '../../tasks/tasks_appcomponent.js';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { Injectable } from '@nestjs/common';
-import { Tools } from 'dragonfly-nest/ai';
 import { tool } from 'langchain';
 import { describe } from 'node:test';
+import { Tools } from 'synapsis-nest/ai';
 import { z } from 'zod';
 
 /** The tools the assistant uses to read and change the tasks (through the tasks component). */

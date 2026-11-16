@@ -1,6 +1,6 @@
 # nuclear-knowledge
 
-The knowledge base of [NuclearLang](../../README.md) and Dragonfly: what the
+The knowledge base of [NuclearLang](../../README.md) and Synapsis: what the
 [Smart Graph](../README.md) ingests, and so what the
 [Nuclear Developer](../../nuclear-agents/nuclear_developer/README.md)'s local agents and every MCP client know. It is
 not a copy of the documentation: it is rows, each one a card that answers one question, on the shelf of its kind of

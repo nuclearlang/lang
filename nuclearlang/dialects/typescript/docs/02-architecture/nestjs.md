@@ -12,8 +12,8 @@ kinds, decorators, folders, `config.nuc`, plugins and tests, in Nuclear) is
 `nuclear-synapsis-framework/platforms/backend/platform.toml`. This dialect holds only how each of those is written:
 NestJS 12 (ES modules) controllers, repositories over tables with Sequelize, DTOs validated with class-validator,
 Kafka listeners and the Redis cache, LangChain.js / LangGraph.js tools, agents and graphs, and the Nest modules,
-written by the dialect. The generated code calls the platform's runtime package `dragonfly-nest`
-(`nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest`). Normative equivalences:
+written by the dialect. The generated code calls the platform's runtime package `synapsis-nest`
+(`nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest`). Normative equivalences:
 [../07-reference/nestjs.md](../07-reference/nestjs.md). Decision: ADR-typescript-0001.
 
 ## What it changes of its parents
@@ -67,7 +67,7 @@ backend platform's.
 
 ## Project files
 
-A folder with `config.nuc` (`dragonfly(platform = "backend", dialect = "nestjs")`); `nuclear build .` writes
+A folder with `config.nuc` (`synapsis(platform = "backend", dialect = "nestjs")`); `nuclear build .` writes
 `build/`. `[project] sources = "src"`; the platform's `test/` stays `test/`.
 
 | File | Template | Holds |
@@ -79,14 +79,14 @@ A folder with `config.nuc` (`dragonfly(platform = "backend", dialect = "nestjs")
 | `.npmrc` | inline | `install-links=true`: npm copies the runtime (a `file:` dependency) instead of linking it; from a link TypeScript resolves the runtime's imports next to the runtime's own folder, not the app's |
 
 Tests run with `node:test` on the compiled code (decorator metadata; no test framework to configure).
-`config.nuc` sections: `dragonfly`, `app`, `plugins`, `contracts`, `dependencies`.
+`config.nuc` sections: `synapsis`, `app`, `plugins`, `contracts`, `dependencies`.
 `[project.manifest.advice]` says, when `express`, `fastify` or `koa` is added, what the platform already gives in
 its place.
 
 ## Plugins
 
-Only the enabled ones go to `package.json`, and only then are their names imported (`dragonfly-nest/ai`,
-`dragonfly-nest/events`).
+Only the enabled ones go to `package.json`, and only then are their names imported (`synapsis-nest/ai`,
+`synapsis-nest/events`).
 
 | Plugin | Packages | Gives |
 |---|---|---|
@@ -104,20 +104,20 @@ Only the enabled ones go to `package.json`, and only then are their names import
 
 ## Toolchain
 
-What the `dragonfly` command runs in `build/` (`[toolchain]`):
+What the `nuclear` command runs in `build/` (`[toolchain]`):
 
 | Key | Command |
 |---|---|
-| `install` | `npm install {{packages}}/dragonfly-nest && npm install` (`installed = "node_modules"`) |
+| `install` | `npm install {{packages}}/synapsis-nest && npm install` (`installed = "node_modules"`) |
 | `install_local` | `npm install --install-links {{path}}`: a dependency that is a folder, installed again |
-| `compile` | `npx tsc -p tsconfig.json`: `dragonfly build` compiles too once the app is installed, and the running server (`node --watch`) restarts on it |
+| `compile` | `npx tsc -p tsconfig.json`: `nuclear build` compiles too once the app is installed, and the running server (`node --watch`) restarts on it |
 | `run` | `npm run dev` (`url = "http://localhost:3000"`, `ready = "Nest application successfully started"`) |
 | `test` | `npm test` |
 | `package_add`, `package_remove`, `package_version`, `package_companion`, `package_defs` | npm, the version it resolved, the `@types/<name>` package of one that ships no types, and `tools/defs/typescript/gen.js --package` for its type definitions, written into the project's `defs/`. A constraint is `^<version>` |
-| `migrate_make`, `migrate`, `migrate_down` | `npx tsc`, then `npx dragonfly-nest-migrate make\|up\|down --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |
+| `migrate_make`, `migrate`, `migrate_down` | `npx tsc`, then `npx synapsis-nest-migrate make\|up\|down --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |
 
 The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after
-the task `dragonfly: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`
+the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`
 through `.nuclear/lines.json`.
 
 ## Architecture rules

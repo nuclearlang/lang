@@ -279,7 +279,7 @@
    "summary": "On a model field: `@key(\"air_date\")`, the field's name in the JSON when it is not the field's (an API that writes snake_case): the answer is read by it and written back with it.",
    "body": [
     "On a model field: `@key(\"air_date\")`, the field's name in the JSON when it is not the field's (an API that writes",
-    "snake_case): the answer is read by it and written back with it. `dragonfly gen` writes it.",
+    "snake_case): the answer is read by it and written back with it. `nuclear gen` writes it.",
     "",
     "```nuclear",
     "Episode",
@@ -962,15 +962,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/ai/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make agent books Book` writes):",
-    "",
-    "```nuclear",
-    "// What Book answers.",
-    "agent Book()",
-    "  prompt: string = \"You help with books.\"",
-    "```"
+    "Its file: `components/{component}/ai/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "agent"
@@ -1007,14 +999,7 @@
    "body": [
     "Business rules several use cases share (a cart with its totals). Only use cases call it; it may use repositories.",
     "",
-    "Its file: `components/{component}/domain/aggregates/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make aggregate books Book` writes):",
-    "",
-    "```nuclear",
-    "// What Book keeps consistent.",
-    "aggregate Book()",
-    "```"
+    "Its file: `components/{component}/domain/aggregates/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "aggregate",
@@ -1120,14 +1105,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/{component}_appcomponent.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make appcomponent books Book` writes):",
-    "",
-    "```nuclear",
-    "// What the rest of the app sees of books.",
-    "appcomponent Book",
-    "```"
+    "Its file: `components/{component}/{component}_appcomponent.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "app component",
@@ -1186,14 +1164,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/config/{component}_config.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make config books Book` writes):",
-    "",
-    "```nuclear",
-    "// The connections of books.",
-    "config Book",
-    "```"
+    "Its file: `components/{component}/config/{component}_config.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "config"
@@ -1246,15 +1217,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/api/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make controller books Book` writes):",
-    "",
-    "```nuclear",
-    "// The books API.",
-    "@controller(\"books\")",
-    "controller Book()",
-    "```"
+    "Its file: `components/{component}/api/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "controller",
@@ -1341,17 +1304,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/data/entities/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make entity books Book` writes):",
-    "",
-    "```nuclear",
-    "// What a Book is.",
-    "@entity(\"books\")",
-    "Book()",
-    "  @primary(generated = true)",
-    "  id: int",
-    "```"
+    "Its file: `components/{component}/data/entities/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "entity",
@@ -1528,14 +1481,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/events/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make listener books Book` writes):",
-    "",
-    "```nuclear",
-    "// What Book does with the events it receives.",
-    "listener Book()",
-    "```"
+    "Its file: `components/{component}/events/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "listener",
@@ -1593,14 +1539,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/domain/models/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make model books Book` writes):",
-    "",
-    "```nuclear",
-    "// What Book carries.",
-    "Book",
-    "```"
+    "Its file: `components/{component}/domain/models/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "model"
@@ -1704,14 +1643,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/data/repositories/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make repository books Book` writes):",
-    "",
-    "```nuclear",
-    "// The queries of Book.",
-    "repository Book",
-    "```"
+    "Its file: `components/{component}/data/repositories/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "repository",
@@ -1782,14 +1714,7 @@
    "body": [
     "Helpers of the use cases: mappings, transformations, calculations without state. Its dependencies are its constructor parameters (injected by type). Only use cases and aggregates call it.",
     "",
-    "Its file: `components/{component}/domain/services/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make service books Book` writes):",
-    "",
-    "```nuclear",
-    "// The rules Book gives the use cases.",
-    "service Book()",
-    "```"
+    "Its file: `components/{component}/domain/services/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "service"
@@ -1843,15 +1768,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/ai/states/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make state books Book` writes):",
-    "",
-    "```nuclear",
-    "// The state of a graph.",
-    "Book",
-    "  input: string",
-    "```"
+    "Its file: `components/{component}/ai/states/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "state"
@@ -1918,14 +1835,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `test/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make tests books Book` writes):",
-    "",
-    "```nuclear",
-    "// The tests of books.",
-    "tests Book",
-    "```"
+    "Its file: `test/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "tests"
@@ -1981,14 +1891,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/ai/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make tools books Book` writes):",
-    "",
-    "```nuclear",
-    "// The tools an agent uses (Book): each method with a doc comment is one tool.",
-    "tools Book()",
-    "```"
+    "Its file: `components/{component}/ai/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "tools"
@@ -2048,16 +1951,7 @@
     "",
     "Full rules: `nuclear help backend`.",
     "",
-    "Its file: `components/{component}/domain/usecases/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case).",
-    "",
-    "The smallest file of the kind (what `dragonfly make usecase books Book` writes):",
-    "",
-    "```nuclear",
-    "// What Book does.",
-    "usecase Book()",
-    "  exec() Result<Error, string>",
-    "    Ok(\"\")",
-    "```"
+    "Its file: `components/{component}/domain/usecases/{file}.nuc` (`{component}`: the component's folder, `{file}`: the name in snake_case)."
    ],
    "keys": [
     "use case",
@@ -2104,7 +1998,7 @@
    "title": "Where each kind's file goes in a backend project",
    "summary": "The folder and file name of every kind of a backend project: `{component}` is the component's folder, `{screen}` the screen's, `{file}` the declaration's name in snake_case.",
    "body": [
-    "`nuclear help layout --platform backend` prints it; `dragonfly make` and the generators follow it.",
+    "`nuclear help layout --platform backend` prints it; `nuclear make` and the generators follow it.",
     "",
     "- `agent` → `components/{component}/ai/{file}.nuc`",
     "- `aggregate` → `components/{component}/domain/aggregates/{file}.nuc`",
@@ -2213,10 +2107,10 @@
   {
    "id": "platform:backend",
    "type": "platform",
-   "title": "The backend platform of Dragonfly",
+   "title": "The backend platform of Synapsis",
    "summary": "The backend platform: HTTP APIs, data, events and AI agents. 16 kinds, 34 decorators, 11 plugins; built by the dialects fastapi, nestjs (default: fastapi).",
    "body": [
-    "A project of the platform is written once in Nuclear and builds with any of its dialects (`fastapi`, `nestjs`; `fastapi` when none is named). Create one: `dragonfly new <name> -p backend`.",
+    "A project of the platform is written once in Nuclear and builds with any of its dialects (`fastapi`, `nestjs`; `fastapi` when none is named). Create one: `nuclear new <name> -p backend`.",
     "",
     "Its kinds:",
     "",

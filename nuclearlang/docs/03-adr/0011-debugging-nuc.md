@@ -18,7 +18,7 @@ statement, member, declaration and argument on its own line. The generated code 
 the `.nuc`: it stays readable. A build writes the map: a mobile app to `build/app/.dart_tool/nuclear_lines.json`,
 any other project to `<output>/.nuclear/lines.json`. Editors set a mirror breakpoint in the generated file, show
 the `.nuc` line of each pause and can mark an error of the target on its `.nuc` line with a side window that
-explains it (`dragonfly explain`).
+explains it (`nuclear explain`).
 
 **Mixed debugging, on top of the target's session.** In a Flutter app the session is the Dart extension's: steps
 go by Nuclear line (the Dart step is repeated until another `.nuc` line), active when the pause came from a `.nuc`

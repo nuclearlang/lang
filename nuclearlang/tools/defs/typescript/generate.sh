@@ -1,7 +1,7 @@
 #!/bin/sh
 # Regenerates nuclearlang/dialects/typescript/defs/: the TypeScript standard library and the packages of the nestjs
 # dialect, with the versions installed in nuclearlang/tools/node (package.json there; the backend platform's
-# nestjs check installs packages/dragonfly-nest into it). Then update the `defs` of
+# nestjs check installs packages/synapsis-nest into it). Then update the `defs` of
 # dialects/typescript/frameworks/nestjs if a version changed, and run `cargo test`.
 set -e
 here=$(cd "$(dirname "$0")" && pwd)
@@ -23,6 +23,6 @@ gen nestjs_sequelize "$(v @nestjs/sequelize)" "$backend" @nestjs/sequelize --dep
 gen class_validator "$(v class-validator)" "$backend" class-validator --depends "$TS" --description "class-validator: validation decorators"
 gen class_transformer "$(v class-transformer)" "$backend" class-transformer --depends "$TS" --description "class-transformer: plain objects to classes"
 gen nestjs_testing "$(v @nestjs/testing)" "$backend" @nestjs/testing --depends "$TS" --description "NestJS testing module"
-gen dragonfly-nest "$(v dragonfly-nest)" "$backend" dragonfly-nest dragonfly-nest/ai dragonfly-nest/events dragonfly-nest/testing --depends "$TS" --description "Dragonfly for NestJS: the runtime of the nestjs dialect"
+gen synapsis-nest "$(v synapsis-nest)" "$backend" synapsis-nest synapsis-nest/ai synapsis-nest/events synapsis-nest/testing --depends "$TS" --description "Synapsis for NestJS: the runtime of the nestjs dialect"
 cp -R "$out/typescript/." "$root/dialects/typescript/defs/"
 rm -rf "$out"

@@ -7,12 +7,12 @@ name = "flutter"
 platform = "mobile"
 extends = "dart"
 description = "Flutter: stateless/stateful widgets, material imported automatically"
-# type definitions (nuclearlang/docs/07-reference/definitions.md), added to dart's: the Flutter SDK, the Dragonfly runtime
-# (packages/dragonfly) and the libraries it relies on. Each one brings its automatic
+# type definitions (nuclearlang/docs/07-reference/definitions.md), added to dart's: the Flutter SDK, the Synapsis runtime
+# (packages/synapsis) and the libraries it relies on. Each one brings its automatic
 # imports; dependencies (bloc) are loaded on their own.
 defs = [
   "flutter@3.47.7",
-  "dragonfly@0.1.0",
+  "synapsis@0.1.0",
   "flutter_bloc@9.1.1",
   "get_it@9.3.0",
   "dio@5.11.1",
@@ -21,7 +21,7 @@ defs = [
   "flutter_secure_storage@11.2.0",
   "json_annotation@4.12.0",
 ]
-# in Dragonfly, WebSocket is the project config connection, not the dart:io class
+# in Synapsis, WebSocket is the project config connection, not the dart:io class
 replaces = ["auto_imports.WebSocket", "auto_imports.Tool", "auto_imports.ToolResult", "auto_imports.Message", "auto_imports.SchemanticType", "auto_imports.ModelRef", "auto_imports.EmbedderRef", "auto_imports.GenkitPlugin", "auto_imports.Genkit", "auto_imports.Part", "auto_imports.TextPart", "auto_imports.Role"]
 
 # stateless MyApp + build → class MyApp extends StatelessWidget { const MyApp({super.key}); @override build }
@@ -61,8 +61,8 @@ rendering = "package:flutter/rendering.dart"
 
 
 # ---------------------------------------------------------------------------------------------------
-# Dragonfly: the clean architecture lite framework (nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md). The classes these kinds use
-# are in the dragonfly package (packages/dragonfly).
+# Synapsis: the clean architecture lite framework (nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md). The classes these kinds use
+# are in the synapsis package (packages/synapsis).
 
 [decorators]
 # read by the templates (decor) and not written as Dart annotations
@@ -241,8 +241,8 @@ template = { file = "templates/event.tpl" }
 [docs]
 "package:flutter/" = "https://api.flutter.dev/flutter/{{library}}/{{name}}{{#class}}-class{{/class}}.html"
 
-# The editor's side of a mobile project (its VS Code workspace, written by `dragonfly build`): the Dart and Flutter
-# extensions run the app of build/app; saving a .nuc transpiles it and hot reloads (task `dragonfly: watch`).
+# The editor's side of a mobile project (its VS Code workspace, written by `nuclear build`): the Dart and Flutter
+# extensions run the app of build/app; saving a .nuc transpiles it and hot reloads (task `synapsis: watch`).
 [toolchain]
 installed = ".dart_tool"
 extensions = ["Dart-Code.flutter", "Dart-Code.dart-code"]
@@ -259,7 +259,7 @@ request = "launch"
 program = "lib/main.dart"
 cwd = "{{app}}"
 flutterMode = "debug"
-preLaunchTask = "dragonfly: build"
+preLaunchTask = "synapsis: build"
 
 [[toolchain.launch]]
 name = "{{name}} (profile)"
@@ -268,7 +268,7 @@ request = "launch"
 program = "lib/main.dart"
 cwd = "{{app}}"
 flutterMode = "profile"
-preLaunchTask = "dragonfly: build"
+preLaunchTask = "synapsis: build"
 
 [[toolchain.launch]]
 name = "{{name}} (release)"
@@ -277,24 +277,24 @@ request = "launch"
 program = "lib/main.dart"
 cwd = "{{app}}"
 flutterMode = "release"
-preLaunchTask = "dragonfly: build"
+preLaunchTask = "synapsis: build"
 
 [project]
 sources = "lib"
-# a Dragonfly project has no nuclear.toml: the folder with main.nuc is a flutter project, built in build/app
+# a Synapsis project has no nuclear.toml: the folder with main.nuc is a flutter project, built in build/app
 marker = "main.nuc"
 output = "build/app"
 # the translation dictionaries (assets/i18n/<locale>/<component>.json) are copied to the app
 assets = ["assets"]
 
-# config.nuc (at the root): the project pubspec written in Nuclear. It is not transpiled: the dragonfly CLI
-# reads it to write the app's pubspec.yaml (with the packages Dragonfly adds on its own) and to load the
+# config.nuc (at the root): the project pubspec written in Nuclear. It is not transpiled: the `nuclear` CLI
+# reads it to write the app's pubspec.yaml (with the packages Synapsis adds on its own) and to load the
 # type definitions of the `dependencies` packages.
 [project.manifest]
 file = "config.nuc"
-sections = ["dragonfly", "app", "environment", "dependencies", "devDependencies", "plugins", "contracts"]
+sections = ["synapsis", "app", "environment", "dependencies", "devDependencies", "plugins", "contracts"]
 # only third-party packages the framework does not use: the ones in `defs` (dio, go_router, flutter_bloc...) and
-# these, which Dragonfly or `flutter create` add on their own, cannot be written (N0303)
+# these, which Synapsis or `flutter create` add on their own, cannot be written (N0303)
 packages = ["dependencies", "devDependencies"]
 reserved = [
   "fpdart", "build_runner", "json_serializable", "mocktail", "bloc_test", "integration_test",
@@ -313,12 +313,12 @@ reserved = [
 "test" = "tests"
 "integration_test" = "integration"
 
-# plugins(genkit = true, googleAI = true) in config.nuc: the optional parts of Dragonfly; the CLI adds their packages
+# plugins(genkit = true, googleAI = true) in config.nuc: the optional parts of Synapsis; the CLI adds their packages
 # to the app only when they are enabled
 [project.plugins.genkit]
 description = "Genkit Dart in the app: the tools, flow, chat, remote and knowledge kinds (add a provider: googleAI, firebaseAI, vertexAI, openAI, anthropic)"
-packages = { genkit = "^1.0.1", schemantic = "^1.0.0", dragonfly_genkit = "local" }
-defs = ["genkit@1.0.1", "schemantic@1.0.0", "dragonfly_genkit@0.1.0"]
+packages = { genkit = "^1.0.1", schemantic = "^1.0.0", synapsis_genkit = "local" }
+defs = ["genkit@1.0.1", "schemantic@1.0.0", "synapsis_genkit@0.1.0"]
 kinds = ["tools", "flow", "chat", "remote", "knowledge"]
 
 [project.plugins.firebaseAI]
@@ -351,21 +351,21 @@ packages = { genkit_anthropic = "^1.0.1" }
 requires = ["genkit"]
 names = ["Anthropic"]
 
-[project.files."lib/dragonfly_genkit.g.dart"]
+[project.files."lib/synapsis_genkit.g.dart"]
 names = ["startGenkit"]
 template = { file = "templates/genkit_g.tpl" }
 
-[project.files."lib/dragonfly.g.dart"]
-names = ["startDragonfly", "appRouter", "buildRouter", "dragonflyConfig", "registerDragonfly"]
-template = { file = "templates/dragonfly_g.tpl" }
+[project.files."lib/synapsis.g.dart"]
+names = ["startSynapsis", "appRouter", "buildRouter", "synapsisConfig", "registerSynapsis"]
+template = { file = "templates/synapsis_g.tpl" }
 
 # the native splash configuration (@splash), only if some screen has it; the CLI runs
 # flutter_native_splash:create with it
 [project.files."flutter_native_splash.yaml"]
 template = { file = "templates/native_splash.tpl" }
 
-# tests every app gets without writing them (nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md §7)
-[project.files."test/dragonfly_generated_test.dart"]
+# tests every app gets without writing them (nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md §7)
+[project.files."test/synapsis_generated_test.dart"]
 template = { file = "templates/generated_tests.tpl" }
 
 # tests do not go to lib/: the app's test/ and integration_test/
@@ -400,7 +400,7 @@ service = ["usecase", "aggregate"]
 aggregate = ["usecase"]
 repository = ["usecase", "aggregate"]
 
-# tests (nuclear-synapsis-framework/platforms/mobile/docs/07-reference/dragonfly.md §7): one group per file in test/; each method with @test, @widget or @states is
+# tests (nuclear-synapsis-framework/platforms/mobile/docs/07-reference/synapsis.md §7): one group per file in test/; each method with @test, @widget or @states is
 # a test; a method without a decorator is setUp, tearDown, setUpAll or tearDownAll. @mock([X]) creates a mock
 # of X (mocktail) and puts it in the injector; inside, X.method() uses the injector's instance.
 [kinds.tests]
@@ -409,18 +409,18 @@ template = { file = "templates/tests.tpl" }
 results = "keep"
 void_methods = true
 provide = { template = "inject<{{name}}>()", kinds = ["repository", "usecase", "appcomponent", "service", "aggregate", "statemanager", "formmanager"] }
-imports = ["Mock", "DragonflyTest", "dragonflyConfig", "registerDragonfly", "NetworkStatus", "group", "setUp", "test", "testWidgets", "blocTest", "inject"]
+imports = ["Mock", "SynapsisTest", "synapsisConfig", "registerSynapsis", "NetworkStatus", "group", "setUp", "test", "testWidgets", "blocTest", "inject"]
 [kinds.tests.syntax]
 method = { file = "templates/tests_method.tpl" }
 
-# integration tests: the real app on a device or emulator (dragonfly test --integration)
+# integration tests: the real app on a device or emulator (nuclear test --integration)
 [kinds.integration]
 description = "tests Name in integration_test/ → integration tests on a device"
 template = { file = "templates/integration.tpl" }
 results = "keep"
 void_methods = true
 provide = { template = "inject<{{name}}>()", kinds = ["repository", "usecase", "appcomponent", "service", "aggregate", "statemanager", "formmanager"] }
-imports = ["Mock", "DragonflyTest", "IntegrationTestWidgetsFlutterBinding", "group", "setUp", "test", "testWidgets", "blocTest", "inject"]
+imports = ["Mock", "SynapsisTest", "IntegrationTestWidgetsFlutterBinding", "group", "setUp", "test", "testWidgets", "blocTest", "inject"]
 [kinds.integration.syntax]
 method = { file = "templates/tests_method.tpl" }
 
@@ -471,11 +471,11 @@ field = "{{#override}}@override\n{{/override}}final {{#type}}{{type}}{{/type}}{{
 written = ["tr", "goTo", "pushTo", "goBack", "pumpScreen", "pumpRouter", "tapText", "enterTextIn", "thenReturnAsync"]
 
 [auto_imports]
-# in Dragonfly, WebSocket is the project config connection (see replaces in [dialect]); goTo, pushTo and
-# goBack are BuildContext methods (DragonflyNavigation extension) and tr a String one (DragonflyTranslate)
-"package:dragonfly/dragonfly.dart" = ["WebSocket", "tr", "goTo", "pushTo", "goBack"]
-# the Genkit names dragonfly_genkit re-exports: imported from it, once
-"package:dragonfly_genkit/dragonfly_genkit.dart" = ["Tool", "ToolResult", "Message", "SchemanticType", "ModelRef", "EmbedderRef", "GenkitPlugin", "Genkit", "Part", "TextPart", "Role"]
+# in Synapsis, WebSocket is the project config connection (see replaces in [dialect]); goTo, pushTo and
+# goBack are BuildContext methods (SynapsisNavigation extension) and tr a String one (SynapsisTranslate)
+"package:synapsis/synapsis.dart" = ["WebSocket", "tr", "goTo", "pushTo", "goBack"]
+# the Genkit names synapsis_genkit re-exports: imported from it, once
+"package:synapsis_genkit/synapsis_genkit.dart" = ["Tool", "ToolResult", "Message", "SchemanticType", "ModelRef", "EmbedderRef", "GenkitPlugin", "Genkit", "Part", "TextPart", "Role"]
 # test names: flutter_test, mocktail, bloc_test, integration_test
 "package:flutter_test/flutter_test.dart" = [
   "test", "testWidgets", "group", "setUp", "tearDown", "setUpAll", "tearDownAll", "expect", "expectLater",
@@ -483,7 +483,7 @@ written = ["tr", "goTo", "pushTo", "goBack", "pumpScreen", "pumpRouter", "tapTex
   "isTrue", "isFalse", "isNull", "isNotNull", "isA", "isEmpty", "isNotEmpty", "hasLength", "contains",
   "throwsA", "anything", "greaterThan", "lessThan", "isNot", "pumpEventQueue",
 ]
-"package:dragonfly/testing.dart" = ["pumpScreen", "pumpRouter", "tapText", "enterTextIn", "thenReturnAsync"]
+"package:synapsis/testing.dart" = ["pumpScreen", "pumpRouter", "tapText", "enterTextIn", "thenReturnAsync"]
 "package:mocktail/mocktail.dart" = ["Mock", "when", "verify", "verifyNever", "any", "captureAny", "registerFallbackValue"]
 "package:bloc_test/bloc_test.dart" = ["blocTest"]
 "package:integration_test/integration_test.dart" = ["IntegrationTestWidgetsFlutterBinding"]

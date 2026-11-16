@@ -1,6 +1,6 @@
-// Debugging `.nuc` code of a Dragonfly project on top of the Dart extension's `dart` sessions.
+// Debugging `.nuc` code of a Synapsis project on top of the Dart extension's `dart` sessions.
 //
-// `dragonfly build` writes `build/app/.dart_tool/nuclear_lines.json`: for each generated `.dart`, its `.nuc` and
+// `nuclear build` writes `build/app/.dart_tool/nuclear_lines.json`: for each generated `.dart`, its `.nuc` and
 // the pairs (dart line, nuc line). With it:
 // - a breakpoint in a `.nuc` gets a mirror breakpoint in the generated `.dart` (the Dart VM only knows `.dart`);
 // - when the app pauses, the `.nuc` line of the paused frame is shown and highlighted;
@@ -11,12 +11,13 @@ import { execFile } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { isDeviceGroup } from './device';
+import { isDeviceGroup } from '../../tools/nuclear-device-manager/src/mobile-device';
 
 export interface Project {
   root: string;
   app: string;
-  dragonfly: string;
+  /** The `nuclear` binary that builds this project. */
+  command: string;
   env: Record<string, string>;
 }
 
@@ -32,7 +33,7 @@ interface Place {
 
 // ------------------------------------------------------------------ line map
 
-// written by every `nuclear build` (any dialect); a mobile app's `dragonfly build` writes the Dart one
+// written by every `nuclear build` (any dialect); a mobile app's `nuclear build` writes the Dart one
 const MAP_FILES = ['.nuclear/lines.json', '.dart_tool/nuclear_lines.json'];
 
 let cache: { file: string; mtime: number; files: Record<string, Entry>; bySource: Map<string, string> } | undefined;
@@ -83,7 +84,7 @@ export function toNuc(p: Project, dart: string, line: number): Place | undefined
   return hit && { path: path.join(p.root, e.source), line: hit[1] };
 }
 
-/** The debug types of the dialects' launches (`build/<name>.code-workspace`, written by the dragonfly CLI). */
+/** The debug types of the dialects' launches (`build/<name>.code-workspace`, written by the `nuclear` CLI). */
 const DEBUG_TYPES = ['dart', 'node', 'pwa-node', 'chrome', 'pwa-chrome', 'msedge', 'pwa-msedge', 'debugpy', 'python'];
 
 // ------------------------------------------------------------------ breakpoints
@@ -397,10 +398,10 @@ interface RuntimeError {
   frames: (Place & { name: string })[];
 }
 
-/** `dragonfly explain --json`: the message, an explanation and the `.nuc` frames of a Dart error text. */
+/** `nuclear explain --json`: the message, an explanation and the `.nuc` frames of a Dart error text. */
 function explainText(p: Project, text: string): Promise<RuntimeError | undefined> {
   return new Promise((done) => {
-    const child = execFile(p.dragonfly, ['explain', '--json'], { cwd: p.root, env: { ...process.env, ...p.env, NO_COLOR: '1' } }, (err, stdout) => {
+    const child = execFile(p.command, ['explain', '--json'], { cwd: p.root, env: { ...process.env, ...p.env, NO_COLOR: '1' } }, (err, stdout) => {
       try {
         const r = JSON.parse(stdout);
         const frames = (r.frames as { source: string; line: number; name: string }[]).map((f) => ({ path: f.source, line: f.line, name: f.name }));
@@ -413,7 +414,7 @@ function explainText(p: Project, text: string): Promise<RuntimeError | undefined
   });
 }
 
-const runtime = vscode.languages.createDiagnosticCollection('dragonfly-runtime');
+const runtime = vscode.languages.createDiagnosticCollection('synapsis-runtime');
 let panel: vscode.WebviewPanel | undefined;
 let panelFrames: Place[] = []; // the frames the panel's links open
 let lastShown = { title: '', at: 0 };
@@ -428,7 +429,7 @@ async function showError(p: Project, e: RuntimeError): Promise<void> {
   if (!top) return;
   const uri = vscode.Uri.file(top.path);
   const d = new vscode.Diagnostic(new vscode.Range(top.line - 1, 0, top.line - 1, 1000), `Runtime error: ${e.title}`, vscode.DiagnosticSeverity.Error);
-  d.source = 'dragonfly';
+  d.source = 'synapsis';
   runtime.set(uri, [d]);
   await showPlace(top, vscode.ViewColumn.One, false);
 
@@ -546,9 +547,9 @@ export function activateDebug(context: vscode.ExtensionContext, find: (dir?: str
       const line = editor.selection.active.line + 1;
       const other = file.endsWith('.nuc') ? toDart(p, file, line) : toNuc(p, file, line);
       if (other) void showPlace(other, vscode.ViewColumn.Beside, false);
-      else void vscode.window.showInformationMessage('This line has no counterpart in the generated code (run dragonfly build first).');
+      else void vscode.window.showInformationMessage('This line has no counterpart in the generated code (run nuclear build first).');
     }),
-    // every debugger a Dragonfly app runs under: dart (mobile), node (nestjs), chrome (react, also the web device),
+    // every debugger a Synapsis app runs under: dart (mobile), node (nestjs), chrome (react, also the web device),
     // debugpy (fastapi); the paused frame of a generated file is shown at its .nuc line
     ...DEBUG_TYPES.map((type) =>
       vscode.debug.registerDebugAdapterTrackerFactory(type, {
@@ -617,7 +618,7 @@ export function activateDebug(context: vscode.ExtensionContext, find: (dir?: str
   }
 
   return {
-    /** After every `dragonfly build`: lines moved, and old run-time errors no longer apply. */
+    /** After every `nuclear build`: lines moved, and old run-time errors no longer apply. */
     built() {
       runtime.clear();
       sync();

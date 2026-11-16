@@ -2,7 +2,7 @@ import { Task } from '../data/entities/task.js';
 import { NewTask, Removed, TaskChanges } from '../domain/models/task_models.js';
 import { TasksAppComponent } from '../tasks_appcomponent.js';
 import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
-import { AppError, Page, Result } from 'dragonfly-nest';
+import { AppError, Page, Result } from 'synapsis-nest';
 
 /**
  * The CRUD of tasks: GET /tasks?done=false, GET /tasks/page?page=1&size=20, GET /tasks/:id, POST /tasks,

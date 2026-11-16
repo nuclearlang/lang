@@ -213,7 +213,7 @@ pub struct ManifestDef {
 
 #[derive(Debug, Clone)]
 pub struct ProjectFileDef {
-    /// Output path, relative to the output folder (`lib/dragonfly.g.dart`).
+    /// Output path, relative to the output folder (`lib/synapsis.g.dart`).
     pub path: String,
     pub template: Template,
     /// Top-level names the file declares: the project's code can use them.
@@ -428,7 +428,7 @@ pub struct GenPiece {
 #[derive(Debug, Clone, Default)]
 pub struct Dialect {
     pub name: String,
-    /// The Dragonfly platform it implements (`web`, `mobile`, `backend`; ADR-synapsis-0002), from `[dialect] platform`
+    /// The Synapsis platform it implements (`web`, `mobile`, `backend`; ADR-synapsis-0002), from `[dialect] platform`
     /// or inherited. `None` for a language dialect.
     pub platform: Option<String>,
     /// This dialect and the ones it extends: `["flutter", "dart"]`.
@@ -479,13 +479,13 @@ pub struct Dialect {
     pub package_gaps: BTreeMap<String, Vec<String>>,
     /// Folders whose `docs.toml` is read before the chain's (the packages').
     pub extra_docs: Vec<PathBuf>,
-    /// `[toolchain]` (ADR-synapsis-0001): the commands the `dragonfly` CLI runs in the generated project (`install`, `run`,
+    /// `[toolchain]` (ADR-synapsis-0001): the commands the `nuclear` CLI runs in the generated project (`install`, `run`,
     /// `test`), with `{{packages}}` for the install's `packages/` folder.
     pub toolchain: BTreeMap<String, String>,
     /// `[toolchain.windows|macos|linux]`: the commands that differ on one operating system (`Dialect::tool`).
     pub toolchain_os: BTreeMap<String, BTreeMap<String, String>>,
     /// `[[toolchain.launch]]`: the editor's debug launches of the generated app, as written (placeholders `{{app}}`,
-    /// `{{url}}`); the dragonfly CLI puts them in the project's VS Code workspace.
+    /// `{{url}}`); the `nuclear` CLI puts them in the project's VS Code workspace.
     pub launches: Vec<toml::Table>,
     /// `[toolchain.settings]` and `[toolchain] extensions`: the editor settings and recommended extensions of a
     /// project of this dialect (its VS Code workspace).
@@ -526,13 +526,13 @@ pub struct Dialect {
     /// `[layout]` of the platform: kind → the path of its file (`components/{component}/domain/usecases/{file}.nuc`;
     /// `{component}`, `{screen}`, `{file}` = the name in snake_case). The same for every dialect of the platform.
     pub layout: BTreeMap<String, String>,
-    /// `[skeletons]` of the platform: kind → the smallest file of the kind (`dragonfly make`), with `{{Name}}`, `{{name}}`,
+    /// `[skeletons]` of the platform: kind → the smallest file of the kind (`nuclear make`), with `{{Name}}`, `{{name}}`,
     /// `{{component}}`, `{{Component}}`, `{{table}}`.
     pub skeletons: BTreeMap<String, String>,
-    /// `[[generators.<what>]]` of the platform (ADR-codegen-0001): the files `dragonfly gen <what>` writes, in order, each a
+    /// `[[generators.<what>]]` of the platform (ADR-codegen-0001): the files `nuclear gen <what>` writes, in order, each a
     /// template over the resource (its names, fields, models, actions, source). The same for every dialect.
     pub generators: BTreeMap<String, Vec<GenPiece>>,
-    /// `[gen]` of the platform: how `dragonfly gen` writes an `Http` connection (`http`, and `http_named` when the app
+    /// `[gen]` of the platform: how `nuclear gen` writes an `Http` connection (`http`, and `http_named` when the app
     /// already has one: `{{name}}`, `{{baseUrl}}`).
     pub gen_values: BTreeMap<String, String>,
     pub project: ProjectDef,
@@ -697,6 +697,8 @@ pub struct Loader {
     pub search_paths: Vec<PathBuf>,
     /// Folders that hold the platforms' contracts: `<platform>/platform.toml` (ADR-synapsis-0002).
     pub platform_paths: Vec<PathBuf>,
+    /// Folders that hold what the code generator writes per platform: `<platform>/generators.toml`.
+    pub generator_paths: Vec<PathBuf>,
     /// Folders that hold kind packages (`<project>/kinds`, `<install>/kinds`; ADR-synapsis-0004).
     pub packages: Vec<PathBuf>,
     /// Extra roots of the type definitions repository (`<language>/<package>/<version>/`), searched before the
@@ -787,6 +789,11 @@ impl Loader {
         table.get("platform")?.get("default_dialect")?.as_str().map(str::to_string)
     }
 
+    /// What the code generator writes for `platform`: the first `<platform>/generators.toml` of `generator_paths`.
+    pub fn generators_file(&self, platform: &str) -> Option<PathBuf> {
+        self.generator_paths.iter().map(|dir| dir.join(platform).join("generators.toml")).find(|p| p.is_file())
+    }
+
     /// The contract of `platform`: the first `<platform>/platform.toml` of `platform_paths`.
     pub fn platform_file(&self, platform: &str) -> Option<PathBuf> {
         self.platform_paths.iter().map(|dir| dir.join(platform).join(PLATFORM_FILE)).find(|p| p.is_file())
@@ -796,14 +803,16 @@ impl Loader {
 impl Loader {
     pub fn new(search_paths: Vec<PathBuf>) -> Self {
         // an install, an editor's bundle: `platforms/` next to `dialects/`
-        let platform_paths = search_paths.iter().map(|p| p.join("../platforms")).filter(|p| p.is_dir()).collect();
-        Loader { search_paths, platform_paths, packages: Vec::new(), defs_paths: Vec::new() }
+        let beside = |name: &str| search_paths.iter().map(|p| p.join("..").join(name)).filter(|p| p.is_dir()).collect();
+        let (platform_paths, generator_paths) = (beside("platforms"), beside("generators"));
+        Loader { search_paths, platform_paths, generator_paths, packages: Vec::new(), defs_paths: Vec::new() }
     }
 
     /// `first` (a flag, a project's own `dialects/`), then the dialects and the platforms of `homes`.
     pub fn of(first: Vec<PathBuf>, homes: &[crate::Home]) -> Self {
         let mut l = Loader::new(first.into_iter().chain(homes.iter().map(|h| h.dialects.clone())).collect());
         l.platform_paths.extend(homes.iter().map(|h| h.platforms.clone()));
+        l.generator_paths.extend(homes.iter().map(|h| h.generators.clone()));
         l
     }
 
@@ -1126,6 +1135,7 @@ impl Loader {
         d.files = report.files.clone();
         if let Some(platform) = &own_platform {
             check_platform(&mut d, platform, self.platform_file(platform).as_deref(), report);
+            load_generators(&mut d, self.generators_file(platform).as_deref(), report);
         }
         stack.pop();
         Some(d)
@@ -1244,6 +1254,62 @@ impl Loader {
     }
 }
 
+/// What the code generator writes in a project of the dialect's platform (`<platform>/generators.toml` of the code
+/// generator: `[gen]`, `[[generators.<what>]]`, `[skeletons]`); each piece goes to its kind's `[layout]` place.
+fn load_generators(d: &mut Dialect, file: Option<&Path>, report: &mut Report) {
+    let Some(path) = file else { return };
+    let shown = path.display().to_string();
+    let text = std::fs::read_to_string(path).unwrap_or_default();
+    let idx = report.file(&shown, &text);
+    let err = |report: &mut Report, msg: String| {
+        report.add(idx, Diagnostic::error(codes::PLATFORM_CONTRACT, Span::default(), msg));
+    };
+    let table = match text.parse::<toml::Table>() {
+        Ok(t) => t,
+        Err(e) => {
+            err(report, format!("{shown}: invalid TOML: {}", e.message()));
+            return;
+        }
+    };
+    for (key, v) in table.get("gen").and_then(|v| v.as_table()).into_iter().flatten() {
+        d.gen_values.insert(key.clone(), v.as_str().unwrap_or_default().to_string());
+    }
+    for (what, pieces) in table.get("generators").and_then(|v| v.as_table()).into_iter().flatten() {
+        for piece in pieces.as_array().into_iter().flatten() {
+            let get = |k: &str| piece.get(k).and_then(|v| v.as_str()).map(str::to_string);
+            let kind = get("kind").unwrap_or_default();
+            if !d.layout.contains_key(&kind) {
+                err(report, format!("{shown}: [[generators.{what}]] writes a '{kind}', which has no place in [layout]"));
+                continue;
+            }
+            let mut compile = |src: &str, field: &str| match Template::compile(src) {
+                Ok(t) => Some(t),
+                Err(e) => {
+                    err(report, format!("{shown}: [[generators.{what}]] {kind} {field}: {}", e.message));
+                    None
+                }
+            };
+            let (Some(name), Some(template)) = (compile(&get("name").unwrap_or_default(), "name"), compile(get("template").unwrap_or_default().trim_start(), "template")) else {
+                continue;
+            };
+            d.generators.entry(what.clone()).or_default().push(GenPiece {
+                kind,
+                name,
+                when: get("when"),
+                each: get("each"),
+                merge: piece.get("merge").and_then(|v| v.as_bool()).unwrap_or(false),
+                template,
+            });
+        }
+    }
+    for (kind, text) in table.get("skeletons").and_then(|v| v.as_table()).into_iter().flatten() {
+        if !d.layout.contains_key(kind) {
+            err(report, format!("{shown}: [skeletons] names '{kind}', which has no place in [layout]"));
+        }
+        d.skeletons.insert(kind.clone(), text.as_str().unwrap_or_default().trim_start().to_string());
+    }
+}
+
 /// The editor documentation of a dialect: it is not part of the dialect's rules (`Dialect::doc`).
 pub const DOCS_FILE: &str = "docs.toml";
 
@@ -1314,43 +1380,6 @@ fn check_platform(d: &mut Dialect, platform: &str, file: Option<&Path>, report: 
             err(report, format!("{shown}: [layout] names '{kind}', which is not a kind of platform '{platform}'"));
         }
         d.layout.insert(kind.clone(), path.as_str().unwrap_or_default().to_string());
-    }
-    for (key, v) in table.get("gen").and_then(|v| v.as_table()).into_iter().flatten() {
-        d.gen_values.insert(key.clone(), v.as_str().unwrap_or_default().to_string());
-    }
-    for (what, pieces) in table.get("generators").and_then(|v| v.as_table()).into_iter().flatten() {
-        for piece in pieces.as_array().into_iter().flatten() {
-            let get = |k: &str| piece.get(k).and_then(|v| v.as_str()).map(str::to_string);
-            let kind = get("kind").unwrap_or_default();
-            if !d.layout.contains_key(&kind) {
-                err(report, format!("{shown}: [[generators.{what}]] writes a '{kind}', which has no place in [layout]"));
-                continue;
-            }
-            let mut compile = |src: &str, field: &str| match Template::compile(src) {
-                Ok(t) => Some(t),
-                Err(e) => {
-                    err(report, format!("{shown}: [[generators.{what}]] {kind} {field}: {}", e.message));
-                    None
-                }
-            };
-            let (Some(name), Some(template)) = (compile(&get("name").unwrap_or_default(), "name"), compile(get("template").unwrap_or_default().trim_start(), "template")) else {
-                continue;
-            };
-            d.generators.entry(what.clone()).or_default().push(GenPiece {
-                kind,
-                name,
-                when: get("when"),
-                each: get("each"),
-                merge: piece.get("merge").and_then(|v| v.as_bool()).unwrap_or(false),
-                template,
-            });
-        }
-    }
-    for (kind, text) in table.get("skeletons").and_then(|v| v.as_table()).into_iter().flatten() {
-        if !d.layout.contains_key(kind) {
-            err(report, format!("{shown}: [skeletons] names '{kind}', which has no place in [layout]"));
-        }
-        d.skeletons.insert(kind.clone(), text.as_str().unwrap_or_default().trim_start().to_string());
     }
     let missing = join(want.difference(&kinds).collect());
     if !missing.is_empty() {

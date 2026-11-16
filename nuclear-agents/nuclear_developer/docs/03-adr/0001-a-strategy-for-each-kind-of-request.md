@@ -6,7 +6,7 @@ deciders: Julian Molina
 # ADR-0001: A strategy for each kind of request: the agent recognises what it is asked and follows the plan of that kind
 
 ## Context and problem
-The local agent treated every request the same way. The planner had one prompt for everything, and the Loop ran
+The local agent treated every request the same way. The planner had one prompt for everything, and the Builder ran
 the same nine stages for a whole system, a rename and a compile error: a bug went through *Generate*, *Plan* and
 *Tests first* as if it were a feature. The spec's `Use case` field was kept and changed nothing. The knowledge
 base (ADR-graph-0001) had its playbooks, found only when someone searched for them. And the generators (old
@@ -21,7 +21,7 @@ model's work.
 **A strategy is a row of the knowledge base** (`strategy:<name>`, type `strategy`, on the playbooks shelf): one per
 kind of request a user makes. It holds how the kind is recognised (exact signs as regular expressions, trigger
 words, the ways people ask), its plan step by step with the tool of every step, and what it asks of a run (its
-mode, the stages of the Loop it runs, where its pieces come from, the generators it calls, the facts it cannot
+mode, the stages of the Builder it runs, where its pieces come from, the generators it calls, the facts it cannot
 start without, whether it needs a frontier model as lead). Changing how a kind of request is handled is changing a
 row, never code.
 
@@ -37,14 +37,14 @@ row, never code.
 
 **The selection asks no model.** An exact sign of the request outweighs any closeness of meaning; meaning decides
 between strategies with no exact sign, or the same ones; whether the project has the names the request writes moves
-the score. The answer says which signs chose the strategy. A run of the Loop cannot follow a strategy without
+the score. The answer says which signs chose the strategy. A run of the Builder cannot follow a strategy without
 stages (a question, a command): such a strategy comes first for a run only when an exact sign chose it. A spec may
 name its strategy itself (`- Strategy: usecase`).
 
 **The analyst** runs before anything is generated or planned, in fixed steps: the project's files say which names
 of the request exist; the graph gives the strategy; the strategy gives the stages, the source of the pieces and the
 facts it needs. A model is asked for one thing only: the resources a request in plain words describes. Each line
-becomes a `dragonfly gen resource` call and is kept only if its `--dry-run` accepts it. A fact the request lacks is
+becomes a `nuclear gen resource` call and is kept only if its `--dry-run` accepts it. A fact the request lacks is
 a question for the user and stops the run: nothing is guessed.
 
 **Tools before models, in every strategy.** A generator writes what is standard; the compiler's exact fixes
@@ -52,18 +52,18 @@ a question for the user and stops the run: nothing is guessed.
 with it the project's names built from it) and no model writes; the files a change starts in are found by the
 project's declarations, not planned. A model writes only a piece of one file that no tool can write.
 
-**The Loop follows the strategy.** The analysis is the last step of the *Specification* stage. Then the stages the
+**The Builder follows the strategy.** The analysis is the last step of the *Specification* stage. Then the stages the
 strategy has no use for are skipped; *Generate* runs the spec's own resources and the calls the analysis derived;
 *Plan* takes the pieces the tools gave, and asks the planner only when the strategy's pieces come from a plan;
 *Code* writes a piece a tool already wrote as it is, and afterwards wires each use case the coder wrote with
-`dragonfly gen usecase`; *Verification*, for a bug, repairs the file the failure names whoever wrote it, and never
+`nuclear gen usecase`; *Verification*, for a bug, repairs the file the failure names whoever wrote it, and never
 the test. A Developer without an analyst leaves the run as it was: every stage.
 
 **The classification is tested like the rest of the knowledge base.** `questions.toml` holds requests in English
 and Spanish (`request = true`), none of them among the `asks` of its row; `nuclear-graph knowledge ask` gives each
 to the selection and its first strategy must be the expected one.
 
-**A generator finishes what it starts on a resource that exists.** `dragonfly gen resource` with a new action adds
+**A generator finishes what it starts on a resource that exists.** `nuclear gen resource` with a new action adds
 the repository's method and the controller's route too (merged member by member); it refuses a search of a stored
 resource, because which column is searched is a decision.
 

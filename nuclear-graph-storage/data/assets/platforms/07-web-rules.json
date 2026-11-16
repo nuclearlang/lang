@@ -7,7 +7,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#layout-and-kinds-the-folder-gives-the-kind-of-a-declaration-without-a-header-wor",
    "type": "spec",
-   "title": "Platform `web` brief: Dragonfly web apps — Layout and kinds (the folder gives the kind of a declaration without a header word)",
+   "title": "Platform `web` brief: Synapsis web apps — Layout and kinds (the folder gives the kind of a declaration without a header word)",
    "summary": "main.nuc (the App view: the router) config.nuc config/ (appConfig) public/ (styles.css, favicon.svg) shared/ models/ events/ components/ guards/ screens/ components/<c>/<c>_component.nuc appcomponent: the facade, the only thing other components see components/<c>/data/ repository…",
    "body": [
     "```",
@@ -33,7 +33,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#pieces.1a8725",
    "type": "spec",
-   "title": "Platform `web` brief: Dragonfly web apps — Pieces",
+   "title": "Platform `web` brief: Synapsis web apps — Pieces",
    "summary": "text, an element or a list.",
    "body": [
     "- Attributes are the DOM's names: `className`, `onClick`, `onChange = (e) => ...`, `src`, `alt`; `children` is a",
@@ -58,7 +58,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#pieces.329531",
    "type": "spec",
-   "title": "Platform `web` brief: Dragonfly web apps — Pieces",
+   "title": "Platform `web` brief: Synapsis web apps — Pieces",
    "summary": "@before(loading) @state(CharactersState.full) loadPage(page: int) Result<CharacterError, Character[]> ~characters.getPage(page) // a view: its parameters are its props; build() Element; HTML functions with named attributes and `children` stateless CharacterTile(character: Character) build()…",
    "body": [
     "@before(loading)",
@@ -101,7 +101,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#pieces.4400d6",
    "type": "spec",
-   "title": "Platform `web` brief: Dragonfly web apps — Pieces",
+   "title": "Platform `web` brief: Synapsis web apps — Pieces",
    "summary": "// repository (data/): each method is an http call; :id goes to the path, other params to the query/body @repository(path = \"character\") repository CharacterRepository @get(path = \":id\") getOne(id: int) Result<CharacterError, Character> @get(cache = true, ttl = 600000) getPage(page: int)…",
    "body": [
     "```nuclear",
@@ -149,12 +149,12 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#platform-web-brief-dragonfly-web-apps",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#platform-web-brief-synapsis-web-apps",
    "type": "spec",
-   "title": "Platform `web` brief: Dragonfly web apps",
-   "summary": "A Dragonfly web app has only `.nuc` files and `public/`; the app is generated in `build/app` (never edit it).",
+   "title": "Platform `web` brief: Synapsis web apps",
+   "summary": "A Synapsis web app has only `.nuc` files and `public/`; the app is generated in `build/app` (never edit it).",
    "body": [
-    "A Dragonfly web app has only `.nuc` files and `public/`; the app is generated in `build/app` (never edit it).",
+    "A Synapsis web app has only `.nuc` files and `public/`; the app is generated in `build/app` (never edit it).",
     "You write the business logic; the framework writes the rest (components, DI, routing, JSON, states, http). The",
     "platform's words are the mobile platform's (`repository`, `usecase`, `appcomponent`, `statemanager`, `@screen`); the",
     "views are HTML functions. Full rules: `nuclear help web`; where each file goes: `nuclear help layout --platform web`."
@@ -169,12 +169,12 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md#work-cycle",
    "type": "spec",
-   "title": "Platform `web` brief: Dragonfly web apps — Work cycle",
-   "summary": "1. `dragonfly new <name> -p web` makes the project; put each file in its folder (the folder gives the kind).",
+   "title": "Platform `web` brief: Synapsis web apps — Work cycle",
+   "summary": "1. `nuclear new <name> -p web` makes the project; put each file in its folder (the folder gives the kind).",
    "body": [
-    "1. `dragonfly new <name> -p web` makes the project; put each file in its folder (the folder gives the kind).",
+    "1. `nuclear new <name> -p web` makes the project; put each file in its folder (the folder gives the kind).",
     "2. Write following this sheet. A kind or decorator: `nuclear help <word> --platform web`; never guess one.",
-    "3. `dragonfly check` (or `nuclear check . --json`) until no errors, then `dragonfly test`."
+    "3. `nuclear check` (or `nuclear check . --json`) until no errors, then `nuclear test`."
    ],
    "platforms": [
     "web"
@@ -184,14 +184,45 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#1-project.31ce88",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#1-project.97518f",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 1. Project",
-   "summary": "dragonfly(platform = \"web\", dialect = \"react\") app(name = \"my_store\", title = \"My Store\", description = \"A Dragonfly web app.\", version = \"1.0.0\") `title` is the browser tab's title and `description` the page's description.",
+   "title": "The `web` platform of Synapsis — 1. Project",
+   "summary": "my_store/ ├── config.nuc synapsis(platform = \"web\", dialect = \"react\"), app(...), dependencies(...) ├── main.nuc the App view: the router with every screen ├── config/project_config.nuc appConfig: the connections and global services of the app ├── components/<name>/ appcomponent, config/, data/,…",
+   "body": [
+    "```",
+    "my_store/",
+    "├── config.nuc                         synapsis(platform = \"web\", dialect = \"react\"), app(...), dependencies(...)",
+    "├── main.nuc                           the App view: the router with every screen",
+    "├── config/project_config.nuc          appConfig: the connections and global services of the app",
+    "├── components/<name>/                 appcomponent, config/, data/, domain/, presentation/",
+    "├── shared/                            models, events, guards, components, screens shared by the app",
+    "├── public/                            static files, copied as they are",
+    "└── test/*_test.nuc                    tests",
+    "```",
+    "",
+    "`config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app (name,",
+    "description, version) and the backends it talks to (`contracts(tasks_api = \"../tasks_api\")`: their models and",
+    "repositories are generated into `contracts/`, [projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1.2) and",
+    "`dependencies(name = \"version\")` for a package the framework does not bring: `nuclear add <package>[@version]`",
+    "installs it with the dialect's package manager, writes it there and generates its type definitions into the project's",
+    "`defs/`; `nuclear remove <package>` takes it out (ADR-lang-0008). `build/app` is the dialect's app, never edited."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#1-project.f77448",
+   "type": "spec",
+   "title": "The `web` platform of Synapsis — 1. Project",
+   "summary": "synapsis(platform = \"web\", dialect = \"react\") app(name = \"my_store\", title = \"My Store\", description = \"A Synapsis web app.\", version = \"1.0.0\") `title` is the browser tab's title and `description` the page's description.",
    "body": [
     "```nuclear",
-    "dragonfly(platform = \"web\", dialect = \"react\")",
-    "app(name = \"my_store\", title = \"My Store\", description = \"A Dragonfly web app.\", version = \"1.0.0\")",
+    "synapsis(platform = \"web\", dialect = \"react\")",
+    "app(name = \"my_store\", title = \"My Store\", description = \"A Synapsis web app.\", version = \"1.0.0\")",
     "```",
     "",
     "`title` is the browser tab's title and `description` the page's description. `public/` is served as it is: a",
@@ -205,40 +236,9 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#1-project.776cda",
-   "type": "spec",
-   "title": "The `web` platform of Dragonfly — 1. Project",
-   "summary": "my_store/ ├── config.nuc dragonfly(platform = \"web\", dialect = \"react\"), app(...), dependencies(...) ├── main.nuc the App view: the router with every screen ├── config/project_config.nuc appConfig: the connections and global services of the app ├── components/<name>/ appcomponent, config/, data/,…",
-   "body": [
-    "```",
-    "my_store/",
-    "├── config.nuc                         dragonfly(platform = \"web\", dialect = \"react\"), app(...), dependencies(...)",
-    "├── main.nuc                           the App view: the router with every screen",
-    "├── config/project_config.nuc          appConfig: the connections and global services of the app",
-    "├── components/<name>/                 appcomponent, config/, data/, domain/, presentation/",
-    "├── shared/                            models, events, guards, components, screens shared by the app",
-    "├── public/                            static files, copied as they are",
-    "└── test/*_test.nuc                    tests",
-    "```",
-    "",
-    "`config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app (name,",
-    "description, version) and the backends it talks to (`contracts(tasks_api = \"../tasks_api\")`: their models and",
-    "repositories are generated into `contracts/`, [projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1.2) and",
-    "`dependencies(name = \"version\")` for a package the framework does not bring: `dragonfly add <package>[@version]`",
-    "installs it with the dialect's package manager, writes it there and generates its type definitions into the project's",
-    "`defs/`; `dragonfly remove <package>` takes it out (ADR-lang-0008). `build/app` is the dialect's app, never edited."
-   ],
-   "platforms": [
-    "web"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
-   ]
-  },
-  {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#2-kinds",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 2. Kinds",
+   "title": "The `web` platform of Synapsis — 2. Kinds",
    "summary": "Not in this version (this platform's `docs/01-product/roadmap.md`): forms and `formmanager`, converters, translations, the local database (`@primary`, `saveLocal`), plugins and AI kinds.",
    "body": [
     "| Area | Kinds and decorators | Rules |",
@@ -266,7 +266,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3. Rules",
+   "title": "The `web` platform of Synapsis — 3. Rules",
    "summary": "1. Golden rule: performance, speed and readability of the syntax.",
    "body": [
     "1. **Golden rule:** performance, speed and readability of the syntax.",
@@ -289,7 +289,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-1-views",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.1 Views",
+   "title": "The `web` platform of Synapsis — 3.1 Views",
    "summary": "A view's parameters are its props; `build()` returns an `Element`.",
    "body": [
     "A view's parameters are its props; `build()` returns an `Element`. Elements are HTML functions with the",
@@ -324,7 +324,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-2-configuration",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.2 Configuration",
+   "title": "The `web` platform of Synapsis — 3.2 Configuration",
    "summary": "`appConfig` (one per project) and `config` (per component) list `connections` and `globals`, as in the mobile platform.",
    "body": [
     "`appConfig` (one per project) and `config` (per component) list `connections` and `globals`, as in the mobile",
@@ -341,7 +341,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-3-data",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.3 Data",
+   "title": "The `web` platform of Synapsis — 3.3 Data",
    "summary": "A `repository` is a class of http calls: the same decorators, parameters and return rules as the mobile platform (flutter.md §6.3): the path under the connection's `baseUrl`, `:name` from a parameter, the rest to the query (GET, DELETE) or the JSON body; a `Result` method answers `Err(E(message =…",
    "body": [
     "A `repository` is a class of http calls: the same decorators, parameters and return rules as the mobile platform",
@@ -359,7 +359,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-4-domain",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.4 Domain",
+   "title": "The `web` platform of Synapsis — 3.4 Domain",
    "summary": "`usecase` (one `exec` that returns `Result`; `@requires(internet, session)`, `@acl(roles, permissions, guards)`), `appcomponent` (aliases to the use cases), `service`, `aggregate`: identical to the mobile platform.",
    "body": [
     "`usecase` (one `exec` that returns `Result`; `@requires(internet, session)`, `@acl(roles, permissions, guards)`),",
@@ -375,7 +375,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-5-state",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.5 State",
+   "title": "The `web` platform of Synapsis — 3.5 State",
    "summary": "A state model lists the states of a screen; a `statemanager` emits them (`@stateModel`, `@state`, `@before`, `@after`).",
    "body": [
     "A state model lists the states of a screen; a `statemanager` emits them (`@stateModel`, `@state`, `@before`,",
@@ -392,7 +392,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-6-screens-and-navigation",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.6 Screens and navigation",
+   "title": "The `web` platform of Synapsis — 3.6 Screens and navigation",
    "summary": "`@screen(route = \"/characters/:id\", providers = [Manager], loggedIn = { forward: \"/login\" }, acl = { roles, permissions, forward: \"/denied\" }, notFound = true)` on a view: a route of the router; `:id` becomes the screen's parameter of that type, the other parameters come from the query.",
    "body": [
     "`@screen(route = \"/characters/:id\", providers = [Manager], loggedIn = { forward: \"/login\" }, acl = { roles,",
@@ -412,7 +412,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-7-events",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.7 Events",
+   "title": "The `web` platform of Synapsis — 3.7 Events",
    "summary": "`event Name` + fields; `Events.publish(Name(...))`; a global `component` method with `@on(Name)` runs with every one; a view calls `useEvent(Name)` in `build` to re-render on it.",
    "body": [
     "`event Name` + fields; `Events.publish(Name(...))`; a global `component` method with `@on(Name)` runs with every",
@@ -428,7 +428,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-3-8-session-and-access",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 3.8 Session and access",
+   "title": "The `web` platform of Synapsis — 3.8 Session and access",
    "summary": "`SessionManager` keeps the session (token, user, roles, permissions, values) in the browser's storage and ends it after `timeout`; `Acl` gives role inheritance; a `guard` is a custom check for `@acl(guards = [...])`.",
    "body": [
     "`SessionManager` keeps the session (token, user, roles, permissions, values) in the browser's storage and ends it",
@@ -442,18 +442,18 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-generators.4bd3c4",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-generators.aee8c3",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — Generators",
-   "summary": "`dragonfly gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's facade; with `--calls <Repository>.<method>` it writes the use case too, when all it does is call that method of a repository.",
+   "title": "The `web` platform of Synapsis — Generators",
+   "summary": "`nuclear gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's facade; with `--calls <Repository>.<method>` it writes the use case too, when all it does is call that method of a repository.",
    "body": [
-    "`dragonfly gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's",
+    "`nuclear gen usecase <component> <Name>` adds the alias of a use case the project declares to its component's",
     "facade; with `--calls <Repository>.<method>` it writes the use case too, when all it does is call that method of a",
     "repository. What a screen shows of it (a state manager's method and its state) is written by hand.",
     "",
     "```sh",
-    "dragonfly gen resource characters Character --from-json https://rickandmortyapi.com/api/character",
-    "dragonfly gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares",
+    "nuclear gen resource characters Character --from-json https://rickandmortyapi.com/api/character",
+    "nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.episodes   # a method the repository declares",
     "```"
    ],
    "platforms": [
@@ -464,18 +464,18 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-generators.bfdbbb",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#3-rules-generators.e21726",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — Generators",
-   "summary": "`dragonfly gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models (nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (an HTTP repository over the app's `Http` connection, a named one added…",
+   "title": "The `web` platform of Synapsis — Generators",
+   "summary": "`nuclear gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models (nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (an HTTP repository over the app's `Http` connection, a named one added…",
    "body": [
-    "`dragonfly gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models",
+    "`nuclear gen resource <component> <Name>` writes the finished, compiling code of a resource (ADR-codegen-0001): its models",
     "(nested objects become models named `<Name><Key>`; a paged answer gives `<Name>Page`), the repository (an HTTP repository over the app's `Http` connection, a named one added when the app has another), one use",
     "case per action (`--actions list,get,search,create,update,delete`), their aliases in the facade, with `--screen <screen>` a screen that lists it with its state manager and state model, and a test with the repository mocked. The fields",
     "come from an example answer (`--from-json <file|url>`), a spec (`--from-spec <spec.md>`: its example answer, else its",
     "`Key | Type` table; a `GET https://...` line gives the API) or `--fields \"id:int name:string\"`. A file that exists is",
     "never overwritten (the facade and the repository get only the members they lack, so an action added to a resource that exists is finished); a name another file declares stops it before it writes.",
-    "`dragonfly gen inspect` answers what the project has. The agent writes only what is not standard: a use case with",
+    "`nuclear gen inspect` answers what the project has. The agent writes only what is not standard: a use case with",
     "its own rules, a view's details."
    ],
    "platforms": [
@@ -488,11 +488,11 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#4-tests",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 4. Tests",
-   "summary": "`tests` in `test/`: the app starts with its real config and every request answers what the test prepares (`DragonflyTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`, `verify`); `@test`, `@states` (the states a manager emits) and `@widget` (a…",
+   "title": "The `web` platform of Synapsis — 4. Tests",
+   "summary": "`tests` in `test/`: the app starts with its real config and every request answers what the test prepares (`SynapsisTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`, `verify`); `@test`, `@states` (the states a manager emits) and `@widget` (a…",
    "body": [
     "`tests` in `test/`: the app starts with its real config and every request answers what the test prepares",
-    "(`DragonflyTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`,",
+    "(`SynapsisTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`,",
     "`verify`); `@test`, `@states` (the states a manager emits) and `@widget` (a screen rendered in a memory router,",
     "read with Testing Library's `screen`) as in the mobile platform; `beforeEach()`/`afterEach()` methods are the hooks."
    ],
@@ -506,7 +506,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#5-architecture",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 5. Architecture",
+   "title": "The `web` platform of Synapsis — 5. Architecture",
    "summary": "5. Architecture",
    "body": [
     "| Rule | Code |",
@@ -528,7 +528,7 @@
   {
    "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#6-what-the-dialect-decides",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly — 6. What the dialect decides",
+   "title": "The `web` platform of Synapsis — 6. What the dialect decides",
    "summary": "Only how it is written: the language, the UI library, the bundler, the test runner, the generated app and how to run it (react.md).",
    "body": [
     "Only how it is written: the language, the UI library, the bundler, the test runner, the generated app and how to",
@@ -542,9 +542,9 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#the-web-platform-of-dragonfly",
+   "id": "spec:nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md#the-web-platform-of-synapsis",
    "type": "spec",
-   "title": "The `web` platform of Dragonfly",
+   "title": "The `web` platform of Synapsis",
    "summary": "The web platform is the mobile platform in a browser (ADR-web-0001): the same words for the same things (`appConfig`, `repository` with `@get`, `usecase`, `appcomponent`, state models and `statemanager`, `@screen`, events, guards, tests), so an app's domain and state read the same on a phone and…",
    "body": [
     "> Inherits every rule of [nuclear-base.md](../../../../../nuclearlang/docs/07-reference/nuclear-base.md) and the standard library ([library.md](../../../../../nuclearlang/docs/07-reference/library.md)).",

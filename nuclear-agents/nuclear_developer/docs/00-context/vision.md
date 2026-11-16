@@ -12,7 +12,7 @@ A frontier model that does all the work of a spec is paid for every token, and t
 small enough to run on a developer's laptop (at most 3B parameters) cannot hold much context, chooses tools badly,
 and the machine has no GPU to train one.
 
-The Nuclear Developer is a set of local agents for NuclearLang and Dragonfly that work as **the junior developer of
+The Nuclear Developer is a set of local agents for NuclearLang and Synapsis that work as **the junior developer of
 a frontier model**: a lead (Claude, or the user) makes the decisions (the plan, the names, the review) and the
 local developer writes each piece. What a small model cannot hold in its head comes from the
 [Nuclear Smart Graph](../../../../nuclear-graph-storage/README.md); what it writes is checked by the Nuclear
@@ -21,7 +21,7 @@ junior gets it right next time.
 
 ## Who uses it
 
-- **The Loop** of the editors and `nuclear-loop`: a spec goes through plan, tests first, code, verification,
+- **The Builder** of the editors and `nuclear-builder`: a spec goes through plan, tests first, code, verification,
   security and artifacts with the local agents.
 - **The chat** of the editor: a question about the project, or an order.
 - **A frontier model** over MCP (Claude Code, Codex, Cursor): `developer_task` first, then it validates and
@@ -44,6 +44,6 @@ How each calls it: [integrations](../02-architecture/integrations.md#where-it-wo
 - It does not write a target language. The agents write only Nuclear: they name a platform (`backend`, `mobile`,
   `web`), never a dialect.
 - It does not run a model larger than 3B parameters of effective size (the user's rule).
-- Its assistant does not change a file: an order is a run of the Loop.
+- Its assistant does not change a file: an order is a run of the Builder.
 - It does not hide what is beyond it: the plan and the analysis say so before anything is written
   ([the limits](../02-architecture/overview.md#known-limits)).

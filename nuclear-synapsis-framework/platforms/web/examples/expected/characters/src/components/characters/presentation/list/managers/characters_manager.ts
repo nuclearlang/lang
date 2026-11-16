@@ -2,7 +2,7 @@ import { CharactersComponent } from '../../../characters_component';
 import { Character } from '../../../domain/models/character';
 import { CharacterError } from '../../../domain/models/character_error';
 import { CharactersState } from '../state_models/characters_state';
-import { Result, StateManager } from 'dragonfly-web';
+import { Result, StateManager } from 'synapsis-web';
 
 export class CharactersManager extends StateManager<CharactersState> {
   constructor(private readonly characters: CharactersComponent) {

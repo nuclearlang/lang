@@ -1,7 +1,7 @@
 import { Task } from '../entities/task.js';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { AppError, Page, Repository, Result } from 'dragonfly-nest';
+import { AppError, Page, Repository, Result } from 'synapsis-nest';
 
 /** The tasks table: find, findAll, save and remove come with the kind. */
 @Injectable()

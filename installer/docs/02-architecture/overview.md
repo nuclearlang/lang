@@ -22,15 +22,16 @@ folder above the binary's `bin/`).
 
 | Folder | Holds | From |
 |---|---|---|
-| `bin/` | `nuclear`, `dragonfly`, `nuclear-lsp`; `nuclear-loop.js` with its launchers `nuclear-loop` and `nuclear-loop.cmd` (when `extensions/vscode/out/nuclear-loop.js` is built) | the binaries given; the VS Code extension |
+| `bin/` | `nuclear`, `nuclear-lsp`; `nuclear-builder.js` with its launchers `nuclear-builder` and `nuclear-builder.cmd` (when `extensions/vscode/out/nuclear-builder.js` is built) | the binaries given; the VS Code extension |
 | `dialects/<language>/` | each language with its frameworks, type definitions and docs | `nuclearlang/dialects/` |
 | `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/` | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |
+| `generators/<platform>/` | `generators.toml`: what the code generator writes | `tools/code_generator/platforms/` |
 | `docs/08-guides/` | the framework's guides | `nuclear-synapsis-framework/docs/08-guides/` |
 | `kinds/` | the kind packages of the platforms | `platforms/<platform>/kinds/` |
-| `packages/` | every runtime package as it is: `dragonfly`, `dragonfly_genkit`, `dragonfly-py`, `dragonfly-nest`, `dragonfly-web` | `platforms/<platform>/packages/` |
-| `tools/defs/` | the definitions generator `dragonfly flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |
+| `packages/` | every runtime package as it is: `synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`, `synapsis-web` | `platforms/<platform>/packages/` |
+| `tools/defs/` | the definitions generator `nuclear flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |
 | `agents/skills/` | the `nuclear` skill | `tools/cli/agent-files/skills/` |
-| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer` (the folders of the tree, so a relative path between the two holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `prompts`, `data` (the knowledge base); the Developer's `config.nuc`, `components`, `config`, `defs` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/` |
+| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer`, `ai/tools/mcp` (the folders of the tree, so a relative path between them holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `prompts`, `data` (the knowledge base); the Developer's `config.nuc`, `components`, `config`, `defs`; the MCP server's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `defs`, `tests` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/`, `tools/mcp/` |
 
 - A JavaScript package whose `main` is in `dist/` and is not built stops the staging (`npm run build` there, or
   `build-runtimes.sh`).
@@ -41,26 +42,27 @@ folder above the binary's `bin/`).
 
 ## From source (`install.sh`)
 
-1. `cargo build --release -p nuclear-cli -p nuclear-lsp -p dragonfly`.
-2. `nuclear-loop`: `npm run loop` in `extensions/vscode` when its `node_modules` are there; else a note.
-3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links in `$PREFIX/bin`.
-4. `ai/nuclear-graph-storage` and `ai/nuclear-agents` become links to the tree's own folders, so the set-up installs the
-   graph editable and builds the Developer in place. With `--ai`: `nuclear-loop setup` (it needs Node.js).
+1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.
+2. `nuclear-builder`: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.
+3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear`, `nuclear-lsp` and
+   `nuclear-builder` in `$PREFIX/bin`, and removes the old `dragonfly` and `nuclear-loop` links.
+4. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the
+   set-up installs the graph editable and builds the Developer and the MCP server in place. With `--ai`: `nuclear-builder setup` (it needs Node.js).
 5. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).
 6. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the
    PATH (`--no-vscode`). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target
    `wasm32-wasip2` is there (`--no-zed`).
 7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.
 
-`--uninstall`: the AI services first (`nuclear-loop setup --remove`), the links, `uv tool uninstall nuclear-graph`,
-the Zed extension, the installation, the skill, the intro marker (`$XDG_STATE_HOME/dragonfly`), the VS Code
-extension.
+`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links (also the old `dragonfly` and
+`nuclear-loop`), `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,
+the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
 
 ## The release
 
 - `release/build-runtimes.sh`: `npm ci` (or `npm install`) and `npm run build` in every
-  `platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-loop` in `extensions/vscode`.
-- `release/package.sh [<rust target>]`: builds the three binaries for the target (or this machine), stages them,
+  `platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.
+- `release/package.sh [<rust target>]`: builds `nuclear` and `nuclear-lsp` for the target (or this machine), stages them,
   writes `VERSION`, and makes `dist/nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with its
   `.sha256`, and `dist/latest` (the version a mirror serves). The version is the workspace's (`Cargo.toml`
   `[workspace.package]`); `os` is `linux`, `macos` or `windows`, `arch` `x86_64` or `aarch64`.
@@ -93,16 +95,16 @@ Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/n
 
 ## The AI services at the end of an install
 
-The installers do not install the services: they call the set-up (`nuclear-loop setup`), whose engine is the VS
+The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS
 Code extension's `aiSetup.ts`. What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is
 ADR-installer-0002.
 
 - The profile is `--profile` / `NUCLEAR_AI_PROFILE`, else the one the machine has (`NUCLEAR_AI_PROFILE=` in
   `~/.config/nuclearlang/ai.env`, `%APPDATA%\nuclearlang\ai.env`).
-- With a profile: `nuclear-loop setup --profile <id> --yes`, no questions (an update keeps the choice). Without
-  one and with a terminal (not CI): `nuclear-loop setup`, which asks. Without a terminal: nothing, and a note.
-- Without Node.js or without `nuclear-loop` in the archive: a note saying how to run the set-up later.
+- With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without
+  one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.
+- Without Node.js or without `nuclear-builder` in the archive: a note saying how to run the set-up later.
 - The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.
 - On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`
   (`systemctl --user restart nuclear-developer` after a change to its code;
-  `journalctl --user -u nuclear-developer -n 50`); `nuclear-loop setup --status` says what is installed and running.
+  `journalctl --user -u nuclear-developer -n 50`); `nuclear-builder setup --status` says what is installed and running.

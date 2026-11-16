@@ -8,15 +8,15 @@
    "id": "doc:device-emulators/AGENTS.md#commands",
    "type": "readme",
    "title": "The devices — Commands",
-   "summary": "cargo test -p dragonfly device # the device's unit tests (arguments, presets, slots, render, window size) cargo clippy --all-targets cargo check -p dragonfly --target <windows or macos target> # the only check those systems have had dragonfly device [<device>] [--landscape] [-- <flutter run args>]…",
+   "summary": "cargo test -p nuclear-devices # the unit tests (arguments, presets, slots, render, window size) cargo clippy --all-targets cargo check -p nuclear-devices --target <windows or macos target> # the only check those systems have had nuclear device [<device>] [--landscape] [-- <flutter run args>]…",
    "body": [
     "```sh",
-    "cargo test -p dragonfly device                # the device's unit tests (arguments, presets, slots, render, window size)",
+    "cargo test -p nuclear-devices               # the unit tests (arguments, presets, slots, render, window size)",
     "cargo clippy --all-targets",
-    "cargo check -p dragonfly --target <windows or macos target>   # the only check those systems have had",
-    "dragonfly device [<device>] [--landscape] [-- <flutter run args>]",
-    "dragonfly device list                         # the running devices and the devices it can be",
-    "dragonfly terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]",
+    "cargo check -p nuclear-devices --target <windows or macos target>   # the only check those systems have had",
+    "nuclear device [<device>] [--landscape] [-- <flutter run args>]",
+    "nuclear device list                         # the running devices and the devices it can be",
+    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]",
     "```"
    ],
    "sources": [
@@ -37,7 +37,7 @@
     "| Read | When |",
     "|---|---|",
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is untested (systems, desktops, terminals) or pending in the devices |",
-    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `device/`: the backend, the CDP client, the window placement, the terminal's rendering, the slots and temporary folders |",
+    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change the crate: the backend, the CDP client, the window placement, the terminal's rendering, the slots and temporary folders |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a device is Flutter web in a browser and not an engine of its own |",
     "",
     "Elsewhere:",
@@ -46,6 +46,30 @@
     "  [the flutter reference](../nuclearlang/dialects/dart/docs/07-reference/flutter.md), §11.",
     "- The device panels of the editors: [the extensions](../extensions/AGENTS.md).",
     "- The command line they are part of: [the command line tools](../tools/cli/AGENTS.md)."
+   ],
+   "sources": [
+    "device-emulators/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/AGENTS.md#folders",
+   "type": "readme",
+   "title": "The devices — Folders",
+   "summary": "Not here: the text layer the terminal reads (`synapsisTextLayer`) is the `synapsis` Dart package's (`nuclear-synapsis-framework/platforms/mobile/packages/synapsis/`); the editors' device panels are their own code (`extensions/tools/nuclear-device-manager/src/mobile-device.ts`, `web-device.ts`).",
+   "body": [
+    "- `src/lib.rs`: the arguments, the list, `run` (a slot, then the front).",
+    "- `src/backend.rs`, `cdp.rs`, `presets.rs`, `system.rs`: Flutter, the browser, CDP, the presets, the operating system.",
+    "- `src/window.rs`, `src/terminal/` (`mod.rs`, `caps.rs`, `render.rs`): the two fronts.",
+    "- `docs/`: this project's documents (the table below).",
+    "",
+    "Not here: the text layer the terminal reads (`__synapsisTextLayer`) is the `synapsis` Dart package's",
+    "(`nuclear-synapsis-framework/platforms/mobile/packages/synapsis/`); the editors' device panels are their own code",
+    "(`extensions/tools/nuclear-device-manager/src/mobile-device.ts`, `web-device.ts`)."
    ],
    "sources": [
     "device-emulators/AGENTS.md"
@@ -67,10 +91,10 @@
     "2. **Nothing stays alive when a device ends**: neither `flutter run` nor the browser, whether the window is",
     "   closed, `q` is pressed or the terminal hangs up. The terminal's raw mode is restored also on a panic.",
     "3. **`render.rs` is pure** (no I/O) and tested; what depends on the operating system is only in `system.rs`.",
-    "4. **The presets are the same list as the editor's panel** (`presets.rs` and `extensions/vscode/src/device.ts`): a",
+    "4. **The presets are the same list as the editor's panel** (`presets.rs` and `extensions/tools/nuclear-device-manager/src/mobile-device.ts`): a",
     "   device added to one is added to the other.",
     "5. **A device is Flutter web**: no native plugins, no `dart:io`. It is not a replacement for a real phone.",
-    "6. What a user reads is the \"Dragonfly devices\" part of the `dragonfly` CLI section (§11) of",
+    "6. What a user reads is the \"Synapsis devices\" part of the `nuclear` CLI section (§11) of",
     "   `nuclearlang/dialects/dart/docs/07-reference/flutter.md`: a new device, key or render updates it."
    ],
    "sources": [
@@ -86,10 +110,12 @@
    "id": "doc:device-emulators/AGENTS.md#stack",
    "type": "readme",
    "title": "The devices — Stack",
-   "summary": "`base64`.",
+   "summary": "(the terminal), `tungstenite` (the CDP WebSocket), `png`, `base64`, `serde_json`.",
    "body": [
-    "- Rust, inside the `dragonfly` crate: `crossterm` (the terminal), `tungstenite` (the CDP WebSocket), `png`,",
-    "  `base64`. They take the binary from 4.1 to 5.3 MB.",
+    "- Rust, the library crate `nuclear-devices` (`src/lib.rs`: `parse`, `list`, `presets_text`, `run`): `crossterm`",
+    "  (the terminal), `tungstenite` (the CDP WebSocket), `png`, `base64`, `serde_json`.",
+    "- Its caller: the `nuclear` command (`device` (dv), `device list`, `terminal-device` (td) in",
+    "  `tools/cli/src/framework/mod.rs`) builds the app, then calls `run`.",
     "- At run time: Flutter (`flutter run -d chrome`) and a Chromium browser (Chrome, Chromium, Edge, Brave or Vivaldi;",
     "  `CHROME_EXECUTABLE` chooses one)."
    ],
@@ -110,8 +136,8 @@
    "body": [
     "Test devices that run a mobile app with the size, density, touch and identity of a phone or a tablet, without an",
     "emulator: the app runs as Flutter web in a Chromium browser driven over the Chrome DevTools Protocol. From the",
-    "command line a device is its own window (`dragonfly device`) or lives inside the terminal",
-    "(`dragonfly terminal-device`); the editors show the same kind of device in a panel."
+    "command line a device is its own window (`nuclear device`) or lives inside the terminal",
+    "(`nuclear terminal-device`); the editors show the same kind of device in a panel."
    ],
    "sources": [
     "device-emulators/AGENTS.md"
@@ -123,40 +149,44 @@
    }
   },
   {
-   "id": "doc:device-emulators/AGENTS.md#where-it-is-today",
-   "type": "readme",
-   "title": "The devices — Where it is today",
-   "summary": "This folder holds only documents.",
-   "body": [
-    "This folder holds only documents. The code is still inside the CLI crate and moves here in spec 008, T4.1",
-    "([tasks](../docs/04-specs/008-restructure/tasks.md)):",
-    "",
-    "| Part | Where it is today |",
-    "|---|---|",
-    "| The device of the command line: backend, window, terminal | `nuclear-synapsis-framework/cli/src/device/` |",
-    "| The commands `device` (dv), `device list`, `terminal-device` (td) | `nuclear-synapsis-framework/cli/src/main.rs` |",
-    "| The text layer the terminal reads (`__dragonflyTextLayer`) | the `dragonfly` Dart package, `nuclear-synapsis-framework/platforms/mobile/packages/dragonfly/` |",
-    "| The editors' device panels (their own code, the same presets) | `extensions/vscode/src/device.ts`, `webDevice.ts` |"
-   ],
-   "sources": [
-    "device-emulators/AGENTS.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-nuclear-synapsis-framework-cli-src-device.4105b2",
+   "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-device-emulators-src-crate-nuclear-devices.10b241",
    "type": "context",
-   "title": "The devices: overview — Modules (`nuclear-synapsis-framework/cli/src/device/`)",
-   "summary": "`dragonfly_device_<n>_<pid>` (the window is named so on Wayland, and the mark names the processes); the CDP connection to that page; `emulate` (size, density, touch, orientation, user agent of `presets.rs`); `open_app`; input (`touch`, `wheel`, `insert_text`, `key`, `back`); `text_layer`…",
+   "title": "The devices: overview — Modules (`device-emulators/src/`, crate `nuclear-devices`)",
+   "summary": "`~/.cache/dfly/<n>`, about 500 MB kept off a `/tmp` that is often in RAM; the path is short because the socket of the browser's profile allows at most 108 bytes); the browser per system (`CHROME_EXECUTABLE`, the PATH, flatpak, `/Applications`, `Program Files`); free ports; `Slot` (the numbers, in…",
+   "body": [
+    "- **`system.rs`**: what depends on the operating system. `device_tmp` (Linux: Flutter's `TMPDIR` is",
+    "  `~/.cache/dfly/<n>`, about 500 MB kept off a `/tmp` that is often in RAM; the path is short because the socket of",
+    "  the browser's profile allows at most 108 bytes); the browser per system (`CHROME_EXECUTABLE`, the PATH, flatpak,",
+    "  `/Applications`, `Program Files`); free ports; `Slot` (the numbers, in `temp/synapsis-devices/<n>` with the pid;",
+    "  a dead one is reused); `alive`, `kill_tree`.",
+    "- **`window.rs`**: the browser in app mode (no tabs, no address bar). It waits 1.2 s for the browser's bars",
+    "  (`--enable-automation`), measures the page and the window WITHOUT emulation, computes `fit_scale` (the device's",
+    "  ratio, at most 85 % of the screen's height), places the window (over CDP; on Hyprland 0.55+ with",
+    "  `hl.dsp.window.*` by the class with the mark, else the classic dispatchers; on Sway by `[app_id=...]`; on i3 by",
+    "  `--class`), corrects once, then emulates and opens the app. The screen's size comes from Hyprland or Sway",
+    "  (`wm_screen`: Chrome does not know it on Wayland). `offset`: device 2 goes to the right, device 3 to the left. On",
+    "  a tiling window manager the window floats instead of filling a tile.",
+    "- **`terminal/`**: the app runs in a browser without a window. `caps.rs`: what the terminal can draw and its"
+   ],
+   "sources": [
+    "device-emulators/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-device-emulators-src-crate-nuclear-devices.94e665",
+   "type": "context",
+   "title": "The devices: overview — Modules (`device-emulators/src/`, crate `nuclear-devices`)",
+   "summary": "`synapsis_device_<n>_<pid>` (the window is named so on Wayland, and the mark names the processes); the CDP connection to that page; `emulate` (size, density, touch, orientation, user agent of `presets.rs`); `open_app`; input (`touch`, `wheel`, `insert_text`, `key`, `back`); `text_layer`…",
    "body": [
     "- **`backend.rs`**: `flutter run -d chrome` with `--web-launch-url` to an empty 404 page marked",
-    "  `__dragonfly_device_<n>_<pid>__` (the window is named so on Wayland, and the mark names the processes); the CDP",
+    "  `__synapsis_device_<n>_<pid>__` (the window is named so on Wayland, and the mark names the processes); the CDP",
     "  connection to that page; `emulate` (size, density, touch, orientation, user agent of `presets.rs`); `open_app`;",
-    "  input (`touch`, `wheel`, `insert_text`, `key`, `back`); `text_layer` (`__dragonflyTextLayer` of the `dragonfly`",
+    "  input (`touch`, `wheel`, `insert_text`, `key`, `back`); `text_layer` (`__synapsisTextLayer` of the `synapsis`",
     "  package, in debug); `typing`, `screenshot`, `start_frames` (a PNG screencast), `reload` (the terminal device:",
     "  `flutter run --machine`, `app.restart`), `close` (`Browser.close` + `kill_tree`).",
     "- **`cdp.rs`**: a minimal Chrome DevTools Protocol client. One thread owns the WebSocket (tungstenite is not",
@@ -178,38 +208,9 @@
    }
   },
   {
-   "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-nuclear-synapsis-framework-cli-src-device.a9c7b1",
+   "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-device-emulators-src-crate-nuclear-devices.acd2e2",
    "type": "context",
-   "title": "The devices: overview — Modules (`nuclear-synapsis-framework/cli/src/device/`)",
-   "summary": "`~/.cache/dfly/<n>`, about 500 MB kept off a `/tmp` that is often in RAM; the path is short because the socket of the browser's profile allows at most 108 bytes); the browser per system (`CHROME_EXECUTABLE`, the PATH, flatpak, `/Applications`, `Program Files`); free ports; `Slot` (the numbers, in…",
-   "body": [
-    "- **`system.rs`**: what depends on the operating system. `device_tmp` (Linux: Flutter's `TMPDIR` is",
-    "  `~/.cache/dfly/<n>`, about 500 MB kept off a `/tmp` that is often in RAM; the path is short because the socket of",
-    "  the browser's profile allows at most 108 bytes); the browser per system (`CHROME_EXECUTABLE`, the PATH, flatpak,",
-    "  `/Applications`, `Program Files`); free ports; `Slot` (the numbers, in `temp/dragonfly-devices/<n>` with the pid;",
-    "  a dead one is reused); `alive`, `kill_tree`.",
-    "- **`window.rs`**: the browser in app mode (no tabs, no address bar). It waits 1.2 s for the browser's bars",
-    "  (`--enable-automation`), measures the page and the window WITHOUT emulation, computes `fit_scale` (the device's",
-    "  ratio, at most 85 % of the screen's height), places the window (over CDP; on Hyprland 0.55+ with",
-    "  `hl.dsp.window.*` by the class with the mark, else the classic dispatchers; on Sway by `[app_id=...]`; on i3 by",
-    "  `--class`), corrects once, then emulates and opens the app. The screen's size comes from Hyprland or Sway",
-    "  (`wm_screen`: Chrome does not know it on Wayland). `offset`: device 2 goes to the right, device 3 to the left. On",
-    "  a tiling window manager the window floats instead of filling a tile.",
-    "- **`terminal/`**: the app runs in a browser without a window. `caps.rs`: what the terminal can draw and its"
-   ],
-   "sources": [
-    "device-emulators/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:device-emulators/docs/02-architecture/overview.md#modules-nuclear-synapsis-framework-cli-src-device.acd2e2",
-   "type": "context",
-   "title": "The devices: overview — Modules (`nuclear-synapsis-framework/cli/src/device/`)",
+   "title": "The devices: overview — Modules (`device-emulators/src/`, crate `nuclear-devices`)",
    "summary": "colors, from environment variables (no queries: they would mix with the input), and the cell size.",
    "body": [
     "colors, from environment variables (no queries: they would mix with the input), and the cell size. `render.rs`",
@@ -232,14 +233,15 @@
    "id": "doc:device-emulators/docs/02-architecture/overview.md#the-devices-overview",
    "type": "context",
    "title": "The devices: overview",
-   "summary": "`dragonfly device` (dv, `window.rs`) and `dragonfly terminal-device` (td, `terminal/`) run on the same backend.",
+   "summary": "`nuclear device` (dv, `window.rs`) and `nuclear terminal-device` (td, `terminal/`) run on the same backend.",
    "body": [
-    "`dragonfly device` (dv, `window.rs`) and `dragonfly terminal-device` (td, `terminal/`) run on the same backend. The",
-    "command builds the app first (`dragonfly build`), then `device::run` takes a slot and starts the front. Several run",
+    "`nuclear device` (dv, `window.rs`) and `nuclear terminal-device` (td, `terminal/`) run on the same backend. The",
+    "command (`tools/cli/src/framework/mod.rs`) builds the app first, then `nuclear_devices::run` takes a slot and starts",
+    "the front. Several run",
     "at the same time: device 1, 2, 3.",
     "",
     "```",
-    " mod.rs    parse (<device> --landscape --render -- <flutter args>), list, run",
+    " lib.rs    parse (<device> --landscape --render -- <flutter args>), list, run",
     "   │",
     "   ├── window.rs      the device in its own window          ┐",
     "   ├── terminal/      the device inside the terminal        ┘ fronts",
@@ -261,9 +263,9 @@
    "id": "doc:device-emulators/docs/02-architecture/overview.md#the-editors-devices",
    "type": "context",
    "title": "The devices: overview — The editors' devices",
-   "summary": "The VS Code extension has its own device panel for a mobile app (a Flutter custom device `dragonfly` over a headless Chromium, the same presets) and a web device for a web project; they are the extension's code, described with the extensions.",
+   "summary": "The VS Code extension has its own device panel for a mobile app (a Flutter custom device `synapsis` over a headless Chromium, the same presets) and a web device for a web project; they are the extension's code, described with the extensions.",
    "body": [
-    "The VS Code extension has its own device panel for a mobile app (a Flutter custom device `dragonfly` over a",
+    "The VS Code extension has its own device panel for a mobile app (a Flutter custom device `synapsis` over a",
     "headless Chromium, the same presets) and a web device for a web project; they are the extension's code, described",
     "with [the extensions](../../../extensions/AGENTS.md)."
    ],
@@ -286,7 +288,7 @@
     "→ back → rotate; closing the window, `q` or SIGHUP leaves no process. Windows and macOS: only",
     "`cargo check --target`. What did not run is in the [roadmap](../01-product/roadmap.md).",
     "",
-    "Unit tests: `arguments` (`mod.rs`), `presets_are_found_by_id_or_name`, `slots_take_the_lowest_free_number`,",
+    "Unit tests (`cargo test -p nuclear-devices`): `arguments` (`lib.rs`), `presets_are_found_by_id_or_name`, `slots_take_the_lowest_free_number`,",
     "`this_process_is_alive`, `machine_lines_become_events`, `the_window_keeps_the_aspect_and_fits_the_screen`,",
     "`visible_width_ignores_escape_codes`, and in `render.rs` `the_area_keeps_the_device_aspect`,",
     "`blocks_use_two_pixels_per_cell_and_texts_replace_them`, `unreadable_text_colors_become_black_or_white`,",
@@ -305,14 +307,14 @@
    "id": "doc:installer/AGENTS.md#commands",
    "type": "readme",
    "title": "The installers and the release — Commands",
-   "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/build-runtimes.sh # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-loop installer/release/package.sh…",
+   "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/build-runtimes.sh # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder…",
    "body": [
     "```sh",
     "installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)",
     "installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall",
-    "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-loop",
+    "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder",
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
-    "nuclear-loop setup [--profile <id> --yes | --status | --remove]   # the AI services",
+    "nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services",
     "```",
     "",
     "The public one-liners (they need a published release):",
@@ -351,7 +353,7 @@
     "  [the CLI's agent support](../tools/cli/docs/02-architecture/agent-support.md).",
     "- The services the set-up installs: [the Smart Graph](../nuclear-graph-storage/AGENTS.md),",
     "  [the agents](../nuclear-agents/AGENTS.md); the MCP server: [tools/mcp](../tools/mcp/AGENTS.md).",
-    "- The wizard of the editor and `nuclear-loop`: [the extensions](../extensions/AGENTS.md)."
+    "- The wizard of the editor and `nuclear-builder`: [the extensions](../extensions/AGENTS.md)."
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -366,10 +368,11 @@
    "id": "doc:installer/AGENTS.md#folders",
    "type": "readme",
    "title": "The installers and the release — Folders",
-   "summary": "and the editor extensions).",
+   "summary": "`nuclear-builder` and `nuclear-lsp`, removes the old `dragonfly` and `nuclear-loop` links, installs the skill and the editor extensions).",
    "body": [
-    "- `install.sh`: the installer from the source tree (builds the three binaries, stages, links, installs the skill",
-    "  and the editor extensions).",
+    "- `install.sh`: the installer from the source tree (builds `nuclear` and `nuclear-lsp`, stages, links `nuclear`,",
+    "  `nuclear-builder` and `nuclear-lsp`, removes the old `dragonfly` and `nuclear-loop` links, installs the skill and",
+    "  the editor extensions).",
     "- `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`",
     "  and `package.sh`.",
     "- `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.",
@@ -421,12 +424,13 @@
    "id": "doc:installer/AGENTS.md#stack",
    "type": "readme",
    "title": "The installers and the release — Stack",
-   "summary": "`aiSetup.json`), run in a terminal as `nuclear-loop setup`.",
+   "summary": "`aiSetup.json`), run in a terminal as `nuclear-builder setup`; it builds and installs the Smart Graph, the Nuclear Developer and the MCP server (`uv tool install` of `ai/nuclear-graph-storage` and `ai/tools/mcp`).",
    "body": [
     "- POSIX `sh` scripts and one PowerShell script (5.1 or 7); no dependency but `curl` or `wget`, `tar`, a SHA-256 tool.",
     "- GitHub Actions for the release (`.github/workflows/release.yml`); static Linux binaries (musl).",
     "- The AI set-up is not code of this folder: its engine is `extensions/vscode/src/aiSetup.ts` (profiles in",
-    "  `aiSetup.json`), run in a terminal as `nuclear-loop setup`."
+    "  `aiSetup.json`), run in a terminal as `nuclear-builder setup`; it builds and installs the Smart Graph, the Nuclear",
+    "  Developer and the MCP server (`uv tool install` of `ai/nuclear-graph-storage` and `ai/tools/mcp`)."
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -457,25 +461,41 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.4a8374",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
-   "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp -p dragonfly`.",
+   "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
    "body": [
-    "1. `cargo build --release -p nuclear-cli -p nuclear-lsp -p dragonfly`.",
-    "2. `nuclear-loop`: `npm run loop` in `extensions/vscode` when its `node_modules` are there; else a note.",
-    "3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links in `$PREFIX/bin`.",
-    "4. `ai/nuclear-graph-storage` and `ai/nuclear-agents` become links to the tree's own folders, so the set-up installs the",
-    "   graph editable and builds the Developer in place. With `--ai`: `nuclear-loop setup` (it needs Node.js).",
+    "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
+    "2. `nuclear-builder`: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.",
+    "3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear`, `nuclear-lsp` and",
+    "   `nuclear-builder` in `$PREFIX/bin`, and removes the old `dragonfly` and `nuclear-loop` links.",
+    "4. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the",
+    "   set-up installs the graph editable and builds the Developer and the MCP server in place. With `--ai`: `nuclear-builder setup` (it needs Node.js).",
     "5. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).",
     "6. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the",
     "   PATH (`--no-vscode`). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
     "   `wasm32-wasip2` is there (`--no-zed`).",
-    "7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.",
-    "",
-    "`--uninstall`: the AI services first (`nuclear-loop setup --remove`), the links, `uv tool uninstall nuclear-graph`,",
-    "the Zed extension, the installation, the skill, the intro marker (`$XDG_STATE_HOME/dragonfly`), the VS Code",
-    "extension."
+    "7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.9d489d",
+   "type": "context",
+   "title": "The installers: overview — From source (`install.sh`)",
+   "summary": "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links (also the old `dragonfly` and `nuclear-loop`), `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill, the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.",
+   "body": [
+    "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links (also the old `dragonfly` and",
+    "`nuclear-loop`), `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,",
+    "the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -490,21 +510,21 @@
    "id": "doc:installer/docs/02-architecture/overview.md#the-ai-services-at-the-end-of-an-install",
    "type": "context",
    "title": "The installers: overview — The AI services at the end of an install",
-   "summary": "The installers do not install the services: they call the set-up (`nuclear-loop setup`), whose engine is the VS Code extension's `aiSetup.ts`.",
+   "summary": "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS Code extension's `aiSetup.ts`.",
    "body": [
-    "The installers do not install the services: they call the set-up (`nuclear-loop setup`), whose engine is the VS",
+    "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS",
     "Code extension's `aiSetup.ts`. What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is",
     "ADR-installer-0002.",
     "",
     "- The profile is `--profile` / `NUCLEAR_AI_PROFILE`, else the one the machine has (`NUCLEAR_AI_PROFILE=` in",
     "  `~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`).",
-    "- With a profile: `nuclear-loop setup --profile <id> --yes`, no questions (an update keeps the choice). Without",
-    "  one and with a terminal (not CI): `nuclear-loop setup`, which asks. Without a terminal: nothing, and a note.",
-    "- Without Node.js or without `nuclear-loop` in the archive: a note saying how to run the set-up later.",
+    "- With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without",
+    "  one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.",
+    "- Without Node.js or without `nuclear-builder` in the archive: a note saying how to run the set-up later.",
     "- The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.",
     "- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`",
     "  (`systemctl --user restart nuclear-developer` after a change to its code;",
-    "  `journalctl --user -u nuclear-developer -n 50`); `nuclear-loop setup --status` says what is installed and running."
+    "  `journalctl --user -u nuclear-developer -n 50`); `nuclear-builder setup --status` says what is installed and running."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -540,12 +560,12 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.5f06e0",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.7f3508",
    "type": "context",
    "title": "The installers: overview — The layout of an installation (`release/stage.sh <dest> <binary>...`)",
    "summary": "`build-runtimes.sh`).",
    "body": [
-    "| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer` (the folders of the tree, so a relative path between the two holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `prompts`, `data` (the knowledge base); the Developer's `config.nuc`, `components`, `config`, `defs` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/` |",
+    "| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer`, `ai/tools/mcp` (the folders of the tree, so a relative path between them holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `prompts`, `data` (the knowledge base); the Developer's `config.nuc`, `components`, `config`, `defs`; the MCP server's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `defs`, `tests` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/`, `tools/mcp/` |",
     "",
     "- A JavaScript package whose `main` is in `dist/` and is not built stops the staging (`npm run build` there, or",
     "  `build-runtimes.sh`).",
@@ -564,20 +584,21 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.8209c5",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.a4aca5",
    "type": "context",
    "title": "The installers: overview — The layout of an installation (`release/stage.sh <dest> <binary>...`)",
    "summary": "The layout of an installation (`release/stage.sh <dest> <binary>...`)",
    "body": [
     "| Folder | Holds | From |",
     "|---|---|---|",
-    "| `bin/` | `nuclear`, `dragonfly`, `nuclear-lsp`; `nuclear-loop.js` with its launchers `nuclear-loop` and `nuclear-loop.cmd` (when `extensions/vscode/out/nuclear-loop.js` is built) | the binaries given; the VS Code extension |",
+    "| `bin/` | `nuclear`, `nuclear-lsp`; `nuclear-builder.js` with its launchers `nuclear-builder` and `nuclear-builder.cmd` (when `extensions/vscode/out/nuclear-builder.js` is built) | the binaries given; the VS Code extension |",
     "| `dialects/<language>/` | each language with its frameworks, type definitions and docs | `nuclearlang/dialects/` |",
     "| `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/` | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |",
+    "| `generators/<platform>/` | `generators.toml`: what the code generator writes | `tools/code_generator/platforms/` |",
     "| `docs/08-guides/` | the framework's guides | `nuclear-synapsis-framework/docs/08-guides/` |",
     "| `kinds/` | the kind packages of the platforms | `platforms/<platform>/kinds/` |",
-    "| `packages/` | every runtime package as it is: `dragonfly`, `dragonfly_genkit`, `dragonfly-py`, `dragonfly-nest`, `dragonfly-web` | `platforms/<platform>/packages/` |",
-    "| `tools/defs/` | the definitions generator `dragonfly flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |",
+    "| `packages/` | every runtime package as it is: `synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`, `synapsis-web` | `platforms/<platform>/packages/` |",
+    "| `tools/defs/` | the definitions generator `nuclear flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |",
     "| `agents/skills/` | the `nuclear` skill | `tools/cli/agent-files/skills/` |"
    ],
    "sources": [
@@ -659,11 +680,11 @@
    "id": "doc:installer/docs/02-architecture/overview.md#the-release",
    "type": "context",
    "title": "The installers: overview — The release",
-   "summary": "`platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-loop` in `extensions/vscode`.",
+   "summary": "`platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
    "body": [
     "- `release/build-runtimes.sh`: `npm ci` (or `npm install`) and `npm run build` in every",
-    "  `platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-loop` in `extensions/vscode`.",
-    "- `release/package.sh [<rust target>]`: builds the three binaries for the target (or this machine), stages them,",
+    "  `platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
+    "- `release/package.sh [<rust target>]`: builds `nuclear` and `nuclear-lsp` for the target (or this machine), stages them,",
     "  writes `VERSION`, and makes `dist/nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with its",
     "  `.sha256`, and `dist/latest` (the version a mirror serves). The version is the workspace's (`Cargo.toml`",
     "  `[workspace.package]`); `os` is `linux`, `macos` or `windows`, `arch` `x86_64` or `aarch64`.",
@@ -687,9 +708,9 @@
    "id": "doc:installer/docs/06-runbooks/release.md#after-a-change-in-the-tree",
    "type": "context",
    "title": "Release, and test an installer — After a change in the tree",
-   "summary": "`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,dragonfly,nuclear-lsp}`, files in `~/.local/share/nuclearlang`).",
+   "summary": "`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,nuclear-lsp,nuclear-builder}`, files in `~/.local/share/nuclearlang`).",
    "body": [
-    "`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,dragonfly,nuclear-lsp}`,",
+    "`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,nuclear-lsp,nuclear-builder}`,",
     "files in `~/.local/share/nuclearlang`). `cargo install` puts binaries in `~/.cargo/bin`, which is not on the user's",
     "PATH. After a change to a service's code on Linux: `systemctl --user restart nuclear-developer` (or",
     "`nuclear-graph`); its output: `journalctl --user -u nuclear-developer -n 50`."
@@ -794,7 +815,7 @@
     "|---|---|",
     "| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \\| sh` asks at its end, in the terminal |",
     "| VS Code | the offer the first time the extension starts, or *Nuclear: Set Up the AI Services* in the command palette, or *Set-up…* in *Settings and integrations* (`Ctrl+Alt+S`) |",
-    "| A terminal, any time | `nuclear-loop setup` |",
+    "| A terminal, any time | `nuclear-builder setup` |",
     "",
     "The same steps run in the three. Run it again whenever you want another choice: what is installed is kept."
    ],
@@ -822,7 +843,7 @@
     "",
     "   | Program | For | Installed for you with |",
     "   |---|---|---|",
-    "   | NuclearLang | the compiler, `dragonfly`, the code of the services | its installer |",
+    "   | NuclearLang | the `nuclear` command, the code of the services | its installer |",
     "   | [uv](https://docs.astral.sh/uv/) | the Python environments of the services (it brings its own Python) | its installer, in your user folder |",
     "   | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |",
     "",
@@ -898,7 +919,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.d66b4b",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.d37e0b",
    "type": "guide",
    "title": "Set up the AI services — 3. The profiles",
    "summary": "The set-up suggests the heaviest profile your machine runs well.",
@@ -913,7 +934,7 @@
     "The set-up suggests the heaviest profile your machine runs well. A profile marked *tight* loads and works with",
     "little else open; one marked *not for this machine* may still be chosen, and will be slow or fail to load.",
     "",
-    "In a terminal, without questions: `nuclear-loop setup --profile medium --yes`."
+    "In a terminal, without questions: `nuclear-builder setup --profile medium --yes`."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -931,9 +952,9 @@
    "summary": "Nothing runs on your machine and nothing is downloaded but the MCP server.",
    "body": [
     "Nothing runs on your machine and nothing is downloaded but the MCP server. Claude Code, Codex, Cursor or OpenCode",
-    "get the generators, the compiler, the documentation of every word and the `dragonfly` commands as tools",
+    "get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
     "([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). What you give up: the Smart Graph (no strategy for a request, no search of the knowledge",
-    "base), the Loop panel and the *Nuclear agent* chat of the editor, and the local agents themselves, so your remote",
+    "base), the Builder panel and the *Nuclear agent* chat of the editor, and the local agents themselves, so your remote",
     "agent writes every line the generators do not and all of it is paid tokens."
    ],
    "sources": [
@@ -946,21 +967,21 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.611d1a",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.5888bb",
    "type": "guide",
    "title": "Set up the AI services — 5. After the set-up",
-   "summary": "The services start at every login and are started again if they fail: `nuclear-loop setup --status` says on every system what is installed and running.",
+   "summary": "The services start at every login and are started again if they fail: `nuclear-builder setup --status` says on every system what is installed and running.",
    "body": [
     "The services start at every login and are started again if they fail:",
     "",
     "| | Linux | macOS | Windows |",
     "|---|---|---|---|",
     "| What starts them | two systemd user units | two launch agents | a script of the Startup folder |",
-    "| State | `systemctl --user status nuclear-graph nuclear-developer` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-loop setup --status` |",
+    "| State | `systemctl --user status nuclear-graph nuclear-developer` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |",
     "| Restart | `systemctl --user restart nuclear-developer` | `launchctl kickstart -k gui/$UID/io.github.nuclearlang.developer` | sign out and in |",
     "| Their output | `journalctl --user -u nuclear-graph -n 50` | `~/Library/Logs/nuclear-graph.log` | |",
     "",
-    "`nuclear-loop setup --status` says on every system what is installed and running. In VS Code, *Settings and",
+    "`nuclear-builder setup --status` says on every system what is installed and running. In VS Code, *Settings and",
     "integrations* shows the same and restarts a service with a button.",
     "",
     "| What | Where |",
@@ -983,13 +1004,13 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.6a0215",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.93fe10",
    "type": "guide",
    "title": "Set up the AI services — 5. After the set-up",
-   "summary": "To give your agent the MCP server: the buttons of *Settings and integrations*, or `claude mcp add --scope user nuclear -- nuclear-graph mcp` (every client).",
+   "summary": "To give your agent the MCP server: the buttons of *Settings and integrations*, or `claude mcp add --scope user nuclear -- nuclear-mcp` (every client).",
    "body": [
     "To give your agent the MCP server: the buttons of *Settings and integrations*, or",
-    "`claude mcp add --scope user nuclear -- nuclear-graph mcp` ([every client](../../../tools/mcp/docs/08-guides/mcp.md#1-set-up))."
+    "`claude mcp add --scope user nuclear -- nuclear-mcp` ([every client](../../../tools/mcp/docs/08-guides/mcp.md#1-set-up))."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1010,7 +1031,7 @@
     "  you had, without questions.",
     "- **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama",
     "  (`ollama rm <model>` frees their disk).",
-    "- **Remove:** `nuclear-loop setup --remove` takes the services away; the installer's `--uninstall` does it too.",
+    "- **Remove:** `nuclear-builder setup --remove` takes the services away; the installer's `--uninstall` does it too.",
     "  Ollama, its models and the graph's data stay: they are yours.",
     "- **In a script or CI:** `--no-ai` skips the set-up, `--profile <id>` takes that profile without questions, and",
     "  without a terminal nothing is asked or downloaded."
@@ -1035,7 +1056,7 @@
     "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
     "| `Ollama refused to pull ...`, or a model stays at the same percent | check the disk and the connection; the download goes on from where it stopped when the step is tried again |",
     "| `no Python 3.12 or newer, and uv could not install one` | install Python 3.12 or newer and try again |",
-    "| `the Nuclear Developer does not answer at ...` | its output (the table above) says why; most often a model of the profile is missing: `nuclear-loop setup --status` |"
+    "| `the Nuclear Developer does not answer at ...` | its output (the table above) says why; most often a model of the profile is missing: `nuclear-builder setup --status` |"
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1069,10 +1090,10 @@
    "id": "doc:installer/docs/08-guides/ai-setup.md#set-up-the-ai-services",
    "type": "guide",
    "title": "Set up the AI services",
-   "summary": "NuclearLang comes with two services that run on your machine: the Smart Graph (what an agent needs to know about NuclearLang and Dragonfly, and the MCP server your agent talks to) and the Nuclear Developer (small local models that plan, write, test and review code).",
+   "summary": "NuclearLang comes with two services that run on your machine: the Smart Graph (what an agent needs to know about NuclearLang and Synapsis, and the MCP server your agent talks to) and the Nuclear Developer (small local models that plan, write, test and review code).",
    "body": [
     "NuclearLang comes with two services that run on your machine: the **Smart Graph** (what an agent needs to know about",
-    "NuclearLang and Dragonfly, and the MCP server your agent talks to) and the **Nuclear Developer** (small local models",
+    "NuclearLang and Synapsis, and the MCP server your agent talks to) and the **Nuclear Developer** (small local models",
     "that plan, write, test and review code). Their set-up reads your machine, suggests which models fit it, tells you how",
     "far each choice works, and installs what you choose. Nothing is downloaded before you say so."
    ],
@@ -1086,27 +1107,49 @@
    }
   },
   {
-   "id": "doc:tools/AGENTS.md#how-they-lean-on-each-other",
+   "id": "doc:tools/AGENTS.md#how-they-lean-on-each-other.676344",
    "type": "readme",
    "title": "Tools — How they lean on each other",
-   "summary": "MCP server ──runs──► nuclear, dragonfly ──calls──► code generator │ │ │ │ HTTP │ Rust API │ data ▼ ▼ ▼ Smart Graph, nuclearlang/crates platform.toml of each platform Nuclear Developer + the dialects' data ([layout], [skeletons], [[generators.*]]) `nuclear-dialect`, `nuclear-transpile`) and takes…",
+   "summary": "The other folders that used to be under `tools/` are the language's: `nuclearlang/tools/` (`defs`, `spec-check`, `stdlib-check.sh`, `node`, `python`).",
+   "body": [
+    "The other folders that used to be under `tools/` are the language's: `nuclearlang/tools/` (`defs`, `spec-check`,",
+    "`stdlib-check.sh`, `node`, `python`)."
+   ],
+   "sources": [
+    "tools/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/AGENTS.md#how-they-lean-on-each-other.89778d",
+   "type": "readme",
+   "title": "Tools — How they lean on each other",
+   "summary": "MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► platforms/<platform>/generators.toml │ │ ([gen], [skeletons], [[generators.*]]) │ the graph's │ Rust API │ package, HTTP ▼ ▼ nuclearlang/crates + the dialects' data; nuclear-devices (device-emulators/) Smart Graph, Nuclear…",
    "body": [
     "```",
-    " MCP server ──runs──► nuclear, dragonfly ──calls──► code generator",
-    "     │                      │                            │",
-    "     │ HTTP                 │ Rust API                   │ data",
-    "     ▼                      ▼                            ▼",
-    " Smart Graph,        nuclearlang/crates          platform.toml of each platform",
-    " Nuclear Developer   + the dialects' data        ([layout], [skeletons], [[generators.*]])",
+    " MCP server ──runs──► nuclear ──calls──► nuclear-codegen ──reads──► platforms/<platform>/generators.toml",
+    "     │                   │                                          ([gen], [skeletons], [[generators.*]])",
+    "     │ the graph's       │ Rust API",
+    "     │ package, HTTP     ▼",
+    "     ▼               nuclearlang/crates + the dialects' data; nuclear-devices (device-emulators/)",
+    " Smart Graph,",
+    " Nuclear Developer",
     "```",
     "",
     "- **The CLI** uses the language crates as a library (`nuclearlang/crates/`: `nuclear-diag`, `nuclear-syntax`,",
     "  `nuclear-dialect`, `nuclear-transpile`) and takes everything about a target from data: a dialect's `[toolchain]`",
-    "  and `[project.manifest]`, a platform's `platform.toml`. `gen` and `make` are the code generator.",
+    "  and `[project.manifest]`, a platform's `platform.toml` (`[layout]`). `new`, `make` and `gen` call the code",
+    "  generator; `device` and `terminal-device` call [the devices](../device-emulators/AGENTS.md).",
     "- **The code generator** reads the fields of a resource, fills the templates of the project's platform and writes",
-    "  each file at the platform's `[layout]` place. The templates are the platform's, never code of the generator.",
-    "- **The MCP server** runs the two commands (so every generator is also a tool), and reaches the Smart Graph",
-    "  (`nuclear-graph-storage/`) and the Nuclear Developer (`nuclear-agents/nuclear_developer/`) over HTTP."
+    "  each file at the platform's `[layout]` place. The templates are data (`generators.toml`), never code of the",
+    "  generator.",
+    "- **The MCP server** runs `nuclear` (so every generator is also a tool), and reaches the Smart Graph",
+    "  (`nuclear-graph-storage/`, through its Python package) and the Nuclear Developer",
+    "  (`nuclear-agents/nuclear_developer/`) over HTTP."
    ],
    "sources": [
     "tools/AGENTS.md"
@@ -1128,36 +1171,9 @@
     "",
     "| Project | Folder | What it is | Start here |",
     "|---|---|---|---|",
-    "| The command line tools | `tools/cli/` | The `nuclear` binary (build, check, fix, fmt, help, spec, defs, contracts, dialect, agent) and, until it is merged in, the `dragonfly` binary (projects, build, run, test, packages, migrations, devices) | [cli/AGENTS.md](cli/AGENTS.md) |",
-    "| The code generator | `tools/code_generator/` | What `dragonfly gen` and `dragonfly make` write: finished code from a resource's data, and one skeleton per kind | [code_generator/AGENTS.md](code_generator/AGENTS.md) |",
-    "| The MCP server | `tools/mcp/` | The tools an AI client (Claude Code, Codex, Cursor, OpenCode) calls: the generators, the compiler, the command line, the Smart Graph, the local developer, the internet | [mcp/AGENTS.md](mcp/AGENTS.md) |"
-   ],
-   "sources": [
-    "tools/AGENTS.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/AGENTS.md#where-the-code-is-today",
-   "type": "readme",
-   "title": "Tools — Where the code is today",
-   "summary": "Two of the three projects are still inside another one (spec 008, phase 4: tasks): The other folders that used to be under `tools/` are the language's: `nuclearlang/tools/` (`defs`, `spec-check`, `stdlib-check.sh`, `node`, `python`).",
-   "body": [
-    "Two of the three projects are still inside another one (spec 008, phase 4:",
-    "[tasks](../docs/04-specs/008-restructure/tasks.md)):",
-    "",
-    "| Project | Its code today | Moves here in |",
-    "|---|---|---|",
-    "| `tools/cli/` | `tools/cli/src/` (`nuclear`) and `nuclear-synapsis-framework/cli/src/` (`dragonfly`) | T2.2 |",
-    "| `tools/code_generator/` | `nuclear-synapsis-framework/cli/src/generate.rs`, `scaffold.rs`; the data in each `nuclear-synapsis-framework/platforms/<platform>/platform.toml` | T4.2 |",
-    "| `tools/mcp/` | `nuclear-graph-storage/mcp_server.nuc` (started with `nuclear-graph mcp`) | T4.3 |",
-    "",
-    "The other folders that used to be under `tools/` are the language's: `nuclearlang/tools/` (`defs`, `spec-check`,",
-    "`stdlib-check.sh`, `node`, `python`)."
+    "| The command line tool | `tools/cli/` | The `nuclear` command: the compiler's commands (build, check, fix, fmt, help, spec, defs, contracts, dialect, agent) and the framework's (new, make, gen, run, test, install, migrate, add, devices...) | [cli/AGENTS.md](cli/AGENTS.md) |",
+    "| The code generator | `tools/code_generator/` | The crate `nuclear-codegen`: what `nuclear new`, `make` and `gen` write, from each platform's `generators.toml` | [code_generator/AGENTS.md](code_generator/AGENTS.md) |",
+    "| The MCP server | `tools/mcp/` | `nuclear-mcp`, a Nuclear project of its own: the tools an AI client (Claude Code, Codex, Cursor, OpenCode) calls: the generators, the compiler, the command line, the Smart Graph, the local developer, the internet | [mcp/AGENTS.md](mcp/AGENTS.md) |"
    ],
    "sources": [
     "tools/AGENTS.md"
@@ -1171,19 +1187,18 @@
   {
    "id": "doc:tools/cli/AGENTS.md#commands",
    "type": "readme",
-   "title": "The command line tools — Commands",
-   "summary": "cargo test -p nuclear-cli -p dragonfly && cargo clippy --all-targets cargo run -q -p nuclear-cli -- build <file.nuc> --dialect flutter [-o out.dart] cargo run -q -p nuclear-cli -- check <file.nuc|folder> [--dialect <d>] --json cargo run -q -p nuclear-cli -- spec --brief --dialect flutter # the…",
+   "title": "The command line tool — Commands",
+   "summary": "cargo test -p nuclear-cli -p nuclear-codegen -p nuclear-devices && cargo clippy --all-targets cargo run -q -p nuclear-cli -- build <file.nuc> --dialect flutter [-o out.dart] cargo run -q -p nuclear-cli -- check <file.nuc|folder> [--dialect <d>] --json cargo run -q -p nuclear-cli -- spec --brief…",
    "body": [
     "```sh",
-    "cargo test -p nuclear-cli -p dragonfly && cargo clippy --all-targets",
+    "cargo test -p nuclear-cli -p nuclear-codegen -p nuclear-devices && cargo clippy --all-targets",
     "cargo run -q -p nuclear-cli -- build <file.nuc> --dialect flutter [-o out.dart]",
     "cargo run -q -p nuclear-cli -- check <file.nuc|folder> [--dialect <d>] --json",
     "cargo run -q -p nuclear-cli -- spec --brief --dialect flutter     # the short sheet an agent reads",
-    "installer/install.sh --no-vscode      # the user runs ~/.local/bin/{nuclear,dragonfly}: install after a change",
-    "nuclear help                          # every command, every documentation topic, every dialect",
-    "dragonfly help                        # every command of the framework",
-    "dragonfly doctor",
-    "dragonfly new shop_app && cd shop_app && dragonfly code",
+    "installer/install.sh --no-vscode      # the user runs ~/.local/bin/nuclear: install after a change",
+    "nuclear help                          # every command (the framework's under \"projects of the framework\"), topic, dialect",
+    "nuclear doctor",
+    "nuclear new shop_app && cd shop_app && nuclear code",
     "```",
     "",
     "`cargo install` puts binaries in `~/.cargo/bin`, which is not on the user's PATH: always `installer/install.sh`."
@@ -1198,19 +1213,44 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#documents.0d010d",
+   "id": "doc:tools/cli/AGENTS.md#documents.ba967c",
    "type": "readme",
-   "title": "The command line tools — Documents",
+   "title": "The command line tool — Documents",
+   "summary": "Documents",
+   "body": [
+    "| Read | When |",
+    "|---|---|",
+    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done, untested or pending in the CLI |",
+    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You need the shape: the one binary and `framework::claims`, the code map of `framework/`, how a project and its platform are found, backend and web projects, kind packages, plugins, known limits |",
+    "| [docs/02-architecture/nuclear-command.md](docs/02-architecture/nuclear-command.md) | You change a command of the compiler's, its help topics, `spec` / `--brief`, or where it looks for dialects and definitions |",
+    "| [docs/02-architecture/agent-support.md](docs/02-architecture/agent-support.md) | You change `agent init`, the hook, the skill or `agent-files/` |",
+    "| [docs/02-architecture/build.md](docs/02-architecture/build.md) | You change `nuclear build` / `run` / `test` / `watch` / `repair` / `explain` of a mobile app, the markers in `.dart_tool`, or the VS Code workspace |",
+    "| [docs/02-architecture/packages.md](docs/02-architecture/packages.md) | You change `config.nuc` handling, `nuclear add` / `remove`, generated type definitions or assets |",
+    "| [docs/02-architecture/landing.md](docs/02-architecture/landing.md) | You change the landing page, the animation, the header, the help or the colors of the output |"
+   ],
+   "sources": [
+    "tools/cli/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/AGENTS.md#documents.bb9546",
+   "type": "readme",
+   "title": "The command line tool — Documents",
    "summary": "Elsewhere: the flutter reference (§11).",
    "body": [
-    "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, or why agents are supported the way they are |",
+    "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, why there is one command, or why agents are supported the way they are |",
     "| [docs/04-specs/README.md](docs/04-specs/README.md) | You continue the agent support plan |",
     "",
     "Elsewhere:",
     "",
-    "- What a user reads about the commands: `nuclear help`, `dragonfly help`, and the `dragonfly` CLI section of",
+    "- What a user reads about the commands: `nuclear help` and the CLI section of",
     "  [the flutter reference](../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (§11).",
-    "- `gen` and `make`: [the code generator](../code_generator/AGENTS.md). `device` and `terminal-device`:",
+    "- `new`, `make` and `gen`: [the code generator](../code_generator/AGENTS.md). `device` and `terminal-device`:",
     "  [the devices](../../device-emulators/AGENTS.md). Installing: [the installer](../../installer/AGENTS.md).",
     "- The format of a dialect (`[toolchain]`, `[project.manifest]`) and of a project:",
     "  `nuclearlang/docs/07-reference/dialects.md`, `projects.md`."
@@ -1225,43 +1265,20 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#documents.6d5767",
-   "type": "readme",
-   "title": "The command line tools — Documents",
-   "summary": "Documents",
-   "body": [
-    "| Read | When |",
-    "|---|---|",
-    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done, untested or pending in the CLI |",
-    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You need the shape: the two binaries, the code map of `dragonfly`, how a project and its platform are found, backend and web projects, kind packages, plugins, known limits |",
-    "| [docs/02-architecture/nuclear-command.md](docs/02-architecture/nuclear-command.md) | You change a command of `nuclear`, its help topics, `spec` / `--brief`, or where it looks for dialects and definitions |",
-    "| [docs/02-architecture/agent-support.md](docs/02-architecture/agent-support.md) | You change `agent init`, the hook, the skill or `agent-files/` |",
-    "| [docs/02-architecture/build.md](docs/02-architecture/build.md) | You change `dragonfly build` / `run` / `test` / `watch` / `repair` / `explain` of a mobile app, the markers in `.dart_tool`, or the VS Code workspace |",
-    "| [docs/02-architecture/packages.md](docs/02-architecture/packages.md) | You change `config.nuc` handling, `dragonfly add` / `remove`, generated type definitions or assets |",
-    "| [docs/02-architecture/landing.md](docs/02-architecture/landing.md) | You change the landing page, the animation, the header, the help or the colors of the output |"
-   ],
-   "sources": [
-    "tools/cli/AGENTS.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/AGENTS.md#folders",
    "type": "readme",
-   "title": "The command line tools — Folders",
-   "summary": "(code map).",
+   "title": "The command line tool — Folders",
+   "summary": "`framework::claims` takes goes to `framework::main`.",
    "body": [
-    "- `src/main.rs`: the `nuclear` binary (the `USAGE` text, the embedded `TOPICS`, every command).",
+    "- `src/main.rs`: the binary: the compiler's commands (the `USAGE` text, the embedded `TOPICS`); a command line",
+    "  `framework::claims` takes goes to `framework::main`.",
     "- `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.",
+    "- `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,",
+    "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `vscode.rs`, `watch.rs`)",
+    "  ([code map](docs/02-architecture/overview.md)).",
     "- `agent-files/project/`: what `agent init` writes into a project (`AGENTS.md` section, the Cursor rule).",
     "- `agent-files/skills/nuclear/`: the `nuclear` skill the installer copies into the agents' folders.",
     "- `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary.",
-    "- `nuclear-synapsis-framework/cli/src/`: the `dragonfly` binary, until T2.2",
-    "  ([code map](docs/02-architecture/overview.md)).",
     "- `docs/`: this project's documents (the table below)."
    ],
    "sources": [
@@ -1274,16 +1291,24 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#rules.7436e4",
+   "id": "doc:tools/cli/AGENTS.md#rules.625853",
    "type": "readme",
-   "title": "The command line tools — Rules",
-   "summary": "6. When a dialect or a platform changes (`@screen`, kinds, events), update the skeletons and test `new` + `make` + `check` + `analyze` + `test`.",
+   "title": "The command line tool — Rules",
+   "summary": "1. The parser and the compiler are a library.",
    "body": [
-    "6. **When a dialect or a platform changes** (`@screen`, kinds, events), update the skeletons and test `new` +",
-    "   `make` + `check` + `analyze` + `test`.",
-    "7. **`agent-files/` is embedded in the binary** (`include_str!`) and the documentation topics too",
-    "   (`nuclearlang/docs/07-reference/`, `08-guides/`): a file renamed there breaks the build here.",
-    "8. Done = `cargo test` + `cargo clippy --all-targets` green and `installer/install.sh --no-vscode`."
+    "1. **The parser and the compiler are a library.** Both sets of commands use `nuclear-transpile::project`,",
+    "   `nuclear-dialect::Loader` and `nuclear-diag`; a missing compiler feature is built in `nuclearlang/crates/`.",
+    "2. **Nothing here names a port, a framework command or a package manager.** How a generated project is installed,",
+    "   run, tested, migrated and given packages is the dialect's `[toolchain]` (ADR-cli-0001). The mobile path is the",
+    "   exception still to remove ([roadmap](docs/01-product/roadmap.md)).",
+    "3. **A Synapsis project has only `.nuc` files**; the CLI writes only into `build/` (the generated project and",
+    "   `build/<name>.code-workspace`) and `.nuclear/`. A generator never overwrites a file.",
+    "4. **A word is the compiler's or the framework's by `framework::claims`** (ADR-cli-0003): `build` and `check` with a",
+    "   path are the compiler's; without one (or `build apk|web|...`) the framework's; `agent init` inside a project of",
+    "   the framework is the framework's. A new framework command is added to `OWN` there.",
+    "5. **A new command or behaviour** updates, in the same change: the `USAGE` text of `main.rs` or of",
+    "   `framework/mod.rs`, the CLI section of `nuclearlang/dialects/dart/docs/07-reference/flutter.md` (§11; §3.1 for",
+    "   `config.nuc`), the tutorial `nuclear-synapsis-framework/docs/08-guides/tutorial.md`, these documents, the"
    ],
    "sources": [
     "tools/cli/AGENTS.md"
@@ -1295,25 +1320,20 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#rules.c200fc",
+   "id": "doc:tools/cli/AGENTS.md#rules.bbd719",
    "type": "readme",
-   "title": "The command line tools — Rules",
-   "summary": "1. The parser and the compiler are a library.",
+   "title": "The command line tool — Rules",
+   "summary": "skeletons of the code generator when it creates files, the skill and `agent-files/` when an agent should use it, and an ADR when it is a decision.",
    "body": [
-    "1. **The parser and the compiler are a library.** Both binaries use `nuclear-transpile::project`,",
-    "   `nuclear-dialect::Loader` and `nuclear-diag`; a missing compiler feature is built in `nuclearlang/crates/`.",
-    "2. **Nothing here names a port, a framework command or a package manager.** How a generated project is installed,",
-    "   run, tested, migrated and given packages is the dialect's `[toolchain]` (ADR-cli-0001). The mobile path is the",
-    "   exception still to remove ([roadmap](docs/01-product/roadmap.md)).",
-    "3. **A Dragonfly project has only `.nuc` files**; the CLI writes only into `build/` (the generated project and",
-    "   `build/<name>.code-workspace`) and `.nuclear/`. A generator never overwrites a file.",
-    "4. **A new command or behaviour** updates, in the same change: the `USAGE` text of its `main.rs`, the `dragonfly`",
-    "   CLI section of `nuclearlang/dialects/dart/docs/07-reference/flutter.md` (§11; §3.1 for `config.nuc`), the",
-    "   tutorial `nuclear-synapsis-framework/docs/08-guides/tutorial.md`, these documents, the skeletons of",
-    "   `scaffold.rs` when it creates files, the skill and `agent-files/` when an agent should use it, and an ADR when",
-    "   it is a decision.",
-    "5. **Colors, logos and the animation only in a terminal**; `NO_COLOR` is respected; `check --json` through a pipe",
-    "   stays clean."
+    "skeletons of the code generator when it creates files, the skill and `agent-files/` when an agent should use",
+    "   it, and an ADR when it is a decision.",
+    "6. **Colors, logos and the animation only in a terminal**; `NO_COLOR` is respected; `check --json` through a pipe",
+    "   stays clean.",
+    "7. **When a dialect or a platform changes** (`@screen`, kinds, events), update the skeletons and test `new` +",
+    "   `make` + `check` + `analyze` + `test`.",
+    "8. **`agent-files/` is embedded in the binary** (`include_str!`) and the documentation topics too",
+    "   (`nuclearlang/docs/07-reference/`, `08-guides/`): a file renamed there breaks the build here.",
+    "9. Done = `cargo test` + `cargo clippy --all-targets` green and `installer/install.sh --no-vscode`."
    ],
    "sources": [
     "tools/cli/AGENTS.md"
@@ -1327,13 +1347,13 @@
   {
    "id": "doc:tools/cli/AGENTS.md#stack",
    "type": "readme",
-   "title": "The command line tools — Stack",
-   "summary": "`png`, `base64` for the devices).",
+   "title": "The command line tool — Stack",
+   "summary": "`nuclear-codegen` (the code generator), `nuclear-devices` (the devices), `serde_json`, `crossterm`, `tungstenite`, `png`, `base64`.",
    "body": [
-    "- `nuclear`: Rust, crate `nuclear-cli` in `tools/cli/` (`serde_json`; the language crates of `nuclearlang/crates/`).",
-    "- `dragonfly`: Rust, crate `dragonfly` in `nuclear-synapsis-framework/cli/` (also `crossterm`, `tungstenite`,",
-    "  `png`, `base64` for the devices). It moves into this crate (spec 008, T2.2).",
-    "- Both are members of the one Cargo workspace at the tree's root; `rustfmt.toml` max_width 120."
+    "- Rust, crate `nuclear-cli` in `tools/cli/` (binary `nuclear`): the language crates of `nuclearlang/crates/`,",
+    "  `nuclear-codegen` ([the code generator](../code_generator/AGENTS.md)), `nuclear-devices`",
+    "  ([the devices](../../device-emulators/AGENTS.md)), `serde_json`, `crossterm`, `tungstenite`, `png`, `base64`.",
+    "- A member of the one Cargo workspace at the tree's root; `rustfmt.toml` max_width 120."
    ],
    "sources": [
     "tools/cli/AGENTS.md"
@@ -1345,15 +1365,16 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#the-command-line-tools",
+   "id": "doc:tools/cli/AGENTS.md#the-command-line-tool",
    "type": "readme",
-   "title": "The command line tools",
-   "summary": "What a person, an AI agent, an editor and the MCP server run: today two binaries.",
+   "title": "The command line tool",
+   "summary": "`nuclear`: what a person, an AI agent, an editor and the MCP server run.",
    "body": [
-    "What a person, an AI agent, an editor and the MCP server run: today two binaries. `nuclear` is the transpiler's",
-    "command line (build, check, fix, fmt, the embedded documentation, the specs for agents, type definitions, contracts,",
-    "dialects, kind packages, the agent files of a project). `dragonfly` is the framework's (new projects, build, run,",
-    "test, migrations, packages, devices, the editor workspace, `make` and `gen`)."
+    "`nuclear`: what a person, an AI agent, an editor and the MCP server run. One binary with two sets of commands",
+    "(ADR-cli-0003): the compiler's (build, check, fix, fmt, the embedded documentation, the specs for agents, type",
+    "definitions, contracts, dialects, kind packages, the agent files of a project) and the framework's, for a Synapsis",
+    "project of any platform (new, make / g, gen, run, test, install, migrate, add, remove, device, terminal-device,",
+    "watch, code, analyze, clean, repair, explain, pub, flutter, doctor, setup, credits)."
    ],
    "sources": [
     "tools/cli/AGENTS.md"
@@ -1390,12 +1411,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.2305ab",
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.3e3a2e",
    "type": "context",
    "title": "What a project and a machine get for AI agents — `nuclear agent init [--dialect <d>]` (`agent::init`)",
-   "summary": "Run in a project folder; `dragonfly agent init` and every `dragonfly new` call it.",
+   "summary": "Run in a project folder; `nuclear agent init` and every `nuclear new` call it.",
    "body": [
-    "Run in a project folder; `dragonfly agent init` and every `dragonfly new` call it. It writes four things and keeps",
+    "Run in a project folder; `nuclear agent init` and every `nuclear new` call it. It writes four things and keeps",
     "everything else of the project's files:",
     "",
     "1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.",
@@ -1407,7 +1428,7 @@
     "   `nuclear agent hook`, added once; the other hooks and settings stay.",
     "",
     "The dialect: `--dialect`, else the one of `nuclear.toml`, else the one `config.nuc` names, else (a `main.nuc` alone,",
-    "or a `config.nuc` without the `dragonfly(...)` line) the mobile platform's default dialect; with none of them it asks",
+    "or a `config.nuc` without the `synapsis(...)` line) the mobile platform's default dialect; with none of them it asks",
     "for `--dialect`.",
     "",
     "The templates have five placeholders:"
@@ -1422,7 +1443,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.3c214f",
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#nuclear-agent-init-dialect-d-agent-init.a15f56",
    "type": "context",
    "title": "What a project and a machine get for AI agents — `nuclear agent init [--dialect <d>]` (`agent::init`)",
    "summary": "Running it twice changes nothing (test `init_keeps_the_project_files_and_runs_twice`).",
@@ -1430,10 +1451,10 @@
     "| Placeholder | Filled with |",
     "|---|---|",
     "| `{dialect}` | the dialect |",
-    "| `{check}` | `dragonfly check --json` (a project with `config.nuc` or `main.nuc`), `nuclear check . --json` (a `nuclear.toml`), else `nuclear check <file>.nuc --dialect <d> --json` |",
-    "| `{dragonfly}` | in a Dragonfly project: create each piece with `dragonfly make`, then `dragonfly analyze` and `dragonfly test` |",
-    "| `{packages}` | in a Dragonfly project: a missing library is `dragonfly add <package>`, never installed by hand in `build/` |",
-    "| `{generated}` | what is never edited: `build/` (and, outside Dragonfly, the `.ts` / `.dart` / `.py` built from the `.nuc`) |",
+    "| `{check}` | `nuclear check --json` (a project with `config.nuc` or `main.nuc`), `nuclear check . --json` (a `nuclear.toml`), else `nuclear check <file>.nuc --dialect <d> --json` |",
+    "| `{synapsis}` | in a Synapsis project: create each piece with `nuclear make`, then `nuclear analyze` and `nuclear test` |",
+    "| `{packages}` | in a Synapsis project: a missing library is `nuclear add <package>`, never installed by hand in `build/` |",
+    "| `{generated}` | what is never edited: `build/` (and, outside Synapsis, the `.ts` / `.dart` / `.py` built from the `.nuc`) |",
     "",
     "Running it twice changes nothing (test `init_keeps_the_project_files_and_runs_twice`)."
    ],
@@ -1506,14 +1527,14 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/build.md#around-it",
    "type": "context",
-   "title": "The build of a mobile app (`dragonfly build`, `run`, `test`, `watch`, `repair`, `explain`) — Around it",
+   "title": "The build of a mobile app (`nuclear build`, `run`, `test`, `watch`, `repair`, `explain`) — Around it",
    "summary": "that fails → 1. `run`, `test` and the devices call Flutter with `--no-pub`: `build` already resolved the packages.",
    "body": [
     "- Errors in the `.nuc` files → exit code 2 (`CODE_ERRORS`: the editors do not try to repair then); another step",
     "  that fails → 1. `run`, `test` and the devices call Flutter with `--no-pub`: `build` already resolved the packages.",
     "- `repair`: build + analyze → markers deleted + pub get + build → flutter clean + build; each step only if the",
     "  previous one left `flutter analyze` with errors. The editors run it only when something fails.",
-    "- `explain`: maps a run-time error to its `.nuc` lines; `--json` for the editors and the Loop.",
+    "- `explain`: maps a run-time error to its `.nuc` lines; `--json` for the editors and the Nuclear Builder.",
     "- `watch` rebuilds the whole project and does not see dialect or definitions changes (restart it).",
     "- Flutter is found in `FLUTTER`, `FLUTTER_ROOT`, `.fvm/flutter_sdk` (the project's or above), the PATH,",
     "  `~/fvm/default` and the typical folders (`find_flutter`); `NO_FLUTTER` explains where it looked."
@@ -1528,12 +1549,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/build.md#the-build-of-a-mobile-app-dragonfly-build-run-test-watch-repair-explain",
+   "id": "doc:tools/cli/docs/02-architecture/build.md#the-build-of-a-mobile-app-nuclear-build-run-test-watch-repair-explain",
    "type": "context",
-   "title": "The build of a mobile app (`dragonfly build`, `run`, `test`, `watch`, `repair`, `explain`)",
-   "summary": "The code is `nuclear-synapsis-framework/cli/src/main.rs` (`build`), `watch.rs`, `explain.rs` and `vscode.rs`.",
+   "title": "The build of a mobile app (`nuclear build`, `run`, `test`, `watch`, `repair`, `explain`)",
+   "summary": "The code is `tools/cli/src/framework/`: `mod.rs` (`build`), `watch.rs`, `explain.rs` and `vscode.rs`.",
    "body": [
-    "The code is `nuclear-synapsis-framework/cli/src/main.rs` (`build`), `watch.rs`, `explain.rs` and `vscode.rs`. A",
+    "The code is `tools/cli/src/framework/`: `mod.rs` (`build`), `watch.rs`, `explain.rs` and `vscode.rs`. A",
     "backend or web project is not built here: [overview.md](overview.md), \"Backend and web projects\"."
    ],
    "sources": [
@@ -1548,15 +1569,15 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/build.md#the-pipeline",
    "type": "context",
-   "title": "The build of a mobile app (`dragonfly build`, `run`, `test`, `watch`, `repair`, `explain`) — The pipeline",
-   "summary": "`dragonfly build` leaves the app ready to compile and repeats nothing without changes (~40 ms): 1. Creates the app if missing; syncs `config.nuc` → pubspec and loads the definitions BEFORE transpiling (packages.md).",
+   "title": "The build of a mobile app (`nuclear build`, `run`, `test`, `watch`, `repair`, `explain`) — The pipeline",
+   "summary": "`nuclear build` leaves the app ready to compile and repeats nothing without changes (~40 ms): 1. Creates the app if missing; syncs `config.nuc` → pubspec and loads the definitions BEFORE transpiling (packages.md).",
    "body": [
-    "`dragonfly build` leaves the app ready to compile and repeats nothing without changes (~40 ms):",
+    "`nuclear build` leaves the app ready to compile and repeats nothing without changes (~40 ms):",
     "",
     "1. Creates the app if missing; syncs `config.nuc` → pubspec and loads the definitions BEFORE transpiling",
     "   ([packages.md](packages.md)).",
     "2. Transpiles the project; writes only what changed and deletes orphans (`.dart_tool/nuclear_files`).",
-    "3. `ensure_packages` (Dragonfly's own; with `@splash` also `flutter_native_splash`, detected by the line prefix",
+    "3. `ensure_packages` (Synapsis's own; with `@splash` also `flutter_native_splash`, detected by the line prefix",
     "   `name:`), copies `out.copies`, `assets::write`.",
     "4. `pub get` when `.dart_tool/package_config.json` is missing (after `flutter clean`) or the pubspec is newer than",
     "   the lock AND than `.dart_tool/nuclear_pub_get` (`pub get` does not touch an unchanged lock).",
@@ -1580,11 +1601,11 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/build.md#the-vs-code-workspace-vscode-rs",
    "type": "context",
-   "title": "The build of a mobile app (`dragonfly build`, `run`, `test`, `watch`, `repair`, `explain`) — The VS Code workspace (`vscode.rs`)",
-   "summary": "`build/<name>.code-workspace` has the Nuclear folder and the Flutter app (the Flutter extension treats the app as a normal project: devices, F5, hot reload, DevTools), the tasks `dragonfly: watch/build/test/analyze` (no problem patterns: the language server gives the errors; errors of closed…",
+   "title": "The build of a mobile app (`nuclear build`, `run`, `test`, `watch`, `repair`, `explain`) — The VS Code workspace (`vscode.rs`)",
+   "summary": "`build/<name>.code-workspace` has the Nuclear folder and the Flutter app (the Flutter extension treats the app as a normal project: devices, F5, hot reload, DevTools), the tasks `nuclear: watch/build/test/analyze` (no problem patterns: the language server gives the errors; errors of closed `.nuc`…",
    "body": [
     "`build/<name>.code-workspace` has the Nuclear folder and the Flutter app (the Flutter extension treats the app as a",
-    "normal project: devices, F5, hot reload, DevTools), the tasks `dragonfly: watch/build/test/analyze` (no problem",
+    "normal project: devices, F5, hot reload, DevTools), the tasks `nuclear: watch/build/test/analyze` (no problem",
     "patterns: the language server gives the errors; errors of closed `.nuc` files only show in the task's terminal), the",
     "launch entries debug/profile/release with `preLaunchTask`, and `dart.flutterSdkPath`.",
     "",
@@ -1596,7 +1617,7 @@
     "- For a backend or web project the workspace's tasks, launch entries and settings come from the dialect's",
     "  `[toolchain]` (`[[toolchain.launch]]`, `[toolchain.settings]`, `extensions`; ADR-cli-0001).",
     "",
-    "What a user reads about these commands: the `dragonfly` CLI section (§11) of",
+    "What a user reads about these commands: the `nuclear` CLI section (§11) of",
     "[the flutter reference](../../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md)."
    ],
    "sources": [
@@ -1609,23 +1630,24 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-dragonfly-landing-rs.820ade",
+   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.d8a3b8",
    "type": "context",
-   "title": "Landing, header, help and colors of `dragonfly` (`landing.rs`)",
-   "summary": "`credits`; EOF only closes a complete page); a shine crosses the dragonfly every `SHINE_EVERY` (5 s); without a terminal on stdin it ends by itself.",
+   "title": "Landing, header, help and colors of the framework's commands (`framework/landing.rs`)",
+   "summary": "`credits`; EOF only closes a complete page); a shine crosses the synapsis every `SHINE_EVERY` (5 s); without a terminal on stdin it ends by itself.",
    "body": [
-    "`credits`; EOF only closes a complete page); a shine crosses the dragonfly every `SHINE_EVERY` (5 s); without a",
+    "`credits`; EOF only closes a complete page); a shine crosses the synapsis every `SHINE_EVERY` (5 s); without a",
     "  terminal on stdin it ends by itself.",
-    "- `header()`: before any command (also `-h` / `help`; not on the bare page nor `credits`), a 6-row header with both",
+    "- `header()`: before any command of the framework's (not on the bare page nor `credits`; the compiler's commands",
+    "  and `nuclear help` print none), a 6-row header with both",
     "  small logos (`MINI`, `sign` radius 6), on stderr and only in a terminal.",
     "- Output colors: `ok` green = done, `bad` red = error, `warn` yellow = warning or note, `cmd` blue = commands, `name`",
     "  purple = project and step names, `dim` = paths and details; `diagnostics()` colors the transpiler's errors; only",
-    "  if stdout and stderr are terminals and there is no `NO_COLOR`. In `watch`, `dragonfly: transpiling|ready|errors`",
+    "  if stdout and stderr are terminals and there is no `NO_COLOR`. In `watch`, `nuclear: transpiling|ready|errors`",
     "  has no color (the VS Code task looks for it).",
     "- `usage()`: the help with a width-1 symbol per section and command (⚙ build, ✿ new, ⚗ test...; only symbols in",
     "  common monospace fonts, checked with `fc-list :charset=`). Without a terminal or with `NO_COLOR`, the plain text.",
-    "  Without a terminal, with `NO_COLOR` or below 80×23, the bare `dragonfly` shows only the page.",
-    "- To review the animation without a terminal: `script -qc \"stty cols 100 rows 30; dragonfly\" /dev/null` captures the",
+    "  Without a terminal, with `NO_COLOR` or below 80×23, the bare `nuclear` shows only the page.",
+    "- To review the animation without a terminal: `script -qc \"stty cols 100 rows 30; nuclear\" /dev/null` captures the",
     "  frames (split by `ESC[?2026h`); a PIL script turns them into images."
    ],
    "sources": [
@@ -1638,23 +1660,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-dragonfly-landing-rs.fd570b",
+   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.f7ec30",
    "type": "context",
-   "title": "Landing, header, help and colors of `dragonfly` (`landing.rs`)",
-   "summary": "`$XDG_STATE_HOME/dragonfly/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
+   "title": "Landing, header, help and colors of the framework's commands (`framework/landing.rs`)",
+   "summary": "`$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
    "body": [
-    "- `dragonfly` without arguments: the animation ONLY the first time (the marker",
-    "  `$XDG_STATE_HOME/dragonfly/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
-    "  `dragonfly credits` (alias `author`): always the full animation and the page with the credits (Julian Molina,",
+    "- `nuclear` without arguments: the animation ONLY the first time (the marker",
+    "  `$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
+    "  `nuclear credits` (alias `author`): always the full animation and the page with the credits (Julian Molina,",
     "  github.com/nodelorien, github.com/nuclearlang).",
     "- The animation takes ~11 s and is a CONCEPT, not realistic: a radioactive mushroom in ASCII, a wave of characters",
-    "  that fills the screen and dissolves into `█▓▒░`, grass grows back and a dragonfly lands on a flower; then the page",
-    "  with the NuclearLang and Dragonfly logos. After the wave, \"WELCOME\" (5-row letters) appears in negative, turns",
-    "  green with \"to NuclearLang · Dragonfly\" and dissolves. In the grass scene the motto is written (`motto`): Spanish",
+    "  that fills the screen and dissolves into `█▓▒░`, grass grows back and a synapsis lands on a flower; then the page",
+    "  with the NuclearLang and Synapsis logos. After the wave, \"WELCOME\" (5-row letters) appears in negative, turns",
+    "  green with \"to NuclearLang · Synapsis\" and dissolves. In the grass scene the motto is written (`motto`): Spanish",
     "  if `LC_ALL` / `LC_MESSAGES` / `LANG` starts with `es` (localization data, the allowed exception to English",
     "  everywhere), else English.",
     "- Only characters over the terminal's background: no background colors (a test checks it), the theme's text color in",
-    "  normal / bold / dim and few accents; fades are dissolves. The dragonfly is metallic purple (`metal`) with",
+    "  normal / bold / dim and few accents; fades are dissolves. The synapsis is metallic purple (`metal`) with",
     "  radioactive green eyes; the NuclearLang symbol is drawn `ASPECT` (1.35) times wider to look round.",
     "- The page stays alive until Enter (a thread reads stdin; Enter during the animation jumps to the page, except in"
    ],
@@ -1670,7 +1692,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.54b323",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — Commands",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Commands",
    "body": [
     "| Command | What it does | Function |",
@@ -1696,7 +1718,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.6c0ab9",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — Commands",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`, `--defs-path <dir>`.",
    "body": [
     "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a",
@@ -1715,7 +1737,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.d4327b",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — Commands",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Commands",
    "body": [
     "| `dialect list`, `dialect check <name\\|path> [--json]` | The dialects found; a dialect's files validated | `dialect_check`, `print_report` |",
@@ -1737,7 +1759,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#tests",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — Tests",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Tests",
    "summary": "added to `TOPICS`), `briefs_are_found_and_short` (the whole flutter sheet stays ≤ 16 KB, about 4k tokens; with `--platform` nothing of the language underneath comes out), `help_finds_topics_and_commands`.",
    "body": [
     "- `src/main.rs`: `every_document_is_a_help_topic` (a new guide chapter or reference file of the language must be",
@@ -1747,9 +1769,28 @@
     "  `the_hook_reads_the_type_definitions_of_the_project`.",
     "- `tests/build.rs`: `a_removed_source_takes_its_output_with_it`, `fix_applies_the_exact_fixes`.",
     "",
-    "`nuclear help` names the targets `.ts / .dart / .py` and points to the `dragonfly` command for the framework's",
-    "projects; the topics `architecture` and `new-dialect` print the language's guides of the same names; a dialect with",
+    "`nuclear help` names the targets `.ts / .dart / .py` and ends with the framework's usage, under \"projects of the",
+    "framework\"; the topics `architecture` and `new-dialect` print the language's guides of the same names; a dialect with",
     "no reference prints the heading `# Dialect <name>` and where its reference would be."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-compiler-s-commands-tools-cli-src-main-rs",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`)",
+   "summary": "One file of commands over the language crates; a command line `framework::claims` takes is the framework's (overview.md, ADR-cli-0003).",
+   "body": [
+    "One file of commands over the language crates; a command line `framework::claims` takes is the framework's",
+    "([overview.md](overview.md), ADR-cli-0003). The text a user sees is the `USAGE` constant: `nuclear help`",
+    "prints it, and `nuclear help <command>` prints its lines of it."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -1763,7 +1804,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation.575b4b",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — The embedded documentation",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation",
    "summary": "(`brief.md` in a dialect's own folder, else the embedded `BRIEFS` of `typescript`, `dart`, `python`, else `docs/07-reference/brief/<name>.md`).",
    "body": [
     "(`brief.md` in a dialect's own folder, else the embedded `BRIEFS` of `typescript`, `dart`, `python`, else",
@@ -1782,7 +1823,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation.57a947",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — The embedded documentation",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation",
    "summary": "guide's chapters, `reference`, `new-dialect`), `nuclearlang/docs/07-reference/` (`base`, `library`, `grammar`, `keywords`, `diagnostics`, `projects`, `dialects`, `defs`, `decisions`) and each language dialect's reference (`typescript`, `nodejs`, `dart`, `python`).",
    "body": [
     "- `TOPICS`: (topic, what it is, text), compiled in with `include_str!` from `nuclearlang/docs/08-guides/` (the",
@@ -1809,27 +1850,9 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-nuclear-binary-tools-cli-src-main-rs",
-   "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`)",
-   "summary": "One file of commands over the language crates.",
-   "body": [
-    "One file of commands over the language crates. The text a user sees is the `USAGE` constant: `nuclear help`",
-    "prints it, and `nuclear help <command>` prints its lines of it."
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/nuclear-command.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#where-it-looks-loader",
    "type": "context",
-   "title": "The `nuclear` binary (`tools/cli/src/main.rs`) — Where it looks (`loader`)",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Where it looks (`loader`)",
    "summary": "`nuclear_dialect::homes()` (the installation, the working tree).",
    "body": [
     "- Dialects: `--dialect-path` (repeatable), `$NUCLEAR_DIALECT_PATH` (`:`-separated), `./dialects`, then the homes of",
@@ -1851,7 +1874,7 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.07e303",
    "type": "context",
-   "title": "The command line tools: overview — Backend and web projects",
+   "title": "The command line tool: overview — Backend and web projects",
    "summary": "`[layout]` path (the code generator).",
    "body": "`[layout]` path ([the code generator](../../../code_generator/docs/02-architecture/overview.md)).",
    "sources": [
@@ -1864,41 +1887,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.40eecc",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.a8fdd6",
    "type": "context",
-   "title": "The command line tools: overview — Backend and web projects",
-   "summary": "name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder.",
+   "title": "The command line tool: overview — Backend and web projects",
+   "summary": "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a mobile app.",
    "body": [
-    "- `build` is `nuclear build .`; `install`, `run`, `test`, `analyze` run the dialect's `[toolchain]` command of that",
-    "  name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by",
-    "  `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder. `fill_command` also fills `{{tools}}`",
-    "  (`<install>/tools`), `{{url}}`, `{{port}}` and `{{host}}`. A command the dialect does not have is refused with the",
-    "  list of those it has. Each of these commands also writes the editor workspace (`vscode::write`), and `build`",
-    "  runs `[toolchain] compile` once the app is installed, so a running server restarts on the build.",
-    "- `install` also runs `[toolchain] install_local` once per folder dependency of `config.nuc` (`{{path}}`; a package",
-    "  manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions",
-    "  ([packages.md](packages.md)).",
-    "- `dragonfly migrate [make \"<message>\" | up | down]` runs `migrate_make` / `migrate` / `migrate_down` with",
-    "  `{{message}}` and `{{migrations}}` = `<project>/migrations` (`migrate_command`; `ADR-backend-0001` §5).",
-    "- `dragonfly check` delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).",
-    "- `dragonfly make <kind> <component> <Name> [--screen <s>]` writes the platform's `[skeletons]` entry at its"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.677922",
-   "type": "context",
-   "title": "The command line tools: overview — Backend and web projects",
-   "summary": "`non_mobile_manifest(root)` tells a backend or web project (`dragonfly(platform = \"backend\"|\"web\", ...)`) from a mobile app.",
-   "body": [
-    "`non_mobile_manifest(root)` tells a backend or web project (`dragonfly(platform = \"backend\"|\"web\", ...)`) from a",
+    "`non_mobile_manifest(root)` tells a backend or web project (`synapsis(platform = \"backend\"|\"web\", ...)`) from a",
     "mobile app. For it (ADR-cli-0001):"
    ],
    "sources": [
@@ -1911,18 +1905,24 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-dragonfly-nuclear-synapsis-framework-cli-src.59c479",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#backend-and-web-projects.af725e",
    "type": "context",
-   "title": "The command line tools: overview — Code map of `dragonfly` (`nuclear-synapsis-framework/cli/src/`)",
-   "summary": "Code map of `dragonfly` (`nuclear-synapsis-framework/cli/src/`)",
+   "title": "The command line tool: overview — Backend and web projects",
+   "summary": "name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder.",
    "body": [
-    "| File | What it does | More |",
-    "|---|---|---|",
-    "| `main.rs` | The commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
-    "| `explain.rs` | `dragonfly explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Loop's local agents read instead of the raw log | [build.md](build.md) |",
-    "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
-    "| `dependencies.rs` | `dragonfly add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
-    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |"
+    "- `build` is `nuclear build .`; `install`, `run`, `test`, `analyze` run the dialect's `[toolchain]` command of that",
+    "  name (`backend_command`: `{{packages}}` = `<install>/packages`; more placeholders through `vars`, quoted by",
+    "  `shell_quote`) with `sh -c` (`cmd /C` on Windows) in the output folder. `fill_command` also fills `{{tools}}`",
+    "  (`<install>/tools`), `{{url}}`, `{{port}}` and `{{host}}`. A command the dialect does not have is refused with the",
+    "  list of those it has. Each of these commands also writes the editor workspace (`vscode::write`), and `build`",
+    "  runs `[toolchain] compile` once the app is installed, so a running server restarts on the build.",
+    "- `install` also runs `[toolchain] install_local` once per folder dependency of `config.nuc` (`{{path}}`; a package",
+    "  manager keeps the old copy of a folder whose version did not change), then generates the missing type definitions",
+    "  ([packages.md](packages.md)).",
+    "- `nuclear migrate [make \"<message>\" | up | down]` runs `migrate_make` / `migrate` / `migrate_down` with",
+    "  `{{message}}` and `{{migrations}}` = `<project>/migrations` (`migrate_command`; `ADR-backend-0001` §5).",
+    "- `nuclear check` (no path) delegates to `nuclear check .` (the Flutter check resolves a pubspec and fonts they do not have).",
+    "- `nuclear make <kind> <component> <Name> [--screen <s>]` writes the platform's `[skeletons]` entry at its"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -1934,17 +1934,43 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-dragonfly-nuclear-synapsis-framework-cli-src.b87b7e",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.154b84",
    "type": "context",
-   "title": "The command line tools: overview — Code map of `dragonfly` (`nuclear-synapsis-framework/cli/src/`)",
-   "summary": "Code map of `dragonfly` (`nuclear-synapsis-framework/cli/src/`)",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "Code map of `src/framework/`",
    "body": [
-    "| `generate.rs`, `scaffold.rs` | `dragonfly gen` and `dragonfly make` (ADR-codegen-0001) | [the code generator](../../../code_generator/AGENTS.md) |",
-    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
-    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Dragonfly need: the CLIs, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
-    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `dragonfly: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
-    "| `device/` | `device` and `terminal-device` (ADR-devices-0001) | [the devices](../../../../device-emulators/AGENTS.md) |",
-    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |"
+    "| File | What it does | More |",
+    "|---|---|---|",
+    "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
+    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |",
+    "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
+    "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
+    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |",
+    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.59d647",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
+   "body": [
+    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
+    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
+    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |",
+    "",
+    "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
+    "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
+    "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
+    "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -1958,11 +1984,11 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/overview.md#kind-packages-adr-synapsis-0004",
    "type": "context",
-   "title": "The command line tools: overview — Kind packages (`ADR-synapsis-0004`)",
-   "summary": "`dragonfly add <folder>` installs a kind package (`kinds/<name>/` with `kind.toml` `[package]`) in `<install>/kinds/` after loading it with every dialect it implements (`add_package`, `copy_dir`).",
+   "title": "The command line tool: overview — Kind packages (`ADR-synapsis-0004`)",
+   "summary": "`nuclear add <folder>` installs a kind package (`kinds/<name>/` with `kind.toml` `[package]`) in `<install>/kinds/` after loading it with every dialect it implements (`add_package`, `copy_dir`).",
    "body": [
-    "`dragonfly add <folder>` installs a kind package (`kinds/<name>/` with `kind.toml` `[package]`) in `<install>/kinds/`",
-    "after loading it with every dialect it implements (`add_package`, `copy_dir`). `loader()` of both binaries adds",
+    "`nuclear add <folder>` installs a kind package (`kinds/<name>/` with `kind.toml` `[package]`) in `<install>/kinds/`",
+    "after loading it with every dialect it implements (`add_package`, `copy_dir`). `loader()` of both sets of commands adds",
     "`kinds/` of the current folder and `<install>/kinds` to `Loader.packages`. The skeleton of a package comes from",
     "`nuclear kind new <name> -p <platform> -d <dialect>`."
    ],
@@ -1978,17 +2004,17 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/overview.md#known-limits",
    "type": "context",
-   "title": "The command line tools: overview — Known limits",
+   "title": "The command line tool: overview — Known limits",
    "summary": "`[toolchain]`.",
    "body": [
     "- Generators normalize a name with `snake()` but do not validate identifiers (a leading digit, reserved words).",
     "- `--org` only in `new`; when `build` creates a missing app it uses `com.example`.",
-    "- The `dragonfly` Dart package is a local path until it is on pub.dev.",
+    "- The `synapsis` Dart package is a local path until it is on pub.dev.",
     "- Mobile apps are built with the Flutter commands called from Rust; backend and web projects through the dialect's",
     "  `[toolchain]`. `manifest()` still refuses a non-mobile project on the Flutter-only paths (`code`, `device`, `pub`,",
     "  `flutter`).",
-    "- A fresh web project builds and type-checks (`tsc`), but `vite build` and `dragonfly run` need the react runtime's",
-    "  bundling fix: rollup cannot resolve `react` from the `--install-links`ed `dragonfly-web`",
+    "- A fresh web project builds and type-checks (`tsc`), but `vite build` and `nuclear run` need the react runtime's",
+    "  bundling fix: rollup cannot resolve `react` from the `--install-links`ed `synapsis-web`",
     "  ([the web platform](../../../../nuclear-synapsis-framework/platforms/web/AGENTS.md))."
    ],
    "sources": [
@@ -2001,23 +2027,22 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.450a36",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.271729",
    "type": "context",
-   "title": "The command line tools: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
-   "summary": "gives its platform (`-d nestjs` is backend), a platform alone its default dialect (`[platform] default_dialect` of `platform.toml`); neither is mobile.",
+   "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
+   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `pub`, `flutter`, `doctor`, `setup`,…",
    "body": [
-    "- `dragonfly new [-p mobile] [-d flutter] <name>` (`platform_and_dialect`, `new_name`, `hint_for`): a dialect alone",
-    "  gives its platform (`-d nestjs` is backend), a platform alone its default dialect (`[platform] default_dialect` of",
-    "  `platform.toml`); neither is mobile. The name is letters, digits and `_`; an option glued to it (`shop-p`) or a",
-    "  stray word (`backend` without `-p`) is refused with a hint. The dialect is loaded and must belong to the platform.",
-    "- A mobile project is scaffolded (`scaffold::project`), its Flutter app created (`flutter create` in `build/app`) and",
-    "  built. A backend project gets `scaffold::backend_project`: `config.nuc`, `config/project_config.nuc` with",
-    "  `SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true)`, `plugins(sqlite = true)` and a first test in",
-    "  `test/app_test.nuc`. A web project gets `scaffold::web_project`: `config.nuc`, `main.nuc` (the App with",
-    "  `createElement(RouterProvider, router = appRouter())`), an `Http` connection and `config/project_config.nuc`;",
-    "  screens are added with `dragonfly make screen`. Every `new` also runs `nuclear agent init`.",
-    "- `manifest()` reads `config.nuc` through `Manifest::read` (`dragonfly(platform, dialect)`, `app(name)`). An app",
-    "  without that line is an app of the mobile platform's default dialect (`any_manifest`); its `dragonfly check`"
+    "| Commands | Code | What they are for |",
+    "|---|---|---|",
+    "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
+    "| The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |",
+    "",
+    "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,",
+    "`run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,",
+    "`clean`, `repair`, `explain`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
+    "page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a",
+    "project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both",
+    "usages, the framework's under \"projects of the framework\"."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -2029,17 +2054,65 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.b4dd24",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.b38a62",
    "type": "context",
-   "title": "The command line tools: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
+   "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
+   "summary": "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the installed command, as a program).",
+   "body": [
+    "The framework's `build` and `check` of a backend or web project run `nuclear build .` / `nuclear check .` (the",
+    "installed command, as a program). Both sets use the language crates as a library (`nuclear_transpile::project`,",
+    "`nuclear_dialect::Loader`, `nuclear_diag`, `nuclear_syntax::fmt`); the framework's also `nuclear_codegen` and",
+    "`nuclear_devices`."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.437057",
+   "type": "context",
+   "title": "The command line tool: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
+   "summary": "gives its platform (`-d nestjs` is backend), a platform alone its default dialect (`[platform] default_dialect` of `platform.toml`); neither is mobile.",
+   "body": [
+    "- `nuclear new [-p mobile] [-d flutter] <name>` (`platform_and_dialect`, `new_name`, `hint_for`): a dialect alone",
+    "  gives its platform (`-d nestjs` is backend), a platform alone its default dialect (`[platform] default_dialect` of",
+    "  `platform.toml`); neither is mobile. The name is letters, digits and `_`; an option glued to it (`shop-p`) or a",
+    "  stray word (`backend` without `-p`) is refused with a hint. The dialect is loaded and must belong to the platform.",
+    "- A mobile project is scaffolded (`nuclear_codegen::scaffold::project`), its Flutter app created (`flutter create` in `build/app`) and",
+    "  built. A backend project gets `scaffold::backend_project`: `config.nuc`, `config/project_config.nuc` with",
+    "  `SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true)`, `plugins(sqlite = true)` and a first test in",
+    "  `test/app_test.nuc`. A web project gets `scaffold::web_project`: `config.nuc`, `main.nuc` (the App with",
+    "  `createElement(RouterProvider, router = appRouter())`), an `Http` connection and `config/project_config.nuc`;",
+    "  screens are added with `nuclear make screen`. Every `new` also runs `nuclear agent init`.",
+    "- `manifest()` reads `config.nuc` through `Manifest::read` (`synapsis(platform, dialect)`, `app(name)`). An app",
+    "  without that line is an app of the mobile platform's default dialect (`any_manifest`); its `nuclear check`"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.eca724",
+   "type": "context",
+   "title": "The command line tool: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
    "summary": "reports N0303 with the line to add.",
    "body": [
-    "reports N0303 with the line to add. `packages::template` writes the `dragonfly(...)` line first.",
+    "reports N0303 with the line to add. `packages::template` writes the `synapsis(...)` line first.",
     "- `build` writes the project card `.nuclear/project.json` (`project::write_metadata`;",
     "  `nuclearlang/docs/07-reference/projects.md` §1.1).",
     "- Dialects and the runtime packages are found in the installation (`nuclear_dialect::install_dir()`:",
     "  `$NUCLEAR_HOME`, or the folder above the binary's `bin/`), else in the working tree it was built in.",
-    "  `NUCLEAR_DIALECT_PATH` adds dialect folders; `DRAGONFLY_PACKAGE` names the `dragonfly` Dart package."
+    "  `NUCLEAR_DIALECT_PATH` adds dialect folders; `SYNAPSIS_PACKAGE` names the `synapsis` Dart package."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -2053,37 +2126,13 @@
   {
    "id": "doc:tools/cli/docs/02-architecture/overview.md#plugins-adr-synapsis-0004",
    "type": "context",
-   "title": "The command line tools: overview — Plugins (`ADR-synapsis-0004`)",
-   "summary": "`build` of a mobile app adds the packages of the plugins `config.nuc` enables (`plugin_packages`, `project::enabled_plugins`) and removes those of plugins turned off (`sync_plugin_packages`, `build/app/.dragonfly_plugins`); a `local` package is found with `runtime_package` (the installed…",
+   "title": "The command line tool: overview — Plugins (`ADR-synapsis-0004`)",
+   "summary": "`build` of a mobile app adds the packages of the plugins `config.nuc` enables (`plugin_packages`, `project::enabled_plugins`) and removes those of plugins turned off (`sync_plugin_packages`, `build/app/.synapsis_plugins`); a `local` package is found with `runtime_package` (the installed…",
    "body": [
     "`build` of a mobile app adds the packages of the plugins `config.nuc` enables (`plugin_packages`,",
     "`project::enabled_plugins`) and removes those of plugins turned off (`sync_plugin_packages`,",
-    "`build/app/.dragonfly_plugins`); a `local` package is found with `runtime_package` (the installed `packages/`, else",
+    "`build/app/.synapsis_plugins`); a `local` package is found with `runtime_package` (the installed `packages/`, else",
     "the working tree)."
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#two-binaries",
-   "type": "context",
-   "title": "The command line tools: overview — Two binaries",
-   "summary": "`dragonfly` calls `nuclear` as a program for what `nuclear` already does: `nuclear build .` of a backend or web project, `nuclear check .` of one, `nuclear agent init`.",
-   "body": [
-    "| Binary | Crate | What it is for |",
-    "|---|---|---|",
-    "| `nuclear` | `nuclear-cli`, `tools/cli/` | The transpiler: a file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
-    "| `dragonfly` | `dragonfly`, `nuclear-synapsis-framework/cli/` | A Dragonfly project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |",
-    "",
-    "`dragonfly` calls `nuclear` as a program for what `nuclear` already does: `nuclear build .` of a backend or web",
-    "project, `nuclear check .` of one, `nuclear agent init`. Both use the language crates as a library",
-    "(`nuclear_transpile::project`, `nuclear_dialect::Loader`, `nuclear_diag`, `nuclear_syntax::fmt`)."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -2115,12 +2164,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/packages.md#dependencies-rs-backend-and-web-adr-lang-0008.08683b",
+   "id": "doc:tools/cli/docs/02-architecture/packages.md#dependencies-rs-backend-and-web-adr-lang-0008.40fd53",
    "type": "context",
    "title": "Packages, type definitions and assets — `dependencies.rs`: backend and web (`ADR-lang-0008`)",
-   "summary": "`dragonfly add|remove <package>` (`package_command` in `main.rs`; a mobile app goes to `packages::add|remove`, a folder to the kind packages).",
+   "summary": "`nuclear add|remove <package>` (`package_command` in `framework/mod.rs`; a mobile app goes to `packages::add|remove`, a folder to the kind packages).",
    "body": [
-    "`dragonfly add|remove <package>` (`package_command` in `main.rs`; a mobile app goes to `packages::add|remove`, a",
+    "`nuclear add|remove <package>` (`package_command` in `framework/mod.rs`; a mobile app goes to `packages::add|remove`, a",
     "folder to the kind packages). Nothing here knows a package manager: every step is a `[toolchain] package_*` command",
     "of the dialect, filled by `fill_command` (`{{tools}}` = `<install>/tools`) and run in the generated project.",
     "",
@@ -2132,7 +2181,7 @@
     "  `nestjs__axios`).",
     "- `remove`: the package and its companion out of `config.nuc` and of the generated project, its `defs/` folder",
     "  deleted.",
-    "- `ensure_defs`: after `dragonfly install`, the definitions of every dependency that has none (not a folder",
+    "- `ensure_defs`: after `nuclear install`, the definitions of every dependency that has none (not a folder",
     "  dependency, not a companion); a failure is a line, the install stands."
    ],
    "sources": [
@@ -2163,9 +2212,9 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/packages.md#packages-rs-a-mobile-app-adr-mobile-0001-to-adr-mobile-0001.2b8e9c",
+   "id": "doc:tools/cli/docs/02-architecture/packages.md#packages-rs-a-mobile-app-adr-mobile-0001.2b8e9c",
    "type": "context",
-   "title": "Packages, type definitions and assets — `packages.rs`: a mobile app (`ADR-mobile-0001` to `ADR-mobile-0001`)",
+   "title": "Packages, type definitions and assets — `packages.rs`: a mobile app (`ADR-mobile-0001`)",
    "summary": "`set_entry` / `remove_entry` open a section written in one line (`one_per_line`) and write a name that is not an identifier, or is a word of the language, as `\"name@value\"` (they ask `project::read_config` how a name reads back).",
    "body": [
     "`set_entry` / `remove_entry` open a section written in one line (`one_per_line`) and write a name that is not an",
@@ -2186,20 +2235,20 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/packages.md#packages-rs-a-mobile-app-adr-mobile-0001-to-adr-mobile-0001.cdad48",
+   "id": "doc:tools/cli/docs/02-architecture/packages.md#packages-rs-a-mobile-app-adr-mobile-0001.ffe3dc",
    "type": "context",
-   "title": "Packages, type definitions and assets — `packages.rs`: a mobile app (`ADR-mobile-0001` to `ADR-mobile-0001`)",
-   "summary": "the packages → `build/app/pubspec.yaml` by editing lines; `flutter pub add/remove`; `build/app/.dragonfly_deps` = the packages that come from `config.nuc`, so only those are removed; it never removes Dragonfly's own, `OWN` + `PACKAGES`).",
+   "title": "Packages, type definitions and assets — `packages.rs`: a mobile app (`ADR-mobile-0001`)",
+   "summary": "the packages → `build/app/pubspec.yaml` by editing lines; `flutter pub add/remove`; `build/app/.synapsis_deps` = the packages that come from `config.nuc`, so only those are removed; it never removes Synapsis's own, `OWN` + `PACKAGES`).",
    "body": [
     "- `read` (the sections come from the dialect's `[project.manifest]`), `sync` (the `app` / `environment` fields and",
-    "  the packages → `build/app/pubspec.yaml` by editing lines; `flutter pub add/remove`; `build/app/.dragonfly_deps` =",
-    "  the packages that come from `config.nuc`, so only those are removed; it never removes Dragonfly's own, `OWN` +",
+    "  the packages → `build/app/pubspec.yaml` by editing lines; `flutter pub add/remove`; `build/app/.synapsis_deps` =",
+    "  the packages that come from `config.nuc`, so only those are removed; it never removes Synapsis's own, `OWN` +",
     "  `PACKAGES`).",
     "- `load_defs`: the version from `pubspec.lock` → `~/.cache/nuclearlang/defs/dart/<p>/<v>`; if missing,",
     "  `generate_defs` runs `dart run bin/defs.dart` of the definitions generator (`nuclearlang/tools/defs`,",
     "  `<install>/tools/defs`) with `--exclude` of the dialect's packages; `Loader::add_defs`; writes `build/defs.lock`;",
     "  skips packages the dialect knows.",
-    "- `add` / `remove` (`dragonfly flutter add|remove`, also `pub add|remove`): edit `config.nuc` with `set_entry` /",
+    "- `add` / `remove` (`nuclear flutter add|remove`, also `pub add|remove`): edit `config.nuc` with `set_entry` /",
     "  `remove_entry`, one entry per line; `add` rejects reserved packages (`project::reserved_package`) before running",
     "  flutter; `sync` never adds a reserved one.",
     "- `ensure_config`: `check` and `build` create `config.nuc` if missing (the name, description / version, the app's",
@@ -2219,8 +2268,8 @@
    "id": "doc:tools/cli/docs/02-architecture/packages.md#packages-type-definitions-and-assets",
    "type": "context",
    "title": "Packages, type definitions and assets",
-   "summary": "The code is in `nuclear-synapsis-framework/cli/src/`.",
-   "body": "The code is in `nuclear-synapsis-framework/cli/src/`.",
+   "summary": "The code is in `tools/cli/src/framework/`.",
+   "body": "The code is in `tools/cli/src/framework/`.",
    "sources": [
     "tools/cli/docs/02-architecture/packages.md"
    ],
@@ -2234,15 +2283,15 @@
    "id": "doc:tools/code_generator/AGENTS.md#commands",
    "type": "readme",
    "title": "The code generator — Commands",
-   "summary": "cargo test -p dragonfly # also builds a generated resource with every dialect of every platform cargo clippy --all-targets dragonfly gen # every option of gen dragonfly gen resource <component> <Name> --fields \"id:int name:string\" --dry-run dragonfly make <kind> <component> <Name> # backend, web;…",
+   "summary": "cargo test -p nuclear-codegen -p nuclear-cli # nuclear-cli builds a generated resource with every dialect of every platform cargo clippy --all-targets nuclear gen # every option of gen nuclear gen resource <component> <Name> --fields \"id:int name:string\" --dry-run nuclear make <kind> <component>…",
    "body": [
     "```sh",
-    "cargo test -p dragonfly                       # also builds a generated resource with every dialect of every platform",
+    "cargo test -p nuclear-codegen -p nuclear-cli   # nuclear-cli builds a generated resource with every dialect of every platform",
     "cargo clippy --all-targets",
-    "dragonfly gen                                 # every option of gen",
-    "dragonfly gen resource <component> <Name> --fields \"id:int name:string\" --dry-run",
-    "dragonfly make <kind> <component> <Name>      # backend, web; `dragonfly help` lists the mobile generators",
-    "nuclear help layout --platform <p>            # where each kind's file goes",
+    "nuclear gen                                    # every option of gen",
+    "nuclear gen resource <component> <Name> --fields \"id:int name:string\" --dry-run",
+    "nuclear make <kind> <component> <Name>         # `nuclear help` lists the generators",
+    "nuclear help layout --platform <p>             # where each kind's file goes",
     "```"
    ],
    "sources": [
@@ -2258,21 +2307,47 @@
    "id": "doc:tools/code_generator/AGENTS.md#documents",
    "type": "readme",
    "title": "The code generator — Documents",
-   "summary": "Elsewhere: command, option and refusal) and `dragonfly help`.",
+   "summary": "Elsewhere: command, option and refusal) and `nuclear help`.",
    "body": [
     "| Read | When |",
     "|---|---|",
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what the generators do not write yet, or what is untested |",
-    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `generate.rs` or `scaffold.rs`, add a generator piece to a `platform.toml`, or need how fields become files |",
+    "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `generate.rs` or `scaffold.rs`, add a piece to a `generators.toml`, or need how fields become files |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the generators exist and why they never write placeholders |",
     "",
     "Elsewhere:",
     "",
     "- What a user reads: [the generators' guide](../../nuclear-synapsis-framework/docs/08-guides/generators.md) (every",
-    "  command, option and refusal) and `dragonfly help`.",
+    "  command, option and refusal) and `nuclear help`.",
     "- The format of `[[generators.<what>]]`, `[gen]`, `[skeletons]` and `[layout]`:",
     "  `nuclearlang/docs/07-reference/dialects.md`.",
-    "- The command itself: [the command line tools](../cli/AGENTS.md)."
+    "- The command itself: [the command line tool](../cli/AGENTS.md)."
+   ],
+   "sources": [
+    "tools/code_generator/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/AGENTS.md#folders",
+   "type": "readme",
+   "title": "The code generator — Folders",
+   "summary": "`[gen]` (the forms of the `Http` connection), `[skeletons]` (what `make <kind>` writes; backend and web) and the `[[generators.<what>]]` pieces.",
+   "body": [
+    "- `src/`: the crate (`lib.rs`, `generate.rs`, `scaffold.rs`).",
+    "- `platforms/<platform>/generators.toml` (`backend`, `mobile`, `web`): the generators' data of each platform:",
+    "  `[gen]` (the forms of the `Http` connection), `[skeletons]` (what `make <kind>` writes; backend and web) and the",
+    "  `[[generators.<what>]]` pieces. The loader finds it through `Home.generators` / `Loader::generators_file`",
+    "  (`nuclear-dialect`); an installation has it in `<install>/generators/`.",
+    "- `docs/`: this project's documents (the table below).",
+    "",
+    "The command side (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) is in",
+    "`tools/cli/src/framework/mod.rs`; where each kind's file goes is the platform's `[layout]`",
+    "(`nuclear-synapsis-framework/platforms/<platform>/platform.toml`)."
    ],
    "sources": [
     "tools/code_generator/AGENTS.md"
@@ -2291,7 +2366,7 @@
    "body": [
     "1. **Finished code or a refusal.** What `gen` writes compiles as written; when it cannot write something finished",
     "   it refuses and says what to do. Never a placeholder for a model to fill (ADR-codegen-0001).",
-    "2. **The templates are the platform's**, never code here: the Nuclear a generator writes is the same for every",
+    "2. **The templates are the platform's data**, never code here: the Nuclear a generator writes is the same for every",
     "   dialect of a platform. This code only reads the fields, picks the templates and writes each file at the",
     "   platform's `[layout]` path.",
     "3. **Nothing is overwritten, nothing is declared twice.** A file that exists is kept; a `merge` piece gets only the",
@@ -2316,12 +2391,15 @@
    "id": "doc:tools/code_generator/AGENTS.md#stack",
    "type": "readme",
    "title": "The code generator — Stack",
-   "summary": "(`nuclearlang/crates/nuclear-dialect/src/template.rs`); what it writes goes through `nuclear_syntax::fmt::format`; a use case's signature is read with `nuclear_transpile::map::shape`.",
+   "summary": "skeletons and the files of a new project).",
    "body": [
-    "- Rust, inside the `dragonfly` crate; the templates are the Mustache subset of `nuclear-dialect`",
-    "  (`nuclearlang/crates/nuclear-dialect/src/template.rs`); what it writes goes through `nuclear_syntax::fmt::format`;",
-    "  a use case's signature is read with `nuclear_transpile::map::shape`.",
-    "- `curl` for `--from-json <url>` and a spec's `GET <url>` line."
+    "- Rust, the library crate `nuclear-codegen` (`src/lib.rs`): `src/generate.rs` (`gen`) and `src/scaffold.rs` (the",
+    "  skeletons and the files of a new project). It writes files and reports `(Wrote::Created | Kept, path)`; the",
+    "  command prints.",
+    "- The templates are the Mustache subset of `nuclear-dialect` (`nuclearlang/crates/nuclear-dialect/src/template.rs`);",
+    "  what it writes goes through `nuclear_syntax::fmt::format`; a use case's signature is read with",
+    "  `nuclear_transpile::map::shape`.",
+    "- `curl` for `--from-json <url>` and a spec's `GET <url>` line (`fetch_text` of the command)."
    ],
    "sources": [
     "tools/code_generator/AGENTS.md"
@@ -2336,12 +2414,13 @@
    "id": "doc:tools/code_generator/AGENTS.md#the-code-generator",
    "type": "readme",
    "title": "The code generator",
-   "summary": "What `dragonfly gen` and `dragonfly make` write into a project.",
+   "summary": "What `nuclear new`, `nuclear make` and `nuclear gen` write into a project.",
    "body": [
-    "What `dragonfly gen` and `dragonfly make` write into a project. `gen` writes finished code that compiles from a",
-    "resource's data (models, repository, a use case per action, the facade's aliases, the controller or the screen, the",
-    "tests) and wires a use case into its component. `make` writes one skeleton of a kind, to fill in. A person, an AI",
-    "agent, the MCP server and the Loop all generate through it, so a standard feature costs no model tokens."
+    "What `nuclear new`, `nuclear make` and `nuclear gen` write into a project. `gen` writes finished code that compiles",
+    "from a resource's data (models, repository, a use case per action, the facade's aliases, the controller or the",
+    "screen, the tests) and wires a use case into its component. `make` writes one skeleton of a kind, to fill in; `new`",
+    "the files of a new project. A person, an AI agent, the MCP server and the Nuclear Builder all generate through it, so",
+    "a standard feature costs no model tokens."
    ],
    "sources": [
     "tools/code_generator/AGENTS.md"
@@ -2353,43 +2432,14 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/AGENTS.md#where-it-is-today",
-   "type": "readme",
-   "title": "The code generator — Where it is today",
-   "summary": "This folder holds only documents.",
-   "body": [
-    "This folder holds only documents. The project is still inside two others and moves here in spec 008, T4.2",
-    "([tasks](../../docs/04-specs/008-restructure/tasks.md)):",
-    "",
-    "| Part | Where it is today |",
-    "|---|---|",
-    "| `gen`: fields, context, plan, write and merge | `nuclear-synapsis-framework/cli/src/generate.rs` |",
-    "| `gen`: the command, its checks, the `Http` connection | `gen_command`, `ensure_http`, `GEN_USAGE` in `nuclear-synapsis-framework/cli/src/main.rs` |",
-    "| `make` and `new` of a mobile project: the skeletons | `nuclear-synapsis-framework/cli/src/scaffold.rs`; `make` in `main.rs` |",
-    "| `make` of a backend or web project | `make_from_layout` in `main.rs`, over the platform's `[skeletons]` |",
-    "| The generators' data: `[[generators.*]]`, `[gen]`, `[skeletons]`, `[layout]` | `nuclear-synapsis-framework/platforms/<platform>/platform.toml` |",
-    "",
-    "After the move, `tools/code_generator/platforms/{web,mobile,backend}/` is where each platform's generator data",
-    "lives."
-   ],
-   "sources": [
-    "tools/code_generator/AGENTS.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.38a666",
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.0bcf83",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "│ fields, models, page [[generators.<what>]] [gen] [layout] ▼ │ Resource / UseCase ──► context (values) ──► plan: one (path, text, merge) per piece ──► write created | kept | added to",
+   "summary": "│ fields, models, page [[generators.<what>]] [gen] ▼ │ Resource / UseCase ──► context (values) ──► plan: one (path, text, merge) per piece ──► write created | kept | added to",
    "body": [
     "```",
-    " --fields | --from-json | --from-spec        platform.toml of the project's platform",
-    "        │ fields, models, page                [[generators.<what>]]  [gen]  [layout]",
+    " --fields | --from-json | --from-spec        generators.toml of the platform  +  [layout] of its platform.toml",
+    "        │ fields, models, page                [[generators.<what>]]  [gen]",
     "        ▼                                              │",
     "   Resource / UseCase ──► context (values) ──► plan: one (path, text, merge) per piece ──► write",
     "                                                                                           created | kept | added to",
@@ -2405,12 +2455,12 @@
    }
   },
   {
-   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.72a311",
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.356c83",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
-   "summary": "1. The fields (`gen_command` in `main.rs`, `generate.rs`): `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not the field's camelCase name gets `@key` (`json_key`).",
+   "summary": "1. The fields (`gen_command` of the command, `generate.rs`): `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not the field's camelCase name gets `@key` (`json_key`).",
    "body": [
-    "1. **The fields** (`gen_command` in `main.rs`, `generate.rs`):",
+    "1. **The fields** (`gen_command` of the command, `generate.rs`):",
     "   - `--fields \"id:int name:string origin:Origin?\"` → `parse_fields`.",
     "   - `--from-json <file|url>` → `from_json`: a nested object becomes a model `<Name><Key>` (`object_model`,",
     "     `nested`), a list under a key of a paged answer gives `<Name>Page`, `null` an optional field, a key that is not",
@@ -2500,8 +2550,8 @@
    "body": [
     "| Project | Where the skeleton is | Code |",
     "|---|---|---|",
-    "| Mobile | Rust templates in `scaffold.rs`: project, component, screen (`--manager`, `--state`, `--route`), statemanager / statemodel (`presentation`), stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page (`--route`, `--not-found`), integration | `make` in `main.rs`; `component`, `screen`, `config`, `in_component`, `test`, `shared`, `presentation`, `app_wide` |",
-    "| Backend, web | The platform's `[skeletons]` entry of the kind, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` in `main.rs` |",
+    "| Mobile | Rust templates in `scaffold.rs`: project, component, screen (`--manager`, `--state`, `--route`), statemanager / statemodel (`presentation`), stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page (`--route`, `--not-found`), integration | `make` of the command; `component`, `screen`, `config`, `in_component`, `test`, `shared`, `presentation`, `app_wide` of `scaffold.rs` |",
+    "| Backend, web | The `[skeletons]` entry of the kind in the platform's `generators.toml`, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` of the command |",
     "",
     "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`), the name helpers",
     "`snake` / `pascal`, and `write`, which never overwrites. Names are given in any case and normalized."
@@ -2524,7 +2574,8 @@
     "- `generate.rs`: `a_spec_gives_its_example_answer_and_its_url`, `plurals_and_fields`,",
     "  `an_example_answer_gives_the_models_and_the_page`, `a_route_is_a_verb_a_prefix_and_a_path_of_the_parameters`,",
     "  `a_merge_adds_whole_members`, `a_spec_table_gives_the_fields_or_says_what_is_missing`.",
-    "- `main.rs`: `a_generated_resource_compiles_with_every_dialect`, `make_writes_every_kind_where_the_platform_says`.",
+    "- `tools/cli/src/framework/mod.rs` (crate `nuclear-cli`): `a_generated_resource_compiles_with_every_dialect`,",
+    "  `make_writes_every_kind_where_the_platform_says`.",
     "- `scaffold.rs`: `names`, `every_skeleton_parses`, `every_new_project_compiles_with_its_dialect`."
    ],
    "sources": [
@@ -2540,10 +2591,11 @@
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#the-code-generator-overview",
    "type": "context",
    "title": "The code generator: overview",
-   "summary": "Two commands write files into a project.",
+   "summary": "The crate `nuclear-codegen` writes files into a project for three commands.",
    "body": [
-    "Two commands write files into a project. `dragonfly gen` writes finished code from data; `dragonfly make` writes a",
-    "skeleton of one kind. Both write Nuclear only, and neither overwrites a file. What a user types and gets is in",
+    "The crate `nuclear-codegen` writes files into a project for three commands. `nuclear gen` writes finished code",
+    "from data; `nuclear make` writes a skeleton of one kind; `nuclear new` the files of a new project. The crate writes",
+    "and reports `(Wrote::Created | Kept, path)`; the command (`tools/cli/src/framework/mod.rs`) parses and prints. Both write Nuclear only, and neither overwrites a file. What a user types and gets is in",
     "[the generators' guide](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md)."
    ],
    "sources": [
@@ -2559,14 +2611,15 @@
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#the-data-of-a-platform",
    "type": "context",
    "title": "The code generator: overview — The data of a platform",
-   "summary": "In `nuclear-synapsis-framework/platforms/<platform>/platform.toml` today; in `tools/code_generator/platforms/<platform>/` after spec 008, T4.2. The templates are Nuclear, the same for every dialect of the platform: nothing here names a dialect.",
+   "summary": "`tools/code_generator/platforms/<platform>/generators.toml`, found by the loader through `Home.generators` / `Loader::generators_file` (an installation: `<install>/generators/`).",
    "body": [
-    "In `nuclear-synapsis-framework/platforms/<platform>/platform.toml` today; in",
-    "`tools/code_generator/platforms/<platform>/` after spec 008, T4.2.",
+    "`tools/code_generator/platforms/<platform>/generators.toml`, found by the loader through `Home.generators` /",
+    "`Loader::generators_file` (an installation: `<install>/generators/`). The place of every kind's file is `[layout]`",
+    "of the platform's own `platform.toml` (`nuclear-synapsis-framework/platforms/<platform>/`), which keeps only",
+    "`[platform]`, the decorators' tables and `[layout]`.",
     "",
-    "| Section | What it gives | Backend | Mobile | Web |",
+    "| Section of `generators.toml` | What it gives | Backend | Mobile | Web |",
     "|---|---|---|---|---|",
-    "| `[layout]` | the place of every kind's file | yes | yes | yes |",
     "| `[skeletons]` | what `make <kind>` writes | yes | no (`scaffold.rs`) | yes |",
     "| `[gen]` | the forms of the `Http` connection (`http`, `http_named`) | yes | yes | yes |",
     "| `[[generators.component]]`, `[[generators.resource]]`, `[[generators.usecase]]` | the pieces of each `gen` command | yes | yes | yes |",
@@ -2588,11 +2641,11 @@
    "title": "The code generator: overview — Who calls it",
    "summary": "`generate_screen` and `api_inspect` run these commands (the MCP server).",
    "body": [
-    "- A person or an agent in a shell: `dragonfly gen`, `dragonfly make` ([the CLI](../../../cli/AGENTS.md)).",
+    "- A person or an agent in a shell: `nuclear gen`, `nuclear make` ([the CLI](../../../cli/AGENTS.md)).",
     "- The MCP server: `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`,",
     "  `generate_screen` and `api_inspect` run these commands ([the MCP server](../../../mcp/AGENTS.md)).",
-    "- The Loop's *Generate* stage: `dragonfly gen resource` for each resource a spec names, before any agent works",
-    "  ([the extensions](../../../../extensions/AGENTS.md)).",
+    "- The Nuclear Builder's *Generate* stage: `nuclear gen resource` for each resource a spec names, before any agent works",
+    "  ([the Nuclear Builder](../../../../extensions/tools/nuclear-builder/AGENTS.md)).",
     "",
     "The state manager that `make screen` (and `make statemanager`) writes loads `Ok([])`: it calls no use case,",
     "because a component made by `gen resource` has none of the skeleton's (`hello` exists only in a component made by",

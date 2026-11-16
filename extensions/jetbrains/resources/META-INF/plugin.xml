@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>dev.nuclearlang</id>
   <name>NuclearLang</name>
-  <version>0.50.0</version>
+  <version>0.51.0</version>
   <vendor>NuclearLang</vendor>
   <idea-version since-build="251"/>
   <description><![CDATA[
@@ -14,12 +14,12 @@
       <li>Code metrics (a port of the CodeMetrics extension): an approximation of cyclomatic complexity as a code
           lens above every function, method, constructor, lambda and module ("Complexity is 3 Everything is
           cool!"), with the details on click and a colored mark per level.</li>
-      <li>Dragonfly projects work like a Flutter project: the app in <code>build/app</code> becomes a module
+      <li>Synapsis projects work like a Flutter project: the app in <code>build/app</code> becomes a module
           (device selector, <code>main.dart</code> run configuration, Run/Debug, which first run
-          <code>dragonfly build</code>) and saving a <code>.nuc</code>
+          <code>nuclear build</code>) and saving a <code>.nuc</code>
           transpiles the project and hot reloads the running app.</li>
       <li>The <b>Chernobyl</b> and <b>Chernobyl Soft</b> themes (UI theme and editor color scheme).</li>
-      <li><b>Nuclear HTTP</b> tool window (Alt+Shift+H): every project of the workspace by platform, its components
+      <li><b>Nuclear Connector</b> tool window (Alt+Shift+H): every project of the workspace by platform, its components
           and endpoints from the contract the compiler writes, the contracts a client declares with an Update action,
           OpenAPI documents, environments and a request panel.</li>
     </ul>
@@ -43,12 +43,12 @@
     <applicationConfigurable parentId="dev.nuclearlang.settings" id="dev.nuclearlang.codemetrics"
                              displayName="Code Metrics" instance="dev.nuclearlang.editor.NuclearCodeMetricsConfigurable"/>
     <editorFactoryListener implementation="dev.nuclearlang.editor.NuclearCodeMetricsMarkers"/>
-    <postStartupActivity implementation="dev.nuclearlang.editor.NuclearDragonfly$Startup"/>
+    <postStartupActivity implementation="dev.nuclearlang.editor.NuclearSynapsis$Startup"/>
     <xdebugger.breakpointType implementation="dev.nuclearlang.editor.NuclearDebug$BreakpointType"/>
     <toolWindow id="Nuclear Error" anchor="right" secondary="true" icon="AllIcons.General.Error"
                 factoryClass="dev.nuclearlang.editor.NuclearDebug$ErrorWindow"/>
-    <toolWindow id="Nuclear HTTP" anchor="left" icon="/icons/nuc.svg" factoryClass="dev.nuclearlang.editor.NuclearHttp$Window"/>
-    <toolWindow id="Nuclear Loop" anchor="bottom" icon="/icons/nuc.svg" factoryClass="dev.nuclearlang.editor.NuclearLoop$Window"/>
+    <toolWindow id="Nuclear Connector" anchor="left" icon="/icons/nuc.svg" factoryClass="dev.nuclearlang.editor.NuclearConnector$Window"/>
+    <toolWindow id="Nuclear Builder" anchor="bottom" icon="/icons/nuc.svg" factoryClass="dev.nuclearlang.editor.NuclearBuilder$Window"/>
     <notificationGroup id="NuclearLang" displayType="BALLOON"/>
     <enterHandlerDelegate implementation="dev.nuclearlang.editor.NuclearCommentEnter"/>
   </extensions>
@@ -58,8 +58,8 @@
   </extensions>
 
   <projectListeners>
-    <listener class="dev.nuclearlang.editor.NuclearDragonfly$OnSave" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
-    <listener class="dev.nuclearlang.editor.NuclearDragonfly$BeforeRun" topic="com.intellij.execution.ExecutionListener"/>
+    <listener class="dev.nuclearlang.editor.NuclearSynapsis$OnSave" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    <listener class="dev.nuclearlang.editor.NuclearSynapsis$BeforeRun" topic="com.intellij.execution.ExecutionListener"/>
     <listener class="dev.nuclearlang.editor.NuclearDebug$MapWatcher" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     <listener class="dev.nuclearlang.editor.NuclearDebug$Breakpoints" topic="com.intellij.xdebugger.breakpoints.XBreakpointListener"/>
     <listener class="dev.nuclearlang.editor.NuclearDebug$Sessions" topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
@@ -72,12 +72,12 @@
               class="dev.nuclearlang.editor.NuclearCodeMetricsActions$ToggleDisplayed"/>
       <action id="dev.nuclearlang.ToggleCodeMetricsForArrowFunctions" text="Toggle code lenses for arrow functions"
               class="dev.nuclearlang.editor.NuclearCodeMetricsActions$ToggleArrowFunctions"/>
-      <action id="dev.nuclearlang.HttpWindow" text="Nuclear HTTP" description="Endpoints of every project, contracts and an HTTP client"
-              class="dev.nuclearlang.editor.NuclearHttp$Open">
+      <action id="dev.nuclearlang.HttpWindow" text="Nuclear Connector" description="Endpoints of every project, contracts and an HTTP client"
+              class="dev.nuclearlang.editor.NuclearConnector$Open">
         <keyboard-shortcut keymap="$default" first-keystroke="alt shift H"/>
       </action>
-      <action id="dev.nuclearlang.LoopWindow" text="Nuclear Loop" description="Specs through plan, code, tests, security, artifacts and deploy (nuclear-loop)"
-              class="dev.nuclearlang.editor.NuclearLoop$Open">
+      <action id="dev.nuclearlang.BuilderWindow" text="Nuclear Builder" description="Specs through plan, code, tests, security, artifacts and deploy (nuclear-builder)"
+              class="dev.nuclearlang.editor.NuclearBuilder$Open">
         <keyboard-shortcut keymap="$default" first-keystroke="alt shift P"/>
       </action>
     </group>

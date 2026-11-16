@@ -1,5 +1,5 @@
 import 'package:clean_flutter_project/components/episodes/domain/models/episode.dart';
-import 'package:dragonfly/dragonfly.dart';
+import 'package:synapsis/synapsis.dart';
 
 class EpisodeRepository extends Repository {
   EpisodeRepository() : super(path: 'episode');

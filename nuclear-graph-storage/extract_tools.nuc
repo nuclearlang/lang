@@ -1,23 +1,22 @@
 // id, what it is, the file that says its version, how the version is written there
 COMPONENTS = [
   ["nuclear", "the compiler, its CLI and the language server", "Cargo.toml", r'^version\s*=\s*"([^"]+)"'],
-  ["dragonfly", "the CLI of Dragonfly projects", "Cargo.toml", r'^version\s*=\s*"([^"]+)"'],
   ["nuclear-graph", "the Smart Graph: the knowledge base and the MCP server", "nuclear-graph-storage/pyproject.toml", r'^version\s*=\s*"([^"]+)"'],
   ["nuclear-developer", "the local agents", "nuclear-agents/nuclear_developer/config.nuc", r'version = "([^"]+)"'],
-  ["nuclear-vscode", "the VS Code extension, with the Loop and `nuclear-loop`", "extensions/vscode/package.json", r'"version":\s*"([^"]+)"'],
+  ["nuclear-vscode", "the VS Code extension, with the Builder and `nuclear-builder`", "extensions/vscode/package.json", r'"version":\s*"([^"]+)"'],
   ["nuclear-jetbrains", "the JetBrains plugin (Android Studio, IntelliJ)", "extensions/jetbrains/resources/META-INF/plugin.xml", r"<version>([^<]+)</version>"],
   ["nuclear-zed", "the Zed extension", "extensions/zed/extension.toml", r'^version\s*=\s*"([^"]+)"'],
-  ["dragonfly-py", "the runtime of the fastapi dialect (Python)", "nuclear-synapsis-framework/platforms/backend/packages/dragonfly-py/pyproject.toml", r'^version\s*=\s*"([^"]+)"'],
-  ["dragonfly-nest", "the runtime of the nestjs dialect (TypeScript)", "nuclear-synapsis-framework/platforms/backend/packages/dragonfly-nest/package.json", r'"version":\s*"([^"]+)"'],
-  ["dragonfly-dart", "the runtime of the flutter dialect (the `dragonfly` Dart package)", "nuclear-synapsis-framework/platforms/mobile/packages/dragonfly/pubspec.yaml", r"^version:\s*(\S+)"],
-  ["dragonfly-web", "the runtime of the react dialect (TypeScript)", "nuclear-synapsis-framework/platforms/web/packages/dragonfly-web/package.json", r'"version":\s*"([^"]+)"'],
+  ["synapsis-py", "the runtime of the fastapi dialect (Python)", "nuclear-synapsis-framework/platforms/backend/packages/synapsis-py/pyproject.toml", r'^version\s*=\s*"([^"]+)"'],
+  ["synapsis-nest", "the runtime of the nestjs dialect (TypeScript)", "nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest/package.json", r'"version":\s*"([^"]+)"'],
+  ["synapsis-dart", "the runtime of the flutter dialect (the `synapsis` Dart package)", "nuclear-synapsis-framework/platforms/mobile/packages/synapsis/pubspec.yaml", r"^version:\s*(\S+)"],
+  ["synapsis-web", "the runtime of the react dialect (TypeScript)", "nuclear-synapsis-framework/platforms/web/packages/synapsis-web/package.json", r'"version":\s*"([^"]+)"'],
 ]
 
 // An entry of a help text: the heading it is under and its lines.
 Entry(heading: string, lines: string[])
 
 // The rows of the tools shelf that have a source: the command line tools as their help prints them, the MCP server,
-// the HTTP routes, the Loop's stages, the local agents, the editor's commands and each component's version.
+// the HTTP routes, the Builder's stages, the local agents, the editor's commands and each component's version.
 ExtractTools
   // A help text as entries: a line at `indent` starts one, the more indented lines below belong to it.
   static entries(text: string, indent: int = 2) Entry[]
@@ -52,7 +51,7 @@ ExtractTools
 
   // A help entry as data: `what` it runs or makes (the first word after the command; `kind` for any kind of a
   // platform), its whole command line (`usage`), its alias, the note before it ("backend and web projects") and what
-  // it does. `command`: what the help leaves out before its lines (`dragonfly make`).
+  // it does. `command`: what the help leaves out before its lines (`nuclear make`).
   static entryOf(lines: string[], command: string) <string, any>
     first = lines[0].trim()
     cut = Regex(r"\s{2,}|\s(?=\(\w{1,3}\)\s)").find(first)
@@ -90,81 +89,67 @@ ExtractTools
     // nuclear: `nuclear help` lists every usage line, then the documentation topics
     text = ctx.run(["nuclear", "help"]) ?? ""
     if text.length > 0
-      usage = before(text, "\ndocumentation:")
-      rest = after(text, "\ndocumentation:")
+      // the help has the compiler's commands, its documentation, the dialects, then the framework's commands
+      framework = after(text, "\nprojects of the framework")
+      own = before(text, "\nprojects of the framework")
+      usage = before(own, "\ndocumentation:")
+      rest = after(own, "\ndocumentation:")
+      src = ["tools/cli/src/main.rs", "tools/cli/src/framework/mod.rs"]
       by: <string, string[][]> = {}
       command = Regex(r"^\s*nuclear (\w+)")
       for entry in ExtractTools.entries(after(usage, "usage:"))
         m = command.find(entry.lines[0])
         ExtractTools.push(by, m != null ? m![1] ?? "options" : "options", entry.lines)
-      for name, found in by
-        if name != "options"
-          rows.add(ExtractTools.toolRow("nuclear", name, found, ["tools/cli/src/main.rs"]))
-      topics = "documentation:${rest.split("\ndialects:")[0]}"
-      options: string[][] = by["options"] ?? []
-      rows.add({
-        "id": "tool:nuclear", "type": "cli", "title": "`nuclear` — the compiler's command line",
-        "summary": "${clip(linesOf(text)[0], 300)} Commands: ${by.keys.filter((n) => n != "options").sorted().join(", ")}.",
-        "body": "```text\n${options.flatten().join("\n")}\n```\n\nEvery command has its own row (`nuclear build`, `nuclear check`...). The documentation it prints:\n\n```text\n${topics.trim()}\n```",
-        "keys": ["nuclear cli", "nuclear command"], "sources": ["tools/cli/src/main.rs"], "meta": { "tool": "nuclear", "name": "" },
-      })
-    // dragonfly: sections; the commands of a project each have a row, the tables (make, gen, packages) one per section
-    text = ctx.run(["dragonfly", "--help"]) ?? ""
-    if text.length > 0
-      src = ["nuclear-synapsis-framework/cli/src/main.rs"]
-      byCommand: <string, string[][]> = {}
+      // the framework's commands: those of a project each join the command of their name, the tables (make, gen,
+      // packages) are one row each
       sections: <string, string[][]> = {}
-      for entry in ExtractTools.entries(text)
+      for entry in ExtractTools.entries(after(framework, "\n"))
         heading = entry.heading
         lines = entry.lines
         if heading.startsWith("project") or heading.startsWith("backend") or heading.startsWith("setup")
-          ExtractTools.push(byCommand, ExtractTools.word(lines[0]), lines)
-        else if "dragonfly make" in heading
+          ExtractTools.push(by, ExtractTools.word(lines[0]), lines)
+        else if "nuclear make" in heading
           if not ("make" in sections)
             sections["make"] = [[heading]]
           sections["make"]!.add(lines)
-        else if "dragonfly gen" in heading
+        else if "nuclear gen" in heading
           if not ("gen" in sections)
             sections["gen"] = [[heading]]
           sections["gen"]!.add(lines)
           // every generator the help lists has its row (a platform's `generator:` rows link to it)
-          rows.add(ExtractTools.toolRow("dragonfly", "gen ${ExtractTools.word(lines[0])}", [lines], src))
+          rows.add(ExtractTools.toolRow("nuclear", "gen ${ExtractTools.word(lines[0])}", [lines], src))
         else if heading.startsWith("packages")
           if not ("packages" in sections)
             sections["packages"] = []
           packages: string[][] = sections["packages"]!
           packages.add([heading] in packages ? [] : [heading])
           packages.add(lines)
-        else if heading.startsWith("options")
-          if not ("options" in sections)
-            sections["options"] = [[heading]]
-          sections["options"]!.add(lines)
-      for name, found in byCommand
-        rows.add(ExtractTools.toolRow("dragonfly", name, found, src))
       for name, found in sections
+        ExtractTools.push(by, name, found.filter((e) => e.length > 0).flatten())
+      for name, found in by
         if name != "options"
-          rows.add(ExtractTools.toolRow("dragonfly", name, found.filter((e) => e.length > 0), src))
-      commands = [...byCommand.keys, ...sections.keys].filter((n) => n != "options").unique().sorted()
-      shown: string[][] = sections["options"] ?? []
+          rows.add(ExtractTools.toolRow("nuclear", name, found, src))
+      topics = "documentation:${rest.split("\ndialects:")[0]}"
+      options: string[][] = by["options"] ?? []
       rows.add({
-        "id": "tool:dragonfly", "type": "cli", "title": "`dragonfly` — the command line of Dragonfly projects",
-        "summary": "Creates, generates, builds, runs, tests and repairs a Dragonfly project of any platform. Commands: ${clip(commands.join(", "), 280)}.",
-        "body": "```text\n${linesOf(text)[0]}\n\n${shown.flatten().join("\n")}\n```\n\nEvery command has its own row (`dragonfly new`, `dragonfly gen resource`...).",
-        "keys": ["dragonfly cli", "dragonfly command"], "sources": src, "meta": { "tool": "dragonfly", "name": "" },
+        "id": "tool:nuclear", "type": "cli", "title": "`nuclear` — the command line of NuclearLang",
+        "summary": "${clip(linesOf(text)[0], 300)} Commands: ${by.keys.filter((n) => n != "options").sorted().join(", ")}.",
+        "body": "```text\n${options.flatten().join("\n")}\n```\n\nEvery command has its own row (`nuclear build`, `nuclear new`, `nuclear gen resource`...). The documentation it prints:\n\n```text\n${topics.trim()}\n```",
+        "keys": ["nuclear cli", "nuclear command"], "sources": src, "meta": { "tool": "nuclear", "name": "" },
       })
-    // nuclear-loop
-    text = ctx.run(["nuclear-loop", "help"]) ?? ""
+    // nuclear-builder
+    text = ctx.run(["nuclear-builder", "help"]) ?? ""
     if text.length > 0
-      src = ["extensions/vscode/src/loopCli.ts"]
-      command = Regex(r"^\s*nuclear-loop (\w+)")
+      src = ["extensions/tools/nuclear-builder/src/cli.ts"]
+      command = Regex(r"^\s*nuclear-builder (\w+)")
       for entry in ExtractTools.entries(text)
         m = command.find(entry.lines[0])
         if m != null
-          rows.add(ExtractTools.toolRow("nuclear-loop", m![1] ?? "", [entry.lines], src))
+          rows.add(ExtractTools.toolRow("nuclear-builder", m![1] ?? "", [entry.lines], src))
       rows.add({
-        "id": "tool:nuclear-loop", "type": "cli", "title": "`nuclear-loop` — the Nuclear Loop without the editor",
+        "id": "tool:nuclear-builder", "type": "cli", "title": "`nuclear-builder` — the Nuclear Builder without the editor",
         "summary": "Runs a spec through the pipeline (generate, plan, tests first, code, verification, security, artifacts, deploy), retries a run from any of its steps or from scratch, and exports the CI file.",
-        "body": "```text\n${text}\n```", "keys": ["nuclear-loop", "loop cli"], "sources": src, "meta": { "tool": "nuclear-loop", "name": "" },
+        "body": "```text\n${text}\n```", "keys": ["nuclear-builder", "loop cli"], "sources": src, "meta": { "tool": "nuclear-builder", "name": "" },
       })
     // nuclear-graph: argparse prints its commands at 4 spaces
     text = ctx.help()
@@ -182,14 +167,14 @@ ExtractTools
       })
     rows
 
-  // ---- the MCP server, the HTTP routes, the Loop's stages, the local agents ----
+  // ---- the MCP server, the HTTP routes, the Builder's stages, the local agents ----
 
   static mcp(ctx: Context) <string, any>[]
     served = ctx.mcp()
     instructions: string = textAt(served, "instructions")
     tools: <string, any>[] = listAt(served, "tools")
-    src = ["nuclear-graph-storage/mcp_server.nuc"]
-    source = ctx.read("nuclear-graph-storage/mcp_server.nuc")
+    src = ["tools/mcp/server.nuc"]
+    source = ctx.read("tools/mcp/server.nuc")
     rows: <string, any>[] = []
     for tool in tools
       name: string = textAt(tool, "name")
@@ -213,13 +198,13 @@ ExtractTools
     if tools.length > 0
       rows.add({
         "id": "mcp:server", "type": "mcp", "title": "The Nuclear MCP server: its tools and how a client must work with them",
-        "summary": "`nuclear-graph mcp` speaks the Model Context Protocol over stdio and gives an AI client ${tools.length} tools: the Smart Graph, the compiler, the dragonfly commands, the generators, the internet and the local developer.",
+        "summary": "`nuclear-graph mcp` speaks the Model Context Protocol over stdio and gives an AI client ${tools.length} tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
         "body": "The instructions every client receives:\n\n${instructions.trim()}\n\nIts tools: ${ticked(tools.map((t) => textAt(t, "name")))}.",
         "keys": ["mcp", "mcp server", "nuclear mcp", "model context protocol"], "sources": src, "meta": { "tool": "mcp", "name": "server" },
       })
     rows
 
-  // The command line a tool of the MCP server runs, read from its own source ("" when it runs none): `dragonfly gen
+  // The command line a tool of the MCP server runs, read from its own source ("" when it runs none): `nuclear gen
   // resource` for `generate_resource`, `nuclear check` for `nuclear_check`.
   static runs(source: string, tool: string) string
     words = tool.split("_")
@@ -227,10 +212,10 @@ ExtractTools
     body = captured("(?s)\n  ${method}\\(.*?\n((?:    [^\n]*\n)+)", source)
     made = Regex(r'\["(gen|make)", "(\w+)"').find(body)
     if made != null
-      return "dragonfly ${made![1]} ${made![2]}"
-    loop = Regex(r'\["nuclear-loop", "(\w+)"').find(body)
+      return "nuclear ${made![1]} ${made![2]}"
+    loop = Regex(r'\["nuclear-builder", "(\w+)"').find(body)
     if loop != null
-      return "nuclear-loop ${loop![1]}"
+      return "nuclear-builder ${loop![1]}"
     defs = Regex(r'\["nuclear", "(\w+)", "(\w+)"').find(body)
     if defs != null
       return "nuclear ${defs![1]} ${defs![2]}"
@@ -238,7 +223,7 @@ ExtractTools
     if asked == null
       return ""
     called = asked![1] ?? ""
-    called == "dragonfly" ? "dragonfly" : "nuclear ${called == "checkProject" ? "check" : (called == "brief" ? "spec --brief" : called)}"
+    called == "project" ? "nuclear" : "nuclear ${called == "checkProject" ? "check" : (called == "brief" ? "spec --brief" : called)}"
 
   static http(ctx: Context) <string, any>[]
     rows: <string, any>[] = []
@@ -265,7 +250,7 @@ ExtractTools
       rows.add({
         "id": "http:developer.${slug(path)}", "type": "http", "title": "`${route}` — the Nuclear Developer's HTTP API",
         "summary": "Runs the local ${agent.length > 0 ? agent : "agent"} on one request: `${method}`. The Developer listens on `127.0.0.1:7879`.",
-        "body": "`${route}` → `${method}`.\n\nEach request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `dragonfly run` in its folder).",
+        "body": "`${route}` → `${method}`.\n\nEach request runs on a thread of its own, so nothing of one request reaches the next. Start it: `nuclear-developer` (or `nuclear run` in its folder).",
         "keys": [route.lower(), "/${prefix}/${path}"], "links": agent.length > 0 ? [{ "rel": "runs", "to": "agent:${agent}" }] : [],
         "sources": ["nuclear-agents/nuclear_developer/components/developer/api/developer_controller.nuc"], "meta": { "tool": "developer", "name": route },
         "data": { "service": "developer", "verb": (m[1] ?? "").upper(), "path": "/${prefix}/${path}", "scope": "", "agent": agent },
@@ -273,7 +258,7 @@ ExtractTools
     rows
 
   static stages(ctx: Context) <string, any>[]
-    found = Regex(r"\{ id: '(\w+)', title: '([^']*)', about: '((?:[^'\\]|\\.)*)', actors: \[([^\]]*)\] \}").findAll(ctx.read("extensions/vscode/src/loopEngine.ts"))
+    found = Regex(r"\{ id: '(\w+)', title: '([^']*)', about: '((?:[^'\\]|\\.)*)', actors: \[([^\]]*)\] \}").findAll(ctx.read("extensions/tools/nuclear-builder/src/engine.ts"))
     rows: <string, any>[] = []
     for at in 0..found.length
       m = found[at]
@@ -284,10 +269,10 @@ ExtractTools
       next = at + 1 < found.length ? found[at + 1][1] ?? "" : ""
       then = " The stage after it: `${next}`."
       rows.add({
-        "id": "stage:${sid}", "type": "stage", "title": "Stage ${at + 1} of the Loop: ${title}", "summary": firstSentence(about, 400),
+        "id": "stage:${sid}", "type": "stage", "title": "Stage ${at + 1} of the Builder: ${title}", "summary": firstSentence(about, 400),
         "body": "${about}\n\nWho takes part: ${who}.${next.length > 0 ? then : " It is the last stage."}",
         "keys": ["${title.lower()} stage", "stage ${sid}"], "links": next.length > 0 ? [{ "rel": "next", "to": "stage:${next}" }] : [],
-        "sources": ["extensions/vscode/src/loopEngine.ts"], "meta": { "tool": "nuclear-loop", "name": sid },
+        "sources": ["extensions/tools/nuclear-builder/src/engine.ts"], "meta": { "tool": "nuclear-builder", "name": sid },
         "data": { "order": at + 1, "stage": sid, "title": title, "actors": (m[4] ?? "").split(",").map((a) => stripChars(a, " '")), "next": next },
       })
     rows
@@ -344,7 +329,7 @@ ExtractTools
     src = ["extensions/vscode/package.json"]
     rows: <string, any>[] = [{
       "id": "editor:vscode.commands", "type": "editor", "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-      "summary": "The ${lines.length} commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, the HTTP tool, the Loop, the agent's chat and the settings.",
+      "summary": "The ${lines.length} commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, the Connector tool, the Builder, the agent's chat and the settings.",
       "body": lines.join("\n"), "keys": ["vscode commands", "keyboard shortcuts", "shortcuts"], "sources": src, "meta": { "tool": "vscode", "name": "commands" },
       "data": { "commands": listed },
     }]

@@ -11,7 +11,7 @@
    "summary": "(`nuclear-synapsis-framework/eval/agent-eval/`) averaged USD 0.5 per easy task; these tasks are apps from scratch, so budget USD 2–6 per run and 4 tasks × 2 arms × `--repeats` runs.",
    "body": [
     "- The repository built and installed: `cargo build` (the bench uses `target/debug/nuclear`) and `installer/install.sh",
-    "  --no-vscode --no-zed` (the agents use the installed `nuclear` and `dragonfly`).",
+    "  --no-vscode --no-zed` (the agents use the installed `nuclear`).",
     "- `nuclearlang/tools/node` installed (`npm install` there; the bench compiles TypeScript with its `tsc`).",
     "- Dart: `dart` in the PATH or `FLUTTER_ROOT` (default `~/develop/flutter`); Flutter itself for the mobile tasks.",
     "- Python 3.12+ with `matplotlib` (the charts; `python3 -c \"import matplotlib\"`).",
@@ -19,7 +19,7 @@
     "  (`nuclear-synapsis-framework/eval/agent-eval/`) averaged USD 0.5 per easy task; these tasks are apps from scratch, so budget **USD 2–6 per",
     "  run** and 4 tasks × 2 arms × `--repeats` runs. Three repeats ≈ USD 100.",
     "- For the `mobile-feature` task: the external app `~/Documents/projects/nuc/flutter/rick_and_morty` built once",
-    "  (`dragonfly build` there) so its `build/app` exists for the native arm."
+    "  (`nuclear build` there) so its `build/app` exists for the native arm."
    ],
    "agents": false,
    "sources": [
@@ -72,7 +72,7 @@
     "```",
     "",
     "Each task of `tasks.toml` has one functional `spec` and two arms. The `nuclear` arm gets the Nuclear framing, the",
-    "installed skill and `nuclear agent init` / `dragonfly agent init` (what a user of Nuclear has, ADR-cli-0002); the",
+    "installed skill and `nuclear agent init` / `nuclear agent init` (what a user of Nuclear has, ADR-cli-0002); the",
     "`native` arm gets the same spec with the target's framing and no Nuclear. Both run in a fresh folder with the same",
     "model, tools and permission mode; both are judged by the target's own tools (`verify` commands: analyzers and the",
     "tests the agent itself had to write and pass). Everything the agent printed is kept next to the folder",
@@ -220,10 +220,10 @@
     "- Four tasks and two programs are a start, not a study: add tasks that look like the user's real work, and repeat",
     "  (`--repeats 3` or more) before trusting a ratio.",
     "- Both arms use the same model and the same tools; the native arm is not handicapped (it gets the ecosystem's",
-    "  standard libraries in its framing). The comparison is Nuclear + Dragonfly against the raw technology, which is",
+    "  standard libraries in its framing). The comparison is Nuclear + Synapsis against the raw technology, which is",
     "  the choice a team makes.",
     "- The bench measures CPU-bound code; an app's real cost is mostly its framework (http, rendering), which the",
-    "  dragonfly runtimes carry and the bench does not measure.",
+    "  synapsis runtimes carry and the bench does not measure.",
     "- The tasks were written by the people building Nuclear. A fair study adds tasks written by someone else."
    ],
    "agents": false,

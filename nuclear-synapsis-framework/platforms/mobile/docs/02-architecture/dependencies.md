@@ -2,7 +2,7 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [02-architecture/overview.md, 07-reference/dragonfly.md, 06-runbooks/runtime-release.md]
+related: [02-architecture/overview.md, 07-reference/synapsis.md, 06-runbooks/runtime-release.md]
 ---
 # Dependencies
 
@@ -11,20 +11,20 @@ related: [02-architecture/overview.md, 07-reference/dragonfly.md, 06-runbooks/ru
 | Consumer | Depends on | Notes |
 |---|---|---|
 | The dialect `flutter` (`nuclearlang/dialects/dart/frameworks/flutter/`) | `platform.toml` | names the platform; refused by the loader when it leaves the contract |
-| A generated app (`build/app`) | `packages/dragonfly` | the dialect's generated code calls its API |
-| An app with the `genkit` plugin | `packages/dragonfly_genkit` | added to the app only when the plugin is enabled |
-| `packages/dragonfly_genkit` | `packages/dragonfly` | a path dependency (`../dragonfly`) |
-| The type definitions `nuclearlang/dialects/dart/defs/{dragonfly,dragonfly_genkit}/0.1.0/` | the public API of the two packages | written by `nuclearlang/tools/defs/generate.sh`; used by the transpiler and the editor |
+| A generated app (`build/app`) | `packages/synapsis` | the dialect's generated code calls its API |
+| An app with the `genkit` plugin | `packages/synapsis_genkit` | added to the app only when the plugin is enabled |
+| `packages/synapsis_genkit` | `packages/synapsis` | a path dependency (`../synapsis`) |
+| The type definitions `nuclearlang/dialects/dart/defs/{synapsis,synapsis_genkit}/0.1.0/` | the public API of the two packages | written by `nuclearlang/tools/defs/generate.sh`; used by the transpiler and the editor |
 | `checks/analyze-flutter.sh` | `nuclearlang/tools/defs/flutter_project` (its host project), the `nuclear` binary | |
-| `checks/spec-check-dragonfly.py` | `nuclearlang/dialects/dart/docs/07-reference/flutter.md`, `examples/` | |
+| `checks/spec-check-synapsis.py` | `nuclearlang/dialects/dart/docs/07-reference/flutter.md`, `examples/` | |
 | The compiler's tests (`nuclear-transpile`, `nuclear-lsp`) | `examples/` | goldens and project tests |
 | `examples/examples-flutter-dialect/tasks_app` | the backend example `platforms/backend/examples/examples-backend/tasks_api` | its contract (ADR-synapsis-0006) |
-| The `dragonfly` CLI | `platform.toml` (`[layout]`, the generators), the debug text layer of the runtime | the terminal device reads `__dragonflyTextLayer` |
+| The `nuclear` CLI | `platform.toml` (`[layout]`) and, through the code generator, `tools/code_generator/platforms/mobile/generators.toml`, the debug text layer of the runtime | the terminal device reads `__synapsisTextLayer` |
 
-## The `dragonfly` package
+## The `synapsis` package
 
-Versions are `packages/dragonfly/pubspec.yaml`; what each library is used for, class by class, is
-[dragonfly.md §1](../07-reference/dragonfly.md). The package re-exports nothing of them.
+Versions are `packages/synapsis/pubspec.yaml`; what each library is used for, class by class, is
+[synapsis.md §1](../07-reference/synapsis.md). The package re-exports nothing of them.
 
 | Use | Libraries |
 |---|---|
@@ -41,15 +41,15 @@ Versions are `packages/dragonfly/pubspec.yaml`; what each library is used for, c
 
 Environment: Dart SDK `^3.12.0`, Flutter `>=3.44.0`. Lints: `flutter_lints`.
 
-## The `dragonfly_genkit` package
+## The `synapsis_genkit` package
 
-`dragonfly` (path), `genkit ^1.0.1`, `schemantic ^1.0.0`; `publish_to: none`. The provider packages (Firebase AI,
+`synapsis` (path), `genkit ^1.0.1`, `schemantic ^1.0.0`; `publish_to: none`. The provider packages (Firebase AI,
 Google AI, Vertex AI, OpenAI, Anthropic) are added to an app by its plugin, not by this package's pubspec.
 
 ## What an app gets besides the runtime
 
 The dialect adds these to every generated app; a project never lists them in `config.nuc`
-([ADR-mobile-0001](../03-adr/0001-project-manifest-packages-and-assets.md)): `dragonfly`, `flutter_bloc`, `fpdart`,
+([ADR-mobile-0001](../03-adr/0001-project-manifest-packages-and-assets.md)): `synapsis`, `flutter_bloc`, `fpdart`,
 `go_router`, `json_annotation`; to generate code and for tests `build_runner`, `json_serializable`, `mocktail`,
 `bloc_test`, `integration_test`; `flutter_native_splash` with a `@splash`. The full list of an app is its
 `build/app/pubspec.yaml`. The list itself is the dialect's

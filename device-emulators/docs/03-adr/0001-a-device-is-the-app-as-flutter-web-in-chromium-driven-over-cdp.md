@@ -6,7 +6,7 @@ deciders: Julian Molina
 # ADR-0001: A device is the app as Flutter web in Chromium, driven over CDP; one backend, a panel, a window and a terminal as fronts
 
 ## Context and problem
-Android Studio shows a running device inside the IDE (*Running Devices*). A Dragonfly app in VS Code, or built from
+Android Studio shows a running device inside the IDE (*Running Devices*). A Synapsis app in VS Code, or built from
 a terminal, had no device of its own to run on: it needed an emulator, a phone or a plain browser tab beside the
 tool. The question was what a device is, so that the editor and the command line show the same one.
 
@@ -17,17 +17,17 @@ a phone or a tablet; the frames come back as a screencast and input goes in as C
 everywhere, the one of the browsers' device toolbar (iPhone, Pixel, iPad, Galaxy, laptop, responsive).
 
 **In the editor** the app runs inside VS Code, like Android Studio's *Running Devices*: a Flutter *custom device*
-(`dragonfly`, "Dragonfly device") shipped with the extension appears in the device picker; launching on it runs
+(`synapsis`, "Synapsis device") shipped with the extension appears in the device picker; launching on it runs
 the app on Flutter's `chrome` device with a headless Chromium, and the panel shows its screen and sends input over
 CDP, with breakpoints, hot reload and hot restart. A device bar like the browsers' (the devices, zoom, rotation)
 sits over Chrome's device mode.
 
-**From the command line** `dragonfly device [<device>]` runs the app in its own window, like an emulator, and
-`dragonfly terminal-device` shows it inside the terminal. Both share one backend (Flutter web in Chromium, the
+**From the command line** `nuclear device [<device>]` runs the app in its own window, like an emulator, and
+`nuclear terminal-device` shows it inside the terminal. Both share one backend (Flutter web in Chromium, the
 emulation over CDP, input, hot reload); only the front changes. Several at once are numbered. The window takes the
 device's ratio and at most 85 % of the screen's height; on a tiling window manager (Hyprland, Sway, i3) it floats.
 The terminal draws with the best it supports: images (kitty, sixel), or colored blocks with the app's texts
-written as letters in their exact place (given by the `dragonfly` package in debug).
+written as letters in their exact place (given by the `synapsis` package in debug).
 
 ## Options considered
 1. Flutter's `web-server` device for the editor's panel: no breakpoints.

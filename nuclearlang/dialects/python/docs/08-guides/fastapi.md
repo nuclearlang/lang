@@ -1,4 +1,4 @@
-# Dragonfly for Python: a backend with FastAPI and LangGraph
+# Synapsis for Python: a backend with FastAPI and LangGraph
 
 The `fastapi` dialect turns Nuclear into a Python 3.12+ backend: **FastAPI** endpoints, **SQLAlchemy 2 async**
 repositories, **pydantic** models, and **LangChain / LangGraph** tools, agents and graphs. The generated code passes
@@ -28,7 +28,7 @@ rick_api/
 `pyproject.toml`). Change `dialect` to `nestjs` and the same project comes out as a NestJS service:
 
 ```nuclear
-dragonfly(platform = "backend", dialect = "fastapi")
+synapsis(platform = "backend", dialect = "fastapi")
 app(name = "rick_api", description = "Characters of the show.", version = "0.1.0")
 plugins(sqlite = true, ollama = true)
 ```
@@ -138,9 +138,9 @@ The same Nuclear builds with the other backend dialect, and `paginate` works the
 the schema with migrations in the project's `migrations/` folder:
 
 ```sh
-dragonfly migrate make "notes on tasks"   # what the entities changed since the last migration
-dragonfly migrate                         # applies the pending ones
-dragonfly migrate down                    # reverts the last one
+nuclear migrate make "notes on tasks"   # what the entities changed since the last migration
+nuclear migrate                         # applies the pending ones
+nuclear migrate down                    # reverts the last one
 ```
 
 They are Alembic migrations (`migrations/versions/*.py`, `alembic_version` in the database), written in batch mode so
@@ -231,13 +231,13 @@ Kafka listeners (`listener` + `@consumer("topic")`, `~publish(topic, data)`) nee
 ## 6. Build, run and test
 
 ```sh
-dragonfly build                    # nuclear build .: writes build/ (the package app/, tests/, pyproject.toml)
-dragonfly install                  # a venv in build/ with the runtime and the app's packages
-dragonfly run                      # uvicorn app.main:app --reload: http://localhost:8000/docs
-dragonfly test                     # pytest: the tests written in Nuclear
+nuclear build                    # nuclear build .: writes build/ (the package app/, tests/, pyproject.toml)
+nuclear install                  # a venv in build/ with the runtime and the app's packages
+nuclear run                      # uvicorn app.main:app --reload: http://localhost:8000/docs
+nuclear test                     # pytest: the tests written in Nuclear
 ```
 
-The same by hand, from `build/`: `python -m venv .venv`, `pip install ~/.local/share/nuclearlang/packages/dragonfly-py`
+The same by hand, from `build/`: `python -m venv .venv`, `pip install ~/.local/share/nuclearlang/packages/synapsis-py`
 (the runtime, until it is on PyPI), `pip install -e ".[test]"`, `uvicorn app.main:app --reload`, `pytest`.
 
 In VS Code: while ▷ Serve runs, saving a `.nuc` rebuilds and uvicorn reloads; ◉ Debug (or F5 with

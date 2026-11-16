@@ -17,7 +17,7 @@ packages bundle every dialect of the tree.
 | Signature help | Parameters of the file's functions and widgets and of external constructors, functions and methods (`Scaffold({key?: Key, appBar?: ...})`, positional ones first); highlights the current argument. |
 | Navigation | Go to definition, find references, highlight uses, rename (it does not allow switching PascalCase ↔ camelCase). |
 | Structure | Outline (modules, kinds, fields, methods) and folding by indentation. |
-| Projects | A file inside a folder with `nuclear.toml` or `main.nuc` (Dragonfly) sees the names of the other files (completion, hover, go to definition), takes the kind of its folder (`domain/models` → `model`) and, saved, the project's diagnostics (N0301/N0302/N0303). What is in `test/` is only seen by `test/`. |
+| Projects | A file inside a folder with `nuclear.toml` or `main.nuc` (Synapsis) sees the names of the other files (completion, hover, go to definition), takes the kind of its folder (`domain/models` → `model`) and, saved, the project's diagnostics (N0301/N0302/N0303). What is in `test/` is only seen by `test/`. |
 | Decorators | Completion after `@` (the dialect's: `@screen`, `@on`, `@test`...) and, inside `@screen(...)`, its arguments (`route = `) and the fields of an object argument (`loggedIn = { forward: `) from `[decorators.args]`, required ones first; hover with the list of arguments. Guide: `nuclear help tutorial` and `dialects/dart/docs/07-reference/flutter.md` §6.9–6.13. |
 | Generated code | The `nuclear/transpile` request: VS Code shows it with **Nuclear: Show Generated Code**. |
 | Code metrics | Complexity (an approximation of the cyclomatic one) on each function, method, module...: see below. |

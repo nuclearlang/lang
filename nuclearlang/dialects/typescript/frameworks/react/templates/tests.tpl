@@ -1,8 +1,8 @@
 {{decorators}}describe('{{name}}', () => {
   beforeEach(async () => {
-    await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
+    await SynapsisTest.start(synapsisConfig(), registerSynapsis);
 {{#decor.mock.items}}
-    DragonflyTest.mock({{.}});
+    SynapsisTest.mock({{.}});
 {{/decor.mock.items}}
   });
 

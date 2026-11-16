@@ -18,7 +18,7 @@ The pending work of the installers, the release and the set-up of the AI service
     (`extensions/vscode/test/setup.test.ts` holds the guide to it).
   - A GPU other than NVIDIA's and Apple silicon is not recognised: the development machine's Radeon 890M runs the
     models and Ollama says "100% GPU", while the set-up says no GPU with memory of its own.
-  - Android Studio has no wizard (`nuclear-loop setup`).
+  - Android Studio has no wizard (`nuclear-builder setup`).
   - The memory figures of the profiles (`ram`, `minRam`) come from the models' loaded size and the development
     machine's behaviour, not from runs on 8 and 32 GB machines.
 
@@ -39,7 +39,7 @@ The pending work of the installers, the release and the set-up of the AI service
   - `installer/install.sh --ai` on a clean machine;
   - a release archive with the graph's `.nuc` sources and the set-up's `nuclear build` step on a machine without
     the working tree;
-  - `nuclear-loop` from a release archive on Windows (`nuclear-loop.cmd`).
+  - `nuclear-builder` from a release archive on Windows (`nuclear-builder.cmd`).
 
 ## To decide with the user
 
@@ -54,3 +54,6 @@ The pending work of the installers, the release and the set-up of the AI service
     `nuclear-agents/nuclear_developer/AGENTS.md` stands until the user changes it).
   - Not run: a round of the evaluation on the CPU alone; `nemotron-3.5-bolt:e4b`; `gemma4:e4b`, `qwen3.5:2b` and
     `4b` as assistant.
+
+## Pending
+

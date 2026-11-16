@@ -1,4 +1,4 @@
-// DragonflyForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
+// SynapsisForm binds its fields to LoginForm by name and validates with LoginFormManager; with a
 // valid form, onSubmit passes the form model to LoginManager (the business logic).
 @screen(route = "/login", providers = [LoginManager, LoginFormManager])
 stateless LoginScreen
@@ -8,7 +8,7 @@ stateless LoginScreen
       body = LoginStateBuilder<LoginManager>(
         initial = () => Padding(
           padding = EdgeInsets.all(24),
-          child = DragonflyForm(
+          child = SynapsisForm(
             manager = LoginFormManager,
             onSubmit = (form) => LoginManager.login(form),
             child = Column(

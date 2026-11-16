@@ -10,9 +10,9 @@ related: [overview.md, search.md, exact-facts.md, ../05-standards/security.md, .
 
 | Caller | How | Scopes |
 |---|---|---|
-| The MCP server (`nuclear-graph mcp`) | `GraphClient("mcp")` over HTTP | read, write |
+| The MCP server (`nuclear-mcp`, [`tools/mcp`](../../../tools/mcp/AGENTS.md)) | `GraphClient("mcp")` over HTTP | read, write |
 | The [Nuclear Developer](../../../nuclear-agents/nuclear_developer/AGENTS.md) | `GraphClient("nuclear-developer")` over HTTP | read, write |
-| The Loop and the settings page of the editor ([`extensions/`](../../../extensions/AGENTS.md)) | `GET /v1/health`: the check of the connections before a run (a run reads the graph through the Developer and the MCP server) | none |
+| The Builder and the settings page of the editor ([`extensions/`](../../../extensions/AGENTS.md)) | `GET /v1/health`: the check of the connections before a run (a run reads the graph through the Developer and the MCP server) | none |
 | The `nuclear-graph` command | HTTP with the owner token | admin |
 
 ## HTTP API
@@ -26,7 +26,7 @@ On `127.0.0.1` only. All routes need `Authorization: Bearer <token>` except `GET
 | `POST /v1/search` | read | `{query, collection \| shelves, k = 5, platform, agents, where, expand}` → `{items: [{id, shelf, text, meta, distance, score, via, card, related}]}`; without a collection, every shelf of the base; `where` filters by metadata (`{"type": "kind"}`, `{"kinds": "usecase"}`) |
 | `GET /v1/cards/{id}` | read | one card by its id, with the title and summary of the rows it links to |
 | `POST /v1/answer` | read | `{question, platform, history, agents, k}` → `{exact, needs, cards, facts, knowledge}`: what a question needs before a model answers it. `exact`: the exact queries it is, each with its parameters and its rows; `needs`: the ones it is close to that lack a name; `cards`: the shelves' answer by meaning; `facts` and `knowledge`: both as the text a prompt gets. No model is asked |
-| `POST /v1/strategy` | read | `{text, platform, existing, new, runnable, only}` → the strategies that fit a request, best first (at most three): `{id, title, summary, score, why, data, text}`. `existing` and `new`: the declarations the request names that a project has, and the ones it has not; `runnable`: for a run of the Loop; `only`: the strategy the request itself names |
+| `POST /v1/strategy` | read | `{text, platform, existing, new, runnable, only}` → the strategies that fit a request, best first (at most three): `{id, title, summary, score, why, data, text}`. `existing` and `new`: the declarations the request names that a project has, and the ones it has not; `runnable`: for a run of the Builder; `only`: the strategy the request itself names |
 | `POST /v1/applies` | read | `{text, platform}` → the capabilities rows whose trigger words a spec writes: what the platform cannot do yet, limits, parts never run for real (exact, never by meaning) |
 | `GET /v1/kinds/{platform}` | read | every way a kind of the platform is written (`use case`, `application component`) and the kind it means |
 | `GET /v1/prompts/{use_case}` | read | the prompt document |
@@ -66,8 +66,8 @@ files.renamed("Book", "Title")                      # a rename by a tool: every 
 
 ## The MCP server
 
-`nuclear-graph mcp` speaks the Model Context Protocol over stdio. Its code is `mcp_server.nuc` of this folder; its
-tools, its instructions and how a client adds it are documented by the project
+`nuclear-mcp` speaks the Model Context Protocol over stdio (`nuclear-graph mcp` runs it). It is not in this folder:
+it is a Nuclear project of its own that imports this package (its `defs/python/nuclear_graph/`); its tools, its instructions and how a client adds it are documented by the project
 [`tools/mcp`](../../../tools/mcp/AGENTS.md). What its `graph_*` tools call here:
 
 | MCP tool | Client call | Route |
@@ -87,7 +87,7 @@ tools, its instructions and how a client adds it are documented by the project
 |---|---|---|
 | Ollama | the embeddings (`embeddinggemma`) | `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED` |
 | The desktop keyring | the documents' key, the tokens | — |
-| `nuclear`, `dragonfly`, `nuclear-loop` | their help (rows); `Toolchain` runs the checks | on the `PATH` |
+| `nuclear`, `nuclear-builder`, `nuclear-mcp` | their help and `nuclear-mcp tools` (rows); `Toolchain` runs `nuclear` (`Toolchain.project(root, args)` runs `nuclear <args>` in a project) | on the `PATH` |
 | The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |
 
 Every setting: [the runbook](../06-runbooks/install-and-serve.md#settings).

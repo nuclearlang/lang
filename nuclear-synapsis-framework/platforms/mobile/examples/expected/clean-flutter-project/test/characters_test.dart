@@ -7,13 +7,13 @@ import 'package:clean_flutter_project/components/characters/domain/usecases/get_
 import 'package:clean_flutter_project/components/characters/presentation/list/character_list_screen.dart';
 import 'package:clean_flutter_project/components/characters/presentation/list/managers/characters_manager.dart';
 import 'package:clean_flutter_project/components/characters/presentation/list/state_models/characters_state.dart';
-import 'package:clean_flutter_project/dragonfly.g.dart';
 import 'package:clean_flutter_project/shared/models/page.dart';
-import 'package:dragonfly/dragonfly.dart';
-import 'package:dragonfly/testing.dart';
+import 'package:clean_flutter_project/synapsis.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:synapsis/synapsis.dart';
+import 'package:synapsis/testing.dart';
 
 /// Tests of the characters component: the repository is a mock (mocktail); everything else is the real code.
 Character character(String name, String status) {
@@ -45,8 +45,8 @@ class MockCharacterRepository extends Mock implements CharacterRepository {}
 void main() {
   group('CharactersTest', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly);
-      DragonflyTest.replace<CharacterRepository>(MockCharacterRepository());
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis);
+      SynapsisTest.replace<CharacterRepository>(MockCharacterRepository());
     });
 
     setUp(() async {

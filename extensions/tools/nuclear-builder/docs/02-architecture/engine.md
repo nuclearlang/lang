@@ -4,15 +4,15 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [overview.md, ../00-context/domain.md, ../01-product/roadmap.md]
 ---
-# The engine (`loopEngine.ts`, `loopSafety.ts`)
+# The engine (`engine.ts`, `safety.ts`)
 
-Neither file imports `vscode`: the page, `nuclear-loop`, the chat's `/task` and `test/loop.test.ts` (node:test)
+Neither file imports `vscode`: the page, `nuclear-builder`, the chat's `/task` and `test/engine.test.ts` (node:test)
 drive the same code.
 
 ## A run through its stages
 
-`LoopEngine.start()` runs spec → generate → plan → tests first → code → verify → security → artifacts → deploy, and
-saves `.nuclear/loop/runs/<id>.json` on every step. Each `Step` has an `Actor`.
+`BuilderEngine.start()` runs spec → generate → plan → tests first → code → verify → security → artifacts → deploy, and
+saves `.nuclear/builder/runs/<id>.json` on every step. Each `Step` has an `Actor`.
 
 - **Spec.** Writes `specs/<id>/spec.md`. `criteriaOf` reads the list under "Acceptance criteria".
   `suggestContext` ranks the project's and the user's `.md` files by the words of the spec: agent instructions
@@ -20,7 +20,7 @@ saves `.nuclear/loop/runs/<id>.json` on every step. Each `Step` has an `Actor`.
   `/developer/analyze` and keeps the answer in `Run.analysis` (the strategy of the request, ADR-developer-0001).
   `Spec.strategy` is the spec's `- Strategy:` line.
 - **Generate** (ADR-codegen-0001). `specResources` (the spec's `## Resources`, or its `GET <url>` lines) go through
-  `dragonfly gen resource ... --from-spec`; the analysis's `generate` calls join them in `generateStage`, through
+  `nuclear gen resource ... --from-spec`; the analysis's `generate` calls join them in `generateStage`, through
   `gen()`. The changed files are found by `nucFiles` snapshots and put in the write ledger (`Step.files`).
 - **Plan.** The planner gets `generatedNote()`, and `withoutGenerated` drops a piece that repeats a generated file.
   The analysis's `pieces` are the plan when the tools gave them; a piece with `code` is written as it is.
@@ -28,7 +28,7 @@ saves `.nuclear/loop/runs/<id>.json` on every step. Each `Step` has an `Actor`.
 - **Tests first.** The tester; skipped when the generators wrote every file.
 - **Code.** Each piece by the coder (Claude takes the ones it leaves with errors and keeps the fix as a graph
   example), then `commands.check`. A project error gets one local repair per file (`repairProject`), then Claude.
-  `wire()` runs `dragonfly gen usecase` for each use case the coder wrote.
+  `wire()` runs `nuclear gen usecase` for each use case the coder wrote.
 - **Verify.** `verifyStage` repairs the file a failure names for `mode: fix`, never a test. After a passing
   verification `accept()` asks `/developer/accept` (`Run.acceptance`, never a gate).
 - **Security, artifacts, deploy.** The security reviewer on each new file; the project's commands.
@@ -43,7 +43,7 @@ why).
 | `start(from?, step?)` | a run again: from its first failed stage, from a stage (`from`), or from one step by its id (`step`: it and every step after it; the ones before it are kept) |
 | `restart()` | from scratch |
 | `guard()` | refuses a run that is running |
-| `undo()` | puts back what the steps left out wrote (`loopSafety.rollback`); a file whose `digest` is not the one the write left is kept and named |
+| `undo()` | puts back what the steps left out wrote (`builderSafety.rollback`); a file whose `digest` is not the one the write left is kept and named |
 | `forget()` | moves the steps left out to `run.previous`, with the reason |
 | `upgradeRun()` | gives a run of an older `ENGINE` (2 today) today's stages and makes its next retry a restart |
 | `restoreWritten` | reads the written files back |
@@ -56,7 +56,7 @@ why).
 - A failed command's line in the log is the compiler's first error and where, not the last line of its output; a
   full disk names the folder that is full.
 
-## What keeps a run safe (`loopSafety.ts`, ADR-platform-0003)
+## What keeps a run safe (`safety.ts`, ADR-platform-0003)
 
 - `atomicWrite`: the run's state is never half written.
 - `trace` / `readTrace`: every event, as JSON lines, append-only.
@@ -84,5 +84,5 @@ markdown and `parseSpecMarkdown` reads it back.
 
 ## CI
 
-Commands are data: `.nuclear/loop.json` (`defaultConfig(platform)`). `ciFile()` exports the deterministic stages to
-GitHub Actions, GitLab CI or Bitbucket Pipelines; `ciCommands` groups them the same way for `nuclear-loop ci`.
+Commands are data: `.nuclear/builder.json` (`defaultConfig(platform)`). `ciFile()` exports the deterministic stages to
+GitHub Actions, GitLab CI or Bitbucket Pipelines; `ciCommands` groups them the same way for `nuclear-builder ci`.

@@ -54,7 +54,7 @@ knowledge folder: `nuclear-graph-storage/data` of the tree). `ingest` needs the 
 
 ## Before building
 
-- The help of `nuclear`, `dragonfly` and `nuclear-loop` is read from the installed binaries: after changing a
+- The help of `nuclear` and `nuclear-builder`, and the tools of `nuclear-mcp`, are read from the installed commands: after changing a
   command, install it (`installer/install.sh`) first.
 - Run `ingest` for the knowledge folder of this tree. An ingest removes only the sources of its own roots, so one
   run for another folder does not empty the graph.

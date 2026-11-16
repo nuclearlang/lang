@@ -7,7 +7,7 @@ void main() {
 
   group('{{name}}', () {
 {{#decor.mock.items}}
-    setUp(() => DragonflyTest.replace<{{.}}>(Mock{{.}}()));
+    setUp(() => SynapsisTest.replace<{{.}}>(Mock{{.}}()));
 {{/decor.mock.items}}
 
     {{members}}

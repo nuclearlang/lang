@@ -28,7 +28,7 @@ stopWords() string[]
 //
 // 1. The query is embedded once and each shelf answers its closest rows (a row is found by its own text or by one of
 //    the questions it answers).
-// 2. The exact names the query writes (`N0114`, `dragonfly gen`, `usecase`, `mcp`) are looked up in the rows' `keys`:
+// 2. The exact names the query writes (`N0114`, `nuclear gen`, `usecase`, `mcp`) are looked up in the rows' `keys`:
 //    a row that carries one is brought in and moves up, more for a longer name.
 // 3. The rows are ranked together, each card once; a search may follow the links of the best ones.
 Retrieve
@@ -163,7 +163,7 @@ Retrieve
   // why, data, text}. A strategy row says how its kind of request is recognised: `data.signals` (regular expressions
   // over the request), `meta.triggers` (its words), `data.target` (`existing`: the request names a declaration the
   // project has; `new`: one it has not; the caller gives both lists) and, by meaning, its text and the questions it
-  // answers. `runnable`: the caller is a run of the Loop, which a strategy without stages (a question, a command, a
+  // answers. `runnable`: the caller is a run of the Builder, which a strategy without stages (a question, a command, a
   // limit) would stop: such a strategy comes first only when an exact sign chose it. `only`: the strategy the request
   // itself names (`usecase` or `strategy:usecase`), which then comes first. Nothing here asks a model.
   static strategy(store: Store, text: string, platform: string = "", existing: string[]? = null, fresh: string[]? = null, runnable: boolean = false, only: string = "") <string, any>[]
@@ -230,7 +230,7 @@ Retrieve
       out.add({ "id": rid, "title": card["title"] ?? rid, "summary": card["summary"] ?? "", "score": (scores[rid]! * 100).round() / 100, "why": why[rid]!.join("; "), "data": card["data"] ?? {}, "text": card.length > 0 ? Assets.render(card) : "" })
     out
 
-  // Whether a strategy's card names stages of the Loop.
+  // Whether a strategy's card names stages of the Builder.
   static staged(card: <string, any>) boolean
     data: <string, any> = card["data"] ?? {}
     stages: any[] = data["stages"] ?? []

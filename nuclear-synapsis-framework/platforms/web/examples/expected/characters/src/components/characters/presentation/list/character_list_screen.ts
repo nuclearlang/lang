@@ -1,7 +1,7 @@
 import { CharacterTile } from '../widgets/character_tile';
 import { CharactersManager } from './managers/characters_manager';
 import { CharactersStateBuilder } from './state_models/characters_state';
-import { Element, Providers, StatelessView, button, createElement, h1, main, p, statelessOf, ul } from 'dragonfly-web';
+import { Element, Providers, StatelessView, button, createElement, h1, main, p, statelessOf, ul } from 'synapsis-web';
 
 /** The list of characters: its state comes from CharactersManager, provided to this screen. */
 /** @screen: builds CharactersManager once for this screen and provides them to its views. */

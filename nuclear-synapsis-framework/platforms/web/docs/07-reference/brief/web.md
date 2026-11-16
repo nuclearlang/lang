@@ -1,15 +1,15 @@
-# Platform `web` brief: Dragonfly web apps
+# Platform `web` brief: Synapsis web apps
 
-A Dragonfly web app has only `.nuc` files and `public/`; the app is generated in `build/app` (never edit it).
+A Synapsis web app has only `.nuc` files and `public/`; the app is generated in `build/app` (never edit it).
 You write the business logic; the framework writes the rest (components, DI, routing, JSON, states, http). The
 platform's words are the mobile platform's (`repository`, `usecase`, `appcomponent`, `statemanager`, `@screen`); the
 views are HTML functions. Full rules: `nuclear help web`; where each file goes: `nuclear help layout --platform web`.
 
 ## Work cycle
 
-1. `dragonfly new <name> -p web` makes the project; put each file in its folder (the folder gives the kind).
+1. `nuclear new <name> -p web` makes the project; put each file in its folder (the folder gives the kind).
 2. Write following this sheet. A kind or decorator: `nuclear help <word> --platform web`; never guess one.
-3. `dragonfly check` (or `nuclear check . --json`) until no errors, then `dragonfly test`.
+3. `nuclear check` (or `nuclear check . --json`) until no errors, then `nuclear test`.
 
 ## Layout and kinds (the folder gives the kind of a declaration without a header word)
 

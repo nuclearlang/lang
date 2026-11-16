@@ -1,7 +1,7 @@
 import { CharacterRepository } from '../../data/character_repository';
 import { Character } from '../models/character';
 import { CharacterError } from '../models/character_error';
-import { Result } from 'dragonfly-web';
+import { Result } from 'synapsis-web';
 
 export class GetOneCharacterUseCase {
   constructor(private readonly repository: CharacterRepository) {}

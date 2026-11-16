@@ -1,11 +1,11 @@
 ---
 name: nuclear
-description: Write, fix or review NuclearLang code (.nuc files, nuclear.toml, Dragonfly projects with config.nuc: mobile apps with the flutter dialect, backends with the fastapi (Python) or nestjs (TypeScript) dialect). Use it whenever a task touches a .nuc file or the nuclear / dragonfly command line tools.
+description: Write, fix or review NuclearLang code (.nuc files, nuclear.toml, Synapsis projects with config.nuc: mobile apps with the flutter dialect, backends with the fastapi (Python) or nestjs (TypeScript) dialect). Use it whenever a task touches a .nuc file or the `nuclear` command line tool.
 ---
 
 # NuclearLang
 
-NuclearLang (`.nuc`) is a minimal language transpiled to TypeScript, Dart or Python by declarative dialects. Dragonfly
+NuclearLang (`.nuc`) is a minimal language transpiled to TypeScript, Dart or Python by declarative dialects. Synapsis
 is its framework: three platforms written in Nuclear — `mobile` (dialect `flutter`: the Flutter app is generated in
 `build/app`), `backend` (dialects `fastapi` = Python/FastAPI and `nestjs` = TypeScript, built to `build/` by
 `nuclear build .`) and `web` (dialect `react` = TypeScript/React). The Nuclear of a platform is the same for every dialect of it; only
@@ -15,7 +15,7 @@ syntax is NOT TypeScript, Dart nor Python: read the sheet before writing.
 ## 1. Load the sheet (once per task, ~3k tokens)
 
 ```sh
-nuclear spec --brief --dialect flutter     # Dragonfly app (config.nuc + main.nuc, no nuclear.toml)
+nuclear spec --brief --dialect flutter     # Synapsis app (config.nuc + main.nuc, no nuclear.toml)
 nuclear spec --brief --dialect <dialect>   # the dialect of config.nuc (fastapi, nestjs) or nuclear.toml (typescript, dart, python)
 ```
 
@@ -24,20 +24,20 @@ It says only what changes from TypeScript/Dart. Do not load the full spec (`nucl
 
 ## 2. Work cycle
 
-1. Dragonfly: generate a resource's finished code first (models, repository, a use case per action, the facade,
-   the controller or the screen, tests): `dragonfly gen inspect`, then `dragonfly gen resource <component> <Name>
+1. Synapsis: generate a resource's finished code first (models, repository, a use case per action, the facade,
+   the controller or the screen, tests): `nuclear gen inspect`, then `nuclear gen resource <component> <Name>
    --from-json <url|file> | --from-spec <spec.md> | --fields "id:int name:string"` (ADR-codegen-0001). Write by hand only
-   what is left. A use case you wrote is wired by `dragonfly gen usecase <component> <Name> [--route "POST
+   what is left. A use case you wrote is wired by `nuclear gen usecase <component> <Name> [--route "POST
    orders/{id}/cancel"]` (its alias in the facade; backend: its route); one that only calls a repository method is
    written by it too (`--calls <Repository>.<method>`). With the Nuclear MCP server, call `graph_strategy` first with
    the request: it answers which kind of request it is (a resource, one screen, a rename, a failing test...) and the
    plan of that kind. Create each other piece with its generator, so it lands in
    the right folder with the right kind:
-   `dragonfly make component|screen|usecase|repository|model|event|guard|widget|page|test ...` (`dragonfly help`).
+   `nuclear make component|screen|usecase|repository|model|event|guard|widget|page|test ...` (`nuclear help`).
 2. Write the code following the sheet. Copy the style of the project's existing `.nuc` files.
 3. Check until clean, and fix exactly what each error says (most carry a `fix`):
-   - Dragonfly: `dragonfly check --json` (must print `[]`), then `dragonfly analyze` (no `error •` lines) and, with
-     tests, `dragonfly test`.
+   - Synapsis: `nuclear check --json` (must print `[]`), then `nuclear analyze` (no `error •` lines) and, with
+     tests, `nuclear test`.
    - fastapi: `nuclear check . --json`, `nuclear build .`, then in `build/`: `pyright` and `pytest`.
    - Other projects: `nuclear check <folder> --json`; a single file: `nuclear check file.nuc --dialect <d> --json`,
      then `nuclear build file.nuc --dialect <d> -o file.ts`.
@@ -49,14 +49,14 @@ It says only what changes from TypeScript/Dart. Do not load the full spec (`nucl
 - A class, constructor, argument or member of Flutter, Dart or a package:
   `nuclear defs show <Name> --dialect flutter` (or `<Name.member>`); `nuclear defs search <text> --dialect flutter`.
   Inside the project they also show the packages the project added.
-- A library the project does not have (npm, PyPI, pub.dev, for the project's dialect): `dragonfly add <package>`
+- A library the project does not have (npm, PyPI, pub.dev, for the project's dialect): `nuclear add <package>`
   (`<package>@<version>`) installs it, writes it in `config.nuc` and generates its type definitions; then its names are
-  used directly, without `use` (the import is written for you). `dragonfly remove <package>` takes it out. Never
+  used directly, without `use` (the import is written for you). `nuclear remove <package>` takes it out. Never
   install a package by hand inside `build/`. A package's default export is one name (`dayjs()`, `lodash.chunk(...)`).
 - A kind, decorator or header word of the dialect (what it generates, its rules, an example):
   `nuclear help <word> --dialect <d>` (`repository`, `@screen`...); every word: `nuclear help words --dialect <d>`; where a kind's file goes: `nuclear help layout --dialect <d>`.
-- A language or framework topic: `nuclear help` lists them (`results`, `flutter`, `dragonfly`, `tutorial`...).
-- A runtime error of the app: `dragonfly explain` (reads the error on stdin and points to the `.nuc` line).
+- A language or framework topic: `nuclear help` lists them (`results`, `flutter`, `synapsis`, `tutorial`...).
+- A runtime error of the app: `nuclear explain` (reads the error on stdin and points to the `.nuc` line).
 
 ## 4. Mistakes agents make
 
@@ -66,7 +66,7 @@ The compiler catches the habits of TypeScript, Dart and Python (`N0022`, with an
 - Writing `return`, `;`, `{ }`, `new`, `await`, `const`/`final`/`var`, `&&`, `!x`, `name: value` arguments: use the
   sheet's forms (`~x`, `x = 1`, `and`, `not x`, `name = value`).
 - The return type goes after the parameters: `load(id: int) User`.
-- In Dragonfly, a screen calls its `statemanager`, which calls the component's `appcomponent`; only the use case
+- In Synapsis, a screen calls its `statemanager`, which calls the component's `appcomponent`; only the use case
   calls the repository. Another component sees only the `appcomponent`, models, events, guards and screens.
 - Texts shown to the user are translation keys: `"component.screen.key".tr()` plus the key in
   `assets/i18n/<locale>/<component>.json`.

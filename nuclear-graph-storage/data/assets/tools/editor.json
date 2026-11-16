@@ -8,21 +8,21 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 72 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, the HTTP tool, the Loop, the agent's chat and the settings.",
+   "summary": "The 72 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, the Connector tool, the Builder, the agent's chat and the settings.",
    "body": [
     "- Run an Action of the Active Project (run, debug, build, test…) (`nuclear.workspace.action`)",
     "- Add the Active Project to the VS Code Workspace (`nuclear.workspace.addToVsCode`)",
     "- Welcome Page — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
     "- Set Up the AI Services (`nuclear.ai.setup`)",
-    "- Open a Tool — `ctrl+alt+h (arg http), ctrl+alt+p (arg loop), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg agent), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
+    "- Open a Tool — `ctrl+alt+h (arg connector), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg agent), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
     "- Open a Project as a Tab — `ctrl+alt+o` (`nuclear.workspace.openProject`)",
     "- Go to Project Tab — `ctrl+1 (arg 1), ctrl+2 (arg 2), ctrl+3 (arg 3), ctrl+4 (arg 4), ctrl+5 (arg 5), ctrl+6 (arg 6), ctrl+7 (arg 7), ctrl+8 (arg 8), ctrl+9 (arg 9)` (`nuclear.workspace.project`)",
     "- Show the Nuclear Workspace — `ctrl+alt+n` (`nuclear.workspace.show`)",
-    "- Refresh (`nuclear.http.refresh`)",
-    "- Select Environment (`nuclear.http.selectEnvironment`)",
-    "- Edit Environments (variables, headers, base urls) (`nuclear.http.editEnvironments`)",
-    "- Add an OpenAPI Document (`nuclear.http.addOpenApi`)",
-    "- Open Request (`nuclear.http.open`)",
+    "- Refresh (`nuclear.connector.refresh`)",
+    "- Select Environment (`nuclear.connector.selectEnvironment`)",
+    "- Edit Environments (variables, headers, base urls) (`nuclear.connector.editEnvironments`)",
+    "- Add an OpenAPI Document (`nuclear.connector.addOpenApi`)",
+    "- Open Request (`nuclear.connector.open`)",
     "- Update Contracts (nuclear contracts update) (`nuclear.contracts.update`)",
     "- Run (`nuclear.run`)",
     "- Debug (`nuclear.debug`)",
@@ -32,8 +32,8 @@
     "- Toggle code lenses for arrow functions (`nuclear.toggleCodeMetricsForArrowFunctions`)",
     "- Toggle code metrics (`nuclear.toggleCodeMetricsDisplayed`)",
     "- Show code metrics details (`nuclear.showCodeMetricsCodeLensInfo`)",
-    "- Open Dragonfly Device (`nuclear.openDevice`)",
-    "- Run on Dragonfly Device (`nuclear.runOnDevice`)",
+    "- Open Synapsis Device (`nuclear.openDevice`)",
+    "- Run on Synapsis Device (`nuclear.runOnDevice`)",
     "- Step Over (Nuclear Line) — `f10` (`nuclear.debug.stepOver`)",
     "- Step Into (Nuclear Line) — `f11` (`nuclear.debug.stepInto`)",
     "- Step Out (Nuclear) — `shift+f11` (`nuclear.debug.stepOut`)",
@@ -43,11 +43,11 @@
     "- Serve — `ctrl+alt+r` (`nuclear.action.serve`)",
     "- Debug — `ctrl+alt+g` (`nuclear.action.debug`)",
     "- Hot Reload — `ctrl+alt+l` (`nuclear.action.reload`)",
-    "- Run on a Dragonfly Device (`nuclear.action.device`)",
+    "- Run on a Synapsis Device (`nuclear.action.device`)",
     "- Build — `ctrl+alt+b` (`nuclear.action.build`)",
     "- Test — `ctrl+alt+t` (`nuclear.action.test`)",
     "- Check — `ctrl+alt+c` (`nuclear.action.check`)",
-    "- Routes in Nuclear HTTP (`nuclear.action.api`)",
+    "- Routes in Nuclear Connector (`nuclear.action.api`)",
     "- Open the web device (`nuclear.webDevice.open`)",
     "- Debug on the web device (`nuclear.webDevice.debug`)",
     "- Reload the web device (`nuclear.webDevice.reload`)",
@@ -120,7 +120,7 @@
      {
       "title": "Open a Tool",
       "command": "nuclear.workspace.tool",
-      "keys": "ctrl+alt+h (arg http), ctrl+alt+p (arg loop), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg agent), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)"
+      "keys": "ctrl+alt+h (arg connector), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg agent), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)"
      },
      {
       "title": "Open a Project as a Tab",
@@ -139,27 +139,27 @@
      },
      {
       "title": "Refresh",
-      "command": "nuclear.http.refresh",
+      "command": "nuclear.connector.refresh",
       "keys": ""
      },
      {
       "title": "Select Environment",
-      "command": "nuclear.http.selectEnvironment",
+      "command": "nuclear.connector.selectEnvironment",
       "keys": ""
      },
      {
       "title": "Edit Environments (variables, headers, base urls)",
-      "command": "nuclear.http.editEnvironments",
+      "command": "nuclear.connector.editEnvironments",
       "keys": ""
      },
      {
       "title": "Add an OpenAPI Document",
-      "command": "nuclear.http.addOpenApi",
+      "command": "nuclear.connector.addOpenApi",
       "keys": ""
      },
      {
       "title": "Open Request",
-      "command": "nuclear.http.open",
+      "command": "nuclear.connector.open",
       "keys": ""
      },
      {
@@ -208,12 +208,12 @@
       "keys": ""
      },
      {
-      "title": "Open Dragonfly Device",
+      "title": "Open Synapsis Device",
       "command": "nuclear.openDevice",
       "keys": ""
      },
      {
-      "title": "Run on Dragonfly Device",
+      "title": "Run on Synapsis Device",
       "command": "nuclear.runOnDevice",
       "keys": ""
      },
@@ -263,7 +263,7 @@
       "keys": "ctrl+alt+l"
      },
      {
-      "title": "Run on a Dragonfly Device",
+      "title": "Run on a Synapsis Device",
       "command": "nuclear.action.device",
       "keys": ""
      },
@@ -283,7 +283,7 @@
       "keys": "ctrl+alt+c"
      },
      {
-      "title": "Routes in Nuclear HTTP",
+      "title": "Routes in Nuclear Connector",
       "command": "nuclear.action.api",
       "keys": ""
      },
@@ -464,7 +464,7 @@
    "id": "editor:vscode.settings.ai",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the AI loop, the local agents and their integrations",
-   "summary": "The 30 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
+   "summary": "The 31 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
    "body": [
     "- `nuclear.ai.developerUrl` (default `\"http://127.0.0.1:7879\"`): Where the Nuclear Developer (the local agents) answers.",
     "- `nuclear.ai.graphUrl` (default `\"http://127.0.0.1:7878\"`): Where the Nuclear Smart Graph answers.",
@@ -472,30 +472,31 @@
     "- `nuclear.ai.models.coder` (default `\"qwen2.5-coder:3b\"`): The local model that writes and repairs code and tests (at most 3B parameters). Applies when the Developer is started from Settings and integrations.",
     "- `nuclear.ai.models.assistant` (default `\"gemma4:e2b\"`): The local model that plans, reviews, documents, diagnoses and chats (at most 3B effective parameters).",
     "- `nuclear.ai.models.embeddings` (default `\"embeddinggemma\"`): The embeddings model of the Smart Graph's search (re-ingest after changing it).",
-    "- `nuclear.ai.claudeModel` (default `\"sonnet\"`): Claude's model when Claude leads a Loop run.",
-    "- `nuclear.ai.mcpCommand` (default `\"nuclear-graph\"`): The program that serves the Nuclear MCP server (`<command> mcp`) and the graph.",
+    "- `nuclear.ai.claudeModel` (default `\"sonnet\"`): Claude's model when Claude leads a Builder run.",
+    "- `nuclear.ai.mcpCommand` (default `\"nuclear-mcp\"`): The program that serves the Nuclear MCP server (an AI client starts it with no argument).",
+    "- `nuclear.ai.graphCommand` (default `\"nuclear-graph\"`): The Smart Graph's program (serve, connect, requests, revoke).",
     "- `nuclear.ai.retry.attempts` (default `5`): Tries of a call to the local agents that fails for a passing reason (down, busy, 5xx), the first included.",
     "- `nuclear.ai.retry.baseMs` (default `1000`): The ceiling of the first wait before a retry, in milliseconds; it doubles at each retry (exponential backoff with full jitter).",
     "- `nuclear.ai.retry.maxMs` (default `30000`): The longest wait before a retry, in milliseconds.",
     "- `nuclear.ai.contextTokens` (default `8192`): The context window of the local models, in tokens: what the chat's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx).",
-    "- `nuclear.ai.claude.command` (default `\"claude\"`): Claude Code's command: the Loop's lead when Claude leads, checked before every such run.",
-    "- `nuclear.ai.claude.maxBudgetUsd` (default `2`): The most a Loop run led by Claude may spend, in USD (0: no limit).",
+    "- `nuclear.ai.claude.command` (default `\"claude\"`): Claude Code's command: the Builder's lead when Claude leads, checked before every such run.",
+    "- `nuclear.ai.claude.maxBudgetUsd` (default `2`): The most a Builder run led by Claude may spend, in USD (0: no limit).",
     "- `nuclear.ai.codex.enabled` (default `false`): Use Codex (its MCP server entry and its regular check).",
     "- `nuclear.ai.codex.command` (default `\"codex\"`): Codex's command.",
     "- `nuclear.ai.opencode.enabled` (default `false`): Use OpenCode (its MCP server entry and its regular check).",
     "- `nuclear.ai.opencode.command` (default `\"opencode\"`): OpenCode's command.",
     "- `nuclear.ai.opencode.configFile` (default `\"~/.config/opencode/opencode.json\"`): OpenCode's configuration file, where the Nuclear MCP server is added.",
     "- `nuclear.ai.cursor.mcpFile` (default `\"~/.cursor/mcp.json\"`): Cursor's MCP configuration file, where the Nuclear MCP server is added.",
-    "- `nuclear.ai.github.command` (default `\"gh\"`): GitHub's command line (issues imported as Loop specs), checked with `gh auth status`.",
-    "- `nuclear.ai.jira.site` (default `\"\"`): Your Jira site (https://your-team.atlassian.net): issues imported as Loop specs. The API token is kept in the secret storage.",
+    "- `nuclear.ai.github.command` (default `\"gh\"`): GitHub's command line (issues imported as Builder specs), checked with `gh auth status`.",
+    "- `nuclear.ai.jira.site` (default `\"\"`): Your Jira site (https://your-team.atlassian.net): issues imported as Builder specs. The API token is kept in the secret storage.",
     "- `nuclear.ai.jira.email` (default `\"\"`): The email of your Atlassian account (Jira).",
     "- `nuclear.ai.jira.criteriaField` (default `\"\"`): Optional: the Jira field that holds the acceptance criteria (customfield_10050); empty: read them from the description.",
     "- `nuclear.ai.watch.callTimeoutMinutes` (default `15`): A call to the local agents that takes longer is cut and retried.",
     "- `nuclear.ai.watch.stallSeconds` (default `90`): A call is stalled (cut and retried) when, this long, the Developer does not answer or Ollama holds no model.",
-    "- `nuclear.ai.watch.minFreeMb` (default `500`): Free disk space (the project and the temporary folder) a Loop run needs before it starts.",
-    "- `nuclear.ai.resumeInterrupted` (default `true`): A Loop run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped.",
+    "- `nuclear.ai.watch.minFreeMb` (default `500`): Free disk space (the project and the temporary folder) a Builder run needs before it starts.",
+    "- `nuclear.ai.resumeInterrupted` (default `true`): A Builder run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped.",
     "- `nuclear.ai.checkEveryMinutes` (default `5`): How often every connection (the Developer, the Smart Graph, Ollama and its models, Claude, Codex, OpenCode, GitHub, Jira) is checked; a notification says when one stops answering (0: only before each task).",
-    "- `nuclear.ai.watch.commandTimeoutMinutes` (default `20`): A command of the Loop (a build, the tests) that runs longer is killed with its children and the step fails."
+    "- `nuclear.ai.watch.commandTimeoutMinutes` (default `20`): A command of the Builder (a build, the tests) that runs longer is killed with its children and the step fails."
    ],
    "keys": [
     "vscode ai settings"
@@ -542,12 +543,17 @@
      {
       "name": "nuclear.ai.claudeModel",
       "default": "\"sonnet\"",
-      "does": "Claude's model when Claude leads a Loop run."
+      "does": "Claude's model when Claude leads a Builder run."
      },
      {
       "name": "nuclear.ai.mcpCommand",
+      "default": "\"nuclear-mcp\"",
+      "does": "The program that serves the Nuclear MCP server (an AI client starts it with no argument)."
+     },
+     {
+      "name": "nuclear.ai.graphCommand",
       "default": "\"nuclear-graph\"",
-      "does": "The program that serves the Nuclear MCP server (`<command> mcp`) and the graph."
+      "does": "The Smart Graph's program (serve, connect, requests, revoke)."
      },
      {
       "name": "nuclear.ai.retry.attempts",
@@ -572,12 +578,12 @@
      {
       "name": "nuclear.ai.claude.command",
       "default": "\"claude\"",
-      "does": "Claude Code's command: the Loop's lead when Claude leads, checked before every such run."
+      "does": "Claude Code's command: the Builder's lead when Claude leads, checked before every such run."
      },
      {
       "name": "nuclear.ai.claude.maxBudgetUsd",
       "default": "2",
-      "does": "The most a Loop run led by Claude may spend, in USD (0: no limit)."
+      "does": "The most a Builder run led by Claude may spend, in USD (0: no limit)."
      },
      {
       "name": "nuclear.ai.codex.enabled",
@@ -612,12 +618,12 @@
      {
       "name": "nuclear.ai.github.command",
       "default": "\"gh\"",
-      "does": "GitHub's command line (issues imported as Loop specs), checked with `gh auth status`."
+      "does": "GitHub's command line (issues imported as Builder specs), checked with `gh auth status`."
      },
      {
       "name": "nuclear.ai.jira.site",
       "default": "\"\"",
-      "does": "Your Jira site (https://your-team.atlassian.net): issues imported as Loop specs. The API token is kept in the secret storage."
+      "does": "Your Jira site (https://your-team.atlassian.net): issues imported as Builder specs. The API token is kept in the secret storage."
      },
      {
       "name": "nuclear.ai.jira.email",
@@ -642,12 +648,12 @@
      {
       "name": "nuclear.ai.watch.minFreeMb",
       "default": "500",
-      "does": "Free disk space (the project and the temporary folder) a Loop run needs before it starts."
+      "does": "Free disk space (the project and the temporary folder) a Builder run needs before it starts."
      },
      {
       "name": "nuclear.ai.resumeInterrupted",
       "default": "true",
-      "does": "A Loop run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped."
+      "does": "A Builder run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped."
      },
      {
       "name": "nuclear.ai.checkEveryMinutes",
@@ -657,7 +663,7 @@
      {
       "name": "nuclear.ai.watch.commandTimeoutMinutes",
       "default": "20",
-      "does": "A command of the Loop (a build, the tests) that runs longer is killed with its children and the step fails."
+      "does": "A command of the Builder (a build, the tests) that runs longer is killed with its children and the step fails."
      }
     ]
    }
@@ -672,10 +678,10 @@
     "- `nuclear.dialectPaths` (default `[]`): Extra directories with dialects (absolute or relative to the workspace). `<workspace>/dialects` is always searched.",
     "- `nuclear.server.path` (default `\"\"`): Path to the `nuclear-lsp` binary. Empty: the one bundled with the extension, then `nuclear-lsp` on the `PATH`.",
     "- `nuclear.trace.server` (default `\"off\"`): Traces the communication between VS Code and the Nuclear language server.",
-    "- `nuclear.debug.followInNuclear` (default `true`): When a Dragonfly app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code.",
-    "- `nuclear.debug.explainErrors` (default `true`): Show Dart run-time errors of a Dragonfly app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error.",
+    "- `nuclear.debug.followInNuclear` (default `true`): When a Synapsis app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code.",
+    "- `nuclear.debug.explainErrors` (default `true`): Show Dart run-time errors of a Synapsis app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error.",
     "- `nuclear.workspace.welcome` (default `true`): Show the Nuclear workspace welcome page (projects and shortcuts) when VS Code starts with no editor open. Ctrl+Alt+W opens it any time.",
-    "- `nuclear.buildOnSave` (default `true`): Saving a `.nuc` of a backend or web project runs `dragonfly build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session.",
+    "- `nuclear.buildOnSave` (default `true`): Saving a `.nuc` of a backend or web project runs `nuclear build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session.",
     "- `nuclear.codemetrics.basics.CodeLensEnabled` (default `true`): A flag which indicates whether code metrics are shown as code lens",
     "- `nuclear.codemetrics.basics.CodeLensHiddenUnder` (default `3`): Threshold to show code lens for code metrics",
     "- `nuclear.codemetrics.basics.ComplexityColorExtreme` (default `\"#ff0000\"`): Color for the extreme complexity level",
@@ -817,12 +823,12 @@
      {
       "name": "nuclear.debug.followInNuclear",
       "default": "true",
-      "does": "When a Dragonfly app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code."
+      "does": "When a Synapsis app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code."
      },
      {
       "name": "nuclear.debug.explainErrors",
       "default": "true",
-      "does": "Show Dart run-time errors of a Dragonfly app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error."
+      "does": "Show Dart run-time errors of a Synapsis app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error."
      },
      {
       "name": "nuclear.workspace.welcome",
@@ -832,7 +838,7 @@
      {
       "name": "nuclear.buildOnSave",
       "default": "true",
-      "does": "Saving a `.nuc` of a backend or web project runs `dragonfly build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session."
+      "does": "Saving a `.nuc` of a backend or web project runs `nuclear build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session."
      },
      {
       "name": "nuclear.codemetrics.basics.CodeLensEnabled",

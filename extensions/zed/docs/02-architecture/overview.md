@@ -21,8 +21,8 @@ uses `grammar/nuclear.wasm`, which `build.sh` regenerates.
 | `highlights.scm` | the token colors; in Zed the later pattern wins |
 | `brackets.scm`, `overrides.scm` | brackets and scopes |
 | `semantic_token_rules.json` | the server's semantic tokens: `kind`, `defaultLibrary`, `deprecated` (struck through) |
-| `tasks.json` | Nuclear: the generated code of a file, check; Dragonfly: run, device, terminal device, test, build, watch, analyze, repair, explain |
-| `runnables.scm` | ▷ on `main(` → `dragonfly-main`; on `@test` / `@widget` / `@states("name")` → `dragonfly-test` with `$ZED_CUSTOM_test_name` |
+| `tasks.json` | Nuclear: the generated code of a file, check; Synapsis: run, device, terminal device, test, build, watch, analyze, repair, explain |
+| `runnables.scm` | ▷ on `main(` → `synapsis-main`; on `@test` / `@widget` / `@states("name")` → `synapsis-test` with `$ZED_CUSTOM_test_name` |
 
 ## The extension (`src/lib.rs`)
 
@@ -45,4 +45,4 @@ The server answers `nuclear.showCodeMetricsCodeLensInfo` with `window/showMessag
 - The device inside the editor, `.nuc` debugging and build on save.
 - Keybindings and views of an extension, so there is no Nuclear workspace (ADR-extensions-0002).
 
-The Loop is not offered in Zed (decided by the user), and the project card is not shown.
+Nuclear Builder is not offered in Zed (decided by the user), and the project card is not shown.

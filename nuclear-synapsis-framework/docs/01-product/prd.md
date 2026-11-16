@@ -4,7 +4,7 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [../00-context/vision.md, roadmap.md, ../02-architecture/rules.md]
 ---
-# PRD: Dragonfly
+# PRD: Synapsis
 
 ## Summary
 
@@ -18,10 +18,10 @@ this file holds only what the framework must give.
 | Platform | What it is | Dialects | Planned dialects |
 |---|---|---|---|
 | `mobile` | apps for Android, iOS, desktop and web through one UI toolkit | `flutter` (Dart) | `react-native`, `kotlin-multiplatform`, native Android |
-| `backend` | HTTP APIs, data, events and AI agents | `fastapi` (Python), `nestjs` (TypeScript) | `express`, Dragonfly's own backend in Rust |
+| `backend` | HTTP APIs, data, events and AI agents | `fastapi` (Python), `nestjs` (TypeScript) | `express`, Synapsis's own backend in Rust |
 | `web` | web apps in the browser through one UI library | `react` (TypeScript), a first version | `vue`, `angular` |
 
-Excluded: a fourth platform; a feature of one dialect only; replacing the target's own tools (the `dragonfly`
+Excluded: a fourth platform; a feature of one dialect only; replacing the target's own tools (the `nuclear`
 command drives them).
 
 ## Functional requirements
@@ -36,7 +36,7 @@ command drives them).
 | Optional parts as plugins a project enables in `config.nuc` | done (ADR-synapsis-0004) |
 | Kinds a project or the community writes, as packages, without touching the compiler | half done ([roadmap](roadmap.md)) |
 | A client app generates its models and repositories from a backend's contract | done; limits in the [roadmap](roadmap.md) (ADR-synapsis-0006) |
-| One command for every platform: new, make, gen, build, run, test, and what each platform adds | the `dragonfly` command: see `tools/cli/` |
+| One command for every platform: new, make, gen, build, run, test, and what each platform adds | the `nuclear` command: see `tools/cli/` |
 
 ## Non-functional requirements
 
@@ -44,7 +44,7 @@ command drives them).
 |---|
 | The golden rule: generated code as fast as an expert's, instant transpilation, minimal readable Nuclear. A kind, decorator or shortcut that breaks one of the three is rejected (ADR-lang-0001). |
 | Generated code passes the target's analyzer without warnings: `flutter analyze` with `flutter_lints`, `tsc --strict`, `pyright --strict`. |
-| A no-change `dragonfly build` takes about 40 ms. |
+| A no-change `nuclear build` takes about 40 ms. |
 | A platform's reference, docs, examples and diagnostics name no dialect and no target's library. |
 
 ## Open questions

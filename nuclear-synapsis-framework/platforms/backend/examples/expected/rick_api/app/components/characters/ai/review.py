@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.components.characters.ai.guide import Guide
 from app.components.characters.ai.states.review_state import ReviewState
-from dragonfly.ai import Graph, next, start
+from synapsis.ai import Graph, next, start
 
 
 class Review(Graph[ReviewState]):

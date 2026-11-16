@@ -14,10 +14,10 @@ Like `.d.ts` / `@types`: packages `name@version` in `dialects/<language>/defs/<p
 `defaults`) and `api.json` (the full API in Nuclear notation, read lazily: the language server, `nuclear defs`,
 agents). GENERATED: never edit.
 
-Packages of the `dart` language today: `dart@3.13.5`, `flutter@3.47.7`, `dragonfly@0.1.0`, `flutter_bloc@9.1.1`,
+Packages of the `dart` language today: `dart@3.13.5`, `flutter@3.47.7`, `synapsis@0.1.0`, `flutter_bloc@9.1.1`,
 `bloc@9.2.1`, `dio@5.11.1`, `get_it@9.3.0`, `go_router@18.1.1`, `connectivity_plus@7.3.2`,
 `flutter_secure_storage@11.2.0`, `json_annotation@4.12.0`, and for the genkit plugin `genkit@1.0.1`,
-`schemantic@1.0.0`, `dragonfly_genkit@0.1.0`. `python` and `typescript` have theirs under their own `defs/`; the
+`schemantic@1.0.0`, `synapsis_genkit@0.1.0`. `python` and `typescript` have theirs under their own `defs/`; the
 list a dialect uses is its `[dialect] defs`.
 
 ## Loading and priority
@@ -37,7 +37,7 @@ own `defs/` and the cache keep `<language>/<package>/<version>/`.
 
 ## Project packages (ADR-lang-0008; ADR-mobile-0001, ADR-mobile-0001)
 
-`dragonfly add <package>` gives a project the definitions of any package of its target. Backend and web: generated
+`nuclear add <package>` gives a project the definitions of any package of its target. Backend and web: generated
 into `<project>/defs/<language>/<name>/<version>/` (`project::project_defs`). Mobile: generated once into the cache
 and listed in `build/defs.lock` (`project::defs_lock`). Both are loaded with `project::with_project_defs`
 (`Loader::add_defs`) by `nuclear build|check`, `nuclear defs` (inside the project) and the language server.

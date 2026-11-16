@@ -1,4 +1,4 @@
-import 'package:dragonfly/dragonfly.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Configuration of the characters component: a connection only for its images, and the color of its logs
 /// (without logColor, one is chosen by the component's name).

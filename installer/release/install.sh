@@ -7,9 +7,9 @@
 #
 # It downloads the release of this system and architecture (Linux x86_64/aarch64, any distribution: the binaries are
 # static; macOS Intel/Apple silicon) from GitHub, checks its SHA-256, installs it in ~/.local/share/nuclearlang with
-# `nuclear`, `dragonfly` and `nuclear-lsp` linked in ~/.local/bin, puts that folder in the PATH of your shells, gives
+# `nuclear` and `nuclear-lsp` linked in ~/.local/bin, puts that folder in the PATH of your shells, gives
 # the AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No sudo. Then, in a terminal,
-# the set-up of the AI services (`nuclear-loop setup`: it reads this machine, suggests a profile and asks before
+# the set-up of the AI services (`nuclear-builder setup`: it reads this machine, suggests a profile and asks before
 # anything is downloaded; a machine already set up is brought up to date without questions).
 #
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
@@ -44,9 +44,9 @@ while [ $# -gt 0 ]; do
     --profile) PROFILE=${2:?--profile needs a value}; shift ;;
     --uninstall)
       # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
-      [ -x "$BIN/nuclear-loop" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-loop" setup --remove >/dev/null 2>&1 || true
+      [ -x "$BIN/nuclear-builder" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-builder" setup --remove >/dev/null 2>&1 || true
       rm -f "$BIN/nuclear-developer"
-      rm -f "$BIN/nuclear" "$BIN/dragonfly" "$BIN/nuclear-lsp" "$BIN/nuclear-loop"
+      rm -f "$BIN/nuclear" "$BIN/dragonfly" "$BIN/nuclear-lsp" "$BIN/nuclear-builder"
       rm -rf "$INSTALL"
       for d in $SKILL_DIRS; do rm -rf "$d/nuclear"; done
       for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
@@ -125,9 +125,9 @@ tar -xzf "$tmp/$name" -C "$tmp"
 rm -rf "$INSTALL"
 mkdir -p "$(dirname "$INSTALL")" "$BIN"
 mv "$tmp/nuclearlang" "$INSTALL"
-for b in nuclear dragonfly nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
-# nuclear-loop needs node (the Loop without an editor, ADR-platform-0003)
-if [ -f "$INSTALL/bin/nuclear-loop" ]; then ln -sf "$INSTALL/bin/nuclear-loop" "$BIN/nuclear-loop"; fi
+for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
+# nuclear-builder needs node (the Builder without an editor, ADR-platform-0003)
+if [ -f "$INSTALL/bin/nuclear-builder" ]; then ln -sf "$INSTALL/bin/nuclear-builder" "$BIN/nuclear-builder"; fi
 "$BIN/nuclear" dialect list >/dev/null || fail "the installed nuclear does not run on this system"
 
 if [ "$AGENT" = 1 ]; then
@@ -168,28 +168,28 @@ MACHINE="${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang/ai.env"
 [ -n "$PROFILE" ] || PROFILE=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
 ai_note=""
 if [ "$AI" = 1 ]; then
-  if [ ! -x "$BIN/nuclear-loop" ] || ! command -v node >/dev/null 2>&1; then
-    ai_note="The AI services need Node.js for their set-up: install it and run \`nuclear-loop setup\`, or use the set-up of the VS Code extension."
+  if [ ! -x "$BIN/nuclear-builder" ] || ! command -v node >/dev/null 2>&1; then
+    ai_note="The AI services need Node.js for their set-up: install it and run \`nuclear-builder setup\`, or use the set-up of the VS Code extension."
   elif [ -n "$PROFILE" ]; then
     say ""
     say "The AI services, profile $PROFILE..."
-    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-loop" setup --profile "$PROFILE" --yes >&2 \
-      || ai_note="The AI services are not set up: run \`nuclear-loop setup\`."
+    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-builder" setup --profile "$PROFILE" --yes >&2 \
+      || ai_note="The AI services are not set up: run \`nuclear-builder setup\`."
   elif [ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null; then
     say ""
     say "The AI services: local agents that write the code, and the Smart Graph. You choose what is downloaded."
-    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-loop" setup < /dev/tty >&2 \
-      || ai_note="The AI services are not set up: run \`nuclear-loop setup\` when you want them."
+    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-builder" setup < /dev/tty >&2 \
+      || ai_note="The AI services are not set up: run \`nuclear-builder setup\` when you want them."
   else
-    ai_note="The AI services are not set up (no terminal here): run \`nuclear-loop setup\`."
+    ai_note="The AI services are not set up (no terminal here): run \`nuclear-builder setup\`."
   fi
 fi
 
 say ""
-say "NuclearLang $VERSION is installed: nuclear and dragonfly in $BIN."
+say "NuclearLang $VERSION is installed: nuclear in $BIN."
 [ -z "$ai_note" ] || say "$ai_note"
 if [ "$on_path" = 0 ]; then
   if [ "$MODIFY_PATH" = 1 ]; then say "Open a new terminal (or run: export PATH=\"$BIN:\$PATH\")."
   else say "Add $BIN to your PATH: export PATH=\"$BIN:\$PATH\""; fi
 fi
-say "Start with: nuclear help   ·   dragonfly new my_app   ·   dragonfly doctor"
+say "Start with: nuclear help   ·   nuclear new my_app   ·   nuclear doctor"

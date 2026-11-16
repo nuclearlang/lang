@@ -34,7 +34,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -103,7 +103,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -183,7 +183,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -191,7 +191,7 @@
    },
    "data": {
     "group": "developer",
-    "runs": "nuclear-loop retry",
+    "runs": "nuclear-builder retry",
     "params": [
      {
       "name": "project",
@@ -256,7 +256,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -321,7 +321,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -377,7 +377,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -385,7 +385,7 @@
    },
    "data": {
     "group": "developer",
-    "runs": "nuclear-loop run",
+    "runs": "nuclear-builder run",
     "params": [
      {
       "name": "project",
@@ -449,7 +449,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -476,66 +476,6 @@
       "type": "string",
       "required": false,
       "default": "\"backend\""
-     }
-    ]
-   }
-  },
-  {
-   "id": "mcp:dragonfly",
-   "type": "mcp",
-   "title": "`dragonfly` — a tool of the Nuclear MCP server",
-   "summary": "A dragonfly command in a project folder: new, build, install, test, check, analyze, make (g), migrate, add, remove, explain.",
-   "body": [
-    "A dragonfly command in a project folder: new, build, install, test, check, analyze, make (g), migrate, add, remove, explain. Example: command=\"make\", args=[\"component\", \"orders\"]. A library the project lacks (npm, PyPI, pub.dev): command=\"add\", args=[\"lodash\"] installs it and generates its type definitions.",
-    "",
-    "Parameters:",
-    "",
-    "- `project`: string",
-    "- `command`: string",
-    "- `args`: any = `null`"
-   ],
-   "keys": [
-    "dragonfly",
-    "dragonfly"
-   ],
-   "asks": [
-    "what does dragonfly do",
-    "que hace dragonfly"
-   ],
-   "links": [
-    {
-     "rel": "part-of",
-     "to": "mcp:server"
-    }
-   ],
-   "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
-   ],
-   "meta": {
-    "tool": "mcp",
-    "name": "dragonfly"
-   },
-   "data": {
-    "group": "dragonfly",
-    "runs": "dragonfly",
-    "params": [
-     {
-      "name": "project",
-      "type": "string",
-      "required": true,
-      "default": ""
-     },
-     {
-      "name": "command",
-      "type": "string",
-      "required": true,
-      "default": ""
-     },
-     {
-      "name": "args",
-      "type": "any",
-      "required": false,
-      "default": "null"
      }
     ]
    }
@@ -568,7 +508,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -576,7 +516,7 @@
    },
    "data": {
     "group": "generate",
-    "runs": "dragonfly gen component",
+    "runs": "nuclear gen component",
     "params": [
      {
       "name": "project",
@@ -631,7 +571,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -639,7 +579,7 @@
    },
    "data": {
     "group": "generate",
-    "runs": "dragonfly gen resource",
+    "runs": "nuclear gen resource",
     "params": [
      {
       "name": "project",
@@ -746,7 +686,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -754,7 +694,7 @@
    },
    "data": {
     "group": "generate",
-    "runs": "dragonfly make screen",
+    "runs": "nuclear make screen",
     "params": [
      {
       "name": "project",
@@ -815,7 +755,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -823,7 +763,7 @@
    },
    "data": {
     "group": "generate",
-    "runs": "dragonfly gen usecase",
+    "runs": "nuclear gen usecase",
     "params": [
      {
       "name": "project",
@@ -868,9 +808,9 @@
    "id": "mcp:graph_answer",
    "type": "mcp",
    "title": "`graph_answer` — a tool of the Nuclear MCP server",
-   "summary": "The exact answer to a question that has one (every command of a tool, the tools of this server and their parameters, the commands that write a kind, a diagnostic by its code, the stages of the Loop, the members of a base type, a version...): the rows of the graph's database, whole, never recalled; then the cards the shelves answer by meaning.",
+   "summary": "The exact answer to a question that has one (every command of a tool, the tools of this server and their parameters, the commands that write a kind, a diagnostic by its code, the stages of the Builder, the members of a base type, a version...): the rows of the graph's database, whole, never recalled; then the cards the shelves answer by meaning.",
    "body": [
-    "The exact answer to a question that has one (every command of a tool, the tools of this server and their parameters, the commands that write a kind, a diagnostic by its code, the stages of the Loop, the members of a base type, a version...): the rows of the graph's database, whole, never recalled; then the cards the shelves answer by meaning. Prefer it to graph_search for \"which\", \"list\", \"what are the\" questions. platform: backend, mobile or web.",
+    "The exact answer to a question that has one (every command of a tool, the tools of this server and their parameters, the commands that write a kind, a diagnostic by its code, the stages of the Builder, the members of a base type, a version...): the rows of the graph's database, whole, never recalled; then the cards the shelves answer by meaning. Prefer it to graph_search for \"which\", \"list\", \"what are the\" questions. platform: backend, mobile or web.",
     "",
     "Parameters:",
     "",
@@ -892,7 +832,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -921,9 +861,9 @@
    "id": "mcp:graph_card",
    "type": "mcp",
    "title": "`graph_card` — a tool of the Nuclear MCP server",
-   "summary": "One row of the graph by its id, with what it links to: error:N0114 (a diagnostic), kind:backend.usecase, decorator:backend.get, tool:dragonfly.gen.resource, mcp:generate_resource, lib:string, platform:mobile, layout:web, playbook:<name>, concept:<name>.",
+   "summary": "One row of the graph by its id, with what it links to: error:N0114 (a diagnostic), kind:backend.usecase, decorator:backend.get, tool:nuclear.gen.resource, mcp:generate_resource, lib:string, platform:mobile, layout:web, playbook:<name>, concept:<name>.",
    "body": [
-    "One row of the graph by its id, with what it links to: error:N0114 (a diagnostic), kind:backend.usecase, decorator:backend.get, tool:dragonfly.gen.resource, mcp:generate_resource, lib:string, platform:mobile, layout:web, playbook:<name>, concept:<name>.",
+    "One row of the graph by its id, with what it links to: error:N0114 (a diagnostic), kind:backend.usecase, decorator:backend.get, tool:nuclear.gen.resource, mcp:generate_resource, lib:string, platform:mobile, layout:web, playbook:<name>, concept:<name>.",
     "",
     "Parameters:",
     "",
@@ -944,7 +884,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -990,7 +930,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1039,7 +979,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1108,7 +1048,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1185,7 +1125,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1237,7 +1177,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1284,7 +1224,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1338,7 +1278,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1375,7 +1315,7 @@
    "title": "`nuclear_defs` — a tool of the Nuclear MCP server",
    "summary": "A declaration of the type definitions (a class or Class.member of a library the dialect uses).",
    "body": [
-    "A declaration of the type definitions (a class or Class.member of a library the dialect uses). With the project's folder, also of a package the project added (dragonfly add <package>).",
+    "A declaration of the type definitions (a class or Class.member of a library the dialect uses). With the project's folder, also of a package the project added (nuclear add <package>).",
     "",
     "Parameters:",
     "",
@@ -1398,7 +1338,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1456,7 +1396,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1503,7 +1443,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1529,12 +1469,72 @@
    }
   },
   {
+   "id": "mcp:nuclear_project",
+   "type": "mcp",
+   "title": "`nuclear_project` — a tool of the Nuclear MCP server",
+   "summary": "A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), migrate, add, remove, explain.",
+   "body": [
+    "A `nuclear` command in a project of the framework: new, build, install, test, check, analyze, make (g), migrate, add, remove, explain. Example: command=\"make\", args=[\"component\", \"orders\"]. A library the project lacks (npm, PyPI, pub.dev): command=\"add\", args=[\"lodash\"] installs it and generates its type definitions.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string",
+    "- `command`: string",
+    "- `args`: any = `null`"
+   ],
+   "keys": [
+    "nuclear_project",
+    "nuclear project"
+   ],
+   "asks": [
+    "what does nuclear_project do",
+    "que hace nuclear_project"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "nuclear_project"
+   },
+   "data": {
+    "group": "nuclear",
+    "runs": "nuclear",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "command",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "args",
+      "type": "any",
+      "required": false,
+      "default": "null"
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:project_inspect",
    "type": "mcp",
    "title": "`project_inspect` — a tool of the Nuclear MCP server",
-   "summary": "What a Dragonfly project has: its platform and dialect, its components with their declarations by kind, and the generators of its platform.",
+   "summary": "What a Synapsis project has: its platform and dialect, its components with their declarations by kind, and the generators of its platform.",
    "body": [
-    "What a Dragonfly project has: its platform and dialect, its components with their declarations by kind, and the generators of its platform. Call it before generating or writing, so nothing is declared twice.",
+    "What a Synapsis project has: its platform and dialect, its components with their declarations by kind, and the generators of its platform. Call it before generating or writing, so nothing is declared twice.",
     "",
     "Parameters:",
     "",
@@ -1555,7 +1555,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1563,7 +1563,7 @@
    },
    "data": {
     "group": "project",
-    "runs": "dragonfly gen inspect",
+    "runs": "nuclear gen inspect",
     "params": [
      {
       "name": "project",
@@ -1578,13 +1578,13 @@
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-graph mcp` speaks the Model Context Protocol over stdio and gives an AI client 27 tools: the Smart Graph, the compiler, the dragonfly commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-graph mcp` speaks the Model Context Protocol over stdio and gives an AI client 27 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
-    "NuclearLang and Dragonfly. The generators write the standard code, the local Nuclear Developer writes what is left; you lead, validate and correct. For any request, first call graph_strategy with the user's own words: it answers which kind of request it is (a whole system, one screen, a rename, a failing test...) and the plan of that kind; follow that plan. For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. Then give developer_task only what the generators did not write (a use case with its own rules, a view's details), and wire each use case it wrote with generate_usecase (its alias in the facade, its route). For any task that writes or changes .nuc (a feature, a bug, a refactor, tests): 1) call developer_task first with the project folder, a title, the description and the acceptance criteria: the local agents plan, write the tests first, write the code, run the tests and the security review, and document everything they did in a journal it returns; 2) read the journal, then validate: nuclear_check of the project must say ok and dragonfly test must pass; 3) correct only what failed or is wrong, never rewrite what passed; before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph instead of guessing; If the run failed, read its 'Why it failed' (the local diagnoser): when the cause was passing or you fixed it, call developer_retry instead of starting again. 4) call developer_review with the run, what you corrected and why, and the corrected files, so the journal keeps your review and the local developer learns from it. Write the code yourself only when developer_task cannot run (the local developer is not running) and say so.",
+    "NuclearLang and Synapsis. The generators write the standard code, the local Nuclear Developer writes what is left; you lead, validate and correct. For any request, first call graph_strategy with the user's own words: it answers which kind of request it is (a whole system, one screen, a rename, a failing test...) and the plan of that kind; follow that plan. For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. Then give developer_task only what the generators did not write (a use case with its own rules, a view's details), and wire each use case it wrote with generate_usecase (its alias in the facade, its route). For any task that writes or changes .nuc (a feature, a bug, a refactor, tests): 1) call developer_task first with the project folder, a title, the description and the acceptance criteria: the local agents plan, write the tests first, write the code, run the tests and the security review, and document everything they did in a journal it returns; 2) read the journal, then validate: nuclear_check of the project must say ok and nuclear test must pass; 3) correct only what failed or is wrong, never rewrite what passed; before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph instead of guessing; If the run failed, read its 'Why it failed' (the local diagnoser): when the cause was passing or you fixed it, call developer_retry instead of starting again. 4) call developer_review with the run, what you corrected and why, and the corrected files, so the journal keeps your review and the local developer learns from it. Write the code yourself only when developer_task cannot run (the local developer is not running) and say so.",
     "",
-    "Its tools: `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `dragonfly`, `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`."
+    "Its tools: `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`."
    ],
    "keys": [
     "mcp",
@@ -1593,7 +1593,7 @@
     "model context protocol"
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1627,7 +1627,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",
@@ -1674,7 +1674,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/mcp_server.nuc"
+    "tools/mcp/server.nuc"
    ],
    "meta": {
     "tool": "mcp",

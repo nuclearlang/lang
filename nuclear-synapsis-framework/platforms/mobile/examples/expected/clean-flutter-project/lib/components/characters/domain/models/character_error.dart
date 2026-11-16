@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'character_error.g.dart';
 
-/// Business error of the component: dragonfly builds it with the failure message.
+/// Business error of the component: synapsis builds it with the failure message.
 @JsonSerializable(explicitToJson: true)
 class CharacterError {
   const CharacterError({required this.message});

@@ -2,7 +2,7 @@ import { Page } from '../../../shared/models/page';
 import { Character } from '../domain/models/character';
 import { CharacterError } from '../domain/models/character_error';
 import { CharacterParams } from '../domain/models/character_params';
-import { Cache, Decode, HttpMethod, Json, Repository, Result } from 'dragonfly-web';
+import { Cache, Decode, HttpMethod, Json, Repository, Result } from 'synapsis-web';
 
 /**
  * Repository: each method is an http call. The path is appended to the connection's baseUrl;

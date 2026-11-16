@@ -1,5 +1,5 @@
-import 'package:dragonfly/dragonfly.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:synapsis/synapsis.dart';
 
 part 'force_logout.g.dart';
 

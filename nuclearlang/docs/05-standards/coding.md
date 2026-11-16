@@ -24,7 +24,7 @@ The rules every project shares (English, quality first, Nuclear first, git, when
   `Span`.
 - **The generated text does not change for a tool:** the line map is recorded beside it, not by aligning lines.
 - **`ast.rs` and the public API are shared.** A changed variant or signature is announced by the workspace build:
-  the language server, `../tools/cli/` and `../nuclear-synapsis-framework/cli/` walk the AST themselves.
+  the language server, `../tools/cli/` and `../tools/code_generator/` walk the AST themselves.
 - Rust style: `../rustfmt.toml` (`max_width = 120`, `use_small_heuristics = "Max"`); `cargo clippy --all-targets`
   without warnings.
 

@@ -4,10 +4,10 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-process.env.DRAGONFLY_DATABASE = 'memory';
+process.env.SYNAPSIS_DATABASE = 'memory';
 const build = path.resolve(process.argv[2]);
 const { AppModule } = await import(pathToFileURL(path.join(build, 'dist/src/app.module.js')).href);
-const { createApp } = await import(pathToFileURL(path.join(build, 'node_modules/dragonfly-nest/dist/index.js')).href);
+const { createApp } = await import(pathToFileURL(path.join(build, 'node_modules/synapsis-nest/dist/index.js')).href);
 const app = await createApp(AppModule);
 await app.listen(0);
 const base = await app.getUrl();

@@ -13,7 +13,7 @@ main() void
   print("replace", "a-b-c".replace("-", "+"), "all", "a-b-c".replaceAll("-", "+"))
   print("repeat", "ab".repeat(3), "pad", "7".padStart(3, "0"), "7".padEnd(3, "."))
   print("reverse", "nuclear".chars().reversed().join(""))
-  print("capitalize", capitalize("dragonfly"))
+  print("capitalize", capitalize("synapsis"))
   print("points", "ok👍".chars().length)
   print("from code", String.fromCodes([78, 117, 99]))
   print("compare", "apple".compareTo("banana") < 0, "a" == "a", "".isEmpty)

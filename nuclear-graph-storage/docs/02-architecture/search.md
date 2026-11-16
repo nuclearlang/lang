@@ -59,7 +59,7 @@ does with it is `ADR-developer-0001` of the
 - Meaning decides between strategies with no exact sign, or the same ones.
 - Whether the project has the names the request writes moves the score (`existing`, `new` against the row's
   `data.target`).
-- A run of the Loop cannot follow a strategy without stages (a question, a command): with `runnable`, such a
+- A run of the Builder cannot follow a strategy without stages (a question, a command): with `runnable`, such a
   strategy comes first only when an exact sign chose it.
 - `only` is the strategy a spec names itself (`- Strategy: usecase`).
 

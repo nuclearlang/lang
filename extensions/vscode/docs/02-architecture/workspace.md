@@ -23,9 +23,9 @@ The container `nuclear` (activity bar) has one view, the webview view `nuclear.w
 
 | id | Label | Key | State | Project |
 |---|---|---|---|---|
-| `http` | HTTP client | `Ctrl+Alt+H` | built | [`nuclear-connector`](../../../tools/nuclear-connector/AGENTS.md) |
+| `connector` | Nuclear Connector | `Ctrl+Alt+H` | built | [`nuclear-connector`](../../../tools/nuclear-connector/AGENTS.md) |
 | `devices` | Devices | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
-| `loop` | Loop | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |
+| `builder` | Nuclear Builder | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |
 | `designer` | UI designer | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |
 | `docs` | AI documenter | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |
 | `agent` | Nuclear agent | `Ctrl+Alt+A` | built | [`nuclear-ai-chat`](../../../tools/nuclear-ai-chat/AGENTS.md) |
@@ -41,12 +41,12 @@ A tool with a `planned` list is a template: `ToolPanel` opens its page, which sa
   `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris
   (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts
   `refreshDir`.
-- **`tool:http`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline
-  `GLYPHS` and the `nuclearHttp.*` colors (the collapsed ids are kept in the webview). An endpoint →
-  `nuclear.http.open`; a node's button → `updateContracts` / `addOpenApi`.
-- **`tool:devices`**: `devices()` of `device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)
+- **`tool:connector`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline
+  `GLYPHS` and the `nuclearConnector.*` colors (the collapsed ids are kept in the webview). An endpoint →
+  `nuclear.connector.open`; a node's button → `updateContracts` / `addOpenApi`.
+- **`tool:devices`**: `devices()` of `tools/nuclear-device-manager/src/mobile-device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)
   and *+ New device* (a quick pick of `PRESETS` → `nuclear.openDevice(preset)`).
-- **The other tools**: a line about the tool and, for `agent`, `loop` and `settings`, the list of their notices.
+- **The other tools**: a line about the tool and, for `agent`, `builder` and `settings`, the list of their notices.
 
 ## The actions of a project
 
@@ -60,9 +60,9 @@ shown by the context key `nuclear.platform` that `refresh()` sets, run by `actio
 | web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |
 
 - Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →
-  `nuclear.runOnDevice(undefined, root)`; api → the HTTP tool.
-- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`dragonfly run`, `build`,
-  `test`, `check`); `dragonfly install` goes first for a backend or web run or test when the app has no packages.
+  `nuclear.runOnDevice(undefined, root)`; api → the Connector tool.
+- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,
+  `test`, `check`); `nuclear install` goes first for a backend or web run or test when the app has no packages.
 - A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global
   state, adds the folder and reloads; `activateWorkspace` resumes it.
 - `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the
@@ -77,12 +77,12 @@ Projects = `findProjects()` (the workspace folders) + the roots saved in `global
 `go(key)` calls `switchTabs(from, to)`:
 
 1. the open `TabInputText` tabs of the tab left go to `workspaceState` `nuclear.workspace.tabs` (path, column,
-   active); leaving the HTTP tool keeps the keys of its open component panels (`model.reopen`);
-2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `dragonflyDevice`) and
+   active); leaving the Connector tool keeps the keys of its open component panels (`model.reopen`);
+2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`) and
    the unsaved editors, which stay open until saved;
 3. the devices are parked (`nuclear.parkDevices`), always before anything is reopened;
-4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for HTTP, the
-   Loop, the settings and the chat panels, the template page of a tool that is not built);
+4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for Nuclear Connector,
+   Nuclear Builder, the settings and the chat panels, the template page of a tool that is not built);
 5. the devices are unparked (`nuclear.unparkDevices`) when the tab entered is a mobile project or the Devices tool.
 
 Clicking a tab or an action posts a toast with its shortcut.
@@ -104,11 +104,11 @@ the platform's layout (`nuclear help layout`), and `package.json` shows an item 
 id is in `nuclearMake` or its flag is true.
 
 - New File, New Folder, Rename, Delete (to the trash).
-- *New with Dragonfly* (`dragonfly make` / `gen`, `makeArgs`), limited to what the clicked folder and the platform
+- *New with Synapsis* (`nuclear make` / `gen`, `makeArgs`), limited to what the clicked folder and the platform
   allow: a config file gets no "new project", a `usecases` folder gets only "new use case".
 - `build/`, `node_modules/` and the files that make a project are protected: they get nothing.
 
 ## Notices on the strip
 
-The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`, `loop`
-and `settings`, and the list in the tool's pane: [ai-services.md](ai-services.md).
+The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`,
+`builder` and `settings`, and the list in the tool's pane: [ai-services.md](ai-services.md).

@@ -1,14 +1,14 @@
-# nestjs dialect: Dragonfly for NestJS (nuclearlang/dialects/typescript/docs/07-reference/nestjs.md).
-# The architecture of Dragonfly (components, use cases, an appcomponent facade, repositories, config) on NestJS:
+# nestjs dialect: Synapsis for NestJS (nuclearlang/dialects/typescript/docs/07-reference/nestjs.md).
+# The architecture of Synapsis (components, use cases, an appcomponent facade, repositories, config) on NestJS:
 # REST controllers (@controller, @get, @post...), repositories over tables with Sequelize (@nestjs/sequelize +
 # sequelize-typescript; entities declared like TypeORM), DTOs validated with class-validator, a Nest module per
-# component and the app module, written by the dialect. The runtime is packages/dragonfly-nest.
+# component and the app module, written by the dialect. The runtime is packages/synapsis-nest.
 
 [dialect]
 name = "nestjs"
 platform = "backend"
 extends = "nodejs"
-description = "Dragonfly for NestJS: controllers, Sequelize repositories, use cases, validated DTOs, modules written for you"
+description = "Synapsis for NestJS: controllers, Sequelize repositories, use cases, validated DTOs, modules written for you"
 # in Nest, Transform is the class-transformer decorator, not the Node stream
 replaces = ["auto_imports.Transform", "syntax.project_import"]
 # type definitions (nuclearlang/docs/07-reference/definitions.md): generated from the .d.ts by nuclearlang/tools/defs/typescript (defs/typescript/)
@@ -22,7 +22,7 @@ defs = [
   "class_validator@0.15.1",
   "class_transformer@0.5.1",
   "sequelize_typescript@2.1.6",
-  "dragonfly-nest@0.1.0",
+  "synapsis-nest@0.1.0",
   "sequelize@6.37.8",
   "nestjs_testing@12.3.2",
   "rxjs@7.8.2",
@@ -33,7 +33,7 @@ defs = [
 project_import = "{{relative}}.js"
 
 [options]
-builtin_result = false             # Result, Ok and Err are the runtime's (dragonfly-nest)
+builtin_result = false             # Result, Ok and Err are the runtime's (synapsis-nest)
 type_args_as_args = ["inject"]     # inject<Repo>() → inject(Repo): the class is the token
 route_param = ":name"              # @get("{id}") of the platform → @Get(':id')
 
@@ -207,19 +207,19 @@ method = { file = "templates/tests_method.tpl" }
 # expect(condition) in a test → node:assert: the condition must hold
 expect = { template = "assert.ok({{args}})" }
 
-# what the dragonfly CLI runs in build/ (ADR-synapsis-0001): install the runtime and the app, run it, test it
+# what the `nuclear` CLI runs in build/ (ADR-synapsis-0001): install the runtime and the app, run it, test it
 [toolchain]
-install = "npm install {{packages}}/dragonfly-nest && npm install"
-# a dependency that is a folder, installed again by `dragonfly install` (its version does not change with its code)
+install = "npm install {{packages}}/synapsis-nest && npm install"
+# a dependency that is a folder, installed again by `nuclear install` (its version does not change with its code)
 install_local = "npm install --install-links {{path}}"
-# `dragonfly build` compiles too once the app is installed: the running server (node --watch) restarts on it
+# `nuclear build` compiles too once the app is installed: the running server (node --watch) restarts on it
 compile = "npx tsc -p tsconfig.json"
 run = "npm run dev"
 test = "npm test"
 url = "http://localhost:3000"
 installed = "node_modules"
 ready = "Nest application successfully started"
-# `dragonfly add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the
+# `nuclear add <package>` / `remove` (ADR-lang-0008): the package manager, the version it resolved and the generator of the
 # package's type definitions, written into the project's defs/
 package_add = "npm install {{requirement}}"
 package_remove = "npm uninstall {{name}}"
@@ -229,11 +229,11 @@ package_version = '''node -p "JSON.parse(require('fs').readFileSync('node_module
 # the package that carries the types of one that ships none (`lodash` → `@types/lodash`): nothing when it has its own
 package_companion = '''node -e "const n = process.argv[1], fs = require('fs'), dir = 'node_modules/' + n, p = JSON.parse(fs.readFileSync(dir + '/package.json', 'utf8')); const own = p.types || p.typings || fs.existsSync(dir + '/index.d.ts') || JSON.stringify(p.exports || '').includes('.d.'); if (!own) console.log('@types/' + n.replace(/^@/, '').replace('/', '__'))" {{name}}'''
 package_defs = "node {{tools}}/defs/typescript/gen.js {{defs_name}} {{version}} {{defs}} {{modules}} --package {{name}} --from . --depends {{depends}}"
-# `dragonfly migrate make "<message>"` / `migrate` / `migrate down` (ADR-backend-0001): the project's migrations/ folder,
+# `nuclear migrate make "<message>"` / `migrate` / `migrate down` (ADR-backend-0001): the project's migrations/ folder,
 # compared with the compiled entities
-migrate_make = "npx tsc -p tsconfig.json && npx dragonfly-nest-migrate make {{message}} --dir {{migrations}}"
-migrate = "npx tsc -p tsconfig.json && npx dragonfly-nest-migrate up --dir {{migrations}}"
-migrate_down = "npx tsc -p tsconfig.json && npx dragonfly-nest-migrate down --dir {{migrations}}"
+migrate_make = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate make {{message}} --dir {{migrations}}"
+migrate = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate up --dir {{migrations}}"
+migrate_down = "npx tsc -p tsconfig.json && npx synapsis-nest-migrate down --dir {{migrations}}"
 
 # the editor's debug launch: the compiled server with its source maps (a breakpoint in the generated .ts binds
 # through dist/*.js.map; one in a .nuc through .nuclear/lines.json)
@@ -247,7 +247,7 @@ sourceMaps = true
 outFiles = ["{{app}}/dist/**/*.js"]
 skipFiles = ["<node_internals>/**"]
 env = { PORT = "{{port}}" }
-preLaunchTask = "dragonfly: build"
+preLaunchTask = "synapsis: build"
 
 [project]
 sources = "src"
@@ -256,7 +256,7 @@ sources = "src"
 # project carries (package.json) only what it enables
 [project.manifest]
 file = "config.nuc"
-sections = ["dragonfly", "app", "plugins", "contracts", "dependencies"]
+sections = ["synapsis", "app", "plugins", "contracts", "dependencies"]
 # dependencies(name = "version") adds a package of the target's package manager; a version that starts with . or / is a folder
 packages = ["dependencies"]
 
@@ -373,11 +373,11 @@ config = "@nestjs/config"
 [auto_imports]
 # the definitions give every other name; these choose the module when two packages export the same name
 "class-transformer" = ["Transform", "Type", "Expose"]
-"dragonfly-nest" = ["Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository"]
+"synapsis-nest" = ["Result", "Ok", "Err", "Entity", "Repository", "Page", "Related", "joinTable", "transactional", "Connection", "Database", "inject", "Http", "HttpRepository"]
 # the optional parts of the runtime: only a project that enables their plugin imports them
-"dragonfly-nest/events" = ["publish", "Redis", "Kafka", "Listener", "consumer", "cacheGet", "cacheSet"]
-"dragonfly-nest/testing" = ["startTestApp", "stopTestApp"]
-"dragonfly-nest/ai" = ["Tools", "Agent", "Graph", "Messages", "start", "next", "chatModel", "textOf", "ChatModel", "Ollama", "OpenAI", "FakeModel", "StateOf", "Embeddings", "Chroma", "vectorStore"]
+"synapsis-nest/events" = ["publish", "Redis", "Kafka", "Listener", "consumer", "cacheGet", "cacheSet"]
+"synapsis-nest/testing" = ["startTestApp", "stopTestApp"]
+"synapsis-nest/ai" = ["Tools", "Agent", "Graph", "Messages", "start", "next", "chatModel", "textOf", "ChatModel", "Ollama", "OpenAI", "FakeModel", "StateOf", "Embeddings", "Chroma", "vectorStore"]
 "node:test" = ["describe", "it", "beforeEach", "afterEach", "before", "after"]
 "langchain" = ["tool"]
 "zod" = ["z"]

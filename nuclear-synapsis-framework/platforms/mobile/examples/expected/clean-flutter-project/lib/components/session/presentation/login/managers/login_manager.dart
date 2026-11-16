@@ -2,8 +2,8 @@ import 'package:clean_flutter_project/components/session/domain/models/auth.dart
 import 'package:clean_flutter_project/components/session/presentation/login/forms/login_form.dart';
 import 'package:clean_flutter_project/components/session/presentation/login/state_models/login_state.dart';
 import 'package:clean_flutter_project/components/session/session_component.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:synapsis/synapsis.dart';
 
 class LoginManager extends StateManager<LoginState> {
   LoginManager(this.session) : super(const LoginState.initial());

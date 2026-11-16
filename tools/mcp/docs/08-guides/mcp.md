@@ -1,7 +1,7 @@
 # The MCP server of NuclearLang
 
 MCP is the **Model Context Protocol**: an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls
-the tools it offers. `nuclear-graph mcp` is that program for NuclearLang. It speaks MCP over stdio and gives a
+the tools it offers. `nuclear-mcp` is that program for NuclearLang. It speaks MCP over stdio and gives a
 frontier model four things: the **generators** that write the standard code, the **local developer** that writes what
 is left, the **Smart Graph** to look things up instead of guessing, and the **compiler** to check everything.
 
@@ -14,18 +14,18 @@ The server comes with the AI services: [set them up](../../../../installer/docs/
 set-up also allows MCP clients to read the graph). Then add the server to your client:
 
 ```sh
-claude mcp add --scope user nuclear -- nuclear-graph mcp   # Claude Code
-codex mcp add nuclear -- nuclear-graph mcp                 # Codex
+claude mcp add --scope user nuclear -- nuclear-mcp   # Claude Code
+codex mcp add nuclear -- nuclear-mcp                 # Codex
 ```
 
 Cursor reads `~/.cursor/mcp.json`, OpenCode `~/.config/opencode/opencode.json`:
 
 ```json
-{ "mcpServers": { "nuclear": { "command": "nuclear-graph", "args": ["mcp"] } } }
+{ "mcpServers": { "nuclear": { "command": "nuclear-mcp" } } }
 ```
 
 ```json
-{ "mcp": { "nuclear": { "type": "local", "command": ["nuclear-graph", "mcp"], "enabled": true } } }
+{ "mcp": { "nuclear": { "type": "local", "command": ["nuclear-mcp"], "enabled": true } } }
 ```
 
 In VS Code, *Settings and integrations* (`Ctrl+Alt+S`) adds it to each client with a button.
@@ -38,7 +38,7 @@ What each group of tools needs running:
 
 | Tools | They need |
 |---|---|
-| `project_inspect`, `generate_*`, `nuclear_*`, `dragonfly` | only the installed `nuclear` and `dragonfly` commands |
+| `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |
 | `api_inspect`, `web_search`, `web_read` | the internet |
 | `graph_*` | the Smart Graph (127.0.0.1:7878), which a local profile of the set-up installs and starts |
 | `developer_*` | the Nuclear Developer (127.0.0.1:7879), the graph and Ollama with the profile's models |
@@ -59,7 +59,7 @@ kind of request it is and the plan of that kind
    its own rules, a view's details): the local agents plan, write the tests first, write the code, run the tests and
    the security review, and answer a journal of everything they did.
 4. **Wire.** Each use case the local developer wrote, with `generate_usecase` (its alias in the facade, its route).
-5. **Validate.** `nuclear_check` of the project must say `ok` and `dragonfly test` must pass.
+5. **Validate.** `nuclear_check` of the project must say `ok` and `nuclear test` must pass.
 6. **Correct only what failed**, never what passed. Before writing `.nuc` the model reads `nuclear_brief` and
    searches the graph. A run that failed for a passing cause is run again with `developer_retry`.
 7. **Review.** `developer_review` with what was corrected and why: the journal keeps it and the corrected files
@@ -71,7 +71,7 @@ The model writes the code itself only when the local developer is not running, a
 
 ### Generators
 
-They write finished code that compiles, never a skeleton to fill in. Each is a `dragonfly gen` command:
+They write finished code that compiles, never a skeleton to fill in. Each is a `nuclear gen` command:
 [the generators' guide](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md) has the
 options, the examples and what each platform gets.
 
@@ -110,9 +110,9 @@ not declare, answers where to write it.
 | Tool | What it does |
 |---|---|
 | `graph_strategy(request, platform)` | **the first call for any request**: which kind of request it is (a whole system, a component, one screen, a use case, a rename, a failing test, a question...), the signs that say so, and the plan of that kind, step by step with the tool of each step |
-| `graph_answer(question, platform)` | the exact answer of a question that has one (every command of a tool, the tools of this server and their parameters, the commands that write a kind, a diagnostic by its code, the stages of the Loop, a version...): the rows of the graph's database, whole, never recalled; then the cards the shelves answer by meaning. For "which", "list", "what are the" questions |
+| `graph_answer(question, platform)` | the exact answer of a question that has one (every command of a tool, the tools of this server and their parameters, the commands that write a kind, a diagnostic by its code, the stages of the Builder, a version...): the rows of the graph's database, whole, never recalled; then the cards the shelves answer by meaning. For "which", "list", "what are the" questions |
 | `graph_search(query, shelf, k, platform, kind, type)` | the cards that answer a question, by meaning and by exact name (a diagnostic code, a command, a kind), each with the rows it links to. `shelf`: `concepts`, `language`, `platforms`, `tools`, `errors`, `capabilities`, `playbooks`, `examples`, `docs`, `memory`; empty searches all |
-| `graph_card(id)` | one row by its id: `error:N0114`, `kind:backend.usecase`, `tool:dragonfly.gen.usecase`, `mcp:generate_usecase`, `playbook:add-a-use-case` |
+| `graph_card(id)` | one row by its id: `error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.usecase`, `mcp:generate_usecase`, `playbook:add-a-use-case` |
 | `graph_prompt(use_case)` | the validated prompt of `feature`, `refactor`, `bug`, `docs`, `diagram`, `test`, `security`, `piece`, `plan` |
 | `graph_remember(id, text, collection, project)` | keeps a decision (`memory`) or a solved example (`examples`) for the local developer and later sessions |
 
@@ -125,8 +125,8 @@ not declare, answers where to write it.
 | `nuclear_fmt(code)` | the piece in the canonical layout |
 | `nuclear_help(word, dialect)` | the documentation of a kind, a decorator, a topic or a command |
 | `nuclear_brief(dialect)` | the short sheet of Nuclear and a platform: read before writing `.nuc` |
-| `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`dragonfly` with `add`) |
-| `dragonfly(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `migrate`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |
+| `nuclear_defs(name, dialect, project?)` | a declaration of the type definitions (a class or `Class.member` of a library); with the project's folder, also of a package the project added (`nuclear_project` with `add`) |
+| `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `migrate`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |
 
 ### The internet
 
@@ -139,10 +139,10 @@ not declare, answers where to write it.
 
 | The tool answers | What to do |
 |---|---|
-| `the local developer is not running at ...` | `nuclear-loop setup --status` says what is missing; restart it in *Settings and integrations*, or with [the command of your system](../../../../installer/docs/08-guides/ai-setup.md#5-after-the-set-up) |
+| `the local developer is not running at ...` | `nuclear-builder setup --status` says what is missing; restart it in *Settings and integrations*, or with [the command of your system](../../../../installer/docs/08-guides/ai-setup.md#5-after-the-set-up) |
 | the graph refuses the client | `nuclear-graph connect mcp --scopes read,write`, with the graph running |
-| `... is not inside a Dragonfly project (no config.nuc)` | give the project's folder: `dragonfly new <name>` creates one |
-| `'<command>' is not allowed here` | the `dragonfly` tool runs only the commands of its list |
+| `... is not inside a Synapsis project (no config.nuc)` | give the project's folder: `nuclear new <name>` creates one |
+| `'<command>' is not allowed here` | the `nuclear_project` tool runs only the commands of its list |
 | a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |
 
 The graph knows every tool of this page: ask it with `graph_card("mcp:<tool>")`, or ask the editor's chat

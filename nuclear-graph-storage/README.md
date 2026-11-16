@@ -1,6 +1,6 @@
 # Nuclear Smart Graph
 
-The local, private library of everything NuclearLang and Dragonfly are. Agents (Claude, Codex, Cursor, the local
+The local, private library of everything NuclearLang and Synapsis are. Agents (Claude, Codex, Cursor, the local
 Nuclear Developer) ask it instead of guessing: what Nuclear is for, how each thing is written, every kind and
 decorator, every tool, every error and its fix, what can and cannot be done, how a task is done step by step, and
 validated code.
@@ -13,7 +13,7 @@ encrypted.
 ```
  Claude Code / Codex / Cursor ──MCP (stdio)──┐
                                              ▼
- VS Code Loop tool ──HTTP──┐        nuclear-graph mcp ──► nuclear / dragonfly CLIs
+ VS Code Builder tool ──HTTP──┐        nuclear-mcp (tools/mcp) ──► nuclear, nuclear-builder
                            ▼                 │        └─► Nuclear Developer (local 3B agents)
  Nuclear Developer ──HTTP──► nuclear-graph serve (127.0.0.1:7878, token)
                                      │
@@ -24,7 +24,7 @@ encrypted.
 ## Install
 
 The set-up of the AI services installs it, loads the knowledge base and starts it at every login:
-`nuclear-loop setup`, the installer's last step, or the wizard of VS Code
+`nuclear-builder setup`, the installer's last step, or the wizard of VS Code
 ([Set up the AI services](../installer/docs/08-guides/ai-setup.md)). By hand:
 [install, serve and ask](docs/06-runbooks/install-and-serve.md).
 
@@ -39,12 +39,13 @@ nuclear-graph strategy "renombra Book a Title"     # which kind of request it is
 
 ## Use it from an AI agent (MCP)
 
-`nuclear-graph mcp` is the MCP server of NuclearLang: it offers the graph, the compiler, the `dragonfly` commands
-and the local developer as tools.
+The MCP server of NuclearLang is `nuclear-mcp`, a project of its own ([`tools/mcp`](../tools/mcp/AGENTS.md)): it
+offers the graph, the compiler, the `nuclear` commands and the local developer as tools. `nuclear-graph mcp` still
+runs it.
 
 ```sh
-claude mcp add nuclear -- nuclear-graph mcp       # Claude Code
-codex mcp add nuclear -- nuclear-graph mcp        # Codex
+claude mcp add nuclear -- nuclear-mcp       # Claude Code
+codex mcp add nuclear -- nuclear-mcp        # Codex
 ```
 
 Its tools and the set-up of each client: the project [`tools/mcp`](../tools/mcp/AGENTS.md).

@@ -4,7 +4,7 @@ owner: Julian Molina
 updated: 2026-11-16
 related: [../01-product/roadmap.md, ../../../../docs/03-adr/0002-the-nuclear-workspace.md, ../../../../vscode/docs/02-architecture/workspace.md]
 ---
-# Architecture of Nuclear HTTP
+# Architecture of Nuclear Connector
 
 A basic Bruno / Postman inside the editor (ADR-extensions-0002) over the contract the compiler writes
 (ADR-synapsis-0006). Not run in a VS Code window nor in a running IDE yet ([roadmap](../01-product/roadmap.md)).
@@ -17,9 +17,9 @@ its `controllers` (what a backend exposes) and its `repositories` (what a mobile
 component with its routes (verb, path, params in path / query / body, what it returns)
 ([projects §1.2](../../../../../nuclearlang/docs/07-reference/projects.md)).
 
-## The model (`http.ts`)
+## The model (`connector.ts`)
 
-`activateHttp(context)` returns the `HttpModel`.
+`activateConnector(context)` returns the `HttpModel`.
 
 - `findProjects` walks the workspace folders (depth 4, skipping `build`, `node_modules`…) for
   `.nuclear/project.json` and reads the `contract.json` next to it. The model watches `**/.nuclear/*.json`.
@@ -32,11 +32,11 @@ component with its routes (verb, path, params in path / query / body, what it re
   `active`, and `environments.<name>.{vars, headers, baseUrls, openapi}`. `{{var}}` is resolved by the extension
   host.
 
-Commands: `nuclear.http.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and
+Commands: `nuclear.connector.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and
 `nuclear.contracts.update (root?, name?)`, which runs `~/.local/bin/nuclear contracts update` in the project (the
-output channel *Nuclear HTTP*).
+output channel *Nuclear Connector*).
 
-## A component's panel (`httpPanel.ts`)
+## A component's panel (`panel.ts`)
 
 `ComponentPanel`: one webview panel per `componentKey(endpoint)`, like a Bruno folder, with an inner tab per
 endpoint opened from the tree. Each inner tab keeps its request and its last response:
@@ -46,20 +46,20 @@ endpoint opened from the tree. Each inner tab keeps its request and its last res
 - the response pretty-printed; *copy as curl*.
 
 The webview posts its whole state (`tabs`, `active`) on every change and the model keeps it in `memory` by key, so
-`restore(keys)` rebuilds the panels when the HTTP workspace is entered again (`model.reopen` = the keys open when
+`restore(keys)` rebuilds the panels when the Connector workspace is entered again (`model.reopen` = the keys open when
 it was left). The memory lives in the window, not on disk.
 
 ## In the workspace
 
-The tool `http` of the strip (`Ctrl+Alt+H`). Its pane is the environment bar and the tree; the ⇄ API action of a
+The tool `connector` of the strip (`Ctrl+Alt+H`). Its pane is the environment bar and the tree; the ⇄ API action of a
 backend project jumps to its routes ([the workspace](../../../../vscode/docs/02-architecture/workspace.md)).
 
 Verbs and sections use theme colors the extension contributes (`colors` in `package.json`:
-`nuclearHttp.get/post/put/patch/delete/platform/project/component`, with dark and light defaults; a theme may
-override them; in CSS `var(--vscode-nuclearHttp-get)`). The Chernobyl themes set them from the palette
+`nuclearConnector.get/post/put/patch/delete/platform/project/component`, with dark and light defaults; a theme may
+override them; in CSS `var(--vscode-nuclearConnector-get)`). The Chernobyl themes set them from the palette
 ([the theme](../../../../vscode/docs/02-architecture/theme.md)).
 
-## The JetBrains tool window (`NuclearHttp.java`)
+## The JetBrains tool window (`NuclearConnector.java`)
 
 The VS Code view in Swing, on the left, `Alt+Shift+H` (`keyboard-shortcut` in `plugin.xml`).
 

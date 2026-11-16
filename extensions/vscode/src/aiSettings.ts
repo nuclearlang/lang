@@ -1,12 +1,12 @@
 // The configuration of the AI loop in the editor's settings (`nuclear.ai.*`): where the services answer, the local
-// models, Claude's model, the retry policy and the MCP command. The Loop and the chat read it as the machine's
-// defaults; a project's `.nuclear/loop.json` still wins (it is shared with CI). Jira's credentials live in the secret
+// models, Claude's model, the retry policy and the MCP command. The Builder and the chat read it as the machine's
+// defaults; a project's `.nuclear/builder.json` still wins (it is shared with CI). Jira's credentials live in the secret
 // storage.
 import * as vscode from 'vscode';
 import { readMachine } from './aiSetup';
-import { JiraAuth, LoopConfig, RetryPolicy, toolEnv } from './loopEngine';
+import { JiraAuth, BuilderConfig, RetryPolicy, toolEnv } from '../../tools/nuclear-builder/src/engine';
 
-export const JIRA_SECRET = 'nuclear.loop.jira';
+export const JIRA_SECRET = 'nuclear.builder.jira';
 
 export interface AiSettings {
   developerUrl: string;
@@ -16,6 +16,9 @@ export interface AiSettings {
   assistantModel: string;
   embeddingsModel: string;
   claudeModel: string;
+  /** The Smart Graph's command (serve, connect, requests, revoke). */
+  graphCommand: string;
+  /** The MCP server's command, started with no argument by an AI client. */
   mcpCommand: string;
   /** The context window of the local models in tokens (the Developer's `numCtx`). */
   contextTokens: number;
@@ -38,14 +41,15 @@ export function aiSettings(): AiSettings {
     assistantModel: model('models.assistant', machine.ASSISTANT_MODEL),
     embeddingsModel: model('models.embeddings', machine.NUCLEAR_GRAPH_EMBED),
     claudeModel: c.get('claudeModel', 'sonnet'),
-    mcpCommand: c.get('mcpCommand', 'nuclear-graph'),
+    graphCommand: c.get('graphCommand', 'nuclear-graph'),
+    mcpCommand: c.get('mcpCommand', 'nuclear-mcp'),
     contextTokens: c.get('contextTokens', 8192),
     retry: { attempts: c.get('retry.attempts', 5), baseMs: c.get('retry.baseMs', 1000), maxMs: c.get('retry.maxMs', 30000) },
   };
 }
 
-/** What the Loop takes from the settings (under a project's `.nuclear/loop.json`). */
-export function machineConfig(): Partial<LoopConfig> {
+/** What the Builder takes from the settings (under a project's `.nuclear/builder.json`). */
+export function machineConfig(): Partial<BuilderConfig> {
   const s = aiSettings();
   const c = vscode.workspace.getConfiguration('nuclear.ai');
   return {
@@ -57,7 +61,7 @@ export function machineConfig(): Partial<LoopConfig> {
     claudeModel: s.claudeModel,
     claudeCommand: c.get('claude.command', 'claude'),
     claudeBudgetUsd: c.get('claude.maxBudgetUsd', 2),
-    graphCommand: s.mcpCommand,
+    mcpCommand: s.mcpCommand,
     retry: s.retry,
     callTimeoutMs: c.get('watch.callTimeoutMinutes', 15) * 60_000,
     stallSeconds: c.get('watch.stallSeconds', 90),

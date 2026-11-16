@@ -5,9 +5,9 @@ class Mock{{.}} extends Mock implements {{.}} {}
 void main() {
   group('{{name}}', () {
     setUp(() async {
-      await DragonflyTest.start(dragonflyConfig(), registerDragonfly{{#decor.offline}}, NetworkStatus.offline{{/decor.offline}});
+      await SynapsisTest.start(synapsisConfig(), registerSynapsis{{#decor.offline}}, NetworkStatus.offline{{/decor.offline}});
 {{#decor.mock.items}}
-      DragonflyTest.replace<{{.}}>(Mock{{.}}());
+      SynapsisTest.replace<{{.}}>(Mock{{.}}());
 {{/decor.mock.items}}
     });
 

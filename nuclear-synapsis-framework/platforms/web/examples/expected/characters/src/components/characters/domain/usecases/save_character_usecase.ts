@@ -2,7 +2,7 @@ import { CharacterRepository } from '../../data/character_repository';
 import { Character } from '../models/character';
 import { CharacterError } from '../models/character_error';
 import { CharacterParams } from '../models/character_params';
-import { Err, Guards, Ok, Result } from 'dragonfly-web';
+import { Err, Guards, Ok, Result } from 'synapsis-web';
 
 export class SaveCharacterUseCase {
   constructor(private readonly repository: CharacterRepository) {}

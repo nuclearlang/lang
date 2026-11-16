@@ -1,8 +1,8 @@
-# Kinds: the libraries of Dragonfly
+# Kinds: the libraries of Synapsis
 
 A **kind** is the word before the name of a declaration: `usecase CreateTask`, `controller TasksController`,
-`stateless Home`. It tells Dragonfly what that block is, and the dialect writes the whole declaration in the target
-(the class, its base, its imports, its boilerplate) so you only write the logic. Kinds are to Dragonfly what
+`stateless Home`. It tells Synapsis what that block is, and the dialect writes the whole declaration in the target
+(the class, its base, its imports, its boilerplate) so you only write the logic. Kinds are to Synapsis what
 libraries are to a language: a platform comes with its **native kinds**, and a project or the community can add
 **extension kinds** on top of a dialect, without touching the compiler (ADR-synapsis-0004).
 
@@ -64,7 +64,7 @@ add ([README](README.md)).
 Anything a project repeats can become a kind: a scheduled job, a webhook handler, a report, a screen layout your
 app uses forty times. An extension kind is a **package**: its TOML, templates, the runtime it needs in the target
 language, its type definitions and its editor docs, with one implementation per dialect it supports. It is enabled
-like a plugin, `plugins(jobs = true)`, and the project keeps `dragonfly(platform = "backend", dialect = "fastapi")`.
+like a plugin, `plugins(jobs = true)`, and the project keeps `synapsis(platform = "backend", dialect = "fastapi")`.
 A package belongs to one platform: a backend package never shows up in a mobile project, even when the word exists
 there with another meaning (`repository` is table queries in backend and HTTP calls in mobile).
 
@@ -77,7 +77,7 @@ The rule of portability (ADR-synapsis-0002, ADR-synapsis-0004): the Nuclear you 
 implements it. A package implemented for one dialect only ties your project to that dialect, exactly as using a
 dialect's type definitions does; the compiler tells you which dialects you can still build with.
 
-Status: the package format, `nuclear kind new`, `dragonfly add` and the missing-implementation diagnostic (N0306)
+Status: the package format, `nuclear kind new`, `nuclear add` and the missing-implementation diagnostic (N0306)
 exist (ADR-synapsis-0004); the editor's view of a kind's source and `nuclear dialect test` are pending (the framework's `docs/01-product/roadmap.md`).
 
 ## 3. Write a kind
@@ -134,7 +134,7 @@ class {{name}}:
 
 ```nuclear
 // config.nuc
-dragonfly(platform = "backend", dialect = "fastapi")
+synapsis(platform = "backend", dialect = "fastapi")
 app(name = "demo")
 plugins(jobs = true)
 ```
@@ -165,7 +165,7 @@ class PurgeJob:
 
 Change `dialect` to `nestjs` and the build says what the rule of portability says: the package `jobs` has no
 implementation for `nestjs` (it has `fastapi`), so either build with fastapi or add `kinds/jobs/nestjs/` (N0306).
-To use the package in every project of your machine: `dragonfly add kinds/jobs`. The editor completes `job`,
+To use the package in every project of your machine: `nuclear add kinds/jobs`. The editor completes `job`,
 shows its `description` and the text of `docs.toml`, and reports a job without `run()` while you type.
 
 ### What a kind can declare

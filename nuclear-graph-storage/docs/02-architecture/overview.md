@@ -11,7 +11,7 @@ related: [shelves.md, search.md, exact-facts.md, knowledge-base.md, integrations
 ```
  Claude Code / Codex / Cursor ──MCP (stdio)──┐
                                              ▼
- VS Code Loop tool ──HTTP──┐        nuclear-graph mcp ──► nuclear / dragonfly CLIs
+ VS Code Builder tool ──HTTP──┐        nuclear-mcp (tools/mcp) ──► nuclear, nuclear-builder
                            ▼                 │        └─► Nuclear Developer (local 3B agents)
  Nuclear Developer ──HTTP──► nuclear-graph serve (127.0.0.1:7878, token)
                                      │
@@ -47,12 +47,11 @@ reads them from `prompts/`), and so does `py.typed` (a project that uses the pac
 | `access.nuc`, `secrets_store.nuc`, `crypto.nuc` | the clients and their tokens; the keyring; the cipher |
 | `server.nuc` | the HTTP API |
 | `client.nuc` | `GraphClient`: what a program uses |
-| `toolchain.nuc` | `Toolchain`: the compiler and the `dragonfly` commands for an agent |
+| `toolchain.nuc` | `Toolchain`: the compiler and the `nuclear` commands for an agent |
 | `workspace.nuc` | `Workspace`: a project's files for an agent (read-only, inside the project; the rename tool) |
 | `web.nuc` | the internet tools (search, read a page) |
-| `mcp_server.nuc` | the MCP server: the project [`tools/mcp`](../../../tools/mcp/AGENTS.md) |
 | `paths.nuc` | the port, the URL, the data folder, the machine's `ai.env` |
-| `cli.nuc` | the `nuclear-graph` command |
+| `cli.nuc` | the `nuclear-graph` command (`nuclear-graph mcp` runs `nuclear-mcp`, the MCP server of [`tools/mcp`](../../../tools/mcp/AGENTS.md)) |
 | `prompts/` | the prompt files: `prompts/<use case>.md` and `prompts/agents/<step>.md`, ingested into `prompts` |
 | `tests/` | the tests, in Nuclear |
 | `data/` | the knowledge base: [knowledge-base.md](knowledge-base.md), [`data/README.md`](../../data/README.md) |
@@ -73,12 +72,11 @@ process.
 |---|---|---|
 | Python 3.12+, uv, hatchling | everything | the built package and its environment |
 | `httpx` | the client, the tools for agents, the command | the only dependency of a plain `pip install nuclear-graph` |
-| `mcp` | extra `mcp` | the MCP server alone (a machine of remote agents only) |
-| `chromadb`, `numpy`, `ollama`, `fastapi`, `uvicorn`, `cryptography`, `mcp` | extra `server` | the store, the exact search over the stored vectors, the embeddings, the HTTP API, the encryption |
+| `chromadb`, `numpy`, `ollama`, `fastapi`, `uvicorn`, `cryptography` | extra `server` | the store, the exact search over the stored vectors, the embeddings, the HTTP API, the encryption |
 | `pytest` | extra `test` | the tests |
 | SQLite | the server | the exact facts; it is in the standard library of the target |
 | Ollama with `embeddinggemma` | the server | the vectors of the rows and of each query |
-| The `nuclear`, `dragonfly` and `nuclear-loop` commands on the `PATH` | `knowledge build`, `Toolchain`, the MCP server | their help is read into rows; the agents' checks run them |
+| The `nuclear`, `nuclear-builder` and `nuclear-mcp` commands on the `PATH` | `knowledge build`, `Toolchain` | their help (and `nuclear-mcp tools`) is read into rows; the agents' checks run `nuclear` |
 | The desktop keyring (`secret-tool`, libsecret) | the server, `connect` | the documents' key, the owner token, each client's token |
 
 ## Quality attributes

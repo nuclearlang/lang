@@ -32,7 +32,7 @@ Besides its card for people and lead models:
 | `data.target` | `existing`: the request names a declaration the project has; `new`: one it has not |
 | `asks` | how people ask for it, in English and Spanish: found by meaning |
 | `data.mode` | `write`, `repair` (the compiler's errors drive), `fix` (a failing test drives), `review`, `answer`, `commands`, `lead` |
-| `data.stages` | the stages of the Loop it runs; empty: this kind of request is not a run |
+| `data.stages` | the stages of the Builder it runs; empty: this kind of request is not a run |
 | `data.pieces` | where its pieces come from: `plan` (the planner splits what is left), `declaring` (the files that declare what the request names), `naming` (every file that writes a name: a rename), `none` |
 | `data.generators` | the generators it calls |
 | `data.needs` | the facts it cannot start without, each with its question for the user |
@@ -52,7 +52,7 @@ in fixed steps:
    project has).
 3. The strategy gives the stages that run, the source of the pieces and the facts it needs.
 4. **A model is asked for one thing only**: the resources a request in plain words describes
-   (`component | Name | fields | source | actions`). Each line becomes a `dragonfly gen resource` call and is kept
+   (`component | Name | fields | source | actions`). Each line becomes a `nuclear gen resource` call and is kept
    only if its `--dry-run` accepts it.
 5. A fact the request lacks is a question for the user and stops the run: nothing is guessed.
 
@@ -69,27 +69,27 @@ words (`total` as `double`) are shown in the *Generate* step of the run, to be c
 In every strategy:
 
 - A generator writes what is standard. "Suppliers with a name and a phone: add, change and remove them" becomes
-  `dragonfly gen resource suppliers Supplier --fields "name:string phone:string" --source db --actions
+  `nuclear gen resource suppliers Supplier --fields "name:string phone:string" --source db --actions
   create,delete,update`, shown before it runs.
 - The compiler's exact fixes (`nuclear fix`) come before any repair.
 - A rename is done by a tool and no model writes (`Workspace.renamed`): every file that writes the name as a word,
   with the new one in its place, and with it the project's names built from it (`NewBook` and `BookRepository` for
   `Book`).
 - The files a change starts in are found by the project's declarations, not planned.
-- A generator finishes what it starts on a resource that exists: `dragonfly gen resource` with a new action adds
+- A generator finishes what it starts on a resource that exists: `nuclear gen resource` with a new action adds
   the repository's method and the controller's route too (merged member by member). It refuses a search of a
   stored resource, because which column is searched is a decision (a query of the repository, wired with
-  `dragonfly gen usecase --calls`).
+  `nuclear gen usecase --calls`).
 
 A model writes only a piece of one file that no tool can write.
 
 ## What a run does with it
 
-The Loop follows the strategy (the project [`extensions/`](../../../../extensions/AGENTS.md) has the pipeline):
+The Builder follows the strategy (the project [`extensions/`](../../../../extensions/AGENTS.md) has the pipeline):
 the analysis is the last step of the *Specification* stage; the stages the strategy has no use for are skipped;
 *Generate* runs the spec's own resources and the calls the analysis derived; *Plan* takes the pieces the tools gave
 and asks the planner only when the strategy's pieces come from a plan; *Code* writes a piece a tool already wrote
-as it is, and afterwards wires each use case the coder wrote with `dragonfly gen usecase` (its alias and, when the
+as it is, and afterwards wires each use case the coder wrote with `nuclear gen usecase` (its alias and, when the
 spec's sentence gives it, its route); *Verification*, for a bug, repairs the file the failure names whoever wrote
 it, and never the test. A Developer without an analyst leaves the run as it was: every stage. A lead model gets
 the same routing and the same plans over MCP (`graph_strategy`).
@@ -104,6 +104,6 @@ the same routing and the same plans over MCP (`graph_strategy`).
   member); the file of a renamed declaration keeps its path; a plural (`ListBooks`) and an alias of the facade
   stay. A rename runs no security review: it writes no new logic.
 - A bug whose failure names only its test stops at *Verification*: where the cause is needs a lead or the user.
-- The Loop writes files and never deletes one.
+- The Builder writes files and never deletes one.
 - Still by hand or by a model, with no generator: relations in a stored resource, the tests of a backend resource
   over another API, what a screen shows of a use case added with `gen usecase` (mobile, web).

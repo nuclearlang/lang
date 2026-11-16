@@ -2,7 +2,7 @@ import { Task } from '../../data/entities/task.js';
 import { TaskRepository } from '../../data/repositories/task_repository.js';
 import { TaskChanges } from '../models/task_models.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Err, Ok, Result } from 'dragonfly-nest';
+import { AppError, Err, Ok, Result } from 'synapsis-nest';
 
 /** Changes the fields that come in `changes`. */
 @Injectable()

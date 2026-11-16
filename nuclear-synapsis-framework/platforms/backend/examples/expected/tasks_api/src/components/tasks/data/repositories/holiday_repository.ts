@@ -1,6 +1,6 @@
 import { Holiday } from '../../domain/models/holiday.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, HttpRepository, Result } from 'dragonfly-nest';
+import { AppError, HttpRepository, Result } from 'synapsis-nest';
 
 /** The public holidays of a country (an HTTP repository: another API, ADR-codegen-0001), to warn when a task is due on one. */
 @Injectable()

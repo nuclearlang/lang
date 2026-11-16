@@ -22,14 +22,14 @@ platform and dialect line (ADR-synapsis-0002), the plugins (ADR-synapsis-0004) a
 (ADR-synapsis-0006).
 
 **Only third-party packages.** A project adds only packages the framework does not use: neither the dialect's (its
-`defs`) nor the ones Dragonfly adds (`[project.manifest] reserved`), which reach the app by themselves.
-`dragonfly add` rejects one before changing anything, and `config.nuc` marks it with `N0303` on its line in
+`defs`) nor the ones Synapsis adds (`[project.manifest] reserved`), which reach the app by themselves.
+`nuclear add` rejects one before changing anything, and `config.nuc` marks it with `N0303` on its line in
 `check`, `build` and the editor. A project without `config.nuc` gets one on its first `check` or `build`.
 
-**Every third-party package has type definitions.** `dragonfly add <package>` (the same command as
-`dragonfly flutter add`, ADR-lang-0008) adds it to `config.nuc` and to the app, and generates its type definitions
+**Every third-party package has type definitions.** `nuclear add <package>` (the same command as
+`nuclear flutter add`, ADR-lang-0008) adds it to `config.nuc` and to the app, and generates its type definitions
 with the Dart analyzer (`nuclearlang/tools/defs`) into a global cache, `~/.cache/nuclearlang/defs`, shared by
-projects. `dragonfly remove` removes it from the project and keeps the cached definitions. The project lists its
+projects. `nuclear remove` removes it from the project and keeps the cached definitions. The project lists its
 own in `build/defs.lock`; the language server loads them from there.
 
 **No empty sections.** What is not used is not written: a new project has only `app(...)`. `add` creates
@@ -37,7 +37,7 @@ own in `build/defs.lock`; the language server loads them from there.
 
 **Assets by convention.** `config.nuc` declares no assets. `assets/fonts/<Family>/` are fonts, with the weight and
 the style taken from the end of the file's name (`Roboto-BoldItalic.ttf`); `assets/shaders/*.frag` are shaders; any
-other folder of `assets/` is bundled. `dragonfly build` rewrites `assets:`, `fonts:` and `shaders:` of the app's
+other folder of `assets/` is bundled. `nuclear build` rewrites `assets:`, `fonts:` and `shaders:` of the app's
 pubspec on every build. Two fonts of a family with the same weight and style are an error. The project only adds:
 no `dependency_overrides`.
 

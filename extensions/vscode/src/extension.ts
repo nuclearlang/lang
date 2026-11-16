@@ -7,10 +7,10 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { activateDebug } from './debug';
-import { activateDevice } from './device';
-import { activateHttp } from './http';
+import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
+import { activateConnector } from '../../tools/nuclear-connector/src/connector';
 import { appDir, CARD, projectCard, readCard } from './card';
-import { activateWebDevice } from './webDevice';
+import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
 import { activateWorkspace } from './workspace';
 import {
   LanguageClient,
@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // from the editor title the argument is the file's uri; from the Nuclear workspace, the project's root
     vscode.commands.registerCommand('nuclear.run', (arg?: unknown) => runApp(true, undefined, {}, typeof arg === 'string' ? arg : undefined)),
     vscode.commands.registerCommand('nuclear.debug', (arg?: unknown) => runApp(false, undefined, {}, typeof arg === 'string' ? arg : undefined)),
-    vscode.debug.registerDebugConfigurationProvider('dragonfly', dragonflyDebugProvider),
+    vscode.debug.registerDebugConfigurationProvider('synapsis', synapsisDebugProvider),
     vscode.debug.registerDebugAdapterTrackerFactory('dart', { createDebugAdapterTracker: watchSession }),
     vscode.debug.onDidTerminateDebugSession(sessionEnded),
     vscode.workspace.onDidSaveTextDocument(reloadOnSave),
@@ -76,42 +76,43 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   updateRunContext();
   watchAppCreation(context);
   // the project of a folder (a session's cwd, a breakpoint's file), or the first one of the workspace
-  debugNuc = activateDebug(context, (dir?: string) => (dir ? dragonflyOf(path.join(dir, '_')) : findDragonfly()));
-  const http = activateHttp(context);
+  debugNuc = activateDebug(context, (dir?: string) => (dir ? synapsisOf(path.join(dir, '_')) : findSynapsis()));
+  const http = activateConnector(context);
   activateWorkspace(context, http);
   // the set-up of the AI services (ADR-installer-0002): a command, and an offer on a machine that was never set up
   context.subscriptions.push(vscode.commands.registerCommand('nuclear.ai.setup', () => SetupPanel.show()));
   void SetupPanel.offer(context);
-  activateDevice(context, findDragonfly, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));
-  // a web project's app: from the workspace `dragonfly build` writes, or (never built yet) its default place
-  // a web project's app: its card (output, toolchain) and the dragonfly of its workspace (else the one on the PATH)
+  activateDevice(context, findSynapsis, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));
+  // a web project's app: from the workspace `nuclear build` writes, or (never built yet) its default place
+  // a web project's app: its card (output, toolchain) and the synapsis of its workspace (else the one on the PATH)
   activateWebDevice(context, (root) => {
     const card = readCard(root);
     const app = appDir(root, card);
     if (!card || !app) return undefined;
-    return { root, app, dragonfly: findDragonfly(root)?.dragonfly ?? 'dragonfly', name: card.name, serve: card.toolchain?.serve ?? undefined };
+    return { root, app, command: findSynapsis(root)?.command ?? 'nuclear', name: card.name, serve: card.toolchain?.serve ?? undefined };
   });
 }
 
-// ---------------------------------------------------------------- run (Dragonfly projects)
+// ---------------------------------------------------------------- run (Synapsis projects)
 
-// A Dragonfly project is a folder with build/<name>.code-workspace, which every `dragonfly build` writes.
-// That file names the Flutter app, the dragonfly binary and the launch config, so Run/Debug, F5 and hot
+// A Synapsis project is a folder with build/<name>.code-workspace, which every `nuclear build` writes.
+// That file names the Flutter app, the synapsis binary and the launch config, so Run/Debug, F5 and hot
 // reload work the same whether the user opened the workspace or just the project folder.
-interface Dragonfly {
+interface Synapsis {
   root: string;
   app: string;
-  dragonfly: string;
+  /** The `nuclear` binary that builds this project. */
+  command: string;
   env: Record<string, string>;
   launch: vscode.DebugConfiguration;
 }
 
-let dragonflyOutput: vscode.OutputChannel | undefined;
+let synapsisOutput: vscode.OutputChannel | undefined;
 let buildQueue: Promise<number> = Promise.resolve(0);
 let appAtStart = false;
 
-/** The Dragonfly project of `root`, or the first one of the workspace folders. */
-function findDragonfly(root?: string): Dragonfly | undefined {
+/** The Synapsis project of `root`, or the first one of the workspace folders. */
+function findSynapsis(root?: string): Synapsis | undefined {
   const roots = root ? [root] : (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
   for (const folder of roots) {
     const build = path.join(folder, 'build');
@@ -136,13 +137,13 @@ function findDragonfly(root?: string): Dragonfly | undefined {
                 : v;
         // the app's debug launch: dart (mobile), node (nestjs), debugpy (fastapi) or chrome (react)
         const launch = (ws.launch?.configurations ?? []).find((c: { name?: string }) => c.name?.endsWith(' (debug)'));
-        const task = (ws.tasks?.tasks ?? []).find((t: { label?: string }) => t.label === 'dragonfly: build');
+        const task = (ws.tasks?.tasks ?? []).find((t: { label?: string }) => t.label === 'nuclear: build');
         if (!launch || !task) continue;
         const resolved = resolve(launch) as vscode.DebugConfiguration;
         return {
           root: folder,
           app: resolved.cwd ?? resolved.webRoot,
-          dragonfly: task.command,
+          command: task.command,
           env: task.options?.env ?? {},
           launch: resolved,
         };
@@ -154,11 +155,11 @@ function findDragonfly(root?: string): Dragonfly | undefined {
   return undefined;
 }
 
-/** The Dragonfly project a file belongs to (walking up), also when its folder is not a workspace folder. */
-function dragonflyOf(file: string): Dragonfly | undefined {
+/** The Synapsis project a file belongs to (walking up), also when its folder is not a workspace folder. */
+function synapsisOf(file: string): Synapsis | undefined {
   let dir = path.dirname(file);
   for (let i = 0; i < 8; i++) {
-    const d = findDragonfly(dir);
+    const d = findSynapsis(dir);
     if (d) return d;
     const up = path.dirname(dir);
     if (up === dir) break;
@@ -168,21 +169,21 @@ function dragonflyOf(file: string): Dragonfly | undefined {
 }
 
 function updateRunContext(): void {
-  void vscode.commands.executeCommand('setContext', 'nuclear.canRun', findDragonfly() !== undefined);
+  void vscode.commands.executeCommand('setContext', 'nuclear.canRun', findSynapsis() !== undefined);
 }
 
-/** Exit code of `dragonfly build` when the `.nuc` have errors: repairing the app cannot fix them. */
+/** Exit code of `nuclear build` when the `.nuc` have errors: repairing the app cannot fix them. */
 const CODE_ERRORS = 2;
 
-/** `dragonfly <command>` (build: transpile, plus pub get and build_runner when needed); one at a time.
+/** `synapsis <command>` (build: transpile, plus pub get and build_runner when needed); one at a time.
  * Resolves to the exit code (0 = ok). */
-function dragonfly(d: Dragonfly, command: 'build' | 'repair' = 'build'): Promise<number> {
-  const out = (dragonflyOutput ??= vscode.window.createOutputChannel('Dragonfly'));
+function synapsis(d: Synapsis, command: 'build' | 'repair' = 'build'): Promise<number> {
+  const out = (synapsisOutput ??= vscode.window.createOutputChannel('Synapsis'));
   buildQueue = buildQueue.then(
     () =>
       new Promise<number>((done) => {
         const env = { ...process.env, ...d.env, NO_COLOR: '1' };
-        execFile(d.dragonfly, [command], { cwd: d.root, env, maxBuffer: 64 << 20 }, (err, stdout, stderr) => {
+        execFile(d.command, [command], { cwd: d.root, env, maxBuffer: 64 << 20 }, (err, stdout, stderr) => {
           out.append(stdout + stderr);
           if (!err) debugNuc?.built();
           done(err ? (typeof err.code === 'number' ? err.code : 1) : 0);
@@ -192,32 +193,32 @@ function dragonfly(d: Dragonfly, command: 'build' | 'repair' = 'build'): Promise
   return buildQueue;
 }
 
-const dragonflyBuild = (d: Dragonfly) => dragonfly(d, 'build');
+const synapsisBuild = (d: Synapsis) => synapsis(d, 'build');
 
-/** `dragonfly repair`, only when something failed: build; pub get + build_runner from scratch; flutter clean
+/** `nuclear repair`, only when something failed: build; pub get + build_runner from scratch; flutter clean
  * and everything again; each step only if the one before did not leave a valid app. */
-function dragonflyRepair(d: Dragonfly, why: string): Thenable<boolean> {
-  dragonflyOutput?.appendLine(`\n--- ${why}: dragonfly repair`);
+function synapsisRepair(d: Synapsis, why: string): Thenable<boolean> {
+  synapsisOutput?.appendLine(`\n--- ${why}: nuclear repair`);
   return vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: `Dragonfly: ${why}, repairing the app…` },
-    async () => (await dragonfly(d, 'repair')) === 0,
+    { location: vscode.ProgressLocation.Notification, title: `Synapsis: ${why}, repairing the app…` },
+    async () => (await synapsis(d, 'repair')) === 0,
   );
 }
 
 async function showBuildError(message: string): Promise<void> {
-  const choice = await vscode.window.showErrorMessage(`Dragonfly: ${message}`, 'Show Output');
-  if (choice) dragonflyOutput?.show();
+  const choice = await vscode.window.showErrorMessage(`Synapsis: ${message}`, 'Show Output');
+  if (choice) synapsisOutput?.show();
 }
 
 /** The app's launch config with the given mode; the project is transpiled first (no preLaunchTask, so it
  * also works without the workspace's tasks). */
-async function dragonflyLaunch(d: Dragonfly, base: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration | undefined> {
-  const code = await dragonflyBuild(d);
+async function synapsisLaunch(d: Synapsis, base: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration | undefined> {
+  const code = await synapsisBuild(d);
   if (code === CODE_ERRORS) {
     await showBuildError('the project has errors.');
     return undefined;
   }
-  if (code !== 0 && !(await dragonflyRepair(d, 'the build failed'))) {
+  if (code !== 0 && !(await synapsisRepair(d, 'the build failed'))) {
     await showBuildError('the build fails even after flutter clean.');
     return undefined;
   }
@@ -230,29 +231,29 @@ async function dragonflyLaunch(d: Dragonfly, base: vscode.DebugConfiguration): P
   return config;
 }
 
-/** `root`: the project (a tab of the Nuclear workspace); without it, the first Dragonfly project of the folders. */
+/** `root`: the project (a tab of the Nuclear workspace); without it, the first Synapsis project of the folders. */
 async function runApp(noDebug: boolean, deviceId?: string, extra: Record<string, unknown> = {}, root?: string): Promise<void> {
-  const d = findDragonfly(root);
+  const d = findSynapsis(root);
   if (!d) {
-    void vscode.window.showWarningMessage('Not a Dragonfly project: run `dragonfly build` in the project first.');
+    void vscode.window.showWarningMessage('Not a Synapsis project: run `nuclear build` in the project first.');
     return;
   }
   if (d.launch.type !== 'dart') return runPlatformApp(d, noDebug);
-  const config = await dragonflyLaunch(d, { type: 'dart', request: 'launch', name: d.launch.name, ...(deviceId && { deviceId }), ...extra });
+  const config = await synapsisLaunch(d, { type: 'dart', request: 'launch', name: d.launch.name, ...(deviceId && { deviceId }), ...extra });
   if (config) await vscode.debug.startDebugging(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(d.app)), config, { noDebug });
 }
 
 /** A backend or web app (the launch the CLI wrote for its dialect): build, then that launch. A web app's dev server
- * runs first in its terminal (`dragonfly run`), as the launch's preLaunchTask would. */
-async function runPlatformApp(d: Dragonfly, noDebug: boolean): Promise<void> {
-  const code = await dragonflyBuild(d);
+ * runs first in its terminal (`nuclear run`), as the launch's preLaunchTask would. */
+async function runPlatformApp(d: Synapsis, noDebug: boolean): Promise<void> {
+  const code = await synapsisBuild(d);
   if (code !== 0) return showBuildError(code === CODE_ERRORS ? 'the project has errors.' : 'the build failed.');
   const config: vscode.DebugConfiguration = { ...d.launch };
   if (config.type === 'chrome' && typeof config.url === 'string') {
     const name = `${path.basename(d.root)} · run`;
     const terminal = vscode.window.terminals.find((t) => t.name === name) ?? vscode.window.createTerminal({ name, cwd: d.root });
     if (!(await answers(config.url))) {
-      terminal.sendText(`"${d.dragonfly}" run`);
+      terminal.sendText(`"${d.command}" run`);
       if (!(await answers(config.url, 120))) return showBuildError(`the dev server did not answer at ${config.url}.`);
     }
   }
@@ -273,32 +274,32 @@ async function answers(url: string, seconds = 0): Promise<boolean> {
   return false;
 }
 
-/** F5 on a `.nuc` without a launch.json: the `dragonfly` debug type becomes the app's `dart` config. */
-const dragonflyDebugProvider: vscode.DebugConfigurationProvider = {
-  provideDebugConfigurations: () => [{ type: 'dragonfly', request: 'launch', name: 'Dragonfly app' }],
+/** F5 on a `.nuc` without a launch.json: the `synapsis` debug type becomes the app's `dart` config. */
+const synapsisDebugProvider: vscode.DebugConfigurationProvider = {
+  provideDebugConfigurations: () => [{ type: 'synapsis', request: 'launch', name: 'Synapsis app' }],
   resolveDebugConfiguration: async (_folder, config) => {
-    const d = findDragonfly();
+    const d = findSynapsis();
     if (!d) {
-      void vscode.window.showWarningMessage('Not a Dragonfly project: run `dragonfly build` in the project first.');
+      void vscode.window.showWarningMessage('Not a Synapsis project: run `nuclear build` in the project first.');
       return undefined;
     }
-    return dragonflyLaunch(d, { ...config, type: 'dart', request: 'launch' });
+    return synapsisLaunch(d, { ...config, type: 'dart', request: 'launch' });
   },
 };
 
 /** Saving a `.nuc` of the project transpiles it and hot reloads the running app, like saving a `.dart`. */
 async function reloadOnSave(doc: vscode.TextDocument): Promise<void> {
   if (doc.languageId !== 'nuclear') return;
-  const d = dragonflyOf(doc.uri.fsPath) ?? findDragonfly();
+  const d = synapsisOf(doc.uri.fsPath) ?? findSynapsis();
   if (!d || !doc.uri.fsPath.startsWith(d.root + path.sep) || doc.uri.fsPath.startsWith(d.app + path.sep)) return;
   // a backend or web app reloads by itself on its build (Vite, uvicorn --reload, node --watch): build on every save
   if (d.launch.type !== 'dart') {
-    if (vscode.workspace.getConfiguration('nuclear').get('buildOnSave', true)) await dragonflyBuild(d);
+    if (vscode.workspace.getConfiguration('nuclear').get('buildOnSave', true)) await synapsisBuild(d);
     return;
   }
   const session = vscode.debug.activeDebugSession;
   if (session?.type !== 'dart') return;
-  const code = await dragonflyBuild(d);
+  const code = await synapsisBuild(d);
   if (code === 0) await vscode.commands.executeCommand('flutter.hotReload');
   else if (code !== CODE_ERRORS) await repairAndRelaunch(session, 'the build failed');
 }
@@ -312,8 +313,8 @@ interface SessionState {
 }
 const sessions = new Map<string, SessionState>();
 
-function ofProject(session: vscode.DebugSession): Dragonfly | undefined {
-  const d = findDragonfly();
+function ofProject(session: vscode.DebugSession): Synapsis | undefined {
+  const d = findSynapsis();
   const cwd = session.configuration.cwd ?? session.workspaceFolder?.uri.fsPath;
   return d && cwd && path.resolve(cwd) === path.resolve(d.app) ? d : undefined;
 }
@@ -351,39 +352,39 @@ function sessionEnded(session: vscode.DebugSession): void {
   if (state && !state.started && !state.stopped) void repairAndRelaunch(session, 'the app did not start', true);
 }
 
-/** `dragonfly repair` and, if it worked, the same launch again. Once per launch: a relaunch that fails
+/** `nuclear repair` and, if it worked, the same launch again. Once per launch: a relaunch that fails
  * again only reports it. */
 async function repairAndRelaunch(session: vscode.DebugSession, why: string, ended = false): Promise<void> {
   const d = ofProject(session);
   const state = sessions.get(session.id);
   if (!d || state?.repairing) return;
   if (state) state.repairing = true;
-  if (session.configuration.dragonflyRepaired) {
+  if (session.configuration.synapsisRepaired) {
     await showBuildError(`${why} again after repairing the app (flutter clean included).`);
     return;
   }
-  if (!(await dragonflyRepair(d, why))) {
+  if (!(await synapsisRepair(d, why))) {
     await showBuildError(`${why}; it still fails after flutter clean.`);
     if (state) state.repairing = false;
     return;
   }
   if (!ended) await vscode.debug.stopDebugging(session);
-  const config: vscode.DebugConfiguration = { ...session.configuration, dragonflyRepaired: true };
+  const config: vscode.DebugConfiguration = { ...session.configuration, synapsisRepaired: true };
   delete config.preLaunchTask; // already built by the repair
   await vscode.debug.startDebugging(session.workspaceFolder, config);
 }
 
 /** The Dart extension looks for Flutter apps when the window opens and ignores the ones created later
- * inside build/: when the first `dragonfly build` creates the app, a reload turns on devices and Run. */
+ * inside build/: when the first `nuclear build` creates the app, a reload turns on devices and Run. */
 function watchAppCreation(context: vscode.ExtensionContext): void {
-  appAtStart = findDragonfly() !== undefined;
+  appAtStart = findSynapsis() !== undefined;
   const watcher = vscode.workspace.createFileSystemWatcher('**/build/*.code-workspace');
   const changed = async () => {
     updateRunContext();
-    if (appAtStart || !findDragonfly()) return;
+    if (appAtStart || !findSynapsis()) return;
     appAtStart = true;
     const choice = await vscode.window.showInformationMessage(
-      'Dragonfly: the Flutter app was created. Reload the window to enable devices, Run and hot reload.',
+      'Synapsis: the Flutter app was created. Reload the window to enable devices, Run and hot reload.',
       'Reload Window',
     );
     if (choice) void vscode.commands.executeCommand('workbench.action.reloadWindow');
@@ -523,10 +524,10 @@ function updateStatus(): void {
 async function selectDialect(): Promise<void> {
   const picked = await vscode.window.showQuickPick(
     [
-      { label: 'flutter', description: 'Dragonfly mobile: Flutter widgets, Dart output' },
-      { label: 'fastapi', description: 'Dragonfly backend: FastAPI, Python output' },
-      { label: 'nestjs', description: 'Dragonfly backend: NestJS, TypeScript output' },
-      { label: 'react', description: 'Dragonfly web: React, TypeScript output' },
+      { label: 'flutter', description: 'Synapsis mobile: Flutter widgets, Dart output' },
+      { label: 'fastapi', description: 'Synapsis backend: FastAPI, Python output' },
+      { label: 'nestjs', description: 'Synapsis backend: NestJS, TypeScript output' },
+      { label: 'react', description: 'Synapsis web: React, TypeScript output' },
       { label: 'dart', description: 'Dart language only' },
       { label: 'python', description: 'Python language only' },
       { label: 'typescript', description: 'TypeScript language only' },

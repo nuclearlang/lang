@@ -1,4 +1,4 @@
-import 'package:dragonfly_genkit/dragonfly_genkit.dart';
+import 'package:synapsis_genkit/synapsis_genkit.dart';
 
 /// The tools of the assistant: notes kept in memory.
 class NoteTools extends Tools {

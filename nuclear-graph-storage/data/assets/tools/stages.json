@@ -2,12 +2,12 @@
  "shelf": "tools",
  "origin": "generated",
  "generator": "stages",
- "about": "The stages of the Nuclear Loop (extensions/vscode/src/loopEngine.ts).",
+ "about": "The stages of the Nuclear Builder (extensions/tools/nuclear-builder/src/engine.ts).",
  "rows": [
   {
    "id": "stage:artifacts",
    "type": "stage",
-   "title": "Stage 8 of the Loop: Artifacts",
+   "title": "Stage 8 of the Builder: Artifacts",
    "summary": "The project is built and its output kept with the run (generated code, contract, OpenAPI).",
    "body": [
     "The project is built and its output kept with the run (generated code, contract, OpenAPI).",
@@ -25,10 +25,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "artifacts"
    },
    "data": {
@@ -44,7 +44,7 @@
   {
    "id": "stage:code",
    "type": "stage",
-   "title": "Stage 5 of the Loop: Code",
+   "title": "Stage 5 of the Builder: Code",
    "summary": "The local coder (qwen2.5-coder:3b) writes each piece with the Smart Graph and repairs it with the compiler; Claude only fixes what it could not.",
    "body": [
     "The local coder (qwen2.5-coder:3b) writes each piece with the Smart Graph and repairs it with the compiler; Claude only fixes what it could not. Ends with nuclear check of the whole project, the tests included.",
@@ -62,10 +62,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "code"
    },
    "data": {
@@ -85,10 +85,10 @@
   {
    "id": "stage:deploy",
    "type": "stage",
-   "title": "Stage 9 of the Loop: Deploy",
-   "summary": "Seeds, integration tests and the local deploy of .nuclear/loop.json; the same commands the exported CI runs on a server.",
+   "title": "Stage 9 of the Builder: Deploy",
+   "summary": "Seeds, integration tests and the local deploy of .nuclear/builder.json; the same commands the exported CI runs on a server.",
    "body": [
-    "Seeds, integration tests and the local deploy of .nuclear/loop.json; the same commands the exported CI runs on a server.",
+    "Seeds, integration tests and the local deploy of .nuclear/builder.json; the same commands the exported CI runs on a server.",
     "",
     "Who takes part: shell. It is the last stage."
    ],
@@ -97,10 +97,10 @@
     "stage deploy"
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "deploy"
    },
    "data": {
@@ -116,10 +116,10 @@
   {
    "id": "stage:generate",
    "type": "stage",
-   "title": "Stage 2 of the Loop: Generate",
-   "summary": "dragonfly gen writes what follows from the data, already compiling: for each resource of the spec (its GET <url> lines, or its Resources) the models, the repository, a use case per action, the facade, the controller or the screen, the tests.",
+   "title": "Stage 2 of the Builder: Generate",
+   "summary": "nuclear gen writes what follows from the data, already compiling: for each resource of the spec (its GET <url> lines, or its Resources) the models, the repository, a use case per action, the facade, the controller or the screen, the tests.",
    "body": [
-    "dragonfly gen writes what follows from the data, already compiling: for each resource of the spec (its GET <url> lines, or its Resources) the models, the repository, a use case per action, the facade, the controller or the screen, the tests. The agents write only what is left.",
+    "nuclear gen writes what follows from the data, already compiling: for each resource of the spec (its GET <url> lines, or its Resources) the models, the repository, a use case per action, the facade, the controller or the screen, the tests. The agents write only what is left.",
     "",
     "Who takes part: shell. The stage after it: `plan`."
    ],
@@ -134,10 +134,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "generate"
    },
    "data": {
@@ -153,7 +153,7 @@
   {
    "id": "stage:plan",
    "type": "stage",
-   "title": "Stage 3 of the Loop: Plan",
+   "title": "Stage 3 of the Builder: Plan",
    "summary": "The work split into pieces of one file each, in the order they can be written.",
    "body": [
     "The work split into pieces of one file each, in the order they can be written. Claude plans when it leads; otherwise the local planner (gemma4:e2b) does.",
@@ -171,10 +171,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "plan"
    },
    "data": {
@@ -192,7 +192,7 @@
   {
    "id": "stage:security",
    "type": "stage",
-   "title": "Stage 7 of the Loop: Security",
+   "title": "Stage 7 of the Builder: Security",
    "summary": "The local reviewer reads each new file against the platform's security rules; the project's security commands run.",
    "body": [
     "The local reviewer reads each new file against the platform's security rules; the project's security commands run.",
@@ -210,10 +210,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "security"
    },
    "data": {
@@ -230,7 +230,7 @@
   {
    "id": "stage:spec",
    "type": "stage",
-   "title": "Stage 1 of the Loop: Specification",
+   "title": "Stage 1 of the Builder: Specification",
    "summary": "The spec you wrote or imported, with its acceptance criteria and the context the agents get, written to specs/<id>/spec.md.",
    "body": [
     "The spec you wrote or imported, with its acceptance criteria and the context the agents get, written to specs/<id>/spec.md. Then its analysis: which kind of request it is (a whole system, one screen, a rename, a failing test...) and the strategy the run follows: the stages that run, what the generators write, the facts it lacks.",
@@ -248,10 +248,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "spec"
    },
    "data": {
@@ -268,7 +268,7 @@
   {
    "id": "stage:test",
    "type": "stage",
-   "title": "Stage 4 of the Loop: Tests first",
+   "title": "Stage 4 of the Builder: Tests first",
    "summary": "Before any code, the local tester writes the tests from the acceptance criteria, the planned pieces and the project map (.nuclear/map.md): what the code must do, in Nuclear.",
    "body": [
     "Before any code, the local tester writes the tests from the acceptance criteria, the planned pieces and the project map (.nuclear/map.md): what the code must do, in Nuclear.",
@@ -286,10 +286,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "test"
    },
    "data": {
@@ -306,10 +306,10 @@
   {
    "id": "stage:verify",
    "type": "stage",
-   "title": "Stage 6 of the Loop: Verification",
+   "title": "Stage 6 of the Builder: Verification",
    "summary": "The project is built and every test runs.",
    "body": [
-    "The project is built and every test runs. A failing test goes back to the coder told in Nuclear (dragonfly explain: the message, a hint and the .nuc lines), then the tests run again (at most 3 rounds); Claude takes what is left when it leads.",
+    "The project is built and every test runs. A failing test goes back to the coder told in Nuclear (nuclear explain: the message, a hint and the .nuc lines), then the tests run again (at most 3 rounds); Claude takes what is left when it leads.",
     "",
     "Who takes part: shell, coder, tester, claude. The stage after it: `security`."
    ],
@@ -324,10 +324,10 @@
     }
    ],
    "sources": [
-    "extensions/vscode/src/loopEngine.ts"
+    "extensions/tools/nuclear-builder/src/engine.ts"
    ],
    "meta": {
-    "tool": "nuclear-loop",
+    "tool": "nuclear-builder",
     "name": "verify"
    },
    "data": {

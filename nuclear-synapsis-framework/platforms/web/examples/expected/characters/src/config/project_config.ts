@@ -1,4 +1,4 @@
-import { Acl, AppConfig, Connection, Global, Http, SessionManager } from 'dragonfly-web';
+import { Acl, AppConfig, Connection, Global, Http, SessionManager } from 'synapsis-web';
 
 /** Global configuration: connections and services of the whole app. */
 export class ProjectConfig extends AppConfig {

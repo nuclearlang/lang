@@ -40,22 +40,33 @@ text), `links.py [--fix]` (relative links), `adr-cites.py` (old ADR numbers → 
 
 Open questions the writers left for the user are written `TODO(human)` in the documents (`rg "TODO\(human\)"`).
 
-## Phase 2 — the names and the one CLI
+## Phase 2 — the names and the one command (done 2026-11-16)
 
-- [ ] T2.1 ADR in `tools/cli`: which command of `dragonfly` becomes which command of `nuclear`.
-- [ ] T2.2 The `dragonfly` crate merged into `tools/cli`; `nuclear-synapsis-framework/cli/` removed.
-- [ ] T2.3 Dragonfly → Synapsis: packages (`synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`,
-      `synapsis-web`), the `synapsis(platform, dialect)` word of `config.nuc`, generated file names, docs.
-- [ ] T2.4 The Loop → `nuclear-builder`; Nuclear HTTP → `nuclear-connector`; `nuclear-graph` →
-      `nuclear-graph-storage`.
-- [ ] T2.5 The user's projects outside the tree (`~/Documents/projects/nuc/`) follow the new words.
+- [x] T2.1 `ADR-cli-0003`: one command, `nuclear`; `build` / `check` with a path are the compiler's, without one the
+      project's; `agent init` inside a project reads its manifest.
+- [x] T2.2 The `dragonfly` crate is the module `framework/` of `nuclear-cli`; `nuclear-synapsis-framework/cli/` gone;
+      the installers build and link only `nuclear` (and remove the old `dragonfly` and `nuclear-loop` links).
+- [x] T2.3 Dragonfly → Synapsis in code, data, packages (`synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`,
+      `synapsis-web`), type definitions, `synapsis(platform, dialect)` of `config.nuc`, generated files, docs
+      (`work/rename.py`).
+- [x] T2.4 The Loop → Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, `.nuclear/builder.json`); Nuclear HTTP →
+      Nuclear Connector (`work/rename2.py`). The graph's command stays `nuclear-graph` (only its folder was named).
+- [x] T2.5 The user's projects in `~/Documents/projects/nuc/` follow the new words (a copy before:
+      `~/Documents/projects/nuc-backup-2026-11-16-before-synapsis.tar.gz`). `python/nuclear_langgraph_agent` still
+      has the two errors it had before (`@generated`, a variable named `tools`): the user's code, not changed.
 
-## Phase 4 — the projects that are still inside another
+## Phase 4 — the projects that were inside another (done 2026-11-16)
 
-- [ ] T4.1 `device-emulators/` out of the CLI crate.
-- [ ] T4.2 `tools/code_generator/` out of the CLI crate and the platform files.
-- [ ] T4.3 `tools/mcp/` out of the graph.
-- [ ] T4.4 `extensions/tools/<tool>/` out of the VS Code extension's `src/`.
+- [x] T4.1 `device-emulators/`: the crate `nuclear-devices`.
+- [x] T4.2 `tools/code_generator/`: the crate `nuclear-codegen`; its data in `platforms/<platform>/generators.toml`
+      (out of each `platform.toml`); the loader reads it (`Home.generators`, `Loader::generators_file`).
+- [x] T4.3 `tools/mcp/`: a Nuclear project of its own, command `nuclear-mcp`; the MCP tool `dragonfly` is
+      `nuclear_project`; the editor's settings `nuclear.ai.mcpCommand` / `nuclear.ai.graphCommand`.
+- [x] T4.4 `extensions/tools/<tool>/`: the code of the builder, the connector, the chat and the device manager (their
+      JetBrains parts in `jetbrains/src/`).
+- [x] T4.5 `website/`: moved into the tree (from `~/Documents/projects/nuc/react/nuclearlang_website`, a copy with
+      its git history is in the backup above); its pages come from every project's reference and guides; CI
+      `.github/workflows/website.yml`.
 
 ## Found on the way (not done)
 
@@ -72,6 +83,11 @@ Open questions the writers left for the user are written `TODO(human)` in the do
 
 ## Phase 5 — outside the tree (each needs the user's go)
 
-- [ ] T5.1 Reinstall (`installer/install.sh`), the extension's version raised and installed.
-- [ ] T5.2 The website follows the new paths and names.
-- [ ] T5.3 The nine GitHub repositories that are now folders: archived.
+- [x] T5.1 Reinstalled from the tree (`installer/install.sh`); the AI services run on the renamed code. The VS Code
+      extension was built and packaged, not installed: its version must be raised first.
+- [ ] T5.2 Publish the website from this repository (nuclearlang.github.io is served only from the
+      `nuclearlang.github.io` repository, which still deploys the old content).
+- [ ] T5.3 The nine GitHub repositories that are now folders, and the website's: archived.
+- [ ] T5.4 The AI set-up written by the old installer: `~/.local/bin/nuclear-developer` and the editors' MCP
+      registrations still name `ai/nuclear-developer` and `nuclear-graph mcp` (both still work: links and the
+      `mcp` command that runs `nuclear-mcp`); running the set-up again writes the new ones.

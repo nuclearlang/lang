@@ -56,13 +56,13 @@
    "id": "doc:extensions/AGENTS.md#editor-extensions",
    "type": "readme",
    "title": "Editor extensions",
-   "summary": "The editor tooling of NuclearLang: one extension per editor (VS Code, Android Studio / IntelliJ, Zed) and the tools they show (the Loop, Nuclear HTTP, the chat, the devices).",
+   "summary": "The editor tooling of NuclearLang: one extension per editor (VS Code, Android Studio / IntelliJ, Zed) and the tools they show (Nuclear Builder, Nuclear Connector, the chat, the devices).",
    "body": [
     "The editor tooling of NuclearLang: one extension per editor (VS Code, Android Studio / IntelliJ, Zed) and the tools",
-    "they show (the Loop, Nuclear HTTP, the chat, the devices). This folder is the index of those projects and holds what",
-    "the three extensions share. The language server is **not** here: it is `nuclearlang/crates/nuclear-lsp`, part of",
-    "[the language project](../nuclearlang/AGENTS.md). The extensions run it as an external binary and talk to it only",
-    "through LSP and the `nuclear/*` requests."
+    "they show (Nuclear Builder, Nuclear Connector, the chat, the devices). This folder is the index of those projects",
+    "and holds what the three extensions share. The language server is **not** here: it is",
+    "`nuclearlang/crates/nuclear-lsp`, part of [the language project](../nuclearlang/AGENTS.md). The extensions run it",
+    "as an external binary and talk to it only through LSP and the `nuclear/*` requests."
    ],
    "sources": [
     "extensions/AGENTS.md"
@@ -77,13 +77,13 @@
    "id": "doc:extensions/AGENTS.md#folders",
    "type": "readme",
    "title": "Editor extensions — Folders",
-   "summary": "today)",
+   "summary": "extension, and `jetbrains/src/` (Nuclear Builder, Nuclear Connector), compiled by the JetBrains `build.sh`",
    "body": [
     "- `vscode/`: the VS Code extension; its `theme/` also generates the themes and icons of the other two",
     "- `jetbrains/`: the Android Studio / IntelliJ plugin",
     "- `zed/`: the Zed extension",
-    "- `tools/<tool>/`: one project per tool of the editors (their code is inside `vscode/src/` and `jetbrains/src/`",
-    "  today)",
+    "- `tools/<tool>/`: one project per tool of the editors, with its code: `src/` (and `test/`), bundled by the VS Code",
+    "  extension, and `jetbrains/src/` (Nuclear Builder, Nuclear Connector), compiled by the JetBrains `build.sh`",
     "- `docs/`: what is common to the three extensions"
    ],
    "sources": [
@@ -106,10 +106,10 @@
     "| [vscode/](vscode/AGENTS.md) | the VS Code extension: the client, the Nuclear workspace, run, debug, the themes |",
     "| [jetbrains/](jetbrains/AGENTS.md) | the Android Studio / IntelliJ plugin |",
     "| [zed/](zed/AGENTS.md) | the Zed extension |",
-    "| [tools/nuclear-builder/](tools/nuclear-builder/AGENTS.md) | the pipeline tool, today \"the Loop\" and the `nuclear-loop` command |",
-    "| [tools/nuclear-connector/](tools/nuclear-connector/AGENTS.md) | the tool like Postman, today \"Nuclear HTTP\" |",
-    "| [tools/nuclear-ai-chat/](tools/nuclear-ai-chat/AGENTS.md) | the chat with the local agents, today \"Nuclear agent\" |",
-    "| [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Dragonfly device and the web device |",
+    "| [tools/nuclear-builder/](tools/nuclear-builder/AGENTS.md) | Nuclear Builder: the pipeline tool and the `nuclear-builder` command |",
+    "| [tools/nuclear-connector/](tools/nuclear-connector/AGENTS.md) | Nuclear Connector: the tool like Postman (HTTP/REST today) |",
+    "| [tools/nuclear-ai-chat/](tools/nuclear-ai-chat/AGENTS.md) | the chat with the local agents (the tool *Nuclear agent*) |",
+    "| [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Synapsis device and the web device |",
     "| [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |",
     "| [tools/nuclear-ui-designer/](tools/nuclear-ui-designer/AGENTS.md) | not built |",
     "| [tools/nuclear-backend-designer/](tools/nuclear-backend-designer/AGENTS.md) | not built |",
@@ -132,16 +132,17 @@
    "body": [
     "- A missing feature of the server is built in `nuclearlang/crates/nuclear-lsp`, with the rules of the language",
     "  project.",
-    "- Done = `npm run compile` in `vscode/` if the client changed, `npm run theme` there if the palette changed,",
-    "  `jetbrains/build.sh` if the plugin changed; and the server's tests and clippy if the server changed.",
+    "- Done = `npm run compile` in `vscode/` if the client or a tool's `src/` changed, `npm test` there if Nuclear",
+    "  Builder changed, `npm run theme` there if the palette changed, `jetbrains/build.sh` if the plugin or a tool's",
+    "  `jetbrains/src/` changed; and the server's tests and clippy if the server changed.",
     "- **Always release after a change** of the server, a client, the themes or the bundled dialects and type",
     "  definitions, without asking: [docs/06-runbooks/release.md](docs/06-runbooks/release.md).",
     "- Themes and icons of the three extensions are generated by `vscode/theme/`: edit `palette.json`, `build.mjs` or",
     "  `icons.mjs`, never the generated JSON, XML or SVG.",
     "- Framework extensions must not collide: only the base extension registers the language, the grammar and the",
     "  language server (ADR-extensions-0001).",
-    "- The Loop is for VS Code and Android Studio only (decided by the user): Zed has none.",
-    "- A tool's document lives in its folder under `tools/`, also while its code is inside an extension."
+    "- Nuclear Builder is for VS Code and Android Studio only (decided by the user): Zed has none.",
+    "- A tool's code and documents live in its folder under `tools/`; an extension only wires it in."
    ],
    "sources": [
     "extensions/AGENTS.md"
@@ -161,7 +162,7 @@
     "- `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer",
     "- `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API",
     "- `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens",
-    "- One version for the three (0.50.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
+    "- One version for the three (0.51.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
     "  `zed/extension.toml`"
    ],
    "sources": [
@@ -174,22 +175,21 @@
    }
   },
   {
-   "id": "doc:extensions/docs/00-context/glossary.md#glossary.6bd6b0",
+   "id": "doc:extensions/docs/00-context/glossary.md#glossary.1560a6",
    "type": "context",
    "title": "Glossary",
    "summary": "Glossary",
    "body": [
+    "| Strip | The vertical row of tabs of the workspace: projects on top, tools at the bottom | `workspace.ts` |",
     "| Pane | What the workspace view shows beside the strip; it depends on the active tab | `workspace.ts` |",
     "| Tab | A project or a tool of the strip; each is a workspace of its own | `activeKey()`: a project root or `tool:<id>` |",
-    "| Tool | A full-screen feature of the strip: `http`, `devices`, `loop`, `designer`, `docs`, `agent`, `settings` | `TOOLS` in `workspace.ts`; `tools/` |",
+    "| Tool | A full-screen feature of the strip: `connector`, `devices`, `builder`, `designer`, `docs`, `agent`, `settings` | `TOOLS` in `workspace.ts`; `tools/` |",
     "| Template page | The page of a tool that is not built: it says what the tool will do | `ToolPanel` in `workspace.ts` |",
     "| Action | A button of a project's platform in the editor title bar (run, debug, reload, device, build, test, check, api, serve) | `PLATFORM_ACTIONS`, commands `nuclear.action.<id>` |",
-    "| Dragonfly device | A mobile app running inside VS Code, like an emulator | `vscode/src/device.ts` |",
-    "| Web device | A web app shown beside its code in a headless browser | `webDevice.ts`, `webSession.ts` |",
+    "| Synapsis device | A mobile app running inside VS Code, like an emulator | `tools/nuclear-device-manager/src/mobile-device.ts` |",
+    "| Web device | A web app shown beside its code in a headless browser | `tools/nuclear-device-manager/src/web-device.ts`, `web-session.ts` |",
     "| Park / unpark | Close a device's panel while its app keeps running, and give it a panel again | `DevicePanel.park()` / `unpark()` |",
-    "| The Loop | The pipeline tool: a spec goes through its stages, every step says who did it | `tools/nuclear-builder/` |",
-    "| Nuclear HTTP | The tool like Bruno or Postman over every project's endpoints | `tools/nuclear-connector/` |",
-    "| Nuclear agent | The chat with the local agents | `tools/nuclear-ai-chat/` |"
+    "| Nuclear Builder | The pipeline tool: a spec goes through its stages, every step says who did it | `tools/nuclear-builder/` |"
    ],
    "sources": [
     "extensions/docs/00-context/glossary.md"
@@ -201,13 +201,21 @@
    }
   },
   {
-   "id": "doc:extensions/docs/00-context/glossary.md#glossary.8476c0",
+   "id": "doc:extensions/docs/00-context/glossary.md#glossary.dbeab5",
    "type": "context",
    "title": "Glossary",
    "summary": "Glossary",
    "body": [
-    "| Notice | A notification of what the local agents did while the user was elsewhere | `vscode/src/notifications.ts` |",
-    "| Chernobyl | The theme of the three extensions, with its variant Chernobyl Soft | `vscode/theme/` |"
+    "| Term | Meaning | Where it is in the code |",
+    "|---|---|---|",
+    "| Base extension | The \"NuclearLang\" extension of an editor: the language for any dialect (ADR-extensions-0001) | `vscode/`, `jetbrains/`, `zed/` |",
+    "| Framework extension | An extension with a framework's tools (run, debug, devices, hot reload); none exists yet | — |",
+    "| Client | The part of an extension that starts the language server and talks LSP to it | `vscode/src/extension.ts`, `NuclearLspServerDescriptor.java`, `zed/src/lib.rs` |",
+    "| Bundle | The server, every dialect and each platform's contract packed inside a `.vsix` or a plugin zip | `vscode/server/`, `jetbrains/build/dist/nuclearlang/server/` |",
+    "| Project card | `.nuclear/project.json`: a project's platform, dialect, output folder and toolchain, written by the server and the CLIs | `vscode/src/card.ts` |",
+    "| Contract | `.nuclear/contract.json`: the endpoints of a project, written next to the card | read by `tools/nuclear-connector/` (`connector.ts`, `NuclearConnector.java`) |",
+    "| Line map | `.nuclear/lines.json` (`.dart_tool/nuclear_lines.json` for a mobile app): generated line ↔ `.nuc` line | `vscode/src/debug.ts`, `NuclearDebug.java` |",
+    "| Nuclear workspace | The one activity bar container of VS Code where projects and tools are tabs (ADR-extensions-0002) | `vscode/src/workspace.ts` |"
    ],
    "sources": [
     "extensions/docs/00-context/glossary.md"
@@ -234,22 +242,15 @@
    }
   },
   {
-   "id": "doc:extensions/docs/00-context/glossary.md#glossary.fc928c",
+   "id": "doc:extensions/docs/00-context/glossary.md#glossary.feead4",
    "type": "context",
    "title": "Glossary",
    "summary": "Glossary",
    "body": [
-    "| Term | Meaning | Where it is in the code |",
-    "|---|---|---|",
-    "| Base extension | The \"NuclearLang\" extension of an editor: the language for any dialect (ADR-extensions-0001) | `vscode/`, `jetbrains/`, `zed/` |",
-    "| Framework extension | An extension with a framework's tools (run, debug, devices, hot reload); none exists yet | — |",
-    "| Client | The part of an extension that starts the language server and talks LSP to it | `vscode/src/extension.ts`, `NuclearLspServerDescriptor.java`, `zed/src/lib.rs` |",
-    "| Bundle | The server, every dialect and each platform's contract packed inside a `.vsix` or a plugin zip | `vscode/server/`, `jetbrains/build/dist/nuclearlang/server/` |",
-    "| Project card | `.nuclear/project.json`: a project's platform, dialect, output folder and toolchain, written by the server and the CLIs | `vscode/src/card.ts` |",
-    "| Contract | `.nuclear/contract.json`: the endpoints of a project, written next to the card | read by `http.ts`, `NuclearHttp.java` |",
-    "| Line map | `.nuclear/lines.json` (`.dart_tool/nuclear_lines.json` for a mobile app): generated line ↔ `.nuc` line | `vscode/src/debug.ts`, `NuclearDebug.java` |",
-    "| Nuclear workspace | The one activity bar container of VS Code where projects and tools are tabs (ADR-extensions-0002) | `vscode/src/workspace.ts` |",
-    "| Strip | The vertical row of tabs of the workspace: projects on top, tools at the bottom | `workspace.ts` |"
+    "| Nuclear Connector | The tool like Bruno or Postman over every project's endpoints | `tools/nuclear-connector/` |",
+    "| Nuclear agent | The chat with the local agents | `tools/nuclear-ai-chat/` |",
+    "| Notice | A notification of what the local agents did while the user was elsewhere | `vscode/src/notifications.ts` |",
+    "| Chernobyl | The theme of the three extensions, with its variant Chernobyl Soft | `vscode/theme/` |"
    ],
    "sources": [
     "extensions/docs/00-context/glossary.md"
@@ -287,7 +288,7 @@
    "body": [
     "- A developer who writes Nuclear by hand: live diagnostics, completion, hover, go to definition, the generated code",
     "  beside the `.nuc`, run and debug of a project of any platform.",
-    "- A developer who works with agents: the Loop, the chat and their settings, on the developer's machine."
+    "- A developer who works with agents: Nuclear Builder, the chat and their settings, on the developer's machine."
    ],
    "sources": [
     "extensions/docs/00-context/vision.md"
@@ -311,11 +312,11 @@
     "| Chernobyl themes and icons | yes | yes | yes |",
     "| Code metrics | code lens and colors | code lens and markers | the list, as a message |",
     "| The Nuclear workspace (projects and tools as tabs) | yes | tool windows with shortcuts | no (Zed has no views nor keybindings for extensions) |",
-    "| Run, hot reload on save, repair of a Dragonfly project | yes | yes (the Flutter plugin runs the app) | tasks and ▷ runnables |",
+    "| Run, hot reload on save, repair of a Synapsis project | yes | yes (the Flutter plugin runs the app) | tasks and ▷ runnables |",
     "| Debugging a `.nuc` | every platform, with mixed stepping | breakpoints, the paused line, error explanations | no |",
-    "| The devices inside the editor | the Dragonfly device and the web device | no | no |",
-    "| Nuclear HTTP | yes | yes | no |",
-    "| The Loop | yes | yes, through `nuclear-loop` | no |",
+    "| The devices inside the editor | the Synapsis device and the web device | no | no |",
+    "| Nuclear Connector | yes | yes | no |",
+    "| Nuclear Builder | yes | yes, through `nuclear-builder` | no |",
     "| The chat, the settings page, the notifications | yes | no | no |"
    ],
    "sources": [
@@ -337,7 +338,7 @@
     "  `nuclearlang/crates/nuclear-lsp`.",
     "- It does not describe a dialect: the kinds, the documentation of each word and where a project's output goes come",
     "  from the dialect and from the project card the server writes.",
-    "- No Loop for Zed (decided by the user).",
+    "- No Nuclear Builder for Zed (decided by the user).",
     "- Zed does not allow the device, `.nuc` debugging nor build on save."
    ],
    "sources": [
@@ -481,6 +482,29 @@
    }
   },
   {
+   "id": "doc:extensions/docs/02-architecture/overview.md#the-parts.065d7c",
+   "type": "context",
+   "title": "Architecture of the editor tooling — The parts",
+   "summary": "The parts",
+   "body": [
+    "| Part | Where | What it does |",
+    "|---|---|---|",
+    "| The language server | `nuclearlang/crates/nuclear-lsp` ([the language project](../../../nuclearlang/AGENTS.md)) | everything about the language: diagnostics, completion, hover, semantic tokens, the project rules, the code metrics |",
+    "| The VS Code extension | [`vscode/`](../../vscode/AGENTS.md) | the client, the Nuclear workspace, run and debug of every platform, the tools, the generators of the themes and icons |",
+    "| The JetBrains plugin | [`jetbrains/`](../../jetbrains/AGENTS.md) | the client, Synapsis projects, `.nuc` breakpoints, two tool windows |",
+    "| The Zed extension | [`zed/`](../../zed/AGENTS.md) | the client, a tree-sitter grammar, tasks and runnables |",
+    "| The tools | [`tools/`](../../AGENTS.md) | one project per tool, with its code: `src/` bundled by the VS Code extension, `jetbrains/src/` compiled with the plugin |"
+   ],
+   "sources": [
+    "extensions/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/docs/02-architecture/overview.md#the-parts.4e929d",
    "type": "context",
    "title": "Architecture of the editor tooling — The parts",
@@ -500,18 +524,23 @@
    }
   },
   {
-   "id": "doc:extensions/docs/02-architecture/overview.md#the-parts.d7313a",
+   "id": "doc:extensions/docs/02-architecture/overview.md#what-a-project-gives-the-editor.0e3117",
    "type": "context",
-   "title": "Architecture of the editor tooling — The parts",
-   "summary": "The parts",
+   "title": "Architecture of the editor tooling — What a project gives the editor",
+   "summary": "The extensions read files; they do not assume a path, a port or a command of a dialect.",
    "body": [
-    "| Part | Where | What it does |",
+    "The extensions read files; they do not assume a path, a port or a command of a dialect.",
+    "",
+    "| File of the project | Written by | Read by |",
     "|---|---|---|",
-    "| The language server | `nuclearlang/crates/nuclear-lsp` ([the language project](../../../nuclearlang/AGENTS.md)) | everything about the language: diagnostics, completion, hover, semantic tokens, the project rules, the code metrics |",
-    "| The VS Code extension | [`vscode/`](../../vscode/AGENTS.md) | the client, the Nuclear workspace, run and debug of every platform, the tools, the generators of the themes and icons |",
-    "| The JetBrains plugin | [`jetbrains/`](../../jetbrains/AGENTS.md) | the client, Dragonfly projects, `.nuc` breakpoints, two tool windows |",
-    "| The Zed extension | [`zed/`](../../zed/AGENTS.md) | the client, a tree-sitter grammar, tasks and runnables |",
-    "| The tools | [`tools/`](../../AGENTS.md) | one project per tool; their code is inside `vscode/src/` and `jetbrains/src/` today |"
+    "| `.nuclear/project.json` (the project card: platform, dialect, output folder, toolchain; [projects §1.1](../../../nuclearlang/docs/07-reference/projects.md)) | the server (`Project::build`) and the CLIs | the VS Code status bar, the workspace, the tools |",
+    "| `.nuclear/contract.json` (the endpoints) | the same, next to the card | Nuclear Connector |",
+    "| `.nuclear/lines.json`; `build/app/.dart_tool/nuclear_lines.json` for a mobile app | every `nuclear build` of a project; `nuclear build` | `.nuc` debugging |",
+    "| `build/<name>.code-workspace` (the tasks and the dialect's debug launch) | `nuclear build` (`tools/cli/src/framework/vscode.rs`) | run and debug in VS Code and JetBrains |",
+    "| `.nuclear/map.md` (every declaration with its kind, description and members) | the transpiler | the chat and Nuclear Builder's agents |",
+    "",
+    "The JetBrains and Zed clients do not show the project card yet (the JetBrains tool windows read it only to find",
+    "the projects); the server is the same, so their diagnostics are right."
    ],
    "sources": [
     "extensions/docs/02-architecture/overview.md"
@@ -531,34 +560,6 @@
     "The server tells a client where a kind comes from (the language, the platform, a kind package) in hover and",
     "completion, and lists for a project only the kinds of its platform. A file's dialect is its project's;",
     "`nuclear.dialect` only applies to a file outside a project."
-   ],
-   "sources": [
-    "extensions/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/docs/02-architecture/overview.md#what-a-project-gives-the-editor.55dfb4",
-   "type": "context",
-   "title": "Architecture of the editor tooling — What a project gives the editor",
-   "summary": "The extensions read files; they do not assume a path, a port or a command of a dialect.",
-   "body": [
-    "The extensions read files; they do not assume a path, a port or a command of a dialect.",
-    "",
-    "| File of the project | Written by | Read by |",
-    "|---|---|---|",
-    "| `.nuclear/project.json` (the project card: platform, dialect, output folder, toolchain; [projects §1.1](../../../nuclearlang/docs/07-reference/projects.md)) | the server (`Project::build`) and the CLIs | the VS Code status bar, the workspace, the tools |",
-    "| `.nuclear/contract.json` (the endpoints) | the same, next to the card | Nuclear HTTP |",
-    "| `.nuclear/lines.json`; `build/app/.dart_tool/nuclear_lines.json` for a mobile app | every `nuclear build` of a project; `dragonfly build` | `.nuc` debugging |",
-    "| `build/<name>.code-workspace` (the tasks and the dialect's debug launch) | `dragonfly build` (`nuclear-synapsis-framework/cli/src/vscode.rs`) | run and debug in VS Code and JetBrains |",
-    "| `.nuclear/map.md` (every declaration with its kind, description and members) | the transpiler | the chat and the Loop's agents |",
-    "",
-    "The JetBrains and Zed clients do not show the project card yet (the JetBrains tool windows read it only to find",
-    "the projects); the server is the same, so their diagnostics are right."
    ],
    "sources": [
     "extensions/docs/02-architecture/overview.md"
@@ -672,7 +673,7 @@
     "   ```",
     "",
     "4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`), rebuilds",
-    "   `nuclear-loop`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).",
+    "   `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).",
     "5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip",
     "   in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*)."
    ],
@@ -716,7 +717,8 @@
     "```",
     "",
     "`build.sh` needs `../vscode` beside it (the theme and the grammar), node and cargo. It generates the themes, builds",
-    "`nuclear-lsp`, writes `resources/codemetrics-defaults.json` from the server, compiles `src/`, and zips the plugin",
+    "`nuclear-lsp`, writes `resources/codemetrics-defaults.json` from the server, compiles `src/` with every",
+    "`../tools/*/jetbrains/src/`, and zips the plugin",
     "with the server, every dialect, the contract of each platform and the TextMate bundle. It ends with",
     "`nuclear-lsp --check-bundle`.",
     "",
@@ -744,8 +746,8 @@
     "| Which class does what, what the build leaves out, what the plugin does not have | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
     "| The pending work of the plugin | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
     "| How it finds the server; the bundle | [`../docs/02-architecture/language-server.md`](../docs/02-architecture/language-server.md) |",
-    "| The *Nuclear HTTP* tool window | [`../tools/nuclear-connector`](../tools/nuclear-connector/AGENTS.md) |",
-    "| The *Nuclear Loop* tool window | [`../tools/nuclear-builder`](../tools/nuclear-builder/AGENTS.md) |",
+    "| The *Nuclear Connector* tool window | [`../tools/nuclear-connector`](../tools/nuclear-connector/AGENTS.md) |",
+    "| The *Nuclear Builder* tool window | [`../tools/nuclear-builder`](../tools/nuclear-builder/AGENTS.md) |",
     "| What a user reads | `README.md`; [the flutter reference §11.2](../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) |"
    ],
    "sources": [
@@ -761,9 +763,10 @@
    "id": "doc:extensions/jetbrains/AGENTS.md#folders",
    "type": "readme",
    "title": "JetBrains plugin — Folders",
-   "summary": "Folders",
+   "summary": "tool windows' classes are in the tools' folders",
    "body": [
-    "- `src/dev/nuclearlang/editor/`: the plugin's classes ([what each does](docs/02-architecture/overview.md))",
+    "- `src/dev/nuclearlang/editor/`: the plugin's own classes ([what each does](docs/02-architecture/overview.md)); the",
+    "  tool windows' classes are in the tools' folders",
     "- `resources/META-INF/plugin.xml`: the version, the extensions, the tool windows, the actions and their shortcuts",
     "- `resources/themes/`, `Chernobyl.icls`, `ChernobylSoft.icls`, `resources/icons/`: GENERATED by `../vscode/theme/`",
     "- `resources/codemetrics-defaults.json`: GENERATED from `nuclear-lsp --codemetrics-defaults`",
@@ -782,12 +785,13 @@
    "id": "doc:extensions/jetbrains/AGENTS.md#jetbrains-plugin",
    "type": "readme",
    "title": "JetBrains plugin",
-   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.50.0): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Dragonfly projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
+   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.50.0): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
    "body": [
     "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.50.0): the client of the language",
-    "server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Dragonfly projects",
-    "that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*Nuclear HTTP*, *Nuclear Loop*). What the",
-    "three extensions share: [`../AGENTS.md`](../AGENTS.md)."
+    "server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects",
+    "that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*Nuclear Connector*, *Nuclear Builder*),",
+    "whose code is in `../tools/nuclear-connector/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What",
+    "the three extensions share: [`../AGENTS.md`](../AGENTS.md)."
    ],
    "sources": [
     "extensions/jetbrains/AGENTS.md"
@@ -808,7 +812,7 @@
     "  or the server.",
     "- The IDE manages `flutter run` and the language server's process itself: the plugin starts neither.",
     "- The tool windows read the same files of a project as VS Code (`.nuclear/project.json`, `contract.json`,",
-    "  `http.json`, `loop/runs/*.json`, `specs/*/spec.md`); the Loop runs only through `nuclear-loop`.",
+    "  `http.json`, `builder/runs/*.json`, `specs/*/spec.md`); Nuclear Builder runs only through `nuclear-builder`.",
     "- After a change, release: [`../docs/06-runbooks/release.md`](../docs/06-runbooks/release.md)."
    ],
    "sources": [
@@ -862,10 +866,11 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.51.0: the version of the three extensions (one repository; the tool windows Nuclear Builder and Nuclear Connector, their code in `extensions/tools/<tool>/jetbrains/`; Synapsis; the framework's commands are `nuclear <command>`).",
     "- First public version.",
-    "- 0.46.0: the version of the three extensions (the Loop's analysis step is in `nuclear-loop`, ADR-developer-0001).",
-    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-loop setup`, ADR-installer-0002).",
-    "- 0.49.0: the version of the three extensions (the Loop's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-loop`; the language server reads `[project] package` of `nuclear.toml`)."
+    "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
+    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
+    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
    ],
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
@@ -886,16 +891,16 @@
     "",
     "```sh",
     "cd extensions/jetbrains       # beside extensions/vscode, inside the NuclearLang tree",
-    "IDE_HOME=/opt/android-studio ./build.sh     # → build/nuclearlang-0.37.0.zip",
+    "IDE_HOME=/opt/android-studio ./build.sh     # → build/nuclearlang-<version>.zip",
     "```",
     "",
     "Install: *Settings → Plugins → ⚙ → Install Plugin from Disk…* → the zip. Then: *Settings → Appearance → Theme* →",
     "**Chernobyl** (it includes the editor's color scheme). Settings in *Settings → Tools → NuclearLang* (dialect and",
     "server path).",
     "",
-    "A Dragonfly project: *File → Open* → the project folder. The first time, the plugin adds the app (`build/app`) as",
+    "A Synapsis project: *File → Open* → the project folder. The first time, the plugin adds the app (`build/app`) as",
     "a module and offers *Reopen Project*; on reopening, the Flutter plugin gives the device picker, the `main.dart`",
-    "configuration, Run / Debug, hot reload and DevTools. Opening the project runs `dragonfly build`, and **Ctrl+S on a",
+    "configuration, Run / Debug, hot reload and DevTools. Opening the project runs `nuclear build`, and **Ctrl+S on a",
     "`.nuc`** transpiles and does a *Hot Reload* of the running app.",
     "",
     "It uses the platform's native LSP API (`com.intellij.modules.lsp`, present in Android Studio 2026.2) and the",
@@ -922,7 +927,7 @@
     "",
     "- a `BreakpointType` (`nuclear-line`) with `Dart` mirrors in the generated file (`Breakpoints`, `MapWatcher`);",
     "- `Sessions`: a pause shows the `.nuc` line with `EXECUTIONPOINT_ATTRIBUTES`;",
-    "- `OutputErrors`: a Dart error in the console → `dragonfly explain --json` → a red line at the `.nuc` and the tool",
+    "- `OutputErrors`: a Dart error in the console → `nuclear explain --json` → a red line at the `.nuc` and the tool",
     "  window *Nuclear Error*.",
     "",
     "Mixed stepping is not done here."
@@ -937,18 +942,18 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/docs/02-architecture/overview.md#dragonfly-projects-nucleardragonfly-java",
+   "id": "doc:extensions/jetbrains/docs/02-architecture/overview.md#synapsis-projects-nuclearsynapsis-java",
    "type": "context",
-   "title": "The JetBrains plugin: its classes — Dragonfly projects (`NuclearDragonfly.java`)",
-   "summary": "A Dragonfly project is a folder with `build/<name>.code-workspace`.",
+   "title": "The JetBrains plugin: its classes — Synapsis projects (`NuclearSynapsis.java`)",
+   "summary": "A Synapsis project is a folder with `build/<name>.code-workspace`.",
    "body": [
-    "A Dragonfly project is a folder with `build/<name>.code-workspace`. *File → Open* → the project folder.",
+    "A Synapsis project is a folder with `build/<name>.code-workspace`. *File → Open* → the project folder.",
     "",
-    "- `Startup` runs `dragonfly build` and, if the app is not a module yet, loads",
+    "- `Startup` runs `nuclear build` and, if the app is not a module yet, loads",
     "  `build/app/<name>_flutter_app.iml` and offers *Reopen Project*. On reopening, the Flutter plugin gives the device",
     "  picker, the `main.dart` configuration, Run / Debug, hot reload and DevTools.",
     "- `OnSave` of a `.nuc` → build + `Flutter.Toolbar.ReloadAllAction`.",
-    "- `BeforeRun` (an `ExecutionListener`) → `dragonfly build` with a modal progress; `repair` if it failed with a code",
+    "- `BeforeRun` (an `ExecutionListener`) → `nuclear build` with a modal progress; `repair` if it failed with a code",
     "  other than 2.",
     "- `processTerminated` with a code other than 0 and without `TERMINATION_REQUESTED`, or a compile error after a",
     "  reload → `repairAndRestart` (at most once per 5 minutes).",
@@ -991,9 +996,10 @@
    "id": "doc:extensions/jetbrains/docs/02-architecture/overview.md#the-jetbrains-plugin-its-classes",
    "type": "context",
    "title": "The JetBrains plugin: its classes",
-   "summary": "Everything is in `src/dev/nuclearlang/editor/`.",
+   "summary": "The plugin's own classes are in `src/dev/nuclearlang/editor/`; the tool windows' classes are in `../tools/<tool>/jetbrains/src/dev/nuclearlang/editor/`, compiled with them by `build.sh`.",
    "body": [
-    "Everything is in `src/dev/nuclearlang/editor/`. The plugin is built into a zip by `build.sh` and installed unpacked",
+    "The plugin's own classes are in `src/dev/nuclearlang/editor/`; the tool windows' classes are in",
+    "`../tools/<tool>/jetbrains/src/dev/nuclearlang/editor/`, compiled with them by `build.sh`. The plugin is built into a zip by `build.sh` and installed unpacked",
     "in `~/.local/share/Google/AndroidStudio2026.2.1/nuclearlang`."
    ],
    "sources": [
@@ -1013,8 +1019,8 @@
    "body": [
     "| Tool window | Class | Shortcut | Project |",
     "|---|---|---|---|",
-    "| *Nuclear HTTP* (left) | `NuclearHttp.java` | `Alt+Shift+H` | [`tools/nuclear-connector`](../../../tools/nuclear-connector/docs/02-architecture/overview.md) |",
-    "| *Nuclear Loop* (bottom) | `NuclearLoop.java` | `Alt+Shift+P` | [`tools/nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/overview.md) |",
+    "| *Nuclear Connector* (left) | `../tools/nuclear-connector/jetbrains/src/…/NuclearConnector.java` | `Alt+Shift+H` | [`tools/nuclear-connector`](../../../tools/nuclear-connector/docs/02-architecture/overview.md) |",
+    "| *Nuclear Builder* (bottom) | `../tools/nuclear-builder/jetbrains/src/…/NuclearBuilder.java` | `Alt+Shift+P` | [`tools/nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/overview.md) |",
     "| *Nuclear Error* (right) | `NuclearDebug.java` | — | above |"
    ],
    "sources": [
@@ -1053,8 +1059,8 @@
    "body": [
     "- The Nuclear workspace: it has tool windows and actions with shortcuts instead (ADR-extensions-0002).",
     "- The project card in the status bar: only the tool windows read `.nuclear/project.json`, to find the projects.",
-    "- The devices inside the editor: the Dragonfly device is a Flutter custom device of VS Code only.",
-    "- The chat, the settings page, the notifications and the Retry buttons of the Loop.",
+    "- The devices inside the editor: the Synapsis device is a Flutter custom device of VS Code only.",
+    "- The chat, the settings page, the notifications and the Retry buttons of Nuclear Builder.",
     "",
     "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
     "[the table of old numbers](../../../../docs/03-adr/old-numbers.md)."
@@ -1129,7 +1135,7 @@
   {
    "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#commands",
    "type": "readme",
-   "title": "nuclear-connector — Commands",
+   "title": "Nuclear Connector (`nuclear-connector`) — Commands",
    "summary": "Run in `extensions/vscode/`: `npm run compile`.",
    "body": [
     "Run in `extensions/vscode/`: `npm run compile`. In `extensions/jetbrains/`:",
@@ -1147,7 +1153,7 @@
   {
    "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#documents-read-by-task",
    "type": "readme",
-   "title": "nuclear-connector — Documents (read by task)",
+   "title": "Nuclear Connector (`nuclear-connector`) — Documents (read by task)",
    "summary": "Documents (read by task)",
    "body": [
     "| You need… | Read |",
@@ -1168,12 +1174,12 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#nuclear-connector",
+   "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#nuclear-connector-nuclear-connector",
    "type": "readme",
-   "title": "nuclear-connector",
-   "summary": "The tool like Postman or Bruno inside the editor.",
+   "title": "Nuclear Connector (`nuclear-connector`)",
+   "summary": "The tool like Postman or Bruno inside the editor, Nuclear Connector: every endpoint of every project as a tree by platform, project and component, read from the contract the compiler writes; the contracts an app declares; OpenAPI documents of APIs that are not Nuclear; environments; and a request…",
    "body": [
-    "The tool like Postman or Bruno inside the editor. The code calls it **Nuclear HTTP** today: every endpoint of every",
+    "The tool like Postman or Bruno inside the editor, **Nuclear Connector**: every endpoint of every",
     "project as a tree by platform, project and component, read from the contract the compiler writes; the contracts an",
     "app declares; OpenAPI documents of APIs that are not Nuclear; environments; and a request panel. It is a tool of the",
     "Nuclear workspace in VS Code (`Ctrl+Alt+H`) and a tool window in Android Studio / IntelliJ (`Alt+Shift+H`).",
@@ -1193,11 +1199,11 @@
   {
    "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#rules",
    "type": "readme",
-   "title": "nuclear-connector — Rules",
+   "title": "Nuclear Connector (`nuclear-connector`) — Rules",
    "summary": "Rules",
    "body": [
     "- The endpoints come from `.nuclear/contract.json`, never from reading the project's code.",
-    "- The tree in VS Code is drawn by the workspace's webview, with the `nuclearHttp.*` colors of the theme.",
+    "- The tree in VS Code is drawn by the workspace's webview, with the `nuclearConnector.*` colors of the theme.",
     "- A component is an editor tab and each endpoint a tab inside it: the tab bar never fills with requests.",
     "- A request is sent by the extension host, not by the webview; `{{var}}` is resolved there.",
     "- The decisions: ADR-extensions-0002 (the workspace), ADR-synapsis-0006 (the contract)."
@@ -1214,7 +1220,7 @@
   {
    "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#stack",
    "type": "readme",
-   "title": "nuclear-connector — Stack",
+   "title": "Nuclear Connector (`nuclear-connector`) — Stack",
    "summary": "Stack",
    "body": [
     "- TypeScript; the request is sent by the extension host with `fetch`; the panel is plain HTML and script",
@@ -1230,23 +1236,22 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#where-the-code-is-today",
+   "id": "doc:extensions/tools/nuclear-connector/AGENTS.md#where-the-code-is",
    "type": "readme",
-   "title": "nuclear-connector — Where the code is today",
-   "summary": "It moves into this folder in spec 008, T4.4. `extensions/vscode/src/connections.ts` is assigned to this folder by spec 008, but it is not part of Nuclear HTTP: it checks the connections of the AI services (the Developer, the graph, Ollama, the integrations), and is documented with the settings page.",
+   "title": "Nuclear Connector (`nuclear-connector`) — Where the code is",
+   "summary": "All of it is in this folder.",
    "body": [
-    "It moves into this folder in [spec 008, T4.4](../../../docs/04-specs/008-restructure/tasks.md).",
+    "All of it is in this folder. The VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`);",
+    "the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin.",
     "",
     "| File | What it is |",
     "|---|---|",
-    "| `extensions/vscode/src/http.ts` | `HttpModel`: the projects, the tree, the environments, the commands |",
-    "| `extensions/vscode/src/httpPanel.ts` | `ComponentPanel`: one editor tab per component, one inner tab per endpoint |",
-    "| `extensions/jetbrains/src/dev/nuclearlang/editor/NuclearHttp.java` | the *Nuclear HTTP* tool window, in Swing |",
+    "| `src/connector.ts` | `HttpModel`: the projects, the tree, the environments, the commands |",
+    "| `src/panel.ts` | `ComponentPanel`: one editor tab per component, one inner tab per endpoint |",
+    "| `jetbrains/src/dev/nuclearlang/editor/NuclearConnector.java` | the *Nuclear Connector* tool window, in Swing |",
     "",
-    "`extensions/vscode/src/connections.ts` is assigned to this folder by spec 008, but it is not part of Nuclear HTTP:",
-    "it checks the connections of the AI services (the Developer, the graph, Ollama, the integrations), and is",
-    "documented with [the settings page](../../vscode/docs/02-architecture/ai-services.md).",
-    "`TODO(human): does connections.ts move here with the tool, or stay with the settings page?`"
+    "`extensions/vscode/src/connections.ts` is not part of this tool: it checks the connections of the AI services and",
+    "stays with [the settings page](../../vscode/docs/02-architecture/ai-services.md)."
    ],
    "sources": [
     "extensions/tools/nuclear-connector/AGENTS.md"
@@ -1258,9 +1263,9 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#a-component-s-panel-httppanel-ts",
+   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#a-component-s-panel-panel-ts",
    "type": "context",
-   "title": "Architecture of Nuclear HTTP — A component's panel (`httpPanel.ts`)",
+   "title": "Architecture of Nuclear Connector — A component's panel (`panel.ts`)",
    "summary": "`ComponentPanel`: one webview panel per `componentKey(endpoint)`, like a Bruno folder, with an inner tab per endpoint opened from the tree.",
    "body": [
     "`ComponentPanel`: one webview panel per `componentKey(endpoint)`, like a Bruno folder, with an inner tab per",
@@ -1271,7 +1276,7 @@
     "- the response pretty-printed; *copy as curl*.",
     "",
     "The webview posts its whole state (`tabs`, `active`) on every change and the model keeps it in `memory` by key, so",
-    "`restore(keys)` rebuilds the panels when the HTTP workspace is entered again (`model.reopen` = the keys open when",
+    "`restore(keys)` rebuilds the panels when the Connector workspace is entered again (`model.reopen` = the keys open when",
     "it was left). The memory lives in the window, not on disk."
    ],
    "sources": [
@@ -1284,9 +1289,9 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#architecture-of-nuclear-http",
+   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#architecture-of-nuclear-connector",
    "type": "context",
-   "title": "Architecture of Nuclear HTTP",
+   "title": "Architecture of Nuclear Connector",
    "summary": "A basic Bruno / Postman inside the editor (ADR-extensions-0002) over the contract the compiler writes (ADR-synapsis-0006).",
    "body": [
     "A basic Bruno / Postman inside the editor (ADR-extensions-0002) over the contract the compiler writes",
@@ -1304,15 +1309,15 @@
   {
    "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#in-the-workspace",
    "type": "context",
-   "title": "Architecture of Nuclear HTTP — In the workspace",
-   "summary": "The tool `http` of the strip (`Ctrl+Alt+H`).",
+   "title": "Architecture of Nuclear Connector — In the workspace",
+   "summary": "The tool `connector` of the strip (`Ctrl+Alt+H`).",
    "body": [
-    "The tool `http` of the strip (`Ctrl+Alt+H`). Its pane is the environment bar and the tree; the ⇄ API action of a",
+    "The tool `connector` of the strip (`Ctrl+Alt+H`). Its pane is the environment bar and the tree; the ⇄ API action of a",
     "backend project jumps to its routes ([the workspace](../../../../vscode/docs/02-architecture/workspace.md)).",
     "",
     "Verbs and sections use theme colors the extension contributes (`colors` in `package.json`:",
-    "`nuclearHttp.get/post/put/patch/delete/platform/project/component`, with dark and light defaults; a theme may",
-    "override them; in CSS `var(--vscode-nuclearHttp-get)`). The Chernobyl themes set them from the palette",
+    "`nuclearConnector.get/post/put/patch/delete/platform/project/component`, with dark and light defaults; a theme may",
+    "override them; in CSS `var(--vscode-nuclearConnector-get)`). The Chernobyl themes set them from the palette",
     "([the theme](../../../../vscode/docs/02-architecture/theme.md))."
    ],
    "sources": [
@@ -1325,9 +1330,9 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#the-jetbrains-tool-window-nuclearhttp-java",
+   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#the-jetbrains-tool-window-nuclearconnector-java",
    "type": "context",
-   "title": "Architecture of Nuclear HTTP — The JetBrains tool window (`NuclearHttp.java`)",
+   "title": "Architecture of Nuclear Connector — The JetBrains tool window (`NuclearConnector.java`)",
    "summary": "The VS Code view in Swing, on the left, `Alt+Shift+H` (`keyboard-shortcut` in `plugin.xml`).",
    "body": [
     "The VS Code view in Swing, on the left, `Alt+Shift+H` (`keyboard-shortcut` in `plugin.xml`).",
@@ -1350,12 +1355,12 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#the-model-http-ts",
+   "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#the-model-connector-ts",
    "type": "context",
-   "title": "Architecture of Nuclear HTTP — The model (`http.ts`)",
-   "summary": "`activateHttp(context)` returns the `HttpModel`.",
+   "title": "Architecture of Nuclear Connector — The model (`connector.ts`)",
+   "summary": "`activateConnector(context)` returns the `HttpModel`.",
    "body": [
-    "`activateHttp(context)` returns the `HttpModel`.",
+    "`activateConnector(context)` returns the `HttpModel`.",
     "",
     "- `findProjects` walks the workspace folders (depth 4, skipping `build`, `node_modules`…) for",
     "  `.nuclear/project.json` and reads the `contract.json` next to it. The model watches `**/.nuclear/*.json`.",
@@ -1368,9 +1373,9 @@
     "  `active`, and `environments.<name>.{vars, headers, baseUrls, openapi}`. `{{var}}` is resolved by the extension",
     "  host.",
     "",
-    "Commands: `nuclear.http.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and",
+    "Commands: `nuclear.connector.{refresh,selectEnvironment,editEnvironments,addOpenApi,open}` and",
     "`nuclear.contracts.update (root?, name?)`, which runs `~/.local/bin/nuclear contracts update` in the project (the",
-    "output channel *Nuclear HTTP*)."
+    "output channel *Nuclear Connector*)."
    ],
    "sources": [
     "extensions/tools/nuclear-connector/docs/02-architecture/overview.md"
@@ -1384,7 +1389,7 @@
   {
    "id": "doc:extensions/tools/nuclear-connector/docs/02-architecture/overview.md#where-the-endpoints-come-from",
    "type": "context",
-   "title": "Architecture of Nuclear HTTP — Where the endpoints come from",
+   "title": "Architecture of Nuclear Connector — Where the endpoints come from",
    "summary": "`.nuclear/contract.json` is written next to the project card `.nuclear/project.json` (by `project::write_metadata`, so the language server's `Project::build` produces it): the app, its version, platform and dialect, its `models`, its `controllers` (what a backend exposes) and its `repositories`…",
    "body": [
     "`.nuclear/contract.json` is written next to the project card `.nuclear/project.json` (by `project::write_metadata`,",
@@ -1433,7 +1438,7 @@
     "| The web device: its engine, its panel, its debugger | [docs/02-architecture/web-device.md](docs/02-architecture/web-device.md) |",
     "| The pending work, what was never tried | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
     "| The Devices pane and the ▷ Run / ◉ Debug / ▭ Device pickers | [the workspace](../../vscode/docs/02-architecture/workspace.md) |",
-    "| The CLI's devices (`dragonfly device`, `terminal-device`) | [`device-emulators/`](../../../device-emulators/AGENTS.md) |"
+    "| The CLI's devices (`nuclear device`, `terminal-device`) | [`device-emulators/`](../../../device-emulators/AGENTS.md) |"
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/AGENTS.md"
@@ -1448,16 +1453,16 @@
    "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#nuclear-device-manager",
    "type": "readme",
    "title": "nuclear-device-manager",
-   "summary": "The devices inside the editor: the Dragonfly device (a mobile app running in a panel of VS Code, like Android Studio's Running Devices) and the web device (a web app beside its code, at the size of a desktop, a laptop, a tablet or a phone), plus the *Devices* tool of the Nuclear workspace…",
+   "summary": "The devices inside the editor: the Synapsis device (a mobile app running in a panel of VS Code, like Android Studio's Running Devices) and the web device (a web app beside its code, at the size of a desktop, a laptop, a tablet or a phone), plus the *Devices* tool of the Nuclear workspace…",
    "body": [
-    "The devices inside the editor: the **Dragonfly device** (a mobile app running in a panel of VS Code, like Android",
+    "The devices inside the editor: the **Synapsis device** (a mobile app running in a panel of VS Code, like Android",
     "Studio's Running Devices) and the **web device** (a web app beside its code, at the size of a desktop, a laptop, a",
     "tablet or a phone), plus the *Devices* tool of the Nuclear workspace (`Ctrl+Alt+V`), which lists the open devices",
     "and opens as many as wanted. It works. VS Code only.",
     "",
-    "The devices themselves are the project [`device-emulators/`](../../../device-emulators/AGENTS.md) (the devices the CLI and",
-    "the editors start; today inside the CLI crate, spec 008 T4.1). The panels of this tool carry their own engine in",
-    "TypeScript, with the same presets as the CLI's `dragonfly device`."
+    "The devices themselves are the project [`device-emulators/`](../../../device-emulators/AGENTS.md) (the crate",
+    "`nuclear-devices`, which `nuclear device` and `nuclear terminal-device` call). The panels of this tool carry their own engine in",
+    "TypeScript, with the same presets as the CLI's `nuclear device`."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/AGENTS.md"
@@ -1478,8 +1483,8 @@
     "- An app lives on its own: closing a device's tab only hides it. A run never replaces a running device.",
     "- The devices belong to the mobile workspaces and the Devices tool; elsewhere they are parked, not ended.",
     "- A frame matches the device's on-screen pixels 1:1: nothing is upscaled.",
-    "- `webSession.ts` and `cdp.ts` never import `vscode`.",
-    "- The decisions: ADR-extensions-0002 (several devices, park, the web device), ADR-devices-0001 (the Dragonfly device)."
+    "- `web-session.ts` and `cdp.ts` never import `vscode`.",
+    "- The decisions: ADR-extensions-0002 (several devices, park, the web device), ADR-devices-0001 (the Synapsis device)."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/AGENTS.md"
@@ -1510,19 +1515,19 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#where-the-code-is-today",
+   "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#where-the-code-is",
    "type": "readme",
-   "title": "nuclear-device-manager — Where the code is today",
-   "summary": "It moves into this folder in spec 008, T4.4.",
+   "title": "nuclear-device-manager — Where the code is",
+   "summary": "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
    "body": [
-    "It moves into this folder in [spec 008, T4.4](../../../docs/04-specs/008-restructure/tasks.md).",
+    "In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).",
     "",
     "| File | What it is |",
     "|---|---|",
-    "| `extensions/vscode/src/device.ts` | the Dragonfly device: the panels, the running apps, the Flutter custom device, the presets |",
-    "| `extensions/vscode/src/webDevice.ts` | the web device's panel and its commands |",
-    "| `extensions/vscode/src/webSession.ts` | the web device's engine; no `vscode` import |",
-    "| `extensions/vscode/src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |"
+    "| `src/mobile-device.ts` | the Synapsis device: the panels, the running apps, the Flutter custom device, the presets |",
+    "| `src/web-device.ts` | the web device's panel and its commands |",
+    "| `src/web-session.ts` | the web device's engine; no `vscode` import |",
+    "| `src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |"
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/AGENTS.md"
@@ -1536,7 +1541,7 @@
   {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#hot-reload",
    "type": "context",
-   "title": "The Dragonfly device (`device.ts`) — Hot reload",
+   "title": "The Synapsis device (`mobile-device.ts`) — Hot reload",
    "summary": "Saving a `.nuc` builds and calls `flutter.hotReload` on the running session (the client).",
    "body": [
     "Saving a `.nuc` builds and calls `flutter.hotReload` on the running session",
@@ -1557,12 +1562,12 @@
   {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-custom-device",
    "type": "context",
-   "title": "The Dragonfly device (`device.ts`) — The custom device",
-   "summary": "Only VS Code lists it: a Flutter custom device with the id `dragonfly`, which the extension registers by itself.",
+   "title": "The Synapsis device (`mobile-device.ts`) — The custom device",
+   "summary": "Only VS Code lists it: a Flutter custom device with the id `synapsis`, which the extension registers by itself.",
    "body": [
-    "Only VS Code lists it: a Flutter custom device with the id `dragonfly`, which the extension registers by itself.",
+    "Only VS Code lists it: a Flutter custom device with the id `synapsis`, which the extension registers by itself.",
     "",
-    "- `ensureDevice`: `dragonfly flutter custom-devices add --json` with `FLUTTER_CUSTOM_DEVICES=true`.",
+    "- `ensureDevice`: `nuclear flutter custom-devices add --json` with `FLUTTER_CUSTOM_DEVICES=true`.",
     "- Custom devices are on only where `FLUTTER_CUSTOM_DEVICES=true`: the extension adds it to the user's `dart.env`",
     "  (and `CHROME_EXECUTABLE` if needed), then `_dart.reloadExtension`. A `configurationDefaults` value for `dart.env`",
     "  does NOT reach the Dart extension, so it is written. `flutter devices` in a terminal and other IDEs do not show",
@@ -1581,38 +1586,16 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-dragonfly-device-device-ts",
-   "type": "context",
-   "title": "The Dragonfly device (`device.ts`)",
-   "summary": "The app running inside VS Code, like Android Studio's Running Devices (ADR-devices-0001).",
-   "body": [
-    "The app running inside VS Code, like Android Studio's Running Devices (ADR-devices-0001). Flutter runs it on its",
-    "`chrome` device with a headless Chromium, so it is debugged like any web app (breakpoints, hot reload, hot",
-    "restart); the panel shows the browser's screen and sends the user's input back."
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-launch",
    "type": "context",
-   "title": "The Dragonfly device (`device.ts`) — The launch",
+   "title": "The Synapsis device (`mobile-device.ts`) — The launch",
    "summary": "`launchProvider` is the `resolveDebugConfiguration` of `dart` (a `-d` in `toolArgs` does NOT work).",
    "body": [
     "`launchProvider` is the `resolveDebugConfiguration` of `dart` (a `-d` in `toolArgs` does NOT work). It sets:",
     "",
     "- `deviceId: 'chrome'`, `--web-port`, `--web-browser-debug-port`;",
     "- `--web-browser-flag=--headless=new`, `--enable-unsafe-swiftshader`;",
-    "- `--web-launch-url http://127.0.0.1:<port>/assets/__dragonfly_device__`: an empty 404 page that carries the",
+    "- `--web-launch-url http://127.0.0.1:<port>/assets/__synapsis_device__`: an empty 404 page that carries the",
     "  process marker (`about:blank` does not work).",
     "",
     "Flutter's `web-server` device is rejected: its debug service has no breakpoints."
@@ -1632,7 +1615,7 @@
   {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-page-in-the-panel",
    "type": "context",
-   "title": "The Dragonfly device (`device.ts`) — The page in the panel",
+   "title": "The Synapsis device (`mobile-device.ts`) — The page in the panel",
    "summary": "`attach` opens the extension's own CDP connection (over node's WebSocket): input lands where it is drawn.",
    "body": [
     "`attach` opens the extension's own CDP connection (over node's WebSocket):",
@@ -1665,7 +1648,7 @@
   {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-panel",
    "type": "context",
-   "title": "The Dragonfly device (`device.ts`) — The panel",
+   "title": "The Synapsis device (`mobile-device.ts`) — The panel",
    "summary": "540).",
    "body": [
     "- Its width is saved per screen width (`nuclear.device.widths`; by default 20 % of the screen, between 340 and",
@@ -1687,19 +1670,41 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-synapsis-device-mobile-device-ts",
+   "type": "context",
+   "title": "The Synapsis device (`mobile-device.ts`)",
+   "summary": "The app running inside VS Code, like Android Studio's Running Devices (ADR-devices-0001).",
+   "body": [
+    "The app running inside VS Code, like Android Studio's Running Devices (ADR-devices-0001). Flutter runs it on its",
+    "`chrome` device with a headless Chromium, so it is debugged like any web app (breakpoints, hot reload, hot",
+    "restart); the panel shows the browser's screen and sends the user's input back."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md#architecture-of-the-devices",
    "type": "context",
    "title": "Architecture of the devices",
-   "summary": "Two kinds of device, both a headless Chromium the editor drives over CDP (`cdp.ts`, shared): The rest of this file is about the Dragonfly devices: there can be several at once.",
+   "summary": "Two kinds of device, both a headless Chromium the editor drives over CDP (`cdp.ts`, shared): The rest of this file is about the Synapsis devices: there can be several at once.",
    "body": [
     "Two kinds of device, both a headless Chromium the editor drives over CDP (`cdp.ts`, shared):",
     "",
     "| Device | For | Files | Document |",
     "|---|---|---|---|",
-    "| Dragonfly device | a mobile project | `device.ts` | [mobile-device.md](mobile-device.md) |",
-    "| Web device | a web project, one panel per project | `webDevice.ts`, `webSession.ts` | [web-device.md](web-device.md) |",
+    "| Synapsis device | a mobile project | `mobile-device.ts` | [mobile-device.md](mobile-device.md) |",
+    "| Web device | a web project, one panel per project | `web-device.ts`, `web-session.ts` | [web-device.md](web-device.md) |",
     "",
-    "The rest of this file is about the Dragonfly devices: there can be several at once."
+    "The rest of this file is about the Synapsis devices: there can be several at once."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md"
@@ -1766,9 +1771,9 @@
     "- `panels` is a `Set<DevicePanel>`; each has its own `running`, `lastView` and `id`.",
     "- `Running` (an app) lives on its own: `panel` is optional, with `title`, `lastUsed`, `ended`. `alive()` = the",
     "  panels' apps + `parked`.",
-    "- `DevicePanel.show(context, preset?)` always opens one more panel (title `Dragonfly device N`; a `preset` message",
+    "- `DevicePanel.show(context, preset?)` always opens one more panel (title `Synapsis device N`; a `preset` message",
     "  selects the device). `freeNumber()` gives the lowest free number, so a closed device frees its name.",
-    "- The launch configuration carries `dragonflyPanel`, the panel to run on, and its `name` is the device's title (the",
+    "- The launch configuration carries `synapsisPanel`, the panel to run on, and its `name` is the device's title (the",
     "  debug toolbar and the Debug Console pick by device). `nuclear.runOnDevice(panelId?, root?, noDebug)`: without a",
     "  panel it takes `DevicePanel.idle()`, a free panel, or a new one. A running device is never replaced.",
     "- `watchSessions` finds the panel of a session by `running.key`.",
@@ -1791,7 +1796,7 @@
    "body": [
     "Nothing stays alive when VS Code closes.",
     "",
-    "- `marker(key)` = `__dragonfly_device_<extension host pid>_<key>__`, written in `--web-launch-url`, so every",
+    "- `marker(key)` = `__synapsis_device_<extension host pid>_<key>__`, written in `--web-launch-url`, so every",
     "  process of a device carries it.",
     "- `reap(mark, wait?)` is a detached `sh`: it waits for `wait` to die, then `pkill -TERM -f`, 3 s, `-KILL`. On",
     "  activation one is left waiting for the extension host itself, so a closed or crashed VS Code ends every app the",
@@ -1829,7 +1834,7 @@
   {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-debugger",
    "type": "context",
-   "title": "The web device (`webDevice.ts`, `webSession.ts`, `cdp.ts`) — The debugger",
+   "title": "The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`) — The debugger",
    "summary": "◉ Debug starts a `chrome` attach session of VS Code's JavaScript debugger on the device's CDP port, with `webRoot` = the app.",
    "body": [
     "◉ Debug starts a `chrome` attach session of VS Code's JavaScript debugger on the device's CDP port, with `webRoot`",
@@ -1849,9 +1854,9 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-engine-websession-ts",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-engine-web-session-ts",
    "type": "context",
-   "title": "The web device (`webDevice.ts`, `webSession.ts`, `cdp.ts`) — The engine (`webSession.ts`)",
+   "title": "The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`) — The engine (`web-session.ts`)",
    "summary": "No `vscode` import.",
    "body": [
     "No `vscode` import. It:",
@@ -1859,7 +1864,7 @@
     "- runs the app's dev server: `build/app/node_modules/.bin/vite`, on a free port of `127.0.0.1`;",
     "- starts a headless Chromium with a profile of its own. `browserExecutable()` looks for `CHROME_EXECUTABLE`,",
     "  Chrome, Chromium, Brave, Edge, Vivaldi;",
-    "- drives the page over CDP (`cdp.ts`, shared with `device.ts`):",
+    "- drives the page over CDP (`cdp.ts`, shared with `mobile-device.ts`):",
     "  - `Emulation.setDeviceMetricsOverride`, touch and user agent per `WEB_PRESETS` (desktop, laptops, tablets,",
     "    phones);",
     "  - `setEmulatedMedia` (`prefers-color-scheme`);",
@@ -1882,9 +1887,9 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-panel-webdevice-ts",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-panel-web-device-ts",
    "type": "context",
-   "title": "The web device (`webDevice.ts`, `webSession.ts`, `cdp.ts`) — The panel (`webDevice.ts`)",
+   "title": "The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`) — The panel (`web-device.ts`)",
    "summary": "Chrome's DevTools of the page.",
    "body": [
     "- The address bar: back, forward, reload (Shift: without cache), the app's address, the page in the user's browser,",
@@ -1908,12 +1913,12 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-web-device-webdevice-ts-websession-ts-cdp-ts",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#the-web-device-web-device-ts-web-session-ts-cdp-ts",
    "type": "context",
-   "title": "The web device (`webDevice.ts`, `webSession.ts`, `cdp.ts`)",
-   "summary": "A web app of the web platform shown in the editor, beside its code, the way the Dragonfly device shows a mobile app (ADR-extensions-0002).",
+   "title": "The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`)",
+   "summary": "A web app of the web platform shown in the editor, beside its code, the way the Synapsis device shows a mobile app (ADR-extensions-0002).",
    "body": [
-    "A web app of the web platform shown in the editor, beside its code, the way the Dragonfly device shows a mobile",
+    "A web app of the web platform shown in the editor, beside its code, the way the Synapsis device shows a mobile",
     "app (ADR-extensions-0002). One panel per project. Only its engine ran; the panel was never opened in a running",
     "VS Code ([roadmap](../01-product/roadmap.md)).",
     "",
@@ -1934,9 +1939,9 @@
   {
    "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/web-device.md#trying-it-without-vs-code",
    "type": "context",
-   "title": "The web device (`webDevice.ts`, `webSession.ts`, `cdp.ts`) — Trying it without VS Code",
-   "summary": "Bundle a script that imports `webSession.ts` with esbuild and run it with node against a built app.",
-   "body": "Bundle a script that imports `webSession.ts` with esbuild and run it with node against a built app.",
+   "title": "The web device (`web-device.ts`, `web-session.ts`, `cdp.ts`) — Trying it without VS Code",
+   "summary": "Bundle a script that imports `web-session.ts` with esbuild and run it with node against a built app.",
+   "body": "Bundle a script that imports `web-session.ts` with esbuild and run it with node against a built app.",
    "platforms": [
     "web"
    ],
@@ -2120,14 +2125,14 @@
    "id": "doc:extensions/vscode/AGENTS.md#commands",
    "type": "readme",
    "title": "VS Code extension — Commands",
-   "summary": "npm install npm run compile # tsc --noEmit, then out/extension.js and out/nuclear-loop.js npm run watch # out/extension.js on every change npm test # test/loop.test.ts and test/setup.test.ts with node:test npm run loop # only out/nuclear-loop.js (the nuclear-loop command) npm run theme # the…",
+   "summary": "npm install npm run compile # tsc --noEmit, then out/extension.js and out/nuclear-builder.js npm run watch # out/extension.js on every change npm test # test/setup.test.ts and ../tools/nuclear-builder/test/engine.test.ts with node:test npm run builder # only out/nuclear-builder.js (the…",
    "body": [
     "```sh",
     "npm install",
-    "npm run compile     # tsc --noEmit, then out/extension.js and out/nuclear-loop.js",
+    "npm run compile     # tsc --noEmit, then out/extension.js and out/nuclear-builder.js",
     "npm run watch       # out/extension.js on every change",
-    "npm test            # test/loop.test.ts and test/setup.test.ts with node:test",
-    "npm run loop        # only out/nuclear-loop.js (the nuclear-loop command)",
+    "npm test            # test/setup.test.ts and ../tools/nuclear-builder/test/engine.test.ts with node:test",
+    "npm run builder     # only out/nuclear-builder.js (the nuclear-builder command)",
     "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
     "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
     "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
@@ -2154,14 +2159,14 @@
     "| You need… | Read |",
     "|---|---|",
     "| Which file of `src/` does what, and what `package.json` contributes | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| The client, the status bar, run / save / repair of a Dragonfly project | [docs/02-architecture/client.md](docs/02-architecture/client.md) |",
+    "| The client, the status bar, run / save / repair of a Synapsis project | [docs/02-architecture/client.md](docs/02-architecture/client.md) |",
     "| Debugging a `.nuc`: mirrors, the paused line, mixed stepping | [docs/02-architecture/debugging.md](docs/02-architecture/debugging.md) |",
     "| The Nuclear workspace: the strip, the tabs, the actions, the file tree | [docs/02-architecture/workspace.md](docs/02-architecture/workspace.md) |",
     "| The set-up wizard, the settings page, the checked connections, the notifications | [docs/02-architecture/ai-services.md](docs/02-architecture/ai-services.md) |",
     "| Colors, the Chernobyl themes, the icons, how to test a theme | [docs/02-architecture/theme.md](docs/02-architecture/theme.md) |",
     "| What the tests cover and how to try something without the editor | [docs/05-standards/testing.md](docs/05-standards/testing.md) |",
     "| The pending work of this extension | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| The Loop, Nuclear HTTP, the chat, the devices | [`../tools/`](../AGENTS.md) |",
+    "| Nuclear Builder, Nuclear Connector, the chat, the devices | [`../tools/`](../AGENTS.md) |",
     "| Why the workspace is as it is | [ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md) |"
    ],
    "sources": [
@@ -2177,10 +2182,11 @@
    "id": "doc:extensions/vscode/AGENTS.md#folders",
    "type": "readme",
    "title": "VS Code extension — Folders",
-   "summary": "has the color tables",
+   "summary": "`../tools/*/src` and `../tools/*/test`, which esbuild bundles from `src/extension.ts` has the color tables",
    "body": [
-    "- `src/`: the extension ([the map of its files](docs/02-architecture/overview.md))",
-    "- `test/`: `loop.test.ts`, `setup.test.ts`",
+    "- `src/`: the extension ([the map of its files](docs/02-architecture/overview.md)); `tsconfig.json` also compiles",
+    "  `../tools/*/src` and `../tools/*/test`, which esbuild bundles from `src/extension.ts`",
+    "- `test/`: `setup.test.ts`",
     "- `theme/`: `palette.json` and the generators (`build.mjs`, `icons.mjs`, `vendor-atom-icons.mjs`); `theme/README.md`",
     "  has the color tables",
     "- `scripts/`: `bundle-server.mjs` (`npm run server`), `codemetrics-settings.mjs`",
@@ -2207,10 +2213,10 @@
    "body": [
     "- Never edit what is generated: `themes/`, `icon-themes/`, `icons/`, `syntaxes/nuclear-example.tmLanguage.json`,",
     "  `server/`, `out/`, and the `nuclear.codemetrics.*` settings of `package.json`.",
-    "- The engines have no `vscode` import, so a node script, `nuclear-loop` and the tests drive them: `loopEngine.ts`,",
-    "  `loopSafety.ts`, `loopCli.ts`, `aiSetup.ts`, `chat.ts`, `cdp.ts`, `webSession.ts`. Keep it so.",
-    "- A page is only a view. A Loop run or a chat job belongs to the extension (module-level), so closing its page or",
-    "  switching tools leaves the work running.",
+    "- The engines have no `vscode` import, so a node script, `nuclear-builder` and the tests drive them: `aiSetup.ts`",
+    "  here, and the tools' `engine.ts`, `safety.ts`, `cli.ts`, `chat.ts`, `cdp.ts`, `web-session.ts`. Keep it so.",
+    "- A page is only a view. A Nuclear Builder run or a chat job belongs to the extension (module-level), so closing",
+    "  its page or switching tools leaves the work running.",
     "- An installer runs in a terminal the user sees, never hidden.",
     "- A tool is documented in `../tools/<tool>/`, not here.",
     "- After a change, release: [`../docs/06-runbooks/release.md`](../docs/06-runbooks/release.md). The user must quit",
@@ -2249,12 +2255,13 @@
    "id": "doc:extensions/vscode/AGENTS.md#vs-code-extension",
    "type": "readme",
    "title": "VS Code extension",
-   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.50.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Dragonfly projects of every platform, the tools (the Loop, Nuclear HTTP, the chat, the devices) and the Chernobyl themes.",
+   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.51.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, Nuclear Connector,…",
    "body": [
-    "The NuclearLang extension for VS Code (`nuclearlang`, 0.50.0): the client of the language server, semantic",
-    "highlighting, code metrics, the Nuclear workspace, run and debug of Dragonfly projects of every platform, the tools",
-    "(the Loop, Nuclear HTTP, the chat, the devices) and the Chernobyl themes. Its `theme/` also generates the themes and",
-    "icons of the JetBrains and Zed extensions. What the three extensions share: [`../AGENTS.md`](../AGENTS.md)."
+    "The NuclearLang extension for VS Code (`nuclearlang`, 0.51.0): the client of the language server, semantic",
+    "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
+    "Chernobyl themes, and it bundles the tools (Nuclear Builder, Nuclear Connector, the chat, the devices), whose code is",
+    "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
+    "the three extensions share: [`../AGENTS.md`](../AGENTS.md)."
    ],
    "sources": [
     "extensions/vscode/AGENTS.md"
@@ -2281,16 +2288,65 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.7b5215",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.4688e8",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`).",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.878813",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.46.0: the Builder follows the strategy of the request (ADR-developer-0001): the *Specification* stage ends with the analysis (`/developer/analyze`), which decides the stages that run, adds the generator calls it read in plain words to *Generate*, gives *Plan* the pieces the tools found (a rename's files are written as the tool gave them), stops the run with the questions when the request lacks a fact, and after *Code* wires each use case with `nuclear gen usecase`; for a bug, *Verification* repairs the file the failure names and never the test; a spec may name its strategy (`- Strategy:`).",
+    "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.9357df",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- 0.49.0: the Builder shows a run as a graph and lets any of it run again. A column per stage, a node per step in the order it ran and, under each step, the steps its agent followed; a click on a node opens it beside the graph: what it did, the decisions it took and why (each step now keeps them: which strategy and by which signs, why a stage is left out, why a file goes to the tester, why a planned piece is dropped), its input, its output and its code. *Run again from this step* on every step, passed or failed (it and every step after it; the steps before it are kept), *Run <stage> again* on every stage, *Run again from scratch* on the run; what the steps left out wrote is undone first, and a file changed since the run wrote it is kept (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`). A run made by an older version (no analysis, no Generate stage) gets today's stages and starts from scratch at any retry. A plan made again drops the pieces a planner gave and keeps the ones written in the form. When the verification passes, each acceptance criterion is held against what the run left (`/developer/accept`): the ones not shown met are listed as left for the reviewer, in the page and in the journal. The local planner is given the spec alone (the context files' words are not the request's). The set-up builds the Smart Graph, now written in Nuclear, before",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.c85704",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
    "body": [
+    "- 0.51.0: one repository (spec 008): the tools' code is in `extensions/tools/<tool>/`; Synapsis for Dragonfly (the debug type, the custom device id `synapsis`, `synapsis.g.dart`); the framework's commands run as `nuclear <command>`; the Loop is Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, commands `nuclear.builder.*`) and Nuclear HTTP is Nuclear Connector (commands `nuclear.connector.*`); the MCP server registered with the agents is `nuclear-mcp` (`nuclear.ai.mcpCommand`), the graph's command is `nuclear.ai.graphCommand`.",
     "- 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`",
     "  (`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
     "- First public version.",
-    "- 0.45.0: every call to the local agents carries the project's folder (`root`), so an agent reads by itself the files that declare the names of its task (the Loop and the chat); the Plan step says how many things of the spec are beyond the platform or the local agents (the planner's `limits`) and shows the plan as a tree; *Tests first* is skipped when the generators wrote every file of the run (ADR-graph-0001).",
-    "- 0.44.0: the Loop's *Generate* stage (before Plan) runs `dragonfly gen` for the spec's resources; its files are undone like the agents' (ADR-codegen-0001)."
+    "- 0.45.0: every call to the local agents carries the project's folder (`root`), so an agent reads by itself the files that declare the names of its task (the Builder and the chat); the Plan step says how many things of the spec are beyond the platform or the local agents (the planner's `limits`) and shows the plan as a tree; *Tests first* is skipped when the generators wrote every file of the run (ADR-graph-0001).",
+    "- 0.44.0: the Builder's *Generate* stage (before Plan) runs `nuclear gen` for the spec's resources; its files are undone like the agents' (ADR-codegen-0001)."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -2302,59 +2358,11 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.7b60b8",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.c9ba37",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.46.0: the Loop follows the strategy of the request (ADR-developer-0001): the *Specification* stage ends with the analysis (`/developer/analyze`), which decides the stages that run, adds the generator calls it read in plain words to *Generate*, gives *Plan* the pieces the tools found (a rename's files are written as the tool gave them), stops the run with the questions when the request lacks a fact, and after *Code* wires each use case with `dragonfly gen usecase`; for a bug, *Verification* repairs the file the failure names and never the test; a spec may name its strategy (`- Strategy:`).",
-    "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Dragonfly* (`dragonfly make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.7b7e87",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- 0.49.0: the Loop shows a run as a graph and lets any of it run again. A column per stage, a node per step in the order it ran and, under each step, the steps its agent followed; a click on a node opens it beside the graph: what it did, the decisions it took and why (each step now keeps them: which strategy and by which signs, why a stage is left out, why a file goes to the tester, why a planned piece is dropped), its input, its output and its code. *Run again from this step* on every step, passed or failed (it and every step after it; the steps before it are kept), *Run <stage> again* on every stage, *Run again from scratch* on the run; what the steps left out wrote is undone first, and a file changed since the run wrote it is kept (`nuclear-loop retry <run> --step <id>`, `nuclear-loop restart <run>`). A run made by an older version (no analysis, no Generate stage) gets today's stages and starts from scratch at any retry. A plan made again drops the pieces a planner gave and keeps the ones written in the form. When the verification passes, each acceptance criterion is held against what the run left (`/developer/accept`): the ones not shown met are listed as left for the reviewer, in the page and in the journal. The local planner is given the spec alone (the context files' words are not the request's). The set-up builds the Smart Graph, now written in Nuclear, before it instal",
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.e4f764",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "ls it.",
-   "body": "ls it. A run of an older version whose record says a file \"was\" what an earlier attempt of the same run wrote removes that file when it starts from scratch (it came back and broke the compile). A failed command's line in the log is the compiler's first error and where, not the last line of its output; a full disk names the folder that is full; the skipped *Tests first* says whether the generators wrote tests.",
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.ecedb1",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-loop setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Loop's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`).",
+   "summary": "it installs it.",
+   "body": "it installs it. A run of an older version whose record says a file \"was\" what an earlier attempt of the same run wrote removes that file when it starts from scratch (it came back and broke the compile). A failed command's line in the log is the compiler's first error and where, not the last line of its output; a full disk names the folder that is full; the skipped *Tests first* says whether the generators wrote tests.",
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -2378,14 +2386,14 @@
     "| Dialect | Target | What it adds |",
     "|---|---|---|",
     "| `dart` | Dart | kinds `extension`, `mixin`, `data`; `Result<E, T>` with fpdart |",
-    "| `flutter` | Dart + Flutter | `stateless`, `stateful` and the Dragonfly framework: `@screen` (routes, providers, session, ACL), `repository`, `usecase`, `statemanager`, `event`, `component`, `guard` and tests in Nuclear |",
+    "| `flutter` | Dart + Flutter | `stateless`, `stateful` and the Synapsis framework: `@screen` (routes, providers, session, ACL), `repository`, `usecase`, `statemanager`, `event`, `component`, `guard` and tests in Nuclear |",
     "| `typescript` | TypeScript | the base language over strict TS |",
     "| `nodejs` | TypeScript for Node.js | Node APIs |",
     "| `nestjs` | NestJS | kinds `controller` and `service` |",
     "",
     "The extension brings every dialect of the repository (`flutter`, `fastapi`, `nestjs`, `dart`, `python`,",
     "`typescript`) with their type definitions. A project is checked with the dialect its manifest names (`config.nuc`",
-    "with `dragonfly(platform, dialect)`, or `nuclear.toml`): a backend project never sees Flutter's kinds, and the",
+    "with `synapsis(platform, dialect)`, or `nuclear.toml`): a backend project never sees Flutter's kinds, and the",
     "status bar shows its platform and dialect (`backend · fastapi`), read from the project card `.nuclear/project.json`",
     "the server writes. `nuclear.dialect` only applies to `.nuc` files outside a project. To use a dialect of your own,",
     "add its folder in the `nuclear.dialectPaths` setting; the `<workspace>/dialects` folder is always searched."
@@ -2489,11 +2497,13 @@
    "body": [
     "| Setting | What it does |",
     "|---|---|",
-    "| `nuclear.buildOnSave` | saving a `.nuc` of a backend or web project runs `dragonfly build` (the server or page reloads by itself); on by default |",
+    "| `nuclear.buildOnSave` | saving a `.nuc` of a backend or web project runs `nuclear build` (the server or page reloads by itself); on by default |",
     "| `nuclear.dialect` | the dialect of files outside a project (`flutter` by default; `base` checks only the base language) |",
     "| `nuclear.dialectPaths` | extra folders with dialects |",
     "| `nuclear.server.path` | another `nuclear-lsp` binary (empty: the one the extension brings) |",
     "| `nuclear.workspace.welcome` | the welcome page of the Nuclear workspace at startup (default on) |",
+    "| `nuclear.ai.mcpCommand` | the program that serves the Nuclear MCP server, started with no argument (`nuclear-mcp`) |",
+    "| `nuclear.ai.graphCommand` | the Smart Graph's program: serve, connect, requests, revoke (`nuclear-graph`) |",
     "| `nuclear.codemetrics.*` | costs and thresholds of the metrics |",
     "",
     "Commands (category **Nuclear**): **Show the Nuclear Workspace**, **Go to Project Tab**, **Open a Project as a Tab**,",
@@ -2510,16 +2520,18 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.0bd85e",
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.17e103",
    "type": "readme",
    "title": "NuclearLang — What the extension brings",
-   "summary": "tab inside it: path and query parameters, headers, a sample body from the model, the pretty-printed response and emulators, tiled side by side, each with its own size, identity, app and session; ▷ Run, ◉ Debug and ▭ Device ask which device to run on (Dragonfly, new, or any Flutter device); a run…",
+   "summary": "declares with *↓ Update* (`nuclear contracts update`), OpenAPI documents of APIs that are not Nuclear, and the environment (`.nuclear/http.json`: variables, headers, base urls).",
    "body": [
-    "tab inside it: path and query parameters, headers, a sample body from the model, the pretty-printed response and",
+    "declares with *↓ Update* (`nuclear contracts update`), OpenAPI documents of APIs that are not Nuclear, and the",
+    "  environment (`.nuclear/http.json`: variables, headers, base urls). A component is an editor tab and each endpoint a",
+    "  tab inside it: path and query parameters, headers, a sample body from the model, the pretty-printed response and",
     "  *copy as curl*.",
-    "- **Devices** (`Ctrl+Alt+V`): the open Dragonfly devices and *+ New device*: as many as you want at once, like",
+    "- **Devices** (`Ctrl+Alt+V`): the open Synapsis devices and *+ New device*: as many as you want at once, like",
     "  emulators, tiled side by side, each with its own size, identity, app and session; ▷ Run, ◉ Debug and ▭ Device ask",
-    "  which device to run on (Dragonfly, new, or any Flutter device); a run never replaces a running device. Closing a",
+    "  which device to run on (Synapsis, new, or any Flutter device); a run never replaces a running device. Closing a",
     "  device tab only hides it (the app goes on); ✕ in the Devices workspace ends it now; a device nobody looks at for 30",
     "  minutes ends by itself and a watchdog frees orphan processes. They belong to the mobile workspaces.",
     "- **Show Generated Code:** shows beside it the Dart or TypeScript the file generates.",
@@ -2536,7 +2548,175 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.0fb68b",
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.24fbf9",
+   "type": "readme",
+   "title": "NuclearLang — What the extension brings",
+   "summary": "page: switch tools or close the page and it keeps working.",
+   "body": [
+    "page: switch tools or close the page and it keeps working. When it ends (a chat answered, a run passed or failed) a",
+    "  notification says so (*Open* goes to that run or session) unless you are looking at it; the Nuclear icon of the",
+    "  activity bar shows a badge with the unread ones, each tool's tab its count, and the tool's pane lists them.",
+    "- **The chat in detail**: what the agent did is folded in grey under each answer (its steps, how long, how many tokens",
+    "  it read); a context meter shows how full the local model's window is (`nuclear.ai.contextTokens`) and tells you to",
+    "  start a new session when it is near; ↑ / ↓ in the input go through the questions you asked before; a question that",
+    "  failed has *↻ Retry*, an order that failed *↻ Retry from the step that failed*.",
+    "- **A run survives the editor**: every run writes a trace log (`.nuclear/builder/runs/<id>.log`), a heartbeat and a ledger",
+    "  of the files it writes. Close or crash VS Code in the middle of a run and, when it opens again, the run is found",
+    "  interrupted: what its unfinished step wrote is undone and it goes on from that step by itself (a notification says",
+    "  so; `nuclear.ai.resumeInterrupted`). A call nothing is working on (the Developer silent, Ollama holding no model) is",
+    "  cut and retried; a command that hangs is killed; two windows never run the same run."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.4ca603",
+   "type": "readme",
+   "title": "NuclearLang — What the extension brings",
+   "summary": "platform glyph + dialect badge): the pane shows its files with the Chernobyl icon theme, and the actions of its platform are the editor title bar's toolbar (mobile: run, debug, hot reload, device, build, test, check; backend: serve, debug, test, build, check, API; web: serve, device, debug,…",
+   "body": [
+    "platform glyph + dialect badge): the pane shows its files with the Chernobyl icon theme, and **the actions of its",
+    "  platform are the editor title bar's toolbar** (mobile: run, debug, hot reload, device, build, test, check; backend:",
+    "  serve, debug, test, build, check, API; web: serve, device, debug, reload, build, test, check; `Ctrl+Alt+R/G/L/B/T/C`). Run, Debug and Device of a",
+    "  mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only",
+    "  there): one reload, then the action continues. The tools at the bottom",
+    "  (`Ctrl+Alt+<letter>`). Clicking a tab or an action shows the shortcut that does the same. A welcome page",
+    "  (`Ctrl+Alt+W`, and at startup when no editor is open) lists the projects, the tools and the keys.",
+    "- **Nuclear Builder** (`Ctrl+Alt+P`): spec-driven work as a pipeline. The first page is the spec: what you want (a feature, a",
+    "  refactor, a bug, tests, a security review, documentation, a diagram), written here or imported from Jira or a GitHub",
+    "  issue, its acceptance criteria, the context files the agents get (suggested from the project and your skills) and",
+    "  who leads (Claude with the local Nuclear Developer, or the local agents only). A run is drawn like a GitHub pipeline"
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.6b7442",
+   "type": "readme",
+   "title": "NuclearLang — What the extension brings",
+   "summary": "Nuclear Developer, like the chats of Claude or Cursor, over the active project and on your machine.",
+   "body": [
+    "- **Nuclear agent** (`Ctrl+Alt+A`): a chat with the local agents of the",
+    "  [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer), like the chats of Claude or Cursor, over the",
+    "  active project and on your machine. Ask anything about the project: the local assistant answers from the project's",
+    "  map (`.nuclear/map.md`) and the Smart Graph. Give an order with `/task <what to do>`: the local agents plan it, write",
+    "  the tests first, then the code, run the tests and the security review, and their journal is the answer (*Open the",
+    "  journal of the run*). The templates above the input are built from the project's own components and use cases;",
+    "  every session is kept in the project (`.nuclear/chat/<id>.json`) and listed on the left.",
+    "- **Set up the AI services** (*Nuclear: Set Up the AI Services*; offered once on a machine never set up; *Set-up…* in",
+    "  *Settings and integrations*): a wizard in four steps. It reads the machine (processor, memory, GPU, free disk) and",
+    "  asks where the agents run: on this machine, or remote agents only. It offers three sets of local models, `lite`,",
+    "  `medium` and `hard`, each with what it downloads, the memory it wants, what works with it and what does not; the",
+    "  one that fits the machine is suggested, the tight ones and the ones that do not fit are marked, and the choice is"
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.a3c399",
+   "type": "readme",
+   "title": "NuclearLang — What the extension brings",
+   "summary": "that zooms like a C4 diagram: the stages (spec, generate, plan, code, tests, security, artifacts, deploy; the *Specification* ends with the strategy, ADR-developer-0001), which decides the stages that run, what the generators write and what is asked of you first; resources the spec names, also in…",
+   "body": [
+    "that zooms like a C4 diagram: the stages (spec, generate, plan, code, tests, security, artifacts, deploy; the *Specification* ends with the",
+    "  **analysis**: which kind of request the spec is (a whole system, one screen, a rename, a failing test...: its",
+    "  strategy, ADR-developer-0001), which decides the stages that run, what the generators write and what is asked of you first;",
+    "  *Generate* runs `nuclear gen` for the",
+    "  resources the spec names, also in plain words, so the agents write only what is left; *Plan* shows the work as parts, tasks and pieces",
+    "  and says what of the spec is beyond the platform or the local agents; *Tests first* is skipped when the generators",
+    "  wrote every file), then the steps of a stage, then what each agent did (its trace, its code, its output). Every",
+    "  call to an agent carries the project's folder, so the agent reads by itself the files its task names. The commands of each stage are",
+    "  `.nuclear/builder.json`; *Export CI* writes them for GitHub Actions, GitLab CI or Bitbucket Pipelines. Needs the",
+    "  [Nuclear Smart Graph](https://github.com/nuclearlang/nuclear-graph) and the",
+    "  [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer) running. The same engine runs without the",
+    "  editor as `nuclear-builder` (`run` a spec file, `ci` the server stages, `export`, `runs`), installed by",
+    "  `installer/install.sh`."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.c0374f",
+   "type": "readme",
+   "title": "NuclearLang — What the extension brings",
+   "summary": "the user's.",
+   "body": [
+    "the user's. It finds what the services need (NuclearLang, uv, Ollama) by itself once installed, or installs it in a",
+    "  terminal. Then it installs the Smart Graph, the Nuclear Developer, the models and the knowledge base, with the",
+    "  progress of each step and *Try again* from the one that failed, and leaves both services starting at every login.",
+    "  The same set-up in a terminal: `nuclear-builder setup`",
+    "  ([Set up the AI services](../../installer/docs/08-guides/ai-setup.md)).",
+    "- **Settings and integrations** (`Ctrl+Alt+S`): every setting of the AI services in one page, kept as the editor's",
+    "  `nuclear.ai.*` settings: the services (Smart Graph, Nuclear Developer, Ollama) with their state and *Start* /",
+    "  *Restart* with the chosen models; the local models (installed ones with their size, a warning over the 3B rule,",
+    "  *Pull*); the Nuclear MCP server (`nuclear-mcp`) added to Claude Code, Codex, Cursor or OpenCode in one click; the connections (the graph's",
+    "  clients and pending access requests with *Allow* / *Deny* / *Revoke*, Jira, GitHub); Claude's model and the retry",
+    "  policy. A project's `.nuclear/builder.json` still wins for its own pipeline.",
+    "- **Work that does not stop, and notifications**: a Nuclear Builder run or a chat question belongs to the extension, not to its"
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.d7fd77",
+   "type": "readme",
+   "title": "NuclearLang — What the extension brings",
+   "summary": "Ollama and the models it needs, Claude Code when it leads, free disk), each chat question checks what it needs, and every few minutes every integration is checked again (Claude Code, Codex, OpenCode, GitHub, Jira): a notification when one stops answering.",
+   "body": [
+    "- **Every connection is checked**: each run starts with *Check the connections* (the Developer, the Smart Graph,",
+    "  Ollama and the models it needs, Claude Code when it leads, free disk), each chat question checks what it needs, and",
+    "  every few minutes every integration is checked again (Claude Code, Codex, OpenCode, GitHub, Jira): a notification when",
+    "  one stops answering. Every integration is configured in *Settings and integrations* with its default.",
+    "- **When a run fails**: a call to the local agents that fails for a passing reason (the service starting, busy, a",
+    "  5xx) is retried by itself with exponential backoff and jitter (*Settings*: tries, first wait, longest wait); each",
+    "  retry is written in the step's trace. When a stage fails, the local **diagnoser** tells why (the kind of failure by",
+    "  rules, the evidence from the compiler or `nuclear doctor`, the next step), shown on the run and in the chat;",
+    "  *↻ Retry* goes on from the step that failed (on the run and on the failed step itself), keeping every step that",
+    "  passed; *Restart <stage>* runs the whole stage again (`nuclear-builder retry <run> [--from <stage>]` without the editor).",
+    "- **Nuclear Connector** (`Ctrl+Alt+H`): a workspace like Bruno. Its pane is the endpoints tree of every project by platform,",
+    "  project and component (from the contract the compiler writes, `.nuclear/contract.json`), the contracts an app"
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.e9e6bc",
    "type": "readme",
    "title": "NuclearLang — What the extension brings",
    "summary": "F10/F11/Shift+F11 by Nuclear line, variable values in the `.nuc`, the *Nuclear Call Stack* view and *Go to the Same Line in the generated code*, under the Dart debugger (mobile; also Dart errors on their `.nuc` line), node (nestjs, with source maps), debugpy (fastapi) and Chrome (react, also on…",
@@ -2544,8 +2724,8 @@
     "F10/F11/Shift+F11 by Nuclear line, variable values in the `.nuc`, the *Nuclear Call Stack* view and *Go to the",
     "  Same Line in the generated code*, under the Dart debugger (mobile; also Dart errors on their `.nuc` line), node",
     "  (nestjs, with source maps), debugpy (fastapi) and Chrome (react, also on the web device). ◉ Debug or F5 with",
-    "  `build/<project>.code-workspace`, which `dragonfly build` writes for every platform with its tasks and launch.",
-    "- **Backend and web apps reload on save:** saving a `.nuc` runs `dragonfly build` and the running server or page",
+    "  `build/<project>.code-workspace`, which `nuclear build` writes for every platform with its tasks and launch.",
+    "- **Backend and web apps reload on save:** saving a `.nuc` runs `nuclear build` and the running server or page",
     "  takes it (uvicorn `--reload`, `node --watch`, Vite); `nuclear.buildOnSave`.",
     "- **The web device** (▭ Device of a web project): the app beside the code at the size of a desktop, a laptop, a",
     "  tablet or a phone (user agent, touch, rotation, any size), with an address bar, Chrome's DevTools of the page, the",
@@ -2564,149 +2744,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.33ce33",
-   "type": "readme",
-   "title": "NuclearLang — What the extension brings",
-   "summary": "Nuclear Developer, like the chats of Claude or Cursor, over the active project and on your machine.",
-   "body": [
-    "[Nuclear Developer](https://github.com/nuclearlang/nuclear-developer), like the chats of Claude or Cursor, over the",
-    "  active project and on your machine. Ask anything about the project: the local assistant answers from the project's",
-    "  map (`.nuclear/map.md`) and the Smart Graph. Give an order with `/task <what to do>`: the local agents plan it, write",
-    "  the tests first, then the code, run the tests and the security review, and their journal is the answer (*Open the",
-    "  journal of the run*). The templates above the input are built from the project's own components and use cases;",
-    "  every session is kept in the project (`.nuclear/chat/<id>.json`) and listed on the left.",
-    "- **Set up the AI services** (*Nuclear: Set Up the AI Services*; offered once on a machine never set up; *Set-up…* in",
-    "  *Settings and integrations*): a wizard in four steps. It reads the machine (processor, memory, GPU, free disk) and",
-    "  asks where the agents run: on this machine, or remote agents only. It offers three sets of local models, `lite`,",
-    "  `medium` and `hard`, each with what it downloads, the memory it wants, what works with it and what does not; the",
-    "  one that fits the machine is suggested, the tight ones and the ones that do not fit are marked, and the choice is",
-    "  the user's. It finds what the services need (NuclearLang, uv, Ollama) by itself once installed, or installs it in a"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.63ef2b",
-   "type": "readme",
-   "title": "NuclearLang — What the extension brings",
-   "summary": "platform glyph + dialect badge): the pane shows its files with the Chernobyl icon theme, and the actions of its platform are the editor title bar's toolbar (mobile: run, debug, hot reload, device, build, test, check; backend: serve, debug, test, build, check, API; web: serve, device, debug,…",
-   "body": [
-    "platform glyph + dialect badge): the pane shows its files with the Chernobyl icon theme, and **the actions of its",
-    "  platform are the editor title bar's toolbar** (mobile: run, debug, hot reload, device, build, test, check; backend:",
-    "  serve, debug, test, build, check, API; web: serve, device, debug, reload, build, test, check; `Ctrl+Alt+R/G/L/B/T/C`). Run, Debug and Device of a",
-    "  mobile project opened as a tab first add its folder to the VS Code workspace (the Dart extension runs Flutter only",
-    "  there): one reload, then the action continues. The tools at the bottom",
-    "  (`Ctrl+Alt+<letter>`). Clicking a tab or an action shows the shortcut that does the same. A welcome page",
-    "  (`Ctrl+Alt+W`, and at startup when no editor is open) lists the projects, the tools and the keys.",
-    "- **Loop** (`Ctrl+Alt+P`): spec-driven work as a pipeline. The first page is the spec: what you want (a feature, a",
-    "  refactor, a bug, tests, a security review, documentation, a diagram), written here or imported from Jira or a GitHub",
-    "  issue, its acceptance criteria, the context files the agents get (suggested from the project and your skills) and",
-    "  who leads (Claude with the local Nuclear Developer, or the local agents only). A run is drawn like a GitHub pipeline",
-    "  that zooms like a C4 diagram: the stages (spec, generate, plan, code, tests, security, artifacts, deploy; the *Specification* ends with the"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.816179",
-   "type": "readme",
-   "title": "NuclearLang — What the extension brings",
-   "summary": "strategy, ADR-developer-0001), which decides the stages that run, what the generators write and what is asked of you first; resources the spec names, also in plain words, so the agents write only what is left; *Plan* shows the work as parts, tasks and pieces and says what of the spec is beyond the…",
-   "body": [
-    "**analysis**: which kind of request the spec is (a whole system, one screen, a rename, a failing test...: its",
-    "  strategy, ADR-developer-0001), which decides the stages that run, what the generators write and what is asked of you first;",
-    "  *Generate* runs `dragonfly gen` for the",
-    "  resources the spec names, also in plain words, so the agents write only what is left; *Plan* shows the work as parts, tasks and pieces",
-    "  and says what of the spec is beyond the platform or the local agents; *Tests first* is skipped when the generators",
-    "  wrote every file), then the steps of a stage, then what each agent did (its trace, its code, its output). Every",
-    "  call to an agent carries the project's folder, so the agent reads by itself the files its task names. The commands of each stage are",
-    "  `.nuclear/loop.json`; *Export CI* writes them for GitHub Actions, GitLab CI or Bitbucket Pipelines. Needs the",
-    "  [Nuclear Smart Graph](https://github.com/nuclearlang/nuclear-graph) and the",
-    "  [Nuclear Developer](https://github.com/nuclearlang/nuclear-developer) running. The same engine runs without the",
-    "  editor as `nuclear-loop` (`run` a spec file, `ci` the server stages, `export`, `runs`), installed by",
-    "  `installer/install.sh`.",
-    "- **Nuclear agent** (`Ctrl+Alt+A`): a chat with the local agents of the"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.9556c0",
-   "type": "readme",
-   "title": "NuclearLang — What the extension brings",
-   "summary": "every few minutes every integration is checked again (Claude Code, Codex, OpenCode, GitHub, Jira): a notification when one stops answering.",
-   "body": [
-    "every few minutes every integration is checked again (Claude Code, Codex, OpenCode, GitHub, Jira): a notification when",
-    "  one stops answering. Every integration is configured in *Settings and integrations* with its default.",
-    "- **When a run fails**: a call to the local agents that fails for a passing reason (the service starting, busy, a",
-    "  5xx) is retried by itself with exponential backoff and jitter (*Settings*: tries, first wait, longest wait); each",
-    "  retry is written in the step's trace. When a stage fails, the local **diagnoser** tells why (the kind of failure by",
-    "  rules, the evidence from the compiler or `dragonfly doctor`, the next step), shown on the run and in the chat;",
-    "  *↻ Retry* goes on from the step that failed (on the run and on the failed step itself), keeping every step that",
-    "  passed; *Restart <stage>* runs the whole stage again (`nuclear-loop retry <run> [--from <stage>]` without the editor).",
-    "- **Nuclear HTTP** (`Ctrl+Alt+H`): a workspace like Bruno. Its pane is the endpoints tree of every project by platform,",
-    "  project and component (from the contract the compiler writes, `.nuclear/contract.json`), the contracts an app",
-    "  declares with *↓ Update* (`nuclear contracts update`), OpenAPI documents of APIs that are not Nuclear, and the",
-    "  environment (`.nuclear/http.json`: variables, headers, base urls). A component is an editor tab and each endpoint a"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.b59abe",
-   "type": "readme",
-   "title": "NuclearLang — What the extension brings",
-   "summary": "terminal.",
-   "body": [
-    "terminal. Then it installs the Smart Graph, the Nuclear Developer, the models and the knowledge base, with the",
-    "  progress of each step and *Try again* from the one that failed, and leaves both services starting at every login.",
-    "  The same set-up in a terminal: `nuclear-loop setup`",
-    "  ([Set up the AI services](../../installer/docs/08-guides/ai-setup.md)).",
-    "- **Settings and integrations** (`Ctrl+Alt+S`): every setting of the AI loop in one page, kept as the editor's",
-    "  `nuclear.ai.*` settings: the services (Smart Graph, Nuclear Developer, Ollama) with their state and *Start* /",
-    "  *Restart* with the chosen models; the local models (installed ones with their size, a warning over the 3B rule,",
-    "  *Pull*); the Nuclear MCP server added to Claude Code, Codex or Cursor in one click; the connections (the graph's",
-    "  clients and pending access requests with *Allow* / *Deny* / *Revoke*, Jira, GitHub); Claude's model and the retry",
-    "  policy. A project's `.nuclear/loop.json` still wins for its own pipeline.",
-    "- **Work that does not stop, and notifications**: a Loop run or a chat question belongs to the extension, not to its",
-    "  page: switch tools or close the page and it keeps working. When it ends (a chat answered, a run passed or failed) a",
-    "  notification says so (*Open* goes to that run or session) unless you are looking at it; the Nuclear icon of the"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.d1a3b4",
+   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.f2ed5e",
    "type": "readme",
    "title": "NuclearLang — What the extension brings",
    "summary": "to override, decorators and the arguments of `@screen`.",
@@ -2717,42 +2755,14 @@
     "  to override, decorators and the arguments of `@screen`.",
     "- **Hover and signature help** from the type definitions, with a link to Flutter's API.",
     "- **Go to definition, references, rename, outline and folding.**",
-    "- **Multi-file projects** (`nuclear.toml`, or a folder with `main.nuc` in a Dragonfly project): the names of the",
+    "- **Multi-file projects** (`nuclear.toml`, or a folder with `main.nuc` in a Synapsis project): the names of the",
     "  other files are visible and the architecture rules apply.",
-    "- **A Dragonfly project like a Flutter project**, opened with `dragonfly code` or as a folder (`code .`): the",
+    "- **A Synapsis project like a Flutter project**, opened with `nuclear code` or as a folder (`code .`): the",
     "  Flutter extension's device picker, a ▷ Run / Debug button and F5 on a `.nuc` (transpiles and launches the app",
     "  with the `<project> (debug)` configuration of `build/<project>.code-workspace`), and **hot reload on saving a",
     "  `.nuc`** while the app runs. If the Flutter app is created with the window already open, the extension offers to",
     "  reload the window so the devices appear.",
     "- **Debugging the `.nuc`** on every platform: breakpoints in the `.nuc`, the pause highlighted in the `.nuc`,"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#what-the-extension-brings.d65737",
-   "type": "readme",
-   "title": "NuclearLang — What the extension brings",
-   "summary": "activity bar shows a badge with the unread ones, each tool's tab its count, and the tool's pane lists them.",
-   "body": [
-    "activity bar shows a badge with the unread ones, each tool's tab its count, and the tool's pane lists them.",
-    "- **The chat in detail**: what the agent did is folded in grey under each answer (its steps, how long, how many tokens",
-    "  it read); a context meter shows how full the local model's window is (`nuclear.ai.contextTokens`) and tells you to",
-    "  start a new session when it is near; ↑ / ↓ in the input go through the questions you asked before; a question that",
-    "  failed has *↻ Retry*, an order that failed *↻ Retry from the step that failed*.",
-    "- **A run survives the editor**: every run writes a trace log (`.nuclear/loop/runs/<id>.log`), a heartbeat and a ledger",
-    "  of the files it writes. Close or crash VS Code in the middle of a run and, when it opens again, the run is found",
-    "  interrupted: what its unfinished step wrote is undone and it goes on from that step by itself (a notification says",
-    "  so; `nuclear.ai.resumeInterrupted`). A call nothing is working on (the Developer silent, Ollama holding no model) is",
-    "  cut and retried; a command that hangs is killed; two windows never run the same run.",
-    "- **Every connection is checked**: each run starts with *Check the connections* (the Developer, the Smart Graph,",
-    "  Ollama and the models it needs, Claude Code when it leads, free disk), each chat question checks what it needs, and"
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -2855,8 +2865,8 @@
     "Every external connection of the extension: the Nuclear Developer, the Smart Graph, Ollama and the local models,",
     "and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira).",
     "",
-    "- `checkAll`: all of them. `checkForChat`: what a chat question needs. A Loop run checks its own (`preflight` of",
-    "  the engine).",
+    "- `checkAll`: all of them. `checkForChat`: what a chat question needs. A Nuclear Builder run checks its own",
+    "  (`preflight` of the engine).",
     "- `watchConnections`: every `nuclear.ai.checkEveryMinutes`; a connection that stops answering, or answers again, is",
     "  a notice of kind `settings`."
    ],
@@ -2873,18 +2883,19 @@
    "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#notifications-notifications-ts-adr-platform-0003",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Notifications (`notifications.ts`; ADR-platform-0003)",
-   "summary": "What the local agents did while the user was elsewhere: a chat answered, a Loop run passed, failed or needs the user.",
+   "summary": "What the local agents did while the user was elsewhere: a chat answered, a Nuclear Builder run passed, failed or needs the user.",
    "body": [
-    "What the local agents did while the user was elsewhere: a chat answered, a Loop run passed, failed or needs the",
-    "user.",
+    "What the local agents did while the user was elsewhere: a chat answered, a Nuclear Builder run passed, failed or",
+    "needs the user.",
     "",
     "- `notices` is one store: `add` (a toast with *Open*, unless that tool is on screen), `watch(tool, visible)` from",
     "  the panels' `onDidChangeViewState`, `unread(tool)`, `open` (set by the workspace: `openNotice` → the tool on that",
-    "  run or session). The tools that have notices: `agent`, `loop`, `settings`.",
+    "  run or session). The tools that have notices: `agent`, `builder`, `settings`.",
     "- The workspace shows them: the badge on the Nuclear icon of the activity bar, a count on the tool's tab, the list",
     "  in the tool's pane.",
-    "- The Loop's engines (`engines` in `loopPanel.ts`) and the chat's jobs (`jobs` in `chatPanel.ts`) are module-level:",
-    "  a page is only a view, so closing it or switching tools leaves the work running."
+    "- Nuclear Builder's engines (`engines` in `tools/nuclear-builder/src/panel.ts`) and the chat's jobs (`jobs` in",
+    "  `tools/nuclear-ai-chat/src/panel.ts`) are module-level: a page is only a view, so closing it or switching tools",
+    "  leaves the work running."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -2896,28 +2907,59 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.162492",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
-   "summary": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
+   "summary": "to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is shared with CI.",
    "body": [
-    "The tool `settings` of the strip (`Ctrl+Alt+S`).",
-    "",
     "- `aiSettings()` reads `nuclear.ai.*` (`contributes.configuration` of `package.json`). `machineConfig()` is passed",
-    "  to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/loop.json`, which is",
+    "  to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is",
     "  shared with CI. `serviceEnv()` is the environment the graph and the Developer are started with (`CODER_MODEL`,",
     "  `ASSISTANT_MODEL`, `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED`, the ports).",
     "- The page:",
     "  - **services**: their health urls; *Start* / *Restart* go through the system's services first, else spawn",
-    "    `nuclear-graph serve` / `nuclear-developer` (owned processes, stopped on deactivate);",
+    "    `<graphCommand> serve` / `nuclear-developer` (owned processes, stopped on deactivate);",
     "  - **models**: Ollama's `/api/tags`; `billionsOf` (`localModels.ts`) counts a model's size from what Ollama",
     "    reports, with the effective size of an `eNb` tag, against `MAX_BILLIONS` = 3.5 (the rule of the local models:",
     "    at most the 3B class); *Pull* runs as a task;",
-    "  - **MCP**: `claude mcp get|add --scope user`, `codex mcp list|add`, `~/.cursor/mcp.json` merged;",
-    "  - **connections**: `nuclear-graph requests|allow|deny|revoke|connect mcp`, Jira in the secret storage",
-    "    (`jiraAuth`), `gh auth status`;",
-    "  - **pipeline**: Claude's model and the retry policy."
+    "  - **MCP**: registers `nuclear.ai.mcpCommand` (default `nuclear-mcp`, the server of",
+    "    [`tools/mcp/`](../../../../tools/mcp/AGENTS.md), started with no argument) in Claude Code",
+    "    (`claude mcp get|add --scope user`), Codex (`codex mcp list|add`), Cursor (`~/.cursor/mcp.json` merged) and",
+    "    OpenCode;",
+    "  - **connections**: `nuclear.ai.graphCommand` (default `nuclear-graph`)",
+    "    `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage",
+    "    (`jiraAuth`), `gh auth status`;"
    ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.22da22",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
+   "summary": "Settings and integrations (`settingsPanel.ts`, `aiSettings.ts`, `localModels.ts`; ADR-platform-0003)",
+   "body": "- **pipeline**: Claude's model and the retry policy.",
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.9648c3",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
+   "summary": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
+   "body": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
    ],
@@ -2931,9 +2973,9 @@
    "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-ai-services-in-the-editor-set-up-settings-connections-notifications",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications",
-   "summary": "What the Loop and the chat need around them.",
+   "summary": "What Nuclear Builder and the chat need around them.",
    "body": [
-    "What the Loop and the chat need around them. The services themselves (the Smart Graph, the Nuclear Developer) and",
+    "What Nuclear Builder and the chat need around them. The services themselves (the Smart Graph, the Nuclear Developer) and",
     "their models are other projects; what a user does is in",
     "[Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)."
    ],
@@ -2947,33 +2989,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.13e1c4",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`;…",
-   "summary": "the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed (`requirements`, `status`) and gives the ordered `steps(profile, root)`: 1. the graph's tool (`uv tool install`, editable when the folder is a git checkout); 2. the Developer (`dragonfly install`…",
-   "body": [
-    "- `aiSetup.ts` has no editor in it. Its two fronts are `nuclear-loop setup` (`loopCli.ts`) and the wizard. It reads",
-    "  the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed",
-    "  (`requirements`, `status`) and gives the ordered `steps(profile, root)`:",
-    "  1. the graph's tool (`uv tool install`, editable when the folder is a git checkout);",
-    "  2. the Developer (`dragonfly install` with a Python 3.12+ that uv finds or brings, and the `nuclear-developer`",
-    "     launcher);",
-    "  3. the models (Ollama's `/api/pull`, with its progress);",
-    "  4. the graph's service;",
-    "  5. the knowledge base (`connect` twice, `ingest`);",
-    "  6. the Developer's service."
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.411335",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.33a7d9",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`;…",
    "summary": "Every step can run again.",
@@ -2983,11 +2999,11 @@
     "  profiles (models, download, memory, what works, what does not). Changing a profile is changing this file and",
     "  measuring it (`nuclear-agents/nuclear_developer/eval/run.py`); `test/setup.test.ts` holds its shape and holds the",
     "  user's guide to it.",
-    "- The machine's choice is `machineFile()` (`~/.config/nuclearlang/ai.env`). `readMachine` gives the Loop",
+    "- The machine's choice is `machineFile()` (`~/.config/nuclearlang/ai.env`). `readMachine` gives Nuclear Builder",
     "  (`defaultConfig`) and the editor (`aiSettings`) their default models; a model set in the editor's settings wins,",
     "  and is written there when the settings page restarts a service.",
     "- `serviceFiles(platform)` are the files that start the services at login (systemd user units, launch agents, a",
-    "  Startup script). `restartService` goes through the system's manager. `remove()` is `nuclear-loop setup --remove`.",
+    "  Startup script). `restartService` goes through the system's manager. `remove()` is `nuclear-builder setup --remove`.",
     "- The services' folder is `aiRoot()`: `<installation>/ai`, or `NUCLEAR_AI_ROOT`.",
     "  Under it the two services keep the folders of the tree (`nuclear-graph-storage/`, with its knowledge base in `data/`,",
     "  and `nuclear-agents/nuclear_developer/`), so the Developer's relative `dependencies(nuclear_graph = ...)` holds in an",
@@ -3022,14 +3038,40 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-dragonfly-project",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.538dfc",
    "type": "context",
-   "title": "The client and Dragonfly projects (`src/extension.ts`, `src/card.ts`) — A Dragonfly project",
-   "summary": "`findDragonfly(root?)` reads `build/<name>.code-workspace`, which `dragonfly build` writes; it works with the workspace file open (`dragonfly code`) and with only the folder open (`code .`).",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`;…",
+   "summary": "the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed (`requirements`, `status`) and gives the ordered `steps(profile, root)`: 1. the graph's tool (`uv tool install`, editable when the folder is a git checkout); 2. the Developer (`nuclear install`…",
    "body": [
-    "`findDragonfly(root?)` reads `build/<name>.code-workspace`, which `dragonfly build` writes; it works with the",
-    "workspace file open (`dragonfly code`) and with only the folder open (`code .`). It takes a project's root, so a tab",
-    "of the Nuclear workspace runs its own project; `dragonflyOf(file)` walks up from a file for the hot reload on save."
+    "- `aiSetup.ts` has no editor in it. Its two fronts are `nuclear-builder setup` (`cli.ts`) and the wizard. It reads",
+    "  the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed",
+    "  (`requirements`, `status`) and gives the ordered `steps(profile, root)`:",
+    "  1. the graph's tool (`uv tool install`, editable when the folder is a git checkout);",
+    "  2. the Developer (`nuclear install` with a Python 3.12+ that uv finds or brings, and the `nuclear-developer`",
+    "     launcher);",
+    "  3. the models (Ollama's `/api/pull`, with its progress);",
+    "  4. the graph's service;",
+    "  5. the knowledge base (`connect` twice, `ingest`);",
+    "  6. the Developer's service."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-synapsis-project",
+   "type": "context",
+   "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — A Synapsis project",
+   "summary": "`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes; it works with the workspace file open (`nuclear code`) and with only the folder open (`code .`).",
+   "body": [
+    "`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes; it works with the",
+    "workspace file open (`nuclear code`) and with only the folder open (`code .`). It takes a project's root, so a tab",
+    "of the Nuclear workspace runs its own project; `synapsisOf(file)` walks up from a file for the hot reload on save."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/client.md"
@@ -3041,15 +3083,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-dragonfly-project-backend-and-web",
+   "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-synapsis-project-backend-and-web",
    "type": "context",
-   "title": "The client and Dragonfly projects (`src/extension.ts`, `src/card.ts`) — Backend and web",
-   "summary": "`extension.ts` reads any `(debug)` launch of `build/<name>.code-workspace`: the CLI writes debugpy for fastapi, node with source maps for nestjs and chrome for react (`nuclear-synapsis-framework/cli/src/vscode.rs`, `write_platform`).",
+   "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — Backend and web",
+   "summary": "`extension.ts` reads any `(debug)` launch of `build/<name>.code-workspace`: the CLI writes debugpy for fastapi, node with source maps for nestjs and chrome for react (`tools/cli/src/framework/vscode.rs`, `write`).",
    "body": [
     "`extension.ts` reads any `(debug)` launch of `build/<name>.code-workspace`: the CLI writes debugpy for fastapi, node",
-    "with source maps for nestjs and chrome for react (`nuclear-synapsis-framework/cli/src/vscode.rs`, `write_platform`).",
+    "with source maps for nestjs and chrome for react (`tools/cli/src/framework/vscode.rs`, `write`).",
     "`runPlatformApp` builds and starts it (a react app's dev server first, in its terminal). Saving a `.nuc` of a",
-    "backend or web project runs `dragonfly build` (`nuclear.buildOnSave`), and the server or the page reloads by itself",
+    "backend or web project runs `nuclear build` (`nuclear.buildOnSave`), and the server or the page reloads by itself",
     "(uvicorn `--reload`, `node --watch`, Vite).",
     "",
     "The buttons of each platform and their shortcuts are the workspace's: [workspace.md](workspace.md)."
@@ -3064,25 +3106,25 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-dragonfly-project-mobile",
+   "id": "doc:extensions/vscode/docs/02-architecture/client.md#a-synapsis-project-mobile",
    "type": "context",
-   "title": "The client and Dragonfly projects (`src/extension.ts`, `src/card.ts`) — Mobile",
-   "summary": "`dragonfly` resolves to a `dart` configuration): both run `dragonfly build` first (the queue `buildQueue`, the output panel *Dragonfly*) and launch the `<project> (debug)` configuration of the workspace file.",
+   "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — Mobile",
+   "summary": "`synapsis` resolves to a `dart` configuration): both run `nuclear build` first (the queue `buildQueue`, the output panel *Synapsis*) and launch the `<project> (debug)` configuration of the workspace file.",
    "body": [
     "- **▷ Run / Debug** (`editor/title/run`, context `nuclear.canRun`) and **F5 without `launch.json`** (the debugger",
-    "  `dragonfly` resolves to a `dart` configuration): both run `dragonfly build` first (the queue `buildQueue`, the",
-    "  output panel *Dragonfly*) and launch the `<project> (debug)` configuration of the workspace file.",
+    "  `synapsis` resolves to a `dart` configuration): both run `nuclear build` first (the queue `buildQueue`, the",
+    "  output panel *Synapsis*) and launch the `<project> (debug)` configuration of the workspace file.",
     "  `runApp(noDebug, deviceId, extra, root)`.",
     "- **Ctrl+S on a `.nuc`** → build + `flutter.hotReload` when a `dart` session is running.",
     "- *Reload Window* is offered when the app appears with the window already open: the Dart extension ignores a new",
     "  app inside `build/` until the window opens again.",
     "- **Repair**, only when something fails:",
-    "  - a build that exits with a code other than 0 and 2 → `dragonfly repair`;",
+    "  - a build that exits with a code other than 0 and 2 → `nuclear repair`;",
     "  - `watchSession` (a `DebugAdapterTracker` of `dart`) marks `flutter.appStarted` and the user's stops, and reads the",
     "    output: `Hot reload was rejected` → `flutter.hotRestart`; a compile error → `repairAndRelaunch`;",
     "  - a session that ends without starting and without Stop → repair, then launch again.",
-    "  - Once per launch (`dragonflyRepaired`). A relaunch from `repairAndRelaunch` is a new launch",
-    "    (`dragonflyToolArgs`)."
+    "  - Once per launch (`synapsisRepaired`). A relaunch from `repairAndRelaunch` is a new launch",
+    "    (`synapsisToolArgs`)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/client.md"
@@ -3096,7 +3138,7 @@
   {
    "id": "doc:extensions/vscode/docs/02-architecture/client.md#the-client",
    "type": "context",
-   "title": "The client and Dragonfly projects (`src/extension.ts`, `src/card.ts`) — The client",
+   "title": "The client and Synapsis projects (`src/extension.ts`, `src/card.ts`) — The client",
    "summary": "`extension.ts` starts the server (where it finds it) and adds: `.nuclear/project.json` (`projectCard`).",
    "body": [
     "`extension.ts` starts the server ([where it finds it](../../../docs/02-architecture/language-server.md)) and adds:",
@@ -3168,7 +3210,7 @@
    "summary": "`.dart`, its `.nuc` and the pairs (dart line, nuc line).",
    "body": [
     "- `<app>/.nuclear/lines.json`: written by every `nuclear build` of a project.",
-    "- `build/app/.dart_tool/nuclear_lines.json`: written by `dragonfly build` of a mobile app; for each generated",
+    "- `build/app/.dart_tool/nuclear_lines.json`: written by `nuclear build` of a mobile app; for each generated",
     "  `.dart`, its `.nuc` and the pairs (dart line, nuc line).",
     "",
     "`toDart` / `toNuc` translate a place; `built()` reads the map again after each build."
@@ -3211,8 +3253,8 @@
     "  in `workspaceState`, to delete the ones VS Code restores).",
     "- **The paused line**: `stopped` → `stackTrace` → the `.nuc` line highlighted (`showPaused`, in the editor group to",
     "  the left of the paused generated file).",
-    "- **Errors (Dart)**: an exception, or an error block in the `output`, → `dragonfly explain --json` → a diagnostic",
-    "  `dragonfly-runtime` at the `.nuc` line (Problems panel) and the webview *Nuclear: runtime error*, with the Nuclear",
+    "- **Errors (Dart)**: an exception, or an error block in the `output`, → `nuclear explain --json` → a diagnostic",
+    "  `synapsis-runtime` at the `.nuc` line (Problems panel) and the webview *Nuclear: runtime error*, with the Nuclear",
     "  call stack and the original Dart error.",
     "- **Mixed debugging**: `nucStep` for F10 / F11 / Shift+F11 when `nuclear.pausedInNuc && (editorLangId == nuclear ||",
     "  nuclear.nucStepping)`: it repeats `next` / `stepIn` while the `.nuc` line and the stack depth do not change (at",
@@ -3263,10 +3305,10 @@
     "| Process | Started by | Ends |",
     "|---|---|---|",
     "| `nuclear-lsp` | the client | 5 minutes after the last `.nuc` closes, or with the window |",
-    "| `dragonfly build` / `repair` / `explain` | run, save, a failure | by itself; builds are queued (`buildQueue`) |",
+    "| `nuclear build` / `repair` / `explain` | run, save, a failure | by itself; builds are queued (`buildQueue`) |",
     "| Flutter, a headless Chromium, Vite | the devices | with their device; a watchdog and `reap` leave none behind |",
     "| `nuclear-graph serve`, `nuclear-developer` | *Start* / *Restart* of the settings page, when the system's services do not own them | on deactivate |",
-    "| `claude -p`, `dragonfly gen`, the project's commands | a Loop run | with the run; a hung command is killed after its limit |",
+    "| `claude -p`, `nuclear gen`, the project's commands | a Nuclear Builder run | with the run; a hung command is killed after its limit |",
     "",
     "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
     "[the table of old numbers](../../../../docs/03-adr/old-numbers.md)."
@@ -3281,34 +3323,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.706695",
-   "type": "context",
-   "title": "The VS Code extension: its files — `src/`",
-   "summary": "`src/`",
-   "body": [
-    "| `loopEngine.ts`, `loopPanel.ts`, `loopSafety.ts`, `loopCli.ts` | the Loop: its engine, its page, what keeps a run safe, the `nuclear-loop` command | [`tools/nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
-    "| `http.ts`, `httpPanel.ts` | Nuclear HTTP: the model and tree, a component's panel | [`tools/nuclear-connector`](../../../tools/nuclear-connector/AGENTS.md) |",
-    "| `chat.ts`, `chatPanel.ts` | the chat: sessions and templates without the editor, the page and its jobs | [`tools/nuclear-ai-chat`](../../../tools/nuclear-ai-chat/AGENTS.md) |",
-    "| `device.ts`, `webDevice.ts`, `webSession.ts`, `cdp.ts` | the Dragonfly device, the web device and its engine, the CDP client | [`tools/nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.b8335b",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
    "body": [
     "| File | What it is | Document |",
     "|---|---|---|",
-    "| `extension.ts` | the client of `nuclear-lsp`, the status bar, the generated-code view, Dragonfly projects: run, debug, save, repair | [client.md](client.md) |",
+    "| `extension.ts` | the client of `nuclear-lsp`, the status bar, the generated-code view, Synapsis projects: run, debug, save, repair | [client.md](client.md) |",
     "| `card.ts` | the project card `.nuclear/project.json` (`readCard`, `projectCard`, `appDir`, `isInstalled`) | [client.md](client.md) |",
     "| `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |",
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
@@ -3328,13 +3350,35 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#the-tools-it-bundles",
+   "type": "context",
+   "title": "The VS Code extension: its files — The tools it bundles",
+   "summary": "Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.json`, bundled into `out/extension.js`); each is documented in its own folder: Nuclear Builder, Nuclear Connector, the chat, the devices.",
+   "body": [
+    "Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.json`, bundled into",
+    "`out/extension.js`); each is documented in its own folder:",
+    "[Nuclear Builder](../../../tools/nuclear-builder/AGENTS.md),",
+    "[Nuclear Connector](../../../tools/nuclear-connector/AGENTS.md),",
+    "[the chat](../../../tools/nuclear-ai-chat/AGENTS.md),",
+    "[the devices](../../../tools/nuclear-device-manager/AGENTS.md)."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/docs/02-architecture/overview.md#the-vs-code-extension-its-files",
    "type": "context",
    "title": "The VS Code extension: its files",
-   "summary": "One bundle, `out/extension.js` (entry `src/extension.ts`), and a second one for the terminal, `out/nuclear-loop.js` (entry `src/loopCli.ts`).",
+   "summary": "One bundle, `out/extension.js` (entry `src/extension.ts`), and a second one for the terminal, `out/nuclear-builder.js` (entry `../tools/nuclear-builder/src/cli.ts`).",
    "body": [
-    "One bundle, `out/extension.js` (entry `src/extension.ts`), and a second one for the terminal, `out/nuclear-loop.js`",
-    "(entry `src/loopCli.ts`). It activates on a `.nuc` file, on a workspace that contains one, and when startup",
+    "One bundle, `out/extension.js` (entry `src/extension.ts`), and a second one for the terminal, `out/nuclear-builder.js`",
+    "(entry `../tools/nuclear-builder/src/cli.ts`). It activates on a `.nuc` file, on a workspace that contains one, and when startup",
     "finishes (`onStartupFinished`)."
    ],
    "sources": [
@@ -3356,13 +3400,15 @@
     "- The themes (Chernobyl, Chernobyl Soft) and the icon themes (Chernobyl Icons, Chernobyl Soft Icons).",
     "- One activity bar container, `nuclear`, with one webview view, `nuclear.workspace`; the view `nuclear.callStack`",
     "  (*Nuclear Call Stack*) in the debug container while paused in a `.nuc`.",
-    "- The debugger type `dragonfly` (F5 without `launch.json`) and breakpoints in `.nuc` files.",
+    "- The debugger type `synapsis` (F5 without `launch.json`) and breakpoints in `.nuc` files.",
     "- The commands (category **Nuclear**), the `editor/title` buttons of each platform, the `webview/context` menu of",
     "  the file tree, the keybindings.",
-    "- The colors `nuclearHttp.*`.",
+    "- The colors `nuclearConnector.*`.",
     "- The settings: `nuclear.dialect`, `nuclear.dialectPaths`, `nuclear.server.path`, `nuclear.trace.server`,",
     "  `nuclear.buildOnSave`, `nuclear.workspace.welcome`, `nuclear.debug.followInNuclear`, `nuclear.debug.explainErrors`,",
-    "  `nuclear.ai.*` and the generated `nuclear.codemetrics.*`."
+    "  `nuclear.ai.*` (among them `nuclear.ai.mcpCommand`, default `nuclear-mcp`, the MCP server an AI client starts",
+    "  with no argument, and `nuclear.ai.graphCommand`, default `nuclear-graph`) and the generated",
+    "  `nuclear.codemetrics.*`."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -3433,15 +3479,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/theme.md#the-colors-of-the-nuclear-http-tree",
+   "id": "doc:extensions/vscode/docs/02-architecture/theme.md#the-colors-of-the-nuclear-connector-tree",
    "type": "context",
-   "title": "The Chernobyl themes and the icons (`theme/`) — The colors of the Nuclear HTTP tree",
-   "summary": "`theme/build.mjs` sets `nuclearHttp.get/post/put/patch/delete/platform/project/component` from the palette (type, function, warning, number, error, primary, enumMember, property), so the tree follows each variant.",
+   "title": "The Chernobyl themes and the icons (`theme/`) — The colors of the Nuclear Connector tree",
+   "summary": "`theme/build.mjs` sets `nuclearConnector.get/post/put/patch/delete/platform/project/component` from the palette (type, function, warning, number, error, primary, enumMember, property), so the tree follows each variant.",
    "body": [
-    "`theme/build.mjs` sets `nuclearHttp.get/post/put/patch/delete/platform/project/component` from the palette (type,",
+    "`theme/build.mjs` sets `nuclearConnector.get/post/put/patch/delete/platform/project/component` from the palette (type,",
     "function, warning, number, error, primary, enumMember, property), so the tree follows each variant. `package.json`",
     "contributes the same ids with neutral dark and light defaults for other themes; a theme may override them. In a",
-    "webview they are `var(--vscode-nuclearHttp-get)`."
+    "webview they are `var(--vscode-nuclearConnector-get)`."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/theme.md"
@@ -3549,10 +3595,10 @@
    "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#notices-on-the-strip",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — Notices on the strip",
-   "summary": "The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`, `loop` and `settings`, and the list in the tool's pane: ai-services.md.",
+   "summary": "The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`, `builder` and `settings`, and the list in the tool's pane: ai-services.md.",
    "body": [
-    "The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`, `loop`",
-    "and `settings`, and the list in the tool's pane: [ai-services.md](ai-services.md)."
+    "The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`,",
+    "`builder` and `settings`, and the list in the tool's pane: [ai-services.md](ai-services.md)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -3576,12 +3622,12 @@
     "`go(key)` calls `switchTabs(from, to)`:",
     "",
     "1. the open `TabInputText` tabs of the tab left go to `workspaceState` `nuclear.workspace.tabs` (path, column,",
-    "   active); leaving the HTTP tool keeps the keys of its open component panels (`model.reopen`);",
-    "2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `dragonflyDevice`) and",
+    "   active); leaving the Connector tool keeps the keys of its open component panels (`model.reopen`);",
+    "2. every tab is closed (`tabGroups.close`) except the device webviews (`viewType` ends with `synapsisDevice`) and",
     "   the unsaved editors, which stay open until saved;",
     "3. the devices are parked (`nuclear.parkDevices`), always before anything is reopened;",
-    "4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for HTTP, the",
-    "   Loop, the settings and the chat panels, the template page of a tool that is not built);",
+    "4. the tab entered comes back: a project's text files, or a tool's page (`ComponentPanel.restore` for Nuclear Connector,",
+    "   Nuclear Builder, the settings and the chat panels, the template page of a tool that is not built);",
     "5. the devices are unparked (`nuclear.unparkDevices`) when the tab entered is a mobile project or the Devices tool.",
     "",
     "Clicking a tab or an action posts a toast with its shortcut."
@@ -3611,9 +3657,9 @@
     "| web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |",
     "",
     "- Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →",
-    "  `nuclear.runOnDevice(undefined, root)`; api → the HTTP tool.",
-    "- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`dragonfly run`, `build`,",
-    "  `test`, `check`); `dragonfly install` goes first for a backend or web run or test when the app has no packages.",
+    "  `nuclear.runOnDevice(undefined, root)`; api → the Connector tool.",
+    "- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,",
+    "  `test`, `check`); `nuclear install` goes first for a backend or web run or test when the app has no packages.",
     "- A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global",
     "  state, adds the folder and reloads; `activateWorkspace` resumes it.",
     "- `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the",
@@ -3658,12 +3704,12 @@
     "  `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris",
     "  (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts",
     "  `refreshDir`.",
-    "- **`tool:http`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline",
-    "  `GLYPHS` and the `nuclearHttp.*` colors (the collapsed ids are kept in the webview). An endpoint →",
-    "  `nuclear.http.open`; a node's button → `updateContracts` / `addOpenApi`.",
-    "- **`tool:devices`**: `devices()` of `device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)",
+    "- **`tool:connector`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline",
+    "  `GLYPHS` and the `nuclearConnector.*` colors (the collapsed ids are kept in the webview). An endpoint →",
+    "  `nuclear.connector.open`; a node's button → `updateContracts` / `addOpenApi`.",
+    "- **`tool:devices`**: `devices()` of `tools/nuclear-device-manager/src/mobile-device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)",
     "  and *+ New device* (a quick pick of `PRESETS` → `nuclear.openDevice(preset)`).",
-    "- **The other tools**: a line about the tool and, for `agent`, `loop` and `settings`, the list of their notices."
+    "- **The other tools**: a line about the tool and, for `agent`, `builder` and `settings`, the list of their notices."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -3685,7 +3731,7 @@
     "id is in `nuclearMake` or its flag is true.",
     "",
     "- New File, New Folder, Rename, Delete (to the trash).",
-    "- *New with Dragonfly* (`dragonfly make` / `gen`, `makeArgs`), limited to what the clicked folder and the platform",
+    "- *New with Synapsis* (`nuclear make` / `gen`, `makeArgs`), limited to what the clicked folder and the platform",
     "  allow: a config file gets no \"new project\", a `usecases` folder gets only \"new use case\".",
     "- `build/`, `node_modules/` and the files that make a project are protected: they get nothing."
    ],
@@ -3706,9 +3752,9 @@
    "body": [
     "| id | Label | Key | State | Project |",
     "|---|---|---|---|---|",
-    "| `http` | HTTP client | `Ctrl+Alt+H` | built | [`nuclear-connector`](../../../tools/nuclear-connector/AGENTS.md) |",
+    "| `connector` | Nuclear Connector | `Ctrl+Alt+H` | built | [`nuclear-connector`](../../../tools/nuclear-connector/AGENTS.md) |",
     "| `devices` | Devices | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |",
-    "| `loop` | Loop | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
+    "| `builder` | Nuclear Builder | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
     "| `designer` | UI designer | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |",
     "| `docs` | AI documenter | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |",
     "| `agent` | Nuclear agent | `Ctrl+Alt+A` | built | [`nuclear-ai-chat`](../../../tools/nuclear-ai-chat/AGENTS.md) |",
@@ -3752,11 +3798,11 @@
    "id": "doc:extensions/vscode/docs/05-standards/testing.md#trying-something-without-the-editor",
    "type": "context",
    "title": "Testing the VS Code extension — Trying something without the editor",
-   "summary": "terminal.",
+   "summary": "(`out/nuclear-builder.js`) drives it from a terminal.",
    "body": [
-    "- **The Loop**: `loopEngine.ts` has no `vscode` import; `nuclear-loop` (`out/nuclear-loop.js`) drives it from a",
-    "  terminal.",
-    "- **The web device**: `webSession.ts` has no `vscode` import. Bundle a script that imports it with esbuild and run",
+    "- **Nuclear Builder**: `../tools/nuclear-builder/src/engine.ts` has no `vscode` import; `nuclear-builder`",
+    "  (`out/nuclear-builder.js`) drives it from a terminal.",
+    "- **The web device**: `../tools/nuclear-device-manager/src/web-session.ts` has no `vscode` import. Bundle a script that imports it with esbuild and run",
     "  it with node against a built app.",
     "- **A theme**: render a preview with the real tokens (the grammar and the server), or quit VS Code completely",
     "  before looking ([theme.md](../02-architecture/theme.md)).",
@@ -3797,8 +3843,8 @@
    "body": [
     "| Level | What it covers | How |",
     "|---|---|---|",
-    "| Types | every file of `src/` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |",
-    "| The engines, without the editor | the Loop (retries, a run retried from a stage or a step, a run from scratch, an interrupted run recovered, a stalled call, the preflight, a hung command, the generate and analysis steps, the acceptance), the chat's templates and history, the 3B rule of the local models | `npm test` → `test/loop.test.ts` |",
+    "| Types | every file of `src/` and of `../tools/*/src` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |",
+    "| The engines, without the editor | Nuclear Builder (retries, a run retried from a stage or a step, a run from scratch, an interrupted run recovered, a stalled call, the preflight, a hung command, the generate and analysis steps, the acceptance), the chat's templates and history, the 3B rule of the local models | `npm test` → `../tools/nuclear-builder/test/engine.test.ts` |",
     "| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `aiSetup.json` says | `npm test` → `test/setup.test.ts` |",
     "| The bundle | the bundled server loads every bundled dialect without the tree | `npm run server` ends with `nuclear-lsp --check-bundle` |",
     "| The server | completion, hover, projects | `cargo test -p nuclear-lsp`, in the language project |",
@@ -3938,7 +3984,7 @@
     "cargo run -q -p nuclear-cli -- dialect check dart        # or flutter",
     "cargo run -q -p nuclear-cli -- spec --dialect flutter    # the contract: templates, variables, options",
     "nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]   # the examples under flutter analyze",
-    "nuclear-synapsis-framework/platforms/mobile/checks/spec-check-dragonfly.py [--fix]    # the project blocks of flutter.md",
+    "nuclear-synapsis-framework/platforms/mobile/checks/spec-check-synapsis.py [--fix]    # the project blocks of flutter.md",
     "",
     "# from nuclearlang/",
     "tools/spec-check/check.py dialects/dart/docs/07-reference/dart.md dart dart [--fix]",
@@ -4032,30 +4078,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/dart/AGENTS.md#rules-of-this-project.6ee8a9",
-   "type": "readme",
-   "title": "The `dart` dialect — Rules of this project",
-   "summary": "`spec-check-dragonfly.py`, 0 problems).",
-   "body": [
-    "- `docs/07-reference/dart.md` and `flutter.md` hold only final rules and real equivalences (`spec-check` and",
-    "  `spec-check-dragonfly.py`, 0 problems). Never edit an equivalence by hand: change the dialect, then `--fix`.",
-    "- Every kind, decorator and header word has its entry in `docs.toml` (test `every_dialect_word_has_editor_docs`).",
-    "- `defs/` is generated: never edited. After a version or the runtime's API changes, regenerate it",
-    "  ([runbook](docs/06-runbooks/type-definitions.md)) and update the `defs` lists.",
-    "- Output changed: `UPDATE_GOLDEN=1 cargo test`, the diff reviewed, the reference fixed in the same change.",
-    "- A structural decision (a library, a pattern of the generated code) is a new ADR in `docs/03-adr/`.",
-    "- What is not documented and cannot be read from the dialect files is asked, not invented."
-   ],
-   "sources": [
-    "extensions/vscode/server/dialects/dart/AGENTS.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": "dart"
-   }
-  },
-  {
    "id": "doc:extensions/vscode/server/dialects/dart/AGENTS.md#rules-of-this-project.a7bf80",
    "type": "readme",
    "title": "The `dart` dialect — Rules of this project",
@@ -4085,6 +4107,30 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/server/dialects/dart/AGENTS.md#rules-of-this-project.af70e6",
+   "type": "readme",
+   "title": "The `dart` dialect — Rules of this project",
+   "summary": "`spec-check-synapsis.py`, 0 problems).",
+   "body": [
+    "- `docs/07-reference/dart.md` and `flutter.md` hold only final rules and real equivalences (`spec-check` and",
+    "  `spec-check-synapsis.py`, 0 problems). Never edit an equivalence by hand: change the dialect, then `--fix`.",
+    "- Every kind, decorator and header word has its entry in `docs.toml` (test `every_dialect_word_has_editor_docs`).",
+    "- `defs/` is generated: never edited. After a version or the runtime's API changes, regenerate it",
+    "  ([runbook](docs/06-runbooks/type-definitions.md)) and update the `defs` lists.",
+    "- Output changed: `UPDATE_GOLDEN=1 cargo test`, the diff reviewed, the reference fixed in the same change.",
+    "- A structural decision (a library, a pattern of the generated code) is a new ADR in `docs/03-adr/`.",
+    "- What is not documented and cannot be read from the dialect files is asked, not invented."
+   ],
+   "sources": [
+    "extensions/vscode/server/dialects/dart/AGENTS.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": "dart"
+   }
+  },
+  {
    "id": "doc:extensions/vscode/server/dialects/dart/AGENTS.md#stack",
    "type": "readme",
    "title": "The `dart` dialect — Stack",
@@ -4094,7 +4140,7 @@
     "- The dialect: TOML tables and Mustache-subset templates, read at run time by `../../crates/nuclear-dialect`.",
     "- `flutter` (platform `mobile`): Flutter, with `bloc` / `flutter_bloc`, `json_serializable` / `json_annotation`,",
     "  `get_it`, `dio`, `go_router`, `fpdart`, `connectivity_plus`, `flutter_secure_storage`; tests with `flutter_test`,",
-    "  `mocktail` and `bloc_test`. Runtime: the platform's Dart package `dragonfly` (and `dragonfly_genkit` for the",
+    "  `mocktail` and `bloc_test`. Runtime: the platform's Dart package `synapsis` (and `synapsis_genkit` for the",
     "  `genkit` plugin).",
     "- Type definitions: `dart@3.13.5`, `flutter@3.47.7` and the packages of the `flutter` dialect, generated by",
     "  `../../tools/defs/` (Dart, `package:analyzer`) from the installed Flutter SDK."
@@ -4117,7 +4163,7 @@
     "How Nuclear is written in Dart, and in the frameworks built on Dart. The same Nuclear code is written once and the",
     "transpiler turns it into each language and framework: this dialect only decides HOW the output is written in Dart",
     "(templates, imports, the standard library), never what the Nuclear code is. Its framework dialect `flutter`",
-    "implements the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/AGENTS.md) of Dragonfly; what",
+    "implements the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/AGENTS.md) of Synapsis; what",
     "that platform is (kinds, decorators, layout) is the platform's, not described here.",
     "",
     "Paths in these documents are relative to this folder (`nuclearlang/dialects/dart/`). `../../` is the language",
@@ -4385,7 +4431,7 @@
     "  with `pyright --strict`.",
     "- The dialect: TOML tables and Mustache-subset templates, read at run time by `../../crates/nuclear-dialect`.",
     "- `fastapi` (platform `backend`): FastAPI, SQLAlchemy 2 async, pydantic, LangChain / LangGraph, Alembic, pytest. Its",
-    "  runtime is the platform's package `dragonfly-py` (import name `dragonfly`).",
+    "  runtime is the platform's package `synapsis-py` (import name `synapsis`).",
     "- Type definitions: `python@3.14` and 18 packages of the `fastapi` dialect, generated by `../../tools/defs/python/`",
     "  from the virtual environment `../../tools/python/.venv`."
    ],
@@ -4408,7 +4454,7 @@
     "the transpiler turns it into each language and framework: this dialect only decides HOW the output is written in",
     "Python (templates, names, imports, the standard library), never what the Nuclear code is. Its framework dialect",
     "`fastapi` implements the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md) of",
-    "Dragonfly; what that platform is (kinds, decorators, layout) is the platform's, not described here.",
+    "Synapsis; what that platform is (kinds, decorators, layout) is the platform's, not described here.",
     "",
     "Paths in these documents are relative to this folder (`nuclearlang/dialects/python/`). `../../` is the language",
     "project ([its AGENTS.md](../../AGENTS.md)); `../../../` is the root of the tree."
@@ -4606,9 +4652,9 @@
     "- The dialect: TOML tables and Mustache-subset templates, read at run time by `../../crates/nuclear-dialect`.",
     "- `nestjs` (platform `backend`; extends [`nodejs`](../nodejs/AGENTS.md), which extends this dialect): NestJS 12",
     "  (ES modules), Sequelize (`@nestjs/sequelize` + `sequelize-typescript`), class-validator, kafkajs, ioredis,",
-    "  LangChain.js / LangGraph.js, `node:test`. Runtime: the platform's package `dragonfly-nest`.",
+    "  LangChain.js / LangGraph.js, `node:test`. Runtime: the platform's package `synapsis-nest`.",
     "- `react` (platform `web`): React 19 without JSX, React Router 7, Vite 7, Vitest 4 + jsdom + Testing Library.",
-    "  Runtime: the platform's package `dragonfly-web`.",
+    "  Runtime: the platform's package `synapsis-web`.",
     "- Type definitions: generated from `.d.ts` files by `../../tools/defs/typescript/` over",
     "  `../../tools/node/node_modules`."
    ],
@@ -4630,7 +4676,7 @@
     "How Nuclear is written in TypeScript, and in the frameworks built on TypeScript. The same Nuclear code is written",
     "once and the transpiler turns it into each language and framework: this dialect only decides HOW the output is",
     "written in TypeScript (templates, imports, the standard library), never what the Nuclear code is. Its framework",
-    "dialects implement platforms of Dragonfly: `nestjs` the",
+    "dialects implement platforms of Synapsis: `nestjs` the",
     "[backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md), `react` the",
     "[web platform](../../../nuclear-synapsis-framework/platforms/web/AGENTS.md). What a platform is (kinds, decorators,",
     "layout) is the platform's, not described here.",
@@ -4851,10 +4897,10 @@
    "id": "doc:extensions/zed/AGENTS.md#zed-extension",
    "type": "readme",
    "title": "Zed extension",
-   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.50.0): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Dragonfly tasks and runnables.",
+   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.51.0): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
    "body": [
-    "The NuclearLang extension for Zed (`nuclearlang`, 0.50.0): a tree-sitter grammar of tokens, the client of the",
-    "language server, the Chernobyl theme and icons, and the Dragonfly tasks and runnables. What the three extensions",
+    "The NuclearLang extension for Zed (`nuclearlang`, 0.51.0): a tree-sitter grammar of tokens, the client of the",
+    "language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables. What the three extensions",
     "share: [`../AGENTS.md`](../AGENTS.md)."
    ],
    "sources": [
@@ -4887,10 +4933,11 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.51.0: the version of the three extensions (one repository: the extension is `extensions/zed/`; the framework's commands of its tasks are `nuclear <command>`).",
     "- First public version.",
-    "- 0.46.0: the version of the three extensions (the Loop's analysis step is in `nuclear-loop`, ADR-developer-0001).",
-    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-loop setup`, ADR-installer-0002).",
-    "- 0.49.0: the version of the three extensions (the Loop's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-loop`; the language server reads `[project] package` of `nuclear.toml`)."
+    "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
+    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
+    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
    ],
    "sources": [
     "extensions/zed/CHANGELOG.md"
@@ -4902,7 +4949,7 @@
    }
   },
   {
-   "id": "doc:extensions/zed/README.md#nuclearlang-for-zed.85cde5",
+   "id": "doc:extensions/zed/README.md#nuclearlang-for-zed.003cf1",
    "type": "readme",
    "title": "NuclearLang for Zed",
    "summary": "operators and nested brackets).",
@@ -4912,7 +4959,7 @@
     "  server's semantic tokens. Zed reads grammars from a commit: `extension.toml` names the `rev` that has it.",
     "- `languages/nuclear/`: `config.toml` (the same indentation rules as VS Code; Enter in a `//` continues with",
     "  ` * `), `highlights.scm`, `brackets.scm`, `overrides.scm`, `semantic_token_rules.json` (kinds, library",
-    "  functions, deprecated struck through), `tasks.json` (Dragonfly) and `runnables.scm` (▷ on `main()` and on each",
+    "  functions, deprecated struck through), `tasks.json` (Synapsis) and `runnables.scm` (▷ on `main()` and on each",
     "  test).",
     "- `src/lib.rs`: starts the server and passes it `lsp.nuclear-lsp.settings`.",
     "- `themes/chernobyl.json` is generated by `extensions/vscode/theme/build.mjs`; `icon_themes/` and `icons/` are",
@@ -5024,8 +5071,8 @@
     "| `highlights.scm` | the token colors; in Zed the later pattern wins |",
     "| `brackets.scm`, `overrides.scm` | brackets and scopes |",
     "| `semantic_token_rules.json` | the server's semantic tokens: `kind`, `defaultLibrary`, `deprecated` (struck through) |",
-    "| `tasks.json` | Nuclear: the generated code of a file, check; Dragonfly: run, device, terminal device, test, build, watch, analyze, repair, explain |",
-    "| `runnables.scm` | ▷ on `main(` → `dragonfly-main`; on `@test` / `@widget` / `@states(\"name\")` → `dragonfly-test` with `$ZED_CUSTOM_test_name` |"
+    "| `tasks.json` | Nuclear: the generated code of a file, check; Synapsis: run, device, terminal device, test, build, watch, analyze, repair, explain |",
+    "| `runnables.scm` | ▷ on `main(` → `synapsis-main`; on `@test` / `@widget` / `@states(\"name\")` → `synapsis-test` with `$ZED_CUSTOM_test_name` |"
    ],
    "sources": [
     "extensions/zed/docs/02-architecture/overview.md"
@@ -5058,12 +5105,12 @@
    "id": "doc:extensions/zed/docs/02-architecture/overview.md#what-zed-does-not-allow",
    "type": "context",
    "title": "The Zed extension: its files — What Zed does not allow",
-   "summary": "The Loop is not offered in Zed (decided by the user), and the project card is not shown.",
+   "summary": "Nuclear Builder is not offered in Zed (decided by the user), and the project card is not shown.",
    "body": [
     "- The device inside the editor, `.nuc` debugging and build on save.",
     "- Keybindings and views of an extension, so there is no Nuclear workspace (ADR-extensions-0002).",
     "",
-    "The Loop is not offered in Zed (decided by the user), and the project card is not shown."
+    "Nuclear Builder is not offered in Zed (decided by the user), and the project card is not shown."
    ],
    "sources": [
     "extensions/zed/docs/02-architecture/overview.md"

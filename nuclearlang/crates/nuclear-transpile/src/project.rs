@@ -23,7 +23,7 @@ pub struct Manifest {
     /// Name of the generated app or package (`package:<name>/...` in Dart).
     pub name: String,
     pub dialect: String,
-    /// The Dragonfly platform of the project (`dragonfly(platform = ...)` in `config.nuc`, ADR-synapsis-0002); `None`
+    /// The Synapsis platform of the project (`synapsis(platform = ...)` in `config.nuc`, ADR-synapsis-0002); `None`
     /// for a project of a language dialect (`nuclear.toml`).
     pub platform: Option<String>,
     /// `app(version = ..., description = ...)` of `config.nuc` (`[project] version` in `nuclear.toml`): what the
@@ -44,7 +44,7 @@ pub struct Manifest {
 
 impl Manifest {
     /// The manifest of a project without `nuclear.toml`: its name is the folder's (in snake_case) and
-    /// its output `build` (a framework CLI knows the dialect: Dragonfly projects have only `.nuc` files).
+    /// its output `build` (a framework CLI knows the dialect: Synapsis projects have only `.nuc` files).
     pub fn infer(root: &Path, dialect: &str, out: &str) -> Manifest {
         let folder = root
             .canonicalize()
@@ -88,22 +88,22 @@ impl Manifest {
         self.package.clone().unwrap_or_else(|| dialect.project.sources.clone())
     }
 
-    /// The manifest of a Dragonfly project: `config.nuc` with `dragonfly(platform = ..., dialect = ...)` and,
+    /// The manifest of a Synapsis project: `config.nuc` with `synapsis(platform = ..., dialect = ...)` and,
     /// optionally, `app(name = ...)` (the folder's name otherwise). `out` stays empty: see `output_dir`.
-    pub fn read_dragonfly(root: &Path) -> Result<Manifest, String> {
+    pub fn read_synapsis(root: &Path) -> Result<Manifest, String> {
         let path = root.join(CONFIG_FILE);
         let text = std::fs::read_to_string(&path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
-        let sections = [DRAGONFLY_SECTION.to_string(), APP_SECTION.to_string(), DEPENDENCIES_SECTION.to_string()];
+        let sections = [SYNAPSIS_SECTION.to_string(), APP_SECTION.to_string(), DEPENDENCIES_SECTION.to_string()];
         let (config, _) = read_config(&text, &sections);
         let shown = path.display();
-        let Some(section) = config.get(DRAGONFLY_SECTION) else {
+        let Some(section) = config.get(SYNAPSIS_SECTION) else {
             return Err(format!(
-                "{shown}: missing dragonfly(platform = \"mobile\", dialect = \"flutter\") (the platform and the dialect of the project)"
+                "{shown}: missing synapsis(platform = \"mobile\", dialect = \"flutter\") (the platform and the dialect of the project)"
             ));
         };
         let get = |k: &str| section.iter().find(|(n, _)| n == k).map(|(_, v)| v.clone());
-        let platform = get("platform").ok_or(format!("{shown}: dragonfly(...) needs platform"))?;
-        let dialect = get("dialect").ok_or(format!("{shown}: dragonfly(...) needs dialect"))?;
+        let platform = get("platform").ok_or(format!("{shown}: synapsis(...) needs platform"))?;
+        let dialect = get("dialect").ok_or(format!("{shown}: synapsis(...) needs dialect"))?;
         let mut m = Manifest::infer(root, &dialect, "");
         m.platform = Some(platform);
         let app = |k: &str| config.get(APP_SECTION).and_then(|a| a.iter().find(|(n, _)| n == k)).map(|(_, v)| v.clone());
@@ -135,9 +135,9 @@ impl Manifest {
             if dir.join("nuclear.toml").is_file() {
                 return Some((dir.to_path_buf(), Manifest::read(dir)));
             }
-            // a Dragonfly project names its platform and dialect in config.nuc (ADR-synapsis-0002); one without the
+            // a Synapsis project names its platform and dialect in config.nuc (ADR-synapsis-0002); one without the
             // section falls through to the marker, and check_config asks for the line
-            if let Some(Ok(mut m)) = dir.join(CONFIG_FILE).is_file().then(|| Manifest::read_dragonfly(dir)) {
+            if let Some(Ok(mut m)) = dir.join(CONFIG_FILE).is_file().then(|| Manifest::read_synapsis(dir)) {
                 if let Some(d) = dialects.iter().find(|d| d.name == m.dialect) {
                     m.out = output_dir(&m, d);
                 }
@@ -155,11 +155,11 @@ impl Manifest {
         None
     }
 
-    /// `nuclear.toml`, or `config.nuc` with `dragonfly(...)` (`read_dragonfly`).
+    /// `nuclear.toml`, or `config.nuc` with `synapsis(...)` (`read_synapsis`).
     pub fn read(root: &Path) -> Result<Manifest, String> {
         let path = root.join("nuclear.toml");
         if !path.is_file() && root.join(CONFIG_FILE).is_file() {
-            return Manifest::read_dragonfly(root);
+            return Manifest::read_synapsis(root);
         }
         let text = std::fs::read_to_string(&path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
         let t: toml::Table =
@@ -303,10 +303,10 @@ pub fn reserved_package(dialect: &Dialect, name: &str) -> bool {
 
 /// The section of `config.nuc` that enables plugins: `plugins(genkit = true, kafka = true)`.
 pub const PLUGINS_SECTION: &str = "plugins";
-/// The manifest of a Dragonfly project and its sections: `dragonfly(platform = ..., dialect = ...)` and
+/// The manifest of a Synapsis project and its sections: `synapsis(platform = ..., dialect = ...)` and
 /// `app(name = ..., description = ..., version = ...)` (ADR-synapsis-0002).
 pub const CONFIG_FILE: &str = "config.nuc";
-pub const DRAGONFLY_SECTION: &str = "dragonfly";
+pub const SYNAPSIS_SECTION: &str = "synapsis";
 pub const APP_SECTION: &str = "app";
 /// `dependencies(name = "version")`: packages of the target's package manager the project adds. A version that
 /// starts with `.` or `/` is a folder on disk (resolved from the project root).
@@ -323,7 +323,7 @@ pub fn output_dir(manifest: &Manifest, dialect: &Dialect) -> String {
     }
 }
 
-/// The project card, written by every tool that builds the project (`nuclear build`, `dragonfly build`, the
+/// The project card, written by every tool that builds the project (`nuclear build`, `nuclear build`, the
 /// editors): what the project is, for a client or a script that must not read Nuclear or load the dialect
 /// (nuclearlang/docs/07-reference/projects.md §1.3).
 pub const METADATA_FILE: &str = ".nuclear/project.json";
@@ -393,13 +393,13 @@ pub fn enabled_plugins(root: &Path, dialect: &Dialect) -> Vec<String> {
 pub fn check_config(source: &str, dialect: &Dialect) -> (Config, Vec<Diagnostic>) {
     let Some(m) = &dialect.project.manifest else { return (Config::new(), Vec::new()) };
     let (spanned, mut diags) = read_config_spans(source, &m.sections);
-    // dragonfly(platform = ..., dialect = ...): required by a Dragonfly dialect, and it must be this one
+    // synapsis(platform = ..., dialect = ...): required by a Synapsis dialect, and it must be this one
     if let Some(platform) = &dialect.platform {
-        match spanned.get(DRAGONFLY_SECTION) {
+        match spanned.get(SYNAPSIS_SECTION) {
             None => diags.push(Diagnostic::error(
                 codes::PROJECT,
                 Span::default(),
-                format!("missing dragonfly(platform = \"{platform}\", dialect = \"{}\"): the first line of the manifest", dialect.name),
+                format!("missing synapsis(platform = \"{platform}\", dialect = \"{}\"): the first line of the manifest", dialect.name),
             )),
             Some(args) => {
                 for (name, value, span) in args {
@@ -407,7 +407,7 @@ pub fn check_config(source: &str, dialect: &Dialect) -> (Config, Vec<Diagnostic>
                         "platform" => platform.as_str(),
                         "dialect" => dialect.name.as_str(),
                         _ => {
-                            let msg = format!("dragonfly(...) takes only platform and dialect, not {name}");
+                            let msg = format!("synapsis(...) takes only platform and dialect, not {name}");
                             diags.push(Diagnostic::error(codes::PROJECT, *span, msg));
                             continue;
                         }
@@ -419,7 +419,7 @@ pub fn check_config(source: &str, dialect: &Dialect) -> (Config, Vec<Diagnostic>
                 }
                 for key in ["platform", "dialect"] {
                     if !args.iter().any(|(n, _, _)| n == key) {
-                        diags.push(Diagnostic::error(codes::PROJECT, Span::default(), format!("dragonfly(...) needs {key}")));
+                        diags.push(Diagnostic::error(codes::PROJECT, Span::default(), format!("synapsis(...) needs {key}")));
                     }
                 }
             }

@@ -1,4 +1,4 @@
-import 'package:dragonfly/dragonfly.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Form model: the login fields and their rules. Each form field (FormTextField("user"))
 /// is bound by its name; the messages are dictionary keys or the text itself.

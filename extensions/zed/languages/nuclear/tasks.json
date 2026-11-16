@@ -23,8 +23,8 @@
     "reveal": "always"
   },
   {
-    "label": "Dragonfly: run (r = hot reload, R = hot restart)",
-    "command": "dragonfly",
+    "label": "Synapsis: run (r = hot reload, R = hot restart)",
+    "command": "nuclear",
     "args": [
       "run"
     ],
@@ -33,12 +33,12 @@
     "allow_concurrent_runs": false,
     "reveal": "always",
     "tags": [
-      "dragonfly-main"
+      "synapsis-main"
     ]
   },
   {
-    "label": "Dragonfly: device (own window, like an emulator)",
-    "command": "dragonfly",
+    "label": "Synapsis: device (own window, like an emulator)",
+    "command": "nuclear",
     "args": [
       "device"
     ],
@@ -46,12 +46,12 @@
     "use_new_terminal": true,
     "reveal": "always",
     "tags": [
-      "dragonfly-main"
+      "synapsis-main"
     ]
   },
   {
-    "label": "Dragonfly: terminal device (inside this terminal)",
-    "command": "dragonfly",
+    "label": "Synapsis: terminal device (inside this terminal)",
+    "command": "nuclear",
     "args": [
       "terminal-device"
     ],
@@ -59,12 +59,12 @@
     "use_new_terminal": true,
     "reveal": "always",
     "tags": [
-      "dragonfly-main"
+      "synapsis-main"
     ]
   },
   {
-    "label": "Dragonfly: test \"$ZED_CUSTOM_test_name\"",
-    "command": "dragonfly",
+    "label": "Synapsis: test \"$ZED_CUSTOM_test_name\"",
+    "command": "nuclear",
     "args": [
       "test",
       "--",
@@ -74,12 +74,12 @@
     "cwd": "$ZED_DIRNAME",
     "reveal": "always",
     "tags": [
-      "dragonfly-test"
+      "synapsis-test"
     ]
   },
   {
-    "label": "Dragonfly: build",
-    "command": "dragonfly",
+    "label": "Synapsis: build",
+    "command": "nuclear",
     "args": [
       "build"
     ],
@@ -87,8 +87,8 @@
     "reveal": "always"
   },
   {
-    "label": "Dragonfly: watch (build on every save)",
-    "command": "dragonfly",
+    "label": "Synapsis: watch (build on every save)",
+    "command": "nuclear",
     "args": [
       "watch"
     ],
@@ -98,20 +98,20 @@
     "reveal": "never"
   },
   {
-    "label": "Dragonfly: test",
-    "command": "dragonfly",
+    "label": "Synapsis: test",
+    "command": "nuclear",
     "args": [
       "test"
     ],
     "cwd": "$ZED_DIRNAME",
     "reveal": "always",
     "tags": [
-      "dragonfly-test"
+      "synapsis-test"
     ]
   },
   {
-    "label": "Dragonfly: analyze",
-    "command": "dragonfly",
+    "label": "Synapsis: analyze",
+    "command": "nuclear",
     "args": [
       "analyze"
     ],
@@ -119,8 +119,8 @@
     "reveal": "always"
   },
   {
-    "label": "Dragonfly: repair",
-    "command": "dragonfly",
+    "label": "Synapsis: repair",
+    "command": "nuclear",
     "args": [
       "repair"
     ],
@@ -128,11 +128,11 @@
     "reveal": "always"
   },
   {
-    "label": "Dragonfly: explain the error in the clipboard",
+    "label": "Synapsis: explain the error in the clipboard",
     "command": "sh",
     "args": [
       "-c",
-      "(wl-paste 2>/dev/null || xclip -o -selection clipboard 2>/dev/null) | dragonfly explain"
+      "(wl-paste 2>/dev/null || xclip -o -selection clipboard 2>/dev/null) | nuclear explain"
     ],
     "cwd": "$ZED_DIRNAME",
     "reveal": "always"

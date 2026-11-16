@@ -1,4 +1,4 @@
-import { AppEvent, Json } from 'dragonfly-web';
+import { AppEvent, Json } from 'synapsis-web';
 
 /** The backend asks to close the session. */
 export class ForceLogout extends AppEvent {

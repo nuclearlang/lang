@@ -12,7 +12,7 @@ files or the `config.nuc` checks. Rules: `docs/07-reference/projects.md`. Code:
 
 ## The manifest
 
-- `Manifest`: `nuclear.toml`, a `config.nuc` that names `dragonfly(platform = ..., dialect = ...)` and
+- `Manifest`: `nuclear.toml`, a `config.nuc` that names `synapsis(platform = ..., dialect = ...)` and
   `app(name = ...)`, or inferred (`Manifest::infer(root, dialect, out)`). `Manifest::read(root)` reads the first
   two; `Manifest::find(path, &dialects)` tries them and then the dialect's `[project] marker`.
 - Fields other tools read: `platform: Option<String>`, `version` and `description` (from `app(...)`).

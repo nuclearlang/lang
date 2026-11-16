@@ -248,7 +248,7 @@ fn type_definitions_are_loaded_and_inherited() {
         [
             "dart@3.13.5",
             "flutter@3.47.7",
-            "dragonfly@0.1.0",
+            "synapsis@0.1.0",
             "flutter_bloc@9.1.1",
             "bloc@9.2.1",
             "dio@5.11.1",
@@ -260,12 +260,12 @@ fn type_definitions_are_loaded_and_inherited() {
             // the definitions of the plugins (only their index; a project that does not enable them gets N0304)
             "genkit@1.0.1",
             "schemantic@1.0.0",
-            "dragonfly_genkit@0.1.0",
+            "synapsis_genkit@0.1.0",
         ]
     );
-    // the WebSocket of dragonfly replaces the one of dart:io
+    // the WebSocket of synapsis replaces the one of dart:io
     assert_eq!(d.auto_imports["BlocBuilder"].value, "package:flutter_bloc/flutter_bloc.dart");
-    assert_eq!(d.auto_imports["WebSocket"].value, "package:dragonfly/dragonfly.dart");
+    assert_eq!(d.auto_imports["WebSocket"].value, "package:synapsis/synapsis.dart");
 }
 
 #[test]
@@ -376,7 +376,7 @@ fn docs_urls_come_from_the_dialect_chain() {
 }
 
 #[test]
-fn dragonfly_dialects_implement_their_platform() {
+fn synapsis_dialects_implement_their_platform() {
     // ADR-synapsis-0002: a framework dialect names its platform and matches its platform.toml; a platform plugin a
     // dialect does not bring is a warning (none today: every backend dialect brings the whole list)
     let loader = tree_loader(vec![]);

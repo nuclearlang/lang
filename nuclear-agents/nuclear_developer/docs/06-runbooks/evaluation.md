@@ -11,8 +11,8 @@ What it measures and how an answer passes: [testing](../05-standards/testing.md#
 ## Before
 
 - The Smart Graph, the Developer and Ollama with the two models are running ([run.md](run.md)).
-- The `nuclear` and `dragonfly` commands are on the `PATH`: every answer is checked with `nuclear check`, a feature
-  as a fresh `dragonfly new` project.
+- The `nuclear` and `nuclear` commands are on the `PATH`: every answer is checked with `nuclear check`, a feature
+  as a fresh `nuclear new` project.
 - `run.py` uses the graph's package (`nuclear_graph.toolchain`): run it with the Python of the graph's environment.
 
 ## The commands

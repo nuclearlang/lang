@@ -6,7 +6,7 @@ related: [overview.md, kinds-and-plugins.md, ../03-adr/README.md, ../../platform
 ---
 # The rules every platform and dialect follows
 
-What makes a project a Dragonfly project, whatever its platform and its dialect. A new kind, decorator, platform
+What makes a project a Synapsis project, whatever its platform and its dialect. A new kind, decorator, platform
 feature or dialect is designed against this list. Paths start at the root of the tree.
 
 1. **Light clean architecture.** Components with layers (`config`, `data`, `domain`, and the platform's entry
@@ -26,7 +26,7 @@ feature or dialect is designed against this list. Paths start at the root of the
    forms, translations (ADR-synapsis-0005), logs by component (ADR-mobile-0005); connections declared in `config/`.
 8. **Warn** when something breaks the architecture or brings security or performance problems (the mobile
    platform documents its security checks).
-9. **Commands per platform.** `dragonfly <command>` reads `dragonfly(...)` of `config.nuc` (ADR-cli-0001,
+9. **Commands per platform.** `nuclear <command>` in a project reads `synapsis(...)` of `config.nuc` (ADR-cli-0001,
    ADR-synapsis-0001). The command knows no language: what it runs is declared by the dialect in `[toolchain]`.
    The mobile path of the command still calls Flutter directly (the roadmap of `tools/cli/`).
 10. **The golden rule** for every kind, decorator or shortcut: generated code as fast as an expert's, instant
@@ -42,8 +42,8 @@ Two more rules come from the hard rules of the root `AGENTS.md`:
 - **The platform names no dialect** (rule 11). A platform's reference, docs, examples and diagnostics hold only
   Nuclear. The standard library is Nuclear's own (`nuclearlang/docs/07-reference/library.md`, ADR-lang-0009): a
   target's library name (`push`, `len`, `toUpperCase`) in platform code, references, docs or examples is a bug.
-- **Nuclear and Dragonfly first** (rule 12). A new development of the tree (a service, a tool, an agent) is a
-  Dragonfly project when one of the three platforms fits.
+- **Nuclear and Synapsis first** (rule 12). A new development of the tree (a service, a tool, an agent) is a
+  Synapsis project when one of the three platforms fits.
 
 ## Proposals
 

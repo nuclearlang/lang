@@ -1,7 +1,7 @@
 import { TaskRepository } from '../../data/repositories/task_repository.js';
 import { Removed } from '../models/task_models.js';
 import { Injectable } from '@nestjs/common';
-import { AppError, Err, NotFound, Ok, Result } from 'dragonfly-nest';
+import { AppError, Err, NotFound, Ok, Result } from 'synapsis-nest';
 
 @Injectable()
 export class DeleteTask {

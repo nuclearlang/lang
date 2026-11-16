@@ -21,7 +21,7 @@ The skill does not copy the brief: it asks the installed binary for it, so it is
 
 ## `nuclear agent init [--dialect <d>]` (`agent::init`)
 
-Run in a project folder; `dragonfly agent init` and every `dragonfly new` call it. It writes four things and keeps
+Run in a project folder; `nuclear agent init` and every `nuclear new` call it. It writes four things and keeps
 everything else of the project's files:
 
 1. **`AGENTS.md`**: the NuclearLang section between the markers `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`.
@@ -33,7 +33,7 @@ everything else of the project's files:
    `nuclear agent hook`, added once; the other hooks and settings stay.
 
 The dialect: `--dialect`, else the one of `nuclear.toml`, else the one `config.nuc` names, else (a `main.nuc` alone,
-or a `config.nuc` without the `dragonfly(...)` line) the mobile platform's default dialect; with none of them it asks
+or a `config.nuc` without the `synapsis(...)` line) the mobile platform's default dialect; with none of them it asks
 for `--dialect`.
 
 The templates have five placeholders:
@@ -41,10 +41,10 @@ The templates have five placeholders:
 | Placeholder | Filled with |
 |---|---|
 | `{dialect}` | the dialect |
-| `{check}` | `dragonfly check --json` (a project with `config.nuc` or `main.nuc`), `nuclear check . --json` (a `nuclear.toml`), else `nuclear check <file>.nuc --dialect <d> --json` |
-| `{dragonfly}` | in a Dragonfly project: create each piece with `dragonfly make`, then `dragonfly analyze` and `dragonfly test` |
-| `{packages}` | in a Dragonfly project: a missing library is `dragonfly add <package>`, never installed by hand in `build/` |
-| `{generated}` | what is never edited: `build/` (and, outside Dragonfly, the `.ts` / `.dart` / `.py` built from the `.nuc`) |
+| `{check}` | `nuclear check --json` (a project with `config.nuc` or `main.nuc`), `nuclear check . --json` (a `nuclear.toml`), else `nuclear check <file>.nuc --dialect <d> --json` |
+| `{synapsis}` | in a Synapsis project: create each piece with `nuclear make`, then `nuclear analyze` and `nuclear test` |
+| `{packages}` | in a Synapsis project: a missing library is `nuclear add <package>`, never installed by hand in `build/` |
+| `{generated}` | what is never edited: `build/` (and, outside Synapsis, the `.ts` / `.dart` / `.py` built from the `.nuc`) |
 
 Running it twice changes nothing (test `init_keeps_the_project_files_and_runs_twice`).
 

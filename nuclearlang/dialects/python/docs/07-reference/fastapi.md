@@ -4,18 +4,18 @@
 > platform's rules, kinds and Nuclear are in `backend.md`; this document holds only how this dialect writes them:
 > REST controllers on **FastAPI**, repositories over tables with **SQLAlchemy 2 async**, **pydantic** models, and
 > **LangChain / LangGraph** tools, agents and graphs. Files: `nuclearlang/dialects/python/frameworks/fastapi/` (renamed `fastapi` in phase B1,
-> `docs/01-product/roadmap.md` of this dialect); runtime: `packages/dragonfly-py` (import name `dragonfly`).
+> `docs/01-product/roadmap.md` of this dialect); runtime: `packages/synapsis-py` (import name `synapsis`).
 
 ## 1. Project
 
-A folder with `config.nuc` (`dragonfly(platform = "backend", dialect = "fastapi")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);
+A folder with `config.nuc` (`synapsis(platform = "backend", dialect = "fastapi")`, [backend.md](../../../../../nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md) §1);
 `nuclear build .` writes `build/` (the Python package `app/`, `tests/` from the platform's `test/`, `pyproject.toml`
 with the `app(...)` name, version and description). Run it with
 `uvicorn app.main:app` from `build/`; test it with `pytest`.
 
 ```
 rick_api/
-├── config.nuc                         dragonfly(platform = "backend", dialect = "fastapi"), app(...), plugins(...)
+├── config.nuc                         synapsis(platform = "backend", dialect = "fastapi"), app(...), plugins(...)
 ├── config/project_config.nuc          appConfig: the connections of the app
 ├── components/characters/
 │   ├── characters_appcomponent.nuc    appcomponent: what the rest of the app sees
@@ -47,7 +47,7 @@ definitions come with the dialect: `nuclear defs search <text> --dialect fastapi
 
 The optional parts are plugins ([projects.md](../../../../docs/07-reference/projects.md) §3.3): `plugins(sqlite = true, postgres = true, mysql =
 true, redis = true, kafka = true, ai = true, openai = true, ollama = true, chroma = true)`. Only the enabled ones go to
-`pyproject.toml`, and the runtime imports them only then (`dragonfly.ai`, `dragonfly.events`). A kind or a name of a
+`pyproject.toml`, and the runtime imports them only then (`synapsis.ai`, `synapsis.events`). A kind or a name of a
 plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `listener` needs `kafka`; `Redis` needs
 `redis`.
 
@@ -72,7 +72,7 @@ entity Character()
 ```python
 from __future__ import annotations
 
-from dragonfly import Entity, Mapped, column, primary
+from synapsis import Entity, Mapped, column, primary
 
 
 class Character(Entity):
@@ -126,7 +126,7 @@ entity Tag()
 ```python
 from __future__ import annotations
 
-from dragonfly import Entity, Mapped, column, many_to_many, many_to_one, one_to_many, primary
+from synapsis import Entity, Mapped, column, many_to_many, many_to_one, one_to_many, primary
 
 
 class Project(Entity):
@@ -175,7 +175,7 @@ repository CharacterRepository
 ```python
 from __future__ import annotations
 
-from dragonfly import AppError, Repository, Result, gte
+from synapsis import AppError, Repository, Result, gte
 from typing import Awaitable
 
 
@@ -211,7 +211,7 @@ repository TaskRepository
 ```python
 from __future__ import annotations
 
-from dragonfly import AppError, Page, Repository, Result
+from synapsis import AppError, Page, Repository, Result
 from typing import Awaitable
 
 
@@ -243,7 +243,7 @@ repository CharacterRepository
 ```python
 from __future__ import annotations
 
-from dragonfly import AppError, HttpRepository, Result
+from synapsis import AppError, HttpRepository, Result
 
 
 class CharacterRepository(HttpRepository):
@@ -255,7 +255,7 @@ class CharacterRepository(HttpRepository):
 
 ### 2.3 Model
 
-What the API reads and answers: a pydantic model (in `domain/models/` by folder). The same rule decorators as the nestjs dialect and Dragonfly's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 422.
+What the API reads and answers: a pydantic model (in `domain/models/` by folder). The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 422.
 
 ```nuclear
 model NewCharacter
@@ -271,8 +271,8 @@ model NewCharacter
 from __future__ import annotations
 
 from annotated_types import MaxLen, MinLen
-from dragonfly.validators import is_email
 from pydantic import AfterValidator, BaseModel
+from synapsis.validators import is_email
 from typing import Annotated
 
 
@@ -308,8 +308,8 @@ usecase CreateCharacter(characters: CharacterRepository)
 ```python
 from __future__ import annotations
 
-from dragonfly import AppError, Conflict, Entity, Err, Mapped, Ok, Result, column, primary
 from pydantic import BaseModel
+from synapsis import AppError, Conflict, Entity, Err, Mapped, Ok, Result, column, primary
 
 
 class NewCharacter(BaseModel):
@@ -352,7 +352,7 @@ usecase CloseProject(tasks: TaskRepository, projects: ProjectRepository)
 ```python
 from __future__ import annotations
 
-from dragonfly import AppError, Ok, Result, transactional
+from synapsis import AppError, Ok, Result, transactional
 
 
 class CloseProject:
@@ -409,7 +409,7 @@ controller CharactersController(characters: CharactersAppComponent)
 ```python
 from __future__ import annotations
 
-from dragonfly import AppError, Result, controller, get, post
+from synapsis import AppError, Result, controller, get, post
 
 
 @controller("characters")
@@ -443,7 +443,7 @@ appConfig ProjectConfig
 ```python
 from __future__ import annotations
 
-from dragonfly import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env
+from synapsis import AppConfig, Connection, Kafka, OpenAI, Postgres, Redis, env
 
 
 class ProjectConfig(AppConfig):
@@ -471,7 +471,7 @@ tools CharacterTools(characters: CharacterRepository)
 ```python
 from __future__ import annotations
 
-from dragonfly.ai import Tools
+from synapsis.ai import Tools
 
 
 class CharacterTools(Tools):
@@ -500,7 +500,7 @@ agent Guide(tools: CharacterTools)
 ```python
 from __future__ import annotations
 
-from dragonfly.ai import Agent
+from synapsis.ai import Agent
 
 
 class Guide(Agent):
@@ -531,8 +531,8 @@ graph Review(guide: Guide)
 ```python
 from __future__ import annotations
 
-from dragonfly.ai import Graph, next, start
 from pydantic import BaseModel
+from synapsis.ai import Graph, next, start
 
 
 class ReviewState(BaseModel):
@@ -566,7 +566,7 @@ listener CharacterEvents(characters: CharactersAppComponent)
 ```python
 from __future__ import annotations
 
-from dragonfly.events import Listener, consumer
+from synapsis.events import Listener, consumer
 
 
 class CharacterEvents(Listener):
@@ -580,7 +580,7 @@ class CharacterEvents(Listener):
 
 ### 2.12 Tests
 
-In `test/*_test.nuc` (written to `tests/`, pytest's folder): `tests Name` + `@test("what it checks")` methods → a pytest class. Every test runs with the project's connections, the databases in memory and the project's listeners created (`tests/conftest.py`); `inject<X>()` gives the instances. `expect(condition)` is `assert`. `dragonfly.testing.FakeModel([...])` answers fixed texts.
+In `test/*_test.nuc` (written to `tests/`, pytest's folder): `tests Name` + `@test("what it checks")` methods → a pytest class. Every test runs with the project's connections, the databases in memory and the project's listeners created (`tests/conftest.py`); `inject<X>()` gives the instances. `expect(condition)` is `assert`. `synapsis.testing.FakeModel([...])` answers fixed texts.
 
 ```nuclear
 tests Characters
@@ -595,7 +595,7 @@ tests Characters
 ```python
 from __future__ import annotations
 
-from dragonfly import inject
+from synapsis import inject
 
 
 class TestCharacters:
@@ -610,10 +610,10 @@ class TestCharacters:
 ### Migrations
 
 Migrations of the database schema (ADR-backend-0001): Alembic over `migrations/` (`env.py`, `versions/`), made by
-`dragonfly migrate make` against an empty SQLite at the last migration, in batch mode. The commands and the rules:
+`nuclear migrate make` against an empty SQLite at the last migration, in batch mode. The commands and the rules:
 `nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md` §2.8.
 
 ## 3. What is not there yet
 
-- `dragonfly make` generators for the backend kinds, `dragonfly check` and `watch` (the CLI has `new`, `build`,
+- `nuclear make` generators for the backend kinds, `nuclear check` and `watch` (the CLI has `new`, `build`,
   `install`, `run`, `test` and `migrate`).

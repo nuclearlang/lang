@@ -1,10 +1,10 @@
-import 'package:clean_flutter_project/dragonfly.g.dart';
 import 'package:clean_flutter_project/shared/widgets/offline_banner.dart';
-import 'package:dragonfly/dragonfly.dart';
+import 'package:clean_flutter_project/synapsis.g.dart';
 import 'package:flutter/material.dart' hide Page;
+import 'package:synapsis/synapsis.dart';
 
 Future<void> main() async {
-  await startDragonfly();
+  await startSynapsis();
   runApp(App());
 }
 

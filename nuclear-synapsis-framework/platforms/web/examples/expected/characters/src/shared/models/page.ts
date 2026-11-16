@@ -1,4 +1,4 @@
-import { Json } from 'dragonfly-web';
+import { Json } from 'synapsis-web';
 
 /** A page of an API list: always info + results; only the model of each result changes. */
 export class PageInfo {

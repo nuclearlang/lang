@@ -3,9 +3,9 @@ import 'package:clean_flutter_project/components/characters/presentation/list/st
 import 'package:clean_flutter_project/components/characters/presentation/widgets/character_tile.dart';
 import 'package:clean_flutter_project/components/session/domain/models/auth.dart';
 import 'package:clean_flutter_project/components/session/presentation/login/login_screen.dart';
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:synapsis/synapsis.dart';
 
 /// Tab 0 of MainShell. GlobalEvents shows the name of whoever signed in and changes only when the
 /// session starts or ends (if the screen is not visible, it changes when coming back to it).

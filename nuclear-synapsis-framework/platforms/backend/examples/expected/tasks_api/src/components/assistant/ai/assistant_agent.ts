@@ -1,6 +1,6 @@
 import { TaskTools } from './task_tools.js';
 import { Injectable } from '@nestjs/common';
-import { Agent } from 'dragonfly-nest/ai';
+import { Agent } from 'synapsis-nest/ai';
 
 /** A task assistant: it reads, adds and completes tasks with its tools. */
 @Injectable()

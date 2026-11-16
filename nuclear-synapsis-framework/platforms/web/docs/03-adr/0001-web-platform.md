@@ -7,7 +7,7 @@ deciders: Julian Molina
 
 ## Context and problem
 
-Dragonfly names three platforms (ADR-synapsis-0002); `web` had no dialect, so "three platforms" was only a promise. The
+Synapsis names three platforms (ADR-synapsis-0002); `web` had no dialect, so "three platforms" was only a promise. The
 user asked for the first web dialect to be built on what the mobile platform already does, so the knowledge of one
 platform carries to the other, and for an analysis of a simpler design on top of React's own ecosystem.
 
@@ -29,10 +29,10 @@ is a class (`StatelessView` / `StatefulView`) shown through `createElement`, so 
 state model generates a `<Model>Builder` component; `@screen(providers)` wraps the screen in `Providers`, and
 `Manager.method()` inside its views is `this.manager(Manager).method()` (no hook in a callback).
 
-**The runtime is `packages/dragonfly-web`** (npm `dragonfly-web`, ESM): `Result`, the injector, configuration and
+**The runtime is `packages/synapsis-web`** (npm `synapsis-web`, ESM): `Result`, the injector, configuration and
 the `Http` connection, `Repository` over fetch (cache, retries, `result` / `attempt`), `StateManager`, the view
 bases and hooks, the HTML functions, events, session / ACL / guards, the router (`buildRouter`, `goTo`, `goBack`),
-`Log`, and `dragonfly-web/testing` (`DragonflyTest` with canned fetch, `mock` / `when` / `verify`, `renderScreen`,
+`Log`, and `synapsis-web/testing` (`SynapsisTest` with canned fetch, `mock` / `when` / `verify`, `renderScreen`,
 `statesOf`). Its type definitions and those of React, React Router, Vitest and Testing Library are in
 `nuclearlang/dialects/typescript/defs/`.
 
@@ -71,13 +71,13 @@ What the first version copies from mobile, and what React's libraries would repl
 | HTML functions without JSX | JSX in `.tsx` | what every React developer reads | Nuclear would need JSX in the parser, which never changes per dialect, or a template string; the functions keep Nuclear's call syntax, the same the mobile widgets use |
 | `Providers` + `this.manager(X)` (context) | zustand stores are global: no provider | less wiring | a store per screen instance (a detail opened twice) needs a factory anyway |
 | `goTo(Screen, params)` | react-router's `<Link>` / `useNavigate` with paths | idiomatic | navigation by address breaks when a route changes; the mobile platform navigates by screen on purpose (ADR-mobile-0002) |
-| `tests` with `DragonflyTest` + `@mock` | MSW for http, vitest mocks | the ecosystem's tools | `DragonflyTest.respond` is MSW's role with no package; `@mock` already uses `vi.fn` |
+| `tests` with `SynapsisTest` + `@mock` | MSW for http, vitest mocks | the ecosystem's tools | `SynapsisTest.respond` is MSW's role with no package; `@mock` already uses `vi.fn` |
 
 ## Consequences
 
 - Positive: a web app is made from the mobile example in an afternoon (the `characters` example is the mobile one
   minus Flutter's widgets); "three platforms" is true; there is one platform reference more.
-- Positive: the `dragonfly` command gets web projects through the dialect's `[toolchain]` (`dragonfly new -p web -d
+- Positive: the `nuclear` command gets web projects through the dialect's `[toolchain]` (`nuclear new -p web -d
   react`, `build` through `nuclear build .`).
 - Negative: no forms, converters, translations, local database, plugins or AI kinds yet; no generated tests file.
 - Negative: `@acl(guards)` only in a use case that awaits something (`Guards.verify` is asynchronous).

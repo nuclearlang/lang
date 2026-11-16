@@ -14,7 +14,7 @@ commands, its devices) is in that platform's roadmap.
 
 - **Moving to `material_ui`.** The mobile platform's CI is red since 2026-11-12: the Flutter stable after 3.47.0
   deprecates `package:flutter/material.dart` and `GlobalMaterialLocalizations` for the `material_ui` package.
-  `flutter analyze` of `nuclear-synapsis-framework/platforms/mobile/packages/dragonfly` reports 9 infos
+  `flutter analyze` of `nuclear-synapsis-framework/platforms/mobile/packages/synapsis` reports 9 infos
   (`deprecated_member_use`) and exits 1. It comes from the Flutter release, not from a change in this tree; the
   local Flutter is older and does not show it. The right fix is moving the runtime, the `flutter` dialect's
   automatic imports, its templates and the Dart type definitions to `material_ui`. Hiding it with

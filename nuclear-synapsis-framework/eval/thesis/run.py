@@ -86,7 +86,7 @@ def prepare(task, arm, work, repeat):
         if src == "empty":
             subprocess.run(["nuclear", "agent", "init", "--dialect", dialect], cwd=dst, capture_output=True)
         else:
-            subprocess.run(["dragonfly", "agent", "init"], cwd=dst, capture_output=True)
+            subprocess.run(["synapsis", "agent", "init"], cwd=dst, capture_output=True)
         skill = os.path.join(root, "tools", "cli", "agent-files", "skills", "nuclear")
         if os.path.isdir(skill):
             shutil.copytree(skill, os.path.join(dst, ".claude", "skills", "nuclear"), dirs_exist_ok=True)

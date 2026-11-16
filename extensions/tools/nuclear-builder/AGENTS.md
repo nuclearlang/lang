@@ -1,22 +1,23 @@
-# nuclear-builder
+# Nuclear Builder (`nuclear-builder`)
 
-The pipeline tool of the editors. The code calls it **the Loop** today: a spec goes through specification, generate,
+The pipeline tool of the editors, **Nuclear Builder**: a spec goes through specification, generate,
 plan, tests first, code, verification, security, artifacts and deploy on the developer's machine, and every step
 shows who did it (you, Claude, a local agent, the shell). It is a tool of the Nuclear workspace in VS Code
-(`Ctrl+Alt+P`), a tool window in Android Studio / IntelliJ (`Alt+Shift+P`) and the `nuclear-loop` command in a
+(`Ctrl+Alt+P`), a tool window in Android Studio / IntelliJ (`Alt+Shift+P`) and the `nuclear-builder` command in a
 terminal or a CI job. It needs the Smart Graph and the Nuclear Developer running.
 
-## Where the code is today
-It moves into this folder in [spec 008, T4.4](../../../docs/04-specs/008-restructure/tasks.md).
+## Where the code is
+All of it is in this folder. It is built through the editors: the VS Code extension compiles and bundles `src/` and
+`test/` (`extensions/vscode/tsconfig.json`), the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin.
 
 | File | What it is |
 |---|---|
-| `extensions/vscode/src/loopEngine.ts` | the engine; no `vscode` import |
-| `extensions/vscode/src/loopSafety.ts` | what keeps a run safe when something breaks; no `vscode` import |
-| `extensions/vscode/src/loopPanel.ts` | the page of VS Code: the runs, the spec form, a run as a graph |
-| `extensions/vscode/src/loopCli.ts` | the `nuclear-loop` command (`out/nuclear-loop.js`) |
-| `extensions/vscode/test/loop.test.ts` | the engine's tests |
-| `extensions/jetbrains/src/dev/nuclearlang/editor/NuclearLoop.java` | the *Nuclear Loop* tool window, which runs `nuclear-loop` |
+| `src/engine.ts` | the engine; no `vscode` import |
+| `src/safety.ts` | what keeps a run safe when something breaks; no `vscode` import |
+| `src/panel.ts` | the page of VS Code: the runs, the spec form, a run as a graph |
+| `src/cli.ts` | the `nuclear-builder` command (bundled to `extensions/vscode/out/nuclear-builder.js`) |
+| `test/engine.test.ts` | the engine's tests (also the chat's templates and history, the 3B rule) |
+| `jetbrains/src/dev/nuclearlang/editor/NuclearBuilder.java` | the *Nuclear Builder* tool window, which runs `nuclear-builder` |
 
 ## Stack
 - TypeScript, bundled with esbuild for node 18; the page is plain HTML and script
@@ -26,22 +27,23 @@ It moves into this folder in [spec 008, T4.4](../../../docs/04-specs/008-restruc
 ## Commands
 Run in `extensions/vscode/`:
 ```sh
-npm run loop        # out/nuclear-loop.js
-npm test            # test/loop.test.ts (node:test)
-npm run compile     # the types, the extension and nuclear-loop
+npm run builder     # out/nuclear-builder.js
+npm test            # ../tools/nuclear-builder/test/engine.test.ts, with the extension's setup.test.ts (node:test)
+npm run compile     # the types, the extension (with src/panel.ts) and nuclear-builder
 ```
-`installer/install.sh` rebuilds `nuclear-loop` and puts it in the installation's `bin/` with a `node` wrapper
+The tool window: in `extensions/jetbrains/`, `IDE_HOME=/opt/android-studio ./build.sh`.
+`installer/install.sh` rebuilds `nuclear-builder` and puts it in the installation's `bin/` with a `node` wrapper
 (`installer/release/stage.sh`).
 
 ## Rules
-- `loopEngine.ts` and `loopSafety.ts` never import `vscode`: the page, `nuclear-loop`, the chat and the tests drive
+- `engine.ts` and `safety.ts` never import `vscode`: the page, `nuclear-builder`, the chat and the tests drive
   the same engine.
 - The page only draws. A run belongs to the extension (`engines`, module-level): closing the page or switching tools
   leaves it running.
-- A run is `.nuclear/loop/runs/<id>.json`, saved on every step: every editor and the command draw that same file.
-- Commands are data (`.nuclear/loop.json`): the shell runs nothing that is not there.
+- A run is `.nuclear/builder/runs/<id>.json`, saved on every step: every editor and the command draw that same file.
+- Commands are data (`.nuclear/builder.json`): the shell runs nothing that is not there.
 - The local agents only ever see Nuclear and the platform, never a dialect's language.
-- No Loop for Zed (decided by the user).
+- No Nuclear Builder for Zed (decided by the user).
 - The decision behind the pipeline is ADR-platform-0003; the strategies, ADR-developer-0001; the generators, ADR-codegen-0001.
 
 ## Documents (read by task)

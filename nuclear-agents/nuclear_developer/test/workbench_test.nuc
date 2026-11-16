@@ -29,7 +29,7 @@ tests WorkbenchTests
   @test("a step names the cards it read")
   read() void
     bench = inject<Workbench>()
-    expect(bench.read("[concepts/concept] The MCP\n\nbody\n\n[tools/command] dragonfly make") == "concept: The MCP; command: dragonfly make")
+    expect(bench.read("[concepts/concept] The MCP\n\nbody\n\n[tools/command] nuclear make") == "concept: The MCP; command: nuclear make")
     expect(bench.read("") == "nothing")
 
   @test("the compiler accepts valid Nuclear and explains invalid Nuclear")
@@ -97,7 +97,7 @@ tests WorkbenchTests
   classify() void
     diagnoser = inject<Diagnoser>()
     expect(diagnoser.classify("the local developer is not running at http://127.0.0.1:7879 (fetch failed)") == "transient")
-    expect(diagnoser.classify("dragonfly: command not found") == "environment")
+    expect(diagnoser.classify("synapsis: command not found") == "environment")
     expect(diagnoser.classify("278 MB free in /tmp (at least 500 MB are needed: free some space)") == "disk")
     expect(diagnoser.classify("a.nuc:3:5 N0106 'book' is not defined") == "code")
     expect(diagnoser.classify("FAILED tests/books_test.py::test_add - assert 0 == 1") == "test")

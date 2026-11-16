@@ -470,7 +470,7 @@ task = "The application component BooksComponent of the web app: all() is AllBoo
 must = ["appcomponent BooksComponent", "all() = AllBooksUseCase.exec", "one() = GetBookUseCase.exec"]
 
 # --- features: several files, planned and written in order, checked together as a project ---
-# `must` texts may be in any file of the feature. The project is a fresh `dragonfly new -p <platform> -d <dialect>`.
+# `must` texts may be in any file of the feature. The project is a fresh `nuclear new -p <platform> -d <dialect>`.
 
 [[feature]]
 id = "feature-books-by-author"
@@ -498,7 +498,7 @@ must = ["Book", "BookError", "@repository(path = \"books\")", "repository BookRe
 
 # ---- the analyst (ADR-developer-0001): `run.py analyze` ----
 # A request as a user writes it, given to `/developer/analyze` in a fresh backend project that has an `orders Order`
-# resource. `strategy`: the one it must get. `generate`: the `dragonfly gen resource` call a request in plain words
+# resource. `strategy`: the one it must get. `generate`: the `nuclear gen resource` call a request in plain words
 # must become (`fields`: the names it must have besides the key, `count` of them when the request names more;
 # `actions`: the ones it must have at least); `[]`-less tables with no `generate` expect no call. `asks`: it must ask
 # for a fact. `pieces`: the files it must give; `tooled`: each already written by a tool. `skips`: stages that do not

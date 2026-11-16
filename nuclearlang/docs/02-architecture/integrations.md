@@ -41,14 +41,14 @@ The extensions talk to the server only through LSP and these requests.
 |---|---|---|
 | `.nuclear/project.json` (the project card) | `project::write_metadata` (`METADATA_FILE`) | the editors (the VS Code status bar) |
 | `.nuclear/map.md` (the project map) | `map::write`, with the card | an agent before it writes |
-| `.nuclear/contract.json` | `contract::write` (`CONTRACT_FILE`), under the project and its output folder | a client project that declares it in `contracts(...)`; the HTTP tool of the editors |
+| `.nuclear/contract.json` | `contract::write` (`CONTRACT_FILE`), under the project and its output folder | a client project that declares it in `contracts(...)`; the Nuclear Connector of the editors |
 | `.nuclear/openapi.json` | `contract::write`, only for a `backend` project | any OpenAPI tool |
 | `contracts/<name>/` | `contract::sync`, at the start of `project::build` | the client project's own build |
 | `<output>/.nuclear/lines.json` (the line map) | the command line tools, from `project::line_map` (`LINE_MAP_FILE`) | the editors' debuggers |
 
 The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).
 The commands that write them (`nuclear build`, `nuclear contracts list|update`) are documented in `../tools/cli/`.
-A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` (the `dragonfly` command).
+A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` (the `nuclear` command).
 
 ## What it reads
 
@@ -56,6 +56,7 @@ A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` 
 |---|---|
 | Dialects | the `dialects/` of each home (`nuclear_dialect::homes`: the install, then the source tree), plus the paths its caller gives |
 | Platform contracts | `platforms/<platform>/platform.toml` next to each `dialects/` (in the tree: `../nuclear-synapsis-framework/platforms/`) |
+| The platforms' generators | `generators/<platform>/generators.toml` next to each `dialects/` (in the tree: `../tools/code_generator/platforms/`; `Loader::generators_file`) |
 | Kind packages | `<project>/kinds`, `<install>/kinds` (`Loader.packages`) |
 | Type definitions | `<language>/defs/` of each dialects folder, the `defs/` next to it, extra roots, the cache → [type-definitions.md](type-definitions.md) |
 | Environment | `NUCLEAR_HOME` (the install), `NUCLEAR_DIALECT_PATH` (extra dialect folders, `:`-separated), `XDG_CACHE_HOME` (the definitions cache) |
@@ -64,6 +65,6 @@ A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` 
 
 - Only the base registers the language, the grammar and the server in an editor; a framework's editor features
   activate on their dialect's `[project] marker`.
-- The `dragonfly` command uses the crates as a library; what it needs from a platform comes from the dialect
+- The `nuclear` command uses the crates as a library; what it needs from a platform comes from the dialect
   (`[toolchain]`); its mobile path still calls Flutter from its own code.
 - The same data files feed the command line tool, the language server and the MCP server.

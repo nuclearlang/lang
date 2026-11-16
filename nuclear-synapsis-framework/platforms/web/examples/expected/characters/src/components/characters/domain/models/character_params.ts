@@ -1,4 +1,4 @@
-import { Json } from 'dragonfly-web';
+import { Json } from 'synapsis-web';
 
 /** What the API takes to create a character. */
 export class CharacterParams {

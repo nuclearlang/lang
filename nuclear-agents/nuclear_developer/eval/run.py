@@ -9,7 +9,7 @@
 
 `[[feature]]` entries are several files: Sonnet writes them all in one answer; the local developer plans them
 (`/developer/plan`), writes each piece with the pieces before it as context, and gets one repair pass with the
-project's errors. Both are checked as a fresh `dragonfly new` project (`nuclear check .`).
+project's errors. Both are checked as a fresh `nuclear new` project (`nuclear check .`).
 
 An answer passes when `nuclear check` reports no errors and it contains every `must` text of its task. The local
 developer is equivalent to Sonnet on a task when both pass. Only `train` answers reach the graph; `test` tasks are
@@ -74,10 +74,10 @@ def files_of(answer: str) -> dict[str, str]:
 async def check_feature(f: dict, files: dict[str, str]) -> str:
     """The files written into a fresh project of the feature's platform; the project's errors (`ok`)."""
     with tempfile.TemporaryDirectory() as tmp:
-        out = subprocess.run(["dragonfly", "new", "app", "-p", f["platform"], "-d", f["dialect"]], cwd=tmp, capture_output=True, text=True)
+        out = subprocess.run(["nuclear", "new", "app", "-p", f["platform"], "-d", f["dialect"]], cwd=tmp, capture_output=True, text=True)
         root = Path(tmp) / "app"
         if not (root / "config.nuc").is_file():
-            return f"dragonfly new failed: {out.stdout}{out.stderr}"
+            return f"nuclear new failed: {out.stdout}{out.stderr}"
         for path, code in files.items():
             target = root / path
             if root.resolve() not in target.resolve().parents:
@@ -167,7 +167,7 @@ async def reference_features() -> None:
             continue
         system = await tools.brief(f["dialect"])
         prompt = (f"{guide}\n\n## Feature\n\nPlatform `{f['platform']}`, dialect `{f['dialect']}`, in a project made by "
-                  f"`dragonfly new`. Write every file. Each file is its own ```nuclear block whose first line is "
+                  f"`nuclear new`. Write every file. Each file is its own ```nuclear block whose first line is "
                   f"`// file: components/<component>/<layer>/<file>.nuc`.\n\n{f['spec']}")
         started = time.time()
         answer, cost = claude(prompt, system)
@@ -228,7 +228,7 @@ async def local_features(only: str = "") -> None:
             attempts = 0
             for piece in plan["pieces"]:
                 context = "\n".join(f"```nuclear\n// file: {p}\n{c}```" for p, c in files.items())
-                # the piece as the Loop sends it: the planner's task already ends with the spec's sentences about it
+                # the piece as the Builder sends it: the planner's task already ends with the spec's sentences about it
                 body = {"task": piece["task"], "platform": f["platform"], "path": piece["path"], "kind": piece["kind"], "context": context}
                 r = (await http.post("/developer/code", json=body)).json()
                 files[piece["path"]] = r["code"]
@@ -309,9 +309,9 @@ async def analyze(only: str = "") -> None:
     cases = [c for c in tomllib.loads((HERE / "tasks.toml").read_text()).get("analysis", []) if not only or only in c["id"]]
     results: dict[str, dict] = {}
     with tempfile.TemporaryDirectory() as tmp:
-        subprocess.run(["dragonfly", "new", "shop_api", "-p", "backend", "-d", "fastapi"], cwd=tmp, capture_output=True, check=True)
+        subprocess.run(["nuclear", "new", "shop_api", "-p", "backend", "-d", "fastapi"], cwd=tmp, capture_output=True, check=True)
         root = str(Path(tmp) / "shop_api")
-        subprocess.run(["dragonfly", "gen", "resource", "orders", "Order", "--fields", "id:int total:double status:string", "--source", "db"], cwd=root, capture_output=True, check=True)
+        subprocess.run(["nuclear", "gen", "resource", "orders", "Order", "--fields", "id:int total:double status:string", "--source", "db"], cwd=root, capture_output=True, check=True)
         async with httpx.AsyncClient(base_url=DEVELOPER, timeout=900) as http:
             for case in cases:
                 start = time.time()
@@ -319,7 +319,7 @@ async def analyze(only: str = "") -> None:
                 got = r.json() if r.status_code == 200 else {"strategy": f"({r.status_code})"}
                 wrong = analysis_problems(case, got)
                 results[case["id"]] = {"pass": not wrong, "wrong": wrong, "strategy": got.get("strategy"), "generate": got.get("generate", []), "seconds": round(time.time() - start, 1)}
-                print(f"{'PASS' if not wrong else 'fail'} {time.time() - start:5.1f}s  {case['id']}" + (f"\n      {'; '.join(wrong)}" if wrong else "") + "".join(f"\n      dragonfly gen {' '.join(c)}" for c in got.get("generate", [])))
+                print(f"{'PASS' if not wrong else 'fail'} {time.time() - start:5.1f}s  {case['id']}" + (f"\n      {'; '.join(wrong)}" if wrong else "") + "".join(f"\n      nuclear gen {' '.join(c)}" for c in got.get("generate", [])))
     save("analysis", results)
     asked = [c for c in cases if "generate" in c]
     print(f"{sum(r['pass'] for r in results.values())} of {len(results)} analyses as expected ({sum(results[c['id']]['pass'] for c in asked)} of {len(asked)} of the ones that ask a model)")

@@ -23,19 +23,19 @@ question needs ([the checked connections](../../../../vscode/docs/02-architectur
 
 ## An order
 
-`/task <text>` builds a local-led `Spec` (`criteriaOf`) and runs a `LoopEngine` in place: the local agents plan it,
+`/task <text>` builds a local-led `Spec` (`criteriaOf`) and runs a `BuilderEngine` in place: the local agents plan it,
 write the tests first, then the code, run the tests and the security review. Each step is drawn as it ends, and the
 answer is the run's `notes` and its journal (*Open the journal of the run*)
-([the Loop's engine](../../../nuclear-builder/docs/02-architecture/engine.md)).
+([Nuclear Builder's engine](../../../nuclear-builder/docs/02-architecture/engine.md)).
 
 ## Jobs and sessions
 
-- A job is `ask` or `drive`. Jobs are module-level (`jobs` in `chatPanel.ts`): a job goes on with the page closed,
+- A job is `ask` or `drive`. Jobs are module-level (`jobs` in `panel.ts`): a job goes on with the page closed,
   and `append` saves its answer in the session; a notice tells the user when it ends.
 - A session is `.nuclear/chat/<id>.json` (`CHAT_DIR`; `listSessions`, `saveSession`), listed on the left of the
   page.
 
-## What the page draws (`chatPanel.ts`)
+## What the page draws (`panel.ts`)
 
 - The answers, with their markdown rendered by the page itself: code blocks, inline code, bold, lists.
 - Under each answer, folded in grey, what the agent did: its `steps`, its `seconds` and its `tokens` (the

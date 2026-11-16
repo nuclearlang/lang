@@ -12,7 +12,7 @@ related: [overview.md, flutter.md, ../06-runbooks/type-definitions.md, ../03-adr
 |---|---|---|
 | The compiler | loading, validating and emitting | [the language project](../../../../AGENTS.md) |
 | The mobile platform's contract | the kinds, decorators and layout `flutter` implements | `nuclear-synapsis-framework/platforms/mobile/platform.toml` |
-| The Dart packages `dragonfly` and `dragonfly_genkit` | what the generated `flutter` code imports (`package:dragonfly/dragonfly.dart`, `testing.dart`, `package:dragonfly_genkit/...`) | `nuclear-synapsis-framework/platforms/mobile/packages/` |
+| The Dart packages `synapsis` and `synapsis_genkit` | what the generated `flutter` code imports (`package:synapsis/synapsis.dart`, `testing.dart`, `package:synapsis_genkit/...`) | `nuclear-synapsis-framework/platforms/mobile/packages/` |
 | The type definitions generator | `defs/` | `../../tools/defs/` (`bin/defs.dart`, `generate.sh`, `flutter_project/`) |
 | The host Flutter project | resolves `package:flutter/...` and the pub packages for the generator; holds the code `analyze-flutter.sh` checks | `../../tools/defs/flutter_project/` |
 
@@ -26,11 +26,11 @@ related: [overview.md, flutter.md, ../06-runbooks/type-definitions.md, ../03-adr
 
 ## Libraries the `flutter` output is written against (ADR-dart-0001)
 
-Official ecosystem libraries, one per need. What Flutter lacks is in the platform's package `dragonfly`.
+Official ecosystem libraries, one per need. What Flutter lacks is in the platform's package `synapsis`.
 
 | Need | Library | Names imported automatically |
 |---|---|---|
-| Dragonfly runtime | `dragonfly` | `Http`, `WebSocket`, `Repository`, `Events`, `SessionManager`, `NetworkManager`, `Acl`, `Log`, `FormManager`, `DragonflyForm`, `DragonflyDialog`, `Popups`, `Translations`, `inject`... |
+| Synapsis runtime | `synapsis` | `Http`, `WebSocket`, `Repository`, `Events`, `SessionManager`, `NetworkManager`, `Acl`, `Log`, `FormManager`, `SynapsisForm`, `SynapsisDialog`, `Popups`, `Translations`, `inject`... |
 | State | `bloc` + `flutter_bloc` | `Cubit`, `Bloc`, `Emitter`, `BlocProvider`, `BlocBuilder`, `BlocListener`, `BlocConsumer`, `BlocSelector`, `MultiBlocProvider`... |
 | Dependency injection | `get_it` | `GetIt` |
 | Network | `dio` | `Dio`, `BaseOptions`, `Options`, `Response`, `Interceptor`, `DioException`, `CancelToken`, `FormData`... |
@@ -52,8 +52,8 @@ SDK's and the packages' classes. Look one up with `nuclear defs show BlocBuilder
 | Dialect | `defs` |
 |---|---|
 | `dart` | `dart@3.13.5`: `dart:core` (implicit: never imported), `dart:async`, `dart:math`, `dart:convert`, `dart:collection`, `dart:io`, `dart:typed_data`, `dart:isolate`, `dart:developer` |
-| `flutter` (added to the parent's) | `flutter@3.47.7` (`package:flutter/{widgets,material,cupertino,services,foundation,painting,rendering,gestures,animation,scheduler,semantics,physics}.dart`), `dragonfly@0.1.0`, `flutter_bloc@9.1.1` (which brings `bloc@9.2.1`), `get_it@9.3.0`, `dio@5.11.1`, `go_router@18.1.1`, `connectivity_plus@7.3.2`, `flutter_secure_storage@11.2.0`, `json_annotation@4.12.0` |
-| `flutter` with the plugin `genkit` | `genkit@1.0.1`, `schemantic@1.0.0`, `dragonfly_genkit@0.1.0` |
+| `flutter` (added to the parent's) | `flutter@3.47.7` (`package:flutter/{widgets,material,cupertino,services,foundation,painting,rendering,gestures,animation,scheduler,semantics,physics}.dart`), `synapsis@0.1.0`, `flutter_bloc@9.1.1` (which brings `bloc@9.2.1`), `get_it@9.3.0`, `dio@5.11.1`, `go_router@18.1.1`, `connectivity_plus@7.3.2`, `flutter_secure_storage@11.2.0`, `json_annotation@4.12.0` |
+| `flutter` with the plugin `genkit` | `genkit@1.0.1`, `schemantic@1.0.0`, `synapsis_genkit@0.1.0` |
 
 Which package gives a name: the parent's first, then the order of `defs`, each package before its dependencies,
 and inside a package the most basic library (in `flutter`, `widgets` before `material`). A name two packages

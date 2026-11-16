@@ -13,7 +13,7 @@ analyzer. Never edit it: regenerate it. The generator's own notes:
 
 ## Regenerate everything
 
-When the Flutter SDK or a package version moves, or the public API of the Dart package `dragonfly` changes.
+When the Flutter SDK or a package version moves, or the public API of the Dart package `synapsis` changes.
 
 1. `FLUTTER_ROOT=<Flutter SDK> nuclearlang/tools/defs/generate.sh` (about 45 s). Without `FLUTTER_ROOT` the script
    looks in `~/development/flutter`. It writes, with the installed versions:
@@ -24,10 +24,10 @@ When the Flutter SDK or a package version moves, or the public API of the Dart p
      basic library);
    - `dio`, `get_it`, `json_annotation`, `bloc`, `flutter_bloc`, `go_router`, `connectivity_plus`,
      `flutter_secure_storage`: the main library of each, with the version of `flutter_project/pubspec.lock`;
-   - `dragonfly`: `package:dragonfly/dragonfly.dart` and `testing.dart` (the runtime, a path dependency), after
+   - `synapsis`: `package:synapsis/synapsis.dart` and `testing.dart` (the runtime, a path dependency), after
      every package it uses;
-   - the `genkit` plugin: `schemantic`, `genkit` (`genkit.dart`, `client.dart`) and `dragonfly_genkit`
-     (`dragonfly_genkit.dart`, `testing.dart`).
+   - the `genkit` plugin: `schemantic`, `genkit` (`genkit.dart`, `client.dart`) and `synapsis_genkit`
+     (`synapsis_genkit.dart`, `testing.dart`).
 2. If a version changed, update `defs` in `dialect.toml` (`dart@...`) or in `frameworks/flutter/dialect.toml`
    (also the `defs` of `[project.plugins.genkit]`).
 3. `cargo test` from the root of the tree: it validates the dialects, and the goldens show whether an import
@@ -37,8 +37,8 @@ When the Flutter SDK or a package version moves, or the public API of the Dart p
 
 ## Only the runtime, without moving the SDK's definitions
 
-The definitions are of `flutter@3.47.7` while a newer SDK may be installed. To regenerate only `dragonfly` and keep
-the others, run `bin/defs.dart` with the `pub dragonfly` line of `generate.sh` and `FV=3.47.7`.
+The definitions are of `flutter@3.47.7` while a newer SDK may be installed. To regenerate only `synapsis` and keep
+the others, run `bin/defs.dart` with the `pub synapsis` line of `generate.sh` and `FV=3.47.7`.
 
 ## A new pub.dev package
 

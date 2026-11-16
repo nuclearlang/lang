@@ -16,7 +16,7 @@ A **shelf** is a Chroma collection that answers one kind of question. A **row** 
 | `concepts` | What is it, why does it exist, how does it work? | the purpose, the advantages, the ideas, the parts of the ecosystem, the theory, the questions people ask | purpose, concept, theory, architecture, comparison, faq, term |
 | `language` | How is it written in Nuclear? | the guide and the rules section by section; each base type's members | guide, rule, library, reference |
 | `platforms` | What does a platform have, and where does each thing go? | every kind, decorator and plugin of `backend`, `mobile` and `web`; their layout and rules | platform, kind, decorator, layout, plugin, spec |
-| `tools` | What can run, and how is it called? | each command of the four CLIs, each MCP tool, each HTTP route, the generators, the Loop's stages, the local agents, the editor's commands, each component's version | cli, mcp, http, generator, stage, agent, editor, service, component |
+| `tools` | What can run, and how is it called? | each command of the command line tools (`nuclear`, `nuclear-builder`, `nuclear-graph`), each MCP tool, each HTTP route, the generators, the Builder's stages, the local agents, the editor's commands, each component's version | cli, mcp, http, generator, stage, agent, editor, service, component |
 | `errors` | What went wrong, and how is it fixed? | each diagnostic of the compiler (linked to the ones it comes with), the habits of other languages, the failures of the tools and services, the mistakes small models repeat | diagnostic, habit, failure, pitfall |
 | `capabilities` | Can it be done, by NuclearLang or by this agent? | what can be done, what cannot yet, the limits, the limits of the local agents | can, cannot, limit, agent-limit |
 | `playbooks` | How is this task done, step by step, and by whom? | the strategy of each kind of request (how it is recognised, its plan, what it asks of a run); the procedure of each use case with the tool of each step; the roles and their skills | strategy, playbook, role, skill |
@@ -33,7 +33,7 @@ and `prompts/agents/<step>.md`) and `memory` (what an agent keeps about a projec
 
 | Field | What it holds |
 |---|---|
-| `id` | `<prefix>:<name>`: `error:N0114`, `kind:backend.usecase`, `tool:dragonfly.gen.resource`, `concept:mcp`. A prefix belongs to one shelf, so an id is fetched without a search |
+| `id` | `<prefix>:<name>`: `error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.resource`, `concept:mcp`. A prefix belongs to one shelf, so an id is fetched without a search |
 | `type` | one of the shelf's row types |
 | `title`, `summary` | the name of the card; the answer in a sentence or two |
 | `body` | the whole card (in an asset, a list of lines) |

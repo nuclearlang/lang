@@ -1,6 +1,6 @@
-import 'package:dragonfly/dragonfly.dart';
 import 'package:flutter/foundation.dart' hide Page;
 import 'package:json_annotation/json_annotation.dart';
+import 'package:synapsis/synapsis.dart';
 
 part 'character.g.dart';
 

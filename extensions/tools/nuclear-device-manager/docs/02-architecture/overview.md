@@ -10,19 +10,19 @@ Two kinds of device, both a headless Chromium the editor drives over CDP (`cdp.t
 
 | Device | For | Files | Document |
 |---|---|---|---|
-| Dragonfly device | a mobile project | `device.ts` | [mobile-device.md](mobile-device.md) |
-| Web device | a web project, one panel per project | `webDevice.ts`, `webSession.ts` | [web-device.md](web-device.md) |
+| Synapsis device | a mobile project | `mobile-device.ts` | [mobile-device.md](mobile-device.md) |
+| Web device | a web project, one panel per project | `web-device.ts`, `web-session.ts` | [web-device.md](web-device.md) |
 
-The rest of this file is about the Dragonfly devices: there can be several at once.
+The rest of this file is about the Synapsis devices: there can be several at once.
 
 ## Panels and running apps
 
 - `panels` is a `Set<DevicePanel>`; each has its own `running`, `lastView` and `id`.
 - `Running` (an app) lives on its own: `panel` is optional, with `title`, `lastUsed`, `ended`. `alive()` = the
   panels' apps + `parked`.
-- `DevicePanel.show(context, preset?)` always opens one more panel (title `Dragonfly device N`; a `preset` message
+- `DevicePanel.show(context, preset?)` always opens one more panel (title `Synapsis device N`; a `preset` message
   selects the device). `freeNumber()` gives the lowest free number, so a closed device frees its name.
-- The launch configuration carries `dragonflyPanel`, the panel to run on, and its `name` is the device's title (the
+- The launch configuration carries `synapsisPanel`, the panel to run on, and its `name` is the device's title (the
   debug toolbar and the Debug Console pick by device). `nuclear.runOnDevice(panelId?, root?, noDebug)`: without a
   panel it takes `DevicePanel.idle()`, a free panel, or a new one. A running device is never replaced.
 - `watchSessions` finds the panel of a session by `running.key`.
@@ -46,7 +46,7 @@ the keys no app owns.
 
 Nothing stays alive when VS Code closes.
 
-- `marker(key)` = `__dragonfly_device_<extension host pid>_<key>__`, written in `--web-launch-url`, so every
+- `marker(key)` = `__synapsis_device_<extension host pid>_<key>__`, written in `--web-launch-url`, so every
   process of a device carries it.
 - `reap(mark, wait?)` is a detached `sh`: it waits for `wait` to die, then `pkill -TERM -f`, 3 s, `-KILL`. On
   activation one is left waiting for the extension host itself, so a closed or crashed VS Code ends every app the

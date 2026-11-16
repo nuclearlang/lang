@@ -1,12 +1,12 @@
 # Nuclear Developer
 
-Local AI agents for [NuclearLang](../../README.md) and Dragonfly, on models of at most 3B parameters, as the junior
+Local AI agents for [NuclearLang](../../README.md) and Synapsis, on models of at most 3B parameters, as the junior
 developer of a frontier model: **coder**, **tester**, **security reviewer**, **planner**, **analyst**,
 **documenter**, **diagnoser**, **acceptor** and **assistant**. What a small model cannot hold in its head comes
 from the [Nuclear Smart Graph](../../nuclear-graph-storage/README.md) (the ecosystem's private knowledge base);
 what it writes is checked by the Nuclear compiler before it answers.
 
-It is itself a Dragonfly backend written in Nuclear (platform `backend`, dialect `fastapi`): FastAPI + LangGraph,
+It is itself a Synapsis backend written in Nuclear (platform `backend`, dialect `fastapi`): FastAPI + LangGraph,
 generated from the `.nuc` files of this folder.
 
 ## How an agent works
@@ -30,8 +30,8 @@ The set-up of the AI services installs it, with the Smart Graph and the models t
 at every login ([Set up the AI services](../../installer/docs/08-guides/ai-setup.md)):
 
 ```sh
-nuclear-loop setup            # or the installer's last step, or VS Code: Nuclear: Set Up the AI Services
-nuclear-loop setup --status   # what is installed and running
+nuclear-builder setup            # or the installer's last step, or VS Code: Nuclear: Set Up the AI Services
+nuclear-builder setup --status   # what is installed and running
 ```
 
 By hand, the models and the settings: [run it](docs/06-runbooks/run.md),
@@ -39,13 +39,13 @@ By hand, the models and the settings: [run it](docs/06-runbooks/run.md),
 
 ## Where it works
 
-- **The Loop** (VS Code `Ctrl+Alt+P`, Android Studio *Nuclear Loop*, `nuclear-loop run`): a spec goes through plan,
+- **The Builder** (VS Code `Ctrl+Alt+P`, Android Studio *Nuclear Builder*, `nuclear-builder run`): a spec goes through plan,
   tests first, code, verification, security and artifacts, each step by a local agent.
 - **The chat** (VS Code `Ctrl+Alt+A`, *Nuclear agent*): a question about the project, or `/task <order>`.
-- **A frontier model over MCP** (Claude Code, Codex, Cursor: `nuclear-graph mcp`): the local developer does the
+- **A frontier model over MCP** (Claude Code, Codex, Cursor: `nuclear-mcp`): the local developer does the
   whole task first, the frontier model validates and corrects.
 
-Every run is documented in `.nuclear/loop/runs/<id>.md`. The details:
+Every run is documented in `.nuclear/builder/runs/<id>.md`. The details:
 [integrations](docs/02-architecture/integrations.md#where-it-works).
 
 ## How good is it

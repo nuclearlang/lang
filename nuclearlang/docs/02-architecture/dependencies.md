@@ -25,7 +25,7 @@ All are members of the tree's one workspace (`../Cargo.toml`: version `0.1.0`, e
 | User | Uses | How |
 |---|---|---|
 | `../tools/cli/` (the `nuclear` command) | the four compiler crates | Rust library; it embeds `docs/07-reference/` and `docs/08-guides/` with `include_str!` |
-| `../nuclear-synapsis-framework/cli/` (the `dragonfly` command) | `nuclear-transpile` (`project`, `map`), `nuclear-dialect::Loader` | Rust library |
+| `../tools/code_generator/` (the crate `nuclear-codegen`: what `nuclear make` and `nuclear gen` write) | `nuclear-dialect`, `nuclear-syntax`, `nuclear-transpile` | Rust library |
 | `../extensions/{vscode,jetbrains,zed}/` | the `nuclear-lsp` binary, `dialects/` | VS Code and JetBrains bundle the binary with every dialect, Zed runs the installed one; they talk to it only through LSP |
 | The platforms' checks (`../nuclear-synapsis-framework/platforms/<platform>/checks/`) | `tools/defs/flutter_project/`, `tools/node/`, `tools/python/.venv` | the host project and the installed target libraries |
 
@@ -53,7 +53,7 @@ The paths of the development machine (the Flutter SDK, the install, the cache) a
 
 - `tools/defs/generate.sh` defaults to a Flutter SDK in `~/development/flutter`: pass `FLUTTER_ROOT=<the SDK>`. To
   regenerate only one package without moving the others to the installed Flutter, run `bin/defs.dart` with the
-  version wanted (`FV=3.47.7`, the `pub dragonfly` line of `generate.sh`).
+  version wanted (`FV=3.47.7`, the `pub synapsis` line of `generate.sh`).
 - `tools/stdlib-check.sh` takes `tsc` from the PATH or from `tools/node/node_modules/typescript/bin/tsc`
   (`TSC=<path>` for another), Python and pyright from `tools/python/.venv` (`PY=<python>`, `PYRIGHT=<pyright>`),
   `dart` from the PATH or `$FLUTTER_ROOT/bin/dart` (`DART=<path>`).

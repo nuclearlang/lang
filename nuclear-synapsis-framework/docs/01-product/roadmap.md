@@ -7,18 +7,18 @@ related: [prd.md, ../03-adr/README.md, ../04-specs/README.md]
 # Roadmap
 
 The pending work of the framework as a whole. What one platform lacks is in that platform's roadmap
-(`platforms/<platform>/docs/01-product/roadmap.md`); what the `dragonfly` command lacks is in `tools/cli/`. A done
+(`platforms/<platform>/docs/01-product/roadmap.md`); what the `nuclear` command lacks is in `tools/cli/`. A done
 item is deleted. Paths start at the root of the tree.
 
 ## Half done
 
-- **Kind packages (ADR-synapsis-0004).** Left: `nuclear dialect test` over a kind package and `dragonfly add <git
+- **Kind packages (ADR-synapsis-0004).** Left: `nuclear dialect test` over a kind package and `nuclear add <git
   url>` with a pinned version (`nuclearlang/docs/04-specs/002-dialects-with-agents/plan.md`, D1 and D6); a
   platform-level list of library extensions in `platform.toml` (today a dialect may add `[library.<base>]` members
   freely).
 - **Shared contracts (ADR-synapsis-0006; `nuclear-synapsis-framework/docs/04-specs/003-shared-contracts/plan.md`).**
-  Left: a drift warning by version (F5 of the plan), and the aliases of `nuclear contracts` in the `dragonfly`
-  command (the `cli/` crate).
+  Left: a drift warning by version (F5 of the plan), and the aliases of `nuclear contracts` among the framework's
+  commands (`tools/cli/src/framework/`).
 
 ## Untested
 
@@ -51,7 +51,7 @@ item is deleted. Paths start at the root of the tree.
   - a stale url copy is not a warning yet (F5 of the plan);
   - a url contract needs `curl`;
   - a web client gets no rules or key until the web platform has forms and the local database;
-  - the HTTP view of the editors resolves `{{baseUrl}}` per project or connection only from the environment file
+  - the Nuclear Connector of the editors resolves `{{baseUrl}}` per project or connection only from the environment file
     (the app's `Http(baseUrl)` is not in the contract yet).
 - **A real reference app shipped** (step 2 of the competitiveness plan the user chose): one complete app on
   Android, iOS and web with a fastapi backend deployed, built from the tutorial on a clean machine. It burns down

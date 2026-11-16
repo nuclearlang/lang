@@ -2,7 +2,7 @@ import { Project } from '../data/entities/project.js';
 import { Moved, NewProject } from '../domain/models/task_models.js';
 import { TasksAppComponent } from '../tasks_appcomponent.js';
 import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { AppError, Result } from 'dragonfly-nest';
+import { AppError, Result } from 'synapsis-nest';
 
 /** Projects: POST /projects, GET /projects/:id (with its tasks and their tags), POST /projects/:id/close/:into. */
 @Controller('projects')

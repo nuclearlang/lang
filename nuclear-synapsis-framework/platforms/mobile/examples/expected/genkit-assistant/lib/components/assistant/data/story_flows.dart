@@ -1,4 +1,4 @@
-import 'package:dragonfly_genkit/dragonfly_genkit.dart';
+import 'package:synapsis_genkit/synapsis_genkit.dart';
 
 /// Flows of a Genkit server (deployed elsewhere), called like an API.
 class StoryFlows extends RemoteFlows {

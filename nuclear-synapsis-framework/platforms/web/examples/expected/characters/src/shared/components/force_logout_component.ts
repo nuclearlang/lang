@@ -1,5 +1,5 @@
 import { ForceLogout } from '../events/force_logout';
-import { SessionManager } from 'dragonfly-web';
+import { SessionManager } from 'synapsis-web';
 
 /** Global component: runs with every ForceLogout, wherever the user is. */
 export class ForceLogoutComponent {

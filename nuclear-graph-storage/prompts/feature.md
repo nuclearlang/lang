@@ -1,13 +1,13 @@
 # Use case: a new feature
 
-You are the lead engineer of a NuclearLang / Dragonfly project. Build the feature of the spec below.
+You are the lead engineer of a NuclearLang / Synapsis project. Build the feature of the spec below.
 
 1. Read the spec, its acceptance criteria and the project card (`.nuclear/project.json`: platform, dialect, kinds).
 2. **The local developer works first:** `developer_task` with the project folder, the title, the description and
    one acceptance criterion per item. The local agents plan, write the tests first, write the code, run the tests and
-   the security review, and return the run's journal (`.nuclear/loop/runs/<id>.md`): what each agent did, the files
+   the security review, and return the run's journal (`.nuclear/builder/runs/<id>.md`): what each agent did, the files
    it wrote and what is left.
-3. Read the journal, then validate: `nuclear_check` of the project must say `ok` and `dragonfly` `test` must pass.
+3. Read the journal, then validate: `nuclear_check` of the project must say `ok` and `synapsis` `test` must pass.
 4. Correct only what failed or is wrong; never rewrite what passed. Before writing `.nuc`, read the platform sheet
    (`nuclear_brief`) and search the graph (`graph_search`); never guess a word: `nuclear_help <word>`.
 5. Record the review: `developer_review` with the run, what you corrected and why, and the corrected files (they go to

@@ -30,7 +30,7 @@ testTheCompilerChecksAPieceAndGivesThePlatformsLayout() void
 
 agentProject(tmp: Path) Workspace
   files = {
-    "config.nuc": "dragonfly(platform = \"backend\", dialect = \"fastapi\")\n",
+    "config.nuc": "synapsis(platform = \"backend\", dialect = \"fastapi\")\n",
     "components/books/domain/models/book.nuc": "// A book of the shelf.\nBook\n  id: int\n  title: string\n",
     "components/books/data/book_repository.nuc": "repository BookRepository\n  byTitle(title: string) Result<Error, Book>\n    where({ \"title\": title })\n    getOne()\n",
     "components/books/domain/usecases/find_book.nuc": "usecase FindBook(books: BookRepository)\n  exec(title: string) Result<Error, Book>\n    ~books.byTitle(title)\n",
@@ -62,25 +62,5 @@ testTheContextOfATaskIsTheFilesThatDeclareItsNamesAndARenameIsDoneByATool(tmpPat
   expect(renamed["components/books/domain/usecases/find_book.nuc"] == "usecase FindTitle(books: TitleRepository)\n  exec(title: string) Result<Error, Title>\n    ~books.byTitle(title)\n")
   expect(renamed.length == 3)
 
-testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents(monkeypatch: any) void
-  monkeypatch.setenv("NUCLEAR_AI_MODE", "local")
-  names: string[] = []
-  for tool in asyncio.run(mcpServer().listTools())
-    names.add(tool.name)
-  expect("graph_answer" in names and "generate_resource" in names and "developer_task" in names)
-  // every tool is in the guide of the MCP server
-  page: string = Path(treeRoot()).joinpath("tools/mcp/docs/08-guides/mcp.md").readText()
-  for name in names
-    expect("`${name}" in page)
-  monkeypatch.setenv("NUCLEAR_AI_MODE", "remote")
-  remote: string[] = []
-  for tool in asyncio.run(mcpServer().listTools())
-    remote.add(tool.name)
-  expect(remote.length > 10 and not remote.any((name) => name.startsWith("graph_") or name.startsWith("developer_")))
-
-testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape() void
-  spec = specMarkdown("Loans", " A reader borrows a book. ", ["a book out is not lent"], "feature")
-  expect(spec == "# Loans\n\n- Use case: feature\n- Source: local\n- Lead: local agents only\n\n## Description\n\nA reader borrows a book.\n\n## Acceptance criteria\n\n- [ ] a book out is not lent\n")
-  value = { "info": { "count": 3, "next": null }, "results": [{ "id": 1, "name": "x", "tags": [] }] }
-  expect(shape(value) == "info: object\n  count: int\n  next: null (optional)\nresults: list of\n  id: int\n  name: string\n  tags: empty list")
-  expect(ExtractTools.runs("\n  generateResource(project: string) string\n    args = [\"gen\", \"resource\", component]\n    ~tools.dragonfly(project, args)\n", "generate_resource") == "dragonfly gen resource")
+testTheCommandAToolRunsIsReadFromTheServersSource() void
+  expect(ExtractTools.runs("\n  generateResource(project: string) string\n    args = [\"gen\", \"resource\", component]\n    ~tools.synapsis(project, args)\n", "generate_resource") == "nuclear gen resource")

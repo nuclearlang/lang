@@ -18,9 +18,9 @@ package, its commands) is in that platform's roadmap.
 
 ## Pending
 
-- **`fastapi` has no `[toolchain] analyze`.** `dragonfly analyze` in a fastapi project answers "the fastapi dialect
+- **`fastapi` has no `[toolchain] analyze`.** `nuclear analyze` in a fastapi project answers "the fastapi dialect
   has no toolchain.analyze" (found in `nuclear-agents/nuclear_developer/`). The `AGENTS.md` that
-  `dragonfly agent init` writes tells every agent to run it after `dragonfly check`.
+  `nuclear agent init` writes tells every agent to run it after `nuclear check`.
 - **A map field of a graph's state gets no default.** `frameworks/fastapi/templates/state_field.tpl` gives one to
   lists, texts, numbers and booleans; the emitter's `tinfo` has no `map` flag. `strategy: <string, string>` in the
   Developer's `PieceState` (`nuclear-agents/nuclear_developer/components/developer/ai/states/piece_state.nuc`) is

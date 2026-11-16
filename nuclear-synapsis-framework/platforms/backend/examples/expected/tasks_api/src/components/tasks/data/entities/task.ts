@@ -1,7 +1,7 @@
 import { Project } from './project.js';
 import { Tag } from './tag.js';
-import { Entity, Related, joinTable } from 'dragonfly-nest';
 import { AutoIncrement, BelongsTo, BelongsToMany, Column, CreatedAt, DataType, PrimaryKey, Table } from 'sequelize-typescript';
+import { Entity, Related, joinTable } from 'synapsis-nest';
 
 /** A task (table tasks), maybe in a project and with tags. */
 @Table({

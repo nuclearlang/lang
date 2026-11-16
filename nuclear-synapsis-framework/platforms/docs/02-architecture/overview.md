@@ -16,9 +16,9 @@ the Nuclear code of a project never changes when its dialect changes (ADR-synaps
 
 | Platform | What it is | Default dialect | Dialects (in `nuclearlang/dialects/`) | Runtime packages (`<platform>/packages/`) |
 |---|---|---|---|---|
-| [`mobile`](../../mobile/AGENTS.md) | apps for Android, iOS, desktop and web through one UI toolkit | `flutter` | `dart/frameworks/flutter` | `dragonfly`, `dragonfly_genkit` (Dart) |
-| [`backend`](../../backend/AGENTS.md) | HTTP APIs, data, events and AI agents | `fastapi` | `python/frameworks/fastapi`, `typescript/frameworks/nestjs` | `dragonfly-py` (Python), `dragonfly-nest` (TypeScript) |
-| [`web`](../../web/AGENTS.md) | web apps in the browser through one UI library | `react` | `typescript/frameworks/react` | `dragonfly-web` (TypeScript) |
+| [`mobile`](../../mobile/AGENTS.md) | apps for Android, iOS, desktop and web through one UI toolkit | `flutter` | `dart/frameworks/flutter` | `synapsis`, `synapsis_genkit` (Dart) |
+| [`backend`](../../backend/AGENTS.md) | HTTP APIs, data, events and AI agents | `fastapi` | `python/frameworks/fastapi`, `typescript/frameworks/nestjs` | `synapsis-py` (Python), `synapsis-nest` (TypeScript) |
+| [`web`](../../web/AGENTS.md) | web apps in the browser through one UI library | `react` | `typescript/frameworks/react` | `synapsis-web` (TypeScript) |
 
 Kinds and features may differ between platforms (`stateless` is mobile and web, `controller` is backend), never
 between the dialects of one platform. The same word may mean different things in two platforms: `repository` is
@@ -39,9 +39,10 @@ make sense in a browser, with the same words, so an app's domain reads the same 
 └── AGENTS.md, CLAUDE.md, README.md, CHANGELOG.md
 ```
 
-What is **not** here: the dialects that implement the platform and the type definitions of its runtime packages.
-They live with their language: `nuclearlang/dialects/<language>/frameworks/<dialect>/` and
-`nuclearlang/dialects/<language>/defs/<package>/<version>/`.
+What is **not** here: the dialects that implement the platform and the type definitions of its runtime packages,
+which live with their language (`nuclearlang/dialects/<language>/frameworks/<dialect>/`,
+`nuclearlang/dialects/<language>/defs/<package>/<version>/`), and what `nuclear make` and `nuclear gen` write, which
+is the code generator's (`tools/code_generator/platforms/<platform>/generators.toml`).
 
 - **Runtime packages.** One per target language of the platform's dialects, plus those of its plugins. A generated
   project gets them by itself; a project never lists them in `config.nuc`. A change to the public API of a runtime
@@ -63,3 +64,5 @@ build or a test leaves inside a package (`build`, `node_modules`, `__pycache__`.
 
 The loader finds the contracts in its platform folders (`Loader.platform_paths`): the `platforms/` of the install
 and, while the source tree is on disk, `nuclear-synapsis-framework/platforms/` (`nuclear_dialect::Home`).
+The generators of each platform are not in a platform folder: the install has them in `$NUCLEAR_HOME/generators/`,
+copied from `tools/code_generator/platforms/` (`Home.generators`, `Loader::generators_file`).

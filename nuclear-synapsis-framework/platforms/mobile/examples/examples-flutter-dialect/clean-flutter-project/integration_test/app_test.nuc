@@ -1,8 +1,8 @@
-// Integration test: the real app on a device or emulator (dragonfly test --integration).
+// Integration test: the real app on a device or emulator (nuclear test --integration).
 AppTest
   @widget("the app starts on the splash, then the list of characters; favorites asks for a session")
   starts(tester: WidgetTester)
-    ~startDragonfly()
+    ~startSynapsis()
     ~tester.pumpWidget(App())
     ~tester.pumpAndSettle()
     expect(find.byType(StartScreen), findsOneWidget)

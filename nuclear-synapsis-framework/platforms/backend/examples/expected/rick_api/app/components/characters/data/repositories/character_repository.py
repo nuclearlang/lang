@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.components.characters.data.entities.character import Character
-from dragonfly import AppError, Repository, Result
+from synapsis import AppError, Repository, Result
 from typing import Awaitable
 
 

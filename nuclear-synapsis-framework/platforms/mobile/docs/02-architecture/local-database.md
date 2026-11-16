@@ -2,13 +2,13 @@
 status: accepted
 owner: Julian Molina
 updated: 2026-11-16
-related: [03-adr/0006-local-database.md, 07-reference/mobile.md, 07-reference/dragonfly.md, 01-product/roadmap.md]
+related: [03-adr/0006-local-database.md, 07-reference/mobile.md, 07-reference/synapsis.md, 01-product/roadmap.md]
 ---
 # The local database
 
 The backend's ORM on the device: the same words as a backend entity and its query builder, 100 % local. The rule
 is [mobile.md §3, rule 6](../07-reference/mobile.md); the decision and what was rejected,
-[ADR-mobile-0006](../03-adr/0006-local-database.md); the classes, [dragonfly.md §3.2](../07-reference/dragonfly.md).
+[ADR-mobile-0006](../03-adr/0006-local-database.md); the classes, [synapsis.md §3.2](../07-reference/synapsis.md).
 
 ## What a project writes
 
@@ -34,7 +34,7 @@ is [mobile.md §3, rule 6](../07-reference/mobile.md); the decision and what was
 
 ## In the runtime
 
-`packages/dragonfly/lib/src/local/local.dart`.
+`packages/synapsis/lib/src/local/local.dart`.
 
 - `Local`: the registry and the storage. One box per table, the same engine on every platform (a file per box on
   Android, iOS, Linux, macOS and Windows; IndexedDB on web). `LocalDatabase(encrypted)` comes from the configs'
@@ -42,12 +42,12 @@ is [mobile.md §3, rule 6](../07-reference/mobile.md); the decision and what was
   encrypted box and kept in the secure storage. `memory` keeps the boxes in memory, unencrypted, for tests.
   `store` / `recall` use a calls box that remembers which rows each call (name, url and query) answered.
 - `LocalTable<T>`: CRUD and the query builder over JSON rows (the model's own JSON mapping, nested objects
-  intact); the box is `dragonfly_<name>`. `putRow` stamps `created` / `updated` (ISO-8601 texts) and gives
+  intact); the box is `synapsis_<name>`. `putRow` stamps `created` / `updated` (ISO-8601 texts) and gives
   `generated` keys.
 - `LocalQuery<T>` and the operators as top-level functions.
 - `NotFound`: a `RepositoryError`, like `HttpError`; `attempt` catches both.
 - `Repository.send(local:)`, `recall`, `target`, `local<T>()`, `saveLocal`.
-- `Dragonfly.reset` closes the database; `DragonflyTest.start` sets `memory`.
+- `Synapsis.reset` closes the database; `SynapsisTest.start` sets `memory`.
 - The dialect writes the table in the model and registers it with its component at startup; nothing generated
   names the engine, so it can change in the package without touching the transpiler or any `.nuc`.
 
