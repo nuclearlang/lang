@@ -281,6 +281,9 @@
    "title": "Changelog — Unreleased",
    "summary": "without the AI plugin.",
    "body": [
+    "- Fixed: an `Http` connection whose `baseUrl` has no final `/` (`https://jsonplaceholder.typicode.com`, as `nuclear gen",
+    "  --source rest:<url>` writes it) sent every request to a wrong host. Found by the onboarding app `todos_app`.",
+    "- `examples/onboarding/todos_app` and the guide `onboarding-mobile.md`: a todos app made only by the tools.",
     "- `nuclear add|remove <package>` is `flutter add|remove` (ADR-lang-0008); adding a package no longer fails in an app",
     "  without the AI plugin.",
     "- First public version.",
@@ -1563,7 +1566,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.4f5af8",
+   "id": "doc:nuclear-synapsis-framework/platforms/mobile/docs/02-architecture/runtime.md#packages-synapsis.81fb21",
    "type": "context",
    "title": "The runtime packages — `packages/synapsis`",
    "summary": "`packages/synapsis`",
@@ -1571,7 +1574,7 @@
     "| Service | `lib/src/` | Behaviour |",
     "|---|---|---|",
     "| Startup, injector | `core.dart` | `Synapsis.start(config)`, `addConfig(config, component:)`, one injector, `Synapsis.reset` stops the services and closes the local database |",
-    "| Http | `http/` | `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |",
+    "| Http | `http/` | `Http` gives dio its `baseUrl` with a final `/` (dio joins it to a relative path as text, so `https://host` + `todos` would be the host `hosttodos`); `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |",
     "| Local database | `local/local.dart` | [local-database.md](local-database.md) |",
     "| State | `state/` | `StateManager<S>` never emits after it is closed |",
     "| Events (ADR-synapsis-0005) | `events/` | below |",

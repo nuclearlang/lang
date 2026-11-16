@@ -4,6 +4,9 @@ All notable changes to synapsis-mobile are written here; versions follow [Semant
 
 ## Unreleased
 
+- Fixed: an `Http` connection whose `baseUrl` has no final `/` (`https://jsonplaceholder.typicode.com`, as `nuclear gen
+  --source rest:<url>` writes it) sent every request to a wrong host. Found by the onboarding app `todos_app`.
+- `examples/onboarding/todos_app` and the guide `onboarding-mobile.md`: a todos app made only by the tools.
 - `nuclear add|remove <package>` is `flutter add|remove` (ADR-lang-0008); adding a package no longer fails in an app
   without the AI plugin.
 - First public version.

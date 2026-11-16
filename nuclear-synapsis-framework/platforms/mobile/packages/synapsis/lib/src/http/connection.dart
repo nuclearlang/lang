@@ -55,7 +55,9 @@ class Http implements Connection {
   Dio _build() {
     final d = Dio(
       BaseOptions(
-        baseUrl: baseUrl,
+        // dio joins the base and a relative path as text: without a final `/`, `https://host` + `todos` would
+        // be the host `hosttodos`
+        baseUrl: baseUrl.isEmpty || baseUrl.endsWith('/') ? baseUrl : '$baseUrl/',
         connectTimeout: connectTimeout,
         receiveTimeout: receiveTimeout,
         sendTimeout: sendTimeout,

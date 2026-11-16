@@ -19,7 +19,7 @@ a `Global`: `register`, `init` at startup, `dispose`. 64 tests in `test/`.
 | Service | `lib/src/` | Behaviour |
 |---|---|---|
 | Startup, injector | `core.dart` | `Synapsis.start(config)`, `addConfig(config, component:)`, one injector, `Synapsis.reset` stops the services and closes the local database |
-| Http | `http/` | `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |
+| Http | `http/` | `Http` gives dio its `baseUrl` with a final `/` (dio joins it to a relative path as text, so `https://host` + `todos` would be the host `hosttodos`); `Repository.send` / `attempt`; an in-memory cache with TTL and a cap (`MemoryCache(maxEntries = 256)`); retries with growing waits; interceptors `HttpLogInterceptor`, `SessionInterceptor`, `EventInterceptor`. `WebSocket` uses `dart:io`: it does not work on web |
 | Local database | `local/local.dart` | [local-database.md](local-database.md) |
 | State | `state/` | `StateManager<S>` never emits after it is closed |
 | Events (ADR-synapsis-0005) | `events/` | below |

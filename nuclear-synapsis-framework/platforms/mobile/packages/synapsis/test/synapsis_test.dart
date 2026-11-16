@@ -77,6 +77,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(SynapsisTest.reset);
 
+  test('a base url without a final slash keeps its host', () {
+    expect(Http(baseUrl: 'https://api.test').dio.options.baseUrl, 'https://api.test/');
+    expect(Http(baseUrl: 'https://api.test/v1').dio.options.baseUrl, 'https://api.test/v1/');
+    expect(Http(baseUrl: 'https://api.test/').dio.options.baseUrl, 'https://api.test/');
+  });
+
   group('repository', () {
     test('path params, query and decoding', () async {
       final a = await setUpHttp((o) => (200, {'id': 7, 'name': 'Rick'}));
