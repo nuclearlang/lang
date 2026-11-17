@@ -30,6 +30,15 @@ compiler (an arrow passed where a `void` callback is expected passes `nuclear ch
 
 ## Pending
 
+- **Example apps for the agent onboarding.** Its prompts (`[[onboarding]] prompts`: a todos API, an orders API, an AI
+  agent endpoint, a notes app, a chat with Genkit...) have no app made from them yet, nor a page that shows what an
+  agent writes for each. Asked by the user (2026-11-16) for later.
+- **A publish can mix the new app with the old content for about ten minutes.** The bundle's name changes with each
+  build, `content/*.json` keep theirs, and GitHub Pages caches them (`max-age=600`): a reader who loads the new app
+  with a cached `home.json` of the shape before sees "Loading…" (`Cannot read properties of undefined (reading
+  'map')`), until a reload without cache. Seen on 2026-11-16. The fix: each publish's content under a path of its
+  own (`content/<version>/…`), which the app's repositories (written by `nuclear gen resource`, a fixed `--path`)
+  cannot name today; it needs a way in the generator or the web platform to give the build's version to a path.
 - **Old links break.** Every page has a new address (`/<project>/<reference|guide>/<name>`, e.g.
   `/nuclearlang/guide/README`); links to the old addresses (`/docs/language/...`, `/spec/...`) lead nowhere.
   TODO(human): redirects from the old addresses, or accept the break?

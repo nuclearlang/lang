@@ -28,7 +28,7 @@ rows: `{shelf, origin, about, rows}`. The files of the folder and an example row
 | the HTTP routes of the graph and of the Nuclear Developer | `server.nuc`, the Developer's controller |
 | the Builder's stages, the editor's commands and settings | `extensions/tools/nuclear-builder/src/engine.ts`, `extensions/vscode/package.json` |
 | the local agents | their own sources in `nuclear-agents/nuclear_developer/` |
-| each component's version | its manifest |
+| each component's version (and its repository: `nuclearlang/lang`, the whole tree) | its manifest (`COMPONENTS` in `extract_tools.nuc`) |
 | the examples | every `.nuc` of the example projects, by kind and platform |
 | the solved tasks | the validated answers of the `train` tasks of the Developer's evaluation, never the held-out ones |
 | the documents | every markdown file of the tree and the website: one row per heading section, on the shelf its section of `data/sections.toml` names |

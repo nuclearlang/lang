@@ -135,20 +135,12 @@
    "id": "doc:extensions/tools/nuclear-atlas/README.md#how-we-made-it",
    "type": "readme",
    "title": "Nuclear Atlas — How we made it",
-   "summary": "3B parameters, which write only Nuclear, with what they know in the Smart Graph.",
+   "summary": "How we made it",
    "body": [
-    "- **Part of the AI loop** ([ADR-platform-0003](../../../docs/03-adr/0003-the-ai-loop.md)): local models of at most",
-    "  3B parameters, which write only Nuclear, with what they know in the Smart Graph.",
-    "- **The work belongs to the extension, not to the page**: closing the page or switching tools leaves a question",
-    "  thinking; the answer is saved in its session and a notification says so.",
-    "- **Sessions live in the project**: `.nuclear/chat/<id>.json`, listed on the left.",
-    "- **What the agent did is shown**: its steps, how long, how many tokens it read, folded under each answer; a",
-    "  context meter warns when the local model's window is nearly full.",
-    "- **Written in TypeScript**, bundled by the VS Code extension; `src/chat.ts` has no `vscode` import, so the tests",
-    "  drive it without the editor.",
-    "",
-    "**State:** the panel was never opened in a running VS Code (only headless renders, node checks and HTTP calls)",
-    "([roadmap](docs/01-product/roadmap.md))."
+    "- Part of the AI loop: local models of at most 3B parameters ([ADR-platform-0003](../../../docs/03-adr/0003-the-ai-loop.md)).",
+    "- The work belongs to the extension: close the page and the answer still lands in its session (`.nuclear/chat/`).",
+    "- Every answer shows the agent's steps, time and tokens; a meter warns when the context is nearly full.",
+    "- TypeScript; `src/chat.ts` has no `vscode` import. Never yet opened in a live VS Code ([roadmap](docs/01-product/roadmap.md))."
    ],
    "sources": [
     "extensions/tools/nuclear-atlas/README.md"
@@ -163,13 +155,32 @@
    "id": "doc:extensions/tools/nuclear-atlas/README.md#nuclear-atlas",
    "type": "readme",
    "title": "Nuclear Atlas",
-   "summary": "Cursor, answered by the local agents on your own machine from the Nuclear Smart Graph, the 100% local knowledge base the agents also read through the MCP server.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website A chat about your project, like Claude's or Cursor's, answered by local agents on your own machine from the Smart Graph.",
    "body": [
-    "**Nuclear Atlas** is the local agent integrated with the RAG: a chat about your project, like the chats of Claude or",
-    "Cursor, answered by the local agents on your own machine from the",
-    "[Nuclear Smart Graph](../../../nuclear-graph-storage/README.md), the 100% local knowledge base the agents also read",
-    "through the MCP server. It is a tool of the Nuclear workspace in VS Code (`Ctrl+Alt+A`). A message is a question;",
-    "`/task <what to do>` is an order."
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/atlas)",
+    "",
+    "A chat about your project, like Claude's or Cursor's, answered by local agents on your own machine from the",
+    "[Smart Graph](../../../nuclear-graph-storage/README.md). In VS Code (`Ctrl+Alt+A`): a message is a question,",
+    "`/task <what to do>` an order."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-atlas/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-atlas/README.md#read-next",
+   "type": "readme",
+   "title": "Nuclear Atlas — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md): questions, `/task`, sessions",
+    "- [How a question and an order travel](docs/02-architecture/overview.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
    ],
    "sources": [
     "extensions/tools/nuclear-atlas/README.md"
@@ -184,61 +195,32 @@
    "id": "doc:extensions/tools/nuclear-atlas/README.md#try-it",
    "type": "readme",
    "title": "Nuclear Atlas — Try it",
-   "summary": "It needs the Nuclear Developer, the Smart Graph and Ollama with the assistant model running: (Set up the AI services).",
+   "summary": "nuclear-builder setup # the Developer, the Smart Graph and Ollama Then open a Nuclear project in VS Code, press `Ctrl+Alt+A` and ask (Set up the AI services).",
    "body": [
-    "It needs the Nuclear Developer, the Smart Graph and Ollama with the assistant model running:",
-    "*Nuclear: Set Up the AI Services* in VS Code, or `nuclear-builder setup`",
-    "([Set up the AI services](../../../installer/docs/08-guides/ai-setup.md)). Then open a Nuclear project, press",
-    "`Ctrl+Alt+A` and ask a question, or write `/task <what to do>`. Before each question Nuclear Atlas checks that every",
-    "service answers and names the one that does not."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-atlas/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-atlas/README.md#where-to-read-next",
-   "type": "readme",
-   "title": "Nuclear Atlas — Where to read next",
-   "summary": "Where to read next",
-   "body": [
-    "| | |",
-    "|---|---|",
-    "| What Nuclear Atlas needs, questions, `/task`, sessions | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| How a question and an order travel | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-atlas/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-atlas/README.md#why-it-exists",
-   "type": "readme",
-   "title": "Nuclear Atlas — Why it exists",
-   "summary": "A developer wants to ask about the project in front of them and to hand small work to an agent, without the code leaving the machine and without paying a frontier model for every token.",
-   "body": [
-    "A developer wants to ask about the project in front of them and to hand small work to an agent, without the code leaving the machine and without paying a",
-    "frontier model for every token. Nuclear Atlas sends a question to the local assistant of the",
-    "[Nuclear Developer](../../../nuclear-agents/nuclear_developer/README.md) with the project's map",
-    "(`.nuclear/map.md`, written by the build) and the last messages of the session; the assistant answers from that map",
-    "and the [Smart Graph](../../../nuclear-graph-storage/README.md). An order runs as a",
-    "[Nuclear Builder](../nuclear-builder/README.md) run by the local agents: plan, tests first, code, tests, security",
-    "review; its journal is the answer.",
+    "```sh",
+    "nuclear-builder setup    # the Developer, the Smart Graph and Ollama",
+    "```",
     "",
-    "What it leaves out: Nuclear Atlas never calls a model by itself (questions go to the Developer, orders to the Builder),",
-    "and it is VS Code only."
+    "Then open a Nuclear project in VS Code, press `Ctrl+Alt+A` and ask ([Set up the AI services](../../../installer/docs/08-guides/ai-setup.md))."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-atlas/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-atlas/README.md#why",
+   "type": "readme",
+   "title": "Nuclear Atlas — Why",
+   "summary": "Why",
+   "body": [
+    "- Ask about your project and hand off small work without the code leaving the machine.",
+    "- No frontier model paid per token: questions go to the [Nuclear Developer](../../../nuclear-agents/nuclear_developer/README.md), orders run as a [Nuclear Builder](../nuclear-builder/README.md) run.",
+    "- Left out on purpose: it never calls a model by itself; VS Code only."
    ],
    "sources": [
     "extensions/tools/nuclear-atlas/README.md"
@@ -665,53 +647,16 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/README.md#how-we-made-it.a351fe",
+   "id": "doc:extensions/tools/nuclear-builder/README.md#how-we-made-it",
    "type": "readme",
    "title": "Nuclear Builder — How we made it",
-   "summary": "files (Sonnet 36) and one or two of three features (Sonnet three) (the rounds).",
+   "summary": "How we made it",
    "body": [
-    "files (Sonnet 36) and one or two of three features (Sonnet three)",
-    "  ([the rounds](../../../nuclear-agents/nuclear_developer/docs/05-standards/testing.md)).",
-    "- **A run is a file**, `.nuclear/builder/runs/<id>.json`, saved on every step: VS Code, JetBrains and the command",
-    "  draw the same file. It survives a crash of the editor: what an unfinished step wrote is undone and the run goes on.",
-    "- **One engine, no editor inside it**: `src/engine.ts` and `src/safety.ts` never import `vscode`, so the page, the",
-    "  command, Nuclear Atlas and the tests drive the same code. Written in TypeScript (bundled by the VS Code extension) and",
-    "  Java for the JetBrains window; not in Nuclear yet, decided by the user to stay so for now",
-    "  ([roadmap](docs/01-product/roadmap.md)).",
-    "",
-    "**State:** the engine and `nuclear-builder` run and are tested; the VS Code panel and the JetBrains window were",
-    "never opened in a running editor ([roadmap](docs/01-product/roadmap.md))."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/README.md#how-we-made-it.c3bce9",
-   "type": "readme",
-   "title": "Nuclear Builder — How we made it",
-   "summary": "projects, with the Smart Graph, the Nuclear Developer and the MCP server.",
-   "body": [
-    "- **The AI loop** ([ADR-platform-0003](../../../docs/03-adr/0003-the-ai-loop.md)): the Builder is one of its four",
-    "  projects, with the [Smart Graph](../../../nuclear-graph-storage/README.md), the",
-    "  [Nuclear Developer](../../../nuclear-agents/nuclear_developer/README.md) and the",
-    "  [MCP server](../../../tools/mcp/AGENTS.md). A failure is diagnosed before it is retried.",
-    "- **A strategy for each kind of request**",
-    "  ([ADR-developer-0001](../../../nuclear-agents/nuclear_developer/docs/03-adr/0001-a-strategy-for-each-kind-of-request.md)):",
-    "  the *Specification* stage ends with the analysis (a whole system, one screen, a rename, a failing test…), which",
-    "  decides the stages that run.",
-    "- **The generators write first**",
-    "  ([ADR-codegen-0001](../../../tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md),",
-    "  [ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)): *Generate* runs `nuclear gen`",
-    "  for the resources the spec names, so the agents write only what is left; *Tests first* is skipped when the",
-    "  generators wrote every file.",
-    "- **Who leads**: *Claude leads, the local developer writes* is the default, because the local developer is at",
-    "  Sonnet's level on single files and behind on whole features: in the last rounds it passes 41 or 42 of 42 single"
+    "- One of the four projects of the AI loop ([ADR-platform-0003](../../../docs/03-adr/0003-the-ai-loop.md)).",
+    "- A strategy per kind of request decides the stages ([ADR-developer-0001](../../../nuclear-agents/nuclear_developer/docs/03-adr/0001-a-strategy-for-each-kind-of-request.md)).",
+    "- The generators write first, the agents only what is left ([ADR-codegen-0001](../../../tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md), [ADR-platform-0004](../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
+    "- Claude leads by default: the local developer passes 41 or 42 of 42 single files (Sonnet 36) but one or two of three features (Sonnet three) ([the rounds](../../../nuclear-agents/nuclear_developer/docs/05-standards/testing.md)).",
+    "- A run is a file that survives a crash; one engine in TypeScript with no editor inside it."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/README.md"
@@ -726,12 +671,32 @@
    "id": "doc:extensions/tools/nuclear-builder/README.md#nuclear-builder",
    "type": "readme",
    "title": "Nuclear Builder",
-   "summary": "The pipeline tool of the editors: a spec goes through specification, generate, plan, tests first, code, verification, security, artifacts and deploy on the developer's machine, and every step shows who did it (you, Claude, a local agent, the shell).",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website The pipeline of the editors: a spec goes through plan, tests first, code, verification, security and deploy, and every step shows who did it.",
    "body": [
-    "The pipeline tool of the editors: a spec goes through specification, generate, plan, tests first, code,",
-    "verification, security, artifacts and deploy on the developer's machine, and every step shows who did it (you,",
-    "Claude, a local agent, the shell). It is a tool of the Nuclear workspace in VS Code (`Ctrl+Alt+P`), a tool window in",
-    "Android Studio / IntelliJ (`Alt+Shift+P`), and the `nuclear-builder` command in a terminal or a CI job."
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/builder)",
+    "",
+    "The pipeline of the editors: a spec goes through plan, tests first, code, verification, security and deploy, and",
+    "every step shows who did it. In VS Code (`Ctrl+Alt+P`), JetBrains (`Alt+Shift+P`) and as `nuclear-builder` in a terminal or CI."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/README.md#read-next",
+   "type": "readme",
+   "title": "Nuclear Builder — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [Write a spec and start a run](docs/08-guides/write-a-spec.md) · [Follow a run](docs/08-guides/follow-a-run.md)",
+    "- [The commands of each stage](docs/08-guides/pipeline-commands.md)",
+    "- [How the engine works](docs/02-architecture/engine.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/README.md"
@@ -746,22 +711,12 @@
    "id": "doc:extensions/tools/nuclear-builder/README.md#try-it",
    "type": "readme",
    "title": "Nuclear Builder — Try it",
-   "summary": "It needs the Smart Graph and the Nuclear Developer running (Set up the AI services): nuclear-builder setup # reads the machine, suggests a profile, installs the services and the models nuclear-builder setup --status # what is installed and running cd <your project> # the folder with config.nuc…",
+   "summary": "nuclear-builder setup # installs the services and the models nuclear-builder run specs/<id>/spec.md --lead local # one line per step; the journal in .nuclear/builder/runs/",
    "body": [
-    "It needs the Smart Graph and the Nuclear Developer running",
-    "([Set up the AI services](../../../installer/docs/08-guides/ai-setup.md)):",
-    "",
     "```sh",
-    "nuclear-builder setup            # reads the machine, suggests a profile, installs the services and the models",
-    "nuclear-builder setup --status   # what is installed and running",
-    "cd <your project>                # the folder with config.nuc",
-    "nuclear-builder run specs/<id>/spec.md --lead local   # one line per step as it ends; the journal in .nuclear/builder/runs/<id>.md",
-    "nuclear-builder runs             # the runs kept in the project",
-    "```",
-    "",
-    "In VS Code: `Ctrl+Alt+P`, write the spec and its acceptance criteria, press **Start the loop**. To build the command",
-    "from the tree: `cd extensions/vscode && npm run builder` (→ `out/nuclear-builder.js`); `npm test` there runs the",
-    "engine's tests."
+    "nuclear-builder setup                                  # installs the services and the models",
+    "nuclear-builder run specs/<id>/spec.md --lead local    # one line per step; the journal in .nuclear/builder/runs/",
+    "```"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/README.md"
@@ -773,45 +728,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/README.md#where-to-read-next",
+   "id": "doc:extensions/tools/nuclear-builder/README.md#why",
    "type": "readme",
-   "title": "Nuclear Builder — Where to read next",
-   "summary": "Where to read next",
+   "title": "Nuclear Builder — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| Write a spec and start a run (VS Code, JetBrains, a terminal) | [docs/08-guides/write-a-spec.md](docs/08-guides/write-a-spec.md) |",
-    "| Follow a run, run something again, read a failure | [docs/08-guides/follow-a-run.md](docs/08-guides/follow-a-run.md) |",
-    "| The commands of each stage, the CI export | [docs/08-guides/pipeline-commands.md](docs/08-guides/pipeline-commands.md) |",
-    "| What it is for, who leads and why | [docs/00-context/vision.md](docs/00-context/vision.md) |",
-    "| How the engine runs, retries, undoes and survives a crash | [docs/02-architecture/engine.md](docs/02-architecture/engine.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/README.md#why-it-exists",
-   "type": "readme",
-   "title": "Nuclear Builder — Why it exists",
-   "summary": "Work with AI agents should start from a spec and end in tested, reviewed code, with every step visible, and the same pipeline should run on a server.",
-   "body": [
-    "Work with AI agents should start from a spec and end in tested, reviewed code, with every step visible, and the same",
-    "pipeline should run on a server. A frontier model that does everything is paid for every token and the code leaves",
-    "the machine; a local 3B model alone cannot hold a whole feature. The Builder puts them in the roles of a lead and a",
-    "junior: Claude makes the decisions (the plan, the names, the review), the local Nuclear Developer writes each piece,",
-    "and what the junior cannot fix the lead fixes and keeps as an example.",
-    "",
-    "What it leaves out on purpose: the shell runs nothing that is not in `.nuclear/builder.json`; the agent stages do",
-    "not run on a server (the server checks their result with the deterministic stages); the acceptance step informs and",
-    "never fails a run; there is no Builder for Zed."
+    "- Work with AI starts from a spec and ends in tested, reviewed code, every step visible.",
+    "- Claude leads (plan, names, review); the local Nuclear Developer writes each piece, on your machine.",
+    "- The same pipeline runs on a server; the shell runs only what `.nuclear/builder.json` allows."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/README.md"
@@ -1404,7 +1328,10 @@
     "  step; `developer_*` calls are drawn as the local agent.",
     "- **The generators**: `nuclear gen resource ... --from-spec`, `nuclear gen usecase`.",
     "- **The project's commands** of `.nuclear/builder.json`.",
-    "- **Jira** (REST v3, ADF to text) and **GitHub** (`gh issue view`), to import a spec."
+    "- **Jira** (REST v3, ADF to text) and **GitHub** (`gh issue view`), to import a spec.",
+    "",
+    "When the local services are missing, the engine suggests the release installer of the tree",
+    "(`raw.githubusercontent.com/nuclearlang/lang/main/installer/release/install.sh`)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -2008,17 +1935,32 @@
    "id": "doc:nuclear-agents/README.md#how-we-made-it",
    "type": "readme",
    "title": "The agents — How we made it",
-   "summary": "parameters, which write only Nuclear and name a platform, never a dialect.",
+   "summary": "How we made it",
    "body": [
-    "- **The AI loop** ([ADR-platform-0003](../docs/03-adr/0003-the-ai-loop.md)): local models of at most 3B",
-    "  parameters, which write only Nuclear and name a platform, never a dialect. They learn by retrieval and",
-    "  distillation, not by training weights.",
-    "- **What an agent knows is a row of the [Smart Graph](../nuclear-graph-storage/README.md)**, and every prompt a",
-    "  model reads is a file of the graph's `prompts/`: never text inside the agent's code.",
-    "- **Written in Nuclear**, with Synapsis when one of its platforms fits (the root [`AGENTS.md`](../AGENTS.md),",
-    "  rule 9): the Nuclear Developer is a Synapsis backend.",
-    "- **Tools before models** ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md)): an agent",
-    "  writes only what no generator, compiler fix or rename tool can write."
+    "- The AI loop: models of at most 3B parameters that write only Nuclear and learn by retrieval and distillation ([ADR-platform-0003](../docs/03-adr/0003-the-ai-loop.md)).",
+    "- What an agent knows, and every prompt, is a row or file of the [Smart Graph](../nuclear-graph-storage/README.md).",
+    "- Written in Nuclear: the Nuclear Developer is a Synapsis backend ([rule 9](../AGENTS.md)).",
+    "- Tools before models: an agent writes only what no generator can ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+   ],
+   "sources": [
+    "nuclear-agents/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-agents/README.md#read-next",
+   "type": "readme",
+   "title": "The agents — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The Nuclear Developer](nuclear_developer/README.md) · [the Smart Graph](../nuclear-graph-storage/README.md)",
+    "- [Nuclear Builder](../extensions/tools/nuclear-builder/README.md) · [Nuclear Atlas](../extensions/tools/nuclear-atlas/README.md)",
+    "- [Set up the AI services](../installer/docs/08-guides/ai-setup.md)",
+    "- [AGENTS.md](AGENTS.md) to add or change an agent"
    ],
    "sources": [
     "nuclear-agents/README.md"
@@ -2033,11 +1975,12 @@
    "id": "doc:nuclear-agents/README.md#the-agents",
    "type": "readme",
    "title": "The agents",
-   "summary": "The AI agents of NuclearLang that run on the developer's machine.",
+   "summary": "Website The AI agents of NuclearLang that run on your machine, one project per folder.",
    "body": [
-    "The AI agents of NuclearLang that run on the developer's machine. Each agent is a project in its own folder. Today",
-    "there is one: the [Nuclear Developer](nuclear_developer/README.md), the local agents (coder, tester, security",
-    "reviewer, planner and more) that work as the junior developer of a frontier model."
+    "[Website](https://nuclearlang.github.io/tools/developer)",
+    "",
+    "The AI agents of NuclearLang that run on your machine, one project per folder. Today there is one: the",
+    "[Nuclear Developer](nuclear_developer/README.md), the junior developer of a frontier model."
    ],
    "sources": [
     "nuclear-agents/README.md"
@@ -2052,14 +1995,12 @@
    "id": "doc:nuclear-agents/README.md#try-it",
    "type": "readme",
    "title": "The agents — Try it",
-   "summary": "nuclear-builder setup # installs the Smart Graph, the Nuclear Developer and the models that fit the machine nuclear-builder setup --status # what is installed and running What to ask it next: the Nuclear Developer.",
+   "summary": "nuclear-builder setup # the Smart Graph, the Nuclear Developer and the models that fit the machine nuclear-builder setup --status # what is installed and running",
    "body": [
     "```sh",
-    "nuclear-builder setup            # installs the Smart Graph, the Nuclear Developer and the models that fit the machine",
+    "nuclear-builder setup            # the Smart Graph, the Nuclear Developer and the models that fit the machine",
     "nuclear-builder setup --status   # what is installed and running",
-    "```",
-    "",
-    "What to ask it next: [the Nuclear Developer](nuclear_developer/README.md#try-it)."
+    "```"
    ],
    "sources": [
     "nuclear-agents/README.md"
@@ -2071,37 +2012,13 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/README.md#where-to-read-next",
+   "id": "doc:nuclear-agents/README.md#why",
    "type": "readme",
-   "title": "The agents — Where to read next",
-   "summary": "Where to read next",
+   "title": "The agents — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| The Nuclear Developer | [nuclear_developer/README.md](nuclear_developer/README.md) |",
-    "| The knowledge the agents read, the prompts | [the Smart Graph](../nuclear-graph-storage/README.md) |",
-    "| The tools a frontier model calls the agents with | [the MCP server](../tools/mcp/AGENTS.md) |",
-    "| The Builder and Nuclear Atlas of the editors | [Nuclear Builder](../extensions/tools/nuclear-builder/README.md), [Nuclear Atlas](../extensions/tools/nuclear-atlas/README.md) |",
-    "| The set-up that installs and starts the agents | [Set up the AI services](../installer/docs/08-guides/ai-setup.md) |",
-    "| To add or change an agent | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "nuclear-agents/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-agents/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The agents — Why it exists",
-   "summary": "Spec-driven work with AI should not need a frontier model for every token, nor send the code off the machine.",
-   "body": [
-    "Spec-driven work with AI should not need a frontier model for every token, nor send the code off the machine. The",
-    "agents here do the writing locally, on small models, while a lead (Claude, or you) makes the decisions."
+    "- Spec-driven work with AI without paying a frontier model for every token.",
+    "- The code never leaves the machine: small local models write, a lead (Claude, or you) decides."
    ],
    "sources": [
     "nuclear-agents/README.md"
@@ -2470,54 +2387,16 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/README.md#how-we-made-it.b80636",
+   "id": "doc:nuclear-agents/nuclear_developer/README.md#how-we-made-it",
    "type": "readme",
    "title": "Nuclear Developer — How we made it",
-   "summary": "trained by retrieval and distillation, not by changing weights.",
+   "summary": "How we made it",
    "body": [
-    "- **The AI loop** ([ADR-platform-0003](../../docs/03-adr/0003-the-ai-loop.md)): models of at most 3B parameters,",
-    "  trained by retrieval and distillation, not by changing weights. A failure is fixed with a general rule or more",
-    "  knowledge in the graph, never with the answer; the agents' prompts are files of the graph. A LoRA of the",
-    "  coder is a [draft spec](docs/04-specs/README.md) waiting for the user's decisions.",
-    "- **Fixed steps, not a toolbox.** A small model follows steps better than it chooses tools, so each agent is a graph:",
-    "",
-    "  ```",
-    "  recall ──► write ──► nuclear check ──ok──► answer",
-    "    │          ▲            │",
-    "    │          └── repair ◄─┘ errors (at most 3 attempts), each with the card of its code",
-    "    └─ from the Smart Graph: the kind's own card, the mistakes small models repeat with it,",
-    "       the closest rules, solved tasks and an example file",
-    "  ```"
-   ],
-   "sources": [
-    "nuclear-agents/nuclear_developer/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-agents/nuclear_developer/README.md#how-we-made-it.f95d30",
-   "type": "readme",
-   "title": "Nuclear Developer — How we made it",
-   "summary": "(ADR-developer-0001): the analyst recognises what it is asked (a whole system, one screen, a rename, a failing test…) and follows the plan of that kind.",
-   "body": [
-    "- **A strategy for each kind of request**",
-    "  ([ADR-developer-0001](docs/03-adr/0001-a-strategy-for-each-kind-of-request.md)): the analyst recognises what it is",
-    "  asked (a whole system, one screen, a rename, a failing test…) and follows the plan of that kind.",
-    "- **Tools before models** ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)): a",
-    "  generator writes what is standard, the compiler's exact fixes come before any repair, a rename is done by a tool.",
-    "- **Written in Nuclear**: it is a Synapsis backend (platform `backend`, dialect `fastapi`), whose FastAPI +",
-    "  LangGraph application is generated from the `.nuc` files of this folder. Two models on Ollama:",
-    "  `qwen2.5-coder:3b` (the coder) and `gemma4:e2b`.",
-    "- **Measured, every change.** A bank of 45 tasks (42 single files of every platform and 3 features of several",
-    "  files, 18 of them held out) is answered once by Claude Sonnet and then by the local agents. In the last rounds the",
-    "  local developer passes 43 of the 45 (Sonnet 39): 41 or 42 of the 42 single files (Sonnet 36), and one or two of the",
-    "  three features, where Sonnet passes all three. That is why a feature goes through the generators first and, when",
-    "  it has a design of its own, under a lead ([testing](docs/05-standards/testing.md),",
-    "  [the rounds](docs/05-standards/evaluation-rounds.md))."
+    "- The AI loop: retrieval and distillation, not weight training; prompts are files of the graph ([ADR-platform-0003](../../docs/03-adr/0003-the-ai-loop.md)).",
+    "- Fixed steps, not a toolbox: recall → write → `nuclear check` → repair (at most 3 attempts) → answer.",
+    "- A strategy for each kind of request ([ADR-developer-0001](docs/03-adr/0001-a-strategy-for-each-kind-of-request.md)); tools before models ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
+    "- Written in Nuclear: a Synapsis backend (`fastapi`), on `qwen2.5-coder:3b` and `gemma4:e2b`.",
+    "- Measured every change on 45 tasks: it passes 43 (Sonnet 39); 41 or 42 of the 42 single files (Sonnet 36), one or two of three features (Sonnet three) ([the rounds](docs/05-standards/evaluation-rounds.md))."
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/README.md"
@@ -2532,13 +2411,33 @@
    "id": "doc:nuclear-agents/nuclear_developer/README.md#nuclear-developer",
    "type": "readme",
    "title": "Nuclear Developer",
-   "summary": "Local AI agents for NuclearLang and Synapsis, on models of at most 3B parameters, that work as the junior developer of a frontier model: coder, tester, security reviewer, planner, analyst, from the Nuclear Smart Graph; what it writes is checked by the Nuclear compiler before it answers.",
+   "summary": "Website Local AI agents on models of at most 3B parameters (coder, tester, security reviewer, planner and more) that work as the junior developer of a frontier model.",
    "body": [
-    "Local AI agents for [NuclearLang](../../README.md) and Synapsis, on models of at most 3B parameters, that work as",
-    "the junior developer of a frontier model: **coder**, **tester**, **security reviewer**, **planner**, **analyst**,",
-    "**documenter**, **diagnoser**, **acceptor** and **assistant**. What a small model cannot hold in its head comes",
-    "from the [Nuclear Smart Graph](../../nuclear-graph-storage/README.md); what it writes is checked by the Nuclear",
-    "compiler before it answers."
+    "[Website](https://nuclearlang.github.io/tools/developer)",
+    "",
+    "Local AI agents on models of at most 3B parameters (coder, tester, security reviewer, planner and more) that work",
+    "as the junior developer of a frontier model. Their knowledge comes from the",
+    "[Smart Graph](../../nuclear-graph-storage/README.md); the compiler checks what they write before they answer."
+   ],
+   "sources": [
+    "nuclear-agents/nuclear_developer/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-agents/nuclear_developer/README.md#read-next",
+   "type": "readme",
+   "title": "Nuclear Developer — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md) · [Run it by hand](docs/06-runbooks/run.md)",
+    "- [Each agent and its model](docs/02-architecture/overview.md) · [Which models fit](docs/02-architecture/models.md)",
+    "- [Why it is this way](docs/03-adr/README.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/README.md"
@@ -2553,27 +2452,14 @@
    "id": "doc:nuclear-agents/nuclear_developer/README.md#try-it",
    "type": "readme",
    "title": "Nuclear Developer — Try it",
-   "summary": "The set-up of the AI services installs it, with the Smart Graph and the models that fit the machine, and starts it at every login (Set up the AI services): nuclear-builder setup # or the installer's last step, or VS Code: Nuclear: Set Up the AI Services nuclear-builder setup --status # what is…",
+   "summary": "nuclear-builder setup curl -s -X POST 127.0.0.1:7879/developer/code -H 'content-type: application/json' \\ \"path\": \"components/tasks/domain/models/task_models.nuc\", \"kind\": \"model\"}'",
    "body": [
-    "The set-up of the AI services installs it, with the Smart Graph and the models that fit the machine, and starts it",
-    "at every login ([Set up the AI services](../../installer/docs/08-guides/ai-setup.md)):",
-    "",
     "```sh",
-    "nuclear-builder setup            # or the installer's last step, or VS Code: Nuclear: Set Up the AI Services",
-    "nuclear-builder setup --status   # what is installed and running",
-    "```",
-    "",
-    "Then give the coder a task; it answers the `.nuc` it wrote, checked by `nuclear check`:",
-    "",
-    "```sh",
+    "nuclear-builder setup",
     "curl -s -X POST 127.0.0.1:7879/developer/code -H 'content-type: application/json' \\",
     "  -d '{\"task\": \"A model NewTask with a title (string, at least 3 characters) and a priority (int, default 2).\",",
     "       \"path\": \"components/tasks/domain/models/task_models.nuc\", \"kind\": \"model\"}'",
-    "```",
-    "",
-    "It also works from the Builder (`Ctrl+Alt+P`, `nuclear-builder run`), Nuclear Atlas (`Ctrl+Alt+A`) and any frontier",
-    "model over MCP (`nuclear-mcp`), which gives the local developer the task first and then validates and corrects it.",
-    "By hand, without the set-up: [run it](docs/06-runbooks/run.md)."
+    "```"
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/README.md"
@@ -2585,45 +2471,14 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/README.md#where-to-read-next",
+   "id": "doc:nuclear-agents/nuclear_developer/README.md#why",
    "type": "readme",
-   "title": "Nuclear Developer — Where to read next",
-   "summary": "Where to read next",
+   "title": "Nuclear Developer — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| What a task goes through, how to call it, what it needs, its limits | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| Each agent, its model and its route; the known limits | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| Who calls it and how | [docs/02-architecture/integrations.md](docs/02-architecture/integrations.md#where-it-works) |",
-    "| Which models fit which machine | [docs/02-architecture/models.md](docs/02-architecture/models.md) |",
-    "| The strategy of each kind of request | [docs/02-architecture/strategies.md](docs/02-architecture/strategies.md) |",
-    "| Why it is this way | [docs/03-adr/README.md](docs/03-adr/README.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "nuclear-agents/nuclear_developer/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-agents/nuclear_developer/README.md#why-it-exists",
-   "type": "readme",
-   "title": "Nuclear Developer — Why it exists",
-   "summary": "A frontier model that does all the work of a spec is paid for every token, and the code leaves the machine.",
-   "body": [
-    "A frontier model that does all the work of a spec is paid for every token, and the code leaves the machine. A model",
-    "small enough for a developer's laptop cannot hold much context, chooses tools badly, and the machine has no GPU to",
-    "train one. So the work is split as a lead splits it with a junior: the lead (Claude, or you) makes the decisions",
-    "(the plan, the names, the review) and the local developer writes each piece. What the junior cannot fix, the lead",
-    "fixes and keeps as an example in the graph, so the junior gets it right next time.",
-    "",
-    "What it leaves out: the agents write only Nuclear, for a platform (`backend`, `mobile`, `web`), never a dialect or",
-    "a target language; and a model writes nothing a tool can write."
+    "- A frontier model doing a whole spec is paid per token, and the code leaves the machine.",
+    "- So the lead (Claude, or you) decides; the local developer writes each piece; what it cannot fix becomes an example in the graph.",
+    "- Left out on purpose: only Nuclear for a platform, never a dialect; nothing a tool can write."
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/README.md"
@@ -4711,46 +4566,16 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/README.md#how-we-made-it.138aa1",
+   "id": "doc:nuclear-graph-storage/README.md#how-we-made-it",
    "type": "readme",
    "title": "Nuclear Smart Graph — How we made it",
-   "summary": "platform, read by frontier models through the MCP server and by the local agents of the Nuclear Developer over HTTP.",
+   "summary": "How we made it",
    "body": [
-    "- **Part of the AI loop** ([ADR-platform-0003](../docs/03-adr/0003-the-ai-loop.md)): the knowledge base of the",
-    "  platform, read by frontier models through [the MCP server](../tools/mcp/AGENTS.md) and by the local agents of the",
-    "  [Nuclear Developer](../nuclear-agents/nuclear_developer/README.md) over HTTP. The agents' prompts are files of",
-    "  the graph (`prompts/`), never text inside their code.",
-    "- **A library of typed, linked, versioned rows**",
-    "  ([ADR-graph-0001](docs/03-adr/0001-a-library-of-typed-linked-versioned-rows.md)): one Chroma collection per kind",
-    "  of question; a search by meaning and by exact name (a code, a command or a kind reaches its card whatever the rest",
-    "  of the sentence says); rows with a structured source generated from the tree, never written by hand; a base that",
-    "  is valid or is not built, and a check that fails when it falls behind the code. The local agents read only the",
-    "  rows written for them, which hold no code of a target language.",
-    "- **Exact facts and a query planner**",
-    "  ([ADR-graph-0002](docs/03-adr/0002-exact-facts-a-query-planner-and-the-graph-in-nuclear.md)): the facts of the",
-    "  base in an SQLite database that lives in memory only, the questions with one right answer as rows of SQL, and a",
-    "  planner that matches a question to them without a model."
-   ],
-   "sources": [
-    "nuclear-graph-storage/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/README.md#how-we-made-it.19eb64",
-   "type": "readme",
-   "title": "Nuclear Smart Graph — How we made it",
-   "summary": "a token, and the documents are encrypted on disk (AES-256-GCM) (security).",
-   "body": [
-    "- **Private by construction**: only its server opens the store, it listens on `127.0.0.1:7878`, every route needs",
-    "  a token, and the documents are encrypted on disk (AES-256-GCM) ([security](docs/05-standards/security.md)).",
-    "- **Written in Nuclear**, the `python` dialect: `nuclear build` writes the Python package `build/nuclear_graph`",
-    "  (FastAPI, Chroma, embeddings by `embeddinggemma` on Ollama). Its tests are `tests/*.nuc`. What the language could",
-    "  not express is a finding for the language's roadmap, never a hand-written `.py`."
+    "- The knowledge base of the AI loop, read through [the MCP server](../tools/mcp/AGENTS.md) and by the local agents ([ADR-platform-0003](../docs/03-adr/0003-the-ai-loop.md)).",
+    "- Typed, linked, versioned rows generated from the tree, searched by meaning and exact name ([ADR-graph-0001](docs/03-adr/0001-a-library-of-typed-linked-versioned-rows.md)).",
+    "- Exact facts in in-memory SQLite and a query planner with no model ([ADR-graph-0002](docs/03-adr/0002-exact-facts-a-query-planner-and-the-graph-in-nuclear.md)).",
+    "- Private by construction: `127.0.0.1:7878`, a token on every route, AES-256-GCM on disk ([security](docs/05-standards/security.md)).",
+    "- Written in Nuclear (`python` dialect): `nuclear build` writes the FastAPI package."
    ],
    "sources": [
     "nuclear-graph-storage/README.md"
@@ -4765,12 +4590,32 @@
    "id": "doc:nuclear-graph-storage/README.md#nuclear-smart-graph",
    "type": "readme",
    "title": "Nuclear Smart Graph",
-   "summary": "The local, private library of everything NuclearLang and Synapsis are.",
+   "summary": "Website The local, private library of everything NuclearLang and Synapsis are.",
    "body": [
+    "[Website](https://nuclearlang.github.io/tools/graph)",
+    "",
     "The local, private library of everything NuclearLang and Synapsis are. Agents (Claude, Codex, Cursor, the local",
-    "Nuclear Developer) ask it instead of guessing: what Nuclear is for, how each thing is written, every kind and",
-    "decorator, every tool, every error and its fix, what can and cannot be done, how a task is done step by step, and",
-    "validated code."
+    "Nuclear Developer) ask it instead of guessing: every kind, tool, error and its fix, and validated code."
+   ],
+   "sources": [
+    "nuclear-graph-storage/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/README.md#read-next",
+   "type": "readme",
+   "title": "Nuclear Smart Graph — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md) · [Install and serve](docs/06-runbooks/install-and-serve.md)",
+    "- [The shelves](docs/02-architecture/shelves.md) · [The search](docs/02-architecture/search.md)",
+    "- [Why it is this way](docs/03-adr/README.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
    ],
    "sources": [
     "nuclear-graph-storage/README.md"
@@ -4785,29 +4630,12 @@
    "id": "doc:nuclear-graph-storage/README.md#try-it",
    "type": "readme",
    "title": "Nuclear Smart Graph — Try it",
-   "summary": "The set-up of the AI services installs it, loads the knowledge base and starts it at every login: `nuclear-builder setup`, the installer's last step, or the wizard of VS Code (Set up the AI services).",
+   "summary": "nuclear-builder setup # installs, loads and starts it nuclear-graph answer \"which tools does the MCP have\" # the exact rows, then the cards nuclear-graph card error:N0114 # one card and what it links to",
    "body": [
-    "The set-up of the AI services installs it, loads the knowledge base and starts it at every login:",
-    "`nuclear-builder setup`, the installer's last step, or the wizard of VS Code",
-    "([Set up the AI services](../installer/docs/08-guides/ai-setup.md)). By hand, from the root of the tree:",
-    "",
     "```sh",
-    "ollama pull embeddinggemma",
-    "nuclear build nuclear-graph-storage                            # the graph is written in Nuclear: its Python package",
-    "uv tool install --editable './nuclear-graph-storage[server]'  # nuclear-graph on the PATH",
-    "nuclear-graph serve &                                          # on 127.0.0.1:7878",
-    "nuclear-graph knowledge build && nuclear-graph ingest          # the knowledge base, learnt by the graph",
-    "nuclear-graph stats                                            # the rows of each shelf and the revision it holds",
-    "```",
-    "",
-    "Then ask it:",
-    "",
-    "```sh",
-    "nuclear-graph search \"how does the MCP server work\"   # the cards that answer, from every shelf",
-    "nuclear-graph card error:N0114                        # one card and what it links to",
-    "nuclear-graph answer \"which tools does the MCP have\"  # the exact rows, then the cards",
-    "nuclear-graph strategy \"rename Book to Title\"         # which kind of request it is, and why",
-    "nuclear-graph connect mcp --scopes read,write         # give a program access (here the MCP server)",
+    "nuclear-builder setup                                  # installs, loads and starts it",
+    "nuclear-graph answer \"which tools does the MCP have\"   # the exact rows, then the cards",
+    "nuclear-graph card error:N0114                         # one card and what it links to",
     "```"
    ],
    "sources": [
@@ -4820,53 +4648,14 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/README.md#where-to-read-next",
+   "id": "doc:nuclear-graph-storage/README.md#why",
    "type": "readme",
-   "title": "Nuclear Smart Graph — Where to read next",
-   "summary": "Where to read next",
+   "title": "Nuclear Smart Graph — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| What the graph holds, how to ask it, how it is kept current | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| Install, serve, connect a client, the settings | [docs/06-runbooks/install-and-serve.md](docs/06-runbooks/install-and-serve.md) |",
-    "| The shelves and what a card is | [docs/02-architecture/shelves.md](docs/02-architecture/shelves.md) |",
-    "| The search, exact facts and the planner | [docs/02-architecture/search.md](docs/02-architecture/search.md), [docs/02-architecture/exact-facts.md](docs/02-architecture/exact-facts.md) |",
-    "| The knowledge base (`data/`) and how it stays current | [docs/02-architecture/knowledge-base.md](docs/02-architecture/knowledge-base.md), [the runbook](docs/06-runbooks/update-the-knowledge-base.md) |",
-    "| The HTTP API and the client package | [docs/02-architecture/integrations.md](docs/02-architecture/integrations.md) |",
-    "| Why it is this way | [docs/03-adr/README.md](docs/03-adr/README.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "nuclear-graph-storage/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/README.md#why-it-exists",
-   "type": "readme",
-   "title": "Nuclear Smart Graph — Why it exists",
-   "summary": "An agent that writes Nuclear guesses what it does not know.",
-   "body": [
-    "An agent that writes Nuclear guesses what it does not know. Cutting every markdown file of the tree into pieces does",
-    "not stop that: a piece knows its file and little else, and a search by meaning gives the closest pieces, never *all*",
-    "of something. Asked for every tool of the MCP server, it gives four and a model fills in the rest from memory.",
-    "",
-    "The Smart Graph is a library of cards on shelves instead: each card answers one question and links to the cards it",
-    "has to do with. A question with one right answer (which, how many, what are) gets every row, the same on every run,",
-    "whatever the model.",
-    "",
-    "What it is not, on purpose:",
-    "",
-    "- **Not a copy of the documentation**, and not the teaching material nor the projects' pending work.",
-    "- **Not a model.** The search, the choice of a strategy and the query planner ask no model; only the embeddings are",
-    "  computed.",
-    "- **Not shared.** It runs on the developer's machine for one OS user, and no program reads it until the user allows",
-    "  it."
+    "- Chunked markdown gives the closest pieces, never *all* of something; a model fills the rest from memory.",
+    "- Here each card answers one question and links to its neighbours; a question with one right answer gets every row, every run.",
+    "- Left out on purpose: not a copy of the docs, not a model (only embeddings are computed), not shared."
    ],
    "sources": [
     "nuclear-graph-storage/README.md"
@@ -5379,7 +5168,7 @@
     "| Ollama | the embeddings (`embeddinggemma`) | `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED` |",
     "| The desktop keyring | the documents' key, the tokens | — |",
     "| `nuclear`, `nuclear-builder`, `nuclear-mcp` | their help and `nuclear-mcp tools` (rows); `Toolchain` runs `nuclear` (`Toolchain.project(root, args)` runs `nuclear <args>` in a project) | on the `PATH` |",
-    "| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |",
+    "| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia; the User-Agent names `github.com/nuclearlang/lang` | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |",
     "",
     "Every setting: [the runbook](../06-runbooks/install-and-serve.md#settings)."
    ],
@@ -5501,13 +5290,31 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/docs/02-architecture/knowledge-base.md#three-kinds-of-content.781e47",
+   "id": "doc:nuclear-graph-storage/docs/02-architecture/knowledge-base.md#three-kinds-of-content.84584c",
+   "type": "context",
+   "title": "The knowledge base: assets, versions, and how it stays current — Three kinds of content",
+   "summary": "`nuclear-graph knowledge build` (the `extract*.nuc` modules):",
+   "body": [
+    "**Generated rows** (`\"origin\": \"generated\"`, never edited by hand) are read from a structured source by",
+    "`nuclear-graph knowledge build` (the `extract*.nuc` modules):"
+   ],
+   "sources": [
+    "nuclear-graph-storage/docs/02-architecture/knowledge-base.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/02-architecture/knowledge-base.md#three-kinds-of-content.8e7e2d",
    "type": "context",
    "title": "The knowledge base: assets, versions, and how it stays current — Three kinds of content",
    "summary": "the advantages, the concepts and the theory, the questions people ask, what can and cannot be done, the limits of the local agents, the playbooks and the strategies, the roles and skills, the failures of the tools and services, the mistakes small models repeat.",
    "body": [
     "| the local agents | their own sources in `nuclear-agents/nuclear_developer/` |",
-    "| each component's version | its manifest |",
+    "| each component's version (and its repository: `nuclearlang/lang`, the whole tree) | its manifest (`COMPONENTS` in `extract_tools.nuc`) |",
     "| the examples | every `.nuc` of the example projects, by kind and platform |",
     "| the solved tasks | the validated answers of the `train` tasks of the Developer's evaluation, never the held-out ones |",
     "| the documents | every markdown file of the tree and the website: one row per heading section, on the shelf its section of `data/sections.toml` names |",
@@ -5522,24 +5329,6 @@
     "",
     "A new command, MCP tool, kind, decorator, diagnostic, version or example reaches the base by building it. A new",
     "capability, limit, failure or procedure needs its row written by hand."
-   ],
-   "sources": [
-    "nuclear-graph-storage/docs/02-architecture/knowledge-base.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/docs/02-architecture/knowledge-base.md#three-kinds-of-content.84584c",
-   "type": "context",
-   "title": "The knowledge base: assets, versions, and how it stays current — Three kinds of content",
-   "summary": "`nuclear-graph knowledge build` (the `extract*.nuc` modules):",
-   "body": [
-    "**Generated rows** (`\"origin\": \"generated\"`, never edited by hand) are read from a structured source by",
-    "`nuclear-graph knowledge build` (the `extract*.nuc` modules):"
    ],
    "sources": [
     "nuclear-graph-storage/docs/02-architecture/knowledge-base.md"
@@ -7363,40 +7152,18 @@
    }
   },
   {
-   "id": "doc:tools/mcp/README.md#how-we-made-it.158e84",
+   "id": "doc:tools/mcp/README.md#how-we-made-it",
    "type": "readme",
    "title": "`nuclear-mcp`, the MCP server — How we made it",
-   "summary": "(ADR-codegen-0001).",
-   "body": "([ADR-codegen-0001](../code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md)).",
-   "sources": [
-    "tools/mcp/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/mcp/README.md#how-we-made-it.2ff4d8",
-   "type": "readme",
-   "title": "`nuclear-mcp`, the MCP server — How we made it",
-   "summary": "`cli.nuc`, `init.nuc` and two of tests); `nuclear build .` turns them into the Python package `build/nuclear_mcp` with the `python` dialect, and `pyproject.toml` packages it.",
+   "summary": "(ADR-platform-0004).",
    "body": [
-    "- **It is a product of the platform, written in Nuclear.** The source is five `.nuc` files (`server.nuc`,",
-    "  `cli.nuc`, `__init__.nuc` and two of tests); `nuclear build .` turns them into the Python package",
-    "  `build/nuclear_mcp` with the `python` dialect, and `pyproject.toml` packages it. Nobody edits `build/`",
+    "- **Written in Nuclear**, five `.nuc` files built into a Python package",
     "  ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
-    "- **A tool is a method with a comment**: the comment is the description the client reads.",
-    "- **The Smart Graph through its type definitions.** The server imports the graph's Python package `nuclear-graph`;",
-    "  its API comes from generated type definitions in `defs/python/nuclear_graph/0.2.0/`, so the Nuclear code is",
-    "  checked against the real package.",
-    "- **A project of its own.** It was a module of the graph's package (`nuclear-graph mcp`); it moved into `tools/mcp`",
-    "  so its code, tests and dependencies live together and the graph's package is lighter. It depends on the graph,",
-    "  never the other way: the graph's knowledge base reads the tools by running `nuclear-mcp tools`, and",
-    "  `nuclear-graph mcp` still runs `nuclear-mcp` ([ADR-mcp-0001](docs/03-adr/0001-the-mcp-server-is-a-project-of-its-own.md)).",
-    "- The decisions that created it are kept elsewhere: the AI loop",
-    "  ([ADR-platform-0003](../../docs/03-adr/0003-the-ai-loop.md)) and the generator tools"
+    "- **A project of its own**, depending on the graph, never the other way",
+    "  ([ADR-mcp-0001](docs/03-adr/0001-the-mcp-server-is-a-project-of-its-own.md)).",
+    "- **Part of the AI loop** ([ADR-platform-0003](../../docs/03-adr/0003-the-ai-loop.md)); a generator tool is a",
+    "  `nuclear gen` command ([ADR-codegen-0001](../code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md)).",
+    "- **A tool is a method with a comment**: the comment is what the client reads."
    ],
    "sources": [
     "tools/mcp/README.md"
@@ -7411,12 +7178,33 @@
    "id": "doc:tools/mcp/README.md#nuclear-mcp-the-mcp-server",
    "type": "readme",
    "title": "`nuclear-mcp`, the MCP server",
-   "summary": "The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang, over stdio.",
    "body": [
-    "The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang. It speaks the",
-    "Model Context Protocol over stdio and offers four things as tools: the **generators** that write the standard code,",
-    "the **local developer** that writes what is left, the **Smart Graph** to look things up instead of guessing, and the",
-    "**compiler** to check everything; plus the command line and the internet."
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/mcp)",
+    "",
+    "The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang, over stdio. Its tools:",
+    "the **generators**, the **local developer**, the **Smart Graph** and the **compiler**."
+   ],
+   "sources": [
+    "tools/mcp/README.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/README.md#read-next",
+   "type": "readme",
+   "title": "`nuclear-mcp`, the MCP server — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/mcp.md): each client's set-up, every tool",
+    "- [Set up the AI services](../../installer/docs/08-guides/ai-setup.md)",
+    "- [How it is built](docs/02-architecture/overview.md), [the decisions](docs/03-adr/README.md)",
+    "- [The Smart Graph](../../nuclear-graph-storage/README.md)",
+    "- To change it: [AGENTS.md](AGENTS.md)"
    ],
    "sources": [
     "tools/mcp/README.md"
@@ -7431,22 +7219,11 @@
    "id": "doc:tools/mcp/README.md#try-it",
    "type": "readme",
    "title": "`nuclear-mcp`, the MCP server — Try it",
-   "summary": "The server comes with the AI services (their set-up).",
+   "summary": "nuclear-mcp tools # {\"instructions\": ..., \"tools\": [...]} claude mcp add --scope user nuclear -- nuclear-mcp # Claude Code; Codex: codex mcp add nuclear -- nuclear-mcp",
    "body": [
-    "The server comes with the AI services ([their set-up](../../installer/docs/08-guides/ai-setup.md)). Once",
-    "`nuclear-mcp` is on the PATH:",
-    "",
     "```sh",
-    "nuclear-mcp tools                          # {\"instructions\": ..., \"tools\": [...]}: 27 tools with the local agents",
-    "                                           # (graph_*, nuclear_*, project_inspect, generate_*, api_inspect, web_*, developer_*)",
+    "nuclear-mcp tools                                    # {\"instructions\": ..., \"tools\": [...]}",
     "claude mcp add --scope user nuclear -- nuclear-mcp   # Claude Code; Codex: codex mcp add nuclear -- nuclear-mcp",
-    "```",
-    "",
-    "From the source, in `tools/mcp`:",
-    "",
-    "```sh",
-    "nuclear check .                            # .: 5 files, no errors",
-    "nuclear build .                            # nuclear_mcp: 5 files → build",
     "```"
    ],
    "sources": [
@@ -7459,48 +7236,14 @@
    }
   },
   {
-   "id": "doc:tools/mcp/README.md#where-to-read-next",
+   "id": "doc:tools/mcp/README.md#why",
    "type": "readme",
-   "title": "`nuclear-mcp`, the MCP server — Where to read next",
-   "summary": "its parameters, what to do when a tool fails.",
+   "title": "`nuclear-mcp`, the MCP server — Why",
+   "summary": "Why",
    "body": [
-    "- [The guide](docs/08-guides/mcp.md): the set-up of each client, how a model works with the server, every tool and",
-    "  its parameters, what to do when a tool fails.",
-    "- [How it is built](docs/02-architecture/overview.md), [the decisions](docs/03-adr/README.md),",
-    "  [the roadmap](docs/01-product/roadmap.md).",
-    "- What it reaches: [the Smart Graph](../../nuclear-graph-storage/README.md) and",
-    "  [the local developer](../../nuclear-agents/AGENTS.md).",
-    "- To change it: [AGENTS.md](AGENTS.md)."
-   ],
-   "sources": [
-    "tools/mcp/README.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/mcp/README.md#why-it-exists",
-   "type": "readme",
-   "title": "`nuclear-mcp`, the MCP server — Why it exists",
-   "summary": "Every client should work the same way on a Nuclear project, whatever model is behind it.",
-   "body": [
-    "Every client should work the same way on a Nuclear project, whatever model is behind it. The server's instructions",
-    "tell each one how: call `graph_strategy` first, inspect the project, generate before writing, give the local",
-    "developer only what the generators leave, then validate and correct. A frontier model leads; the standard code",
-    "costs it no tokens, and it never has to guess an API.",
-    "",
-    "What it leaves out on purpose:",
-    "",
-    "- **No generator code of its own.** A generator tool is a `nuclear gen` command; its options and refusals are",
-    "  [the code generator's](../code_generator/README.md).",
-    "- **`nuclear_project` runs only the commands of its list**, and the graph is reached with the token of the client",
-    "  `mcp`: the user decides whether MCP clients may read it.",
-    "- **A machine set up for remote agents only** gets no `graph_*` and no `developer_*` tools, and other instructions.",
-    "- **What comes from the internet is untrusted text**: no code blocks, and never a page of this machine or the local",
-    "  network."
+    "- Every client works the same way on a Nuclear project, whatever model is behind it.",
+    "- Standard code costs the model no tokens, and it never has to guess an API.",
+    "- Safe by default: `nuclear_project` runs only its listed commands; internet text is untrusted."
    ],
    "sources": [
     "tools/mcp/README.md"

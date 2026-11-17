@@ -14,9 +14,9 @@
     "irm https://nuclearlang.github.io/install.ps1 | iex             # Windows (PowerShell)",
     "```",
     "",
-    "It brings `nuclear`, `synapsis`, the language server and `nuclear-builder`, with the dialects and type definitions, into your user folders. No Rust needed.",
+    "It brings `nuclear`, the language server and `nuclear-builder`, with the dialects and type definitions, into your user folders. No Rust needed.",
     "",
-    "From the source tree: `./install.sh` builds and installs everything and the VS Code and Zed extensions (it needs Rust; `--no-vscode`, `--no-zed`, `--uninstall`). `./install.sh --ai` then runs the set-up of the AI services over the tree's own folders.",
+    "From the source tree: `installer/install.sh` builds and installs everything and the VS Code and Zed extensions (it needs Rust; `--no-vscode`, `--no-zed`, `--uninstall`). `./install.sh --ai` then runs the set-up of the AI services over the tree's own folders.",
     "",
     "Then check the machine: `nuclear doctor` says what is missing. For mobile apps, `nuclear setup` installs Flutter step by step."
    ],
@@ -51,7 +51,8 @@
     }
    ],
    "sources": [
-    "README.md#Installation",
+    "README.md#Try it",
+    "installer/docs/02-architecture/overview.md#From source (`install.sh`)",
     "installer/docs/08-guides/ai-setup.md#1. Start it"
    ],
    "meta": {

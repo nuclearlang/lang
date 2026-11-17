@@ -35,6 +35,8 @@ Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.jso
 
 ## What `package.json` contributes
 
+- Its `repository` is the tree, `nuclearlang/lang`, directory `extensions/vscode`; `bugs` its issues.
+
 - The language `nuclear` (`.nuc`), its grammars, the semantic token modifiers and scopes.
 - The themes (Chernobyl, Chernobyl Soft) and the icon themes (Chernobyl Icons, Chernobyl Soft Icons).
 - One activity bar container, `nuclear`, with one webview view, `nuclear.workspace`; the view `nuclear.callStack`

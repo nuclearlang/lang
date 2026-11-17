@@ -5,7 +5,7 @@ page() Page
     title = "The base language",
     html = "<h1>The base language</h1><p>Every rule of Nuclear.</p>",
     headings = [Heading(level = 2, id = "names", text = "Names and files")],
-    source = "https://github.com/nuclearlang/nuclear/blob/main/nuclearlang/docs/07-reference/nuclear-base.md",
+    source = "https://github.com/nuclearlang/lang/blob/main/nuclearlang/docs/07-reference/nuclear-base.md",
   )
 
 entry(path: string, title: string, headings: string[], words: string) SearchEntry
@@ -112,6 +112,8 @@ platform() Platform
     levels = [PlatformLevels(level = "1 · Context", title = "Your API and its clients", text = "Text.", boxes = [PlatformBoxes(name = "Your API", kind = "system", text = "in Nuclear")], flows = [PlatformFlows(source = "Clients", target = "Your API", text = "HTTP")])],
     pages = [PlatformPages(title = "The backend", path = "/backend/reference/backend")],
     app = "todos_api",
+    agentSteps = [step("nuclear new todos_api -p backend", ""), step("claude \"A todos API\"", "")],
+    prompts = ["A todos API on SQLite."],
     example = "https://github.com/example/tree/main/todos_api",
     steps = [step("nuclear new todos_api -p backend", "created config.nuc"), step("nuclear check --json", "[]")],
     code = code(),
@@ -204,5 +206,7 @@ DocsTest
   showsOnboarding()
     renderScreen(StartScreen(name = "backend"))
     ~screen.findByText("Build todos_api")
+    ~screen.findByText("With an agent")
+    ~screen.findByText("A todos API on SQLite.")
     ~screen.findAllByText("\$ nuclear new todos_api -p backend")
     ~screen.findByText("Next")

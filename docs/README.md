@@ -6,7 +6,8 @@ related: [05-standards/agent-context-docs-implementation.md]
 ---
 # Context documentation
 
-The source of truth of the platform for people and AI agents. This folder holds only what is about the **whole
+The source of truth of the platform for people and AI agents. What a user reads (each project's references and
+guides) is published at [nuclearlang.github.io](https://nuclearlang.github.io). This folder holds only what is about the **whole
 platform**. Each project documents itself, in its own folder, the same way.
 
 ## How to read
@@ -42,7 +43,10 @@ its documents with one line each saying when to read it. Under 150 lines. A `CLA
 `@AGENTS.md`.
 
 `README.md` beside it: the page a person reads first, on GitHub or in the folder. It is not `AGENTS.md` (that one
-is for whoever changes the project) and it repeats no reference. In this order, under about 120 lines:
+is for whoever changes the project) and it repeats no reference. Under the title, one line: the badge of each CI
+workflow that tests the project (`https://github.com/nuclearlang/lang/actions/workflows/<file>.yml/badge.svg`, linked
+to the workflow) and the link to its page on the website (`https://nuclearlang.github.io/...`). Then, in this order,
+short enough to read in a minute (about 60 lines; the detail is in the guides it links):
 
 1. **What it is**, in one or two sentences a newcomer understands.
 2. **Why it exists**: the problem it solves for an agent or a person, and what it leaves out on purpose.

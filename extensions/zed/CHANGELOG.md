@@ -4,6 +4,7 @@ All notable changes to nuclear-zed are written here; versions follow [Semantic V
 
 ## Unreleased
 
+- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.
 - 0.52.0: the version of the three extensions (HTTP Connections and Nuclear Atlas renamed in VS Code and Android Studio; nothing changes in Zed).
 - 0.51.0: the version of the three extensions (one repository: the extension is `extensions/zed/`; the framework's commands of its tasks are `nuclear <command>`).
 - First public version.

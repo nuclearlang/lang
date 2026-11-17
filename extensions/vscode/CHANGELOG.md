@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.
 - 0.52.0: Nuclear Connector is now HTTP Connections (the folder `extensions/tools/nuclear-http-connections`, the commands `nuclear.httpConnections.*`, the colors `nuclearHttpConnections.*`, the workspace tool `http-connections`); the chat (*Nuclear agent*) is now Nuclear Atlas, the local agent integrated with the RAG (the folder `extensions/tools/nuclear-atlas`, the workspace tool `atlas`). A theme that set `nuclearConnector.*` colors must use the new ids.
 - 0.51.0: one repository (spec 008): the tools' code is in `extensions/tools/<tool>/`; Synapsis for Dragonfly (the debug type, the custom device id `synapsis`, `synapsis.g.dart`); the framework's commands run as `nuclear <command>`; the Loop is Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, commands `nuclear.builder.*`) and Nuclear HTTP is HTTP Connections (commands `nuclear.httpConnections.*`); the MCP server registered with the agents is `nuclear-mcp` (`nuclear.ai.mcpCommand`), the graph's command is `nuclear.ai.graphCommand`.
 - 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`

@@ -88,6 +88,6 @@ it is a Nuclear project of its own that imports this package (its `defs/python/n
 | Ollama | the embeddings (`embeddinggemma`) | `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED` |
 | The desktop keyring | the documents' key, the tokens | — |
 | `nuclear`, `nuclear-builder`, `nuclear-mcp` | their help and `nuclear-mcp tools` (rows); `Toolchain` runs `nuclear` (`Toolchain.project(root, args)` runs `nuclear <args>` in a project) | on the `PATH` |
-| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |
+| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia; the User-Agent names `github.com/nuclearlang/lang` | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |
 
 Every setting: [the runbook](../06-runbooks/install-and-serve.md#settings).

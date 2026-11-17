@@ -163,7 +163,7 @@
     "- `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer",
     "- `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API",
     "- `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens",
-    "- One version for the three (0.52.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
+    "- One version for the three (0.52.1 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
     "  `zed/extension.toml`"
    ],
    "sources": [
@@ -176,50 +176,17 @@
    }
   },
   {
-   "id": "doc:extensions/README.md#how-we-made-it.706d12",
+   "id": "doc:extensions/README.md#how-we-made-it",
    "type": "readme",
    "title": "NuclearLang in the editors — How we made it",
-   "summary": "yet (root `AGENTS.md`, rule 9).",
+   "summary": "each tool is a project in `tools/`.",
    "body": [
-    "yet (root [`AGENTS.md`](../AGENTS.md), rule 9).",
-    "- **The tools make the product** ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md)):",
-    "  the extensions are where a developer runs `nuclear`, the generators and Nuclear Builder, not a place to write",
-    "  target code.",
-    "- One version for the three extensions.",
-    "",
-    "What was never tried in a running editor is listed in each roadmap: the JetBrains plugin is only compiled, and many",
-    "VS Code panels were checked only headless."
-   ],
-   "sources": [
-    "extensions/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/README.md#how-we-made-it.bb4585",
-   "type": "readme",
-   "title": "NuclearLang in the editors — How we made it",
-   "summary": "(ADR-extensions-0001).",
-   "body": [
-    "- **One language server, one base extension per editor**",
-    "  ([ADR-extensions-0001](docs/03-adr/0001-one-base-extension-per-editor.md)). Only the base extension registers the",
-    "  language, the grammar and the server; what a framework adds (run, debug, devices) is meant to go in an extension",
-    "  of that framework. Until those exist, the VS Code and JetBrains extensions carry the Synapsis parts",
-    "  ([roadmap](docs/01-product/roadmap.md)).",
-    "- **The Nuclear workspace** ([ADR-extensions-0002](docs/03-adr/0002-the-nuclear-workspace.md)): in VS Code, one",
-    "  container where every project and every tool is a tab, one thing on screen at a time, keyboard first. The other",
-    "  editors follow as far as their platform allows.",
-    "- **One source for what the three share.** The Chernobyl themes and icons of all three are generated from",
-    "  `vscode/theme/`; the TextMate grammar of VS Code is also packed by the JetBrains plugin; the code metrics settings",
-    "  are generated from the server's defaults. Nothing generated is edited by hand.",
-    "- **A tool is a project of its own** in [`tools/`](tools/), with its code and documents; an extension only wires",
-    "  it in.",
-    "- **Written in the editors' languages**: TypeScript for VS Code, Java for JetBrains (compiled with `javac`, no",
-    "  Gradle), Rust to wasm for Zed. An editor runs only its own language, so this is where Nuclear cannot be the source"
+    "- **One language server, one base extension per editor** ([ADR-extensions-0001](docs/03-adr/0001-one-base-extension-per-editor.md)).",
+    "- **The Nuclear workspace**: one container, every project and tool a tab ([ADR-extensions-0002](docs/03-adr/0002-the-nuclear-workspace.md)).",
+    "- **One source for what they share**: themes, icons and grammar generated from `vscode/`.",
+    "- **The tools make the product** ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md));",
+    "  each tool is a project in [`tools/`](tools/).",
+    "- Written in TypeScript, Java and Rust to wasm: an editor runs only its own language."
    ],
    "sources": [
     "extensions/README.md"
@@ -234,11 +201,32 @@
    "id": "doc:extensions/README.md#nuclearlang-in-the-editors",
    "type": "readme",
    "title": "NuclearLang in the editors",
-   "summary": "The extensions that bring NuclearLang (`.nuc`) to three editors: VS Code, Android Studio / IntelliJ and Zed.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) ![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) · Website Extensions for VS Code, Android Studio / IntelliJ and Zed.",
    "body": [
-    "The extensions that bring NuclearLang (`.nuc`) to three editors: VS Code, Android Studio / IntelliJ and Zed. Each",
-    "one starts the same language server, so a `.nuc` file gets the same diagnostics, completion and colors everywhere,",
-    "and puts the platform's tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices) where the code is."
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) [![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) · [Website](https://nuclearlang.github.io/tools/extensions)",
+    "",
+    "Extensions for VS Code, Android Studio / IntelliJ and Zed. Each starts the same language server, and brings the",
+    "platform's tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices) where the code is."
+   ],
+   "sources": [
+    "extensions/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/README.md#read-next",
+   "type": "readme",
+   "title": "NuclearLang in the editors — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [Which editor has what](docs/08-guides/README.md)",
+    "- [VS Code](vscode/README.md), [Android Studio / IntelliJ](jetbrains/README.md), [Zed](zed/README.md)",
+    "- [The decisions](docs/03-adr/README.md), [the roadmap](docs/01-product/roadmap.md)",
+    "- To change it: [AGENTS.md](AGENTS.md)"
    ],
    "sources": [
     "extensions/README.md"
@@ -253,19 +241,14 @@
    "id": "doc:extensions/README.md#try-it",
    "type": "readme",
    "title": "NuclearLang in the editors — Try it",
-   "summary": "The installer installs what it can, with `nuclear` and `nuclear-lsp`.",
+   "summary": "installer/install.sh # installs the VS Code and Zed extensions it can (cd extensions/vscode && npm install && npm run package) # → nuclearlang-<version>.vsix Open a `.nuc` file: diagnostics appear while you type.",
    "body": [
-    "The installer installs what it can, with `nuclear` and `nuclear-lsp`. From the tree:",
-    "",
     "```sh",
-    "installer/install.sh                            # the newest vscode/nuclearlang-*.vsix when `code` is on the PATH;",
-    "                                                # builds and installs the Zed extension when Zed is installed",
-    "(cd extensions/vscode && npm install && npm run package)            # → nuclearlang-<version>.vsix",
-    "(cd extensions/jetbrains && IDE_HOME=/opt/android-studio ./build.sh) # → build/nuclearlang-<version>.zip",
-    "(cd extensions/zed && ./build.sh)                                    # builds and installs into Zed",
+    "installer/install.sh                                     # installs the VS Code and Zed extensions it can",
+    "(cd extensions/vscode && npm install && npm run package) # → nuclearlang-<version>.vsix",
     "```",
     "",
-    "Open a `.nuc` file: diagnostics appear while you type. In VS Code, `Ctrl+Alt+N` opens the Nuclear workspace."
+    "Open a `.nuc` file: diagnostics appear while you type. In VS Code, `Ctrl+Alt+N` opens the workspace."
    ],
    "sources": [
     "extensions/README.md"
@@ -277,50 +260,14 @@
    }
   },
   {
-   "id": "doc:extensions/README.md#where-to-read-next",
+   "id": "doc:extensions/README.md#why",
    "type": "readme",
-   "title": "NuclearLang in the editors — Where to read next",
-   "summary": "Where to read next",
+   "title": "NuclearLang in the editors — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| Which editor has what, how to install each | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| VS Code | [vscode/README.md](vscode/README.md) |",
-    "| Android Studio / IntelliJ | [jetbrains/README.md](jetbrains/README.md) |",
-    "| Zed | [zed/README.md](zed/README.md) |",
-    "| The tools | [Nuclear Builder](tools/nuclear-builder/README.md), [HTTP Connections](tools/nuclear-http-connections/README.md), [Nuclear Atlas](tools/nuclear-atlas/README.md), [the devices](tools/nuclear-device-manager/README.md) |",
-    "| How the parts fit | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| Why it is this way | [docs/03-adr/README.md](docs/03-adr/README.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it, or to release | [AGENTS.md](AGENTS.md), [docs/06-runbooks/release.md](docs/06-runbooks/release.md) |"
-   ],
-   "sources": [
-    "extensions/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/README.md#why-it-exists",
-   "type": "readme",
-   "title": "NuclearLang in the editors — Why it exists",
-   "summary": "A `.nuc` file is written in an editor, and so is everything a developer does around it: run the app, debug it, call its API, hand work to the agents.",
-   "body": [
-    "A `.nuc` file is written in an editor, and so is everything a developer does around it: run the app, debug it, call",
-    "its API, hand work to the agents. Without the extensions that means a terminal per task and several windows for a",
-    "backend and its apps. The extensions put every Nuclear feature in one place.",
-    "",
-    "What they leave out on purpose:",
-    "",
-    "- **The language itself.** Completion, hover, diagnostics and the project rules are the language server,",
-    "  `nuclear-lsp`, in [the language project](../nuclearlang/AGENTS.md). An extension only talks to it.",
-    "- **Any dialect.** The kinds, the documentation of each word and where a project's output goes are data of the",
-    "  dialect and of the project card the server writes; no extension hard-codes a path, a port or a command.",
-    "- **Nuclear Builder in Zed**, decided by the user. Zed also lets an extension add no panels, views or keybindings,",
-    "  so the workspace, the devices and `.nuc` debugging cannot be built there."
+    "- Write, run, debug, call the API and hand work to agents in one place, not a terminal per task.",
+    "- The same diagnostics, completion and colors in every editor.",
+    "- No language or dialect logic in an extension: that is `nuclear-lsp` and the dialects' data."
    ],
    "sources": [
     "extensions/README.md"
@@ -1123,9 +1070,9 @@
    "id": "doc:extensions/jetbrains/AGENTS.md#jetbrains-plugin",
    "type": "readme",
    "title": "JetBrains plugin",
-   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.0): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
+   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.1): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
    "body": [
-    "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.0): the client of the language",
+    "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.1): the client of the language",
     "server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects",
     "that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*HTTP Connections*, *Nuclear Builder*),",
     "whose code is in `../tools/nuclear-http-connections/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What",
@@ -1204,6 +1151,7 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
     "- 0.52.0: the tool window Nuclear Connector is now HTTP Connections (its code in `extensions/tools/nuclear-http-connections/jetbrains/`, the class `HttpConnections`).",
     "- 0.51.0: the version of the three extensions (one repository; the tool windows Nuclear Builder and HTTP Connections, their code in `extensions/tools/<tool>/jetbrains/`; Synapsis; the framework's commands are `nuclear <command>`).",
     "- First public version.",
@@ -1224,21 +1172,13 @@
    "id": "doc:extensions/jetbrains/README.md#how-we-made-it",
    "type": "readme",
    "title": "NuclearLang for Android Studio / IntelliJ — How we made it",
-   "summary": "(ADR-extensions-0001): it uses the IDE's native LSP API (`com.intellij.modules.lsp`) and the TextMate plugin bundled with the IDE, with the grammar of the VS Code extension.",
+   "summary": "(ADR-extensions-0001).",
    "body": [
-    "- **The same server and grammar as every editor**",
-    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)): it uses the IDE's native LSP API",
-    "  (`com.intellij.modules.lsp`) and the TextMate plugin bundled with the IDE, with the grammar of the VS Code",
-    "  extension. The themes, color schemes and icons are generated by `../vscode/theme/`.",
-    "- **The IDE runs what it already knows how to run**: the plugin never starts `flutter run` nor the server's process",
-    "  itself; it adds the generated app (`build/app`) as a module and lets the Flutter plugin do the rest.",
-    "- **The tool windows read the same files as VS Code** (`.nuclear/project.json`, `contract.json`, `http.json`, the",
-    "  Builder's runs); Nuclear Builder runs only through the `nuclear-builder` command. Their code lives in",
-    "  [`../tools/nuclear-http-connections/`](../tools/nuclear-http-connections/README.md) and",
-    "  [`../tools/nuclear-builder/`](../tools/nuclear-builder/README.md).",
-    "- **Written in Java**, compiled with `javac` against the jars of the installed IDE: no Gradle.",
-    "",
-    "**State:** compiled against Android Studio 2026.2, never loaded in a running IDE."
+    "- **The same server and grammar as every editor**, through the IDE's native LSP API",
+    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)).",
+    "- **The IDE runs what it knows**: the generated app is a module the Flutter plugin runs.",
+    "- **The tool windows read the same files as VS Code**; their code is in [`../tools/`](../tools/).",
+    "- **Written in Java**, compiled with `javac`, no Gradle. Compiled, never loaded in a running IDE."
    ],
    "sources": [
     "extensions/jetbrains/README.md"
@@ -1253,11 +1193,33 @@
    "id": "doc:extensions/jetbrains/README.md#nuclearlang-for-android-studio-intellij",
    "type": "readme",
    "title": "NuclearLang for Android Studio / IntelliJ",
-   "summary": "The NuclearLang plugin for JetBrains IDEs (`dev.nuclearlang`, build 251 or newer): the language server `nuclear-lsp`, the TextMate grammar and the Chernobyl themes, code metrics, Synapsis mobile projects that work like a Flutter project, `.nuc` breakpoints, and two tool windows, *HTTP Connections*…",
+   "summary": "Website · IntelliJ The NuclearLang plugin for JetBrains IDEs (build 251+): the language server, the grammar and Chernobyl themes, code metrics, Synapsis mobile projects that work like Flutter projects, and the *HTTP Connections* and *Nuclear Builder* tool windows.",
    "body": [
-    "The NuclearLang plugin for JetBrains IDEs (`dev.nuclearlang`, build 251 or newer): the language server",
-    "`nuclear-lsp`, the TextMate grammar and the Chernobyl themes, code metrics, Synapsis mobile projects that work like a",
-    "Flutter project, `.nuc` breakpoints, and two tool windows, *HTTP Connections* and *Nuclear Builder*."
+    "[Website](https://nuclearlang.github.io/tools/android-studio) · [IntelliJ](https://nuclearlang.github.io/tools/intellij)",
+    "",
+    "The NuclearLang plugin for JetBrains IDEs (build 251+): the language server, the grammar and Chernobyl themes, code",
+    "metrics, Synapsis mobile projects that work like Flutter projects, and the *HTTP Connections* and *Nuclear Builder*",
+    "tool windows."
+   ],
+   "sources": [
+    "extensions/jetbrains/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/jetbrains/README.md#read-next",
+   "type": "readme",
+   "title": "NuclearLang for Android Studio / IntelliJ — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md)",
+    "- [Which class does what](docs/02-architecture/overview.md)",
+    "- [The extensions](../README.md), [the roadmap](docs/01-product/roadmap.md)",
+    "- To change it: [AGENTS.md](AGENTS.md)"
    ],
    "sources": [
     "extensions/jetbrains/README.md"
@@ -1272,16 +1234,14 @@
    "id": "doc:extensions/jetbrains/README.md#try-it",
    "type": "readme",
    "title": "NuclearLang for Android Studio / IntelliJ — Try it",
-   "summary": "cd extensions/jetbrains # beside extensions/vscode; needs node and cargo IDE_HOME=/opt/android-studio ./build.sh # → build/nuclearlang-<version>.zip, checked with nuclear-lsp --check-bundle Then *Settings → Plugins → ⚙ → Install Plugin from Disk…* → the zip, restart the IDE, and *Settings →…",
+   "summary": "cd extensions/jetbrains IDE_HOME=/opt/android-studio ./build.sh # → build/nuclearlang-<version>.zip Then *Settings → Plugins → Install Plugin from Disk…* → the zip.",
    "body": [
     "```sh",
-    "cd extensions/jetbrains                       # beside extensions/vscode; needs node and cargo",
-    "IDE_HOME=/opt/android-studio ./build.sh       # → build/nuclearlang-<version>.zip, checked with nuclear-lsp --check-bundle",
+    "cd extensions/jetbrains",
+    "IDE_HOME=/opt/android-studio ./build.sh       # → build/nuclearlang-<version>.zip",
     "```",
     "",
-    "Then *Settings → Plugins → ⚙ → Install Plugin from Disk…* → the zip, restart the IDE, and *Settings → Appearance →",
-    "Theme* → **Chernobyl**. Open a Synapsis project folder (*File → Open*); the first time the plugin offers *Reopen",
-    "Project*, after which the Flutter plugin's devices and Run appear. The release does not ship the zip."
+    "Then *Settings → Plugins → Install Plugin from Disk…* → the zip."
    ],
    "sources": [
     "extensions/jetbrains/README.md"
@@ -1293,40 +1253,15 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/README.md#where-to-read-next",
+   "id": "doc:extensions/jetbrains/README.md#why",
    "type": "readme",
-   "title": "NuclearLang for Android Studio / IntelliJ — Where to read next",
-   "summary": "Where to read next",
+   "title": "NuclearLang for Android Studio / IntelliJ — Why",
+   "summary": "hot reload and DevTools.",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| Install, the settings, Synapsis projects, debugging, the tool windows | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| Which class does what | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| What the three editors share | [the extensions](../README.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/jetbrains/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/jetbrains/README.md#why-it-exists",
-   "type": "readme",
-   "title": "NuclearLang for Android Studio / IntelliJ — Why it exists",
-   "summary": "A Flutter developer lives in Android Studio.",
-   "body": [
-    "A Flutter developer lives in Android Studio. The plugin lets a Synapsis mobile app be written in Nuclear there and",
-    "still run with everything the Flutter plugin gives: the device picker, Run / Debug, hot reload, DevTools. Opening",
-    "the project runs `nuclear build`; saving a `.nuc` builds and hot reloads the running app.",
-    "",
-    "What it leaves out: Nuclear Atlas, the settings page, the notifications and the Nuclear workspace are VS Code only;",
-    "stepping by Nuclear line is not there yet ([roadmap](docs/01-product/roadmap.md))."
+    "- A Flutter developer lives in Android Studio: write the app in Nuclear and keep the device picker, Run / Debug,",
+    "  hot reload and DevTools.",
+    "- Saving a `.nuc` builds and hot reloads the running app.",
+    "- Nuclear Atlas and the Nuclear workspace are VS Code only."
    ],
    "sources": [
     "extensions/jetbrains/README.md"
@@ -1744,13 +1679,10 @@
    "id": "doc:extensions/tools/nuclear-backend-designer/README.md#how-it-will-be-made",
    "type": "readme",
    "title": "Nuclear Backend Designer — How it will be made",
-   "summary": "(ADR-extensions-0002).",
+   "summary": "Nothing is built until its spec exists in `docs/04-specs/`.",
    "body": [
-    "- Nothing is built here until its spec exists in `docs/04-specs/` of this folder.",
-    "- It will be a tool of the Nuclear workspace: a workspace of its own, full screen, with a shortcut",
-    "  ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)).",
-    "",
-    "`TODO(human): what must the backend designer show and do that HTTP Connections does not?`"
+    "Nothing is built until its spec exists in `docs/04-specs/`. It will be a tool of the Nuclear workspace",
+    "([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md))."
    ],
    "platforms": [
     "backend"
@@ -1768,28 +1700,11 @@
    "id": "doc:extensions/tools/nuclear-backend-designer/README.md#nuclear-backend-designer",
    "type": "readme",
    "title": "Nuclear Backend Designer",
-   "summary": "Nuclear Backend Designer",
-   "body": "**Not built.** A viewer of the backend API, inside VS Code.",
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-backend-designer/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-backend-designer/README.md#what-exists-today",
-   "type": "readme",
-   "title": "Nuclear Backend Designer — What exists today",
-   "summary": "Nothing: no code, no spec and no tab of the Nuclear workspace.",
+   "summary": "`TODO(human): what must the backend designer show and do that HTTP Connections does not?`",
    "body": [
-    "Nothing: no code, no spec and no tab of the Nuclear workspace. The name and the one line above are all that is",
-    "decided."
+    "**Not built.** A viewer of the backend API, inside VS Code. No code, no spec yet.",
+    "",
+    "`TODO(human): what must the backend designer show and do that HTTP Connections does not?`"
    ],
    "platforms": [
     "backend"
@@ -1804,14 +1719,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-backend-designer/README.md#where-to-read-next",
+   "id": "doc:extensions/tools/nuclear-backend-designer/README.md#read-next",
    "type": "readme",
-   "title": "Nuclear Backend Designer — Where to read next",
-   "summary": "Where to read next",
-   "body": [
-    "- The tools that exist: [the extensions](../../README.md).",
-    "- To work on it: [AGENTS.md](AGENTS.md)."
-   ],
+   "title": "Nuclear Backend Designer — Read next",
+   "summary": "The tools that exist · AGENTS.md to work on it",
+   "body": "[The tools that exist](../../README.md) · [AGENTS.md](AGENTS.md) to work on it",
    "platforms": [
     "backend"
    ],
@@ -1957,24 +1869,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/README.md#how-we-made-it.0a730c",
+   "id": "doc:extensions/tools/nuclear-device-manager/README.md#how-we-made-it",
    "type": "readme",
    "title": "The devices in the editor — How we made it",
-   "summary": "(ADR-devices-0001): Flutter runs the app on its `chrome` device in a headless Chromium (Chrome, Chromium, Brave, Edge or Vivaldi); the panel shows its screen and sends it your taps, wheel and keys.",
+   "summary": "How we made it",
    "body": [
-    "- **A device is the app as Flutter web in Chromium, driven over CDP**",
-    "  ([ADR-devices-0001](../../../device-emulators/docs/03-adr/0001-a-device-is-the-app-as-flutter-web-in-chromium-driven-over-cdp.md)):",
-    "  Flutter runs the app on its `chrome` device in a headless Chromium (Chrome, Chromium, Brave, Edge or Vivaldi); the",
-    "  panel shows its screen and sends it your taps, wheel and keys. Breakpoints, hot reload and hot restart work as for",
-    "  any Flutter web app. A web app runs on its dialect's dev server.",
-    "- **Several devices, parked, never lost** ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)):",
-    "  the devices stay in the mobile workspaces and the Devices tool; elsewhere they are parked (the app keeps running",
-    "  headless). Closing a device's tab only hides it; a device nobody looks at for 30 minutes ends by itself.",
-    "- **Nothing stays alive when VS Code closes**: every process a device starts carries the window's marker and is",
-    "  reaped.",
-    "- **A frame is the device's on-screen pixels 1:1**: nothing is upscaled.",
-    "- **Written in TypeScript**, bundled by the VS Code extension, with the same presets as `nuclear device`; the web",
-    "  device's engine and the CDP client have no `vscode` import, so node runs them without the editor."
+    "- A device is the app as Flutter web in a headless Chromium, driven over CDP ([ADR-devices-0001](../../../device-emulators/docs/03-adr/0001-a-device-is-the-app-as-flutter-web-in-chromium-driven-over-cdp.md)).",
+    "- Several devices, parked, never lost; one idle for 30 minutes ends by itself ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)).",
+    "- Nothing stays alive when VS Code closes; a frame is the on-screen pixels 1:1.",
+    "- TypeScript, with the same presets as `nuclear device` ([roadmap](docs/01-product/roadmap.md))."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/README.md"
@@ -1986,13 +1889,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/README.md#how-we-made-it.43f4a9",
+   "id": "doc:extensions/tools/nuclear-device-manager/README.md#read-next",
    "type": "readme",
-   "title": "The devices in the editor — How we made it",
-   "summary": "tried in a running VS Code, and the watchdog has no Windows version (roadmap).",
+   "title": "The devices in the editor — Read next",
+   "summary": "Read next",
    "body": [
-    "**State:** it works; hot reload of each device, the idle stop, park and unpark and the web device panel were never",
-    "tried in a running VS Code, and the watchdog has no Windows version ([roadmap](docs/01-product/roadmap.md))."
+    "- [The guide](docs/08-guides/README.md): devices, several at once, the web device",
+    "- [Architecture](docs/02-architecture/overview.md) · [Mobile device](docs/02-architecture/mobile-device.md) · [Web device](docs/02-architecture/web-device.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/README.md"
@@ -2007,12 +1911,12 @@
    "id": "doc:extensions/tools/nuclear-device-manager/README.md#the-devices-in-the-editor",
    "type": "readme",
    "title": "The devices in the editor",
-   "summary": "Your app running inside VS Code, beside its code.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website Your app running inside VS Code, beside its code: the Synapsis device runs a mobile app in a panel, like Android Studio's *Running Devices*; the web device shows a web app at desktop, laptop,…",
    "body": [
-    "Your app running inside VS Code, beside its code. The **Synapsis device** runs a mobile app in a panel, like",
-    "Android Studio's *Running Devices*; the **web device** shows a web app at the size of a desktop, a laptop, a tablet",
-    "or a phone. The *Devices* tool of the Nuclear workspace (`Ctrl+Alt+V`) lists the open devices and opens as many as",
-    "you want."
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/devices)",
+    "",
+    "Your app running inside VS Code, beside its code: the **Synapsis device** runs a mobile app in a panel, like Android",
+    "Studio's *Running Devices*; the **web device** shows a web app at desktop, laptop, tablet or phone size (`Ctrl+Alt+V`)."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/README.md"
@@ -2027,11 +1931,10 @@
    "id": "doc:extensions/tools/nuclear-device-manager/README.md#try-it",
    "type": "readme",
    "title": "The devices in the editor — Try it",
-   "summary": "Install the VS Code extension and the Dart and Flutter extensions.",
+   "summary": "Install the VS Code extension and the Dart and Flutter extensions, open a Synapsis mobile project, press ▷ Run and pick a Synapsis device.",
    "body": [
-    "Install the [VS Code extension](../../vscode/README.md) and the Dart and Flutter extensions. Open a Synapsis",
-    "mobile project and press ▷ Run: it asks which device to use; pick a Synapsis device. The first run builds Flutter web",
-    "and takes about a minute; the next ones are incremental. For a web project, ▭ Device opens the web device."
+    "Install the [VS Code extension](../../vscode/README.md) and the Dart and Flutter extensions, open a Synapsis mobile",
+    "project, press ▷ Run and pick a Synapsis device. The first build takes about a minute."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/README.md"
@@ -2043,42 +1946,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/README.md#where-to-read-next",
+   "id": "doc:extensions/tools/nuclear-device-manager/README.md#why",
    "type": "readme",
-   "title": "The devices in the editor — Where to read next",
-   "summary": "Where to read next",
+   "title": "The devices in the editor — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| The Synapsis device, several devices, the web device | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| The panels, park and unpark, the watchdog | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| How a mobile app gets into a panel | [docs/02-architecture/mobile-device.md](docs/02-architecture/mobile-device.md) |",
-    "| The web device | [docs/02-architecture/web-device.md](docs/02-architecture/web-device.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-device-manager/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-device-manager/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The devices in the editor — Why it exists",
-   "summary": "Hot reload is watched while you code, so the app belongs next to the code, not in another window.",
-   "body": [
-    "Hot reload is watched while you code, so the app belongs next to the code, not in another window. Each device",
-    "has its own size, identity, app and session, so two users signed in side by side are two devices, tiled like",
-    "emulators.",
-    "",
-    "What it leaves out: it is VS Code only. In a terminal or another editor, `nuclear device` opens its own window, or",
-    "use `nuclear terminal-device`; those devices are the project",
-    "[`device-emulators/`](../../../device-emulators/AGENTS.md)."
+    "- You watch hot reload while you code, so the app belongs next to the code.",
+    "- Each device has its own size, identity and session: two users side by side are two tiled devices.",
+    "- Left out on purpose: VS Code only; elsewhere use [`nuclear device`](../../../device-emulators/AGENTS.md)."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/README.md"
@@ -2726,11 +2601,10 @@
    "id": "doc:extensions/tools/nuclear-documentor/README.md#how-it-will-be-made",
    "type": "readme",
    "title": "Nuclear Documentor — How it will be made",
-   "summary": "(ADR-extensions-0002).",
+   "summary": "Nothing is built until its spec exists in `docs/04-specs/`.",
    "body": [
-    "- Nothing is built here until its spec exists in `docs/04-specs/` of this folder.",
-    "- A tool of the strip comes first as its layout and shortcut, the tool later",
-    "  ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md))."
+    "Nothing is built until its spec exists in `docs/04-specs/`. It will be a tool of the Nuclear workspace",
+    "([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md))."
    ],
    "sources": [
     "extensions/tools/nuclear-documentor/README.md"
@@ -2745,11 +2619,11 @@
    "id": "doc:extensions/tools/nuclear-documentor/README.md#nuclear-documentor",
    "type": "readme",
    "title": "Nuclear Documentor",
-   "summary": "`TODO(human): what is nuclear-documentor, and what must it do?`",
+   "summary": "`TODO(human): what is nuclear-documentor, and what must it do?` `TODO(human): is nuclear-documentor that template tab?`",
    "body": [
-    "**Not built.** A tool of the editors still to do; no description of it was given.",
+    "**Not built.** No description given, no code, no spec. VS Code has a template tab, *AI documenter* (`Ctrl+Alt+M`).",
     "",
-    "`TODO(human): what is nuclear-documentor, and what must it do?`"
+    "`TODO(human): what is nuclear-documentor, and what must it do?` `TODO(human): is nuclear-documentor that template tab?`"
    ],
    "sources": [
     "extensions/tools/nuclear-documentor/README.md"
@@ -2761,36 +2635,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-documentor/README.md#what-exists-today",
+   "id": "doc:extensions/tools/nuclear-documentor/README.md#read-next",
    "type": "readme",
-   "title": "Nuclear Documentor — What exists today",
-   "summary": "No code and no spec.",
-   "body": [
-    "No code and no spec. The Nuclear workspace of VS Code has a template tab, *AI documenter* (`Ctrl+Alt+M`): a page",
-    "that says \"Documentation of the active project generated from its declarations, contracts and doc comments\" and",
-    "lists as planned a page per component with its use cases, repositories and screens, the API reference from",
-    "`.nuclear/openapi.json`, and a model explaining each declaration on demand.",
-    "",
-    "`TODO(human): is nuclear-documentor that template tab?`"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-documentor/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-documentor/README.md#where-to-read-next",
-   "type": "readme",
-   "title": "Nuclear Documentor — Where to read next",
-   "summary": "Where to read next",
-   "body": [
-    "- The tools that exist: [the extensions](../../README.md).",
-    "- To work on it: [AGENTS.md](AGENTS.md)."
-   ],
+   "title": "Nuclear Documentor — Read next",
+   "summary": "The tools that exist · AGENTS.md to work on it",
+   "body": "[The tools that exist](../../README.md) · [AGENTS.md](AGENTS.md) to work on it",
    "sources": [
     "extensions/tools/nuclear-documentor/README.md"
    ],
@@ -2935,20 +2784,12 @@
    "id": "doc:extensions/tools/nuclear-http-connections/README.md#how-we-made-it",
    "type": "readme",
    "title": "HTTP Connections — How we made it",
-   "summary": "(ADR-synapsis-0006; its format: projects §1.2).",
+   "summary": "How we made it",
    "body": [
-    "- **The endpoints come from the contract**, never from the code",
-    "  ([ADR-synapsis-0006](../../../nuclear-synapsis-framework/docs/03-adr/0006-shared-contracts.md); its format:",
-    "  [projects §1.2](../../../nuclearlang/docs/07-reference/projects.md)). Build the project, or open one of its",
-    "  `.nuc` files, and the tree follows.",
-    "- **A tool of the Nuclear workspace** ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)): a",
-    "  component is one editor tab and each endpoint a tab inside it, so the tab bar never fills with requests.",
-    "- **The request is sent by the extension host**, not by the page, and `{{var}}` is resolved there.",
-    "- **Written in TypeScript** for VS Code (bundled by the extension, sent with `fetch`) and Java for the JetBrains",
-    "  tool window (`java.net.http`, Gson). It has no test of its own.",
-    "",
-    "**State:** never run in a VS Code window nor in a running IDE; the JetBrains window is only compiled",
-    "([roadmap](docs/01-product/roadmap.md))."
+    "- The endpoints come from the contract, never the code ([ADR-synapsis-0006](../../../nuclear-synapsis-framework/docs/03-adr/0006-shared-contracts.md); format in [projects §1.2](../../../nuclearlang/docs/07-reference/projects.md)).",
+    "- A tool of the Nuclear workspace: one tab per component, endpoints inside it ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)).",
+    "- The extension host sends the request and resolves `{{var}}`, not the page.",
+    "- TypeScript for VS Code, Java for JetBrains. Never yet run in a live editor ([roadmap](docs/01-product/roadmap.md))."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/README.md"
@@ -2963,11 +2804,31 @@
    "id": "doc:extensions/tools/nuclear-http-connections/README.md#http-connections",
    "type": "readme",
    "title": "HTTP Connections",
-   "summary": "An HTTP client like Postman or Bruno, inside the editor, that already knows every endpoint of your projects.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website An HTTP client like Postman or Bruno, inside the editor, that already knows every endpoint of your projects.",
    "body": [
-    "An HTTP client like Postman or Bruno, inside the editor, that already knows every endpoint of your projects. It is",
-    "a tool of the Nuclear workspace in VS Code (`Ctrl+Alt+H`) and a tool window in Android Studio / IntelliJ",
-    "(`Alt+Shift+H`)."
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/http-connections)",
+    "",
+    "An HTTP client like Postman or Bruno, inside the editor, that already knows every endpoint of your projects. In VS",
+    "Code (`Ctrl+Alt+H`) and JetBrains (`Alt+Shift+H`)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-http-connections/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-http-connections/README.md#read-next",
+   "type": "readme",
+   "title": "HTTP Connections — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md): the tree, requests, environments, OpenAPI",
+    "- [Architecture](docs/02-architecture/overview.md)",
+    "- [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it"
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/README.md"
@@ -2982,15 +2843,10 @@
    "id": "doc:extensions/tools/nuclear-http-connections/README.md#try-it",
    "type": "readme",
    "title": "HTTP Connections — Try it",
-   "summary": "Install the VS Code extension, open a folder with a built Nuclear project (one that has `.nuclear/project.json`) and press `Ctrl+Alt+H`.",
+   "summary": "Install the VS Code extension, open a built Nuclear project and press `Ctrl+Alt+H`.",
    "body": [
-    "Install the [VS Code extension](../../vscode/README.md), open a folder with a built Nuclear project (one that has",
-    "`.nuclear/project.json`) and press `Ctrl+Alt+H`. Click an endpoint: its tab has the path and query parameters,",
-    "the headers, a sample body from the model, **Send**, the pretty-printed response and *copy as curl*. A backend",
-    "project's ⇄ action (*Routes in HTTP Connections*) opens the same tree.",
-    "",
-    "To build it from the tree: `cd extensions/vscode && npm run compile`; the JetBrains window:",
-    "`cd extensions/jetbrains && IDE_HOME=/opt/android-studio ./build.sh`."
+    "Install the [VS Code extension](../../vscode/README.md), open a built Nuclear project and press `Ctrl+Alt+H`. Click",
+    "an endpoint, then **Send**."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/README.md"
@@ -3002,43 +2858,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-http-connections/README.md#where-to-read-next",
+   "id": "doc:extensions/tools/nuclear-http-connections/README.md#why",
    "type": "readme",
-   "title": "HTTP Connections — Where to read next",
-   "summary": "Where to read next",
+   "title": "HTTP Connections — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| The tree, sending a request, the environments, OpenAPI | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| The model, the tree, the panel, the JetBrains window | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-http-connections/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-http-connections/README.md#why-it-exists",
-   "type": "readme",
-   "title": "HTTP Connections — Why it exists",
-   "summary": "Calling the API of a backend you are writing means typing every path, parameter and body into another program, and typing them again when they change.",
-   "body": [
-    "Calling the API of a backend you are writing means typing every path, parameter and body into another program, and",
-    "typing them again when they change. The compiler already knows them: it writes each project's endpoints to",
-    "`.nuclear/contract.json`. The HTTP Connections tool reads that file and shows a tree by platform, project and component, with",
-    "the routes a backend exposes and the calls an app makes. It also lists the contracts an app declares (with",
-    "*↓ Update*), OpenAPI documents of APIs that are not Nuclear, and environments (`.nuclear/http.json`: variables,",
-    "headers, base urls).",
-    "",
-    "What it leaves out: it never reads your code to find an endpoint, and today it speaks only HTTP (REST: GET, POST,",
-    "PUT, PATCH, DELETE). More protocols (sockets, gRPC, UDP) are the user's plan ([roadmap](docs/01-product/roadmap.md)).",
-    "An OpenAPI document must be JSON."
+    "- No retyping paths, parameters and bodies: the compiler already wrote them to `.nuclear/contract.json`.",
+    "- One tree by platform, project and component: the routes a backend exposes and the calls an app makes.",
+    "- Environments, app contracts and OpenAPI (JSON) documents of APIs that are not Nuclear.",
+    "- Left out on purpose: it never reads your code; today only HTTP REST."
    ],
    "sources": [
     "extensions/tools/nuclear-http-connections/README.md"
@@ -3398,13 +3226,10 @@
    "id": "doc:extensions/tools/nuclear-storage-connector/README.md#how-it-will-be-made",
    "type": "readme",
    "title": "Nuclear Storage Connector — How it will be made",
-   "summary": "(ADR-extensions-0002).",
+   "summary": "Nothing is built until its spec exists in `docs/04-specs/`.",
    "body": [
-    "- Nothing is built here until its spec exists in `docs/04-specs/` of this folder.",
-    "- It will be a tool of the Nuclear workspace: a workspace of its own, full screen, with a shortcut",
-    "  ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)).",
-    "",
-    "`TODO(human): which databases, and does it only read them or also edit them?`"
+    "Nothing is built until its spec exists in `docs/04-specs/`. It will be a tool of the Nuclear workspace",
+    "([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md))."
    ],
    "sources": [
     "extensions/tools/nuclear-storage-connector/README.md"
@@ -3419,25 +3244,11 @@
    "id": "doc:extensions/tools/nuclear-storage-connector/README.md#nuclear-storage-connector",
    "type": "readme",
    "title": "Nuclear Storage Connector",
-   "summary": "Nuclear Storage Connector",
-   "body": "**Not built.** A viewer of databases, inside VS Code.",
-   "sources": [
-    "extensions/tools/nuclear-storage-connector/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-storage-connector/README.md#what-exists-today",
-   "type": "readme",
-   "title": "Nuclear Storage Connector — What exists today",
-   "summary": "Nothing: no code, no spec and no tab of the Nuclear workspace.",
+   "summary": "`TODO(human): which databases, and does it only read them or also edit them?`",
    "body": [
-    "Nothing: no code, no spec and no tab of the Nuclear workspace. The name and the one line above are all that is",
-    "decided."
+    "**Not built.** A viewer of databases, inside VS Code. No code, no spec yet.",
+    "",
+    "`TODO(human): which databases, and does it only read them or also edit them?`"
    ],
    "sources": [
     "extensions/tools/nuclear-storage-connector/README.md"
@@ -3449,14 +3260,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-storage-connector/README.md#where-to-read-next",
+   "id": "doc:extensions/tools/nuclear-storage-connector/README.md#read-next",
    "type": "readme",
-   "title": "Nuclear Storage Connector — Where to read next",
-   "summary": "Where to read next",
-   "body": [
-    "- The tools that exist: [the extensions](../../README.md).",
-    "- To work on it: [AGENTS.md](AGENTS.md)."
-   ],
+   "title": "Nuclear Storage Connector — Read next",
+   "summary": "The tools that exist · AGENTS.md to work on it",
+   "body": "[The tools that exist](../../README.md) · [AGENTS.md](AGENTS.md) to work on it",
    "sources": [
     "extensions/tools/nuclear-storage-connector/README.md"
    ],
@@ -3527,11 +3335,10 @@
    "id": "doc:extensions/tools/nuclear-ui-designer/README.md#how-it-will-be-made",
    "type": "readme",
    "title": "Nuclear UI Designer — How it will be made",
-   "summary": "(ADR-extensions-0002).",
+   "summary": "Nothing is built until its spec exists in `docs/04-specs/`.",
    "body": [
-    "- Nothing is built here until its spec exists in `docs/04-specs/` of this folder.",
-    "- A tool of the strip comes first as its layout and shortcut, the tool later",
-    "  ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md))."
+    "Nothing is built until its spec exists in `docs/04-specs/`. It will be a tool of the Nuclear workspace",
+    "([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md))."
    ],
    "sources": [
     "extensions/tools/nuclear-ui-designer/README.md"
@@ -3546,29 +3353,9 @@
    "id": "doc:extensions/tools/nuclear-ui-designer/README.md#nuclear-ui-designer",
    "type": "readme",
    "title": "Nuclear UI Designer",
-   "summary": "Nuclear.",
+   "summary": "`TODO(human): the template page says \"a mobile or web project\"; is the tool for the mobile platform only?`",
    "body": [
-    "**Not built.** A builder of UI inside VS Code: screens and widgets drawn and edited visually, and written back as",
-    "Nuclear."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-ui-designer/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-ui-designer/README.md#what-exists-today",
-   "type": "readme",
-   "title": "Nuclear UI Designer — What exists today",
-   "summary": "No code and no spec.",
-   "body": [
-    "No code and no spec. The Nuclear workspace of VS Code has a template tab, *UI designer* (`Ctrl+Alt+D`): a page that",
-    "says what the tool will do and lists as planned a canvas of the active screen built from its `.nuc`, dragging",
-    "widgets from the platform's kinds, and two-way editing (the code changes, the canvas follows).",
+    "**Not built.** Screens and widgets drawn visually in VS Code and written back as Nuclear. Today only a template tab, *UI designer* (`Ctrl+Alt+D`).",
     "",
     "`TODO(human): the template page says \"a mobile or web project\"; is the tool for the mobile platform only?`"
    ],
@@ -3582,14 +3369,11 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-ui-designer/README.md#where-to-read-next",
+   "id": "doc:extensions/tools/nuclear-ui-designer/README.md#read-next",
    "type": "readme",
-   "title": "Nuclear UI Designer — Where to read next",
-   "summary": "Where to read next",
-   "body": [
-    "- The tools that exist: [the extensions](../../README.md).",
-    "- To work on it: [AGENTS.md](AGENTS.md)."
-   ],
+   "title": "Nuclear UI Designer — Read next",
+   "summary": "The tools that exist · AGENTS.md to work on it",
+   "body": "[The tools that exist](../../README.md) · [AGENTS.md](AGENTS.md) to work on it",
    "sources": [
     "extensions/tools/nuclear-ui-designer/README.md"
    ],
@@ -3752,9 +3536,9 @@
    "id": "doc:extensions/vscode/AGENTS.md#vs-code-extension",
    "type": "readme",
    "title": "VS Code extension",
-   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.52.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
+   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.52.1): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
    "body": [
-    "The NuclearLang extension for VS Code (`nuclearlang`, 0.52.0): the client of the language server, semantic",
+    "The NuclearLang extension for VS Code (`nuclearlang`, 0.52.1): the client of the language server, semantic",
     "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
     "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is",
     "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
@@ -3800,27 +3584,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a27fde",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
-   "body": [
-    "- 0.52.0: Nuclear Connector is now HTTP Connections (the folder `extensions/tools/nuclear-http-connections`, the commands `nuclear.httpConnections.*`, the colors `nuclearHttpConnections.*`, the workspace tool `http-connections`); the chat (*Nuclear agent*) is now Nuclear Atlas, the local agent integrated with the RAG (the folder `extensions/tools/nuclear-atlas`, the workspace tool `atlas`). A theme that set `nuclearConnector.*` colors must use the new ids.",
-    "- 0.51.0: one repository (spec 008): the tools' code is in `extensions/tools/<tool>/`; Synapsis for Dragonfly (the debug type, the custom device id `synapsis`, `synapsis.g.dart`); the framework's commands run as `nuclear <command>`; the Loop is Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, commands `nuclear.builder.*`) and Nuclear HTTP is HTTP Connections (commands `nuclear.httpConnections.*`); the MCP server registered with the agents is `nuclear-mcp` (`nuclear.ai.mcpCommand`), the graph's command is `nuclear.ai.graphCommand`.",
-    "- 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`",
-    "  (`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
-    "- First public version."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.c9ba37",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -3836,14 +3599,36 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.cb41ad",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
+   "body": [
+    "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
+    "- First public version.",
+    "- 0.45.0: every call to the local agents carries the project's folder (`root`), so an agent reads by itself the files that declare the names of its task (the Builder and Nuclear Atlas); the Plan step says how many things of the spec are beyond the platform or the local agents (the planner's `limits`) and shows the plan as a tree; *Tests first* is skipped when the generators wrote every file of the run (ADR-graph-0001).",
+    "- 0.44.0: the Builder's *Generate* stage (before Plan) runs `nuclear gen` for the spec's resources; its files are undone like the agents' (ADR-codegen-0001).",
+    "- 0.46.0: the Builder follows the strategy of the request (ADR-developer-0001): the *Specification* stage ends with the analysis (`/developer/analyze`), which decides the stages that run, adds the generator calls it read in plain words to *Generate*, gives *Plan* the pieces the tools found (a rename's files are written as the tool gave them), stops the run with the questions when the request lacks a fact, and after *Code* wires each use case with `nuclear gen usecase`; for a bug, *Verification* repairs the file the failure names and never the test; a spec may name its strategy (`- Strategy:`)."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.dc5d5f",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.45.0: every call to the local agents carries the project's folder (`root`), so an agent reads by itself the files that declare the names of its task (the Builder and Nuclear Atlas); the Plan step says how many things of the spec are beyond the platform or the local agents (the planner's `limits`) and shows the plan as a tree; *Tests first* is skipped when the generators wrote every file of the run (ADR-graph-0001).",
-    "- 0.44.0: the Builder's *Generate* stage (before Plan) runs `nuclear gen` for the spec's resources; its files are undone like the agents' (ADR-codegen-0001).",
-    "- 0.46.0: the Builder follows the strategy of the request (ADR-developer-0001): the *Specification* stage ends with the analysis (`/developer/analyze`), which decides the stages that run, adds the generator calls it read in plain words to *Generate*, gives *Plan* the pieces the tools found (a rename's files are written as the tool gave them), stops the run with the questions when the request lacks a fact, and after *Code* wires each use case with `nuclear gen usecase`; for a bug, *Verification* repairs the file the failure names and never the test; a spec may name its strategy (`- Strategy:`)."
+    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
+    "- 0.52.0: Nuclear Connector is now HTTP Connections (the folder `extensions/tools/nuclear-http-connections`, the commands `nuclear.httpConnections.*`, the colors `nuclearHttpConnections.*`, the workspace tool `http-connections`); the chat (*Nuclear agent*) is now Nuclear Atlas, the local agent integrated with the RAG (the folder `extensions/tools/nuclear-atlas`, the workspace tool `atlas`). A theme that set `nuclearConnector.*` colors must use the new ids.",
+    "- 0.51.0: one repository (spec 008): the tools' code is in `extensions/tools/<tool>/`; Synapsis for Dragonfly (the debug type, the custom device id `synapsis`, `synapsis.g.dart`); the framework's commands run as `nuclear <command>`; the Loop is Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, commands `nuclear.builder.*`) and Nuclear HTTP is HTTP Connections (commands `nuclear.httpConnections.*`); the MCP server registered with the agents is `nuclear-mcp` (`nuclear.ai.mcpCommand`), the graph's command is `nuclear.ai.graphCommand`.",
+    "- 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`"
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -3873,42 +3658,18 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#how-we-made-it.4faefc",
+   "id": "doc:extensions/vscode/README.md#how-we-made-it",
    "type": "readme",
    "title": "NuclearLang for VS Code — How we made it",
-   "summary": "(ADR-extensions-0001): the same `nuclear-lsp` serves VS Code, Android Studio and Zed, and the extension knows a dialect only as data.",
+   "summary": "(ADR-extensions-0001).",
    "body": [
-    "- **One language server and one base extension per editor**",
-    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)): the same `nuclear-lsp` serves",
-    "  VS Code, Android Studio and Zed, and the extension knows a dialect only as data. A project's dialect comes from its",
-    "  manifest (`config.nuc` or `nuclear.toml`), so a backend project never sees Flutter's kinds.",
-    "- **The Nuclear workspace** ([ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md)): one container,",
-    "  one thing on screen at a time, keyboard first, the devices beside the code like emulators.",
-    "- **A page is only a view**: a Builder run or a chat question belongs to the extension, so closing its page or",
-    "  switching tools leaves the work running, and a notification says when it ends.",
-    "- **The tools come first** ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)): the",
-    "  generators of the file tree's *New with Synapsis* menu are `nuclear make` and `nuclear gen`, and the Builder runs",
-    "  `nuclear gen` before any agent writes.",
-    "- **Written in TypeScript**, bundled with esbuild, the panels in plain HTML and script with no framework. The tools'",
-    "  code lives in their own projects ([`../tools/`](../tools/)), bundled here."
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#how-we-made-it.554504",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — How we made it",
-   "summary": "Done and never tried in a running VS Code (only headless renders and node checks): the workspace, the AI pages and the web device panel among them (roadmap).",
-   "body": [
-    "Done and never tried in a running VS Code (only headless renders and node checks): the workspace, the AI pages and",
-    "the web device panel among them ([roadmap](docs/01-product/roadmap.md))."
+    "- **One language server, one base extension per editor**; a dialect is only data",
+    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)).",
+    "- **The Nuclear workspace**: one thing on screen at a time, keyboard first",
+    "  ([ADR-extensions-0002](../docs/03-adr/0002-the-nuclear-workspace.md)).",
+    "- **The tools come first**: *New with Synapsis* runs `nuclear make` and `nuclear gen`",
+    "  ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).",
+    "- **Written in TypeScript**, bundled with esbuild; panels in plain HTML."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -3923,13 +3684,33 @@
    "id": "doc:extensions/vscode/README.md#nuclearlang-for-vs-code",
    "type": "readme",
    "title": "NuclearLang for VS Code",
-   "summary": "written in Rust turns it into the code an expert would write in the target: Dart/Flutter, TypeScript, Python.",
+   "summary": "![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · Website transpiler turns it into expert Dart/Flutter, TypeScript or Python.",
    "body": [
-    "**NuclearLang** (`.nuc`) is a minimal language, made to be written by AI agents and read by people. A transpiler",
-    "written in Rust turns it into the code an expert would write in the target: Dart/Flutter, TypeScript, Python. This",
-    "extension brings the language server (`nuclear-lsp`), the dialects (`flutter`, `fastapi`, `nestjs`, `react`, and",
-    "the base `dart`, `python`, `typescript`) with their type definitions, the **Nuclear workspace** with the platform's",
-    "tools, and the **Chernobyl** themes."
+    "[![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/vscode)",
+    "",
+    "**NuclearLang** (`.nuc`) is a minimal language made to be written by AI agents and read by people; a Rust",
+    "transpiler turns it into expert Dart/Flutter, TypeScript or Python. This extension brings the language server, the",
+    "dialects, the **Nuclear workspace** and the **Chernobyl** themes."
+   ],
+   "sources": [
+    "extensions/vscode/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/README.md#read-next",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md): every command, key and setting",
+    "- [The workspace](docs/08-guides/workspace.md), [run and debug](docs/08-guides/run-and-debug.md)",
+    "- [What changed](CHANGELOG.md)",
+    "- To change it: [AGENTS.md](AGENTS.md)"
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -3944,16 +3725,13 @@
    "id": "doc:extensions/vscode/README.md#try-it",
    "type": "readme",
    "title": "NuclearLang for VS Code — Try it",
-   "summary": "code --install-extension nuclearlang-<version>.vsix # from a GitHub release, or built below cd extensions/vscode && npm install && npm run package # → nuclearlang-<version>.vsix The NuclearLang installer installs the `.vsix` by itself when `code` is on the `PATH`.",
+   "summary": "code --install-extension nuclearlang-<version>.vsix Open a `.nuc` file: diagnostics appear while you type.",
    "body": [
     "```sh",
-    "code --install-extension nuclearlang-<version>.vsix   # from a GitHub release, or built below",
-    "cd extensions/vscode && npm install && npm run package # → nuclearlang-<version>.vsix",
+    "code --install-extension nuclearlang-<version>.vsix",
     "```",
     "",
-    "The NuclearLang installer installs the `.vsix` by itself when `code` is on the `PATH`. Then open a `.nuc` file:",
-    "diagnostics appear while you type. *Preferences: Color Theme* → **Chernobyl**; `Ctrl+Alt+N` opens the workspace,",
-    "`Ctrl+Alt+W` its welcome page with the projects, the tools and the keys."
+    "Open a `.nuc` file: diagnostics appear while you type. `Ctrl+Alt+N` opens the workspace."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -3965,24 +3743,21 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#what-it-brings.2150bc",
+   "id": "doc:extensions/vscode/README.md#what-it-brings",
    "type": "readme",
    "title": "NuclearLang for VS Code — What it brings",
-   "summary": "projects, read from the contract the compiler writes.",
+   "summary": "What it brings",
    "body": [
-    "- **HTTP Connections** (`Ctrl+Alt+H`): an HTTP client like Bruno that already knows every endpoint of your",
-    "  projects, read from the contract the compiler writes.",
-    "- **Nuclear Builder** (`Ctrl+Alt+P`): a spec taken through plan, tests first, code, verification, security and",
-    "  deploy by Claude and the local agents, every step visible. The same engine is the `nuclear-builder` command.",
-    "- **Nuclear Atlas** (`Ctrl+Alt+A`): the local agent integrated with the RAG, a chat with the local agents about the",
-    "  active project, answered from the Nuclear Smart Graph (100% local, the knowledge base the MCP serves too); `/task <order>` runs it",
-    "  as a Builder run.",
-    "- **Set up the AI services** and **Settings and integrations** (`Ctrl+Alt+S`): a wizard that installs the Smart",
-    "  Graph, the Nuclear Developer and the local models that fit the machine, and one page for every `nuclear.ai.*`",
-    "  setting, the MCP server and the connections.",
-    "- **The Chernobyl and Chernobyl Soft themes**, with their file icons.",
-    "",
-    "Every command, key and setting is in [the guide](docs/08-guides/README.md)."
+    "- **The language server**: live diagnostics with quick fixes, completion, hover, go to definition, rename, semantic colors.",
+    "- **Show Generated Code** beside the `.nuc`, and **code metrics** above each function.",
+    "- **The Nuclear workspace** (`Ctrl+Alt+N`): projects and tools as tabs, each action with a key.",
+    "- **Run, debug and reload on save**, with breakpoints in the `.nuc`.",
+    "- **The devices** (`Ctrl+Alt+V`): a mobile or web app inside the editor.",
+    "- **HTTP Connections** (`Ctrl+Alt+H`): an HTTP client that knows every endpoint of your projects.",
+    "- **Nuclear Builder** (`Ctrl+Alt+P`): a spec taken through plan, tests, code, verification and deploy.",
+    "- **Nuclear Atlas** (`Ctrl+Alt+A`): a local chat answered from the Nuclear Smart Graph.",
+    "- **Settings and integrations** (`Ctrl+Alt+S`) and the AI services set-up.",
+    "- **The Chernobyl and Chernobyl Soft themes**, with file icons."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -3994,107 +3769,13 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/README.md#what-it-brings.bc2d03",
+   "id": "doc:extensions/vscode/README.md#why",
    "type": "readme",
-   "title": "NuclearLang for VS Code — What it brings",
-   "summary": "exact; completion of members, named arguments, overrides and decorators; hover and signature help from the type definitions; go to definition, references, rename, outline, folding; semantic colors; multi-file projects with the architecture rules of their platform.",
+   "title": "NuclearLang for VS Code — Why",
+   "summary": "Why",
    "body": [
-    "- **The language server**: live diagnostics with the transpiler's codes (`N0106`) and a quick fix when the fix is",
-    "  exact; completion of members, named arguments, overrides and decorators; hover and signature help from the type",
-    "  definitions; go to definition, references, rename, outline, folding; semantic colors; multi-file projects with the",
-    "  architecture rules of their platform. The status bar shows the project's platform and dialect (`backend · fastapi`).",
-    "- **Show Generated Code**: the Dart, TypeScript or Python a `.nuc` generates, beside it.",
-    "- **Code metrics**: a complexity code lens above each function, like CodeMetrics.",
-    "- **The Nuclear workspace** (`Ctrl+Alt+N`): a strip of tabs, the projects at the top and the tools at the bottom.",
-    "  Every tab is a workspace of its own; a project's tab shows its files and puts its platform's actions (run, debug,",
-    "  device, build, test, check…) in the editor title bar, each with a key.",
-    "- **Run, debug and reload on save** for every platform: breakpoints in the `.nuc`, the paused line in the `.nuc`,",
-    "  stepping by Nuclear line, under the Dart debugger, node, debugpy and Chrome; saving a `.nuc` rebuilds and the",
-    "  running app, server or page takes it.",
-    "- **The devices** (`Ctrl+Alt+V`): a mobile app or a web app running inside the editor, beside its code."
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#where-to-read-next",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Where to read next",
-   "summary": "Where to read next",
-   "body": [
-    "| | |",
-    "|---|---|",
-    "| Install, every command, key and setting, troubleshooting | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| The strip, the actions, the file tree, the settings page | [docs/08-guides/workspace.md](docs/08-guides/workspace.md) |",
-    "| The tasks, run, hot reload and `.nuc` debugging | [docs/08-guides/run-and-debug.md](docs/08-guides/run-and-debug.md) |",
-    "| The tools | [Nuclear Builder](../tools/nuclear-builder/README.md), [HTTP Connections](../tools/nuclear-http-connections/README.md), [Nuclear Atlas](../tools/nuclear-atlas/README.md), [the devices](../tools/nuclear-device-manager/README.md) |",
-    "| Set up the AI services | [the set-up guide](../../installer/docs/08-guides/ai-setup.md) |",
-    "| What the three editors share | [the extensions](../README.md) |",
-    "| What changed | [CHANGELOG.md](CHANGELOG.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#why-it-exists.153404",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Why it exists",
-   "summary": "Agents write better when there is less to write and one single way to write it.",
-   "body": [
-    "Agents write better when there is less to write and one single way to write it. Nuclear removes the noise of the",
-    "target (imports, boilerplate, `super.key`, `setState(() { })`) and keeps the logic. This `.nuc`:",
-    "",
-    "```nuclear",
-    "stateful Counter",
-    "  count: int = 0",
-    "",
-    "  increment() void",
-    "    setState()",
-    "      count = count + 1",
-    "",
-    "  build(context: BuildContext) Widget",
-    "    Scaffold(",
-    "      body = Center(child = Text('Clicks: ${count}')),",
-    "      floatingActionButton = FloatingActionButton(",
-    "        onPressed = increment,",
-    "        child = Icon(Icons.add),",
-    "      ),",
-    "    )",
-    "```",
-    "",
-    "becomes this Dart (the transpiler's real output):"
-   ],
-   "sources": [
-    "extensions/vscode/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/README.md#why-it-exists.e829d3",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Why it exists",
-   "summary": "The extension puts everything around that code in one window: writing it, running and debugging the app, calling its API and handing work to the local agents.",
-   "body": [
-    "The extension puts everything around that code in one window: writing it, running and debugging the app, calling",
-    "its API and handing work to the local agents. It is not the language: completion, hover and diagnostics come from",
-    "the language server, and what a dialect means comes from the dialect."
+    "- Less to write, one way to write it: Nuclear drops the target's imports and boilerplate and keeps the logic.",
+    "- Writing, running, debugging, calling the API and the local agents, in one window."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -4669,6 +4350,8 @@
    "title": "The VS Code extension: its files — What `package.json` contributes",
    "summary": "(*Nuclear Call Stack*) in the debug container while paused in a `.nuc`.",
    "body": [
+    "- Its `repository` is the tree, `nuclearlang/lang`, directory `extensions/vscode`; `bugs` its issues.",
+    "",
     "- The language `nuclear` (`.nuc`), its grammars, the semantic token modifiers and scopes.",
     "- The themes (Chernobyl, Chernobyl Soft) and the icon themes (Chernobyl Icons, Chernobyl Soft Icons).",
     "- One activity bar container, `nuclear`, with one webview view, `nuclear.workspace`; the view `nuclear.callStack`",
@@ -7279,9 +6962,9 @@
    "id": "doc:extensions/zed/AGENTS.md#zed-extension",
    "type": "readme",
    "title": "Zed extension",
-   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.52.0): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
+   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.52.1): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
    "body": [
-    "The NuclearLang extension for Zed (`nuclearlang`, 0.52.0): a tree-sitter grammar of tokens, the client of the",
+    "The NuclearLang extension for Zed (`nuclearlang`, 0.52.1): a tree-sitter grammar of tokens, the client of the",
     "language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables. What the three extensions",
     "share: [`../AGENTS.md`](../AGENTS.md)."
    ],
@@ -7315,6 +6998,7 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
     "- 0.52.0: the version of the three extensions (HTTP Connections and Nuclear Atlas renamed in VS Code and Android Studio; nothing changes in Zed).",
     "- 0.51.0: the version of the three extensions (one repository: the extension is `extensions/zed/`; the framework's commands of its tasks are `nuclear <command>`).",
     "- First public version.",
@@ -7335,19 +7019,13 @@
    "id": "doc:extensions/zed/README.md#how-we-made-it",
    "type": "readme",
    "title": "NuclearLang for Zed — How we made it",
-   "summary": "(ADR-extensions-0001): Zed has no bundle, so the extension starts the installed `nuclear-lsp` and passes it `lsp.nuclear-lsp.settings`.",
+   "summary": "(ADR-extensions-0001).",
    "body": [
-    "- **The same server as every editor**",
-    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)): Zed has no bundle, so the",
-    "  extension starts the installed `nuclear-lsp` and passes it `lsp.nuclear-lsp.settings`.",
-    "- **A grammar of tokens only**: comments, strings with `${}`, numbers, decorators, words, operators and nested",
-    "  brackets. It never fails on half-written code; what a name means comes from the server's semantic tokens.",
-    "- **Generated, not copied**: the theme comes from `../vscode/theme/build.mjs`, the icon themes from",
-    "  `scripts/icons.mjs` over the VS Code icon themes.",
-    "- **Written in Rust**, compiled to `wasm32-wasip2` with `zed_extension_api` 0.7.",
-    "",
-    "**State:** never tried in a running Zed ([the editors' roadmap](../docs/01-product/roadmap.md)). Where a published",
-    "extension would read its grammar from is open ([roadmap](docs/01-product/roadmap.md))."
+    "- **The same server as every editor**, the installed `nuclear-lsp`",
+    "  ([ADR-extensions-0001](../docs/03-adr/0001-one-base-extension-per-editor.md)).",
+    "- **A grammar of tokens only**: it never fails on half-written code; meaning comes from semantic tokens.",
+    "- **Generated, not copied**: theme and icons from the VS Code sources.",
+    "- **Written in Rust**, compiled to `wasm32-wasip2`. Never tried in a running Zed ([roadmap](../docs/01-product/roadmap.md))."
    ],
    "sources": [
     "extensions/zed/README.md"
@@ -7362,10 +7040,32 @@
    "id": "doc:extensions/zed/README.md#nuclearlang-for-zed",
    "type": "readme",
    "title": "NuclearLang for Zed",
-   "summary": "The NuclearLang extension for Zed: a tree-sitter grammar of tokens, the client of the language server `nuclear-lsp`, the Chernobyl theme and icons, and the Synapsis tasks and ▷ runnables.",
+   "summary": "![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) · Website The NuclearLang extension for Zed: a token grammar, the `nuclear-lsp` client, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
    "body": [
-    "The NuclearLang extension for Zed: a tree-sitter grammar of tokens, the client of the language server",
-    "`nuclear-lsp`, the Chernobyl theme and icons, and the Synapsis tasks and ▷ runnables."
+    "[![extension-zed](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-zed.yml) · [Website](https://nuclearlang.github.io/tools/zed)",
+    "",
+    "The NuclearLang extension for Zed: a token grammar, the `nuclear-lsp` client, the Chernobyl theme and icons, and",
+    "the Synapsis tasks and runnables."
+   ],
+   "sources": [
+    "extensions/zed/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/zed/README.md#read-next",
+   "type": "readme",
+   "title": "NuclearLang for Zed — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The guide](docs/08-guides/README.md)",
+    "- [What Zed does not allow](docs/02-architecture/overview.md)",
+    "- [The extensions](../README.md), [the roadmap](docs/01-product/roadmap.md)",
+    "- To change it: [AGENTS.md](AGENTS.md)"
    ],
    "sources": [
     "extensions/zed/README.md"
@@ -7380,17 +7080,14 @@
    "id": "doc:extensions/zed/README.md#try-it",
    "type": "readme",
    "title": "NuclearLang for Zed — Try it",
-   "summary": "rustup target add wasm32-wasip2 # once cd extensions/zed && ./build.sh # builds and installs into ~/.local/share/zed/extensions/installed/nuclearlang `installer/install.sh` does the same when Zed is installed (`--no-zed` skips it), and installs the server in `~/.local/bin/nuclear-lsp`.",
+   "summary": "rustup target add wasm32-wasip2 # once cd extensions/zed && ./build.sh # builds and installs into Zed Then pick Chernobyl and turn on semantic tokens in `settings.json` (the guide).",
    "body": [
     "```sh",
     "rustup target add wasm32-wasip2      # once",
-    "cd extensions/zed && ./build.sh      # builds and installs into ~/.local/share/zed/extensions/installed/nuclearlang",
+    "cd extensions/zed && ./build.sh      # builds and installs into Zed",
     "```",
     "",
-    "`installer/install.sh` does the same when Zed is installed (`--no-zed` skips it), and installs the server in",
-    "`~/.local/bin/nuclear-lsp`. Zed reloads the extension by itself. Pick **Chernobyl** in *theme selector: toggle*,",
-    "then turn on the semantic tokens, outline, folding and code lenses in `settings.json`, which Zed leaves off by",
-    "default ([the guide](docs/08-guides/README.md))."
+    "Then pick **Chernobyl** and turn on semantic tokens in `settings.json` ([the guide](docs/08-guides/README.md))."
    ],
    "sources": [
     "extensions/zed/README.md"
@@ -7402,40 +7099,13 @@
    }
   },
   {
-   "id": "doc:extensions/zed/README.md#where-to-read-next",
+   "id": "doc:extensions/zed/README.md#why",
    "type": "readme",
-   "title": "NuclearLang for Zed — Where to read next",
-   "summary": "Where to read next",
+   "title": "NuclearLang for Zed — Why",
+   "summary": "Why",
    "body": [
-    "| | |",
-    "|---|---|",
-    "| Install, turning the features on, the server's settings, the tasks | [docs/08-guides/README.md](docs/08-guides/README.md) |",
-    "| What each file does, and what Zed does not allow | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |",
-    "| What the three editors share | [the extensions](../README.md) |",
-    "| What is pending | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |",
-    "| To change it | [AGENTS.md](AGENTS.md) |"
-   ],
-   "sources": [
-    "extensions/zed/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/zed/README.md#why-it-exists",
-   "type": "readme",
-   "title": "NuclearLang for Zed — Why it exists",
-   "summary": "For a developer who writes in Zed, it gives a `.nuc` file the same diagnostics, quick fixes, completion, hover, navigation, rename and colors by meaning as VS Code and Android Studio, because the server is the same.",
-   "body": [
-    "For a developer who writes in Zed, it gives a `.nuc` file the same diagnostics, quick fixes, completion, hover,",
-    "navigation, rename and colors by meaning as VS Code and Android Studio, because the server is the same.",
-    "",
-    "What it leaves out: Zed lets an extension add no panels, views, keybindings or actions on save, so there is no",
-    "Nuclear workspace, no device, no `.nuc` debugging and no build on save. Nuclear Builder is not offered for Zed",
-    "(decided by the user). A device opens in its own window with `nuclear device`."
+    "- The same diagnostics, quick fixes, completion and colors as VS Code and Android Studio: the server is the same.",
+    "- Zed allows no panels or keybindings: no workspace, devices or `.nuc` debugging; Nuclear Builder is not offered."
    ],
    "sources": [
     "extensions/zed/README.md"
@@ -7492,7 +7162,8 @@
     "A tree-sitter grammar of tokens: comments, strings with `${}`, numbers, decorators, words, operators and nested",
     "brackets. It never fails on half-written code. Zed reads a published extension's grammar from a git commit:",
     "`[grammars.nuclear]` of `extension.toml` names the repository, the path and the `rev`. The installed extension",
-    "uses `grammar/nuclear.wasm`, which `build.sh` regenerates."
+    "uses `grammar/nuclear.wasm`, which `build.sh` regenerates. The extension's own `repository` is the tree,",
+    "`nuclearlang/lang`; the grammar's is still `nuclearlang/nuclear-zed` (the roadmap)."
    ],
    "sources": [
     "extensions/zed/docs/02-architecture/overview.md"

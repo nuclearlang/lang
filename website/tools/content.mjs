@@ -43,7 +43,7 @@ if (!existsSync(join(tree, 'nuclearlang/docs/07-reference/nuclear-base.md'))) {
 // --- the pages: the reference and the guides of every project of the tree (a context document is not a page) ---
 const PUBLIC = ['07-reference', '08-guides']
 const SKIP = new Set(['node_modules', 'target', 'build', 'dist', 'out', '.git', '.venv', '.dart_tool', 'website', 'github-profile', 'aprende', 'work'])
-const repoOf = () => 'nuclear'
+const repoOf = () => 'lang'
 const walk = (base, dir) => existsSync(join(base, dir))
   ? readdirSync(join(base, dir)).flatMap(name => {
       const path = posix.join(dir, name)
@@ -149,7 +149,7 @@ for (const path of pages) {
   const html = md.render(read(path))
   const title = titleOf(path)
   const source = path === `${GRAMMAR}.md`
-    ? `${org}/nuclear/blob/${branch}/${GRAMMAR}.ebnf`
+    ? `${org}/lang/blob/${branch}/${GRAMMAR}.ebnf`
     : `${org}/${repoOf(current.base)}/blob/${branch}/${path}`
   writeFileSync(join(out, 'content', `${keyOf(path)}.json`),
     JSON.stringify({ path: route(path), title, html, headings: current.headings, source }))
@@ -303,9 +303,15 @@ const onboardings = new Map(config.onboarding.map(o => {
     }
     return { dialect, path: `build/${out}`, html: highlight(readFileSync(join(build, out), 'utf8').trim(), LANG[extOf(out)]) }
   })
+  // the onboarding with an agent: shown, never run (it needs the reader's agent)
+  const fill = text => fillSite(text.trim()).replaceAll('{{platform}}', o.platform)
+    .replaceAll('{{app}}', posix.basename(o.example)).replaceAll('{{prompt}}', o.prompts[0])
+  const agentSteps = config.agent_onboarding.map(st => ({ title: st.title, text: st.text, command: fill(st.command), output: '' }))
   return [o.platform, {
     app: posix.basename(o.example),
-    example: `${org}/nuclear/tree/${branch}/${o.example}`,
+    agentSteps,
+    prompts: o.prompts,
+    example: `${org}/lang/tree/${branch}/${o.example}`,
     steps,
     code: { path: o.show, html: highlight(readFileSync(join(dir, o.show), 'utf8').trim(), 'nuclear'), outputs },
     stats: { nucFiles: made.length, nucLines: linesOf(dir, made), outFiles: generated.files, outLines: generated.lines },
@@ -442,7 +448,7 @@ const withLogo = o => ({ ...o, logo: logos.get(o.dialect)?.src ?? '' })
 const tools = config.tools.map(t => ({
   key: t.key, name: t.name, group: t.group, tagline: t.tagline, pitch: t.pitch, highlights: t.highlights,
   icon: icon(t.key, t.icon), logos: (t.logos ?? []).map(l => logo(t.key, l)), shots: shotsOf(t.key, t.shots),
-  demo: highlight(t.demo.trim(), 'shellscript'), project: `${org}/nuclear/tree/${branch}/${t.project}`, pages: pagesOf(t.key, t.pages),
+  demo: highlight(t.demo.trim(), 'shellscript'), project: `${org}/lang/tree/${branch}/${t.project}`, pages: pagesOf(t.key, t.pages),
 }))
 writeFileSync(join(out, 'content', 'tools.json'), JSON.stringify(tools))
 

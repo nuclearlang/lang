@@ -78,7 +78,10 @@ Every `.md` under a `docs/07-reference/` or `docs/08-guides/` of any project of 
 - `[[platforms]]`: `key`, `name`, `dialects`, `tagline`, `pitch`, `pages`, and `[[platforms.levels]]` (`level`,
   `title`, `text`, `boxes` with a `kind` of person, system, container, component or external, `flows` written
   `A → B: what`).
-- `[[onboarding]]`: `platform`, `example` (its folder in the tree), `show` (the file of the code level), `steps`
+- `[[agent_onboarding]]`: the steps with an agent, the same for every platform (`title`, `text`, `command`, where
+  `{{platform}}`, `{{app}}`, `{{prompt}}` and `{{site}}` are filled per platform); shown, never run.
+- `[[onboarding]]`: `platform`, `example` (its folder in the tree), `show` (the file of the code level), `prompts`
+  (what to ask an agent: apps of several kinds; the first is the agent's last step), `steps`
   (`title`, `text`, and `run` to replay it or `command` to only show it).
 
 ## What runs when the site is built

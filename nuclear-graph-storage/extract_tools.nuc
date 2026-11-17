@@ -1,7 +1,7 @@
 // id, what it is, the file that says its version, how the version is written there
 COMPONENTS = [
   ["nuclear", "the compiler, its CLI and the language server", "Cargo.toml", r'^version\s*=\s*"([^"]+)"'],
-  ["nuclear-graph", "the Smart Graph: the knowledge base and the MCP server", "nuclear-graph-storage/pyproject.toml", r'^version\s*=\s*"([^"]+)"'],
+  ["nuclear-graph", "the Smart Graph: the local knowledge base (the RAG) the agents read", "nuclear-graph-storage/pyproject.toml", r'^version\s*=\s*"([^"]+)"'],
   ["nuclear-developer", "the local agents", "nuclear-agents/nuclear_developer/config.nuc", r'version = "([^"]+)"'],
   ["nuclear-vscode", "the VS Code extension, with the Builder and `nuclear-builder`", "extensions/vscode/package.json", r'"version":\s*"([^"]+)"'],
   ["nuclear-jetbrains", "the JetBrains plugin (Android Studio, IntelliJ)", "extensions/jetbrains/resources/META-INF/plugin.xml", r"<version>([^<]+)</version>"],
@@ -377,7 +377,7 @@ ExtractTools
       rows.add({
         "id": "component:${name}", "type": "component", "title": "`${name}` ${version} — ${what}",
         "summary": "`${name}` is ${what}; its version is ${version}.",
-        "body": "Version ${version}, read from `${rel}`. Repository: `nuclearlang/${name.split("-py")[0].split("-nest")[0].split("-dart")[0]}`.",
+        "body": "Version ${version}, read from `${rel}`. Repository: `nuclearlang/lang`, the whole tree.",
         "keys": ["${name} version"], "asks": ["what version is ${name}", "which version of ${name} is this"],
         "sources": [rel], "meta": { "tool": name, "name": "version", "version": version },
         "data": { "component": name, "what": what, "file": rel },

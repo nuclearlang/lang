@@ -43,6 +43,9 @@ flowchart LR
 - **The project's commands** of `.nuclear/builder.json`.
 - **Jira** (REST v3, ADF to text) and **GitHub** (`gh issue view`), to import a spec.
 
+When the local services are missing, the engine suggests the release installer of the tree
+(`raw.githubusercontent.com/nuclearlang/lang/main/installer/release/install.sh`).
+
 ## What it writes in a project
 
 | File | What |

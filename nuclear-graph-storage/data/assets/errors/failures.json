@@ -6,10 +6,10 @@
   {
    "id": "failure:a-command-is-not-found",
    "type": "failure",
-   "title": "Failure: `nuclear`, `synapsis` or `nuclear-builder`: command not found",
-   "summary": "The tool is not installed, or it is not on the PATH of the program that ran it (an editor started from the desktop does not have `~/.local/bin`). Install with the installer or `./install.sh`, and check with `nuclear doctor`.",
+   "title": "Failure: `nuclear`, `nuclear-mcp` or `nuclear-builder`: command not found",
+   "summary": "The tool is not installed, or it is not on the PATH of the program that ran it (an editor started from the desktop does not have `~/.local/bin`). Install with the installer or `installer/install.sh`, and check with `nuclear doctor`.",
    "body": [
-    "**Looks like.** `nuclear: command not found`, `synapsis is not installed (run the NuclearLang installer)`, exit code 127.",
+    "**Looks like.** `nuclear: command not found`, `nuclear is not installed (run the NuclearLang installer)`, exit code 127.",
     "",
     "**Cause.** The binaries live in `~/.local/bin`. A terminal has that folder on its PATH; a desktop program may not.",
     "",
@@ -52,13 +52,13 @@
    "id": "failure:the-installed-tools-are-old",
    "type": "failure",
    "title": "Failure: the installed tools are older than the source tree",
-   "summary": "A command, a kind or a diagnostic that exists in the sources is unknown to the installed binary, or the editor reports an error the terminal does not: the installed copy is stale. Run `./install.sh` again after changing the compiler, a dialect or the CLI.",
+   "summary": "A command, a kind or a diagnostic that exists in the sources is unknown to the installed binary, or the editor reports an error the terminal does not: the installed copy is stale. Run `installer/install.sh` again after changing the compiler, a dialect or the CLI.",
    "body": [
-    "**Looks like.** `synapsis: unknown command`, a kind the docs describe is `N0201`, the editor and `nuclear check` disagree, a Python package of a folder dependency behaves like an old version.",
+    "**Looks like.** `nuclear: unknown command`, a kind the docs describe is `N0201`, the editor and `nuclear check` disagree, a Python package of a folder dependency behaves like an old version.",
     "",
-    "**Cause.** `nuclear`, `synapsis`, the language server and the editors' bundled copies are installed copies; a project's folder dependency is installed into its `build/.venv`.",
+    "**Cause.** `nuclear`, the language server and the editors' bundled copies are installed copies; a project's folder dependency is installed into its `build/.venv`.",
     "",
-    "**Next step.** `./install.sh` (it rebuilds and reinstalls everything); in a project, `nuclear install` reinstalls folder dependencies. Restart the editor to load the new server."
+    "**Next step.** `installer/install.sh` (it rebuilds and reinstalls everything); in a project, `nuclear install` reinstalls folder dependencies. Restart the editor to load the new server."
    ],
    "keys": [
     "unknown command",
@@ -77,7 +77,8 @@
     }
    ],
    "sources": [
-    "AGENTS.md"
+    "AGENTS.md#Commands of the whole tree",
+    "installer/docs/02-architecture/overview.md#From source (`install.sh`)"
    ],
    "meta": {
     "family": "environment",
@@ -343,7 +344,7 @@
    "id": "failure:not-inside-a-project",
    "type": "failure",
    "title": "Failure: the folder is not a Synapsis project",
-   "summary": "A `synapsis` or `nuclear-builder` command finds no `config.nuc` (or `main.nuc`) in the folder or above it. Run it inside a project, or create one with `nuclear new <name> -p <platform>`.",
+   "summary": "A project command of `nuclear` (`build`, `run`, `test`, `gen`...) or `nuclear-builder` finds no `config.nuc` (or `main.nuc`) in the folder or above it. Run it inside a project, or create one with `nuclear new <name> -p <platform>`.",
    "body": [
     "**Looks like.** `no main.nuc or config.nuc in <folder> or above`, `<folder> is not inside a Synapsis project (no config.nuc)`.",
     "",

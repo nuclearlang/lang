@@ -18,7 +18,7 @@
 # repository (owner/name) and NUCLEAR_DOWNLOAD the base url of the files (a mirror).
 set -eu
 
-REPO=${NUCLEAR_REPO:-nuclearlang/nuclear}
+REPO=${NUCLEAR_REPO:-nuclearlang/lang}
 VERSION=${NUCLEAR_VERSION:-latest}
 INSTALL=${NUCLEAR_INSTALL:-$HOME/.local/share/nuclearlang}
 BIN=${NUCLEAR_BIN:-$HOME/.local/bin}

@@ -1775,7 +1775,7 @@ export class BuilderEngine extends EventEmitter {
 
 export type CiProvider = 'github' | 'gitlab' | 'bitbucket';
 
-const INSTALL = 'curl -fsSL https://raw.githubusercontent.com/nuclearlang/nuclear/main/installer/release/install.sh | sh && echo "$HOME/.local/bin" >> "${GITHUB_PATH:-/dev/null}"';
+const INSTALL = 'curl -fsSL https://raw.githubusercontent.com/nuclearlang/lang/main/installer/release/install.sh | sh && echo "$HOME/.local/bin" >> "${GITHUB_PATH:-/dev/null}"';
 
 /** The deterministic stages of the pipeline for a server: the same commands of `.nuclear/builder.json`. The agent
  * stages (plan, code, the agents' tests and reviews) run on the developer's machine; the server checks their result. */

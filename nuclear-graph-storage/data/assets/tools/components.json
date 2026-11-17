@@ -9,7 +9,7 @@
    "type": "component",
    "title": "`nuclear` 0.1.0 — the compiler, its CLI and the language server",
    "summary": "`nuclear` is the compiler, its CLI and the language server; its version is 0.1.0.",
-   "body": "Version 0.1.0, read from `Cargo.toml`. Repository: `nuclearlang/nuclear`.",
+   "body": "Version 0.1.0, read from `Cargo.toml`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "nuclear version"
    ],
@@ -36,7 +36,7 @@
    "type": "component",
    "title": "`nuclear-developer` 0.1.0 — the local agents",
    "summary": "`nuclear-developer` is the local agents; its version is 0.1.0.",
-   "body": "Version 0.1.0, read from `nuclear-agents/nuclear_developer/config.nuc`. Repository: `nuclearlang/nuclear-developer`.",
+   "body": "Version 0.1.0, read from `nuclear-agents/nuclear_developer/config.nuc`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "nuclear-developer version"
    ],
@@ -61,9 +61,9 @@
   {
    "id": "component:nuclear-graph",
    "type": "component",
-   "title": "`nuclear-graph` 0.2.0 — the Smart Graph: the knowledge base and the MCP server",
-   "summary": "`nuclear-graph` is the Smart Graph: the knowledge base and the MCP server; its version is 0.2.0.",
-   "body": "Version 0.2.0, read from `nuclear-graph-storage/pyproject.toml`. Repository: `nuclearlang/nuclear-graph`.",
+   "title": "`nuclear-graph` 0.2.0 — the Smart Graph: the local knowledge base (the RAG) the agents read",
+   "summary": "`nuclear-graph` is the Smart Graph: the local knowledge base (the RAG) the agents read; its version is 0.2.0.",
+   "body": "Version 0.2.0, read from `nuclear-graph-storage/pyproject.toml`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "nuclear-graph version"
    ],
@@ -81,16 +81,16 @@
    },
    "data": {
     "component": "nuclear-graph",
-    "what": "the Smart Graph: the knowledge base and the MCP server",
+    "what": "the Smart Graph: the local knowledge base (the RAG) the agents read",
     "file": "nuclear-graph-storage/pyproject.toml"
    }
   },
   {
    "id": "component:nuclear-jetbrains",
    "type": "component",
-   "title": "`nuclear-jetbrains` 0.52.0 — the JetBrains plugin (Android Studio, IntelliJ)",
-   "summary": "`nuclear-jetbrains` is the JetBrains plugin (Android Studio, IntelliJ); its version is 0.52.0.",
-   "body": "Version 0.52.0, read from `extensions/jetbrains/resources/META-INF/plugin.xml`. Repository: `nuclearlang/nuclear-jetbrains`.",
+   "title": "`nuclear-jetbrains` 0.52.1 — the JetBrains plugin (Android Studio, IntelliJ)",
+   "summary": "`nuclear-jetbrains` is the JetBrains plugin (Android Studio, IntelliJ); its version is 0.52.1.",
+   "body": "Version 0.52.1, read from `extensions/jetbrains/resources/META-INF/plugin.xml`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "nuclear-jetbrains version"
    ],
@@ -104,7 +104,7 @@
    "meta": {
     "tool": "nuclear-jetbrains",
     "name": "version",
-    "version": "0.52.0"
+    "version": "0.52.1"
    },
    "data": {
     "component": "nuclear-jetbrains",
@@ -115,9 +115,9 @@
   {
    "id": "component:nuclear-vscode",
    "type": "component",
-   "title": "`nuclear-vscode` 0.52.0 — the VS Code extension, with the Builder and `nuclear-builder`",
-   "summary": "`nuclear-vscode` is the VS Code extension, with the Builder and `nuclear-builder`; its version is 0.52.0.",
-   "body": "Version 0.52.0, read from `extensions/vscode/package.json`. Repository: `nuclearlang/nuclear-vscode`.",
+   "title": "`nuclear-vscode` 0.52.1 — the VS Code extension, with the Builder and `nuclear-builder`",
+   "summary": "`nuclear-vscode` is the VS Code extension, with the Builder and `nuclear-builder`; its version is 0.52.1.",
+   "body": "Version 0.52.1, read from `extensions/vscode/package.json`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "nuclear-vscode version"
    ],
@@ -131,7 +131,7 @@
    "meta": {
     "tool": "nuclear-vscode",
     "name": "version",
-    "version": "0.52.0"
+    "version": "0.52.1"
    },
    "data": {
     "component": "nuclear-vscode",
@@ -142,9 +142,9 @@
   {
    "id": "component:nuclear-zed",
    "type": "component",
-   "title": "`nuclear-zed` 0.52.0 — the Zed extension",
-   "summary": "`nuclear-zed` is the Zed extension; its version is 0.52.0.",
-   "body": "Version 0.52.0, read from `extensions/zed/extension.toml`. Repository: `nuclearlang/nuclear-zed`.",
+   "title": "`nuclear-zed` 0.52.1 — the Zed extension",
+   "summary": "`nuclear-zed` is the Zed extension; its version is 0.52.1.",
+   "body": "Version 0.52.1, read from `extensions/zed/extension.toml`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "nuclear-zed version"
    ],
@@ -158,7 +158,7 @@
    "meta": {
     "tool": "nuclear-zed",
     "name": "version",
-    "version": "0.52.0"
+    "version": "0.52.1"
    },
    "data": {
     "component": "nuclear-zed",
@@ -171,7 +171,7 @@
    "type": "component",
    "title": "`synapsis-dart` 0.1.0 — the runtime of the flutter dialect (the `synapsis` Dart package)",
    "summary": "`synapsis-dart` is the runtime of the flutter dialect (the `synapsis` Dart package); its version is 0.1.0.",
-   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/mobile/packages/synapsis/pubspec.yaml`. Repository: `nuclearlang/synapsis`.",
+   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/mobile/packages/synapsis/pubspec.yaml`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "synapsis-dart version"
    ],
@@ -198,7 +198,7 @@
    "type": "component",
    "title": "`synapsis-nest` 0.1.0 — the runtime of the nestjs dialect (TypeScript)",
    "summary": "`synapsis-nest` is the runtime of the nestjs dialect (TypeScript); its version is 0.1.0.",
-   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest/package.json`. Repository: `nuclearlang/synapsis`.",
+   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/backend/packages/synapsis-nest/package.json`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "synapsis-nest version"
    ],
@@ -225,7 +225,7 @@
    "type": "component",
    "title": "`synapsis-py` 0.1.0 — the runtime of the fastapi dialect (Python)",
    "summary": "`synapsis-py` is the runtime of the fastapi dialect (Python); its version is 0.1.0.",
-   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/backend/packages/synapsis-py/pyproject.toml`. Repository: `nuclearlang/synapsis`.",
+   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/backend/packages/synapsis-py/pyproject.toml`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "synapsis-py version"
    ],
@@ -252,7 +252,7 @@
    "type": "component",
    "title": "`synapsis-web` 0.1.0 — the runtime of the react dialect (TypeScript)",
    "summary": "`synapsis-web` is the runtime of the react dialect (TypeScript); its version is 0.1.0.",
-   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/web/packages/synapsis-web/package.json`. Repository: `nuclearlang/synapsis-web`.",
+   "body": "Version 0.1.0, read from `nuclear-synapsis-framework/platforms/web/packages/synapsis-web/package.json`. Repository: `nuclearlang/lang`, the whole tree.",
    "keys": [
     "synapsis-web version"
    ],

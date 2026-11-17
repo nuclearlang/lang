@@ -6,7 +6,7 @@ Thank you for helping. The whole platform is this one repository; each folder is
 ## Set up
 
 ```sh
-git clone https://github.com/nuclearlang/nuclear && cd nuclear
+git clone https://github.com/nuclearlang/lang && cd lang
 installer/install.sh
 ```
 

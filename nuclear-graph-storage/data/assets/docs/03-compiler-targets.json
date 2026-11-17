@@ -8,10 +8,12 @@
    "id": "doc:nuclearlang/dialects/README.md#dialects",
    "type": "readme",
    "title": "Dialects",
-   "summary": "A dialect is the data that says how Nuclear is written in one target: TOML tables and templates the compiler loads at run time.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run time.",
    "body": [
-    "A **dialect** is the data that says how Nuclear is written in one target: TOML tables and templates the compiler",
-    "loads at run time. The same `.nuc` is written once and each dialect turns it into its language or framework."
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/platforms)",
+    "",
+    "A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run",
+    "time. The same `.nuc` is written once and each dialect turns it into its language or framework."
    ],
    "agents": false,
    "sources": [
@@ -24,26 +26,22 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/README.md#how-we-made-them.879f34",
+   "id": "doc:nuclearlang/dialects/README.md#how-we-made-them",
    "type": "readme",
    "title": "Dialects — How we made them",
-   "summary": "Inheritance (`extends` in each `dialect.toml`): typescript ─► nodejs ─► nestjs backend platform typescript ─► react web platform python ─────► fastapi backend platform dart ───────► flutter mobile platform",
+   "summary": "How we made them",
    "body": [
-    "| Dialect | Target | Framework dialects (the platform each implements) | Read |",
-    "|---|---|---|---|",
-    "| `python` | Python 3.12+ typed, checked with `pyright --strict` | `fastapi` (backend) | [python/](python/README.md) |",
-    "| `typescript` | TypeScript 5 with ES modules, checked with `tsc --strict` | `nestjs` (backend), `react` (web) | [typescript/](typescript/README.md) |",
-    "| `dart` | Dart 3, checked with `flutter analyze` | `flutter` (mobile) | [dart/](dart/README.md) |",
-    "| `nodejs` | TypeScript for Node.js. Postponed by the user | none of its own; `nestjs` extends it | [nodejs/](nodejs/AGENTS.md) |",
+    "- Rust decides what, the dialect decides how; Python proved it (ADR-python-0001, [python/docs/03-adr/](python/docs/03-adr/README.md)).",
+    "- Language dialects and framework dialects: a framework dialect names its language and its Synapsis platform.",
+    "- Official libraries, not code of our own (ADR-dart-0001, ADR-python-0002, ADR-typescript-0001).",
+    "- Imports come from type definitions (ADR-lang-0008, [../docs/03-adr/](../docs/03-adr/README.md)); each reference is checked by `spec-check`.",
     "",
-    "Inheritance (`extends` in each `dialect.toml`):",
-    "",
-    "```",
-    "typescript ─► nodejs ─► nestjs     backend platform",
-    "typescript ─► react                web platform",
-    "python ─────► fastapi              backend platform",
-    "dart ───────► flutter              mobile platform",
-    "```"
+    "| Dialect | Framework dialects | Read |",
+    "|---|---|---|",
+    "| `python` | `fastapi` (backend) | [python/](python/README.md) |",
+    "| `typescript` | `nestjs` (backend), `react` (web) | [typescript/](typescript/README.md) |",
+    "| `dart` | `flutter` (mobile) | [dart/](dart/README.md) |",
+    "| `nodejs` | postponed; `nestjs` extends it | [nodejs/](nodejs/AGENTS.md) |"
    ],
    "agents": false,
    "sources": [
@@ -56,24 +54,15 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/README.md#how-we-made-them.887b64",
+   "id": "doc:nuclearlang/dialects/README.md#read-next",
    "type": "readme",
-   "title": "Dialects — How we made them",
-   "summary": "one target becomes a generic option or template variable any dialect can use.",
+   "title": "Dialects — Read next",
+   "summary": "Read next",
    "body": [
-    "- **Rust decides what is emitted, the dialect decides how.** Nothing of a target lives in the compiler: a need of",
-    "  one target becomes a generic option or template variable any dialect can use. Python was the proof: everything",
-    "  it needed became generic emitter options (ADR-python-0001, [python/docs/03-adr/](python/docs/03-adr/README.md)).",
-    "- **Language dialects and framework dialects.** A language dialect extends no other and translates the whole base",
-    "  and Nuclear's standard library. A framework dialect names its language (`extends`) and the Synapsis platform it",
-    "  writes (`platform = \"backend\"`); the platform's contract says which kinds exist, the dialect only how each is",
-    "  written. Kinds never differ between the dialects of one platform.",
-    "- **Official libraries, not code of our own**: the generated app relies on the target ecosystem's most used",
-    "  libraries (ADR-dart-0001, ADR-python-0002, ADR-typescript-0001).",
-    "- **The imports come from type definitions** generated from the installed target packages, versioned like `.d.ts`",
-    "  (ADR-lang-0008, [../docs/03-adr/](../docs/03-adr/README.md)).",
-    "- **The reference is checked.** Each dialect's `docs/07-reference/<dialect>.md` holds the real Nuclear → target",
-    "  equivalences, verified by `../tools/spec-check/check.py` with 0 problems."
+    "- [The dialect format](../docs/07-reference/dialects.md).",
+    "- [Create a dialect with an agent](../docs/08-guides/create-a-dialect-with-an-agent.md).",
+    "- [Type definitions](../docs/07-reference/definitions.md) and [the standard library](../docs/07-reference/library.md).",
+    "- [The platforms](../../nuclear-synapsis-framework/platforms/README.md) the framework dialects write."
    ],
    "agents": false,
    "sources": [
@@ -89,15 +78,12 @@
    "id": "doc:nuclearlang/dialects/README.md#try-it",
    "type": "readme",
    "title": "Dialects — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`): cargo run -q -p nuclear-cli -- dialect list # every dialect, its chain and one line about it cargo run -q -p nuclear-cli -- dialect check flutter # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ... cargo run -q -p nuclear-cli --…",
+   "summary": "cargo run -q -p nuclear-cli -- dialect list # every dialect, its chain and one line about it cargo run -q -p nuclear-cli -- dialect check flutter # dialect 'flutter' (flutter → dart) is valid cargo run -q -p nuclear-cli -- spec --dialect fastapi # the contract: templates, variables, options",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`):",
-    "",
     "```sh",
     "cargo run -q -p nuclear-cli -- dialect list              # every dialect, its chain and one line about it",
-    "cargo run -q -p nuclear-cli -- dialect check flutter     # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ...",
+    "cargo run -q -p nuclear-cli -- dialect check flutter     # dialect 'flutter' (flutter → dart) is valid",
     "cargo run -q -p nuclear-cli -- spec --dialect fastapi    # the contract: templates, variables, options",
-    "cd nuclearlang && tools/stdlib-check.sh strings          # ok strings typescript / dart / python: the same output",
     "```"
    ],
    "agents": false,
@@ -111,62 +97,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/README.md#what-every-dialect-folder-has",
+   "id": "doc:nuclearlang/dialects/README.md#why",
    "type": "readme",
-   "title": "Dialects — What every dialect folder has",
-   "summary": "`dialect.toml` (options, `[syntax]`, `[types]`, `[operators]`, names, imports), `keywords.toml` (the target's reserved words), `library.toml` (Nuclear's standard library in the target), `docs.toml` (what the editor shows for each word; a build never reads it), `templates/*.tpl`,…",
+   "title": "Dialects — Why",
+   "summary": "Why",
    "body": [
-    "`dialect.toml` (options, `[syntax]`, `[types]`, `[operators]`, names, imports), `keywords.toml` (the target's",
-    "reserved words), `library.toml` (Nuclear's standard library in the target), `docs.toml` (what the editor shows for",
-    "each word; a build never reads it), `templates/*.tpl`, `frameworks/<name>/`, `defs/<package>/<version>/` (type",
-    "definitions, generated, never edited by hand) and `docs/`. A dialect's name is its folder's."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/README.md#where-to-read-next",
-   "type": "readme",
-   "title": "Dialects — Where to read next",
-   "summary": "loader finds a dialect.",
-   "body": [
-    "- [The dialect format](../docs/07-reference/dialects.md): sections, templates, variables, validation, where the",
-    "  loader finds a dialect.",
-    "- [Create a dialect with an agent](../docs/08-guides/create-a-dialect-with-an-agent.md).",
-    "- [Type definitions](../docs/07-reference/definitions.md) and [the standard library](../docs/07-reference/library.md)",
-    "  every language dialect translates.",
-    "- The platforms the framework dialects write:",
-    "  [../../nuclear-synapsis-framework/platforms/](../../nuclear-synapsis-framework/platforms/AGENTS.md).",
-    "- Each dialect's `AGENTS.md`, to change it."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/README.md#why-they-exist",
-   "type": "readme",
-   "title": "Dialects — Why they exist",
-   "summary": "A language built for agents should not need a new compiler for every target, and its code should not bend to the target it happens to be built for.",
-   "body": [
-    "A language built for agents should not need a new compiler for every target, and its code should not bend to the",
-    "target it happens to be built for. A dialect decides only HOW the output is written; it never decides what the",
-    "Nuclear code is: the `.nuc` of a project does not change when its dialect changes. Adding a target or a framework",
-    "is writing data files, templates and tests, not Rust. What a dialect leaves out on purpose: it never reads target",
-    "code, and it never wraps the target's libraries (they are used as they are, through their type definitions)."
+    "- A new target is data files, templates and tests, not a new compiler.",
+    "- A dialect decides only how the output is written; the `.nuc` never changes with it.",
+    "- It never reads target code and never wraps the target's libraries."
    ],
    "agents": false,
    "sources": [
@@ -398,22 +336,33 @@
    "id": "doc:nuclearlang/dialects/dart/README.md#how-we-made-it",
    "type": "readme",
    "title": "The `dart` dialect — How we made it",
-   "summary": "own: `bloc` / `flutter_bloc`, `json_serializable`, `get_it`, `dio`, `go_router`, `fpdart` for `Result`; what does not exist in Flutter lives in the independent Dart package `synapsis`, usable without Nuclear (ADR-dart-0001).",
+   "summary": "How we made it",
    "body": [
-    "- **`flutter` is a framework that generates the app** over official ecosystem libraries instead of code of our",
-    "  own: `bloc` / `flutter_bloc`, `json_serializable`, `get_it`, `dio`, `go_router`, `fpdart` for `Result`; what does",
-    "  not exist in Flutter lives in the independent Dart package `synapsis`, usable without Nuclear",
-    "  ([ADR-dart-0001](docs/03-adr/0001-flutter-dialect-as-a-framework.md)).",
-    "- **The platform says what, the dialect says how.** A kind, a decorator or a folder is added to the platform's",
-    "  contract first; `frameworks/flutter/` only writes it in Dart (ADR-dart-0001).",
-    "- **Nothing of Dart or Flutter in Rust.** Generic mechanisms (projects, decorators, architecture names) are the",
-    "  compiler's; Flutter specifics live here, as data.",
-    "- **Imports from type definitions**, not hand-written lists: `dart@3.13.5`, `flutter@3.47.7` and the packages of",
-    "  `flutter`, generated by `../../tools/defs/` with `package:analyzer` from the installed Flutter SDK. Every widget",
-    "  and class of Flutter and of the Dart libraries can be used, and its import is added by itself.",
-    "",
-    "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/flutter/`",
-    "and the generated `defs/`, read at run time by the compiler ([../../](../../README.md))."
+    "- `flutter` generates the app over official libraries (`bloc`, `dio`, `go_router`...) ([ADR-dart-0001](docs/03-adr/0001-flutter-dialect-as-a-framework.md)).",
+    "- The platform says what, the dialect says how (ADR-dart-0001).",
+    "- Nothing of Dart or Flutter in Rust.",
+    "- Imports from type definitions generated from the installed Flutter SDK."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/README.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "dart"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/README.md#read-next",
+   "type": "readme",
+   "title": "The `dart` dialect — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The tutorial](../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
+    "- The reference: [dart.md](docs/07-reference/dart.md) and [flutter.md](docs/07-reference/flutter.md).",
+    "- [How it is built](docs/02-architecture/overview.md) and [what each kind generates](docs/02-architecture/flutter-kinds.md).",
+    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
    ],
    "agents": false,
    "sources": [
@@ -429,11 +378,12 @@
    "id": "doc:nuclearlang/dialects/dart/README.md#the-dart-dialect",
    "type": "readme",
    "title": "The `dart` dialect",
-   "summary": "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with `flutter_lints` and no warnings.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · Website How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings.",
    "body": [
-    "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with `flutter_lints` and no warnings. Its",
-    "framework dialect, `flutter`, writes the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/AGENTS.md)",
-    "of Synapsis: the whole Flutter app is generated from the business logic written in Nuclear."
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/dart/reference/dart)",
+    "",
+    "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings. Its framework dialect,",
+    "`flutter`, generates the whole app of the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/README.md)."
    ],
    "agents": false,
    "sources": [
@@ -449,29 +399,13 @@
    "id": "doc:nuclearlang/dialects/dart/README.md#try-it",
    "type": "readme",
    "title": "The `dart` dialect — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`).",
+   "summary": "cargo run -q -p nuclear-cli -- build hello.nuc --dialect dart # List<String> shout(List<String> words) cargo run -q -p nuclear-cli -- dialect check flutter # dialect 'flutter' (flutter → dart) is valid cargo run -q -p nuclear-cli -- help tutorial # a Flutter app from scratch with Synapsis",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`). Save as `hello.nuc`:",
-    "",
-    "```",
-    "shout(words: string[]) string[]",
-    "  words.map(w => w.upper())",
-    "```",
-    "",
     "```sh",
-    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect dart",
-    "#   List<String> shout(List<String> words) {",
-    "#     return words.map((w) => w.toUpperCase()).toList();",
-    "#   }",
-    "cargo run -q -p nuclear-cli -- dialect check flutter       # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ...",
-    "cargo run -q -p nuclear-cli -- defs show Scaffold --dialect flutter   # Flutter's Scaffold in Nuclear notation",
-    "cargo run -q -p nuclear-cli -- help tutorial                          # a Flutter app from scratch with Synapsis",
-    "cd nuclearlang && tools/spec-check/check.py dialects/dart/docs/07-reference/dart.md dart dart",
-    "#   dialects/dart/docs/07-reference/dart.md: 30 equivalences, 0 problems",
-    "```",
-    "",
-    "The examples under `flutter analyze`: `nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh`",
-    "(it needs Flutter: `FLUTTER` or `FLUTTER_ROOT` if it is not on the PATH)."
+    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect dart              # List<String> shout(List<String> words)",
+    "cargo run -q -p nuclear-cli -- dialect check flutter                       # dialect 'flutter' (flutter → dart) is valid",
+    "cargo run -q -p nuclear-cli -- help tutorial                               # a Flutter app from scratch with Synapsis",
+    "```"
    ],
    "agents": false,
    "sources": [
@@ -484,39 +418,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/README.md#where-to-read-next",
+   "id": "doc:nuclearlang/dialects/dart/README.md#why",
    "type": "readme",
-   "title": "The `dart` dialect — Where to read next",
-   "summary": "Nuclear → Dart equivalences; the briefs in docs/07-reference/brief/.",
+   "title": "The `dart` dialect — Why",
+   "summary": "Why",
    "body": [
-    "- [The tutorial](../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
-    "- The reference: [dart.md](docs/07-reference/dart.md) and [flutter.md](docs/07-reference/flutter.md), the real",
-    "  Nuclear → Dart equivalences; the briefs in [docs/07-reference/brief/](docs/07-reference/brief/).",
-    "- How it is built: [overview](docs/02-architecture/overview.md), [flutter](docs/02-architecture/flutter.md),",
-    "  [what each kind generates](docs/02-architecture/flutter-kinds.md).",
-    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": "dart"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The `dart` dialect — Why it exists",
-   "summary": "A Flutter app is mostly layers, state, JSON and wiring that are always the same.",
-   "body": [
-    "A Flutter app is mostly layers, state, JSON and wiring that are always the same. With this dialect Nuclear holds",
-    "only the business logic; the layers of a light clean architecture exist in the generated Dart, not in Nuclear.",
-    "Names are written as they are (Nuclear's `camelCase` is Dart's) and the library is Nuclear's, translated by",
-    "`library.toml`. It leaves out what Flutter already does: the SDK, packages, builds and devices are handled by the",
-    "`flutter` command, which `nuclear` drives."
+    "- A Flutter app is mostly layers, state, JSON and wiring; Nuclear holds only the business logic.",
+    "- The library is Nuclear's, translated by `library.toml`.",
+    "- It leaves the SDK, builds and devices to the `flutter` command, which `nuclear` drives."
    ],
    "agents": false,
    "sources": [
@@ -3835,21 +3744,33 @@
    "id": "doc:nuclearlang/dialects/python/README.md#how-we-made-it",
    "type": "readme",
    "title": "The `python` dialect — How we made it",
-   "summary": "block hoisted to local functions, f-strings, constructor defaults, `snake_case` names) became generic emitter options any later target can use (ADR-python-0001).",
+   "summary": "How we made it",
    "body": [
-    "- **A dialect made with the dialect system, with no Python in Rust.** Everything Python needed (lambdas with a",
-    "  block hoisted to local functions, f-strings, constructor defaults, `snake_case` names) became generic emitter",
-    "  options any later target can use ([ADR-python-0001](docs/03-adr/0001-python-dialect-and-generic-emitter-options.md)).",
-    "- **The target**: PEP 8 layout (4 spaces, 88 columns, two blank lines), PEP 695 generics, docstrings, and a",
-    "  `Result` runtime written into the file (ADR-python-0001).",
-    "- **`fastapi`**: FastAPI controllers, SQLAlchemy 2 async repositories, pydantic models, LangChain / LangGraph",
-    "  agents and graphs, aiokafka and `redis.asyncio`, over the platform's runtime package `synapsis-py`",
-    "  ([ADR-python-0002](docs/03-adr/0002-fastapi-dialect.md)).",
-    "- **Type definitions** are generated by `../../tools/defs/python/` with `inspect` from a pinned virtual environment:",
-    "  `python@3.14` for this dialect, and 18 more packages for `fastapi` (`nuclear defs list --dialect fastapi`).",
-    "",
-    "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/fastapi/`",
-    "and the generated `defs/`, read at run time by the compiler ([../../](../../README.md))."
+    "- No Python in Rust: what it needed became generic emitter options ([ADR-python-0001](docs/03-adr/0001-python-dialect-and-generic-emitter-options.md)).",
+    "- PEP 8 layout, PEP 695 generics, a `Result` runtime in the file (ADR-python-0001).",
+    "- `fastapi`: FastAPI, SQLAlchemy 2 async, pydantic, LangChain, over `synapsis-py` ([ADR-python-0002](docs/03-adr/0002-fastapi-dialect.md)).",
+    "- Type definitions generated with `inspect` from a pinned virtual environment."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/README.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/README.md#read-next",
+   "type": "readme",
+   "title": "The `python` dialect — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The fastapi guide](docs/08-guides/fastapi.md): a backend, as a user writes it.",
+    "- The reference: [python.md](docs/07-reference/python.md) and [fastapi.md](docs/07-reference/fastapi.md).",
+    "- [How it is built](docs/02-architecture/overview.md).",
+    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
    ],
    "agents": false,
    "sources": [
@@ -3865,11 +3786,12 @@
    "id": "doc:nuclearlang/dialects/python/README.md#the-python-dialect",
    "type": "readme",
    "title": "The `python` dialect",
-   "summary": "How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · Website How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`.",
    "body": [
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/python/reference/python)",
+    "",
     "How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`. Its framework dialect,",
-    "`fastapi`, writes the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md) of",
-    "Synapsis with FastAPI."
+    "`fastapi`, writes the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/README.md) of Synapsis."
    ],
    "agents": false,
    "sources": [
@@ -3885,31 +3807,13 @@
    "id": "doc:nuclearlang/dialects/python/README.md#try-it",
    "type": "readme",
    "title": "The `python` dialect — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`).",
+   "summary": "cargo run -q -p nuclear-cli -- build hello.nuc --dialect python # def full_name(first_name: str, ...) -> str: cargo run -q -p nuclear-cli -- dialect check fastapi # dialect 'fastapi' (fastapi → python) is valid cargo run -q -p nuclear-cli -- spec --brief --dialect fastapi # the short sheet an…",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`). Save as `hello.nuc`:",
-    "",
-    "```",
-    "fullName(firstName: string, lastName: string) string",
-    "  \"${firstName} ${lastName}\"",
-    "```",
-    "",
     "```sh",
-    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect python",
-    "#   from __future__ import annotations",
-    "#",
-    "#",
-    "#   def full_name(first_name: str, last_name: str) -> str:",
-    "#       return f\"{first_name} {last_name}\"",
-    "cargo run -q -p nuclear-cli -- dialect check fastapi       # dialect 'fastapi' (fastapi → python) is valid: 16 kinds, ...",
-    "cargo run -q -p nuclear-cli -- defs show Path --dialect python   # pathlib's Path in Nuclear notation",
-    "cargo run -q -p nuclear-cli -- spec --brief --dialect fastapi    # the short sheet an agent reads",
-    "cd nuclearlang && tools/spec-check/check.py dialects/python/docs/07-reference/python.md python python",
-    "#   dialects/python/docs/07-reference/python.md: 17 equivalences, 0 problems",
-    "```",
-    "",
-    "A whole backend (`pyright --strict`, pytest and a live run):",
-    "`nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh`."
+    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect python   # def full_name(first_name: str, ...) -> str:",
+    "cargo run -q -p nuclear-cli -- dialect check fastapi              # dialect 'fastapi' (fastapi → python) is valid",
+    "cargo run -q -p nuclear-cli -- spec --brief --dialect fastapi     # the short sheet an agent reads",
+    "```"
    ],
    "agents": false,
    "sources": [
@@ -3922,39 +3826,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/README.md#where-to-read-next",
+   "id": "doc:nuclearlang/dialects/python/README.md#why",
    "type": "readme",
-   "title": "The `python` dialect — Where to read next",
-   "summary": "Nuclear → Python equivalences; the briefs in docs/07-reference/brief/.",
+   "title": "The `python` dialect — Why",
+   "summary": "Why",
    "body": [
-    "- [The fastapi guide](docs/08-guides/fastapi.md): a backend, as a user writes it.",
-    "- The reference: [python.md](docs/07-reference/python.md) and [fastapi.md](docs/07-reference/fastapi.md), the real",
-    "  Nuclear → Python equivalences; the briefs in [docs/07-reference/brief/](docs/07-reference/brief/).",
-    "- [How the base is written in Python](docs/02-architecture/overview.md) and",
-    "  [how fastapi writes each kind](docs/02-architecture/fastapi.md).",
-    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/python/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": "python"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/python/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The `python` dialect — Why it exists",
-   "summary": "So that the same Nuclear runs where Python is the right target, without the Nuclear bending to Python.",
-   "body": [
-    "So that the same Nuclear runs where Python is the right target, without the Nuclear bending to Python. The `.nuc`",
-    "keeps Nuclear's `camelCase`; the dialect writes Python's `snake_case`, and keeps as they are the names that exist",
-    "that way in the type definitions. The library is Nuclear's: every member of Nuclear's standard library has its",
-    "Python template in `library.toml`, and a Python name such as `len` or `append` in Nuclear code is a bug. It leaves out what the",
-    "platform's contract does not have: `fastapi` only writes the kinds, decorators and folders of the backend platform."
+    "- The same Nuclear runs where Python is the right target, without bending to Python.",
+    "- The `.nuc` keeps `camelCase`; the dialect writes `snake_case`.",
+    "- The library is Nuclear's: a Python name such as `len` in Nuclear code is a bug."
    ],
    "agents": false,
    "sources": [
@@ -6054,23 +5933,15 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/README.md#how-we-made-it.0d44e8",
+   "id": "doc:nuclearlang/dialects/typescript/README.md#how-we-made-it",
    "type": "readme",
    "title": "The `typescript` dialect — How we made it",
-   "summary": "any dialect can use (`relative` imports, `alias_via = \"constructor\"`, `== null` in operators...), listed by `nuclear spec` (ADR-typescript-0001).",
+   "summary": "How we made it",
    "body": [
-    "- **Nothing of TypeScript in Rust.** What this target needs is a generic `[options]` key or template variable that",
-    "  any dialect can use (`relative` imports, `alias_via = \"constructor\"`, `== null` in operators...), listed by",
-    "  `nuclear spec` ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
-    "- **`react`**: React 19 without JSX, React Router 7, Vite 7, Vitest 4 with Testing Library, over the platform's",
-    "  runtime package `synapsis-web`; why React and why without JSX is the web platform's",
-    "  [ADR-web-0001](../../../nuclear-synapsis-framework/platforms/web/docs/03-adr/0001-web-platform.md).",
-    "- **`nestjs`**: the same Synapsis as the Python backend (ADR-python-0002), on NestJS 12 with ES modules, Sequelize,",
-    "  class-validator, kafkajs, ioredis and LangChain.js / LangGraph.js, over the runtime `synapsis-nest`. It extends",
-    "  [`nodejs`](../nodejs/AGENTS.md), which is postponed by the user ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
-    "- **Type definitions** are generated by `../../tools/defs/typescript/` with the TypeScript compiler over the `.d.ts`",
-    "  files: TypeScript's standard library and the packages each framework dialect lists (`nuclear defs list --dialect",
-    "  react`). The order of `defs` decides which package gives a name two of them export."
+    "- Nothing of TypeScript in Rust: only generic options and template variables ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
+    "- `react`: React 19 without JSX, React Router 7, Vite 7, Vitest 4 ([ADR-web-0001](../../../nuclear-synapsis-framework/platforms/web/docs/03-adr/0001-web-platform.md)).",
+    "- `nestjs`: NestJS 12, Sequelize, kafkajs, LangChain.js, over `synapsis-nest` ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
+    "- Type definitions generated with the TypeScript compiler over the `.d.ts` files."
    ],
    "agents": false,
    "sources": [
@@ -6083,13 +5954,15 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/README.md#how-we-made-it.c7420a",
+   "id": "doc:nuclearlang/dialects/typescript/README.md#read-next",
    "type": "readme",
-   "title": "The `typescript` dialect — How we made it",
-   "summary": "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/nestjs/`, `frameworks/react/` and the generated `defs/`, read at run time by the compiler (../../).",
+   "title": "The `typescript` dialect — Read next",
+   "summary": "Read next",
    "body": [
-    "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/nestjs/`,",
-    "`frameworks/react/` and the generated `defs/`, read at run time by the compiler ([../../](../../README.md))."
+    "- The guides: [react](docs/08-guides/react.md) and [nestjs](docs/08-guides/nestjs.md).",
+    "- The reference: [typescript.md](docs/07-reference/typescript.md), [react.md](docs/07-reference/react.md), [nestjs.md](docs/07-reference/nestjs.md).",
+    "- [How it is built](docs/02-architecture/overview.md).",
+    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
    ],
    "agents": false,
    "sources": [
@@ -6105,11 +5978,13 @@
    "id": "doc:nuclearlang/dialects/typescript/README.md#the-typescript-dialect",
    "type": "readme",
    "title": "The `typescript` dialect",
-   "summary": "How Nuclear is written in TypeScript: TypeScript 5 with ES modules that passes `tsc --strict`.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · Website How Nuclear is written in…",
    "body": [
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/typescript/reference/typescript)",
+    "",
     "How Nuclear is written in TypeScript: TypeScript 5 with ES modules that passes `tsc --strict`. Its framework",
-    "dialects write two platforms of Synapsis: `react` the [web platform](../../../nuclear-synapsis-framework/platforms/web/AGENTS.md)",
-    "and `nestjs` the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md)."
+    "dialects write `react` for the [web platform](../../../nuclear-synapsis-framework/platforms/web/README.md) and",
+    "`nestjs` for the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/README.md)."
    ],
    "agents": false,
    "sources": [
@@ -6125,30 +6000,13 @@
    "id": "doc:nuclearlang/dialects/typescript/README.md#try-it",
    "type": "readme",
    "title": "The `typescript` dialect — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`).",
+   "summary": "cargo run -q -p nuclear-cli -- build hello.nuc --dialect typescript # export function shout(...): string[] cargo run -q -p nuclear-cli -- dialect check react # dialect 'react' (react → typescript) is valid cargo run -q -p nuclear-cli -- defs show useState --dialect react # the hook's API in…",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`). Save as `hello.nuc`:",
-    "",
-    "```",
-    "shout(words: string[]) string[]",
-    "  words.map(w => w.upper())",
-    "```",
-    "",
     "```sh",
-    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect typescript",
-    "#   export function shout(words: string[]): string[] {",
-    "#     return words.map((w) => w.toUpperCase());",
-    "#   }",
-    "cargo run -q -p nuclear-cli -- dialect check react         # dialect 'react' (react → typescript) is valid: 16 kinds, ...",
-    "cargo run -q -p nuclear-cli -- defs show useState --dialect react   # the hook's API in Nuclear notation",
-    "cargo run -q -p nuclear-cli -- spec --brief --dialect react         # the short sheet an agent reads",
-    "cd nuclearlang && tools/spec-check/check.py dialects/typescript/docs/07-reference/typescript.md typescript typescript",
-    "#   dialects/typescript/docs/07-reference/typescript.md: 29 equivalences, 0 problems",
-    "```",
-    "",
-    "A whole web app (`tsc --strict`, vitest, `vite build`):",
-    "`nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh`. The website of the tree is one",
-    "([../../../website/](../../../website/README.md))."
+    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect typescript        # export function shout(...): string[]",
+    "cargo run -q -p nuclear-cli -- dialect check react                         # dialect 'react' (react → typescript) is valid",
+    "cargo run -q -p nuclear-cli -- defs show useState --dialect react          # the hook's API in Nuclear notation",
+    "```"
    ],
    "agents": false,
    "sources": [
@@ -6161,38 +6019,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/README.md#where-to-read-next",
+   "id": "doc:nuclearlang/dialects/typescript/README.md#why",
    "type": "readme",
-   "title": "The `typescript` dialect — Where to read next",
-   "summary": "nestjs.md; the briefs in docs/07-reference/brief/.",
+   "title": "The `typescript` dialect — Why",
+   "summary": "Why",
    "body": [
-    "- The guides: [react](docs/08-guides/react.md) and [nestjs](docs/08-guides/nestjs.md).",
-    "- The reference: [typescript.md](docs/07-reference/typescript.md), [react.md](docs/07-reference/react.md),",
-    "  [nestjs.md](docs/07-reference/nestjs.md); the briefs in [docs/07-reference/brief/](docs/07-reference/brief/).",
-    "- How it is built: [overview](docs/02-architecture/overview.md), [react](docs/02-architecture/react.md),",
-    "  [nestjs](docs/02-architecture/nestjs.md).",
-    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/README.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": "typescript"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The `typescript` dialect — Why it exists",
-   "summary": "So that the same Nuclear runs in the browser and on Node.js, written as a TypeScript expert would write it.",
-   "body": [
-    "So that the same Nuclear runs in the browser and on Node.js, written as a TypeScript expert would write it. Names",
-    "are written as they are (Nuclear's `camelCase` is TypeScript's); the library is Nuclear's, and each member has its",
-    "TypeScript template in `library.toml`, so a TypeScript name such as `push` or `toUpperCase` in Nuclear code is a",
-    "bug. A framework dialect leaves out whatever its platform's contract does not have."
+    "- The same Nuclear runs in the browser and on Node.js, written as an expert would.",
+    "- The library is Nuclear's: a TypeScript name such as `push` in Nuclear code is a bug.",
+    "- A framework dialect leaves out what its platform's contract does not have."
    ],
    "agents": false,
    "sources": [

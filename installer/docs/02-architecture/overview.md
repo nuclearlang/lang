@@ -89,9 +89,10 @@ replace the installation, link or put `bin` on the PATH, check `nuclear dialect 
 | The PATH | a marked line in `.bashrc`, `.zshrc`, `.profile`; a `conf.d` file for fish | the user's `Path` |
 | Options | `--version <v>`, `--no-modify-path`, `--no-vscode`, `--no-agent`, `--no-ai`, `--profile <id>`, `--uninstall` | `-Version`, `-NoModifyPath`, `-NoVSCode`, `-NoAgent`, `-NoAi`, `-AiProfile`, `-Uninstall` |
 
-Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/nuclear`),
+Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`),
 `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also
-`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.
+`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`. The repository was `nuclearlang/nuclear` until 2026-11-16: GitHub redirects its
+old release addresses to `nuclearlang/lang`.
 
 ## The AI services at the end of an install
 

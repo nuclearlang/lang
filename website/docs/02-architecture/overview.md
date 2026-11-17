@@ -59,7 +59,10 @@ stack and the grids drop to two columns, under 640 px to one, and the rows of ta
   legend lights its callout; the image opens at full size. On a phone the callouts keep only their number.
 - **A tool** and **a platform** are read from the list their manager loads (`find` by key); an unknown key shows
   "Not found". A platform's page is its `Diagram`s (one per C4 level) and the code level (`CodeTabs`).
-- **The onboarding** is a stateful stepper: one step at a time, its real output in a `Terminal`, then the app's code.
+- **The onboarding** is a stateful stepper with two ways: *With an agent* (the set-up that gives the agent its
+  context: install, the Smart Graph, the MCP server, the project's agent files, then what to ask; shown, never run)
+  and then the prompts of apps of several kinds; *By hand* (the replayed commands, each with its real output in a
+  `Terminal`, then the app's code).
 - **Motion**: `Reveal` wraps the content once it is loaded and runs `motion` on its blocks
   ([ADR-website-0003](../03-adr/0003-libraries-of-the-target-through-nuclear-add.md)).
 

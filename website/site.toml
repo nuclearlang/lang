@@ -734,8 +734,45 @@ flows = ["Screen → State manager", "State manager → App component", "App com
 # runs every `run` again in a scratch folder when it is built, shows its real output, and fails when the result is
 # not the example of the tree (UPDATE_EXAMPLES=1 writes the example from it). `show` is the file of the level
 # "4 · Code": its Nuclear and what each dialect writes from it.
+# --- the onboarding with an agent: the same for every platform ({{platform}}, {{app}}: the platform's onboarding app,
+# {{prompt}}: its first prompt, {{site}}: the site's url). Shown, never run: they need the user's machine and agent ---
+
+[[agent_onboarding]]
+title = "Install nuclear"
+text = "The compiler, the generators, the language server and the MCP server, in your user folders. No Rust needed."
+command = "curl -fsSL {{site}}/install.sh | sh"
+
+[[agent_onboarding]]
+title = "Give your agent the knowledge"
+text = "The AI set-up installs the Smart Graph, the local RAG of the whole ecosystem (every kind, rule, error and solved task), and the small local agents your machine can run. Pick remote agents only to install nothing but the MCP server."
+command = "nuclear-builder setup"
+
+[[agent_onboarding]]
+title = "Connect it through MCP"
+text = "nuclear-mcp gives your agent the generators, the compiler, the tests, the Smart Graph and the local developer as tools. One line in Claude Code or Codex; Cursor and OpenCode take it in their MCP config, which the set-up writes for you."
+command = """
+claude mcp add --scope user nuclear -- nuclear-mcp
+codex mcp add nuclear -- nuclear-mcp
+"""
+
+[[agent_onboarding]]
+title = "Create the project"
+text = "nuclear new writes the project and the files your agent reads first: AGENTS.md (the rules, the commands, the sheet to read), CLAUDE.md, a Cursor rule and a hook that checks every .nuc it writes. In a project you already have: nuclear agent init."
+command = "nuclear new {{app}} -p {{platform}}"
+
+[[agent_onboarding]]
+title = "Ask for the app"
+text = "Say what you want in your words. The agent reads the platform's sheet (nuclear spec --brief), asks the Smart Graph instead of guessing, lets the generators write the standard code, writes only the logic that is new, and stops when nuclear check and the tests pass."
+command = "claude \"{{prompt}}\""
+
 [[onboarding]]
 platform = "backend"
+# what to ask an agent: apps of several kinds (the first one is the agent onboarding's last step)
+prompts = [
+  "A todos API on SQLite: list, create, update and delete todos, with tests.",
+  "An orders API: customers and their orders (a relation), paginated lists, and placing an order in one transaction.",
+  "An endpoint where an AI agent answers questions about the products of the database.",
+]
 example = "nuclear-synapsis-framework/platforms/backend/examples/onboarding/todos_api"
 show = "components/todos/api/todos_controller.nuc"
 steps = [
@@ -747,6 +784,12 @@ steps = [
 
 [[onboarding]]
 platform = "web"
+# what to ask an agent: apps of several kinds (the first one is the agent onboarding's last step)
+prompts = [
+  "A web app that lists the todos of https://jsonplaceholder.typicode.com/todos and shows one when it is picked.",
+  "A page of the characters of https://rickandmortyapi.com/api/character, with a detail page for each.",
+  "A web app that shows the posts of https://jsonplaceholder.typicode.com/posts with their comments.",
+]
 example = "nuclear-synapsis-framework/platforms/web/examples/onboarding/todos_web"
 show = "components/todos/presentation/todos/todos_screen.nuc"
 steps = [
@@ -758,6 +801,12 @@ steps = [
 
 [[onboarding]]
 platform = "mobile"
+# what to ask an agent: apps of several kinds (the first one is the agent onboarding's last step)
+prompts = [
+  "A todos app that reads https://jsonplaceholder.typicode.com/todos, with a detail screen.",
+  "A notes app that keeps the notes on the phone and works without network.",
+  "An app with a chat with an AI assistant (the Genkit plugin).",
+]
 example = "nuclear-synapsis-framework/platforms/mobile/examples/onboarding/todos_app"
 show = "components/todos/presentation/todos/todos_screen.nuc"
 steps = [

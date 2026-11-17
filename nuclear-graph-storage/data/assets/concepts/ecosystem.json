@@ -961,7 +961,7 @@
    "summary": "Everything is open source under Apache-2.0, in one repository of the `nuclearlang` organization on GitHub: the language and its dialects, Synapsis and its platforms, the tools, the editor extensions, the Smart Graph, the Nuclear Developer and the knowledge base.",
    "body": [
     "- License: Apache-2.0 for the whole tree and every runtime package.",
-    "- Home: `https://github.com/nuclearlang/nuclear`, one repository; each folder is a project with its own `AGENTS.md` and `docs/`. The organization's profile is its own `.github` repository.",
+    "- Home: `https://github.com/nuclearlang/lang`, one repository; the website is `https://nuclearlang.github.io`; each folder is a project with its own `AGENTS.md` and `docs/`. The organization's profile is its own `.github` repository.",
     "- A release is installed with one command: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` (Linux, macOS) or `irm https://nuclearlang.github.io/install.ps1 | iex` (Windows). From the source tree: `installer/install.sh` (`--ai` adds the graph and the local agents)."
    ],
    "keys": [
@@ -987,7 +987,9 @@
     }
    ],
    "sources": [
-    "README.md#Installation"
+    "README.md#Try it",
+    "AGENTS.md",
+    "installer/docs/02-architecture/overview.md#The public installers (`release/install.sh`, `release/install.ps1`)"
    ],
    "meta": {
     "topic": "purpose"

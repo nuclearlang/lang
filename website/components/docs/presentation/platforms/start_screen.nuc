@@ -1,5 +1,6 @@
-// The onboarding of a platform (/start/web): the commands that make its example app, one step at a time, each with
-// the output it gave when this site was built (the site runs them again on every build).
+// The onboarding of a platform (/start/web), two ways: with an agent (the set-up that gives it the context: the MCP
+// server, the Smart Graph, the project's agent files; then what to ask it), or by hand (the commands that make the
+// example app, each with the output it gave when this site was built: the site runs them again on every build).
 @screen(route = "/start/:name", providers = [PlatformsManager, SiteManager, SearchManager])
 stateless StartScreen(name: string)
   build() Element
@@ -14,6 +15,7 @@ stateless StartScreen(name: string)
 
 stateful Onboarding(platforms: Platform[], name: string)
   step: int = 0
+  agent: boolean = true
 
   build() Element
     platform = platforms.find((p) => p.key == name)
@@ -27,29 +29,42 @@ stateful Onboarding(platforms: Platform[], name: string)
           children = [
             small(className = "eyebrow rise", children = "Onboarding · ${platform.name}"),
             h1(className = "rise", children = "Build ${platform.app}"),
-            p(className = "lead rise", children = "${platform.steps.length} steps. Nothing written by hand: every file comes from the tools."),
+            p(className = "lead rise", children = agent ? "${platform.agentSteps.length} steps. Your agent writes the app; the tools give it what it needs to know." : "${platform.steps.length} steps. Nothing written by hand: every file comes from the tools."),
+            div(
+              className = "pills rise",
+              children = [
+                button(className = agent ? "pill active" : "pill", onClick = () => choose(true), children = "With an agent"),
+                button(className = agent ? "pill" : "pill active", onClick = () => choose(false), children = "By hand"),
+              ],
+            ),
           ],
         ),
         ol(
           className = "stepper rise",
-          children = platform.steps.map((s, i) =>
+          children = (agent ? platform.agentSteps : platform.steps).map((s, i) =>
             li(key = s.title, className = i == step ? "current" : i < step ? "done" : "", children = button(onClick = () => go(i), children = [span(className = "number", children = "${i + 1}"), span(children = s.title)]))
           ),
         ),
-        StepCard(key = "${step}", step = platform.steps[step]),
+        StepCard(key = "${agent}${step}", step = agent ? platform.agentSteps[step] : platform.steps[step]),
         div(
           className = "actions",
           children = [
             if step > 0 button(className = "button", onClick = () => go(step - 1), children = "Back"),
-            if step < platform.steps.length - 1 button(className = "button primary", onClick = () => go(step + 1), children = "Next"),
+            if step < (agent ? platform.agentSteps : platform.steps).length - 1 button(className = "button primary", onClick = () => go(step + 1), children = "Next"),
           ],
         ),
-        step == platform.steps.length - 1 ? Done(platform = platform) : span(),
+        agent ? Prompts(platform = platform) : step == platform.steps.length - 1 ? Done(platform = platform) : span(),
       )
 
   go(index: int) void
     setState(() =>
       step = index
+    )
+
+  choose(withAgent: boolean) void
+    setState(() =>
+      agent = withAgent
+      step = 0
     )
 
 stateless StepCard(step: PlatformSteps)
@@ -86,5 +101,18 @@ stateless Done(platform: Platform)
             ...platform.pages.slice(0, 1).map((d) => a(key = d.path, className = "button", href = d.path, children = "The guide")),
           ],
         ),
+      ],
+    )
+
+// What to ask an agent on this platform: apps of several kinds, and what it uses to write them.
+stateless Prompts(platform: Platform)
+  build() Element
+    section(
+      className = "block",
+      children = [
+        h2(children = "Ask for an app"),
+        p(className = "block-text", children = "A few starting points. Say what you want; the agent reads AGENTS.md, asks the Smart Graph through the MCP server, runs the generators and checks every file."),
+        ul(className = "prompts", children = platform.prompts.map((t) => li(key = t, children = t))),
+        div(className = "actions", children = [a(className = "button", href = "/tools/mcp", children = "The MCP server"), a(className = "button", href = "/tools/graph", children = "The Smart Graph"), a(className = "button", href = "/tools/atlas", children = "Nuclear Atlas")]),
       ],
     )
