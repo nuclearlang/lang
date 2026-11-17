@@ -1545,9 +1545,12 @@
    "body": [
     "- [x] T5.1 Reinstalled from the tree (`installer/install.sh`); the AI services run on the renamed code. The VS Code",
     "      extension was built and packaged, not installed: its version must be raised first.",
-    "- [ ] T5.2 Publish the website from this repository (nuclearlang.github.io is served only from the",
-    "      `nuclearlang.github.io` repository, which still deploys the old content).",
-    "- [ ] T5.3 The nine GitHub repositories that are now folders, and the website's: archived.",
+    "- [x] T5.2 Publish the website from this repository: the `nuclearlang.github.io` repository holds only the",
+    "      workflow that builds `website/` of `nuclearlang/lang` (its roadmap in `website/`).",
+    "- [x] T5.3 The repositories that are now folders are archived (2026-11-16): `dragonfly`, `dragonfly-web`,",
+    "      `dragonfly-mobile`, `dragonfly-backend`, `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-developer`,",
+    "      `nuclear-knowledge`, `nuclear-graph`. Not archived: `nuclear-zed` (the grammar `extensions/zed/extension.toml`",
+    "      loads) and `nuclearlang.github.io` (it publishes the site).",
     "- [ ] T5.4 The AI set-up written by the old installer: `~/.local/bin/nuclear-developer` and the editors' MCP",
     "      registrations still name `ai/nuclear-developer` and `nuclear-graph mcp` (both still work: links and the",
     "      `mcp` command that runs `nuclear-mcp`); running the set-up again writes the new ones."
