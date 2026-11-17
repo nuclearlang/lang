@@ -2,7 +2,7 @@
   "name": "nuclearlang",
   "displayName": "NuclearLang",
   "description": "NuclearLang (.nuc) support: the Nuclear workspace (projects as tabs, tools full screen, keyboard first), language server, semantic highlighting, code metrics, the Synapsis dialects (flutter, fastapi, nestjs, react) and the Chernobyl theme",
-  "version": "0.52.1",
+  "version": "0.53.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
@@ -1957,7 +1957,7 @@
     "theme": "node theme/build.mjs && node theme/icons.mjs",
     "server": "node scripts/bundle-server.mjs",
     "package": "npm run theme && npm run compile && npm run server && vsce package --no-dependencies --allow-missing-repository",
-    "test": "esbuild test/setup.test.ts ../tools/nuclear-builder/test/engine.test.ts --bundle --platform=node --target=node18 --external:vscode --outdir=out/test --entry-names=[name] && node --test out/test/setup.test.js out/test/engine.test.js"
+    "test": "esbuild ../tools/nuclear-builder/test/engine.test.ts --bundle --platform=node --target=node18 --external:vscode --outdir=out/test --entry-names=[name] && node --test out/test/engine.test.js"
   },
   "dependencies": {
     "vscode-languageclient": "9.0.1"

@@ -86,7 +86,7 @@ In `extensions/vscode/`, `npm run builder` → `out/nuclear-builder.js`, also pa
 | `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` (`ciCommands`, the same grouping `ciFile` exports) |
 | `nuclear-builder export github\|gitlab\|bitbucket` | writes the CI file |
 | `nuclear-builder runs` | the runs of this project |
-| `nuclear-builder setup [--profile <id>] [--yes] \| --status \| --remove` | the AI services of this machine ([the set-up](../../../../vscode/docs/02-architecture/ai-services.md)) |
+| `nuclear-builder setup [--profile <id>] [--yes] \| --status [--json] \| --remove \| --plan --json \| --events --profile <id> \| --restart <service> \| --set KEY=value` | the AI services of this machine (`setup.nuc`, `cli.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)) |
 
 ## The JetBrains tool window (`NuclearBuilder.java`)
 

@@ -1,14 +1,13 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolchain.nuc, nuclear-graph-storage/web.nuc, tools/mcp/docs/08-guides/mcp.md]
 ---
 # The MCP server: overview
 
 `nuclear-mcp` serves MCP over stdio until the client closes it (`main` in `cli.nuc` → `mcpMain` →
-`mcpServer().run()` in `server.nuc`); `nuclear-mcp tools` prints `mcpTools()` as JSON. `nuclear-graph mcp` runs
-`nuclear-mcp`. What each tool does for a user is in [the guide](../08-guides/mcp.md).
+`mcpServer().run()` in `server.nuc`); `nuclear-mcp tools` prints `mcpTools()` as JSON. What each tool does for a user is in [the guide](../08-guides/mcp.md).
 
 ## What it stands on
 
@@ -89,7 +88,7 @@ product is made with these tools: no target code for a feature, no native code t
 | Variable | Default |
 |---|---|
 | `NUCLEAR_AI_MODE` | the mode of the machine's `ai.env`, else `local` |
-| `NUCLEAR_DEVELOPER_URL` | `http://127.0.0.1:7879` |
+| `NUCLEAR_DEVELOPER_URL` | `http://127.0.0.1:<port>`: `NUCLEAR_DEVELOPER_PORT` of `ai.env` (the port the set-up chose), else `7879` |
 | `NUCLEAR_GRAPH_URL` / `NUCLEAR_GRAPH_PORT` | `http://127.0.0.1:7878` / `7878` |
 | `NUCLEAR_SEARXNG_URL` | none (Brave with a key, else Wikipedia) |
 

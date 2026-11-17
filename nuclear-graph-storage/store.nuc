@@ -77,12 +77,12 @@ Store
     client = chromadb.PersistentClient(path = path.length > 0 ? path : "${Paths.db()}", settings = Settings(anonymizedTelemetry = false, allowReset = false))
     box = Box(key ?? Secrets.key())
     embedder = embed ?? ollamaEmbed
-    for name in collections()
+    for name in COLLECTIONS
       cols[name] = client.getOrCreateCollection(name, metadata = { "hnsw:space": "cosine" }, embeddingFunction = null)
 
   col(name: string) Collection
     if not (name in cols)
-      throw KeyError("unknown collection '${name}' (collections: ${collections().join(", ")})")
+      throw KeyError("unknown collection '${name}' (collections: ${COLLECTIONS.join(", ")})")
     cols[name]!
 
   // ---- writing ----
@@ -116,7 +116,7 @@ Store
   // Removes the collections of before the shelves (ADR-graph-0001).
   dropLegacy() string[]
     gone: string[] = []
-    for name in legacyCollections()
+    for name in LEGACY
       try
         client.deleteCollection(name)
         gone.add(name)
@@ -129,13 +129,13 @@ Store
 
   // The schema and the revision of the knowledge base this store holds (0: never ingested).
   version() <string, int>
-    meta: <string, any> = client.getCollection(shelfTable().keys[0]).metadata ?? {}
+    meta: <string, any> = client.getCollection(SHELVES.keys[0]).metadata ?? {}
     schema: int = meta["schema"] ?? 0
     revision: int = meta["revision"] ?? 0
     { "schema": schema, "revision": revision }
 
   setVersion(schema: int, revision: int) void
-    for name in shelfTable().keys
+    for name in SHELVES.keys
       col(name).modify(metadata = { "schema": schema, "revision": revision })
 
   // ---- reading ----

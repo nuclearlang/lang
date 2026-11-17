@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [../04-specs/README.md, ../02-architecture/limits.md]
 ---
 # Roadmap
@@ -29,6 +29,47 @@ The pending work of the language, the compiler and the language server. A done i
 - Diagnostics of the closed files of a project in the editor: only if the user asks.
 
 ## Pending
+
+### Found in the restructure (spec 008)
+
+- `docs/07-reference/projects.md` §1.2 says only a url contract keeps `contracts/<name>/contract.json`; the code
+  writes it for a path contract too.
+
+### Found by a corpus checked in the three targets (2026-11-17)
+
+Each case passes `nuclear check` and is wrong in a target (pyright / `tsc --strict` / `dart analyze`, then run).
+
+- **A local or a function named like a builtin the library writes** (Python): `sorted = xs.sorted()` is an
+  `UnboundLocalError` (also `len`, `max`, `sum`); a function of the file named `sorted` takes the place of the
+  builtin, so `xs.sorted()` calls it and gives a wrong result with no error.
+- **A static field in Python**: `static count: int = 0` is written as an instance field set in `__init__`;
+  `Counter.count` is an `AttributeError`.
+- **`?.` does not stop the rest of the chain** (Python): `u.friend?.name.length`, `u?.name.upper()` call `len` or
+  `upper` on `None`.
+- **Dart**: a default list (`xs: int[] = []`) is `const []`, which `add` cannot change; a list of function values
+  (`(() => int)[]`) is `List<(int Function())>`, a record type; `m["a"] += 1` on a map does not compile (the value
+  is nullable).
+- **TypeScript**: `int?[]` is `number | null[]` (a list of nullable ints is `(number | null)[]`).
+- **The same code gives another result in Python**: a lambda made in a loop sees the loop's last value (`[2, 2, 2]`
+  where TypeScript and Dart give `[0, 1, 2]`); a default list is shared by every call; `-7 ~/ 2` is `-4`
+  (`//` floors), while nuclear-base.md §6 says `~/` goes toward zero.
+- **Not decided**: `==` on two lists or maps is by value in Python and by reference in TypeScript and Dart
+  (`tsc` rejects it: TS2839); a missed `?.` prints `undefined` in TypeScript; TypeScript prints a whole double without
+  its `.0` (`2.0` is `2`), while library.md §12 says numbers print the same in every dialect.
+- `tsc --strict` rejects a comparison with a constant it narrowed (`t = true` then `t == false`, TS2367).
+
+### Found writing Nuclear Builder's set-up (2026-11-17)
+
+- **No tuple for a target's API that takes one**: Python's `socket.bind(("127.0.0.1", port))` cannot be written;
+  `extensions/tools/nuclear-builder/setup.nuc` passes `socket.getaddrinfo(...)[0][4]` (the pair the system gives).
+- **A function that assigns a variable of its file** (`counter = counter + 1` in `bump()`, `counter = 0` at the
+  top): Python makes it a local of the function (no `global`, an `UnboundLocalError`), TypeScript and Dart assign
+  a constant. No diagnostic either.
+- **A function type with a parameter without a name** (`onPick: (int) => void`) is written in TypeScript as
+  `(int) => void`, a parameter named `int` of type `any` (`tsc --noEmit` of the website: TS7006 in
+  `module_panel.ts`). Wanted: `(arg0: number) => void`, or the name made required with a fix.
+- **No alias of a function type**: `Say = (line: string) => void` is a lambda, so `(line: string) => void` is written
+  at every parameter.
 
 ### Found building the website (2026-11-16)
 

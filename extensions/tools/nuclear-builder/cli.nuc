@@ -1,0 +1,254 @@
+use os
+use sys
+use json
+use time
+use shutil
+use subprocess
+use pathlib{ Path }
+
+// `nuclear-builder`: the set-up of the AI services in a terminal and for the editors, which run it as a process and
+// draw what it prints. The pipeline's commands (run, retry, restart, ci, export, runs) are still the TypeScript engine
+// of the installation (`bin/nuclear-builder.js`, run by node) until it is written in Nuclear (spec 009, phase 3).
+
+USAGE = """
+  nuclear-builder setup [--profile remote|lite|medium|hard] [--yes]
+                                  the AI services of this machine, step by step: it reads the hardware, suggests a
+                                  profile (which models are downloaded and how far each works), installs what is
+                                  missing (Ollama), downloads the models, loads the knowledge base and starts the
+                                  services, now and at every login (--yes: no questions, the suggested profile)
+  nuclear-builder setup --status [--json]      what is installed and running
+  nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)
+  nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements
+  nuclear-builder setup --events --profile <id> [--from <step>]
+                                  the steps of a profile, one JSON line per event (what the editors draw)
+  nuclear-builder setup --restart graph|developer   a service again, through the system's manager
+  nuclear-builder setup --set KEY=value ...    writes the machine's choice (ai.env)
+
+  nuclear-builder run | retry | restart | ci | export | runs ...
+                                  the pipeline (nuclear-builder help): still the TypeScript engine, run by node
+"""
+
+// `--name value` of the arguments, or null.
+option(args: string[], name: string) string?
+  at = args.indexOf(name)
+  at >= 0 and at + 1 < args.length ? args[at + 1] : null
+
+// A question in the terminal; without one (or with no answer) the fallback.
+ask(question: string, fallback: string) string
+  if not sys.stdin.isatty()
+    return fallback
+  try
+    answer = input(question).trim()
+    answer.length > 0 ? answer : fallback
+  catch e
+    if not isinstance(e, EOFError)
+      throw e
+    fallback
+
+yes(answer: string) boolean
+  answer.lower().startsWith("y")
+
+event(value: <string, any>) void
+  print(json.dumps(value), flush = true)
+
+showStatus(asJson: boolean) int
+  st = status()
+  machine: <string, string> = st["machine"]!
+  ready = st["graph"] == true and st["developer"] == true and st["ollama"] == true and (st["missingModels"] as string[]).isEmpty
+  if asJson
+    print(json.dumps(st, indent = 1))
+    return 0
+  mode = machine["NUCLEAR_AI_MODE"] ?? ""
+  if mode.isEmpty
+    print("not set up: nuclear-builder setup")
+    return 1
+  print("profile ${machine["NUCLEAR_AI_PROFILE"] ?? ""} (${st["file"]})")
+  if mode != "local"
+    return 0
+  on = (ok: any) => ok == true ? "running" : "not running"
+  missing: string[] = st["missingModels"]!
+  print("Smart Graph        ${on(st["graph"])}")
+  print("Nuclear Developer  ${on(st["developer"])}")
+  print("Ollama             ${on(st["ollama"])}")
+  print("models             ${missing.isEmpty ? "installed" : "missing ${missing.join(", ")}"}")
+  print("at login           ${st["atLogin"] == true ? "yes" : "no"}")
+  ready ? 0 : 1
+
+// This machine, the profiles with how each sits on it, and the requirements of both modes: what the editors' set-up
+// page draws.
+plan() <string, any>
+  hw = hardware()
+  onMachine = PROFILES.map((p) => profileOnMachine(p, hw))
+  {
+    "hw": hw.asMap(),
+    "platform": sys.platform,
+    "suggested": recommend(hw),
+    "profiles": onMachine,
+    "machine": readMachine(),
+    "root": aiRoot(),
+    "requirements": { "local": requirements(true), "remote": requirements(false) }
+  }
+
+profileOnMachine(p: Profile, hw: Hardware) <string, any>
+  shown: <string, any> = dict(p.data)
+  f = fit(p, hw)
+  shown["fit"] = f.fit
+  shown["note"] = f.note
+  shown
+
+// The steps of a profile as JSON lines, from the step `from` on: `steps`, then `step` (running, a line, done or
+// failed), then `done`. The requirements are the caller's (the page installs them in a terminal the user sees).
+events(args: string[]) int
+  p = profileOf(option(args, "--profile") ?? "")
+  root = aiRoot()
+  if p == null or root == null
+    event({ "type": "failed", "line": p == null ? "no such profile" : "NuclearLang is installed without the AI services: run its installer again" })
+    return 2
+  first = (option(args, "--from") ?? "0").toInt() ?? 0
+  all = steps(p)
+  event({ "type": "steps", "titles": all.map((s) => s.title), "from": first })
+  for i in 0..all.length
+    if i < first
+      continue
+    event({ "type": "step", "index": i, "status": "running", "line": "" })
+    try
+      runStep(all[i].id, p, root, (line) => event({ "type": "step", "index": i, "status": "running", "line": line }))
+    catch e
+      event({ "type": "step", "index": i, "status": "failed", "line": "${e}" })
+      return 1
+    event({ "type": "step", "index": i, "status": "done", "line": "" })
+  event({ "type": "done", "profile": p.id, "local": p.coder != null })
+  0
+
+describeProfiles(hw: Hardware, suggested: string) void
+  print("This machine: ${hw.cpu}, ${hw.cores} threads, ${hw.ram} GB of memory, ${hw.gpu.isEmpty ? "no GPU with memory of its own" : hw.gpu}, ${hw.disk} GB of disk free.\n")
+  for p in PROFILES
+    f = fit(p, hw)
+    mark = p.id == suggested ? "→" : " "
+    best = p.id == suggested ? "   (suggested for this machine)" : ""
+    print("${mark} ${p.id.padEnd(7)} ${p.title}: downloads ${p.data["gb"]} GB${best}")
+    print("          ${p.data["summary"]}")
+    if p.coder != null
+      sits = f.fit == "no" ? "✗ not for this machine" : f.fit == "tight" ? "! tight on this machine" : "on this machine"
+      print("          ${sits}: ${f.note}")
+      print("          measured: ${p.data["measured"]}")
+    for w in p.data["works"] as string[]
+      print("          ✓ ${w}")
+    for l in p.data["limits"] as string[]
+      print("          ✗ ${l}")
+    print("")
+
+// What a profile needs, found or installed by its own installer, one at a time; false when it is still missing.
+haveRequirements(p: Profile, always: boolean) boolean
+  local = p.coder != null
+  while true
+    missing = requirements(local).find((r) => r["found"] != true)
+    if missing == null
+      return true
+    command: string? = (missing["install"] as <string, string>)[sys.platform]
+    print("\n${missing["title"]} is needed (${missing["why"]}): ${missing["detail"]}.")
+    other = missing["local"] == true ? ", or choose the profile `remote`" : ""
+    by = "Install it from ${missing["url"]} and run `nuclear-builder setup` again${other}."
+    if command == null or "${missing["detail"]}".startsWith("installed, not running")
+      print(command != null ? "Start it and run `nuclear-builder setup` again." : by)
+      return false
+    notes: <string, string> = missing["note"] ?? ({} as <string, string>)
+    if notes[sys.platform] != null
+      print(notes[sys.platform])
+    if not yes(always ? "y" : ask("Install it now with `${command}`? [Y/n]: ", "y"))
+      print(by)
+      return false
+    // in the terminal the user sees: an installer may ask for a password
+    subprocess.run(command, shell = true, env = toolEnv())
+    found = false
+    for i in 0..20
+      found = requirements(local).any((r) => r["id"] == missing["id"] and r["found"] == true)
+      if found
+        break
+      time.sleep(1.5)
+    if not found
+      print("${missing["title"]} is still not found. ${by}")
+      return false
+  true
+
+// The AI services of this machine, in a terminal: the same steps as the editors' set-up page.
+setup(args: string[]) int
+  if "--help" in args or "-h" in args
+    print(USAGE)
+    return 0
+  if "--remove" in args
+    remove((line) => print(line))
+    print("The AI services are removed. Ollama, its models and the graph's data stay.")
+    return 0
+  if "--status" in args
+    return showStatus("--json" in args)
+  if "--plan" in args
+    print(json.dumps(plan(), indent = 1))
+    return 0
+  if "--events" in args
+    return events(args)
+  restart = option(args, "--restart")
+  if restart != null
+    return restartService(restart) ? 0 : 1
+  if "--set" in args
+    values: <string, string> = {}
+    for a in args.skip(args.indexOf("--set") + 1)
+      at = a.indexOf("=")
+      if at > 0
+        values[a.substring(0, at)] = a.substring(at + 1)
+    writeMachine(values)
+    return 0
+  always = "--yes" in args
+  hw = hardware()
+  suggested = recommend(hw)
+  describeProfiles(hw, suggested)
+  names = PROFILES.map((x) => x.id).join(", ")
+  p = profileOf(option(args, "--profile") ?? (always ? suggested : ask("Which one? ${names} [${suggested}]: ", suggested)))
+  if p == null
+    print("no such profile: ${names}", file = sys.stderr)
+    return 2
+  f = fit(p, hw)
+  if f.fit == "no" and not yes(always ? "y" : ask("${p.title} is not for this machine (${f.note}). Install it anyway? [y/N]: ", "n"))
+    return 1
+  if not haveRequirements(p, always)
+    return 1
+  root = aiRoot()
+  if root == null
+    print("NuclearLang is installed without the AI services: run its installer again (without --no-ai).", file = sys.stderr)
+    return 1
+  all = steps(p)
+  for i in 0..all.length
+    print("\n[${i + 1}/${all.length}] ${all[i].title}", flush = true)
+    runStep(all[i].id, p, root, (line) => print("    ${line}", flush = true))
+  m = readMachine()
+  if p.coder != null
+    print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
+    print("Your agents: nuclear-mcp (claude mcp add --scope user nuclear -- nuclear-mcp). State: nuclear-builder setup --status")
+  else
+    print("\nDone: add the MCP server to your agent (claude mcp add --scope user nuclear -- nuclear-mcp). The local agents: nuclear-builder setup again, another profile.")
+  0
+
+// The pipeline's commands: the TypeScript engine of the installation, run by node.
+pipeline(args: string[]) int
+  given = os.environ.get("NUCLEAR_BUILDER_JS") ?? ""
+  engine = given.length > 0 ? Path(given) : Path(installDir(), "bin", "nuclear-builder.js")
+  node = shutil.which("node", path = toolEnv()["PATH"])
+  if node == null or not engine.exists()
+    print("nuclear-builder ${args.first}: the pipeline still needs Node.js and ${engine} (spec 009, phase 3)", file = sys.stderr)
+    return 1
+  subprocess.run([node!, "${engine}", ...args], env = toolEnv()).returncode
+
+main(argv: string[]? = null) void
+  args: string[] = argv ?? sys.argv.slice(1)
+  if args.isEmpty or args[0] == "--help" or args[0] == "-h"
+    print("nuclear-builder — the Nuclear Builder without the editor\n${USAGE}")
+    if args.isEmpty
+      sys.exit(pipeline(["help"]))
+    return
+  try
+    sys.exit(args[0] == "setup" ? setup(args.skip(1)) : pipeline(args))
+  catch e
+    if not isinstance(e, RuntimeError) and not isinstance(e, OSError)
+      throw e
+    print("nuclear-builder: ${e}", file = sys.stderr)
+    sys.exit(1)

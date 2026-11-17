@@ -28,8 +28,6 @@ claude mcp add --scope user nuclear -- nuclear-mcp
 nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the graph
 ```
 
-`nuclear-graph mcp` still works: it runs `nuclear-mcp`.
-
 ## Folders
 
 - `server.nuc`: the server, its instructions and every tool (`McpTools`, `mcpServer`, `mcpTools`, `remoteOnly`).

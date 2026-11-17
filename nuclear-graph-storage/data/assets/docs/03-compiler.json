@@ -1290,7 +1290,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#constructs.3435b4",
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#constructs.03de9e",
    "type": "context",
    "title": "The emitter — Constructs",
    "summary": "`{{#mods.get}}`.",
@@ -1308,9 +1308,7 @@
     "  for `in`, `map` (a `Map` object) / `object` (a map literal or `<K, V>`); for `eq`/`not_eq`, `null` (a side is",
     "  `null`: Python `is None`). A bitwise operand of a comparison gets parentheses (TS binds `==` tighter);",
     "  `-(a ** b)` under unary minus. `is` gets `t` (the type's `tinfo`: TS writes",
-    "  `typeof`/`Number.isInteger`/`Array.isArray`). `for_entries` gets `map`. Constructed `Map/Set/List<...>()` locals",
-    "  record their type.",
-    "- `try` as the last line returns the last line of `try` and `catch` (`try_stmt` with the tail)."
+    "  `typeof`/`Number.isInteger`/`Array.isArray`). `for_entries` gets `map` and `iter_member` (the map wrapped for a member after it: `(env ?? {}).items()`). The"
    ],
    "agents": false,
    "sources": [
@@ -1323,11 +1321,14 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#constructs.b426b9",
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#constructs.952864",
    "type": "context",
    "title": "The emitter — Constructs",
-   "summary": "emitted block): Python binds no name otherwise (`except Exception:`).",
+   "summary": "operand of a spread is wrapped the same way (`*([b] if c else [])`).",
    "body": [
+    "operand of a spread is wrapped the same way (`*([b] if c else [])`). Constructed `Map/Set/List<...>()` locals",
+    "  record their type.",
+    "- `try` as the last line returns the last line of `try` and `catch` (`try_stmt` with the tail).",
     "- The `try` template gets `catch_used` when the `catch` block names the caught value (`contains_word` over the",
     "  emitted block): Python binds no name otherwise (`except Exception:`).",
     "- Dart top level (`toplevel_main`): statements go in a generated `main`; a variable that a declaration uses",
@@ -1446,7 +1447,12 @@
    "body": [
     "A member of a base type is rewritten when the receiver's type is known: `static_type` (the receiver's type),",
     "`library_access`, `library_render`, with the dialect's `[library.<base>]` templates; N0114 and N0115 are its",
-    "diagnostics. Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`."
+    "diagnostics. Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`.",
+    "",
+    "A map read `m[k]` uses the dialect's `index` template with the `map` flag (a lookup that gives `null` for an",
+    "absent key, in a dialect whose index throws) when `map_kind` knows the object is a map: a typed local or field, or",
+    "what `static_type` says any other expression gives: a function, a static method of a class of the project or of",
+    "the type definitions (`Paths.machine()[\"k\"]`), a member."
    ],
    "agents": false,
    "sources": [
@@ -3489,7 +3495,7 @@
    "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-3-functions-function-shortcuts",
    "type": "spec",
    "title": "NuclearLang dialects — 5.3 `[functions]`: function shortcuts",
-   "summary": "[functions] print = \"console.log\" # renames the function now = { template = \"new Date()\" } # replaces the whole call sleep = { template = \"await new Promise((r) => setTimeout(r, {{arg0}}))\" } The template receives `args` (all the arguments) and `arg0`, `arg1`... [call_site.Log] arg = \"at\" text =…",
+   "summary": "[functions] print = \"console.log\" # renames the function now = { template = \"new Date()\" } # replaces the whole call sleep = { template = \"await new Promise((r) => setTimeout(r, {{arg0}}))\" } The template receives `args` (the positional arguments), `arg0`, `arg1`... and `call_args` (every…",
    "body": [
     "```toml",
     "[functions]",
@@ -3498,7 +3504,8 @@
     "sleep = { template = \"await new Promise((r) => setTimeout(r, {{arg0}}))\" }",
     "```",
     "",
-    "The template receives `args` (all the arguments) and `arg0`, `arg1`...",
+    "The template receives `args` (the positional arguments), `arg0`, `arg1`... and `call_args` (every argument, a named",
+    "one as the dialect's `named_arg` writes it: Python's `print(line, flush=True)`).",
     "",
     "#### 5.3.1 `[call_site]`: where a call was written",
     "",

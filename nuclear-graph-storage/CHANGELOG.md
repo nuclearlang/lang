@@ -4,6 +4,12 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them
+  now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of
+  the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).
+- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was
+  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in
+  `paths.nuc`; `Paths.machine()` gives the same).
 - The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear
   Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.
 - MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the

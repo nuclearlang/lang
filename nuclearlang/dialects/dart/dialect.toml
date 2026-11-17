@@ -124,7 +124,7 @@ for (var {{var}} = {{start}}; {{var}} < {{end}}; {{var}}++) {
   {{body}}
 }"""
 for_entries = """
-for (final MapEntry(key: {{key}}, value: {{value}}) in {{iter}}.entries) {
+for (final MapEntry(key: {{key}}, value: {{value}}) in {{iter_member}}.entries) {
   {{body}}
 }"""
 while = """

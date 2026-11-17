@@ -76,7 +76,8 @@ see §6.4).
 
 **Canonical layout** (what `nuclear fmt` writes): 2 spaces per block; one space after `,` and `:` and around
 binary operators and `=`; none inside `( )` and `[ ]`, one inside `{ }` (`{ "id": id }`); at most one blank line,
-and one before a top-level declaration that follows a block; no trailing spaces. Lines are never joined, split or
+and one before a top-level declaration that follows a block; no trailing spaces. The path of a `use`
+(`use urllib/parse{ quote }`) keeps its spacing: its `/` is not a division. Lines are never joined, split or
 reordered.
 
 ### 2.3 Comments
@@ -206,6 +207,11 @@ counter += 1
 Rule: `x = value` **declares** `x` if it does not exist in the block nor in the blocks that contain it. If
 `x` is assigned again later in its block, the transpiler emits it as a mutable variable in the target; if it
 is never reassigned, it emits it as a constant. There is no `var` in Nuclear.
+
+Rule: at the top level of a file, `PORTS: <string, int> = { 'graph': 7878 }` is a value with a type, also when its
+name starts with a capital: the `=` on its line tells it from a module with a parent (`Admin: User`, §4), whose
+header never has one. In a project it is seen by the other files, as a declaration is (everything is exported;
+[projects.md](projects.md) §2).
 
 Rule: the transpiler optimizes as much as possible for the target language.
 

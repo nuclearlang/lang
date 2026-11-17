@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [installer/install.sh, installer/release/stage.sh, installer/release/package.sh, installer/release/install.sh, installer/release/install.ps1, .github/workflows/release.yml, installer/docs/08-guides/ai-setup.md]
 ---
 # The installers: overview
@@ -43,19 +43,22 @@ folder above the binary's `bin/`).
 ## From source (`install.sh`)
 
 1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.
-2. `nuclear-builder`: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.
+2. The pipeline's engine: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.
 3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear`, `nuclear-lsp` and
-   `nuclear-builder` in `$PREFIX/bin`, and removes the old `dragonfly` and `nuclear-loop` links.
+   `nuclear-builder` in `$PREFIX/bin`.
 4. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the
-   set-up installs the graph editable and builds the Developer and the MCP server in place. With `--ai`: `nuclear-builder setup` (it needs Node.js).
+   set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself
+   (`extensions/tools/nuclear-builder`, Nuclear) is built and installed editable with uv as `nuclear-builder`, in
+   place of the node link. With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as
+   `ai/` and its own `nuclear-builder setup`.
 5. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).
 6. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the
-   PATH (`--no-vscode`). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target
+   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the
+   installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target
    `wasm32-wasip2` is there (`--no-zed`).
 7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.
 
-`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links (also the old `dragonfly` and
-`nuclear-loop`), `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,
+`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,
 the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
 
 ## The release
@@ -66,10 +69,20 @@ the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
   writes `VERSION`, and makes `dist/nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with its
   `.sha256`, and `dist/latest` (the version a mirror serves). The version is the workspace's (`Cargo.toml`
   `[workspace.package]`); `os` is `linux`, `macos` or `windows`, `arch` `x86_64` or `aarch64`.
+- `release/ai-runtime.sh`: the AI archive of this machine (ADR-installer-0003),
+  `dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows) and its `.sha256`, unpacked as the
+  installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer
+  installed from what `nuclear build` writes, pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the
+  MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,
+  `nuclear-mcp`, `nuclear-developer`, and the knowledge base. Before packing it fails if a `.pth` points into the
+  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it
+  (`installer/install.sh --ai`).
 - `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets
   (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,
   `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:
-  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `publish`: every archive,
+  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each
+  system (Linux x86_64 and arm64, macOS Intel and Apple silicon, Windows), so each AI archive is tried where it
+  runs. Job `publish`: every archive,
   checksum and `.vsix`, plus both installers, as assets of the GitHub release.
 - The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`).
 
@@ -91,20 +104,21 @@ replace the installation, link or put `bin` on the PATH, check `nuclear dialect 
 
 Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`),
 `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also
-`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`. The repository was `nuclearlang/nuclear` until 2026-11-16: GitHub redirects its
-old release addresses to `nuclearlang/lang`.
+`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.
 
 ## The AI services at the end of an install
 
 The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS
-Code extension's `aiSetup.ts`. What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is
+archive's `ai/bin/nuclear-builder` (`extensions/tools/nuclear-builder/setup.nuc`, written in Nuclear). What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is
 ADR-installer-0002.
 
 - The profile is `--profile` / `NUCLEAR_AI_PROFILE`, else the one the machine has (`NUCLEAR_AI_PROFILE=` in
   `~/.config/nuclearlang/ai.env`, `%APPDATA%\nuclearlang\ai.env`).
 - With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without
   one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.
-- Without Node.js or without `nuclear-builder` in the archive: a note saying how to run the set-up later.
+- Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),
+  so `nuclear-builder setup` works before the set-up ran; its pipeline commands run the installation's
+  `bin/nuclear-builder.js` with node.
 - The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.
 - On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`
   (`systemctl --user restart nuclear-developer` after a change to its code;

@@ -132,7 +132,7 @@ for_range = """
 for {{var}} in range({{start}}, {{end}}):
     {{body}}"""
 for_entries = """
-for {{key}}, {{value}} in {{#map}}{{iter}}.items(){{/map}}{{^map}}{{iter}}.items(){{/map}}:
+for {{key}}, {{value}} in {{iter_member}}.items():
     {{body}}"""
 while = """
 while {{cond}}:
@@ -308,7 +308,8 @@ os = "os"
 
 [functions]
 # print(a, b) writes the values separated by spaces, with Nuclear's text for booleans and null (nuclearlang/docs/07-reference/library.md §12)
-print = { template = "_print({{args}})", helper = "def _show(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)\n\n\ndef _print(*args: object) -> None:\n    print(*(_show(a) for a in args))" }
+# (its named arguments are Python's own: `print(line, flush = true)`, `print(e, file = sys.stderr)`)
+print = { template = "_print({{call_args}})", helper = "def _show(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)\n\n\ndef _print(*args: object, **options: Any) -> None:\n    print(*(_show(a) for a in args), **options)" }
 # the standard library (nuclearlang/docs/07-reference/library.md §10)
 delay = { template = "asyncio.sleep({{arg0}} / 1000)" }
 awaitAll = { template = "asyncio.gather(*{{arg0}})" }

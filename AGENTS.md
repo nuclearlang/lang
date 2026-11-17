@@ -86,7 +86,6 @@ A project's own commands are in its `AGENTS.md`.
 
 ## In progress
 
-The restructure of the tree: its phases 1 to 4 are done (one repository, a project per folder with its own
-documents, one `nuclear` command, the code generator, the devices, the MCP server and the editors' tools in folders
-of their own). The names in the code are Synapsis, `nuclear`, `nuclear-builder` and HTTP Connections. What is left
-is in [docs/04-specs/008-restructure/tasks.md](docs/04-specs/008-restructure/tasks.md).
+The AI services ready to run from the installer, with nothing on the machine: their own Python and the set-up in
+Nuclear are done; Nuclear Builder's engine in Nuclear and the welcome page for Ollama and the models are left
+([docs/04-specs/009-self-contained-ai-services/tasks.md](docs/04-specs/009-self-contained-ai-services/tasks.md)).

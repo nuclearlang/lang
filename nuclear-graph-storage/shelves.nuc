@@ -102,15 +102,6 @@ PLATFORMS = ["backend", "mobile", "web"]
 // The metadata every row has (in clear in Chroma: names and keys, never the text).
 COMMON = ["card", "facet", "type", "title", "agents", "platforms", "keys", "tags", "links", "origin", "source", "hash"]
 
-// A top-level value belongs to its file: the others read it through these.
-shelfTable() <string, Shelf> = SHELVES
-schemaVersion() int = SCHEMA
-runtimeCollections() string[] = RUNTIME
-collections() string[] = COLLECTIONS
-legacyCollections() string[] = LEGACY
-platformNames() string[] = PLATFORMS
-exactShelf() string = EXACT
-
 // The shelves a search of every shelf reads: all but the catalogue of exact questions.
 searchedShelves() string[]
   known: <string, Shelf> = SHELVES

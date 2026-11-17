@@ -20,7 +20,7 @@ finishes (`onStartupFinished`).
 | `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |
 | `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |
 | `notifications.ts` | the notices of what the local agents did | [ai-services.md](ai-services.md) |
-| `aiSetup.ts`, `aiSetup.json`, `setupPanel.ts` | the set-up of the AI services: its engine, its data, its wizard | [ai-services.md](ai-services.md) |
+| `aiMachine.ts`, `setupPanel.ts` | the set-up of the AI services: the machine's choice and `nuclear-builder setup` run as a process, its wizard | [ai-services.md](ai-services.md) |
 | `settingsPanel.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool and the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |
 | `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |
 

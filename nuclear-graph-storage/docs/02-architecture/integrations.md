@@ -66,7 +66,7 @@ files.renamed("Book", "Title")                      # a rename by a tool: every 
 
 ## The MCP server
 
-`nuclear-mcp` speaks the Model Context Protocol over stdio (`nuclear-graph mcp` runs it). It is not in this folder:
+`nuclear-mcp` speaks the Model Context Protocol over stdio. It is not in this folder:
 it is a Nuclear project of its own that imports this package (its `defs/python/nuclear_graph/`); its tools, its instructions and how a client adds it are documented by the project
 [`tools/mcp`](../../../tools/mcp/AGENTS.md). What its `graph_*` tools call here:
 

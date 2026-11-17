@@ -1,5 +1,5 @@
 # The release of NuclearLang: on a tag v<version> (the version of Cargo.toml [workspace.package]) every target's archive
-# is built (installer/release/package.sh), with the VS Code extension, and published in the GitHub release that the
+# is built (installer/release/package.sh), with the AI services' archive of each system (ai-runtime.sh) and the VS Code extension, and published in the GitHub release that the
 # installers download from (installer/release/install.sh, install.ps1; also served by the website).
 name: release
 
@@ -66,8 +66,45 @@ jobs:
           name: vscode
           path: dist/*.vsix
 
+  # the AI services' archive (ADR-installer-0003): a Python of their own with the Smart Graph, the MCP server and the
+  # Nuclear Developer, built and tried on a runner of each system (glibc Linux: onnxruntime has no musl wheel)
+  ai:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest }
+          - { runner: ubuntu-24.04-arm }
+          - { runner: macos-13 }
+          - { runner: macos-14 }
+          - { runner: windows-latest }
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.13.8'
+      - name: nuclear, to build the services from their .nuc
+        run: |
+          cargo build --release --quiet -p nuclear-cli
+          exe=""; [ "$RUNNER_OS" = Windows ] && exe=".exe"
+          installer/release/stage.sh "$RUNNER_TEMP/nuclearlang" "target/release/nuclear$exe"
+          echo "NUCLEAR=$RUNNER_TEMP/nuclearlang/bin/nuclear$exe" >> "$GITHUB_ENV"
+      - name: The AI archive, built and tried
+        run: installer/release/ai-runtime.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-${{ matrix.runner }}
+          path: |
+            installer/dist/nuclearlang-ai-*.tar.gz
+            installer/dist/nuclearlang-ai-*.zip
+            installer/dist/nuclearlang-ai-*.sha256
+
   publish:
-    needs: [archive, vscode]
+    needs: [archive, ai, vscode]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

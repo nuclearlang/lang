@@ -126,13 +126,17 @@ Example: `examples/examples-flutter-dialect/tasks_app` over `examples/examples-b
   `[project] sources = "lib"` in the dialect, `components/users/data/user_repository.nuc` →
   `lib/components/users/data/user_repository.dart`.
 - Hidden folders and the output folder are not read.
-- A name is declared only once in the whole project (`N0303`).
+- A name is declared only once in the whole project (`N0303`), a constant of a file too.
 - Every name declared in a file can be used in the others without `use`: the transpiler writes the import
-  of the file that declares it. The dialect's `project_import` template gives the import path (Dart:
+  of the file that declares it. A constant of a file is such a name: a name assigned once at its top level
+  (`PORTS: <string, int> = {...}`, `LIMIT = 10`) is imported with its type, as a function is; TypeScript writes it
+  `export const` (the dialect's `toplevel_const_decl`), Dart keeps it top-level instead of in `main`. A name
+  assigned again is a variable of its file and is not exported. The dialect's `project_import` template gives the import path (Dart:
   `package:{{project}}/{{path}}.dart`; Python: `{{package}}.{{path}}`, where `package` is the folder the files go
   to: the manifest's `package`, else the dialect's `sources`).
 - A file is imported only if the generated code uses one of its names (comments and the text of strings do
-  not count; their interpolations do).
+  not count; their interpolations do). A member (`platform.machine()`) or a local of the file with that name is
+  not a use.
 - What holds for the declarations of one file holds across files: `Result` propagation, aliases
   (`f() = Module.method` with `Module` in another file), overrides of bases in another file and named
   arguments.

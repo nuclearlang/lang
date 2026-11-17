@@ -470,7 +470,7 @@ function drawForm() {
       + '<div class="card' + (f.lead === 'local' ? ' sel' : '') + '" data-lead="local" tabindex="0">' + av('planner') + ' ' + av('coder') + '<b>Local agents only</b><ul><li>The local planner splits the spec</li><li>The local coder, tester and reviewer do the rest</li><li>Free and private; best for small, well named pieces</li></ul></div></div>'
       + '<div class="row" style="margin-top:12px"><button id="preview">Preview the plan with the local planner</button><span class="muted">optional: edit the pieces before starting</span></div>'
       + (f.pieces.length ? '<table class="pieces"><tr class="muted"><td>file</td><td>kind</td><td>task</td><td></td></tr>' + f.pieces.map((p, i) => '<tr><td><input data-pc="' + i + '" data-k="path" value="' + esc(p.path) + '"></td><td style="width:110px"><input data-pc="' + i + '" data-k="kind" value="' + esc(p.kind) + '"></td><td><input data-pc="' + i + '" data-k="task" value="' + esc(p.task) + '"></td><td><button data-delpc="' + i + '">✕</button></td></tr>').join('') + '</table>' : ''))
-    + '<div class="go"><button id="reset">Clear</button><button id="start" class="primary">▶ Start the loop</button></div></div>';
+    + '<div class="go"><button id="reset">Clear</button><button id="start" class="primary">▶ Start the run</button></div></div>';
 }
 function section(n, title, body) { return '<div class="section"><div class="num">' + n + '</div><div><h2>' + title + '</h2>' + body + '</div></div>'; }
 function readForm() {

@@ -36,17 +36,22 @@ its `.sha256` and `installer/dist/latest`.
   checksum from there instead of a GitHub release.
 - **A clean machine in Docker** (`installer/release/clean-machine/`): nothing of NuclearLang inside, a user `dev`
   who can sudo, systemd as on a real machine (so Ollama's installer and the AI set-up register their services the
-  usual way), Node.js, Python and git as on any developer's machine. The installer reads the archive mounted at
+  usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own
+  Python). The installer reads the archive mounted at
   `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`).
 
   ```sh
   installer/release/package.sh x86_64-unknown-linux-musl
+  installer/release/ai-runtime.sh
   docker build -t nuclear-clean installer/release/clean-machine
-  docker run -d --name nuclear-clean --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
-    -v "$PWD/installer/dist:/mirror:ro" nuclear-clean
+  docker run -d --name nuclear-clean --cgroupns=private --security-opt writable-cgroups=true \
+    --tmpfs /run --tmpfs /run/lock --tmpfs /tmp -v "$PWD/installer/dist:/mirror:ro" nuclear-clean
   docker exec -it nuclear-clean su - dev      # a terminal of the new user
   docker rm -f nuclear-clean                  # the machine is gone: run it again for a new one
   ```
+
+  Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the
+  host's cgroups, ttys and devices and brings the desktop session down. `writable-cgroups` gives it only its own.
 
 ## After a change in the tree
 

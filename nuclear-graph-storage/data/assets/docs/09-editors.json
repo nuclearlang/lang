@@ -163,7 +163,7 @@
     "- `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer",
     "- `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API",
     "- `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens",
-    "- One version for the three (0.52.1 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
+    "- One version for the three (0.53.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
     "  `zed/extension.toml`"
    ],
    "sources": [
@@ -776,7 +776,9 @@
     "   (cd extensions/zed && ./build.sh)                                    # builds and installs into Zed",
     "   ```",
     "",
-    "4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`), rebuilds",
+    "4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`) and does not",
+    "   build one: without step 3 the previous version stays installed (0.52.1 was never packaged, so VS Code kept 0.52.0;",
+    "   the installer now says so). Check with `code --list-extensions --show-versions`. It rebuilds",
     "   `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).",
     "5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip",
     "   in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*)."
@@ -1070,9 +1072,9 @@
    "id": "doc:extensions/jetbrains/AGENTS.md#jetbrains-plugin",
    "type": "readme",
    "title": "JetBrains plugin",
-   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.1): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
+   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.53.0): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
    "body": [
-    "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.52.1): the client of the language",
+    "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.53.0): the client of the language",
     "server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects",
     "that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*HTTP Connections*, *Nuclear Builder*),",
     "whose code is in `../tools/nuclear-http-connections/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What",
@@ -1146,18 +1148,34 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased",
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.945fea",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`).",
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.d914ec",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project.",
+    "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
     "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
     "- 0.52.0: the tool window Nuclear Connector is now HTTP Connections (its code in `extensions/tools/nuclear-http-connections/jetbrains/`, the class `HttpConnections`).",
     "- 0.51.0: the version of the three extensions (one repository; the tool windows Nuclear Builder and HTTP Connections, their code in `extensions/tools/<tool>/jetbrains/`; Synapsis; the framework's commands are `nuclear <command>`).",
     "- First public version.",
     "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
-    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
-    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
+    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002)."
    ],
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
@@ -3387,13 +3405,13 @@
    "id": "doc:extensions/vscode/AGENTS.md#commands",
    "type": "readme",
    "title": "VS Code extension — Commands",
-   "summary": "npm install npm run compile # tsc --noEmit, then out/extension.js and out/nuclear-builder.js npm run watch # out/extension.js on every change npm test # test/setup.test.ts and ../tools/nuclear-builder/test/engine.test.ts with node:test npm run builder # only out/nuclear-builder.js (the…",
+   "summary": "npm install npm run compile # tsc --noEmit, then out/extension.js and out/nuclear-builder.js npm run watch # out/extension.js on every change npm test # ../tools/nuclear-builder/test/engine.test.ts with node:test (the set-up's tests are Nuclear's: ../tools/nuclear-builder/tests) npm run builder #…",
    "body": [
     "```sh",
     "npm install",
     "npm run compile     # tsc --noEmit, then out/extension.js and out/nuclear-builder.js",
     "npm run watch       # out/extension.js on every change",
-    "npm test            # test/setup.test.ts and ../tools/nuclear-builder/test/engine.test.ts with node:test",
+    "npm test            # ../tools/nuclear-builder/test/engine.test.ts with node:test (the set-up's tests are Nuclear's: ../tools/nuclear-builder/tests)",
     "npm run builder     # only out/nuclear-builder.js (the nuclear-builder command)",
     "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
     "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
@@ -3467,7 +3485,6 @@
    "body": [
     "- `src/`: the extension ([the map of its files](docs/02-architecture/overview.md)); `tsconfig.json` also compiles",
     "  `../tools/*/src` and `../tools/*/test`, which esbuild bundles from `src/extension.ts`",
-    "- `test/`: `setup.test.ts`",
     "- `theme/`: `palette.json` and the generators (`build.mjs`, `icons.mjs`, `vendor-atom-icons.mjs`); `theme/README.md`",
     "  has the color tables",
     "- `scripts/`: `bundle-server.mjs` (`npm run server`), `codemetrics-settings.mjs`",
@@ -3494,8 +3511,10 @@
    "body": [
     "- Never edit what is generated: `themes/`, `icon-themes/`, `icons/`, `syntaxes/nuclear-example.tmLanguage.json`,",
     "  `server/`, `out/`, and the `nuclear.codemetrics.*` settings of `package.json`.",
-    "- The engines have no `vscode` import, so a node script, `nuclear-builder` and the tests drive them: `aiSetup.ts`",
-    "  here, and the tools' `engine.ts`, `safety.ts`, `cli.ts`, `chat.ts`, `cdp.ts`, `web-session.ts`. Keep it so.",
+    "- The engines have no `vscode` import, so a node script, `nuclear-builder` and the tests drive them: the tools'",
+    "  `engine.ts`, `safety.ts`, `cli.ts`, `chat.ts`, `cdp.ts`, `web-session.ts`. Keep it so.",
+    "- The set-up of the AI services is `nuclear-builder setup` (Nuclear, `../tools/nuclear-builder/`), run as a",
+    "  process (`aiMachine.ts`): the extension never re-implements it.",
     "- A page is only a view. A Nuclear Builder run or a chat job belongs to the extension (module-level), so closing",
     "  its page or switching tools leaves the work running.",
     "- An installer runs in a terminal the user sees, never hidden.",
@@ -3536,9 +3555,9 @@
    "id": "doc:extensions/vscode/AGENTS.md#vs-code-extension",
    "type": "readme",
    "title": "VS Code extension",
-   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.52.1): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
+   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.53.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
    "body": [
-    "The NuclearLang extension for VS Code (`nuclearlang`, 0.52.1): the client of the language server, semantic",
+    "The NuclearLang extension for VS Code (`nuclearlang`, 0.53.0): the client of the language server, semantic",
     "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
     "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is",
     "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
@@ -3584,6 +3603,46 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a27fde",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
+   "body": [
+    "- 0.52.0: Nuclear Connector is now HTTP Connections (the folder `extensions/tools/nuclear-http-connections`, the commands `nuclear.httpConnections.*`, the colors `nuclearHttpConnections.*`, the workspace tool `http-connections`); the chat (*Nuclear agent*) is now Nuclear Atlas, the local agent integrated with the RAG (the folder `extensions/tools/nuclear-atlas`, the workspace tool `atlas`). A theme that set `nuclearConnector.*` colors must use the new ids.",
+    "- 0.51.0: one repository (spec 008): the tools' code is in `extensions/tools/<tool>/`; Synapsis for Dragonfly (the debug type, the custom device id `synapsis`, `synapsis.g.dart`); the framework's commands run as `nuclear <command>`; the Loop is Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, commands `nuclear.builder.*`) and Nuclear HTTP is HTTP Connections (commands `nuclear.httpConnections.*`); the MCP server registered with the agents is `nuclear-mcp` (`nuclear.ai.mcpCommand`), the graph's command is `nuclear.ai.graphCommand`.",
+    "- 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`",
+    "  (`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
+    "- First public version."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.af44df",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.53.0: the set-up of the AI services is `nuclear-builder setup`, written in Nuclear and brought by the AI archive: the set-up page and *Settings and integrations* run it as a process (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), one call per action, so the one-line installer sets the services up with no Node.js on the machine. The bundled `python` dialect writes `print`'s named arguments (`flush=True`), a map of a `??` in a `for`, a conditional spread and `a?.b ?? c` as valid Python, and a local or a member no longer imports another file of the project.",
+    "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
+    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.c9ba37",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -3599,36 +3658,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.cb41ad",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
-   "body": [
-    "(`\"date-fns@^4.1.0\"`), a package's default export, the `package_*` commands of the backend and web dialects.",
-    "- First public version.",
-    "- 0.45.0: every call to the local agents carries the project's folder (`root`), so an agent reads by itself the files that declare the names of its task (the Builder and Nuclear Atlas); the Plan step says how many things of the spec are beyond the platform or the local agents (the planner's `limits`) and shows the plan as a tree; *Tests first* is skipped when the generators wrote every file of the run (ADR-graph-0001).",
-    "- 0.44.0: the Builder's *Generate* stage (before Plan) runs `nuclear gen` for the spec's resources; its files are undone like the agents' (ADR-codegen-0001).",
-    "- 0.46.0: the Builder follows the strategy of the request (ADR-developer-0001): the *Specification* stage ends with the analysis (`/developer/analyze`), which decides the stages that run, adds the generator calls it read in plain words to *Generate*, gives *Plan* the pieces the tools found (a rename's files are written as the tool gave them), stops the run with the questions when the request lacks a fact, and after *Code* wires each use case with `nuclear gen usecase`; for a bug, *Verification* repairs the file the failure names and never the test; a spec may name its strategy (`- Strategy:`)."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.dc5d5f",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.d9cee4",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
-    "- 0.52.0: Nuclear Connector is now HTTP Connections (the folder `extensions/tools/nuclear-http-connections`, the commands `nuclear.httpConnections.*`, the colors `nuclearHttpConnections.*`, the workspace tool `http-connections`); the chat (*Nuclear agent*) is now Nuclear Atlas, the local agent integrated with the RAG (the folder `extensions/tools/nuclear-atlas`, the workspace tool `atlas`). A theme that set `nuclearConnector.*` colors must use the new ids.",
-    "- 0.51.0: one repository (spec 008): the tools' code is in `extensions/tools/<tool>/`; Synapsis for Dragonfly (the debug type, the custom device id `synapsis`, `synapsis.g.dart`); the framework's commands run as `nuclear <command>`; the Loop is Nuclear Builder (`nuclear-builder`, `.nuclear/builder/`, commands `nuclear.builder.*`) and Nuclear HTTP is HTTP Connections (commands `nuclear.httpConnections.*`); the MCP server registered with the agents is `nuclear-mcp` (`nuclear.ai.mcpCommand`), the graph's command is `nuclear.ai.graphCommand`.",
-    "- 0.50.0: the bundled server and dialects of ADR-lang-0008: a package name that is not an identifier in `config.nuc`"
+    "- 0.45.0: every call to the local agents carries the project's folder (`root`), so an agent reads by itself the files that declare the names of its task (the Builder and Nuclear Atlas); the Plan step says how many things of the spec are beyond the platform or the local agents (the planner's `limits`) and shows the plan as a tree; *Tests first* is skipped when the generators wrote every file of the run (ADR-graph-0001).",
+    "- 0.44.0: the Builder's *Generate* stage (before Plan) runs `nuclear gen` for the spec's resources; its files are undone like the agents' (ADR-codegen-0001).",
+    "- 0.46.0: the Builder follows the strategy of the request (ADR-developer-0001): the *Specification* stage ends with the analysis (`/developer/analyze`), which decides the stages that run, adds the generator calls it read in plain words to *Generate*, gives *Plan* the pieces the tools found (a rename's files are written as the tool gave them), stops the run with the questions when the request lacks a fact, and after *Code* wires each use case with `nuclear gen usecase`; for a bug, *Verification* repairs the file the failure names and never the test; a spec may name its strategy (`- Strategy:`)."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -3943,25 +3980,37 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.33a7d9",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.3821ef",
    "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`;…",
-   "summary": "Every step can run again.",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
+   "summary": "the page says to run the installer again.",
+   "body": "the page says to run the installer again.",
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.8fae4a",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
+   "summary": "The set-up is `nuclear-builder setup`, written in Nuclear (`../../../tools/nuclear-builder/setup.nuc`, its data `setup.json`).",
    "body": [
-    "Every step can run again.",
-    "- `aiSetup.json` is the data: the requirements (their command, their installer per system, their page) and the",
-    "  profiles (models, download, memory, what works, what does not). Changing a profile is changing this file and",
-    "  measuring it (`nuclear-agents/nuclear_developer/eval/run.py`); `test/setup.test.ts` holds its shape and holds the",
-    "  user's guide to it.",
-    "- The machine's choice is `machineFile()` (`~/.config/nuclearlang/ai.env`). `readMachine` gives Nuclear Builder",
-    "  (`defaultConfig`) and the editor (`aiSettings`) their default models; a model set in the editor's settings wins,",
-    "  and is written there when the settings page restarts a service.",
-    "- `serviceFiles(platform)` are the files that start the services at login (systemd user units, launch agents, a",
-    "  Startup script). `restartService` goes through the system's manager. `remove()` is `nuclear-builder setup --remove`.",
-    "- The services' folder is `aiRoot()`: `<installation>/ai`, or `NUCLEAR_AI_ROOT`.",
-    "  Under it the two services keep the folders of the tree (`nuclear-graph-storage/`, with its knowledge base in `data/`,",
-    "  and `nuclear-agents/nuclear_developer/`), so the Developer's relative `dependencies(nuclear_graph = ...)` holds in an",
-    "  installation too. From source both are links to the tree; the graph is then installed editable."
+    "The set-up is `nuclear-builder setup`, written in Nuclear",
+    "([`../../../tools/nuclear-builder/setup.nuc`](../../../tools/nuclear-builder/AGENTS.md), its data `setup.json`). The",
+    "extension runs it as a process, one call per action, and keeps no process of it alive:",
+    "",
+    "| The extension asks | `nuclear-builder setup ...` | It gives |",
+    "|---|---|---|",
+    "| the page's state | `--plan --json` | this machine, the profiles with `fit` and `note`, the suggested one, the machine's choice, the AI root, the requirements of both modes |",
+    "| the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |",
+    "| whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |",
+    "| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=... NUCLEAR_GRAPH_EMBED=...` | written to `ai.env` |",
+    "| a service again | `--restart graph\\|developer` | exit 0 when the system's manager restarted it |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -3973,40 +4022,25 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.48815d",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.d08417",
    "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`;…",
-   "summary": "polls `check` every three seconds on the requirements step.",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
+   "summary": "(`~/.config/nuclearlang/ai.env`: Nuclear Builder's `defaultConfig` and `aiSettings` take their default models from it; a model set in the settings wins), `urls()` (the ports chosen there) and `builder(args)`, which runs the AI archive's `<installation>/ai/bin/nuclear-builder` (it runs before the…",
    "body": [
-    "- `setupPanel.ts` is the page (*Nuclear: Set Up the AI Services*): four steps drawn from one state message. It",
-    "  polls `check` every three seconds on the requirements step. An installer runs in a terminal (`createTerminal` +",
-    "  `sendText`), never hidden. `SetupPanel.offer` asks once on a machine with no machine file."
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-aisetup-ts-aisetup-json-setuppanel-ts-adr-installer-0002.538dfc",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`;…",
-   "summary": "the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed (`requirements`, `status`) and gives the ordered `steps(profile, root)`: 1. the graph's tool (`uv tool install`, editable when the folder is a git checkout); 2. the Developer (`nuclear install`…",
-   "body": [
-    "- `aiSetup.ts` has no editor in it. Its two fronts are `nuclear-builder setup` (`cli.ts`) and the wizard. It reads",
-    "  the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed",
-    "  (`requirements`, `status`) and gives the ordered `steps(profile, root)`:",
-    "  1. the graph's tool (`uv tool install`, editable when the folder is a git checkout);",
-    "  2. the Developer (`nuclear install` with a Python 3.12+ that uv finds or brings, and the `nuclear-developer`",
-    "     launcher);",
-    "  3. the models (Ollama's `/api/pull`, with its progress);",
-    "  4. the graph's service;",
-    "  5. the knowledge base (`connect` twice, `ingest`);",
-    "  6. the Developer's service."
+    "- `aiMachine.ts` is what the extension reads itself, with no process: `machineFile()` / `readMachine()`",
+    "  (`~/.config/nuclearlang/ai.env`: Nuclear Builder's `defaultConfig` and `aiSettings` take their default models from",
+    "  it; a model set in the settings wins), `urls()` (the ports chosen there) and `builder(args)`, which runs the AI",
+    "  archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the",
+    "  PATH's.",
+    "- The steps, in order, each can run again: the graph and the MCP server (the archive's launchers linked onto the",
+    "  PATH; from source `uv tool install`, editable), the Developer (in the archive; from source `nuclear install` and",
+    "  the `nuclear-developer` launcher), the models (Ollama's `/api/pull`), the ports (each service keeps its port when",
+    "  it already runs there, else the first one from 7878 / 7879 upward it can listen on, written to `ai.env`;",
+    "  ADR-installer-0003 §5) and the graph's service, the knowledge base (`connect` twice, `ingest`), the Developer's",
+    "  service.",
+    "- `setupPanel.ts` is the page (*Nuclear: Set Up the AI Services*): four steps drawn from the plan. It polls `check`",
+    "  every three seconds on the requirements step (a new plan). An installer runs in a terminal (`createTerminal` +",
+    "  `sendText`), never hidden. `SetupPanel.offer` asks once on a machine with no machine file. Without the AI archive"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -4290,7 +4324,7 @@
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
     "| `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |",
     "| `notifications.ts` | the notices of what the local agents did | [ai-services.md](ai-services.md) |",
-    "| `aiSetup.ts`, `aiSetup.json`, `setupPanel.ts` | the set-up of the AI services: its engine, its data, its wizard | [ai-services.md](ai-services.md) |",
+    "| `aiMachine.ts`, `setupPanel.ts` | the set-up of the AI services: the machine's choice and `nuclear-builder setup` run as a process, its wizard | [ai-services.md](ai-services.md) |",
     "| `settingsPanel.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool and the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
     "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
    ],
@@ -4795,17 +4829,17 @@
    "id": "doc:extensions/vscode/docs/05-standards/testing.md#what-is-tested",
    "type": "context",
    "title": "Testing the VS Code extension — What is tested",
-   "summary": "`npm test` bundles the two test files with esbuild (`vscode` external) into `out/test/` and runs them with `node --test`.",
+   "summary": "`npm test` (the `test` script of `package.json`) bundles the test file with esbuild (`vscode` external) into `out/test/` and runs it with `node --test`.",
    "body": [
     "| Level | What it covers | How |",
     "|---|---|---|",
     "| Types | every file of `src/` and of `../tools/*/src` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |",
     "| The engines, without the editor | Nuclear Builder (retries, a run retried from a stage or a step, a run from scratch, an interrupted run recovered, a stalled call, the preflight, a hung command, the generate and analysis steps, the acceptance), Nuclear Atlas's templates and history, the 3B rule of the local models | `npm test` → `../tools/nuclear-builder/test/engine.test.ts` |",
-    "| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `aiSetup.json` says | `npm test` → `test/setup.test.ts` |",
+    "| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems, the ports, the AI archive's launchers; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `setup.json` says | Nuclear's tests: `../tools/nuclear-builder/tests/test_setup.nuc` (pytest, in its `build/`) |",
     "| The bundle | the bundled server loads every bundled dialect without the tree | `npm run server` ends with `nuclear-lsp --check-bundle` |",
     "| The server | completion, hover, projects | `cargo test -p nuclear-lsp`, in the language project |",
     "",
-    "`npm test` bundles the two test files with esbuild (`vscode` external) into `out/test/` and runs them with",
+    "`npm test` (the `test` script of `package.json`) bundles the test file with esbuild (`vscode` external) into `out/test/` and runs it with",
     "`node --test`."
    ],
    "sources": [
@@ -5467,10 +5501,12 @@
    "id": "doc:extensions/vscode/server/dialects/README.md#dialects",
    "type": "readme",
    "title": "Dialects",
-   "summary": "A dialect is the data that says how Nuclear is written in one target: TOML tables and templates the compiler loads at run time.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run time.",
    "body": [
-    "A **dialect** is the data that says how Nuclear is written in one target: TOML tables and templates the compiler",
-    "loads at run time. The same `.nuc` is written once and each dialect turns it into its language or framework."
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/platforms)",
+    "",
+    "A dialect is the data that says how Nuclear is written in one target: TOML and templates the compiler loads at run",
+    "time. The same `.nuc` is written once and each dialect turns it into its language or framework."
    ],
    "sources": [
     "extensions/vscode/server/dialects/README.md"
@@ -5482,26 +5518,22 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/README.md#how-we-made-them.879f34",
+   "id": "doc:extensions/vscode/server/dialects/README.md#how-we-made-them",
    "type": "readme",
    "title": "Dialects — How we made them",
-   "summary": "Inheritance (`extends` in each `dialect.toml`): typescript ─► nodejs ─► nestjs backend platform typescript ─► react web platform python ─────► fastapi backend platform dart ───────► flutter mobile platform",
+   "summary": "How we made them",
    "body": [
-    "| Dialect | Target | Framework dialects (the platform each implements) | Read |",
-    "|---|---|---|---|",
-    "| `python` | Python 3.12+ typed, checked with `pyright --strict` | `fastapi` (backend) | [python/](python/README.md) |",
-    "| `typescript` | TypeScript 5 with ES modules, checked with `tsc --strict` | `nestjs` (backend), `react` (web) | [typescript/](typescript/README.md) |",
-    "| `dart` | Dart 3, checked with `flutter analyze` | `flutter` (mobile) | [dart/](dart/README.md) |",
-    "| `nodejs` | TypeScript for Node.js. Postponed by the user | none of its own; `nestjs` extends it | [nodejs/](nodejs/AGENTS.md) |",
+    "- Rust decides what, the dialect decides how; Python proved it (ADR-python-0001, [python/docs/03-adr/](python/docs/03-adr/README.md)).",
+    "- Language dialects and framework dialects: a framework dialect names its language and its Synapsis platform.",
+    "- Official libraries, not code of our own (ADR-dart-0001, ADR-python-0002, ADR-typescript-0001).",
+    "- Imports come from type definitions (ADR-lang-0008, [../docs/03-adr/](../docs/03-adr/README.md)); each reference is checked by `spec-check`.",
     "",
-    "Inheritance (`extends` in each `dialect.toml`):",
-    "",
-    "```",
-    "typescript ─► nodejs ─► nestjs     backend platform",
-    "typescript ─► react                web platform",
-    "python ─────► fastapi              backend platform",
-    "dart ───────► flutter              mobile platform",
-    "```"
+    "| Dialect | Framework dialects | Read |",
+    "|---|---|---|",
+    "| `python` | `fastapi` (backend) | [python/](python/README.md) |",
+    "| `typescript` | `nestjs` (backend), `react` (web) | [typescript/](typescript/README.md) |",
+    "| `dart` | `flutter` (mobile) | [dart/](dart/README.md) |",
+    "| `nodejs` | postponed; `nestjs` extends it | [nodejs/](nodejs/AGENTS.md) |"
    ],
    "sources": [
     "extensions/vscode/server/dialects/README.md"
@@ -5513,24 +5545,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/README.md#how-we-made-them.887b64",
+   "id": "doc:extensions/vscode/server/dialects/README.md#read-next",
    "type": "readme",
-   "title": "Dialects — How we made them",
-   "summary": "one target becomes a generic option or template variable any dialect can use.",
+   "title": "Dialects — Read next",
+   "summary": "Read next",
    "body": [
-    "- **Rust decides what is emitted, the dialect decides how.** Nothing of a target lives in the compiler: a need of",
-    "  one target becomes a generic option or template variable any dialect can use. Python was the proof: everything",
-    "  it needed became generic emitter options (ADR-python-0001, [python/docs/03-adr/](python/docs/03-adr/README.md)).",
-    "- **Language dialects and framework dialects.** A language dialect extends no other and translates the whole base",
-    "  and Nuclear's standard library. A framework dialect names its language (`extends`) and the Synapsis platform it",
-    "  writes (`platform = \"backend\"`); the platform's contract says which kinds exist, the dialect only how each is",
-    "  written. Kinds never differ between the dialects of one platform.",
-    "- **Official libraries, not code of our own**: the generated app relies on the target ecosystem's most used",
-    "  libraries (ADR-dart-0001, ADR-python-0002, ADR-typescript-0001).",
-    "- **The imports come from type definitions** generated from the installed target packages, versioned like `.d.ts`",
-    "  (ADR-lang-0008, [../docs/03-adr/](../docs/03-adr/README.md)).",
-    "- **The reference is checked.** Each dialect's `docs/07-reference/<dialect>.md` holds the real Nuclear → target",
-    "  equivalences, verified by `../tools/spec-check/check.py` with 0 problems."
+    "- [The dialect format](../docs/07-reference/dialects.md).",
+    "- [Create a dialect with an agent](../docs/08-guides/create-a-dialect-with-an-agent.md).",
+    "- [Type definitions](../docs/07-reference/definitions.md) and [the standard library](../docs/07-reference/library.md).",
+    "- [The platforms](../../nuclear-synapsis-framework/platforms/README.md) the framework dialects write."
    ],
    "sources": [
     "extensions/vscode/server/dialects/README.md"
@@ -5545,15 +5568,12 @@
    "id": "doc:extensions/vscode/server/dialects/README.md#try-it",
    "type": "readme",
    "title": "Dialects — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`): cargo run -q -p nuclear-cli -- dialect list # every dialect, its chain and one line about it cargo run -q -p nuclear-cli -- dialect check flutter # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ... cargo run -q -p nuclear-cli --…",
+   "summary": "cargo run -q -p nuclear-cli -- dialect list # every dialect, its chain and one line about it cargo run -q -p nuclear-cli -- dialect check flutter # dialect 'flutter' (flutter → dart) is valid cargo run -q -p nuclear-cli -- spec --dialect fastapi # the contract: templates, variables, options",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`):",
-    "",
     "```sh",
     "cargo run -q -p nuclear-cli -- dialect list              # every dialect, its chain and one line about it",
-    "cargo run -q -p nuclear-cli -- dialect check flutter     # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ...",
+    "cargo run -q -p nuclear-cli -- dialect check flutter     # dialect 'flutter' (flutter → dart) is valid",
     "cargo run -q -p nuclear-cli -- spec --dialect fastapi    # the contract: templates, variables, options",
-    "cd nuclearlang && tools/stdlib-check.sh strings          # ok strings typescript / dart / python: the same output",
     "```"
    ],
    "sources": [
@@ -5566,60 +5586,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/README.md#what-every-dialect-folder-has",
+   "id": "doc:extensions/vscode/server/dialects/README.md#why",
    "type": "readme",
-   "title": "Dialects — What every dialect folder has",
-   "summary": "`dialect.toml` (options, `[syntax]`, `[types]`, `[operators]`, names, imports), `keywords.toml` (the target's reserved words), `library.toml` (Nuclear's standard library in the target), `docs.toml` (what the editor shows for each word; a build never reads it), `templates/*.tpl`,…",
+   "title": "Dialects — Why",
+   "summary": "Why",
    "body": [
-    "`dialect.toml` (options, `[syntax]`, `[types]`, `[operators]`, names, imports), `keywords.toml` (the target's",
-    "reserved words), `library.toml` (Nuclear's standard library in the target), `docs.toml` (what the editor shows for",
-    "each word; a build never reads it), `templates/*.tpl`, `frameworks/<name>/`, `defs/<package>/<version>/` (type",
-    "definitions, generated, never edited by hand) and `docs/`. A dialect's name is its folder's."
-   ],
-   "sources": [
-    "extensions/vscode/server/dialects/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/server/dialects/README.md#where-to-read-next",
-   "type": "readme",
-   "title": "Dialects — Where to read next",
-   "summary": "loader finds a dialect.",
-   "body": [
-    "- [The dialect format](../docs/07-reference/dialects.md): sections, templates, variables, validation, where the",
-    "  loader finds a dialect.",
-    "- [Create a dialect with an agent](../docs/08-guides/create-a-dialect-with-an-agent.md).",
-    "- [Type definitions](../docs/07-reference/definitions.md) and [the standard library](../docs/07-reference/library.md)",
-    "  every language dialect translates.",
-    "- The platforms the framework dialects write:",
-    "  [../../nuclear-synapsis-framework/platforms/](../../nuclear-synapsis-framework/platforms/AGENTS.md).",
-    "- Each dialect's `AGENTS.md`, to change it."
-   ],
-   "sources": [
-    "extensions/vscode/server/dialects/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/server/dialects/README.md#why-they-exist",
-   "type": "readme",
-   "title": "Dialects — Why they exist",
-   "summary": "A language built for agents should not need a new compiler for every target, and its code should not bend to the target it happens to be built for.",
-   "body": [
-    "A language built for agents should not need a new compiler for every target, and its code should not bend to the",
-    "target it happens to be built for. A dialect decides only HOW the output is written; it never decides what the",
-    "Nuclear code is: the `.nuc` of a project does not change when its dialect changes. Adding a target or a framework",
-    "is writing data files, templates and tests, not Rust. What a dialect leaves out on purpose: it never reads target",
-    "code, and it never wraps the target's libraries (they are used as they are, through their type definitions)."
+    "- A new target is data files, templates and tests, not a new compiler.",
+    "- A dialect decides only how the output is written; the `.nuc` never changes with it.",
+    "- It never reads target code and never wraps the target's libraries."
    ],
    "sources": [
     "extensions/vscode/server/dialects/README.md"
@@ -5842,22 +5816,32 @@
    "id": "doc:extensions/vscode/server/dialects/dart/README.md#how-we-made-it",
    "type": "readme",
    "title": "The `dart` dialect — How we made it",
-   "summary": "own: `bloc` / `flutter_bloc`, `json_serializable`, `get_it`, `dio`, `go_router`, `fpdart` for `Result`; what does not exist in Flutter lives in the independent Dart package `synapsis`, usable without Nuclear (ADR-dart-0001).",
+   "summary": "How we made it",
    "body": [
-    "- **`flutter` is a framework that generates the app** over official ecosystem libraries instead of code of our",
-    "  own: `bloc` / `flutter_bloc`, `json_serializable`, `get_it`, `dio`, `go_router`, `fpdart` for `Result`; what does",
-    "  not exist in Flutter lives in the independent Dart package `synapsis`, usable without Nuclear",
-    "  ([ADR-dart-0001](docs/03-adr/0001-flutter-dialect-as-a-framework.md)).",
-    "- **The platform says what, the dialect says how.** A kind, a decorator or a folder is added to the platform's",
-    "  contract first; `frameworks/flutter/` only writes it in Dart (ADR-dart-0001).",
-    "- **Nothing of Dart or Flutter in Rust.** Generic mechanisms (projects, decorators, architecture names) are the",
-    "  compiler's; Flutter specifics live here, as data.",
-    "- **Imports from type definitions**, not hand-written lists: `dart@3.13.5`, `flutter@3.47.7` and the packages of",
-    "  `flutter`, generated by `../../tools/defs/` with `package:analyzer` from the installed Flutter SDK. Every widget",
-    "  and class of Flutter and of the Dart libraries can be used, and its import is added by itself.",
-    "",
-    "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/flutter/`",
-    "and the generated `defs/`, read at run time by the compiler ([../../](../../README.md))."
+    "- `flutter` generates the app over official libraries (`bloc`, `dio`, `go_router`...) ([ADR-dart-0001](docs/03-adr/0001-flutter-dialect-as-a-framework.md)).",
+    "- The platform says what, the dialect says how (ADR-dart-0001).",
+    "- Nothing of Dart or Flutter in Rust.",
+    "- Imports from type definitions generated from the installed Flutter SDK."
+   ],
+   "sources": [
+    "extensions/vscode/server/dialects/dart/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": "dart"
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/server/dialects/dart/README.md#read-next",
+   "type": "readme",
+   "title": "The `dart` dialect — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The tutorial](../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
+    "- The reference: [dart.md](docs/07-reference/dart.md) and [flutter.md](docs/07-reference/flutter.md).",
+    "- [How it is built](docs/02-architecture/overview.md) and [what each kind generates](docs/02-architecture/flutter-kinds.md).",
+    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
    ],
    "sources": [
     "extensions/vscode/server/dialects/dart/README.md"
@@ -5872,11 +5856,12 @@
    "id": "doc:extensions/vscode/server/dialects/dart/README.md#the-dart-dialect",
    "type": "readme",
    "title": "The `dart` dialect",
-   "summary": "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with `flutter_lints` and no warnings.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · Website How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings.",
    "body": [
-    "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with `flutter_lints` and no warnings. Its",
-    "framework dialect, `flutter`, writes the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/AGENTS.md)",
-    "of Synapsis: the whole Flutter app is generated from the business logic written in Nuclear."
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-mobile](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-mobile.yml) · [Website](https://nuclearlang.github.io/dart/reference/dart)",
+    "",
+    "How Nuclear is written in Dart: Dart 3 that passes `flutter analyze` with no warnings. Its framework dialect,",
+    "`flutter`, generates the whole app of the [mobile platform](../../../nuclear-synapsis-framework/platforms/mobile/README.md)."
    ],
    "sources": [
     "extensions/vscode/server/dialects/dart/README.md"
@@ -5891,29 +5876,13 @@
    "id": "doc:extensions/vscode/server/dialects/dart/README.md#try-it",
    "type": "readme",
    "title": "The `dart` dialect — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`).",
+   "summary": "cargo run -q -p nuclear-cli -- build hello.nuc --dialect dart # List<String> shout(List<String> words) cargo run -q -p nuclear-cli -- dialect check flutter # dialect 'flutter' (flutter → dart) is valid cargo run -q -p nuclear-cli -- help tutorial # a Flutter app from scratch with Synapsis",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`). Save as `hello.nuc`:",
-    "",
-    "```",
-    "shout(words: string[]) string[]",
-    "  words.map(w => w.upper())",
-    "```",
-    "",
     "```sh",
-    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect dart",
-    "#   List<String> shout(List<String> words) {",
-    "#     return words.map((w) => w.toUpperCase()).toList();",
-    "#   }",
-    "cargo run -q -p nuclear-cli -- dialect check flutter       # dialect 'flutter' (flutter → dart) is valid: 28 kinds, ...",
-    "cargo run -q -p nuclear-cli -- defs show Scaffold --dialect flutter   # Flutter's Scaffold in Nuclear notation",
-    "cargo run -q -p nuclear-cli -- help tutorial                          # a Flutter app from scratch with Synapsis",
-    "cd nuclearlang && tools/spec-check/check.py dialects/dart/docs/07-reference/dart.md dart dart",
-    "#   dialects/dart/docs/07-reference/dart.md: 30 equivalences, 0 problems",
-    "```",
-    "",
-    "The examples under `flutter analyze`: `nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh`",
-    "(it needs Flutter: `FLUTTER` or `FLUTTER_ROOT` if it is not on the PATH)."
+    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect dart              # List<String> shout(List<String> words)",
+    "cargo run -q -p nuclear-cli -- dialect check flutter                       # dialect 'flutter' (flutter → dart) is valid",
+    "cargo run -q -p nuclear-cli -- help tutorial                               # a Flutter app from scratch with Synapsis",
+    "```"
    ],
    "sources": [
     "extensions/vscode/server/dialects/dart/README.md"
@@ -5925,38 +5894,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/dart/README.md#where-to-read-next",
+   "id": "doc:extensions/vscode/server/dialects/dart/README.md#why",
    "type": "readme",
-   "title": "The `dart` dialect — Where to read next",
-   "summary": "Nuclear → Dart equivalences; the briefs in docs/07-reference/brief/.",
+   "title": "The `dart` dialect — Why",
+   "summary": "Why",
    "body": [
-    "- [The tutorial](../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
-    "- The reference: [dart.md](docs/07-reference/dart.md) and [flutter.md](docs/07-reference/flutter.md), the real",
-    "  Nuclear → Dart equivalences; the briefs in [docs/07-reference/brief/](docs/07-reference/brief/).",
-    "- How it is built: [overview](docs/02-architecture/overview.md), [flutter](docs/02-architecture/flutter.md),",
-    "  [what each kind generates](docs/02-architecture/flutter-kinds.md).",
-    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
-   ],
-   "sources": [
-    "extensions/vscode/server/dialects/dart/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": "dart"
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/server/dialects/dart/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The `dart` dialect — Why it exists",
-   "summary": "A Flutter app is mostly layers, state, JSON and wiring that are always the same.",
-   "body": [
-    "A Flutter app is mostly layers, state, JSON and wiring that are always the same. With this dialect Nuclear holds",
-    "only the business logic; the layers of a light clean architecture exist in the generated Dart, not in Nuclear.",
-    "Names are written as they are (Nuclear's `camelCase` is Dart's) and the library is Nuclear's, translated by",
-    "`library.toml`. It leaves out what Flutter already does: the SDK, packages, builds and devices are handled by the",
-    "`flutter` command, which `nuclear` drives."
+    "- A Flutter app is mostly layers, state, JSON and wiring; Nuclear holds only the business logic.",
+    "- The library is Nuclear's, translated by `library.toml`.",
+    "- It leaves the SDK, builds and devices to the `flutter` command, which `nuclear` drives."
    ],
    "sources": [
     "extensions/vscode/server/dialects/dart/README.md"
@@ -6261,21 +6206,32 @@
    "id": "doc:extensions/vscode/server/dialects/python/README.md#how-we-made-it",
    "type": "readme",
    "title": "The `python` dialect — How we made it",
-   "summary": "block hoisted to local functions, f-strings, constructor defaults, `snake_case` names) became generic emitter options any later target can use (ADR-python-0001).",
+   "summary": "How we made it",
    "body": [
-    "- **A dialect made with the dialect system, with no Python in Rust.** Everything Python needed (lambdas with a",
-    "  block hoisted to local functions, f-strings, constructor defaults, `snake_case` names) became generic emitter",
-    "  options any later target can use ([ADR-python-0001](docs/03-adr/0001-python-dialect-and-generic-emitter-options.md)).",
-    "- **The target**: PEP 8 layout (4 spaces, 88 columns, two blank lines), PEP 695 generics, docstrings, and a",
-    "  `Result` runtime written into the file (ADR-python-0001).",
-    "- **`fastapi`**: FastAPI controllers, SQLAlchemy 2 async repositories, pydantic models, LangChain / LangGraph",
-    "  agents and graphs, aiokafka and `redis.asyncio`, over the platform's runtime package `synapsis-py`",
-    "  ([ADR-python-0002](docs/03-adr/0002-fastapi-dialect.md)).",
-    "- **Type definitions** are generated by `../../tools/defs/python/` with `inspect` from a pinned virtual environment:",
-    "  `python@3.14` for this dialect, and 18 more packages for `fastapi` (`nuclear defs list --dialect fastapi`).",
-    "",
-    "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/fastapi/`",
-    "and the generated `defs/`, read at run time by the compiler ([../../](../../README.md))."
+    "- No Python in Rust: what it needed became generic emitter options ([ADR-python-0001](docs/03-adr/0001-python-dialect-and-generic-emitter-options.md)).",
+    "- PEP 8 layout, PEP 695 generics, a `Result` runtime in the file (ADR-python-0001).",
+    "- `fastapi`: FastAPI, SQLAlchemy 2 async, pydantic, LangChain, over `synapsis-py` ([ADR-python-0002](docs/03-adr/0002-fastapi-dialect.md)).",
+    "- Type definitions generated with `inspect` from a pinned virtual environment."
+   ],
+   "sources": [
+    "extensions/vscode/server/dialects/python/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/server/dialects/python/README.md#read-next",
+   "type": "readme",
+   "title": "The `python` dialect — Read next",
+   "summary": "Read next",
+   "body": [
+    "- [The fastapi guide](docs/08-guides/fastapi.md): a backend, as a user writes it.",
+    "- The reference: [python.md](docs/07-reference/python.md) and [fastapi.md](docs/07-reference/fastapi.md).",
+    "- [How it is built](docs/02-architecture/overview.md).",
+    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
    ],
    "sources": [
     "extensions/vscode/server/dialects/python/README.md"
@@ -6290,11 +6246,12 @@
    "id": "doc:extensions/vscode/server/dialects/python/README.md#the-python-dialect",
    "type": "readme",
    "title": "The `python` dialect",
-   "summary": "How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · Website How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`.",
    "body": [
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) · [Website](https://nuclearlang.github.io/python/reference/python)",
+    "",
     "How Nuclear is written in Python: typed Python 3.12+ that passes `pyright --strict`. Its framework dialect,",
-    "`fastapi`, writes the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md) of",
-    "Synapsis with FastAPI."
+    "`fastapi`, writes the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/README.md) of Synapsis."
    ],
    "sources": [
     "extensions/vscode/server/dialects/python/README.md"
@@ -6309,31 +6266,13 @@
    "id": "doc:extensions/vscode/server/dialects/python/README.md#try-it",
    "type": "readme",
    "title": "The `python` dialect — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`).",
+   "summary": "cargo run -q -p nuclear-cli -- build hello.nuc --dialect python # def full_name(first_name: str, ...) -> str: cargo run -q -p nuclear-cli -- dialect check fastapi # dialect 'fastapi' (fastapi → python) is valid cargo run -q -p nuclear-cli -- spec --brief --dialect fastapi # the short sheet an…",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`). Save as `hello.nuc`:",
-    "",
-    "```",
-    "fullName(firstName: string, lastName: string) string",
-    "  \"${firstName} ${lastName}\"",
-    "```",
-    "",
     "```sh",
-    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect python",
-    "#   from __future__ import annotations",
-    "#",
-    "#",
-    "#   def full_name(first_name: str, last_name: str) -> str:",
-    "#       return f\"{first_name} {last_name}\"",
-    "cargo run -q -p nuclear-cli -- dialect check fastapi       # dialect 'fastapi' (fastapi → python) is valid: 16 kinds, ...",
-    "cargo run -q -p nuclear-cli -- defs show Path --dialect python   # pathlib's Path in Nuclear notation",
-    "cargo run -q -p nuclear-cli -- spec --brief --dialect fastapi    # the short sheet an agent reads",
-    "cd nuclearlang && tools/spec-check/check.py dialects/python/docs/07-reference/python.md python python",
-    "#   dialects/python/docs/07-reference/python.md: 17 equivalences, 0 problems",
-    "```",
-    "",
-    "A whole backend (`pyright --strict`, pytest and a live run):",
-    "`nuclear-synapsis-framework/platforms/backend/checks/fastapi-check/check.sh`."
+    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect python   # def full_name(first_name: str, ...) -> str:",
+    "cargo run -q -p nuclear-cli -- dialect check fastapi              # dialect 'fastapi' (fastapi → python) is valid",
+    "cargo run -q -p nuclear-cli -- spec --brief --dialect fastapi     # the short sheet an agent reads",
+    "```"
    ],
    "sources": [
     "extensions/vscode/server/dialects/python/README.md"
@@ -6345,38 +6284,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/python/README.md#where-to-read-next",
+   "id": "doc:extensions/vscode/server/dialects/python/README.md#why",
    "type": "readme",
-   "title": "The `python` dialect — Where to read next",
-   "summary": "Nuclear → Python equivalences; the briefs in docs/07-reference/brief/.",
+   "title": "The `python` dialect — Why",
+   "summary": "Why",
    "body": [
-    "- [The fastapi guide](docs/08-guides/fastapi.md): a backend, as a user writes it.",
-    "- The reference: [python.md](docs/07-reference/python.md) and [fastapi.md](docs/07-reference/fastapi.md), the real",
-    "  Nuclear → Python equivalences; the briefs in [docs/07-reference/brief/](docs/07-reference/brief/).",
-    "- [How the base is written in Python](docs/02-architecture/overview.md) and",
-    "  [how fastapi writes each kind](docs/02-architecture/fastapi.md).",
-    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
-   ],
-   "sources": [
-    "extensions/vscode/server/dialects/python/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": "python"
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/server/dialects/python/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The `python` dialect — Why it exists",
-   "summary": "So that the same Nuclear runs where Python is the right target, without the Nuclear bending to Python.",
-   "body": [
-    "So that the same Nuclear runs where Python is the right target, without the Nuclear bending to Python. The `.nuc`",
-    "keeps Nuclear's `camelCase`; the dialect writes Python's `snake_case`, and keeps as they are the names that exist",
-    "that way in the type definitions. The library is Nuclear's: every member of Nuclear's standard library has its",
-    "Python template in `library.toml`, and a Python name such as `len` or `append` in Nuclear code is a bug. It leaves out what the",
-    "platform's contract does not have: `fastapi` only writes the kinds, decorators and folders of the backend platform."
+    "- The same Nuclear runs where Python is the right target, without bending to Python.",
+    "- The `.nuc` keeps `camelCase`; the dialect writes `snake_case`.",
+    "- The library is Nuclear's: a Python name such as `len` in Nuclear code is a bug."
    ],
    "sources": [
     "extensions/vscode/server/dialects/python/README.md"
@@ -6613,23 +6528,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#how-we-made-it.0d44e8",
+   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#how-we-made-it",
    "type": "readme",
    "title": "The `typescript` dialect — How we made it",
-   "summary": "any dialect can use (`relative` imports, `alias_via = \"constructor\"`, `== null` in operators...), listed by `nuclear spec` (ADR-typescript-0001).",
+   "summary": "How we made it",
    "body": [
-    "- **Nothing of TypeScript in Rust.** What this target needs is a generic `[options]` key or template variable that",
-    "  any dialect can use (`relative` imports, `alias_via = \"constructor\"`, `== null` in operators...), listed by",
-    "  `nuclear spec` ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
-    "- **`react`**: React 19 without JSX, React Router 7, Vite 7, Vitest 4 with Testing Library, over the platform's",
-    "  runtime package `synapsis-web`; why React and why without JSX is the web platform's",
-    "  [ADR-web-0001](../../../nuclear-synapsis-framework/platforms/web/docs/03-adr/0001-web-platform.md).",
-    "- **`nestjs`**: the same Synapsis as the Python backend (ADR-python-0002), on NestJS 12 with ES modules, Sequelize,",
-    "  class-validator, kafkajs, ioredis and LangChain.js / LangGraph.js, over the runtime `synapsis-nest`. It extends",
-    "  [`nodejs`](../nodejs/AGENTS.md), which is postponed by the user ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
-    "- **Type definitions** are generated by `../../tools/defs/typescript/` with the TypeScript compiler over the `.d.ts`",
-    "  files: TypeScript's standard library and the packages each framework dialect lists (`nuclear defs list --dialect",
-    "  react`). The order of `defs` decides which package gives a name two of them export."
+    "- Nothing of TypeScript in Rust: only generic options and template variables ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
+    "- `react`: React 19 without JSX, React Router 7, Vite 7, Vitest 4 ([ADR-web-0001](../../../nuclear-synapsis-framework/platforms/web/docs/03-adr/0001-web-platform.md)).",
+    "- `nestjs`: NestJS 12, Sequelize, kafkajs, LangChain.js, over `synapsis-nest` ([ADR-typescript-0001](docs/03-adr/0001-nestjs-dialect.md)).",
+    "- Type definitions generated with the TypeScript compiler over the `.d.ts` files."
    ],
    "sources": [
     "extensions/vscode/server/dialects/typescript/README.md"
@@ -6641,13 +6548,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#how-we-made-it.c7420a",
+   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#read-next",
    "type": "readme",
-   "title": "The `typescript` dialect — How we made it",
-   "summary": "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/nestjs/`, `frameworks/react/` and the generated `defs/`, read at run time by the compiler (../../).",
+   "title": "The `typescript` dialect — Read next",
+   "summary": "Read next",
    "body": [
-    "It is data only: `dialect.toml`, `keywords.toml`, `library.toml`, `docs.toml`, `templates/`, `frameworks/nestjs/`,",
-    "`frameworks/react/` and the generated `defs/`, read at run time by the compiler ([../../](../../README.md))."
+    "- The guides: [react](docs/08-guides/react.md) and [nestjs](docs/08-guides/nestjs.md).",
+    "- The reference: [typescript.md](docs/07-reference/typescript.md), [react.md](docs/07-reference/react.md), [nestjs.md](docs/07-reference/nestjs.md).",
+    "- [How it is built](docs/02-architecture/overview.md).",
+    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
    ],
    "sources": [
     "extensions/vscode/server/dialects/typescript/README.md"
@@ -6662,11 +6571,13 @@
    "id": "doc:extensions/vscode/server/dialects/typescript/README.md#the-typescript-dialect",
    "type": "readme",
    "title": "The `typescript` dialect",
-   "summary": "How Nuclear is written in TypeScript: TypeScript 5 with ES modules that passes `tsc --strict`.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) ![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) ![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · Website How Nuclear is written in…",
    "body": [
+    "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) [![platform-backend](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-backend.yml) [![platform-web](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/platform-web.yml) · [Website](https://nuclearlang.github.io/typescript/reference/typescript)",
+    "",
     "How Nuclear is written in TypeScript: TypeScript 5 with ES modules that passes `tsc --strict`. Its framework",
-    "dialects write two platforms of Synapsis: `react` the [web platform](../../../nuclear-synapsis-framework/platforms/web/AGENTS.md)",
-    "and `nestjs` the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/AGENTS.md)."
+    "dialects write `react` for the [web platform](../../../nuclear-synapsis-framework/platforms/web/README.md) and",
+    "`nestjs` for the [backend platform](../../../nuclear-synapsis-framework/platforms/backend/README.md)."
    ],
    "sources": [
     "extensions/vscode/server/dialects/typescript/README.md"
@@ -6681,30 +6592,13 @@
    "id": "doc:extensions/vscode/server/dialects/typescript/README.md#try-it",
    "type": "readme",
    "title": "The `typescript` dialect — Try it",
-   "summary": "From the root of the tree (or with the installed `nuclear`).",
+   "summary": "cargo run -q -p nuclear-cli -- build hello.nuc --dialect typescript # export function shout(...): string[] cargo run -q -p nuclear-cli -- dialect check react # dialect 'react' (react → typescript) is valid cargo run -q -p nuclear-cli -- defs show useState --dialect react # the hook's API in…",
    "body": [
-    "From the root of the tree (or with the installed `nuclear`). Save as `hello.nuc`:",
-    "",
-    "```",
-    "shout(words: string[]) string[]",
-    "  words.map(w => w.upper())",
-    "```",
-    "",
     "```sh",
-    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect typescript",
-    "#   export function shout(words: string[]): string[] {",
-    "#     return words.map((w) => w.toUpperCase());",
-    "#   }",
-    "cargo run -q -p nuclear-cli -- dialect check react         # dialect 'react' (react → typescript) is valid: 16 kinds, ...",
-    "cargo run -q -p nuclear-cli -- defs show useState --dialect react   # the hook's API in Nuclear notation",
-    "cargo run -q -p nuclear-cli -- spec --brief --dialect react         # the short sheet an agent reads",
-    "cd nuclearlang && tools/spec-check/check.py dialects/typescript/docs/07-reference/typescript.md typescript typescript",
-    "#   dialects/typescript/docs/07-reference/typescript.md: 29 equivalences, 0 problems",
-    "```",
-    "",
-    "A whole web app (`tsc --strict`, vitest, `vite build`):",
-    "`nuclear-synapsis-framework/platforms/web/checks/react-check/check.sh`. The website of the tree is one",
-    "([../../../website/](../../../website/README.md))."
+    "cargo run -q -p nuclear-cli -- build hello.nuc --dialect typescript        # export function shout(...): string[]",
+    "cargo run -q -p nuclear-cli -- dialect check react                         # dialect 'react' (react → typescript) is valid",
+    "cargo run -q -p nuclear-cli -- defs show useState --dialect react          # the hook's API in Nuclear notation",
+    "```"
    ],
    "sources": [
     "extensions/vscode/server/dialects/typescript/README.md"
@@ -6716,37 +6610,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#where-to-read-next",
+   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#why",
    "type": "readme",
-   "title": "The `typescript` dialect — Where to read next",
-   "summary": "nestjs.md; the briefs in docs/07-reference/brief/.",
+   "title": "The `typescript` dialect — Why",
+   "summary": "Why",
    "body": [
-    "- The guides: [react](docs/08-guides/react.md) and [nestjs](docs/08-guides/nestjs.md).",
-    "- The reference: [typescript.md](docs/07-reference/typescript.md), [react.md](docs/07-reference/react.md),",
-    "  [nestjs.md](docs/07-reference/nestjs.md); the briefs in [docs/07-reference/brief/](docs/07-reference/brief/).",
-    "- How it is built: [overview](docs/02-architecture/overview.md), [react](docs/02-architecture/react.md),",
-    "  [nestjs](docs/02-architecture/nestjs.md).",
-    "- [The other dialects](../README.md). [AGENTS.md](AGENTS.md): to change this dialect."
-   ],
-   "sources": [
-    "extensions/vscode/server/dialects/typescript/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": "typescript"
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/server/dialects/typescript/README.md#why-it-exists",
-   "type": "readme",
-   "title": "The `typescript` dialect — Why it exists",
-   "summary": "So that the same Nuclear runs in the browser and on Node.js, written as a TypeScript expert would write it.",
-   "body": [
-    "So that the same Nuclear runs in the browser and on Node.js, written as a TypeScript expert would write it. Names",
-    "are written as they are (Nuclear's `camelCase` is TypeScript's); the library is Nuclear's, and each member has its",
-    "TypeScript template in `library.toml`, so a TypeScript name such as `push` or `toUpperCase` in Nuclear code is a",
-    "bug. A framework dialect leaves out whatever its platform's contract does not have."
+    "- The same Nuclear runs in the browser and on Node.js, written as an expert would.",
+    "- The library is Nuclear's: a TypeScript name such as `push` in Nuclear code is a bug.",
+    "- A framework dialect leaves out what its platform's contract does not have."
    ],
    "sources": [
     "extensions/vscode/server/dialects/typescript/README.md"
@@ -6962,9 +6833,9 @@
    "id": "doc:extensions/zed/AGENTS.md#zed-extension",
    "type": "readme",
    "title": "Zed extension",
-   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.52.1): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
+   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.53.0): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
    "body": [
-    "The NuclearLang extension for Zed (`nuclearlang`, 0.52.1): a tree-sitter grammar of tokens, the client of the",
+    "The NuclearLang extension for Zed (`nuclearlang`, 0.53.0): a tree-sitter grammar of tokens, the client of the",
     "language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables. What the three extensions",
     "share: [`../AGENTS.md`](../AGENTS.md)."
    ],
@@ -6993,18 +6864,34 @@
    }
   },
   {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased",
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.945fea",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`).",
+   "sources": [
+    "extensions/zed/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.d259f8",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project.",
+    "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
     "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
     "- 0.52.0: the version of the three extensions (HTTP Connections and Nuclear Atlas renamed in VS Code and Android Studio; nothing changes in Zed).",
     "- 0.51.0: the version of the three extensions (one repository: the extension is `extensions/zed/`; the framework's commands of its tasks are `nuclear <command>`).",
     "- First public version.",
     "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
-    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
-    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
+    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002)."
    ],
    "sources": [
     "extensions/zed/CHANGELOG.md"

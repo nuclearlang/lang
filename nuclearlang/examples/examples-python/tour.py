@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Iterator, Protocol, override
+from typing import Any, Iterator, Protocol, override
 import asyncio
 
 
@@ -84,8 +84,8 @@ def _show(v: object) -> str:
     return str(v)
 
 
-def _print(*args: object) -> None:
-    print(*(_show(a) for a in args))
+def _print(*args: object, **options: Any) -> None:
+    print(*(_show(a) for a in args), **options)
 
 
 class Role(Enum):

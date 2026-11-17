@@ -41,6 +41,8 @@ rm -rf "$dist/$name"
 "$REPO/installer/release/stage.sh" "$stage" \
   "$REPO/target/$out/nuclear$EXE" "$REPO/target/$out/nuclear-lsp$EXE"
 echo "$VERSION" > "$stage/VERSION"
+# the AI services travel built, in their own archive (installer/release/ai-runtime.sh, ADR-installer-0003)
+rm -rf "$stage/ai"
 
 cd "$dist/$name"
 if [ "$os" = windows ]; then

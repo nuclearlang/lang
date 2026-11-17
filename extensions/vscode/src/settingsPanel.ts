@@ -9,7 +9,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { aiSettings, JIRA_SECRET, jiraAuth, serviceEnv } from './aiSettings';
-import { readMachine, restartService, serviceFiles, writeMachine } from './aiSetup';
+import { builder, builderJson, readMachine } from './aiMachine';
 import { billionsOf, MAX_BILLIONS } from './localModels';
 import { checkAll } from './connections';
 import { notices } from './notifications';
@@ -141,7 +141,7 @@ export class SettingsPanel {
       resumeInterrupted: c.get('resumeInterrupted', true),
       checkEveryMinutes: c.get('checkEveryMinutes', 5),
     };
-    const [checks, graph, developer, ollama, models, mcp, gh] = await Promise.all([
+    const [checks, graph, developer, ollama, models, mcp, gh, machine] = await Promise.all([
       checkAll(this.context),
       up(s.graphUrl + '/v1/health'),
       up(s.developerUrl + '/docs'),
@@ -149,11 +149,12 @@ export class SettingsPanel {
       this.models(),
       this.mcpState(),
       run('gh', ['auth', 'status']),
+      builderJson<{ atLogin: boolean }>(['--status', '--json']),
     ]);
     this.post({
       type: 'state',
       settings: s,
-      services: { graph, developer, ollama, own: [...own.keys()], atLogin: serviceFiles().length > 0 && serviceFiles().every((f) => fs.existsSync(f.path)) },
+      services: { graph, developer, ollama, own: [...own.keys()], atLogin: machine?.atLogin ?? false },
       profile: readMachine().NUCLEAR_AI_PROFILE ?? '',
       models,
       max: MAX_BILLIONS,
@@ -217,8 +218,8 @@ export class SettingsPanel {
     const [cmd, args, url] = service === 'graph' ? [s.graphCommand, ['serve'], s.graphUrl + '/v1/health'] : ['nuclear-developer', [], s.developerUrl + '/docs'];
     // the services the set-up left in this system (ADR-installer-0002) start with the machine's file: the models chosen here go
     // there, and the system's manager starts the service again
-    if (readMachine().NUCLEAR_AI_MODE === 'local') writeMachine({ CODER_MODEL: s.coderModel, ASSISTANT_MODEL: s.assistantModel, NUCLEAR_GRAPH_EMBED: s.embeddingsModel });
-    if (!own.has(service) && (await restartService(service))) {
+    if (readMachine().NUCLEAR_AI_MODE === 'local') await builder(['setup', '--set', `CODER_MODEL=${s.coderModel}`, `ASSISTANT_MODEL=${s.assistantModel}`, `NUCLEAR_GRAPH_EMBED=${s.embeddingsModel}`]);
+    if (!own.has(service) && (await builder(['setup', '--restart', service])).code === 0) {
       for (let i = 0; i < 40 && !(await up(url)); i++) await new Promise((r) => setTimeout(r, 500));
       return this.state();
     }

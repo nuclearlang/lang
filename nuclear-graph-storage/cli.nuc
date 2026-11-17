@@ -121,7 +121,6 @@ graphParser() any
   p = argparse.ArgumentParser(prog = "nuclear-graph", description = "`nuclear-graph`: run, fill and guard the Nuclear Smart Graph.")
   sub = p.addSubparsers(dest = "cmd", required = true)
   sub.addParser("serve", help = "run the graph on 127.0.0.1 (NUCLEAR_GRAPH_PORT, default 7878)")
-  sub.addParser("mcp", help = "the MCP server on stdio (for Claude Code, Codex, Cursor...)")
   k = sub.addParser("knowledge", help = "the knowledge base folder (nuclear-graph-storage/data): build its assets from the working tree, check that they are what the tree gives now, record the review of a hand-written row, ask the running graph the questions of questions.toml and see that each finds its row, or compile every Nuclear example of the hand-written rows")
   k.addArgument("action", choices = ["build", "check", "review", "ask", "examples"])
   k.addArgument("ids", nargs = "*", help = "review: the rows that still hold (default: every row whose source changed); ask: only the questions that contain one of these words")
@@ -233,12 +232,6 @@ main(argv: string[]? = null) void
   if cmd == "serve"
     // the web server is a library of its own, loaded only to serve
     importlib.importModule("uvicorn").run(graphPart("server").graphApp(), host = "127.0.0.1", port = graphPort(), logLevel = "warning")
-  else if cmd == "mcp"
-    // the MCP server is a project of its own (tools/mcp): an agent set up with `nuclear-graph mcp` still reaches it
-    server = shutil.which("nuclear-mcp")
-    if server == null
-      sys.exit("the MCP server is `nuclear-mcp` (tools/mcp of NuclearLang), which is not installed: run the AI set-up")
-    os.execv(server!, [server!])
   else if cmd == "ingest"
     given = "${args.folder}"
     folder: Path = given.length > 0 ? Path(given).resolve() : Path(treeRoot()).resolve().joinpath("nuclear-graph-storage", "data")

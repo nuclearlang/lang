@@ -6,7 +6,9 @@ use httpx{ Response }
 use pathlib{ Path }
 use mcp/server/mcpserver{ MCPServer }
 
-DEVELOPER_URL = os.environ.get("NUCLEAR_DEVELOPER_URL") ?? "http://127.0.0.1:7879"
+// The local developer: the environment's address, else the port the set-up chose (ai.env), else 7879.
+DEVELOPER_PORT = Paths.machine()["NUCLEAR_DEVELOPER_PORT"] ?? "7879"
+DEVELOPER_URL = os.environ.get("NUCLEAR_DEVELOPER_URL") ?? "http://127.0.0.1:${DEVELOPER_PORT}"
 PROJECT_COMMANDS = ["new", "n", "build", "install", "test", "check", "analyze", "make", "g", "gen", "migrate", "add", "remove", "explain"]
 
 // What the server tells every client. The generators' part is the same with or without the local agents.

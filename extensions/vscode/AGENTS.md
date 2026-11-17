@@ -1,6 +1,6 @@
 # VS Code extension
 
-The NuclearLang extension for VS Code (`nuclearlang`, 0.52.1): the client of the language server, semantic
+The NuclearLang extension for VS Code (`nuclearlang`, 0.53.0): the client of the language server, semantic
 highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the
 Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is
 in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What
@@ -17,7 +17,7 @@ the three extensions share: [`../AGENTS.md`](../AGENTS.md).
 npm install
 npm run compile     # tsc --noEmit, then out/extension.js and out/nuclear-builder.js
 npm run watch       # out/extension.js on every change
-npm test            # test/setup.test.ts and ../tools/nuclear-builder/test/engine.test.ts with node:test
+npm test            # ../tools/nuclear-builder/test/engine.test.ts with node:test (the set-up's tests are Nuclear's: ../tools/nuclear-builder/tests)
 npm run builder     # only out/nuclear-builder.js (the nuclear-builder command)
 npm run theme       # the themes and icons, also of ../jetbrains and ../zed
 npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)
@@ -30,7 +30,6 @@ To develop: open this folder in VS Code and press F5; then *Preferences: Color T
 ## Folders
 - `src/`: the extension ([the map of its files](docs/02-architecture/overview.md)); `tsconfig.json` also compiles
   `../tools/*/src` and `../tools/*/test`, which esbuild bundles from `src/extension.ts`
-- `test/`: `setup.test.ts`
 - `theme/`: `palette.json` and the generators (`build.mjs`, `icons.mjs`, `vendor-atom-icons.mjs`); `theme/README.md`
   has the color tables
 - `scripts/`: `bundle-server.mjs` (`npm run server`), `codemetrics-settings.mjs`
@@ -43,8 +42,10 @@ To develop: open this folder in VS Code and press F5; then *Preferences: Color T
 ## Rules
 - Never edit what is generated: `themes/`, `icon-themes/`, `icons/`, `syntaxes/nuclear-example.tmLanguage.json`,
   `server/`, `out/`, and the `nuclear.codemetrics.*` settings of `package.json`.
-- The engines have no `vscode` import, so a node script, `nuclear-builder` and the tests drive them: `aiSetup.ts`
-  here, and the tools' `engine.ts`, `safety.ts`, `cli.ts`, `chat.ts`, `cdp.ts`, `web-session.ts`. Keep it so.
+- The engines have no `vscode` import, so a node script, `nuclear-builder` and the tests drive them: the tools'
+  `engine.ts`, `safety.ts`, `cli.ts`, `chat.ts`, `cdp.ts`, `web-session.ts`. Keep it so.
+- The set-up of the AI services is `nuclear-builder setup` (Nuclear, `../tools/nuclear-builder/`), run as a
+  process (`aiMachine.ts`): the extension never re-implements it.
 - A page is only a view. A Nuclear Builder run or a chat job belongs to the extension (module-level), so closing
   its page or switching tools leaves the work running.
 - An installer runs in a terminal the user sees, never hidden.

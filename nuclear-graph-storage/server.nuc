@@ -120,9 +120,9 @@ Api
   search(body: SearchIn, request: Request) <string, any>
     allowed(request, "read")
     among: string[] = body.shelves ?? (body.collection.length > 0 ? [body.collection] : searchedShelves())
-    unknown = among.filter((s) => not (s in collections()))
+    unknown = among.filter((s) => not (s in COLLECTIONS))
     if unknown.length > 0
-      throw HTTPException(404, "unknown collection ${unknown} (collections: ${collections().join(", ")})")
+      throw HTTPException(404, "unknown collection ${unknown} (collections: ${COLLECTIONS.join(", ")})")
     items = ~asyncio.toThread(Retrieve.search, db(), body.query, among, body.k, body.platform, body.agents, body.where, body.expand)
     { "items": items }
 

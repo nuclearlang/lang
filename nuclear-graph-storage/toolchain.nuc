@@ -4,8 +4,6 @@ use shutil
 use tempfile
 use pathlib{ Path }
 
-PLATFORM_NAMES = ["backend", "mobile", "web"]
-
 // What a command gave: its exit code and what it printed.
 Ran(code: int, out: string)
 
@@ -101,7 +99,7 @@ layoutPath(layout: <string, string>, kind: string, name: string, component: stri
 
 // `--platform backend` for a platform (what an agent that writes only Nuclear names), `--dialect fastapi` else.
 target(name: string) string[]
-  name in PLATFORM_NAMES ? ["--platform", name] : ["--dialect", name]
+  name in PLATFORMS ? ["--platform", name] : ["--dialect", name]
 
 // The NuclearLang command line tools, for agents: check, build and format a piece of Nuclear, and run the Synapsis
 // commands of a project. Answers are short texts a small model can read.

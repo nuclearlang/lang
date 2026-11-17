@@ -45,7 +45,7 @@ Open the Nuclear workspace and press `Ctrl+Alt+P`. The first page is the spec:
 4. **Who leads**: *Claude leads, the local developer writes*, or *Local agents only*. *Preview the plan* shows the
    pieces the local planner would make, so you can edit them before starting.
 
-Press **Start the loop**. The spec is written to `specs/<id>/spec.md`.
+Press **Start the run**. The spec is written to `specs/<id>/spec.md`.
 
 ## 3. Without VS Code
 

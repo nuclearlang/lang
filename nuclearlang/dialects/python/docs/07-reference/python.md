@@ -558,7 +558,8 @@ expression lambda becomes a comprehension (`xs.map((x) => x * 2)` is `[x * 2 for
 `re.compile` through `_regex`, which also writes `(?<name>...)` as `(?P<name>...)`; `Match` is `re.Match`;
 `Error(message)` is `Exception(message)` and `e.message` is `str(e)`; a map read `m[k]` is `m.get(k)` (`None`
 when the key is absent, as [library.md](../../../../docs/07-reference/library.md) §3 says; `m[k] = v` stays an index). `x!` is `_sure(x)` (an assertion pyright
-understands), `print` goes through `_print` (`true`, `false` and `null` as Nuclear prints them), `round` is half
+understands), `print` goes through `_print` (`true`, `false` and `null` as Nuclear prints them; its named arguments are
+Python's: `print(line, flush = true)` is `_print(line, flush=True)`), `round` is half
 away from zero; `toInt`, `toDouble`, `indexOf` on lists, `remove`, `groupBy`, `toRadix`, `toIso`, `Json.encode`
 (compact, models through `model_dump` or `vars`) are helpers written once per file. `math`, `json`, `re`,
 `base64`, `datetime`, `functools`, `random` and `asyncio` are imported when written, and those names are reserved

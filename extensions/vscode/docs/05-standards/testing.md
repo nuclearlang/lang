@@ -12,11 +12,11 @@ related: [../02-architecture/overview.md, ../01-product/roadmap.md]
 |---|---|---|
 | Types | every file of `src/` and of `../tools/*/src` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |
 | The engines, without the editor | Nuclear Builder (retries, a run retried from a stage or a step, a run from scratch, an interrupted run recovered, a stalled call, the preflight, a hung command, the generate and analysis steps, the acceptance), Nuclear Atlas's templates and history, the 3B rule of the local models | `npm test` → `../tools/nuclear-builder/test/engine.test.ts` |
-| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `aiSetup.json` says | `npm test` → `test/setup.test.ts` |
+| The set-up | the profiles and what each says, the suggested profile, the machine file, the files that start the services on each system, the steps of a profile, the requirements on the three systems, the ports, the AI archive's launchers; the user's guide `installer/docs/08-guides/ai-setup.md` says of each profile what `setup.json` says | Nuclear's tests: `../tools/nuclear-builder/tests/test_setup.nuc` (pytest, in its `build/`) |
 | The bundle | the bundled server loads every bundled dialect without the tree | `npm run server` ends with `nuclear-lsp --check-bundle` |
 | The server | completion, hover, projects | `cargo test -p nuclear-lsp`, in the language project |
 
-`npm test` bundles the two test files with esbuild (`vscode` external) into `out/test/` and runs them with
+`npm test` (the `test` script of `package.json`) bundles the test file with esbuild (`vscode` external) into `out/test/` and runs it with
 `node --test`.
 
 ## What has no test

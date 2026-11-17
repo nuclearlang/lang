@@ -16,8 +16,7 @@ The platform's rules are the root [`AGENTS.md`](../AGENTS.md).
 - **Server:** FastAPI + uvicorn on `127.0.0.1:7878`, a token on every route. The client (`nuclear_graph.client`)
   needs only `httpx`.
 - **The MCP server** is not here: it is the project [`tools/mcp`](../tools/mcp/AGENTS.md) (command `nuclear-mcp`),
-  which imports this package. `nuclear-graph mcp` runs `nuclear-mcp`; `knowledge build` reads its tools with
-  `nuclear-mcp tools`.
+  which imports this package; `knowledge build` reads its tools with `nuclear-mcp tools`.
 
 ## Commands
 
@@ -33,7 +32,7 @@ In this folder:
 | The knowledge base | `nuclear-graph knowledge build`, `knowledge check`, `knowledge review [id...]`, `ingest`, `knowledge ask [word...]`, `knowledge examples` |
 | Ask | `nuclear-graph search "<query>"`, `card <id>`, `answer "<question>"`, `strategy "<request>"`, `stats` |
 | Access | `nuclear-graph connect <client> --scopes read,write`, `requests`, `allow <request>`, `deny <request>`, `revoke <client>` |
-| The MCP server (runs `nuclear-mcp`), the agents' search engine | `nuclear-graph mcp`, `nuclear-graph web-key brave` |
+| The agents' search engine | `nuclear-graph web-key brave` |
 
 ## Folders
 

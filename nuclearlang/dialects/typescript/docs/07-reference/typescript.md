@@ -20,6 +20,7 @@
 |---|---|
 | Declaration | `export` before functions, classes, interfaces and enums |
 | Variable that is not reassigned / that is reassigned | `const` / `let` |
+| A constant at the top of a file (`PORTS = { ... }`) | `export const PORTS = { ... };` (the other files of a project import it) |
 | `x = if ...` with multi-line branches | `let x;` and an `if` that assigns in each branch |
 | Members of the module | `this.` |
 | Construct `User(...)` | `new User(...)` |
@@ -171,8 +172,8 @@ counter += 1
 ```
 
 ```typescript
-const name = 'Ana';
-const age: number = 30;
+export const name = 'Ana';
+export const age: number = 30;
 let counter = 0;
 counter = counter + 1;
 counter += 1;
@@ -1016,11 +1017,11 @@ name = user!.name
 ```
 
 ```typescript
-const equal = a === b;
-const both = active && !admin;
-const isUser = x instanceof User;
-const data = read(file) as Record<string, number>;
-const name = user!.name;
+export const equal = a === b;
+export const both = active && !admin;
+export const isUser = x instanceof User;
+export const data = read(file) as Record<string, number>;
+export const name = user!.name;
 ```
 
 ### Named arguments and construction (base §6.2, §6.3)
@@ -1075,12 +1076,12 @@ export class User {
   constructor(public name: string, public age: number = 0) {}
 }
 
-const users = Array.from({ length: 10 - 1 }, (_, i) => 1 + i).map((iterator: number) => new User('Julian'));
-const active = usersRepo.get({ active: true });
-const filtered = active.filter((user: User) => user.age > 18);
-const doubled = numbers.map((n) => n * 2);
-const adults = users.filter((user: User) => user.age >= 18);
-const label = users.map((user: User) => user.name.toUpperCase()).join(', ');
+export const users = Array.from({ length: 10 - 1 }, (_, i) => 1 + i).map((iterator: number) => new User('Julian'));
+export const active = usersRepo.get({ active: true });
+export const filtered = active.filter((user: User) => user.age > 18);
+export const doubled = numbers.map((n) => n * 2);
+export const adults = users.filter((user: User) => user.age >= 18);
+export const label = users.map((user: User) => user.name.toUpperCase()).join(', ');
 ```
 
 Lambda with a block as an argument:

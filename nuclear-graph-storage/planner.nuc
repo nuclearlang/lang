@@ -65,7 +65,7 @@ Planner
   // question writes (`grams`), the project's platform and the messages before it (`past`): the ones that can run are
   // added to `scored`, the ones that lack a name to `needs`.
   static choose(store: Store, facts: Facts, asked: string, grams: string[], past: string[], platform: string, scored: <string, any>[], needs: string[]) void
-    close: <string, any>[] = Retrieve.search(store, asked, [exactShelf()], k = 6)
+    close: <string, any>[] = Retrieve.search(store, asked, [EXACT], k = 6)
     for item in close
       card: <string, any> = item["card"] ?? {}
       data: <string, any> = card["data"] ?? {}

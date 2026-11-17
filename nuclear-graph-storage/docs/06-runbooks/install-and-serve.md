@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [update-the-knowledge-base.md, ../05-standards/security.md, ../02-architecture/integrations.md]
 ---
 # Install, serve and ask
@@ -58,7 +58,7 @@ Every access command: [security](../05-standards/security.md#who-may-read-it). A
 
 | Variable | Default |
 |---|---|
-| `NUCLEAR_GRAPH_PORT` / `NUCLEAR_GRAPH_URL` | `7878` / `http://127.0.0.1:7878` |
+| `NUCLEAR_GRAPH_PORT` / `NUCLEAR_GRAPH_URL` | the environment's, else `NUCLEAR_GRAPH_PORT` of `ai.env` (the port the set-up chose when 7878 was held), else `7878` / `http://127.0.0.1:<port>` |
 | `NUCLEAR_GRAPH_HOME` | `$XDG_DATA_HOME/nuclear-graph` |
 | `NUCLEAR_GRAPH_EMBED` | `embeddinggemma` |
 | `NUCLEAR_GRAPH_TOKEN` (a client) | the token `nuclear-graph connect <client>` stored |

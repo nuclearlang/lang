@@ -64,7 +64,7 @@ data Point
 | `print(a, b)` | `print([a, b].join(' '))` (Dart's `print` takes one value) |
 | top-level statements | inside a generated `main()`; top-level variables stay top-level (`final g = 9.8;`) |
 | Range `a..b` as a value | `List.generate(b - a, (i) => a + i)` |
-| `for k, v in map` | `for (final MapEntry(key: k, value: v) in map.entries)` |
+| `for k, v in map` | `for (final MapEntry(key: k, value: v) in map.entries)` (`m ?? {}` is `(m ?? {}).entries`) |
 | Top-level statements | inside `void main() { ... }` |
 | Inheritance | a single base (`: A`); interfaces go with `>` or are detected, also the SDK's `interface class`es: `Score: Comparable<Score>` → `class Score implements Comparable<Score>` |
 | `super(...)` at the start of the constructor | initializer list: `Bird(this.wings) : super('bird')`; if it passes the inherited parameters as they are and in order, super parameters: `Dog(super.name, this.breed)` |

@@ -1,8 +1,8 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
-related: [installer/docs/08-guides/ai-setup.md, installer/docs/06-runbooks/release.md, extensions/vscode/src/aiSetup.json]
+updated: 2026-11-17
+related: [installer/docs/08-guides/ai-setup.md, installer/docs/06-runbooks/release.md, extensions/tools/nuclear-builder/setup.json]
 ---
 # Roadmap of the installers and the release
 
@@ -10,12 +10,22 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Half done
 
+- **The AI services ready to run from the installer** (ADR-installer-0003,
+  [spec 009](../../../docs/04-specs/009-self-contained-ai-services/tasks.md)). Done: the ports are checked and
+  chosen; the AI archive (`release/ai-runtime.sh`, the `ai` job of `release.yml`), downloaded and checked by both
+  installers, removed by `--uninstall`, tried on the clean machine (no Python, no uv, no Node.js: install with `lite`,
+  the set-up in Nuclear, services, a reboot, `--uninstall`). Left:
+  - the welcome page where the user installs Ollama and the models.
+
+  The set-up is Nuclear's and comes in the archive; only Nuclear Builder's pipeline still runs on node
+  (its roadmap).
+
 - **The first release.** The installers and the release workflow are written (ADR-installer-0001): binaries for
   Linux, macOS and Windows and a one-command installer. They work once a tag `v*` exists. Left: the first release
   tag `v0.1.0`; `release.yml` never ran, and the public one-line installer fails without a release.
 - **The AI services built into the installer** (ADR-installer-0002; [the guide](../08-guides/ai-setup.md)). Left:
-  - The profiles: see *To decide with the user*. Then `aiSetup.json` is written
-    (`extensions/vscode/test/setup.test.ts` holds the guide to it).
+  - The profiles: see *To decide with the user*. Then `setup.json` is written
+    (`extensions/tools/nuclear-builder/tests/test_setup.nuc` holds the guide to it).
   - A GPU other than NVIDIA's and Apple silicon is not recognised: the development machine's Radeon 890M runs the
     models and Ollama says "100% GPU", while the set-up says no GPU with memory of its own.
   - Android Studio has no wizard (`nuclear-builder setup`).
@@ -34,11 +44,10 @@ The pending work of the installers, the release and the set-up of the AI service
     `nuclear-developer.cmd`) are written and never ran;
   - a machine without uv or without Ollama;
   - the public one-liner with a real release;
-  - a login after a real reboot (the wait for the keyring is proved by a test only);
-  - the `lite` profile's download;
+  - a login after a real reboot of a desktop (the clean machine's reboot has no keyring; the wait for it is proved by
+    a test only);
   - `installer/install.sh --ai` on a clean machine;
-  - a release archive with the graph's `.nuc` sources and the set-up's `nuclear build` step on a machine without
-    the working tree;
+  - the AI archive of macOS, Windows and Linux arm64 (only Linux x86_64 was built and tried);
   - `nuclear-builder` from a release archive on Windows (`nuclear-builder.cmd`).
 
 ## To decide with the user

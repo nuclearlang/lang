@@ -650,6 +650,7 @@
     "installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall",
     "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder",
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
+    "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
     "nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services",
     "```",
     "",
@@ -704,14 +705,14 @@
    "id": "doc:installer/AGENTS.md#folders",
    "type": "readme",
    "title": "The installers and the release — Folders",
-   "summary": "`nuclear-builder` and `nuclear-lsp`, removes the old `dragonfly` and `nuclear-loop` links, installs the skill and the editor extensions).",
+   "summary": "`nuclear-builder` and `nuclear-lsp`, installs the skill and the editor extensions).",
    "body": [
     "- `install.sh`: the installer from the source tree (builds `nuclear` and `nuclear-lsp`, stages, links `nuclear`,",
-    "  `nuclear-builder` and `nuclear-lsp`, removes the old `dragonfly` and `nuclear-loop` links, installs the skill and",
-    "  the editor extensions).",
+    "  `nuclear-builder` and `nuclear-lsp`, installs the skill and the editor extensions).",
     "- `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`",
     "  and `package.sh`.",
     "- `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.",
+    "- `release/ai-runtime.sh`: the AI archive of this machine, built and tried before it is packed.",
     "- `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).",
     "- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.",
     "- `dist/`: what `package.sh` writes (ignored by git).",
@@ -740,8 +741,8 @@
     "   asked or downloaded (ADR-installer-0002).",
     "4. **Never run `--uninstall` or a public installer against the real `HOME` while testing**: use a fake `HOME` and a",
     "   mirror ([the runbook](docs/06-runbooks/release.md)).",
-    "5. **`docs/08-guides/ai-setup.md` is held to the profiles by a test** (`extensions/vscode/test/setup.test.ts`",
-    "   against `aiSetup.json`): what a profile says of itself is changed in the data, then in the guide.",
+    "5. **`docs/08-guides/ai-setup.md` is held to the profiles by a test** (`extensions/tools/nuclear-builder/tests/test_setup.nuc`",
+    "   against `setup.json`): what a profile says of itself is changed in the data, then in the guide.",
     "6. **The user runs the installed binaries**: after a change to a binary, a dialect, a platform, a runtime package",
     "   or the skill, `installer/install.sh` again.",
     "7. A change to an installer's options updates its own header comment (it is its `--help`), the guide and these",
@@ -760,13 +761,14 @@
    "id": "doc:installer/AGENTS.md#stack",
    "type": "readme",
    "title": "The installers and the release — Stack",
-   "summary": "`aiSetup.json`), run in a terminal as `nuclear-builder setup`; it builds and installs the Smart Graph, the Nuclear Developer and the MCP server (`uv tool install` of `ai/nuclear-graph-storage` and `ai/tools/mcp`).",
+   "summary": "(`extensions/tools/nuclear-builder/setup.nuc`, profiles in `setup.json`), which the editors run as a process.",
    "body": [
     "- POSIX `sh` scripts and one PowerShell script (5.1 or 7); no dependency but `curl` or `wget`, `tar`, a SHA-256 tool.",
     "- GitHub Actions for the release (`.github/workflows/release.yml`); static Linux binaries (musl).",
-    "- The AI set-up is not code of this folder: its engine is `extensions/vscode/src/aiSetup.ts` (profiles in",
-    "  `aiSetup.json`), run in a terminal as `nuclear-builder setup`; it builds and installs the Smart Graph, the Nuclear",
-    "  Developer and the MCP server (`uv tool install` of `ai/nuclear-graph-storage` and `ai/tools/mcp`)."
+    "- The AI set-up is not code of this folder: it is `nuclear-builder setup`, written in Nuclear",
+    "  (`extensions/tools/nuclear-builder/setup.nuc`, profiles in `setup.json`), which the editors run as a process. The services themselves come in the AI archive",
+    "  (`release/ai-runtime.sh`): a Python of their own with the Smart Graph, the MCP server and the Nuclear Developer,",
+    "  unpacked as the installation's `ai/` (ADR-installer-0003)."
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -900,22 +902,25 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.4a8374",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.3e653b",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
    "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
    "body": [
     "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
-    "2. `nuclear-builder`: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.",
+    "2. The pipeline's engine: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.",
     "3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear`, `nuclear-lsp` and",
-    "   `nuclear-builder` in `$PREFIX/bin`, and removes the old `dragonfly` and `nuclear-loop` links.",
+    "   `nuclear-builder` in `$PREFIX/bin`.",
     "4. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the",
-    "   set-up installs the graph editable and builds the Developer and the MCP server in place. With `--ai`: `nuclear-builder setup` (it needs Node.js).",
+    "   set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself",
+    "   (`extensions/tools/nuclear-builder`, Nuclear) is built and installed editable with uv as `nuclear-builder`, in",
+    "   place of the node link. With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as",
+    "   `ai/` and its own `nuclear-builder setup`.",
     "5. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).",
     "6. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the",
-    "   PATH (`--no-vscode`). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
-    "   `wasm32-wasip2` is there (`--no-zed`).",
-    "7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH."
+    "   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the",
+    "   installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
+    "   `wasm32-wasip2` is there (`--no-zed`)."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -927,13 +932,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.9d489d",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.6cbb30",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
-   "summary": "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links (also the old `dragonfly` and `nuclear-loop`), `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill, the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.",
+   "summary": "7. A check: the installed `nuclear dialect list` must run.",
    "body": [
-    "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links (also the old `dragonfly` and",
-    "`nuclear-loop`), `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,",
+    "7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.",
+    "",
+    "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,",
     "the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension."
    ],
    "sources": [
@@ -949,17 +955,19 @@
    "id": "doc:installer/docs/02-architecture/overview.md#the-ai-services-at-the-end-of-an-install",
    "type": "context",
    "title": "The installers: overview — The AI services at the end of an install",
-   "summary": "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS Code extension's `aiSetup.ts`.",
+   "summary": "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS archive's `ai/bin/nuclear-builder` (`extensions/tools/nuclear-builder/setup.nuc`, written in Nuclear).",
    "body": [
     "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS",
-    "Code extension's `aiSetup.ts`. What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is",
+    "archive's `ai/bin/nuclear-builder` (`extensions/tools/nuclear-builder/setup.nuc`, written in Nuclear). What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is",
     "ADR-installer-0002.",
     "",
     "- The profile is `--profile` / `NUCLEAR_AI_PROFILE`, else the one the machine has (`NUCLEAR_AI_PROFILE=` in",
     "  `~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`).",
     "- With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without",
     "  one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.",
-    "- Without Node.js or without `nuclear-builder` in the archive: a note saying how to run the set-up later.",
+    "- Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),",
+    "  so `nuclear-builder setup` works before the set-up ran; its pipeline commands run the installation's",
+    "  `bin/nuclear-builder.js` with node.",
     "- The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.",
     "- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`",
     "  (`systemctl --user restart nuclear-developer` after a change to its code;",
@@ -1068,26 +1076,6 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.2fbec4",
-   "type": "context",
-   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`), `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also `NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.",
-   "body": [
-    "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`),",
-    "`NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also",
-    "`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`. The repository was `nuclearlang/nuclear` until 2026-11-16: GitHub redirects its",
-    "old release addresses to `nuclearlang/lang`."
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5f9bb8",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
@@ -1117,7 +1105,26 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.9e5de4",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`), `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also `NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.",
+   "body": [
+    "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`),",
+    "`NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also",
+    "`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.a3a962",
    "type": "context",
    "title": "The installers: overview — The release",
    "summary": "`platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
@@ -1128,10 +1135,36 @@
     "  writes `VERSION`, and makes `dist/nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with its",
     "  `.sha256`, and `dist/latest` (the version a mirror serves). The version is the workspace's (`Cargo.toml`",
     "  `[workspace.package]`); `os` is `linux`, `macos` or `windows`, `arch` `x86_64` or `aarch64`.",
+    "- `release/ai-runtime.sh`: the AI archive of this machine (ADR-installer-0003),",
+    "  `dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows) and its `.sha256`, unpacked as the",
+    "  installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer",
+    "  installed from what `nuclear build` writes, pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the",
+    "  MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,",
+    "  `nuclear-mcp`, `nuclear-developer`, and the knowledge base. Before packing it fails if a `.pth` points into the",
+    "  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it"
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.b0d364",
+   "type": "context",
+   "title": "The installers: overview — The release",
+   "summary": "(`installer/install.sh --ai`).",
+   "body": [
+    "(`installer/install.sh --ai`).",
     "- `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets",
     "  (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,",
     "  `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:",
-    "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `publish`: every archive,",
+    "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each",
+    "  system (Linux x86_64 and arm64, macOS Intel and Apple silicon, Windows), so each AI archive is tried where it",
+    "  runs. Job `publish`: every archive,",
     "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
     "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
    ],
@@ -1212,7 +1245,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.6c041e",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
    "summary": "`HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the checksum from there instead of a GitHub release.",
@@ -1224,17 +1257,37 @@
     "  checksum from there instead of a GitHub release.",
     "- **A clean machine in Docker** (`installer/release/clean-machine/`): nothing of NuclearLang inside, a user `dev`",
     "  who can sudo, systemd as on a real machine (so Ollama's installer and the AI set-up register their services the",
-    "  usual way), Node.js, Python and git as on any developer's machine. The installer reads the archive mounted at",
+    "  usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own",
+    "  Python). The installer reads the archive mounted at",
     "  `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`).",
     "",
     "  ```sh",
     "  installer/release/package.sh x86_64-unknown-linux-musl",
+    "  installer/release/ai-runtime.sh",
     "  docker build -t nuclear-clean installer/release/clean-machine",
-    "  docker run -d --name nuclear-clean --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \\",
-    "    -v \"$PWD/installer/dist:/mirror:ro\" nuclear-clean",
+    "  docker run -d --name nuclear-clean --cgroupns=private --security-opt writable-cgroups=true \\",
+    "    --tmpfs /run --tmpfs /run/lock --tmpfs /tmp -v \"$PWD/installer/dist:/mirror:ro\" nuclear-clean",
     "  docker exec -it nuclear-clean su - dev      # a terminal of the new user",
     "  docker rm -f nuclear-clean                  # the machine is gone: run it again for a new one",
     "  ```"
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.ce0080",
+   "type": "context",
+   "title": "Release, and test an installer — Test an installer without touching your machine",
+   "summary": "Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the host's cgroups, ttys and devices and brings the desktop session down.",
+   "body": [
+    "Never `--privileged`, `--cgroupns=host` or a bind of `/sys/fs/cgroup`: the container's systemd then takes the",
+    "  host's cgroups, ttys and devices and brings the desktop session down. `writable-cgroups` gives it only its own."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1493,6 +1546,7 @@
    "body": [
     "| It says | What to do |",
     "|---|---|",
+    "| the graph or the Developer on a port other than 7878 / 7879 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`); the tools and the editor read it there. Nothing to do |",
     "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
     "| `Ollama refused to pull ...`, or a model stays at the same percent | check the disk and the connection; the download goes on from where it stopped when the step is tried again |",
     "| `no Python 3.12 or newer, and uv could not install one` | install Python 3.12 or newer and try again |",
@@ -1935,6 +1989,61 @@
    }
   },
   {
+   "id": "doc:tools/cli/CHANGELOG.md#changelog",
+   "type": "changelog",
+   "title": "Changelog",
+   "summary": "All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow Semantic Versioning.",
+   "body": "All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.2dba9f",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in `config.nuc` and generates its type definitions into `defs/` (`dependencies.rs`); a mobile app goes through `flutter add`.",
+   "body": [
+    "- `nuclear add <package>[@version]... [--module <m>]` and `nuclear remove <package>...` on every platform",
+    "  (ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in",
+    "  `config.nuc` and generates its type definitions into `defs/` (`dependencies.rs`); a mobile app goes through",
+    "  `flutter add`. `nuclear install` generates the definitions a package of `config.nuc` lacks. A section of",
+    "  `config.nuc` written in one line is edited.",
+    "- First public version.",
+    "- `nuclear gen inspect|component|resource` (ADR-codegen-0001): a resource's finished code from `--fields`, `--from-json` or `--from-spec`, for the three platforms.",
+    "- `nuclear gen usecase <component> <Name> [--calls <Repository>.<method>] [--route \"POST orders/{id}/cancel\"]` (ADR-codegen-0001): a use case wired into its component (its alias in the facade; backend: its route in the controller of the route's prefix), its signature read from the project; with `--calls` the use case is written too. A `merge` piece adds whole members (a route keeps its decorator and its body), and a name another file declares also stops a new `merge` file.",
+    "- `docs/08-guides/generators.md`: the generators' guide (every option, what each platform gets, a use case written and wired step by step, the refusals, the MCP tool of each command, what is not generated yet)."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.834918",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- `nuclear gen resource` on a resource that exists finishes what it adds: a new action also gets the repository's method and the controller's route (it left a use case calling a method nobody had). `--source db --actions search` is refused: which column is searched is a decision (a query of the repository, wired with `gen usecase --calls`). ADR-developer-0001.",
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/README.md#how-we-made-it",
    "type": "readme",
    "title": "`nuclear`, the command line tool — How we made it",
@@ -2290,25 +2399,24 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.d8a3b8",
+   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.67a747",
    "type": "context",
    "title": "Landing, header, help and colors of the framework's commands (`framework/landing.rs`)",
-   "summary": "`credits`; EOF only closes a complete page); a shine crosses the synapsis every `SHINE_EVERY` (5 s); without a terminal on stdin it ends by itself.",
+   "summary": "`$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
    "body": [
-    "`credits`; EOF only closes a complete page); a shine crosses the synapsis every `SHINE_EVERY` (5 s); without a",
-    "  terminal on stdin it ends by itself.",
-    "- `header()`: before any command of the framework's (not on the bare page nor `credits`; the compiler's commands",
-    "  and `nuclear help` print none), a 6-row header with both",
-    "  small logos (`MINI`, `sign` radius 6), on stderr and only in a terminal.",
-    "- Output colors: `ok` green = done, `bad` red = error, `warn` yellow = warning or note, `cmd` blue = commands, `name`",
-    "  purple = project and step names, `dim` = paths and details; `diagnostics()` colors the transpiler's errors; only",
-    "  if stdout and stderr are terminals and there is no `NO_COLOR`. In `watch`, `nuclear: transpiling|ready|errors`",
-    "  has no color (the VS Code task looks for it).",
-    "- `usage()`: the help with a width-1 symbol per section and command (⚙ build, ✿ new, ⚗ test...; only symbols in",
-    "  common monospace fonts, checked with `fc-list :charset=`). Without a terminal or with `NO_COLOR`, the plain text.",
-    "  Without a terminal, with `NO_COLOR` or below 80×23, the bare `nuclear` shows only the page.",
-    "- To review the animation without a terminal: `script -qc \"stty cols 100 rows 30; nuclear\" /dev/null` captures the",
-    "  frames (split by `ESC[?2026h`); a PIL script turns them into images."
+    "- `nuclear` without arguments: the animation ONLY the first time (the marker",
+    "  `$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
+    "  `nuclear credits` (alias `author`): always the full animation and the page with the credits (Julian Molina,",
+    "  github.com/nodelorien, github.com/nuclearlang).",
+    "- The animation takes ~7 s and is a CONCEPT, not realistic: a radioactive mushroom in ASCII, a wave of characters",
+    "  that fills the screen and dissolves into `█▓▒░`; \"WELCOME\" (5-row letters) appears in negative, turns green with",
+    "  \"to NuclearLang · Synapsis\" and dissolves; then the page: the NuclearLang sign, large (`sign` radius 12), on the",
+    "  left, and the names and how to start on the right. The only logo is Nuclear's (the user, 2026-11-17).",
+    "- Only characters over the terminal's background: no background colors (a test checks it), the theme's text color in",
+    "  normal / bold / dim and few accents; fades are dissolves. Synapsis is a name in purple; the NuclearLang symbol is drawn `ASPECT` (1.35) times wider to look round.",
+    "- The page stays alive until Enter (a thread reads stdin; Enter during the animation jumps to the page, except in",
+    "  `credits`; EOF only closes a complete page); a shine crosses the sign every `SHINE_EVERY` (5 s); without a",
+    "  terminal on stdin it ends by itself."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/landing.md"
@@ -2320,25 +2428,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.f7ec30",
+   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.d2ad65",
    "type": "context",
    "title": "Landing, header, help and colors of the framework's commands (`framework/landing.rs`)",
-   "summary": "`$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
+   "summary": "and `nuclear help` print none), a 6-row header with the small sign (`sign` radius 6), NuclearLang and Synapsis, on stderr and only in a terminal.",
    "body": [
-    "- `nuclear` without arguments: the animation ONLY the first time (the marker",
-    "  `$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
-    "  `nuclear credits` (alias `author`): always the full animation and the page with the credits (Julian Molina,",
-    "  github.com/nodelorien, github.com/nuclearlang).",
-    "- The animation takes ~11 s and is a CONCEPT, not realistic: a radioactive mushroom in ASCII, a wave of characters",
-    "  that fills the screen and dissolves into `█▓▒░`, grass grows back and a synapsis lands on a flower; then the page",
-    "  with the NuclearLang and Synapsis logos. After the wave, \"WELCOME\" (5-row letters) appears in negative, turns",
-    "  green with \"to NuclearLang · Synapsis\" and dissolves. In the grass scene the motto is written (`motto`): Spanish",
-    "  if `LC_ALL` / `LC_MESSAGES` / `LANG` starts with `es` (localization data, the allowed exception to English",
-    "  everywhere), else English.",
-    "- Only characters over the terminal's background: no background colors (a test checks it), the theme's text color in",
-    "  normal / bold / dim and few accents; fades are dissolves. The synapsis is metallic purple (`metal`) with",
-    "  radioactive green eyes; the NuclearLang symbol is drawn `ASPECT` (1.35) times wider to look round.",
-    "- The page stays alive until Enter (a thread reads stdin; Enter during the animation jumps to the page, except in"
+    "- `header()`: before any command of the framework's (not on the bare page nor `credits`; the compiler's commands",
+    "  and `nuclear help` print none), a 6-row header with the",
+    "  small sign (`sign` radius 6), NuclearLang and Synapsis, on stderr and only in a terminal.",
+    "- Output colors: `ok` green = done, `bad` red = error, `warn` yellow = warning or note, `cmd` blue = commands, `name`",
+    "  purple = project and step names, `dim` = paths and details; `diagnostics()` colors the transpiler's errors; only",
+    "  if stdout and stderr are terminals and there is no `NO_COLOR`. In `watch`, `nuclear: transpiling|ready|errors`",
+    "  has no color (the VS Code task looks for it).",
+    "- `usage()`: the help with a width-1 symbol per section and command (⚙ build, ✿ new, ⚗ test...; only symbols in",
+    "  common monospace fonts, checked with `fc-list :charset=`). Without a terminal or with `NO_COLOR`, the plain text.",
+    "  Without a terminal, with `NO_COLOR` or below 80×23, the bare `nuclear` shows only the page.",
+    "- To review the animation without a terminal: `script -qc \"stty cols 100 rows 30; nuclear\" /dev/null` captures the",
+    "  frames (split by `ESC[?2026h`); a PIL script turns them into images."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/landing.md"

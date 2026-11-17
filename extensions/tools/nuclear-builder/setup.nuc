@@ -1,0 +1,729 @@
+use os
+use sys
+use json
+use time
+use shutil
+use socket
+use ntpath
+use platform
+use posixpath
+use subprocess
+use httpx
+use pathlib{ Path }
+
+// The set-up of the AI services (ADR-installer-0002): what this machine has, what each profile needs and how far it
+// works, and the steps that install it. `nuclear-builder setup` runs it in a terminal; the editors run that command
+// and draw what it prints (`--plan --json`, `--events`). The requirements and the profiles are data (setup.json).
+
+// The requirements, the embeddings model and the profiles: setup.json beside the package, or the project's own in a
+// checkout (the package is `build/nuclear_builder`).
+setupData() <string, any>
+  here = Path(__file__).resolve().parent
+  file = here.joinpath("setup.json")
+  if not file.exists()
+    file = here.parents[1].joinpath("setup.json")
+  json.loads(file.readText(encoding = "utf-8"))
+
+// A set of local models (or none: `remote`), what it downloads, the memory it wants and how far it works; `data` is
+// it as setup.json writes it.
+Profile(id: string, title: string, gb: double, ram: double, minRam: double, coder: string?, assistant: string?, data: <string, any>)
+
+profileFrom(d: <string, any>) Profile
+  Profile(d["id"]!, d["title"]!, d["gb"]!, d["ram"]!, d["minRam"]!, d["coder"], d["assistant"], d)
+
+DATA = setupData()
+PROFILES: Profile[] = (DATA["profiles"] as <string, any>[]).map((d) => profileFrom(d))
+REQUIREMENTS: <string, any>[] = DATA["requirements"]!
+EMBEDDINGS: string = DATA["embeddings"]!
+
+profileOf(id: string) Profile?
+  PROFILES.find((p) => p.id == id)
+
+// ---------- where things are ----------
+
+joinOn(system: string, parts: string[]) string
+  system == "win32" ? ntpath.join(...parts) : posixpath.join(...parts)
+
+home() string
+  "${Path.home()}"
+
+installDir(env: <string, string>? = null, system: string = sys.platform) string
+  e = env ?? dict(os.environ)
+  given = e["NUCLEAR_INSTALL"] ?? ""
+  if given.length > 0
+    return given
+  if system == "win32"
+    return ntpath.join(e["LOCALAPPDATA"] ?? home(), "nuclearlang")
+  posixpath.join(home(), ".local", "share", "nuclearlang")
+
+binDir(env: <string, string>? = null, system: string = sys.platform) string
+  e = env ?? dict(os.environ)
+  given = e["NUCLEAR_BIN"] ?? ""
+  if given.length > 0
+    return given
+  system == "win32" ? ntpath.join(installDir(e, system), "bin") : posixpath.join(home(), ".local", "bin")
+
+// Where the services are under the AI root: the same folders as in the working tree, so what one names of the other
+// by a relative path (the Developer's `dependencies(nuclear_graph = ...)`) holds in an installation too.
+GRAPH = "nuclear-graph-storage"
+DEVELOPER = "nuclear-agents/nuclear_developer"
+MCP = "tools/mcp"
+
+// The services' commands in the AI archive (ADR-installer-0003), the set-up's own with them.
+RUNTIME_COMMANDS = ["nuclear-graph", "nuclear-mcp", "nuclear-developer", "nuclear-builder"]
+
+// Whether the services' folder is the AI archive of a release: a Python of its own with the services installed in it
+// and their launchers (`installer/release/ai-runtime.sh`). Then nothing is built, and neither uv nor a Python is needed.
+hasRuntime(root: string?, system: string = sys.platform) boolean
+  if root == null
+    return false
+  ending = system == "win32" ? ".cmd" : ""
+  RUNTIME_COMMANDS.all((c) => Path(root, "bin", "${c}${ending}").exists())
+
+// The folder with the code of the services, as the installers leave it; null when NuclearLang is not installed.
+aiRoot(env: <string, string>? = null) string?
+  e = env ?? dict(os.environ)
+  given = e["NUCLEAR_AI_ROOT"] ?? ""
+  root = given.length > 0 ? given : "${Path(installDir(e), "ai")}"
+  if hasRuntime(root)
+    return root
+  Path(root, GRAPH, "pyproject.toml").exists() and Path(root, DEVELOPER, "config.nuc").exists() ? root : null
+
+// Puts the runtime's launchers on the PATH: links on Linux and macOS (each launcher finds its Python from its own
+// place), and on Windows a `.cmd` that calls the runtime's.
+linkRuntime(root: string, bin: string? = null, system: string = sys.platform) string[]
+  at = bin ?? binDir()
+  Path(at).mkdir(parents = true, existOk = true)
+  linked: string[] = []
+  for c in RUNTIME_COMMANDS
+    if system == "win32"
+      file = ntpath.join(at, "${c}.cmd")
+      Path(file).writeText("@\"${ntpath.join(root, "bin", "${c}.cmd")}\" %*\r\n", encoding = "utf-8", newline = "")
+      linked.add(file)
+    else
+      link = Path(at, c)
+      link.unlink(missingOk = true)
+      link.symlinkTo(Path(root, "bin", c))
+      linked.add("${link}")
+  linked
+
+// What the set-up chose on this machine (`KEY=value` lines): the mode, the profile, its models, the ports. The
+// services start with it; `nuclear-builder` and the editor take their defaults from it.
+machineFile(env: <string, string>? = null, system: string = sys.platform) string
+  e = env ?? dict(os.environ)
+  if system == "win32"
+    return ntpath.join(e["APPDATA"] ?? home(), "nuclearlang", "ai.env")
+  given = e["XDG_CONFIG_HOME"] ?? ""
+  posixpath.join(given.length > 0 ? given : posixpath.join(home(), ".config"), "nuclearlang", "ai.env")
+
+readMachine(file: string? = null) <string, string>
+  values: <string, string> = {}
+  try
+    text = Path(file ?? machineFile()).readText(encoding = "utf-8")
+    for raw in text.split("\n")
+      line = raw.trimEnd()
+      at = line.indexOf("=")
+      if at > 0 and line.substring(0, at).upper() == line.substring(0, at) and line[0] >= "A" and line[0] <= "Z"
+        values[line.substring(0, at)] = line.substring(at + 1)
+  catch e
+    if not isinstance(e, OSError)
+      throw e
+  values
+
+writeMachine(values: <string, string>, file: string? = null) void
+  at = Path(file ?? machineFile())
+  all = readMachine("${at}")
+  for k, v in values
+    all[k] = v
+  at.parent.mkdir(parents = true, existOk = true)
+  lines = ["# The AI services of NuclearLang on this machine, written by their set-up (nuclear-builder setup, the editor)."]
+  for k, v in all
+    lines.add("${k}=${v}")
+  at.writeText("${lines.join("\n")}\n", encoding = "utf-8")
+
+// What a profile writes in the machine's file.
+machineOf(p: Profile) <string, string>
+  if p.coder == null
+    return { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": p.id }
+  { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": p.id, "CODER_MODEL": p.coder!, "ASSISTANT_MODEL": p.assistant ?? p.coder!, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
+
+// The environment of the tools: the caller's, with the folders where NuclearLang, cargo and Homebrew put their
+// commands (an editor started from the desktop may not have them on its PATH).
+toolEnv(env: <string, string>? = null, system: string = sys.platform) <string, string>
+  e: <string, string> = dict(env ?? dict(os.environ))
+  sep = system == "win32" ? ";" : ":"
+  extra: string[] = []
+  if system == "win32"
+    extra = [e["NUCLEAR_INSTALL"] != null ? ntpath.join(e["NUCLEAR_INSTALL"]!, "bin") : "", e["LOCALAPPDATA"] != null ? ntpath.join(e["LOCALAPPDATA"]!, "nuclearlang", "bin") : ""]
+  else
+    extra = [e["PREFIX"] != null ? posixpath.join(e["PREFIX"]!, "bin") : "", posixpath.join(home(), ".local", "bin"), posixpath.join(home(), ".cargo", "bin"), "/opt/homebrew/bin", "/usr/local/bin"]
+  dirs = [...(e["PATH"] ?? "").split(sep), ...extra].filter((d) => d.length > 0)
+  e["PATH"] = dirs.unique().join(sep)
+  e
+
+// ---------- commands ----------
+
+// What a command gave: its exit code and what it printed.
+Ran(code: int, out: string)
+
+// Runs a command and waits for it, at most 20 seconds; a command that is not there gives 127.
+capture(args: string[], cwd: string? = null) Ran
+  try
+    done = subprocess.run(args, cwd = cwd, captureOutput = true, text = true, timeout = 20, env = toolEnv(), shell = sys.platform == "win32")
+    Ran(done.returncode, "${done.stdout}${done.stderr}")
+  catch e
+    if not isinstance(e, OSError) and not isinstance(e, subprocess.TimeoutExpired)
+      throw e
+    Ran(127, "${e}")
+
+// Runs a command and says every line it prints; a failure is thrown with its last line.
+runCommand(args: string[], say: (line: string) => void, cwd: string? = null, env: <string, string>? = null) void
+  all = toolEnv()
+  // a Python it runs (the graph's ingest) says its progress as it goes, not when it ends
+  all["PYTHONUNBUFFERED"] = "1"
+  for k, v in env ?? {}
+    all[k] = v
+  p = subprocess.Popen(args, cwd = cwd, env = all, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = true, errors = "replace", shell = sys.platform == "win32")
+  last = ""
+  for raw in p.stdout!
+    line = raw.trim()
+    if line.length > 0 and not line.startsWith("[notice]")
+      last = line
+      say(line)
+  code = p.wait()
+  if code != 0
+    throw RuntimeError("${args.join(" ")} failed${last.length > 0 ? ": ${last}" : " (${code})"}")
+
+// Whether something answers at a url (any answer below 500).
+up(url: string) boolean
+  try
+    httpx.get(url, timeout = 2.5).statusCode < 500
+  catch e
+    if not isinstance(e, httpx.HTTPError)
+      throw e
+    false
+
+// ---------- the machine ----------
+
+// Memory, the GPU's own memory (0: none known; Ollama then uses the integrated GPU or the CPU) and free disk of the
+// home, in GB.
+Hardware(system: string, arch: string, cpu: string, cores: int, ram: int, gpu: string, vram: int, disk: int)
+  asMap() <string, any>
+    { "platform": system, "arch": arch, "cpu": cpu, "cores": cores, "ram": ram, "gpu": gpu, "vram": vram, "disk": disk }
+
+gb(bytes: double) int = (bytes / 1_000_000_000).round()
+
+totalMemory() double
+  if sys.platform == "win32"
+    told = capture(["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory"])
+    return told.out.trim().toDouble() ?? 0.0
+  os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") * 1.0
+
+cpuName() string
+  if sys.platform == "win32"
+    return capture(["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_Processor)[0].Name"]).out.trim()
+  if sys.platform == "darwin"
+    return capture(["sysctl", "-n", "machdep.cpu.brand_string"]).out.trim()
+  try
+    lines: string[] = Path("/proc/cpuinfo").readText().split("\n")
+    for line in lines
+      if line.startsWith("model name")
+        return line.substring(line.indexOf(":") + 1).trim()
+  catch e
+    if not isinstance(e, OSError)
+      throw e
+  platform.processor()
+
+hardware() Hardware
+  ram = gb(totalMemory())
+  gpu = ""
+  vram = 0
+  smi = capture(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"])
+  first = smi.out.trim().split("\n")[0].split(",")
+  mib = first.length > 1 ? first[1].trim().toDouble() ?? 0.0 : 0.0
+  arch = platform.machine().lower()
+  if smi.code == 0 and mib > 0
+    gpu = first[0].trim()
+    vram = (mib / 1024).round()
+  else if sys.platform == "darwin" and arch == "arm64"
+    gpu = "Apple silicon (memory shared with the GPU)"
+    vram = ram
+  disk = 0
+  try
+    disk = gb(shutil.diskUsage(home()).free * 1.0)
+  catch e
+    // unknown: not held against a profile
+    if not isinstance(e, OSError)
+      throw e
+  Hardware(sys.platform, arch, cpuName(), os.cpuCount() ?? 1, ram, gpu, vram, disk)
+
+// How a profile sits on a machine (`fits`, `tight`, `no`), and why, in words for the user.
+Fit(fit: string, note: string)
+
+fit(p: Profile, hw: Hardware) Fit
+  if p.coder == null
+    return Fit("fits", "nothing runs on this machine")
+  if hw.disk > 0 and hw.disk < p.gb + 2
+    return Fit("no", "it downloads ${p.gb} GB and ${hw.disk} GB of disk are free")
+  if hw.ram < p.minRam
+    return Fit("no", "its models do not load: it needs ${p.minRam.round()} GB of memory, this machine has ${hw.ram} GB")
+  at = hw.vram >= p.gb ? "the models fit in the GPU (${hw.gpu})" : "no GPU with memory of its own was found: an answer takes from seconds to a few minutes"
+  if hw.ram < p.ram
+    return Fit("tight", "it runs with little else open (${p.ram.round()} GB of memory recommended, this machine has ${hw.ram} GB); ${at}")
+  Fit("fits", at)
+
+// The profile suggested for a machine: the heaviest local one that fits, else the lightest that still runs, else the
+// remote agents alone. The user decides.
+recommend(hw: Hardware, profiles: Profile[] = PROFILES) string
+  local = profiles.filter((p) => p.coder != null)
+  best = local.reversed().find((p) => fit(p, hw).fit == "fits") ?? local.find((p) => fit(p, hw).fit == "tight")
+  best?.id ?? "remote"
+
+// ---------- the ports ----------
+
+// The ports the services listen on (127.0.0.1) when nothing else holds them.
+PORTS: <string, int> = { "graph": 7878, "developer": 7879 }
+
+// Whether a port of 127.0.0.1 can be listened on now: not held by another program and, on Windows, not in a range
+// the system keeps for itself (Hyper-V, WSL, Docker: `netsh interface ipv4 show excludedportrange protocol=tcp`). A
+// port of 127.0.0.1 above 1024 needs no permission of the system and no firewall rule on Linux, macOS or Windows.
+canListen(port: int) boolean
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  try
+    if sys.platform == "win32"
+      s.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+    // the address as the socket takes it (a pair), from the system's own resolution of it
+    s.bind(socket.getaddrinfo("127.0.0.1", port, socket.AF_INET, socket.SOCK_STREAM)[0][4])
+    s.listen(1)
+    true
+  catch e
+    if not isinstance(e, OSError)
+      throw e
+    false
+  finally
+    s.close()
+
+// The port a service takes: the one it has when it is ours and answers there, else the first one from it upward that
+// can be listened on and is not `taken`.
+choosePort(preferred: int, ours: (port: int) => boolean, taken: int[] = []) int
+  if ours(preferred)
+    return preferred
+  for port in preferred..preferred + 100
+    if not (port in taken) and canListen(port)
+      return port
+  throw RuntimeError("no free port of 127.0.0.1 between ${preferred} and ${preferred + 99}")
+
+// The ports of both services on this machine, chosen now and written to the machine's file with the rest of the
+// choice: every service and client reads them there (ADR-installer-0003).
+servicePorts(say: (line: string) => void) <string, string>
+  m = readMachine()
+  graph = choosePort((m["NUCLEAR_GRAPH_PORT"] ?? "").toInt() ?? PORTS["graph"]!, (p) => up("http://127.0.0.1:${p}/v1/health"))
+  developer = choosePort((m["NUCLEAR_DEVELOPER_PORT"] ?? "").toInt() ?? PORTS["developer"]!, (p) => up("http://127.0.0.1:${p}/docs"), [graph])
+  say(portLine("Smart Graph", graph, PORTS["graph"]!))
+  say(portLine("Nuclear Developer", developer, PORTS["developer"]!))
+  { "NUCLEAR_GRAPH_PORT": "${graph}", "NUCLEAR_DEVELOPER_PORT": "${developer}" }
+
+portLine(name: string, port: int, usual: int) string
+  port == usual ? "${name}: port ${port}" : "${name}: port ${port} (${usual} is held by another program)"
+
+// Where the graph, the Developer and Ollama answer: the environment, else the machine's file, else the usual ports.
+urls(env: <string, string>? = null) <string, string>
+  e = env ?? dict(os.environ)
+  m = readMachine()
+  {
+    "graph": e["NUCLEAR_GRAPH_URL"] ?? "http://127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? PORTS["graph"]}",
+    "developer": e["NUCLEAR_DEVELOPER_URL"] ?? "http://127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? PORTS["developer"]}",
+    "ollama": e["OLLAMA_URL"] ?? m["OLLAMA_URL"] ?? "http://localhost:11434"
+  }
+
+// ---------- what is installed ----------
+
+which(command: string) string?
+  shutil.which(command, path = toolEnv()["PATH"])
+
+// The requirements of a mode, each found or not on this machine (`found`, `detail` beside its data).
+requirements(local: boolean, u: <string, string>? = null) <string, any>[]
+  at = u ?? urls()
+  root = aiRoot()
+  // the AI archive brings the services' Python: uv is needed only to build them (from source)
+  runtime = hasRuntime(root)
+  found: <string, any>[] = []
+  for r in REQUIREMENTS
+    if (r["local"] == true and not local) or (runtime and r["id"] == "uv")
+      continue
+    item: <string, any> = dict(r)
+    command = which(r["command"]!)
+    if r["id"] == "nuclearlang"
+      item["found"] = command != null and root != null
+      item["detail"] = command == null ? "not installed" : root != null ? command : "installed without the AI services: update it"
+    else if r["id"] == "ollama"
+      answers = up("${at["ollama"]}/api/tags")
+      item["found"] = answers
+      item["detail"] = answers ? at["ollama"] : command != null ? "installed, not running: start it (its app, or `ollama serve`)" : "not installed"
+    else
+      item["found"] = command != null
+      item["detail"] = command ?? "not installed"
+    found.add(item)
+  found
+
+installedModels(ollama: string) string[]
+  try
+    models: <string, any>[] = httpx.get("${ollama}/api/tags", timeout = 3).json()["models"]
+    models.map((m) => "${m["name"]}")
+  catch e
+    if not isinstance(e, httpx.HTTPError) and not isinstance(e, ValueError) and not isinstance(e, KeyError)
+      throw e
+    []
+
+// A model Ollama has: `embeddinggemma` is `embeddinggemma:latest` there.
+hasModel(installed: string[], model: string) boolean
+  model in installed or "${model}:latest" in installed
+
+// What is installed and running on this machine.
+status(u: <string, string>? = null) <string, any>
+  at = u ?? urls()
+  machine = readMachine()
+  models = installedModels(at["ollama"]!)
+  wanted: string[] = []
+  if machine["NUCLEAR_AI_MODE"] == "local"
+    wanted = [machine["NUCLEAR_GRAPH_EMBED"] ?? "", machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
+  files = serviceFiles()
+  {
+    "machine": machine,
+    "file": machineFile(),
+    "graph": up("${at["graph"]}/v1/health"),
+    "developer": up("${at["developer"]}/docs"),
+    "ollama": up("${at["ollama"]}/api/tags"),
+    "atLogin": files.length > 0 and files.all((f) => Path(f.path).exists()),
+    "missingModels": wanted.filter((m) => not hasModel(models, m))
+  }
+
+// ---------- the services at login ----------
+
+// A service of the set-up: its name, its title and the command that runs it.
+Service(name: string, title: string, args: string[])
+
+SERVICES = [Service("graph", "Nuclear Smart Graph", ["nuclear-graph", "serve"]), Service("developer", "Nuclear Developer", ["nuclear-developer"])]
+
+serviceOf(name: string) Service
+  SERVICES.find((s) => s.name == name) ?? SERVICES[0]
+
+label(name: string) string = "io.github.nuclearlang.${name}"
+
+// The PATH a service runs with: where the NuclearLang tools are and the system's folders. Not the PATH of whoever ran
+// the set-up, which may put a project's own environment first.
+servicePath(bin: string? = null, at: string? = null) string
+  [bin ?? binDir(), posixpath.join(at ?? home(), ".cargo", "bin"), "/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"].join(":")
+
+// A file the set-up writes, and what it holds.
+ServiceFile(path: string, text: string)
+
+// The files that start the services when the user logs in: systemd user units (Linux), launch agents (macOS), a
+// script of the Startup folder (Windows). They start with the machine's file as their environment.
+serviceFiles(system: string = sys.platform, at: string? = null, bin: string? = null, machine: string? = null, pathEnv: string? = null) ServiceFile[]
+  h = at ?? home()
+  b = bin ?? binDir()
+  m = machine ?? machineFile()
+  pathOf = pathEnv ?? servicePath(b, h)
+  if system == "linux"
+    return SERVICES.map((s) => ServiceFile(posixpath.join(h, ".config", "systemd", "user", "nuclear-${s.name}.service"), unit(s, b, m, pathOf)))
+  if system == "darwin"
+    return SERVICES.map((s) => ServiceFile(posixpath.join(h, "Library", "LaunchAgents", "${label(s.name)}.plist"), agent(s, h, b, m, pathOf)))
+  if system == "win32"
+    starts = SERVICES.map((s) => "start \"\" /min \"${ntpath.join(b, s.args[0] + (s.name == "developer" ? ".cmd" : ".exe"))}\"${s.args.skip(1).map((a) => " ${a}").join()}")
+    file = ntpath.join(h, "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "nuclear-ai.cmd")
+    return [ServiceFile(file, "@echo off\r\nrem The AI services of NuclearLang, started at login (written by their set-up).\r\nfor /f \"usebackq eol=# tokens=1,* delims==\" %%a in (\"${m}\") do set \"%%a=%%b\"\r\n${starts.join("\r\n")}\r\n")]
+  []
+
+unit(s: Service, bin: string, machine: string, pathEnv: string) string
+  after = s.name == "developer" ? "After=nuclear-graph.service\n" : ""
+  command = [posixpath.join(bin, s.args[0]), ...s.args.skip(1)].join(" ")
+  "[Unit]\nDescription=${s.title} (NuclearLang)\n${after}\n[Service]\nEnvironment=PATH=${pathEnv}\nEnvironmentFile=-${machine}\nExecStart=${command}\nRestart=on-failure\nRestartSec=5\n\n[Install]\nWantedBy=default.target\n"
+
+agent(s: Service, at: string, bin: string, machine: string, pathEnv: string) string
+  command = "exec '${posixpath.join(bin, s.args[0])}'${s.args.skip(1).map((a) => " ${a}").join()}"
+  log = posixpath.join(at, "Library", "Logs", "nuclear-${s.name}.log")
+  """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0"><dict>
+    <key>Label</key><string>${label(s.name)}</string>
+    <key>ProgramArguments</key><array><string>/bin/sh</string><string>-c</string><string>set -a; [ -f '${machine}' ] &amp;&amp; . '${machine}'; ${command}</string></array>
+    <key>EnvironmentVariables</key><dict><key>PATH</key><string>${pathEnv}</string></dict>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>StandardErrorPath</key><string>${log}</string>
+  </dict></plist>
+
+  """
+
+// The user's own domain of launchd.
+gui() string
+  sys.platform == "win32" ? "" : "gui/${os.getuid()}"
+
+// Whether this system starts user services by itself (Linux without a systemd user session does not).
+serviceManager() boolean
+  if sys.platform == "linux"
+    return capture(["systemctl", "--user", "show-environment"]).code == 0
+  sys.platform == "darwin" or sys.platform == "win32"
+
+// Starts a service again through the system's manager; false when the system keeps none (the caller starts it).
+restartService(name: string) boolean
+  file = serviceFiles().find((f) => name in f.path or sys.platform == "win32")
+  if file == null or not Path(file.path).exists() or not serviceManager()
+    return false
+  if sys.platform == "linux"
+    return capture(["systemctl", "--user", "restart", "nuclear-${name}"]).code == 0
+  if sys.platform == "darwin"
+    return capture(["launchctl", "kickstart", "-k", "${gui()}/${label(name)}"]).code == 0
+  // Windows: the Startup script starts them at login; now, the caller does
+  false
+
+enableServices(say: (line: string) => void) boolean
+  files = serviceFiles()
+  if files.isEmpty or not serviceManager()
+    return false
+  for f in files
+    Path(f.path).parent.mkdir(parents = true, existOk = true)
+    Path(f.path).writeText(f.text, encoding = "utf-8", newline = "")
+    say("wrote ${f.path}")
+  if sys.platform == "linux"
+    runCommand(["systemctl", "--user", "daemon-reload"], say)
+    runCommand(["systemctl", "--user", "enable", ...SERVICES.map((s) => "nuclear-${s.name}")], say)
+  else if sys.platform == "darwin"
+    for i in 0..SERVICES.length
+      capture(["launchctl", "bootout", "${gui()}/${label(SERVICES[i].name)}"])
+      runCommand(["launchctl", "bootstrap", gui(), files[i].path], say)
+  true
+
+removeServices(say: (line: string) => void) void
+  if sys.platform == "linux"
+    capture(["systemctl", "--user", "disable", "--now", ...SERVICES.map((s) => "nuclear-${s.name}")])
+  if sys.platform == "darwin"
+    for s in SERVICES
+      capture(["launchctl", "bootout", "${gui()}/${label(s.name)}"])
+  for f in serviceFiles()
+    if Path(f.path).exists()
+      say("removed ${f.path}")
+    Path(f.path).unlink(missingOk = true)
+  if sys.platform == "linux"
+    capture(["systemctl", "--user", "daemon-reload"])
+
+// Starts a command as a process of its own that outlives the set-up.
+detach(args: string[], env: <string, string>) void
+  if sys.platform == "win32"
+    subprocess.Popen(args, env = env, stdin = subprocess.DEVNULL, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL, shell = true, creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+  else
+    subprocess.Popen(args, env = env, stdin = subprocess.DEVNULL, stdout = subprocess.DEVNULL, stderr = subprocess.DEVNULL, startNewSession = true)
+
+// Starts a service now: through the system's manager, else as a process of its own that outlives the set-up.
+startService(name: string, url: string, say: (line: string) => void) void
+  s = serviceOf(name)
+  ours = true
+  if sys.platform == "linux"
+    ours = capture(["systemctl", "--user", "is-active", "nuclear-${name}"]).code == 0
+  else if sys.platform == "darwin"
+    ours = capture(["launchctl", "print", "${gui()}/${label(name)}"]).code == 0
+  if not ours and up(url)
+    stop = name == "graph" ? "pkill -f 'nuclear-graph serve'" : "pkill -f 'uvicorn app.main:app'"
+    throw RuntimeError("a ${s.title} started by hand already answers at ${url}: stop it (${stop}) and run the set-up again, so the service of this system takes its place")
+  if not restartService(name)
+    env = toolEnv()
+    for k, v in readMachine()
+      env[k] = v
+    detach([joinOn(sys.platform, [binDir(), s.args[0]]), ...s.args.skip(1)], env)
+    say("started ${s.args[0]} (this system starts no services at login: start it again after a restart, here or in the editor's settings)")
+  for i in 0..120
+    if up(url)
+      break
+    time.sleep(0.5)
+  if not up(url)
+    journal = sys.platform == "linux" ? " (journalctl --user -u nuclear-${name} -n 30)" : ""
+    throw RuntimeError("the ${s.title} does not answer at ${url}${journal}")
+  say("${s.title}: ${url}")
+
+// ---------- from the working tree (no AI archive) ----------
+
+// A folder whose `python3` is a Python the services run on (3.12 or newer): the system's or one uv brings.
+pythonDir(build: string, say: (line: string) => void) string
+  found = capture(["uv", "python", "find", ">=3.12"])
+  if found.code != 0
+    runCommand(["uv", "python", "install", "3.12"], say)
+    found = capture(["uv", "python", "find", ">=3.12"])
+  python = found.out.trim().split("\n").last
+  if found.code != 0 or not Path(python).exists()
+    throw RuntimeError("no Python 3.12 or newer, and uv could not install one: ${found.out.trim()}")
+  if sys.platform == "win32"
+    return "${Path(python).parent}"
+  // the folder of a system Python may hold an older `python3`: a folder of our own with the one found
+  dir = Path(build, ".python")
+  dir.mkdir(parents = true, existOk = true)
+  for n in ["python3", "python"]
+    dir.joinpath(n).unlink(missingOk = true)
+    dir.joinpath(n).symlinkTo(python)
+  "${dir}"
+
+// `nuclear-developer` of a working tree: the built Developer with its environment, on the machine's models unless the
+// caller gives others (the editor does).
+launcher(root: string, machine: string? = null, system: string = sys.platform) ServiceFile
+  m = machine ?? machineFile()
+  if system == "win32"
+    build = ntpath.join(root, "nuclear-agents", "nuclear_developer", "build")
+    return ServiceFile("nuclear-developer.cmd", "@echo off\r\nrem The Nuclear Developer (ADR-platform-0003), built in ${build} by the AI set-up.\r\nfor /f \"usebackq eol=# tokens=1,* delims==\" %%a in (\"${m}\") do if not defined %%a set \"%%a=%%b\"\r\nif not defined NUCLEAR_DEVELOPER_PORT set NUCLEAR_DEVELOPER_PORT=7879\r\ncd /d \"${build}\" && .venv\\Scripts\\uvicorn app.main:app --host 127.0.0.1 --port %NUCLEAR_DEVELOPER_PORT% %*\r\n")
+  build = posixpath.join(root, DEVELOPER, "build")
+  ServiceFile("nuclear-developer", """
+    #!/bin/sh
+    # The Nuclear Developer (ADR-platform-0003), built in ${build} by the AI set-up.
+    # The machine's models (${m}), unless the caller already gave them.
+    if [ -f "${m}" ]; then
+      while IFS='=' read -r key value; do
+        case $key in [A-Z]*) eval "[ -n \\"\\\${$key+x}\\" ]" || export "$key=$value" ;; esac
+      done < "${m}"
+    fi
+    cd "${build}" && exec .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "\${NUCLEAR_DEVELOPER_PORT:-7879}" "$@"
+
+    """)
+
+// ---------- the models ----------
+
+// Downloads a model through Ollama, saying how far it got.
+pull(ollama: string, model: string, say: (line: string) => void) void
+  client = httpx.Client(timeout = null)
+  try
+    r = client.send(client.buildRequest("POST", "${ollama}/api/pull", json = { "model": model, "stream": true }), stream = true)
+    if r.statusCode >= 400
+      throw RuntimeError("Ollama refused to pull ${model} (${r.statusCode})")
+    shown = ""
+    for line in r.iterLines()
+      if line.trim().isEmpty
+        continue
+      e: <string, any> = json.loads(line)
+      if e["error"] != null
+        throw RuntimeError("${model}: ${e["error"]}")
+      total: double = e["total"] ?? 0
+      done: double = e["completed"] ?? 0
+      text = total > 0 ? "${model}: ${(100 * done / total).floor()}% of ${(total / 1_000_000_000).toFixed(1)} GB" : "${model}: ${e["status"] ?? ""}"
+      if text != shown
+        shown = text
+        say(text)
+  finally
+    client.close()
+
+// ---------- the steps ----------
+
+// A step of the set-up: what it is called and what it says it does.
+Step(id: string, title: string)
+
+modelsOf(p: Profile) string[]
+  [EMBEDDINGS, p.coder ?? "", p.assistant ?? p.coder ?? ""].filter((m) => m.length > 0).unique()
+
+// The steps that leave a profile installed and running, in order. Each can be run again: what is there is kept.
+steps(p: Profile) Step[]
+  if p.coder == null
+    return [Step("graph", "Install the MCP server"), Step("machine", "Keep the choice")]
+  [
+    Step("graph", "Install the Smart Graph and the MCP server"),
+    Step("developer", "Build and install the Nuclear Developer"),
+    Step("models", "Download the models (${modelsOf(p).join(", ")})"),
+    Step("graph-service", "Start the Smart Graph, now and at every login"),
+    Step("knowledge", "Load the knowledge base into the graph"),
+    Step("developer-service", "Start the Nuclear Developer, now and at every login")
+  ]
+
+// Runs one step of a profile, with the services' folder `root`.
+runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
+  match id
+    "graph" -> installGraph(p, root, say)
+    "machine" -> keepRemote(p, say)
+    "developer" -> installDeveloper(root, say)
+    "models" -> downloadModels(p, say)
+    "graph-service" -> startGraph(p, say)
+    "knowledge" -> loadKnowledge(root, say)
+    "developer-service" -> startService("developer", "${urls()["developer"]}/docs", say)
+    _ ->
+      throw RuntimeError("no step ${id}")
+
+installGraph(p: Profile, root: string, say: (line: string) => void) void
+  if hasRuntime(root)
+    for at in linkRuntime(root)
+      say("linked ${at}")
+    return
+  // the graph is written in Nuclear: its Python package is what `nuclear build` writes, so it is built first
+  editable = Path(root, GRAPH).isSymlink()
+  tool = (target: string) => runCommand(["uv", "tool", "install", "--force", "--no-progress", ...(editable ? ["--editable"] : []), target], say, env = { "UV_TOOL_BIN_DIR": binDir() })
+  runCommand(["nuclear", "build", "${Path(root, GRAPH)}"], say)
+  // the graph's server only with the local agents; the MCP server (a project of its own) always
+  if p.coder != null
+    tool("${Path(root, GRAPH)}[server]")
+  runCommand(["nuclear", "build", "${Path(root, MCP)}"], say)
+  tool("${Path(root, MCP)}")
+
+keepRemote(p: Profile, say: (line: string) => void) void
+  removeServices(say)
+  writeMachine(machineOf(p))
+  say("wrote ${machineFile()}")
+
+installDeveloper(root: string, say: (line: string) => void) void
+  if hasRuntime(root)
+    say("the Nuclear Developer is in the AI archive: nothing to build")
+    return
+  dev = Path(root, DEVELOPER)
+  python = pythonDir("${dev.joinpath("build")}", say)
+  runCommand(["nuclear", "install"], say, cwd = "${dev}", env = { "PATH": "${python}${os.pathsep}${toolEnv()["PATH"]}" })
+  l = launcher(root)
+  file = Path(binDir(), l.path)
+  file.parent.mkdir(parents = true, existOk = true)
+  file.writeText(l.text, encoding = "utf-8", newline = "")
+  file.chmod(493)
+  say("wrote ${file}")
+
+downloadModels(p: Profile, say: (line: string) => void) void
+  ollama = urls()["ollama"]!
+  have = installedModels(ollama)
+  for m in modelsOf(p)
+    if hasModel(have, m)
+      say("${m}: already here")
+    else
+      pull(ollama, m, say)
+
+startGraph(p: Profile, say: (line: string) => void) void
+  choice = machineOf(p)
+  for k, v in servicePorts(say)
+    choice[k] = v
+  writeMachine(choice)
+  say("wrote ${machineFile()}")
+  enableServices(say)
+  startService("graph", "${urls()["graph"]}/v1/health", say)
+
+loadKnowledge(root: string, say: (line: string) => void) void
+  tool = joinOn(sys.platform, [binDir(), "nuclear-graph"])
+  for client in ["nuclear-developer", "mcp"]
+    runCommand([tool, "connect", client, "--scopes", "read,write"], say)
+  // the ingest prints its report as JSON at the end: only its progress lines are said
+  progress = (line: string) => line[0] in "{}\"]" ? null : say(line)
+  runCommand([tool, "ingest", "${Path(root, GRAPH, "data")}"], progress)
+  say("the graph holds the knowledge base")
+
+// Takes the services away: what starts them, the graph's tool, the links to the AI archive, the Developer's launcher
+// and the machine's file. The models and Ollama stay (they are the user's), and so does the graph's data.
+remove(say: (line: string) => void) void
+  removeServices(say)
+  if which("uv") != null
+    for tool in ["nuclear-graph", "nuclear-mcp"]
+      capture(["uv", "tool", "uninstall", tool])
+  // the links to the AI archive's launchers (the archive itself goes with the installation)
+  inside = joinOn(sys.platform, ["ai", "bin"])
+  for c in RUNTIME_COMMANDS
+    at = Path(binDir(), sys.platform == "win32" ? "${c}.cmd" : c)
+    ours = false
+    if sys.platform == "win32"
+      ours = at.exists() and inside in at.readText()
+    else
+      ours = at.isSymlink() and inside in "${at.readlink()}"
+    if ours
+      at.unlink()
+      say("removed ${at}")
+  for file in [Path(binDir(), launcher("").path), Path(machineFile())]
+    if file.exists()
+      say("removed ${file}")
+    file.unlink(missingOk = true)

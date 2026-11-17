@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Installs NuclearLang from this repository: the `nuclear` command with its dialects, type
 # definitions, specs and the Synapsis runtime packages, the language server (nuclear-lsp, used by Zed), `nuclear-builder` (the
-# Builder without the editor, ADR-platform-0003), plus the VS Code extension (which bundles its own copy of the LSP) and the Zed
+# Builder without the editor, ADR-platform-0003, with the set-up of the AI services: needs uv from source), plus the VS Code extension (which bundles its own copy of the LSP) and the Zed
 # extension. With --ai also the AI services, step by step (ADR-installer-0002): the Smart Graph, the Nuclear Developer, the models.
 #
 #   installer/install.sh                  install into ~/.local (PREFIX=/usr/local for another prefix)
@@ -9,6 +9,9 @@
 #   installer/install.sh --no-zed         without the Zed extension
 #   installer/install.sh --no-agent       without the `nuclear` skill for AI agents
 #   installer/install.sh --ai             then `nuclear-builder setup`: a profile for this machine, the services at every login
+#   installer/install.sh --ai-runtime     the AI services as a release brings them (ADR-installer-0003): a Python of their own
+#                                         built from this tree (installer/release/ai-runtime.sh, needs uv), then the set-up;
+#                                         without it they are this tree's folders, the graph installed editable
 #   installer/install.sh --uninstall      remove what an install created
 #
 # Layout: $PREFIX/share/nuclearlang/{bin,dialects,platforms,docs,packages/{synapsis,synapsis_genkit,synapsis-py,synapsis-nest,synapsis-web},tools/defs} (release/stage.sh) and links in $PREFIX/bin.
@@ -24,6 +27,7 @@ VSCODE=1
 ZED=1
 AGENT=1
 AI=0
+RUNTIME=0
 # where agents look for skills: Claude Code (also read by Cursor and OpenCode), the open .agents folder (Codex,
 # Cursor, OpenCode) and Codex's own
 SKILL_DIRS="$HOME/.claude/skills $HOME/.agents/skills $HOME/.codex/skills"
@@ -34,10 +38,12 @@ for arg in "$@"; do
     --no-zed) ZED=0 ;;
     --no-agent) AGENT=0 ;;
     --ai) AI=1 ;;
+    --ai-runtime) AI=1; RUNTIME=1 ;;
     --uninstall)
       # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
       [ -x "$BIN_DIR/nuclear-builder" ] && NUCLEAR_INSTALL="$HOME_DIR" NUCLEAR_BIN="$BIN_DIR" "$BIN_DIR/nuclear-builder" setup --remove >/dev/null 2>&1 || true
-      rm -f "$BIN_DIR/nuclear" "$BIN_DIR/dragonfly" "$BIN_DIR/nuclear-lsp" "$BIN_DIR/nuclear-builder" "$BIN_DIR/nuclear-loop" "$BIN_DIR/nuclear-developer"
+      command -v uv >/dev/null 2>&1 && uv tool uninstall nuclear-builder >/dev/null 2>&1 || true
+      rm -f "$BIN_DIR/nuclear" "$BIN_DIR/nuclear-lsp" "$BIN_DIR/nuclear-builder" "$BIN_DIR/nuclear-developer"
       command -v uv >/dev/null 2>&1 && { uv tool uninstall nuclear-graph; uv tool uninstall nuclear-mcp; } >/dev/null 2>&1 || true
       rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/zed/extensions/installed/nuclearlang"
       rm -rf "$HOME_DIR"
@@ -46,7 +52,7 @@ for arg in "$@"; do
       command -v code >/dev/null 2>&1 && code --uninstall-extension nuclearlang.nuclearlang >/dev/null 2>&1 || true
       echo "NuclearLang uninstalled from $PREFIX"
       exit 0 ;;
-    -h|--help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -69,24 +75,36 @@ EXE=""
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) EXE=".exe" ;; esac
 "$REPO/installer/release/stage.sh" "$HOME_DIR" "$REPO/target/release/nuclear$EXE" "$REPO/target/release/nuclear-lsp$EXE"
 ln -sf "$HOME_DIR/bin/nuclear" "$BIN_DIR/nuclear"
-# the framework's commands are `nuclear`'s since spec 008: the old `dragonfly` link goes
-rm -f "$BIN_DIR/dragonfly" "$BIN_DIR/nuclear-loop"
 ln -sf "$HOME_DIR/bin/nuclear-lsp" "$BIN_DIR/nuclear-lsp"
 if [ -f "$HOME_DIR/bin/nuclear-builder" ]; then ln -sf "$HOME_DIR/bin/nuclear-builder" "$BIN_DIR/nuclear-builder"; fi
 
 # from source the AI services are the working tree's own folders (stage.sh copied them): their set-up installs the
-# graph editable and builds the Developer in place
-if [ -d "$HOME_DIR/ai" ]; then
-  for d in nuclear-graph-storage nuclear-agents tools; do
-    rm -rf "$HOME_DIR/ai/$d" && ln -s "$REPO/$d" "$HOME_DIR/ai/$d"
-  done
+# graph editable and builds the Developer in place; the set-up itself (Nuclear, the python dialect) is this tree's
+# extensions/tools/nuclear-builder, installed editable with uv in place of the node link
+BUILDER="$BIN_DIR/nuclear-builder"
+if [ "$RUNTIME" = 1 ]; then
+  echo "building the AI runtime (installer/release/ai-runtime.sh)..."
+  NUCLEAR="$HOME_DIR/bin/nuclear$EXE" AI_STAGE="$HOME_DIR/ai" "$REPO/installer/release/ai-runtime.sh" >/dev/null
+  BUILDER="$HOME_DIR/ai/bin/nuclear-builder"
+else
+  if [ -d "$HOME_DIR/ai" ]; then
+    for d in nuclear-graph-storage nuclear-agents tools; do
+      rm -rf "$HOME_DIR/ai/$d" && ln -s "$REPO/$d" "$HOME_DIR/ai/$d"
+    done
+  fi
+  if command -v uv >/dev/null 2>&1; then
+    "$HOME_DIR/bin/nuclear$EXE" build "$REPO/extensions/tools/nuclear-builder" >/dev/null
+    UV_TOOL_BIN_DIR="$BIN_DIR" uv tool install --quiet --force --editable "$REPO/extensions/tools/nuclear-builder"
+  else
+    echo "note: without uv the set-up of the AI services (nuclear-builder setup) is not installed: https://docs.astral.sh/uv/"
+  fi
 fi
 
 if [ "$AI" = 1 ]; then
-  if [ ! -x "$BIN_DIR/nuclear-builder" ] || ! command -v node >/dev/null 2>&1; then
-    echo "note: --ai needs nuclear-builder (Node.js, and npm install in extensions/vscode); the AI services skipped"
+  if ! "$BUILDER" --help >/dev/null 2>&1; then
+    echo "note: --ai needs the set-up (uv, or --ai-runtime); the AI services skipped"
   else
-    NUCLEAR_INSTALL="$HOME_DIR" NUCLEAR_BIN="$BIN_DIR" "$BIN_DIR/nuclear-builder" setup \
+    NUCLEAR_INSTALL="$HOME_DIR" NUCLEAR_BIN="$BIN_DIR" "$BUILDER" setup \
       || echo "note: the AI services are not set up; when you want them: nuclear-builder setup"
   fi
 fi
@@ -108,6 +126,10 @@ if [ "$VSCODE" = 1 ]; then
     echo "note: no .vsix in extensions/vscode (npm run package there); VS Code extension skipped"
   else
     code --install-extension "$VSIX" --force >/dev/null && echo "VS Code extension: $(basename "$VSIX")"
+    # the newest .vsix may be older than the extension's version: say so, or an old extension stays installed unseen
+    WANT=$(sed -n 's/^  "version": "\(.*\)",$/\1/p' "$REPO/extensions/vscode/package.json")
+    [ "$(basename "$VSIX")" = "nuclearlang-$WANT.vsix" ] \
+      || echo "note: the extension is $WANT but its newest package is $(basename "$VSIX"): npm run package in extensions/vscode, then install again"
   fi
 fi
 

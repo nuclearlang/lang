@@ -113,11 +113,11 @@ Assets
     out: string[] = []
     seen: <string, string> = {}
     valid = Regex(r"^[a-z-]+:[A-Za-z0-9_.@/#+-]+$")
-    known: <string, Shelf> = shelfTable()
+    known: <string, Shelf> = SHELVES
     for shelf, rows in byShelf
       spec = known[shelf]
       if spec == null
-        out.add("${shelf}: not a shelf (shelves: ${shelfTable().keys.join(", ")})")
+        out.add("${shelf}: not a shelf (shelves: ${SHELVES.keys.join(", ")})")
         continue
       for raw in rows
         row: <string, any> = Assets.normal(raw)
@@ -150,9 +150,9 @@ Assets
         if keys.any((k) => k != k.lower())
           out.add("${where}: keys are written in lower case")
         platforms: string[] = row["platforms"]!
-        unknown = platforms.filter((p) => not (p in platformNames()))
+        unknown = platforms.filter((p) => not (p in PLATFORMS))
         if unknown.length > 0
-          out.add("${where}: unknown platform ${unknown} (${platformNames().join(", ")})")
+          out.add("${where}: unknown platform ${unknown} (${PLATFORMS.join(", ")})")
         meta: <string, any> = row["meta"]!
         alien = meta.keys.filter((k) => not (k in spec!.meta))
         if alien.length > 0

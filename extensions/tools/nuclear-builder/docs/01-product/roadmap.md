@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [../02-architecture/engine.md, ../../../../vscode/docs/01-product/roadmap.md, ../../../../jetbrains/docs/01-product/roadmap.md]
 ---
 # Roadmap of Nuclear Builder
@@ -11,10 +11,20 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Half done
 
+- **Nuclear Builder in Nuclear** ([spec 009](../../../../../docs/04-specs/009-self-contained-ai-services/tasks.md),
+  phase 3). Done: the set-up and the `nuclear-builder` command (`setup.nuc`, `cli.nuc`, `python` dialect), in the
+  AI archive; the VS Code pages run it as a process. Left: the engine (`src/engine.ts`, `src/safety.ts`, the
+  pipeline commands of `src/cli.ts`, about 2,400 lines) with its tests; until then `cli.nuc` runs it with node, so
+  the pipeline still needs Node.js outside the editor.
+
 - Nuclear Builder's form in the editor has no field for the strategy (the spec file's `- Strategy:` line and
   `nuclear-builder run` read it).
 
 ## Untested
+
+- **The set-up in Nuclear on macOS and Windows** (launch agents, the Startup script, `Get-CimInstance` for the memory
+  and the processor, the `.cmd` launchers): written, never ran. On Linux it ran from a working tree and on the clean
+  machine.
 
 - **The message that sends a question to Nuclear Atlas** (renamed from the chat) and its tests pass (`npm test`);
   never seen in a running VS Code.

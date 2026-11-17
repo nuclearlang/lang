@@ -504,17 +504,23 @@
    "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#commands",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Commands",
-   "summary": "Run in `extensions/vscode/`: npm run builder # out/nuclear-builder.js npm test # ../tools/nuclear-builder/test/engine.test.ts, with the extension's setup.test.ts (node:test) npm run compile # the types, the extension (with src/panel.ts) and nuclear-builder The tool window: in…",
+   "summary": "Run here: nuclear check . --json && nuclear build . # the set-up and the command, into build/nuclear_builder cd build && pytest nuclear_builder/tests && pyright nuclear_builder # its tests and types (httpx, pytest installed) Run in `extensions/vscode/`: npm run builder # out/nuclear-builder.js…",
    "body": [
+    "Run here:",
+    "```sh",
+    "nuclear check . --json && nuclear build .     # the set-up and the command, into build/nuclear_builder",
+    "cd build && pytest nuclear_builder/tests && pyright nuclear_builder   # its tests and types (httpx, pytest installed)",
+    "```",
     "Run in `extensions/vscode/`:",
     "```sh",
-    "npm run builder     # out/nuclear-builder.js",
-    "npm test            # ../tools/nuclear-builder/test/engine.test.ts, with the extension's setup.test.ts (node:test)",
-    "npm run compile     # the types, the extension (with src/panel.ts) and nuclear-builder",
+    "npm run builder     # out/nuclear-builder.js (the engine)",
+    "npm test            # ../tools/nuclear-builder/test/engine.test.ts (node:test)",
+    "npm run compile     # the types, the extension (with src/panel.ts) and the engine",
     "```",
     "The tool window: in `extensions/jetbrains/`, `IDE_HOME=/opt/android-studio ./build.sh`.",
-    "`installer/install.sh` rebuilds `nuclear-builder` and puts it in the installation's `bin/` with a `node` wrapper",
-    "(`installer/release/stage.sh`)."
+    "`installer/install.sh` rebuilds the engine into the installation's `bin/nuclear-builder.js` with a `node` wrapper",
+    "(`installer/release/stage.sh`), builds this project and installs it editable with uv as `~/.local/bin/nuclear-builder`;",
+    "a release brings it in the AI archive (`ai/bin/nuclear-builder`)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -579,8 +585,11 @@
    "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#rules",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Rules",
-   "summary": "the same engine.",
+   "summary": "alive (decided by the user: the least memory and the fewest problems of compatibility).",
    "body": [
+    "- The editors run the set-up as a process (`nuclear-builder setup ...`), one call per action: no process of it stays",
+    "  alive (decided by the user: the least memory and the fewest problems of compatibility). Its JSON is the contract",
+    "  of the pages.",
     "- `engine.ts` and `safety.ts` never import `vscode`: the page, `nuclear-builder`, Nuclear Atlas and the tests drive",
     "  the same engine.",
     "- The page only draws. A run belongs to the extension (`engines`, module-level): closing the page or switching tools",
@@ -606,7 +615,8 @@
    "title": "Nuclear Builder (`nuclear-builder`) — Stack",
    "summary": "Stack",
    "body": [
-    "- TypeScript, bundled with esbuild for node 18; the page is plain HTML and script",
+    "- Nuclear, `python` dialect (Python 3.12+, httpx) for the set-up and the command",
+    "- TypeScript, bundled with esbuild for node 18, for the engine; the page is plain HTML and script",
     "- The agents: the Nuclear Developer over HTTP; Claude through `claude -p` with the Nuclear MCP server",
     "- Java (Swing) for the JetBrains tool window"
    ],
@@ -620,22 +630,45 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.7df941",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "All of it is in this folder.",
+   "summary": "Where the code is",
    "body": [
-    "All of it is in this folder. It is built through the editors: the VS Code extension compiles and bundles `src/` and",
-    "`test/` (`extensions/vscode/tsconfig.json`), the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin.",
-    "",
     "| File | What it is |",
     "|---|---|",
+    "| `setup.nuc` | the set-up: this machine, the profiles and how each sits on it, the ports, the services at login, the steps (the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |",
+    "| `cli.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), the rest given to the engine of `bin/nuclear-builder.js` |",
+    "| `setup.json` | the data of the set-up: the requirements, the embeddings model, the profiles |",
+    "| `tests/test_setup.nuc` | the set-up's tests (pytest), with `tests/support.nuc` |",
     "| `src/engine.ts` | the engine; no `vscode` import |",
     "| `src/safety.ts` | what keeps a run safe when something breaks; no `vscode` import |",
     "| `src/panel.ts` | the page of VS Code: the runs, the spec form, a run as a graph |",
-    "| `src/cli.ts` | the `nuclear-builder` command (bundled to `extensions/vscode/out/nuclear-builder.js`) |",
+    "| `src/cli.ts` | the pipeline's commands (bundled to `extensions/vscode/out/nuclear-builder.js`, which `cli.nuc` runs) |",
     "| `test/engine.test.ts` | the engine's tests (also Nuclear Atlas's templates and history, the 3B rule) |",
     "| `jetbrains/src/dev/nuclearlang/editor/NuclearBuilder.java` | the *Nuclear Builder* tool window, which runs `nuclear-builder` |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.d83e0c",
+   "type": "readme",
+   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
+   "summary": "All of it is in this folder, in two parts while spec 009's phase 3 moves the engine to Nuclear: `nuclear build .` writes `build/nuclear_builder`, packaged by `pyproject.toml` and installed in the AI archive (`installer/release/ai-runtime.sh`).",
+   "body": [
+    "All of it is in this folder, in two parts while spec 009's phase 3 moves the engine to Nuclear:",
+    "- **Nuclear** (`python` dialect, `nuclear.toml`): the set-up of the AI services and the `nuclear-builder` command.",
+    "  `nuclear build .` writes `build/nuclear_builder`, packaged by `pyproject.toml` and installed in the AI archive",
+    "  (`installer/release/ai-runtime.sh`). Its pipeline commands still run the TypeScript engine with node.",
+    "- **TypeScript**: the pipeline's engine and the VS Code page, compiled and bundled by the VS Code extension (`src/`,",
+    "  `test/`, `extensions/vscode/tsconfig.json`); the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -1233,7 +1266,7 @@
     "| `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` (`ciCommands`, the same grouping `ciFile` exports) |",
     "| `nuclear-builder export github\\|gitlab\\|bitbucket` | writes the CI file |",
     "| `nuclear-builder runs` | the runs of this project |",
-    "| `nuclear-builder setup [--profile <id>] [--yes] \\| --status \\| --remove` | the AI services of this machine ([the set-up](../../../../vscode/docs/02-architecture/ai-services.md)) |"
+    "| `nuclear-builder setup [--profile <id>] [--yes] \\| --status [--json] \\| --remove \\| --plan --json \\| --events --profile <id> \\| --restart <service> \\| --set KEY=value` | the AI services of this machine (`setup.nuc`, `cli.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -1761,7 +1794,7 @@
     "4. **Who leads**: *Claude leads, the local developer writes*, or *Local agents only*. *Preview the plan* shows the",
     "   pieces the local planner would make, so you can edit them before starting.",
     "",
-    "Press **Start the loop**. The spec is written to `specs/<id>/spec.md`."
+    "Press **Start the run**. The spec is written to `specs/<id>/spec.md`."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md"
@@ -4200,7 +4233,7 @@
     "| The knowledge base | `nuclear-graph knowledge build`, `knowledge check`, `knowledge review [id...]`, `ingest`, `knowledge ask [word...]`, `knowledge examples` |",
     "| Ask | `nuclear-graph search \"<query>\"`, `card <id>`, `answer \"<question>\"`, `strategy \"<request>\"`, `stats` |",
     "| Access | `nuclear-graph connect <client> --scopes read,write`, `requests`, `allow <request>`, `deny <request>`, `revoke <client>` |",
-    "| The MCP server (runs `nuclear-mcp`), the agents' search engine | `nuclear-graph mcp`, `nuclear-graph web-key brave` |"
+    "| The agents' search engine | `nuclear-graph web-key brave` |"
    ],
    "sources": [
     "nuclear-graph-storage/AGENTS.md"
@@ -4371,8 +4404,7 @@
     "- **Server:** FastAPI + uvicorn on `127.0.0.1:7878`, a token on every route. The client (`nuclear_graph.client`)",
     "  needs only `httpx`.",
     "- **The MCP server** is not here: it is the project [`tools/mcp`](../tools/mcp/AGENTS.md) (command `nuclear-mcp`),",
-    "  which imports this package. `nuclear-graph mcp` runs `nuclear-mcp`; `knowledge build` reads its tools with",
-    "  `nuclear-mcp tools`."
+    "  which imports this package; `knowledge build` reads its tools with `nuclear-mcp tools`."
    ],
    "sources": [
     "nuclear-graph-storage/AGENTS.md"
@@ -4416,6 +4448,35 @@
     "  page (`docs/ai/mcp.md` of `nuclear`), so a new tool is documented in the same change.",
     "- Strategies (ADR-developer-0001): the row type `strategy` on the playbooks shelf (`meta`: `family`, `scope`, `triggers`; `data`: `signals`,",
     "  `target`, `mode`, `stages`, `pieces`, `generators`, `needs`, `lead`); the selection `retrieve.strategy` (exact signs, then"
+   ],
+   "sources": [
+    "nuclear-graph-storage/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.4b6b37",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "work\" (27).",
+   "body": [
+    "work\" (27). `knowledge ask` holds the open questions marked `exact = false` in `questions.toml` to no query.",
+    "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every",
+    "  item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
+    "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
+    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server.",
+    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
+    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
+    "  was the same as the one asked.",
+    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no",
+    "  owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
+    "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
+    "  keyring is waited for, then refused, and never made again.",
+    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -4480,23 +4541,24 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.91b146",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.76a1e3",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
+   "summary": "now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
    "body": [
+    "- The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them",
+    "  now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of",
+    "  the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
+    "- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was",
+    "  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in",
+    "  `paths.nuc`; `Paths.machine()` gives the same).",
     "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
     "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
     "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
     "  project added (ADR-lang-0008).",
     "- The planner runs a query of the exact facts only when its exact question is closer to what was asked than the",
     "  closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`,",
-    "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp",
-    "  work\" (27). `knowledge ask` holds the open questions marked `exact = false` in `questions.toml` to no query.",
-    "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every",
-    "  item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
-    "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
-    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server."
+    "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -4508,20 +4570,12 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.b15235",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.9bbf93",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest).",
+   "summary": "agents wrote at run time.",
    "body": [
-    "instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest). Search by",
-    "  meaning and by exact name over several shelves; `GET /v1/cards/{id}`; `nuclear-graph card`, `search -p --agents`;",
-    "  MCP `graph_search` by shelf and `graph_card`.",
-    "- The knowledge base is asset files: `knowledge build` generates the rows from the working tree (`extract.py`:",
-    "  diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
-    "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
-    "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
-    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what",
-    "  agents wrote at run time. A client writes only `memory` and `examples`.",
+    "agents wrote at run time. A client writes only `memory` and `examples`.",
     "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),",
     "  `GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
     "  `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`,",
@@ -4537,24 +4591,24 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.f827c5",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.c55271",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that was the same as the one asked.",
+   "summary": "question the 15 rows of `query:mcp.commands`.",
    "body": [
-    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
-    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
-    "  was the same as the one asked.",
-    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no",
-    "  owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
-    "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
-    "  keyring is waited for, then refused, and never made again.",
-    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that",
-    "  question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
+    "question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
     "  is a question of `concept:mcp`, no longer of `query:mcp.tools`.",
     "- The package is typed (`py.typed`): a project that uses it is checked against it.",
     "- The graph is a library (ADR-graph-0001): nine shelves (`concepts`, `language`, `platforms`, `tools`, `errors`,",
-    "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,"
+    "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,",
+    "  instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest). Search by",
+    "  meaning and by exact name over several shelves; `GET /v1/cards/{id}`; `nuclear-graph card`, `search -p --agents`;",
+    "  MCP `graph_search` by shelf and `graph_card`.",
+    "- The knowledge base is asset files: `knowledge build` generates the rows from the working tree (`extract.py`:",
+    "  diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
+    "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
+    "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
+    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -5131,9 +5185,9 @@
    "id": "doc:nuclear-graph-storage/docs/02-architecture/integrations.md#the-mcp-server",
    "type": "context",
    "title": "Integrations and contracts — The MCP server",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio (`nuclear-graph mcp` runs it).",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio.",
    "body": [
-    "`nuclear-mcp` speaks the Model Context Protocol over stdio (`nuclear-graph mcp` runs it). It is not in this folder:",
+    "`nuclear-mcp` speaks the Model Context Protocol over stdio. It is not in this folder:",
     "it is a Nuclear project of its own that imports this package (its `defs/python/nuclear_graph/`); its tools, its instructions and how a client adds it are documented by the project",
     "[`tools/mcp`](../../../tools/mcp/AGENTS.md). What its `graph_*` tools call here:",
     "",
@@ -5483,14 +5537,34 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/docs/02-architecture/overview.md#parts.7e3cf3",
+   "id": "doc:nuclear-graph-storage/docs/02-architecture/overview.md#parts.74b41d",
+   "type": "context",
+   "title": "Architecture — Parts",
+   "summary": "Parts",
+   "body": [
+    "| `cli.nuc` | the `nuclear-graph` command (the MCP server is `nuclear-mcp`, of [`tools/mcp`](../../../tools/mcp/AGENTS.md)) |",
+    "| `prompts/` | the prompt files: `prompts/<use case>.md` and `prompts/agents/<step>.md`, ingested into `prompts` |",
+    "| `tests/` | the tests, in Nuclear |",
+    "| `data/` | the knowledge base: [knowledge-base.md](knowledge-base.md), [`data/README.md`](../../data/README.md) |"
+   ],
+   "sources": [
+    "nuclear-graph-storage/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/02-architecture/overview.md#parts.e2921b",
    "type": "context",
    "title": "Architecture — Parts",
    "summary": "Parts",
    "body": [
     "| File | What it is |",
     "|---|---|",
-    "| `shelves.nuc` | the schema: the shelves, their row types, id prefixes and filters; the row format |",
+    "| `shelves.nuc` | the schema: the shelves, their row types, id prefixes and filters; the row format; its constants (`SHELVES`, `SCHEMA`, `COLLECTIONS`, `PLATFORMS`...) are read as they are by the other files |",
     "| `assets.nuc` | a row: its validation, what is embedded, what is stored |",
     "| `extract.nuc`, `extract_docs.nuc`, `extract_examples.nuc`, `extract_language.nuc`, `extract_platforms.nuc`, `extract_tools.nuc` | the generated rows, each from its structured source |",
     "| `knowledge.nuc` | the knowledge base as a folder: build, check, review |",
@@ -5505,27 +5579,7 @@
     "| `toolchain.nuc` | `Toolchain`: the compiler and the `nuclear` commands for an agent |",
     "| `workspace.nuc` | `Workspace`: a project's files for an agent (read-only, inside the project; the rename tool) |",
     "| `web.nuc` | the internet tools (search, read a page) |",
-    "| `paths.nuc` | the port, the URL, the data folder, the machine's `ai.env` |",
-    "| `cli.nuc` | the `nuclear-graph` command (`nuclear-graph mcp` runs `nuclear-mcp`, the MCP server of [`tools/mcp`](../../../tools/mcp/AGENTS.md)) |"
-   ],
-   "sources": [
-    "nuclear-graph-storage/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/docs/02-architecture/overview.md#parts.9e3031",
-   "type": "context",
-   "title": "Architecture — Parts",
-   "summary": "Parts",
-   "body": [
-    "| `prompts/` | the prompt files: `prompts/<use case>.md` and `prompts/agents/<step>.md`, ingested into `prompts` |",
-    "| `tests/` | the tests, in Nuclear |",
-    "| `data/` | the knowledge base: [knowledge-base.md](knowledge-base.md), [`data/README.md`](../../data/README.md) |"
+    "| `paths.nuc` | the port, the URL, the data folder, the machine's `ai.env` |"
    ],
    "sources": [
     "nuclear-graph-storage/docs/02-architecture/overview.md"
@@ -6314,7 +6368,7 @@
    "body": [
     "| Variable | Default |",
     "|---|---|",
-    "| `NUCLEAR_GRAPH_PORT` / `NUCLEAR_GRAPH_URL` | `7878` / `http://127.0.0.1:7878` |",
+    "| `NUCLEAR_GRAPH_PORT` / `NUCLEAR_GRAPH_URL` | the environment's, else `NUCLEAR_GRAPH_PORT` of `ai.env` (the port the set-up chose when 7878 was held), else `7878` / `http://127.0.0.1:<port>` |",
     "| `NUCLEAR_GRAPH_HOME` | `$XDG_DATA_HOME/nuclear-graph` |",
     "| `NUCLEAR_GRAPH_EMBED` | `embeddinggemma` |",
     "| `NUCLEAR_GRAPH_TOKEN` (a client) | the token `nuclear-graph connect <client>` stored |",
@@ -6589,9 +6643,9 @@
    "id": "doc:nuclear-graph-storage/docs/08-guides/README.md#ask-it-from-an-agent-over-mcp",
    "type": "readme",
    "title": "The Smart Graph — From an agent, over MCP",
-   "summary": "Claude Code, Codex and Cursor reach the graph through the MCP server `nuclear-mcp` (`nuclear-graph mcp` runs it).",
+   "summary": "Claude Code, Codex and Cursor reach the graph through the MCP server `nuclear-mcp`.",
    "body": [
-    "Claude Code, Codex and Cursor reach the graph through the MCP server `nuclear-mcp` (`nuclear-graph mcp` runs it).",
+    "Claude Code, Codex and Cursor reach the graph through the MCP server `nuclear-mcp`.",
     "Its `graph_*` tools are the same questions:",
     "",
     "| MCP tool | What it asks |",
@@ -6996,9 +7050,7 @@
     "uv tool install tools/mcp                     # from the tree's root, after the build: what the AI set-up does",
     "claude mcp add --scope user nuclear -- nuclear-mcp",
     "nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the graph",
-    "```",
-    "",
-    "`nuclear-graph mcp` still works: it runs `nuclear-mcp`."
+    "```"
    ],
    "sources": [
     "tools/mcp/AGENTS.md"
@@ -7305,7 +7357,7 @@
     "| Variable | Default |",
     "|---|---|",
     "| `NUCLEAR_AI_MODE` | the mode of the machine's `ai.env`, else `local` |",
-    "| `NUCLEAR_DEVELOPER_URL` | `http://127.0.0.1:7879` |",
+    "| `NUCLEAR_DEVELOPER_URL` | `http://127.0.0.1:<port>`: `NUCLEAR_DEVELOPER_PORT` of `ai.env` (the port the set-up chose), else `7879` |",
     "| `NUCLEAR_GRAPH_URL` / `NUCLEAR_GRAPH_PORT` | `http://127.0.0.1:7878` / `7878` |",
     "| `NUCLEAR_SEARXNG_URL` | none (Brave with a key, else Wikipedia) |"
    ],
@@ -7403,8 +7455,7 @@
    "summary": "`nuclear-mcp` serves MCP over stdio until the client closes it (`main` in `cli.nuc` → `mcpMain` → `mcpServer().run()` in `server.nuc`); `nuclear-mcp tools` prints `mcpTools()` as JSON.",
    "body": [
     "`nuclear-mcp` serves MCP over stdio until the client closes it (`main` in `cli.nuc` → `mcpMain` →",
-    "`mcpServer().run()` in `server.nuc`); `nuclear-mcp tools` prints `mcpTools()` as JSON. `nuclear-graph mcp` runs",
-    "`nuclear-mcp`. What each tool does for a user is in [the guide](../08-guides/mcp.md)."
+    "`mcpServer().run()` in `server.nuc`); `nuclear-mcp tools` prints `mcpTools()` as JSON. What each tool does for a user is in [the guide](../08-guides/mcp.md)."
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"

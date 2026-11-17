@@ -443,6 +443,48 @@ fn a_name_declared_in_two_files_is_an_error() {
         tmp_project("dup", "", &[("a.nuc", "User\n  (name: string)\n"), ("b.nuc", "User\n  (age: int)\n")]);
     let codes = build_codes(&root, &dialects);
     assert_eq!(codes, [("b.nuc".to_string(), "N0303")]);
+    // two constants of the same name in two files too: each file exports its own
+    let (root, dialects) = tmp_project("dupvalue", "", &[("a.nuc", "LIMIT = 1\n"), ("b.nuc", "\nLIMIT = 2\n")]);
+    let manifest = Manifest::read(&root).unwrap();
+    let (d, _) = loader(Some(&dialects)).load(&manifest.dialect);
+    let out = project::build(&root, &manifest, &d.unwrap());
+    let found: Vec<_> = out.files.iter().flat_map(|f| f.diagnostics.iter().map(|x| (x.code.id, x.span))).collect();
+    assert!(found.iter().any(|(c, sp)| *c == "N0303" && sp.start > 0), "{found:?}");
+}
+
+/// Another file's `machine()` is imported where it is called, not where `machine` is a local or a member.
+#[test]
+fn a_local_or_a_member_does_not_import_another_file() {
+    let a = "Box(machine: int)\n\nlocal() string\n  machine = 'x'\n  machine\n\nfield(b: Box) int = b.machine\n";
+    let files = [("a.nuc", a), ("b.nuc", "machine() int = 1\n"), ("c.nuc", "uses() int = machine()\n")];
+    let (root, dialects) = tmp_project("locals", "", &files);
+    let manifest = Manifest::read(&root).unwrap();
+    let (d, report) = loader(Some(&dialects)).load(&manifest.dialect);
+    let d = d.unwrap_or_else(|| panic!("{:#?}", report.diags));
+    let out = project::build(&root, &manifest, &d);
+    let code = |name: &str| out.files.iter().find(|f| f.source_path.ends_with(name)).map(|f| f.code.clone()).unwrap();
+    assert!(!code("a.nuc").contains("b.dart"), "{}", code("a.nuc"));
+    assert!(code("c.nuc").contains("b.dart"), "{}", code("c.nuc"));
+}
+
+/// A constant at the top of a file is seen by the other files, as a function is: they import it, and it stays
+/// top-level (Dart writes the loose statements of a file in `main`).
+#[test]
+fn a_constant_of_a_file_is_imported_by_the_others() {
+    let files = [
+        ("setup.nuc", "PORTS = { 'graph': 7878 }\nNAMES: string[] = ['a']\n"),
+        ("cli.nuc", "port() int = PORTS['graph'] ?? 0\nshort() int = NAMES.count((n) => n.length < 3)\n"),
+    ];
+    let (root, dialects) = tmp_project("values", "", &files);
+    let manifest = Manifest::read(&root).unwrap();
+    let (d, report) = loader(Some(&dialects)).load(&manifest.dialect);
+    let d = d.unwrap_or_else(|| panic!("{:#?}", report.diags));
+    let out = project::build(&root, &manifest, &d);
+    let code = |name: &str| out.files.iter().find(|f| f.source_path.ends_with(name)).map(|f| f.code.clone()).unwrap();
+    assert!(code("cli.nuc").contains("setup.dart"), "{}", code("cli.nuc"));
+    // its type comes with it: the library's members of a list are the dialect's
+    assert!(!code("cli.nuc").contains("NAMES.count("), "{}", code("cli.nuc"));
+    assert!(code("setup.nuc").contains("final PORTS = {'graph': 7878};") && !code("setup.nuc").contains("main()"), "{}", code("setup.nuc"));
 }
 
 /// A type argument names a class too: `inject<Missing>()` is N0220 (it compiled and failed at run time); a declared

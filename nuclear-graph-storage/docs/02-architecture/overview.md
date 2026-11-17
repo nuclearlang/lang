@@ -35,7 +35,7 @@ reads them from `prompts/`), and so does `py.typed` (a project that uses the pac
 
 | File | What it is |
 |---|---|
-| `shelves.nuc` | the schema: the shelves, their row types, id prefixes and filters; the row format |
+| `shelves.nuc` | the schema: the shelves, their row types, id prefixes and filters; the row format; its constants (`SHELVES`, `SCHEMA`, `COLLECTIONS`, `PLATFORMS`...) are read as they are by the other files |
 | `assets.nuc` | a row: its validation, what is embedded, what is stored |
 | `extract.nuc`, `extract_docs.nuc`, `extract_examples.nuc`, `extract_language.nuc`, `extract_platforms.nuc`, `extract_tools.nuc` | the generated rows, each from its structured source |
 | `knowledge.nuc` | the knowledge base as a folder: build, check, review |
@@ -51,7 +51,7 @@ reads them from `prompts/`), and so does `py.typed` (a project that uses the pac
 | `workspace.nuc` | `Workspace`: a project's files for an agent (read-only, inside the project; the rename tool) |
 | `web.nuc` | the internet tools (search, read a page) |
 | `paths.nuc` | the port, the URL, the data folder, the machine's `ai.env` |
-| `cli.nuc` | the `nuclear-graph` command (`nuclear-graph mcp` runs `nuclear-mcp`, the MCP server of [`tools/mcp`](../../../tools/mcp/AGENTS.md)) |
+| `cli.nuc` | the `nuclear-graph` command (the MCP server is `nuclear-mcp`, of [`tools/mcp`](../../../tools/mcp/AGENTS.md)) |
 | `prompts/` | the prompt files: `prompts/<use case>.md` and `prompts/agents/<step>.md`, ingested into `prompts` |
 | `tests/` | the tests, in Nuclear |
 | `data/` | the knowledge base: [knowledge-base.md](knowledge-base.md), [`data/README.md`](../../data/README.md) |

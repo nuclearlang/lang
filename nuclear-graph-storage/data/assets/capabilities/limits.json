@@ -414,8 +414,8 @@
     "- Mobile: a real phone, macOS; the local database on a real device and on web.",
     "- Backend: PostgreSQL, MySQL, MariaDB, Redis, Kafka with a broker, OpenAI; migrations on anything but SQLite; `nuclear migrate` on Windows.",
     "- Web: the `characters` example in a browser; the website's animations, its screenshots' windows and callouts and its logos per theme on Safari and Firefox (only Chromium ran).",
-    "- Installers: `install.sh` on macOS, `install.ps1` on Windows, the AI set-up on macOS and Windows; only the Linux x86_64 archive ran.",
-    "- Editors: the Nuclear workspace and the AI pages inside a running VS Code; the JetBrains plugin in a running IDE (only compiled). The extensions' 0.52.0 (HTTP Connections and Nuclear Atlas renamed) was never opened in a running VS Code or IDE; the VS Code extension inside Cursor was never tried."
+    "- Installers: `install.sh` on macOS, `install.ps1` on Windows, the AI set-up on macOS and Windows; only the Linux x86_64 archive ran. No release is published yet. The AI archive (its own Python with the services, ADR-installer-0003) was built and tried only for Linux x86_64, on a clean machine without Python or uv; the AI set-up still needs Node.js until Nuclear Builder is written in Nuclear (spec 009, phase 3).",
+    "- Editors: the Nuclear workspace and the AI pages inside a running VS Code; the JetBrains plugin in a running IDE (only compiled). The extensions' 0.52.x (HTTP Connections and Nuclear Atlas renamed, the ports the set-up chooses) were never opened in a running VS Code or IDE; the VS Code extension inside Cursor was never tried."
    ],
    "keys": [
     "untested",

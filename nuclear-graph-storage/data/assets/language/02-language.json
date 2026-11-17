@@ -882,7 +882,8 @@
     "",
     "**Canonical layout** (what `nuclear fmt` writes): 2 spaces per block; one space after `,` and `:` and around",
     "binary operators and `=`; none inside `( )` and `[ ]`, one inside `{ }` (`{ \"id\": id }`); at most one blank line,",
-    "and one before a top-level declaration that follows a block; no trailing spaces. Lines are never joined, split or",
+    "and one before a top-level declaration that follows a block; no trailing spaces. The path of a `use`",
+    "(`use urllib/parse{ quote }`) keeps its spacing: its `/` is not a division. Lines are never joined, split or",
     "reordered."
    ],
    "sources": [
@@ -1228,7 +1229,7 @@
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#3-variables.308157",
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#3-variables.308f8d",
    "type": "rule",
    "title": "NuclearLang — Base language v0.1 (draft) — 3. Variables",
    "summary": "name = 'Ana' // not reassigned → a constant in the target age: number = 30 // with a type counter = 0 counter = counter + 1 // reassignment → counter is mutable counter += 1 Rule: `x = value` declares `x` if it does not exist in the block nor in the blocks that contain it.",
@@ -1245,13 +1246,28 @@
     "`x` is assigned again later in its block, the transpiler emits it as a mutable variable in the target; if it",
     "is never reassigned, it emits it as a constant. There is no `var` in Nuclear.",
     "",
+    "Rule: at the top level of a file, `PORTS: <string, int> = { 'graph': 7878 }` is a value with a type, also when its",
+    "name starts with a capital: the `=` on its line tells it from a module with a parent (`Admin: User`, §4), whose",
+    "header never has one. In a project it is seen by the other files, as a declaration is (everything is exported;",
+    "[projects.md](projects.md) §2).",
+    "",
     "Rule: the transpiler optimizes as much as possible for the target language.",
     "",
     "**Block scope.** A variable exists from its declaration to the end of the block where it was declared",
     "(function body, `if`, `else`, `for`, `while`, `match` branch, `try`, `catch`). Using it outside that block is",
     "error `N0105`. Using a name nothing defines (variable, parameter, member, declaration or import) is error",
-    "`N0106`.",
-    "",
+    "`N0106`."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#3-variables.9dc6f6",
+   "type": "rule",
+   "title": "NuclearLang — Base language v0.1 (draft) — 3. Variables",
+   "summary": "out of an `if` or a `match`, assign the whole `if`: // error N0105: text only exists inside each branch if age >= 18 text = 'adult' else text = 'minor' print(text) // correct text = if age >= 18 prefix = 'adu' prefix + 'lt' else 'minor' print(text) a `match` needs the `_` branch.",
+   "body": [
     "**`if` and `match` are values**, as in Elixir: the value of each branch is its last line. To get a value",
     "out of an `if` or a `match`, assign the whole `if`:",
     "",
@@ -1270,18 +1286,8 @@
     "else",
     "  'minor'",
     "print(text)",
-    "```"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/nuclear-base.md"
-   ]
-  },
-  {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#3-variables.f24375",
-   "type": "rule",
-   "title": "NuclearLang — Base language v0.1 (draft) — 3. Variables",
-   "summary": "a `match` needs the `_` branch.",
-   "body": [
+    "```",
+    "",
     "- As the value of an assignment or a `return`, each branch may have several lines; an `if` needs `else` and",
     "  a `match` needs the `_` branch.",
     "- Inside a larger expression (an argument, an operation), each branch is a single expression."

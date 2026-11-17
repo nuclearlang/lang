@@ -96,7 +96,7 @@ ExtractDocs
     if known.length > 0
       return known
     parts = rel.split(Regex(r"[/_.\-]"))
-    platformNames().find((p) => p in parts) ?? ""
+    PLATFORMS.find((p) => p in parts) ?? ""
 
   // Every markdown (and grammar) file of the tree and the website.
   static documents(tree: Path, website: Path?) Document[]
@@ -201,7 +201,7 @@ generateAssets(ctx: Context) <string, any[]>
     "examples/projects": ["Every .nuc file of the example projects, by kind and platform, and the standard library's programs.", ExtractExamples.projects(ctx)],
     "examples/solved": ["The validated answers of a frontier model to the evaluation's train tasks.", ExtractExamples.solved(ctx)],
   }
-  for p in platformNames()
+  for p in PLATFORMS
     out["platforms/${p}"] = ["The ${p} platform: its kinds, decorators, layout and plugins (platform.toml and the default dialect's docs.toml).", ExtractPlatforms.platform(ctx, p)]
   for name, value in ExtractDocs.docs(ctx)
     out[name] = value

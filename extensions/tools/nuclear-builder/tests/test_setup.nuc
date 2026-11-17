@@ -1,0 +1,154 @@
+use os
+use socket
+use subprocess
+use pathlib{ Path }
+
+// The set-up of the AI services (ADR-installer-0002): what a machine is suggested, what a profile writes, the files
+// that start the services at login on each system, the ports and the AI archive.
+
+machine(ram: int, disk: int = 200, gpu: string = "", vram: int = 0) Hardware
+  Hardware("linux", "x86_64", "test", 8, ram, gpu, vram, disk)
+
+testTheProfilesGoFromNothingLocalToTheHeaviestAndEachSaysHowFarItWorks() void
+  all = PROFILES
+  expect(all.map((p) => p.id) == ["remote", "lite", "medium", "hard"])
+  for p in all
+    works: string[] = p.data["works"]!
+    limits: string[] = p.data["limits"]!
+    expect(works.length > 0 and limits.length > 0)
+    expect((p.coder != null) == (p.id != "remote"))
+    if p.coder != null
+      expect(p.gb > 0 and p.minRam <= p.ram)
+  sizes = all.map((p) => p.gb)
+  expect(sizes == sizes.sorted())
+
+testTheGuideSaysOfEachProfileWhatItsDataSays() void
+  // only in the working tree: installer/docs/08-guides/ai-setup.md
+  page = Path(__file__).resolve().parents[5].joinpath("installer", "docs", "08-guides", "ai-setup.md")
+  if not page.exists()
+    return
+  text = page.readText(encoding = "utf-8")
+  for p in PROFILES.filter((x) => x.coder != null)
+    works: string[] = p.data["works"]!
+    limits: string[] = p.data["limits"]!
+    said = ["| `${p.id}` |", "`${p.coder}`", "`${p.assistant}`", "| ${p.data["gb"]} GB |", "${p.data["ram"]} GB (${p.data["minRam"]} GB at least)", "${p.data["measured"]}", ...works, ...limits]
+    for line in said
+      expect(line in text, "installer/docs/08-guides/ai-setup.md lacks, for ${p.id}: ${line}")
+
+testAMachineIsSuggestedTheHeaviestProfileThatFitsIt() void
+  lite = profileOf("lite")!
+  medium = profileOf("medium")!
+  hard = profileOf("hard")!
+  expect(recommend(machine(hard.ram.round())) == "hard")
+  expect(recommend(machine(medium.ram.round())) == "medium")
+  expect(recommend(machine(lite.ram.round())) == "lite")
+  // too little for the lightest to run well: it is still the suggestion while its models load
+  expect(recommend(machine(lite.minRam.round())) == "lite")
+  expect(fit(lite, machine(lite.minRam.round())).fit == (lite.minRam < lite.ram ? "tight" : "fits"))
+  // nothing local loads: only the remote agents
+  expect(recommend(machine(lite.minRam.round() - 1)) == "remote")
+  expect(fit(hard, machine(lite.minRam.round() - 1)).fit == "no")
+  // a full disk rules a profile out, whatever the memory
+  full = fit(hard, machine(64, disk = 3))
+  expect(full.fit == "no" and "disk" in full.note)
+  // a GPU that holds the models is said
+  expect("GPU (RTX)" in fit(lite, machine(32, gpu = "RTX", vram = 24)).note)
+
+testTheChoiceIsKeptInTheMachineFileAndReadBack(tmpPath: Path) void
+  file = "${tmpPath.joinpath("nuclearlang", "ai.env")}"
+  medium = profileOf("medium")!
+  writeMachine(machineOf(medium), file)
+  expect(readMachine(file) == { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": "medium", "CODER_MODEL": medium.coder!, "ASSISTANT_MODEL": medium.assistant!, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS })
+  // a later write keeps what it does not name
+  writeMachine({ "CODER_MODEL": "other:1b" }, file)
+  expect(readMachine(file)["CODER_MODEL"] == "other:1b" and readMachine(file)["NUCLEAR_AI_PROFILE"] == "medium")
+  expect(machineOf(profileOf("remote")!) == { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote" })
+  expect(readMachine("${tmpPath.joinpath("no-such-file")}").isEmpty)
+
+testEachSystemGetsTheFilesThatStartTheServicesAtLogin() void
+  linux = serviceFiles("linux", "/home/u", "/home/u/.local/bin", "/home/u/.config/nuclearlang/ai.env", "/usr/bin")
+  expect(linux.map((f) => f.path) == ["/home/u/.config/systemd/user/nuclear-graph.service", "/home/u/.config/systemd/user/nuclear-developer.service"])
+  expect("ExecStart=/home/u/.local/bin/nuclear-graph serve\n" in linux[0].text)
+  expect("EnvironmentFile=-/home/u/.config/nuclearlang/ai.env" in linux[0].text)
+  expect("After=nuclear-graph.service" in linux[1].text and "WantedBy=default.target" in linux[1].text)
+  mac = serviceFiles("darwin", "/Users/u", "/Users/u/.local/bin", "/Users/u/.config/nuclearlang/ai.env", "/usr/bin")
+  expect(mac[0].path == "/Users/u/Library/LaunchAgents/io.github.nuclearlang.graph.plist")
+  expect("<key>RunAtLoad</key><true/>" in mac[0].text and "exec '/Users/u/.local/bin/nuclear-developer'" in mac[1].text)
+  expect(mac[0].text.startsWith("<?xml"))
+  windows = serviceFiles("win32", "C:\\Users\\u", "C:\\n\\bin", "C:\\Users\\u\\AppData\\Roaming\\nuclearlang\\ai.env", "")
+  expect(windows.length == 1 and windows[0].path.endsWith("Startup\\nuclear-ai.cmd"))
+  expect("nuclear-graph.exe\" serve" in windows[0].text and "nuclear-developer.cmd\"" in windows[0].text)
+  expect(serviceFiles("freebsd", "/home/u", "/b", "/m", "").isEmpty)
+  // a service runs with the tools' folders, not with the PATH of whoever ran the set-up
+  unit = serviceFiles("linux", "/home/u", "/home/u/.local/bin", "/m")[0].text
+  expect("Environment=PATH=/home/u/.local/bin:/home/u/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin\n" in unit)
+
+testTheLauncherTakesTheMachineModelsUnlessTheCallerGivesItsOwn(tmpPath: Path) void
+  sh = launcher("/opt/ai", "/home/u/.config/nuclearlang/ai.env", "linux")
+  expect(sh.path == "nuclear-developer" and sh.text.startsWith("#!/bin/sh\n"))
+  expect("cd \"/opt/ai/nuclear-agents/nuclear_developer/build\" && exec .venv/bin/uvicorn app.main:app" in sh.text)
+  // run for real: a value of the file fills what is unset, a value of the caller stays
+  env = tmpPath.joinpath("ai.env")
+  env.writeText("# comment\nCODER_MODEL=from-file\nASSISTANT_MODEL=from-file\n")
+  lines = launcher("${tmpPath}", "${env}", "linux").text.split("\n").map((l) => l.startsWith("cd ") ? "echo \"$CODER_MODEL $ASSISTANT_MODEL\"" : l)
+  script = tmpPath.joinpath("run.sh")
+  script.writeText(lines.join("\n"))
+  out = subprocess.run(["sh", "${script}"], captureOutput = true, text = true, env = { "PATH": os.environ["PATH"]!, "CODER_MODEL": "from-caller" })
+  expect(out.stdout.trim() == "from-caller from-file")
+  expect(launcher("C:\\ai", "C:\\m\\ai.env", "win32").path == "nuclear-developer.cmd")
+
+testAProfileIsInstalledInItsStepsAndRemoteAgentsAloneTakeTwo() void
+  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "machine"])
+  expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "developer", "models", "graph-service", "knowledge", "developer-service"])
+  expect(EMBEDDINGS in steps(profileOf("hard")!)[2].title)
+
+testEveryRequirementCanBeInstalledOnTheThreeSystemsOrByHand() void
+  expect(REQUIREMENTS.map((r) => "${r["id"]}") == ["nuclearlang", "uv", "ollama"])
+  for r in REQUIREMENTS
+    install: <string, string> = r["install"]!
+    expect("${r["url"]}".startsWith("https://"))
+    for system in ["linux", "darwin", "win32"]
+      expect(install[system] != null, "${r["id"]} on ${system}")
+  expect(REQUIREMENTS.find((r) => r["id"] == "ollama")!["local"] == true)
+  expect(hasModel(["embeddinggemma:latest"], "embeddinggemma") and hasModel(["a:3b"], "a:3b") and not hasModel(["a:3b"], "a"))
+
+testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
+  held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  held.bind(socket.getaddrinfo("127.0.0.1", 0, socket.AF_INET, socket.SOCK_STREAM)[0][4])
+  held.listen(1)
+  port: int = held.getsockname()[1]
+  try
+    expect(not canListen(port))
+    notOurs = (p: int) => false
+    next = choosePort(port, notOurs)
+    expect(next > port and canListen(next))
+    // a port another service took is skipped
+    expect(choosePort(port, notOurs, [next]) != next)
+    // our own service keeps its port
+    expect(choosePort(port, (p: int) => p == port) == port)
+  finally
+    held.close()
+  expect(PORTS == { "graph": 7878, "developer": 7879 })
+
+testTheAiArchiveIsFoundByItsLaunchersAndTheyAreLinkedOntoThePath(tmpPath: Path) void
+  root = tmpPath.joinpath("ai")
+  bin = tmpPath.joinpath("bin")
+  expect(not hasRuntime("${root}", "linux"))
+  root.joinpath("bin").mkdir(parents = true)
+  for c in RUNTIME_COMMANDS
+    root.joinpath("bin", c).writeText("#!/bin/sh\n")
+  expect(hasRuntime("${root}", "linux"))
+  // Windows looks for the .cmd launchers
+  expect(not hasRuntime("${root}", "win32"))
+  linked = linkRuntime("${root}", "${bin}", "linux")
+  expect(linked.map((l) => Path(l).name) == RUNTIME_COMMANDS)
+  for l in linked
+    expect(Path(l).readlink() == root.joinpath("bin", Path(l).name))
+  cmd = linkRuntime("C:\\Users\\a\\nuclearlang\\ai", "${bin}", "win32")[0]
+  expect(Path(cmd).readText().startsWith("@\"C:\\Users\\a\\nuclearlang\\ai\\bin\\nuclear-graph.cmd\" %*"))
+
+testTheToolsFindTheFoldersOfNuclearLangOnTheirPath() void
+  e = toolEnv({ "PATH": "/usr/bin:/usr/bin" }, "linux")
+  dirs = e["PATH"]!.split(":")
+  expect(dirs[0] == "/usr/bin" and dirs.count((d) => d == "/usr/bin") == 1)
+  expect("/opt/homebrew/bin" in dirs and dirs.any((d) => d.endsWith("/.local/bin")))

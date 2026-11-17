@@ -872,7 +872,14 @@ fn assets(root: &Path, dir: &str) -> Assets {
 fn file_decl_span(file: &File, name: &str) -> Span {
     file.items
         .iter()
-        .find_map(|i| if let Item::Decl(d) = i { (d.name.name == name).then_some(d.name.span) } else { None })
+        .find_map(|i| match i {
+            Item::Decl(d) => (d.name.name == name).then_some(d.name.span),
+            // a constant of the file (`PORTS = {...}`)
+            Item::Stmt(nuclear_syntax::ast::Stmt::Assign(a)) => {
+                matches!(&a.target.kind, nuclear_syntax::ast::ExprKind::Name(n) if n == name).then_some(a.target.span)
+            }
+            _ => None,
+        })
         .unwrap_or_default()
 }
 

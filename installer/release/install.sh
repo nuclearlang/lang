@@ -8,9 +8,11 @@
 # It downloads the release of this system and architecture (Linux x86_64/aarch64, any distribution: the binaries are
 # static; macOS Intel/Apple silicon) from GitHub, checks its SHA-256, installs it in ~/.local/share/nuclearlang with
 # `nuclear` and `nuclear-lsp` linked in ~/.local/bin, puts that folder in the PATH of your shells, gives
-# the AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No sudo. Then, in a terminal,
-# the set-up of the AI services (`nuclear-builder setup`: it reads this machine, suggests a profile and asks before
-# anything is downloaded; a machine already set up is brought up to date without questions).
+# the AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No sudo. Then, asked in a
+# terminal, the AI services: their archive (a Python of their own with the Smart Graph, the MCP server and the Nuclear
+# Developer, about 160 MB; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: it reads this
+# machine, suggests a profile and asks before anything else is downloaded). A machine already set up gets them again
+# for the new version, without questions.
 #
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
 # (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai, --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
@@ -44,9 +46,9 @@ while [ $# -gt 0 ]; do
     --profile) PROFILE=${2:?--profile needs a value}; shift ;;
     --uninstall)
       # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
-      [ -x "$BIN/nuclear-builder" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-builder" setup --remove >/dev/null 2>&1 || true
+      [ -x "$INSTALL/ai/bin/nuclear-builder" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$INSTALL/ai/bin/nuclear-builder" setup --remove >/dev/null 2>&1 || true
       rm -f "$BIN/nuclear-developer"
-      rm -f "$BIN/nuclear" "$BIN/dragonfly" "$BIN/nuclear-lsp" "$BIN/nuclear-builder"
+      rm -f "$BIN/nuclear" "$BIN/nuclear-lsp" "$BIN/nuclear-builder"
       rm -rf "$INSTALL"
       for d in $SKILL_DIRS; do rm -rf "$d/nuclear"; done
       for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
@@ -126,7 +128,8 @@ rm -rf "$INSTALL"
 mkdir -p "$(dirname "$INSTALL")" "$BIN"
 mv "$tmp/nuclearlang" "$INSTALL"
 for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
-# nuclear-builder needs node (the Builder without an editor, ADR-platform-0003)
+# nuclear-builder: the AI archive's replaces this link when it is installed (its pipeline commands still run this one's
+# engine with node, ADR-platform-0003)
 if [ -f "$INSTALL/bin/nuclear-builder" ]; then ln -sf "$INSTALL/bin/nuclear-builder" "$BIN/nuclear-builder"; fi
 "$BIN/nuclear" dialect list >/dev/null || fail "the installed nuclear does not run on this system"
 
@@ -161,24 +164,64 @@ if [ "$on_path" = 0 ] && [ "$MODIFY_PATH" = 1 ]; then
   fi
 fi
 
-# --- the AI services (ADR-installer-0002) ---
-# Their environments live inside the installation: a machine already set up gets them again for this version, with
-# the profile it had. A new one is asked, in the terminal; nothing is downloaded before the user chooses.
+# --- the AI services (ADR-installer-0002, ADR-installer-0003) ---
+# They live inside the installation: a machine already set up gets them again for this version, with the profile it
+# had. A new one is asked, in the terminal; nothing is downloaded before the user chooses.
 MACHINE="${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang/ai.env"
 [ -n "$PROFILE" ] || PROFILE=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
 ai_note=""
+tty=0
+[ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null && tty=1
+if [ "$AI" = 1 ] && [ -z "$PROFILE" ]; then
+  if [ "$tty" = 1 ]; then
+    say ""
+    printf 'The AI services: the Smart Graph (what agents know of NuclearLang), the MCP server and local agents that\nwrite code. Download them (about 160 MB)? [Y/n] ' >&2
+    read -r answer < /dev/tty || answer=n
+    case $answer in [nN]*) AI=0; ai_note="The AI services are not installed: run this installer again when you want them." ;; esac
+  else
+    AI=0
+    ai_note="The AI services are not installed (no terminal here): run this installer in a terminal, or with --profile."
+  fi
+fi
 if [ "$AI" = 1 ]; then
-  if [ ! -x "$BIN/nuclear-builder" ] || ! command -v node >/dev/null 2>&1; then
-    ai_note="The AI services need Node.js for their set-up: install it and run \`nuclear-builder setup\`, or use the set-up of the VS Code extension."
+  # their archive: a Python of their own with the services in it, unpacked as the installation's ai/
+  ai_name="nuclearlang-ai-$VERSION-$os-$arch.tar.gz"
+  say "Downloading the AI services..."
+  if get "$base/$ai_name" "$tmp/$ai_name" && get "$base/$ai_name.sha256" "$tmp/$ai_name.sha256"; then
+    want=$(cut -d ' ' -f 1 < "$tmp/$ai_name.sha256")
+    if command -v sha256sum >/dev/null 2>&1; then got=$(sha256sum "$tmp/$ai_name" | cut -d ' ' -f 1)
+    else got=$(shasum -a 256 "$tmp/$ai_name" | cut -d ' ' -f 1); fi
+    [ "$want" = "$got" ] || fail "the AI services' download is damaged (SHA-256 does not match); try again"
+    rm -rf "$INSTALL/ai"
+    tar -xzf "$tmp/$ai_name" -C "$INSTALL"
+    # a Linux without glibc (Alpine, musl) runs nuclear but not the services' Python
+    if ! "$INSTALL/ai/bin/nuclear-graph" --help >/dev/null 2>&1; then
+      rm -rf "$INSTALL/ai"
+      AI=0
+      ai_note="The AI services do not run on this system (a Linux needs glibc); NuclearLang itself is installed."
+    else
+      # nuclear-builder is the archive's from now on: `nuclear-builder setup` works before the set-up ran
+      ln -sf "$INSTALL/ai/bin/nuclear-builder" "$BIN/nuclear-builder"
+    fi
+  else
+    AI=0
+    ai_note="The AI services of $VERSION are not published for $os $arch."
+  fi
+fi
+# the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
+builder="$INSTALL/ai/bin/nuclear-builder"
+if [ "$AI" = 1 ]; then
+  if [ ! -x "$builder" ]; then
+    ai_note="The AI archive has no set-up: run this installer again."
   elif [ -n "$PROFILE" ]; then
     say ""
     say "The AI services, profile $PROFILE..."
-    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-builder" setup --profile "$PROFILE" --yes >&2 \
+    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile "$PROFILE" --yes >&2 \
       || ai_note="The AI services are not set up: run \`nuclear-builder setup\`."
-  elif [ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null; then
+  elif [ "$tty" = 1 ]; then
     say ""
     say "The AI services: local agents that write the code, and the Smart Graph. You choose what is downloaded."
-    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$BIN/nuclear-builder" setup < /dev/tty >&2 \
+    NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup < /dev/tty >&2 \
       || ai_note="The AI services are not set up: run \`nuclear-builder setup\` when you want them."
   else
     ai_note="The AI services are not set up (no terminal here): run \`nuclear-builder setup\`."

@@ -6,7 +6,7 @@
 // script can drive it alone.
 import { ChildProcess, spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import { readMachine } from '../../../vscode/src/aiSetup';
+import { readMachine } from '../../../vscode/src/aiMachine';
 import { atomicWrite, BEAT_MS, checkConnections, digest, ollamaBusy, orphaned, owner, Owner, rollback, trace, Write } from './safety';
 import * as fs from 'node:fs';
 import * as os from 'node:os';

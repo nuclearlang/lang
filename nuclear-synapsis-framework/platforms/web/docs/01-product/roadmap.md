@@ -32,6 +32,9 @@ From the analysis of ADR-web-0001:
 
 ## Pending
 
+- The five `gen.js` commands of the web type definitions (`react`, `react_router`, `vitest`...) are in no script
+  (the TODO of `docs/06-runbooks/`, found in spec 008).
+
 - **The runtime's HTML functions leave out common elements**: `figure`, `figcaption`, `kbd`, `code`, `blockquote`,
   `video`, `picture` and others (`packages/synapsis-web/src/html.ts` exports 39 tags). The website uses a `div` and
   a `span` with a class where it meant a `figure` and a `kbd`. The list should cover the HTML elements, with the

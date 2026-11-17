@@ -137,7 +137,7 @@ $ nuclear-graph search "N0114" -k 3
 
 ### From an agent, over MCP
 
-Claude Code, Codex and Cursor reach the graph through the MCP server `nuclear-mcp` (`nuclear-graph mcp` runs it).
+Claude Code, Codex and Cursor reach the graph through the MCP server `nuclear-mcp`.
 Its `graph_*` tools are the same questions:
 
 | MCP tool | What it asks |

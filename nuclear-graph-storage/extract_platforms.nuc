@@ -3,7 +3,7 @@ use tomllib
 PLATFORM_OF = { "fastapi": "backend", "nestjs": "backend", "flutter": "mobile", "react": "web" }
 // Where the tree keeps the platforms (each with its contract) and the dialects (a framework dialect is under the
 // language it is written in: `<language>/frameworks/<dialect>/`).
-PLATFORMS = "nuclear-synapsis-framework/platforms"
+PLATFORMS_DIR = "nuclear-synapsis-framework/platforms"
 DIALECTS_DIR = "nuclearlang/dialects"
 // where the code generator keeps what it writes for each platform
 GENERATORS = "tools/code_generator/platforms"
@@ -26,7 +26,7 @@ PlatformFiles(contract: <string, any>, docs: <string, any>, dialect: <string, an
 // dialect; and what its generators write.
 ExtractPlatforms
   static filesOf(ctx: Context, p: string) PlatformFiles
-    base = "${PLATFORMS}/${p}"
+    base = "${PLATFORMS_DIR}/${p}"
     contract: <string, any> = tomllib.loads(ctx.read("${base}/platform.toml"))
     chosen: string = textAt(tableAt(contract, "platform"), "default_dialect")
     // the folder of the default dialect: under the language it is written in
@@ -149,7 +149,7 @@ ExtractPlatforms
   // (tools/code_generator/platforms/<platform>/generators.toml).
   static generators(ctx: Context) <string, any>[]
     rows: <string, any>[] = []
-    for p in platformNames()
+    for p in PLATFORMS
       files = ExtractPlatforms.filesOf(ctx, p)
       genFile = "${GENERATORS}/${p}/generators.toml"
       known: <string, any> = tableAt(tomllib.loads(ctx.read(genFile)), "generators")

@@ -33,6 +33,8 @@ pub(crate) enum DeclKind {
     Interface,
     Enum,
     Kind(String),
+    /// `PORTS = {...}` at the top of a file, never assigned again: the other files of a project see it.
+    Value,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,6 +74,44 @@ pub(crate) struct DeclInfo {
     decor: Value,
     /// Alias methods (`list() = ListTasks.exec`) → (module, method): their signature is the target's.
     aliases: HashMap<String, (String, String)>,
+}
+
+impl DeclInfo {
+    /// A constant of a file: only its name is known to the other files.
+    fn value(ty: Option<Type>) -> Self {
+        DeclInfo {
+            kind: DeclKind::Value,
+            params: Vec::new(),
+            methods: HashMap::new(),
+            members: HashSet::new(),
+            bases: Vec::new(),
+            sig: Sig { ret: ty, is_async: false },
+            method_sigs: HashMap::new(),
+            field_types: HashMap::new(),
+            field_decor: HashMap::new(),
+            decor: Value::Map(BTreeMap::new()),
+            aliases: HashMap::new(),
+        }
+    }
+}
+
+/// The constants of a file: a name assigned once at its top level (`PORTS = {...}`, `NAME: string = "x"`).
+pub(crate) fn file_values(f: &File) -> Vec<(String, &Assign)> {
+    let stmts: Vec<Stmt> = f.items.iter().filter_map(|i| if let Item::Stmt(s) = i { Some(s.clone()) } else { None }).collect();
+    let reassigned = analysis::reassigned_after(&stmts);
+    let mut seen = HashSet::new();
+    let mut out = Vec::new();
+    for item in &f.items {
+        if let Item::Stmt(Stmt::Assign(a)) = item
+            && a.op == AssignOp::Set
+            && let ExprKind::Name(n) = &a.target.kind
+            && !reassigned.contains(n)
+            && seen.insert(n.clone())
+        {
+            out.push((n.clone(), a));
+        }
+    }
+    out
 }
 
 /// What a call returns: its declared return type and whether it is async.
@@ -236,6 +276,11 @@ pub struct Emitter<'a> {
     file_path: String,
     /// Names written in this file (project mode: the files to import).
     used_names: HashSet<String>,
+    /// Names this file declares as a local or a parameter, and names it reads that no local holds: a name only
+    /// ever local is not a declaration of another file.
+    local_names: HashSet<String>,
+    free_names: HashSet<String>,
+    member_only: HashSet<String>,
     /// Kind of the declarations without a kind word (`[project] kinds` of this file's folder).
     default_kind: Option<String>,
     /// Kinds declared in this file (their `file_header` is written once).
@@ -431,6 +476,9 @@ impl<'a> Emitter<'a> {
             project: None,
             file_path: String::new(),
             used_names: HashSet::new(),
+            local_names: HashSet::new(),
+            free_names: HashSet::new(),
+            member_only: HashSet::new(),
             default_kind: None,
             kinds_used: BTreeSet::new(),
             provided: HashMap::new(),
@@ -530,6 +578,15 @@ impl<'a> Emitter<'a> {
         for extra in &self.extra_decls {
             if let Some(info) = self.decls.get(extra) {
                 out.push((extra.clone(), extra.clone(), info.clone()));
+            }
+        }
+        // the constants of the file: everything is exported, a value as a function
+        for (name, a) in file_values(f) {
+            if !self.decl_names.contains_key(&name) {
+                let out_name = self.escape(&name);
+                // its type travels with it: the declared one, else the one of its value
+                let ty = a.ty.clone().or_else(|| self.static_type(&a.value));
+                out.push((name, out_name, DeclInfo::value(ty)));
             }
         }
         out
@@ -731,6 +788,7 @@ impl<'a> Emitter<'a> {
         if let Some(f) = self.frames.last_mut() {
             f.vars.insert(name.to_string(), out.clone());
         }
+        self.local_names.insert(out.clone());
         out
     }
 
@@ -816,8 +874,11 @@ impl<'a> Emitter<'a> {
         let used: HashSet<String> = decl_out.iter().flat_map(|(_, c)| code_words(c)).collect();
         let mut main_stmts: Vec<String> = Vec::new();
         let mut first_main_stmt = None;
+        // in a project a constant of the file stays top-level too: another file may import it
+        let values: HashSet<String> =
+            if self.project.is_some() { file_values(f).into_iter().map(|(n, _)| n).collect() } else { HashSet::new() };
         for (at, code, span, declared) in pending.into_iter().rev() {
-            if declared.is_some_and(|n| used.contains(&n)) && !code.contains("await ") {
+            if declared.is_some_and(|n| used.contains(&n) || values.contains(&n)) && !code.contains("await ") {
                 decl_out.insert(at, (true, code));
             } else {
                 first_main_stmt = Some(span);
@@ -840,9 +901,14 @@ impl<'a> Emitter<'a> {
         // write names the source does not) and the Result runtime; in any file, the names of
         // `[names] written` that templates write (`Right`, `Left`)
         let mut written = HashSet::new();
+        let mut free = HashSet::new();
         for (_, c) in &decl_out {
             written.extend(code_words(c));
+            free.extend(free_code_words(c));
         }
+        // `platform.machine()`: only a member, never the `machine()` of another file (an extension's members are
+        // still imported: they are what the templates write)
+        self.member_only = written.difference(&free).cloned().collect();
         // the helpers of the library (`Callable`, `math`) need their imports too
         for h in self.helpers.values() {
             written.extend(code_words(h));
@@ -1258,7 +1324,12 @@ impl<'a> Emitter<'a> {
                 if declared_here.contains(n.as_str()) {
                     continue;
                 }
+                // `machine = readMachine()`: a local of this file, not the `machine()` of another
+                if self.local_names.contains(n) && !self.free_names.contains(n) {
+                    continue;
+                }
                 let path = match p.decls.get(n) {
+                    Some(_) if self.member_only.contains(n) => None,
                     Some(ext) if ext.path != self.file_path && p.visible(&ext.path, &self.file_path) => {
                         Some(ext.path.clone())
                     }
@@ -1984,6 +2055,8 @@ impl<'a> Emitter<'a> {
                     None => String::new(),
                 }
             }
+            // a value is a statement of its file, never a declaration of it
+            DeclKind::Value => String::new(),
         }
     }
 
@@ -3187,6 +3260,10 @@ impl<'a> Emitter<'a> {
         if self.lookup_local(n).is_some() {
             return self.frames.iter().rev().find_map(|f| f.types.get(n).cloned());
         }
+        // a constant of another file of the project
+        if let Some(i) = self.decl_info(n).filter(|i| i.kind == DeclKind::Value) {
+            return i.sig.ret.clone();
+        }
         let m = self.module.as_ref().filter(|m| m.members.contains(n))?;
         self.decl_info(&m.name).and_then(|i| i.field_types.get(n).cloned())
     }
@@ -4047,7 +4124,7 @@ impl<'a> Emitter<'a> {
                 f.types.insert(n.clone(), t);
             }
             let ty = a.ty.as_ref().map(|t| self.ty(t));
-            let key = if mutable { "let_decl" } else { "const_decl" };
+            let key = self.const_key(mutable);
             return self.tpl(key, Ctx::new().set("name", out).opt("type", ty).set("value", value), a.span);
         }
         let keep = std::mem::take(&mut self.keep_next);
@@ -4109,6 +4186,18 @@ impl<'a> Emitter<'a> {
 
     /// `paint = Paint()` + `..color = red` with options.cascade_statements: the declaration and one
     /// statement per section (`paint.color = red;`).
+    /// The template of a declared variable: a constant of the file is exported where the target asks for it
+    /// (`toplevel_const_decl`: TypeScript's `export const`).
+    fn const_key(&self, mutable: bool) -> &'static str {
+        if mutable {
+            "let_decl"
+        } else if self.frames.len() == 1 && self.module.is_none() && self.has("toplevel_const_decl") {
+            "toplevel_const_decl"
+        } else {
+            "const_decl"
+        }
+    }
+
     fn cascade_statements(&mut self, a: &Assign) -> Option<String> {
         let ExprKind::Cascade { target, sections } = &a.value.kind else {
             return None;
@@ -4123,7 +4212,7 @@ impl<'a> Emitter<'a> {
         let mutable = self.frames.iter().rev().any(|f| f.mutable.contains(n));
         let out = self.declare_local(n);
         let ty = a.ty.as_ref().map(|t| self.ty(t));
-        let key = if mutable { "let_decl" } else { "const_decl" };
+        let key = self.const_key(mutable);
         let mut lines =
             vec![self.tpl(key, Ctx::new().set("name", out.clone()).opt("type", ty).set("value", value), a.span)];
         for sec in self.cascade_sections(sections, out) {
@@ -4304,7 +4393,10 @@ impl<'a> Emitter<'a> {
                 ExprKind::Call { callee, .. } => matches!(&callee.kind, ExprKind::Name(c) if c == "Map"),
                 _ => false,
             };
-            let iter = self.expr(&f.iter).0;
+            let iter = self.expr(&f.iter);
+            // `{{iter_member}}.items()`: `m ?? {}` keeps its parentheses before a member
+            let iter_member = self.wrap(iter.clone(), P_POSTFIX);
+            let iter = iter.0;
             let key = self.declare_local(&f.vars[0].name);
             let value = self.declare_local(&f.vars[1].name);
             if let Some(t) = self.static_type(&f.iter)
@@ -4317,7 +4409,13 @@ impl<'a> Emitter<'a> {
             let body = self.block(&f.body, &Tail::None);
             return self.tpl(
                 "for_entries",
-                Ctx::new().set("key", key).set("value", value).set("iter", iter).set("body", body).flag("map", is_map),
+                Ctx::new()
+                    .set("key", key)
+                    .set("value", value)
+                    .set("iter", iter)
+                    .set("iter_member", iter_member)
+                    .set("body", body)
+                    .flag("map", is_map),
                 f.span,
             );
         }
@@ -4547,7 +4645,10 @@ impl<'a> Emitter<'a> {
                 (self.tpl("cast", Ctx::new().set("expr", x).set("type", t), e.span), 6)
             }
             ExprKind::Spread(x) => {
-                let v = self.expr(x).0;
+                // `...(c ? a : b)`: an operand below a postfix keeps its parentheses (Python's `*` binds tighter
+                // than its conditional)
+                let v = self.expr(x);
+                let v = self.wrap(v, P_POSTFIX);
                 (self.tpl("spread_arg", Ctx::new().set("expr", v), e.span), P_PRIMARY)
             }
             ExprKind::Lambda(l) => (self.lambda(l), P_LAMBDA),
@@ -4701,7 +4802,14 @@ impl<'a> Emitter<'a> {
         // a class or module (`GetOne.exec`, `Theme.of`, `np` of `use numpy as np`), a function or object of a library
         // (`lodash.max(...)`: its default export) or a cascade target: not a value of a base type
         match &object.kind {
-            ExprKind::Name(obj) if self.lookup_local(obj).is_none() && is_pascal(obj) => return None,
+            // (`PROFILES` of another file is a value: its members are the library's)
+            ExprKind::Name(obj)
+                if self.lookup_local(obj).is_none()
+                    && is_pascal(obj)
+                    && !self.decl_info(obj).is_some_and(|i| i.kind == DeclKind::Value) =>
+            {
+                return None;
+            }
             ExprKind::Name(obj)
                 if self.lookup_local(obj).is_none()
                     && !self.is_member(obj)
@@ -4997,10 +5105,16 @@ impl<'a> Emitter<'a> {
             ExprKind::Number(n) => Some(named_type(if n.kind == NumberKind::Float { "double" } else { "int" }, Vec::new(), sp)),
             ExprKind::Bool(_) => Some(named_type("boolean", Vec::new(), sp)),
             ExprKind::List(items) => {
+                // `[...xs, y]`: a spread gives the elements of its list
                 let elem = items
                     .iter()
-                    .filter(|i| !matches!(i.kind, ExprKind::Spread(_)))
-                    .find_map(|i| self.static_type(i))
+                    .find_map(|i| match &i.kind {
+                        ExprKind::Spread(inner) => match self.static_type(inner)?.kind {
+                            TypeKind::List(elem) => Some(*elem),
+                            _ => None,
+                        },
+                        _ => self.static_type(i),
+                    })
                     .unwrap_or_else(|| named_type("dynamic", Vec::new(), sp));
                 Some(Type { span: sp, kind: TypeKind::List(Box::new(elem)) })
             }
@@ -5094,6 +5208,31 @@ impl<'a> Emitter<'a> {
                     {
                         let m = library::member_of(obj, &self.src_name(name)).filter(|m| !m.property)?;
                         return self.lib_ret(m.returns, None, sp);
+                    }
+                    // `Conf.all()`: a static method of a class of the project
+                    if let ExprKind::Name(obj) = &object.kind
+                        && self.lookup_local(obj).is_none()
+                        && is_pascal(obj)
+                        && let Some(info) = self.decl_info(obj)
+                        && let Some(sig) = self.sig_of_method(info, &name.name)
+                    {
+                        let ret = sig.ret.clone()?;
+                        return Some(if sig.is_async { named_type("Future", vec![ret], sp) } else { ret });
+                    }
+                    // `Paths.machine()`: a static method of a class of the type definitions
+                    if let ExprKind::Name(obj) = &object.kind
+                        && self.lookup_local(obj).is_none()
+                        && is_pascal(obj)
+                        && self.decl_info(obj).is_none()
+                    {
+                        let snake = crate::naming::snake(&name.name);
+                        if let Some(ret) = self.d.typedefs.members(obj).into_iter().find_map(|(_, m)| {
+                            (m.is_static && m.kind == "method" && (m.name == name.name || m.name == snake))
+                                .then(|| m.returns.as_deref().and_then(nuclear_syntax::parse_type))
+                                .flatten()
+                        }) {
+                            return Some(ret);
+                        }
                     }
                     let Some(t) = self.static_type(object) else {
                         return self.only_base_ret(&self.src_name(name), false, sp);
@@ -5333,7 +5472,8 @@ impl<'a> Emitter<'a> {
                 let m = self.module.as_ref()?;
                 self.decl_info(&m.name)?.field_types.get(n).cloned()
             }),
-            _ => None,
+            // a call, a member, a static method: what it returns (`Conf.all()["k"]`)
+            _ => self.static_type(e),
         };
         let mut ty = ty;
         if let Some(Type { kind: TypeKind::Nullable(inner), .. }) = &ty {
@@ -5396,6 +5536,7 @@ impl<'a> Emitter<'a> {
         if let Some(local) = self.lookup_local(n) {
             return local;
         }
+        self.free_names.insert(n.to_string());
         if let Some(t) = self.provided.get(n) {
             let name = self.decl_names.get(n).cloned().unwrap_or_else(|| n.to_string());
             return t.render(&Ctx::new().set("name", name).into_value());
@@ -5701,8 +5842,24 @@ impl<'a> Emitter<'a> {
                     return self.tpl("call", Ctx::new().set("callee", to).set("args", a), span);
                 }
                 FunctionShortcut::Template(t) => {
-                    let rendered: Vec<String> = args.iter().map(|a| self.expr(&a.value).0).collect();
-                    let mut ctx = Ctx::new().set("args", rendered.join(", "));
+                    // `args`, `arg0`...: the positional ones; `call_args`: all, a named one as the target names it
+                    // (`print(line, flush = true)` → Python's `flush=True`)
+                    let mut rendered: Vec<String> = Vec::new();
+                    let mut all: Vec<String> = Vec::new();
+                    for a in args {
+                        let text = self.expr(&a.value).0;
+                        match &a.name {
+                            Some(n) => {
+                                let name = self.src_name(n);
+                                all.push(self.tpl("named_arg", Ctx::new().set("name", &name).set("value", &text), a.span));
+                            }
+                            None => {
+                                all.push(text.clone());
+                                rendered.push(text);
+                            }
+                        }
+                    }
+                    let mut ctx = Ctx::new().set("args", rendered.join(", ")).set("call_args", all.join(", "));
                     for (i, r) in rendered.iter().enumerate() {
                         ctx = ctx.set(&format!("arg{i}"), r.clone());
                     }
@@ -6370,6 +6527,34 @@ pub(crate) fn code_words(code: &str) -> HashSet<String> {
     kept.split(|ch: char| !(ch.is_alphanumeric() || ch == '_')).filter(|w| !w.is_empty()).map(str::to_string).collect()
 }
 
+/// The names of generated code that can be free references: not the members (`platform.machine()`, a cascade's
+/// `..add`), which are attributes of their receiver; a spread (`...items`) still reads its name.
+pub(crate) fn free_code_words(code: &str) -> HashSet<String> {
+    let mut out = HashSet::new();
+    for w in code_words(code) {
+        let mut free = false;
+        let mut seen = false;
+        for (at, _) in code.match_indices(w.as_str()) {
+            let before = &code[..at];
+            let bounded = !before.chars().next_back().is_some_and(|c| c.is_alphanumeric() || c == '_')
+                && !code[at + w.len()..].chars().next().is_some_and(|c| c.is_alphanumeric() || c == '_');
+            if !bounded {
+                continue;
+            }
+            seen = true;
+            let dots = before.chars().rev().take_while(|c| *c == '.').count();
+            if dots == 0 || dots >= 3 {
+                free = true;
+                break;
+            }
+        }
+        if free || !seen {
+            out.insert(w);
+        }
+    }
+    out
+}
+
 /// The same Nuclear name, also after a dialect wrote it in snake_case (`onDelete` and `on_delete`).
 fn same_name(a: &str, b: &str) -> bool {
     a.len().abs_diff(b.len()) <= 4 && a.replace('_', "").eq_ignore_ascii_case(&b.replace('_', ""))
@@ -6535,7 +6720,8 @@ fn generic_list(generics: &[Ident]) -> Value {
 fn is_plain_path(e: &Expr) -> bool {
     match &e.kind {
         ExprKind::Name(_) | ExprKind::This => true,
-        ExprKind::Member { object, .. } => is_plain_path(object),
+        // `a?.b` is a conditional where `?.` is not native (Python): `??` must not write it twice
+        ExprKind::Member { object, optional, .. } => !*optional && is_plain_path(object),
         _ => false,
     }
 }

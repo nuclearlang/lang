@@ -15,6 +15,8 @@ design with the user for Synapsis as a whole (logs, TDD, the linter, what is man
 
 ## Untested
 
+- Not run since the tree became one repository (spec 008): `analyze-flutter.sh` and the Dart runtimes' tests.
+
 Done; each needs a manual test.
 
 - A real phone; macOS.

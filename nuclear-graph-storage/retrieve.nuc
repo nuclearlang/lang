@@ -102,7 +102,7 @@ Retrieve
         best[card] = { "id": card, "shelf": shelf, "distance": closest, "score": (score * 10000).round() / 10000, "via": via, "source": meta["source"] ?? "" }
       else
         known!["distance"] = closest
-    known: <string, Shelf> = shelfTable()
+    known: <string, Shelf> = SHELVES
     for shelf in among
       for hit in store.near(shelf, vector, Math.max(k * 3, 12), base)
         consider(shelf, hit, 0.0)

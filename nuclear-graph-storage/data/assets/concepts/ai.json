@@ -143,7 +143,7 @@
    "id": "concept:mcp",
    "type": "concept",
    "title": "The MCP of NuclearLang: what it is and how it works",
-   "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls its tools. `nuclear-mcp` is that program for NuclearLang (`nuclear-graph mcp` runs it): it gives the client the generators, the local developer, the Smart Graph, the compiler, the `nuclear` commands and the internet as tools.",
+   "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls its tools. `nuclear-mcp` is that program for NuclearLang: it gives the client the generators, the local developer, the Smart Graph, the compiler, the `nuclear` commands and the internet as tools.",
    "body": [
     "**How it works.** The AI client starts `nuclear-mcp` and talks to it over stdio. The server offers tools and a set of instructions; the model calls a tool, the server runs it on your machine (a search in the graph, `nuclear check`, `nuclear gen`, a request to the local agents) and answers text the model reads.",
     "",
@@ -196,7 +196,7 @@
     },
     {
      "rel": "command",
-     "to": "tool:nuclear-graph.mcp"
+     "to": "mcp:server"
     },
     {
      "rel": "command",
@@ -356,7 +356,7 @@
     "",
     "Every local profile also downloads `embeddinggemma` (0.6 GB, in the figures above), which makes the graph's vectors.",
     "",
-    "**What the set-up needs**, found by itself once installed or installed in a terminal the user sees: NuclearLang, `uv` (the Python environments; it brings its own Python) and Ollama (it runs the models; only the local profiles need it).",
+    "**What the set-up needs**, found by itself once installed or installed in a terminal the user sees: NuclearLang with its AI archive (a Python of its own with the services and the set-up, written in Nuclear: no Python, uv or Node.js on the machine) and Ollama (it runs the models; only the local profiles need it). From the source tree it also needs `uv`.",
     "",
     "**Where things are.** The choice: `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`): the mode, the profile, its models; the services start with it, and the Builder and the editor take their default models from it. The code of the services: `~/.local/share/nuclearlang/ai/`. The graph's data: `~/.local/share/nuclear-graph/`. The models: Ollama's own folder.",
     "",
@@ -409,7 +409,7 @@
    "sources": [
     "installer/docs/08-guides/ai-setup.md",
     "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#Decision",
-    "extensions/vscode/src/aiSetup.json"
+    "extensions/tools/nuclear-builder/setup.json"
    ],
    "meta": {
     "topic": "ai"

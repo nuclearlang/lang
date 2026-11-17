@@ -1380,21 +1380,13 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/008-restructure/tasks.md#found-on-the-way-not-done",
+   "id": "doc:docs/04-specs/008-restructure/tasks.md#found-on-the-way",
    "type": "spec",
-   "title": "Spec 008: restructure the tree — Tasks — Found on the way (not done)",
-   "summary": "`~/Documents/projects/nuc/react/nuclearlang_website`): it does not build until T5.2. the code writes it for a path contract too.",
+   "title": "Spec 008: restructure the tree — Tasks — Found on the way",
+   "summary": "Moved to the roadmaps of their projects on 2026-11-17 (the language, the web and mobile platforms, the platform's own for the workflows); the framework's changelog is `tools/cli/CHANGELOG.md`, the command's.",
    "body": [
-    "- The website reads this tree by the old paths (`site.toml`, `tools/content.mjs` of",
-    "  `~/Documents/projects/nuc/react/nuclearlang_website`): it does not build until T5.2.",
-    "- `nuclearlang/docs/07-reference/projects.md` §1.2 says only a url contract keeps `contracts/<name>/contract.json`;",
-    "  the code writes it for a path contract too.",
-    "- The five `gen.js` commands of the web type definitions are in no script (`platforms/web` runbook).",
-    "- The installed AI services were repaired by hand (the links of `~/.local/share/nuclearlang/ai/` and the graph's",
-    "  editable path point at the new folders, under the OLD names the installed extension expects); `installer/install.sh`",
-    "  now writes `ai/nuclear-graph-storage` and `ai/nuclear-agents`: reinstall the extension with it (T5.1).",
-    "- `nuclear-synapsis-framework/CHANGELOG.md` is the `dragonfly` command's: it moves with the crate (T2.2).",
-    "- Not run after the move: `analyze-flutter.sh`, the Dart runtimes' tests, the workflows of `.github/`."
+    "Moved to the roadmaps of their projects on 2026-11-17 (the language, the web and mobile platforms, the platform's",
+    "own for the workflows); the framework's changelog is `tools/cli/CHANGELOG.md`, the command's."
    ],
    "agents": false,
    "sources": [
@@ -1463,32 +1455,11 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/008-restructure/tasks.md#phase-3-the-docs-done-2026-11-16.97b285",
+   "id": "doc:docs/04-specs/008-restructure/tasks.md#phase-3-the-docs-done-2026-11-16",
    "type": "spec",
    "title": "Spec 008: restructure the tree — Tasks — Phase 3 — the docs (done 2026-11-16)",
-   "summary": "Open questions the writers left for the user are written `TODO(human)` in the documents (`rg \"TODO\\(human\\)\"`).",
-   "body": "Open questions the writers left for the user are written `TODO(human)` in the documents (`rg \"TODO\\(human\\)\"`).",
-   "agents": false,
-   "sources": [
-    "docs/04-specs/008-restructure/tasks.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:docs/04-specs/008-restructure/tasks.md#phase-3-the-docs-done-2026-11-16.dfbd4c",
-   "type": "spec",
-   "title": "Spec 008: restructure the tree — Tasks — Phase 3 — the docs (done 2026-11-16)",
-   "summary": "`work/` keeps what the phase used: `docs-brief.md` (the brief every project's writer followed), `agents/<name>/adr-map.tsv` and `status-taken.txt` (what each handed back), `sweep.py` (old folder names → new, in text), `links.py [--fix]` (relative links), `adr-cites.py` (old ADR numbers →…",
+   "summary": "`nuclearlang/docs/07-reference/decisions.md` is the index of all of them; `docs/adr/` deleted.",
    "body": [
-    "`work/` keeps what the phase used: `docs-brief.md` (the brief every project's writer followed),",
-    "`agents/<name>/adr-map.tsv` and `status-taken.txt` (what each handed back), `sweep.py` (old folder names → new, in",
-    "text), `links.py [--fix]` (relative links), `adr-cites.py` (old ADR numbers → `ADR-<key>-NNNN`), `kb-sources.py`",
-    "(the knowledge base's sources → the new files and headings).",
-    "",
     "- [x] T3.1 Root: `AGENTS.md` as the map, `docs/` with the platform's layers, three platform ADRs.",
     "- [x] T3.2 Each project: `AGENTS.md` + `docs/` (17 projects, each with its roadmap).",
     "- [x] T3.3 The 108 ADRs consolidated into 44, numbered per project; every citation of the tree rewritten;",
@@ -1498,7 +1469,9 @@
     "- [x] T3.5 The knowledge base: `sections.toml` and the rows' sources name the new tree; built (revision 60),",
     "      reviewed, checked, ingested.",
     "- [x] T3.6 No broken relative link (one left in the user's guideline `docs/05-standards/agent-context-docs-",
-    "      implementation.md`: a template's example link, kept as the user wrote it)."
+    "      implementation.md`: a template's example link, kept as the user wrote it).",
+    "",
+    "Open questions the writers left for the user are written `TODO(human)` in the documents (`rg \"TODO\\(human\\)\"`)."
    ],
    "agents": false,
    "sources": [
@@ -1551,9 +1524,9 @@
     "      `dragonfly-mobile`, `dragonfly-backend`, `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-developer`,",
     "      `nuclear-knowledge`, `nuclear-graph`. Not archived: `nuclear-zed` (the grammar `extensions/zed/extension.toml`",
     "      loads) and `nuclearlang.github.io` (it publishes the site).",
-    "- [ ] T5.4 The AI set-up written by the old installer: `~/.local/bin/nuclear-developer` and the editors' MCP",
-    "      registrations still name `ai/nuclear-developer` and `nuclear-graph mcp` (both still work: links and the",
-    "      `mcp` command that runs `nuclear-mcp`); running the set-up again writes the new ones."
+    "- [x] T5.4 The AI set-up written by the old installer (2026-11-17): the set-up ran again (the `nuclear-developer`",
+    "      launcher of `ai/nuclear-agents/nuclear_developer`), the editors' MCP registrations name `nuclear-mcp`, and",
+    "      `nuclear-graph mcp` and the installers' removal of the old `dragonfly` and `nuclear-loop` links are gone."
    ],
    "agents": false,
    "sources": [
@@ -1582,6 +1555,305 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/design.md#ports",
+   "type": "spec",
+   "title": "Spec 009 — Design — Ports",
+   "summary": "Done in this spec's first change (2026-11-17), in the TypeScript set-up: the default;",
+   "body": [
+    "Done in this spec's first change (2026-11-17), in the TypeScript set-up:",
+    "- `canListen`, `choosePort` and `servicePorts` in `aiSetup.ts`, run by the step that starts the graph;",
+    "- the graph's `paths.nuc` and the MCP server's `server.nuc` read the port from the environment, then `ai.env`, then",
+    "  the default;",
+    "- the editor's `urls()` and `aiSettings()` do the same."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/design.md#the-archive",
+   "type": "spec",
+   "title": "Spec 009 — Design — The archive",
+   "summary": "`nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows), with its `.sha256`, unpacked at `<installation>/ai/`: ai/python/ python-build-standalone 3.12, install_only (relocatable) ai/python/lib/.../site-packages the locked packages of the graph [server], the MCP server, the Developer, the…",
+   "body": [
+    "`nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows), with its `.sha256`, unpacked at",
+    "`<installation>/ai/`:",
+    "",
+    "```",
+    "ai/python/                    python-build-standalone 3.12, install_only (relocatable)",
+    "ai/python/lib/.../site-packages   the locked packages of the graph [server], the MCP server, the Developer, the Builder",
+    "ai/nuclear-graph-storage/data/    the knowledge base (ingested by the set-up)",
+    "ai/bin/nuclear-graph, nuclear-mcp, nuclear-developer, nuclear-builder   launchers: `exec ai/python/bin/python -m ...`",
+    "```",
+    "",
+    "Built by a job of `release.yml` per target: `nuclear build` of the four projects, then",
+    "`ai/python/bin/python -m pip install --no-deps -r <the exported lock>` and the four wheels, then a smoke test on",
+    "that runner (each launcher answers `--version`; the graph serves `/v1/health`; the MCP lists its tools). The lock",
+    "is exported from each project's `uv.lock`, so the runtime has the versions the tests ran with.",
+    "",
+    "Targets: `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`, `x86_64-apple-darwin`,",
+    "`x86_64-pc-windows-msvc`."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/design.md#the-editors-and-the-set-up",
+   "type": "spec",
+   "title": "Spec 009 — Design — The editors and the set-up",
+   "summary": "Decided by the user on 2026-11-17: the least memory and the fewest problems of compatibility.",
+   "body": [
+    "Decided by the user on 2026-11-17: the least memory and the fewest problems of compatibility. The editors run",
+    "`nuclear-builder setup` as a process, one call per action; no process of it stays alive between actions (a Python",
+    "that waited would hold 60 to 100 MB for nothing, and starting a process is the same on the three systems).",
+    "",
+    "- `--plan --json`: this machine, the profiles with how each sits on it, the suggested one, the machine's choice,",
+    "  the AI root, the requirements of both modes.",
+    "- `--events --profile <id> --from <step>`: one JSON line per event (`steps`, `step`, `done`, `failed`).",
+    "- `--status --json`, `--restart graph|developer`, `--set KEY=value ...`.",
+    "",
+    "What an editor only reads (`ai.env`, the ports in it) it reads itself. Until the engine is in Nuclear, the",
+    "command's pipeline subcommands run the installation's `bin/nuclear-builder.js` with node."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/design.md#the-set-up",
+   "type": "spec",
+   "title": "Spec 009 — Design — The set-up",
+   "summary": "`nuclear-builder setup` (Nuclear, run by `ai/python`) keeps the steps of ADR-installer-0002 without what the archive now brings: 1. this machine and the profile (data: `aiSetup.json`, moved beside the Builder); 2. the ports (`servicePorts`: listen on each for a moment, take the next free one,…",
+   "body": [
+    "`nuclear-builder setup` (Nuclear, run by `ai/python`) keeps the steps of ADR-installer-0002 without what the",
+    "archive now brings:",
+    "",
+    "1. this machine and the profile (data: `aiSetup.json`, moved beside the Builder);",
+    "2. the ports (`servicePorts`: listen on each for a moment, take the next free one, write `ai.env`);",
+    "3. the services at login, started now;",
+    "4. the knowledge base (`connect`, `ingest`);",
+    "5. Ollama and the models: only checked; what is missing is shown in the welcome page, never installed."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/design.md#the-welcome-page",
+   "type": "spec",
+   "title": "Spec 009 — Design — The welcome page",
+   "summary": "The extension's set-up page becomes its welcome page: 1. what the AI services are; 2. the profile; 3. Ollama: its page for this system, a check every three seconds that sees it running; 4. the models: one row each, with its size, `fit`, and a Download button (`/api/pull` with its progress); 5. the…",
+   "body": [
+    "The extension's set-up page becomes its welcome page:",
+    "",
+    "1. what the AI services are;",
+    "2. the profile;",
+    "3. Ollama: its page for this system, a check every three seconds that sees it running;",
+    "4. the models: one row each, with its size, `fit`, and a Download button (`/api/pull` with its progress);",
+    "5. the services' state."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/requirements.md#goal",
+   "type": "spec",
+   "title": "Spec 009: the AI services, ready to run from the installer — Requirements — Goal",
+   "summary": "`curl … | sh` (or `irm … | iex`) on a clean machine, of any of the supported systems, leaves the Smart Graph, the MCP server, the Nuclear Developer and Nuclear Builder ready to run, with nothing assumed on the machine: no Python, no uv, no Node.js.",
+   "body": [
+    "`curl … | sh` (or `irm … | iex`) on a clean machine, of any of the supported systems, leaves the Smart Graph, the",
+    "MCP server, the Nuclear Developer and Nuclear Builder ready to run, with nothing assumed on the machine: no Python,",
+    "no uv, no Node.js. Asked by the user on 2026-11-17. The decision is ADR-installer-0003."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/requirements.md#out-of-scope",
+   "type": "spec",
+   "title": "Spec 009: the AI services, ready to run from the installer — Requirements — Out of scope",
+   "summary": "Out of scope",
+   "body": [
+    "- Linux with musl (Alpine): no local services (onnxruntime has no wheel for it).",
+    "- Installing Ollama or pulling a model without the user pressing its button."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/requirements.md#requirements",
+   "type": "spec",
+   "title": "Spec 009: the AI services, ready to run from the installer — Requirements — Requirements",
+   "summary": "1. The release builds, for each system and processor, one archive with a Python of its own and the four services installed in it, tested by the release's CI on that system before it is published.",
+   "body": [
+    "1. The release builds, for each system and processor, one archive with a Python of its own and the four services",
+    "   installed in it, tested by the release's CI on that system before it is published.",
+    "2. The installers download that archive only when the user wants the AI services (`--no-ai` skips it), check its",
+    "   SHA-256, and unpack it into the installation; `nuclear-graph`, `nuclear-mcp`, `nuclear-developer` and",
+    "   `nuclear-builder` are on the PATH after it.",
+    "3. Nuclear Builder is a Nuclear project (`python` dialect) in that runtime; the editors run it as a process.",
+    "4. Ollama and the models are installed by the user, guided by the extension's welcome page step by step; the",
+    "   user chooses each model, sees its size and how it sits on the machine, and downloads it with one button.",
+    "5. The services listen on 127.0.0.1 on ports the set-up checked it can listen on; a port held by another program",
+    "   or kept by the system is passed over; every service and client finds the chosen port.",
+    "6. Without Ollama, the remote mode works (the MCP server with the generators, the compiler, the command line and",
+    "   the internet tools).",
+    "7. An update keeps the machine's choice; `--uninstall` removes the runtime and leaves the user's data, Ollama and",
+    "   the models."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/tasks.md#phase-1-the-ports-done-2026-11-17",
+   "type": "spec",
+   "title": "Spec 009 — Tasks — Phase 1: the ports (done 2026-11-17)",
+   "summary": "key was absent: the MCP server failed to start on a machine with no `ai.env`).",
+   "body": [
+    "- [x] T1.1 The set-up checks each port can be listened on and takes the next free one (`choosePort`, a test).",
+    "- [x] T1.2 The graph, the MCP server and the editor read the chosen port from `ai.env`.",
+    "- [x] T1.3 The compiler reads a map from a call with a lookup (`Conf.all()[\"k\"]` was a `KeyError` in Python when the",
+    "      key was absent: the MCP server failed to start on a machine with no `ai.env`)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/tasks.md#phase-2-the-runtime-in-the-release-done-2026-11-17",
+   "type": "spec",
+   "title": "Spec 009 — Tasks — Phase 2: the runtime in the release (done 2026-11-17)",
+   "summary": "installed from their locks, the launchers, the archive and its `.sha256`.",
+   "body": [
+    "- [x] T2.1 `installer/release/ai-runtime.sh <target>`: python-build-standalone, the four projects built and",
+    "      installed from their locks, the launchers, the archive and its `.sha256`.",
+    "- [x] T2.2 A job of `release.yml` per target, with the smoke test on its runner.",
+    "- [x] T2.3 `release/install.sh` and `install.ps1` download and unpack the AI archive (unless `--no-ai`);",
+    "      `installer/install.sh --ai` builds it from the tree.",
+    "- [x] T2.4 `--uninstall` removes `ai/`.",
+    "- [x] T2.5 Tried in `release/clean-machine/` (no Python, no uv, no Node.js): install, set-up, services, a reboot.",
+    "      It found the graph installed as a link to the checkout (the MCP server's editable source): `ai-runtime.sh`",
+    "      installs with `--no-sources` and fails when a `.pth` points into the checkout."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/tasks.md#phase-3-nuclear-builder-in-nuclear",
+   "type": "spec",
+   "title": "Spec 009 — Tasks — Phase 3: Nuclear Builder in Nuclear",
+   "summary": "dialect (`extensions/tools/nuclear-builder`: `setup.nuc`, `cli.nuc`, `setup.json`), with its tests; the compiler fixes it needed (a typed value of a file, `...(c ? a : b)`, `a?.b ??",
+   "body": [
+    "- [x] T3.1a The set-up (was `aiSetup.ts`) and the `nuclear-builder` command as a Nuclear project of the `python`",
+    "      dialect (`extensions/tools/nuclear-builder`: `setup.nuc`, `cli.nuc`, `setup.json`), with its tests; the",
+    "      compiler fixes it needed (a typed value of a file, `...(c ? a : b)`, `a?.b ?? c`, the type of a list with",
+    "      spreads, a local or a member importing another file, `for k, v in m ?? {}`, `print`'s named arguments, a",
+    "      constant of a file seen by the other files of the project).",
+    "- [ ] T3.1b The engine (`src/engine.ts`, `src/safety.ts`, the pipeline of `src/cli.ts`, about 2,400 lines) with its",
+    "      tests.",
+    "- [x] T3.2a The VS Code set-up and settings pages run `nuclear-builder setup` as a process; their pages stay.",
+    "- [ ] T3.2b The Builder's page and the JetBrains tool window run the engine in Nuclear.",
+    "- [x] T3.3a `nuclear-builder` from the AI archive: the installers' set-up needs no Node.js.",
+    "- [ ] T3.3b Node.js no longer needed outside the editor (the pipeline, after T3.1b)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/009-self-contained-ai-services/tasks.md#phase-4-the-welcome-page",
+   "type": "spec",
+   "title": "Spec 009 — Tasks — Phase 4: the welcome page",
+   "summary": "user's, one button per model.",
+   "body": [
+    "- [ ] T4.1 The set-up page becomes the welcome page (design: *The welcome page*): Ollama and the models are the",
+    "      user's, one button per model.",
+    "- [ ] T4.2 The set-up no longer installs Ollama nor pulls a model by itself; the guide (`installer/docs/08-guides/",
+    "      ai-setup.md`) says so."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/009-self-contained-ai-services/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform",
    "type": "readme",
    "title": "Specs of the platform",
@@ -1593,7 +1865,8 @@
     "| Spec | Change | State |",
     "|---|---|---|",
     "| [006-public-repositories](006-public-repositories/plan.md) | The organization and the split into public repositories | superseded by `ADR-platform-0002`; kept for what it says of the organization, the license and the published packages |",
-    "| [008-restructure](008-restructure/tasks.md) | One repository, a project per folder, per-project documents, the new names | in progress |"
+    "| [008-restructure](008-restructure/tasks.md) | One repository, a project per folder, per-project documents, the new names | done (2026-11-17) |",
+    "| [009-self-contained-ai-services](009-self-contained-ai-services/tasks.md) | The AI services ready to run from the installer: their own Python, Nuclear Builder in Nuclear, Ollama and the models by the user, the ports chosen | in progress (phases 1 and 2 done, phase 3 half done) |"
    ],
    "agents": false,
    "sources": [
@@ -2134,72 +2407,13 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.32f913",
+   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.12472f",
    "type": "adr",
    "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
-   "summary": "embeddings behind one address, an open licence, no window that must stay open.",
+   "summary": "macOS, a script in the Startup folder on Windows.",
    "body": [
-    "embeddings behind one address, an open licence, no window that must stay open. Where the models run is one",
-    "   address (`OLLAMA_URL`): changing the program later touches the Developer's connection, not the set-up.",
-    "7. **Remote agents only** is a choice of the first step: nothing runs on the machine. The MCP server is installed",
-    "   alone (`nuclear-graph[mcp]`, 33 MB instead of 405), offers the generators, the compiler, the command line and",
-    "   the internet tools, takes away the tools that need the graph or the local developer, and its instructions ask",
-    "   the model to write what the generators do not. The wizard says what that costs: every line is paid tokens.",
-    "8. **The choice is one file**: `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`), `KEY=value` lines:",
-    "   the mode, the profile, its models. The services start with it; the Builder and the editor take their default models",
-    "   from it; the MCP server reads the mode from it. A model set in the editor's settings wins there and is written",
-    "   to the file when the editor restarts a service.",
-    "9. **The services start at every login**, with the system's own means and no administrator rights: two systemd",
-    "   user units on Linux (`nuclear-graph`, `nuclear-developer`, restarted when they fail), two launch agents on",
-    "   macOS, a script in the Startup folder on Windows. The editor's Start and Restart go through them. A system"
-   ],
-   "agents": false,
-   "sources": [
-    "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.8d8ebd",
-   "type": "adr",
-   "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
-   "summary": "reason; the user chooses, also one that does not fit.",
-   "body": [
-    "reason; the user chooses, also one that does not fit. What each profile says of itself is measured with the",
-    "   Developer's own evaluation, not estimated; the table of the profiles is in",
-    "   [the guide](../08-guides/ai-setup.md) (§3), held to the data by a test. Every local profile also downloads",
-    "   `embeddinggemma`, which makes the graph's vectors. No model is larger than 3B parameters of effective size.",
-    "5. **What the services need is data too**: NuclearLang itself, `uv` (the Python environments; it brings its own",
-    "   Python) and Ollama (the local profiles only). Each is found by its command, or installed by its own installer in",
-    "   a terminal the user sees (Ollama's asks for a password on Linux), or by hand from its page: the wizard checks",
-    "   every three seconds and sees it once it is there.",
-    "6. **Ollama stays the program that runs the models.** Looked at: llama.cpp's own server, LM Studio, MLX, vLLM.",
-    "   Ollama, LM Studio, Jan and others run the same engine (llama.cpp), so on the same model and quantization the",
-    "   published differences are a few percent, and the comparisons found disagree with each other; MLX is clearly",
-    "   faster on Apple silicon, and Ollama has an MLX engine there. What decides is the rest: one installer per system",
-    "   that leaves a service running, models pulled by name, a model loaded when asked and freed afterwards, chat and"
-   ],
-   "agents": false,
-   "sources": [
-    "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.921ae8",
-   "type": "adr",
-   "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
-   "summary": "without a user service manager gets the services started now and is told so.",
-   "body": [
-    "without a user service manager gets the services started now and is told so. A service started by hand that",
+    "macOS, a script in the Startup folder on Windows. The editor's Start and Restart go through them. A system",
+    "   without a user service manager gets the services started now and is told so. A service started by hand that",
     "   holds the port stops the set-up with the command that stops it.",
     "10. **A service that starts at login runs before the keyring opens.** The graph writes down the names of the",
     "    secrets its keyring keeps (`.keyring` of its data folder, no secret in it): a keyring that does not answer for",
@@ -2210,8 +2424,55 @@
     "11. **An update keeps the choice.** The environments live inside the installation, so an installer that replaces",
     "    it runs the set-up again with the profile the machine has, without questions. `--no-ai` skips it,",
     "    `--profile <id>` takes one without questions, and without a terminal (CI) nothing is asked or downloaded.",
-    "12. **Uninstalling** takes away what starts the services, the graph's tool, the Developer's launcher and the file",
-    "    of the choice (`nuclear-builder setup --remove`, called by `--uninstall`). Ollama, its models and the graph's data",
+    "12. **Uninstalling** takes away what starts the services, the graph's tool, the Developer's launcher and the file"
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.98d938",
+   "type": "adr",
+   "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
+   "summary": "that leaves a service running, models pulled by name, a model loaded when asked and freed afterwards, chat and embeddings behind one address, an open licence, no window that must stay open.",
+   "body": [
+    "that leaves a service running, models pulled by name, a model loaded when asked and freed afterwards, chat and",
+    "   embeddings behind one address, an open licence, no window that must stay open. Where the models run is one",
+    "   address (`OLLAMA_URL`): changing the program later touches the Developer's connection, not the set-up.",
+    "7. **Remote agents only** is a choice of the first step: nothing runs on the machine. The MCP server is installed",
+    "   alone (`nuclear-graph[mcp]`, 33 MB instead of 405), offers the generators, the compiler, the command line and",
+    "   the internet tools, takes away the tools that need the graph or the local developer, and its instructions ask",
+    "   the model to write what the generators do not. The wizard says what that costs: every line is paid tokens.",
+    "8. **The choice is one file**: `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`), `KEY=value` lines:",
+    "   the mode, the profile, its models. The services start with it; the Builder and the editor take their default models",
+    "   from it; the MCP server reads the mode from it. A model set in the editor's settings wins there and is written",
+    "   to the file when the editor restarts a service.",
+    "9. **The services start at every login**, with the system's own means and no administrator rights: two systemd",
+    "   user units on Linux (`nuclear-graph`, `nuclear-developer`, restarted when they fail), two launch agents on"
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.9f9e11",
+   "type": "adr",
+   "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
+   "summary": "of the choice (`nuclear-builder setup --remove`, called by `--uninstall`).",
+   "body": [
+    "of the choice (`nuclear-builder setup --remove`, called by `--uninstall`). Ollama, its models and the graph's data",
     "    stay: they are the user's."
    ],
    "agents": false,
@@ -2225,7 +2486,37 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.f5afe4",
+   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.a5c581",
+   "type": "adr",
+   "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
+   "summary": "set-up suggests the heaviest that fits the machine and marks the ones that are tight or do not fit, with the reason; the user chooses, also one that does not fit.",
+   "body": [
+    "set-up suggests the heaviest that fits the machine and marks the ones that are tight or do not fit, with the",
+    "   reason; the user chooses, also one that does not fit. What each profile says of itself is measured with the",
+    "   Developer's own evaluation, not estimated; the table of the profiles is in",
+    "   [the guide](../08-guides/ai-setup.md) (§3), held to the data by a test. Every local profile also downloads",
+    "   `embeddinggemma`, which makes the graph's vectors. No model is larger than 3B parameters of effective size.",
+    "5. **What the services need is data too**: NuclearLang itself, `uv` (the Python environments; it brings its own",
+    "   Python) and Ollama (the local profiles only). Each is found by its command, or installed by its own installer in",
+    "   a terminal the user sees (Ollama's asks for a password on Linux), or by hand from its page: the wizard checks",
+    "   every three seconds and sees it once it is there.",
+    "6. **Ollama stays the program that runs the models.** Looked at: llama.cpp's own server, LM Studio, MLX, vLLM.",
+    "   Ollama, LM Studio, Jan and others run the same engine (llama.cpp), so on the same model and quantization the",
+    "   published differences are a few percent, and the comparisons found disagree with each other; MLX is clearly",
+    "   faster on Apple silicon, and Ollama has an MLX engine there. What decides is the rest: one installer per system"
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#decision.e47d56",
    "type": "adr",
    "title": "ADR-0002: The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login — Decision",
    "summary": "1. Every release archive carries the code of the services (`ai/nuclear-graph-storage` with its knowledge base, and `ai/nuclear-agents/nuclear_developer`: 5 MB).",
@@ -2233,15 +2524,14 @@
     "1. **Every release archive carries the code of the services** (`ai/nuclear-graph-storage` with its knowledge base, and",
     "   `ai/nuclear-agents/nuclear_developer`: 5 MB). What is large is downloaded by the set-up, after the user chose: the Python packages",
     "   (about 550 MB) and the models. Nothing of a model fits a release (a release file is at most 2 GB).",
-    "2. **One set-up, two fronts.** `aiSetup.ts` reads the machine, finds what is installed and runs the steps. The",
+    "2. **One set-up, two fronts.** The set-up (`nuclear-builder setup`, written in Nuclear since spec 009) reads the machine, finds what is installed and runs the steps. The",
     "   editor shows it as a wizard (*Nuclear: Set Up the AI Services*; offered once on a machine never set up; a button",
     "   in *Settings and integrations*); a terminal as `nuclear-builder setup`, which the installers call at their end.",
     "   Nothing is downloaded before the user presses Install or answers the question.",
     "3. **The wizard's steps**: this machine (processor, memory, GPU, free disk) and where the agents run; the profile;",
     "   what it needs; the installation, with the progress of each step and *Try again* from the step that failed.",
-    "4. **Profiles are data** (`aiSetup.json`): `remote`, `lite`, `medium`, `hard`. Each names its models, what it",
-    "   downloads, the memory it runs well with and the least it loads with, what works with it and what does not. The",
-    "   set-up suggests the heaviest that fits the machine and marks the ones that are tight or do not fit, with the"
+    "4. **Profiles are data** (`setup.json` of `extensions/tools/nuclear-builder`): `remote`, `lite`, `medium`, `hard`. Each names its models, what it",
+    "   downloads, the memory it runs well with and the least it loads with, what works with it and what does not. The"
    ],
    "agents": false,
    "sources": [
@@ -2296,6 +2586,195 @@
    }
   },
   {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#consequences",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — Consequences",
+   "summary": "on each system before it is published, so a failure shows there, not on the user's machine.",
+   "body": [
+    "- Positive: `install.sh` on a clean machine leaves services that run. One runtime is tested by the release's CI",
+    "  on each system before it is published, so a failure shows there, not on the user's machine. A port held by",
+    "  another program no longer stops the set-up.",
+    "- Negative:",
+    "  - The AI archive is large. The packages are about 550 MB on disk, and the size of the compressed archive will be",
+    "    measured on the first release, not estimated here.",
+    "  - Every system and processor needs its own build: Linux x86_64 and arm64 (glibc), macOS arm64 and x86_64,",
+    "    Windows x86_64.",
+    "  - Linux with musl (Alpine) gets no local services: onnxruntime publishes no wheel for it.",
+    "  - Nuclear Builder must be ported before Node.js stops being needed."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — Context and problem",
+   "summary": "After ADR-installer-0002 a release carried only the `.nuc` sources of the services.",
+   "body": [
+    "After ADR-installer-0002 a release carried only the `.nuc` sources of the services. The set-up then needed, on the",
+    "user's machine: Node.js (to run `nuclear-builder setup`), uv and a Python 3.12 or newer (to build the environments,",
+    "about 550 MB of packages downloaded there), and Ollama installed by the set-up. A clean machine has none of them, so",
+    "`install.sh` left a NuclearLang without its services, and the services failed in ways that depend on the machine",
+    "(a Python too old, a package without a wheel for it, a port held by another program). The user (2026-11-17): the",
+    "installer must bring the services ready to run, never assume a Python on the machine, take the option that weighs",
+    "least, works on the most machines and gives no service that does not start; Ollama and the models are the user's,",
+    "guided step by step by the extension's welcome page; the ports must be checked."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#decision.5fa3e1",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — Decision",
+   "summary": "1. One runtime per system, built by the release.",
+   "body": [
+    "1. **One runtime per system, built by the release.** Each release has, beside the archive of `nuclear`, an archive",
+    "   `nuclearlang-ai-<version>-<os>-<arch>`: a Python of python-build-standalone (the one uv uses, relocatable, no",
+    "   system Python), the locked packages of the services already installed in it, the services' code transpiled by",
+    "   the release's CI (`nuclear build`), and the launchers `nuclear-graph`, `nuclear-mcp`, `nuclear-developer` and",
+    "   `nuclear-builder`. The four share that one Python: no package is installed twice. The user's machine needs",
+    "   nothing: no Python, no uv, no Node.js, no compiler.",
+    "2. **Python, not TypeScript, for every service.** Measured on the development machine (Linux x86_64): the graph's",
+    "   environment is 406 MB, 107 MB compressed (chromadb with its Rust bindings 57 MB, onnxruntime 63 MB, numpy",
+    "   59 MB, and `kubernetes`, 74 MB, a dependency chromadb's client pulls in); the Developer's is 148 MB (LangChain,",
+    "   LangGraph, FastAPI). Moving the graph and the Developer to TypeScript would need Node.js on the machine (about",
+    "   45 MB compressed per system) and a new vector store: Chroma's embedded store exists only in Python, its",
+    "   JavaScript client needs a Chroma server, which is Python. The search would have to be measured again from zero"
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#decision.60c181",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — Decision",
+   "summary": "(174 questions today).",
+   "body": [
+    "(174 questions today). The MCP server is also Python. Python is already the language of three services out of",
+    "   four, so keeping them in Python and porting the fourth weighs least and risks least.",
+    "3. **Nuclear Builder becomes a Nuclear project with the `python` dialect** (rule 9 of the tree: Nuclear first),",
+    "   run by the same runtime. The editors call it as a process: VS Code, Android Studio and Zed get the same engine,",
+    "   and the terminal gets `nuclear-builder` without Node.js. The VS Code extension keeps only its pages in",
+    "   TypeScript. Until the port is done, the release builds `nuclear-builder` as today and the installer says that",
+    "   it needs Node.js.",
+    "4. **Ollama and the models are the user's.** The set-up never installs Ollama nor pulls a model by itself. The",
+    "   extension's welcome page shows the steps: what Ollama is, its page for the user's system, a check that sees it",
+    "   running, then the models, each with its size and how it sits on this machine (`fit`), downloaded only when the",
+    "   user presses its button. Without Ollama the services run in remote mode (ADR-installer-0002, §7).",
+    "5. **The ports are chosen, not assumed.** The services listen on 127.0.0.1 only. A port of 127.0.0.1 above 1024",
+    "   needs no permission and no administrator on Linux, macOS or Windows, and no firewall asks about it (a firewall"
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#decision.a1fffa",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — Decision",
+   "summary": "asks only for an address other machines can reach).",
+   "body": [
+    "asks only for an address other machines can reach). Nothing is reserved in the system: on Windows reserving a",
+    "   port (`netsh int ipv4 add excludedportrange`) needs an administrator, and the installers ask for none. Instead,",
+    "   the set-up listens on each port for a moment before writing it. A port another program holds, or one Windows",
+    "   keeps for Hyper-V, WSL or Docker (an error, not \"in use\"), is passed over for the next free one, from 7878 (the",
+    "   graph) and 7879 (the Developer). The choice is written to `ai.env` (`NUCLEAR_GRAPH_PORT`,",
+    "   `NUCLEAR_DEVELOPER_PORT`). Every service and client reads the port from the environment, then `ai.env`, then",
+    "   the default, so a shell that never read `ai.env` reaches the services all the same. A service of ours already",
+    "   answering on its port keeps it.",
+    "6. **What stays from ADR-installer-0002:**",
+    "   - the profiles as data, with their measured limits;",
+    "   - `ai.env` as the one record of the machine's choice;",
+    "   - the services at every login (systemd user units, launch agents, the Startup folder);",
+    "   - the wait for the keyring;",
+    "   - an update keeps the choice;",
+    "   - `--no-ai`, `--profile`;",
+    "   - uninstalling leaves the user's data, Ollama and the models."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#options-considered",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — Options considered",
+   "summary": "1. A Python of our own, shared by the four services.",
+   "body": [
+    "1. **A Python of our own, shared by the four services.** Chosen.",
+    "2. **PyInstaller, one binary per service.** Each binary carries its own Python and packages, more than 1 GB in all.",
+    "   chromadb and onnxruntime need hand-kept hooks, and antivirus programs on Windows often flag such binaries.",
+    "3. **Nuitka.** Long builds on every system of the CI, and the same packages to tame.",
+    "4. **Everything in TypeScript on a Node.js of our own.** It rewrites the graph and the Developer and replaces",
+    "   Chroma, and the search would have to be measured again. It saves about 60 MB of runtime, but it needs Node.js",
+    "   inside the release anyway.",
+    "5. **Keep assuming Python, uv and Node.js.** The problem itself."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md#references",
+   "type": "adr",
+   "title": "ADR-0003: The AI services bring their own Python; nothing is assumed on the user's machine — References",
+   "summary": "need), §6 (Ollama installed by the set-up).",
+   "body": [
+    "- Supersedes: ADR-installer-0002 §1, §2 (the set-up's two fronts, now one Python engine), §5 (what the services",
+    "  need), §6 (Ollama installed by the set-up). The rest of ADR-installer-0002 stands.",
+    "- The plan: [spec 009](../../../docs/04-specs/009-self-contained-ai-services/requirements.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0003-the-ai-services-bring-their-own-python.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
    "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release",
    "type": "adr",
    "title": "Decisions of the installers and the release",
@@ -2307,7 +2786,8 @@
     "| ADR | Decision | Status |",
     "|---|---|---|",
     "| [ADR-installer-0001](0001-release-archives-and-one-line-installers.md) | A release is one archive per system, installed by a one-line installer into the user's folders | accepted |",
-    "| [ADR-installer-0002](0002-the-ai-services-come-with-the-installer.md) | The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login | accepted |",
+    "| [ADR-installer-0002](0002-the-ai-services-come-with-the-installer.md) | The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login | accepted; §1, §2, §5, §6 superseded by 0003 |",
+    "| [ADR-installer-0003](0003-the-ai-services-bring-their-own-python.md) | The AI services bring their own Python; nothing is assumed on the user's machine; Ollama is the user's; the ports are chosen | accepted |",
     "",
     "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
     "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
@@ -11245,11 +11725,10 @@
    "id": "doc:tools/mcp/docs/03-adr/0001-the-mcp-server-is-a-project-of-its-own.md#consequences",
    "type": "adr",
    "title": "ADR-0001: The MCP server is a Nuclear project of its own, `nuclear-mcp` — Consequences",
-   "summary": "set-up runs again.",
+   "summary": "Consequences",
    "body": [
     "- Positive: the server's code, tests and dependencies are in its project; the graph's package is lighter.",
-    "- Negative: two packages to install where there was one; the old registrations name `nuclear-graph mcp` until the",
-    "  set-up runs again."
+    "- Negative: two packages to install where there was one."
    ],
    "agents": false,
    "sources": [
@@ -11291,8 +11770,8 @@
     "   stdio; `nuclear-mcp tools` prints its instructions and tools as JSON.",
     "2. It reaches the graph through the graph's package as a dependency (its type definitions in `defs/`), never the",
     "   other way: the graph's knowledge base reads the server's tools by running `nuclear-mcp tools`.",
-    "3. The graph's package has no MCP server and no `mcp` extra. `nuclear-graph mcp` runs `nuclear-mcp`, so a client",
-    "   registered before keeps working.",
+    "3. The graph's package has no MCP server and no `mcp` extra. (Amended 2026-11-17: `nuclear-graph mcp`, which ran",
+    "   `nuclear-mcp` for the clients registered before, is gone; a client registers `nuclear-mcp`.)",
     "4. A machine of remote agents only installs `tools/mcp` (it pulls the graph's package without its `server` extra:",
     "   33 MB, as before); a machine with the local agents installs the graph's `server` extra and `tools/mcp`.",
     "5. Every client is registered with `nuclear-mcp` and no argument (the editor's setting `nuclear.ai.mcpCommand`)."

@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted; §1, §2, §5 and §6 superseded by ADR-installer-0003
 date: 2026-11-13
 deciders: Julian Molina
 ---
@@ -22,13 +22,13 @@ who does not want it choosing the remote agents alone.
 1. **Every release archive carries the code of the services** (`ai/nuclear-graph-storage` with its knowledge base, and
    `ai/nuclear-agents/nuclear_developer`: 5 MB). What is large is downloaded by the set-up, after the user chose: the Python packages
    (about 550 MB) and the models. Nothing of a model fits a release (a release file is at most 2 GB).
-2. **One set-up, two fronts.** `aiSetup.ts` reads the machine, finds what is installed and runs the steps. The
+2. **One set-up, two fronts.** The set-up (`nuclear-builder setup`, written in Nuclear since spec 009) reads the machine, finds what is installed and runs the steps. The
    editor shows it as a wizard (*Nuclear: Set Up the AI Services*; offered once on a machine never set up; a button
    in *Settings and integrations*); a terminal as `nuclear-builder setup`, which the installers call at their end.
    Nothing is downloaded before the user presses Install or answers the question.
 3. **The wizard's steps**: this machine (processor, memory, GPU, free disk) and where the agents run; the profile;
    what it needs; the installation, with the progress of each step and *Try again* from the step that failed.
-4. **Profiles are data** (`aiSetup.json`): `remote`, `lite`, `medium`, `hard`. Each names its models, what it
+4. **Profiles are data** (`setup.json` of `extensions/tools/nuclear-builder`): `remote`, `lite`, `medium`, `hard`. Each names its models, what it
    downloads, the memory it runs well with and the least it loads with, what works with it and what does not. The
    set-up suggests the heaviest that fits the machine and marks the ones that are tight or do not fit, with the
    reason; the user chooses, also one that does not fit. What each profile says of itself is measured with the

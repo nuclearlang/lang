@@ -15,8 +15,8 @@ it (ADR-installer-0002). The user ordered every project into its own folder with
    stdio; `nuclear-mcp tools` prints its instructions and tools as JSON.
 2. It reaches the graph through the graph's package as a dependency (its type definitions in `defs/`), never the
    other way: the graph's knowledge base reads the server's tools by running `nuclear-mcp tools`.
-3. The graph's package has no MCP server and no `mcp` extra. `nuclear-graph mcp` runs `nuclear-mcp`, so a client
-   registered before keeps working.
+3. The graph's package has no MCP server and no `mcp` extra. (Amended 2026-11-17: `nuclear-graph mcp`, which ran
+   `nuclear-mcp` for the clients registered before, is gone; a client registers `nuclear-mcp`.)
 4. A machine of remote agents only installs `tools/mcp` (it pulls the graph's package without its `server` extra:
    33 MB, as before); a machine with the local agents installs the graph's `server` extra and `tools/mcp`.
 5. Every client is registered with `nuclear-mcp` and no argument (the editor's setting `nuclear.ai.mcpCommand`).
@@ -28,8 +28,7 @@ it (ADR-installer-0002). The user ordered every project into its own folder with
 
 ## Consequences
 - Positive: the server's code, tests and dependencies are in its project; the graph's package is lighter.
-- Negative: two packages to install where there was one; the old registrations name `nuclear-graph mcp` until the
-  set-up runs again.
+- Negative: two packages to install where there was one.
 
 ## References
 - Replaces, in ADR-installer-0002, the point "the MCP server is the graph's `mcp` extra".

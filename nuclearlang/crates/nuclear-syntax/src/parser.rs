@@ -333,6 +333,22 @@ impl<'s> Parser<'s> {
         }
     }
 
+    /// Whether a `=` outside brackets comes before the end of the line, from the token `from` on.
+    fn eq_on_line(&self, from: usize) -> bool {
+        let mut depth = 0i32;
+        let mut i = from;
+        loop {
+            match self.peek_at(i) {
+                TokenKind::Punct(Punct::Eq) if depth == 0 => return true,
+                TokenKind::Punct(p) if p.is_open() => depth += 1,
+                TokenKind::Punct(p) if p.is_close() => depth -= 1,
+                TokenKind::Newline | TokenKind::Indent | TokenKind::Dedent | TokenKind::Eof => return false,
+                _ => {}
+            }
+            i += 1;
+        }
+    }
+
     // ---------- file ----------
 
     fn file(&mut self) -> Vec<Item> {
@@ -389,7 +405,11 @@ impl<'s> Parser<'s> {
         }
         if is_pascal(first) {
             // `Logger.info(...)` and `MAX = 1` are statements
-            return !matches!(next, TokenKind::Punct(Punct::Dot | Punct::Eq | Punct::QuestionDot | Punct::LBracket));
+            if matches!(next, TokenKind::Punct(Punct::Dot | Punct::Eq | Punct::QuestionDot | Punct::LBracket)) {
+                return false;
+            }
+            // `PORTS: <string, int> = {...}` is a typed value; `Admin: User` a header, which never has a `=`
+            return !(matches!(next, TokenKind::Punct(Punct::Colon)) && self.eq_on_line(start + 2));
         }
         match next {
             // `greet` + block: function without parameters

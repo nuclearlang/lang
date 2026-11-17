@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to synapsis are written here; versions follow [Semantic Versioning](https://semver.org).
+All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 

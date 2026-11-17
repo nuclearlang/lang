@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [../../../docs/01-product/roadmap.md, ../02-architecture/workspace.md, ../02-architecture/ai-services.md]
 ---
 # Roadmap of the VS Code extension
@@ -14,8 +14,12 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
-- **0.52.0, the renamed tools** (HTTP Connections, Nuclear Atlas: new command, colour and tool ids): compiled,
-  tested (`npm test`) and installed, never opened in a running VS Code.
+- **0.52.0, the renamed tools** (HTTP Connections, Nuclear Atlas: new command, colour and tool ids), and **0.52.2,
+  the ports the set-up chooses**: compiled, tested (`npm test`), packaged and installed (0.52.2), never opened in a
+  running VS Code.
+- **0.53.0, the set-up page and the settings page over `nuclear-builder setup`** (the plan, the steps as JSON
+  lines, `--status --json`, `--restart`, `--set`): compiled and packaged; the commands they run were tried in a
+  terminal (`--plan --json`, `--status --json`, a whole set-up), the pages never opened in a running VS Code.
 Done, and never tried in a running VS Code (only headless renders, node checks, HTTP calls and `nuclear-builder`):
 
 - **The Nuclear workspace** (ADR-extensions-0002): the icon theme on the file tree, the editors swapped per

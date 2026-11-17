@@ -678,7 +678,7 @@
     },
     {
      "rel": "tool",
-     "to": "tool:nuclear-graph.mcp"
+     "to": "mcp:server"
     },
     {
      "rel": "tool",
@@ -717,13 +717,14 @@
     "",
     "1. **This machine**: its processor, memory, GPU and free disk; and where the agents run: on this machine (suggested: it saves tokens) or remote agents only.",
     "2. **The profile**: `lite`, `medium` or `hard`: what each downloads, the memory it wants, what works with it and what does not. One is suggested; the choice is yours.",
-    "3. **What it needs**: NuclearLang, `uv`, Ollama. Each is found by itself once installed, or installed for you in a terminal (Ollama's installer asks for your password on Linux).",
+    "3. **What it needs**: NuclearLang with its AI archive (nothing else: the set-up and the services bring their own Python), and Ollama for a local profile. Each is found by itself once installed, or installed for you in a terminal (Ollama's installer asks for your password on Linux).",
     "4. **Install**: the Smart Graph and the MCP server, the Nuclear Developer, the models, the knowledge base into the graph (about two minutes the first time), both services started. A step that fails says why; try again from it.",
     "",
-    "- Afterwards, give your agent the MCP server: `claude mcp add --scope user nuclear -- nuclear-graph mcp`, or the buttons of *Settings and integrations* in VS Code.",
+    "- Afterwards, give your agent the MCP server: `claude mcp add --scope user nuclear -- nuclear-mcp`, or the buttons of *Settings and integrations* in VS Code.",
     "- Another profile later: run it again; what is installed is kept.",
     "- In CI or a script: the installer's `--no-ai` skips it, `--profile <id>` takes one without questions.",
-    "- From the source tree: `./install.sh --ai`."
+    "- From the source tree: `installer/install.sh --ai` (it needs `uv`), or `--ai-runtime` to build the AI archive as a release brings it.",
+    "- The editors run the same set-up as a process: `nuclear-builder setup --plan --json` and `--events`."
    ],
    "keys": [
     "nuclear-builder setup",

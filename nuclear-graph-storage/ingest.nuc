@@ -36,7 +36,7 @@ Ingest
   static stored(store: Store) <string, Loaded[]>
     common = ["card", "facet", "type", "title", "agents", "platforms", "keys", "tags", "links", "origin", "source", "hash", "rev"]
     out: <string, Loaded[]> = {}
-    for shelf in shelfTable().keys
+    for shelf in SHELVES.keys
       rows: Loaded[] = []
       for item in store.read(shelf, { "facet": "card" })
         card = Assets.cardOf("${item["text"]}")
@@ -79,11 +79,11 @@ Ingest
     byShelf: <string, <string, any>[]> = {}
     for shelf, rows in loaded
       byShelf[shelf] = rows.map((l) => l.row)
-    problems: string[] = [...Assets.problems(byShelf), ...Facts.problems(byShelf[exactShelf()] ?? [])]
+    problems: string[] = [...Assets.problems(byShelf), ...Facts.problems(byShelf[EXACT] ?? [])]
     if problems.length > 0
       throw ValueError("the knowledge base is not valid:\n${problems.take(20).join("\n")}")
     result: <string, any> = {}
-    for shelf in shelfTable().keys
+    for shelf in SHELVES.keys
       items: <string, any>[] = []
       held: Loaded[] = loaded[shelf] ?? []
       for l in held

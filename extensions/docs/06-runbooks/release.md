@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [../02-architecture/language-server.md, ../../vscode/AGENTS.md, ../../jetbrains/AGENTS.md, ../../zed/AGENTS.md]
 ---
 # Release the extensions
@@ -25,7 +25,9 @@ asking. The three extensions share one version; Zed's follows VS Code's.
    (cd extensions/zed && ./build.sh)                                    # builds and installs into Zed
    ```
 
-4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`), rebuilds
+4. Install: `installer/install.sh`. It installs the newest `.vsix` of `extensions/vscode/` (`sort -V`) and does not
+   build one: without step 3 the previous version stays installed (0.52.1 was never packaged, so VS Code kept 0.52.0;
+   the installer now says so). Check with `code --list-extensions --show-versions`. It rebuilds
    `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).
 5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip
    in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*).

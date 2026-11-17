@@ -1,8 +1,26 @@
 use os
 use pathlib{ Path }
 
-// The port and the address the graph answers at.
-GRAPH_PORT = (os.environ.get("NUCLEAR_GRAPH_PORT") ?? "7878").toInt() ?? 7878
+// What the AI set-up chose on this machine (ADR-installer-0002): the `KEY=value` lines of nuclearlang/ai.env, written by
+// `nuclear-builder setup` and the editor (the mode, the profile, its models and the services' ports).
+machineValues() <string, string>
+  config: string = os.environ.get("XDG_CONFIG_HOME") ?? ""
+  base = os.name == "nt" ? Path(os.environ.get("APPDATA") ?? "${Path.home()}") : (config.length > 0 ? Path(config) : Path.home().joinpath(".config"))
+  found: <string, string> = {}
+  try
+    text: string = base.joinpath("nuclearlang", "ai.env").readText()
+    for line in text.split("\n")
+      cut = line.indexOf("=")
+      if cut > 0 and not line.startsWith("#")
+        found[line.substring(0, cut)] = line.substring(cut + 1).trim()
+  catch e
+    return found
+  found
+
+// The port and the address the graph answers at: the environment's, else the one the set-up chose (a port another
+// program held), else 7878. A shell that never read ai.env reaches the graph all the same.
+MACHINE = machineValues()
+GRAPH_PORT = (os.environ.get("NUCLEAR_GRAPH_PORT") ?? (MACHINE["NUCLEAR_GRAPH_PORT"] ?? "7878")).toInt() ?? 7878
 GRAPH_URL = os.environ.get("NUCLEAR_GRAPH_URL") ?? "http://127.0.0.1:${GRAPH_PORT}"
 
 // The version of the Smart Graph (the same as `pyproject.toml` and `nuclear.toml`).
@@ -23,21 +41,9 @@ Paths
     os.chmod(root, 448)
     root
 
-  // What the AI set-up chose on this machine (ADR-installer-0002): the `KEY=value` lines of nuclearlang/ai.env, written by
-  // `nuclear-builder setup` and the editor (the mode, the profile and its models).
+  // What the AI set-up chose on this machine (`machineValues`).
   static machine() <string, string>
-    config: string = os.environ.get("XDG_CONFIG_HOME") ?? ""
-    base = os.name == "nt" ? Path(os.environ.get("APPDATA") ?? "${Path.home()}") : (config.length > 0 ? Path(config) : Path.home().joinpath(".config"))
-    found: <string, string> = {}
-    try
-      text: string = base.joinpath("nuclearlang", "ai.env").readText()
-      for line in text.split("\n")
-        cut = line.indexOf("=")
-        if cut > 0 and not line.startsWith("#")
-          found[line.substring(0, cut)] = line.substring(cut + 1).trim()
-    catch e
-      return found
-    found
+    machineValues()
 
   // The vectors of the shelves (Chroma).
   static db() Path

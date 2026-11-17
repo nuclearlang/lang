@@ -3,7 +3,7 @@
 // defaults; a project's `.nuclear/builder.json` still wins (it is shared with CI). Jira's credentials live in the secret
 // storage.
 import * as vscode from 'vscode';
-import { readMachine } from './aiSetup';
+import { readMachine, urls } from './aiMachine';
 import { JiraAuth, BuilderConfig, RetryPolicy, toolEnv } from '../../tools/nuclear-builder/src/engine';
 
 export const JIRA_SECRET = 'nuclear.builder.jira';
@@ -34,8 +34,9 @@ export function aiSettings(): AiSettings {
     return i?.workspaceFolderValue ?? i?.workspaceValue ?? i?.globalValue ?? chosen ?? i?.defaultValue ?? '';
   };
   return {
-    developerUrl: c.get('developerUrl', 'http://127.0.0.1:7879'),
-    graphUrl: c.get('graphUrl', 'http://127.0.0.1:7878'),
+    // an address set in the editor wins; else the port the set-up chose (ai.env)
+    developerUrl: model('developerUrl', urls().developer),
+    graphUrl: model('graphUrl', urls().graph),
     ollamaUrl: c.get('ollamaUrl', 'http://localhost:11434'),
     coderModel: model('models.coder', machine.CODER_MODEL),
     assistantModel: model('models.assistant', machine.ASSISTANT_MODEL),

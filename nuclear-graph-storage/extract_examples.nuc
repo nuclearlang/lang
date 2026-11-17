@@ -31,7 +31,7 @@ ExtractExamples
   static projects(ctx: Context) <string, any>[]
     layouts: <string, <string, any>> = {}
     kinds: <string, string[]> = {}
-    for p in platformNames()
+    for p in PLATFORMS
       contract = ExtractPlatforms.filesOf(ctx, p).contract
       layouts[p] = tableAt(contract, "layout")
       kinds[p] = listAt(tableAt(contract, "platform"), "kinds")
@@ -75,7 +75,7 @@ ExtractExamples
           "id": "example:${project}/${rel.substring(0, rel.length - 4)}", "type": "file",
           "title": clip("`${kind}` ${name} — the example project ${project}${plat.length > 0 ? " (${plat})" : ""}", 140),
           "summary": summary.length > 0 ? summary : fallback,
-          "body": "`${rel}` of `${project}`:\n\n```nuclear\n${shown}\n```", "platforms": plat in platformNames() ? [plat] : [],
+          "body": "`${rel}` of `${project}`:\n\n```nuclear\n${shown}\n```", "platforms": plat in PLATFORMS ? [plat] : [],
           "sources": [path.relativeTo(ctx.tree).asPosix()], "meta": { "kind": kind, "name": name, "project": project },
         })
     programs: Path[] = list(ctx.tree.joinpath("nuclearlang/examples/stdlib").glob("*.nuc"))
@@ -96,7 +96,7 @@ ExtractExamples
   static solvedRow(rid: string, task: string, path: string, kind: string, code: string, plat: string) <string, any>
     {
       "id": "solved:${rid}", "type": "solved", "title": clip("Solved — a ${kind}: ${task}", 140), "summary": clip(task, 400),
-      "body": "Task: ${task}\n\nFile `${path}`:\n\n```nuclear\n${code.trim()}\n```", "platforms": plat in platformNames() ? [plat] : [],
+      "body": "Task: ${task}\n\nFile `${path}`:\n\n```nuclear\n${code.trim()}\n```", "platforms": plat in PLATFORMS ? [plat] : [],
       "sources": ["nuclear-agents/nuclear_developer/eval/tasks.toml", "nuclear-agents/nuclear_developer/eval/results/reference.json"], "meta": { "kind": kind, "validated": "sonnet + nuclear check" },
     }
 

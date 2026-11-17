@@ -28,8 +28,3 @@ package, its commands) is in that platform's roadmap.
   the template, for both backend dialects.
 - **Logs with call sites for Python.** `fastapi` has no `[call_site]` section (the `flutter` and `react` dialects
   have `[call_site.Log]`).
-- **The standard library programs in Python.** Recorded as: `nuclearlang/examples/stdlib/` has no Python version
-  of the 10 areas yet, and `nuclearlang/tools/stdlib-check.sh` runs TypeScript and Dart.
-  TODO(human): `stdlib-check.sh` already builds each area with `--dialect python`, checks it with
-  `pyright --strict` and compares its output with `<area>.out`. Do the 10 areas pass in Python, so this item can be
-  deleted?

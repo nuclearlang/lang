@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [emitter-options.md, result.md, dialects.md, type-definitions.md, ../05-standards/testing.md]
 ---
 # The emitter
@@ -61,7 +61,8 @@ module re-exports it (`[reexports]`). A file imports an auto-import name only if
   for `in`, `map` (a `Map` object) / `object` (a map literal or `<K, V>`); for `eq`/`not_eq`, `null` (a side is
   `null`: Python `is None`). A bitwise operand of a comparison gets parentheses (TS binds `==` tighter);
   `-(a ** b)` under unary minus. `is` gets `t` (the type's `tinfo`: TS writes
-  `typeof`/`Number.isInteger`/`Array.isArray`). `for_entries` gets `map`. Constructed `Map/Set/List<...>()` locals
+  `typeof`/`Number.isInteger`/`Array.isArray`). `for_entries` gets `map` and `iter_member` (the map wrapped for a member after it: `(env ?? {}).items()`). The
+  operand of a spread is wrapped the same way (`*([b] if c else [])`). Constructed `Map/Set/List<...>()` locals
   record their type.
 - `try` as the last line returns the last line of `try` and `catch` (`try_stmt` with the tail).
 - The `try` template gets `catch_used` when the `catch` block names the caught value (`contains_word` over the
@@ -76,6 +77,11 @@ module re-exports it (`[reexports]`). A file imports an auto-import name only if
 A member of a base type is rewritten when the receiver's type is known: `static_type` (the receiver's type),
 `library_access`, `library_render`, with the dialect's `[library.<base>]` templates; N0114 and N0115 are its
 diagnostics. Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`.
+
+A map read `m[k]` uses the dialect's `index` template with the `map` flag (a lookup that gives `null` for an
+absent key, in a dialect whose index throws) when `map_kind` knows the object is a map: a typed local or field, or
+what `static_type` says any other expression gives: a function, a static method of a class of the project or of
+the type definitions (`Paths.machine()["k"]`), a member.
 
 ## Inheritance
 

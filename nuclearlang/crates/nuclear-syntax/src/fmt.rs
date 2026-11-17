@@ -45,6 +45,8 @@ struct Printer<'a> {
     columns: Vec<(usize, usize)>,
     /// Level of the last block line, to add a blank line before a top-level declaration after a block.
     line_level: usize,
+    /// The current line is a `use`: its path (`urllib/parse{ quote }`) keeps its spacing (`/` is not a division).
+    in_use: bool,
 }
 
 impl<'a> Printer<'a> {
@@ -59,6 +61,7 @@ impl<'a> Printer<'a> {
             delta: 0,
             columns: Vec::new(),
             line_level: 0,
+            in_use: false,
         }
     }
 
@@ -85,8 +88,9 @@ impl<'a> Printer<'a> {
                     let gap = &self.src[gap_start..t.span.start];
                     if prev.is_none() || gap.contains('\n') {
                         self.line_gap(gap_start, t.span.start, Some(layout_break));
+                        self.in_use = t.kind == TokenKind::Keyword(Keyword::Use);
                     } else if let Some(p) = prev
-                        && space(before, p, t, !gap.is_empty())
+                        && if self.in_use && use_path(p, t) { !gap.is_empty() } else { space(before, p, t, !gap.is_empty()) }
                     {
                         self.out.push(' ');
                     }
@@ -218,6 +222,11 @@ fn punct(t: &Token) -> Option<Punct> {
     if let TokenKind::Punct(p) = t.kind { Some(p) } else { None }
 }
 
+/// Inside a `use` line: around the `/` of a path and before its `{`.
+fn use_path(a: &Token, b: &Token) -> bool {
+    matches!(punct(a), Some(Punct::Slash)) || matches!(punct(b), Some(Punct::Slash | Punct::LBrace))
+}
+
 /// A token that ends a value: after it, `-` is a subtraction, `(` a call and `[` an index.
 fn operand(t: &Token) -> bool {
     match &t.kind {
@@ -267,6 +276,13 @@ mod tests {
 
     fn same(src: &str) {
         assert_eq!(format(src).unwrap(), src, "not a fixed point");
+    }
+
+    #[test]
+    fn a_use_path_keeps_its_spacing() {
+        // `/` separates the path of a module there, it is not a division
+        let src = "use urllib/parse{ quote }\nuse a/b/c{ D, E }\n\nf() int = 6 /  2\n";
+        assert_eq!(format(src).unwrap(), "use urllib/parse{ quote }\nuse a/b/c{ D, E }\n\nf() int = 6 / 2\n");
     }
 
     #[test]

@@ -6,10 +6,11 @@
 #
 # It downloads the release of this architecture (x86_64 or arm64) from
 # GitHub, checks its SHA-256, installs it in %LOCALAPPDATA%\nuclearlang, puts its bin folder in your user PATH, gives the
-# AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No administrator rights. Then the
-# set-up of the AI services (`nuclear-builder setup`: it reads this machine, suggests a profile and asks before anything
-# is downloaded; a machine already set up is brought up to date without questions). -NoAi skips it; -AiProfile
-# remote|lite|medium|hard takes that profile without questions.
+# AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No administrator rights. Then,
+# asked, the AI services: their archive (a Python of their own with the Smart Graph, the MCP server and the Nuclear
+# Developer; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: it reads this machine,
+# suggests a profile and asks before anything else is downloaded; a machine already set up is brought up to date
+# without questions). -NoAi skips them; -AiProfile remote|lite|medium|hard takes that profile without questions.
 #
 # Environment: NUCLEAR_VERSION, NUCLEAR_INSTALL (the folder), NUCLEAR_REPO (owner/name), NUCLEAR_DOWNLOAD (a mirror),
 # NUCLEAR_AI_PROFILE.
@@ -36,12 +37,13 @@ function Set-UserPath([string[]]$Parts) {
 }
 $UserPath = @(([Environment]::GetEnvironmentVariable('Path', 'User') -split ';') | Where-Object { $_ })
 
-$Builder = Join-Path $Bin 'nuclear-builder.cmd'
+# the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
+$Builder = Join-Path $Install 'ai\bin\nuclear-builder.cmd'
 $env:NUCLEAR_INSTALL = $Install
 
 if ($Uninstall) {
   # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
-  if ((Test-Path $Builder) -and (Get-Command node -ErrorAction SilentlyContinue)) { & $Builder setup --remove *> $null }
+  if (Test-Path $Builder) { & $Builder setup --remove *> $null }
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
   foreach ($d in $SkillDirs) { Remove-Item -Recurse -Force (Join-Path $d 'nuclear') -ErrorAction SilentlyContinue }
   Set-UserPath ($UserPath | Where-Object { $_ -ne $Bin })
@@ -114,7 +116,7 @@ if (-not $NoModifyPath -and -not ($UserPath -contains $Bin)) {
   $env:Path = "$Bin;$env:Path"
 }
 
-# --- the AI services (ADR-installer-0002) ---
+# --- the AI services (ADR-installer-0002, ADR-installer-0003) ---
 # Their environments live inside the installation: a machine already set up gets them again for this version, with
 # the profile it had. A new one is asked; nothing is downloaded before the user chooses.
 $Machine = Join-Path $env:APPDATA 'nuclearlang\ai.env'
@@ -122,15 +124,53 @@ if (-not $AiProfile -and (Test-Path $Machine)) {
   $AiProfile = (Get-Content $Machine | Where-Object { $_ -like 'NUCLEAR_AI_PROFILE=*' } | Select-Object -First 1) -replace '^NUCLEAR_AI_PROFILE=', ''
 }
 $AiNote = ''
+$Interactive = -not $env:CI -and [Environment]::UserInteractive
+if (-not $NoAi -and -not $AiProfile) {
+  if ($Interactive) {
+    Write-Host ''
+    $Answer = Read-Host 'The AI services: the Smart Graph (what agents know of NuclearLang), the MCP server and local agents that write code. Download them (about 160 MB)? [Y/n]'
+    if ($Answer -match '^[nN]') { $NoAi = $true; $AiNote = 'The AI services are not installed: run this installer again when you want them.' }
+  } else {
+    $NoAi = $true
+    $AiNote = 'The AI services are not installed (no terminal here): run this installer in a terminal, or with -AiProfile.'
+  }
+}
 if (-not $NoAi) {
-  if (-not (Test-Path $Builder) -or -not (Get-Command node -ErrorAction SilentlyContinue)) {
-    $AiNote = 'The AI services need Node.js for their set-up: install it and run `nuclear-builder setup`, or use the set-up of the VS Code extension.'
+  # their archive (ADR-installer-0003): a Python of their own with the services in it, unpacked as the installation's ai\
+  $AiName = "nuclearlang-ai-$Version-windows-$Arch.zip"
+  $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("nuclearlang-ai-" + [Guid]::NewGuid())
+  New-Item -ItemType Directory -Path $Tmp | Out-Null
+  try {
+    Write-Host 'Downloading the AI services...'
+    $AiZip = Join-Path $Tmp $AiName
+    $Want = ''
+    try {
+      Invoke-WebRequest "$Base/$AiName" -OutFile $AiZip -UseBasicParsing
+      $Want = ((Invoke-WebRequest "$Base/$AiName.sha256" -UseBasicParsing).Content.ToString() -split '\s+')[0].ToLower()
+    } catch {
+      $NoAi = $true
+      $AiNote = "The AI services of $Version are not published for Windows $Arch."
+    }
+    if (-not $NoAi) {
+      if ($Want -ne (Get-FileHash $AiZip -Algorithm SHA256).Hash.ToLower()) { throw "the AI services' download is damaged (SHA-256 does not match); try again" }
+      Remove-Item -Recurse -Force (Join-Path $Install 'ai') -ErrorAction SilentlyContinue
+      Expand-Archive $AiZip -DestinationPath $Install -Force
+      # nuclear-builder is the archive's from now on: `nuclear-builder setup` works before the set-up ran
+      Set-Content -Path (Join-Path $Bin 'nuclear-builder.cmd') -Value "@`"$Builder`" %*" -Encoding ascii
+    }
+  } finally {
+    Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue
+  }
+}
+if (-not $NoAi) {
+  if (-not (Test-Path $Builder)) {
+    $AiNote = 'The AI archive has no set-up: run this installer again.'
   } elseif ($AiProfile) {
     Write-Host ''
     Write-Host "The AI services, profile $AiProfile..."
     & $Builder setup --profile $AiProfile --yes
     if ($LASTEXITCODE -ne 0) { $AiNote = 'The AI services are not set up: run `nuclear-builder setup`.' }
-  } elseif (-not $env:CI -and [Environment]::UserInteractive) {
+  } elseif ($Interactive) {
     Write-Host ''
     Write-Host 'The AI services: local agents that write the code, and the Smart Graph. You choose what is downloaded.'
     & $Builder setup

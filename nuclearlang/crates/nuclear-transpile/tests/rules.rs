@@ -382,11 +382,55 @@ fn generic_calls() {
 }
 
 #[test]
+fn a_typed_value_of_a_file_is_not_a_header() {
+    // `Admin: User` is a module with a parent; with a `=` on its line it is a typed value of the file
+    let src = "PORTS: <string, int> = { 'graph': 7878 }\nUser(name: string)\nAdmin: User\n  level: int = 1\n";
+    let py = build(src, "python");
+    has(&py, "PORTS: dict[str, int] = {\"graph\": 7878}");
+    has(&py, "class Admin(User):");
+    has(&ts(src), "export const PORTS: Record<string, number> = { 'graph': 7878 };");
+    // a local constant is not exported
+    has(&ts("f() int\n  n = 1\n  n\n"), "  const n = 1;");
+}
+
+#[test]
+fn a_list_with_spreads_has_the_type_of_their_elements() {
+    let py = build("f(a: string, more: string[]) string[]\n  [...a.split(':'), ...more].filter((d) => d.length > 0)\n", "python");
+    has(&py, "if len(d) > 0]");
+}
+
+#[test]
+fn an_optional_member_before_coalesce_is_evaluated_once() {
+    // `?.` is a conditional in Python: `??` must not write it twice (pyright cannot narrow the repetition)
+    let py = build("Item(id: string)\npick(item: Item?) string\n  item?.id ?? 'none'\n", "python");
+    has(&py, "_coalesce((item.id if item is not None else None), lambda: \"none\")");
+}
+
+#[test]
+fn a_map_of_a_coalesce_is_iterated_whole() {
+    let src = "run(env: <string, string>?) void\n  for k, v in env ?? {}\n    print(k)\n";
+    has(&build(src, "python"), "in (env if env is not None else {}).items():");
+    has(&build(src, "dart"), "in (env ?? {}).entries)");
+}
+
+#[test]
+fn print_passes_its_named_arguments_to_python() {
+    let py = build("use sys\nrun() void\n  print('a', flush = true)\n  print('b', file = sys.stderr)\n", "python");
+    has(&py, "_print(\"a\", flush=True)");
+    has(&py, "_print(\"b\", file=sys.stderr)");
+    has(&py, "def _print(*args: object, **options: Any) -> None:");
+}
+
+#[test]
 fn spread_in_lists() {
     has(
         &dart("f(items: string[]) Widget[]\n  [Text('a'), ...items.map(i => Text(i))]\n"),
         "[Text('a'), ...items.map((i) => Text(i)).toList()]",
     );
+    // a conditional spread keeps its parentheses: Python's `*` binds tighter than its `if ... else`
+    let src = "f(on: boolean) string[]\n  ['a', ...(on ? ['b'] : [])]\n";
+    has(&build(src, "python"), "*([\"b\"] if on else [])");
+    has(&ts(src), "...(on ? ['b'] : [])");
 }
 
 #[test]
@@ -972,4 +1016,15 @@ fn a_view_reads_the_default_of_its_parameter() {
     has(&code, "export function Tag(props: TagProps): Element");
     has(&code, "export function Bare(props: BareProps = {}): Element");
     assert!(!code.contains("constructor"), "{code}");
+}
+
+/// A map read is a lookup (`None` when the key is absent) also when the map comes from a call: a function, a static
+/// method of a class, or a local holding what one returns.
+#[test]
+fn a_map_from_a_call_is_read_with_a_lookup_in_python() {
+    let src = "Conf\n  static all() <string, string>\n    found: <string, string> = {}\n    found\n\nmapOf() <string, string>\n  found: <string, string> = {}\n  found\n\nread() string\n  m = Conf.all()\n  a: string = m[\"x\"] ?? \"a\"\n  b: string = Conf.all()[\"x\"] ?? \"b\"\n  c: string = mapOf()[\"x\"] ?? \"c\"\n  \"${a}${b}${c}\"\n";
+    let py = build(src, "python");
+    for read in ["m.get(\"x\")", "Conf.all().get(\"x\")", "map_of().get(\"x\")"] {
+        assert!(py.contains(read), "{read} missing in:\n{py}");
+    }
 }

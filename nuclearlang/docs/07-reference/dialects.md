@@ -319,7 +319,8 @@ now = { template = "new Date()" }             # replaces the whole call
 sleep = { template = "await new Promise((r) => setTimeout(r, {{arg0}}))" }
 ```
 
-The template receives `args` (all the arguments) and `arg0`, `arg1`...
+The template receives `args` (the positional arguments), `arg0`, `arg1`... and `call_args` (every argument, a named
+one as the dialect's `named_arg` writes it: Python's `print(line, flush=True)`).
 
 #### 5.3.1 `[call_site]`: where a call was written
 

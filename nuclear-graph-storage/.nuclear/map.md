@@ -197,12 +197,13 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `check(out: Path, ctx: Context) string[]` — Every way the base is behind the tree: a generated file that is not what the tree gives now, an invalid row, a manifest of other rows, a curated row whose source changed.
     - `review(out: Path, ids: string[], ctx: Context) string[]` — Records that the curated rows `ids` (every stale one when empty) still hold with their sources as they are.
 - `paths.nuc`
+  - `machineValues() <string, string>` — What the AI set-up chose on this machine (ADR-installer-0002): the `KEY=value` lines of nuclearlang/ai.env, written by `nuclear-builder setup` and the editor (the mode, the profile, its models and the services' ports).
   - `graphPort() int` — (no description)
   - `graphUrl() string` — (no description)
   - `graphVersion() string` — (no description)
   - `Paths` — Where the graph keeps its data: one folder only its owner can open (0700).
     - `home() Path`
-    - `machine() <string, string>` — What the AI set-up chose on this machine (ADR-installer-0002): the `KEY=value` lines of nuclearlang/ai.env, written by `nuclear-builder setup` and the editor (the mode, the profile and its models).
+    - `machine() <string, string>` — What the AI set-up chose on this machine (`machineValues`).
     - `db() Path` — The vectors of the shelves (Chroma).
     - `grants() Path`
     - `prompts() Path` — The prompt files: next to the package when it is installed, else the checkout's `prompts/` folder.
@@ -316,13 +317,6 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
   - `graphRoutes() <string, any>[]` — The routes of the HTTP API as data, for the knowledge base: [{verb, path, scope, doc}]. Nothing is opened.
 - `shelves.nuc`
   - `Shelf(answers: string, holds: string, types: string[], prefixes: string[], meta: string[])` — `answers`: the question a reader brings to this shelf; `holds`: what its rows are; `types`: the `type` of a row; `prefixes`: an id is `<prefix>:<name>`, and a prefix lives in exactly one shelf; `meta`: the metadata of its own a search may filter by, besides the common ones.
-  - `shelfTable() <string, Shelf>` — A top-level value belongs to its file: the others read it through these.
-  - `schemaVersion() int` — (no description)
-  - `runtimeCollections() string[]` — (no description)
-  - `collections() string[]` — (no description)
-  - `legacyCollections() string[]` — (no description)
-  - `platformNames() string[]` — (no description)
-  - `exactShelf() string` — (no description)
   - `searchedShelves() string[]` — The shelves a search of every shelf reads: all but the catalogue of exact questions.
   - `shelfOf(rowId: string) string` — The shelf an id lives in, by its prefix ("" for an id no shelf holds).
   - `graphSchema() <string, any>` — The schema as data (what `schema.json` holds).

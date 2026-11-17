@@ -645,6 +645,7 @@ impl Dialect {
             "super_ctor",
             "local_function",
             "doc_comment",
+            "toplevel_const_decl",
             "project_import",
             "result_runtime",
             "result_ok",

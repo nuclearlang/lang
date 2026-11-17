@@ -107,15 +107,7 @@
     "  nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json (all by default)",
     "  nuclear-builder export github|gitlab|bitbucket        writes the CI file that runs `nuclear-builder ci`",
     "  nuclear-builder runs                                  the runs kept in .nuclear/builder/runs",
-    "  nuclear-builder setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
-    "                                                     the AI services of this machine, step by step: it reads the",
-    "                                                     hardware, suggests a profile (which models are downloaded and how",
-    "                                                     far each works), installs what is missing (uv, Ollama), the",
-    "                                                     Smart Graph and the Nuclear Developer, downloads the models, loads",
-    "                                                     the knowledge base and starts the services, now and at every login",
-    "                                                     (--yes: no questions, the suggested profile; --status: what is",
-    "                                                     installed and running; --remove: takes the services away, Ollama",
-    "                                                     and its models stay)",
+    "  nuclear-builder setup ...                            the AI services of this machine (nuclear-builder setup --help)",
     "",
     "Run it in the project or any folder inside it (the project is the closest folder up with config.nuc). The agent stages need the Nuclear Developer",
     "(127.0.0.1:7879) and, when Claude leads, Claude Code with the Nuclear MCP server.",
@@ -342,19 +334,11 @@
   {
    "id": "tool:nuclear-builder.setup",
    "type": "cli",
-   "title": "`nuclear-builder setup` — The AI services of this machine, step by step: it reads the hardware, suggests a profile (which…",
-   "summary": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (uv, Ollama), the Smart Graph and the Nuclear Developer, downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile; --status: what is installed and…",
+   "title": "`nuclear-builder setup` — The AI services of this machine (nuclear-builder setup --help)",
+   "summary": "The AI services of this machine (nuclear-builder setup --help)",
    "body": [
     "```text",
-    "  nuclear-builder setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
-    "                                                     the AI services of this machine, step by step: it reads the",
-    "                                                     hardware, suggests a profile (which models are downloaded and how",
-    "                                                     far each works), installs what is missing (uv, Ollama), the",
-    "                                                     Smart Graph and the Nuclear Developer, downloads the models, loads",
-    "                                                     the knowledge base and starts the services, now and at every login",
-    "                                                     (--yes: no questions, the suggested profile; --status: what is",
-    "                                                     installed and running; --remove: takes the services away, Ollama",
-    "                                                     and its models stay)",
+    "  nuclear-builder setup ...                            the AI services of this machine (nuclear-builder setup --help)",
     "```"
    ],
    "keys": [
@@ -372,10 +356,10 @@
     "entries": [
      {
       "what": "setup",
-      "usage": "nuclear-builder setup [--profile remote|lite|medium|hard] [--yes] | --status | --remove",
+      "usage": "nuclear-builder setup ...",
       "alias": "",
       "note": "",
-      "does": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (uv, Ollama), the Smart Graph and the Nuclear Developer, downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile; --status: what is installed and running; --remove: takes the services away, Ollama and its models stay)"
+      "does": "The AI services of this machine (nuclear-builder setup --help)"
      }
     ]
    }
@@ -384,18 +368,17 @@
    "id": "tool:nuclear-graph",
    "type": "cli",
    "title": "`nuclear-graph` — run, fill and guard the Nuclear Smart Graph",
-   "summary": "Runs the graph's server and its MCP server, builds and checks the knowledge base, ingests it, searches it, answers the exact questions and decides which programs may read it. Commands: serve, mcp, knowledge, ingest, search, answer, strategy, card, stats, connect, allow, deny, web-key, requests, revoke.",
+   "summary": "Runs the graph's server and its MCP server, builds and checks the knowledge base, ingests it, searches it, answers the exact questions and decides which programs may read it. Commands: serve, knowledge, ingest, search, answer, strategy, card, stats, connect, allow, deny, web-key, requests, revoke.",
    "body": [
     "```text",
     "usage: nuclear-graph [-h]",
-    "                     {serve,mcp,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke} ...",
+    "                     {serve,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke} ...",
     "",
     "`nuclear-graph`: run, fill and guard the Nuclear Smart Graph.",
     "",
     "positional arguments:",
-    "  {serve,mcp,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke}",
+    "  {serve,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke}",
     "    serve               run the graph on 127.0.0.1 (NUCLEAR_GRAPH_PORT, default 7878)",
-    "    mcp                 the MCP server on stdio (for Claude Code, Codex, Cursor...)",
     "    knowledge           the knowledge base folder (nuclear-graph-storage/data): build its assets",
     "                        from the working tree, check that they are what the tree gives now, record",
     "                        the review of a hand-written row, ask the running graph the questions of",
@@ -618,31 +601,6 @@
    },
    "data": {
     "command": "nuclear-graph knowledge",
-    "entries": []
-   }
-  },
-  {
-   "id": "tool:nuclear-graph.mcp",
-   "type": "cli",
-   "title": "`nuclear-graph mcp` — The MCP server on stdio (for Claude Code, Codex, Cursor...)",
-   "summary": "The MCP server on stdio (for Claude Code, Codex, Cursor...)",
-   "body": [
-    "```text",
-    "nuclear-graph mcp                 the MCP server on stdio (for Claude Code, Codex, Cursor...)",
-    "```"
-   ],
-   "keys": [
-    "nuclear-graph mcp"
-   ],
-   "sources": [
-    "nuclear-graph-storage/cli.nuc"
-   ],
-   "meta": {
-    "tool": "nuclear-graph",
-    "name": "mcp"
-   },
-   "data": {
-    "command": "nuclear-graph mcp",
     "entries": []
    }
   },

@@ -1,0 +1,13 @@
+# The set-up of the AI services and the `nuclear-builder` command, written in Nuclear and built with the `python`
+# dialect: `nuclear build .` writes the Python package `build/nuclear_builder`, which `pyproject.toml` packages. Never
+# edit `build/`: change the `.nuc` files. The pipeline's engine is still TypeScript (`src/`, spec 009 phase 3).
+[project]
+name = "nuclear_builder"
+dialect = "python"
+package = "nuclear_builder"
+version = "0.1.0"
+description = "Nuclear Builder: the set-up of the AI services of NuclearLang and the nuclear-builder command."
+out = "build"
+
+[dependencies]
+httpx = ">=0.28"

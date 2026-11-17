@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [workspace.md, ../../../tools/nuclear-builder/AGENTS.md, ../../../tools/nuclear-atlas/AGENTS.md, ../../../../installer/docs/08-guides/ai-setup.md]
 ---
 # The AI services in the editor: set-up, settings, connections, notifications
@@ -10,36 +10,35 @@ What Nuclear Builder and Nuclear Atlas need around them. The services themselves
 their models are other projects; what a user does is in
 [Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md).
 
-## The set-up (`aiSetup.ts`, `aiSetup.json`, `setupPanel.ts`; ADR-installer-0002)
+## The set-up (`setupPanel.ts`, `aiMachine.ts`; ADR-installer-0002)
 
-- `aiSetup.ts` has no editor in it. Its two fronts are `nuclear-builder setup` (`cli.ts`) and the wizard. It reads
-  the machine (`hardware`), says how a profile sits on it (`fit`, `recommend`), finds what is installed
-  (`requirements`, `status`) and gives the ordered `steps(profile, root)`:
-  1. the graph's tool (`uv tool install`, editable when the folder is a git checkout);
-  2. the Developer (`nuclear install` with a Python 3.12+ that uv finds or brings, and the `nuclear-developer`
-     launcher);
-  3. the models (Ollama's `/api/pull`, with its progress);
-  4. the graph's service;
-  5. the knowledge base (`connect` twice, `ingest`);
-  6. the Developer's service.
+The set-up is `nuclear-builder setup`, written in Nuclear
+([`../../../tools/nuclear-builder/setup.nuc`](../../../tools/nuclear-builder/AGENTS.md), its data `setup.json`). The
+extension runs it as a process, one call per action, and keeps no process of it alive:
 
-  Every step can run again.
-- `aiSetup.json` is the data: the requirements (their command, their installer per system, their page) and the
-  profiles (models, download, memory, what works, what does not). Changing a profile is changing this file and
-  measuring it (`nuclear-agents/nuclear_developer/eval/run.py`); `test/setup.test.ts` holds its shape and holds the
-  user's guide to it.
-- The machine's choice is `machineFile()` (`~/.config/nuclearlang/ai.env`). `readMachine` gives Nuclear Builder
-  (`defaultConfig`) and the editor (`aiSettings`) their default models; a model set in the editor's settings wins,
-  and is written there when the settings page restarts a service.
-- `serviceFiles(platform)` are the files that start the services at login (systemd user units, launch agents, a
-  Startup script). `restartService` goes through the system's manager. `remove()` is `nuclear-builder setup --remove`.
-- The services' folder is `aiRoot()`: `<installation>/ai`, or `NUCLEAR_AI_ROOT`.
-  Under it the two services keep the folders of the tree (`nuclear-graph-storage/`, with its knowledge base in `data/`,
-  and `nuclear-agents/nuclear_developer/`), so the Developer's relative `dependencies(nuclear_graph = ...)` holds in an
-  installation too. From source both are links to the tree; the graph is then installed editable.
-- `setupPanel.ts` is the page (*Nuclear: Set Up the AI Services*): four steps drawn from one state message. It
-  polls `check` every three seconds on the requirements step. An installer runs in a terminal (`createTerminal` +
-  `sendText`), never hidden. `SetupPanel.offer` asks once on a machine with no machine file.
+| The extension asks | `nuclear-builder setup ...` | It gives |
+|---|---|---|
+| the page's state | `--plan --json` | this machine, the profiles with `fit` and `note`, the suggested one, the machine's choice, the AI root, the requirements of both modes |
+| the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |
+| whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |
+| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=... NUCLEAR_GRAPH_EMBED=...` | written to `ai.env` |
+| a service again | `--restart graph\|developer` | exit 0 when the system's manager restarted it |
+
+- `aiMachine.ts` is what the extension reads itself, with no process: `machineFile()` / `readMachine()`
+  (`~/.config/nuclearlang/ai.env`: Nuclear Builder's `defaultConfig` and `aiSettings` take their default models from
+  it; a model set in the settings wins), `urls()` (the ports chosen there) and `builder(args)`, which runs the AI
+  archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the
+  PATH's.
+- The steps, in order, each can run again: the graph and the MCP server (the archive's launchers linked onto the
+  PATH; from source `uv tool install`, editable), the Developer (in the archive; from source `nuclear install` and
+  the `nuclear-developer` launcher), the models (Ollama's `/api/pull`), the ports (each service keeps its port when
+  it already runs there, else the first one from 7878 / 7879 upward it can listen on, written to `ai.env`;
+  ADR-installer-0003 §5) and the graph's service, the knowledge base (`connect` twice, `ingest`), the Developer's
+  service.
+- `setupPanel.ts` is the page (*Nuclear: Set Up the AI Services*): four steps drawn from the plan. It polls `check`
+  every three seconds on the requirements step (a new plan). An installer runs in a terminal (`createTerminal` +
+  `sendText`), never hidden. `SetupPanel.offer` asks once on a machine with no machine file. Without the AI archive
+  the page says to run the installer again.
 
 ## Settings and integrations (`settingsPanel.ts`, `aiSettings.ts`, `localModels.ts`; ADR-platform-0003)
 

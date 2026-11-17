@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 owner: Julian Molina
 updated: 2026-11-16
 ---
@@ -22,10 +22,6 @@ Each phase ends with `cargo test` and `cargo clippy --all-targets` green. Nothin
 
 ## Phase 3 — the docs (done 2026-11-16)
 
-`work/` keeps what the phase used: `docs-brief.md` (the brief every project's writer followed),
-`agents/<name>/adr-map.tsv` and `status-taken.txt` (what each handed back), `sweep.py` (old folder names → new, in
-text), `links.py [--fix]` (relative links), `adr-cites.py` (old ADR numbers → `ADR-<key>-NNNN`), `kb-sources.py`
-(the knowledge base's sources → the new files and headings).
 
 - [x] T3.1 Root: `AGENTS.md` as the map, `docs/` with the platform's layers, three platform ADRs.
 - [x] T3.2 Each project: `AGENTS.md` + `docs/` (17 projects, each with its roadmap).
@@ -68,18 +64,10 @@ Open questions the writers left for the user are written `TODO(human)` in the do
       its git history is in the backup above); its pages come from every project's reference and guides; CI
       `.github/workflows/website.yml`.
 
-## Found on the way (not done)
+## Found on the way
 
-- The website reads this tree by the old paths (`site.toml`, `tools/content.mjs` of
-  `~/Documents/projects/nuc/react/nuclearlang_website`): it does not build until T5.2.
-- `nuclearlang/docs/07-reference/projects.md` §1.2 says only a url contract keeps `contracts/<name>/contract.json`;
-  the code writes it for a path contract too.
-- The five `gen.js` commands of the web type definitions are in no script (`platforms/web` runbook).
-- The installed AI services were repaired by hand (the links of `~/.local/share/nuclearlang/ai/` and the graph's
-  editable path point at the new folders, under the OLD names the installed extension expects); `installer/install.sh`
-  now writes `ai/nuclear-graph-storage` and `ai/nuclear-agents`: reinstall the extension with it (T5.1).
-- `nuclear-synapsis-framework/CHANGELOG.md` is the `dragonfly` command's: it moves with the crate (T2.2).
-- Not run after the move: `analyze-flutter.sh`, the Dart runtimes' tests, the workflows of `.github/`.
+Moved to the roadmaps of their projects on 2026-11-17 (the language, the web and mobile platforms, the platform's
+own for the workflows); the framework's changelog is `tools/cli/CHANGELOG.md`, the command's.
 
 ## Phase 5 — outside the tree (each needs the user's go)
 
@@ -91,6 +79,6 @@ Open questions the writers left for the user are written `TODO(human)` in the do
       `dragonfly-mobile`, `dragonfly-backend`, `nuclear-vscode`, `nuclear-jetbrains`, `nuclear-developer`,
       `nuclear-knowledge`, `nuclear-graph`. Not archived: `nuclear-zed` (the grammar `extensions/zed/extension.toml`
       loads) and `nuclearlang.github.io` (it publishes the site).
-- [ ] T5.4 The AI set-up written by the old installer: `~/.local/bin/nuclear-developer` and the editors' MCP
-      registrations still name `ai/nuclear-developer` and `nuclear-graph mcp` (both still work: links and the
-      `mcp` command that runs `nuclear-mcp`); running the set-up again writes the new ones.
+- [x] T5.4 The AI set-up written by the old installer (2026-11-17): the set-up ran again (the `nuclear-developer`
+      launcher of `ai/nuclear-agents/nuclear_developer`), the editors' MCP registrations name `nuclear-mcp`, and
+      `nuclear-graph mcp` and the installers' removal of the old `dragonfly` and `nuclear-loop` links are gone.

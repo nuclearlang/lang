@@ -206,6 +206,7 @@ pub const SYNTAX: &[TemplateSpec] = &[
     ),
     // statements
     t("const_decl", &["name", "type", "value"], "variable that is never reassigned"),
+    t("toplevel_const_decl", &["name", "type", "value"], "optional: a constant at the top of a file, which the other files of a project import (`const_decl` when absent; TypeScript: `export const`)"),
     t("let_decl", &["name", "type", "value"], "variable that is reassigned later"),
     t(
         "declare",
@@ -226,7 +227,7 @@ pub const SYNTAX: &[TemplateSpec] = &[
     t("else", &["body"], "appended after if / else_if"),
     t("for_in", &["var", "iter", "body"], "`for x in xs`"),
     t("for_range", &["var", "start", "end", "body"], "`for i in 0..10` (end excluded)"),
-    t("for_entries", &["key", "value", "iter", "body", "map"], "`for key, value in map` (`map`: the value is a Map object, not a map literal)"),
+    t("for_entries", &["key", "value", "iter", "iter_member", "body", "map"], "`for key, value in map` (`map`: the value is a Map object, not a map literal; `iter_member`: the map with parentheses when a member follows it)"),
     t("while", &["cond", "body"], "while"),
     t("try", &["body", "catch", "catch_var", "catch_used", "catch_body", "finally", "finally_body"], "try / catch / finally"),
     t("throw", &["value"], "throw"),

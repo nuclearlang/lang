@@ -11,8 +11,8 @@ What the assistant answers (the facts under an answer, the planner's queries) is
 
 ## Untested
 
-- **Renamed to Nuclear Atlas** (was the chat, *Nuclear agent*; the webview `nuclear.atlas`, the tool `atlas`): its
-  sessions in `.nuclear/chat/` are kept; never opened in a running VS Code after the rename.
+- **Nuclear Atlas** (the webview `nuclear.atlas`, the tool `atlas`) with its sessions in `.nuclear/chat/`: never
+  opened in a running VS Code since 0.52.0.
 - The Nuclear Atlas panel was never opened in a running VS Code (only headless renders, node checks and HTTP calls): the
   exact rows under an answer, the context meter, Retry, the diagnosis box.
 

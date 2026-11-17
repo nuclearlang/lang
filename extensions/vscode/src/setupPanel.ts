@@ -1,10 +1,28 @@
 // The set-up of the AI services, in steps (ADR-installer-0002): this machine and where the agents run (here, or only remote
 // agents), the profile (which models are downloaded and how far each works, one suggested for the hardware), what is
 // needed (found by itself once installed, or installed in a terminal), and the installation with its progress.
-// The page asks and shows; everything it does is aiSetup.ts. Plain HTML and script, no framework.
+// The page asks and shows; everything it does is `nuclear-builder setup` (written in Nuclear), run as a process: its
+// plan (`--plan --json`) and its steps (`--events`, one JSON line each). Plain HTML and script, no framework.
 import * as vscode from 'vscode';
-import { PROFILES, Step, aiRoot, fit, hardware, Hardware, profileOf, readMachine, recommend, requirements, steps } from './aiSetup';
+import { builder, builderJson, readMachine } from './aiMachine';
 import { toolEnv } from '../../tools/nuclear-builder/src/engine';
+
+/** What `nuclear-builder setup --plan --json` gives: the page's state (this machine, the profiles, the requirements). */
+interface Plan {
+  hw: unknown;
+  platform: string;
+  suggested: string;
+  profiles: unknown[];
+  machine: Record<string, string>;
+  root: string | null;
+  requirements: { local: Requirement[]; remote: Requirement[] };
+}
+
+interface Requirement {
+  id: string;
+  title: string;
+  install: Record<string, string | undefined>;
+}
 
 type Message =
   | { type: 'ready' | 'check' | 'settings' }
@@ -15,7 +33,7 @@ type Message =
 export class SetupPanel {
   private static current: SetupPanel | undefined;
   private readonly panel: vscode.WebviewPanel;
-  private hw: Hardware | undefined;
+  private plan: Plan | undefined;
   private running = false;
 
   private constructor() {
@@ -46,17 +64,13 @@ export class SetupPanel {
   }
 
   private async state(): Promise<void> {
-    const hw = this.hw ?? (this.hw = await hardware());
-    const [local, remote] = await Promise.all([requirements(true), requirements(false)]);
-    this.post({
-      type: 'state',
-      hw,
-      platform: process.platform,
-      suggested: recommend(hw),
-      profiles: PROFILES.map((p) => ({ ...p, ...fit(p, hw) })),
-      machine: readMachine(),
-      requirements: { local, remote },
-    });
+    const plan = await builderJson<Plan>(['--plan', '--json']);
+    if (!plan) {
+      this.post({ type: 'missing', text: 'The set-up comes with the AI services, and they are not installed: run the NuclearLang installer again (without --no-ai).' });
+      return;
+    }
+    this.plan = plan;
+    this.post({ type: 'state', ...plan });
   }
 
   private async receive(m: Message): Promise<void> {
@@ -72,7 +86,7 @@ export class SetupPanel {
         return;
       case 'install': {
         // in a terminal the user sees: an installer may ask for a password, and its output is theirs to read
-        const r = (await requirements(true)).find((x) => x.id === m.id);
+        const r = this.plan?.requirements.local.find((x) => x.id === m.id);
         const command = r?.install[process.platform];
         if (!r || !command) return;
         const t = vscode.window.createTerminal({ name: `Install ${r.title}`, env: toolEnv() as Record<string, string> });
@@ -85,26 +99,18 @@ export class SetupPanel {
     }
   }
 
+  /** The steps of a profile, from `from` on: each JSON line the set-up prints is a message of the page as it is. */
   private async install(id: string, from: number): Promise<void> {
-    const p = profileOf(id);
-    const root = aiRoot();
-    if (!p || !root || this.running) return;
+    if (this.running) return;
     this.running = true;
-    const all: Step[] = steps(p, root);
-    this.post({ type: 'steps', titles: all.map((s) => s.title), from });
     try {
-      for (const [i, step] of all.entries()) {
-        if (i < from) continue;
-        this.post({ type: 'step', index: i, status: 'running', line: '' });
+      await builder(['setup', '--events', '--profile', id, '--from', String(from)], (line) => {
         try {
-          await step.run((line) => this.post({ type: 'step', index: i, status: 'running', line }));
-          this.post({ type: 'step', index: i, status: 'done', line: '' });
-        } catch (e) {
-          this.post({ type: 'step', index: i, status: 'failed', line: e instanceof Error ? e.message : String(e) });
-          return;
+          this.post(JSON.parse(line));
+        } catch {
+          // a line that is not an event (a warning of Python): not the page's
         }
-      }
-      this.post({ type: 'done', profile: p.id, local: !!p.coder });
+      });
     } finally {
       this.running = false;
     }
@@ -220,6 +226,7 @@ window.addEventListener('message', (e) => {
     run.status[m.index] = m.status; if (m.line || m.status === 'failed') run.line[m.index] = m.line; if (m.status === 'failed') run.failed = m.index;
     draw();
   } else if (m.type === 'done') { run.done = true; run.profile = m.profile; run.local = m.local; draw(); }
+  else if (m.type === 'missing' || m.type === 'failed') { document.getElementById('root').innerHTML = '<div class="bad">' + esc(m.text || m.line) + '</div>'; }
 });
 vscode.postMessage({ type: 'ready' });
 </script></body></html>`;

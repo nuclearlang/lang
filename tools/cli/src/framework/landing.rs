@@ -1,11 +1,10 @@
 //! `nuclear` without arguments: a landing page. On a terminal it opens with an animation, drawn as a
 //! concept and not as a picture: a radioactive mushroom cloud rises, its shock wave rolls up to the camera
-//! and fills the screen; it dissolves, life grows back and a dragonfly (the logo of the framework) lands on a flower. It ends on the
-//! NuclearLang and Synapsis logos. Only characters on the terminal's own background, in its own text
+//! and fills the screen, WELCOME shows through it and it dissolves. It ends on the NuclearLang sign and
+//! the page. Only characters on the terminal's own background, in its own text
 //! color (normal or faint) with a few accents, so it fits any theme. Piped, too small or with `NO_COLOR`,
 //! only the page is printed. Every other command starts with the header (`header`).
 
-use std::f32::consts::PI;
 use std::io::{IsTerminal, Write};
 use std::time::{Duration, Instant};
 
@@ -16,18 +15,12 @@ const PAGE_W: usize = 80;
 const H: usize = 22;
 /// The horizon row.
 const GROUND: i32 = 16;
-/// Scene boundaries in seconds: the cloud rises, the wave, the screen fills and dissolves, life grows
-/// back, the dragonfly lands and rests, the scene dissolves, then the page.
+/// Scene boundaries in seconds: the cloud rises, the wave, the screen fills and dissolves, then the page.
 const RISE: f32 = 2.6;
 const WAVE: f32 = 4.0;
-const FLASH: f32 = 6.1;
-const GROW: f32 = 7.6;
-const FLY_START: f32 = 7.1;
-const LAND: f32 = 8.8;
-const REST: f32 = 9.8;
-const FADE: f32 = 10.2;
-const END: f32 = 11.2;
-/// On the live page, the dragonfly shines every this many seconds.
+const FADE: f32 = 6.1;
+const END: f32 = 7.1;
+/// On the live page, the sign shines every this many seconds.
 const SHINE_EVERY: f32 = 5.0;
 /// "WELCOME" in 5×5 / 4×5 letters (`#` = a pixel, two cells wide), shown when the blast ends.
 const WELCOME: [&str; 5] = [
@@ -38,40 +31,6 @@ const WELCOME: [&str; 5] = [
     "#...#.####.####..###..##..#...#.####",
 ];
 
-const LOGO: [&str; 17] = [
-    "                               ",
-    "             .=#=.             ",
-    "            (@@#@@)            ",
-    "   .:=+**+=-. '#' .-=+**+=:.   ",
-    " .=*#########*=#=*#########*=. ",
-    "=*############*#*############*=",
-    "'=*##########*=#=*##########*='",
-    "  ':=+****+=-:.#.:-=+****+=:'  ",
-    "   .-=+****+=::#::=+****+=-.   ",
-    "  =*#########*=#=*#########*=  ",
-    "  '=*#######*=-#-=*#######*='  ",
-    "    ':-==-:'  '#'  ':-==-:'    ",
-    "              :#:              ",
-    "              :#:              ",
-    "              :#:              ",
-    "              :+:              ",
-    "               '               ",
-];
-/// The dragonfly logo, small (the header of `nuclear help`).
-const MINI: [&str; 6] = [
-    "       .=#=.       ",
-    "  .=*##(@#@)##*=.  ",
-    " '=*#*=-'#'-=*#*=' ",
-    "  .=*#*=:#:=*#*=.  ",
-    "        :#:        ",
-    "         '         ",
-];
-/// The dragonfly seen from the side (head to the right): wings up, level, down.
-const SPRITE: [[&str; 3]; 3] = [
-    [r"     \\ \\ ", r"~~~~==##@>", r"          "],
-    [r"     __ __ ", r"~~~~==##@>", r"          "],
-    [r"          ", r"~~~~==##@>", r"     // // "],
-];
 /// Cloud characters from thin to dense.
 const RAMP: [char; 9] = ['.', ':', '-', '=', '+', '*', '#', '%', '@'];
 const YELLOW: Rgb = (253, 216, 63);
@@ -84,8 +43,6 @@ const ASPECT: f32 = 1.35;
 const GREEN: Rgb = (120, 230, 150);
 const BLUE: Rgb = (90, 180, 255);
 const TOXIC: Rgb = (140, 255, 90);
-const GRASS: Rgb = (100, 200, 100);
-const PINK: Rgb = (255, 110, 180);
 const RED: Rgb = (255, 95, 95);
 /// Text attributes: normal, bold, faint (SGR 0, 1, 2).
 const NORMAL: u8 = 0;
@@ -126,22 +83,14 @@ pub fn header() {
     }
     eprintln!();
     let mut c = Canvas::new(PAGE_W, 6);
-    sign(&mut c, 1, 0, 6.0);
+    sign(&mut c, 1, 0, 6.0, None);
     c.ink_text(19, 1, "NuclearLang", Some(YELLOW), BOLD);
     c.ink_text(19, 2, "Write only the logic;", None, FAINT);
     c.ink_text(19, 3, "transpilers do the rest.", None, FAINT);
-    for (y, row) in MINI.iter().enumerate() {
-        for (x, ch) in row.chars().enumerate() {
-            let color = if ch == '@' { TOXIC } else { metal(x as i32, y as i32) };
-            if ch != ' ' {
-                c.ink(44 + x as i32, y as i32, ch, Some(color), NORMAL);
-            }
-        }
-    }
-    c.ink_text(64, 1, "Synapsis", Some(PURPLE), BOLD);
-    c.ink_text(64, 2, "Mobile, web and", None, NORMAL);
-    c.ink_text(64, 3, "backend in Nuclear", None, NORMAL);
-    c.ink_text(64, 4, concat!("v", env!("CARGO_PKG_VERSION")), None, FAINT);
+    c.ink_text(46, 1, "Synapsis", Some(PURPLE), BOLD);
+    c.ink_text(46, 2, "Mobile, web and", None, NORMAL);
+    c.ink_text(46, 3, "backend in Nuclear", None, NORMAL);
+    c.ink_text(46, 4, concat!("v", env!("CARGO_PKG_VERSION")), None, FAINT);
     eprintln!("{}", c.render(std::env::var_os("NO_COLOR").is_none()));
 }
 
@@ -284,7 +233,7 @@ pub fn usage(text: &str) -> String {
     out
 }
 
-/// Plays the animation, then keeps the page alive (the dragonfly shines every `SHINE_EVERY` seconds) until
+/// Plays the animation, then keeps the page alive (the sign shines every `SHINE_EVERY` seconds) until
 /// Enter. Enter during the animation skips to the page, except in `credits`.
 fn animate(w: usize, credits: bool) {
     let mut out = std::io::stdout().lock();
@@ -343,18 +292,14 @@ fn frame(t: f32, w: usize, credits: bool) -> Canvas {
     } else if t < WAVE {
         let q = (t - RISE) / (WAVE - RISE);
         c.cells(|x, y| wave(x, y, w, q, t));
-    } else if t < FLASH {
-        welcome(&mut c, w, (t - WAVE) / (FLASH - WAVE));
     } else if t < FADE {
-        meadow(&mut c, t, w, off + 18);
-        motto(&mut c, t, w);
-        c.dissolve(1.0 - ((t - REST) / (FADE - REST)).clamp(0.0, 1.0));
+        welcome(&mut c, w, (t - WAVE) / (FADE - WAVE));
     } else {
         let h = ((t - FADE) / (END - FADE)).min(1.0);
-        // a bright band crosses the dragonfly every SHINE_EVERY seconds once the page is complete
+        // a bright band crosses the sign every SHINE_EVERY seconds once the page is complete
         let s = t - END - 1.0;
-        let shine = (s >= 0.0 && s % SHINE_EVERY < 0.9).then(|| lerp(-6.0, 50.0, (s % SHINE_EVERY) / 0.9));
-        logo(&mut c, off + 2, 2, shine);
+        let shine = (s >= 0.0 && s % SHINE_EVERY < 0.9).then(|| lerp(-0.2, 1.2, (s % SHINE_EVERY) / 0.9));
+        sign(&mut c, off + 1, 4, 12.0, shine);
         page(&mut c, off + 35, h, credits);
         c.dissolve(h * 2.0);
     }
@@ -497,136 +442,12 @@ fn welcome(c: &mut Canvas, w: usize, f: f32) {
     }
 }
 
-/// Scenes 4 and 5: life grows back (`g` 0 → 1) and the dragonfly lands on the flower at column `fx`.
-fn meadow(c: &mut Canvas, t: f32, w: usize, fx: i32) {
-    let g = ((t - FLASH) / (GROW - FLASH)).clamp(0.0, 1.0);
-    c.cells(|x, y| match () {
-        _ if y == GROUND => Cell::new('_', None, FAINT),
-        _ if y > GROUND && hash(x, y) < g * 0.25 => {
-            Cell::new(if hash(x, y) < 0.1 { ',' } else { '.' }, Some(GRASS), FAINT)
-        }
-        _ => Cell::new(' ', None, NORMAL),
-    });
-    // a new day: a faint sun coming up
-    let sun_y = GROUND - 1 - (4.0 * g) as i32;
-    let sun_x = (w as f32 * 0.72) as i32;
-    c.ink_text(sun_x - 3, sun_y - 1, r" \  |  /", None, FAINT);
-    c.ink_text(sun_x - 3, sun_y, "-- ( ) --", None, FAINT);
-    // grass, and a few small flowers on top of it
-    for x in 0..w as i32 {
-        let r = hash(x, 7);
-        let tall = ((1.0 + r * 2.5) * ease(g * 1.6 - r * 0.6)).round() as i32;
-        for k in 1..=tall {
-            let ch = [',', ';', '\'', '|', '/', '\\', '"'][(hash(x, k) * 7.0) as usize];
-            c.ink(x, GROUND - k + 1, ch, Some(GRASS), if hash(x, k + 3) < 0.5 { FAINT } else { NORMAL });
-        }
-        if r > 0.88 && tall > 0 && g > 0.5 + (r - 0.88) * 2.0 {
-            let color = if r > 0.91 { YELLOW } else { PINK };
-            c.ink(x, GROUND - tall, if r > 0.94 { '*' } else { 'o' }, Some(color), NORMAL);
-        }
-    }
-    // the flower: stem, leaves, then bud → half open → open
-    let stem = (6.0 * ease(g * 1.2)).round() as i32;
-    for k in 1..=stem {
-        c.ink(fx, GROUND - k, '|', Some(GRASS), NORMAL);
-    }
-    if stem >= 2 {
-        c.ink(fx - 1, GROUND - 2, '\\', Some(GRASS), NORMAL);
-    }
-    if stem >= 4 {
-        c.ink(fx + 1, GROUND - 4, '/', Some(GRASS), NORMAL);
-    }
-    let head = GROUND - stem - 1;
-    if g >= 0.95 {
-        c.ink_text(fx - 2, head - 2, ".-.-.", Some(PINK), NORMAL);
-        c.ink_text(fx - 3, head - 1, "( (o) )", Some(PINK), NORMAL);
-        c.ink_text(fx - 2, head, "'-.-'", Some(PINK), NORMAL);
-        c.ink(fx, head - 1, 'o', Some(YELLOW), BOLD);
-    } else if g >= 0.8 {
-        c.ink_text(fx - 1, head, "(o)", Some(PINK), NORMAL);
-        c.ink(fx, head, 'o', Some(YELLOW), BOLD);
-    } else if stem >= 3 {
-        c.ink(fx, head, 'o', Some(GRASS), NORMAL);
-    }
-    // the insect of the logo flies in on a wavy path, lands on the flower, its wings slow down and rest
-    if t >= FLY_START {
-        let f = ((t - FLY_START) / (LAND - FLY_START)).clamp(0.0, 1.0);
-        let body_y = GROUND - 6 - 4;
-        let x = lerp(-12.0, (fx - 6) as f32, ease(f));
-        let y = body_y as f32 + (f * PI * 3.0).sin() * 3.0 * (1.0 - f);
-        let beat = if t < LAND { 16.0 } else { 5.0 };
-        let wings = match () {
-            _ if t > LAND + 0.6 => 0,
-            // close to the flower the wings stay up, off the petals
-            _ if t > LAND - 0.3 => [0, 1][(t * beat) as usize % 2],
-            _ => [0, 1, 2, 1][(t * beat) as usize % 4],
-        };
-        for (i, row) in SPRITE[wings].iter().enumerate() {
-            for (j, ch) in row.chars().enumerate() {
-                let (color, sgr) = match ch {
-                    ' ' => continue,
-                    '@' => (Some(TOXIC), BOLD),
-                    '\\' | '/' | '_' => (None, FAINT),
-                    _ => (Some(metal(j as i32, i as i32)), NORMAL),
-                };
-                c.ink(x as i32 + j as i32, y.round() as i32 - 1 + i as i32, ch, color, sgr);
-            }
-        }
-    }
-}
-
-/// After WELCOME, on the right of the meadow: the motto, typed in, in Spanish when the locale is Spanish.
-fn motto(c: &mut Canvas, t: f32, w: usize) {
-    let spanish = ["LC_ALL", "LC_MESSAGES", "LANG"]
-        .iter()
-        .find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()))
-        .is_some_and(|v| v.starts_with("es"));
-    let lines = if spanish {
-        ["Antes todo era caos,", "ahora todo es más simple", "con "]
-    } else {
-        ["Before, everything was chaos;", "now everything is simpler", "with "]
-    };
-    let total = lines.iter().map(|l| l.chars().count()).sum::<usize>() + "Synapsis".len();
-    let mut left = (((t - FLASH - 0.4) / 1.6).clamp(0.0, 1.0) * total as f32) as usize;
-    let x0 = w as i32 / 2 + 4;
-    for (y, line) in lines.iter().enumerate() {
-        let tail = if y == 2 { "Synapsis" } else { "" };
-        for (x, ch) in line.chars().chain(tail.chars()).enumerate() {
-            if left == 0 {
-                return;
-            }
-            let (color, sgr) = if x >= line.chars().count() { (Some(PURPLE), BOLD) } else { (None, NORMAL) };
-            c.ink(x0 + x as i32, 3 + y as i32, ch, color, sgr);
-            left -= 1;
-        }
-    }
-}
-
-/// The dragonfly logo, with the shine band at diagonal position `shine`.
-fn logo(c: &mut Canvas, x0: i32, y0: i32, shine: Option<f32>) {
-    for (y, row) in LOGO.iter().enumerate() {
-        for (x, ch) in row.chars().enumerate() {
-            let color = match ch {
-                '@' => TOXIC,
-                ' ' => continue,
-                _ => metal(x as i32, y as i32),
-            };
-            // the shine: a diagonal band, brightest in its middle
-            let glow = shine.map_or(0.0, |pos| (1.0 - (x as f32 + y as f32 * 1.6 - pos).abs() / 3.5).max(0.0));
-            let sgr = if glow > 0.5 { BOLD } else { NORMAL };
-            c.ink(x0 + x as i32, y0 + y as i32, ch, Some(mix(color, (255, 245, 255), glow)), sgr);
-        }
-    }
-}
-
-/// The right column: the NuclearLang sign and both names, then how to start (or the credits); `h` 0 → 1
-/// types it in.
+/// The right column: both names, then how to start (or the credits); `h` 0 → 1 types it in.
 fn page(c: &mut Canvas, x0: i32, h: f32, credits: bool) {
-    sign(c, x0, 1, 7.0);
     let mut lines: Vec<(i32, i32, &str, Option<Rgb>, u8)> = vec![
-        (21, 3, "NuclearLang", Some(YELLOW), BOLD),
-        (21, 4, "Write only the logic;", None, FAINT),
-        (21, 5, "transpilers do the rest.", None, FAINT),
+        (0, 3, "NuclearLang", Some(YELLOW), BOLD),
+        (0, 4, "Write only the logic;", None, FAINT),
+        (0, 5, "transpilers do the rest.", None, FAINT),
         (0, 10, "Synapsis", Some(PURPLE), BOLD),
         (0, 11, "Mobile, web and backend in NuclearLang", None, NORMAL),
         (0, 12, concat!("v", env!("CARGO_PKG_VERSION")), None, FAINT),
@@ -657,25 +478,20 @@ fn page(c: &mut Canvas, x0: i32, h: f32, credits: bool) {
     }
 }
 
-/// The NuclearLang sign (the radiation symbol) in half-block pixels, `r` cells tall and `2r × ASPECT` wide.
-fn sign(c: &mut Canvas, x0: i32, y0: i32, r: f32) {
+/// The NuclearLang sign (the radiation symbol) in half-block pixels, `r` cells tall and `2r × ASPECT` wide;
+/// `shine` (0 → 1 across it) is a bright diagonal band.
+fn sign(c: &mut Canvas, x0: i32, y0: i32, r: f32, shine: Option<f32>) {
     let (cx, cy) = (x0 as f32 + r * ASPECT, y0 as f32 * 2.0 + r);
     let pixel = |px: f32, py: f32| {
         let (dx, dy) = ((px + 0.5 - cx) / (r * ASPECT), (py + 0.5 - cy) / r);
         let d = (dx * dx + dy * dy).sqrt();
         let angle = dy.atan2(dx).to_degrees() + 90.0; // 0 = up
         let blade = [0.0f32, 120.0, 240.0].iter().any(|b| ((angle - b).rem_euclid(360.0) + 30.0) % 360.0 < 60.0);
-        (d <= 1.0).then_some(if d < 0.25 || (blade && d > 0.3 && d < 0.78) { SLATE } else { YELLOW })
+        let glow = shine.map_or(0.0, |pos| (1.0 - ((dx + dy) / 4.0 + 0.5 - pos).abs() * 8.0).max(0.0));
+        let color = if d < 0.25 || (blade && d > 0.3 && d < 0.78) { SLATE } else { YELLOW };
+        (d <= 1.0).then_some(mix(color, (255, 255, 240), glow * 0.7))
     };
     c.pixels_in(x0, y0, (2.0 * r * ASPECT).round() as usize, r as usize, pixel);
-}
-
-/// Metallic purple at a cell of a synapsis drawing: dark and vivid bands with a bright sheen across.
-fn metal(x: i32, y: i32) -> Rgb {
-    let (x, y) = (x as f32, y as f32);
-    let band = (x * 0.45 + y * 1.1).sin() * 0.5 + 0.5;
-    let sheen = (1.0 - (x * 0.3 - y * 0.6 - 2.0).sin().abs()).powi(6);
-    mix(mix((105, 35, 200), (200, 115, 255), band), (245, 220, 255), sheen)
 }
 
 fn noise(x: f32, y: f32, t: f32) -> f32 {
@@ -827,6 +643,9 @@ mod tests {
                 t += 0.05;
             }
         }
+        // the page's sign has its yellow disc and its dark blades
+        let cells = frame(END, PAGE_W, false).cells;
+        assert!([YELLOW, SLATE].iter().all(|k| cells.iter().any(|c| c.fg == Some(*k) || c.bg == Some(*k))));
         let page = frame(END, PAGE_W, false).render(false);
         assert!(page.contains("NuclearLang") && page.contains("Synapsis") && page.contains("nuclear help"));
         let credits = frame(END, PAGE_W, true).render(false);
