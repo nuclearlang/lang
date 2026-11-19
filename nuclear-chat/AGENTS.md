@@ -40,6 +40,8 @@ The service's components (`nuclear_chat/components/`):
 
 ## Commands
 
+- The UI's embedded bundle for the editors: `ui/build-embed.sh` (the CI's extension job and the release run it).
+
 ```sh
 # system/: what the service depends on (build it first)
 cd system && nuclear check . --json && nuclear build . && .venv/bin/python -m pytest -q   # venv: uv venv; uv pip install pytest

@@ -17,9 +17,11 @@ asking. The three extensions share one version; Zed's follows VS Code's.
    - `extensions/zed/extension.toml`
    - the examples of each `README.md` that name a version
 2. Write the change in the `CHANGELOG.md` of each extension it reaches.
-3. Build:
+3. Build (the VS Code extension carries Nuclear Chat's UI: `nuclear-chat/ui/build-embed.sh` first, after `npm ci` in
+   `nuclearlang/tools/node`; the CI and the release do the same):
 
    ```sh
+   nuclear-chat/ui/build-embed.sh                                      # → nuclear-chat/ui/build/app/dist-embed/embed.js
    (cd extensions/vscode && npm run package)                           # → nuclearlang-<version>.vsix
    (cd extensions/jetbrains && IDE_HOME=/opt/android-studio ./build.sh) # → build/nuclearlang-<version>.zip
    (cd extensions/zed && ./build.sh)                                    # builds and installs into Zed

@@ -4,9 +4,9 @@ name: extension-vscode
 on:
   push:
     branches: [main]
-    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'extensions/tools/**', 'nuclear-chat/ui/**', 'nuclear-synapsis-framework/platforms/web/packages/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
   pull_request:
-    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
+    paths: ['nuclearlang/**', 'tools/cli/**', 'tools/code_generator/**', 'device-emulators/**', 'Cargo.toml', 'Cargo.lock', 'extensions/vscode/**', 'extensions/tools/**', 'nuclear-chat/ui/**', 'nuclear-synapsis-framework/platforms/web/packages/**', 'nuclear-synapsis-framework/platforms/*/platform.toml', '.github/workflows/extension-vscode.yml']
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 26
+      - name: "Nuclear Chat's UI, embedded (the extension carries it)"
+        run: |
+          (cd nuclearlang/tools/node && npm ci --no-audit --no-fund)
+          nuclear-chat/ui/build-embed.sh
       - name: "Compile, the generated themes and icons, the package"
         working-directory: extensions/vscode
         run: |

@@ -56,6 +56,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 26
+      - uses: dtolnay/rust-toolchain@stable
+      - name: "Nuclear Chat's UI, embedded (the extension carries it)"
+        run: |
+          (cd nuclearlang/tools/node && npm ci --no-audit --no-fund)
+          nuclear-chat/ui/build-embed.sh
       - name: The extension (its bundled server is the Linux one; the installers link the platform's own nuclear-lsp)
         run: |
           version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
