@@ -54,12 +54,16 @@ if [ "$os" = windows ]; then PY="$AI/python/python.exe"; else PY="$AI/python/bin
 find "$AI/python" -name EXTERNALLY-MANAGED -delete
 
 # 2. the services' code, from their .nuc
-"$NUCLEAR" build "$GRAPH" >/dev/null 2>&1
-"$NUCLEAR" build "$MCP" >/dev/null 2>&1
-(cd "$DEVELOPER" && "$NUCLEAR" build >/dev/null 2>&1)
-"$NUCLEAR" build "$BUILDER" >/dev/null 2>&1
-"$NUCLEAR" build "$CHAT" >/dev/null 2>&1
-(cd "$CHAT_SERVICE" && "$NUCLEAR" build >/dev/null 2>&1)
+# quiet when it works; what failed is printed (a silent exit 1 in a CI log tells nothing)
+build() {
+  out=$(cd "$1" && "$NUCLEAR" build . 2>&1) || { echo "$out" >&2; echo "ai-runtime: nuclear build $1 failed" >&2; exit 1; }
+}
+build "$GRAPH"
+build "$MCP"
+build "$DEVELOPER"
+build "$BUILDER"
+build "$CHAT"
+build "$CHAT_SERVICE"
 
 # 3. the packages: the versions the graph's tests ran with (its uv.lock) bind the whole resolution; --no-sources, or
 # the MCP server's editable source of the graph would install a link to this checkout instead of the graph itself
