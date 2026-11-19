@@ -17,6 +17,7 @@ mod landing;
 mod monitor;
 mod packages;
 mod setup;
+mod toolchain;
 mod vscode;
 mod watch;
 
@@ -114,8 +115,11 @@ packages and devices (flutter, inside the app)
   flutter <any flutter command>              run any flutter command inside the app
 
 setup
-  doctor                                     what NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code
-  setup [--dir ~/develop]                    install Flutter step by step (system packages, SDK, PATH)
+  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code
+                                             (--json: the toolchains, for the editor)
+  setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)
+  setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear
+                                             (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)
   credits | author                           the intro animation, the author and the repository
 
 options
@@ -292,10 +296,21 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
         "remove" => with_root(project_dir, |root| package_command(root, "remove", &rest)),
         "doctor" => {
             let start = project_dir.map(PathBuf::from).unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-            doctor::doctor(start.ancestors().find(|d| d.join("main.nuc").is_file()));
+            if rest.iter().any(|a| a == "--json") {
+                println!("{}", doctor::json());
+            } else {
+                doctor::doctor(start.ancestors().find(|d| d.join("main.nuc").is_file()));
+            }
             Ok(())
         }
-        "setup" => setup::setup(rest),
+        "setup" => match rest.first().map(String::as_str) {
+            Some("flutter") => setup::setup(rest[1..].to_vec()),
+            Some(name) => match toolchain::of(name) {
+                Some(t) => toolchain::install(t),
+                None => setup::setup(rest),
+            },
+            None => setup::setup(rest),
+        },
         "clean" | "devices" | "emulators" | "logs" | "install" | "screenshot" | "attach" | "gen-l10n" => {
             with_root(project_dir, |root| {
                 // a backend project: install is the dialect's toolchain (a venv, npm install), then the type
@@ -668,8 +683,9 @@ fn backend_command(root: &Path, cmd: &str, m: &Manifest, rest: &[String], vars: 
         }
         return Ok(());
     }
+    toolchain::ready(dialect.tool("needs"))?;
     let Some(command) = dialect.tool(cmd) else {
-        let has: Vec<&str> = dialect.toolchain.keys().map(String::as_str).collect();
+        let has: Vec<&str> = dialect.toolchain.keys().filter(|k| *k != "needs").map(String::as_str).collect();
         return Err(format!("the {} dialect has no toolchain.{cmd} (it has: {})", m.dialect, has.join(", ")));
     };
     let mut command = fill_command(&dialect, command, vars)?;
@@ -720,6 +736,7 @@ fn package_command(root: &Path, what: &str, rest: &[String]) -> Result<(), Strin
         let msgs: Vec<String> = report.diags.iter().map(|(_, x)| x.message.clone()).collect();
         format!("dialect '{}': {}", m.dialect, msgs.join("; "))
     })?;
+    toolchain::ready(dialect.tool("needs"))?;
     match what {
         "add" => dependencies::add(root, &m, &dialect, rest),
         _ => dependencies::remove(root, &m, &dialect, rest),

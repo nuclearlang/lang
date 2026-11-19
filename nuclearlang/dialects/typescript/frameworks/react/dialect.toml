@@ -223,6 +223,8 @@ method = { file = "templates/tests_method.tpl" }
 
 # what the `nuclear` CLI runs in build/app (ADR-synapsis-0001): install the runtime and the app, run it, test it
 [toolchain]
+# the toolchain its commands run with (the CLI finds it or offers to install it: `nuclear setup node`)
+needs = "node"
 # then Vite's dependency cache goes: it would keep serving the runtime it pre-bundled before (same version, new code)
 install = "npm install {{packages}}/synapsis-web && npm install && node -e \"require('fs').rmSync('node_modules/.vite', { recursive: true, force: true })\""
 run = "npm run dev -- --port {{port}} --strictPort"

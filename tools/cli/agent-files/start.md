@@ -36,7 +36,8 @@ never search the disk for Nuclear's source code or its documents, and never gues
 
 1. A new project: `nuclear new <name> -p mobile|backend|web [-d <dialect>]` (mobile: `flutter`; backend: `fastapi`,
    `nestjs`; web: `react`). Inside it, `nuclear help` lists every command of its platform. `nuclear doctor` says
-   what this machine lacks for it; a mobile app needs Flutter, which `nuclear setup` installs.
+   what this machine lacks for it: a mobile app needs Flutter (`nuclear setup flutter`), a `nestjs` or `react` project
+   Node.js (`nuclear setup node`); Python for `fastapi` comes with NuclearLang.
 2. Read: the brief of the dialect, the platform's topic (`mobile`, `backend`, `web`), its first-project guide
    (`onboarding-mobile`, `onboarding-backend`, `onboarding-web`) and `nuclear help layout --dialect <dialect>` (where
    each kind's file goes).

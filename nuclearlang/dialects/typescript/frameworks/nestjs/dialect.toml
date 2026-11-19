@@ -211,6 +211,8 @@ expect = { template = "assert.ok({{args}})" }
 
 # what the `nuclear` CLI runs in build/ (ADR-synapsis-0001): install the runtime and the app, run it, test it
 [toolchain]
+# the toolchain its commands run with (the CLI finds it or offers to install it: `nuclear setup node`)
+needs = "node"
 install = "npm install {{packages}}/synapsis-nest && npm install"
 # a dependency that is a folder, installed again by `nuclear install` (its version does not change with its code)
 install_local = "npm install --install-links {{path}}"

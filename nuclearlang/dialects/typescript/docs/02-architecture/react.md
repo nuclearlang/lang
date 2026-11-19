@@ -64,7 +64,7 @@ A folder with `config.nuc` (`synapsis(platform = "web", dialect = "react")`) and
 |---|---|
 | `src/synapsis.g.ts` | `synapsis_g.tpl` (`startSynapsis`, `synapsisConfig`, `registerModels`, `registerSynapsis`, `routes`, `appRouter`) |
 | `src/index.ts`, `index.html` | `index_ts.tpl`, `index_html.tpl` |
-| `package.json` | `package_json.tpl`: `"type": "module"`; scripts `dev` (`vite`), `build` (`tsc` + `vite build`), `preview`, `test` (`vitest run`) |
+| `package.json` | `package_json.tpl`: `"type": "module"`; scripts `dev` (`vite`), `build` (`tsc` + `vite build`), `preview`, `test` (`vitest run --passWithNoTests`: a new project has no tests yet) |
 | `tsconfig.json`, `vite.config.ts` | `tsconfig.tpl` (ES2022, `bundler`, strict, `noEmit`), `vite_config.tpl` (jsdom, `test/**/*_test.ts`) |
 | `.npmrc` | inline `install-links=true`: npm copies the runtime (a `file:` dependency) instead of linking it; from a link, TypeScript and Vite resolve its imports (react) next to the runtime's own folder, the types become `any` and the bundle fails |
 
@@ -80,6 +80,7 @@ What the `nuclear` command runs in `build/app` (`[toolchain]`):
 
 | Key | Command |
 |---|---|
+| `needs` | `node`: the CLI finds Node.js (`NUCLEAR_NODE`, Nuclear's own, the PATH) or offers `nuclear setup node` (ADR-cli-0004) |
 | `install` | `npm install {{packages}}/synapsis-web && npm install`, then Vite's dependency cache (`node_modules/.vite`) is removed: it would keep serving the runtime it pre-bundled before (same version, new code) |
 | `run` | `npm run dev -- --port {{port}} --strictPort` (`url = "http://localhost:5173"`, `ready = "Local:"`, `installed = "node_modules"`) |
 | `serve` | `npx vite --port {{port}} --strictPort --host {{host}} --clearScreen false`: the dev server the editor's web device runs on a port and host it picks |

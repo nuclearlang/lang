@@ -99,6 +99,7 @@ What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]
 | Key | Command |
 |---|---|
 | `install` | `python3 -m venv .venv`, then pip installs the runtime from `{{packages}}/synapsis-py` and the app (`-e '.[test]'`) |
+| `needs` | `python`: the CLI finds Python (`NUCLEAR_PYTHON`, the one included with NuclearLang, Nuclear's own, the PATH) and puts it first in the PATH of these commands (ADR-cli-0004) |
 | `install_local` | reinstalls a dependency that is a folder (`--no-deps --force-reinstall`) |
 | `run` | `.venv/bin/uvicorn app.main:app --reload --port {{port}}` (`url = "http://localhost:8000"`, `ready = "Uvicorn running"`, `installed = ".venv"`) |
 | `test` | `.venv/bin/python -m pytest -q` |

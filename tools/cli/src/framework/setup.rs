@@ -82,23 +82,47 @@ fn packages(os: &str) -> Result<(), String> {
         println!("{} all installed", super::landing::ok("✓"));
         return Ok(());
     }
-    let (program, mut args): (&str, Vec<&str>) = match manager {
-        Manager::Apt => ("apt-get", vec!["install", "-y"]),
-        Manager::Dnf => ("dnf", vec!["install", "-y"]),
-        Manager::Pacman => ("pacman", vec!["-S", "--needed"]),
-        Manager::Zypper => ("zypper", vec!["install"]),
-    };
-    args.extend(&missing);
     println!("Missing: {}", missing.join(" "));
     println!("It needs administrator rights (sudo asks for your password).");
     if !ask("Install them?") {
         println!("{} Flutter may fail until they are installed.", super::landing::warn("Skipped:"));
         return Ok(());
     }
+    install_packages(manager, &missing)
+}
+
+/// System packages with the distribution's manager, through sudo.
+fn install_packages(manager: Manager, packages: &[&str]) -> Result<(), String> {
+    let (program, mut args): (&str, Vec<&str>) = match manager {
+        Manager::Apt => ("apt-get", vec!["install", "-y"]),
+        Manager::Dnf => ("dnf", vec!["install", "-y"]),
+        Manager::Pacman => ("pacman", vec!["-S", "--needed"]),
+        Manager::Zypper => ("zypper", vec!["install"]),
+    };
+    args.extend(packages);
     if manager == Manager::Apt {
         shell("sudo", &["apt-get", "update", "-y"])?;
     }
     shell("sudo", &[&[program][..], &args].concat())
+}
+
+/// `libatomic`, which Node.js's Linux builds load and a minimal distribution lacks: installed on a yes (it needs
+/// administrator rights). Whether it was installed.
+pub(super) fn libatomic() -> Result<bool, String> {
+    let Some(manager) = manager() else {
+        println!("Install the libatomic library with your distribution's package manager, then run this again.");
+        return Ok(false);
+    };
+    let package = match manager {
+        Manager::Apt | Manager::Zypper => "libatomic1",
+        Manager::Dnf => "libatomic",
+        Manager::Pacman => "gcc-libs",
+    };
+    println!("Node.js needs the system library libatomic (package {package}); it needs administrator rights.");
+    if !ask("Install it?") {
+        return Ok(false);
+    }
+    install_packages(manager, &[package]).map(|_| true)
 }
 
 /// The package manager, from /etc/os-release (`ID` and `ID_LIKE`).
@@ -314,7 +338,7 @@ fn step(n: usize, title: &str) {
 }
 
 /// Asks a yes/no question; Enter means yes. Without an answer (no terminal) it is no.
-fn ask(question: &str) -> bool {
+pub(super) fn ask(question: &str) -> bool {
     print!("{} {} ", super::landing::name(question), super::landing::dim("[Y/n]"));
     let _ = std::io::stdout().flush();
     let mut answer = String::new();
@@ -335,7 +359,7 @@ fn pause(message: &str) {
 }
 
 /// Runs a command in front of the user (it may ask for a password), showing it first.
-fn shell(program: &str, args: &[&str]) -> Result<(), String> {
+pub(super) fn shell(program: &str, args: &[&str]) -> Result<(), String> {
     println!("{} {}", super::landing::dim("$"), super::landing::cmd(&format!("{program} {}", args.join(" "))));
     let status = Command::new(program).args(args).status().map_err(|e| format!("cannot run {program}: {e}"))?;
     if status.success() {

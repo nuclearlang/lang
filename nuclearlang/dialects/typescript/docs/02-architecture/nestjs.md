@@ -109,6 +109,7 @@ What the `nuclear` command runs in `build/` (`[toolchain]`):
 | Key | Command |
 |---|---|
 | `install` | `npm install {{packages}}/synapsis-nest && npm install` (`installed = "node_modules"`) |
+| `needs` | `node`: the CLI finds Node.js (`NUCLEAR_NODE`, Nuclear's own, the PATH) or offers `nuclear setup node` (ADR-cli-0004) |
 | `install_local` | `npm install --install-links {{path}}`: a dependency that is a folder, installed again |
 | `compile` | `npx tsc -p tsconfig.json`: `nuclear build` compiles too once the app is installed, and the running server (`node --watch`) restarts on it |
 | `run` | `npm run dev` (`url = "http://localhost:3000"`, `ready = "Nest application successfully started"`) |

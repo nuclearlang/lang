@@ -12,11 +12,10 @@ The pending work of `nuclear`. A done item is deleted. What `gen` and `make` wri
 
 ## Half done
 
-- **A backend or web project on a new machine** (found by spec 016's clean-machine run, 2026-11-18): `nuclear
-  install` of a `fastapi` project needs `python3` (a `nestjs` or `react` one, Node.js), and nothing installs it:
-  `nuclear setup` installs only Flutter, and `nuclear doctor` checks only the mobile platform (in a backend
-  project it reports Flutter and never Python). TODO(user): how a new machine gets the backend and web toolchains
-  (`nuclear setup` per platform, the AI archive's Python, or the user's own).
+- **The toolchains of a fresh machine** (ADR-cli-0004): `nuclear setup node|python` works on Linux and macOS only;
+  on Windows the user installs Node.js or Python and names it (`NUCLEAR_NODE`, `NUCLEAR_PYTHON`). A Linux with musl
+  gets no Nuclear Python (python-build-standalone's glibc build). Untested on a clean machine: `nuclear setup node`,
+  and a `fastapi` project with only the AI archive's Python.
 
 - **The `nuclear` CLI for backend projects** has `new`, `build`, `install`, `run`, `test`, `migrate`, `check` and
   `make` (every kind, from the platform's `[layout]` + `[skeletons]`). Missing: `watch` for backend projects, and

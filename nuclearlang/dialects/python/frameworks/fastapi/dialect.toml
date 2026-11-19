@@ -204,6 +204,8 @@ expect = { template = "assert {{args}}" }
 
 # what the `nuclear` CLI runs in build/ (ADR-synapsis-0001): install the runtime and the app, run it, test it
 [toolchain]
+# the toolchain its commands run with (the CLI finds it or offers to install it: `nuclear setup python`)
+needs = "python"
 install = "python3 -m venv .venv && .venv/bin/pip install -q {{packages}}/synapsis-py && .venv/bin/pip install -q -e '.[test]'"
 # a dependency that is a folder, installed again by `nuclear install` (its version does not change with its code)
 install_local = ".venv/bin/pip install -q --no-deps --force-reinstall {{path}}"

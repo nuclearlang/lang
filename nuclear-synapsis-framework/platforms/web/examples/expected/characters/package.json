@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "build:embed": "tsc -p tsconfig.json && vite build -c vite.embed.config.ts",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "synapsis-web": "^0.1.0",

@@ -1,6 +1,7 @@
 //! `nuclear doctor`: checks what NuclearLang and Synapsis need to work, like `flutter doctor` but only for
 //! their own resources: the CLIs, the flutter dialect and its type definitions, the synapsis Dart package,
-//! the Flutter SDK, VS Code with its extensions, and the project of the current folder.
+//! the Flutter SDK, the toolchains of backend and web (Python, Node.js), VS Code with its extensions, and the project
+//! of the current folder.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -29,7 +30,9 @@ pub fn doctor(project: Option<&Path>) {
         name("Doctor summary for NuclearLang and Synapsis"),
         dim(&format!("(Flutter's own checks: {})", cmd("nuclear flutter doctor")))
     );
-    let mut checks = vec![synapsis(), nuclear(), dialect(), package(), flutter(), vscode()];
+    let mut checks = vec![synapsis(), nuclear(), dialect(), package(), flutter()];
+    checks.extend(super::toolchain::ALL.into_iter().map(toolchain));
+    checks.push(vscode());
     checks.extend(project.map(project_check));
     for c in &checks {
         let mark = match c.status {
@@ -179,6 +182,75 @@ fn flutter() -> Check {
     }
     let dart = v["dartSdkVersion"].as_str().unwrap_or("?");
     check(status, format!("Flutter {version} (Dart {dart})"), details)
+}
+
+/// `nuclear doctor --json`: each toolchain, for the editor: `{"toolchains": {"python": {"found": "env" | "included" |
+/// "nuclear" | "path" | "missing" | "broken", "path": "...", "version": "..."}, "node": {...}, "flutter": {...}}}`
+/// (`broken`: found, but `--version` fails; `version` then holds why).
+pub fn json() -> String {
+    use super::toolchain::Source;
+    let entry = |found: &str, path: Option<&Path>, version: String| {
+        serde_json::json!({"found": found, "path": path.map(|p| p.display().to_string()).unwrap_or_default(), "version": version})
+    };
+    let mut toolchains = serde_json::Map::new();
+    for t in super::toolchain::ALL {
+        let value = match super::toolchain::find(t) {
+            None => entry("missing", None, String::new()),
+            Some((exe, source)) => {
+                let found = match source {
+                    Source::Env => "env",
+                    Source::Included => "included",
+                    Source::Nuclear => "nuclear",
+                    Source::Path => "path",
+                };
+                match super::toolchain::version(&exe) {
+                    Ok(v) => entry(found, Some(&exe), v),
+                    Err(e) => entry("broken", Some(&exe), e),
+                }
+            }
+        };
+        toolchains.insert(t.name.into(), value);
+    }
+    let flutter = match super::find_flutter() {
+        None => entry("missing", None, String::new()),
+        Some(bin) => {
+            let found = match () {
+                _ if std::env::var_os("FLUTTER").is_some() || std::env::var_os("FLUTTER_ROOT").is_some() => "env",
+                _ if bin.to_string_lossy().contains("develop/flutter") => "nuclear",
+                _ => "path",
+            };
+            entry(found, Some(&bin), String::new())
+        }
+    };
+    toolchains.insert("flutter".into(), flutter);
+    serde_json::json!({ "toolchains": toolchains }).to_string()
+}
+
+/// A toolchain of backend or web: where it was found and its version, or how to get it.
+fn toolchain(t: &super::toolchain::Tool) -> Check {
+    use super::toolchain::Source;
+    let Some((exe, source)) = super::toolchain::find(t) else {
+        let mut details: Vec<String> = super::toolchain::missing(t).lines().map(String::from).collect();
+        details.insert(0, "only needed by the projects of those dialects".into());
+        return check(Status::Warn, format!("{} not found", t.what), details);
+    };
+    let version = match super::toolchain::version(&exe) {
+        Ok(v) => v,
+        Err(e) => {
+            let mut details = vec![home_relative(&exe), e];
+            if details[1].contains("libatomic") {
+                details.push(format!("install the system library libatomic (nuclear setup {} offers it)", t.name));
+            }
+            return check(Status::Fail, format!("{} does not run", t.what), details);
+        }
+    };
+    let from = match source {
+        Source::Env => format!("from ${}", t.env),
+        Source::Included => "included with NuclearLang".into(),
+        Source::Nuclear => format!("Nuclear's own (nuclear setup {})", t.name),
+        Source::Path => "from the PATH".into(),
+    };
+    check(Status::Ok, format!("{} {}", t.what, version.trim_start_matches("Python ")), vec![format!("{} ({from})", home_relative(&exe))])
 }
 
 fn vscode() -> Check {

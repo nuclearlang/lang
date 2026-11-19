@@ -1,6 +1,6 @@
 # The website: its content from the reference and the guides of every project, the app built and tested, the bundle.
-# Publishing it at nuclearlang.github.io (served only from the `nuclearlang.github.io` repository) is not wired from
-# here yet: website/docs/01-product/roadmap.md.
+# A push to main then asks nuclearlang.github.io (GitHub serves the site only from that repository) to publish it: a
+# `repository_dispatch` of type `website`, with the secret SITE_DISPATCH_TOKEN (skipped while it is not set).
 name: website
 
 on:
@@ -15,6 +15,8 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      SITE_DISPATCH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -39,3 +41,8 @@ jobs:
           nuclear install
           nuclear test
           (cd build/app && npx vite build)
+      - name: "Publish: nuclearlang.github.io builds the site from main"
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.SITE_DISPATCH_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+        run: gh api repos/nuclearlang/nuclearlang.github.io/dispatches -f event_type=website

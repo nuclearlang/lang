@@ -15,9 +15,10 @@ compiler (an arrow passed where a `void` callback is expected passes `nuclear ch
 
 - **The site is published from the `nuclearlang.github.io` repository**, whose only file of substance is a workflow
   that checks out this tree's `main`, builds `website/` and deploys it: by hand, every day, or on a
-  `repository_dispatch` of type `website`. A push to this tree does not publish at once: the tree's CI
-  (`.github/workflows/website.yml`) has no token to send that dispatch. TODO(human): a token (a fine-grained one with
-  Actions write on `nuclearlang.github.io`, as a secret here), or is the daily run enough?
+  `repository_dispatch` of type `website`. The tree's CI (`.github/workflows/website.yml`) sends that dispatch after a
+  green push to `main` with the secret `SITE_DISPATCH_TOKEN`, and skips it while the secret is not set. TODO(human):
+  create it (decided 2026-11-18): a fine-grained token, owner `nuclearlang`, only `nuclearlang.github.io`, "Contents:
+  read and write", saved as the secret `SITE_DISPATCH_TOKEN` of `nuclearlang/lang`.
 
 ## Untested
 

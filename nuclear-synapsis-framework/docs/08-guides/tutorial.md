@@ -12,7 +12,7 @@ The full rules are in [nuclearlang/dialects/dart/docs/07-reference/flutter.md](.
 curl -fsSL https://nuclearlang.github.io/install.sh | sh   # Windows: irm https://nuclearlang.github.io/install.ps1 | iex
 # or, from the source tree: installer/install.sh (needs Rust)
 nuclear doctor             # checks everything: the command, the dialect, the Synapsis package, Flutter, VS Code
-nuclear setup              # only if doctor says Flutter is missing: installs it step by step
+nuclear setup              # only if doctor says Flutter is missing: installs it step by step (backend or web: nuclear setup node; Python comes with NuclearLang)
 ```
 
 `nuclear` finds Flutter by itself (on the PATH, `~/development/flutter`, fvm...); `FLUTTER`
