@@ -14,6 +14,8 @@ test -d "$nm" || { echo "build-embed: run 'npm ci' in nuclearlang/tools/node fir
 (cd "$web" && node "$nm/typescript/bin/tsc" -p tsconfig.json)
 rm -rf "$nm/synapsis-web"
 (cd "$root/nuclearlang/tools/node" && npm install --no-save --no-audit --no-fund --install-links "$web" >/dev/null 2>&1)
+# the service first: the UI's repositories come from its contract (contracts(nuclear_chat = "../nuclear_chat"))
+(cd "$root" && cargo run -q --release -p nuclear-cli -- build "$here/../nuclear_chat")
 rm -rf "$here/build"
 (cd "$root" && cargo run -q --release -p nuclear-cli -- build "$here")
 ln -sfn "$nm" "$here/build/app/node_modules"

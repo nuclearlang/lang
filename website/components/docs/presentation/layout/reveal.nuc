@@ -9,7 +9,14 @@ stateful Reveal(child: Element)
       inView(".reveal", (element) => fadeIn(element), { "amount": 0.12 })
     catch e
       Log.w("no animations: ${e}")
+      showAll()
+
+  // Every block visible at once; a page with no block to show (a missing tool's page) has nothing to do.
+  showAll() void
+    try
       animate(".rise, .reveal", { "opacity": 1 }, { "duration": 0 })
+    catch e
+      Log.w("no blocks to show: ${e}")
 
   fadeIn(element: any) void
     animate(element, { "opacity": [0, 1], "transform": ["translateY(28px)", "none"] }, { "duration": 0.65 })
