@@ -242,8 +242,15 @@ haveRequirements(p: Profile, always: boolean) boolean
     print("\n${missing["title"]} is needed (${missing["why"]}): ${missing["detail"]}.")
     other = missing["local"] == true ? ", or choose the profile `remote`" : ""
     by = "Install it from ${missing["url"]} and run `nuclear-builder setup` again${other}."
-    if command == null or "${missing["detail"]}".startsWith("installed, not running")
-      print(command != null ? "Start it and run `nuclear-builder setup` again." : by)
+    // installed but stopped: started here, then used as it is
+    if missing["id"] == "ollama" and "${missing["detail"]}".startsWith("installed, not running")
+      print("Ollama is installed: starting it...")
+      if startOllama()
+        continue
+      print("Ollama does not answer. Start it (its app, or `ollama serve`) and run `nuclear-builder setup` again.")
+      return false
+    if command == null
+      print(by)
       return false
     notes: <string, string> = missing["note"] ?? ({} as <string, string>)
     if notes[sys.platform] != null
@@ -263,6 +270,25 @@ haveRequirements(p: Profile, always: boolean) boolean
       print("${missing["title"]} is still not found. ${by}")
       return false
   true
+
+// The models of a local profile: the ones Ollama already has are used as they are; the others are downloaded only when
+// the user says so (`always`: yes). False when they stay missing.
+haveModels(p: Profile, always: boolean) boolean
+  wanted = modelsOf(p)
+  missing = missingOf(wanted, installedModels(urls()["ollama"]!))
+  here = wanted.filter((m) => not (m in missing))
+  if not here.isEmpty
+    print("\nAlready in Ollama, used as they are: ${here.join(", ")}.")
+  // the Smart Graph's model is not a choice: the MCP server reads the graph
+  if EMBEDDINGS in missing
+    print("\n${EMBEDDINGS} (the Smart Graph's model, which the MCP server needs) is downloaded.")
+  missing = missing.filter((m) => m != EMBEDDINGS)
+  if missing.isEmpty
+    return true
+  if yes(always ? "y" : ask("\nDownload ${missing.join(", ")} (up to ${p.gb} GB)? [Y/n]: ", "y"))
+    return true
+  print("Nothing is downloaded. Run `nuclear-builder setup` again when you want the models, or choose the profile `remote`.")
+  false
 
 // The AI services of this machine, in a terminal: the same steps as the editors' set-up page.
 setup(args: string[]) int
@@ -308,6 +334,8 @@ setup(args: string[]) int
     return 1
   if not haveRequirements(p, always)
     return 1
+  if not haveModels(p, always)
+    return 1
   root = aiRoot()
   if root == null
     print("NuclearLang is installed without the AI services: run its installer again (without --no-ai).", file = sys.stderr)
@@ -321,7 +349,7 @@ setup(args: string[]) int
     print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
     print("${clientsLine()} State: nuclear-builder setup --status")
   else
-    print("\nDone. ${clientsLine()} The local agents: nuclear-builder setup again, another profile.")
+    print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) runs, now and at every login. ${clientsLine()} The local agents: nuclear-builder setup again, another profile.")
   0
 
 // A list option (`--skills a,b`): its items trimmed, none empty; null when it is not given.

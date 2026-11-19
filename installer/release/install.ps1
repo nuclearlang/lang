@@ -6,7 +6,7 @@
 #
 # It downloads the release of this architecture (x86_64 or arm64) from
 # GitHub, checks its SHA-256, installs it in %LOCALAPPDATA%\nuclearlang, puts its bin folder in your user PATH, gives the
-# AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No administrator rights. Then,
+# AI agents the `nuclear` skill and installs the editor extension in every VS Code family editor on the PATH. No administrator rights. Then,
 # asked, the AI services: their archive (a Python of their own with the Smart Graph, the MCP server and the Nuclear
 # Developer; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: it reads this machine,
 # suggests a profile and asks before anything else is downloaded; a machine already set up is brought up to date
@@ -47,7 +47,9 @@ if ($Uninstall) {
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
   foreach ($d in $SkillDirs) { Remove-Item -Recurse -Force (Join-Path $d 'nuclear') -ErrorAction SilentlyContinue }
   Set-UserPath ($UserPath | Where-Object { $_ -ne $Bin })
-  if (Get-Command code -ErrorAction SilentlyContinue) { code --uninstall-extension nuclearlang.nuclearlang *> $null }
+  foreach ($e in @('code', 'code-insiders', 'cursor', 'codium', 'windsurf')) {
+    if (Get-Command $e -ErrorAction SilentlyContinue) { & $e --uninstall-extension nuclearlang.nuclearlang *> $null }
+  }
   Write-Host 'NuclearLang uninstalled.'
   return
 }
@@ -98,12 +100,17 @@ try {
     }
   }
 
-  if (-not $NoVSCode -and (Get-Command code -ErrorAction SilentlyContinue)) {
+  # every editor of the VS Code family on the PATH
+  $Editors = @('code', 'code-insiders', 'cursor', 'codium', 'windsurf') | Where-Object { Get-Command $_ -ErrorAction SilentlyContinue }
+  if (-not $NoVSCode -and $Editors) {
     $Vsix = Join-Path $Tmp "nuclearlang-$Version.vsix"
     try {
       Invoke-WebRequest "$Base/nuclearlang-$Version.vsix" -OutFile $Vsix -UseBasicParsing
-      code --install-extension $Vsix --force *> $null
-      Write-Host 'VS Code extension installed.'
+      foreach ($e in $Editors) {
+        & $e --install-extension $Vsix --force *> $null
+        if ($LASTEXITCODE -eq 0) { Write-Host "Editor extension installed in $e." }
+        else { Write-Host "The editor extension did not install in ${e}: $e --install-extension $Base/nuclearlang-$Version.vsix" }
+      }
     } catch { }
   }
 } finally {

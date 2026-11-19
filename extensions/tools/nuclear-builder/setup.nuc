@@ -148,8 +148,9 @@ writeMachine(values: <string, string>, file: string? = null) void
 
 // What a profile writes in the machine's file.
 machineOf(p: Profile) <string, string>
+  // the Smart Graph runs in every profile (the MCP server reads it), with its embeddings model
   if p.coder == null
-    return { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": p.id }
+    return { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": p.id, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
   { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": p.id, "CODER_MODEL": p.coder!, "ASSISTANT_MODEL": p.assistant ?? p.coder!, "CHAT_MODEL": chatModelOf(p), "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
 
 // The environment of the tools: the caller's, with the folders where NuclearLang, cargo and Homebrew put their
@@ -174,7 +175,9 @@ Ran(code: int, out: string)
 // Runs a command and waits for it, at most 20 seconds; a command that is not there gives 127.
 capture(args: string[], cwd: string? = null) Ran
   try
-    done = subprocess.run(args, cwd = cwd, captureOutput = true, text = true, timeout = 20, env = toolEnv(), shell = sys.platform == "win32")
+    // no input: a command run from the installer would read its terminal, which Bun (Claude Code's CLI) cannot watch
+    // on macOS (`EINVAL: kqueue`)
+    done = subprocess.run(args, cwd = cwd, stdin = subprocess.DEVNULL, captureOutput = true, text = true, timeout = 20, env = toolEnv(), shell = sys.platform == "win32")
     Ran(done.returncode, "${done.stdout}${done.stderr}")
   catch e
     if not isinstance(e, OSError) and not isinstance(e, subprocess.TimeoutExpired)
@@ -405,15 +408,35 @@ installedModels(ollama: string) string[]
 hasModel(installed: string[], model: string) boolean
   model in installed or "${model}:latest" in installed
 
+// The models of `wanted` Ollama does not have yet (`have`: what it lists).
+missingOf(wanted: string[], have: string[]) string[]
+  wanted.filter((m) => not hasModel(have, m))
+
+// Starts an Ollama that is installed but not running: its app on macOS, else `ollama serve` as a process of its own
+// that outlives the set-up. True when it answers.
+startOllama() boolean
+  app = "/Applications/Ollama.app"
+  if sys.platform == "darwin" and Path(app).exists()
+    subprocess.run(["open", "-a", app], captureOutput = true)
+  else
+    command = which("ollama")
+    if command == null
+      return false
+    detach([command!, "serve"], toolEnv())
+  at = urls()["ollama"]!
+  for i in 0..30
+    if up("${at}/api/tags")
+      return true
+    time.sleep(1)
+  false
+
 // What is installed and running on this machine.
 status(u: <string, string>? = null) <string, any>
   at = u ?? urls()
   machine = readMachine()
   models = installedModels(at["ollama"]!)
-  wanted: string[] = []
-  if machine["NUCLEAR_AI_MODE"] == "local"
-    wanted = [machine["NUCLEAR_GRAPH_EMBED"] ?? "", machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? "", machine["CHAT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
-  files = serviceFiles()
+  wanted = [machine["NUCLEAR_GRAPH_EMBED"] ?? "", machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? "", machine["CHAT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
+  files = serviceFiles(services = machine["NUCLEAR_AI_MODE"] == "remote" ? SERVICES.filter((s) => s.name == "graph") : SERVICES)
   {
     "machine": machine,
     "file": machineFile(),
@@ -448,17 +471,21 @@ ServiceFile(path: string, text: string)
 
 // The files that start the services when the user logs in: systemd user units (Linux), launch agents (macOS), a
 // script of the Startup folder (Windows). They start with the machine's file as their environment.
-serviceFiles(system: string = sys.platform, at: string? = null, bin: string? = null, machine: string? = null, pathEnv: string? = null) ServiceFile[]
+// The services a profile runs: the Smart Graph always, the Developer and the chat with the local agents.
+servicesOf(p: Profile) Service[]
+  p.coder == null ? SERVICES.filter((s) => s.name == "graph") : SERVICES
+
+serviceFiles(system: string = sys.platform, at: string? = null, bin: string? = null, machine: string? = null, pathEnv: string? = null, services: Service[] = SERVICES) ServiceFile[]
   h = at ?? home()
   b = bin ?? binDir()
   m = machine ?? machineFile()
   pathOf = pathEnv ?? servicePath(b, h)
   if system == "linux"
-    return SERVICES.map((s) => ServiceFile(posixpath.join(h, ".config", "systemd", "user", "nuclear-${s.name}.service"), unit(s, b, m, pathOf)))
+    return services.map((s) => ServiceFile(posixpath.join(h, ".config", "systemd", "user", "nuclear-${s.name}.service"), unit(s, b, m, pathOf)))
   if system == "darwin"
-    return SERVICES.map((s) => ServiceFile(posixpath.join(h, "Library", "LaunchAgents", "${label(s.name)}.plist"), agent(s, h, b, m, pathOf)))
+    return services.map((s) => ServiceFile(posixpath.join(h, "Library", "LaunchAgents", "${label(s.name)}.plist"), agent(s, h, b, m, pathOf)))
   if system == "win32"
-    starts = SERVICES.map((s) => "start \"\" /min \"${ntpath.join(b, s.args[0] + (s.name == "developer" ? ".cmd" : ".exe"))}\"${s.args.skip(1).map((a) => " ${a}").join()}")
+    starts = services.map((s) => "start \"\" /min \"${ntpath.join(b, s.args[0] + (s.name == "developer" ? ".cmd" : ".exe"))}\"${s.args.skip(1).map((a) => " ${a}").join()}")
     file = ntpath.join(h, "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "nuclear-ai.cmd")
     return [ServiceFile(file, "@echo off\r\nrem The AI services of NuclearLang, started at login (written by their set-up).\r\nfor /f \"usebackq eol=# tokens=1,* delims==\" %%a in (\"${m}\") do set \"%%a=%%b\"\r\n${starts.join("\r\n")}\r\n")]
   []
@@ -507,8 +534,8 @@ restartService(name: string) boolean
   // Windows: the Startup script starts them at login; now, the caller does
   false
 
-enableServices(say: (line: string) => void) boolean
-  files = serviceFiles()
+enableServices(say: (line: string) => void, services: Service[] = SERVICES) boolean
+  files = serviceFiles(services = services)
   if files.isEmpty or not serviceManager()
     return false
   for f in files
@@ -517,10 +544,10 @@ enableServices(say: (line: string) => void) boolean
     say("wrote ${f.path}")
   if sys.platform == "linux"
     runCommand(["systemctl", "--user", "daemon-reload"], say)
-    runCommand(["systemctl", "--user", "enable", ...SERVICES.map((s) => "nuclear-${s.name}")], say)
+    runCommand(["systemctl", "--user", "enable", ...services.map((s) => "nuclear-${s.name}")], say)
   else if sys.platform == "darwin"
-    for i in 0..SERVICES.length
-      capture(["launchctl", "bootout", "${gui()}/${label(SERVICES[i].name)}"])
+    for i in 0..services.length
+      capture(["launchctl", "bootout", "${gui()}/${label(services[i].name)}"])
       runCommand(["launchctl", "bootstrap", gui(), files[i].path], say)
   true
 
@@ -676,7 +703,8 @@ mcpEntry(client: string, command: string) <string, any>
 // The server written into the `table` of a JSON settings file, every other key kept.
 addJsonEntry(file: Path, table: string, entry: <string, any>) string
   data: <string, any> = {}
-  if file.exists()
+  // an empty file is a new one (Cursor creates `mcp.json` empty)
+  if file.exists() and not file.readText(encoding = "utf-8").trim().isEmpty
     try
       data = json.loads(file.readText(encoding = "utf-8"))
     catch e
@@ -753,13 +781,17 @@ disconnectClients(say: (line: string) => void) void
 // A step of the set-up: what it is called and what it says it does.
 Step(id: string, title: string)
 
+// The models of a profile: the Smart Graph's always; the agents' and the chat's with the local agents.
 modelsOf(p: Profile) string[]
+  if p.coder == null
+    return [EMBEDDINGS]
   [EMBEDDINGS, p.coder ?? "", p.assistant ?? p.coder ?? "", chatModelOf(p)].filter((m) => m.length > 0).unique()
 
 // The steps that leave a profile installed and running, in order. Each can be run again: what is there is kept.
 steps(p: Profile) Step[]
+  // the Smart Graph in every profile: the MCP server reads it
   if p.coder == null
-    return [Step("graph", "Install the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("machine", "Keep the choice")]
+    return [Step("graph", "Install the Smart Graph and the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("models", "Download the Smart Graph's model (${EMBEDDINGS})"), Step("graph-service", "Start the Smart Graph, now and at every login"), Step("knowledge", "Load the knowledge base into the graph")]
   [
     Step("graph", "Install the Smart Graph and the MCP server"),
     Step("clients", "Add the MCP server to the AI clients of this machine"),
@@ -795,9 +827,8 @@ installGraph(p: Profile, root: string, say: (line: string) => void) void
   editable = Path(root, GRAPH).isSymlink()
   tool = (target: string) => runCommand(["uv", "tool", "install", "--force", "--no-progress", ...(editable ? ["--editable"] : []), target], say, env = { "UV_TOOL_BIN_DIR": binDir() })
   runCommand(["nuclear", "build", "${Path(root, GRAPH)}"], say)
-  // the graph's server only with the local agents; the MCP server (a project of its own) always
-  if p.coder != null
-    tool("${Path(root, GRAPH)}[server]")
+  // the graph's server and the MCP server (a project of its own) in every profile
+  tool("${Path(root, GRAPH)}[server]")
   runCommand(["nuclear", "build", "${Path(root, MCP)}"], say)
   tool("${Path(root, MCP)}")
 
@@ -852,7 +883,10 @@ startGraph(p: Profile, say: (line: string) => void) void
     choice[k] = v
   writeMachine(choice)
   say("wrote ${machineFile()}")
-  enableServices(say)
+  // a profile without the local agents runs the graph alone: the others' services, left by an earlier profile, go
+  if p.coder == null
+    removeServices(say)
+  enableServices(say, servicesOf(p))
   startService("graph", "${urls()["graph"]}/v1/health", say)
 
 loadKnowledge(root: string, say: (line: string) => void) void

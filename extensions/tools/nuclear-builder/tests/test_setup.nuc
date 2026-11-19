@@ -81,7 +81,7 @@ testTheChoiceIsKeptInTheMachineFileAndReadBack(tmpPath: Path) void
   // a later write keeps what it does not name
   writeMachine({ "CODER_MODEL": "other:1b" }, file)
   expect(readMachine(file)["CODER_MODEL"] == "other:1b" and readMachine(file)["NUCLEAR_AI_PROFILE"] == "medium")
-  expect(machineOf(profileOf("remote")!) == { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote" })
+  expect(machineOf(profileOf("remote")!) == { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote", "NUCLEAR_GRAPH_EMBED": EMBEDDINGS })
   expect(readMachine("${tmpPath.joinpath("no-such-file")}").isEmpty)
 
 testEachSystemGetsTheFilesThatStartTheServicesAtLogin() void
@@ -118,7 +118,10 @@ testTheLauncherTakesTheMachineModelsUnlessTheCallerGivesItsOwn(tmpPath: Path) vo
   expect(launcher("C:\\ai", "C:\\m\\ai.env", "win32").path == "nuclear-developer.cmd")
 
 testAProfileIsInstalledInItsStepsAndRemoteAgentsAloneTakeTwo() void
-  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "machine"])
+  // the Smart Graph in every profile: the MCP server reads it
+  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "models", "graph-service", "knowledge"])
+  expect(servicesOf(profileOf("remote")!).map((s) => s.name) == ["graph"] and servicesOf(profileOf("medium")!).length == 3)
+  expect(modelsOf(profileOf("remote")!) == [EMBEDDINGS])
   expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "clients", "developer", "models", "graph-service", "knowledge", "developer-service", "chat-service"])
   expect(EMBEDDINGS in steps(profileOf("hard")!)[3].title)
 
@@ -129,8 +132,12 @@ testEveryRequirementCanBeInstalledOnTheThreeSystemsOrByHand() void
     expect("${r["url"]}".startsWith("https://"))
     for system in ["linux", "darwin", "win32"]
       expect(install[system] != null, "${r["id"]} on ${system}")
-  expect(REQUIREMENTS.find((r) => r["id"] == "ollama")!["local"] == true)
+  // Ollama in every profile: the Smart Graph's model runs on it
+  expect(REQUIREMENTS.find((r) => r["id"] == "ollama")!["local"] == null)
   expect(hasModel(["embeddinggemma:latest"], "embeddinggemma") and hasModel(["a:3b"], "a:3b") and not hasModel(["a:3b"], "a"))
+  // what Ollama already has is used; only the rest would be downloaded
+  expect(missingOf(["embeddinggemma", "a:3b", "b:2b"], ["embeddinggemma:latest", "a:3b"]) == ["b:2b"])
+  expect(missingOf(["a:3b"], ["a:3b"]).isEmpty)
 
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -191,5 +198,8 @@ testTheMcpServerIsAddedToAClientsFileAndTakenOutKeepingTheRest(tmpPath: Path) vo
   broken = tmpPath.joinpath("broken.json")
   broken.writeText("{ not json")
   expect("left as it is" in addJsonEntry(broken, "mcpServers", mcpEntry("Cursor", "nuclear-mcp")) and broken.readText() == "{ not json")
+  empty = tmpPath.joinpath("empty.json")
+  empty.writeText("")
+  expect("wrote" in addJsonEntry(empty, "mcpServers", mcpEntry("Cursor", "nuclear-mcp")) and "nuclear" in empty.readText())
   expect(mcpEntry("Gemini CLI", "nuclear-mcp") == { "command": "nuclear-mcp" })
   expect(jsonClients({ "XDG_CONFIG_HOME": "/cfg" })[1].file == "${Path("/cfg", "opencode", "opencode.json")}")

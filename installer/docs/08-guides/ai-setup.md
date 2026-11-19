@@ -30,7 +30,10 @@ The same steps run in the three. Run it again whenever you want another choice: 
    | [uv](https://docs.astral.sh/uv/) | the Python environments of the services (it brings its own Python) | its installer, in your user folder |
    | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |
 
-   Without Ollama there are no local agents: install it, or go back and choose the remote agents only.
+   Without Ollama there is no Smart Graph and no local agent: it is needed in every profile. A program
+   already on the machine is used as it is, with no question; an Ollama that is installed but stopped is started.
+   The models Ollama already has are used as they are; the ones missing are listed with the size, and downloaded
+   only when you say yes (`--yes`: without asking).
 4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine
    (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of
    yours), the Nuclear Developer, the models, the knowledge base loaded
@@ -44,9 +47,9 @@ The same steps run in the three. Run it again whenever you want another choice: 
 | `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |
 | `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 5.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
 | `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
-| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine |
+| `remote` | `embeddinggemma` (the Smart Graph's) | 0.6 GB | 1 GB | only the Smart Graph runs on the machine |
 
-Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors. The chat answers with one small model of its own (`CHAT_MODEL` in the machine's file; `lite` uses its one model), loaded only while you chat. No model is larger than 3B parameters of effective size.
+Every profile downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors: the Smart Graph runs in every profile, because the MCP server reads it, so Ollama is needed in every profile too. The chat answers with one small model of its own (`CHAT_MODEL` in the machine's file; `lite` uses its one model), loaded only while you chat. No model is larger than 3B parameters of effective size.
 
 **`lite`: One 1.5B model does everything: for a machine with little memory.**
 
@@ -80,12 +83,12 @@ little else open; one marked *not for this machine* may still be chosen, and wil
 
 In a terminal, without questions: `nuclear-builder setup --profile medium --yes`.
 
-## 4. Remote agents only
+## 4. Remote agents and the Smart Graph
 
-Nothing runs on your machine and nothing is downloaded but the MCP server, which the set-up adds to every AI
-client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
-([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). What you give up: the Smart Graph (no strategy for a request, no search of the knowledge
-base), the Builder panel and Nuclear Atlas of the editor, and the local agents themselves, so your remote
+Only the Smart Graph runs on your machine, with its model (`embeddinggemma`, 0.6 GB, on Ollama), and the MCP server,
+which the set-up adds to every AI client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
+([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). Your agent also gets the Smart Graph: the strategy of each request and the search of the knowledge base. What you
+give up: the Builder panel of the editor and the local agents themselves, so your remote
 agent writes every line the generators do not and all of it is paid tokens.
 
 ## 5. After the set-up

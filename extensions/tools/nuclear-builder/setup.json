@@ -32,7 +32,6 @@
       "why": "runs the local models and keeps them: it loads one when an agent asks and frees its memory afterwards",
       "command": "ollama",
       "url": "https://ollama.com/download",
-      "local": true,
       "install": {
         "linux": "curl -fsSL https://ollama.com/install.sh | sh",
         "darwin": "brew install ollama && brew services start ollama",
@@ -54,35 +53,35 @@
   "profiles": [
     {
       "id": "remote",
-      "title": "Remote agents only",
-      "summary": "Nothing runs on this machine. Claude Code, Codex, Cursor or OpenCode get the Nuclear MCP server: the generators, the compiler and the command line.",
-      "gb": 0,
-      "ram": 0,
-      "minRam": 0,
+      "title": "Remote agents and the Smart Graph",
+      "summary": "Only the Smart Graph runs on this machine, with its small model. Claude Code, Codex, Cursor or OpenCode get the Nuclear MCP server: the generators, the compiler, the command line and the knowledge base.",
+      "gb": 0.6,
+      "ram": 1,
+      "minRam": 1,
       "works": [
         "the generators (a resource, a use case, a screen) from your agent",
         "the compiler's checks and fixes, the documentation of every kind and decorator",
-        "nuclear build, test and migrate from your agent"
+        "nuclear build, test and migrate from your agent",
+        "the Smart Graph: the strategy of each request and the search of the knowledge base, for your agent"
       ],
       "limits": [
         "your agent writes every line the generators do not: all of it is paid tokens",
-        "no Smart Graph: no strategy for a request, no search of the knowledge base",
         "no Builder panel and no Nuclear Atlas in the editor"
       ],
-      "measured": "nothing runs on this machine",
-      "title_es": "Solo agentes remotos",
-      "summary_es": "No corre nada en esta máquina. Claude Code, Codex, Cursor u OpenCode reciben el servidor MCP de Nuclear: los generadores, el compilador y la línea de comandos.",
+      "measured": "only the Smart Graph runs on this machine",
+      "title_es": "Agentes remotos y el Smart Graph",
+      "summary_es": "En esta máquina solo corre el Smart Graph, con su modelo pequeño. Claude Code, Codex, Cursor u OpenCode reciben el servidor MCP de Nuclear: los generadores, el compilador, la línea de comandos y la base de conocimiento.",
       "works_es": [
         "los generadores (un recurso, un caso de uso, una pantalla) desde tu agente",
         "las comprobaciones y arreglos del compilador, la documentación de cada kind y decorador",
-        "nuclear build, test y migrate desde tu agente"
+        "nuclear build, test y migrate desde tu agente",
+        "el Smart Graph: la estrategia de cada pedido y la búsqueda en la base de conocimiento, para tu agente"
       ],
       "limits_es": [
         "tu agente escribe cada línea que los generadores no escriben: todo son tokens de pago",
-        "sin Smart Graph: sin estrategia para un pedido, sin búsqueda en la base de conocimiento",
         "sin el panel del Builder ni Nuclear Atlas en el editor"
       ],
-      "measured_es": "no corre nada en esta máquina"
+      "measured_es": "en esta máquina solo corre el Smart Graph"
     },
     {
       "id": "lite",

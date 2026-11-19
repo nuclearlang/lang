@@ -8,7 +8,8 @@
 # It downloads the release of this system and architecture (Linux x86_64/aarch64, any distribution: the binaries are
 # static; macOS Intel/Apple silicon) from GitHub, checks its SHA-256, installs it in ~/.local/share/nuclearlang with
 # `nuclear` and `nuclear-lsp` linked in ~/.local/bin, puts that folder in the PATH of your shells, gives
-# the AI agents the `nuclear` skill and, when VS Code is there, installs its extension. No sudo. Then, asked in a
+# the AI agents the `nuclear` skill and installs the editor extension in every editor of the VS Code family it finds
+# (VS Code, Insiders, Cursor, VSCodium, Windsurf; on macOS inside their apps too). No sudo. Then, asked in a
 # terminal, the AI services: their archive (a Python of their own with the Smart Graph, the MCP server and the Nuclear
 # Developer, about 160 MB; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: it reads this
 # machine, suggests a profile and asks before anything else is downloaded). A machine already set up gets them again
@@ -35,6 +36,18 @@ MARK="# added by the NuclearLang installer"
 
 say() { printf '%s\n' "$*" >&2; }
 fail() { say "error: $*"; exit 1; }
+# The command line of every editor of the VS Code family on this machine, one per line: on the PATH, or inside its app
+# on macOS (where `code` is on the PATH only after "Shell Command: Install 'code' command in PATH").
+editors() {
+  for cli in code code-insiders cursor codium windsurf; do command -v "$cli" 2>/dev/null; done
+  for app in "Visual Studio Code:code" "Visual Studio Code - Insiders:code-insiders" "Cursor:cursor" \
+    "VSCodium:codium" "Windsurf:windsurf"; do
+    for dir in /Applications "$HOME/Applications"; do
+      cli="$dir/${app%%:*}.app/Contents/Resources/app/bin/${app##*:}"
+      [ -x "$cli" ] && printf '%s\n' "$cli"
+    done
+  done | awk -F/ '!seen[$NF]++'
+}
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -54,7 +67,7 @@ while [ $# -gt 0 ]; do
       for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
         [ -f "$rc" ] && grep -q "$MARK" "$rc" && { grep -v "$MARK" "$rc" > "$rc.nuclear" && mv "$rc.nuclear" "$rc"; }
       done
-      command -v code >/dev/null 2>&1 && code --uninstall-extension nuclearlang.nuclearlang >/dev/null 2>&1 || true
+      editors | while IFS= read -r cli; do "$cli" --uninstall-extension nuclearlang.nuclearlang >/dev/null 2>&1 || true; done
       say "NuclearLang uninstalled."
       exit 0 ;;
     -h|--help) sed -n '2,20p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -136,10 +149,14 @@ if [ "$AGENT" = 1 ]; then
   done
 fi
 
-if [ "$VSCODE" = 1 ] && command -v code >/dev/null 2>&1; then
+if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
   vsix="nuclearlang-$VERSION.vsix"
   if get "$base/$vsix" "$tmp/$vsix" 2>/dev/null; then
-    code --install-extension "$tmp/$vsix" --force >/dev/null 2>&1 && say "VS Code extension installed."
+    editors | while IFS= read -r cli; do
+      name=$(basename "$cli")
+      if "$cli" --install-extension "$tmp/$vsix" --force >/dev/null 2>&1; then say "Editor extension installed in $name."
+      else say "The editor extension did not install in $name: $cli --install-extension $base/$vsix"; fi
+    done
   fi
 fi
 
