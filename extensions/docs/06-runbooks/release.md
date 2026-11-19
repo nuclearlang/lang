@@ -18,7 +18,7 @@ asking. The three extensions share one version; Zed's follows VS Code's.
    - the examples of each `README.md` that name a version
 2. Write the change in the `CHANGELOG.md` of each extension it reaches.
 3. Build (the VS Code extension carries Nuclear Chat's UI: `nuclear-chat/ui/build-embed.sh` first, after `npm ci` in
-   `nuclearlang/tools/node`; the CI and the release do the same):
+   `nuclearlang/tools/node` and `installer/release/build-runtimes.sh`; the CI and the release do the same):
 
    ```sh
    nuclear-chat/ui/build-embed.sh                                      # → nuclear-chat/ui/build/app/dist-embed/embed.js

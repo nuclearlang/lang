@@ -26,6 +26,7 @@ jobs:
       - name: "Nuclear Chat's UI, embedded (the extension carries it)"
         run: |
           (cd nuclearlang/tools/node && npm ci --no-audit --no-fund)
+          installer/release/build-runtimes.sh
           nuclear-chat/ui/build-embed.sh
       - name: "Compile, the generated themes and icons, the package"
         working-directory: extensions/vscode

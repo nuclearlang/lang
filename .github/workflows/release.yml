@@ -60,6 +60,7 @@ jobs:
       - name: "Nuclear Chat's UI, embedded (the extension carries it)"
         run: |
           (cd nuclearlang/tools/node && npm ci --no-audit --no-fund)
+          installer/release/build-runtimes.sh
           nuclear-chat/ui/build-embed.sh
       - name: The extension (its bundled server is the Linux one; the installers link the platform's own nuclear-lsp)
         run: |

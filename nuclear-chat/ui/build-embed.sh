@@ -1,7 +1,8 @@
 #!/bin/sh
 # Builds Nuclear Chat's UI as the embedded bundle the editors carry (ADR-synapsis-0009):
 # nuclear-chat/ui/build/app/dist-embed/embed.js. The same way the web platform's check builds its examples: `nuclear`
-# from the tree, the runtime and the node tools of nuclearlang/tools/node (npm ci there first). `root` is the working
+# from the tree, the runtime and the node tools of nuclearlang/tools/node (npm ci there and
+# installer/release/build-runtimes.sh first, on a fresh checkout). `root` is the working
 # tree (or NUCLEAR_ROOT).
 set -e
 here=$(cd "$(dirname "$0")" && pwd)
