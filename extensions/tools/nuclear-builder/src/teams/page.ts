@@ -453,6 +453,8 @@ window.Squad = (() => {
   // HERE: each provider's models and this machine's memory (models --json); ask: the confirmation of a model too big
   // for this machine's memory ({ m, yes }); brainOther: the provider whose model is typed in the brain ({ kind, provider })
   let HERE = null, ask = null, brainOther = null;
+  // NUMBERS: each member's numbers of the shown team, from the factory's ledger (metrics --view people), by member id
+  let NUMBERS = {};
 
   // ---------- an employee's portrait (the roster's, sent once), else their initials in the frame ----------
   // THUMBS: the 128 px thumbnails (tiles, cards, rows, avatars); FACES: the 512 px portraits (the open profile only)
@@ -708,11 +710,19 @@ window.Squad = (() => {
       + ro(t('sq.mp.brain'), esc(whoText(x)) + ' ' + paidTag(x), '<button data-a="brain">' + esc(t('sq.mp.change')) + '</button>')
       + (key ? ro(t('sq.apiKey'), key, keyBtn) : '')
       + ro(t('sq.mp.cost'), esc(isPaid(x) ? t('sq.mp.paidBudget', budget > 0 ? budget.toFixed(2) + ' USD' : t('sq.mp.noLimit')) : t('sq.mp.free')))
+      + numbersRow(x, ro)
       + ro(t('sq.mp.teams'), esc(teams.join(' · ')))
       + ro(t('sq.techLead'), esc(lead ? t('sq.mp.yes') : t('sq.mp.no')), lead ? '' : '<button data-a="lead">' + esc(t('sq.makeLead')) + '</button>')
       + ro(t('sq.temperament'), tm ? '<span class="tag tmp">' + esc(temperName(tm)) + '</span>' : '—', '<button data-tab="person">' + esc(t('sq.mp.change')) + '</button>')
       + ro(t('sq.tab.skills'), esc(t('sq.mp.skillsOn', on, roleSk.length) + (own ? ' · ' + t('sq.mp.ownSkills', own) : '')), '<button data-tab="skills">' + esc(t('sq.mp.change')) + '</button>')
       + '</div><div class="lbl ov-h">' + esc(t('sq.li.activity')) + '</div>' + feed;
+  }
+  /** The member's numbers from the factory's ledger: steps, answers, lines, passed and failed, tokens, money. */
+  function numbersRow(x, ro) {
+    const n = NUMBERS[x.id];
+    if (!n) return '';
+    const k = (v) => (v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e4 ? (v / 1e3).toFixed(1) + 'k' : String(v));
+    return ro(t('sq.mp.numbers'), esc(t('sq.mp.numbersText', n.steps, n.answers, n.added, n.removed, n.passed, n.failed, k(n.inTokens + n.outTokens), '$' + Number(n.costUsd).toFixed(2))), '<button data-a="reports">' + esc(t('sq.mp.reports')) + '</button>');
   }
   /** The brain's list, focused (the roster's chip, the overview's *Change*). */
   function focusBrain() { tab = 'overview'; askAgents(); draw(); const b = el.querySelector('#sqBrain'); if (b) { b.scrollIntoView?.({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); b.focus({ preventScroll: true }); } }
@@ -1337,6 +1347,7 @@ window.Squad = (() => {
     if (ds.view) { const f = findEmp(ds.view); if (!f) return; if (f.role !== role) { role = f.role; filter = ''; ftemper = ''; fgender = ''; } const own = members().find((m) => m.employee === f.p.id); if (own) { sel = own.id; viewing = null; } else viewing = f.p.id; peek = f.p.id; skillsAll = false; draw(); return el.querySelector('.sq-side')?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
     if (ds.cfg) { select(ds.cfg); return focusBrain(); }
     if (ds.a === 'brain') return focusBrain();
+    if (ds.a === 'reports') return post({ type: 'team:reports', team: S.team.id, member: x.id });
     if (ds.member) { select(ds.member); return draw(); }
     if (ds.addrole) { role = ds.addrole; filter = ''; ftemper = ''; fgender = ''; peek = null; draw(); return el.querySelector('.sq-roster')?.scrollIntoView?.({ block: 'start' }); }
     if (ds.addemp) { flush(); S.loading = true; draw(); const f = findEmp(ds.addemp); return post({ type: 'team:memberAdd', id: S.team.id, members: [{ role: f?.role ?? role, employee: ds.addemp }] }); }
@@ -1445,7 +1456,7 @@ window.Squad = (() => {
       if (m.type === 'team:state') {
         if (m.faces) FACES = m.faces; if (m.thumbs) THUMBS = m.thumbs; delete m.faces; delete m.thumbs;
         const other = S.team?.id !== m.team?.id; S = { ...S, ...m, loading: false, missing: null };
-        if (other) { peek = null; viewing = null; savedAt = 0; }
+        if (other) { peek = null; viewing = null; savedAt = 0; NUMBERS = {}; }
         if (W?.creating && m.team) { W = null; view = 'team'; }
         if (!memberById(sel)) select(members()[0]?.id ?? null);
         // the member panel's brain lists this machine's agents: asked once
@@ -1454,6 +1465,7 @@ window.Squad = (() => {
         if (!companyMode && !S.team && !W && !autoWizard) { autoWizard = true; return openWizard('new'); }
         draw();
       }
+      else if (m.type === 'team:numbers') { if (S.team?.id === m.team) { NUMBERS = m.numbers ?? {}; draw(); } }
       else if (m.type === 'team:agents') { AGENTS = m.agents ?? []; draw(); }
       else if (m.type === 'team:models') { HERE = m.models ?? { memory: {}, providers: {} }; draw(); }
       else if (m.type === 'team:names') { if (!W) return true; W.names = m.names ?? []; W.nameAt = W.names.length ? 0 : -1; if (W.names.length) W.name = W.names[0]; draw(); }

@@ -217,6 +217,11 @@
     "nuclear-builder retry <id> --step <step>        a run again from one step (it and every step after it)",
     "nuclear-builder restart <id>                 the whole run again: every file it wrote goes back first",
     "nuclear-builder runs [--json]                the runs of this project",
+    "nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day|week] [--view bill|throughput|cycle|burndown|flow|waiting|quality|people|indicators] [--json]",
+    "                                the reports of the factory from its ledger (~/.config/nuclearlang/factory/ledger), every",
+    "                                project of this machine: the bill (tokens in and out, USD, local against paid, the",
+    "                                budget used), throughput and velocity, cycle time, burndown, cumulative flow, the gates",
+    "                                waiting for you, quality, each member's work, the indicators (spec 017)",
     "nuclear-builder checks <id> [list|on <check>|off <check>|add --title … --station … [--by user|role] [--prompt …]|mark <check> passed|failed|skipped] [--json]",
     "                                the run's checks (checks.json in the spec's folder): QA's plan, yours",
     "nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]",
@@ -506,6 +511,35 @@
    },
    "data": {
     "command": "nuclear-builder member",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.metrics",
+   "type": "cli",
+   "title": "`nuclear-builder metrics` — The reports of the factory from its ledger (~/.config/nuclearlang/factory/ledger), every project…",
+   "summary": "The reports of the factory from its ledger (~/.config/nuclearlang/factory/ledger), every project of this machine: the bill (tokens in and out, USD, local against paid, the budget used), throughput and velocity, cycle time, burndown, cumulative flow, the gates waiting for you, quality, each member's work, the indicators (spec 017)",
+   "body": [
+    "```text",
+    "nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day|week] [--view bill|throughput|cycle|burndown|flow|waiting|quality|people|indicators] [--json]",
+    "                                the reports of the factory from its ledger (~/.config/nuclearlang/factory/ledger), every",
+    "                                project of this machine: the bill (tokens in and out, USD, local against paid, the",
+    "                                budget used), throughput and velocity, cycle time, burndown, cumulative flow, the gates",
+    "                                waiting for you, quality, each member's work, the indicators (spec 017)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder metrics"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "metrics"
+   },
+   "data": {
+    "command": "nuclear-builder metrics",
     "entries": []
    }
   },

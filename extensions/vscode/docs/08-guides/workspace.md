@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-19
 related: [README.md, run-and-debug.md, ../02-architecture/workspace.md, ../../../docs/03-adr/0002-the-nuclear-workspace.md]
 ---
 # The Nuclear workspace
@@ -74,6 +74,7 @@ to see its name and key. The open one has a frame and a glowing bar; a dashed ic
 |---|---|---|---|---|
 | Nuclear Builder | a factory | `Ctrl+Alt+P` | built | [Nuclear Builder](../../../tools/nuclear-builder/docs/08-guides/README.md) |
 | Your software company | three people | `Ctrl+Alt+E` | built: the teams, their members and the new-team wizard | [Make a team](../../../tools/nuclear-builder/docs/08-guides/make-a-team.md) |
+| Reports | a bar chart with a coin | `Ctrl+Alt+K` | built: the bill of tokens and money and the reports of the factory's work | [Read the reports](../../../tools/nuclear-builder/docs/08-guides/read-the-reports.md) |
 | Nuclear Atlas | a chat bubble | `Ctrl+Alt+A` | built | [Nuclear Atlas](../../../tools/nuclear-atlas/docs/08-guides/README.md) |
 | HTTP Connections | a plug | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |
 | Devices | a phone | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |
@@ -118,5 +119,5 @@ integrations*.
 
 ## The welcome page
 
-`Ctrl+Alt+W`, and at startup when no editor is open (`nuclear.workspace.welcome`): the projects, the tools and
+`Ctrl+Alt+W` (at startup too, when no editor is open, only if you turn on `nuclear.workspace.welcome`; off by default since 0.73.2): the projects, the tools and
 their keys. A click on a tab or an action also shows a short message with the key that does the same.

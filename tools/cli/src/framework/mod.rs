@@ -16,6 +16,7 @@ mod explain;
 mod landing;
 mod monitor;
 mod packages;
+mod runlog;
 mod setup;
 mod toolchain;
 mod vscode;
@@ -261,14 +262,27 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             let target = if rest.iter().any(|a| a == "--integration") { "integration_test" } else { "test" };
             flutter(&app, &[&["test", target, "--no-pub"][..], &passthrough(&rest)].concat())
         }),
-        "run" | "analyze" => with_root(project_dir, |root| {
+        "run" => with_root(project_dir, |root| {
+            let log = runlog::RunLog::start(root, "nuclear run");
+            let result = match non_mobile_manifest(root) {
+                Ok(Some(m)) => run_backend(root, &m, &rest, &log),
+                Ok(None) => run_mobile(root, &rest, &log),
+                Err(e) => Err(e),
+            };
+            // a server that ended has its `exited:` line already; anything else says why it stopped
+            if let Err(e) = &result
+                && e != SERVER_ENDED
+            {
+                log.line(&format!("failed: {}", if e.is_empty() { "see the lines above" } else { e }));
+            }
+            result.map_err(|e| if e == SERVER_ENDED { String::new() } else { e })
+        }),
+        "analyze" => with_root(project_dir, |root| {
             if let Some(m) = non_mobile_manifest(root)? {
                 return backend_command(root, &cmd, &m, &rest, &[]);
             }
             let app = build(root)?;
-            // build already resolved the packages: flutter run would do it again
-            let no_pub: &[&str] = if cmd == "run" { &["--no-pub"] } else { &[] };
-            flutter(&app, &[&[cmd.as_str()][..], no_pub, &passthrough(&rest)].concat())
+            flutter(&app, &[&[cmd.as_str()][..], &passthrough(&rest)].concat())
         }),
         "device" | "dv" if rest.first().is_some_and(|a| a == "list") => {
             print!("{}", device::list());
@@ -684,11 +698,23 @@ fn backend_command(root: &Path, cmd: &str, m: &Manifest, rest: &[String], vars: 
         return Ok(());
     }
     toolchain::ready(dialect.tool("needs"))?;
+    shell(&out, &toolchain_command(root, cmd, m, &dialect, rest, vars)?)
+}
+
+/// The dialect's `toolchain.<cmd>` for the project, filled, with the arguments after `--`.
+fn toolchain_command(
+    root: &Path,
+    cmd: &str,
+    m: &Manifest,
+    dialect: &Dialect,
+    rest: &[String],
+    vars: &[(&str, String)],
+) -> Result<String, String> {
     let Some(command) = dialect.tool(cmd) else {
         let has: Vec<&str> = dialect.toolchain.keys().filter(|k| *k != "needs").map(String::as_str).collect();
         return Err(format!("the {} dialect has no toolchain.{cmd} (it has: {})", m.dialect, has.join(", ")));
     };
-    let mut command = fill_command(&dialect, command, vars)?;
+    let mut command = fill_command(dialect, command, vars)?;
     // a dependency that is a folder (`dependencies(lib = "../lib")`) keeps its version while its code changes: the
     // package manager would keep the old copy, so `install_local` installs each one again
     if cmd == "install"
@@ -698,7 +724,7 @@ fn backend_command(root: &Path, cmd: &str, m: &Manifest, rest: &[String], vars: 
             let path = root.join(version);
             let path = path.canonicalize().unwrap_or(path);
             command.push_str(" && ");
-            command.push_str(&fill_command(&dialect, &local.replace("{{path}}", &shell_quote(&path.display().to_string())), vars)?);
+            command.push_str(&fill_command(dialect, &local.replace("{{path}}", &shell_quote(&path.display().to_string())), vars)?);
         }
     }
     let extra = passthrough(rest);
@@ -706,7 +732,81 @@ fn backend_command(root: &Path, cmd: &str, m: &Manifest, rest: &[String], vars: 
         command.push(' ');
         command.push_str(&extra.join(" "));
     }
-    shell(&out, &command)
+    Ok(command)
+}
+
+/// The error of a `nuclear run` whose server ran and ended: its `exited:` line is in the log already.
+const SERVER_ENDED: &str = "\0server ended";
+
+/// `nuclear run` of a backend or web project, step by step in the project's run log: the build, the packages when
+/// the app has none yet (as `nuclear install`), then the dialect's `toolchain.run`, its output on the terminal and in
+/// the log, and how it ended.
+fn run_backend(root: &Path, m: &Manifest, rest: &[String], log: &runlog::RunLog) -> Result<(), String> {
+    log.step("build");
+    tee_run(log, "nuclear", root, &["build", "."])?;
+    let (dialect, report) = loader().load(&m.dialect);
+    let dialect = dialect.ok_or_else(|| {
+        let msgs: Vec<String> = report.diags.iter().map(|(_, x)| x.message.clone()).collect();
+        format!("dialect '{}': {}", m.dialect, msgs.join("; "))
+    })?;
+    let out = root.join(project::output_dir(m, &dialect));
+    let out_rel = project::output_dir(m, &dialect).replace('\\', "/");
+    vscode::write(root, m, &dialect, &out_rel, serde_json::Map::new(), serde_json::Map::new())?;
+    toolchain::ready(dialect.tool("needs"))?;
+    if let Some(installed) = dialect.tool("installed")
+        && !out.join(installed).exists()
+    {
+        log.step("install");
+        let install = toolchain_command(root, "install", m, &dialect, &[], &[])?;
+        shell_tee(log, &out, &install)?;
+        dependencies::ensure_defs(root, m, &dialect)?;
+    }
+    let command = toolchain_command(root, "run", m, &dialect, rest, &[])?;
+    match dialect.tool("url") {
+        Some(url) => log.step(&format!("serve {}", fill_command(&dialect, url, &[])?)),
+        None => log.step("serve"),
+    }
+    let (program, flag) = if cfg!(windows) { ("cmd", "/C") } else { ("sh", "-c") };
+    eprintln!("{} {}", landing::dim("$"), landing::cmd(&command));
+    log.line(&format!("$ {command}"));
+    // Python prints as it goes, not when the buffer of a pipe fills
+    let status = log
+        .tee(Command::new(program).args([flag, command.as_str()]).current_dir(&out).env("PYTHONUNBUFFERED", "1"))
+        .map_err(|e| format!("cannot run {program}: {e}"))?;
+    log.line(&format!("exited: {}", status.code().map_or("signal".into(), |c| c.to_string())));
+    if status.success() { Ok(()) } else { Err(SERVER_ENDED.into()) }
+}
+
+/// `nuclear run` of a mobile app: Flutter keeps the terminal (its keys: r, R, q), so only the steps and how it
+/// ended go to the log.
+fn run_mobile(root: &Path, rest: &[String], log: &runlog::RunLog) -> Result<(), String> {
+    log.step("build");
+    let app = build(root)?;
+    log.step("flutter");
+    // build already resolved the packages: flutter run would do it again
+    let result = flutter(&app, &[&["run", "--no-pub"][..], &passthrough(rest)].concat());
+    log.line(&format!("exited: {}", if result.is_ok() { "0" } else { "1" }));
+    result.map_err(|e| if e.is_empty() { SERVER_ENDED.into() } else { e })
+}
+
+/// `program args` shown as `run` shows it, its output on the terminal and in the log. Err: the reason, with its
+/// exit code (the command's own errors are in the lines above).
+fn tee_run(log: &runlog::RunLog, program: &str, dir: &Path, args: &[&str]) -> Result<(), String> {
+    let shown = format!("{} {}", Path::new(program).file_name().map_or(program.into(), |f| f.to_string_lossy()), args.join(" "));
+    eprintln!("{} {}", landing::dim("$"), landing::cmd(&shown));
+    log.line(&format!("$ {shown}"));
+    let status = log
+        .tee(Command::new(program).args(args).current_dir(dir))
+        .map_err(|e| format!("cannot run {program}: {e}"))?;
+    match status.code() {
+        Some(0) => Ok(()),
+        Some(code) => Err(format!("{shown} failed (exit code {code})")),
+        None => Err(format!("{shown} was stopped")),
+    }
+}
+
+fn shell_tee(log: &runlog::RunLog, dir: &Path, command: &str) -> Result<(), String> {
+    if cfg!(windows) { tee_run(log, "cmd", dir, &["/C", command]) } else { tee_run(log, "sh", dir, &["-c", command]) }
 }
 
 /// A toolchain command with its placeholders filled: the runtimes of the install (`{{packages}}`), its tools

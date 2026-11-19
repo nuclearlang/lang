@@ -109,6 +109,7 @@ apiLoop(provider: string, ask: (key: string, model: string, system: string, turn
   builder: McpClient? = null
   http = httpx.Client(transport = work.inputs["transport"], timeout = work.timeoutMs / 1000)
   cost = 0.0
+  used: <string, any> = {}
   try
     // the Builder's MCP server beside NuclearLang's: each call goes to the server that has the tool
     builder = startMcp(builderMcpCommand(), work.root, builderMcpArgs(work.root))
@@ -119,16 +120,18 @@ apiLoop(provider: string, ask: (key: string, model: string, system: string, turn
     turns: <string, any>[] = [{ "role": "user", "text": stationPrompt(role, station, work, true) }]
     for n in 0..MAX_TURNS
       if work.budgetUsd > 0 and cost >= work.budgetUsd
-        return Outcome(false, "", {}, [], cost, events, "the step spent its budget (${work.budgetUsd.toFixed(2)} USD) before it ended")
+        return Outcome(false, "", {}, [], cost, events, "the step spent its budget (${work.budgetUsd.toFixed(2)} USD) before it ended", {}, used)
       turn: ModelTurn = ask(key!, work.model, role.text(), turns, tools, http)
       spent = turnCost(turn, price)
       cost += spent
+      addTokens(used, "inTokens", turn.inputTokens)
+      addTokens(used, "outTokens", turn.outputTokens)
       say({ "type": "cost", "usd": spent, "inputTokens": turn.inputTokens, "outputTokens": turn.outputTokens })
       if turn.text.length > 0
         say({ "type": "text", "text": turn.text })
       turns.add({ "role": "assistant", "text": turn.text, "calls": turn.calls })
       if turn.calls.isEmpty
-        return Outcome(true, turn.text, collectDocuments(work, turn.text), [], cost, events)
+        return Outcome(true, turn.text, collectDocuments(work, turn.text), [], cost, events, "", {}, used)
       results: <string, any>[] = []
       for c in turn.calls
         say({ "type": "tool", "id": c["id"], "tool": c["name"], "input": json.dumps(c["input"]).substring(0, 4000) })
@@ -136,12 +139,12 @@ apiLoop(provider: string, ask: (key: string, model: string, system: string, turn
         say({ "type": "tool-result", "id": c["id"], "ok": r["error"] != true, "text": "${r["text"]}".substring(0, 20000) })
         results.add({ "id": c["id"], "name": c["name"], "text": r["text"], "error": r["error"] })
       turns.add({ "role": "tool", "results": results })
-    Outcome(false, "", {}, [], cost, events, "${provider}: no answer after ${MAX_TURNS} turns")
+    Outcome(false, "", {}, [], cost, events, "${provider}: no answer after ${MAX_TURNS} turns", {}, used)
   catch e
     if not isinstance(e, httpx.HTTPError) and not isinstance(e, RuntimeError) and not isinstance(e, KeyError)
       throw e
     // the key is never in an error: only the provider's status and message
-    Outcome(false, "", {}, [], cost, events, "${provider}: ${e}".replace(key!, "<key>"))
+    Outcome(false, "", {}, [], cost, events, "${provider}: ${e}".replace(key!, "<key>"), {}, used)
   finally
     http.close()
     mcp.close()

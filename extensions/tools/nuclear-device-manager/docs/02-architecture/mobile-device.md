@@ -22,6 +22,20 @@ Only VS Code lists it: a Flutter custom device with the id `synapsis`, which the
 
 ## The launch
 
+The launch goes through `startDart` (`vscode/src/extension.ts`): the Dart extension is activated first (it starts by
+itself only when a `pubspec.yaml` is at most two folders deep, and a Synapsis app is `<project>/build/app`; without
+it VS Code refuses the `dart` launch in silence).
+
+A launch never fails in silence (`launch-log.ts`). The device shows its steps — building the Nuclear project (▷ Run),
+starting Flutter (the config resolved), compiling the app (the session started), opening the app (the page's CDP
+connected), running (the first frame). A step without news (a step or a line of Flutter's output, read by a debug
+adapter tracker of `dart`) longer than its limit (`STALL_MS`: 5 min build, 90 s Flutter, 6 min compile, 2 min
+opening) ends the launch as stuck. Flutter ending before the first frame, a build error (`showBuildError`), a
+missing Flutter extension or a refused launch (`nuclear.deviceLaunchFailed`) show on the device the message, the
+output lines that explain it (`reason`), *Try again* and *Show the log*. The build's output, the launch's steps,
+Flutter's output and every failure go to the project's `.nuclear/logs/run.log` (timestamped, kept under 1 MB),
+which outlives the window: a person or an agent reads it after a failure.
+
 `launchProvider` is the `resolveDebugConfiguration` of `dart` (a `-d` in `toolArgs` does NOT work). It sets:
 
 - `deviceId: 'chrome'`, `--web-port`, `--web-browser-debug-port`;

@@ -8,7 +8,7 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 77 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
+   "summary": "The 78 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
     "- %command.nuclear.chooseLanguage% (`nuclear.chooseLanguage`)",
     "- %command.nuclear.monitor.open% (`nuclear.monitor.open`)",
@@ -17,9 +17,10 @@
     "- %command.nuclear.workspace.welcome% — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
     "- %command.nuclear.ai.setup% (`nuclear.ai.setup`)",
     "- %command.nuclear.builder.teams% (`nuclear.builder.teams`)",
+    "- %command.nuclear.builder.reports% (`nuclear.builder.reports`)",
     "- %command.nuclear.chat.open% (`nuclear.chat.open`)",
     "- %command.nuclear.chat.gifKey% (`nuclear.chat.gifKey`)",
-    "- %command.nuclear.workspace.tool% — `ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+e (arg teams), ctrl+alt+f (arg monitor), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
+    "- %command.nuclear.workspace.tool% — `ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+e (arg teams), ctrl+alt+k (arg reports), ctrl+alt+f (arg monitor), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
     "- %command.nuclear.workspace.openProject% — `ctrl+alt+o` (`nuclear.workspace.openProject`)",
     "- %command.nuclear.workspace.project% — `ctrl+1 (arg 1), ctrl+2 (arg 2), ctrl+3 (arg 3), ctrl+4 (arg 4), ctrl+5 (arg 5), ctrl+6 (arg 6), ctrl+7 (arg 7), ctrl+8 (arg 8), ctrl+9 (arg 9)` (`nuclear.workspace.project`)",
     "- %command.nuclear.workspace.show% — `ctrl+alt+n` (`nuclear.workspace.show`)",
@@ -138,6 +139,11 @@
       "keys": ""
      },
      {
+      "title": "%command.nuclear.builder.reports%",
+      "command": "nuclear.builder.reports",
+      "keys": ""
+     },
+     {
       "title": "%command.nuclear.chat.open%",
       "command": "nuclear.chat.open",
       "keys": ""
@@ -150,7 +156,7 @@
      {
       "title": "%command.nuclear.workspace.tool%",
       "command": "nuclear.workspace.tool",
-      "keys": "ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+e (arg teams), ctrl+alt+f (arg monitor), ctrl+alt+v (arg devices)"
+      "keys": "ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+e (arg teams), ctrl+alt+k (arg reports), ctrl+alt+f (arg monitor), ctrl+alt+v (arg devices)"
      },
      {
       "title": "%command.nuclear.workspace.openProject%",
@@ -676,7 +682,7 @@
     "- `nuclear.trace.server` (default `\"off\"`): %nuclear.trace.server.desc%",
     "- `nuclear.debug.followInNuclear` (default `true`): %nuclear.debug.followInNuclear.desc%",
     "- `nuclear.debug.explainErrors` (default `true`): %nuclear.debug.explainErrors.desc%",
-    "- `nuclear.workspace.welcome` (default `true`): %nuclear.workspace.welcome.desc%",
+    "- `nuclear.workspace.welcome` (default `false`): %nuclear.workspace.welcome.desc%",
     "- `nuclear.buildOnSave` (default `true`): %nuclear.buildOnSave.md%",
     "- `nuclear.toolchains.python` (default `\"\"`): %nuclear.toolchains.python.desc%",
     "- `nuclear.toolchains.node` (default `\"\"`): %nuclear.toolchains.node.desc%",
@@ -855,7 +861,7 @@
      },
      {
       "name": "nuclear.workspace.welcome",
-      "default": "true",
+      "default": "false",
       "does": "%nuclear.workspace.welcome.desc%"
      },
      {

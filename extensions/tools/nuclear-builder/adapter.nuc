@@ -44,8 +44,39 @@ Role(id: string, title: string, mission: string, skills: <string, string>, templ
 Work(root: string, specDir: string, task: string, documents: <string, string>, writes: string[], model: string, budgetUsd: double, mcpCommand: string = "nuclear-mcp", timeoutMs: int = 1_200_000, inputs: <string, any> = {})
 
 // What a provider did: its events (text, tool calls, cost), the documents it wrote, the project files it changed,
-// what it cost, its last text, and why it failed when it did.
-Outcome(ok: boolean, text: string, documents: <string, string>, files: string[], costUsd: double, events: <string, any>[], error: string = "", data: <string, any> = {})
+// what it cost, its last text, why it failed when it did, and its usage (spec 017): `{inTokens, outTokens, costUsd,
+// ms, provider, model}` as `runAdapter` gives it; a count the provider did not report is null, never a guess.
+Outcome(ok: boolean, text: string, documents: <string, string>, files: string[], costUsd: double, events: <string, any>[], error: string = "", data: <string, any> = {}, usage: <string, any> = {})
+
+// ---------- the usage ----------
+
+// Adds the tokens a provider reported to `found[key]`; a count it never reported stays null ("not reported").
+addTokens(found: <string, any>, key: string, n: any) void
+  if isinstance(n, int)
+    had: int = found[key] ?? 0
+    found[key] = had + (n as int)
+
+// The usage of a call as every report reads it: the tokens the adapter found (null: not reported), the cost, the
+// time, the provider and the model (the one the provider said, else the one asked for).
+usageOf(out: Outcome, provider: string, model: string, ms: int) <string, any>
+  said = "${out.usage["model"] ?? ""}"
+  { "inTokens": out.usage["inTokens"], "outTokens": out.usage["outTokens"], "costUsd": out.costUsd, "ms": ms, "provider": provider, "model": said.isEmpty ? model : said }
+
+// Two usages as one (a step or an answer of several calls): the counts added, a count null only when neither has it,
+// the provider and model the last one named.
+sumUsage(a: <string, any>?, b: <string, any>) <string, any>
+  if a == null
+    return dict(b)
+  both: <string, any> = dict(a!)
+  for key in ["inTokens", "outTokens", "ms"]
+    addTokens(both, key, b[key])
+  spent: double = both["costUsd"] ?? 0.0
+  more: double = b["costUsd"] ?? 0.0
+  both["costUsd"] = spent + more
+  for key in ["provider", "model"]
+    if not "${b[key] ?? ""}".isEmpty
+      both[key] = b[key]
+  both
 
 // ---------- the role from its folder ----------
 
@@ -180,18 +211,22 @@ changedFiles(before: <string, string>, after: <string, string>) string[]
   changed = after.keys.filter((f) => before[f] != after[f])
   [...changed, ...before.keys.filter((f) => not (f in after))].sorted()
 
-// Runs an adapter: the files it changed are found by snapshots, a failure becomes an outcome, never an exception.
+// Runs an adapter: the files it changed are found by snapshots, a failure becomes an outcome, never an exception;
+// its `usage` is stamped with the time it took and the `provider` that did it.
 // Every adapter is a function `(role, station, work, emit) => Outcome`, one per provider, each in its own file.
-runAdapter(adapter: (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome, role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+runAdapter(adapter: (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome, role: Role, station: string, work: Work, emit: (e: <string, any>) => void, provider: string = "") Outcome
   before = snapshot(work.root)
+  started = time.monotonic()
+  out = Outcome(false, "", {}, [], 0, [], "")
   try
     out = adapter(role, station, work, emit)
     out.files = changedFiles(before, snapshot(work.root)).filter((f) => not f.startsWith("${Path(work.specDir).relativeTo(work.root)}"))
-    out
   catch e
     if not isinstance(e, RuntimeError) and not isinstance(e, OSError) and not isinstance(e, ValueError)
       throw e
-    Outcome(false, "", {}, changedFiles(before, snapshot(work.root)), 0, [], "${e}")
+    out = Outcome(false, "", {}, changedFiles(before, snapshot(work.root)), 0, [], "${e}")
+  out.usage = usageOf(out, provider, work.model, ((time.monotonic() - started) * 1000).round())
+  out
 
 // ---------- the prompt every provider gets ----------
 
@@ -274,7 +309,7 @@ agentOutcome(name: string, ran: <string, any>, found: <string, any>, events: <st
   code: int = ran["code"]!
   failed = code != 0 or found["failed"] == true
   why = code == -9 ? "${name} timed out (killed)" : "${name} ended with ${code}: ${ran["stderr"] ?? ""} ${failed ? text : ""}".trim()
-  Outcome(not failed, text, collectDocuments(work, text), [], cost, events, failed ? why : "")
+  Outcome(not failed, text, collectDocuments(work, text), [], cost, events, failed ? why : "", {}, { "inTokens": found["inTokens"], "outTokens": found["outTokens"], "model": found["model"] ?? "" })
 
 // Parses one line of JSON, or null when it is not.
 jsonLine(line: string) <string, any>?

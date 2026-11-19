@@ -1,15 +1,15 @@
 ---
-status: draft
+status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-19
 related: [../011-software-factory/requirements.md, ../013-nuclear-chat/requirements.md, ../../03-adr/0009-the-ui-is-only-a-ui.md]
 ---
-# Spec 017: Productivity and consumption reports — Requirements (draft)
+# Spec 017: Productivity and consumption reports — Requirements
 
 ## Goal
 
 The user wants to know what each agent, member and team spends and produces: tokens, money, time, lines of code,
-and whether the work passed. Asked on 2026-11-18; the plan is written after the work in progress ends.
+and whether the work passed. Asked on 2026-11-18; built on 2026-11-19.
 
 ## Philosophy
 
@@ -42,4 +42,6 @@ tokens and dollars.
 
 ## Open
 
-- Where the history of every run across projects is kept and for how long; export (CSV); budgets and alerts.
+- Decided by the design: every run's history is kept in the factory's ledger, one file a month, across projects
+  (`extensions/tools/nuclear-builder/docs/02-architecture/reports.md`). Left for the user to decide: how long it is
+  kept, an export (CSV), budgets and alerts over the reports (the Builder's roadmap).

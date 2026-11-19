@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-19
 related: [../02-architecture/engine.md, ../../../../vscode/docs/01-product/roadmap.md, ../../../../jetbrains/docs/01-product/roadmap.md]
 ---
 # Roadmap of Nuclear Builder
@@ -11,6 +11,13 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Half done
 
+- **The reports** ([spec 017](../../../../../docs/04-specs/017-productivity-reports/tasks.md), [reports.md](../02-architecture/reports.md)).
+  Done: the usage of every provider at the source, the factory's ledger, `metrics` and its MCP tool, the VS Code page
+  *Reports* and the member's numbers in their Summary. Left: the JetBrains tool window has no Reports page (the
+  command serves it); an export of the ledger (CSV) and budgets with alerts over the reports (the requirements' open
+  questions, for the user to decide); how long the ledger is kept (today: forever, one file a month); the token lines
+  of OpenCode, Codex and Gemini CLI were read from their documentation and are checked with stubs, not with a real
+  run (no paid call was made).
 - **Skills in JetBrains** (spec 011 req. 34): the library, the team's and the members' skills, the preview and the skills editor are VS Code's company screen; the JetBrains tool window has none yet (the commands and MCP tools serve both).
 - **Every action a command and a tool** (ADR-platform-0009, [actions.md](../02-architecture/actions.md)). Done:
   `nuclear-builder mcp` (55 tools), every agent given it, the chat's local member through the same tools, the user's

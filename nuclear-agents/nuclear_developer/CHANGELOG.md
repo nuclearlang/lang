@@ -2,6 +2,9 @@
 
 ## Unreleased (2026-11-18)
 
+- Every answer says the tokens its models used (`usage: {inTokens, outTokens, model}`, Ollama's `prompt_eval_count`
+  and `eval_count` summed over the request's model calls; empty when none were counted), for Nuclear Builder's
+  reports (spec 017). Each request counts its own (`TALLY`, a context variable): concurrent requests never mix.
 - The chat answers with one small model of its own, `CHAT_MODEL` (`qwen3.5:2b`; `CHAT_CONTEXT_TOKENS` 4096,
   `CHAT_KEEP_ALIVE` 3m, no thinking, 1024 tokens at most): a message no longer loads `gemma4:e2b` (7.9 GB); a chat
   turn takes 5.7 GB instead of 9–10 GB, its first answer 13 s instead of 37 s. Five messages measured against five

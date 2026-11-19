@@ -1,0 +1,514 @@
+use time
+use calendar
+use pathlib{ Path }
+
+// The reports of the factory (spec 017): `nuclear-builder metrics … --json` and the MCP tool `metrics`, computed
+// from the factory's ledger (usage.nuc) and, for the gates open now, the projects' run files. A mix of Jira's reports
+// over the factory's work (specs as issues, runs as their work) and the bill of tokens and money. Measured, never
+// estimated: a count the provider did not report stays out of the sums and is counted as `notReported`.
+
+VIEWS = ["bill", "throughput", "cycle", "burndown", "flow", "waiting", "quality", "people", "indicators"]
+
+// The longest series a burndown or a flow draws.
+MAX_PERIODS = 400
+
+DAY_MS = 86_400_000
+
+// ---------- the numbers of a line ----------
+
+num(v: any) double
+  isinstance(v, int) or isinstance(v, float) ? (v as double) : 0.0
+
+// Whether a count was reported (a number, not null).
+reported(v: any) boolean
+  isinstance(v, int) or isinstance(v, float)
+
+usageIn(e: <string, any>) <string, any>
+  u = e["usage"]
+  isinstance(u, dict) ? (u as <string, any>) : ({} as <string, any>)
+
+paidLine(e: <string, any>) boolean
+  kind = "${e["agentKind"] ?? ""}"
+  not kind.isEmpty and kind != "local"
+
+// A total of usage: the tokens reported, the money, the time, the calls, the calls with no tokens reported.
+emptyTotal() <string, any>
+  { "inTokens": 0, "outTokens": 0, "costUsd": 0.0, "ms": 0, "calls": 0, "notReported": 0 }
+
+addTo(total: <string, any>, e: <string, any>) void
+  u = usageIn(e)
+  if u.isEmpty
+    return
+  total["calls"] = (total["calls"] as int) + 1
+  if reported(u["inTokens"]) or reported(u["outTokens"])
+    total["inTokens"] = (total["inTokens"] as int) + num(u["inTokens"]).round()
+    total["outTokens"] = (total["outTokens"] as int) + num(u["outTokens"]).round()
+  else
+    total["notReported"] = (total["notReported"] as int) + 1
+  total["costUsd"] = (total["costUsd"] as double) + num(u["costUsd"])
+  total["ms"] = (total["ms"] as int) + num(u["ms"]).round()
+
+// Adds a line to the group `key` of `groups`, made with `seed` the first time.
+group(groups: <string, <string, any>>, key: string, seed: <string, any>, e: <string, any>) void
+  if not (key in groups)
+    made = emptyTotal()
+    for k, v in seed
+      made[k] = v
+    groups[key] = made
+  addTo(groups[key]!, e)
+
+byCost(groups: <string, <string, any>>) <string, any>[]
+  groups.values.sortedBy((g) => -(g["costUsd"] as double))
+
+// ---------- the time ----------
+
+// A date `YYYY-MM-DD` as ms (UTC, the day's start), or null.
+dayMs(text: string?) int?
+  if text == null or text!.trim().isEmpty
+    return null
+  try
+    calendar.timegm(time.strptime(text!.trim(), "%Y-%m-%d")) * 1000
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    throw ValueError("`${text}` is not a date: YYYY-MM-DD")
+
+// The period of a time: its day (`2026-11-19`) or its ISO week (`2026-W47`).
+periodOf(at: int, by: string) string
+  stamp = time.gmtime(at / 1000)
+  by == "week" ? time.strftime("%G-W%V", stamp) : time.strftime("%Y-%m-%d", stamp)
+
+// Every period from `first` to `last` (ms), in order, each with its end (ms).
+periodsBetween(first: int, last: int, by: string) <string, any>[]
+  found: <string, any>[] = []
+  at = first - first % DAY_MS
+  while at <= last and found.length < MAX_PERIODS
+    name = periodOf(at, by)
+    if found.isEmpty or found.last["period"] != name
+      found.add({ "period": name, "end": at + DAY_MS - 1 })
+    else
+      found.last["end"] = at + DAY_MS - 1
+    at += DAY_MS
+  found
+
+// ---------- the filter ----------
+
+// What a report is asked for: the project (its name or folder), the team, the member (its id, or `<team>-<id>`),
+// the dates (`YYYY-MM-DD`, the last one whole), the period (day or week).
+Filter(project: string = "", team: string = "", member: string = "", fromMs: int? = null, toMs: int? = null, by: string = "day")
+
+  // Whether a line is the asked project's and team's, in the dates.
+  holds(e: <string, any>) boolean
+    at: int = num(e["at"]).round()
+    if fromMs != null and at < fromMs!
+      return false
+    if toMs != null and at > toMs!
+      return false
+    same(e)
+
+  // The project and the team, whatever the time.
+  same(e: <string, any>) boolean
+    if not project.isEmpty and e["project"] != project and e["root"] != project and "${Path("${e["root"] ?? ""}").resolve()}" != project
+      return false
+    team.isEmpty or e["team"] == team
+
+  memberHolds(e: <string, any>) boolean
+    member.isEmpty or e["member"] == member or "${e["team"]}-${e["member"]}" == member
+
+  shown() <string, any>
+    { "project": project, "team": team, "member": member, "from": fromMs == null ? null : time.strftime("%Y-%m-%d", time.gmtime(fromMs! / 1000)), "to": toMs == null ? null : time.strftime("%Y-%m-%d", time.gmtime(toMs! / 1000)), "by": by }
+
+// The filter of a command's options.
+filterOf(project: string, team: string, member: string, since: string, until: string, by: string) Filter
+  if not (by in ["day", "week"])
+    throw ValueError("--by is day or week, not `${by}`")
+  end = dayMs(until)
+  Filter(project, team, member, dayMs(since), end == null ? null : end! + DAY_MS - 1, by)
+
+// The project asked as its folder when it is one, so it matches the ledger's `root`.
+projectOf(given: string) string
+  if given.isEmpty
+    return ""
+  Path(given).isDir() ? "${Path(given).resolve()}" : given
+
+// ---------- the reports ----------
+
+// The lines of the reports: the steps and the answers asked (the member's when one is asked), and the last line of
+// each run asked (a run's line is written when it ends or waits; the newest says what it is now).
+Lines(steps: <string, any>[], answers: <string, any>[], runs: <string, any>[])
+
+reportLines(all: <string, any>[], f: Filter) Lines
+  steps = all.filter((e) => e["kind"] == "step" and f.holds(e) and f.memberHolds(e))
+  answers = all.filter((e) => e["kind"] == "chat" and f.holds(e) and f.memberHolds(e))
+  // a member's runs: those they worked a step of
+  theirs: string[] = f.member.isEmpty ? ([] as string[]) : all.filter((e) => e["kind"] == "step" and f.memberHolds(e)).map((e) => "${e["root"]}|${e["run"]}")
+  last: <string, <string, any>> = {}
+  for e in all.filter((x) => x["kind"] == "run" and f.same(x))
+    key = "${e["root"]}|${e["run"]}"
+    if not f.member.isEmpty and not (key in theirs)
+      continue
+    had = last[key]
+    if had == null or num(e["at"]) >= num(had!["at"])
+      last[key] = e
+  Lines(steps, answers, last.values)
+
+// When a run was delivered (it passed), else null.
+deliveredAt(r: <string, any>) int?
+  r["result"] == "passed" and reported(r["ended"]) ? num(r["ended"]).round() : null
+
+inRange(at: int, f: Filter) boolean
+  (f.fromMs == null or at >= f.fromMs!) and (f.toMs == null or at <= f.toMs!)
+
+// The bill: tokens in and out and USD in all, by period, by provider · model, by team, by member, by project; local
+// against paid; the budget each run used.
+bill(lines: Lines, f: Filter) <string, any>
+  total = emptyTotal()
+  local = emptyTotal()
+  paid = emptyTotal()
+  days: <string, <string, any>> = {}
+  models: <string, <string, any>> = {}
+  teams: <string, <string, any>> = {}
+  members: <string, <string, any>> = {}
+  projects: <string, <string, any>> = {}
+  for e in [...lines.steps, ...lines.answers]
+    u = usageIn(e)
+    if u.isEmpty
+      continue
+    addTo(total, e)
+    addTo(paidLine(e) ? paid : local, e)
+    group(days, periodOf(num(e["at"]).round(), f.by), { "period": periodOf(num(e["at"]).round(), f.by) }, e)
+    group(models, "${u["provider"] ?? ""}/${u["model"] ?? ""}", { "provider": "${u["provider"] ?? ""}", "model": "${u["model"] ?? ""}", "paid": paidLine(e) }, e)
+    group(teams, "${e["team"] ?? ""}", { "team": "${e["team"] ?? ""}", "teamName": "${e["teamName"] ?? ""}" }, e)
+    if not "${e["member"] ?? ""}".isEmpty
+      group(members, "${e["team"]}-${e["member"]}", { "team": "${e["team"] ?? ""}", "member": "${e["member"]}", "employee": "${e["employee"] ?? ""}", "role": "${e["role"] ?? ""}" }, e)
+    group(projects, "${e["root"] ?? e["project"]}", { "project": "${e["project"] ?? ""}", "root": "${e["root"] ?? ""}" }, e)
+  runs: <string, any>[] = []
+  spent = 0.0
+  budget = 0.0
+  for r in lines.runs.filter((x) => inRange(num(x["at"]).round(), f))
+    cost = num(r["costUsd"])
+    limit = num(r["budgetUsd"])
+    spent += cost
+    budget += limit
+    runs.add({ "run": r["run"], "project": r["project"], "spec": r["specTitle"], "team": r["team"], "result": r["result"], "costUsd": cost, "budgetUsd": limit, "used": limit > 0 ? cost / limit : null })
+  { "total": total, "local": local, "paid": paid, "byPeriod": days.values.sortedBy((d) => "${d["period"]}"), "byModel": byCost(models), "byTeam": byCost(teams), "byMember": byCost(members), "byProject": byCost(projects), "budget": { "runs": runs.length, "spentUsd": spent, "budgetUsd": budget, "used": budget > 0 ? spent / budget : null }, "runs": runs.sortedBy((r) => -(r["costUsd"] as double)) }
+
+// Throughput and velocity: the specs delivered by period, by team.
+throughput(lines: Lines, f: Filter) <string, any>
+  periods: <string, <string, any>> = {}
+  teams: <string, int> = {}
+  total = 0
+  for r in lines.runs
+    at = deliveredAt(r)
+    if at == null or not inRange(at!, f)
+      continue
+    name = periodOf(at!, f.by)
+    if not (name in periods)
+      periods[name] = { "period": name, "delivered": 0, "byTeam": {} as <string, int> }
+    p = periods[name]!
+    p["delivered"] = (p["delivered"] as int) + 1
+    byTeam: <string, int> = p["byTeam"]!
+    t = "${r["team"] ?? ""}"
+    byTeam[t] = (byTeam[t] ?? 0) + 1
+    teams[t] = (teams[t] ?? 0) + 1
+    total += 1
+  shown = periods.values.sortedBy((p) => "${p["period"]}")
+  count = Math.max(1, shown.length)
+  velocity = teams.keys.map((t) => { "team": t, "delivered": teams[t], "perPeriod": (teams[t]! as double) / count })
+  { "delivered": total, "periods": shown, "velocity": velocity.sortedBy((v) => -(v["delivered"] as int)) }
+
+// A series' distribution: how many, the least, the median, the 85th percentile, the most.
+distribution(values: int[]) <string, any>
+  if values.isEmpty
+    return { "count": 0, "min": null, "median": null, "p85": null, "max": null }
+  all = values.sorted()
+  at = (p: double) => all[Math.min(all.length - 1, (p * (all.length - 1)).round())]
+  { "count": all.length, "min": all[0], "median": at(0.5), "p85": at(0.85), "max": all.last }
+
+// Cycle time: each spec from its run's start to its delivery (or its stop), its distribution, the time per station.
+cycle(lines: Lines, f: Filter) <string, any>
+  specs: <string, any>[] = []
+  delivered: int[] = []
+  stationMs: <string, int[]> = {}
+  for r in lines.runs
+    if not reported(r["created"]) or not reported(r["ended"]) or not (r["result"] in ["passed", "failed"]) or not inRange(num(r["ended"]).round(), f)
+      continue
+    ms = num(r["ended"]).round() - num(r["created"]).round()
+    specs.add({ "run": r["run"], "project": r["project"], "spec": r["specTitle"], "team": r["team"], "result": r["result"], "ms": ms, "ended": r["ended"] })
+    if r["result"] == "passed"
+      delivered.add(ms)
+    for st in (r["stations"] ?? []) as <string, any>[]
+      if reported(st["started"]) and reported(st["ended"])
+        id = "${st["id"]}"
+        took: int[] = stationMs[id] ?? []
+        took.add(num(st["ended"]).round() - num(st["started"]).round())
+        stationMs[id] = took
+  stations = STATIONS.filter((s) => s in stationMs).map((s) => { "station": s, ...distribution(stationMs[s]!) })
+  { "specs": specs.sortedBy((s) => -(s["ended"] as int)), "delivered": distribution(delivered), "stations": stations }
+
+// The periods of a report: from the asked start (else the first run's) to the asked end (else now).
+periodsFor(lines: Lines, f: Filter, now: int) <string, any>[]
+  starts = lines.runs.filter((r) => reported(r["created"])).map((r) => num(r["created"]).round())
+  if starts.isEmpty and f.fromMs == null
+    return []
+  first = f.fromMs ?? starts.reduce(now, (a: int, b: int) => Math.min(a, b))
+  periodsBetween(first, Math.min(now, f.toMs ?? now), f.by)
+
+// The burndown and the burnup of a period's specs: the runs started in it (the scope), how many were delivered and
+// how many are left at the end of each period.
+burndown(lines: Lines, f: Filter, now: int) <string, any>
+  scope = lines.runs.filter((r) => reported(r["created"]) and inRange(num(r["created"]).round(), f))
+  series: <string, any>[] = []
+  for p in periodsFor(lines, f, now)
+    end: int = p["end"]!
+    started = scope.count((r) => num(r["created"]).round() <= end)
+    done = scope.count((r) => deliveredAt(r) != null and deliveredAt(r)! <= end)
+    series.add({ "period": p["period"], "scope": started, "delivered": done, "remaining": started - done })
+  { "scope": scope.length, "delivered": scope.count((r) => deliveredAt(r) != null), "periods": series }
+
+// Where a run was at a time: delivered, stopped, a station, or pending (not started).
+whereAt(r: <string, any>, at: int) string?
+  if not reported(r["created"]) or num(r["created"]).round() > at
+    return null
+  if reported(r["ended"]) and num(r["ended"]).round() <= at and r["result"] in ["passed", "failed"]
+    return r["result"] == "passed" ? "delivered" : "stopped"
+  found = "pending"
+  for st in (r["stations"] ?? []) as <string, any>[]
+    if reported(st["started"]) and num(st["started"]).round() <= at
+      found = "${st["id"]}"
+  found
+
+// The cumulative flow: at the end of each period, how many specs were at each station (pending, the stations,
+// delivered, stopped).
+flow(lines: Lines, f: Filter, now: int) <string, any>
+  columns = ["pending", ...STATIONS, "delivered", "stopped"]
+  series: <string, any>[] = []
+  for p in periodsFor(lines, f, now)
+    counts: <string, int> = {}
+    for c in columns
+      counts[c] = 0
+    for r in lines.runs
+      where = whereAt(r, p["end"]!)
+      if where != null and where! in counts
+        counts[where!] = counts[where!]! + 1
+    series.add({ "period": p["period"], "counts": counts })
+  { "columns": columns, "periods": series }
+
+// Waiting for you: the gates open now (the projects' run files) and how long the answered ones waited.
+waiting(lines: Lines, f: Filter, now: int, roots: string[]) <string, any>
+  open: <string, any>[] = []
+  for root in roots
+    if not Path(root).isDir()
+      continue
+    for run in listRuns(root)
+      q: <string, any>? = run["waiting"]
+      if run["status"] != "waiting" or q == null
+        continue
+      who = runWho(run)
+      if not f.same(who)
+        continue
+      gates: <string, any>[] = run["gates"] ?? []
+      gate = gates.find((g) => g["id"] == q!["id"] and g["answered"] == null)
+      since: int? = gate == null ? (reported(run["ended"]) ? num(run["ended"]).round() : null) : num(gate!["opened"]).round()
+      open.add({ "project": who["project"], "root": root, "run": run["id"], "spec": who["specTitle"], "team": who["team"], "gate": q!["id"], "kind": q!["kind"], "station": q!["station"] ?? "", "question": q!["question"] ?? "", "since": since, "ms": since == null ? null : now - since! })
+  waited: int[] = []
+  stations: <string, int[]> = {}
+  seen: string[] = []
+  for r in lines.runs
+    for g in (r["gates"] ?? []) as <string, any>[]
+      if not reported(g["answered"]) or not reported(g["opened"]) or not inRange(num(g["answered"]).round(), f)
+        continue
+      key = "${r["root"]}|${r["run"]}|${g["id"]}|${g["opened"]}"
+      if key in seen
+        continue
+      seen.add(key)
+      ms = num(g["answered"]).round() - num(g["opened"]).round()
+      waited.add(ms)
+      at = "${g["station"] ?? ""}"
+      had: int[] = stations[at] ?? []
+      had.add(ms)
+      stations[at] = had
+  { "open": open.sortedBy((o) => -num(o["ms"])), "answered": distribution(waited), "byStation": stations.keys.map((s) => { "station": s, ...distribution(stations[s]!) }) }
+
+// Quality: each station's steps, passes, failures, the steps done again, and how often it passed at the first try.
+quality(lines: Lines, f: Filter) <string, any>
+  rows: <string, <string, any>> = {}
+  for s in STATIONS
+    rows[s] = { "station": s, "steps": 0, "passed": 0, "failed": 0, "retried": 0, "stationsPassed": 0, "firstTry": 0, "firstTryRate": null }
+  tried: string[] = []
+  for e in lines.steps
+    row = rows["${e["station"]}"]
+    if row == null
+      continue
+    row!["steps"] = (row!["steps"] as int) + 1
+    if e["result"] == "passed"
+      row!["passed"] = (row!["passed"] as int) + 1
+    else if e["result"] == "failed"
+      row!["failed"] = (row!["failed"] as int) + 1
+    // the same kind of step again in the same run's station: a retry
+    key = "${e["root"]}|${e["run"]}|${e["station"]}|${e["key"] ?? ""}|${e["title"] ?? ""}"
+    if key in tried
+      row!["retried"] = (row!["retried"] as int) + 1
+    else
+      tried.add(key)
+  for r in lines.runs.filter((x) => inRange(num(x["at"]).round(), f))
+    for st in (r["stations"] ?? []) as <string, any>[]
+      row = rows["${st["id"]}"]
+      if row == null or st["status"] != "passed"
+        continue
+      row!["stationsPassed"] = (row!["stationsPassed"] as int) + 1
+      if num(st["failed"]) == 0 and num(r["retries"]) == 0
+        row!["firstTry"] = (row!["firstTry"] as int) + 1
+  for row in rows.values
+    passed: int = row["stationsPassed"]!
+    if passed > 0
+      row["firstTryRate"] = (row["firstTry"] as int) / passed
+  { "stations": STATIONS.map((s) => rows[s]!) }
+
+// People: each member's steps, answers, lines, passes, fails, tokens and money; ranked by cost and by result.
+people(lines: Lines) <string, any>
+  rows: <string, <string, any>> = {}
+  for e in [...lines.steps, ...lines.answers]
+    member = "${e["member"] ?? ""}"
+    if member.isEmpty
+      continue
+    key = "${e["team"]}-${member}"
+    if not (key in rows)
+      made = emptyTotal()
+      for k, v in { "team": "${e["team"] ?? ""}", "teamName": "${e["teamName"] ?? ""}", "member": member, "employee": "${e["employee"] ?? ""}", "role": "${e["role"] ?? ""}", "steps": 0, "answers": 0, "passed": 0, "failed": 0, "added": 0, "removed": 0, "linesNotReported": 0 }
+        made[k] = v
+      rows[key] = made
+    row = rows[key]!
+    addTo(row, e)
+    if e["kind"] == "chat"
+      row["answers"] = (row["answers"] as int) + 1
+      continue
+    row["steps"] = (row["steps"] as int) + 1
+    if e["result"] == "passed"
+      row["passed"] = (row["passed"] as int) + 1
+    else if e["result"] == "failed"
+      row["failed"] = (row["failed"] as int) + 1
+    l = e["lines"]
+    if isinstance(l, dict)
+      counted: <string, any> = l
+      row["added"] = (row["added"] as int) + num(counted["added"]).round()
+      row["removed"] = (row["removed"] as int) + num(counted["removed"]).round()
+    else
+      row["linesNotReported"] = (row["linesNotReported"] as int) + 1
+  all = rows.values
+  for row in all
+    ended = (row["passed"] as int) + (row["failed"] as int)
+    row["passRate"] = ended > 0 ? (row["passed"] as int) / ended : null
+  { "members": all.sortedBy((r) => -(r["costUsd"] as double)), "byResult": all.sortedBy((r) => -(num(r["passRate"]) * 1000 + num(r["passed"]))).map((r) => "${r["team"]}-${r["member"]}") }
+
+// The indicators: what a delivered spec cost, the tokens per useful line (the lines of the passed steps of the
+// delivered runs), local against paid, the retries per station.
+indicators(lines: Lines, f: Filter) <string, any>
+  delivered = lines.runs.filter((r) => deliveredAt(r) != null and inRange(deliveredAt(r)!, f))
+  keys = delivered.map((r) => "${r["root"]}|${r["run"]}")
+  cost = 0.0
+  for r in delivered
+    cost += num(r["costUsd"])
+  tokens = 0
+  useful = 0
+  for e in lines.steps
+    if not ("${e["root"]}|${e["run"]}" in keys)
+      continue
+    u = usageIn(e)
+    tokens += num(u["inTokens"]).round() + num(u["outTokens"]).round()
+    l = e["lines"]
+    if e["result"] == "passed" and isinstance(l, dict)
+      counted: <string, any> = l
+      useful += num(counted["added"]).round()
+  b = bill(lines, f)
+  local: <string, any> = b["local"]!
+  paid: <string, any> = b["paid"]!
+  allTokens = (local["inTokens"] as int) + (local["outTokens"] as int) + (paid["inTokens"] as int) + (paid["outTokens"] as int)
+  retries: <string, int> = {}
+  for row in (quality(lines, f)["stations"] ?? []) as <string, any>[]
+    retries["${row["station"]}"] = row["retried"]!
+  { "delivered": delivered.length, "costPerDeliveredUsd": delivered.isEmpty ? null : cost / delivered.length, "tokensPerUsefulLine": useful == 0 ? null : tokens / useful, "usefulLines": useful, "localTokenShare": allTokens == 0 ? null : ((local["inTokens"] as int) + (local["outTokens"] as int)) / allTokens, "localUsd": local["costUsd"], "paidUsd": paid["costUsd"], "retriesPerStation": retries }
+
+// Every view asked (all of VIEWS when none is), over the ledger's lines; `roots` are the projects whose open gates
+// are read (the ledger's and the one asked).
+metricsOf(all: <string, any>[], f: Filter, view: string = "", now: int? = null, roots: string[] = []) <string, any>
+  if not view.isEmpty and not (view in VIEWS)
+    throw ValueError("--view is one of ${VIEWS.join(", ")}, not `${view}`")
+  at = now ?? nowMs()
+  lines = reportLines(all, f)
+  known: string[] = [...roots]
+  for e in all
+    root = "${e["root"] ?? ""}"
+    if not root.isEmpty and not (root in known)
+      known.add(root)
+  found: <string, any> = { "filter": f.shown(), "lines": lines.steps.length + lines.answers.length, "runs": lines.runs.length }
+  wanted = view.isEmpty ? VIEWS : [view]
+  for v in wanted
+    // a match is given a name first: `found[v] = match …` is emitted as a call (a bug of the python dialect)
+    shown = match v
+      "bill" -> bill(lines, f)
+      "throughput" -> throughput(lines, f)
+      "cycle" -> cycle(lines, f)
+      "burndown" -> burndown(lines, f, at)
+      "flow" -> flow(lines, f, at)
+      "waiting" -> waiting(lines, f, at, known)
+      "quality" -> quality(lines, f)
+      "people" -> people(lines)
+      _ -> indicators(lines, f)
+    found[v] = shown
+  found
+
+// The reports of this machine's ledger, the project `root`'s runs of before the ledger copied into it first.
+metrics(root: string, f: Filter, view: string = "") <string, any>
+  if Path(root, RUNS_DIR).isDir()
+    backfill(root)
+  // the months the dates touch (the runs' lines of before them too: a run's newest line says what it is now)
+  metricsOf(readLedger(null, f.toMs), f, view, null, ["${Path(root).resolve()}"])
+
+// `nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to
+// YYYY-MM-DD] [--by day|week] [--view <view>] [--json]`.
+metricsLine(args: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  try
+    f = filterOf(projectOf(option(args, "--project") ?? ""), option(args, "--team") ?? "", option(args, "--member") ?? "", option(args, "--from") ?? "", option(args, "--to") ?? "", option(args, "--by") ?? "day")
+    found = metrics(root, f, option(args, "--view") ?? "")
+    if "--json" in args
+      printJson(found)
+      return 0
+    printMetrics(found)
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0
+
+usd(v: any) string
+  "${num(v).toFixed(2)} USD"
+
+// The reports in a terminal: the bill and a line per view.
+printMetrics(found: <string, any>) void
+  b: <string, any>? = found["bill"]
+  if b != null
+    t: <string, any> = b!["total"]!
+    print("Bill: ${t["inTokens"]} tokens in · ${t["outTokens"]} out · ${usd(t["costUsd"])} (${t["calls"]} calls, ${t["notReported"]} without tokens reported)")
+    local: <string, any> = b!["local"]!
+    paid: <string, any> = b!["paid"]!
+    print("  local ${(local["inTokens"] as int) + (local["outTokens"] as int)} tokens · paid ${(paid["inTokens"] as int) + (paid["outTokens"] as int)} tokens, ${usd(paid["costUsd"])}")
+    for m in (b!["byModel"] ?? []) as <string, any>[]
+      print("  ${m["provider"]} ${m["model"]}: ${m["inTokens"]}/${m["outTokens"]} tokens · ${usd(m["costUsd"])}")
+  th: <string, any>? = found["throughput"]
+  if th != null
+    print("Delivered: ${th!["delivered"]} specs")
+  c: <string, any>? = found["cycle"]
+  if c != null
+    d: <string, any> = c!["delivered"]!
+    print("Cycle time (delivered): median ${d["median"] == null ? "—" : "${(num(d["median"]) / 60000).round()} min"} of ${d["count"]}")
+  w: <string, any>? = found["waiting"]
+  if w != null
+    for o in (w!["open"] ?? []) as <string, any>[]
+      print("Waiting for you: ${o["project"]} · ${o["run"]} · ${o["gate"]}${o["ms"] == null ? "" : " for ${(num(o["ms"]) / 60000).round()} min"}")
+  p: <string, any>? = found["people"]
+  if p != null
+    for m in (p!["members"] ?? []) as <string, any>[]
+      print("${m["team"]} · ${m["member"]} (${m["role"]}): ${m["steps"]} steps, ${m["answers"]} answers, +${m["added"]}/-${m["removed"]} lines, ${m["passed"]} passed, ${m["failed"]} failed, ${usd(m["costUsd"])}")

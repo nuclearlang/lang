@@ -37,6 +37,20 @@ projectOf(folder: string) Path?
       return d
   null
 
+// The last lines (1 to 2000) of a project's run log `.nuclear/logs/run.log`, or what to do when there is none. Only
+// that file: a log that resolves outside the project (a symlink) is refused.
+runLogTail(project: string, lines: int = 200) string
+  root: Path = projectOf(project) ?? Path(project).resolve()
+  log: Path = root.joinpath(".nuclear", "logs", "run.log").resolve()
+  if not (root in log.parents)
+    return "refused: the run log of ${root} resolves outside the project"
+  if not log.isFile()
+    return "no run log yet in ${root}: run the app once (nuclear run, or ▷ Run / ▭ Device in the editor), then read it again"
+  all: string[] = log.readText(errors = "replace").split("\n").filter((l) => l.length > 0)
+  count = Math.max(1, Math.min(2000, lines))
+  shown = all.slice(Math.max(0, all.length - count), all.length)
+  "${log} (last ${shown.length} of ${all.length} lines)\n\n${shown.join("\n")}"
+
 taskSlug(text: string) string
   whole = stripChars(text.lower().replaceAll(Regex(r"[^a-z0-9]+"), "-"), "-")
   cut = whole.substring(0, Math.min(40, whole.length))
@@ -208,6 +222,12 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   // memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.
   projectMonitor(project: string) string
     ~tools.project(project, ["monitor"])
+
+  // Why the app failed or what it did: the tail of the project's run log `.nuclear/logs/run.log` (lines: default
+  // 200, at most 2000), which `nuclear run` and the editor's devices write: each step (build, install, serve, the
+  // device), the build's errors, the server's output, `failed:` and `exited:`. Read it after a run that failed.
+  projectRunLog(project: string, lines: int = 200) string
+    runLogTail(project, lines)
 
   // project_monitor, and the hot spots kept in the graph (`monitor:<project>`) so the local developer and later
   // sessions know where the app was slow. Call it after a run with `nuclear run --monitor`.
@@ -423,7 +443,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   all() any[]
     [
       nuclearStart, nuclearDoc, graphSearch, graphAnswer, graphStrategy, graphCard, graphPrompt, graphRemember, nuclearCheck, nuclearBuild, nuclearHelp, nuclearBrief, nuclearFmt, nuclearDefs,
-      nuclearProject, projectInspect, projectMonitor, graphMonitor, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
+      nuclearProject, projectInspect, projectMonitor, projectRunLog, graphMonitor, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 

@@ -11,6 +11,7 @@
 //   the user's taps, clicks, wheel and keys back (CDP `Input.*`). The device is Chrome's device mode (metrics,
 //   user agent, touch): Flutter then behaves as on iOS or Android, and every input lands where it is drawn.
 
+import { appendLog, Launch, logFile, reason, Step, STEPS } from './launch-log';
 import { browserPage, Cdp, freePort } from './cdp';
 import { execFile, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -225,6 +226,8 @@ interface Running {
   lastView?: View;
   lastUsed: number; // last moment somebody looked at it or used it (the idle stop)
   ended?: boolean;
+  root?: string; // the project (its log: .nuclear/logs/run.log)
+  launch?: Launch; // the steps until the first frame
 }
 
 const panels = new Set<DevicePanel>();
@@ -307,8 +310,20 @@ function launchProvider(context: vscode.ExtensionContext): vscode.DebugConfigura
       const target = [...panels].find((p) => p.id === config.synapsisPanel) ?? DevicePanel.idle() ?? DevicePanel.show(context);
       target.closeRunning();
       const key = `${Date.now()}`;
-      target.running = { key, appPort, cdpPort, view: target.lastView ?? lastView, panel: target, title: target.view.title, lastUsed: Date.now() };
+      const root = typeof config.cwd === 'string' ? path.dirname(path.dirname(config.cwd)) : undefined;
+      const running: Running = { key, appPort, cdpPort, view: target.lastView ?? lastView, panel: target, title: target.view.title, lastUsed: Date.now(), root };
+      target.running = running;
       target.starting();
+      running.launch = new Launch(
+        root,
+        (l) => running.panel?.progress(l),
+        (l) => {
+          const panel = running.panel;
+          endRunning(running);
+          panel?.failed(texts(MOBILE_DEVICE).stuck.replace('{0}', (texts(MOBILE_DEVICE) as Record<string, string>)[`step_${l.step}`]), reason(l.output), root);
+        },
+      );
+      running.launch.to('flutter');
       devicesChanged.fire();
       const browser = chromium();
       return {
@@ -357,7 +372,9 @@ async function attach(r: Running, tries?: number): Promise<void> {
   const cdp = await browserPage(r.cdpPort, tries);
   if (r.ended) return cdp.close();
   r.cdp = cdp;
+  r.launch?.to('browser');
   cdp.on('Page.screencastFrame', (f) => {
+    if (r.launch && !r.launch.done) r.launch.to('live');
     void cdp.call('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => undefined);
     r.panel?.frame(String(f.data));
     // a frame of another size means the emulation is gone: apply it again
@@ -480,6 +497,7 @@ async function input(r: Running, i: Input): Promise<void> {
 function endRunning(r: Running): void {
   if (r.ended) return;
   r.ended = true;
+  r.launch?.end();
   const i = parked.indexOf(r);
   if (i >= 0) parked.splice(i, 1);
   if (r.panel?.running === r) {
@@ -508,14 +526,41 @@ function watchSessions(): vscode.Disposable[] {
         return;
       }
       r.session = s;
+      r.launch?.to('compile');
       r.panel?.view.reveal(undefined, true);
-      attach(r)
+      attach(r, 2400)
         .then(() => devicesChanged.fire())
-        .catch((e) => r.panel?.failed(e instanceof Error ? e.message : String(e)));
+        .catch((e) => {
+          if (r.ended) return;
+          const why = e instanceof Error ? e.message : String(e);
+          r.launch?.fail(why);
+          r.panel?.failed(why, reason(r.launch?.output ?? []), r.root);
+        });
     }),
     vscode.debug.onDidTerminateDebugSession((s) => {
       const r = of(s);
-      if (r) endRunning(r);
+      if (!r) return;
+      const l = r.launch;
+      const panel = r.panel;
+      endRunning(r);
+      // Flutter ended before the first frame: the build failed; say why instead of "not running"
+      if (l && !l.done) {
+        l.fail('Flutter ended before the app opened');
+        panel?.failed(texts(MOBILE_DEVICE).flutterEnded, reason(l.output), r.root);
+      }
+    }),
+    // Flutter's output (its build errors among it) to the launch and the project's log
+    vscode.debug.registerDebugAdapterTrackerFactory('dart', {
+      createDebugAdapterTracker(s) {
+        return {
+          onDidSendMessage(m: { type?: string; event?: string; body?: { output?: string; category?: string } }) {
+            if (m.type !== 'event' || m.event !== 'output' || m.body?.category === 'telemetry') return;
+            const r = of(s);
+            if (r?.launch) r.launch.out(String(m.body?.output ?? ''));
+            else if (r) appendLog(r.root, String(m.body?.output ?? ''));
+          },
+        };
+      },
     }),
   ];
 }
@@ -584,10 +629,12 @@ async function lockDeviceGroup(back: vscode.TextEditor | undefined): Promise<voi
   if (back) await vscode.window.showTextDocument(back.document, { viewColumn: back.viewColumn, preserveFocus: false });
 }
 
-class DevicePanel {
+export class DevicePanel {
   readonly id = `device-${nextId++}`;
   running: Running | undefined;
   lastView: View | undefined;
+  logRoot: string | undefined; // the project whose log the failure's button opens
+  building = false; // ▷ Run asked: the project is being built, no launch yet
   private disposed = false;
 
   private constructor(
@@ -633,6 +680,11 @@ class DevicePanel {
         case 'run':
           void vscode.commands.executeCommand('nuclear.runOnDevice', this.id);
           break;
+        case 'log': {
+          const file = logFile(this.logRoot);
+          if (file) void vscode.window.showTextDocument(vscode.Uri.file(file), { viewColumn: vscode.ViewColumn.One, preview: true });
+          break;
+        }
         case 'reload':
           void vscode.commands.executeCommand('flutter.hotReload');
           break;
@@ -756,8 +808,22 @@ class DevicePanel {
     this.post({ type: 'frame', data });
   }
 
-  failed(message: string): void {
-    this.post({ type: 'failed', message });
+  /** The steps of the launch while it starts: done, current (with its seconds), still to come. */
+  progress(l: Launch): void {
+    const L = texts(MOBILE_DEVICE) as Record<string, string>;
+    this.post({ type: 'progress', steps: STEPS.filter((s) => s !== 'live').map((s: Step) => ({ label: L[`step_${s}`], state: STEPS.indexOf(s) < STEPS.indexOf(l.step) ? 'done' : s === l.step ? 'now' : 'next' })) });
+  }
+
+  /** ▷ Run: the project is being built (before Flutter is asked for anything). */
+  progressBuild(): void {
+    const L = texts(MOBILE_DEVICE) as Record<string, string>;
+    this.post({ type: 'progress', steps: STEPS.filter((s) => s !== 'live').map((s, i) => ({ label: L[`step_${s}`], state: i === 0 ? 'now' : 'next' })) });
+  }
+
+  /** Why the app is not on the device: the message, the lines of output that explain it, Retry and the log. */
+  failed(message: string, lines: string[] = [], root?: string): void {
+    this.logRoot = root ?? this.logRoot;
+    this.post({ type: 'failed', message, lines, log: !!logFile(this.logRoot) });
   }
 
   stopped(): void {
@@ -804,6 +870,12 @@ button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke
 #device.touch #screen { cursor: default; }
 /* the cover is scaled with the device: its text keeps the size of the editor's */
 #cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(12px / var(--z, 1)); background: #1e1e1e; color: #ccc; text-align: center; padding: 20px; font-size: calc(13px / var(--z, 1)); }
+#cover .steps { list-style: none; padding: 0; margin: 0; text-align: left; display: flex; flex-direction: column; gap: calc(6px / var(--z, 1)); }
+#cover .steps .done { color: #81c784; } #cover .steps .next { opacity: .5; }
+#cover .spin.small { display: inline-block; width: calc(10px / var(--z, 1)); height: calc(10px / var(--z, 1)); border-width: calc(2px / var(--z, 1)); vertical-align: middle; }
+#cover pre.why { max-width: 100%; max-height: 40%; overflow: auto; text-align: left; white-space: pre-wrap; font-size: calc(11px / var(--z, 1)); background: #111; color: #ef9a9a; padding: calc(8px / var(--z, 1)); border-radius: 4px; margin: 0; }
+#cover .acts { display: flex; gap: calc(8px / var(--z, 1)); }
+#cover button.run.ghost { background: transparent; color: #ccc; border: 1px solid #555; }
 #cover button.run { width: auto; height: calc(28px / var(--z, 1)); padding: 0 calc(14px / var(--z, 1)); font-size: inherit; background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
 .spin { width: calc(26px / var(--z, 1)); height: calc(26px / var(--z, 1)); border: calc(3px / var(--z, 1)) solid #555; border-top-color: #4fc3f7; border-radius: 50%; animation: s 0.9s linear infinite; }
 @keyframes s { to { transform: rotate(360deg); } }
@@ -878,6 +950,7 @@ function layout() {
   vscode.postMessage({ type: 'state', state: st });
   if (innerWidth > 0) vscode.postMessage({ type: 'size', size: { screen: window.screen.width, width: innerWidth, dpr: window.devicePixelRatio, shot: Math.ceil(cw * z * window.devicePixelRatio) } });
 }
+const esc = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function setCover(html) { cover.innerHTML = html; cover.style.display = html ? 'flex' : 'none'; }
 function controls(on) { for (const id of ['reload', 'restart', 'stop', 'browser']) $(id).disabled = !on; }
 
@@ -952,8 +1025,16 @@ window.addEventListener('message', (e) => {
   } else if (m.type === 'starting') {
     live = false; controls(false); img.removeAttribute('src'); sentView = ''; layout();
     setCover('<div class="spin"></div><div>' + t('starting') + '<br><small>' + t('firstBuild') + '</small></div>');
+  } else if (m.type === 'progress') {
+    live = false; controls(false);
+    const marks = { done: '✓', now: '<span class="spin small"></span>', next: '○' };
+    setCover('<div>' + t('starting') + '</div><ol class="steps">' + m.steps.map((x) => '<li class="' + x.state + '">' + marks[x.state] + ' ' + esc(x.label) + '</li>').join('') + '</ol><small>' + t('firstBuild') + '</small>');
   } else if (m.type === 'failed') {
-    setCover('<div>' + t('failed') + '<br><small>' + String(m.message).replace(/</g, '&lt;') + '</small></div>');
+    live = false; controls(false); img.removeAttribute('src');
+    const lines = (m.lines || []).length ? '<pre class="why">' + m.lines.map(esc).join('\\n') + '</pre>' : '';
+    setCover('<div><b>' + t('failed') + '</b><br>' + esc(m.message) + '</div>' + lines + '<div class="acts"><button class="run" id="retry">' + t('retry') + '</button>' + (m.log ? '<button class="run ghost" id="log">' + t('showLog') + '</button>' : '') + '</div>');
+    $('retry').onclick = () => vscode.postMessage({ type: 'run' });
+    if (m.log) $('log').onclick = () => vscode.postMessage({ type: 'log' });
   } else if (m.type === 'stopped') {
     live = false; controls(false); img.removeAttribute('src');
     setCover('<div>' + t('notRunning') + '</div><button class="run" id="run">' + t('run') + '</button>');
@@ -981,6 +1062,21 @@ export function activateDevice(
     vscode.commands.registerCommand('nuclear.closeDevice', (id: string) => closeDevice(id)),
     vscode.commands.registerCommand('nuclear.openDevice', (preset?: string): { id: string } => ({ id: DevicePanel.show(context, typeof preset === 'string' ? preset : undefined).id })),
     vscode.commands.registerCommand('nuclear.parkDevices', () => DevicePanel.park()),
+    // a launch that never started (the Flutter extension missing or refused): the devices waiting on it say why
+    vscode.commands.registerCommand('nuclear.deviceLaunchFailed', (message: string) => {
+      for (const p of panels) {
+        const r = p.running;
+        if (!r && p.building) {
+          p.building = false;
+          p.failed(message, [], p.logRoot);
+          continue;
+        }
+        if (!r || r.cdp) continue;
+        r.launch?.fail(message);
+        p.closeRunning();
+        p.failed(message, reason(r.launch?.output ?? []), r.root);
+      }
+    }),
     vscode.commands.registerCommand('nuclear.unparkDevices', () => DevicePanel.unpark(context)),
     // `panelId` names the device to run on (its ▷ Run, the Devices workspace); without it a free one, or a new one
     vscode.commands.registerCommand('nuclear.runOnDevice', async (panelId?: unknown, root?: string, noDebug?: boolean) => {
@@ -993,7 +1089,14 @@ export function activateDevice(
       if (hidden) DevicePanel.adopt(context, hidden);
       const target = (typeof panelId === 'string' && [...panels].find((d) => d.id === panelId || d.running === hidden)) || DevicePanel.idle() || DevicePanel.show(context);
       target.view.reveal(undefined, true);
-      await run(DEVICE_ID, { synapsisPanel: target.id }, root, noDebug);
+      target.building = true;
+      target.logRoot = p.root;
+      target.progressBuild();
+      try {
+        await run(DEVICE_ID, { synapsisPanel: target.id }, root, noDebug);
+      } finally {
+        target.building = false;
+      }
     }),
   );
   // VS Code closed or crashed: end every app this window started on the device

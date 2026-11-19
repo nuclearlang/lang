@@ -12,13 +12,13 @@ On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`.
 
 | Route | Request | Answer |
 |---|---|---|
-| `code`, `test`, `security` | `{task, platform = "backend", path, kind, context, root}` | `{code, report, check, attempts, trace: [{step, detail}]}` |
+| `code`, `test`, `security` | `{task, platform = "backend", path, kind, context, root}` | `{code, report, check, attempts, trace: [{step, detail}], usage}` |
 | `document` | the same; the run's journal in `context` | the same; the summary in `report` |
 | `diagnose` | the same; `task` is the step, `context` its output, `path` the project's folder | the same |
 | `accept` | the same; `task` the criteria, numbered; `context` the facts and the files of the run | the same |
 | `chat` | `{message, platform, map, history, root, query}` | the same answer (`report`) |
-| `plan` | `{spec, platform, root}` | `{pieces: [{path, kind, task}], raw, trace, tree, limits}` |
-| `analyze` | `{spec, platform, root, strategy}` | `{strategy, title, why, mode, stages, lead, source, generate, pieces, questions, limits, report, trace}` |
+| `plan` | `{spec, platform, root}` | `{pieces: [{path, kind, task}], raw, trace, tree, limits, usage}` |
+| `analyze` | `{spec, platform, root, strategy}` | `{strategy, title, why, mode, stages, lead, source, generate, pieces, questions, limits, report, trace, usage}` |
 
 - `platform` is `backend`, `mobile` or `web`: the agents name a platform, never a dialect. Any other value (`""`,
   a dialect's name) is refused with 400 (the validation error, naming the field) before an agent runs (it was a 500 from the graph's `/v1/kinds/`).
@@ -27,6 +27,10 @@ On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`.
   member: who it is, its tools, the conversation). The graph (two cards instead of four) and the project's files are
   searched with them, and the assistant's guide is left out: the prompt brings its own.
 - `trace` is the steps the agent followed, with what it read.
+- `usage` is what the request's models read and wrote, as Ollama counted them: `{inTokens, outTokens, model}` (the
+  sums of `prompt_eval_count` and `eval_count` over every model call of the request, the last model that answered);
+  empty when no model reported counts. Each request counts its own (`TALLY` of `workbench.nuc`, a context variable
+  the controller sets per request; a graph's steps share it). Nuclear Builder keeps it in its ledger (spec 017).
 - The analysis runs before a run generates or plans anything: [strategies.md](strategies.md).
 
 ## Where it works

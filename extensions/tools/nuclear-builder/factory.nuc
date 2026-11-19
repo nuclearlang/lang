@@ -92,8 +92,11 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     s["status"] = status
     s["summary"] = summary
     s["ended"] = nowMs()
+    s["lines"] = stepLines(run, "${s["id"]}")
     traceEvent(run, status, summary, s["id"]!)
     save()
+    // the factory's ledger (usage.nuc): the step, who did it, its usage and its lines, across projects
+    ledgerAppend(stepEntry(run, s))
 
   decide(s: <string, any>, what: string, why: string) void
     decisions: <string, any>[] = s["decisions"]!
@@ -108,6 +111,8 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   start(fromStation: string? = null, fromStep: string? = null) <string, any>
     if run["status"] == "running" and not orphaned(run["owner"])
       throw RuntimeError("the run ${run["id"]} is running in another process (pid ${(run["owner"] as <string, any>)["pid"]})")
+    // the project's runs of before the ledger go into it once, before this one writes its first line
+    backfill(root())
     recovered = recoverRun(run)
     stepAt: string? = fromStep
     if stepAt == null and recovered and fromStation == null
@@ -166,6 +171,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
         run["owner"] = null
         traceEvent(run, "waiting", "${e}")
         save()
+        ledgerAppend(runEntry(run))
         return run
       if isinstance(e, KeyboardInterrupt)
         for st in stages()
@@ -187,6 +193,7 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     run["waiting"] = null
     traceEvent(run, status)
     save()
+    ledgerAppend(runEntry(run))
     emit({ "type": "done", "status": status, "costUsd": run["costUsd"] })
     run
 
@@ -310,12 +317,21 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
   // A question for the user as an event; no answer (no stdin, the editor closed) stops the run: it waits.
   askUser(question: <string, any>) <string, any>
     run["waiting"] = question
+    // the gate's times (spec 017, waiting for you): opened once, answered when the answer comes
+    gates: <string, any>[] = run["gates"] ?? []
+    opened = gates.find((g) => g["id"] == question["id"] and g["answered"] == null)
+    if opened == null
+      opened = { "id": question["id"], "kind": question["kind"], "station": question["station"] ?? "", "opened": nowMs(), "answered": null }
+      gates.add(opened!)
+    run["gates"] = gates
     save()
     emit({ "type": "ask", ...question })
     answer = ask(question)
     if answer == null
       throw RunStop("waiting for your answer: ${question["question"]}")
     given: <string, any> = answer!
+    opened!["answered"] = nowMs()
+    opened!["answer"] = "${given["answer"] ?? ""}"
     run["waiting"] = null
     traceEvent(run, "answer", "${question["id"]}: ${given["answer"]}")
     given
@@ -410,8 +426,9 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     Path(specDir()).mkdir(parents = true, existOk = true)
     w = Work(root(), specDir(), task, documentsBefore(), writes, "${a["model"] ?? ""}", budget, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, given)
     before = contents(root())
-    out = runAdapter(adapter!, role, station, w, (e) => onEvent(s, e))
+    out = runAdapter(adapter!, role, station, w, (e) => onEvent(s, e), "${a["provider"]}")
     s["files"] = ledger(run, "${s["id"]}", before)
+    s["usage"] = sumUsage(s["usage"], out.usage)
     s["costUsd"] = (s["costUsd"] ?? 0.0) + out.costUsd
     run["costUsd"] = (run["costUsd"] ?? 0.0) + out.costUsd
     s["log"] = out.text.substring(Math.max(0, out.text.length - 60000))

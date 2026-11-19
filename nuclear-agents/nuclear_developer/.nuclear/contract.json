@@ -194,6 +194,12 @@
         {
           "name": "trace",
           "type": "<string, string>[]"
+        },
+        {
+          "default": {},
+          "description": "the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)",
+          "name": "usage",
+          "type": "<string, any>"
         }
       ],
       "key": null
@@ -299,6 +305,12 @@
         {
           "name": "trace",
           "type": "<string, string>[]"
+        },
+        {
+          "default": {},
+          "description": "the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)",
+          "name": "usage",
+          "type": "<string, any>"
         }
       ],
       "key": null
@@ -370,6 +382,12 @@
           "default": [],
           "name": "limits",
           "type": "string[]"
+        },
+        {
+          "default": {},
+          "description": "the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)",
+          "name": "usage",
+          "type": "<string, any>"
         }
       ],
       "key": null

@@ -6,7 +6,7 @@ use pathlib{ Path }
 // workspace-write`, `--skip-git-repo-check`, `-C <dir>`, `-c key=value`). The role is rendered as an `AGENTS.md`
 // section in the run's temporary folder and given at the head of the prompt (Codex reads AGENTS.md only from the
 // project and its own home, which hold the user's files and login); the Nuclear MCP server and the Builder's are
-// `-c mcp_servers.*` settings. Codex brings its own login and does not report a cost: its tokens are events, its cost 0.
+// `-c mcp_servers.*` settings. Codex brings its own login and does not report a cost: its tokens are counted (`turn.completed`), its cost 0.
 
 renderCodex(role: Role, at: Path) string
   text = "## The ${role.title} of the software factory\n\n${role.text()}\n"
@@ -32,7 +32,10 @@ codexLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, a
   else if kind == "item.completed" and (itemKind == "mcp_tool_call" or itemKind == "command_execution")
     emit({ "type": "tool-result", "id": item["id"], "ok": item["status"] != "failed", "text": "${item["result"] ?? item["aggregated_output"] ?? ""}".substring(0, 20000) })
   else if kind == "turn.completed"
-    emit({ "type": "tokens", "usage": ev["usage"] ?? {} })
+    used: <string, any> = ev["usage"] ?? ({} as <string, any>)
+    addTokens(found, "inTokens", used["input_tokens"])
+    addTokens(found, "outTokens", used["output_tokens"])
+    emit({ "type": "tokens", "usage": used })
   else if kind == "turn.failed" or kind == "error"
     found["failed"] = true
     found["text"] = json.dumps(ev["error"] ?? ev["message"] ?? ev)

@@ -3,13 +3,14 @@
 // a laptop, a tablet or a phone; the panel adds what a web developer needs: the address bar, the color scheme, the
 // network throttling, the cache, the page's console and requests, a screenshot, Chrome's DevTools and the debugger
 // (VS Code's JavaScript debugger attached to the same page: a breakpoint in a .nuc stops there).
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { isInstalled, readCard } from '../../../vscode/src/card';
 import { lang, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
 import { WEB_DEVICE } from './l10n';
+import { appendLog, Launch, logFile, reason, WEB_STALL_MS, WebStep } from './launch-log';
 import { ConsoleEntry, NetworkEntry, WEB_PRESETS, WebSession, WebView } from './web-session';
 
 const STATE_KEY = 'nuclear.webDevice.view';
@@ -26,23 +27,31 @@ const panels = new Map<string, WebDevicePanel>(); // by project root
 let ctx: vscode.ExtensionContext;
 let output: vscode.OutputChannel;
 
-/** `synapsis <args>` in the project, its output in the channel; resolves to the exit code. */
-function synapsis(app: WebApp, args: string[]): Promise<number> {
+/** `nuclear <args>` in the project, its output as it comes to the channel and to the launch (news for its stall
+ * limit, and the project's log); resolves to the exit code. */
+function synapsis(app: WebApp, args: string[], launch: Launch<WebStep>): Promise<number> {
   return new Promise((done) => {
-    output.appendLine(`$ synapsis ${args.join(' ')}`);
-    execFile(app.command, args, { cwd: app.root, env: { ...process.env, NO_COLOR: '1' }, maxBuffer: 64 << 20 }, (err, stdout, stderr) => {
-      output.append(stdout + stderr);
-      done(err ? (typeof err.code === 'number' ? err.code : 1) : 0);
-    });
+    output.appendLine(`$ nuclear ${args.join(' ')}`);
+    launch.out(`$ nuclear ${args.join(' ')}`);
+    const p = spawn(app.command, args, { cwd: app.root, env: { ...process.env, NO_COLOR: '1' } });
+    const each = (d: Buffer) => {
+      output.append(d.toString());
+      launch.out(d.toString());
+    };
+    p.stdout.on('data', each);
+    p.stderr.on('data', each);
+    p.on('error', (e) => (each(Buffer.from(`cannot run ${app.command}: ${e.message}\n`)), done(127)));
+    p.on('close', (code) => done(code ?? 1));
   });
 }
 
-class WebDevicePanel {
+export class WebDevicePanel {
   readonly panel: vscode.WebviewPanel;
   session?: WebSession;
   private view: WebView;
   private debugging?: vscode.DebugSession;
   private density = 1;
+  private launch?: Launch<WebStep>;
 
   constructor(readonly app: WebApp) {
     this.view = { ...{ preset: 'Responsive', width: 1280, height: 800, landscape: false, scheme: 'system', throttle: 'none', noCache: false }, ...ctx.globalState.get<Partial<WebView>>(STATE_KEY, {}) } as WebView;
@@ -57,37 +66,78 @@ class WebDevicePanel {
     void this.panel.webview.postMessage(m);
   }
 
-  /** Builds and installs the app when needed, serves it and opens it at the panel's viewport. */
+  /** Builds and installs the app when needed, serves it and opens it at the panel's viewport, step by step: a step
+   * silent past its limit, or any step that fails, ends on a cover with the reason, Try again and Show the log. */
   async start(): Promise<void> {
     this.stop(false);
-    this.post({ type: 'starting', text: l10n.t('Building the app…') });
-    if ((await synapsis(this.app, ['build'])) !== 0) return this.failed(l10n.t('the build failed (see the Web device output)'));
-    if (!isInstalled(this.app.root)) {
-      this.post({ type: 'starting', text: l10n.t('Installing the packages (once)…') });
-      if ((await synapsis(this.app, ['install'])) !== 0) return this.failed(l10n.t('nuclear install failed (see the Web device output)'));
+    const L = texts(WEB_DEVICE) as Record<string, string>;
+    const installed = isInstalled(this.app.root);
+    const launch = (this.launch = new Launch<WebStep>(
+      this.app.root,
+      (l) => this.progress(l, installed),
+      (l) => {
+        this.session?.stop();
+        this.failed(L.stuck.replace('{0}', L[`step_${l.step}`]), reason(l.output));
+      },
+      WEB_STALL_MS,
+      5_000,
+      'the web device',
+    ));
+    this.progress(launch, installed);
+    const current = () => this.launch === launch && !launch.done;
+    const fail = (message: string) => {
+      if (!current()) return;
+      launch.fail(message);
+      this.failed(message, reason(launch.output));
+    };
+    if ((await synapsis(this.app, ['build'], launch)) !== 0) return fail(L.buildFailed);
+    if (!current()) return;
+    if (!installed) {
+      launch.to('install');
+      if ((await synapsis(this.app, ['install'], launch)) !== 0) return fail(L.installFailed);
+      if (!current()) return;
     }
-    this.post({ type: 'starting', text: l10n.t('Starting the dev server and the browser…') });
+    launch.to('server');
     const s = (this.session = new WebSession(this.app.app, readCard(this.app.root)?.toolchain?.serve ?? this.app.serve, {
       frame: (data) => this.post({ type: 'frame', data }),
       console: (e: ConsoleEntry) => this.post({ type: 'console', entry: e }),
       network: (e: NetworkEntry) => this.post({ type: 'network', entry: e }),
       address: (url, canBack, canForward) => this.post({ type: 'address', url, canBack, canForward }),
-      log: (line) => output.appendLine(line),
+      log: (line) => {
+        output.appendLine(line);
+        // the dev server's output to the log also once the app is live (its errors come later)
+        if (launch.done) appendLog(this.app.root, line);
+        else launch.out(line);
+      },
+      step: (step) => launch.to(step),
     }));
     try {
       await s.start(this.view, this.density);
+      if (!current()) return;
+      launch.to('live');
       this.post({ type: 'live', url: s.url });
     } catch (e) {
       s.stop();
-      this.failed(e instanceof Error ? e.message : String(e));
+      fail(e instanceof Error ? e.message : String(e));
     }
   }
 
-  private failed(message: string): void {
-    this.post({ type: 'failed', message });
+  /** The steps while the app starts: done, current, still to come (the packages only when the app has none). */
+  private progress(l: Launch<WebStep>, installed: boolean): void {
+    const L = texts(WEB_DEVICE) as Record<string, string>;
+    const steps = l.steps.filter((s) => s !== 'live' && !(s === 'install' && installed));
+    const at = l.steps.indexOf(l.step);
+    this.post({ type: 'progress', steps: steps.map((s) => ({ label: L[`step_${s}`], state: l.steps.indexOf(s) < at ? 'done' : s === l.step ? 'now' : 'next' })) });
+  }
+
+  /** Why the app is not on the device: the message, the lines of output that explain it, Try again and the log. */
+  private failed(message: string, lines: string[] = []): void {
+    this.post({ type: 'failed', message, lines, log: !!logFile(this.app.root) });
   }
 
   stop(disposed: boolean): void {
+    this.launch?.end();
+    this.launch = undefined;
     if (this.debugging) void vscode.debug.stopDebugging(this.debugging);
     this.debugging = undefined;
     this.session?.stop();
@@ -150,6 +200,11 @@ class WebDevicePanel {
       case 'run':
         await this.start();
         break;
+      case 'log': {
+        const file = logFile(this.app.root);
+        if (file) await vscode.window.showTextDocument(vscode.Uri.file(file), { viewColumn: vscode.ViewColumn.One, preview: true });
+        break;
+      }
       case 'stop':
         this.stop(false);
         break;
@@ -228,6 +283,12 @@ button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke
 #app { display: block; width: 100%; height: 100%; pointer-events: none; }
 #cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(12px / var(--z, 1)); background: #1e1e1e; color: #ccc; text-align: center; padding: 20px; font-size: calc(13px / var(--z, 1)); }
 #cover button.run { height: calc(28px / var(--z, 1)); padding: 0 calc(14px / var(--z, 1)); font-size: inherit; background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+#cover .steps { list-style: none; padding: 0; margin: 0; text-align: left; display: flex; flex-direction: column; gap: calc(6px / var(--z, 1)); }
+#cover .steps .done { color: #81c784; } #cover .steps .next { opacity: .5; }
+#cover .spin.small { display: inline-block; width: calc(10px / var(--z, 1)); height: calc(10px / var(--z, 1)); border-width: calc(2px / var(--z, 1)); vertical-align: middle; }
+#cover pre.why { max-width: 100%; max-height: 40%; overflow: auto; text-align: left; white-space: pre-wrap; font-size: calc(11px / var(--z, 1)); background: #111; color: #ef9a9a; padding: calc(8px / var(--z, 1)); border-radius: 4px; margin: 0; }
+#cover .acts { display: flex; gap: calc(8px / var(--z, 1)); }
+#cover button.run.ghost { background: transparent; color: #ccc; border: 1px solid #555; }
 .spin { width: calc(26px / var(--z, 1)); height: calc(26px / var(--z, 1)); border: calc(3px / var(--z, 1)) solid #555; border-top-color: #4fc3f7; border-radius: 50%; animation: s .9s linear infinite; }
 @keyframes s { to { transform: rotate(360deg); } }
 #dock { height: 34%; min-height: 28px; display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--vscode-panel-background, var(--vscode-editor-background)); }
@@ -401,8 +462,18 @@ window.addEventListener('message', (ev) => {
   }
   else if (m.type === 'live') { base = m.url; sent = ''; layout(); }
   else if (m.type === 'debugging') $('debug').classList.toggle('on', !!m.on);
-  else if (m.type === 'starting') { live = false; img.removeAttribute('src'); setCover('<div class="spin"></div><div>' + esc(m.text) + '</div>'); }
-  else if (m.type === 'failed') setCover('<div>' + t('failed') + '<br><small>' + esc(m.message) + '</small></div><button class="run" id="run">' + t('tryAgain') + '</button>'), $('run').onclick = () => vscode.postMessage({ type: 'run' });
+  else if (m.type === 'progress') {
+    live = false; img.removeAttribute('src');
+    const marks = { done: '✓', now: '<span class="spin small"></span>', next: '○' };
+    setCover('<div>' + t('starting') + '</div><ol class="steps">' + m.steps.map((x) => '<li class="' + x.state + '">' + marks[x.state] + ' ' + esc(x.label) + '</li>').join('') + '</ol>');
+  }
+  else if (m.type === 'failed') {
+    live = false; img.removeAttribute('src');
+    const lines = (m.lines || []).length ? '<pre class="why">' + m.lines.map(esc).join('\\n') + '</pre>' : '';
+    setCover('<div><b>' + t('failed') + '</b><br>' + esc(m.message) + '</div>' + lines + '<div class="acts"><button class="run" id="run">' + t('tryAgain') + '</button>' + (m.log ? '<button class="run ghost" id="log">' + t('showLog') + '</button>' : '') + '</div>');
+    $('run').onclick = () => vscode.postMessage({ type: 'run' });
+    if (m.log) $('log').onclick = () => vscode.postMessage({ type: 'log' });
+  }
   else if (m.type === 'stopped') { live = false; img.removeAttribute('src'); $('debug').classList.remove('on'); setCover('<div>' + t('notRunning') + '</div><button class="run" id="run">' + t('run') + '</button>'); $('run').onclick = () => vscode.postMessage({ type: 'run' }); }
 });
 layout();

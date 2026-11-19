@@ -84,6 +84,7 @@ options, the examples and what each platform gets.
 |---|---|
 | `project_inspect(project)` | the project's platform and dialect, its components with their declarations by kind, the generators of its platform |
 | `project_monitor(project)` | where the app is slow (Nuclear Monitor): the hot spots and the time, calls, connections and memory of each Nuclear function and method, from the last run with `nuclear run --monitor` |
+| `project_run_log(project, lines)` | why the app failed or what it did: the last `lines` (default 200, at most 2000) of the project's `.nuclear/logs/run.log`, which `nuclear run` and the editor's devices write (each step, the build's errors, the server's output, `failed:` and `exited:`); only that file |
 | `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for the local developer and later sessions |
 | `generate_component(project, component)` | a new component with its facade |
 | `generate_resource(project, component, name, from_json \| from_spec \| fields, source, path, actions, screen, plural, dry_run)` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or a screen with its state manager (mobile, web), the tests |
@@ -152,6 +153,7 @@ not declare, answers where to write it.
 | the graph refuses the client | `nuclear-graph connect mcp --scopes read,write`, with the graph running |
 | `... is not inside a Synapsis project (no config.nuc)` | give the project's folder: `nuclear new <name>` creates one |
 | `'<command>' is not allowed here` | the `nuclear_project` tool runs only the commands of its list |
+| `no run log yet in ...` | the app never ran in that project: run it once (`nuclear run`, or ▷ Run / ▭ Device in the editor), then call `project_run_log` again |
 | a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |
 
 The graph knows every tool of this page: ask it with `graph_card("mcp:<tool>")`, or ask the editor's chat

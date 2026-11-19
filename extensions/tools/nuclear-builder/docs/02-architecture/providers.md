@@ -23,7 +23,9 @@ Every provider of a role is called the same way (`adapter.nuc`):
   retries, an httpx transport in tests, a key, the project's prices).
 - `Outcome`: ok, the last text, the documents (written into the spec's folder by an agent, else found in the answer
   after `--- document: <name> ---` lines, or the whole answer when one was asked), the project files it changed
-  (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error.
+  (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error,
+  and the `usage` (`{inTokens, outTokens, costUsd, ms, provider, model}`, stamped by `runAdapter`; a count the provider
+  does not report is null; each provider's source: [reports.md](reports.md)).
 - Events, one shape for every provider: `text`, `tool` (`id`, `tool`, `input`), `tool-result` (`id`, `ok`,
   `text`), `cost` (`usd`), `tokens`, `retry`, `trace`.
 - `runAdapter` turns an exception into a failed outcome. `stationPrompt` is the task every provider gets: the role
@@ -36,8 +38,8 @@ Every provider of a role is called the same way (`adapter.nuc`):
 | `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |
 | `agent` | `claude-code` | `adapter_claude_code.nuc` | `claude -p --output-format stream-json --verbose --mcp-config --strict-mcp-config --plugin-dir --append-system-prompt --tools Read,Write,Edit,Glob,Grep --allowedTools … mcp__nuclear mcp__nuclear_builder --no-session-persistence [--model] [--max-budget-usd]` | a plugin in the run's temporary folder: `skills/<name>/SKILL.md`, the sub-agent `agents/<role>.md`; and the session's system prompt | `total_cost_usd` |
 | `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |
-| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (tokens as events) |
-| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (tokens as events) |
+| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |
+| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |
 | `api` | `anthropic` | `api_anthropic.nuc` | the Messages API, `anthropic-version: 2026-10-21` | the system prompt; the MCP tools as client tools | tokens × `PRICES` |
 | `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |
 | `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |

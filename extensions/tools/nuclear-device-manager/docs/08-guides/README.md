@@ -43,6 +43,11 @@ The first run builds Flutter web and takes about a minute; the next ones are inc
   150 %) and the rotation.
 - Hot reload, hot restart, stop (■), and open in your browser.
 
+While the app starts, the device shows each step (building the project, starting Flutter, compiling the app, opening
+it). When something fails or a step gets stuck, the device says why, with the lines of the error, *Try again* and
+*Show the log*. The log of every launch is kept in the project, in `.nuclear/logs/run.log`, even after VS Code is
+closed.
+
 The panel sits in its own locked editor group to the right of the code. Its width is remembered for each screen
 width (the first time it is 20 % of the screen, between 340 and 540 px). The screen is streamed at the pixels the
 panel shows, so it stays sharp on a HiDPI monitor.

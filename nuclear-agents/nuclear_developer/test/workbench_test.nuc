@@ -1,3 +1,5 @@
+use langchain_core/messages{ AIMessage }
+
 // The parts of the agents that need no model: how a prompt is put together, an unreachable graph, the compiler.
 tests WorkbenchTests
   @test("the prompt file starts with the guide, ends with the task and drops an empty section")
@@ -31,6 +33,16 @@ tests WorkbenchTests
     bench = inject<Workbench>()
     expect(bench.read("[concepts/concept] The MCP\n\nbody\n\n[tools/command] nuclear make") == "concept: The MCP; command: nuclear make")
     expect(bench.read("") == "nothing")
+
+  @test("the tokens a model counted are added to the request's tally, and a reply with no counts adds nothing")
+  tally() void
+    bench = Workbench(GraphClient(url = "http://127.0.0.1:9"), Toolchain())
+    TALLY.set(Tally())
+    bench.tally(AIMessage(content = "a", usageMetadata = { "input_tokens": 12, "output_tokens": 3, "total_tokens": 15 }, responseMetadata = { "model": "gemma4:e2b" }))
+    bench.tally(AIMessage(content = "b", usageMetadata = { "input_tokens": 8, "output_tokens": 2, "total_tokens": 10 }))
+    bench.tally(AIMessage(content = "c"))
+    counted = TALLY.get()!
+    expect(counted.inTokens == 20 and counted.outTokens == 5 and counted.model == "gemma4:e2b")
 
   @test("the compiler accepts valid Nuclear and explains invalid Nuclear")
   check() void

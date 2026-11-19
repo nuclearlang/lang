@@ -1,0 +1,172 @@
+use json
+use pathlib{ Path }
+
+// The reports (spec 017): the usage at the source (each provider stubbed: no paid call), the lines of a write, the
+// factory's ledger written by a run and by a chat's answer, the runs of before the ledger copied once, and every view
+// of `metrics` over a fixture ledger.
+
+DAY = 86_400_000
+// 2026-11-16, a Monday (UTC)
+MONDAY = 1_794_787_200_000
+
+testEveryAgentGivesItsTokensAndOneThatReportsNoneSaysSo(tmpPath: Path, monkeypatch: any) void
+  claude = [{ "type": "system", "subtype": "init", "model": "claude-haiku-5-5" }, { "type": "result", "result": "Done.", "total_cost_usd": 0.01, "is_error": false, "usage": { "input_tokens": 100, "cache_read_input_tokens": 50, "output_tokens": 20 } }]
+  fakeAgent(tmpPath, monkeypatch, "claude", claude)
+  out = runAdapter(claudeCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null, "claude-code")
+  expect(out.usage["inTokens"] == 150 and out.usage["outTokens"] == 20 and out.usage["costUsd"] == 0.01, json.dumps(out.usage))
+  expect(out.usage["provider"] == "claude-code" and out.usage["model"] == "claude-haiku-5-5" and (out.usage["ms"] as int) >= 0)
+  open = [{ "type": "step_finish", "part": { "cost": 0.002, "tokens": { "input": 10, "output": 5, "reasoning": 1, "cache": { "read": 2, "write": 0 } } } }, { "type": "step_finish", "part": { "cost": 0.001, "tokens": { "input": 3, "output": 1 } } }]
+  fakeAgent(tmpPath, monkeypatch, "opencode", open)
+  two = runAdapter(openCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch, "openai/gpt"), (e) => null, "opencode")
+  expect(two.usage["inTokens"] == 15 and two.usage["outTokens"] == 7 and two.usage["model"] == "openai/gpt", json.dumps(two.usage))
+  fakeAgent(tmpPath, monkeypatch, "codex", [{ "type": "turn.completed", "usage": { "input_tokens": 40, "output_tokens": 9 } }])
+  three = runAdapter(codexAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null, "codex")
+  expect(three.usage["inTokens"] == 40 and three.usage["outTokens"] == 9)
+  fakeAgent(tmpPath, monkeypatch, "gemini", [{ "type": "result", "status": "success", "stats": { "input_tokens": 7, "output_tokens": 3 } }])
+  four = runAdapter(geminiCliAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null, "gemini-cli")
+  expect(four.usage["inTokens"] == 7 and four.usage["outTokens"] == 3)
+  // a provider that says nothing of its tokens: not reported (null), never 0 nor a guess
+  fakeAgent(tmpPath, monkeypatch, "codex", [{ "type": "item.completed", "item": { "type": "agent_message", "text": "ok" } }])
+  silent = runAdapter(codexAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null, "codex")
+  expect(silent.usage["inTokens"] == null and silent.usage["outTokens"] == null and silent.usage["provider"] == "codex")
+
+testTwoUsagesAddUpAndACountNeverReportedStaysNull() void
+  a: <string, any> = { "inTokens": null, "outTokens": null, "costUsd": 0.5, "ms": 10, "provider": "codex", "model": "" }
+  b: <string, any> = { "inTokens": 5, "outTokens": 2, "costUsd": 0.25, "ms": 5, "provider": "codex", "model": "o4" }
+  both = sumUsage(sumUsage(null, a), b)
+  expect(both["inTokens"] == 5 and both["outTokens"] == 2 and both["costUsd"] == 0.75 and both["ms"] == 15 and both["model"] == "o4")
+  expect(sumUsage(null, a)["inTokens"] == null)
+
+testAWriteCountsTheLinesItAddedAndRemoved() void
+  expect(lineDelta(null, "a\nb\n") == { "added": 2, "removed": 0 })
+  expect(lineDelta("a\nb\nc\n", "a\nc\nd\ne\n") == { "added": 2, "removed": 1 })
+  expect(lineDelta("a\nb\n", null) == { "added": 0, "removed": 2 })
+  // a line only moved is neither
+  expect(lineDelta("a\nb\n", "b\na\n") == { "added": 0, "removed": 0 })
+
+testARunAndAChatAnswerWriteTheirLinesInTheLedger(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch)
+  calls: string[] = []
+  answers: <string, any> = { "/developer/analyze": { "report": "The client needs a count.", "questions": [] as string[], "trace": [] as any[], "usage": { "inTokens": 120, "outTokens": 30, "model": "gemma4:e2b" } } }
+  f = factory(root, localCrew(), [{ "answer": "approve" }, { "answer": "yes" }, { "answer": "no" }], developer(calls, answers))
+  run = f.start()
+  expect(run["status"] == "passed")
+  lines = readLedger()
+  steps = lines.filter((e) => e["kind"] == "step")
+  expect(steps.length == stepsOf(run).length, "${steps.length}")
+  analysis = steps.find((e) => e["role"] == "analyst")!
+  used: <string, any> = analysis["usage"]!
+  expect(used["inTokens"] == 120 and used["outTokens"] == 30 and used["provider"] == "nuclear-developer" and analysis["agentKind"] == "local" and analysis["team"] == "local-team" and analysis["project"] == "app")
+  // a step whose Developer did not say its tokens: not reported
+  coded = steps.find((e) => e["station"] == "code" and e["usage"] != null)!
+  expect((coded["usage"] as <string, any>)["inTokens"] == null)
+  // the lines a step wrote, from the run's writes
+  written = steps.filter((e) => e["lines"] != null and ((e["lines"] as <string, any>)["added"] as int) > 0)
+  expect(not written.isEmpty)
+  ended = lines.filter((e) => e["kind"] == "run")
+  expect(ended.last["result"] == "passed" and (ended.last["gates"] as any[]).length >= 1 and ended.last["gates"]![0]["answered"] != null)
+  // a chat's answer is one line too
+  bodies: <string, any>[] = []
+  chat = chatOf(chatProject(tmpPath.joinpath("c"), monkeypatch), "c1", {}, [say("hello")], [], { "transport": assistant(bodies, ["Hi."]) })
+  chat.start()
+  told = readLedger().filter((e) => e["kind"] == "chat")
+  expect(told.length == 1 and told[0]["result"] == "answered" and told[0]["role"] == "chat" and (told[0]["usage"] as <string, any>)["provider"] == "nuclear-developer")
+
+testTheRunsOfBeforeTheLedgerAreCopiedOnceWithWhatTheyHave(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  root = tmpPath.joinpath("old")
+  runs = root.joinpath(RUNS_DIR)
+  runs.mkdir(parents = true)
+  fixture = compatFixture(["runs", "engine3-no-keys.json"])
+  runs.joinpath("count-books.json").writeText(fixture.readText())
+  expect(backfill("${root}"))
+  copied = readLedger()
+  expect(not copied.isEmpty and copied.all((e) => e["backfilled"] == true))
+  // what an earlier run file does not have stays not reported: no tokens, no lines
+  steps = copied.filter((e) => e["kind"] == "step")
+  expect(not steps.isEmpty and steps.all((e) => e["lines"] == null or isinstance(e["lines"], dict)))
+  expect(steps.filter((e) => e["usage"] != null).all((e) => (e["usage"] as <string, any>)["inTokens"] == null))
+  expect(copied.count((e) => e["kind"] == "run") == 1)
+  // once
+  expect(not backfill("${root}") and readLedger().length == copied.length)
+
+// A fixture ledger: two teams, a delivered spec and a stopped one, a gate answered after an hour, a paid and a local
+// member, a chat answer, a step with no tokens reported.
+fixtureLedger() <string, any>[]
+  usage = (inT: any, outT: any, usd: double, provider: string, model: string) => ({ "inTokens": inT, "outTokens": outT, "costUsd": usd, "ms": 1000, "provider": provider, "model": model } as <string, any>)
+  who = (run: string, team: string) => ({ "project": "app", "root": "/p/app", "run": run, "spec": run, "specTitle": run, "team": team, "teamName": team } as <string, any>)
+  step = (run: string, team: string, station: string, n: int, member: string, kind: string, u: <string, any>?, added: int, result: string, at: int) => ({ ...who(run, team), "kind": "step", "station": station, "step": "${station}-${n}", "title": "work", "key": "work", "role": member, "member": member, "employee": "e-${member}", "agentKind": kind, "usage": u, "lines": { "added": added, "removed": 1 }, "result": result, "started": at - 1000, "ended": at, "at": at } as <string, any>)
+  stations = (start: int, upto: int) => STATIONS.take(upto).map((s) => { "id": s, "status": "passed", "started": start + STATIONS.indexOf(s) * 3_600_000, "ended": start + (STATIONS.indexOf(s) + 1) * 3_600_000, "steps": 1, "failed": 0 })
+  [
+    step("a", "red", "analysis", 1, "analyst", "local", usage(100, 50, 0.0, "nuclear-developer", "gemma4:e2b"), 0, "passed", MONDAY + 1000),
+    step("a", "red", "code", 1, "developer", "agent", usage(1000, 500, 0.5, "claude-code", "haiku"), 40, "failed", MONDAY + 2000),
+    step("a", "red", "code", 2, "developer", "agent", usage(800, 400, 0.25, "claude-code", "haiku"), 20, "passed", MONDAY + 3000),
+    step("b", "blue", "analysis", 1, "analyst", "agent", usage(null, null, 0.0, "codex", ""), 0, "failed", MONDAY + DAY + 1000),
+    { ...who("a", "red"), "kind": "run", "result": "waiting", "created": MONDAY, "ended": null, "stations": stations(MONDAY, 1), "gates": [{ "id": "gate-analysis", "kind": "gate", "station": "analysis", "opened": MONDAY + 3_600_000, "answered": null }], "retries": 0, "costUsd": 0.0, "budgetUsd": 5.0, "at": MONDAY + 3_600_000 },
+    { ...who("a", "red"), "kind": "run", "result": "passed", "created": MONDAY, "ended": MONDAY + 6 * 3_600_000, "stations": stations(MONDAY, 6), "gates": [{ "id": "gate-analysis", "kind": "gate", "station": "analysis", "opened": MONDAY + 3_600_000, "answered": MONDAY + 7_200_000 }], "retries": 0, "costUsd": 0.75, "budgetUsd": 5.0, "at": MONDAY + 6 * 3_600_000 },
+    { ...who("b", "blue"), "kind": "run", "result": "failed", "created": MONDAY + DAY, "ended": MONDAY + DAY + 60_000, "stations": stations(MONDAY + DAY, 1), "gates": [] as any[], "retries": 1, "costUsd": 0.0, "budgetUsd": 2.0, "at": MONDAY + DAY + 60_000 },
+    { "kind": "chat", "project": "app", "root": "/p/app", "team": "red", "teamName": "red", "member": "analyst", "employee": "e-analyst", "role": "analyst", "channel": "general", "agentKind": "local", "usage": usage(10, 5, 0.0, "nuclear-developer", "qwen3.5:2b"), "result": "answered", "at": MONDAY + 4000 },
+  ]
+
+testTheReportsOfAFixtureLedger(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  all = fixtureLedger()
+  f = filterOf("", "", "", "2026-11-16", "2026-11-17", "day")
+  m = metricsOf(all, f, "", MONDAY + 2 * DAY)
+  for v in VIEWS
+    expect(m[v] != null, v)
+  bill: <string, any> = m["bill"]!
+  total: <string, any> = bill["total"]!
+  expect(total["inTokens"] == 1910 and total["outTokens"] == 955 and total["costUsd"] == 0.75 and total["calls"] == 5 and total["notReported"] == 1, json.dumps(total))
+  expect((bill["paid"] as <string, any>)["costUsd"] == 0.75 and (bill["local"] as <string, any>)["inTokens"] == 110)
+  expect((bill["byModel"] as <string, any>[])[0]["model"] == "haiku" and (bill["byPeriod"] as any[]).length == 2)
+  budget: <string, any> = bill["budget"]!
+  expect(budget["runs"] == 2 and budget["spentUsd"] == 0.75 and budget["budgetUsd"] == 7.0)
+  th: <string, any> = m["throughput"]!
+  expect(th["delivered"] == 1 and (th["velocity"] as <string, any>[])[0]["team"] == "red")
+  cy: <string, any> = m["cycle"]!
+  expect((cy["delivered"] as <string, any>)["median"] == 6 * 3_600_000 and (cy["specs"] as any[]).length == 2)
+  expect((cy["stations"] as <string, any>[])[0]["station"] == "analysis")
+  bd: <string, any> = m["burndown"]!
+  periods: <string, any>[] = bd["periods"]!
+  expect(bd["scope"] == 2 and periods.length == 2 and periods[0]["remaining"] == 0 and periods[1]["remaining"] == 1, json.dumps(periods))
+  fl: <string, any> = m["flow"]!
+  last: <string, any> = (fl["periods"] as <string, any>[]).last["counts"]!
+  expect(last["delivered"] == 1 and last["stopped"] == 1)
+  wt: <string, any> = m["waiting"]!
+  expect((wt["answered"] as <string, any>)["median"] == 3_600_000 and (wt["answered"] as <string, any>)["count"] == 1)
+  q: <string, any>[] = (m["quality"] as <string, any>)["stations"]!
+  code = q.find((r) => r["station"] == "code")!
+  expect(code["steps"] == 2 and code["failed"] == 1 and code["retried"] == 1 and code["firstTryRate"] == 1.0)
+  ppl: <string, any> = m["people"]!
+  members: <string, any>[] = ppl["members"]!
+  dev = members.find((r) => r["team"] == "red" and r["member"] == "developer")!
+  expect(members[0]["member"] == "developer" and dev["added"] == 60 and dev["removed"] == 2 and dev["passRate"] == 0.5)
+  expect(members.find((r) => r["team"] == "red" and r["member"] == "analyst")!["answers"] == 1)
+  ind: <string, any> = m["indicators"]!
+  expect(ind["costPerDeliveredUsd"] == 0.75 and ind["usefulLines"] == 20 and ind["tokensPerUsefulLine"] == 2850 / 20, json.dumps(ind))
+  // a team, a member, a week, one view
+  red = metricsOf(all, filterOf("", "red", "", "", "", "week"), "people", MONDAY + 2 * DAY)
+  expect(red["bill"] == null and ((red["people"] as <string, any>)["members"] as any[]).length == 2)
+  mine = metricsOf(all, filterOf("", "", "developer", "", "", "day"), "bill", MONDAY + 2 * DAY)
+  expect(((mine["bill"] as <string, any>)["total"] as <string, any>)["calls"] == 2)
+  // a bad view or date is said
+  for bad in [() => metricsOf(all, f, "velocity"), () => metricsOf(all, filterOf("", "", "", "yesterday", "", "day"))]
+    try
+      bad()
+      expect(false, "accepted")
+    catch e
+      expect(isinstance(e, ValueError))
+
+testTheMetricsCommandReadsTheLedgerOfEveryProject(tmpPath: Path, monkeypatch: any, capsys: any) void
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  for e in fixtureLedger()
+    ledgerAppend(e)
+  monkeypatch.chdir(tmpPath)
+  expect(metricsLine(["--view", "bill", "--json"]) == 0)
+  said = json.loads(capsys.readouterr().out)
+  expect(((said["bill"] as <string, any>)["total"] as <string, any>)["costUsd"] == 0.75)
+  expect(metricsLine(["--by", "month", "--json"]) == 1)
+  // the MCP tool answers the same
+  tool = json.loads(BuilderTools("${tmpPath}").metricsTool(view = "throughput"))
+  expect((tool["throughput"] as <string, any>)["delivered"] == 1)

@@ -1,7 +1,7 @@
 ---
 status: in-progress
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-19
 related: [requirements.md, design.md]
 ---
 # Spec 015: Nuclear Monitor — Tasks
@@ -30,3 +30,10 @@ Left:
 - [ ] The report of an app on a phone (Flutter: the VM service's `postEvent`) and in a browser tab (a route of the
       dev server); the Dart runtime without `dart:io` on the web.
 - [ ] The Monitor in Android Studio / IntelliJ.
+
+## Phase 3: the automatic Monitor (the user, 2026-11-19; not started)
+
+- [ ] The page uses the workspace's project, starts the measured run itself (terminal or device, always visible),
+      receives a browser's report through a collector of the extension, keeps the monitor on with
+      `.nuclear/monitor/on`, and shows designed states for an end user (no path, command or raw error in the body).
+      The full list: `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md` ("The automatic Monitor").

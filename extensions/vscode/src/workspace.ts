@@ -10,6 +10,7 @@ import * as fs from 'node:fs';
 import { savedInside } from './savedProjects';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { Launch, logFile, logSize, reason, RUN_STALL_MS, RunFollower, RunStep } from '../../tools/nuclear-device-manager/src/launch-log';
 import { isInstalled } from './card';
 import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
 import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
@@ -60,6 +61,15 @@ export function tools(): Tool[] {
       about: l10n.t('The teams of the software factory: each one a crew of employees by role (analyst, architect, developer, QA, DevOps), who works each one (a local agent or a provider) and its budget; a new team in five steps.'),
       planned: [],
       command: 'nuclear.builder.teams',
+    },
+    {
+      id: 'reports',
+      label: l10n.t('Reports'),
+      short: l10n.t('REPORTS'),
+      key: 'Ctrl+Alt+K',
+      about: l10n.t("What the factory spent and made: the bill of tokens and money (local against paid, the budget used) and the reports of its work like a sprint's (throughput, cycle time, burndown, cumulative flow, the gates waiting for you, quality, each member's work), from nuclear-builder metrics."),
+      planned: [],
+      command: 'nuclear.builder.reports',
     },
     {
       id: 'atlas',
@@ -246,7 +256,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     return ws;
   }
   // the welcome page at startup, unless the user turned it off or the window restored editors
-  if (vscode.workspace.getConfiguration().get<boolean>(WELCOME, true) && vscode.window.tabGroups.all.every((g) => g.tabs.length === 0)) {
+  if (vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) && vscode.window.tabGroups.all.every((g) => g.tabs.length === 0)) {
     WelcomePanel.show(context, ws);
   }
   return ws;
@@ -460,11 +470,14 @@ class Workspace implements vscode.WebviewViewProvider {
     if (a.id === 'api') return this.openTool('http-connections');
     let cmd = TERMINAL_COMMANDS[p.platform ?? '']?.[a.id];
     if (!cmd) return;
-    if (p.platform !== 'mobile' && (a.id === 'run' || a.id === 'test') && !isInstalled(p.root)) cmd = `nuclear install && ${cmd}`;
+    // `nuclear run` installs the packages itself (a step of its log); `test` does not
+    if (p.platform !== 'mobile' && a.id === 'test' && !isInstalled(p.root)) cmd = `nuclear install && ${cmd}`;
     const name = `${p.name} · ${a.id}`;
     const terminal = vscode.window.terminals.find((t) => t.name === name) ?? vscode.window.createTerminal({ name, cwd: p.root });
     terminal.show(true);
+    const offset = logSize(p.root);
     terminal.sendText(cmd);
+    if (a.id === 'run') followRun(p.root, p.name, offset, () => void this.action(a!.id));
   }
 
   /** The Dart extension launches Flutter only for a project inside the workspace folders ("Dart-only workspace"):
@@ -824,6 +837,8 @@ const TOOL_ICONS: Record<string, string> = {
   builder: '<path d="M3 20.5V11l5 3v-3l5 3v-3l5 3V3.5h3v17z"/><path d="M6.5 17.5h1.5M11.25 17.5h1.5M16 17.5h1.5"/>',
   // three people: the company's crews
   teams: '<circle cx="12" cy="8" r="3.2"/><path d="M6.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="5.5" cy="10" r="2.2"/><path d="M1.8 18a3.8 3.8 0 0 1 5-3.5"/><circle cx="18.5" cy="10" r="2.2"/><path d="M22.2 18a3.8 3.8 0 0 0-5-3.5"/>',
+  // a bar chart with a coin: what the factory made and what it cost
+  reports: '<path d="M3 20.5h18M5.5 20.5v-6M10 20.5V9.5M14.5 20.5v-4"/><circle cx="17.5" cy="7" r="3.5"/><path d="M17.5 5.3v3.4"/>',
   // a chat bubble with the agent's spark
   atlas: '<path d="M4.5 4h15A1.5 1.5 0 0 1 21 5.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h-1A1.5 1.5 0 0 1 3 15.5v-10A1.5 1.5 0 0 1 4.5 4z"/><path d="M12 6.8l1.1 2.8 2.8 1.1-2.8 1.1-1.1 2.8-1.1-2.8-2.8-1.1 2.8-1.1z"/>',
   // a plug, its signal both ways (REST and WebSockets)
@@ -881,6 +896,7 @@ export function stripHtml(webview: vscode.Webview): string {
   @media (prefers-reduced-motion: reduce) { .tool .badge { animation: none; } }
   .t-builder { --tc: var(--vscode-nuclearHttpConnections-put, var(--vscode-charts-yellow, #cca700)); }
   .t-teams { --tc: var(--vscode-nuclearHttpConnections-component, var(--vscode-charts-purple, #b180d7)); }
+  .t-reports { --tc: var(--vscode-nuclearHttpConnections-put, var(--vscode-charts-yellow, #cca700)); }
   .t-atlas { --tc: var(--vscode-nuclearHttpConnections-post, var(--vscode-charts-green, #89d185)); }
   .t-http-connections { --tc: var(--vscode-nuclearHttpConnections-get, var(--vscode-charts-blue, #75beff)); }
   .t-devices { --tc: var(--vscode-nuclearHttpConnections-platform, var(--vscode-charts-green, #89d185)); }
@@ -1467,7 +1483,7 @@ ${list}
 <h2>${w.tools}</h2>
 <table>${tools().map((t) => `<tr><td><kbd>${t.key}</kbd></td><td><b>${esc(t.label)}</b>${t.planned.length ? ` <span class="muted">${w.templateTag}</span>` : ''}<br><span class="muted">${esc(t.about)}</span></td></tr>`).join('')}</table>
 <h2>${w.startup}</h2>
-<label><input type="checkbox" id="startup" ${vscode.workspace.getConfiguration().get<boolean>(WELCOME, true) ? 'checked' : ''}> ${w.startupLabel}</label>
+<label><input type="checkbox" id="startup" ${vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) ? 'checked' : ''}> ${w.startupLabel}</label>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   document.querySelectorAll('.project').forEach((p) => p.addEventListener('click', () => vscode.postMessage({ type: 'project', root: p.dataset.root })));
@@ -1522,3 +1538,65 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/** ▷ Serve in the terminal, followed through the lines `nuclear run` appends to the project's log: a progress
+ * notification with its steps until the server answers; a failure or a stall shows why, Show the log and Try again. */
+function followRun(root: string, name: string, offset: number, again: () => void): void {
+  const steps: Record<RunStep, string> = {
+    build: l10n.t('Building the project'),
+    install: l10n.t('Installing the packages'),
+    serve: l10n.t('Starting the server'),
+    live: l10n.t('Ready'),
+  };
+  void vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `${name} · ▷` }, (progress) =>
+    new Promise<void>((done) => {
+      let finished = false;
+      const end = () => {
+        if (finished) return;
+        finished = true;
+        clearInterval(timer);
+        done();
+      };
+      const fail = async (why: string, lines: string[]) => {
+        end();
+        const log = l10n.t('Show the log');
+        const retry = l10n.t('Try again');
+        const detail = lines.length ? `\n${lines.join('\n')}` : '';
+        const choice = await vscode.window.showErrorMessage(l10n.t('{0} did not start: {1}', name, why) + detail, log, retry);
+        if (choice === log) void vscode.window.showTextDocument(vscode.Uri.file(logFile(root)!), { preview: true });
+        if (choice === retry) again();
+      };
+      const launch: Launch<RunStep> = new Launch<RunStep>(
+        undefined,
+        (l) => progress.report({ message: steps[l.step] }),
+        (l) => void fail(l10n.t('it got stuck: {0}', steps[l.step]), reason(l.output)),
+        RUN_STALL_MS,
+      );
+      const follower = new RunFollower(root, launch, (why) => void fail(why, reason(launch.output)), offset);
+      let servedAt = 0;
+      progress.report({ message: steps.build });
+      let asking = false;
+      const timer = setInterval(() => {
+        follower.poll();
+        if (launch.done && !finished && launch.step !== 'live') return; // fail() runs
+        if (launch.step === 'live') return end();
+        // the server's address answers: ready
+        if (launch.step === 'serve' && follower.url && !asking) {
+          asking = true;
+          fetch(follower.url, { signal: AbortSignal.timeout(2000) })
+            .then(() => {
+              launch.to('live');
+              void vscode.window.showInformationMessage(l10n.t('{0} is ready at {1}', name, follower.url!));
+              end();
+            })
+            .catch(() => undefined)
+            .finally(() => (asking = false));
+        }
+        // a server without an address to ask: running once it has been up a few seconds; its own lines are in the terminal
+        if (launch.step === 'serve' && !follower.url) {
+          servedAt ||= Date.now();
+          if (Date.now() - servedAt > 4000) (launch.to('live'), end());
+        }
+      }, 700);
+    }),
+  );
+}

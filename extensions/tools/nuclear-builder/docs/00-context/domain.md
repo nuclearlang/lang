@@ -32,7 +32,9 @@ the editors and the terminal as the `nuclear-builder` process.
 | Piece | One file to write, with its task | the plan; `## Pieces` of a spec |
 | Strategy | The kind of request and the plan of that kind; it decides the stations that run | `run.analysis`; `- Strategy:` of the spec |
 | Journal | The readable record of a run | `.nuclear/builder/runs/<id>.md` |
-| Ledger | Every file a run wrote, with what was there before | `writes` of the run file |
+| Ledger | Every file a run wrote, with what was there before (and the lines it added and removed) | `writes` of the run file |
+| The factory's ledger | One line per step, per end of a run and per chat answer, across every project: who, where, the usage (tokens, money, time), the lines, the result | `~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl` ([reports.md](../02-architecture/reports.md)) |
+| Usage | What a provider's call used, as it reported it: `{inTokens, outTokens, costUsd, ms, provider, model}`; a count not reported is null | `usage` of a step, `Outcome.usage` |
 | Project map | Every declaration of the project with its kind, description and members, written by the transpiler | `.nuclear/map.md` |
 | Line settings | The commands, the gates, the stations that run | `.nuclear/builder.json` |
 

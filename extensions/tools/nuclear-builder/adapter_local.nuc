@@ -154,4 +154,9 @@ localAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) =
   for t in (data["trace"] ?? []) as <string, any>[]
     say({ "type": "trace", "step": "${t["step"] ?? ""}", "detail": "${t["detail"] ?? ""}" })
   text = "${data["report"] ?? data["code"] ?? json.dumps(data)}"
-  Outcome(true, text, collectDocuments(work, text), [], 0, events, "", data)
+  // the tokens Ollama counted for the answer (the Developer's `usage`); a Developer that does not say: not reported
+  said: <string, any> = data["usage"] ?? ({} as <string, any>)
+  found: <string, any> = { "model": said["model"] ?? "" }
+  addTokens(found, "inTokens", said["inTokens"])
+  addTokens(found, "outTokens", said["outTokens"])
+  Outcome(true, text, collectDocuments(work, text), [], 0, events, "", data, found)

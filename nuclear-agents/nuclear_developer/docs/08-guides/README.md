@@ -103,8 +103,8 @@ curl -s -X POST 127.0.0.1:7879/developer/code -H 'content-type: application/json
        "path": "components/tasks/domain/models/task_models.nuc", "kind": "model"}'
 ```
 
-The answer is `{code, report, check, attempts, trace}`: the file, what the compiler said, how many attempts it took
-and the steps the agent followed.
+The answer is `{code, report, check, attempts, trace, usage}`: the file, what the compiler said, how many attempts it
+took, the steps the agent followed and the tokens its models used.
 
 ## How well it does
 

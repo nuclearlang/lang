@@ -119,6 +119,9 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
   spentUsd: double = 0.0
   confirmed: boolean = false
   turn: int = 0
+  // the usage of the answer being given (its provider's calls summed) and when it began: its line of the ledger
+  answerUsage: <string, any>? = null
+  answerStarted: int = 0
 
   file() Path
     Path(root, CHAT_DIR, "${id}.jsonl")
@@ -229,6 +232,8 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
   answer(text: string) void
     turn += 1
     step = "turn-${turn}"
+    answerUsage = null
+    answerStarted = nowMs()
     keep({ "role": "you", "text": text })
     cost = 0.0
     for round in 0..CHAT_ROUNDS
@@ -240,6 +245,7 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
         done(step, "failed", cost, "the chat spent its budget (${budget().toFixed(2)} USD)")
         return
       got: Outcome = callProvider(step, left)
+      answerUsage = sumUsage(answerUsage, got.usage)
       cost += got.costUsd
       spentUsd += got.costUsd
       if not got.ok
@@ -310,6 +316,16 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
     if not error.isEmpty
       e["error"] = error
     out(e)
+    // the factory's ledger (usage.nuc): one line per answer, with who answered and where
+    card = projectCard(root)
+    entry: <string, any> = { "kind": "chat", "project": "${card["name"] ?? Path(root).name}", "root": root, "chat": id, "step": step, "agentKind": kind(), "usage": answerUsage, "result": status, "started": answerStarted, "ended": nowMs(), "at": nowMs() }
+    for k, v in ledgerWho()
+      entry[k] = v
+    ledgerAppend(entry)
+
+  // Who answers, as the ledger names them: the general agent of a conversation of the Builder.
+  ledgerWho() <string, any>
+    { "team": "", "teamName": "", "member": "", "employee": "", "role": "chat", "channel": "" }
 
   // One call of the provider with the conversation so far; what an agent changed in the roles' folder is put back.
   callProvider(step: string, left: double) Outcome
@@ -326,7 +342,7 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
     work = Work(root, "${Path(root, CHAT_DIR)}", prompt, {}, [], "${given["model"] ?? ""}", paid() ? left : 0, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, inputs)
     roles = rolesDir()
     before = roleFiles(roles)
-    got = runAdapter(adapter!, persona(), "chat", work, (e) => onEvent(step, e))
+    got = runAdapter(adapter!, persona(), "chat", work, (e) => onEvent(step, e), provider())
     fixed = restoreRoleFiles(roles, before)
     if not fixed.isEmpty
       out({ "type": "event", "step": step, "event": { "type": "trace", "step": "guard", "detail": "a role's files are not the chat's: put back ${fixed.join(", ")}" } })

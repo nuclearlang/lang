@@ -330,14 +330,15 @@ contents(root: string) <string, string>
             throw e
   seen
 
-// Notes in the ledger every file a step changed, with what was there before (null: it did not exist) and the
-// digest of what it left.
+// Notes in the ledger every file a step changed, with what was there before (null: it did not exist), the
+// digest of what it left and the lines it added and removed (spec 017).
 ledger(run: <string, any>, step: string, before: <string, string>) string[]
   after = contents(run["root"]!)
   changed = [...after.keys.filter((f) => before[f] != after[f]), ...before.keys.filter((f) => not (f in after))].sorted()
   writes: <string, any>[] = run["writes"]!
   for f in changed
-    writes.add({ "path": f, "step": step, "before": before[f], "at": nowMs(), "after": after[f] == null ? null : digestOf(after[f]!) })
+    delta = lineDelta(before[f], after[f])
+    writes.add({ "path": f, "step": step, "before": before[f], "at": nowMs(), "after": after[f] == null ? null : digestOf(after[f]!), "added": delta["added"], "removed": delta["removed"] })
   changed
 
 // Undoes the writes of the steps that did not pass, newest first: each file goes back to what it was. A file changed

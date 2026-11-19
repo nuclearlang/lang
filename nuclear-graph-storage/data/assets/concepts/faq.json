@@ -173,7 +173,8 @@
    "body": [
     "- The graph refuses web pages (any request with an `Origin` header), gives nothing without a token you allowed (`nuclear-graph connect`, `allow`), and stores its texts encrypted (AES-256-GCM, the key in your keyring).",
     "- The internet tools (`web_read`) refuse local addresses.",
-    "- The Builder lets you choose who leads: *Claude leads, the local developer writes* (the default) or *Local agents only*. What a frontier model reads leaves the machine, as with any frontier model (ADR-platform-0003)."
+    "- The Builder lets you choose who leads: *Claude leads, the local developer writes* (the default) or *Local agents only*. What a frontier model reads leaves the machine, as with any frontier model (ADR-platform-0003).",
+    "- What the factory spent and made (the factory's ledger of tokens, money, time and lines, `~/.config/nuclearlang/factory/ledger/`) stays on your machine; the reports read it there (`nuclear-builder metrics`)."
    ],
    "keys": [
     "privacy",
@@ -201,7 +202,8 @@
     "nuclear-graph-storage/docs/05-standards/security.md#How it is protected",
     "nuclear-agents/nuclear_developer/docs/08-guides/README.md",
     "extensions/tools/nuclear-builder/docs/00-context/vision.md#Who leads, and why",
-    "docs/03-adr/0003-the-ai-loop.md"
+    "docs/03-adr/0003-the-ai-loop.md",
+    "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
    ],
    "meta": {
     "topic": "ai"

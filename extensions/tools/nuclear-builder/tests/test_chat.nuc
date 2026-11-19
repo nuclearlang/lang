@@ -13,6 +13,8 @@ chatProject(tmpPath: Path, monkeypatch: any) string
   root.joinpath(".nuclear").mkdir()
   root.joinpath(".nuclear", "project.json").writeText(json.dumps({ "name": "app", "platform": "backend" }))
   monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("roles")}")
+  // the ledger of the answers goes to the test's own factory folder
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
   monkeypatch.chdir(root)
   "${root}"
 

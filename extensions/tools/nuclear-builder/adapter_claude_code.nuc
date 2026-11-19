@@ -6,7 +6,7 @@ use pathlib{ Path }
 // sub-agent `agents/<role>.md`; the role is also the session's own (`--append-system-prompt`). The Nuclear MCP
 // server and the Builder's (`nuclear_builder`) are the only ones (`--mcp-config`, `--strict-mcp-config`); the built-in tools are the file tools, no shell
 // (commands are data: `.nuclear/builder.json`). Claude Code brings its own login and says what a call cost
-// (`total_cost_usd`); the run's budget is its `--max-budget-usd`. A chat's turn (`inputs.stream`) adds
+// (`total_cost_usd`) and its tokens (`usage`); the run's budget is its `--max-budget-usd`. A chat's turn (`inputs.stream`) adds
 // `--include-partial-messages`: its text as it is written, `text-delta` events.
 
 CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep"]
@@ -68,7 +68,14 @@ claudeLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, 
     delta: <string, any> = streamed["delta"] ?? ({} as <string, any>)
     if streamed["type"] == "content_block_delta" and delta["type"] == "text_delta"
       emit({ "type": "text-delta", "text": delta["text"] ?? "" })
+  else if kind == "system" and ev["subtype"] == "init"
+    found["model"] = ev["model"] ?? ""
   else if kind == "result"
+    // its tokens: the input with what the cache wrote and read, the output
+    used: <string, any> = ev["usage"] ?? ({} as <string, any>)
+    for key in ["input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"]
+      addTokens(found, "inTokens", used[key])
+    addTokens(found, "outTokens", used["output_tokens"])
     found["cost"] = ev["total_cost_usd"] ?? 0
     found["text"] = ev["result"] ?? found["text"]
     found["failed"] = ev["is_error"] == true

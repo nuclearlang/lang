@@ -4,6 +4,10 @@ All notable changes to nuclear-jetbrains are written here; versions follow [Sema
 
 ## Unreleased
 
+- 0.74.0: no change of its own (`nuclear run` writes the project's run log; the VS Code devices' and Serve's steps).
+- 0.73.2: no change of its own (the VS Code devices' launch log).
+- 0.73.1: no change of its own (the VS Code launch of a mobile app).
+- 0.73.0: the version of VS Code's Reports page (spec 017); the Builder's command records every step's usage in the factory's ledger, and `nuclear-builder metrics` reads it here too (no Reports window yet).
 - 0.72.0: the language server's new diagnostics (a Result is always handled, N0117, N0118, N0220, N0224) and the Python dialect's lazy imports.
 - 0.71.0: the version of VS Code's chat, toolchains and light local chat; nothing changes in this extension.
 - 0.70.0: the version of VS Code's skills, models, notifications and DevOps; nothing changes in this extension.

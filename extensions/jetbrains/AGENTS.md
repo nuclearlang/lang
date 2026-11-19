@@ -1,6 +1,6 @@
 # JetBrains plugin
 
-The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.72.0): the client of the language
+The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.74.0): the client of the language
 server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects
 that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*HTTP Connections*, *Nuclear Builder*),
 whose code is in `../tools/nuclear-http-connections/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What

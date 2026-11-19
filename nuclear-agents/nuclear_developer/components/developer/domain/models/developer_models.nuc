@@ -18,6 +18,8 @@ PieceReply
   check: string
   attempts: int
   trace: <string, string>[]
+  // the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)
+  usage: <string, any> = {}
 
 // A spec to split into pieces.
 PlanRequest
@@ -37,6 +39,8 @@ PlanReply
   trace: <string, string>[]
   tree: string = ""
   limits: string[] = []
+  // the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)
+  usage: <string, any> = {}
 
 // A request to analyse before a run: which kind of request it is.
 AnalyzeRequest
@@ -69,6 +73,8 @@ Analysis
   limits: string[]
   report: string
   trace: <string, string>[]
+  // the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)
+  usage: <string, any> = {}
 
 // What the Nuclear Smart Graph gave an agent for a task.
 Recall

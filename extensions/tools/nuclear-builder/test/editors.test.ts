@@ -21,6 +21,10 @@ import { differences, draftOf, filterPool, missingRoles, paidMembers, roleCounts
 import { SQUAD_SCRIPT } from '../src/teams/page';
 import { libraryGroups, mdHtml, memberSkills, skillFields, skillMarkdown, skillSlug } from '../src/teams/skills';
 import { PAGE_ACTIONS } from '../src/actions';
+import { barsSvg, fmtMs, fmtPct, fmtTokens, fmtUsd, linesSvg, splitShare, stackSvg } from '../src/reports/charts';
+import { metricsArgs } from '../src/reports/metrics';
+import { filterOf } from '../src/reports/host';
+import { REPORTS_SCRIPT } from '../src/reports/page';
 import { chatProvider } from '../src/settings';
 import { backoff, checkConnections, DEFAULT_RETRY, retryAfter, toolEnv, transientStatus } from '../src/support';
 import { templatesOf } from '../../nuclear-atlas/src/chat';
@@ -634,7 +638,7 @@ test('every page dictionary has the Spanish of each English key', async () => {
   const dicts: Record<string, { en: Record<string, string>; es: Record<string, string> }> = {
     ...(await import('../../../vscode/src/welcomeL10n')), ...(await import('../../../vscode/src/setupL10n')), ...(await import('../../../vscode/src/workspaceL10n')),
     ...(await import('../../../vscode/src/settingsL10n')), LANGUAGE: (await import('../../../vscode/src/i18n')).LANGUAGE, ...(await import('../../nuclear-atlas/src/l10n')),
-    ...(await import('../src/teams/l10n')), ...(await import('../src/l10n')), ...(await import('../../nuclear-device-manager/src/l10n')), ...(await import('../../nuclear-http-connections/src/l10n')),
+    ...(await import('../src/teams/l10n')), ...(await import('../src/reports/l10n')), ...(await import('../src/l10n')), ...(await import('../../nuclear-device-manager/src/l10n')), ...(await import('../../nuclear-http-connections/src/l10n')),
   } as never;
   const names = Object.keys(dicts).filter((k) => dicts[k]?.en && dicts[k]?.es);
   assert.ok(names.length >= 12, names.join());
@@ -737,7 +741,8 @@ test('every action of the pages names a command of the inventory (ADR-platform-0
     const body = src.slice(at, src.indexOf('\n  }\n', at));
     return [...body.matchAll(/^ {6}case '([^']+)':/gm)].map((m) => m[1]);
   };
-  const messages = [...receive(read('src/panel.ts')), ...receive(read('src/teams/host.ts'))];
+  const messages = [...receive(read('src/panel.ts')), ...receive(read('src/teams/host.ts')), ...receive(read('src/reports/host.ts'))];
+  assert.ok(messages.includes('reports:load'));
   assert.ok(messages.length > 30);
   for (const m of messages) {
     const command = PAGE_ACTIONS[m];
@@ -781,4 +786,98 @@ test('a member lists its own skills first, then its library ones, then what it i
     ['i18n', 'library', 'agent', false, []],
     ['payments', 'team', 'team', true, ['library']],
   ]);
+});
+
+// ---------- spec 017: the Reports page ----------
+
+test('the reports read numbers as people do, and a count not reported stays a dash', () => {
+  assert.equal(fmtTokens(950), '950');
+  assert.equal(fmtTokens(12_345), '12.3k');
+  assert.equal(fmtTokens(4_100_000), '4.1M');
+  assert.equal(fmtTokens(null), '—');
+  assert.equal(fmtUsd(1.5), '$1.50');
+  assert.equal(fmtUsd(0.0042), '$0.0042');
+  assert.equal(fmtUsd(0), '$0.00');
+  assert.equal(fmtMs(45_000), '45 s');
+  assert.equal(fmtMs(12 * 60_000), '12 min');
+  assert.equal(fmtMs(3.5 * 3_600_000), '3.5 h');
+  assert.equal(fmtPct(0.5), '50%');
+  assert.equal(fmtPct(null), '—');
+  assert.deepEqual(splitShare(3, 1), { a: 75, b: 25 });
+  assert.deepEqual(splitShare(0, 0), { a: 0, b: 0 });
+});
+
+test('the charts are inline SVG: a bar per point, parts stacked, a line per series; a label is text, never markup', () => {
+  const bars = barsSvg([{ label: '<b>x</b>', value: 2 }, { label: 'y', value: 4 }], 'var(--hud)');
+  assert.equal((bars.match(/<rect /g) ?? []).length, 2);
+  assert.ok(bars.startsWith('<svg') && bars.includes('&lt;b&gt;x&lt;/b&gt;') && !bars.includes('<b>'));
+  assert.equal(barsSvg([], 'red'), '');
+  const stack = stackSvg([{ label: 'd1', parts: [1, 2] }, { label: 'd2', parts: [0, 3] }], ['a', 'b'], ['in', 'out']);
+  assert.equal((stack.match(/<rect /g) ?? []).length, 3);
+  const lines = linesSvg(['d1', 'd2', 'd3'], [{ name: 'left', values: [3, 2, 0], color: 'c' }, { name: 'done', values: [0, 1, 3], color: 'd' }]);
+  assert.equal((lines.match(/<path d="M/g) ?? []).length, 3);
+  assert.equal((lines.match(/<circle /g) ?? []).length, 6);
+});
+
+test('the page asks the command only what it takes: the filter kept to its options', () => {
+  assert.deepEqual(metricsArgs({ team: 'red', from: '2026-11-01', by: 'week', view: 'people' }), ['metrics', '--team', 'red', '--from', '2026-11-01', '--by', 'week', '--view', 'people', '--json']);
+  assert.deepEqual(filterOf({ project: ' app ', from: 'yesterday', to: '2026-11-19', by: 'month', view: 'velocity', member: '' }), { project: 'app', team: undefined, member: undefined, from: undefined, to: '2026-11-19', by: 'day', view: undefined });
+});
+
+test('the Reports page draws the bill and every view, and asks again when a filter changes', () => {
+  const on: Record<string, (e: unknown) => void> = {};
+  const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f) };
+  const sent: { type: string; [k: string]: unknown }[] = [];
+  const window: { Reports?: { mount(el: unknown, post: (m: unknown) => void): void; receive(m: unknown): boolean } } = {};
+  new Function('window', 'T', 't', 'langButton', REPORTS_SCRIPT)(window, {}, (k: string, ...a: unknown[]) => [k, ...a].join(' '), () => '');
+  const page = window.Reports!;
+  page.mount(el, (m) => sent.push(m as never));
+  assert.equal(sent[0].type, 'reports:ready');
+  const total = { inTokens: 1000, outTokens: 500, costUsd: 0.75, ms: 10, calls: 3, notReported: 1 };
+  const data = {
+    filter: {}, lines: 3, runs: 1,
+    bill: { total, local: { ...total, costUsd: 0, inTokens: 100, outTokens: 50 }, paid: { ...total, inTokens: 900, outTokens: 450 }, byPeriod: [{ period: '2026-11-16', ...total }], byModel: [{ provider: 'claude-code', model: 'haiku', ...total }], byTeam: [], byMember: [], byProject: [{ project: 'app', root: '/p/app', ...total }], budget: { runs: 1, spentUsd: 0.75, budgetUsd: 5, used: 0.15 }, runs: [] },
+    throughput: { delivered: 1, periods: [{ period: '2026-11-16', delivered: 1 }], velocity: [{ team: 'red', delivered: 1, perPeriod: 1 }] },
+    cycle: { specs: [], delivered: { count: 1, median: 60_000 }, stations: [] },
+    burndown: { scope: 1, delivered: 1, periods: [{ period: '2026-11-16', scope: 1, delivered: 1, remaining: 0 }] },
+    flow: { columns: ['pending', 'delivered'], periods: [{ period: '2026-11-16', counts: { pending: 0, delivered: 1 } }] },
+    waiting: { open: [{ run: 'a', project: 'app', gate: 'gate-analysis', station: 'analysis', ms: 60_000 }], answered: { count: 0 }, byStation: [] },
+    quality: { stations: [{ station: 'code', steps: 2, passed: 1, failed: 1, retried: 1, firstTryRate: 1 }] },
+    people: { members: [{ team: 'red', member: 'dev', role: 'developer', steps: 2, answers: 0, added: 60, removed: 2, passed: 1, failed: 1, passRate: 0.5, ...total }], byResult: ['red-dev'] },
+    indicators: { delivered: 1, costPerDeliveredUsd: 0.75, tokensPerUsefulLine: 142.5, usefulLines: 20, localTokenShare: 0.1, localUsd: 0, paidUsd: 0.75, retriesPerStation: { code: 1 } },
+  };
+  assert.ok(page.receive({ type: 'reports:data', data }));
+  assert.ok(el.innerHTML.includes('rp.bill') && el.innerHTML.includes('$0.75') && el.innerHTML.includes('<svg') && el.innerHTML.includes('rp.notReported 1'));
+  for (const view of ['throughput', 'cycle', 'burndown', 'flow', 'waiting', 'quality', 'people', 'indicators']) {
+    on.click({ target: { closest: () => ({ dataset: { tab: view } }) } });
+    assert.ok(el.innerHTML.includes('aria-selected="true" class="sel">rp.tab.' + view), view);
+  }
+  assert.ok(el.innerHTML.includes('rp.ind.costPerSpec'));
+  // the projects the reports named are offered by the filter; a change asks again
+  assert.ok(el.innerHTML.includes('value="/p/app"'));
+  on.change({ target: { dataset: { f: 'team' }, value: 'red' } });
+  assert.deepEqual(sent.at(-1), { type: 'reports:load', filter: { project: '', team: 'red', member: '', from: '', to: '', by: 'day' } });
+  page.receive({ type: 'reports:filter', team: 'red', member: 'dev' });
+  assert.equal((sent.at(-1)!.filter as { member: string }).member, 'dev');
+  assert.ok(page.receive({ type: 'reports:error', text: 'boom' }) && el.innerHTML.includes('rp.error boom'));
+  assert.equal(page.receive({ type: 'team:state' }), false);
+});
+
+test("a member's numbers from the ledger are in their panel's Summary, and its Reports opens the page filtered to them", () => {
+  const on: Record<string, (e: unknown) => void> = {};
+  const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };
+  const sent: { type: string; [k: string]: unknown }[] = [];
+  const window: { Squad?: { mount(el: unknown, post: (m: unknown) => void, o: unknown): void; receive(m: unknown): boolean } } = {};
+  new Function('window', 'T', 't', 'document', 'matchMedia', SQUAD_SCRIPT)(window, {}, (k: string, ...a: unknown[]) => [k, ...a].join(' '), { activeElement: null }, () => ({ matches: true }));
+  const squad = window.Squad!;
+  squad.mount(el, (m) => sent.push(m as never), { company: false });
+  squad.receive({ type: 'team:state', teams: [{ id: 't', name: 'T' }], team: { id: 't', name: 'T', members: [{ id: 'dev', role: 'developer', kind: 'local', provider: 'nuclear-developer', model: '', skills: [], extraSkills: [], behaviour: {}, tasks: [] }] }, roster: {} });
+  assert.ok(!el.innerHTML.includes('sq.mp.numbers'));
+  squad.receive({ type: 'team:numbers', team: 't', numbers: { dev: { steps: 4, answers: 2, added: 60, removed: 3, passed: 3, failed: 1, inTokens: 12000, outTokens: 3000, costUsd: 0 } } });
+  assert.ok(el.innerHTML.includes('sq.mp.numbers') && el.innerHTML.includes('sq.mp.numbersText 4 2 60 3 3 1 15.0k $0.00'), el.innerHTML.slice(0, 200));
+  // another team's numbers are not this one's
+  squad.receive({ type: 'team:numbers', team: 'other', numbers: {} });
+  assert.ok(el.innerHTML.includes('sq.mp.numbersText'));
+  on.click({ target: { closest: () => ({ dataset: { a: 'reports' }, disabled: false }) } });
+  assert.deepEqual(sent.at(-1), { type: 'team:reports', team: 't', member: 'dev' });
 });

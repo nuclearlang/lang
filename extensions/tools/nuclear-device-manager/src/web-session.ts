@@ -94,6 +94,7 @@ export interface WebEvents {
   network(e: NetworkEntry): void;
   address(url: string, canBack: boolean, canForward: boolean): void;
   log(line: string): void; // the dev server's and the browser's own output
+  step?(step: 'browser'): void; // the dev server answers: the browser starts
 }
 
 /** The browser to drive: `CHROME_EXECUTABLE`, then the Chromium browsers usually installed. */
@@ -171,7 +172,8 @@ export class WebSession {
       env: { ...process.env, FORCE_COLOR: '0', NUCLEAR_DEVICE: this.mark },
     });
     this.pipe(this.server, 'server');
-    await this.until(async () => (await fetch(this.url)).ok, 120, 'the dev server did not start');
+    await this.until(async () => (await fetch(this.url, { signal: AbortSignal.timeout(3000) })).ok, 120, 'the dev server did not answer in 2 minutes');
+    this.events.step?.('browser');
     const exe = browserExecutable();
     if (!exe) throw new Error('no Chromium browser found (Chrome, Chromium, Brave or Edge; or set CHROME_EXECUTABLE)');
     this.cdpPort = await freePort();
@@ -314,7 +316,7 @@ export class WebSession {
 
   /** The address of Chrome's full DevTools for this page (opened in a real browser). */
   async devtoolsUrl(): Promise<string | undefined> {
-    const targets = (await (await fetch(`http://${HOST}:${this.cdpPort}/json/list`)).json()) as { type: string; devtoolsFrontendUrl?: string }[];
+    const targets = (await (await fetch(`http://${HOST}:${this.cdpPort}/json/list`, { signal: AbortSignal.timeout(5000) })).json()) as { type: string; devtoolsFrontendUrl?: string }[];
     const page = targets.find((t) => t.type === 'page');
     return page?.devtoolsFrontendUrl && new URL(page.devtoolsFrontendUrl, `http://${HOST}:${this.cdpPort}`).href;
   }
@@ -374,9 +376,13 @@ export class WebSession {
     });
   }
 
+  /** Waits for `test` up to `seconds` (a deadline, whatever each try takes); a dev server that exits fails at once. */
   private async until(test: () => Promise<boolean>, seconds: number, error: string): Promise<void> {
-    for (let i = 0; i < seconds * 4; i++) {
+    const deadline = Date.now() + seconds * 1000;
+    while (Date.now() < deadline) {
       if (this.stopped) throw new Error('stopped');
+      const code = this.server?.exitCode;
+      if (code !== null && code !== undefined) throw new Error(`the dev server exited (code ${code}) before it answered`);
       try {
         if (await test()) return;
       } catch {

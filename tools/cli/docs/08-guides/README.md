@@ -39,6 +39,10 @@ nuclear check --json                         # every error, as JSON, for an agen
 nuclear fix .                                # apply every exact fix, then report what is left
 ```
 
+Every `nuclear run` also writes its steps, the build's errors and the server's output to the project's
+`.nuclear/logs/run.log` (with the time of each line): read it after a run that failed.
+
+
 `new` writes only `.nuc` files: for a backend, `config.nuc`, `config/project_config.nuc` and `test/app_test.nuc`.
 `gen resource` writes the entity, the input model, the repository, a use case per action, the component's facade,
 the controller and the tests, as finished code ([the generators' guide](../../../code_generator/docs/08-guides/README.md)).

@@ -5,7 +5,7 @@ use pathlib{ Path }
 // json`, `--model provider/model`, `--auto`). The role is rendered as OpenCode's own agent, `.opencode/agent/<role>.md`
 // in the run's temporary folder (`OPENCODE_CONFIG_DIR`), and the configuration there (`OPENCODE_CONFIG`) gives the
 // Nuclear MCP server and the Builder's (`nuclear_builder`) and denies the shell (commands are data: `.nuclear/builder.json`). OpenCode brings its own
-// login; the cost is the sum of what its steps report. The lines of `--format json` were read from OpenCode's
+// login; the cost and the tokens are the sums of what its steps report. The lines of `--format json` were read from OpenCode's
 // documentation, not yet from a real run (no paid call was made).
 
 renderOpenCode(role: Role, work: Work, at: Path) <string, string>
@@ -40,6 +40,13 @@ openCodeLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string
   else if kind == "step_finish" or kind == "step-finish"
     cost: double = part["cost"] ?? 0
     found["cost"] = (found["cost"] as double) + cost
+    // its tokens: the input with the cache's, the output with the reasoning's
+    tokens: <string, any> = part["tokens"] ?? ({} as <string, any>)
+    cache: <string, any> = tokens["cache"] ?? ({} as <string, any>)
+    for n in [tokens["input"], cache["read"], cache["write"]]
+      addTokens(found, "inTokens", n)
+    for n in [tokens["output"], tokens["reasoning"]]
+      addTokens(found, "outTokens", n)
     emit({ "type": "cost", "usd": cost })
   else if kind == "error"
     found["failed"] = true

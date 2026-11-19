@@ -5,10 +5,12 @@ import { applyToolchains } from './toolchainHost';
 import { SetupPanel } from './setupPanel';
 import { migrateSettings } from './migrateSettings';
 import { TeamsPanel } from '../../tools/nuclear-builder/src/teams/panel';
+import { ReportsPanel } from '../../tools/nuclear-builder/src/reports/panel';
 import { execFile } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { appendLog } from '../../tools/nuclear-device-manager/src/launch-log';
 import { l10n, registerLanguage } from './i18n';
 import { activateDebug } from './debug';
 import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
@@ -95,6 +97,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.commands.registerCommand('nuclear.ai.setup', () => SetupPanel.show(context)),
     vscode.commands.registerCommand('nuclear.builder.teams', (o?: { wizard?: boolean }) => TeamsPanel.show(context, !!o?.wizard)),
+    vscode.commands.registerCommand('nuclear.builder.reports', (f?: { team?: string; member?: string }) => ReportsPanel.show(context, f)),
   );
   void SetupPanel.offer(context);
   activateDevice(context, findSynapsis, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));
@@ -200,6 +203,7 @@ function synapsis(d: Synapsis, command: 'build' | 'repair' = 'build'): Promise<n
         const env = { ...process.env, ...d.env, NO_COLOR: '1' };
         execFile(d.command, [command], { cwd: d.root, env, maxBuffer: 64 << 20 }, (err, stdout, stderr) => {
           out.append(stdout + stderr);
+          appendLog(d.root, `nuclear ${command}${err ? ` failed (exit ${err.code})` : ''}\n${stdout}${stderr}`);
           if (!err) debugNuc?.built();
           done(err ? (typeof err.code === 'number' ? err.code : 1) : 0);
         });
@@ -221,8 +225,46 @@ function synapsisRepair(d: Synapsis, why: string): Thenable<boolean> {
 }
 
 async function showBuildError(message: string): Promise<void> {
+  // a ▷ Run on the Synapsis device waits for this build: it shows why too
+  void vscode.commands.executeCommand('nuclear.deviceLaunchFailed', message);
   const choice = await vscode.window.showErrorMessage(`Synapsis: ${message}`, l10n.t('Show Output'));
   if (choice) synapsisOutput?.show();
+}
+
+/** Starts a Flutter launch through the Dart extension, which may not be active yet: it activates by itself only
+ * when a pubspec.yaml is at most two folders deep, and a Synapsis app lives in `<project>/build/app`. Every step and
+ * failure goes to the Synapsis output, so a launch never fails in silence. */
+async function startDart(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, options?: vscode.DebugSessionOptions): Promise<boolean> {
+  const channel = (synapsisOutput ??= vscode.window.createOutputChannel('Synapsis'));
+  const root = typeof config.cwd === 'string' ? path.dirname(path.dirname(config.cwd)) : undefined;
+  // each line also to the project's log (.nuclear/logs/run.log), which outlives the window
+  const out = { appendLine: (l: string) => (channel.appendLine(l), appendLog(root, l)) };
+  const dart = vscode.extensions.getExtension('Dart-Code.dart-code');
+  if (!dart) {
+    out.appendLine(l10n.t('The Flutter extension (Dart-Code.flutter) is not installed: it runs the app.'));
+    void vscode.commands.executeCommand('nuclear.deviceLaunchFailed', l10n.t('the Flutter extension is not installed.'));
+    const install = l10n.t('Install it');
+    if ((await vscode.window.showErrorMessage(l10n.t('Synapsis: the app needs the Flutter extension to run.'), install)) === install)
+      await vscode.commands.executeCommand('workbench.extensions.installExtension', 'Dart-Code.flutter');
+    return false;
+  }
+  if (!dart.isActive) {
+    out.appendLine(l10n.t('Starting the Flutter extension…'));
+    try {
+      await dart.activate();
+    } catch (e) {
+      out.appendLine(String(e));
+      await showBuildError(l10n.t('the Flutter extension did not start.'));
+      return false;
+    }
+  }
+  out.appendLine(l10n.t('Launching {0} on {1}…', String(config.name ?? 'the app'), String(config.deviceId ?? 'the device')));
+  const ok = await vscode.debug.startDebugging(folder, config, options);
+  if (!ok) {
+    out.appendLine(l10n.t('VS Code refused the launch (see the Debug Console).'));
+    await showBuildError(l10n.t('the app could not be launched.'));
+  }
+  return ok;
 }
 
 /** The app's launch config with the given mode; the project is transpiled first (no preLaunchTask, so it
@@ -255,7 +297,7 @@ async function runApp(noDebug: boolean, deviceId?: string, extra: Record<string,
   }
   if (d.launch.type !== 'dart') return runPlatformApp(d, noDebug);
   const config = await synapsisLaunch(d, { type: 'dart', request: 'launch', name: d.launch.name, ...(deviceId && { deviceId }), ...extra });
-  if (config) await vscode.debug.startDebugging(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(d.app)), config, { noDebug });
+  if (config) await startDart(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(d.app)), config, { noDebug });
 }
 
 /** A backend or web app (the launch the CLI wrote for its dialect): build, then that launch. A web app's dev server
@@ -386,7 +428,7 @@ async function repairAndRelaunch(session: vscode.DebugSession, why: string, ende
   if (!ended) await vscode.debug.stopDebugging(session);
   const config: vscode.DebugConfiguration = { ...session.configuration, synapsisRepaired: true };
   delete config.preLaunchTask; // already built by the repair
-  await vscode.debug.startDebugging(session.workspaceFolder, config);
+  await startDart(session.workspaceFolder, config);
 }
 
 /** The Dart extension looks for Flutter apps when the window opens and ignores the ones created later

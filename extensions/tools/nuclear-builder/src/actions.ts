@@ -1,6 +1,6 @@
 // What each message of the Builder's pages does (ADR-platform-0009, docs/02-architecture/actions.md): the
 // `nuclear-builder` command it calls, or `editor` when it only draws or opens something of the editor. The pages'
-// hosts call only these commands; a test holds every message of `panel.ts` and `teams/host.ts` to this table and
+// hosts call only these commands; a test holds every message of `panel.ts`, `teams/host.ts` and `reports/host.ts` to this table and
 // every command to actions.md. No `vscode` import.
 
 export const PAGE_ACTIONS: Record<string, string> = {
@@ -60,4 +60,8 @@ export const PAGE_ACTIONS: Record<string, string> = {
   'team:skillCreate': 'skills create',
   'team:skillUpdate': 'skills update',
   'team:skillDelete': 'skills delete',
+  'team:reports': 'editor',
+  // the Reports page (reports/host.ts)
+  'reports:ready': 'metrics',
+  'reports:load': 'metrics',
 };

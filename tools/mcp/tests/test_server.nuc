@@ -37,3 +37,20 @@ testAnAgentWithNoContextLearnsNuclearFromNuclearStart() void
   expect("Start here" in start and "The work cycle with the MCP tools" in start and "example/" in start)
   doc: string = asyncio.run(tools.nuclearDoc("control"))
   expect("match" in doc)
+
+testTheRunLogToolAnswersTheTailOfTheProjectsLogAndNothingOutsideIt(tmpPath: Path) void
+  project = tmpPath.joinpath("shop")
+  project.mkdir()
+  project.joinpath("config.nuc").writeText("")
+  expect("no run log yet" in runLogTail("${project}"))
+  logs = project.joinpath(".nuclear", "logs")
+  logs.mkdir(parents = true)
+  logs.joinpath("run.log").writeText("2026-11-19T10:00:00Z step: build\n2026-11-19T10:00:01Z step: serve http://127.0.0.1:8000\n2026-11-19T10:00:02Z exited: 1\n")
+  tail = runLogTail("${project}", 2)
+  expect("last 2 of 3 lines" in tail and "exited: 1" in tail and not ("step: build" in tail))
+  // a run log that is a link out of the project is refused
+  outside = tmpPath.joinpath("secret.txt")
+  outside.writeText("secret")
+  logs.joinpath("run.log").unlink()
+  logs.joinpath("run.log").symlinkTo(outside)
+  expect(runLogTail("${project}").startsWith("refused"))

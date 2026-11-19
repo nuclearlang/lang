@@ -92,6 +92,10 @@ Member: Chat
   assigned() <string, any>
     role == "chat" ? ({} as <string, any>) : given
 
+  // Who answers, as the ledger names them: the team's member (or the general agent) in the chat's channel.
+  ledgerWho() <string, any>
+    { "team": "${team["id"] ?? ""}", "teamName": "${team["name"] ?? ""}", "member": "${assigned()["id"] ?? ""}", "employee": "${assigned()["employee"] ?? ""}", "role": role, "channel": "${ask["channel"] ?? "general"}${"${ask["thread"] ?? ""}".isEmpty ? "" : "/${ask["thread"]}"}" }
+
   lang() string
     "${ask["lang"] ?? "en"}"
 

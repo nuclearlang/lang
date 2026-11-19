@@ -2798,30 +2798,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.08dd5a",
-   "type": "context",
-   "title": "The command line tool: overview — Code map of `src/framework/`",
-   "summary": "Code map of `src/framework/`",
-   "body": [
-    "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
-    "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
-    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |",
-    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
-    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
-    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
-    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.806c48",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.0e921d",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
    "summary": "Code map of `src/framework/`",
@@ -2829,8 +2806,7 @@
     "| File | What it does | More |",
     "|---|---|---|",
     "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
-    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |",
-    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |"
+    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -2842,15 +2818,41 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.caaac0",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.36c474",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
    "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
    "body": [
+    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
+    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
+    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
+    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |",
+    "",
     "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
     "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
     "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
     "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.d5148e",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "Code map of `src/framework/`",
+   "body": [
+    "| `runlog.rs` | the project's run log `.nuclear/logs/run.log` of `nuclear run`: an ISO time per line, ANSI stripped, kept under 1 MB, never stopping the run when it cannot be written; `step: build|install|serve <url>|flutter`, the build's and the server's output (tee'd: stdin inherited, stdout/stderr piped to the terminal and the log, colours kept on a terminal), `failed: <why>`, `exited: <code>`; a mobile run logs only its steps (Flutter keeps the terminal). The editor follows it (▷ Serve) and the MCP tool `project_run_log` reads it | — |",
+    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |",
+    "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
+    "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
+    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3163,11 +3165,18 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.3bd47c",
+   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.93c563",
    "type": "readme",
    "title": "The `nuclear` command — Five minutes: a backend",
-   "summary": "`nuclear check` prints an error the way a compiler does: error[N0106]: 'undefinedThing' is not defined 3 | x = undefinedThing and `nuclear check --json` prints the same error with its code, position, explanation and, when there is one, the exact `fix` (every code: the diagnostics): { \"code\":…",
+   "summary": "`new` writes only `.nuc` files: for a backend, `config.nuc`, `config/project_config.nuc` and `test/app_test.nuc`.",
    "body": [
+    "`new` writes only `.nuc` files: for a backend, `config.nuc`, `config/project_config.nuc` and `test/app_test.nuc`.",
+    "`gen resource` writes the entity, the input model, the repository, a use case per action, the component's facade,",
+    "the controller and the tests, as finished code ([the generators' guide](../../../code_generator/docs/08-guides/README.md)).",
+    "The other platforms start the same way: `nuclear new shop -p web` (dialect `react`) and `nuclear new shop -p mobile`",
+    "(dialect `flutter`; it also creates the Flutter app in `build/app`). Pick another dialect with `-d`, for example",
+    "`-d nestjs`. The Nuclear of a project does not change with its dialect.",
+    "",
     "`nuclear check` prints an error the way a compiler does:",
     "",
     "```text",
@@ -3179,19 +3188,7 @@
     "```",
     "",
     "and `nuclear check --json` prints the same error with its code, position, explanation and, when there is one, the",
-    "exact `fix` (every code: [the diagnostics](../../../../nuclearlang/docs/07-reference/diagnostics.md)):",
-    "",
-    "```json",
-    "{",
-    "  \"code\": \"N0106\",",
-    "  \"col\": 9, \"end_col\": 23, \"line\": 3, \"end_line\": 3,",
-    "  \"explanation-context\": \"Line 3, column 9: The name is not a variable, parameter, member, declaration or import of this file.\",",
-    "  \"file\": \"components/books/domain/usecases/broken.nuc\",",
-    "  \"fix\": null,",
-    "  \"message\": \"'undefinedThing' is not defined\",",
-    "  \"severity\": \"error\"",
-    "}",
-    "```"
+    "exact `fix` (every code: [the diagnostics](../../../../nuclearlang/docs/07-reference/diagnostics.md)):"
    ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"
@@ -3203,7 +3200,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.c6bea4",
+   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.bd5bc9",
    "type": "readme",
    "title": "The `nuclear` command — Five minutes: a backend",
    "summary": "nuclear new demo -p backend # a project of the backend platform (dialect fastapi by default) cd demo nuclear gen resource books Book --fields \"id:int title:string author:string?\" nuclear build # demo: 17 files → ./build nuclear install # the runtime and the packages (a venv, for fastapi) nuclear…",
@@ -3220,12 +3217,35 @@
     "nuclear fix .                                # apply every exact fix, then report what is left",
     "```",
     "",
-    "`new` writes only `.nuc` files: for a backend, `config.nuc`, `config/project_config.nuc` and `test/app_test.nuc`.",
-    "`gen resource` writes the entity, the input model, the repository, a use case per action, the component's facade,",
-    "the controller and the tests, as finished code ([the generators' guide](../../../code_generator/docs/08-guides/README.md)).",
-    "The other platforms start the same way: `nuclear new shop -p web` (dialect `react`) and `nuclear new shop -p mobile`",
-    "(dialect `flutter`; it also creates the Flutter app in `build/app`). Pick another dialect with `-d`, for example",
-    "`-d nestjs`. The Nuclear of a project does not change with its dialect."
+    "Every `nuclear run` also writes its steps, the build's errors and the server's output to the project's",
+    "`.nuclear/logs/run.log` (with the time of each line): read it after a run that failed."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#five-minutes-a-backend.f75b3d",
+   "type": "readme",
+   "title": "The `nuclear` command — Five minutes: a backend",
+   "summary": "{ \"code\": \"N0106\", \"col\": 9, \"end_col\": 23, \"line\": 3, \"end_line\": 3, \"explanation-context\": \"Line 3, column 9: The name is not a variable, parameter, member, declaration or import of this file.\", \"file\": \"components/books/domain/usecases/broken.nuc\", \"fix\": null, \"message\": \"'undefinedThing' is…",
+   "body": [
+    "```json",
+    "{",
+    "  \"code\": \"N0106\",",
+    "  \"col\": 9, \"end_col\": 23, \"line\": 3, \"end_line\": 3,",
+    "  \"explanation-context\": \"Line 3, column 9: The name is not a variable, parameter, member, declaration or import of this file.\",",
+    "  \"file\": \"components/books/domain/usecases/broken.nuc\",",
+    "  \"fix\": null,",
+    "  \"message\": \"'undefinedThing' is not defined\",",
+    "  \"severity\": \"error\"",
+    "}",
+    "```"
    ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"

@@ -1,0 +1,198 @@
+use json
+use time
+use pathlib{ Path }
+
+// The factory's ledger of usage (spec 017): one JSON line per step of a run, per end of a run and per answer of the
+// chat, across every project of this machine, appended to `<factory>/ledger/<yyyy-mm>.jsonl` (factoryDir: the
+// teams' folder's parent). Who (team, member, employee, role), what (project, spec, run, station, step or channel),
+// the usage at the source (`{inTokens, outTokens, costUsd, ms, provider, model}`: null tokens were not reported),
+// the lines added and removed, the result and the times. The reports (`metrics.nuc`) read only this. The ledger is
+// the user's and never leaves the machine; a line that cannot be written never stops a run.
+
+LEDGER_VERSION = 1
+
+// The runs of a project are copied into the ledger once (`backfill`): the projects already copied.
+BACKFILLED = "backfilled.json"
+
+ledgerDir() Path
+  Path(factoryDir(), "ledger")
+
+// The month's file of a time in ms (UTC).
+ledgerFile(at: int) Path
+  ledgerDir().joinpath("${time.strftime("%Y-%m", time.gmtime(at / 1000))}.jsonl")
+
+// Appends one line; the ledger never stops what it records (a full disk is the preflight's).
+ledgerAppend(entry: <string, any>) void
+  try
+    at: int = entry["at"] ?? nowMs()
+    entry["v"] = LEDGER_VERSION
+    file = ledgerFile(at)
+    file.parent.mkdir(parents = true, existOk = true)
+    out = file.open("a", encoding = "utf-8")
+    out.write(json.dumps(entry, ensureAscii = false) + "\n")
+    out.close()
+  catch e
+    if not isinstance(e, OSError)
+      throw e
+
+// Every line of the ledger whose month is between `fromMs` and `toMs` (null: no bound); a line cut by a crash is
+// skipped.
+readLedger(fromMs: int? = null, toMs: int? = null) <string, any>[]
+  dir = ledgerDir()
+  if not dir.isDir()
+    return []
+  first = fromMs == null ? "" : time.strftime("%Y-%m", time.gmtime(fromMs! / 1000))
+  last = toMs == null ? "9999-99" : time.strftime("%Y-%m", time.gmtime(toMs! / 1000))
+  found: <string, any>[] = []
+  for f in dir.glob("*.jsonl").sorted()
+    month = "${f.stem}"
+    if month < first or month > last
+      continue
+    for l in f.readText(encoding = "utf-8").split("\n")
+      entry = jsonLine(l.trim())
+      if entry != null
+        found.add(entry!)
+  found
+
+// ---------- the lines of code ----------
+
+// A text's lines (a last newline ends a line, it does not start one); null is no file.
+linesOf(text: string?) string[]
+  if text == null or text!.isEmpty
+    return []
+  all = text!.split("\n")
+  all.last.isEmpty ? all.take(all.length - 1) : all
+
+counted(lines: string[]) <string, int>
+  seen: <string, int> = {}
+  for l in lines
+    had: int = seen[l] ?? 0
+    seen[l] = had + 1
+  seen
+
+// The lines a write added and removed: each line counted on both sides, as a diff's stat counts them (a line only
+// moved is neither); linear in the size of the file.
+lineDelta(before: string?, after: string?) <string, int>
+  a = counted(linesOf(before))
+  b = counted(linesOf(after))
+  added = 0
+  removed = 0
+  for l, n in b
+    had: int = a[l] ?? 0
+    added += Math.max(0, n - had)
+  for l, n in a
+    now: int = b[l] ?? 0
+    removed += Math.max(0, n - now)
+  { "added": added, "removed": removed }
+
+// The lines a step changed, from the run's writes; null when a write does not say (a run of an earlier version).
+stepLines(run: <string, any>, step: string) <string, int>?
+  added = 0
+  removed = 0
+  for w in (run["writes"] ?? []) as <string, any>[]
+    if w["step"] != step
+      continue
+    if w["added"] == null
+      return null
+    one: int = w["added"]!
+    two: int = w["removed"] ?? 0
+    added += one
+    removed += two
+  { "added": added, "removed": removed }
+
+// ---------- what a line says ----------
+
+// The station of a step id (`code-3` → `code`).
+stationOfStep(id: string) string
+  at = id.lastIndexOf("-")
+  at < 0 ? id : id.substring(0, at)
+
+// What every line of a run says: the project, the spec, the run and its team.
+runWho(run: <string, any>) <string, any>
+  spec: <string, any> = run["spec"] ?? ({} as <string, any>)
+  factory: <string, any> = run["factory"] ?? ({} as <string, any>)
+  team: <string, any> = run["team"] ?? ({} as <string, any>)
+  { "project": "${run["project"] ?? Path("${run["root"] ?? ""}").name}", "root": "${run["root"] ?? ""}", "spec": "${spec["id"] ?? run["id"] ?? ""}", "specTitle": "${spec["title"] ?? ""}", "run": "${run["id"] ?? ""}", "team": "${team["id"] ?? factory["team"] ?? ""}", "teamName": "${team["name"] ?? factory["teamName"] ?? ""}" }
+
+// The ledger's line of a step: who did it, its usage, its lines and its result.
+stepEntry(run: <string, any>, s: <string, any>) <string, any>
+  entry = runWho(run)
+  provider = "${s["provider"] ?? ""}"
+  entry["kind"] = "step"
+  entry["station"] = stationOfStep("${s["id"]}")
+  entry["step"] = "${s["id"]}"
+  entry["title"] = "${s["title"] ?? ""}"
+  entry["key"] = "${s["key"] ?? ""}"
+  entry["actor"] = "${s["actor"] ?? ""}"
+  entry["role"] = "${s["role"] ?? ""}"
+  entry["member"] = "${s["member"] ?? ""}"
+  entry["employee"] = "${s["employee"] ?? ""}"
+  entry["agentKind"] = provider.isEmpty ? "" : "${s["kind"] ?? (provider == "nuclear-developer" ? "local" : "agent")}"
+  entry["usage"] = s["usage"] ?? (provider.isEmpty ? null : ({ "inTokens": null, "outTokens": null, "costUsd": s["costUsd"] ?? 0.0, "ms": null, "provider": provider, "model": "${s["model"] ?? ""}" } as <string, any>))
+  entry["lines"] = s["lines"] ?? stepLines(run, "${s["id"]}")
+  entry["result"] = "${s["status"] ?? ""}"
+  entry["started"] = s["started"]
+  entry["ended"] = s["ended"]
+  entry["at"] = s["ended"] ?? s["started"] ?? nowMs()
+  entry
+
+// The ledger's line of a run that ended or waits: its status, its times, its stations, its gates and its money.
+runEntry(run: <string, any>) <string, any>
+  entry = runWho(run)
+  factory: <string, any> = run["factory"] ?? ({} as <string, any>)
+  stations: <string, any>[] = []
+  for st in (run["stages"] ?? []) as <string, any>[]
+    steps: <string, any>[] = st["steps"] ?? []
+    stations.add({ "id": st["id"], "status": st["status"], "started": st["started"], "ended": st["ended"], "steps": steps.length, "failed": steps.count((x) => x["status"] == "failed") })
+  entry["kind"] = "run"
+  entry["result"] = "${run["status"] ?? ""}"
+  entry["created"] = run["created"]
+  entry["ended"] = run["ended"]
+  entry["stations"] = stations
+  entry["gates"] = run["gates"] ?? ([] as <string, any>[])
+  entry["retries"] = ((run["previous"] ?? []) as any[]).length
+  entry["costUsd"] = run["costUsd"] ?? 0.0
+  entry["budgetUsd"] = factory["budgetUsd"] ?? 5.0
+  entry["at"] = run["ended"] ?? nowMs()
+  entry
+
+// ---------- the runs of before the ledger ----------
+
+// The projects already copied into the ledger.
+backfilled() string[]
+  file = ledgerDir().joinpath(BACKFILLED)
+  if not file.isFile()
+    return []
+  try
+    found = json.loads(file.readText(encoding = "utf-8"))
+    isinstance(found, list) ? found : ([] as string[])
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    []
+
+// Copies the runs a project made before the ledger once: each step and each run with what its file has (a run of an
+// earlier version has no tokens, no lines, no gates: they stay null). False when the project was copied already.
+backfill(root: string) boolean
+  done = backfilled()
+  at = "${Path(root).resolve()}"
+  if at in done
+    return false
+  for run in listRuns(root)
+    for st in (run["stages"] ?? []) as <string, any>[]
+      for s in (st["steps"] ?? []) as <string, any>[]
+        if isinstance(s, dict) and s["status"] != "running" and s["id"] != null
+          entry = stepEntry(run, s)
+          entry["backfilled"] = true
+          ledgerAppend(entry)
+    if run["status"] != "running"
+      entry = runEntry(run)
+      entry["backfilled"] = true
+      ledgerAppend(entry)
+  try
+    ledgerDir().mkdir(parents = true, existOk = true)
+    writeAtomic(ledgerDir().joinpath(BACKFILLED), json.dumps([...done, at], indent = 1))
+  catch e
+    if not isinstance(e, OSError)
+      throw e
+  true

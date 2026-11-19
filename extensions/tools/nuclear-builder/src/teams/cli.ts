@@ -198,7 +198,7 @@ export interface TeamEntry {
 export class CommandMissing extends Error {}
 
 /** One call of the contract: its JSON, or the error it said. */
-async function call<T>(args: string[], input?: string): Promise<T> {
+export async function call<T>(args: string[], input?: string): Promise<T> {
   const err: string[] = [];
   const r = await builder(args, (l) => err.push(l), input);
   let value: unknown;

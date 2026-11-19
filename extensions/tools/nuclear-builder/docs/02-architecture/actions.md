@@ -36,6 +36,13 @@ Merging a pull request is never a tool, nor a command.
 | Migrate the flat specs | `spec migrate` | `spec_migrate` | anyone |
 | Delete a spec (to `.nuclear/builder/deleted/`) | `spec delete <id>` | `spec_delete` | user |
 
+## The reports
+
+| Action (page) | Command | Tool | Who |
+|---|---|---|---|
+| The *Reports* page: the bill and the Jira-like views, with its filters (spec 017) | `metrics [--project <name\|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day\|week] [--view <view>] --json` | `metrics` (`since`/`until` for `--from`/`--to`: `from` is a reserved word of Nuclear) | anyone |
+| A member's numbers in the member panel's Summary | `metrics --team <id> --member <id> --view people --json` | `metrics` | anyone |
+
 ## The runs
 
 | Action (page) | Command | Tool | Who |

@@ -87,6 +87,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `@start @next("write") recall(state: PieceState) <string, any>`
     - `@next("end") write(state: PieceState) <string, any>`
 - `components/developer/ai/workbench.nuc`
+  - `Tally(inTokens: int, outTokens: int, model: string)` — A request's count of tokens: what its models read and wrote, and the model that answered last.
   - tools `Workbench(knowledge: GraphClient, toolchain: Toolchain)` — What every local agent shares: the Nuclear Smart Graph, the NuclearLang tools and the models. No method has a doc comment, so none is offered to a model as a tool: the graphs call them in a fixed order, because a small model follows steps better than it chooses tools.  The prompts are the skills of the roles (`nuclear-agents/roles/<role>/skills/step-<name>.md`, ADR-developer-0002), served by the graph and read with `prompt(name, values)`: nothing a model reads is written inside this code.
     - `recall(query: string, platform: string, useCase: string, kind: string) Recall` — What the graph holds for a piece of work: the guide of the use case and, for a piece of one kind, the kind's own card, every mistake small models repeat with that kind, the rules closest to the task and validated examples of that kind (solved tasks, and a file of an example project; two files when no task of that kind was solved).
     - `lookup(question: string, platform: string) string` — What the graph answers to a question in plain words: the closest cards of every shelf a local agent reads, each with a line for the rows it links to.
@@ -99,6 +100,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `prompt(name: string, values: <string, string>) string` — The prompt `agent.<name>` (a step skill of a role) with each `{{key}}` filled. A `## ` section all of whose values are empty is dropped whole, with the words the file writes around them: a model never reads an empty heading, nor what to do with rows it was not given (it copies those words into its answer).
     - `compose(state: PieceState, examples: boolean) string` — The prompt of a piece: the guide of the use case, then the knowledge, the examples (left out when `examples` is false), the files it depends on and the task, so the most important text is the last one the model reads.
     - `ask(model: string, prompt: string) string`
+    - `tally(reply: any) void` — Adds what a model's reply counted to the request's tally.
     - `write(state: PieceState, request: string, tries: int, faithful: boolean) PieceReply` — Writes the code of a piece from its prompt (`request`) and repairs it with the compiler's errors, each with the card of its code, at most `tries` times. With `faithful`, an answer that compiles is also held to the task's own words: a name, a path or a value the task writes and the answer lacks is asked for once more.
     - `terms(task: string) string[]` — The exact words a task gives that its answer must have: quoted texts, decorators with their arguments, calls on a member (`books.byAuthor(name)`), signatures (`book(id: int)`, `all()`) and status codes. Names alone are not asked for: a task also names what it only describes (`NotFound` when nothing is found).
     - `missing(task: string, code: string) string[]` — The terms of a task its code does not have. A quoted text counts by what is inside its quotes: both quotes write the same string, and a description the task quotes may be a comment.
@@ -116,6 +118,8 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `@post("plan", status = 200) plan(input: PlanRequest) PlanReply`
     - `@post("analyze", status = 200) analyze(input: AnalyzeRequest) Analysis` — Which kind of request a spec is and what its strategy asks of the run: before anything is generated or planned.
     - `fresh() string`
+    - `count() void` — A request's tally of tokens, empty (workbench.nuc `TALLY`); `counted` is what its models counted.
+    - `counted() <string, any>`
     - `start(input: PieceRequest) <string, any>`
     - `reply(state: <string, any>) PieceReply`
 - `components/developer/domain/models/developer_models.nuc`
@@ -132,6 +136,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `check: string`
     - `attempts: int`
     - `trace: <string, string>[]`
+    - `usage: <string, any>` — the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)
   - model `PlanRequest` — A spec to split into pieces.
     - `@minLength(3) spec: string`
     - `@pattern(r"^(backend|mobile|web)$") platform: string` — backend, mobile or web: the agents write Nuclear for a platform, never for a dialect
@@ -142,6 +147,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `trace: <string, string>[]`
     - `tree: string`
     - `limits: string[]`
+    - `usage: <string, any>` — the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)
   - model `AnalyzeRequest` — A request to analyse before a run: which kind of request it is.
     - `@minLength(3) spec: string`
     - `@pattern(r"^(backend|mobile|web)$") platform: string`
@@ -161,6 +167,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `limits: string[]`
     - `report: string`
     - `trace: <string, string>[]`
+    - `usage: <string, any>` — the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)
   - model `Recall` — What the Nuclear Smart Graph gave an agent for a task.
     - `guide: string`
     - `knowledge: string`
@@ -205,6 +212,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `@test("a section whose value is empty is dropped with the words written around it") emptySection() void`
     - `@test("an unreachable graph is a note, not an error") unreachable() void`
     - `@test("a step names the cards it read") read() void`
+    - `@test("the tokens a model counted are added to the request's tally, and a reply with no counts adds nothing") tally() void`
     - `@test("the compiler accepts valid Nuclear and explains invalid Nuclear") check() void`
     - `@test("a plan's paths come from the platform's layout, and the spec corrects what the model forgot or mislabeled") plan() void`
     - `@test("a spec in plain words keeps every piece the model designed, but its tests: a capitalised noun names no declaration") plainWords() void`

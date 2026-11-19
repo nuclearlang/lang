@@ -70,6 +70,12 @@
             },
             "type": "array"
           },
+          "usage": {
+            "additionalProperties": {},
+            "default": {},
+            "description": "the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)",
+            "type": "object"
+          },
           "why": {
             "type": "string"
           }
@@ -195,6 +201,12 @@
               "type": "object"
             },
             "type": "array"
+          },
+          "usage": {
+            "additionalProperties": {},
+            "default": {},
+            "description": "the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)",
+            "type": "object"
           }
         },
         "required": [
@@ -276,6 +288,12 @@
           "tree": {
             "default": "",
             "type": "string"
+          },
+          "usage": {
+            "additionalProperties": {},
+            "default": {},
+            "description": "the tokens its models read and wrote, as Ollama counted them: { inTokens, outTokens, model } (empty: none counted)",
+            "type": "object"
           }
         },
         "required": [

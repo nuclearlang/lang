@@ -20,6 +20,7 @@ controller DeveloperController(coder: Coder, tester: Tester, security: Security,
 
   @post("chat", status = 200)
   chat(input: ChatRequest) PieceReply
+    count()
     state = { "task": input.message, "platform": input.platform, "map": input.map, "history": input.history, "root": input.root, "query": input.query }
     reply(~assistant.run(state, thread = fresh()))
 
@@ -36,22 +37,33 @@ controller DeveloperController(coder: Coder, tester: Tester, security: Security,
 
   @post("plan", status = 200)
   plan(input: PlanRequest) PlanReply
+    count()
     state = ~planner.run({ "task": input.spec, "platform": input.platform, "root": input.root }, thread = fresh())
-    PlanReply(pieces = state["pieces"]!, raw = state["report"]!, trace = state["trace"]!, tree = state["tree"]!, limits = state["limits"]!)
+    PlanReply(pieces = state["pieces"]!, raw = state["report"]!, trace = state["trace"]!, tree = state["tree"]!, limits = state["limits"]!, usage = counted())
 
   // Which kind of request a spec is and what its strategy asks of the run: before anything is generated or planned.
   @post("analyze", status = 200)
   analyze(input: AnalyzeRequest) Analysis
+    count()
     state = ~analyst.run({ "task": input.spec, "platform": input.platform, "root": input.root, "forced": input.strategy }, thread = fresh())
     chosen: <string, string> = state["strategy"]!
     stages = (chosen["stages"] ?? "").split(",").filter((s) => s.length > 0)
-    Analysis(strategy = chosen["id"] ?? "", title = chosen["title"] ?? "", why = chosen["why"] ?? "", mode = chosen["mode"] ?? "write", stages = stages, lead = chosen["lead"] ?? "local", source = chosen["pieces"] ?? "plan", generate = state["generate"]!, pieces = state["pieces"]!, questions = state["questions"]!, limits = state["limits"]!, report = state["report"]!, trace = state["trace"]!)
+    Analysis(strategy = chosen["id"] ?? "", title = chosen["title"] ?? "", why = chosen["why"] ?? "", mode = chosen["mode"] ?? "write", stages = stages, lead = chosen["lead"] ?? "local", source = chosen["pieces"] ?? "plan", generate = state["generate"]!, pieces = state["pieces"]!, questions = state["questions"]!, limits = state["limits"]!, report = state["report"]!, trace = state["trace"]!, usage = counted())
 
   fresh() string
     "${uuid4()}"
 
+  // A request's tally of tokens, empty (workbench.nuc `TALLY`); `counted` is what its models counted.
+  count() void
+    TALLY.set(Tally())
+
+  counted() <string, any>
+    tallied = TALLY.get()
+    tallied == null or tallied!.inTokens + tallied!.outTokens == 0 ? ({} as <string, any>) : { "inTokens": tallied!.inTokens, "outTokens": tallied!.outTokens, "model": tallied!.model }
+
   start(input: PieceRequest) <string, any>
+    count()
     { "task": input.task, "platform": input.platform, "path": input.path, "kind": input.kind, "context": input.context, "root": input.root }
 
   reply(state: <string, any>) PieceReply
-    PieceReply(code = state["code"]!, report = state["report"]!, check = state["check"]!, attempts = state["attempts"]!, trace = state["trace"]!)
+    PieceReply(code = state["code"]!, report = state["report"]!, check = state["check"]!, attempts = state["attempts"]!, trace = state["trace"]!, usage = counted())

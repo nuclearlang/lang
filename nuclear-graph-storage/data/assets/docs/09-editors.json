@@ -200,7 +200,7 @@
     "- `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer",
     "- `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API",
     "- `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens",
-    "- One version for the three (0.72.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
+    "- One version for the three (0.74.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
     "  `zed/extension.toml`"
    ],
    "sources": [
@@ -1240,9 +1240,9 @@
    "id": "doc:extensions/jetbrains/AGENTS.md#jetbrains-plugin",
    "type": "readme",
    "title": "JetBrains plugin",
-   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.72.0): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
+   "summary": "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.74.0): the client of the language server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects that work like a Flutter project, `.nuc` breakpoints, and two tool…",
    "body": [
-    "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.72.0): the client of the language",
+    "The NuclearLang plugin for Android Studio and IntelliJ (`dev.nuclearlang`, 0.74.0): the client of the language",
     "server, the TextMate grammar and the Chernobyl themes of the VS Code extension, the code metrics, Synapsis projects",
     "that work like a Flutter project, `.nuc` breakpoints, and two tool windows (*HTTP Connections*, *Nuclear Builder*),",
     "whose code is in `../tools/nuclear-http-connections/jetbrains/src/` and `../tools/nuclear-builder/jetbrains/src/`. What",
@@ -1316,11 +1316,15 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.1bba98",
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.178fb8",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.74.0: no change of its own (`nuclear run` writes the project's run log; the VS Code devices' and Serve's steps).",
+    "- 0.73.2: no change of its own (the VS Code devices' launch log).",
+    "- 0.73.1: no change of its own (the VS Code launch of a mobile app).",
+    "- 0.73.0: the version of VS Code's Reports page (spec 017); the Builder's command records every step's usage in the factory's ledger, and `nuclear-builder metrics` reads it here too (no Reports window yet).",
     "- 0.72.0: the language server's new diagnostics (a Result is always handled, N0117, N0118, N0220, N0224) and the Python dialect's lazy imports.",
     "- 0.71.0: the version of VS Code's chat, toolchains and light local chat; nothing changes in this extension.",
     "- 0.70.0: the version of VS Code's skills, models, notifications and DevOps; nothing changes in this extension.",
@@ -1329,10 +1333,7 @@
     "- 0.67.0: the version of VS Code's team wizard follow-ups; nothing changes in this extension.",
     "- 0.66.0: the version of VS Code's team wizard; nothing changes in this extension.",
     "- 0.65.0: the version of VS Code's portraits and profiles; nothing changes in this extension.",
-    "- 0.64.0: the version of VS Code's chat agent picker; nothing changes in this extension.",
-    "- 0.63.0: the version of the Builder's MCP server and VS Code's per-folder workspace; nothing changes in this extension.",
-    "- 0.62.0: the version of VS Code's company screen; nothing changes in this extension.",
-    "- 0.61.0: the version of VS Code's Nuclear Chat, faces and Nuclear Monitor; nothing changes in this extension."
+    "- 0.64.0: the version of VS Code's chat agent picker; nothing changes in this extension."
    ],
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
@@ -1344,74 +1345,79 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.529cd0",
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.2775de",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
-    "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
-    "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension.",
-    "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`)."
-   ],
-   "sources": [
-    "extensions/jetbrains/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.945fea",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`).",
-   "sources": [
-    "extensions/jetbrains/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.96f8f8",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.60.0: the *HTTP Connections* tool window speaks WebSockets: a **WS** mark on what a backend's contract serves over WebSockets, its events, ws:// urls of the environment (*Add a WebSocket Url*), and a socket panel (`java.net.http.WebSocket`) with the url, headers, the message and its history, and a filtered log.",
-    "- 0.59.0: the version of VS Code's Builder workbench and chat; nothing changes in this extension.",
-    "- 0.58.0: the *Nuclear Builder* tool window runs the software factory: *Run the Spec with a Team…* (a team of `nuclear-builder team list`) runs `nuclear-builder run … --events`, and each run shows its stations and steps with the role, the employee, the provider and the model. What a station asks is a dialog, answered on the run's stdin, instead of hanging at the first gate: a gate (*Approve*, *Ask for a Change…*, *Later*, its documents opened), QA's plan (each of your checks marked *Done* or *Failed*, then *Go On*), the spending (two dialogs, the second with the amount and the providers). *Go On* resumes a run that waits (`run --resume`), *Run a Station Again…* runs `retry --from` (or `restart`), *Stop* leaves a waiting run waiting and interrupts a working one. `--lead` is gone.",
-    "- 0.57.0: the version of VS Code's workspace tree and first Spanish texts; nothing changes in this extension."
-   ],
-   "sources": [
-    "extensions/jetbrains/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.d914ec",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project.",
     "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
     "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
     "- 0.52.0: the tool window Nuclear Connector is now HTTP Connections (its code in `extensions/tools/nuclear-http-connections/jetbrains/`, the class `HttpConnections`).",
     "- 0.51.0: the version of the three extensions (one repository; the tool windows Nuclear Builder and HTTP Connections, their code in `extensions/tools/<tool>/jetbrains/`; Synapsis; the framework's commands are `nuclear <command>`).",
     "- First public version.",
     "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
-    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002)."
+    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
+    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
+   ],
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.3b8d04",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`).",
+    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project."
+   ],
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.3fe2cf",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.58.0: the *Nuclear Builder* tool window runs the software factory: *Run the Spec with a Team…* (a team of `nuclear-builder team list`) runs `nuclear-builder run … --events`, and each run shows its stations and steps with the role, the employee, the provider and the model. What a station asks is a dialog, answered on the run's stdin, instead of hanging at the first gate: a gate (*Approve*, *Ask for a Change…*, *Later*, its documents opened), QA's plan (each of your checks marked *Done* or *Failed*, then *Go On*), the spending (two dialogs, the second with the amount and the providers). *Go On* resumes a run that waits (`run --resume`), *Run a Station Again…* runs `retry --from` (or `restart`), *Stop* leaves a waiting run waiting and interrupts a working one. `--lead` is gone.",
+    "- 0.57.0: the version of VS Code's workspace tree and first Spanish texts; nothing changes in this extension.",
+    "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
+    "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
+    "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension."
+   ],
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.c7644a",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.63.0: the version of the Builder's MCP server and VS Code's per-folder workspace; nothing changes in this extension.",
+    "- 0.62.0: the version of VS Code's company screen; nothing changes in this extension.",
+    "- 0.61.0: the version of VS Code's Nuclear Chat, faces and Nuclear Monitor; nothing changes in this extension.",
+    "- 0.60.0: the *HTTP Connections* tool window speaks WebSockets: a **WS** mark on what a backend's contract serves over WebSockets, its events, ws:// urls of the environment (*Add a WebSocket Url*), and a socket panel (`java.net.http.WebSocket`) with the url, headers, the message and its history, and a filtered log.",
+    "- 0.59.0: the version of VS Code's Builder workbench and chat; nothing changes in this extension."
    ],
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
@@ -1995,9 +2001,9 @@
    "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#commands",
    "type": "readme",
    "title": "nuclear-device-manager — Commands",
-   "summary": "Run in `extensions/vscode/`: `npm run compile`.",
+   "summary": "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`).",
    "body": [
-    "Run in `extensions/vscode/`: `npm run compile`. There is no test of the devices; the web device's engine can be run",
+    "Run in `extensions/vscode/`: `npm run compile`, `npm test` (`test/launch-log.test.ts`). The panels have no test; the web device's engine can be run",
     "with node without the editor ([testing](../../vscode/docs/05-standards/testing.md))."
    ],
    "sources": [
@@ -2062,13 +2068,16 @@
    "id": "doc:extensions/tools/nuclear-device-manager/AGENTS.md#rules",
    "type": "readme",
    "title": "nuclear-device-manager — Rules",
-   "summary": "Rules",
+   "summary": "failure, and every failure says why (its error lines), offers *Try again* and *Show the log*, and is written to the project's `.nuclear/logs/run.log`.",
    "body": [
     "- Nothing stays alive when VS Code closes: every process a device starts carries the window's marker and is reaped.",
     "- An app lives on its own: closing a device's tab only hides it. A run never replaces a running device.",
     "- The devices belong to the mobile workspaces and the Devices tool; elsewhere they are parked, not ended.",
     "- A frame matches the device's on-screen pixels 1:1: nothing is upscaled.",
-    "- `web-session.ts` and `cdp.ts` never import `vscode`.",
+    "- `web-session.ts`, `cdp.ts` and `launch-log.ts` never import `vscode`.",
+    "- A launch never fails in silence: every step is shown on the device, a step without news past its limit is a",
+    "  failure, and every failure says why (its error lines), offers *Try again* and *Show the log*, and is written to",
+    "  the project's `.nuclear/logs/run.log`.",
     "- The decisions: ADR-extensions-0002 (several devices, park, the web device), ADR-devices-0001 (the Synapsis device)."
    ],
    "sources": [
@@ -2112,7 +2121,9 @@
     "| `src/mobile-device.ts` | the Synapsis device: the panels, the running apps, the Flutter custom device, the presets |",
     "| `src/web-device.ts` | the web device's panel and its commands |",
     "| `src/web-session.ts` | the web device's engine; no `vscode` import |",
-    "| `src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |"
+    "| `src/cdp.ts` | a small client of the Chrome DevTools Protocol; no `vscode` import |",
+    "| `src/launch-log.ts` | a launch's steps, the stall limit of each, the reason of a failure and the project's log `.nuclear/logs/run.log`; no `vscode` import |",
+    "| `test/launch-log.test.ts` | the log, the reason, the stall (node:test) |"
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/AGENTS.md"
@@ -2267,19 +2278,51 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-launch",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-launch.3536e5",
    "type": "context",
    "title": "The Synapsis device (`mobile-device.ts`) — The launch",
-   "summary": "`launchProvider` is the `resolveDebugConfiguration` of `dart` (a `-d` in `toolArgs` does NOT work).",
+   "summary": "process marker (`about:blank` does not work).",
    "body": [
-    "`launchProvider` is the `resolveDebugConfiguration` of `dart` (a `-d` in `toolArgs` does NOT work). It sets:",
-    "",
     "- `deviceId: 'chrome'`, `--web-port`, `--web-browser-debug-port`;",
     "- `--web-browser-flag=--headless=new`, `--enable-unsafe-swiftshader`;",
     "- `--web-launch-url http://127.0.0.1:<port>/assets/__synapsis_device__`: an empty 404 page that carries the",
     "  process marker (`about:blank` does not work).",
     "",
     "Flutter's `web-server` device is rejected: its debug service has no breakpoints."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/02-architecture/mobile-device.md#the-launch.3d5c8b",
+   "type": "context",
+   "title": "The Synapsis device (`mobile-device.ts`) — The launch",
+   "summary": "The launch goes through `startDart` (`vscode/src/extension.ts`): the Dart extension is activated first (it starts by itself only when a `pubspec.yaml` is at most two folders deep, and a Synapsis app is `<project>/build/app`; without it VS Code refuses the `dart` launch in silence).",
+   "body": [
+    "The launch goes through `startDart` (`vscode/src/extension.ts`): the Dart extension is activated first (it starts by",
+    "itself only when a `pubspec.yaml` is at most two folders deep, and a Synapsis app is `<project>/build/app`; without",
+    "it VS Code refuses the `dart` launch in silence).",
+    "",
+    "A launch never fails in silence (`launch-log.ts`). The device shows its steps — building the Nuclear project (▷ Run),",
+    "starting Flutter (the config resolved), compiling the app (the session started), opening the app (the page's CDP",
+    "connected), running (the first frame). A step without news (a step or a line of Flutter's output, read by a debug",
+    "adapter tracker of `dart`) longer than its limit (`STALL_MS`: 5 min build, 90 s Flutter, 6 min compile, 2 min",
+    "opening) ends the launch as stuck. Flutter ending before the first frame, a build error (`showBuildError`), a",
+    "missing Flutter extension or a refused launch (`nuclear.deviceLaunchFailed`) show on the device the message, the",
+    "output lines that explain it (`reason`), *Try again* and *Show the log*. The build's output, the launch's steps,",
+    "Flutter's output and every failure go to the project's `.nuclear/logs/run.log` (timestamped, kept under 1 MB),",
+    "which outlives the window: a person or an agent reads it after a failure.",
+    "",
+    "`launchProvider` is the `resolveDebugConfiguration` of `dart` (a `-d` in `toolArgs` does NOT work). It sets:"
    ],
    "platforms": [
     "mobile"
@@ -2749,7 +2792,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-device-manager/docs/08-guides/README.md#the-synapsis-device-mobile.c2deb2",
+   "id": "doc:extensions/tools/nuclear-device-manager/docs/08-guides/README.md#the-synapsis-device-mobile.301c64",
    "type": "readme",
    "title": "The devices in VS Code — The Synapsis device (mobile)",
    "summary": "Galaxy A51/71, iPad Mini, iPad Air, iPad Pro, Galaxy Tab S7, Laptop, Desktop.",
@@ -2761,6 +2804,11 @@
     "- The width × height (editable, and by dragging the borders in Responsive), the zoom (*Fit to window* grows up to",
     "  150 %) and the rotation.",
     "- Hot reload, hot restart, stop (■), and open in your browser.",
+    "",
+    "While the app starts, the device shows each step (building the project, starting Flutter, compiling the app, opening",
+    "it). When something fails or a step gets stuck, the device says why, with the lines of the error, *Try again* and",
+    "*Show the log*. The log of every launch is kept in the project, in `.nuclear/logs/run.log`, even after VS Code is",
+    "closed.",
     "",
     "The panel sits in its own locked editor group to the right of the code. Its width is remembered for each screen",
     "width (the first time it is 20 % of the screen, between 340 and 540 px). The screen is streamed at the pixels the",
@@ -4338,9 +4386,9 @@
    "id": "doc:extensions/vscode/AGENTS.md#vs-code-extension",
    "type": "readme",
    "title": "VS Code extension",
-   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.72.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
+   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.74.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
    "body": [
-    "The NuclearLang extension for VS Code (`nuclearlang`, 0.72.0): the client of the language server, semantic",
+    "The NuclearLang extension for VS Code (`nuclearlang`, 0.74.0): the client of the language server, semantic",
     "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
     "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is",
     "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
@@ -4471,6 +4519,21 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.2be121",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- *Reports*: what the factory spent and made, in the HUD of the company screen, in English and Spanish, light and dark. On top the bill: the tokens in and out, the money, local against paid, the budget the runs used, and tokens and money by day or week. Under it the reports of a sprint: *Throughput* (specs delivered, velocity by team), *Cycle time* (each spec and the time per station), *Burndown*, *Flow* (where the specs were each day), *Waiting for you* (the gates open now and how long), *Quality* (failures, retries, first-try pass rate per station), *People* (each member ranked by cost or by result) and *Indicators* (cost per delivered spec, tokens per useful line, the local share). A member's panel on *Your software company* shows their numbers in its Summary, and its *Reports* opens the page filtered to them. Every step of a run and every chat answer is a line of your factory's ledger (`~/.config/nuclearlang/factory/ledger/`), across projects; the runs of before are copied once with what they had.",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.31c069",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4534,6 +4597,25 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.4d3573",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.74.0: every launch says where it is and why it failed. The web device shows its steps (build, install when needed, dev server, browser), a step stuck past its limit or a failure shows its error lines with *Try again* and *Show the log*. ▷ Serve of a backend or web project is followed by a notification (building, installing, starting the server, ready at its address) that reads the lines `nuclear run` now writes to the project's `.nuclear/logs/run.log`, and shows why it did not start. The MCP tool `project_run_log` gives an agent the tail of that log.",
+    "- 0.73.2 (fix): the Synapsis device's page drew nothing (a line break inside its script); a test now parses the page's script. The welcome page no longer opens by itself at startup (`nuclear.workspace.welcome` is off by default; `Ctrl+Alt+W` opens it).",
+    "- 0.73.2: a launch on the Synapsis device never fails in silence: the device shows each step (build, Flutter, compile, open), a step stuck past its limit or Flutter ending before the first frame is a failure that shows its error lines with *Try again* and *Show the log*; every launch is written to the project's `.nuclear/logs/run.log`."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.4dab3c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4542,6 +4624,24 @@
     "eeze or restart. Every line says what it is, *Claude Code (agent) · opus 5.5*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*, each group how it is paid, and a model's version is chosen like its latest (Claude Code's `opus — latest`, then opus 5.5, opus 5…).",
     "- Nuclear Chat's members answer in your language and with GIFs: in the language you chose (`nuclear.language`), or in the one your message is written in, even with the local 3B model; a member whose personality sends GIFs may answer with one of the pack's (more likely when you sent one), never showing the words behind it. The language is the first section of *Settings and integrations*, and *Automatic* says what it resolves to there and in the onboarding.",
     "- 0.69.0: a member's panel is for working (its *Brain*: one list of agent · model, the unavailable ones disabled; tabs Summary, Person, Skills, Instructions, Behaviour, Tasks and, last, the fun Profile); the company screen loads in about 0.2 s (one `team screen` process, 128 px thumbnails, lazy imports); the workspace strip has one meaningful icon per tool with its label, *Your software company* among them, and the Builder a *Build a team* button; skills, checks, step titles, questions, agents' reasons and the set-up's texts in Spanish."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.5f2b53",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.73.1: a mobile app always starts or says why: the Flutter extension is activated before the launch (it starts by itself only when a pubspec.yaml is at most two folders deep, and a Synapsis app is in `build/app`); a launch refused or a missing Flutter extension shows on the device and in the Synapsis output instead of the device loading forever.",
+    "- 0.73.0: *Reports*, what the factory spent and made (spec 017): a new tool of the strip (a bar chart with a coin, `Ctrl+Alt+K`) with the bill on top (tokens in and out, the money, local against paid, the budget used, by day or week) and Jira's reports of the factory's work as tabs (throughput and velocity, cycle time, burndown, cumulative flow, the gates waiting for you, quality, each member's work, the indicators), filtered by project, team, member and dates; each member's numbers in their panel's Summary. Every provider's tokens are measured at the source (never estimated: one that reports none says *not reported*) and kept in the factory's ledger with the lines each step wrote; the page reads `nuclear-builder metrics`, which agents read too."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -6124,7 +6224,7 @@
     "`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/A/H/V/F/D/M/S`; the actions",
     "`Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web).",
     "",
-    "`WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation when",
+    "`WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation (since 0.73.2 only when the user turned it on: the setting is off by default) when",
     "`nuclear.workspace.welcome` is on and every tab group is empty."
    ],
    "sources": [
@@ -6182,7 +6282,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.0081e5",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The actions of a project",
    "summary": "`PLATFORM_ACTIONS[platform]` are the `editor/title` buttons of `package.json`: the commands `nuclear.action.<id>`, shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.",
@@ -6194,12 +6294,32 @@
     "|---|---|",
     "| mobile | ▷ Run, ◉ Debug, ↻ Reload, ▭ Device, ⚒ Build, ✓ Test, ☑ Check |",
     "| backend | ▷ Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, ⇄ API |",
-    "| web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |",
-    "",
+    "| web | ▷ Serve, ▭ Device, ◉ Debug, ↻ Reload, ⚒ Build, ✓ Test, ☑ Check |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.1110bf",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The actions of a project",
+   "summary": "`nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.",
+   "body": [
     "- Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →",
     "  `nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.",
     "- The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,",
-    "  `test`, `check`); `nuclear install` goes first for a backend or web run or test when the app has no packages.",
+    "  `test`, `check`); `nuclear install` goes first for a test when the app has no packages (`nuclear run` installs",
+    "  them itself, as a step of its log).",
+    "- ▷ Serve is followed (`followRun`): a progress notification reads the lines `nuclear run` appends to the project's",
+    "  `.nuclear/logs/run.log` (`RunFollower` of `launch-log.ts`): building, installing, starting the server, ready when its",
+    "  address answers; `failed:`, `exited:` or a step silent past its limit (`RUN_STALL_MS`) shows why with *Show the log*",
+    "  and *Try again*.",
     "- A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global",
     "  state, adds the folder and reloads; `activateWorkspace` resumes it.",
     "- `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the",
@@ -6313,17 +6433,40 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.09cfbe",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.31c675",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The tools of the strip",
-   "summary": "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.",
+   "summary": "The tools of the strip",
    "body": [
-    "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool",
-    "with a `command` opens its own page with that command when its tab is entered (`switchTabs`).",
-    "",
+    "| id | Label | Word | Key | State | Project |",
+    "|---|---|---|---|---|---|",
+    "| `builder` | Nuclear Builder | BUILD | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
+    "| `teams` | Your software company | TEAMS | `Ctrl+Alt+E` | built: `command` `nuclear.builder.teams` | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) (the company screen) |",
+    "| `reports` | Reports | REPORTS | `Ctrl+Alt+K` | built: `command` `nuclear.builder.reports` | [`nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/reports.md) (the Reports page, spec 017) |",
+    "| `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |",
+    "| `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |",
+    "| `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |",
+    "| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |",
+    "| `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.96048a",
+   "type": "context",
+   "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The tools of the strip",
+   "summary": "Each tool is drawn as its icon over its word (`short`, translated).",
+   "body": [
     "Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a",
     "24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people",
-    "for the company, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a",
+    "for the company, a bar chart with a coin for the reports, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a",
     "phone for the devices, a gauge for the Monitor, a pen's nib for the designer, a page for the documenter, a gear for",
     "the settings), in its colour (`--tc`: the theme's `nuclearHttpConnections.*` colours, VS Code's `charts.*` when the",
     "theme has none). A template's icon is dashed and faint. The open tool has a HUD frame (two corner brackets), a",
@@ -6356,22 +6499,16 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.b0d953",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-tools-of-the-strip.c71cff",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The tools of the strip",
-   "summary": "The tools of the strip",
+   "summary": "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.",
    "body": [
-    "| id | Label | Word | Key | State | Project |",
-    "|---|---|---|---|---|---|",
-    "| `builder` | Nuclear Builder | BUILD | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |",
-    "| `teams` | Your software company | TEAMS | `Ctrl+Alt+E` | built: `command` `nuclear.builder.teams` | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) (the company screen) |",
-    "| `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |",
-    "| `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |",
-    "| `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |",
-    "| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |",
-    "| `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |",
     "| `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |",
-    "| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |"
+    "| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |",
+    "",
+    "A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool",
+    "with a `command` opens its own page with that command when its tab is entered (`switchTabs`)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/workspace.md"
@@ -7145,9 +7282,9 @@
    "id": "doc:extensions/vscode/docs/08-guides/workspace.md#the-welcome-page",
    "type": "guide",
    "title": "The Nuclear workspace — The welcome page",
-   "summary": "`Ctrl+Alt+W`, and at startup when no editor is open (`nuclear.workspace.welcome`): the projects, the tools and their keys.",
+   "summary": "`Ctrl+Alt+W` (at startup too, when no editor is open, only if you turn on `nuclear.workspace.welcome`; off by default since 0.73.2): the projects, the tools and their keys.",
    "body": [
-    "`Ctrl+Alt+W`, and at startup when no editor is open (`nuclear.workspace.welcome`): the projects, the tools and",
+    "`Ctrl+Alt+W` (at startup too, when no editor is open, only if you turn on `nuclear.workspace.welcome`; off by default since 0.73.2): the projects, the tools and",
     "their keys. A click on a tab or an action also shows a short message with the key that does the same."
    ],
    "sources": [
@@ -7192,18 +7329,31 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.8513c2",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.95947e",
    "type": "guide",
    "title": "The Nuclear workspace — Tool tabs",
-   "summary": "The tools are at the bottom of the strip, each an icon in its colour over a word; hover one (or reach it with Tab) to see its name and key.",
+   "summary": "The tools act on the last project you were in.",
+   "body": "The tools act on the last project you were in.",
+   "sources": [
+    "extensions/vscode/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.9da74a",
+   "type": "guide",
+   "title": "The Nuclear workspace — Tool tabs",
+   "summary": "Tool tabs",
    "body": [
-    "The tools are at the bottom of the strip, each an icon in its colour over a word; hover one (or reach it with Tab)",
-    "to see its name and key. The open one has a frame and a glowing bar; a dashed icon is a tool not built yet.",
-    "",
     "| Tool | Icon | Key | State | Guide |",
     "|---|---|---|---|---|",
     "| Nuclear Builder | a factory | `Ctrl+Alt+P` | built | [Nuclear Builder](../../../tools/nuclear-builder/docs/08-guides/README.md) |",
     "| Your software company | three people | `Ctrl+Alt+E` | built: the teams, their members and the new-team wizard | [Make a team](../../../tools/nuclear-builder/docs/08-guides/make-a-team.md) |",
+    "| Reports | a bar chart with a coin | `Ctrl+Alt+K` | built: the bill of tokens and money and the reports of the factory's work | [Read the reports](../../../tools/nuclear-builder/docs/08-guides/read-the-reports.md) |",
     "| Nuclear Atlas | a chat bubble | `Ctrl+Alt+A` | built | [Nuclear Atlas](../../../tools/nuclear-atlas/docs/08-guides/README.md) |",
     "| HTTP Connections | a plug | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |",
     "| Devices | a phone | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |",
@@ -7222,11 +7372,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.95947e",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs.fe1085",
    "type": "guide",
    "title": "The Nuclear workspace — Tool tabs",
-   "summary": "The tools act on the last project you were in.",
-   "body": "The tools act on the last project you were in.",
+   "summary": "The tools are at the bottom of the strip, each an icon in its colour over a word; hover one (or reach it with Tab) to see its name and key.",
+   "body": [
+    "The tools are at the bottom of the strip, each an icon in its colour over a word; hover one (or reach it with Tab)",
+    "to see its name and key. The open one has a frame and a glowing bar; a dashed icon is a tool not built yet."
+   ],
    "sources": [
     "extensions/vscode/docs/08-guides/workspace.md"
    ],
@@ -8575,9 +8728,9 @@
    "id": "doc:extensions/zed/AGENTS.md#zed-extension",
    "type": "readme",
    "title": "Zed extension",
-   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.72.0): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
+   "summary": "The NuclearLang extension for Zed (`nuclearlang`, 0.74.0): a tree-sitter grammar of tokens, the client of the language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables.",
    "body": [
-    "The NuclearLang extension for Zed (`nuclearlang`, 0.72.0): a tree-sitter grammar of tokens, the client of the",
+    "The NuclearLang extension for Zed (`nuclearlang`, 0.74.0): a tree-sitter grammar of tokens, the client of the",
     "language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables. What the three extensions",
     "share: [`../AGENTS.md`](../AGENTS.md)."
    ],
@@ -8606,11 +8759,82 @@
    }
   },
   {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.2e4130",
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.3b8d04",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`).",
+    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project."
+   ],
+   "sources": [
+    "extensions/zed/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.49cdab",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.62.0: the version of VS Code's company screen; nothing changes in this extension.",
+    "- 0.61.0: the version of VS Code's Nuclear Chat, faces and Nuclear Monitor; nothing changes in this extension.",
+    "- 0.60.0: the version of VS Code's second Builder workbench and HTTP Connections' WebSockets; nothing changes in this extension.",
+    "- 0.59.0: the version of VS Code's Builder workbench and chat; nothing changes in this extension.",
+    "- 0.58.0: the version of VS Code's and Android Studio's software factory, onboarding and squad screen; nothing changes in this extension.",
+    "- 0.57.0: the version of VS Code's workspace tree and first Spanish texts; nothing changes in this extension.",
+    "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
+    "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
+    "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension."
+   ],
+   "sources": [
+    "extensions/zed/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.4aa459",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
+    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
+    "- 0.52.0: the version of the three extensions (HTTP Connections and Nuclear Atlas renamed in VS Code and Android Studio; nothing changes in Zed).",
+    "- 0.51.0: the version of the three extensions (one repository: the extension is `extensions/zed/`; the framework's commands of its tasks are `nuclear <command>`).",
+    "- First public version.",
+    "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
+    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
+    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
+   ],
+   "sources": [
+    "extensions/zed/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.c9383b",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.74.0: no change of its own (`nuclear run` writes the project's run log).",
+    "- 0.73.2: no change of its own (the VS Code devices' launch log).",
+    "- 0.73.1: no change of its own (the VS Code launch of a mobile app).",
+    "- 0.73.0: the version of VS Code's Reports page (spec 017); nothing changes in this extension.",
     "- 0.72.0: the language server's new diagnostics (a Result is always handled, N0117, N0118, N0220, N0224).",
     "- 0.71.0: the version of VS Code's chat, toolchains and light local chat; nothing changes in this extension.",
     "- 0.70.0: the version of VS Code's skills, models, notifications and DevOps; nothing changes in this extension.",
@@ -8620,75 +8844,7 @@
     "- 0.66.0: the version of VS Code's team wizard; nothing changes in this extension.",
     "- 0.65.0: the version of VS Code's portraits and profiles; nothing changes in this extension.",
     "- 0.64.0: the version of VS Code's chat agent picker; nothing changes in this extension.",
-    "- 0.63.0: the version of the Builder's MCP server and VS Code's per-folder workspace; nothing changes in this extension.",
-    "- 0.62.0: the version of VS Code's company screen; nothing changes in this extension.",
-    "- 0.61.0: the version of VS Code's Nuclear Chat, faces and Nuclear Monitor; nothing changes in this extension.",
-    "- 0.60.0: the version of VS Code's second Builder workbench and HTTP Connections' WebSockets; nothing changes in this extension."
-   ],
-   "sources": [
-    "extensions/zed/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.c69fe0",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.59.0: the version of VS Code's Builder workbench and chat; nothing changes in this extension.",
-    "- 0.58.0: the version of VS Code's and Android Studio's software factory, onboarding and squad screen; nothing changes in this extension.",
-    "- 0.57.0: the version of VS Code's workspace tree and first Spanish texts; nothing changes in this extension.",
-    "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
-    "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
-    "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension.",
-    "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writ"
-   ],
-   "sources": [
-    "extensions/zed/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.da3b63",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "es `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`).",
-   "body": [
-    "es `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`).",
-    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project.",
-    "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
-    "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests.",
-    "- 0.52.0: the version of the three extensions (HTTP Connections and Nuclear Atlas renamed in VS Code and Android Studio; nothing changes in Zed).",
-    "- 0.51.0: the version of the three extensions (one repository: the extension is `extensions/zed/`; the framework's commands of its tasks are `nuclear <command>`).",
-    "- First public version.",
-    "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001)."
-   ],
-   "sources": [
-    "extensions/zed/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.f17a96",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
-    "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
+    "- 0.63.0: the version of the Builder's MCP server and VS Code's per-folder workspace; nothing changes in this extension."
    ],
    "sources": [
     "extensions/zed/CHANGELOG.md"

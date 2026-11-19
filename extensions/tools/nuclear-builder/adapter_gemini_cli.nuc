@@ -6,7 +6,7 @@ use pathlib{ Path }
 // `--model`, `--approval-mode auto_edit`, `--allowed-mcp-server-names`). The role is rendered as a `GEMINI.md` in
 // the run's temporary folder and given at the head of the prompt; the Nuclear MCP server and the Builder's are in a settings file there
 // (`GEMINI_CLI_SYSTEM_SETTINGS_PATH`). Gemini CLI brings its own login and does not report a cost: its tokens are
-// events, its cost 0.
+// counted (the result's `stats`), its cost 0.
 
 renderGemini(role: Role, work: Work, at: Path) <string, string>
   at.joinpath("GEMINI.md").writeText("# The ${role.title} of the software factory\n\n${role.text()}\n")
@@ -35,7 +35,10 @@ geminiLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, 
     emit({ "type": "tool-result", "id": ev["tool_id"], "ok": ev["status"] == "success", "text": "${ev["output"] ?? ""}".substring(0, 20000) })
   else if kind == "result"
     found["failed"] = ev["status"] == "error"
-    emit({ "type": "tokens", "usage": ev["stats"] ?? {} })
+    stats: <string, any> = ev["stats"] ?? ({} as <string, any>)
+    addTokens(found, "inTokens", stats["input_tokens"])
+    addTokens(found, "outTokens", stats["output_tokens"])
+    emit({ "type": "tokens", "usage": stats })
   else if kind == "error"
     found["failed"] = true
     found["text"] = "${ev["message"] ?? json.dumps(ev)}"

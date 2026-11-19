@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-19
 related: [../../../docs/03-adr/0002-the-nuclear-workspace.md, client.md, ai-services.md]
 ---
 # The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`)
@@ -27,6 +27,7 @@ In this order: the AI factory, the tools of a running project, the ones not buil
 |---|---|---|---|---|---|
 | `builder` | Nuclear Builder | BUILD | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |
 | `teams` | Your software company | TEAMS | `Ctrl+Alt+E` | built: `command` `nuclear.builder.teams` | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) (the company screen) |
+| `reports` | Reports | REPORTS | `Ctrl+Alt+K` | built: `command` `nuclear.builder.reports` | [`nuclear-builder`](../../../tools/nuclear-builder/docs/02-architecture/reports.md) (the Reports page, spec 017) |
 | `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |
 | `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |
 | `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
@@ -40,7 +41,7 @@ with a `command` opens its own page with that command when its tab is entered (`
 
 Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a
 24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people
-for the company, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a
+for the company, a bar chart with a coin for the reports, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a
 phone for the devices, a gauge for the Monitor, a pen's nib for the designer, a page for the documenter, a gear for
 the settings), in its colour (`--tc`: the theme's `nuclearHttpConnections.*` colours, VS Code's `charts.*` when the
 theme has none). A template's icon is dashed and faint. The open tool has a HUD frame (two corner brackets), a
@@ -89,7 +90,12 @@ shown by the context key `nuclear.platform` that `refresh()` sets, run by `actio
 - Mobile run / debug → `nuclear.run` / `nuclear.debug` with the root; reload → `flutter.hotReload`; device →
   `nuclear.runOnDevice(undefined, root)`; api → the HTTP Connections tool.
 - The rest runs in a terminal named `<project> · <action>` with `TERMINAL_COMMANDS` (`nuclear run`, `build`,
-  `test`, `check`); `nuclear install` goes first for a backend or web run or test when the app has no packages.
+  `test`, `check`); `nuclear install` goes first for a test when the app has no packages (`nuclear run` installs
+  them itself, as a step of its log).
+- ▷ Serve is followed (`followRun`): a progress notification reads the lines `nuclear run` appends to the project's
+  `.nuclear/logs/run.log` (`RunFollower` of `launch-log.ts`): building, installing, starting the server, ready when its
+  address answers; `failed:`, `exited:` or a step silent past its limit (`RUN_STALL_MS`) shows why with *Show the log*
+  and *Try again*.
 - A mobile run, debug or device of a root outside the workspace folders saves a `PendingAction` in the global
   state, adds the folder and reloads; `activateWorkspace` resumes it.
 - `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the
@@ -121,7 +127,7 @@ Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToV
 `Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/A/H/V/F/D/M/S`; the actions
 `Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web).
 
-`WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation when
+`WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation (since 0.73.2 only when the user turned it on: the setting is off by default) when
 `nuclear.workspace.welcome` is on and every tab group is empty.
 
 ## The right-click menu of the file tree (`treeMenu.ts`)

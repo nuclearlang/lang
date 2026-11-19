@@ -1,6 +1,6 @@
 # VS Code extension
 
-The NuclearLang extension for VS Code (`nuclearlang`, 0.72.0): the client of the language server, semantic
+The NuclearLang extension for VS Code (`nuclearlang`, 0.74.0): the client of the language server, semantic
 highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the
 Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is
 in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What

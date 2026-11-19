@@ -1,3 +1,14 @@
+use contextvars{ ContextVar }
+
+// A request's count of tokens: what its models read and wrote, and the model that answered last.
+Tally(inTokens: int = 0, outTokens: int = 0, model: string = "")
+
+// The tokens the models of one request read and wrote, as Ollama counted them (`prompt_eval_count`, `eval_count`):
+// set for each request by the controller (`count`), added to by every `ask` of it (a graph's steps run in tasks that
+// share it), given back as the reply's `usage` (spec 017: Nuclear Builder's ledger). Never estimated: a model that
+// reports no counts adds nothing.
+TALLY: ContextVar<Tally?> = ContextVar("tally", default = null)
+
 // What every local agent shares: the Nuclear Smart Graph, the NuclearLang tools and the models. No method has a doc
 // comment, so none is offered to a model as a tool: the graphs call them in a fixed order, because a small model
 // follows steps better than it chooses tools.
@@ -122,7 +133,21 @@ tools Workbench(knowledge: GraphClient, toolchain: Toolchain)
 
   ask(model: string, prompt: string) string
     reply = ~chatModel(model).ainvoke(prompt)
+    tally(reply)
     textOf(reply)
+
+  // Adds what a model's reply counted to the request's tally.
+  tally(reply: any) void
+    tallied = TALLY.get()
+    used: <string, any>? = reply.usageMetadata
+    if tallied == null or used == null
+      return
+    given: int = used!["input_tokens"] ?? 0
+    wrote: int = used!["output_tokens"] ?? 0
+    tallied!.inTokens += given
+    tallied!.outTokens += wrote
+    said: <string, any> = reply.responseMetadata ?? ({} as <string, any>)
+    tallied!.model = "${said["model"] ?? tallied!.model}"
 
   // Writes the code of a piece from its prompt (`request`) and repairs it with the compiler's errors, each with the
   // card of its code, at most `tries` times. With `faithful`, an answer that compiles is also held to the task's own

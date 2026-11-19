@@ -8,6 +8,7 @@ import { lang, l10n } from '../../../../vscode/src/i18n';
 import { addMembers, Agent, cloneSkill, createSkill, deleteSkill, setSkills, updateSkill, agentsHere, modelsHere, ModelsHere, CommandMissing, createTeam, removeMember, updateMember, deleteTeam, duplicateTeam, exportTeam, importTeam, clearTeamLogo, logoData, renameTeam, rosterFaces, Screen, suggestMembers, suggestNames, saveTeam, setDefaultTeam, setTeamLogo, Team, TeamDraft, TeamEntry, teamScreen, vaultList, vaultSet } from './cli';
 import { teamWork } from '../workbench';
 import { memberActivity, teamSpend } from './hud';
+import { teamNumbers } from '../reports/metrics';
 
 /** A run as the company screen needs it: whose team, its spec, where it is. */
 type WorkRun = Parameters<typeof teamWork>[0][number] & Parameters<typeof memberActivity>[0][number] & { costUsd?: number };
@@ -217,6 +218,10 @@ export class TeamsHost {
         if (!id) return;
         this.put(await clearTeamLogo(id));
         return this.state();
+      case 'team:reports':
+        // the Reports page, filtered to the member
+        void vscode.commands.executeCommand('nuclear.builder.reports', { team: m.team, member: m.member });
+        return;
       case 'team:key': {
         const provider = String(m.provider ?? '');
         if (!/^[a-z-]+$/.test(provider)) return;
@@ -257,6 +262,9 @@ export class TeamsHost {
     const runs = this.work?.() ?? [];
     const activity = team ? Object.fromEntries((team.members ?? []).map((x) => [x.id, memberActivity(runs, team.id, x.employee ?? '')])) : {};
     this.post({ type: 'team:state', teams, team, logo: team ? logoData(team) : null, roster: s.roster, temperaments: s.temperaments, faces, thumbs, vault: s.vault, library: s.library ?? [], agents: s.agents ?? [], activity, company: this.work ? this.company(teams, s.shown) : null });
+    // each member's numbers from the factory's ledger (the member panel's Summary): after the page is drawn, never
+    // holding it; an older nuclear-builder without `metrics` leaves them out
+    if (team) void teamNumbers(team.id).then((numbers) => this.post({ type: 'team:numbers', team: team.id, numbers })).catch(() => undefined);
   }
 
   /** The company screen's panels: each team with its logo, description, members, tech lead, what it works on, and its

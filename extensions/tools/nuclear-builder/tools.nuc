@@ -199,6 +199,17 @@ BuilderTools(root: string)
       toolSaid(listRuns(root).map((r) => runSummary(r)))
     attempt(body)
 
+  // The factory's reports from its ledger, every project of this machine (spec 017): the bill (tokens in and out
+  // and USD by period, provider and model, team, member and project; local against paid; the budget each run used),
+  // throughput and velocity, cycle time, burndown, cumulative flow, the gates waiting for the user, quality, each
+  // member's work (people) and the indicators. `view` is one of them (all when empty); `project` a name or folder,
+  // `team` an id, `member` a member's id; `since` and `until` dates YYYY-MM-DD; `by` day or week. A token count a
+  // provider did not report is null, never guessed (`notReported`).
+  metricsTool(view: string = "", project: string = "", team: string = "", member: string = "", since: string = "", until: string = "", by: string = "day") string
+    body = () =>
+      toolSaid(metrics(root, filterOf(projectOf(project), team, member, since, until, by), view))
+    attempt(body)
+
   // A run file: every station and step, who did it, its decisions, the files it wrote and the cost; `waiting` is the
   // question it waits on.
   runFileTool(id: string) string
@@ -575,7 +586,7 @@ BuilderTools(root: string)
   all() any[]
     [
       specNewTool, specListTool, specShowTool, specDraftTool, specAcceptTool, specDiscardTool, specMoveTool, specMigrateTool, specDeleteTool,
-      runStartTool, runsTool, runFileTool, runJournalTool, runAnswerTool, runResumeTool, runRetryTool, runRestartTool, runStopTool,
+      runStartTool, runsTool, metricsTool, runFileTool, runJournalTool, runAnswerTool, runResumeTool, runRetryTool, runRestartTool, runStopTool,
       checksTool, checkSwitchTool, checkAddTool, checkMarkTool,
       teamListTool, teamShowTool, teamCreateTool, teamSuggestTool, teamNameSuggestTool, teamRunnableTool, teamUpdateTool, teamMemberAddTool, teamMemberRemoveTool, teamMemberUpdateTool, teamDuplicateTool, teamDeleteTool, teamDefaultTool, teamExportTool, teamImportTool, teamLogoTool, teamRosterTool, teamTemperamentsTool,
       skillsListTool, skillsShowTool, skillsCloneTool, skillsCreateTool, skillsUpdateTool, skillsDeleteTool, teamSkillsSetTool,

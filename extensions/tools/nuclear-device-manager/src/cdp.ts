@@ -15,12 +15,21 @@ interface Ws {
 }
 const WebSocketImpl = (globalThis as unknown as { WebSocket: new (url: string) => Ws }).WebSocket;
 
+/** How long a call (or the connection) may take: a browser that stops answering fails the call, never hangs it. */
+const CALL_MS = 30_000;
+
 /** A small CDP client over the WebSocket of one page. */
 export class Cdp {
   private id = 0;
   private readonly pending = new Map<number, (r: { result?: unknown; error?: { message: string } }) => void>();
   private readonly listeners = new Map<string, (params: Record<string, unknown>) => void>();
+  private closed?: () => void;
   private constructor(private readonly ws: Ws) {
+    ws.onclose = () => {
+      for (const done of this.pending.values()) done({ error: { message: 'the browser closed the page' } });
+      this.pending.clear();
+      this.closed?.();
+    };
     ws.onmessage = (m) => {
       const d = JSON.parse(String(m.data));
       if (d.id !== undefined) {
@@ -33,15 +42,22 @@ export class Cdp {
   static open(url: string): Promise<Cdp> {
     return new Promise((done, fail) => {
       const ws = new WebSocketImpl(url);
-      ws.onopen = () => done(new Cdp(ws));
-      ws.onerror = () => fail(new Error(`cannot connect to ${url}`));
+      const late = setTimeout(() => (ws.close(), fail(new Error(`no answer from ${url}`))), CALL_MS);
+      ws.onopen = () => (clearTimeout(late), done(new Cdp(ws)));
+      ws.onerror = () => (clearTimeout(late), fail(new Error(`cannot connect to ${url}`)));
     });
   }
 
   call<T = unknown>(method: string, params: object = {}): Promise<T> {
     return new Promise((done, fail) => {
       const id = ++this.id;
-      this.pending.set(id, (r) => (r.error ? fail(new Error(r.error.message)) : done(r.result as T)));
+      const late = setTimeout(() => this.pending.get(id)?.({ error: { message: `${method}: no answer from the browser` } }), CALL_MS);
+      this.pending.set(id, (r) => {
+        clearTimeout(late);
+        this.pending.delete(id);
+        if (r.error) fail(new Error(r.error.message));
+        else done(r.result as T);
+      });
       this.ws.send(JSON.stringify({ id, method, params }));
     });
   }
@@ -51,7 +67,7 @@ export class Cdp {
   }
 
   set onclose(f: () => void) {
-    this.ws.onclose = f;
+    this.closed = f;
   }
 
   close(): void {
@@ -64,7 +80,7 @@ export class Cdp {
 export async function browserPage(cdpPort: number, tries = 600): Promise<Cdp> {
   for (let i = 0; i < tries; i++) {
     try {
-      const targets = (await (await fetch(`http://${HOST}:${cdpPort}/json/list`)).json()) as {
+      const targets = (await (await fetch(`http://${HOST}:${cdpPort}/json/list`, { signal: AbortSignal.timeout(2000) })).json()) as {
         type: string;
         url: string;
         webSocketDebuggerUrl: string;

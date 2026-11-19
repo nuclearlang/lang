@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-19
 related: [../04-specs/README.md, ../02-architecture/limits.md]
 ---
 # Roadmap
@@ -13,6 +13,15 @@ The pending work of the language, the compiler and the language server. A done i
 - **The language to 1.0** ([spec 005](../04-specs/005-language-1-0/plan.md)): `nuclear fmt` is done (only reflow).
   Left: TypeScript type definitions, member types in the definitions, named and factory constructors, patterns in
   lambdas, `for` and `match`, `const` inference; then the 1.0 spec is frozen.
+
+- **A `match` assigned to an index** (python dialect): `found[key] = match v …` is emitted as `found.get(key) = …`, a
+  syntax error of the generated Python that `nuclear check` does not report (found by Nuclear Builder's `metrics.nuc`,
+  which names the match first). Left: emit the index's assignment, and a golden test. Not reproduced in a small file:
+  `found[v] = match v` (string arms, calls in the arms, `+=`, `? :`, `if`/`else`) is emitted as an index assignment
+  with a ternary in python, typescript and dart; the next step is to build `metrics.nuc` with the workaround removed
+  and find what makes the match lower into statements there.
+- **Dart: `+=` on a map's entry with a ternary** (`found[v] += c ? 1 : 2`) is emitted as
+  `found.update(v, (v) => v + c ? 1 : 2)`: the lambda's parameter shadows the key and the value is not parenthesized.
 
 ## Untested
 

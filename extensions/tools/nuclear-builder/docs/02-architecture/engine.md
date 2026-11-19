@@ -117,7 +117,7 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
 - **Safety** (`run.nuc`, today's rules): the run file is written atomically on every change; every event goes to
   `<id>.log` (JSON lines); the process beats every 10 s (`owner`), a beat older than 45 s or a dead process on this
   machine is an orphaned run; every file a step changes goes to the ledger (`writes`: the text before, the digest
-  after), found by comparing the project's files before and after the step; what a failed step wrote is undone, a
+  after, the lines added and removed), found by comparing the project's files before and after the step; what a failed step wrote is undone, a
   file changed since is kept and named; an orphaned run is recovered (its running steps failed, their files undone,
   `interrupted`, with the `stepId` it was in) and goes on from that step; a retry from a station moves the steps from
   there to `previous` and undoes their files; a retry from a step (`--step <id>`) keeps the steps of its station
@@ -176,7 +176,9 @@ title, Spanish title], `youApproved`, `youAskedChange`, `qaPlan`, `youWentOn`, `
 `youApprovedDelivery`; a step named by a file or a command has none, and a run without them shows the English),
 `actor`, `status`, `started`, `ended`, `summary`, `log`, `trace` (an item `{step, detail}`, with
 `"kind": "tool"` when it is a tool call of an agent), `decisions`, `files`, and a
-role's step `role`, `employee`, `kind`, `provider`, `model`, `costUsd`, `phase`. The actor of a role's step is the
+role's step `role`, `employee`, `kind`, `provider`, `model`, `costUsd`, `usage`, `phase`; every ended step `lines`;
+the run `gates` (each question's `opened` and `answered`). Each ended step and each end of a run is also a line of the
+factory's ledger ([reports.md](reports.md)). The actor of a role's step is the
 role's id (`analyst`…), of a command `shell`, of the user's answer `you`. The run adds `team` (`{ id, name }`, the team that works it,
 written when it is made and again when it starts: a retry with another team names that one; the page shows that
 team's logo after the team changes), `factory` (`team`, `teamName`, `budgetUsd`), `spending`, `waiting` (the question it waits for, its `key` and `args`

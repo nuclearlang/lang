@@ -1052,7 +1052,7 @@
       "summary": "Every action of Nuclear Builder's pages is a `nuclear-builder` command and a tool of its MCP server, `nuclear-builder mcp`: an agent reads the slides, writes the specs with their criteria, starts their runs, answers their gates and keeps the teams and the line. The factory gives the server to every agent it runs, beside `nuclear-mcp`; what spends money, destroys or acts in the user's name waits for the user.",
       "body": [
         "- In the chat: `read docs/slides.pdf and write all the specs from those slides, then write the code through the Builder` — the member calls `project_read` (a PDF with pdftotext, a .pptx, markdown), `spec_new` with the acceptance criteria (refused without them: it asks), then `run_start` for each spec; each run is told in its thread.",
-        "- 55 tools (the skills too: `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `team_skills_set`; `models_list`, `agents_list`): specs (`spec_new`, `spec_list`, `spec_show`, `spec_draft`, `spec_accept`, `spec_discard`, `spec_move`, `spec_migrate`, `spec_delete`), runs (`run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`), QA's plan (`checks`, `check_switch`, `check_add`, `check_mark`), teams (`team_*`: the new-team wizard's `team_create`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_member_add|remove|update`), the line (`line_show`, `line_set`), `ci_export`, `connections_check`, `project_read`, `vault_list`, `agents_list` (the agents a conversation can choose on this machine).",
+        "- 56 tools (the skills too: `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `team_skills_set`; `models_list`, `agents_list`): specs (`spec_new`, `spec_list`, `spec_show`, `spec_draft`, `spec_accept`, `spec_discard`, `spec_move`, `spec_migrate`, `spec_delete`), runs (`run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`), the reports (`metrics`), QA's plan (`checks`, `check_switch`, `check_add`, `check_mark`), teams (`team_*`: the new-team wizard's `team_create`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_member_add|remove|update`), the line (`line_show`, `line_set`), `ci_export`, `connections_check`, `project_read`, `vault_list`, `agents_list` (the agents a conversation can choose on this machine).",
         "- Money: a tool never confirms it; it answers `waiting: spending` and the run waits for the user's two confirmations (the editor's two questions, or two in the chat; force confirmation holds).",
         "- The user's: deleting a spec or a team, a restart from scratch, the delivery gate (a commit and a pull request in the user's name), the line's gates, commands and forceConfirm, replacing a CI file answer `needsUser`; the chat asks the user and applies it on a yes. Merging is never a tool; an API key is kept only by the user.",
         "- Every agent gets it: Claude Code (`--mcp-config`, `mcp__nuclear_builder`), OpenCode (its `mcp` table), Codex (`-c mcp_servers.nuclear_builder.*`), Gemini CLI (its settings), an API model's loop (a second MCP client); the local Nuclear Developer calls the same tools as text blocks.",
@@ -1098,6 +1098,57 @@
         "extensions/tools/nuclear-builder/docs/08-guides/ask-the-team.md",
         "extensions/tools/nuclear-builder/tools.nuc",
         "extensions/tools/nuclear-builder/mcp.nuc"
+      ],
+      "meta": {
+        "area": "tools",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:factory-reports",
+      "type": "can",
+      "title": "Can: read what the factory spent and made (nuclear-builder metrics, the Reports page)",
+      "summary": "Every Builder step and Nuclear Chat answer is a line of the factory's ledger (`~/.config/nuclearlang/factory/ledger/`, every project, on the machine only): who, where, the tokens and money the provider reported, the time, the lines added and removed, the result. `nuclear-builder metrics` and the MCP tool `metrics` read it as a bill and Jira-like reports; VS Code's *Reports* tool (Ctrl+Alt+K) draws them.",
+      "body": [
+        "- The views: `bill` (tokens in and out, USD, local against paid, by period, provider and model, team, member, project; the budget each run used), `throughput` (specs delivered, velocity by team), `cycle` (cycle time and time per station), `burndown`, `flow` (cumulative flow), `waiting` (the gates open now and how long), `quality` (failures, retries, first-try pass rate per station), `people` (each member's steps, answers, lines, passes, fails, tokens, money), `indicators` (cost per delivered spec, tokens per useful line, the local share).",
+        "- `nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day|week] [--view <view>] --json`; the MCP tool takes `since` and `until` for the dates.",
+        "- Measured at the source, never estimated: Claude Code's usage, OpenCode's steps, Codex's and Gemini CLI's turns, the APIs' usage, Ollama's counts for the local Nuclear Developer; a provider that reports none is counted as not reported.",
+        "- A member's numbers are also in their panel's Summary on *Your software company*; the runs of before are copied into the ledger once, with what their files had."
+      ],
+      "keys": [
+        "metrics",
+        "reports",
+        "nuclear-builder metrics",
+        "tokens spent",
+        "cost of the team",
+        "informes",
+        "burndown",
+        "velocity"
+      ],
+      "asks": [
+        "how much did the team spend this week",
+        "how many tokens did claude code use",
+        "which member costs the most",
+        "what is waiting for me in the builder",
+        "cuánto gastó el equipo",
+        "show the burndown of the factory"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:agents-do-everything"
+        },
+        {
+          "rel": "uses",
+          "to": "tool:nuclear-builder.run"
+        }
+      ],
+      "sources": [
+        "docs/04-specs/017-productivity-reports/design.md",
+        "extensions/tools/nuclear-builder/docs/02-architecture/reports.md",
+        "extensions/tools/nuclear-builder/docs/08-guides/read-the-reports.md",
+        "extensions/tools/nuclear-builder/metrics.nuc",
+        "extensions/tools/nuclear-builder/usage.nuc"
       ],
       "meta": {
         "area": "tools",

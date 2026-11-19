@@ -5948,6 +5948,27 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/015-monitor/tasks.md#phase-3-the-automatic-monitor-the-user-2026-11-19-not-started",
+   "type": "spec",
+   "title": "Spec 015: Nuclear Monitor — Tasks — Phase 3: the automatic Monitor (the user, 2026-11-19; not started)",
+   "summary": "receives a browser's report through a collector of the extension, keeps the monitor on with `.nuclear/monitor/on`, and shows designed states for an end user (no path, command or raw error in the body).",
+   "body": [
+    "- [ ] The page uses the workspace's project, starts the measured run itself (terminal or device, always visible),",
+    "      receives a browser's report through a collector of the extension, keeps the monitor on with",
+    "      `.nuclear/monitor/on`, and shows designed states for an end user (no path, command or raw error in the body).",
+    "      The full list: `extensions/tools/nuclear-monitor/docs/01-product/roadmap.md` (\"The automatic Monitor\")."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/015-monitor/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/016-agent-onboarding/design.md#the-clients",
    "type": "spec",
    "title": "Spec 016: An agent learns Nuclear from the MCP server alone — Design — The clients",
@@ -6391,13 +6412,103 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/017-productivity-reports/design.md#rules",
+   "type": "spec",
+   "title": "Spec 017: Productivity and consumption reports — Design — Rules",
+   "summary": "Rules",
+   "body": [
+    "- Measured, never estimated: a provider that gives no tokens shows \"not reported\", not a guess.",
+    "- The ledger is the user's, outside the extension's storage; nothing leaves the machine.",
+    "- The UI is only a UI (ADR-platform-0009): the page reads `nuclear-builder metrics`, which agents read too."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/017-productivity-reports/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/017-productivity-reports/design.md#the-numbers",
+   "type": "spec",
+   "title": "Spec 017: Productivity and consumption reports — Design — The numbers",
+   "summary": "The numbers",
+   "body": [
+    "- **Tokens and money**: from the provider — Claude Code's `usage` and `total_cost_usd` (stream-json), OpenCode's step costs and tokens, the APIs' `usage`, Ollama's `prompt_eval_count`/`eval_count` for the local agents (cost 0, time real).",
+    "- **Lines**: from the run's ledger of writes (each file's text before and after): added and removed per step.",
+    "- **Time**: each step's start and end; a station's time; a spec's cycle time (written → delivered or stopped); time waiting for the user (a gate opened → answered).",
+    "- **Result**: a step passed, failed, retried; a station passed at the first try or after repairs; a spec delivered."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/017-productivity-reports/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/017-productivity-reports/design.md#the-parts",
+   "type": "spec",
+   "title": "Spec 017: Productivity and consumption reports — Design — The parts",
+   "summary": "The parts",
+   "body": [
+    "| Part | Where | What |",
+    "|---|---|---|",
+    "| The usage at the source | `extensions/tools/nuclear-builder/adapter*.nuc`, `api_*.nuc`, `member.nuc`; the Nuclear Developer | every provider call gives `usage: {inTokens, outTokens, costUsd, ms, provider, model}`; each run step and chat answer keeps it |",
+    "| The ledger | `nuclear-builder` (Nuclear), `~/.config/nuclearlang/factory/ledger/<yyyy-mm>.jsonl` | one line per step and per chat answer, across projects, appended: who (team, member, employee, role), what (project, spec, run, station, step or channel), usage, lines added/removed, result |",
+    "| The reports | `nuclear-builder metrics [--project] [--team] [--member] [--from --to] [--by day\\|week] --json`, MCP tool `metrics` | the Jira-like views and the bill, computed from the ledger and the run files |",
+    "| The page | the VS Code tool *Reports* (`extensions/tools/nuclear-builder/src/reports/`), the strip's icon | charts in the HUD style; each member's Summary shows their numbers |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/017-productivity-reports/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/017-productivity-reports/design.md#the-views",
+   "type": "spec",
+   "title": "Spec 017: Productivity and consumption reports — Design — The views",
+   "summary": "The views",
+   "body": [
+    "- **Bill**: tokens in/out and USD by day, by provider · model, by team, by member, by project; local against paid; budget used per run.",
+    "- **Throughput and velocity**: specs delivered per day/week, per team.",
+    "- **Cycle time**: per spec and its distribution; time per station.",
+    "- **Burndown / burnup** of a period's specs.",
+    "- **Cumulative flow**: specs by station over time.",
+    "- **Waiting for you**: open gates, how long.",
+    "- **Quality**: failures and retries per station, first-try pass rate.",
+    "- **People**: each member's steps, lines, passes/fails, tokens, cost; ranking by cost and by result.",
+    "- **Indicators**: cost per delivered spec, tokens per useful line (lines kept in the delivery)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/017-productivity-reports/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/017-productivity-reports/requirements.md#goal",
    "type": "spec",
-   "title": "Spec 017: Productivity and consumption reports — Requirements (draft) — Goal",
+   "title": "Spec 017: Productivity and consumption reports — Requirements — Goal",
    "summary": "The user wants to know what each agent, member and team spends and produces: tokens, money, time, lines of code, and whether the work passed.",
    "body": [
     "The user wants to know what each agent, member and team spends and produces: tokens, money, time, lines of code,",
-    "and whether the work passed. Asked on 2026-11-18; the plan is written after the work in progress ends."
+    "and whether the work passed. Asked on 2026-11-18; built on 2026-11-19."
    ],
    "agents": false,
    "sources": [
@@ -6412,9 +6523,13 @@
   {
    "id": "doc:docs/04-specs/017-productivity-reports/requirements.md#open",
    "type": "spec",
-   "title": "Spec 017: Productivity and consumption reports — Requirements (draft) — Open",
-   "summary": "Open",
-   "body": "- Where the history of every run across projects is kept and for how long; export (CSV); budgets and alerts.",
+   "title": "Spec 017: Productivity and consumption reports — Requirements — Open",
+   "summary": "(`extensions/tools/nuclear-builder/docs/02-architecture/reports.md`).",
+   "body": [
+    "- Decided by the design: every run's history is kept in the factory's ledger, one file a month, across projects",
+    "  (`extensions/tools/nuclear-builder/docs/02-architecture/reports.md`). Left for the user to decide: how long it is",
+    "  kept, an export (CSV), budgets and alerts over the reports (the Builder's roadmap)."
+   ],
    "agents": false,
    "sources": [
     "docs/04-specs/017-productivity-reports/requirements.md"
@@ -6428,7 +6543,7 @@
   {
    "id": "doc:docs/04-specs/017-productivity-reports/requirements.md#philosophy",
    "type": "spec",
-   "title": "Spec 017: Productivity and consumption reports — Requirements (draft) — Philosophy",
+   "title": "Spec 017: Productivity and consumption reports — Requirements — Philosophy",
    "summary": "Chat keeps each answer's cost.",
    "body": [
     "- **Measure what is already recorded.** A run already keeps each step's cost, time and the files it wrote; Nuclear",
@@ -6449,7 +6564,7 @@
   {
    "id": "doc:docs/04-specs/017-productivity-reports/requirements.md#requirements-first-version",
    "type": "spec",
-   "title": "Spec 017: Productivity and consumption reports — Requirements (draft) — Requirements (first version)",
+   "title": "Spec 017: Productivity and consumption reports — Requirements — Requirements (first version)",
    "summary": "1. Every step and every chat answer keeps: tokens in and out (from the provider: Claude Code's usage, OpenCode's step costs, the APIs' usage, Ollama's counts for the local agents), cost in USD, time, lines added and removed (from the run's ledger), the result (passed, failed, retried, tests).",
    "body": [
     "1. **Every step and every chat answer keeps**: tokens in and out (from the provider: Claude Code's usage, OpenCode's",
@@ -6479,7 +6594,7 @@
   {
    "id": "doc:docs/04-specs/017-productivity-reports/requirements.md#what-it-is-the-user-2026-11-18",
    "type": "spec",
-   "title": "Spec 017: Productivity and consumption reports — Requirements (draft) — What it is (the user, 2026-11-18)",
+   "title": "Spec 017: Productivity and consumption reports — Requirements — What it is (the user, 2026-11-18)",
    "summary": "A mix of Jira's reports and a bill of tokens and money: the work of the factory's teams read as a project manager reads a team's sprint (what got done, how fast, what is stuck, who did what), next to what each piece of it cost in tokens and dollars.",
    "body": [
     "A mix of Jira's reports and a bill of tokens and money: the work of the factory's teams read as a project manager",
@@ -6489,6 +6604,33 @@
    "agents": false,
    "sources": [
     "docs/04-specs/017-productivity-reports/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/017-productivity-reports/tasks.md#spec-017-tasks",
+   "type": "spec",
+   "title": "Spec 017 — Tasks",
+   "summary": "Built on 2026-11-19: `extensions/tools/nuclear-builder` (`adapter*.nuc`, `usage.nuc`, `metrics.nuc`, `src/reports/`, `tests/test_metrics.nuc`), the Nuclear Developer's `usage` (`nuclear-agents/nuclear_developer`), the strip's tool in `extensions/vscode`.",
+   "body": [
+    "- [x] T1 Usage at the source: every adapter and the API loop give `usage` (tokens in/out, cost, ms, provider, model); the Developer returns Ollama's counts; run steps and chat answers keep it; tests with stubbed providers.",
+    "- [x] T2 Lines per step from the run's writes; cycle and waiting times from the run file.",
+    "- [x] T3 The ledger: one line per step and chat answer across projects; old runs back-filled once from their run files (what they have).",
+    "- [x] T4 `nuclear-builder metrics … --json` and the MCP tool: every view of design.md; tests over a fixture ledger.",
+    "- [x] T5 The *Reports* page (HUD style, en/es, light/dark), its strip icon; each member's numbers in their Summary.",
+    "- [x] T6 Docs, the knowledge base, the editors' release.",
+    "",
+    "Built on 2026-11-19: `extensions/tools/nuclear-builder` (`adapter*.nuc`, `usage.nuc`, `metrics.nuc`, `src/reports/`,",
+    "`tests/test_metrics.nuc`), the Nuclear Developer's `usage` (`nuclear-agents/nuclear_developer`), the strip's tool in",
+    "`extensions/vscode`. What is left is in the Builder's roadmap (\"The reports\")."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/017-productivity-reports/tasks.md"
    ],
    "meta": {
     "section": "11-decisions",
@@ -6561,13 +6703,13 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.acda95",
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.96b860",
    "type": "readme",
    "title": "Specs of the platform",
    "summary": "Specs of the platform",
    "body": [
     "| [016-agent-onboarding](016-agent-onboarding/requirements.md) | An agent with no context learns Nuclear from the MCP server alone: `nuclear_start`, the atlas of topics embedded in the binary, the context documents `nuclear new` writes, every client integrated by the set-up, measured by a sandboxed run | in progress (phases 1-5 done; the other clients and the extension left) |",
-    "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | draft |"
+    "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |"
    ],
    "agents": false,
    "sources": [
