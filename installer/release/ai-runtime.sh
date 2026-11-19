@@ -11,7 +11,8 @@
 # It builds for the machine it runs on (the release runs it on a runner of each system). It needs uv and nuclear; the
 # services' code is what `nuclear build` writes from their .nuc, the packages are installed from the graph's uv.lock.
 set -eu
-REPO=$(cd "$(dirname "$0")/../.." && pwd)
+# Git Bash on Windows: the native path (D:/a/...), which uv reads; elsewhere `pwd -W` fails and `pwd` answers
+REPO=$(cd "$(dirname "$0")/../.." && { pwd -W 2>/dev/null || pwd; })
 VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' "$REPO/Cargo.toml" | head -n 1)
 NUCLEAR=${NUCLEAR:-nuclear}
 # the Python of the services: the newest every package of theirs publishes wheels for, on every system

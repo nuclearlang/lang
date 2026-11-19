@@ -84,8 +84,8 @@ the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
   (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,
   `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:
   the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each
-  system (Linux x86_64 and arm64, macOS Intel and Apple silicon, Windows), so each AI archive is tried where it
-  runs. Job `publish`: every archive,
+  system (Linux x86_64 and arm64, macOS Apple silicon, Windows x86_64), so each AI archive is tried where it
+  runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so. Job `publish`: every archive,
   checksum and `.vsix`, plus both installers, as assets of the GitHub release.
 - The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`).
 

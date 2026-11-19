@@ -54,7 +54,8 @@ The pending work of the installers, the release and the set-up of the AI service
   - a login after a real reboot of a desktop (the clean machine's reboot has no keyring; the wait for it is proved by
     a test only);
   - `installer/install.sh --ai` on a clean machine;
-  - the AI archive of macOS, Windows and Linux arm64 (only Linux x86_64 was built and tried);
+  - the AI archive of Windows (macOS Apple silicon and Linux arm64 are built and tried by the release; installed only
+    from Linux x86_64);
   - `nuclear-builder` from a release archive on Windows (`nuclear-builder.cmd`).
 
 ## To decide with the user

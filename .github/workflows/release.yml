@@ -81,7 +81,7 @@ jobs:
         include:
           - { runner: ubuntu-latest }
           - { runner: ubuntu-24.04-arm }
-          - { runner: macos-15-intel }
+          # no macos-15-intel: onnxruntime (chromadb's) publishes no wheel for an Intel Mac; the installer says so there
           - { runner: macos-15 }
           - { runner: windows-latest }
     runs-on: ${{ matrix.runner }}
