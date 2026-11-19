@@ -1,0 +1,11 @@
+// The user deletes a message (their own or a member's: the workspace is theirs): a line that names it, folded on
+// read as "deleted"; its thread's replies stay.
+usecase DeleteMessage(store: MessageStore, events: EventsAppComponent)
+  exec(workspace: string, id: string) Result<Error, Message>
+    ws = store.workspace(workspace)
+    channel = store.locate(ws, id)
+    store.message(ws, channel, id)
+    store.append(ws, channel, { "edit": id, "at": DateTime.now().millis, "deleted": true })
+    shown = store.message(ws, channel, id)
+    ~events.emit(ws.id, "message", channel, { "message": shown })
+    Ok(messageOf(shown))

@@ -72,7 +72,12 @@ testTheChoiceIsKeptInTheMachineFileAndReadBack(tmpPath: Path) void
   file = "${tmpPath.joinpath("nuclearlang", "ai.env")}"
   medium = profileOf("medium")!
   writeMachine(machineOf(medium), file)
-  expect(readMachine(file) == { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": "medium", "CODER_MODEL": medium.coder!, "ASSISTANT_MODEL": medium.assistant!, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS })
+  expect(readMachine(file) == { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": "medium", "CODER_MODEL": medium.coder!, "ASSISTANT_MODEL": medium.assistant!, "CHAT_MODEL": CHAT_MODEL, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS })
+  // the chat's small model is downloaded with every local profile
+  expect(CHAT_MODEL in modelsOf(medium))
+  // lite has one model for everything, the chat too
+  lite = profileOf("lite")!
+  expect(machineOf(lite)["CHAT_MODEL"] == lite.coder and modelsOf(lite).length == 2)
   // a later write keeps what it does not name
   writeMachine({ "CODER_MODEL": "other:1b" }, file)
   expect(readMachine(file)["CODER_MODEL"] == "other:1b" and readMachine(file)["NUCLEAR_AI_PROFILE"] == "medium")

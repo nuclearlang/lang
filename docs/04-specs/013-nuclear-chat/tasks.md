@@ -39,6 +39,13 @@ Each phase ends with its tests green and its projects' documents saying it (AGEN
 - [x] T2.2 Tests of the project (`nuclear test`, vitest: 9) and the page checked rendered in a headless browser with a
       fake bridge (en and es, dark and light, wide, a dock, narrow).
 
+- [x] T2.3 Conversations and the search, as in Slack (requirements 1–4, 10, 11, 14): a message edited (the user's) and
+      deleted (any, confirmed; its thread stays); a conversation closed, archived, opened again, renamed, its topic
+      changed, deleted (its history moved to `.nuclear/chat/deleted/`); a channel made with chosen members; the quick
+      switcher (Ctrl+K, the pencil) and the members list to start a direct message with anyone; the search with
+      `from:@member` and `in:#channel` whose result opens the message lit (also `?message=&thread=`, a notification's
+      click). Service and UI tests, e2e against the live service, rendered en/es (2026-11-18).
+
 ## Phase 3: the hosts (H)
 
 - [x] T3.1 Nuclear Builder: `nuclear-builder member --team --role --events` (the responder: the role's provider,

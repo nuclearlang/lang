@@ -1,6 +1,7 @@
 // VS Code client for the NuclearLang language server (nuclear-lsp).
 
 import { SettingsPanel } from './settingsPanel';
+import { applyToolchains } from './toolchainHost';
 import { SetupPanel } from './setupPanel';
 import { migrateSettings } from './migrateSettings';
 import { TeamsPanel } from '../../tools/nuclear-builder/src/teams/panel';
@@ -36,6 +37,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   await migrateSettings();
   // the language of every page and message (nuclear.language): the status bar's globe and the change event
   registerLanguage(context);
+  // the toolchains' settings into the environment of every process and terminal, before the first one starts
+  applyToolchains(context);
   generated = new GeneratedCodeProvider();
   metricsDecoration = new CodeMetricsDecoration();
   statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);

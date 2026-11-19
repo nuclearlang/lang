@@ -83,6 +83,49 @@
           "path": "{workspace}/{channel}/agent",
           "returns": "Channel",
           "verb": "put"
+        },
+        {
+          "error": "Error",
+          "name": "changeChannel",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "changes",
+              "type": "ChannelChanges"
+            }
+          ],
+          "path": "{workspace}/{channel}",
+          "returns": "Channel",
+          "verb": "patch"
+        },
+        {
+          "error": "Error",
+          "name": "deleteChannel",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}/{channel}",
+          "returns": "Channel",
+          "verb": "delete"
         }
       ],
       "transports": [
@@ -408,6 +451,25 @@
           "path": "{workspace}/message/{id}/click",
           "returns": "ChatEvent",
           "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "deleteMessage",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}/message/{id}",
+          "returns": "Message",
+          "verb": "delete"
         }
       ],
       "transports": [
@@ -651,6 +713,46 @@
         {
           "default": "",
           "name": "model",
+          "type": "string"
+        },
+        {
+          "default": "open",
+          "description": "open; closed (out of the sidebar until it is opened again or a message comes); archived (read only)",
+          "name": "state",
+          "rules": {
+            "pattern": "^(open|closed|archived)$"
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "ChannelChanges": {
+      "description": "What the user changes of a conversation: a channel's name (its id stays: its history is kept by the id) and topic, and its state: open, closed (out of the sidebar until it is opened again or a message comes) or archived (kept, read only, out of the sidebar).",
+      "fields": [
+        {
+          "name": "name",
+          "optional": true,
+          "rules": {
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "name": "topic",
+          "optional": true,
+          "rules": {
+            "maxLength": 500
+          },
+          "type": "string"
+        },
+        {
+          "name": "state",
+          "optional": true,
+          "rules": {
+            "pattern": "^(open|closed|archived)$"
+          },
           "type": "string"
         }
       ],
@@ -1058,6 +1160,12 @@
         },
         {
           "default": 0,
+          "description": "the time it was deleted (its text, GIF, buttons and reactions are gone; its thread stays), 0 when it is not",
+          "name": "deleted",
+          "type": "int"
+        },
+        {
+          "default": 0,
           "name": "replies",
           "type": "int"
         },
@@ -1355,6 +1463,27 @@
         {
           "name": "thread",
           "optional": true,
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "SearchQuery": {
+      "description": "A search's words and filters: the author (`from:`, a member's id or `you`) and the channel (`in:`); `-` when the filter named nobody.",
+      "fields": [
+        {
+          "default": [],
+          "name": "words",
+          "type": "string[]"
+        },
+        {
+          "default": "",
+          "name": "author",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "inChannel",
           "type": "string"
         }
       ],

@@ -7,9 +7,10 @@ use subprocess
 use pathlib{ Path }
 
 // Nuclear Chat's service as this machine runs it (spec 013 T1.5): its port, its token and how it starts. The token is
-// made once and kept only in the system's keyring (service `nuclear-chat`, account `token`), as the Smart Graph keeps
-// its owner token: never in a file. A note (`~/.config/nuclearlang/nuclear-chat.json`, no secret in it) says one was
-// kept, so a keyring that is closed at login is waited for, never answered with a second token. The service gets it
+// made once and kept in the system's keyring (service `nuclear-chat`, account `token`), as the Smart Graph keeps its
+// owner token; a machine without a keyring keeps it in a 0600 file of the chat's data folder (`.token`). A note
+// (`~/.config/nuclearlang/nuclear-chat.json`, no secret in it) says the keyring keeps it, so a keyring that is closed
+// at login is waited for, never answered with a second token, and a keyring installed later is not taken for one. The service gets it
 // in its environment (`NUCLEAR_CHAT_TOKEN`, its guard's value) and a host from `nuclear-chat connect --json`.
 
 CHAT_PORT = 7880
@@ -47,21 +48,26 @@ chatUrl() string
 noteFile() Path
   Path(Path(machineFile()).parent, "nuclear-chat.json")
 
-// The service's token: the one the keyring keeps; made and kept the first time. A token noted but not answered is a
-// closed keyring: waited for `wait` seconds, then refused (a second token would lock the hosts out).
+// The service's token: the one the keyring (or, without one, its file) keeps; made and kept the first time. A token
+// noted in a keyring that does not answer is a closed keyring: waited for `wait` seconds, then refused (a second
+// token would lock the hosts out); what the keyring keeps is never read from a file.
 serviceToken(keyring: Keyring, wait: int = KEYRING_WAIT) string
+  noted = keyring.available() and noteFile().isFile()
   found = keyring.lookup(TOKEN_ACCOUNT)
+  if found == null and not noted
+    found = keyring.stored(TOKEN_ACCOUNT)
   waited = 0
-  while found == null and noteFile().isFile() and waited < wait
+  while found == null and noted and waited < wait
     time.sleep(1)
     waited += 1
     found = keyring.lookup(TOKEN_ACCOUNT)
   if found != null
     return found!
-  if noteFile().isFile()
+  if noted
     throw KeyringError("the keyring that keeps Nuclear Chat's token is closed: open it (log in) and start the service again")
   made: string = secrets.tokenUrlsafe(32)
-  keyring.keep(TOKEN_ACCOUNT, made)
+  if not keyring.keep(TOKEN_ACCOUNT, made)
+    return made
   noteFile().parent.mkdir(parents = true, existOk = true)
   noteFile().writeText(json.dumps({ "token": "in the keyring (service ${KEYRING_SERVICE}, account ${TOKEN_ACCOUNT})" }) + "\n", encoding = "utf-8")
   made
@@ -93,7 +99,7 @@ serve() int
 // `connect --json`: what a host needs to reach the service (only the editors' extension host asks it).
 connect(asJson: boolean) int
   if not asJson
-    print("${chatUrl()}  (header ${TOKEN_HEADER}; the token is in the keyring: nuclear-chat connect --json)")
+    print("${chatUrl()}  (header ${TOKEN_HEADER}; the token is in the keyring, or its file without one: nuclear-chat connect --json)")
     return 0
   print(json.dumps({ "url": chatUrl(), "header": TOKEN_HEADER, "token": serviceToken(Keyring(), 0) }))
   0

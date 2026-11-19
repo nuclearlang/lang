@@ -50,6 +50,7 @@
     }
   ],
   "embeddings": "embeddinggemma",
+  "chat": "qwen3.5:2b",
   "profiles": [
     {
       "id": "remote",
@@ -89,6 +90,7 @@
       "summary": "One 1.5B model does everything: for a machine with little memory.",
       "coder": "qwen2.5-coder:1.5b",
       "assistant": "qwen2.5-coder:1.5b",
+      "chat": "qwen2.5-coder:1.5b",
       "gb": 1.6,
       "ram": 8,
       "minRam": 4,
@@ -119,16 +121,17 @@
       "summary": "The coder the project measures does everything, also the plans and the reviews: one 3B model in memory.",
       "coder": "qwen2.5-coder:3b",
       "assistant": "qwen2.5-coder:3b",
-      "gb": 2.5,
+      "gb": 5.2,
       "ram": 12,
       "minRam": 8,
       "works": [
         "the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent",
         "the generators and the compiler's fixes, which need no model",
-        "a file is written as in hard: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before"
+        "a file is written as in hard: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before",
+        "the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message"
       ],
       "limits": [
-        "plans, reviews and chat answers come from a model made for code: 6 of the first 8 chat questions as required, where hard answers 10 of 10",
+        "plans and reviews come from a model made for code: as assistant it answered 6 of the first 8 chat questions as required, where hard answers 10 of 10",
         "some answers are slow: one chat question had not ended after five minutes",
         "turning a request in plain words into generator calls is not measured yet with this model"
       ],
@@ -138,10 +141,11 @@
       "works_es": [
         "el Smart Graph: la estrategia de cada pedido y la base de conocimiento, para los agentes locales y para tu agente remoto",
         "los generadores y los arreglos del compilador, que no necesitan modelo",
-        "un archivo se escribe como en Fuerte: 43 de 45 tareas de un archivo (Claude Sonnet: 39), 16 de 18 nunca vistas antes"
+        "un archivo se escribe como en Fuerte: 43 de 45 tareas de un archivo (Claude Sonnet: 39), 16 de 18 nunca vistas antes",
+        "el chat responde con su propio modelo pequeño, `qwen3.5:2b`: unos 4 GB mientras chateas, liberados 3 minutos después del último mensaje"
       ],
       "limits_es": [
-        "los planes, las revisiones y las respuestas del chat vienen de un modelo hecho para código: 6 de las primeras 8 preguntas del chat como se pedía, donde Fuerte responde 10 de 10",
+        "los planes y las revisiones vienen de un modelo hecho para código: como asistente respondió 6 de las primeras 8 preguntas del chat como se pedía, donde Fuerte responde 10 de 10",
         "algunas respuestas son lentas: una pregunta del chat no había terminado a los cinco minutos",
         "convertir un pedido en palabras simples en llamadas a los generadores aún no está medido con este modelo"
       ],
@@ -153,14 +157,15 @@
       "summary": "The set every measurement of the project was made with: a coder and a separate model to plan, review and answer.",
       "coder": "qwen2.5-coder:3b",
       "assistant": "gemma4:e2b",
-      "gb": 9.7,
+      "gb": 12.4,
       "ram": 24,
       "minRam": 16,
       "works": [
         "the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent",
         "the generators and the compiler's fixes, which need no model",
         "43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before",
-        "the assistant answers 10 of 10 questions about NuclearLang as required, and reads 10 of 11 requests right"
+        "the assistant answers 10 of 10 questions about NuclearLang as required, and reads 10 of 11 requests right",
+        "the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message"
       ],
       "limits": [
         "its assistant model takes 7.2 GB: with 16 GB of memory little else stays open",
@@ -173,7 +178,8 @@
         "el Smart Graph: la estrategia de cada pedido y la base de conocimiento, para los agentes locales y para tu agente remoto",
         "los generadores y los arreglos del compilador, que no necesitan modelo",
         "43 de 45 tareas de un archivo (Claude Sonnet: 39), 16 de 18 nunca vistas antes",
-        "el asistente responde 10 de 10 preguntas sobre NuclearLang como se pedía, y lee bien 10 de 11 pedidos"
+        "el asistente responde 10 de 10 preguntas sobre NuclearLang como se pedía, y lee bien 10 de 11 pedidos",
+        "el chat responde con su propio modelo pequeño, `qwen3.5:2b`: unos 4 GB mientras chateas, liberados 3 minutos después del último mensaje"
       ],
       "limits_es": [
         "su modelo asistente ocupa 7.2 GB: con 16 GB de memoria queda poco más abierto",

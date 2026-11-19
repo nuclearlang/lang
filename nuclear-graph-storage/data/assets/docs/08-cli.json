@@ -1126,7 +1126,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.788d47",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.39f39f",
    "type": "context",
    "title": "The installers: overview — The release",
    "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base.",
@@ -1138,8 +1138,8 @@
     "  (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,",
     "  `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:",
     "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each",
-    "  system (Linux x86_64 and arm64, macOS Intel and Apple silicon, Windows), so each AI archive is tried where it",
-    "  runs. Job `publish`: every archive,",
+    "  system (Linux x86_64 and arm64, macOS Apple silicon, Windows x86_64), so each AI archive is tried where it",
+    "  runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so. Job `publish`: every archive,",
     "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
     "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
    ],
@@ -1375,7 +1375,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.4b47e6",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.235a1a",
    "type": "guide",
    "title": "Set up the AI services — 3. The profiles",
    "summary": "Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors.",
@@ -1383,11 +1383,11 @@
     "| Profile | Models | Downloads | Memory | Measured with the Developer's evaluation |",
     "|---|---|---|---|---|",
     "| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |",
-    "| `medium` | `qwen2.5-coder:3b` | 2.5 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
-    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.7 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
+    "| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 5.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
+    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
     "| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine |",
     "",
-    "Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors. No model is larger than 3B parameters of effective size.",
+    "Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors. The chat answers with one small model of its own (`CHAT_MODEL` in the machine's file; `lite` uses its one model), loaded only while you chat. No model is larger than 3B parameters of effective size.",
     "",
     "**`lite`: One 1.5B model does everything: for a machine with little memory.**"
    ],
@@ -1401,7 +1401,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.84407d",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.c357ca",
    "type": "guide",
    "title": "Set up the AI services — 3. The profiles",
    "summary": "3. The profiles",
@@ -1416,11 +1416,10 @@
     "- Works: the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent.",
     "- Works: the generators and the compiler's fixes, which need no model.",
     "- Works: a file is written as in hard: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before.",
-    "- Does not, or less: plans, reviews and chat answers come from a model made for code: 6 of the first 8 chat questions as required, where hard answers 10 of 10.",
+    "- Works: the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message.",
+    "- Does not, or less: plans and reviews come from a model made for code: as assistant it answered 6 of the first 8 chat questions as required, where hard answers 10 of 10.",
     "- Does not, or less: some answers are slow: one chat question had not ended after five minutes.",
-    "- Does not, or less: turning a request in plain words into generator calls is not measured yet with this model.",
-    "",
-    "**`hard`: The set every measurement of the project was made with: a coder and a separate model to plan, review and answer.**"
+    "- Does not, or less: turning a request in plain words into generator calls is not measured yet with this model."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1432,15 +1431,18 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.d37e0b",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.c6cf7d",
    "type": "guide",
    "title": "Set up the AI services — 3. The profiles",
    "summary": "The set-up suggests the heaviest profile your machine runs well.",
    "body": [
+    "**`hard`: The set every measurement of the project was made with: a coder and a separate model to plan, review and answer.**",
+    "",
     "- Works: the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent.",
     "- Works: the generators and the compiler's fixes, which need no model.",
     "- Works: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before.",
     "- Works: the assistant answers 10 of 10 questions about NuclearLang as required, and reads 10 of 11 requests right.",
+    "- Works: the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message.",
     "- Does not, or less: its assistant model takes 7.2 GB: with 16 GB of memory little else stays open.",
     "- Does not, or less: a whole feature of several files passes 2 times of 3: your remote agent validates and corrects.",
     "",
@@ -1904,7 +1906,7 @@
     "  examples), links resolved for a reader without the source tree (spec 016).",
     "- `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.",
     "- `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,",
-    "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `vscode.rs`, `watch.rs`)",
+    "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`)",
     "  ([code map](docs/02-architecture/overview.md)).",
     "- `agent-files/start.md`: the `start` topic, the onboarding of an agent with no context (MCP `nuclear_start`).",
     "- `agent-files/project/`: what `agent init` writes into a project (`AGENTS.md` section, the Cursor rule).",
@@ -3610,13 +3612,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.4a5f5b",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.0825e7",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "monitor [--json] the report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time",
+   "summary": "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008) add <package>[@version]... [--module <m>] install it with the dialect's package manager, write it in config.nuc (dependencies) and generate its type definitions: its names are then known to the…",
    "body": [
-    "monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
-    "                                             calls in a loop, connections, memory) and each function's time"
+    "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008)",
+    "  add <package>[@version]... [--module <m>]  install it with the dialect's package manager, write it in config.nuc",
+    "                                             (dependencies) and generate its type definitions: its names are then",
+    "                                             known to the compiler, the editor and the dialect, which imports them",
+    "                                             (backend, web: definitions in the project's defs/; mobile: cached in",
+    "                                             ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`)",
+    "  remove <package>...                        out of config.nuc, the generated project and its definitions",
+    "",
+    "packages and devices (flutter, inside the app)",
+    "  pub get|upgrade|outdated                   (pub add|remove = flutter add|remove)",
+    "  devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "  flutter <any flutter command>              run any flutter command inside the app"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -3628,15 +3640,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.5746dd",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.4a5f5b",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "options FLUTTER the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)",
+   "summary": "monitor [--json] the report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time",
    "body": [
-    "options",
-    "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
-    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)",
-    "```"
+    "monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
+    "                                             calls in a loop, connections, memory) and each function's time"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -3829,28 +3839,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.f816a1",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.db0e21",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008) add <package>[@version]... [--module <m>] install it with the dialect's package manager, write it in config.nuc (dependencies) and generate its type definitions: its names are then known to the…",
+   "summary": "setup doctor [--json] what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor) setup [flutter] [--dir ~/develop] install Flutter step by step (system packages, SDK, PATH) setup node | python Nuclear's own Node.js (nestjs, react)…",
    "body": [
-    "packages of the target (npm, PyPI, pub.dev: any of them, for the project's dialect; ADR-lang-0008)",
-    "  add <package>[@version]... [--module <m>]  install it with the dialect's package manager, write it in config.nuc",
-    "                                             (dependencies) and generate its type definitions: its names are then",
-    "                                             known to the compiler, the editor and the dialect, which imports them",
-    "                                             (backend, web: definitions in the project's defs/; mobile: cached in",
-    "                                             ~/.cache/nuclearlang/defs, also `flutter add <package>[:version] [--dev]`)",
-    "  remove <package>...                        out of config.nuc, the generated project and its definitions",
-    "",
-    "packages and devices (flutter, inside the app)",
-    "  pub get|upgrade|outdated                   (pub add|remove = flutter add|remove)",
-    "  devices | emulators | logs | install | screenshot | attach | gen-l10n",
-    "  flutter <any flutter command>              run any flutter command inside the app",
-    "",
     "setup",
-    "  doctor                                     what NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
-    "  setup [--dir ~/develop]                    install Flutter step by step (system packages, SDK, PATH)",
-    "  credits | author                           the intro animation, the author and the repository"
+    "  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code",
+    "                                             (--json: the toolchains, for the editor)",
+    "  setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)",
+    "  setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear",
+    "                                             (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)",
+    "  credits | author                           the intro animation, the author and the repository",
+    "",
+    "options",
+    "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
+    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)",
+    "```"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"

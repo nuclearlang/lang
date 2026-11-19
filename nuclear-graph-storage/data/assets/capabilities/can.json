@@ -1,1105 +1,1108 @@
 {
- "shelf": "capabilities",
- "origin": "curated",
- "about": "What NuclearLang, Synapsis and their tools can do today, by area. Each row names the kinds and commands that do it.",
- "rows": [
-  {
-   "id": "can:backend-api",
-   "type": "can",
-   "title": "Can: an HTTP API with validation (backend)",
-   "summary": "A backend exposes REST routes with controllers (`@get`, `@post`, `@put`, `@patch`, `@delete`), reads and answers validated models, turns a `Result` error into its HTTP status, checks guards on its routes, serves the same routes over a WebSocket when configured, and publishes its contract and OpenAPI document.",
-   "body": [
-    "- `@controller(\"books\") controller BooksController(books: BooksAppComponent)` with one method per route; `{id}` in a route is a path parameter, a model parameter is the JSON body.",
-    "- Models validate the input with rule decorators (`@required`, `@minLength`, `@maxLength`, `@min`, `@max`, `@pattern`, `@email`, `@url`); an invalid body is a 422.",
-    "- An `Err(NotFound(...))` answers 404; `Invalid` 400, `Unauthorized` 401, `Forbidden` 403, `Conflict` 409. A `@post` answers 201; `status = 200` in the decorator changes it.",
-    "- Guards: `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]` in the `appConfig`, `@controller(\"x\", guards = [...])` for one controller (see can:backend-guards).",
-    "- `WebSocketServer(path = \"ws\")` in the connections serves the same controllers over a WebSocket (see can:real-time).",
-    "- The build serves `/.nuclear/contract.json` and `/.nuclear/openapi.json`.",
-    "- The same Nuclear builds as a Python service (`fastapi`) or a TypeScript one (`nestjs`)."
-   ],
-   "keys": [
-    "rest api",
-    "http api",
-    "endpoint",
-    "endpoints",
-    "routes"
-   ],
-   "asks": [
-    "can nuclear build a rest api",
-    "how do I make an endpoint",
-    "does nuclear validate the request body"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "links": [
+  "shelf": "capabilities",
+  "origin": "curated",
+  "about": "What NuclearLang, Synapsis and their tools can do today, by area. Each row names the kinds and commands that do it.",
+  "rows": [
     {
-     "rel": "kind",
-     "to": "kind:backend.controller"
+      "id": "can:backend-api",
+      "type": "can",
+      "title": "Can: an HTTP API with validation (backend)",
+      "summary": "A backend exposes REST routes with controllers (`@get`, `@post`, `@put`, `@patch`, `@delete`), reads and answers validated models, turns a `Result` error into its HTTP status, checks guards on its routes, serves the same routes over a WebSocket when configured, and publishes its contract and OpenAPI document.",
+      "body": [
+        "- `@controller(\"books\") controller BooksController(books: BooksAppComponent)` with one method per route; `{id}` in a route is a path parameter, a model parameter is the JSON body.",
+        "- Models validate the input with rule decorators (`@required`, `@minLength`, `@maxLength`, `@min`, `@max`, `@pattern`, `@email`, `@url`); an invalid body is a 422.",
+        "- An `Err(NotFound(...))` answers 404; `Invalid` 400, `Unauthorized` 401, `Forbidden` 403, `Conflict` 409. A `@post` answers 201; `status = 200` in the decorator changes it.",
+        "- Guards: `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]` in the `appConfig`, `@controller(\"x\", guards = [...])` for one controller (see can:backend-guards).",
+        "- `WebSocketServer(path = \"ws\")` in the connections serves the same controllers over a WebSocket (see can:real-time).",
+        "- The build serves `/.nuclear/contract.json` and `/.nuclear/openapi.json`.",
+        "- The same Nuclear builds as a Python service (`fastapi`) or a TypeScript one (`nestjs`)."
+      ],
+      "keys": [
+        "rest api",
+        "http api",
+        "endpoint",
+        "endpoints",
+        "routes"
+      ],
+      "asks": [
+        "can nuclear build a rest api",
+        "how do I make an endpoint",
+        "does nuclear validate the request body"
+      ],
+      "platforms": [
+        "backend"
+      ],
+      "links": [
+        {
+          "rel": "kind",
+          "to": "kind:backend.controller"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:backend.model"
+        },
+        {
+          "rel": "playbook",
+          "to": "playbook:add-an-endpoint"
+        },
+        {
+          "rel": "can",
+          "to": "can:backend-guards"
+        },
+        {
+          "rel": "can",
+          "to": "can:real-time"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "done"
+      }
     },
     {
-     "rel": "kind",
-     "to": "kind:backend.model"
+      "id": "can:backend-data",
+      "type": "can",
+      "title": "Can: a database with entities, relations, queries, transactions and migrations (backend)",
+      "summary": "A backend stores data with entities (tables), repositories (CRUD and queries built line by line), relations between entities, pages, transactions and migrations, on SQLite, PostgreSQL, MySQL or MariaDB.",
+      "body": [
+        "- `entity` with `@primary(generated = true)`, `@column(length, unique, index, nullable, default, name)`, `@created`, `@updated`.",
+        "- Relations: `@manyToOne` (with its column `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn`; loaded with `relations(\"tasks\")`.",
+        "- `repository`: `find`, `findAll`, `save`, `remove` come with it; a method's lines build one query: `where({...})` with `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`; `orderBy`, `limit`, `offset`; then `getOne()`, `getMany()`, `paginate(page, size)`, `count()`, `exists()`, `update({...})`, `delete()`.",
+        "- `@transactional` on a use case's `exec`: one transaction; an `Err` rolls it back.",
+        "- Migrations: `nuclear migrate make \"<message>\"`, `nuclear migrate`, `nuclear migrate down`.",
+        "- Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`. Tests run on an in-memory database.",
+        "",
+        "Checked on SQLite; the other databases were not run against a real server yet."
+      ],
+      "keys": [
+        "database",
+        "orm",
+        "sql",
+        "migrations",
+        "relations",
+        "transactions",
+        "base de datos"
+      ],
+      "asks": [
+        "can nuclear use a database",
+        "how do I query the database",
+        "does nuclear have migrations",
+        "how do I relate two entities"
+      ],
+      "platforms": [
+        "backend"
+      ],
+      "links": [
+        {
+          "rel": "kind",
+          "to": "kind:backend.entity"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:backend.repository"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.migrate"
+        },
+        {
+          "rel": "playbook",
+          "to": "playbook:database-resource"
+        },
+        {
+          "rel": "untested",
+          "to": "limit:untested"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md",
+        "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0001-backend-data.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "done"
+      }
     },
     {
-     "rel": "playbook",
-     "to": "playbook:add-an-endpoint"
+      "id": "can:call-an-api",
+      "type": "can",
+      "title": "Can: call another HTTP API (every platform)",
+      "summary": "A repository whose methods carry `@get`, `@post`, `@put`, `@patch` or `@delete` and no body calls the `Http(baseUrl)` connection: path parameters, the query or the body are filled from the method's parameters, and an error status is the `Err` of its `Result`.",
+      "body": [
+        "```nuclear",
+        "@repository(path = \"character\")",
+        "repository CharacterRepository",
+        "  @get(path = \":id\")",
+        "  one(id: int) Result<Error, Character>",
+        "```",
+        "",
+        "- `:id` takes the parameter `id`; the other parameters go to the query (GET) or the body.",
+        "- The connection is `Http(baseUrl = \"https://...\")` in `appConfig`.",
+        "- A JSON key that is not the field's name gets `@key(\"air_date\")` on the model's field.",
+        "- On mobile and web, `cache`, `ttl` and `retry` are options of the request; on mobile, `saveLocal = true` keeps the answers in the device's database.",
+        "- `nuclear gen resource ... --from-json <url>` writes the whole resource from the API's own answer."
+      ],
+      "keys": [
+        "http client",
+        "external api",
+        "call an api",
+        "consume api",
+        "rest client"
+      ],
+      "asks": [
+        "how do I call an external api",
+        "can the backend call another api",
+        "how do I consume a rest api in nuclear"
+      ],
+      "links": [
+        {
+          "rel": "kind",
+          "to": "kind:backend.repository"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:mobile.repository"
+        },
+        {
+          "rel": "playbook",
+          "to": "playbook:resource-from-an-api"
+        }
+      ],
+      "sources": [
+        "tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md#Decision"
+      ],
+      "meta": {
+        "area": "data",
+        "status": "done"
+      }
     },
     {
-     "rel": "can",
-     "to": "can:backend-guards"
+      "id": "can:backend-events-and-ai",
+      "type": "can",
+      "title": "Can: events, a cache and AI agents (backend)",
+      "summary": "A backend publishes and consumes events (in the process or through Kafka), caches with Redis, and declares AI agents: tools, agents with memory per thread and graphs of steps, on Ollama or OpenAI models, with a vector store.",
+      "body": [
+        "- Events: `~publish(\"topic\", value)`; `listener Name` with `@consumer(\"topic\")` methods; the clients of the app's WebSocket subscribed to the topic receive it too. Plugins `events`, `kafka`, `websocket`.",
+        "- Cache: the `redis` plugin.",
+        "- AI (plugin `ai`, with `ollama` or `openai`): `tools Name` (each method with a doc comment is a tool), `agent Name(tools: T)` with a `prompt`, `@state(S) graph Name` whose methods are nodes (`@start`, `@next(\"node\")`), a `state` for the graph, `Chroma` vectors (plugin `chroma`).",
+        "- A test replaces the model with `FakeModel([\"answer\"])`.",
+        "",
+        "The Nuclear Developer itself is written with these kinds."
+      ],
+      "keys": [
+        "events",
+        "kafka",
+        "redis",
+        "agents",
+        "llm",
+        "langgraph",
+        "ollama",
+        "openai"
+      ],
+      "asks": [
+        "can I write an ai agent in nuclear",
+        "does nuclear support kafka",
+        "how do I make a graph of steps"
+      ],
+      "platforms": [
+        "backend"
+      ],
+      "links": [
+        {
+          "rel": "kind",
+          "to": "kind:backend.agent"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:backend.graph"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:backend.tools"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:backend.listener"
+        },
+        {
+          "rel": "theory",
+          "to": "concept:agents-and-graphs"
+        },
+        {
+          "rel": "untested",
+          "to": "limit:untested"
+        },
+        {
+          "rel": "can",
+          "to": "can:real-time"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "done"
+      }
     },
     {
-     "rel": "can",
-     "to": "can:real-time"
+      "id": "can:mobile-app",
+      "type": "can",
+      "title": "Can: a mobile app (mobile)",
+      "summary": "A mobile app with screens and navigation, state managers, forms with validation, translations, a session with roles and guards, events, HTTP repositories with cache, an encrypted local database, and AI chats and flows; it runs on Android, iOS, desktop and web.",
+      "body": [
+        "- Views: `stateless` and `stateful` with the UI toolkit's classes; `@screen(route, providers, acl, transition)`; navigation by screen (`context.goTo`, `pushTo`, `goBack`).",
+        "- State: `statemanager` + state model, `<State>Builder` in the view.",
+        "- Forms: a form model with rules, a `formmanager`, `SynapsisForm` in the view.",
+        "- Texts: `\"component.screen.key\".tr()` from `assets/i18n/<locale>/<component>.json`.",
+        "- Session and access: `SessionManager`, `guard`, `@acl(roles = [...])`, `@screen(acl = {...})`.",
+        "- Events: `event`, `Events.publish`, `@on(Event)`.",
+        "- Data: HTTP repositories (`cache`, `ttl`, `retry`), and a local database: `@primary` on a model gives it an encrypted table, `saveLocal = true` keeps what a GET answers.",
+        "- AI (plugin `genkit`): `tools`, `chat`, `flow`, `remote`, `knowledge`.",
+        "- Tests: `@mock`, `@test`, `@states`, `@widget`, integration tests.",
+        "- Run and debug: `nuclear run`, `nuclear device` (a test device in its own window), breakpoints on `.nuc` lines in VS Code."
+      ],
+      "keys": [
+        "mobile app",
+        "android",
+        "ios",
+        "flutter app",
+        "app movil"
+      ],
+      "asks": [
+        "can nuclear build a mobile app",
+        "does nuclear support forms",
+        "can I store data on the device",
+        "how do I run the app on a device"
+      ],
+      "platforms": [
+        "mobile"
+      ],
+      "links": [
+        {
+          "rel": "platform",
+          "to": "platform:mobile"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:mobile.stateless"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:mobile.statemanager"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.device"
+        },
+        {
+          "rel": "playbook",
+          "to": "playbook:add-a-screen"
+        },
+        {
+          "rel": "limits",
+          "to": "limit:mobile-not-yet"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
+      ],
+      "meta": {
+        "area": "mobile",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:web-app",
+      "type": "can",
+      "title": "Can: a web app (web)",
+      "summary": "A web app with screens and routing, views as HTML functions, state managers, repositories over HTTP or a WebSocket (with what the server pushes), use cases, events, guards and tests; it also mounts in a host's page. The words are the mobile platform's.",
+      "body": [
+        "- Views: `stateless` and `stateful` with `build() Element` and HTML functions (`main`, `ul`, `li`, `button`) with named attributes and `children`. No JSX.",
+        "- `@screen(route, providers, acl, notFound)`; navigation by screen: `goTo(Screen, id = 7)`, `goBack()`.",
+        "- `statemanager` + state model, `<State>Builder` with one callback per state.",
+        "- `repository` over HTTP (`cache`, `ttl`, `retry`) or over a `WebSocket` connection with the same methods; `@on(\"topic\")` methods return `Stream<T>` of what the server pushes; `usecase`, `appcomponent`, `service`, `event`, `guard`.",
+        "- Tests: `@mock`, `@test`, `@states`, `@widget` with `renderScreen`.",
+        "- `mount(element, host)`: the same app in a host's page (see can:web-embedded).",
+        "- `nuclear new <name> -p web`, `nuclear build | install | run | test`.",
+        "",
+        "The NuclearLang website is written with it."
+      ],
+      "keys": [
+        "web app",
+        "website",
+        "react app",
+        "frontend",
+        "spa"
+      ],
+      "asks": [
+        "can nuclear build a web app",
+        "does nuclear support react",
+        "how do I make a web page with nuclear"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "links": [
+        {
+          "rel": "platform",
+          "to": "platform:web"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:web.stateless"
+        },
+        {
+          "rel": "limits",
+          "to": "limit:web-first-version"
+        },
+        {
+          "rel": "playbook",
+          "to": "playbook:add-a-screen"
+        },
+        {
+          "rel": "can",
+          "to": "can:real-time"
+        },
+        {
+          "rel": "can",
+          "to": "can:web-embedded"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md"
+      ],
+      "meta": {
+        "area": "web",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:generate-code",
+      "type": "can",
+      "title": "Can: generate the finished code of a resource from its data",
+      "summary": "`nuclear gen resource` writes, on any platform, the models, the repository, a use case per action, the facade, the controller or the screen and the tests of a resource, all compiling; the fields come from a list, from an example answer of an API (a file or a URL) or from a spec.",
+      "body": [
+        "- `--fields \"id:int name:string origin:Origin?\"`, `--from-json <file|url>` (nested objects become models, a list under `results` a page, `null` an optional field) or `--from-spec <spec.md>` (its example answer, its `Key | Type` table, its `GET <url>` line).",
+        "- `--source rest[:<base url>]` (an API) or `--source db` (an entity and its queries, backend only).",
+        "- `--actions list,get,search,create,update,delete`; `--screen <screen>` on mobile and web; `--dry-run` shows the files.",
+        "- It refuses, before writing, a field type nobody declared, a name another file declares and a source the platform has no pieces for. Nothing is overwritten.",
+        "- `nuclear gen usecase <component> <Name>` wires a use case the project declares: its alias in the facade and, on the backend, `--route \"POST orders/{id}/cancel\"` adds its route to the controller of `orders` (made when missing). With `--calls <Repository>.<method>` it also writes the use case, when all it does is call that method.",
+        "- `nuclear make <kind> <component> <Name>` writes the smallest file of any kind of the platform.",
+        "- The same generators are MCP tools and the first stage of the Builder."
+      ],
+      "keys": [
+        "generate code",
+        "scaffold",
+        "crud",
+        "code generation"
+      ],
+      "asks": [
+        "can nuclear generate a crud",
+        "can it create code from a json",
+        "what can nuclear gen write"
+      ],
+      "links": [
+        {
+          "rel": "concept",
+          "to": "concept:generators"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.gen.resource"
+        },
+        {
+          "rel": "mcp",
+          "to": "mcp:generate_resource"
+        },
+        {
+          "rel": "limit",
+          "to": "limit:generators"
+        }
+      ],
+      "sources": [
+        "tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md#Decision"
+      ],
+      "meta": {
+        "area": "tools",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:switch-dialect",
+      "type": "can",
+      "title": "Can: build the same project with another dialect of its platform",
+      "summary": "A backend written once builds as FastAPI (Python) or as NestJS (TypeScript): change `dialect` in `config.nuc` and build. No other file changes, because kinds, decorators, the library and the tests belong to the platform.",
+      "body": [
+        "```nuclear",
+        "synapsis(platform = \"backend\", dialect = \"nestjs\")   // was \"fastapi\"",
+        "```",
+        "",
+        "Then `nuclear build && nuclear install && nuclear test`. The example `tasks_api` is built and tested with both.",
+        "",
+        "The exception: code that uses a library of one target through its type definitions is tied to that target's dialect. Mobile and web have one dialect each today."
+      ],
+      "keys": [
+        "switch dialect",
+        "change dialect",
+        "portable"
+      ],
+      "asks": [
+        "can I change from python to typescript",
+        "can the same code build to nestjs and fastapi"
+      ],
+      "links": [
+        {
+          "rel": "concept",
+          "to": "concept:platforms-and-dialects"
+        }
+      ],
+      "sources": [
+        "AGENTS.md#Hard rules"
+      ],
+      "meta": {
+        "area": "compiler",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:contracts",
+      "type": "can",
+      "title": "Can: generate an app's models and repositories from its backend",
+      "summary": "An app that declares a backend's contract in `config.nuc` gets its models and one typed repository per controller generated at build time; a change in the backend that breaks the app is a compile error in the app.",
+      "body": [
+        "`contracts(tasks_api = \"../tasks_api\")` or a URL; `nuclear contracts update`, `nuclear contracts list`. The generated files are in `contracts/<name>/`. Works for mobile and web apps over a backend of any dialect."
+      ],
+      "keys": [
+        "shared models",
+        "typed client",
+        "api client"
+      ],
+      "asks": [
+        "can the app share models with the backend",
+        "does nuclear generate an api client"
+      ],
+      "links": [
+        {
+          "rel": "concept",
+          "to": "concept:contracts"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.contracts"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts.md"
+      ],
+      "meta": {
+        "area": "compiler",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:check-fix-format",
+      "type": "can",
+      "title": "Can: check a project, apply the exact fixes and format it",
+      "summary": "`nuclear check` reports every error of a file or a project with its code, place and fix (JSON for agents); `nuclear fix` applies the exact fixes; `nuclear fmt` rewrites the layout; `nuclear explain` tells a run-time error or a failing test at its `.nuc` lines.",
+      "body": [
+        "- `nuclear check . --json`: syntax, names, results, the library, the kinds' rules and the project's architecture, all at once. It also writes the project map (`.nuclear/map.md`).",
+        "- `nuclear fix <folder|file>`: applies every exact fix, then reports what is left.",
+        "- `nuclear fmt <file|folder> [--check]`: spacing, indentation and blank lines; it never reorders.",
+        "- `nuclear explain`: reads a stack or a test's output and answers the message, a hint and the `.nuc` lines.",
+        "- `nuclear repair` (mobile): rebuilds from scratch until the target's analyzer finds no errors.",
+        "- `nuclear doctor`: what the machine lacks."
+      ],
+      "keys": [
+        "lint",
+        "format",
+        "formatter",
+        "check",
+        "fix"
+      ],
+      "asks": [
+        "how do I check my code",
+        "does nuclear have a formatter",
+        "can nuclear fix errors automatically"
+      ],
+      "links": [
+        {
+          "rel": "command",
+          "to": "tool:nuclear.check"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.fix"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.fmt"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.explain"
+        },
+        {
+          "rel": "playbook",
+          "to": "playbook:fix-compiler-errors"
+        }
+      ],
+      "meta": {
+        "area": "tools",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:ai-workflow",
+      "type": "can",
+      "title": "Can: take a spec to tested code with AI agents, on your machine or under a frontier model",
+      "summary": "The Builder runs a spec through the factory's stations with a team (each role done by the local agents, a provider's agent or a provider's model); every run is documented, waits at its gates for you, and is exportable as CI.",
+      "body": [
+        "- From a terminal: `nuclear-builder run specs/<component>/<id>/spec.md` runs the factory (Analysis, Design, Tests first, Code, Quality, Delivery) with the run's team (`nuclear-builder team …`); `--lead` is ignored. Or `/task` in Nuclear Atlas.",
+        "- The editors run the same factory as a process: VS Code's Builder page and Android Studio's tool window (the team, the gates, QA's checks, the two spending questions); the MCP tools `developer_task`, `developer_retry`, `developer_review` stay.",
+        "- Nuclear Chat under the Builder's diagram (and as a full tab): each run is a thread of its team's channel, told by the member of each station, its gates and QA's plan as buttons that answer the run; a member does everything the page does (`nuclear-builder mcp`, see can:agents-do-everything): reads the slides, writes specs with their criteria (`spec_new`), starts runs, answers gates, or proposes a change of a spec as a difference the user accepts (`nuclear-builder spec accept|discard`); anything a paid member spends is confirmed twice in the editor.",
+        "- The teams as your software company (VS Code): each team any number of members per role, hired with a wizard (a suggested name, the purpose and skills, members suggested with why, the roster's filters, who works each member and what it costs: `nuclear-builder team create|suggest|name-suggest|member add`), a logo, a description and a tech lead who answers for it; a run's node reads like a debugger, and who did each step is one label, `<employee> · <role> · <provider> · <model>`.",
+        "- Specs imported from Jira or a GitHub issue (VS Code).",
+        "- The internet for facts: `web_search`, `web_read`, `api_inspect` (MCP tools).",
+        "- CI: `nuclear-builder export github|gitlab|bitbucket`; `nuclear-builder ci` runs the same commands locally.",
+        "- A direct message with the general agent (Atlas, `nuclear-builder member --role chat`, its provider in `nuclear.builder.chat`): Nuclear Atlas's page (VS Code); `/task` there runs an order."
+      ],
+      "keys": [
+        "ai workflow",
+        "spec to code",
+        "automation"
+      ],
+      "asks": [
+        "can the agent build a whole feature",
+        "can I use claude with the local agents",
+        "can nuclear run in ci"
+      ],
+      "links": [
+        {
+          "rel": "concept",
+          "to": "concept:loop"
+        },
+        {
+          "rel": "concept",
+          "to": "concept:local-first"
+        },
+        {
+          "rel": "limit",
+          "to": "limit:agent-features"
+        },
+        {
+          "rel": "can",
+          "to": "can:agents-do-everything"
+        }
+      ],
+      "sources": [
+        "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
+      ],
+      "meta": {
+        "area": "ai",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:workplace-chat",
+      "type": "can",
+      "title": "Can: work with your factory's teams in a chat, as a company works in Slack (Nuclear Chat)",
+      "summary": "Nuclear Chat is the factory's workplace: channels, direct messages, threads, mentions, reactions and GIFs, local to the project (`.nuclear/chat/`). A member answers as themselves through their provider; a message to a team is answered by its tech lead; a member that does not understand asks. A local service on `127.0.0.1:7880`, every route guarded by a token kept in the keyring (a `0600` file without one).",
+      "body": [
+        "- A host (the Builder, Nuclear Atlas) registers a project with its members, teams and channels: `POST workspaces`; a host gets the URL and the token from `nuclear-chat connect --json` (header `X-Chat-Token`; a request with an `Origin` is refused).",
+        "- In VS Code the Builder and Nuclear Atlas are its hosts: the dock under the Builder's diagram and the tab (*Open the chat*) on the team's channel, Atlas on `dm-atlas`; one WebSocket per window holds the token (a page never does), each member's face drawn, `nuclear.chat.gifs` (`pack`, `tenor`, `giphy`) passed as the workspace's GIFs and the key kept with *Nuclear Chat: Keep a GIF Service's Key*.",
+        "- A run of the factory is a thread of its team's channel; `/poc <what>` is not available yet (the factory cannot run on a scratch folder).",
+        "- Who answers: a direct message's member; `@<member>` by id, name, first name or role; `@<team>`, or a team's channel without a member mentioned: the team's tech lead.",
+        "- A member answers through its responder, a command run once per answer with `--events` (the conversation in, `typing`, `text`, `tool`, `ask`, `done` out); its questions reach the user and the answer goes back to it; the cost is shown on the message.",
+        "- A front for any agent: a direct message with the general agent (Atlas) has a menu in its header to choose who answers it, as in Claude's own app: the local Nuclear Developer (always offered, the default with nothing configured), Claude Code, OpenCode, Codex, Gemini CLI or an API model, each with its model; only what is on this machine is offered (`nuclear-builder agents --json`, the MCP tool `agents_list`; one not found disabled with why). The choice is kept per conversation (`PUT channels/{ws}/{channel}/agent`, `channels.json`); the setting `nuclear.builder.chat` is the default for new ones; a paid agent is still confirmed twice. The answer arrives as it is written (`text-delta` → the event `message.delta`; Claude Code streams), with its markdown, code, tool chips and cost.",
+        "- A member answers in the user's chosen language (`nuclear.language`), or in the language the user wrote in; may end an answer with a GIF of the pack by personality; a direct message shows under the member's name the brain that answers (`<agent> · <model> · paid|local`).",
+        "- The history is append-only JSON lines per channel (edits and reactions are lines, a crash loses nothing), searchable, with unread counts.",
+        "- Real time: the service's WebSocket (`/ws`) serves the same routes and pushes each workspace's events (`{\"subscribe\": \"chat.<workspace>\"}`); `GET events/{ws}?since=` reads what a client missed.",
+        "- GIFs: a pack of 36 animated drawings made for the project (works offline); a member sends one by personality; Tenor or Giphy only with a key in the keyring (`nuclear-chat gif-key tenor`) and the project's yes, asked once.",
+        "- Started at login by the AI set-up (`nuclear-builder setup`); by hand: `nuclear-chat serve`.",
+        "- Conversations as in Slack, each a route a host or an agent calls too: edit the user's message (`PATCH messages/{ws}/message/{id}`), delete any (`DELETE`, it shows deleted, its thread stays); close, archive, open again, rename or retopic a conversation (`PATCH channels/{ws}/{channel}` `{state|name|topic}`), delete it (`DELETE channels/{ws}/{channel}`: its history moved to `.nuclear/chat/deleted/`); make a channel with chosen members (`POST channels/{ws}`). In the page: *New message* and Ctrl+K open the quick switcher (any member's direct message, any channel), *Members* lists everyone, the header's ⋯ holds the conversation's actions.",
+        "- Search every message: `GET messages/{ws}/search?words=` with `from:@<member>` (`from:@you`) and `in:#<channel>`; in the page the header's *Search*, whose result opens the message highlighted in its channel or thread; a host opens the page at a message with `/<ws>/<channel>?message=<id>&thread=<id>` (VS Code's chat notifications do)."
+      ],
+      "keys": [
+        "nuclear chat",
+        "nuclear-chat",
+        "chat with the team",
+        "workplace",
+        "slack",
+        "tech lead",
+        "mention",
+        "gif",
+        "choose the agent",
+        "claude code in the chat",
+        "dropdown"
+      ],
+      "asks": [
+        "how do I talk to my team in nuclear",
+        "can I chat with the members of the factory",
+        "who answers a message to a team",
+        "how does a host connect to nuclear chat",
+        "como hablo con mi equipo",
+        "where is the chat in the builder",
+        "can I choose which agent answers in the chat",
+        "how do I talk to claude code from nuclear chat"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:ai-workflow"
+        },
+        {
+          "rel": "can",
+          "to": "can:real-time"
+        },
+        {
+          "rel": "can",
+          "to": "can:backend-guards"
+        }
+      ],
+      "sources": [
+        "nuclear-chat/docs/00-context/vision.md",
+        "nuclear-chat/docs/02-architecture/api.md",
+        "nuclear-chat/docs/02-architecture/responders.md",
+        "nuclear-chat/docs/05-standards/security.md",
+        "extensions/tools/nuclear-builder/docs/02-architecture/chat.md",
+        "nuclear-chat/docs/02-architecture/ui.md"
+      ],
+      "meta": {
+        "area": "tools",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:extend",
+      "type": "can",
+      "title": "Can: add your own kinds, definitions and dialects without touching the compiler",
+      "summary": "A project or the community adds a kind as a package (`kinds/<name>/` with TOML, templates and a runtime), brings type definitions of a library in `<project>/defs/`, and a new target is a new dialect: all data, never Rust.",
+      "body": [
+        "- `nuclear kind new <name> -p <platform> -d <dialect>` writes a kind package's skeleton; `nuclear add <folder>` installs it. A package implemented for some dialects ties the project to them (`N0306`).",
+        "- `nuclear add <package>` adds any package of the target with its type definitions (`can:packages`).",
+        "- `nuclear dialect check <name|path>` validates a dialect's files."
+      ],
+      "keys": [
+        "extension",
+        "custom kind",
+        "kind package",
+        "new dialect"
+      ],
+      "asks": [
+        "can I create my own kind",
+        "can I write a dialect"
+      ],
+      "links": [
+        {
+          "rel": "concept",
+          "to": "concept:kinds"
+        },
+        {
+          "rel": "command",
+          "to": "tool:nuclear.kind"
+        },
+        {
+          "rel": "missing-is",
+          "to": "error:N0306"
+        },
+        {
+          "rel": "see",
+          "to": "can:packages"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/docs/08-guides/kinds.md"
+      ],
+      "meta": {
+        "area": "compiler",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:packages",
+      "type": "can",
+      "title": "Can: use any library of the target (npm, PyPI, pub.dev) through Nuclear",
+      "summary": "`nuclear add <package>` installs any package of the project's dialect with that technology's package manager, writes it in `config.nuc` and generates its type definitions: its names are then known to the compiler and the editor, and imported where they are used.",
+      "body": [
+        "- `nuclear add lodash` (nestjs, react: npm), `nuclear add humanize` (fastapi: pip), `nuclear add cached_network_image` (flutter: pub). A version: `nuclear add lodash@4.17.21`. Out again: `nuclear remove lodash`.",
+        "- The package goes to `dependencies(...)` of `config.nuc`: `lodash = \"^4.18.1\"`, or `\"date-fns@^4.4.0\"` when the name is not an identifier. A package written there by hand gets its definitions with `nuclear install`.",
+        "- A backend or web project keeps the definitions in its `defs/` folder, with the sources; a mobile app in the shared cache (`build/defs.lock`).",
+        "- Then the names are used directly, without `use`: `nanoid(8)` writes `import { nanoid } from 'nanoid'`, `slugify(title)` writes `from slugify import slugify`. A package's default export is one name: `dayjs()`, `lodash.chunk(list, 2)`.",
+        "- Look a name up inside the project: `nuclear defs search <text> --dialect <d>`, `nuclear defs show <Name> --dialect <d>`.",
+        "- A package the platform already covers (`express` under nestjs, `flask` under fastapi) is added with a word of advice: the `controller` kind already gives the routes.",
+        "- Only for the project's dialect: a Python library cannot be used in a project built for TypeScript, nor a Flutter package in a backend.",
+        "- Never install a package by hand inside `build/`: it is not in `config.nuc`, and its names stay unknown (`N0106`)."
+      ],
+      "keys": [
+        "package",
+        "library",
+        "dependency",
+        "npm",
+        "pip",
+        "pypi",
+        "pub.dev",
+        "install a library",
+        "nuclear add",
+        "type definitions"
+      ],
+      "asks": [
+        "how do I add a library to nuclear",
+        "how do I install an npm package",
+        "can I use a python library",
+        "how do I use lodash in nestjs",
+        "can I use cached_network_image"
+      ],
+      "links": [
+        {
+          "rel": "command",
+          "to": "tool:nuclear.add"
+        },
+        {
+          "rel": "missing-is",
+          "to": "error:N0106"
+        },
+        {
+          "rel": "see",
+          "to": "can:extend"
+        }
+      ],
+      "sources": [
+        "nuclearlang/docs/03-adr/0008-type-definitions-and-target-packages.md#Decision"
+      ],
+      "meta": {
+        "area": "tools",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:backend-telemetry",
+      "type": "can",
+      "title": "Can: traces and metrics to Datadog, New Relic or Grafana (backend)",
+      "summary": "With `plugins(telemetry = true)` and one connection (`Datadog`, `NewRelic`, `Grafana` or `Otlp`) a backend sends every request and use case as a span and its metrics over OTLP; `@untraced` leaves out a use case, a route or a controller. Done with fastapi; nestjs does not bring the plugin yet.",
+      "body": [
+        "- `config.nuc`: `plugins(telemetry = true)`; `config/project_config.nuc`: `Datadog(apiKey = env(\"DD_API_KEY\"))`, `NewRelic(licenseKey = env(\"NEW_RELIC_LICENSE_KEY\"), region = \"eu\")`, `Grafana(url = ..., instanceId = ..., token = ...)` or `Otlp(url = \"http://localhost:4318\")` in `connections`. Keys always from `env(...)`.",
+        "- Every one takes `service` (default: the project's name) and `sample` (the share of traces kept, 1 = all).",
+        "- No code for the spans: each request and each use case's `exec` (named `component › usecase › Class.exec`); an `Err` marks the span as an error.",
+        "- Business metrics: `Metric.count(\"orders.created\", region = r)`, `Metric.record(\"orders.total\", total)`.",
+        "- `@untraced` on a use case (no span), on a route (the request starts no trace, e.g. a health check) or on a controller (every route). Without the plugin it does nothing.",
+        "- Not yet: nestjs, spans of queries, outgoing HTTP, listeners and agents; `Log` with the trace."
+      ],
+      "keys": [
+        "telemetry",
+        "observability",
+        "tracing",
+        "traces",
+        "metrics",
+        "datadog",
+        "new relic",
+        "newrelic",
+        "grafana",
+        "opentelemetry",
+        "otlp",
+        "untraced",
+        "monitoring",
+        "apm"
+      ],
+      "asks": [
+        "how do I send traces to datadog",
+        "can nuclear integrate with new relic",
+        "how do I use grafana with nuclear",
+        "how do I stop tracing a health check route",
+        "how do I add a business metric"
+      ],
+      "platforms": [
+        "backend"
+      ],
+      "links": [
+        {
+          "rel": "kind",
+          "to": "kind:backend.usecase"
+        },
+        {
+          "rel": "kind",
+          "to": "kind:backend.controller"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md",
+        "docs/04-specs/012-observability/tasks.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "in-progress"
+      }
+    },
+    {
+      "id": "can:real-time",
+      "type": "can",
+      "title": "Can: real time over WebSockets, by configuration (backend and web)",
+      "summary": "Real time is configuration: a backend with `WebSocketServer(path = \"ws\")` serves its same controllers over a WebSocket and pushes what it publishes; a web app with a `WebSocket(url)` connection instead of `Http` sends its repositories' calls over it, unchanged, and receives what is pushed as a `Stream<T>`. The same Nuclear for every dialect.",
+      "body": [
+        "- Backend: `plugins(events = true, websocket = true)`, `WebSocketServer(path = \"ws\")` in the `appConfig`'s connections; `~publish(\"tasks.created\", value)` reaches the clients subscribed to `tasks.created`. The app's guards check the upgrade.",
+        "- Web: `WebSocket(url = \"ws://localhost:8000/ws\", headers, timeout, interceptors)` in `connections`; the repositories stay as they are (one line of config switches HTTP to WebSockets).",
+        "- What is pushed: a repository method `@on(\"topic\")` (it may use the method's parameters: `@on(\"chat.${workspace}\") events(workspace: string)`) without a body that returns `Stream<T>`; a use case passes it on (`exec() Stream<T>`, no `~`; `nuclear gen usecase <c> <Name> --calls <Repo>.<method>` writes it); a state manager follows it with `listen(stream, (value) => ...)` until its screen leaves.",
+        "- The frames (JSON): `{id, method, path, headers, body}` → `{id, status, body}`; `{subscribe}`, `{unsubscribe}`; `{event, data}`.",
+        "- `nuclear new <name> -p backend --websocket`, `nuclear new <name> -p web --websocket`.",
+        "- The contract says `webSocket`, each controller's `transports` and the `events` the app publishes.",
+        "- Tested in the project: `ws = (~appClient().socket(\"/ws\", headers = TOKEN)).value`, `~ws.subscribe(t)`, `~ws.request(...)`, `~ws.next()` (see can:test-the-app)."
+      ],
+      "keys": [
+        "websocket",
+        "websockets",
+        "real time",
+        "realtime",
+        "push",
+        "server push",
+        "live updates",
+        "subscribe"
+      ],
+      "asks": [
+        "can nuclear push events to the browser",
+        "how do I use websockets in synapsis",
+        "how does a screen receive live updates"
+      ],
+      "platforms": [
+        "backend",
+        "web"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:backend-events-and-ai"
+        },
+        {
+          "rel": "can",
+          "to": "can:web-app"
+        },
+        {
+          "rel": "can",
+          "to": "can:backend-guards"
+        },
+        {
+          "rel": "can",
+          "to": "can:test-the-app"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/docs/03-adr/0008-websockets-are-a-connection.md",
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md",
+        "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:backend-guards",
+      "type": "can",
+      "title": "Can: guards on a backend's routes (a header token, no web pages)",
+      "summary": "A backend checks the headers of every request before its route runs: `Token(value, header)` (401 without it) and `NoOrigin()` (403 for a request from a web page), for the whole app in the `appConfig` or for one controller, over HTTP and over the app's WebSocket. Never a token in the query.",
+      "body": [
+        "- `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"), header = \"X-Token\")]` in the `appConfig`: every route, the contract's routes and the WebSocket's upgrade.",
+        "- `@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])`: that controller's routes, after the app's guards.",
+        "- `Token` reads `Authorization: Bearer <value>` by default; an empty value (an unset variable) refuses everything.",
+        "- A guarded app serves no documentation pages; the contract lists the guards with their headers, never a value.",
+        "- A project's tests prove them: `app = appClient()`, `expect((~app.get(\"/x\")).status == 401)`, with the test token of `testEnv(TOKEN = \"test\")` in `config.nuc` (see can:test-the-app).",
+        "- `nuclear new <name> -p backend --token <ENV_VAR>` writes them.",
+        "- Not yet: users, sessions, a guard kind for checks beyond headers."
+      ],
+      "keys": [
+        "guard",
+        "guards",
+        "token",
+        "auth header",
+        "origin",
+        "local service",
+        "authorization"
+      ],
+      "asks": [
+        "how do I protect a backend route with a token",
+        "can synapsis refuse requests from web pages",
+        "how do I add a guard to a controller"
+      ],
+      "platforms": [
+        "backend"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:backend-api"
+        },
+        {
+          "rel": "limits",
+          "to": "limit:backend-not-yet"
+        },
+        {
+          "rel": "can",
+          "to": "can:test-the-app"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/docs/03-adr/0007-guards-of-a-backend.md",
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:web-embedded",
+      "type": "can",
+      "title": "Can: a web app mounted in a host's page (web)",
+      "summary": "Every web build also writes `mount(element, host)`: the app mounted in an element of another page (an editor's webview, another site), in a shadow root with its stylesheet, the host's CSS variables as its theme, an in-memory router, and every call through the host's bridge when given.",
+      "body": [
+        "- In `build/app`: `npm run build:embed` → `dist-embed/embed.js`, one ES module with React inside.",
+        "- `mount(element, { path: \"/channels\", bridge: { send(frame), onMessage(callback) } })` gives back the function that unmounts it.",
+        "- The bridge carries the frames of the backend's WebSocket: the host forwards them to its service with its own token (a webview cannot hold it).",
+        "- The stylesheet (`public/styles.css`) reads the host's variables: `color: var(--accent, #0a84ff)`."
+      ],
+      "keys": [
+        "embedded",
+        "embed",
+        "mount",
+        "webview",
+        "host page",
+        "widget",
+        "shadow dom"
+      ],
+      "asks": [
+        "can a synapsis web app run inside a vscode webview",
+        "how do I embed a nuclear web app in another page"
+      ],
+      "platforms": [
+        "web"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:web-app"
+        },
+        {
+          "rel": "can",
+          "to": "can:real-time"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/docs/03-adr/0009-a-web-app-mounts-in-a-host-page.md",
+        "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
+      ],
+      "meta": {
+        "area": "web",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:test-the-app",
+      "type": "can",
+      "title": "Can: test a backend as its clients call it (HTTP, its WebSocket, its guards)",
+      "summary": "A backend's `tests` call the app over HTTP and over its WebSocket with `appClient()`, with the test's connections and the environment of `testEnv(...)` in `config.nuc` (a test token, never a real one); the same Nuclear for every dialect.",
+      "body": [
+        "- `app = appClient()`; `~app.get(path, headers = {...})`, `~app.post(path, body = ..., headers = ...)`, `put`, `patch`, `delete`, `request(method, path, body, headers)` → `HttpAnswer` (`status`, `body`).",
+        "- `~app.socket(\"/ws\", headers = {...})` → `Ok(AppSocket)` or `Err` with 401/403 when a guard refuses the upgrade; `~ws.subscribe(topic)`, `~ws.request(...)`, `~ws.next(seconds = 2)` (a `SocketEvent`: `topic`, `data`; `null` when none), `~ws.close()`.",
+        "- `body` and `headers` are always named arguments.",
+        "- `testEnv(TASKS_TOKEN = \"test-tasks-token\")` in `config.nuc`: set before the app is loaded, only for the tests.",
+        "- Examples: `tasks_api/test/api_test.nuc`, `nuclear-chat/nuclear_chat/test/api_test.nuc`."
+      ],
+      "keys": [
+        "test client",
+        "appclient",
+        "testenv",
+        "test the api",
+        "test guards",
+        "test websocket",
+        "integration test"
+      ],
+      "asks": [
+        "how do I test a route over http in nuclear",
+        "how do I test my guards",
+        "how do I test the websocket of a backend"
+      ],
+      "platforms": [
+        "backend"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:backend-guards"
+        },
+        {
+          "rel": "can",
+          "to": "can:real-time"
+        }
+      ],
+      "sources": [
+        "nuclear-synapsis-framework/docs/03-adr/0010-a-backend-is-tested-as-its-clients-call-it.md",
+        "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+      ],
+      "meta": {
+        "area": "backend",
+        "status": "done"
+      }
+    },
+    {
+      "id": "can:agents-do-everything",
+      "type": "can",
+      "title": "Can: the agents do everything the Builder's UI does (nuclear-builder mcp)",
+      "summary": "Every action of Nuclear Builder's pages is a `nuclear-builder` command and a tool of its MCP server, `nuclear-builder mcp`: an agent reads the slides, writes the specs with their criteria, starts their runs, answers their gates and keeps the teams and the line. The factory gives the server to every agent it runs, beside `nuclear-mcp`; what spends money, destroys or acts in the user's name waits for the user.",
+      "body": [
+        "- In the chat: `read docs/slides.pdf and write all the specs from those slides, then write the code through the Builder` — the member calls `project_read` (a PDF with pdftotext, a .pptx, markdown), `spec_new` with the acceptance criteria (refused without them: it asks), then `run_start` for each spec; each run is told in its thread.",
+        "- 55 tools (the skills too: `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `team_skills_set`; `models_list`, `agents_list`): specs (`spec_new`, `spec_list`, `spec_show`, `spec_draft`, `spec_accept`, `spec_discard`, `spec_move`, `spec_migrate`, `spec_delete`), runs (`run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`), QA's plan (`checks`, `check_switch`, `check_add`, `check_mark`), teams (`team_*`: the new-team wizard's `team_create`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_member_add|remove|update`), the line (`line_show`, `line_set`), `ci_export`, `connections_check`, `project_read`, `vault_list`, `agents_list` (the agents a conversation can choose on this machine).",
+        "- Money: a tool never confirms it; it answers `waiting: spending` and the run waits for the user's two confirmations (the editor's two questions, or two in the chat; force confirmation holds).",
+        "- The user's: deleting a spec or a team, a restart from scratch, the delivery gate (a commit and a pull request in the user's name), the line's gates, commands and forceConfirm, replacing a CI file answer `needsUser`; the chat asks the user and applies it on a yes. Merging is never a tool; an API key is kept only by the user.",
+        "- Every agent gets it: Claude Code (`--mcp-config`, `mcp__nuclear_builder`), OpenCode (its `mcp` table), Codex (`-c mcp_servers.nuclear_builder.*`), Gemini CLI (its settings), an API model's loop (a second MCP client); the local Nuclear Developer calls the same tools as text blocks.",
+        "- Your own agent: `claude mcp add nuclear_builder -- nuclear-builder mcp --root <project>`."
+      ],
+      "keys": [
+        "nuclear-builder mcp",
+        "builder mcp",
+        "agents do everything",
+        "ui is only a ui",
+        "slides to specs",
+        "run from the chat"
+      ],
+      "asks": [
+        "can an agent start a run of the builder",
+        "can the chat read my slides and write the specs",
+        "how does an agent use nuclear builder",
+        "which tools does nuclear-builder mcp have",
+        "puede el agente hacer todo lo que hace la interfaz",
+        "can claude code start a builder run"
+      ],
+      "links": [
+        {
+          "rel": "can",
+          "to": "can:ai-workflow"
+        },
+        {
+          "rel": "can",
+          "to": "can:workplace-chat"
+        },
+        {
+          "rel": "uses",
+          "to": "tool:nuclear-builder.mcp"
+        },
+        {
+          "rel": "uses",
+          "to": "tool:nuclear-builder.run"
+        }
+      ],
+      "sources": [
+        "docs/03-adr/0009-the-ui-is-only-a-ui.md",
+        "extensions/tools/nuclear-builder/docs/02-architecture/actions.md",
+        "extensions/tools/nuclear-builder/docs/08-guides/ask-the-team.md",
+        "extensions/tools/nuclear-builder/tools.nuc",
+        "extensions/tools/nuclear-builder/mcp.nuc"
+      ],
+      "meta": {
+        "area": "tools",
+        "status": "done"
+      }
     }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:backend-data",
-   "type": "can",
-   "title": "Can: a database with entities, relations, queries, transactions and migrations (backend)",
-   "summary": "A backend stores data with entities (tables), repositories (CRUD and queries built line by line), relations between entities, pages, transactions and migrations, on SQLite, PostgreSQL, MySQL or MariaDB.",
-   "body": [
-    "- `entity` with `@primary(generated = true)`, `@column(length, unique, index, nullable, default, name)`, `@created`, `@updated`.",
-    "- Relations: `@manyToOne` (with its column `<name>Id`), `@oneToMany`, `@manyToMany` + `@joinTable`, `@oneToOne` + `@joinColumn`; loaded with `relations(\"tasks\")`.",
-    "- `repository`: `find`, `findAll`, `save`, `remove` come with it; a method's lines build one query: `where({...})` with `gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`; `orderBy`, `limit`, `offset`; then `getOne()`, `getMany()`, `paginate(page, size)`, `count()`, `exists()`, `update({...})`, `delete()`.",
-    "- `@transactional` on a use case's `exec`: one transaction; an `Err` rolls it back.",
-    "- Migrations: `nuclear migrate make \"<message>\"`, `nuclear migrate`, `nuclear migrate down`.",
-    "- Plugins: `sqlite`, `postgres`, `mysql`, `mariadb`. Tests run on an in-memory database.",
-    "",
-    "Checked on SQLite; the other databases were not run against a real server yet."
-   ],
-   "keys": [
-    "database",
-    "orm",
-    "sql",
-    "migrations",
-    "relations",
-    "transactions",
-    "base de datos"
-   ],
-   "asks": [
-    "can nuclear use a database",
-    "how do I query the database",
-    "does nuclear have migrations",
-    "how do I relate two entities"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "links": [
-    {
-     "rel": "kind",
-     "to": "kind:backend.entity"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:backend.repository"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.migrate"
-    },
-    {
-     "rel": "playbook",
-     "to": "playbook:database-resource"
-    },
-    {
-     "rel": "untested",
-     "to": "limit:untested"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md",
-    "nuclear-synapsis-framework/platforms/backend/docs/03-adr/0001-backend-data.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:call-an-api",
-   "type": "can",
-   "title": "Can: call another HTTP API (every platform)",
-   "summary": "A repository whose methods carry `@get`, `@post`, `@put`, `@patch` or `@delete` and no body calls the `Http(baseUrl)` connection: path parameters, the query or the body are filled from the method's parameters, and an error status is the `Err` of its `Result`.",
-   "body": [
-    "```nuclear",
-    "@repository(path = \"character\")",
-    "repository CharacterRepository",
-    "  @get(path = \":id\")",
-    "  one(id: int) Result<Error, Character>",
-    "```",
-    "",
-    "- `:id` takes the parameter `id`; the other parameters go to the query (GET) or the body.",
-    "- The connection is `Http(baseUrl = \"https://...\")` in `appConfig`.",
-    "- A JSON key that is not the field's name gets `@key(\"air_date\")` on the model's field.",
-    "- On mobile and web, `cache`, `ttl` and `retry` are options of the request; on mobile, `saveLocal = true` keeps the answers in the device's database.",
-    "- `nuclear gen resource ... --from-json <url>` writes the whole resource from the API's own answer."
-   ],
-   "keys": [
-    "http client",
-    "external api",
-    "call an api",
-    "consume api",
-    "rest client"
-   ],
-   "asks": [
-    "how do I call an external api",
-    "can the backend call another api",
-    "how do I consume a rest api in nuclear"
-   ],
-   "links": [
-    {
-     "rel": "kind",
-     "to": "kind:backend.repository"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:mobile.repository"
-    },
-    {
-     "rel": "playbook",
-     "to": "playbook:resource-from-an-api"
-    }
-   ],
-   "sources": [
-    "tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md#Decision"
-   ],
-   "meta": {
-    "area": "data",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:backend-events-and-ai",
-   "type": "can",
-   "title": "Can: events, a cache and AI agents (backend)",
-   "summary": "A backend publishes and consumes events (in the process or through Kafka), caches with Redis, and declares AI agents: tools, agents with memory per thread and graphs of steps, on Ollama or OpenAI models, with a vector store.",
-   "body": [
-    "- Events: `~publish(\"topic\", value)`; `listener Name` with `@consumer(\"topic\")` methods; the clients of the app's WebSocket subscribed to the topic receive it too. Plugins `events`, `kafka`, `websocket`.",
-    "- Cache: the `redis` plugin.",
-    "- AI (plugin `ai`, with `ollama` or `openai`): `tools Name` (each method with a doc comment is a tool), `agent Name(tools: T)` with a `prompt`, `@state(S) graph Name` whose methods are nodes (`@start`, `@next(\"node\")`), a `state` for the graph, `Chroma` vectors (plugin `chroma`).",
-    "- A test replaces the model with `FakeModel([\"answer\"])`.",
-    "",
-    "The Nuclear Developer itself is written with these kinds."
-   ],
-   "keys": [
-    "events",
-    "kafka",
-    "redis",
-    "agents",
-    "llm",
-    "langgraph",
-    "ollama",
-    "openai"
-   ],
-   "asks": [
-    "can I write an ai agent in nuclear",
-    "does nuclear support kafka",
-    "how do I make a graph of steps"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "links": [
-    {
-     "rel": "kind",
-     "to": "kind:backend.agent"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:backend.graph"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:backend.tools"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:backend.listener"
-    },
-    {
-     "rel": "theory",
-     "to": "concept:agents-and-graphs"
-    },
-    {
-     "rel": "untested",
-     "to": "limit:untested"
-    },
-    {
-     "rel": "can",
-     "to": "can:real-time"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:mobile-app",
-   "type": "can",
-   "title": "Can: a mobile app (mobile)",
-   "summary": "A mobile app with screens and navigation, state managers, forms with validation, translations, a session with roles and guards, events, HTTP repositories with cache, an encrypted local database, and AI chats and flows; it runs on Android, iOS, desktop and web.",
-   "body": [
-    "- Views: `stateless` and `stateful` with the UI toolkit's classes; `@screen(route, providers, acl, transition)`; navigation by screen (`context.goTo`, `pushTo`, `goBack`).",
-    "- State: `statemanager` + state model, `<State>Builder` in the view.",
-    "- Forms: a form model with rules, a `formmanager`, `SynapsisForm` in the view.",
-    "- Texts: `\"component.screen.key\".tr()` from `assets/i18n/<locale>/<component>.json`.",
-    "- Session and access: `SessionManager`, `guard`, `@acl(roles = [...])`, `@screen(acl = {...})`.",
-    "- Events: `event`, `Events.publish`, `@on(Event)`.",
-    "- Data: HTTP repositories (`cache`, `ttl`, `retry`), and a local database: `@primary` on a model gives it an encrypted table, `saveLocal = true` keeps what a GET answers.",
-    "- AI (plugin `genkit`): `tools`, `chat`, `flow`, `remote`, `knowledge`.",
-    "- Tests: `@mock`, `@test`, `@states`, `@widget`, integration tests.",
-    "- Run and debug: `nuclear run`, `nuclear device` (a test device in its own window), breakpoints on `.nuc` lines in VS Code."
-   ],
-   "keys": [
-    "mobile app",
-    "android",
-    "ios",
-    "flutter app",
-    "app movil"
-   ],
-   "asks": [
-    "can nuclear build a mobile app",
-    "does nuclear support forms",
-    "can I store data on the device",
-    "how do I run the app on a device"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "links": [
-    {
-     "rel": "platform",
-     "to": "platform:mobile"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:mobile.stateless"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:mobile.statemanager"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.device"
-    },
-    {
-     "rel": "playbook",
-     "to": "playbook:add-a-screen"
-    },
-    {
-     "rel": "limits",
-     "to": "limit:mobile-not-yet"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/mobile/docs/07-reference/brief/mobile.md"
-   ],
-   "meta": {
-    "area": "mobile",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:web-app",
-   "type": "can",
-   "title": "Can: a web app (web)",
-   "summary": "A web app with screens and routing, views as HTML functions, state managers, repositories over HTTP or a WebSocket (with what the server pushes), use cases, events, guards and tests; it also mounts in a host's page. The words are the mobile platform's.",
-   "body": [
-    "- Views: `stateless` and `stateful` with `build() Element` and HTML functions (`main`, `ul`, `li`, `button`) with named attributes and `children`. No JSX.",
-    "- `@screen(route, providers, acl, notFound)`; navigation by screen: `goTo(Screen, id = 7)`, `goBack()`.",
-    "- `statemanager` + state model, `<State>Builder` with one callback per state.",
-    "- `repository` over HTTP (`cache`, `ttl`, `retry`) or over a `WebSocket` connection with the same methods; `@on(\"topic\")` methods return `Stream<T>` of what the server pushes; `usecase`, `appcomponent`, `service`, `event`, `guard`.",
-    "- Tests: `@mock`, `@test`, `@states`, `@widget` with `renderScreen`.",
-    "- `mount(element, host)`: the same app in a host's page (see can:web-embedded).",
-    "- `nuclear new <name> -p web`, `nuclear build | install | run | test`.",
-    "",
-    "The NuclearLang website is written with it."
-   ],
-   "keys": [
-    "web app",
-    "website",
-    "react app",
-    "frontend",
-    "spa"
-   ],
-   "asks": [
-    "can nuclear build a web app",
-    "does nuclear support react",
-    "how do I make a web page with nuclear"
-   ],
-   "platforms": [
-    "web"
-   ],
-   "links": [
-    {
-     "rel": "platform",
-     "to": "platform:web"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:web.stateless"
-    },
-    {
-     "rel": "limits",
-     "to": "limit:web-first-version"
-    },
-    {
-     "rel": "playbook",
-     "to": "playbook:add-a-screen"
-    },
-    {
-     "rel": "can",
-     "to": "can:real-time"
-    },
-    {
-     "rel": "can",
-     "to": "can:web-embedded"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/web/docs/07-reference/brief/web.md"
-   ],
-   "meta": {
-    "area": "web",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:generate-code",
-   "type": "can",
-   "title": "Can: generate the finished code of a resource from its data",
-   "summary": "`nuclear gen resource` writes, on any platform, the models, the repository, a use case per action, the facade, the controller or the screen and the tests of a resource, all compiling; the fields come from a list, from an example answer of an API (a file or a URL) or from a spec.",
-   "body": [
-    "- `--fields \"id:int name:string origin:Origin?\"`, `--from-json <file|url>` (nested objects become models, a list under `results` a page, `null` an optional field) or `--from-spec <spec.md>` (its example answer, its `Key | Type` table, its `GET <url>` line).",
-    "- `--source rest[:<base url>]` (an API) or `--source db` (an entity and its queries, backend only).",
-    "- `--actions list,get,search,create,update,delete`; `--screen <screen>` on mobile and web; `--dry-run` shows the files.",
-    "- It refuses, before writing, a field type nobody declared, a name another file declares and a source the platform has no pieces for. Nothing is overwritten.",
-    "- `nuclear gen usecase <component> <Name>` wires a use case the project declares: its alias in the facade and, on the backend, `--route \"POST orders/{id}/cancel\"` adds its route to the controller of `orders` (made when missing). With `--calls <Repository>.<method>` it also writes the use case, when all it does is call that method.",
-    "- `nuclear make <kind> <component> <Name>` writes the smallest file of any kind of the platform.",
-    "- The same generators are MCP tools and the first stage of the Builder."
-   ],
-   "keys": [
-    "generate code",
-    "scaffold",
-    "crud",
-    "code generation"
-   ],
-   "asks": [
-    "can nuclear generate a crud",
-    "can it create code from a json",
-    "what can nuclear gen write"
-   ],
-   "links": [
-    {
-     "rel": "concept",
-     "to": "concept:generators"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.gen.resource"
-    },
-    {
-     "rel": "mcp",
-     "to": "mcp:generate_resource"
-    },
-    {
-     "rel": "limit",
-     "to": "limit:generators"
-    }
-   ],
-   "sources": [
-    "tools/code_generator/docs/03-adr/0001-the-generators-write-finished-code-the-agent-only-what-is-not-standard.md#Decision"
-   ],
-   "meta": {
-    "area": "tools",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:switch-dialect",
-   "type": "can",
-   "title": "Can: build the same project with another dialect of its platform",
-   "summary": "A backend written once builds as FastAPI (Python) or as NestJS (TypeScript): change `dialect` in `config.nuc` and build. No other file changes, because kinds, decorators, the library and the tests belong to the platform.",
-   "body": [
-    "```nuclear",
-    "synapsis(platform = \"backend\", dialect = \"nestjs\")   // was \"fastapi\"",
-    "```",
-    "",
-    "Then `nuclear build && nuclear install && nuclear test`. The example `tasks_api` is built and tested with both.",
-    "",
-    "The exception: code that uses a library of one target through its type definitions is tied to that target's dialect. Mobile and web have one dialect each today."
-   ],
-   "keys": [
-    "switch dialect",
-    "change dialect",
-    "portable"
-   ],
-   "asks": [
-    "can I change from python to typescript",
-    "can the same code build to nestjs and fastapi"
-   ],
-   "links": [
-    {
-     "rel": "concept",
-     "to": "concept:platforms-and-dialects"
-    }
-   ],
-   "sources": [
-    "AGENTS.md#Hard rules"
-   ],
-   "meta": {
-    "area": "compiler",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:contracts",
-   "type": "can",
-   "title": "Can: generate an app's models and repositories from its backend",
-   "summary": "An app that declares a backend's contract in `config.nuc` gets its models and one typed repository per controller generated at build time; a change in the backend that breaks the app is a compile error in the app.",
-   "body": [
-    "`contracts(tasks_api = \"../tasks_api\")` or a URL; `nuclear contracts update`, `nuclear contracts list`. The generated files are in `contracts/<name>/`. Works for mobile and web apps over a backend of any dialect."
-   ],
-   "keys": [
-    "shared models",
-    "typed client",
-    "api client"
-   ],
-   "asks": [
-    "can the app share models with the backend",
-    "does nuclear generate an api client"
-   ],
-   "links": [
-    {
-     "rel": "concept",
-     "to": "concept:contracts"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.contracts"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/08-guides/contracts.md"
-   ],
-   "meta": {
-    "area": "compiler",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:check-fix-format",
-   "type": "can",
-   "title": "Can: check a project, apply the exact fixes and format it",
-   "summary": "`nuclear check` reports every error of a file or a project with its code, place and fix (JSON for agents); `nuclear fix` applies the exact fixes; `nuclear fmt` rewrites the layout; `nuclear explain` tells a run-time error or a failing test at its `.nuc` lines.",
-   "body": [
-    "- `nuclear check . --json`: syntax, names, results, the library, the kinds' rules and the project's architecture, all at once. It also writes the project map (`.nuclear/map.md`).",
-    "- `nuclear fix <folder|file>`: applies every exact fix, then reports what is left.",
-    "- `nuclear fmt <file|folder> [--check]`: spacing, indentation and blank lines; it never reorders.",
-    "- `nuclear explain`: reads a stack or a test's output and answers the message, a hint and the `.nuc` lines.",
-    "- `nuclear repair` (mobile): rebuilds from scratch until the target's analyzer finds no errors.",
-    "- `nuclear doctor`: what the machine lacks."
-   ],
-   "keys": [
-    "lint",
-    "format",
-    "formatter",
-    "check",
-    "fix"
-   ],
-   "asks": [
-    "how do I check my code",
-    "does nuclear have a formatter",
-    "can nuclear fix errors automatically"
-   ],
-   "links": [
-    {
-     "rel": "command",
-     "to": "tool:nuclear.check"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.fix"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.fmt"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.explain"
-    },
-    {
-     "rel": "playbook",
-     "to": "playbook:fix-compiler-errors"
-    }
-   ],
-   "meta": {
-    "area": "tools",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:ai-workflow",
-   "type": "can",
-   "title": "Can: take a spec to tested code with AI agents, on your machine or under a frontier model",
-   "summary": "The Builder runs a spec through the factory's stations with a team (each role done by the local agents, a provider's agent or a provider's model); every run is documented, waits at its gates for you, and is exportable as CI.",
-   "body": [
-    "- From a terminal: `nuclear-builder run specs/<component>/<id>/spec.md` runs the factory (Analysis, Design, Tests first, Code, Quality, Delivery) with the run's team (`nuclear-builder team …`); `--lead` is ignored. Or `/task` in Nuclear Atlas.",
-    "- The editors run the same factory as a process: VS Code's Builder page and Android Studio's tool window (the team, the gates, QA's checks, the two spending questions); the MCP tools `developer_task`, `developer_retry`, `developer_review` stay.",
-    "- Nuclear Chat under the Builder's diagram (and as a full tab): each run is a thread of its team's channel, told by the member of each station, its gates and QA's plan as buttons that answer the run; a member does everything the page does (`nuclear-builder mcp`, see can:agents-do-everything): reads the slides, writes specs with their criteria (`spec_new`), starts runs, answers gates, or proposes a change of a spec as a difference the user accepts (`nuclear-builder spec accept|discard`); anything a paid member spends is confirmed twice in the editor.",
-    "- The teams as your software company (VS Code): each team any number of members per role, hired with a wizard (a suggested name, the purpose and skills, members suggested with why, the roster's filters, who works each member and what it costs: `nuclear-builder team create|suggest|name-suggest|member add`), a logo, a description and a tech lead who answers for it; a run's node reads like a debugger, and who did each step is one label, `<employee> · <role> · <provider> · <model>`.",
-    "- Specs imported from Jira or a GitHub issue (VS Code).",
-    "- The internet for facts: `web_search`, `web_read`, `api_inspect` (MCP tools).",
-    "- CI: `nuclear-builder export github|gitlab|bitbucket`; `nuclear-builder ci` runs the same commands locally.",
-    "- A direct message with the general agent (Atlas, `nuclear-builder member --role chat`, its provider in `nuclear.builder.chat`): Nuclear Atlas's page (VS Code); `/task` there runs an order."
-   ],
-   "keys": [
-    "ai workflow",
-    "spec to code",
-    "automation"
-   ],
-   "asks": [
-    "can the agent build a whole feature",
-    "can I use claude with the local agents",
-    "can nuclear run in ci"
-   ],
-   "links": [
-    {
-     "rel": "concept",
-     "to": "concept:loop"
-    },
-    {
-     "rel": "concept",
-     "to": "concept:local-first"
-    },
-    {
-     "rel": "limit",
-     "to": "limit:agent-features"
-    },
-    {
-     "rel": "can",
-     "to": "can:agents-do-everything"
-    }
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "area": "ai",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:workplace-chat",
-   "type": "can",
-   "title": "Can: work with your factory's teams in a chat, as a company works in Slack (Nuclear Chat)",
-   "summary": "Nuclear Chat is the factory's workplace: channels, direct messages, threads, mentions, reactions and GIFs, local to the project (`.nuclear/chat/`). A member answers as themselves through their provider; a message to a team is answered by its tech lead; a member that does not understand asks. A local service on `127.0.0.1:7880`, every route guarded by a token from the keyring.",
-   "body": [
-    "- A host (the Builder, Nuclear Atlas) registers a project with its members, teams and channels: `POST workspaces`; a host gets the URL and the token from `nuclear-chat connect --json` (header `X-Chat-Token`; a request with an `Origin` is refused).",
-    "- In VS Code the Builder and Nuclear Atlas are its hosts: the dock under the Builder's diagram and the tab (*Open the chat*) on the team's channel, Atlas on `dm-atlas`; one WebSocket per window holds the token (a page never does), each member's face drawn, `nuclear.chat.gifs` (`pack`, `tenor`, `giphy`) passed as the workspace's GIFs and the key kept with *Nuclear Chat: Keep a GIF Service's Key*.",
-    "- A run of the factory is a thread of its team's channel; `/poc <what>` is not available yet (the factory cannot run on a scratch folder).",
-    "- Who answers: a direct message's member; `@<member>` by id, name, first name or role; `@<team>`, or a team's channel without a member mentioned: the team's tech lead.",
-    "- A member answers through its responder, a command run once per answer with `--events` (the conversation in, `typing`, `text`, `tool`, `ask`, `done` out); its questions reach the user and the answer goes back to it; the cost is shown on the message.",
-    "- A front for any agent: a direct message with the general agent (Atlas) has a menu in its header to choose who answers it, as in Claude's own app: the local Nuclear Developer (always offered, the default with nothing configured), Claude Code, OpenCode, Codex, Gemini CLI or an API model, each with its model; only what is on this machine is offered (`nuclear-builder agents --json`, the MCP tool `agents_list`; one not found disabled with why). The choice is kept per conversation (`PUT channels/{ws}/{channel}/agent`, `channels.json`); the setting `nuclear.builder.chat` is the default for new ones; a paid agent is still confirmed twice. The answer arrives as it is written (`text-delta` → the event `message.delta`; Claude Code streams), with its markdown, code, tool chips and cost.",
-    "- A member answers in the user's chosen language (`nuclear.language`), or in the language the user wrote in; may end an answer with a GIF of the pack by personality; a direct message shows under the member's name the brain that answers (`<agent> · <model> · paid|local`).",
-    "- The history is append-only JSON lines per channel (edits and reactions are lines, a crash loses nothing), searchable, with unread counts.",
-    "- Real time: the service's WebSocket (`/ws`) serves the same routes and pushes each workspace's events (`{\"subscribe\": \"chat.<workspace>\"}`); `GET events/{ws}?since=` reads what a client missed.",
-    "- GIFs: a pack of 36 animated drawings made for the project (works offline); a member sends one by personality; Tenor or Giphy only with a key in the keyring (`nuclear-chat gif-key tenor`) and the project's yes, asked once.",
-    "- Started at login by the AI set-up (`nuclear-builder setup`); by hand: `nuclear-chat serve`."
-   ],
-   "keys": [
-    "nuclear chat",
-    "nuclear-chat",
-    "chat with the team",
-    "workplace",
-    "slack",
-    "tech lead",
-    "mention",
-    "gif",
-    "choose the agent",
-    "claude code in the chat",
-    "dropdown"
-   ],
-   "asks": [
-    "how do I talk to my team in nuclear",
-    "can I chat with the members of the factory",
-    "who answers a message to a team",
-    "how does a host connect to nuclear chat",
-    "como hablo con mi equipo",
-    "where is the chat in the builder",
-    "can I choose which agent answers in the chat",
-    "how do I talk to claude code from nuclear chat"
-   ],
-   "links": [
-    {
-     "rel": "can",
-     "to": "can:ai-workflow"
-    },
-    {
-     "rel": "can",
-     "to": "can:real-time"
-    },
-    {
-     "rel": "can",
-     "to": "can:backend-guards"
-    }
-   ],
-   "sources": [
-    "nuclear-chat/docs/00-context/vision.md",
-    "nuclear-chat/docs/02-architecture/api.md",
-    "nuclear-chat/docs/02-architecture/responders.md",
-    "nuclear-chat/docs/05-standards/security.md",
-    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
-   ],
-   "meta": {
-    "area": "tools",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:extend",
-   "type": "can",
-   "title": "Can: add your own kinds, definitions and dialects without touching the compiler",
-   "summary": "A project or the community adds a kind as a package (`kinds/<name>/` with TOML, templates and a runtime), brings type definitions of a library in `<project>/defs/`, and a new target is a new dialect: all data, never Rust.",
-   "body": [
-    "- `nuclear kind new <name> -p <platform> -d <dialect>` writes a kind package's skeleton; `nuclear add <folder>` installs it. A package implemented for some dialects ties the project to them (`N0306`).",
-    "- `nuclear add <package>` adds any package of the target with its type definitions (`can:packages`).",
-    "- `nuclear dialect check <name|path>` validates a dialect's files."
-   ],
-   "keys": [
-    "extension",
-    "custom kind",
-    "kind package",
-    "new dialect"
-   ],
-   "asks": [
-    "can I create my own kind",
-    "can I write a dialect"
-   ],
-   "links": [
-    {
-     "rel": "concept",
-     "to": "concept:kinds"
-    },
-    {
-     "rel": "command",
-     "to": "tool:nuclear.kind"
-    },
-    {
-     "rel": "missing-is",
-     "to": "error:N0306"
-    },
-    {
-     "rel": "see",
-     "to": "can:packages"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/docs/08-guides/kinds.md"
-   ],
-   "meta": {
-    "area": "compiler",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:packages",
-   "type": "can",
-   "title": "Can: use any library of the target (npm, PyPI, pub.dev) through Nuclear",
-   "summary": "`nuclear add <package>` installs any package of the project's dialect with that technology's package manager, writes it in `config.nuc` and generates its type definitions: its names are then known to the compiler and the editor, and imported where they are used.",
-   "body": [
-    "- `nuclear add lodash` (nestjs, react: npm), `nuclear add humanize` (fastapi: pip), `nuclear add cached_network_image` (flutter: pub). A version: `nuclear add lodash@4.17.21`. Out again: `nuclear remove lodash`.",
-    "- The package goes to `dependencies(...)` of `config.nuc`: `lodash = \"^4.18.1\"`, or `\"date-fns@^4.4.0\"` when the name is not an identifier. A package written there by hand gets its definitions with `nuclear install`.",
-    "- A backend or web project keeps the definitions in its `defs/` folder, with the sources; a mobile app in the shared cache (`build/defs.lock`).",
-    "- Then the names are used directly, without `use`: `nanoid(8)` writes `import { nanoid } from 'nanoid'`, `slugify(title)` writes `from slugify import slugify`. A package's default export is one name: `dayjs()`, `lodash.chunk(list, 2)`.",
-    "- Look a name up inside the project: `nuclear defs search <text> --dialect <d>`, `nuclear defs show <Name> --dialect <d>`.",
-    "- A package the platform already covers (`express` under nestjs, `flask` under fastapi) is added with a word of advice: the `controller` kind already gives the routes.",
-    "- Only for the project's dialect: a Python library cannot be used in a project built for TypeScript, nor a Flutter package in a backend.",
-    "- Never install a package by hand inside `build/`: it is not in `config.nuc`, and its names stay unknown (`N0106`)."
-   ],
-   "keys": [
-    "package",
-    "library",
-    "dependency",
-    "npm",
-    "pip",
-    "pypi",
-    "pub.dev",
-    "install a library",
-    "nuclear add",
-    "type definitions"
-   ],
-   "asks": [
-    "how do I add a library to nuclear",
-    "how do I install an npm package",
-    "can I use a python library",
-    "how do I use lodash in nestjs",
-    "can I use cached_network_image"
-   ],
-   "links": [
-    {
-     "rel": "command",
-     "to": "tool:nuclear.add"
-    },
-    {
-     "rel": "missing-is",
-     "to": "error:N0106"
-    },
-    {
-     "rel": "see",
-     "to": "can:extend"
-    }
-   ],
-   "sources": [
-    "nuclearlang/docs/03-adr/0008-type-definitions-and-target-packages.md#Decision"
-   ],
-   "meta": {
-    "area": "tools",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:backend-telemetry",
-   "type": "can",
-   "title": "Can: traces and metrics to Datadog, New Relic or Grafana (backend)",
-   "summary": "With `plugins(telemetry = true)` and one connection (`Datadog`, `NewRelic`, `Grafana` or `Otlp`) a backend sends every request and use case as a span and its metrics over OTLP; `@untraced` leaves out a use case, a route or a controller. Done with fastapi; nestjs does not bring the plugin yet.",
-   "body": [
-    "- `config.nuc`: `plugins(telemetry = true)`; `config/project_config.nuc`: `Datadog(apiKey = env(\"DD_API_KEY\"))`, `NewRelic(licenseKey = env(\"NEW_RELIC_LICENSE_KEY\"), region = \"eu\")`, `Grafana(url = ..., instanceId = ..., token = ...)` or `Otlp(url = \"http://localhost:4318\")` in `connections`. Keys always from `env(...)`.",
-    "- Every one takes `service` (default: the project's name) and `sample` (the share of traces kept, 1 = all).",
-    "- No code for the spans: each request and each use case's `exec` (named `component › usecase › Class.exec`); an `Err` marks the span as an error.",
-    "- Business metrics: `Metric.count(\"orders.created\", region = r)`, `Metric.record(\"orders.total\", total)`.",
-    "- `@untraced` on a use case (no span), on a route (the request starts no trace, e.g. a health check) or on a controller (every route). Without the plugin it does nothing.",
-    "- Not yet: nestjs, spans of queries, outgoing HTTP, listeners and agents; `Log` with the trace."
-   ],
-   "keys": [
-    "telemetry",
-    "observability",
-    "tracing",
-    "traces",
-    "metrics",
-    "datadog",
-    "new relic",
-    "newrelic",
-    "grafana",
-    "opentelemetry",
-    "otlp",
-    "untraced",
-    "monitoring",
-    "apm"
-   ],
-   "asks": [
-    "how do I send traces to datadog",
-    "can nuclear integrate with new relic",
-    "how do I use grafana with nuclear",
-    "how do I stop tracing a health check route",
-    "how do I add a business metric"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "links": [
-    {
-     "rel": "kind",
-     "to": "kind:backend.usecase"
-    },
-    {
-     "rel": "kind",
-     "to": "kind:backend.controller"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md",
-    "docs/04-specs/012-observability/tasks.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "in-progress"
-   }
-  },
-  {
-   "id": "can:real-time",
-   "type": "can",
-   "title": "Can: real time over WebSockets, by configuration (backend and web)",
-   "summary": "Real time is configuration: a backend with `WebSocketServer(path = \"ws\")` serves its same controllers over a WebSocket and pushes what it publishes; a web app with a `WebSocket(url)` connection instead of `Http` sends its repositories' calls over it, unchanged, and receives what is pushed as a `Stream<T>`. The same Nuclear for every dialect.",
-   "body": [
-    "- Backend: `plugins(events = true, websocket = true)`, `WebSocketServer(path = \"ws\")` in the `appConfig`'s connections; `~publish(\"tasks.created\", value)` reaches the clients subscribed to `tasks.created`. The app's guards check the upgrade.",
-    "- Web: `WebSocket(url = \"ws://localhost:8000/ws\", headers, timeout, interceptors)` in `connections`; the repositories stay as they are (one line of config switches HTTP to WebSockets).",
-    "- What is pushed: a repository method `@on(\"topic\")` (it may use the method's parameters: `@on(\"chat.${workspace}\") events(workspace: string)`) without a body that returns `Stream<T>`; a use case passes it on (`exec() Stream<T>`, no `~`; `nuclear gen usecase <c> <Name> --calls <Repo>.<method>` writes it); a state manager follows it with `listen(stream, (value) => ...)` until its screen leaves.",
-    "- The frames (JSON): `{id, method, path, headers, body}` → `{id, status, body}`; `{subscribe}`, `{unsubscribe}`; `{event, data}`.",
-    "- `nuclear new <name> -p backend --websocket`, `nuclear new <name> -p web --websocket`.",
-    "- The contract says `webSocket`, each controller's `transports` and the `events` the app publishes.",
-    "- Tested in the project: `ws = (~appClient().socket(\"/ws\", headers = TOKEN)).value`, `~ws.subscribe(t)`, `~ws.request(...)`, `~ws.next()` (see can:test-the-app)."
-   ],
-   "keys": [
-    "websocket",
-    "websockets",
-    "real time",
-    "realtime",
-    "push",
-    "server push",
-    "live updates",
-    "subscribe"
-   ],
-   "asks": [
-    "can nuclear push events to the browser",
-    "how do I use websockets in synapsis",
-    "how does a screen receive live updates"
-   ],
-   "platforms": [
-    "backend",
-    "web"
-   ],
-   "links": [
-    {
-     "rel": "can",
-     "to": "can:backend-events-and-ai"
-    },
-    {
-     "rel": "can",
-     "to": "can:web-app"
-    },
-    {
-     "rel": "can",
-     "to": "can:backend-guards"
-    },
-    {
-     "rel": "can",
-     "to": "can:test-the-app"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/docs/03-adr/0008-websockets-are-a-connection.md",
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md",
-    "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:backend-guards",
-   "type": "can",
-   "title": "Can: guards on a backend's routes (a header token, no web pages)",
-   "summary": "A backend checks the headers of every request before its route runs: `Token(value, header)` (401 without it) and `NoOrigin()` (403 for a request from a web page), for the whole app in the `appConfig` or for one controller, over HTTP and over the app's WebSocket. Never a token in the query.",
-   "body": [
-    "- `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"), header = \"X-Token\")]` in the `appConfig`: every route, the contract's routes and the WebSocket's upgrade.",
-    "- `@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])`: that controller's routes, after the app's guards.",
-    "- `Token` reads `Authorization: Bearer <value>` by default; an empty value (an unset variable) refuses everything.",
-    "- A guarded app serves no documentation pages; the contract lists the guards with their headers, never a value.",
-    "- A project's tests prove them: `app = appClient()`, `expect((~app.get(\"/x\")).status == 401)`, with the test token of `testEnv(TOKEN = \"test\")` in `config.nuc` (see can:test-the-app).",
-    "- `nuclear new <name> -p backend --token <ENV_VAR>` writes them.",
-    "- Not yet: users, sessions, a guard kind for checks beyond headers."
-   ],
-   "keys": [
-    "guard",
-    "guards",
-    "token",
-    "auth header",
-    "origin",
-    "local service",
-    "authorization"
-   ],
-   "asks": [
-    "how do I protect a backend route with a token",
-    "can synapsis refuse requests from web pages",
-    "how do I add a guard to a controller"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "links": [
-    {
-     "rel": "can",
-     "to": "can:backend-api"
-    },
-    {
-     "rel": "limits",
-     "to": "limit:backend-not-yet"
-    },
-    {
-     "rel": "can",
-     "to": "can:test-the-app"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/docs/03-adr/0007-guards-of-a-backend.md",
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:web-embedded",
-   "type": "can",
-   "title": "Can: a web app mounted in a host's page (web)",
-   "summary": "Every web build also writes `mount(element, host)`: the app mounted in an element of another page (an editor's webview, another site), in a shadow root with its stylesheet, the host's CSS variables as its theme, an in-memory router, and every call through the host's bridge when given.",
-   "body": [
-    "- In `build/app`: `npm run build:embed` → `dist-embed/embed.js`, one ES module with React inside.",
-    "- `mount(element, { path: \"/channels\", bridge: { send(frame), onMessage(callback) } })` gives back the function that unmounts it.",
-    "- The bridge carries the frames of the backend's WebSocket: the host forwards them to its service with its own token (a webview cannot hold it).",
-    "- The stylesheet (`public/styles.css`) reads the host's variables: `color: var(--accent, #0a84ff)`."
-   ],
-   "keys": [
-    "embedded",
-    "embed",
-    "mount",
-    "webview",
-    "host page",
-    "widget",
-    "shadow dom"
-   ],
-   "asks": [
-    "can a synapsis web app run inside a vscode webview",
-    "how do I embed a nuclear web app in another page"
-   ],
-   "platforms": [
-    "web"
-   ],
-   "links": [
-    {
-     "rel": "can",
-     "to": "can:web-app"
-    },
-    {
-     "rel": "can",
-     "to": "can:real-time"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/docs/03-adr/0009-a-web-app-mounts-in-a-host-page.md",
-    "nuclear-synapsis-framework/platforms/web/docs/07-reference/web.md"
-   ],
-   "meta": {
-    "area": "web",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:test-the-app",
-   "type": "can",
-   "title": "Can: test a backend as its clients call it (HTTP, its WebSocket, its guards)",
-   "summary": "A backend's `tests` call the app over HTTP and over its WebSocket with `appClient()`, with the test's connections and the environment of `testEnv(...)` in `config.nuc` (a test token, never a real one); the same Nuclear for every dialect.",
-   "body": [
-    "- `app = appClient()`; `~app.get(path, headers = {...})`, `~app.post(path, body = ..., headers = ...)`, `put`, `patch`, `delete`, `request(method, path, body, headers)` → `HttpAnswer` (`status`, `body`).",
-    "- `~app.socket(\"/ws\", headers = {...})` → `Ok(AppSocket)` or `Err` with 401/403 when a guard refuses the upgrade; `~ws.subscribe(topic)`, `~ws.request(...)`, `~ws.next(seconds = 2)` (a `SocketEvent`: `topic`, `data`; `null` when none), `~ws.close()`.",
-    "- `body` and `headers` are always named arguments.",
-    "- `testEnv(TASKS_TOKEN = \"test-tasks-token\")` in `config.nuc`: set before the app is loaded, only for the tests.",
-    "- Examples: `tasks_api/test/api_test.nuc`, `nuclear-chat/nuclear_chat/test/api_test.nuc`."
-   ],
-   "keys": [
-    "test client",
-    "appclient",
-    "testenv",
-    "test the api",
-    "test guards",
-    "test websocket",
-    "integration test"
-   ],
-   "asks": [
-    "how do I test a route over http in nuclear",
-    "how do I test my guards",
-    "how do I test the websocket of a backend"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "links": [
-    {
-     "rel": "can",
-     "to": "can:backend-guards"
-    },
-    {
-     "rel": "can",
-     "to": "can:real-time"
-    }
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/docs/03-adr/0010-a-backend-is-tested-as-its-clients-call-it.md",
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ],
-   "meta": {
-    "area": "backend",
-    "status": "done"
-   }
-  },
-  {
-   "id": "can:agents-do-everything",
-   "type": "can",
-   "title": "Can: the agents do everything the Builder's UI does (nuclear-builder mcp)",
-   "summary": "Every action of Nuclear Builder's pages is a `nuclear-builder` command and a tool of its MCP server, `nuclear-builder mcp`: an agent reads the slides, writes the specs with their criteria, starts their runs, answers their gates and keeps the teams and the line. The factory gives the server to every agent it runs, beside `nuclear-mcp`; what spends money, destroys or acts in the user's name waits for the user.",
-   "body": [
-    "- In the chat: `read docs/slides.pdf and write all the specs from those slides, then write the code through the Builder` — the member calls `project_read` (a PDF with pdftotext, a .pptx, markdown), `spec_new` with the acceptance criteria (refused without them: it asks), then `run_start` for each spec; each run is told in its thread.",
-    "- 55 tools (the skills too: `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `team_skills_set`; `models_list`, `agents_list`): specs (`spec_new`, `spec_list`, `spec_show`, `spec_draft`, `spec_accept`, `spec_discard`, `spec_move`, `spec_migrate`, `spec_delete`), runs (`run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`), QA's plan (`checks`, `check_switch`, `check_add`, `check_mark`), teams (`team_*`: the new-team wizard's `team_create`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_member_add|remove|update`), the line (`line_show`, `line_set`), `ci_export`, `connections_check`, `project_read`, `vault_list`, `agents_list` (the agents a conversation can choose on this machine).",
-    "- Money: a tool never confirms it; it answers `waiting: spending` and the run waits for the user's two confirmations (the editor's two questions, or two in the chat; force confirmation holds).",
-    "- The user's: deleting a spec or a team, a restart from scratch, the delivery gate (a commit and a pull request in the user's name), the line's gates, commands and forceConfirm, replacing a CI file answer `needsUser`; the chat asks the user and applies it on a yes. Merging is never a tool; an API key is kept only by the user.",
-    "- Every agent gets it: Claude Code (`--mcp-config`, `mcp__nuclear_builder`), OpenCode (its `mcp` table), Codex (`-c mcp_servers.nuclear_builder.*`), Gemini CLI (its settings), an API model's loop (a second MCP client); the local Nuclear Developer calls the same tools as text blocks.",
-    "- Your own agent: `claude mcp add nuclear_builder -- nuclear-builder mcp --root <project>`."
-   ],
-   "keys": [
-    "nuclear-builder mcp",
-    "builder mcp",
-    "agents do everything",
-    "ui is only a ui",
-    "slides to specs",
-    "run from the chat"
-   ],
-   "asks": [
-    "can an agent start a run of the builder",
-    "can the chat read my slides and write the specs",
-    "how does an agent use nuclear builder",
-    "which tools does nuclear-builder mcp have",
-    "puede el agente hacer todo lo que hace la interfaz",
-    "can claude code start a builder run"
-   ],
-   "links": [
-    {
-     "rel": "can",
-     "to": "can:ai-workflow"
-    },
-    {
-     "rel": "can",
-     "to": "can:workplace-chat"
-    },
-    {
-     "rel": "uses",
-     "to": "tool:nuclear-builder.mcp"
-    },
-    {
-     "rel": "uses",
-     "to": "tool:nuclear-builder.run"
-    }
-   ],
-   "sources": [
-    "docs/03-adr/0009-the-ui-is-only-a-ui.md",
-    "extensions/tools/nuclear-builder/docs/02-architecture/actions.md",
-    "extensions/tools/nuclear-builder/docs/08-guides/ask-the-team.md",
-    "extensions/tools/nuclear-builder/tools.nuc",
-    "extensions/tools/nuclear-builder/mcp.nuc"
-   ],
-   "meta": {
-    "area": "tools",
-    "status": "done"
-   }
-  }
- ]
+  ]
 }

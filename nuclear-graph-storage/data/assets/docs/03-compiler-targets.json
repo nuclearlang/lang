@@ -4181,10 +4181,33 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/02-architecture/fastapi.md#toolchain",
+   "id": "doc:nuclearlang/dialects/python/docs/02-architecture/fastapi.md#toolchain.080308",
    "type": "context",
    "title": "The `fastapi` dialect: the backend platform written in Python — Toolchain",
-   "summary": "What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]` has the same with `.venv\\Scripts\\`): There is no `analyze` key (roadmap).",
+   "summary": "There is no `analyze` key (roadmap).",
+   "body": [
+    "There is no `analyze` key ([roadmap](../01-product/roadmap.md)). The editor's debug launch (`[[toolchain.launch]]`)",
+    "runs `uvicorn` under debugpy with the app's virtual environment, without `--reload` (the debugger owns the",
+    "process), after the task `nuclear: build`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/02-architecture/fastapi.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/02-architecture/fastapi.md#toolchain.7e3b5c",
+   "type": "context",
+   "title": "The `fastapi` dialect: the backend platform written in Python — Toolchain",
+   "summary": "What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]` has the same with `.venv\\Scripts\\`):",
    "body": [
     "What the `nuclear` command runs in `build/` (`[toolchain]`; `[toolchain.windows]` has the same with",
     "`.venv\\Scripts\\`):",
@@ -4192,15 +4215,12 @@
     "| Key | Command |",
     "|---|---|",
     "| `install` | `python3 -m venv .venv`, then pip installs the runtime from `{{packages}}/synapsis-py` and the app (`-e '.[test]'`) |",
+    "| `needs` | `python`: the CLI finds Python (`NUCLEAR_PYTHON`, the one included with NuclearLang, Nuclear's own, the PATH) and puts it first in the PATH of these commands (ADR-cli-0004) |",
     "| `install_local` | reinstalls a dependency that is a folder (`--no-deps --force-reinstall`) |",
     "| `run` | `.venv/bin/uvicorn app.main:app --reload --port {{port}}` (`url = \"http://localhost:8000\"`, `ready = \"Uvicorn running\"`, `installed = \".venv\"`) |",
     "| `test` | `.venv/bin/python -m pytest -q` |",
     "| `package_add`, `package_remove`, `package_version`, `package_defs` | pip, the version it resolved, and `tools/defs/python/gen.py --distribution` for the package's type definitions, written into the project's `defs/`. A bare version (`4.17.0`) is exact (`==`); a constraint is `>=` |",
-    "| `migrate_make`, `migrate`, `migrate_down` | `python -m synapsis.migrate make\\|up\\|down --dir {{migrations}}` (Alembic over the project's `migrations/`) |",
-    "",
-    "There is no `analyze` key ([roadmap](../01-product/roadmap.md)). The editor's debug launch (`[[toolchain.launch]]`)",
-    "runs `uvicorn` under debugpy with the app's virtual environment, without `--reload` (the debugger owns the",
-    "process), after the task `nuclear: build`."
+    "| `migrate_make`, `migrate`, `migrate_down` | `python -m synapsis.migrate make\\|up\\|down --dir {{migrations}}` (Alembic over the project's `migrations/`) |"
    ],
    "platforms": [
     "backend"
@@ -6508,26 +6528,46 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain",
+   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain.eee212",
    "type": "context",
    "title": "The `nestjs` dialect: the backend platform written in TypeScript — Toolchain",
-   "summary": "What the `nuclear` command runs in `build/` (`[toolchain]`): The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc` through…",
+   "summary": "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc` through `.nuclear/lines.json`.",
+   "body": [
+    "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after",
+    "the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`",
+    "through `.nuclear/lines.json`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/nestjs.md#toolchain.f6797c",
+   "type": "context",
+   "title": "The `nestjs` dialect: the backend platform written in TypeScript — Toolchain",
+   "summary": "What the `nuclear` command runs in `build/` (`[toolchain]`):",
    "body": [
     "What the `nuclear` command runs in `build/` (`[toolchain]`):",
     "",
     "| Key | Command |",
     "|---|---|",
     "| `install` | `npm install {{packages}}/synapsis-nest && npm install` (`installed = \"node_modules\"`) |",
+    "| `needs` | `node`: the CLI finds Node.js (`NUCLEAR_NODE`, Nuclear's own, the PATH) or offers `nuclear setup node` (ADR-cli-0004) |",
     "| `install_local` | `npm install --install-links {{path}}`: a dependency that is a folder, installed again |",
     "| `compile` | `npx tsc -p tsconfig.json`: `nuclear build` compiles too once the app is installed, and the running server (`node --watch`) restarts on it |",
     "| `run` | `npm run dev` (`url = \"http://localhost:3000\"`, `ready = \"Nest application successfully started\"`) |",
     "| `test` | `npm test` |",
     "| `package_add`, `package_remove`, `package_version`, `package_companion`, `package_defs` | npm, the version it resolved, the `@types/<name>` package of one that ships no types, and `tools/defs/typescript/gen.js --package` for its type definitions, written into the project's `defs/`. A constraint is `^<version>` |",
-    "| `migrate_make`, `migrate`, `migrate_down` | `npx tsc`, then `npx synapsis-nest-migrate make\\|up\\|down --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |",
-    "",
-    "The editor's debug launch (`[[toolchain.launch]]`, type `node`) runs `dist/src/main.js` with its source maps after",
-    "the task `nuclear: build`: a breakpoint in the generated `.ts` binds through `dist/*.js.map`, one in a `.nuc`",
-    "through `.nuclear/lines.json`."
+    "| `migrate_make`, `migrate`, `migrate_down` | `npx tsc`, then `npx synapsis-nest-migrate make\\|up\\|down --dir {{migrations}}` (the project's `migrations/`, compared with the compiled entities) |"
    ],
    "platforms": [
     "backend"
@@ -6807,7 +6847,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/react.md#project-files.7fdb70",
+   "id": "doc:nuclearlang/dialects/typescript/docs/02-architecture/react.md#project-files.405d1d",
    "type": "context",
    "title": "The `react` dialect: the web platform written in TypeScript — Project files",
    "summary": "A folder with `config.nuc` (`synapsis(platform = \"web\", dialect = \"react\")`) and `main.nuc` (the project `marker`: there is no `nuclear.toml`); `nuclear build .` writes `build/app` (`output`).",
@@ -6820,7 +6860,7 @@
     "|---|---|",
     "| `src/synapsis.g.ts` | `synapsis_g.tpl` (`startSynapsis`, `synapsisConfig`, `registerModels`, `registerSynapsis`, `routes`, `appRouter`) |",
     "| `src/index.ts`, `index.html` | `index_ts.tpl`, `index_html.tpl` |",
-    "| `package.json` | `package_json.tpl`: `\"type\": \"module\"`; scripts `dev` (`vite`), `build` (`tsc` + `vite build`), `preview`, `test` (`vitest run`) |",
+    "| `package.json` | `package_json.tpl`: `\"type\": \"module\"`; scripts `dev` (`vite`), `build` (`tsc` + `vite build`), `preview`, `test` (`vitest run --passWithNoTests`: a new project has no tests yet) |",
     "| `tsconfig.json`, `vite.config.ts` | `tsconfig.tpl` (ES2022, `bundler`, strict, `noEmit`), `vite_config.tpl` (jsdom, `test/**/*_test.ts`) |",
     "| `.npmrc` | inline `install-links=true`: npm copies the runtime (a `file:` dependency) instead of linking it; from a link, TypeScript and Vite resolve its imports (react) next to the runtime's own folder, the types become `any` and the bundle fails |"
    ],
@@ -6934,6 +6974,7 @@
     "",
     "| Key | Command |",
     "|---|---|",
+    "| `needs` | `node`: the CLI finds Node.js (`NUCLEAR_NODE`, Nuclear's own, the PATH) or offers `nuclear setup node` (ADR-cli-0004) |",
     "| `install` | `npm install {{packages}}/synapsis-web && npm install`, then Vite's dependency cache (`node_modules/.vite`) is removed: it would keep serving the runtime it pre-bundled before (same version, new code) |",
     "| `run` | `npm run dev -- --port {{port}} --strictPort` (`url = \"http://localhost:5173\"`, `ready = \"Local:\"`, `installed = \"node_modules\"`) |",
     "| `serve` | `npx vite --port {{port}} --strictPort --host {{host}} --clearScreen false`: the dev server the editor's web device runs on a port and host it picks |",

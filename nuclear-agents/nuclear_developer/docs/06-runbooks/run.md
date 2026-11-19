@@ -53,6 +53,9 @@ Every route: [integrations](../02-architecture/integrations.md#the-http-api).
 |---|---|---|
 | `CODER_MODEL` | `qwen2.5-coder:3b` | the model that writes code and tests |
 | `ASSISTANT_MODEL` | `gemma4:e2b` | the model that plans, reviews, analyses and answers |
+| `CHAT_MODEL` | `qwen3.5:2b` | the one model the chat answers with (`/developer/chat`), never the two above |
+| `CHAT_CONTEXT_TOKENS` | `4096` | the chat model's context window |
+| `CHAT_KEEP_ALIVE` | `3m` | how long Ollama keeps the chat model after the last message |
 | `OLLAMA_URL` | `http://localhost:11434` | where Ollama listens |
 | `CONTEXT_TOKENS` | `8192` | the context window of each model; the editor passes its `nuclear.ai.contextTokens` |
 | `NUCLEAR_GRAPH_URL` | `http://127.0.0.1:7878` | where the graph listens |

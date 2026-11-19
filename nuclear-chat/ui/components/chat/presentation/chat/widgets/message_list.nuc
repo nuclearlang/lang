@@ -1,6 +1,6 @@
 // The messages of a channel or a thread, oldest first: a divider for each day, grouped by author and minute. `after`
-// is the time of what is shown above them (a thread's first message), 0 when nothing is.
-stateless MessageList(messages: Message[], ws: Workspace, texts: Texts, inThread: boolean, onThread: (m: Message) => void, onChannel: (id: string) => void, after: int = 0)
+// is the time of what is shown above them (a thread's first message), 0 when nothing is; `focus` the message lit.
+stateless MessageList(messages: Message[], ws: Workspace, texts: Texts, inThread: boolean, onThread: (m: Message) => void, onChannel: (id: string) => void, after: int = 0, focus: string = "")
   build() Element
     rows: Element[] = []
     for i in 0..messages.length
@@ -10,7 +10,7 @@ stateless MessageList(messages: Message[], ws: Workspace, texts: Texts, inThread
       if newDay
         rows.add(div(key = "day-${m.id}", className = "day", children = span(children = dayLabel(m.at, texts))))
       first = newDay or i == 0 or not sameGroup(messages[i - 1], m)
-      rows.add(MessageRow(key = m.id, message = m, ws = ws, texts = texts, first = first, inThread = inThread, onThread = onThread, onChannel = onChannel))
+      rows.add(MessageRow(key = m.id, message = m, ws = ws, texts = texts, first = first, inThread = inThread, onThread = onThread, onChannel = onChannel, focused = m.id == focus))
     div(className = "rows", children = rows)
 
 // What an empty channel says: its beginning, who answers in it and how to bring a member in.

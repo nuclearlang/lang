@@ -3,7 +3,9 @@
 usecase Say(store: MessageStore, events: EventsAppComponent)
   exec(workspace: string, channel: string, said: Said) Result<Error, Message>
     ws = store.workspace(workspace)
-    store.channel(ws, channel)
+    shown = store.channel(ws, channel)
+    if shown.state == "archived"
+      return Err(Invalid("#${channel} is archived: open it again to write in it"))
     if said.thread != null
       store.message(ws, channel, said.thread!)
     text = said.text.trim()

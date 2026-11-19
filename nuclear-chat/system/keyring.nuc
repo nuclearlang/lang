@@ -3,11 +3,14 @@ use sys
 use time
 use shutil
 use subprocess
+use pathlib{ Path }
 
-// The keys of the GIF services (Tenor, Giphy) in the system's keyring, under the service `nuclear-chat`
-// (libsecret's `secret-tool` on Linux, the Keychain's `security` on macOS, the Credential Manager's password vault
-// on Windows), as the factory's vault keeps its API keys. A key is read from stdin, never from the command line, and
-// never written to a log, a file of the project or an answer of the service.
+// The keys of the GIF services (Tenor, Giphy) and the service's token in the system's keyring, under the service
+// `nuclear-chat` (libsecret's `secret-tool` on Linux, the Keychain's `security` on macOS, the Credential Manager's
+// password vault on Windows), as the Smart Graph keeps its secrets: a machine without that tool keeps them in files
+// of the chat's data folder (`$XDG_DATA_HOME/nuclear-chat`, `0700`) that only the owner reads (`0600`). A key is read
+// from stdin, never from the command line, and never written to a log, a file of the project or an answer of the
+// service.
 
 KEYRING_SERVICE = "nuclear-chat"
 // The services whose key the keyring may keep, and the service's own token.
@@ -44,7 +47,29 @@ keyringCommand(action: string, account: string, system: string = sys.platform) s
     "lookup" -> ["secret-tool", "lookup", "service", KEYRING_SERVICE, "account", account]
     _ -> ["secret-tool", "clear", "service", KEYRING_SERVICE, "account", account]
 
+// The folder of the secrets kept without a keyring (0700), named as the Smart Graph names its own.
+secretsFolder() Path
+  data: string = os.environ.get("XDG_DATA_HOME") ?? ""
+  (data.isEmpty ? Path.home().joinpath(".local", "share") : Path(data)).joinpath("nuclear-chat")
+
 Keyring()
+  // Whether this system's keyring tool is on the PATH.
+  available() boolean
+    command = keyringCommand("lookup", TOKEN_ACCOUNT)
+    shutil.which(command[0], path = keyringEnv()["PATH"]) != null
+
+  // The file of a secret kept without a keyring.
+  fileOf(name: string) Path
+    secretsFolder().joinpath(".${name}")
+
+  // What the file of a secret holds, or null.
+  stored(name: string) string?
+    file = fileOf(service(name))
+    if not file.isFile()
+      return null
+    text: string = file.readText(encoding = "utf-8")
+    text.trim().isEmpty ? null : text.trim()
+
   // Runs the keyring's command of this system, found on the PATH.
   run(command: string[], input: string? = null) subprocess.CompletedProcess
     env = keyringEnv()
@@ -58,12 +83,20 @@ Keyring()
       throw KeyringError("no GIF service `${name}`: ${GIF_SERVICES.join(", ")}")
     name
 
-  // Keeps the key of a GIF service.
-  keep(name: string, key: string) void
+  // Keeps a secret: true in the keyring, false in its 0600 file when this machine has no keyring.
+  keep(name: string, key: string) boolean
     service(name)
     clean = key.trim()
     if clean.isEmpty
       throw KeyringError("no key given for ${name}")
+    if not available()
+      file = fileOf(name)
+      file.parent.mkdir(parents = true, existOk = true)
+      os.chmod(file.parent, 448)
+      file.touch(mode = 384)
+      os.chmod(file, 384)
+      file.writeText(clean, encoding = "utf-8")
+      return false
     if sys.platform == "darwin"
       // shortcut: `security` takes the key as an argument only, seen by `ps` for that instant; upgrade with a Keychain library
       r = run([...keyringCommand("store", name), clean])
@@ -73,23 +106,29 @@ Keyring()
       r = run(keyringCommand("store", name), clean)
       if r.returncode != 0
         throw KeyringError("the keyring did not keep the key of ${name}: ${r.stderr.trim()}")
+    true
 
   remove(name: string) void
     service(name)
-    run(keyringCommand("clear", name))
+    if available()
+      run(keyringCommand("clear", name))
+    fileOf(name).unlink(missingOk = true)
 
-  // The key of a GIF service, or null when none is kept (or there is no keyring).
+  // The key of a GIF service, or null when none is kept: the keyring's, else its file's.
   key(name: string) string?
+    found: string? = null
     try
-      lookup(name)
+      found = lookup(name)
     catch e
       if not isinstance(e, KeyringError) and not isinstance(e, OSError)
         throw e
-      null
+    found ?? stored(name)
 
-  // What the keyring keeps for an account, or null; no keyring at all is an error.
+  // What the keyring keeps for an account, or null (also when this machine has no keyring).
   lookup(name: string) string?
     service(name)
+    if not available()
+      return null
     r = run(keyringCommand("lookup", name))
     out: string = r.stdout
     r.returncode == 0 and not out.trim().isEmpty ? out.trim() : null

@@ -12,6 +12,9 @@ use pathlib{ Path }
 // spends is confirmed twice, as a run's spending is.
 
 CHAT_DIR = ".nuclear/builder/chat"
+// The factory tools the local member's prompt describes; it names the others only (its model's window is small).
+LOCAL_CHAT_TOOLS = ["project_read", "spec_new", "spec_list", "spec_show", "run_start", "runs", "run_file", "run_answer", "team_list", "team_show"]
+
 // The rounds of tool calls one message may take before the agent must answer.
 CHAT_ROUNDS = 6
 
@@ -316,7 +319,10 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
     card = projectCard(root)
     platform = "${card["platform"] ?? ""}"
     prompt = chatPrompt("${card["name"] ?? Path(root).name}", platform)
-    inputs: <string, any> = { "platform": platform, "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }, "route": "/developer/chat", "stream": true, "body": { "message": prompt, "history": "", "platform": platform in ["backend", "mobile", "web"] ? platform : "backend", "root": root } }
+    // the user's last words: what the local Developer searches its graph and the project's files with
+    mine = history.filter((h) => h["role"] == "you")
+    query = mine.isEmpty ? "" : "${mine.last["text"] ?? ""}"
+    inputs: <string, any> = { "platform": platform, "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }, "route": "/developer/chat", "stream": true, "body": { "message": prompt, "history": "", "platform": platform in ["backend", "mobile", "web"] ? platform : "backend", "root": root, "query": query } }
     work = Work(root, "${Path(root, CHAT_DIR)}", prompt, {}, [], "${given["model"] ?? ""}", paid() ? left : 0, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, inputs)
     roles = rolesDir()
     before = roleFiles(roles)
@@ -344,7 +350,12 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
   toolsSection() string
     if kind() != "local"
       return "## The factory's tools\n\nThe MCP server `nuclear_builder` gives you every action of Nuclear Builder (specs, runs and their answers, checks, teams, the line, the CI file, reading a file of the project): call them as tools. A tool that answers `waiting: spending` or `needsUser` waits for the user: say so, never answer it yourself."
-    tools = builderToolList(root).map((t) => toolLine(t)).join("\n")
+    // a small model's window holds the tools a chat calls most, described; the rest by name
+    all = builderToolList(root)
+    tools = all.filter((t) => t["name"] in LOCAL_CHAT_TOOLS).map((t) => toolLine(t)).join("\n")
+    others = all.filter((t) => not (t["name"] in LOCAL_CHAT_TOOLS)).map((t) => "${t["name"]}")
+    if not others.isEmpty
+      tools = "${tools}\n\nMore tools, by name: ${others.join(", ")}."
     "## The factory's tools\n\nTo call one, end your answer with a line `--- tool: <name> ---` and its JSON arguments on the next line (several calls: one block each). The results come back in the next message; answer the user once you have them. For example:\n\n--- tool: project_read ---\n{\"path\": \"docs/brief.pdf\"}\n\nA tool that answers `waiting: spending` or `needsUser` is asked of the user: never answer it yourself.\n\n${tools}"
 
   // The project's business components (`components/`), as a prompt's section.

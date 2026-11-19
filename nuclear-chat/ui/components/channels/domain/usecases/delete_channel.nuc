@@ -1,0 +1,4 @@
+// What ChannelsRepository.deleteChannel answers, for the screens of channels.
+usecase DeleteChannel(repository: ChannelsRepository)
+  exec(workspace: string, channel: string) Result<NuclearChatError, Channel>
+    ~repository.deleteChannel(workspace, channel)

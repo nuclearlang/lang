@@ -36,3 +36,7 @@ controller MessagesController(messages: MessagesAppComponent)
   @post("{workspace}/message/{id}/click")
   click(workspace: string, id: string, click: Click) Result<Error, ChatEvent>
     ~messages.click(workspace, id, click)
+
+  @delete("{workspace}/message/{id}")
+  deleteMessage(workspace: string, id: string) Result<Error, Message>
+    ~messages.deleteMessage(workspace, id)

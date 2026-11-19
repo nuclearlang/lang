@@ -42,11 +42,11 @@ The same steps run in the three. Run it again whenever you want another choice: 
 | Profile | Models | Downloads | Memory | Measured with the Developer's evaluation |
 |---|---|---|---|---|
 | `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |
-| `medium` | `qwen2.5-coder:3b` | 2.5 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
-| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.7 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
+| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 5.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
+| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
 | `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine |
 
-Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors. No model is larger than 3B parameters of effective size.
+Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors. The chat answers with one small model of its own (`CHAT_MODEL` in the machine's file; `lite` uses its one model), loaded only while you chat. No model is larger than 3B parameters of effective size.
 
 **`lite`: One 1.5B model does everything: for a machine with little memory.**
 
@@ -60,7 +60,8 @@ Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), whi
 - Works: the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent.
 - Works: the generators and the compiler's fixes, which need no model.
 - Works: a file is written as in hard: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before.
-- Does not, or less: plans, reviews and chat answers come from a model made for code: 6 of the first 8 chat questions as required, where hard answers 10 of 10.
+- Works: the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message.
+- Does not, or less: plans and reviews come from a model made for code: as assistant it answered 6 of the first 8 chat questions as required, where hard answers 10 of 10.
 - Does not, or less: some answers are slow: one chat question had not ended after five minutes.
 - Does not, or less: turning a request in plain words into generator calls is not measured yet with this model.
 
@@ -70,6 +71,7 @@ Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), whi
 - Works: the generators and the compiler's fixes, which need no model.
 - Works: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before.
 - Works: the assistant answers 10 of 10 questions about NuclearLang as required, and reads 10 of 11 requests right.
+- Works: the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message.
 - Does not, or less: its assistant model takes 7.2 GB: with 16 GB of memory little else stays open.
 - Does not, or less: a whole feature of several files passes 2 times of 3: your remote agent validates and corrects.
 

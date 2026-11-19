@@ -5366,7 +5366,14 @@
     "      `nuclear-chat/docs/02-architecture/ui.md`). Its writes reach the service once the compiler's contract writes",
     "      `@body` (nuclear-chat's roadmap, \"The UI talks to the service\").",
     "- [x] T2.2 Tests of the project (`nuclear test`, vitest: 9) and the page checked rendered in a headless browser with a",
-    "      fake bridge (en and es, dark and light, wide, a dock, narrow)."
+    "      fake bridge (en and es, dark and light, wide, a dock, narrow).",
+    "",
+    "- [x] T2.3 Conversations and the search, as in Slack (requirements 1–4, 10, 11, 14): a message edited (the user's) and",
+    "      deleted (any, confirmed; its thread stays); a conversation closed, archived, opened again, renamed, its topic",
+    "      changed, deleted (its history moved to `.nuclear/chat/deleted/`); a channel made with chosen members; the quick",
+    "      switcher (Ctrl+K, the pencil) and the members list to start a direct message with anyone; the search with",
+    "      `from:@member` and `in:#channel` whose result opens the message lit (also `?message=&thread=`, a notification's",
+    "      click). Service and UI tests, e2e against the live service, rendered en/es (2026-11-18)."
    ],
    "agents": false,
    "sources": [
@@ -16828,7 +16835,80 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/03-adr/README.md#decisions-of-the-command-line-tools",
+   "id": "doc:tools/cli/docs/03-adr/0004-the-toolchains-of-a-fresh-machine.md#consequences",
+   "type": "adr",
+   "title": "ADR-0004: The toolchains of a fresh machine: Python comes with NuclearLang, Node.js and Flutter on a yes — Consequences",
+   "summary": "variables (tools/cli roadmap).",
+   "body": [
+    "- A `fastapi` project works right after the installer, with nothing else installed.",
+    "- `nuclear setup node|python` works on Linux and macOS; on Windows the user installs them and names them with the",
+    "  variables (tools/cli roadmap).",
+    "- The editor's onboarding asks for each toolchain (mine, install it, later) and passes the paths as the variables."
+   ],
+   "agents": false,
+   "sources": [
+    "tools/cli/docs/03-adr/0004-the-toolchains-of-a-fresh-machine.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/03-adr/0004-the-toolchains-of-a-fresh-machine.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-0004: The toolchains of a fresh machine: Python comes with NuclearLang, Node.js and Flutter on a yes — Context and problem",
+   "summary": "On a machine where only the installer ran, `nuclear install` of a `fastapi` project failed with `python3: not found` (a `nestjs` or `react` one would fail on Node.js), and `nuclear doctor` checked only Flutter (spec 016's clean machine).",
+   "body": [
+    "On a machine where only the installer ran, `nuclear install` of a `fastapi` project failed with `python3: not found`",
+    "(a `nestjs` or `react` one would fail on Node.js), and `nuclear doctor` checked only Flutter (spec 016's clean",
+    "machine). A user who just installed NuclearLang, and an agent with no context, must get a working project without",
+    "knowing which language runs underneath (root rule 14)."
+   ],
+   "agents": false,
+   "sources": [
+    "tools/cli/docs/03-adr/0004-the-toolchains-of-a-fresh-machine.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/03-adr/0004-the-toolchains-of-a-fresh-machine.md#decision",
+   "type": "adr",
+   "title": "ADR-0004: The toolchains of a fresh machine: Python comes with NuclearLang, Node.js and Flutter on a yes — Decision",
+   "summary": "1. Python comes with the installation.",
+   "body": [
+    "1. **Python comes with the installation.** The AI services' archive already carries a relocatable Python",
+    "   (`<installation>/ai/python`); `nuclear` uses it for a `fastapi` project without asking. A system without that",
+    "   archive (an Intel Mac, Windows on arm) gets Nuclear's own on a yes: `nuclear setup python`.",
+    "2. **Node.js and Flutter do not come.** The user is asked; on a yes Nuclear installs its own: `nuclear setup node`",
+    "   (the latest LTS from nodejs.org into `<installation>/toolchains/node`), `nuclear setup flutter` (as `nuclear setup`",
+    "   did). Nuclear's copies are only Nuclear's: no administrator rights, nothing else on the machine changes, checked",
+    "   against their sha256.",
+    "3. **The user's own wins.** Lookup, for each toolchain: the variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`: the",
+    "   executable, what the editor's settings pass; `FLUTTER`, `FLUTTER_ROOT` for Flutter), the installation's (included,",
+    "   then `toolchains/`), the PATH.",
+    "4. **A dialect names the toolchain it needs** (`[toolchain] needs = \"python\" | \"node\"`), never the CLI. Before a",
+    "   toolchain command `nuclear` finds it and puts its folder first in the PATH of that command; when it is missing it",
+    "   offers to install it in a terminal and says what to do otherwise. `nuclear doctor` shows each toolchain and where",
+    "   it was found."
+   ],
+   "agents": false,
+   "sources": [
+    "tools/cli/docs/03-adr/0004-the-toolchains-of-a-fresh-machine.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/03-adr/README.md#decisions-of-the-command-line-tools.e7f5d7",
    "type": "adr",
    "title": "Decisions of the command line tools",
    "summary": "Cited as `ADR-cli-NNNN`.",
@@ -16841,7 +16921,24 @@
     "| [ADR-cli-0001](0001-a-projects-commands-come-from-its-dialects-data.md) | A project's commands come from its dialect's data (`[toolchain]`, the platform's default dialect, the project card); a dialect's own commands go under its name | accepted |",
     "| [ADR-cli-0002](0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md) | Agents learn Nuclear from a short brief, one skill, a project's agent files and the compiler's errors | accepted |",
     "| [ADR-cli-0003](0003-one-command-nuclear.md) | One command line tool, `nuclear`, with the framework's commands; `build`, `check` and `agent init` decide by their argument and the folder they run in | accepted |",
-    "",
+    "| [ADR-cli-0004](0004-the-toolchains-of-a-fresh-machine.md) | Python comes with NuclearLang (the AI services' own); Node.js and Flutter are installed by Nuclear on a yes (`nuclear setup node|flutter`); the user's own wins (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`); a dialect names its toolchain (`[toolchain] needs`) | accepted |"
+   ],
+   "agents": false,
+   "sources": [
+    "tools/cli/docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/03-adr/README.md#decisions-of-the-command-line-tools.fb9f16",
+   "type": "adr",
+   "title": "Decisions of the command line tools",
+   "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
+   "body": [
     "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
     "[the table of old numbers](../../../../docs/03-adr/old-numbers.md)."
    ],

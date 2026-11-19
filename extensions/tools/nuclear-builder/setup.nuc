@@ -35,6 +35,11 @@ DATA = setupData()
 PROFILES: Profile[] = (DATA["profiles"] as <string, any>[]).map((d) => profileFrom(d))
 REQUIREMENTS: <string, any>[] = DATA["requirements"]!
 EMBEDDINGS: string = DATA["embeddings"]!
+// the small model the local chat answers with (the Developer's CHAT_MODEL), unless a profile names its own
+CHAT_MODEL: string = DATA["chat"]!
+
+chatModelOf(p: Profile) string
+  p.data["chat"] ?? CHAT_MODEL
 
 profileOf(id: string) Profile?
   PROFILES.find((p) => p.id == id)
@@ -145,7 +150,7 @@ writeMachine(values: <string, string>, file: string? = null) void
 machineOf(p: Profile) <string, string>
   if p.coder == null
     return { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": p.id }
-  { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": p.id, "CODER_MODEL": p.coder!, "ASSISTANT_MODEL": p.assistant ?? p.coder!, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
+  { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": p.id, "CODER_MODEL": p.coder!, "ASSISTANT_MODEL": p.assistant ?? p.coder!, "CHAT_MODEL": chatModelOf(p), "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
 
 // The environment of the tools: the caller's, with the folders where NuclearLang, cargo and Homebrew put their
 // commands (an editor started from the desktop may not have them on its PATH).
@@ -407,7 +412,7 @@ status(u: <string, string>? = null) <string, any>
   models = installedModels(at["ollama"]!)
   wanted: string[] = []
   if machine["NUCLEAR_AI_MODE"] == "local"
-    wanted = [machine["NUCLEAR_GRAPH_EMBED"] ?? "", machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
+    wanted = [machine["NUCLEAR_GRAPH_EMBED"] ?? "", machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? "", machine["CHAT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
   files = serviceFiles()
   {
     "machine": machine,
@@ -701,6 +706,10 @@ removeJsonEntry(file: Path, table: string) string?
   catch e
     null
 
+// Whether this machine has an AI client the step `clients` can give the MCP server to.
+anyAiClient() boolean
+  which("claude") != null or which("codex") != null or jsonClients().any((c) => which(c.command) != null or Path(c.folder).isDir())
+
 // The step `clients`: the server added to every AI client of this machine.
 connectClients(say: (line: string) => void) void
   command = mcpCommand()
@@ -745,7 +754,7 @@ disconnectClients(say: (line: string) => void) void
 Step(id: string, title: string)
 
 modelsOf(p: Profile) string[]
-  [EMBEDDINGS, p.coder ?? "", p.assistant ?? p.coder ?? ""].filter((m) => m.length > 0).unique()
+  [EMBEDDINGS, p.coder ?? "", p.assistant ?? p.coder ?? "", chatModelOf(p)].filter((m) => m.length > 0).unique()
 
 // The steps that leave a profile installed and running, in order. Each can be run again: what is there is kept.
 steps(p: Profile) Step[]

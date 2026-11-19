@@ -666,7 +666,7 @@
    "id": "editor:vscode.settings.editor",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the language, the dialect, the build and the devices",
-   "summary": "The 128 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
+   "summary": "The 132 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
    "body": [
     "- `nuclear.language` (default `\"auto\"`): %nuclear.language.desc%",
     "- `nuclear.notifications` (default `\"all\"`): %nuclear.notifications.desc%",
@@ -678,6 +678,10 @@
     "- `nuclear.debug.explainErrors` (default `true`): %nuclear.debug.explainErrors.desc%",
     "- `nuclear.workspace.welcome` (default `true`): %nuclear.workspace.welcome.desc%",
     "- `nuclear.buildOnSave` (default `true`): %nuclear.buildOnSave.md%",
+    "- `nuclear.toolchains.python` (default `\"\"`): %nuclear.toolchains.python.desc%",
+    "- `nuclear.toolchains.node` (default `\"\"`): %nuclear.toolchains.node.desc%",
+    "- `nuclear.toolchains.flutter` (default `\"\"`): %nuclear.toolchains.flutter.desc%",
+    "- `nuclear.toolchains.platforms` (default `[]`): %nuclear.toolchains.platforms.desc%",
     "- `nuclear.builder.team` (default `\"\"`): %nuclear.builder.team.desc%",
     "- `nuclear.builder.claudeModel` (default `\"haiku\"`): %nuclear.builder.claudeModel.desc%",
     "- `nuclear.builder.resumeInterrupted` (default `true`): %nuclear.builder.resumeInterrupted.desc%",
@@ -858,6 +862,26 @@
       "name": "nuclear.buildOnSave",
       "default": "true",
       "does": "%nuclear.buildOnSave.md%"
+     },
+     {
+      "name": "nuclear.toolchains.python",
+      "default": "\"\"",
+      "does": "%nuclear.toolchains.python.desc%"
+     },
+     {
+      "name": "nuclear.toolchains.node",
+      "default": "\"\"",
+      "does": "%nuclear.toolchains.node.desc%"
+     },
+     {
+      "name": "nuclear.toolchains.flutter",
+      "default": "\"\"",
+      "does": "%nuclear.toolchains.flutter.desc%"
+     },
+     {
+      "name": "nuclear.toolchains.platforms",
+      "default": "[]",
+      "does": "%nuclear.toolchains.platforms.desc%"
      },
      {
       "name": "nuclear.builder.team",

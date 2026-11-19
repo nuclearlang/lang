@@ -16,13 +16,16 @@ On `127.0.0.1:7879`. Every route is `POST /developer/<name>` and answers `200`.
 | `document` | the same; the run's journal in `context` | the same; the summary in `report` |
 | `diagnose` | the same; `task` is the step, `context` its output, `path` the project's folder | the same |
 | `accept` | the same; `task` the criteria, numbered; `context` the facts and the files of the run | the same |
-| `chat` | `{message, platform, map, history, root}` | the same answer (`report`) |
+| `chat` | `{message, platform, map, history, root, query}` | the same answer (`report`) |
 | `plan` | `{spec, platform, root}` | `{pieces: [{path, kind, task}], raw, trace, tree, limits}` |
 | `analyze` | `{spec, platform, root, strategy}` | `{strategy, title, why, mode, stages, lead, source, generate, pieces, questions, limits, report, trace}` |
 
 - `platform` is `backend`, `mobile` or `web`: the agents name a platform, never a dialect. Any other value (`""`,
   a dialect's name) is refused with 400 (the validation error, naming the field) before an agent runs (it was a 500 from the graph's `/v1/kinds/`).
 - `root` is the project's folder: with it an agent reads the project by itself.
+- `query` (chat): the developer's own words when `message` is a whole prompt of its own (Nuclear Builder's chat
+  member: who it is, its tools, the conversation). The graph (two cards instead of four) and the project's files are
+  searched with them, and the assistant's guide is left out: the prompt brings its own.
 - `trace` is the steps the agent followed, with what it read.
 - The analysis runs before a run generates or plans anything: [strategies.md](strategies.md).
 
@@ -60,6 +63,6 @@ retried, and every run first checks that the Developer, the graph, Ollama and th
 | Service | Use | Setting |
 |---|---|---|
 | The [Smart Graph](../../../../nuclear-graph-storage/AGENTS.md) (`127.0.0.1:7878`) | every recall, the strategy of a request, the exact facts, the prompts (the roles' skills); the client `nuclear-developer` with the scopes `read,write` | `NUCLEAR_GRAPH_URL`, `nuclear-graph connect nuclear-developer --scopes read,write` |
-| Ollama | the two models | `OLLAMA_URL`, `CODER_MODEL`, `ASSISTANT_MODEL`, `CONTEXT_TOKENS` |
+| Ollama | the two models, and the chat's own | `OLLAMA_URL`, `CODER_MODEL`, `ASSISTANT_MODEL`, `CONTEXT_TOKENS`, `CHAT_MODEL`, `CHAT_CONTEXT_TOKENS`, `CHAT_KEEP_ALIVE` |
 | The `nuclear` command | `nuclear check --platform` of every answer, `nuclear help layout`, `nuclear gen ... --dry-run`, `nuclear explain`, `nuclear doctor` | on the `PATH` |
 | The graph's package (`nuclear_graph.client`, `.toolchain`, `.workspace`) | the client, the compiler for an agent, a project's files | a dependency of `config.nuc`, typed by `defs/` |

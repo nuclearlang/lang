@@ -147,4 +147,6 @@ Every notice of the one system ([ai-services.md](ai-services.md)) reaches the co
   tool reads them (the badge clears).
 - The list at the bottom of the column (`#notes`, under every pane, at most 38 % of its height): every tool's
   notices, newest first, the unread with a bar in their tool's colour; a click, Enter or Space posts `notice` →
-  `openNotice`, the same place as the pop-up's *Open*.
+  `openNotice`, the same place as the pop-up's *Open*. A Nuclear Chat notice keeps its message id (`chatWhere` in
+  `notify.ts`): it opens the chat at `/<workspace>/<channel>?message=&thread=`, the message highlighted and its thread
+  open.

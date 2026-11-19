@@ -2269,6 +2269,36 @@
    }
   },
   {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.7e0a0c",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "nuclear doctor # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code) nuclear setup [flutter] [--dir ~/develop] # installs Flutter step by step (system packages, SDK, PATH) nuclear setup node | python # Nuclear's own Node.js or Python, only for Nuclear…",
+   "body": [
+    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, the toolchains, VS Code)",
+    "nuclear setup [flutter] [--dir ~/develop]  # installs Flutter step by step (system packages, SDK, PATH)",
+    "nuclear setup node | python                # Nuclear's own Node.js or Python, only for Nuclear (ADR-cli-0004)",
+    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
+    "```",
+    "",
+    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
+    "",
+    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.a2b52e",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
@@ -2377,35 +2407,6 @@
     "- **Synapsis devices** (`device` and `terminal-device`): the app as Flutter web in a Chromium browser (Chrome,",
     "  Chromium, Edge, Brave or Vivaldi; `CHROME_EXECUTABLE` chooses one) with the device's screen, density, touch",
     "  and identity (Android, iOS). Devices: `pixel7` (the default), `iphone14pro`, `iphonese`, `iphone15promax`,"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.f1c777",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear doctor # what NuclearLang and Synapsis need (CLIs, dialect, package, Flutter, VS Code) nuclear setup [--dir ~/develop] # installs Flutter step by step (system packages, SDK, PATH) nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n nuclear flutter <any other…",
-   "body": [
-    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, Flutter, VS Code)",
-    "nuclear setup [--dir ~/develop]            # installs Flutter step by step (system packages, SDK, PATH)",
-    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
-    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
-    "```",
-    "",
-    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
-    "",
-    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
    ],
    "platforms": [
     "mobile"

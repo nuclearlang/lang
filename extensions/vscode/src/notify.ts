@@ -23,6 +23,9 @@ export interface Notice {
   stage?: string;
   step?: string;
   channel?: string;
+  /** The chat's message it is about and the thread it is in: a click opens the chat at it. */
+  message?: string;
+  thread?: string;
   /** The place on screen that makes it seen (`chat:<root>:<channel>`). */
   place?: string;
   /** Notices with the same key fold into one while unread (a member's message, then its answer's end). */
@@ -47,7 +50,7 @@ export const FOLD_MS = 120_000;
 export function add(list: readonly Notice[], n: Notice): { list: Notice[]; folded: boolean } {
   const was = n.key ? list.find((x) => x.key === n.key && !x.read && n.at - x.at < FOLD_MS) : undefined;
   const rest = was ? list.filter((x) => x !== was) : list;
-  return { list: [{ ...n, id: was?.id ?? n.id, text: n.text || (was?.text ?? '') }, ...rest].slice(0, 50), folded: !!was };
+  return { list: [{ ...n, id: was?.id ?? n.id, text: n.text || (was?.text ?? ''), message: n.message ?? was?.message, thread: n.thread ?? was?.thread }, ...rest].slice(0, 50), folded: !!was };
 }
 
 /** The unread count of each tool: its badge on the strip. */
@@ -73,6 +76,8 @@ export interface ChatCall {
   member: string;
   channel: string;
   thread?: string;
+  /** The message that called (a message event's), to open the chat at it. */
+  message?: string;
   text: string;
 }
 
@@ -99,11 +104,21 @@ export function chatCall(e: ChatEventLike, known: Set<string>): ChatCall | null 
   known.add(m.id);
   if (!m.author || m.author === 'you' || m.author === 'system' || e.data.said === true) return null;
   if (m.links?.run || m.buttons?.some((b) => b.id?.startsWith('run|'))) return null;
-  const at = { member: m.author, channel: e.channel, thread: m.thread ?? undefined, text: m.text ?? '' };
+  const at = { member: m.author, channel: e.channel, thread: m.thread ?? undefined, message: m.id, text: m.text ?? '' };
   if (m.buttons?.length) return { what: 'asks', ...at };
   if (/(^|\s)@you\b/i.test(m.text ?? '')) return { what: 'mentioned', ...at };
   if (e.channel.startsWith('dm-')) return { what: 'answered', ...at };
   return null;
+}
+
+/** Where the chat opens for a notice: its channel, at its message (`?message=`) and in its thread (`&thread=`). */
+export function chatWhere(n: Pick<Notice, 'channel' | 'message' | 'thread'>): string | undefined {
+  if (!n.channel) return undefined;
+  const q = new URLSearchParams();
+  if (n.message) q.set('message', n.message);
+  if (n.thread) q.set('thread', n.thread);
+  const query = q.toString();
+  return query ? `${n.channel}?${query}` : n.channel;
 }
 
 /** The key that folds a member's message and the end of its answer into one notice. */

@@ -40,17 +40,43 @@ extension runs it as a process, one call per action, and keeps no process of it 
 - `setupPanel.ts` is the welcome (*Nuclear: Welcome and Set-Up*, spec 011 requirement 14), *Next, Next* with a
   default on every step: 1 this machine and where the agents run, 2 the profile, 3 what it needs (polled every three
   seconds, a new plan), 4 the installation (an installer runs in a terminal, `createTerminal` + `sendText`, never
-  hidden), 5 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;
+  hidden), 5 the toolchains (below), 6 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;
   Codex's and OpenCode's switch is their `nuclear.ai.*.enabled`; the API keys go to `nuclear-builder vault set
   <provider>` on stdin, asked hidden, never in a setting; and who works the Builder's chat by default, `nuclear.builder.chat`,
-  chosen among the local agents, the agents and the APIs, with its model; a conversation can choose another), 6 the team (the squad screen mounted in the page,
+  chosen among the local agents, the agents and the APIs, with its model; a conversation can choose another), 7 the team (the squad screen mounted in the page,
   `TeamsHost`; with no team yet it opens the new-team wizard, `team create`: no team is cloned from a preset,
-  ADR-platform-0010), 7 the spending (the `spending` section),
-  8 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the
-  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 9 a summary with *Change* on every line.
+  ADR-platform-0010), 8 the spending (the `spending` section),
+  9 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the
+  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 10 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is).
   *Keep the defaults of the rest* jumps to the summary. `SetupPanel.offer` asks once while the welcome was never
   finished (`nuclear.onboarding.done`); *Settings and integrations* runs it again. Without the AI archive the
   machine steps say to run the installer again and the other steps still work.
+
+## The toolchains (`toolchains.ts`, `toolchainHost.ts`)
+
+What builds and runs each platform: Python (fastapi backends), Node.js (TypeScript, NestJS, React; npm and npx
+next to it), Flutter's SDK (mobile, required). The settings `nuclear.toolchains.python|node|flutter` hold a path
+(Flutter: the SDK's root or its `flutter`), `nuclear.toolchains.platforms` the platforms the user builds.
+
+- **Into the environment**: `applyToolchains` (at activation, before the language server, and on every change)
+  writes `toolchainEnv(settings)` into the extension host's `process.env` and the terminals' and tasks'
+  `environmentVariableCollection`: `NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT` (and `FLUTTER` for an
+  executable, a path ending in `bin/flutter` or `flutter.bat`). Every process the extension starts inherits it:
+  `nuclear` (build, run, repair, explain), the language server, the Builder's processes (`toolEnv()` spreads
+  `process.env`), the debuggers of the same host. With no Python setting it is the Python included with the
+  installation (the AI services' own, `<installation>/ai/python/bin/python3`, Windows `ai/python/python.exe`); a
+  variable the user set themselves stays while its setting is empty.
+- **The status** of each: `nuclear doctor --json`'s `toolchains` (`found`: `env`, `nuclear`, `path`, `missing`;
+  `path`, `version`) when the CLI has it, else `probe` in the CLI's order without running anything: the setting →
+  the variable → NuclearLang's own (`<installation>/toolchains/<id>`; Python's included one first) → the PATH. A
+  Python found in `ai/python` is shown as *included*.
+- **The actions** (`handleToolchain`, the pages' `tc*` messages; ids and platforms checked, a path only from the
+  dialog or the PATH): *Browse…* (Flutter: a folder or a file), *Install NuclearLang's own* (`nuclear setup <id>`
+  in a terminal the user sees; the page checks again when it closes), *Use the one on PATH*, *Back to the default*.
+- **The welcome's step**: which platforms (checkboxes: the setting, else the workspace's project cards, else all
+  three), then the toolchains they need. Python, included, asks nothing. A missing Node.js or Flutter offers *I'll
+  install it myself (I'll point to it)* (the dialog), *Install NuclearLang's own*, *Later*; Flutter is marked
+  required for mobile. Settings and integrations has the section *Toolchains* with the same cards and the paths.
 
 ## Settings and integrations (`settingsPanel.ts`, `aiSettings.ts`, `localModels.ts`; ADR-platform-0003)
 
@@ -73,6 +99,7 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
   - **connections**: `nuclear.ai.graphCommand` (default `nuclear-graph`)
     `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage
     (`jiraAuth`), `gh auth status`;
+  - **the toolchains** follow it: the cards above and the paths' form;
   - **the language** is the first section (as it is the onboarding's first step): `nuclear.language`, *Automatic*
     with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español;
   - **the other sections** (Nuclear Builder, the spending, Nuclear Chat, Nuclear Atlas, HTTP Connections, the

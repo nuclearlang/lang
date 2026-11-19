@@ -1,0 +1,29 @@
+// The search of every message of the workspace (words, `from:@member`, `in:#channel`), as the user types.
+@stateModel(SearchState)
+statemanager SearchManager
+  (messages: MessagesComponent)
+  workspace: string = ""
+  words: string = ""
+
+  start(id: string)
+    workspace = id
+    idle()
+
+  @state(SearchState.idle)
+  idle()
+
+  @state(SearchState.searching)
+  searching()
+
+  // The user typed: nothing searched for an empty text.
+  find(text: string)
+    words = text.trim()
+    if words == ""
+      idle()
+    else
+      searching()
+      load()
+
+  @state(SearchState.ready)
+  load() Result<NuclearChatError, Found[]>
+    ~messages.searchMessages(workspace, words)

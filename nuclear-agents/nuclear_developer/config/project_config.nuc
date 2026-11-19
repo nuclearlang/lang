@@ -1,8 +1,12 @@
 // The models of the local agents, both on Ollama: a small coder model writes the code, a small general model
 // plans and reviews. Neither may be larger than 3B parameters of effective size (the user's rule).
 // Their context window is CONTEXT_TOKENS (8192 by default; the editor passes its nuclear.ai.contextTokens).
+// The chat answers with one small model of its own (CHAT_MODEL), a small window (CHAT_CONTEXT_TOKENS) and no
+// thinking, an answer of 1024 tokens at most (a small model may never stop), and Ollama frees it CHAT_KEEP_ALIVE
+// after the last message: a chat never holds the factory's models.
 appConfig ProjectConfig
   connections: Connection[] = [
     Ollama(model = env("CODER_MODEL", "qwen2.5-coder:3b"), name = "coder", baseUrl = env("OLLAMA_URL", "http://localhost:11434"), numCtx = env("CONTEXT_TOKENS", "8192").toInt() ?? 8192),
     Ollama(model = env("ASSISTANT_MODEL", "gemma4:e2b"), baseUrl = env("OLLAMA_URL", "http://localhost:11434"), numCtx = env("CONTEXT_TOKENS", "8192").toInt() ?? 8192),
+    Ollama(model = env("CHAT_MODEL", "qwen3.5:2b"), name = "chat", baseUrl = env("OLLAMA_URL", "http://localhost:11434"), numCtx = env("CHAT_CONTEXT_TOKENS", "4096").toInt() ?? 4096, keepAlive = env("CHAT_KEEP_ALIVE", "3m"), numPredict = 1024, reasoning = false),
   ]

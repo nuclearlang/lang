@@ -25,3 +25,6 @@ repository MessagesRepository
 
   @post(path = ":workspace/message/:id/click")
   click(workspace: string, id: string, @body click: Click) Result<NuclearChatError, ChatEvent>
+
+  @delete(path = ":workspace/message/:id")
+  deleteMessage(workspace: string, id: string) Result<NuclearChatError, Message>

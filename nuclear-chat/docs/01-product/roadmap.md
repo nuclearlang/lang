@@ -27,20 +27,24 @@ related: [../02-architecture/overview.md, ../../../docs/04-specs/013-nuclear-cha
   (no `text-delta`), as OpenCode, Codex, Gemini CLI and the API loop do for now (the Builder's roadmap).
 - Tenor's and Giphy's real searches (what keeps spec 013 T1.4 open, the rest of it is done): an `Http` connection takes no fake transport in a project's tests (the
   backend platform's roadmap); only the mapping of their answers and the paths without a call are tested.
-- The keyring on macOS and Windows (a fake `secret-tool` on Linux is tested), and the service at login there.
+- The keyring on macOS and Windows (a fake `secret-tool` on Linux is tested, and a machine without one), and the
+  service at login there.
 - The AI archive with the service (`installer/release/ai-runtime.sh`): written, not run on this machine.
 - The responders on Windows (`os.killpg`, the tests' `sh`).
 - The service under load: every read folds a channel's whole file (fine for a project's chat; an index per
   channel if one grows to many thousands of lines).
+
+- The conversations and the search in a real editor: checked against the live service in headless Chromium through
+  a relay; Ctrl+K inside VS Code's webview (the editor may keep the chord) and a notification opening the exact
+  message (`chatWhere`, unit-tested) were not clicked in the editor.
+- A search as the user types sends one request per key: the answer of an older text could arrive after a newer one's
+  (not seen locally; a request id per search if it is).
 
 ## To decide with the user
 - A workspace is not kept by the service across a restart: the host registers its project on every start (what
   the project keeps, channels and history, stays). Decided while building; confirm.
 
 ## Pending
-- **Open a thread or a message from the path**: the hosts open the chat on a channel (`/<workspace>/<channel>`);
-  a notification of the editors ("Askia answered you") should open the thread and scroll to the message
-  (`?thread=<id>&message=<id>`, the web platform's route query). Until then it opens the channel.
 - A CI workflow that builds `system/`, `nuclear_chat/` and `ui/` and runs their tests, pyright and the embedded build; then the badge in
   `README.md` and a page on the website.
 - The knowledge base: `nuclear-graph knowledge build`, `check`, `ingest` once the platform's other changes of

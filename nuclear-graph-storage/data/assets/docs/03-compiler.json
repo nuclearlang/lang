@@ -3202,53 +3202,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.b376bc",
-   "type": "spec",
-   "title": "NuclearLang dialects — 3. Sections",
-   "summary": "3. Sections",
-   "body": [
-    "| `[exports]` | Names a module exports besides the auto-imported ones (`Task` of fpdart): a declaration of the project with that name hides it from the import (`hide` clause of `import_default`); the type definitions give the rest |",
-    "| `[functions]` | Function shortcuts |",
-    "| `[toolchain]` | What the `nuclear` CLI and the editors run in the generated project (`build/` or the dialect's output): shell commands `install`, `compile`, `run`, `test`, `serve` (the editor's own server), and `url` (where the app answers), `ready` (the line of `run` that means it is up), `installed` (the folder that means `install` ran), `install_local` (run by `install` once per dependency of `config.nuc` that is a folder, `{{path}}`: a package manager keeps the old copy of a folder whose version did not change); placeholders `{{packages}}` (the installation's runtimes), `{{url}}`, `{{port}}`, `{{host}}`; `migrate_make`, `migrate`, `migrate_down` for `nuclear migrate` with `{{message}}` and `{{migrations}}` (the project's `migrations/` folder), quoted for the shell (ADR-backend-0001); for `nuclear add|remove <package>` (ADR-lang-0008): `package_add` (`{{requirement}}`), `package_remove` (`{{name}}`), `package_version` (prints the installed version of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depends}}`"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/07-reference/dialects.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.cf8937",
-   "type": "spec",
-   "title": "NuclearLang dialects — 3. Sections",
-   "summary": "the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement:…",
-   "body": [
-    "the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement: `{{name}}@{{version}}`), `package_constraint` (what `config.nuc` writes for the resolved `{{version}}`: `^{{version}}`) and `package_exact` (what a version written bare gets before it: `==`). `[toolchain.linux|macos|windows]` override a key on that system. `[[toolchain.launch]]` are the editor's debug configurations, `[toolchain.settings]` its settings and `extensions` the editor extensions it recommends, with `{{name}}`, `{{app}}`, `{{url}}`, `{{port}}` (ADR-synapsis-0001, ADR-cli-0001) |",
-    "| `[call_site]` | `Module.method(...)` calls that receive where they are written (§5.3.1) |",
-    "| `[names]` | `globals` (names of the environment), `not_constructors` (PascalCase names called without `new`) and `written` (names templates write, like `Right`/`Left`: imported if the generated code contains them) |",
-    "| `[kinds.<word>]` | Header words that generate whole declarations: `stateless`, `controller`... |",
-    "| `[decorators]` | Decorators the templates read (`consumed`), that provide objects (`provide`), that do not return (`void`) and the arguments of each one (`args`, N0217) ([projects.md](projects.md) §5) |"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/07-reference/dialects.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.d82216",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.1fc364",
    "type": "spec",
    "title": "NuclearLang dialects — 3. Sections",
    "summary": "An unknown section or key is an error (`N0206`), with a suggestion of the right name.",
    "body": [
+    "| `[decorators]` | Decorators the templates read (`consumed`), that provide objects (`provide`), that do not return (`void`) and the arguments of each one (`args`, N0217) ([projects.md](projects.md) §5) |",
     "| `[project]` | Multi-file projects: output folder, kind by folder, files generated once per project, the file that marks a project without `nuclear.toml` (`marker`, `output`) and the manifest written in Nuclear (`[project.manifest]`, `config.nuc`) ([projects.md](projects.md)) |",
     "| `[docs]` | Module prefix → URL of a name's API reference, for the editor's hover. Variables: `name`, `library` (the rest of the module without its extension) and `class` (the name is PascalCase). The longest prefix wins; added to the parent's |",
     "| `[architecture]` | Rules between the declarations of a project: components and who uses whom ([projects.md](projects.md) §4) |",
@@ -3257,6 +3216,47 @@
     "| `[use]` | `clauses`: words allowed after a `use` path (`show`, `hide`, `deferred`) |",
     "",
     "An unknown section or key is an error (`N0206`), with a suggestion of the right name."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.28dbec",
+   "type": "spec",
+   "title": "NuclearLang dialects — 3. Sections",
+   "summary": "n of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depends}}` the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the…",
+   "body": [
+    "n of `{{name}}`), `package_defs` (the generator: `{{defs_name}}`, `{{name}}`, `{{version}}`, `{{defs}}` the project's `defs/` folder, `{{modules}}`, `{{depends}}` the definitions of the language itself, `{{tools}}` the installation's tools), `package_companion` (prints the package that carries the types of `{{name}}` when it is another one, or nothing), and the texts `package_requirement` (how a name and a version are one requirement: `{{name}}@{{version}}`), `package_constraint` (what `config.nuc` writes for the resolved `{{version}}`: `^{{version}}`) and `package_exact` (what a version written bare gets before it: `==`). `[toolchain.linux|macos|windows]` override a key on that system. `[[toolchain.launch]]` are the editor's debug configurations, `[toolchain.settings]` its settings and `extensions` the editor extensions it recommends, with `{{name}}`, `{{app}}`, `{{url}}`, `{{port}}` (ADR-synapsis-0001, ADR-cli-0001) |",
+    "| `[call_site]` | `Module.method(...)` calls that receive where they are written (§5.3.1) |",
+    "| `[names]` | `globals` (names of the environment), `not_constructors` (PascalCase names called without `new`) and `written` (names templates write, like `Right`/`Left`: imported if the generated code contains them) |",
+    "| `[kinds.<word>]` | Header words that generate whole declarations: `stateless`, `controller`... |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#3-sections.84d927",
+   "type": "spec",
+   "title": "NuclearLang dialects — 3. Sections",
+   "summary": "3. Sections",
+   "body": [
+    "| `[exports]` | Names a module exports besides the auto-imported ones (`Task` of fpdart): a declaration of the project with that name hides it from the import (`hide` clause of `import_default`); the type definitions give the rest |",
+    "| `[functions]` | Function shortcuts |",
+    "| `[toolchain]` | What the `nuclear` CLI and the editors run in the generated project (`build/` or the dialect's output): `needs` (the toolchain its commands run with, `python` or `node`: the CLI finds it, puts it first in their PATH, or offers `nuclear setup <needs>`, ADR-cli-0004); shell commands `install`, `compile`, `run`, `test`, `serve` (the editor's own server), and `url` (where the app answers), `ready` (the line of `run` that means it is up), `installed` (the folder that means `install` ran), `install_local` (run by `install` once per dependency of `config.nuc` that is a folder, `{{path}}`: a package manager keeps the old copy of a folder whose version did not change); placeholders `{{packages}}` (the installation's runtimes), `{{url}}`, `{{port}}`, `{{host}}`; `migrate_make`, `migrate`, `migrate_down` for `nuclear migrate` with `{{message}}` and `{{migrations}}` (the project's `migrations/` folder), quoted for the shell (ADR-backend-0001); for `nuclear add|remove <package>` (ADR-lang-0008): `package_add` (`{{requirement}}`), `package_remove` (`{{name}}`), `package_version` (prints the installed versio"
    ],
    "agents": false,
    "sources": [

@@ -937,6 +937,10 @@ ask = "can I choose which agent answers in the chat, like claude code"
 expect = ["can:workplace-chat"]
 
 [[question]]
+ask = "how do I delete or close a conversation and search old messages in nuclear chat"
+expect = ["can:workplace-chat"]
+
+[[question]]
 ask = "the orders endpoint takes three seconds, where is the bottleneck?"
 expect = ["strategy:bug-slow"]
 request = true

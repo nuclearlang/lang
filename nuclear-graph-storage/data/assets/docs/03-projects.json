@@ -906,6 +906,36 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#3-what-the-dialect-adds-project-3-1-manifest-in-nuclear-project-manifest.9761df",
+   "type": "spec",
+   "title": "Multi-file projects — 3.1 Manifest in Nuclear: `[project.manifest]`",
+   "summary": "A `packages` section only lists third-party packages the framework does not use: a package of the dialect (its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line (`project::check_config`, `project::reserved_package`).",
+   "body": [
+    "A `packages` section only lists third-party packages the framework does not use: a package of the dialect",
+    "(its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line",
+    "(`project::check_config`, `project::reserved_package`). A package of `advice` is never refused: the CLI says the",
+    "advice when the package is added (`nuclear add express`), and adds it.",
+    "",
+    "A backend dialect has the `dependencies` section too (`dependencies(nuclear_graph = \">=0.1\")`): each package goes to",
+    "the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,",
+    "`version`, `path`, `url`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root:",
+    "`path` is absolute with `/` separators (`D:/a/x` on Windows), `url` its `file:` URL (`nuclear_graph @ file:///...`,",
+    "`\"file:/...\"`).",
+    "",
+    "`testEnv(NAME = \"value\")` (a section the dialect lists in `sections`) is the environment the project's tests run",
+    "with (ADR-synapsis-0010): the template variable `test_env` (`name`, `value`) of the project files, which set it",
+    "before the app is loaded (`tests/conftest.py`, `src/test_env.ts`). Only the tests see it."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/07-reference/projects.md#3-what-the-dialect-adds-project-3-1-manifest-in-nuclear-project-manifest.e4b36d",
    "type": "spec",
    "title": "Multi-file projects — 3.1 Manifest in Nuclear: `[project.manifest]`",
@@ -918,35 +948,6 @@
     "that is not a literal is `N0303`) and it is not transpiled: it has no output",
     "(empty `out_path`). The framework's CLI reads it with `project::read_config` (section → arguments as text)",
     "to write the target's manifest (the `pubspec.yaml` in Flutter)."
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/projects.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#3-what-the-dialect-adds-project-3-1-manifest-in-nuclear-project-manifest.fb0774",
-   "type": "spec",
-   "title": "Multi-file projects — 3.1 Manifest in Nuclear: `[project.manifest]`",
-   "summary": "A `packages` section only lists third-party packages the framework does not use: a package of the dialect (its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line (`project::check_config`, `project::reserved_package`).",
-   "body": [
-    "A `packages` section only lists third-party packages the framework does not use: a package of the dialect",
-    "(its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line",
-    "(`project::check_config`, `project::reserved_package`). A package of `advice` is never refused: the CLI says the",
-    "advice when the package is added (`nuclear add express`), and adds it.",
-    "",
-    "A backend dialect has the `dependencies` section too (`dependencies(nuclear_graph = \">=0.1\")`): each package goes to",
-    "the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,",
-    "`version`, `path`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root",
-    "(`nuclear_graph @ file:///...`, `\"file:/...\"`).",
-    "",
-    "`testEnv(NAME = \"value\")` (a section the dialect lists in `sections`) is the environment the project's tests run",
-    "with (ADR-synapsis-0010): the template variable `test_env` (`name`, `value`) of the project files, which set it",
-    "before the app is loaded (`tests/conftest.py`, `src/test_env.ts`). Only the tests see it."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"

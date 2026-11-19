@@ -15,3 +15,5 @@ Channel
   // the choice of its member's responder that answers it (a direct message), and its model; empty: the default
   agent: string = ""
   model: string = ""
+  // open; closed (out of the sidebar until it is opened again or a message comes); archived (read only)
+  state: string = "open"

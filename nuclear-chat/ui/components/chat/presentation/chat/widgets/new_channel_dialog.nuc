@@ -1,0 +1,75 @@
+// A channel the user makes (the sidebar's +): its name, its topic and the members they bring in; a name taken or not
+// valid is said in the dialog.
+stateful NewChannelDialog(ws: Workspace, texts: Texts, onMade: (id: string) => void, onClose: () => void)
+  name: string = ""
+  topic: string = ""
+  chosen: string[] = []
+  failed: string = ""
+
+  build() Element
+    div(
+      className = "overlay",
+      onMouseDown = (e) => outside(e),
+      children = div(
+        className = "dialog new-channel",
+        role = "dialog",
+        onKeyDown = (e) => key(e),
+        children = [
+          div(className = "dialog-head", children = [strong(className = "dialog-title", children = texts.get("newChannel")), button(className = "close", title = texts.get("close"), onClick = () => onClose(), children = span(className = "icon icon-close"))]),
+          div(
+            className = "dialog-body",
+            children = [
+              label(className = "field", children = [span(children = texts.get("newChannel.name")), div(className = "field-hash", children = [span(className = "hash", children = "#"), input(className = "field-input", autoFocus = true, value = name, placeholder = texts.get("newChannel.namePh"), onChange = (e) => named(e.target.value))])]),
+              label(className = "field", children = [span(children = texts.get("newChannel.topic")), input(className = "field-input", value = topic, onChange = (e) => topical(e.target.value))]),
+              div(className = "field", children = [span(children = texts.get("newChannel.members")), div(className = "member-picks", children = ws.members.map((m) => memberPick(m)))]),
+              failed != "" ? p(className = "failed", children = texts.format("failed", { "error": failed })) : null,
+            ],
+          ),
+          div(className = "dialog-actions", children = [button(className = "action", onClick = () => onClose(), children = texts.get("cancel")), button(className = "action primary", disabled = name.trim() == "", onClick = () => create(), children = texts.get("create"))]),
+        ],
+      ),
+    )
+
+  // A member to bring in: a toggle with their face, name and role.
+  memberPick(m: Member) Element
+    on = m.id in chosen
+    button(key = m.id, className = "member-pick ${on ? "on" : ""}", title = m.role, onClick = () => choose(m.id), children = [Avatar(member = m, author = m.id, size = "tiny"), span(children = m.name), on ? span(className = "icon icon-check") : null])
+
+  named(value: string)
+    setState(() =>
+      name = value
+      failed = ""
+    )
+
+  topical(value: string)
+    setState(() =>
+      topic = value
+    )
+
+  choose(id: string)
+    setState(() =>
+      chosen = id in chosen ? chosen.filter((c) => c != id) : [...chosen, id]
+    )
+
+  key(e: KeyboardEvent)
+    if e.key == "Escape"
+      e.preventDefault()
+      onClose()
+    else if e.key == "Enter" and name.trim() != ""
+      e.preventDefault()
+      create()
+
+  create()
+    made: Result<NuclearChatError, Channel> = ~ChannelsManager.create(NewChannel(name = name.trim(), topic = topic.trim(), members = chosen, team = ""))
+    match made
+      Ok(c) -> onMade(c.id)
+      Err(e) -> refused(e.message)
+
+  refused(why: string)
+    setState(() =>
+      failed = why
+    )
+
+  outside(e: MouseEvent)
+    if e.target == e.currentTarget
+      onClose()

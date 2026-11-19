@@ -11,19 +11,23 @@ graph Assistant(bench: Workbench)
   @start
   @next("answer")
   recall(state: PieceState) <string, any>
-    found: <string, string> = ~bench.answer(state.task, state.platform, state.history)
+    asked = state.query.length > 0 ? state.query : state.task
+    // a prompt of its own already fills much of the chat model's small window: two cards beside it
+    found: <string, string> = ~bench.answer(asked, state.platform, state.history, k = state.query.length > 0 ? 2 : 4)
     facts = found["facts"] ?? ""
     cards = found["knowledge"] ?? ""
     needs = found["needs"] ?? ""
     exact = Regex(r"^### (.+)$", multiline = true).findAll(facts).map((m) => m[1] ?? "")
     steps = [bench.step("exact", exact.length > 0 ? "from the graph's database: ${exact.join("; ")}" : "no question with one right answer in it${needs.length > 0 ? " (close to: ${needs.split("\n").join("; ")})" : ""}"), bench.step("recall", "the cards — ${bench.read(cards)}")]
-    { "guide": ~bench.knowledge.prompt("chat"), "knowledge": cards, "facts": facts, "examples": "", "trace": state.trace + steps }
+    // a prompt of its own (`query` given) says who answers and how: the assistant's guide would contradict it
+    guide = state.query.length > 0 ? "" : ~bench.knowledge.prompt("chat")
+    { "guide": guide, "knowledge": cards, "facts": facts, "examples": "", "trace": state.trace + steps }
 
   @next("end")
   answer(state: PieceState) <string, any>
-    files = bench.files(state.root, state.task)
+    files = bench.files(state.root, state.query.length > 0 ? state.query : state.task)
     prompt = ~bench.prompt("chat", { "guide": state.guide, "facts": state.facts, "knowledge": state.knowledge, "examples": state.examples, "map": state.map, "files": files, "history": state.history, "message": state.task, "platform": state.platform })
-    said = ~bench.ask("default", prompt)
+    said = ~bench.ask("chat", prompt)
     // the exact rows reach the developer as they are, whatever the model wrote of them
     report = state.facts.length > 0 ? "${said.trim()}\n\n${state.facts}" : said.trim()
     // `context`: the characters the model read, so the editor shows how full its context window was

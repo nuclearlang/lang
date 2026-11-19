@@ -25,7 +25,8 @@ run in the team's channel, and does what its buttons ask.
   (`chat_agents.nuc`: the local Nuclear Developer always, Claude Code, OpenCode, Codex and Gemini CLI when their
   command is on the PATH, the API providers when the vault notes their key and a model has a price; each with
   `{id, label, kind, command, paid, models, defaultModel, available, why?}` and its command `member --role chat
-  --kind … --provider …`), and `choice: "nuclear-developer"`. The user picks the agent and its model in the
+  --kind … --provider …`; the local one offers only the machine's chat model, `CHAT_MODEL` of `ai.env`, else
+  setup.json's `chat`), and `choice: "nuclear-developer"`. The user picks the agent and its model in the
   conversation's header; the chat runs that choice's command with `--model`. A spending confirmation holds only for
   the provider it named: another agent chosen for the same conversation asks twice again.
 - **The answer as it is written**: a chat's turn asks its adapter to stream (`inputs.stream`): Claude Code runs with
@@ -52,7 +53,11 @@ run in the team's channel, and does what its buttons ask.
   (`spec_new` refuses one without them), start runs (`run_start`, apart: the host tells the run in its thread),
   answer their gates (`run_answer`), keep the teams and the line. An agent or an API model has them as the MCP
   server `nuclear_builder` beside `nuclear`; the local Nuclear Developer (no MCP) writes them in its answer (`---
-  tool: <name> ---` and its JSON, listed from the same server, called through it: `callBuilderTool`).
+  tool: <name> ---` and its JSON, listed from the same server, called through it: `callBuilderTool`). Its model's
+  window is small (the Developer's `CHAT_MODEL`, 4096 tokens), so its prompt describes the tools a chat calls most
+  (`LOCAL_CHAT_TOOLS`: `project_read`, the specs' `new`, `list` and `show`, `run_start`, `runs`, `run_file`,
+  `run_answer`, `team_list`, `team_show`) and names the rest; and the body gives the Developer the user's last
+  words as `query`, what it searches its graph and the project's files with (not the whole prompt).
   `spec_draft` (`id`, `text`: the spec's whole new markdown) writes `spec.draft.md` beside the spec, never over it.
 - **What is the user's is asked in the chat**: a tool's `needsUser` (accept or discard a draft, delete a spec or a
   team, restart a run, the delivery gate, the line's gates, commands or forceConfirm, a CI file replaced) is an

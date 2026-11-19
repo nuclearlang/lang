@@ -267,7 +267,7 @@
     "",
     "**It knows its limits.** One file per call, an 8192-token window by default, no decisions. Its plan says what of a spec the platform cannot do yet or is beyond a local model; a task beyond it is split smaller, handed to a frontier model that leads, or asked back to the user (`limit:agent-reasoning`, `playbook:escalate`).",
     "",
-    "Run it: `nuclear-developer` (it listens on `127.0.0.1:7879`); its models: `qwen2.5-coder:3b` writes code, `gemma4:e2b` plans, reviews and answers."
+    "Run it: `nuclear-developer` (it listens on `127.0.0.1:7879`); its models: `qwen2.5-coder:3b` writes code, `gemma4:e2b` plans and reviews, and the chat answers with its own small one (`CHAT_MODEL`, `qwen3.5:2b`)."
    ],
    "keys": [
     "nuclear developer",
@@ -353,11 +353,11 @@
     "| Profile | Models | Downloads | Memory | Measured |",
     "|---|---|---|---|---|",
     "| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |",
-    "| `medium` | `qwen2.5-coder:3b` | 2.5 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
-    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.7 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
+    "| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 5.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
+    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
     "| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine: the MCP server alone |",
     "",
-    "Every local profile also downloads `embeddinggemma` (0.6 GB, in the figures above), which makes the graph's vectors.",
+    "Every local profile also downloads `embeddinggemma` (0.6 GB, in the figures above), which makes the graph's vectors. The chat answers with one small model of its own (`CHAT_MODEL`; `lite` uses its one model), loaded only while you chat and freed 3 minutes after.",
     "",
     "**What the set-up needs**, found by itself once installed or installed in a terminal the user sees: NuclearLang with its AI archive (a Python of its own with the services and the set-up, written in Nuclear: no Python, uv or Node.js on the machine) and Ollama (it runs the models; only the local profiles need it). From the source tree it also needs `uv`.",
     "",

@@ -816,11 +816,11 @@
    "id": "failure:an-answer-never-ends",
    "type": "failure",
    "title": "Failure: a model's answer never ends and the Developer stops answering",
-   "summary": "Nothing limits the length of a local model's answer. A model that enters an answer without end keeps writing, and the Developer waits for it: every call after it waits too, until the model is stopped in Ollama and the Developer is restarted.",
+   "summary": "Nothing limits the length of a factory model's answer (the chat's is capped at 1024 tokens). A model that enters an answer without end keeps writing, and the Developer waits for it: every call after it waits too, until the model is stopped in Ollama and the Developer is restarted.",
    "body": [
     "**Looks like.** A chat question, an analysis or a piece that has no answer after several minutes, and every later call to the Developer waits as well; `ollama ps` shows the model loaded and working.",
     "",
-    "**Cause.** The Developer's connections give a model its context window only (`config/project_config.nuc`), not a limit on what it writes. Seen with `qwen2.5-coder:3b` as assistant (the `medium` profile), `llama3.2:1b` and `phi3:3.8b`; the two models of the `hard` profile did not do it in the measured rounds.",
+    "**Cause.** The coder's and the assistant's connections give a model its context window only (`config/project_config.nuc`), not a limit on what it writes; the chat's model (`CHAT_MODEL`) has one, 1024 tokens. Seen with `qwen2.5-coder:3b` as assistant (the `medium` profile), `llama3.2:1b`, `phi3:3.8b`, and `qwen2.5:1.5b` as the chat's model before its limit; the two models of the `hard` profile did not do it in the measured rounds.",
     "",
     "**Next step.** `ollama stop <model>`, then restart the Developer (`systemctl --user restart nuclear-developer` on Linux, or *Restart* in the editor's settings page), and ask again. If the same model does it again, use the profile whose assistant is `gemma4:e2b` (`nuclear-builder setup`)."
    ],

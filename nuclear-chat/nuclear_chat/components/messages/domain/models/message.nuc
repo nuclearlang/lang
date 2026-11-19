@@ -17,5 +17,7 @@ Message
   costUsd?: double
   // the time of its last edit, 0 when never edited
   edited: int = 0
+  // the time it was deleted (its text, GIF, buttons and reactions are gone; its thread stays), 0 when it is not
+  deleted: int = 0
   replies: int = 0
   lastReply: int = 0

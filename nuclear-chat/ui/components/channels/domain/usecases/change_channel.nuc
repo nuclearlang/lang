@@ -1,0 +1,4 @@
+// What ChannelsRepository.changeChannel answers, for the screens of channels.
+usecase ChangeChannel(repository: ChannelsRepository)
+  exec(workspace: string, channel: string, changes: ChannelChanges) Result<NuclearChatError, Channel>
+    ~repository.changeChannel(workspace, channel, changes)

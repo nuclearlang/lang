@@ -90,6 +90,19 @@ the app is paused in code that comes from a `.nuc` ([run and debug](run-and-debu
 | `nuclear.debug.explainErrors` | `true` | Dart run-time errors at their `.nuc` line, with an explanation |
 | `nuclear.codemetrics.*` | (generated) | the costs and thresholds of the code metrics, the same names as CodeMetrics |
 
+The toolchains of the platforms (*Settings and integrations* → Toolchains, and a step of the welcome):
+
+| Setting | Default | What it does |
+|---|---|---|
+| `nuclear.toolchains.python` | `""` | optional: another Python for the fastapi backends; empty: the Python included with NuclearLang, else the PATH's |
+| `nuclear.toolchains.node` | `""` | Node.js for TypeScript, NestJS and React; empty: NuclearLang's own (`nuclear setup node`), else the PATH's |
+| `nuclear.toolchains.flutter` | `""` | Flutter's SDK folder or its `flutter`, required for mobile; empty: NuclearLang's own (`nuclear setup flutter`), else the PATH's |
+| `nuclear.toolchains.platforms` | `[]` | the platforms you build; the welcome asks only their toolchains |
+
+Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run,
+debug session and terminal of the editor. The page shows where each was found and has *Browse…*, *Install
+NuclearLang's own* (in a terminal you see) and *Use the one on PATH*.
+
 The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool
 (`Ctrl+Alt+S`), where each one has its default. The most used:
 

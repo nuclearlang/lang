@@ -13,3 +13,9 @@ repository ChannelsRepository
 
   @put(path = ":workspace/:channel/agent")
   chooseAgent(workspace: string, channel: string, @body input: AgentChoice) Result<NuclearChatError, Channel>
+
+  @patch(path = ":workspace/:channel")
+  changeChannel(workspace: string, channel: string, @body changes: ChannelChanges) Result<NuclearChatError, Channel>
+
+  @delete(path = ":workspace/:channel")
+  deleteChannel(workspace: string, channel: string) Result<NuclearChatError, Channel>

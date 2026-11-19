@@ -96,6 +96,8 @@ Every setting of the AI services on one page, saved as the `nuclear.ai.*` settin
 - **Connections**: the Smart Graph's clients and access requests (*Allow*, *Deny*, *Revoke*), Jira (its token is
   kept in VS Code's secret storage) and GitHub (`gh auth status`).
 - **Pipeline**: Claude's model and the retry policy of Nuclear Builder.
+- **Toolchains**: Python (included), Node.js and Flutter, each with where it was found (your setting, NuclearLang's
+  own, the PATH, or not found) and *Browse…*, *Install NuclearLang's own*, *Use the one on PATH*.
 
 The services are installed by *Nuclear: Set Up the AI Services*, a wizard in four steps
 ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)). It is offered once on a machine

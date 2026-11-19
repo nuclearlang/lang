@@ -4,6 +4,7 @@ All notable changes to nuclear-zed are written here; versions follow [Semantic V
 
 ## Unreleased
 
+- 0.71.0: the version of VS Code's chat, toolchains and light local chat; nothing changes in this extension.
 - 0.70.0: the version of VS Code's skills, models, notifications and DevOps; nothing changes in this extension.
 - 0.69.0: the version of VS Code's member panel, faster company screen and tool icons; nothing changes in this extension.
 - 0.68.0: the version of VS Code's language button; nothing changes in this extension.

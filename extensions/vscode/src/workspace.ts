@@ -15,6 +15,7 @@ import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nucl
 import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
 import { chatGifKey, disposeChat, openChatTab } from './chatView';
 import { followChatNotices, Notice, notices } from './notifications';
+import { chatWhere } from './notify';
 import { SettingsPanel } from './settingsPanel';
 import { watchConnections } from './connections';
 import { BuilderPanel, builderSidebar, resumeOrphans, sidebarChanged } from '../../tools/nuclear-builder/src/panel';
@@ -416,7 +417,7 @@ class Workspace implements vscode.WebviewViewProvider {
       BuilderPanel.show(this.context, () => this.projects(), n.root, n.ref);
       if (n.ref && n.stage) BuilderPanel.drive(this.context, () => this.projects(), { op: 'node', id: n.ref, stage: n.stage, step: n.step });
     } else if (n.tool === 'settings') SettingsPanel.show(this.context);
-    else AtlasPanel.show(this.context, () => this.projects(), n.root, n.channel);
+    else AtlasPanel.show(this.context, () => this.projects(), n.root, chatWhere(n));
   }
 
   async openTool(id?: string): Promise<void> {

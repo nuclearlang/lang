@@ -1,0 +1,110 @@
+// The search beside the channel (where a thread opens): every message of the workspace, as the user types; words,
+// `from:@member` and `in:#channel`. Each result shows its conversation, author, day and time and its text with the
+// words marked; a click opens the message in its channel (and its thread), scrolled to and lit.
+stateful SearchPanel(ws: Workspace, channels: Channel[], texts: Texts, onJump: (f: Found) => void, onClose: () => void)
+  words: string = ""
+
+  build() Element
+    aside(
+      className = "thread search-panel",
+      children = [
+        header(
+          className = "thread-header",
+          children = [
+            strong(children = texts.get("search")),
+            button(className = "close", title = texts.get("close"), onClick = () => onClose(), children = span(className = "icon icon-close")),
+          ],
+        ),
+        div(
+          className = "search-box",
+          children = [
+            span(className = "icon icon-search"),
+            input(className = "search-input", autoFocus = true, value = words, placeholder = texts.get("search.placeholder"), title = texts.get("search.placeholder"), onChange = (e) => typed(e.target.value), onKeyDown = (e) => key(e)),
+          ],
+        ),
+        div(
+          className = "search-results",
+          children = SearchStateBuilder(
+            ready = (found: Found[]) => results(found),
+            searching = () => div(className = "skeleton", children = [div(), div(), div()]),
+            error = (e: NuclearChatError) => p(className = "search-note", children = texts.format("error", { "error": e.message })),
+            orElse = () => p(className = "search-note", children = texts.get("search.hint")),
+          ),
+        ),
+      ],
+    )
+
+  results(found: Found[]) Element
+    if found.isEmpty
+      return p(className = "search-note", children = texts.format("search.none", { "q": words }))
+    div(
+      children = [
+        div(className = "search-count", children = found.length == 1 ? texts.get("search.count.one") : texts.format("search.count.many", { "count": "${found.length}" })),
+        ...found.map((f) => result(f)),
+      ],
+    )
+
+  // One message found: where, who, when, and its text with the words marked.
+  result(f: Found) Element
+    m = f.message
+    room = channels.find((c) => c.id == f.channel)
+    member = room != null and room!.kind == "dm" ? dmMember(ws, room!) : null
+    where = member != null ? member!.name : "#${room?.name ?? f.channel}"
+    button(
+      key = m.id,
+      className = "found",
+      onClick = () => onJump(f),
+      children = [
+        div(className = "found-where", children = [strong(children = where), m.thread != null ? span(className = "chip", children = texts.get("search.inThread")) : null, span(className = "time", children = "${dayLabel(m.at, texts)} · ${clock(m.at)}")]),
+        div(
+          className = "found-body",
+          children = [
+            Avatar(member = memberOf(ws, m.author), author = m.author, size = "small", label = authorName(ws, m.author, texts)),
+            div(className = "found-text", children = [strong(className = "author", children = authorName(ws, m.author, texts)), p(children = marked(snippet(m), wordsOf(words)))]),
+          ],
+        ),
+      ],
+    )
+
+  typed(value: string)
+    setState(() =>
+      words = value
+    )
+    SearchManager.find(value)
+
+  key(e: KeyboardEvent)
+    if e.key == "Escape"
+      e.preventDefault()
+      onClose()
+
+// What a found message shows: its text without the marks of bold, strike and code (or its GIF's title), at most 240
+// characters.
+snippet(m: Message) string
+  text = m.text != "" ? m.text.replaceAll(Regex(r"\*\*|~~|`"), "") : (m.gif?.title ?? "")
+  text.length > 240 ? "${text.substring(0, 240)}…" : text
+
+// The words of a search, without its filters.
+wordsOf(query: string) string[]
+  query.lower().split(Regex(r"\s+")).filter((w) => w != "" and not w.startsWith("from:") and not w.startsWith("in:"))
+
+// A text with each of the words marked (`strong.hit`), as elements, never as HTML.
+marked(text: string, words: string[]) Element[]
+  parts: Element[] = []
+  lower = text.lower()
+  at = 0
+  while at < text.length
+    next = -1
+    size = 0
+    for w in words
+      i = lower.indexOf(w, at)
+      if i >= 0 and (next < 0 or i < next)
+        next = i
+        size = w.length
+    if next < 0
+      parts.add(span(key = "t${at}", children = text.substring(at)))
+      break
+    if next > at
+      parts.add(span(key = "t${at}", children = text.substring(at, next)))
+    parts.add(strong(key = "m${next}", className = "hit", children = text.substring(next, next + size)))
+    at = next + size
+  parts

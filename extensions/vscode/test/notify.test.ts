@@ -2,7 +2,7 @@
 // repeat folds, the badges, and which chat events call the user. node:test, no editor.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { add, badges, chatCall, chatKey, Notice, pops, seen } from '../src/notify';
+import { add, badges, chatCall, chatKey, chatWhere, Notice, pops, seen } from '../src/notify';
 
 const notice = (o: Partial<Notice>): Notice => ({ id: 1, tool: 'builder', kind: 'info', title: 't', text: '', level: 'info', at: 0, read: false, ...o });
 
@@ -37,7 +37,7 @@ test('the badges count the unread notices of each tool', () => {
 test('the chat calls the user for direct messages, mentions, questions and answers, never for their own words', () => {
   const known = new Set<string>();
   const msg = (channel: string, m: Record<string, unknown>, said = false) => chatCall({ type: 'message', channel, data: { message: m, ...(said ? { said } : {}) } }, known);
-  assert.deepEqual(msg('dm-askia', { id: 'm1', author: 'askia', text: 'Done.' }), { what: 'answered', member: 'askia', channel: 'dm-askia', thread: undefined, text: 'Done.' });
+  assert.deepEqual(msg('dm-askia', { id: 'm1', author: 'askia', text: 'Done.' }), { what: 'answered', member: 'askia', channel: 'dm-askia', thread: undefined, message: 'm1', text: 'Done.' });
   assert.equal(msg('dm-askia', { id: 'm1', author: 'askia', text: 'Done (edited).' }), null, 'an edit is the same message');
   assert.equal(msg('dm-askia', { id: 'm2', author: 'you', text: 'hi' }, true), null, 'the user\'s own');
   assert.equal(msg('dm-askia', { id: 'm3', author: 'system', text: 'could not answer' }), null);
@@ -51,4 +51,8 @@ test('the chat calls the user for direct messages, mentions, questions and answe
   assert.equal(chatCall({ type: 'ask', channel: 'dm-askia', data: { member: 'askia', question: 'Which table?' } }, known)?.what, 'asks');
   assert.equal(chatCall({ type: 'typing', channel: 'dm-askia', data: { member: 'askia' } }, known), null);
   assert.equal(chatKey('/p', { channel: 'dm-askia', member: 'askia' }), 'chat:/p:dm-askia:askia');
+  // a click opens the chat at the message, in its thread
+  assert.equal(chatWhere({ channel: 'team-a', message: 'm5', thread: 'm2' }), 'team-a?message=m5&thread=m2');
+  assert.equal(chatWhere({ channel: 'dm-askia' }), 'dm-askia');
+  assert.equal(chatWhere({}), undefined);
 });

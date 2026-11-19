@@ -59,6 +59,9 @@ testTheChatWritesASpecsBaseWithTheFactorysToolAndKeepsItsHistory(tmpPath: Path, 
   // the assistant's route, with the conversation, the factory's tools and the components; the tool's result in the
   // second call
   expect(bodies.length == 2 and bodies[0]["platform"] == "backend" and bodies[0]["root"] == root)
+  // the graph is searched with the user's words, not the whole prompt; the tools a chat calls most are described
+  expect(bodies[0]["query"] == "write a spec's base for booking a room" and bodies[1]["query"] == bodies[0]["query"])
+  expect("More tools, by name:" in "${bodies[0]["message"]}" and not ("`team_create`" in "${bodies[0]["message"]}"))
   message = "${bodies[0]["message"]}"
   expect("you: write a spec's base for booking a room" in message and "`spec_new`" in message and "- booking" in message and "never edit a role's files" in message)
   expect("the result of the tool spec_new" in "${bodies[1]["message"]}" and "## Now" in "${bodies[1]["message"]}" and "book-a-room" in "${bodies[1]["message"]}")

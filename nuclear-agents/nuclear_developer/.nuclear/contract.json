@@ -267,6 +267,12 @@
           "description": "the project's folder: with it the assistant reads the files that declare the names the question writes",
           "name": "root",
           "type": "string"
+        },
+        {
+          "default": "",
+          "description": "the developer's own words when `message` is a whole prompt of its own (Nuclear Builder's chat member: who it is, its tools, the conversation): the graph and the files are searched with them, and the assistant's guide is left out (the prompt brings its own)",
+          "name": "query",
+          "type": "string"
         }
       ],
       "key": null

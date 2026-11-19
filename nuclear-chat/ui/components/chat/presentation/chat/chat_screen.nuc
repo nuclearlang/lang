@@ -1,9 +1,17 @@
 // The chat, as Slack: the channels and direct messages on the left, the open channel in the middle, its thread
 // beside it. The host's path names the workspace and the first channel (`/<workspace>/general`); every call and event goes
 // through the host's bridge. On a narrow page the channels fold behind a button and the thread covers the channel.
-@screen(route = "/:workspace/:channel", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager])
-stateful ChatScreen(workspace: string, channel: string)
+// `?message=<id>` (and `&thread=<id>` when it is a reply) opens the channel at that message, lit: a notification
+// opens the exact message. Ctrl+K (⌘K) opens the quick switcher.
+@screen(route = "/:workspace/:channel", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager, SearchManager])
+stateful ChatScreen(workspace: string, channel: string, message: string = "", thread: string = "")
   open: string = "general"
+  // the message a search or a notification opened
+  focus: string = ""
+  // the quick switcher (switch), the members list (people), or nothing
+  finder: string = ""
+  searching: boolean = false
+  newChannel: boolean = false
   sidebar: boolean = false
   picker: boolean = false
   pickerStart: string = ""
@@ -11,6 +19,7 @@ stateful ChatScreen(workspace: string, channel: string)
 
   initState() void
     open = channel
+    focus = message
     WorkspaceManager.load(workspace)
     ChannelsManager.start(workspace, open)
     MessagesManager.start(workspace)
@@ -19,6 +28,9 @@ stateful ChatScreen(workspace: string, channel: string)
     ActivityManager.start(workspace)
     QuestionsManager.start(workspace)
     PickerManager.start(workspace)
+    SearchManager.start(workspace)
+    if thread != ""
+      ThreadManager.open(open, thread)
 
   build() Element
     WorkspaceStateBuilder(
@@ -37,26 +49,27 @@ stateful ChatScreen(workspace: string, channel: string)
     current = channels.find((c) => c.id == open)
     div(
       className = "chat ${sidebar ? "sidebar-open" : ""}",
+      onKeyDown = (e) => shortcut(e),
       children = [
-        Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id)),
+        Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id), onFind = (people) => find(people ? "people" : "switch"), onNewChannel = () => making(true)),
         div(className = "scrim", onClick = () => toggle()),
         section(
           className = "channel",
           children = [
-            ChannelHeader(ws = ws, channel = current, open = open, texts = texts, onSidebar = () => toggle()),
+            ChannelHeader(ws = ws, channel = current, open = open, texts = texts, onSidebar = () => toggle(), onSearch = () => search(true), onPeople = () => find("people"), onLeave = () => go("general")),
             MessagesStateBuilder(
               ready = (messages: Message[]) =>
                 if messages.isEmpty
                   EmptyChannel(ws = ws, channel = current, open = open, texts = texts)
                 else
-                  div(className = "scroll", children = div(children = [MessageList(messages = messages, ws = ws, texts = texts, inThread = false, onThread = (m) => thread(m), onChannel = (id) => go(id)), Streaming(ws = ws, channel = open, thread = "", texts = texts)]))
+                  div(className = "scroll", children = div(children = [MessageList(messages = messages, ws = ws, texts = texts, inThread = false, onThread = (m) => openThread(m), onChannel = (id) => go(id), focus = focus), Streaming(ws = ws, channel = open, thread = "", texts = texts)]))
               ,
               error = (e: NuclearChatError) => div(className = "scroll", children = div(className = "chat-state", children = [p(children = texts.format("error", { "error": e.message })), button(className = "action primary", onClick = () => MessagesManager.open(open), children = texts.get("retry"))])),
               orElse = () => div(className = "scroll", children = div(className = "skeleton", children = [div(), div(), div()])),
             ),
             Questions(ws = ws, channel = open, thread = "", texts = texts),
             Typing(ws = ws, channel = open, thread = "", texts = texts),
-            div(
+            current != null and current!.state == "archived" ? archived(current!, texts) : div(
               className = "composer-area",
               children = [
                 picker and pickerThread == "" ? gifPicker(texts) : null,
@@ -65,9 +78,15 @@ stateful ChatScreen(workspace: string, channel: string)
             ),
           ],
         ),
-        ThreadPanel(ws = ws, channels = channels, texts = texts, picker = picker and pickerThread != "" ? gifPicker(texts) : null, onClose = () => ThreadManager.hide(), onGif = (q) => gif(q, threadOpen()), onChannel = (id) => go(id)),
+        searching ? SearchPanel(ws = ws, channels = channels, texts = texts, onJump = (f) => jump(f), onClose = () => search(false)) : ThreadPanel(ws = ws, channels = channels, texts = texts, picker = picker and pickerThread != "" ? gifPicker(texts) : null, onClose = () => ThreadManager.hide(), onGif = (q) => gif(q, threadOpen()), onChannel = (id) => go(id), focus = focus),
+        finder != "" ? Finder(ws = ws, channels = channels, texts = texts, people = finder == "people", onOpen = (id) => found(id), onClose = () => find("")) : null,
+        newChannel ? NewChannelDialog(ws = ws, texts = texts, onMade = (id) => made(id), onClose = () => making(false)) : null,
       ],
     )
+
+  // An archived channel is read only: where the composer was, what it is and *Open it again*.
+  archived(current: Channel, texts: Texts) Element
+    div(className = "archived-bar", children = [span(children = texts.format("archived.bar", { "name": current.name })), button(className = "action primary", onClick = () => ChannelsManager.change(current.id, ChannelChanges(name = null, topic = null, state = "open")), children = texts.get("unarchive"))])
 
   gifPicker(texts: Texts) Element
     GifPicker(key = "picker-${pickerThread}-${pickerStart}", texts = texts, start = pickerStart, thread = pickerThread, onClose = () => closePicker())
@@ -80,10 +99,11 @@ stateful ChatScreen(workspace: string, channel: string)
     else
       texts.format("placeholder.channel", { "name": current?.name ?? open })
 
-  // Opens a channel: its messages, read; the thread of another channel closes.
-  go(id: string)
+  // Opens a channel (a closed one is open again): its messages, read; the thread of another channel closes.
+  go(id: string, at: string = "")
     setState(() =>
       open = id
+      focus = at
       sidebar = false
       picker = false
     )
@@ -91,8 +111,49 @@ stateful ChatScreen(workspace: string, channel: string)
     MessagesManager.open(id)
     ChannelsManager.read(id)
 
-  thread(m: Message)
+  openThread(m: Message)
     ThreadManager.open(open, m.id)
+
+  // A search's result: its channel at the message, and its thread when it is a reply.
+  jump(f: Found)
+    go(f.channel, f.message.id)
+    if f.message.thread != null
+      ThreadManager.open(f.channel, f.message.thread!)
+    search(false)
+
+  // Ctrl+K or ⌘K anywhere in the chat opens the quick switcher.
+  shortcut(e: KeyboardEvent)
+    if (e.ctrlKey or e.metaKey) and e.key.lower() == "k"
+      e.preventDefault()
+      find(finder == "" ? "switch" : "")
+
+  find(mode: string)
+    setState(() =>
+      finder = mode
+      sidebar = false
+    )
+
+  // The switcher or the members list chose a conversation.
+  found(id: string)
+    find("")
+    go(id)
+
+  search(on: boolean)
+    setState(() =>
+      searching = on
+      sidebar = false
+    )
+    if not on
+      SearchManager.find("")
+
+  making(on: boolean)
+    setState(() =>
+      newChannel = on
+    )
+
+  made(id: string)
+    making(false)
+    go(id)
 
   threadOpen() string
     ThreadManager.root

@@ -9,11 +9,16 @@ related: [overview.md, responders.md, ../../../docs/04-specs/013-nuclear-chat/de
 The service on `127.0.0.1`, at the port the set-up chose (`NUCLEAR_CHAT_PORT` of `ai.env`, 7880 by default). JSON
 in and out. Every route needs the header `X-Chat-Token` with the service's token (401 without it or with another);
 a request with an `Origin` header (a web page) is refused (403); there are no documentation pages. A host gets the
-URL, the header and the token from `nuclear-chat connect --json` (ADR-synapsis-0007, `config/project_config.nuc`).
+URL, the header and the token from `nuclear-chat connect --json` (ADR-synapsis-0007, `config/project_config.nuc`);
+the token lives in the system's keyring, or in `~/.local/share/nuclear-chat/.token` (`0600`) on a machine without
+one ([security.md](../05-standards/security.md)).
 `nuclear_chat/test/api_test.nuc` checks the guards and the socket through the app (`appClient()`, with the test
 token of `testEnv` in `config.nuc`, never the keyring's; ADR-synapsis-0010).
 An error answers its status with `{"detail": "…"}`: 400 a body that is not valid or a name not in the workspace,
 404 no workspace, channel, message or waiting question, 409 a channel's name taken.
+
+A `Channel` carries `state` (`open`, `closed`, `archived`, kept in `channels.json`; a new message in a closed one opens
+it again); a `Message` carries `deleted` (its time, 0 when it is not).
 
 The fields of an answer have Nuclear's names (`lastRead`, `costUsd`), as the files on disk (ADR-synapsis-0012).
 
@@ -25,15 +30,18 @@ The fields of an answer have Nuclear's names (`lastRead`, `costUsd`), as the fil
 | `GET channels/{ws}` | | `Channel[]` with `unread` |
 | `POST channels/{ws}` | `NewChannel` `{name, topic, members, team}` | `Channel` (201) |
 | `POST channels/{ws}/{channel}/read` | | `Channel` (`lastRead` now) |
+| `PATCH channels/{ws}/{channel}` | `ChannelChanges` `{name?, topic?, state?: open\|closed\|archived}` | `Channel`: a channel renamed (its id stays) or its topic changed (kept over the host's when it registers again); a conversation closed (out of the sidebar until it is opened, `POST …/read`, or a message comes), archived (read only: a said message is 400) or open again. 400: a direct message's name or topic, `#general` or a direct message archived |
+| `DELETE channels/{ws}/{channel}` | | `Channel`: its history moved to `.nuclear/chat/deleted/<channel>-<ms>.jsonl` (never destroyed); a channel leaves the workspace (a host's comes back, empty, when the host registers again), a direct message stays empty and closed. 400: `#general` |
 | `PUT channels/{ws}/{channel}/agent` | `AgentChoice` `{agent, model}` | `Channel` (`agent`, `model` kept in `channels.json`): who answers a direct message, one of its member's `responder.choices` (400: not a direct message with a member who has choices, no such choice, one not `available`, a model it does not offer when it offers some); `agent: ""` is the host's default again |
 | `GET messages/{ws}/{channel}?thread=` | | `Message[]` (one thread with `thread`) |
 | `POST messages/{ws}/{channel}` | `Said` `{text, thread?}` | `Message` (201): the user's; who it brings in answers (events) |
 | `POST messages/{ws}/{channel}/gif` | `SentGif` `{gif: {src, title, source}, thread?}` | `Message` (201) |
 | `POST messages/{ws}/{channel}/post` | `Posted` `{author, text, thread?, buttons, links, moment?, gif?, answersGif, costUsd?}` | `Message` (201): a host's, as a member or `system`; a GIF may follow by the member's personality: at a `moment`, or of the pack's tag `gif` (`answersGif`: the member answers a GIF of the user, likelier) |
 | `PATCH messages/{ws}/message/{id}` | `Changes` `{text?, buttons?}` | `Message` |
+| `DELETE messages/{ws}/message/{id}` | | `Message` with `deleted` (the user's or a member's: the workspace is the user's): a line `{"edit": id, "deleted": true}`; its text, GIF, buttons, links and reactions are gone, its thread's replies stay; a later edit or reaction changes nothing |
 | `POST messages/{ws}/message/{id}/reactions` | `Reaction` `{emoji, by = you}` | `Message` (the same emoji again takes it away) |
 | `POST messages/{ws}/message/{id}/click` | `Click` `{button}` | `ChatEvent` (`action`) |
-| `GET messages/{ws}/search?words=` | | `Found[]` `{channel, message}`, newest first |
+| `GET messages/{ws}/search?words=` | | `Found[]` `{channel, message}`, newest first: every channel (closed and archived too), messages that hold every word (text or a GIF's title); `from:@<member>` (id, name, first name; `from:@you`) and `in:#<channel>` (id or name) narrow it, alone too; a filter that names nobody finds nothing; a deleted message is never found |
 | `POST members/{ws}/answers` | `Answer` `{id, answer}` | `Answer`: written to the responder that asked |
 | `GET gifs/pack` | | `PackGif[]` `{id, file, title, tags, svg}` |
 | `GET gifs/{ws}/search?q=` | | `GifResults` `{q, source, results, ask, service, note}` |
@@ -54,7 +62,7 @@ never shown, since its URL holds the key). A pack GIF's `src` is `pack/<file>`: 
 | `type` | `data` |
 |---|---|
 | `message` | `{message}` (a new or changed message, folded, as the file keeps it); `said: true` on the user's new message |
-| `channels` | `{channel}` (made) or `{read}` |
+| `channels` | `{channel}` (made), `{read}`, `{changed}` (renamed, topic, state) or `{deleted}` |
 | `typing` | `{member, thread}` |
 | `tool` | `{member, thread, tool}` (the responder's line) |
 | `ask` | the responder's `ask` line with `member`, `thread` |

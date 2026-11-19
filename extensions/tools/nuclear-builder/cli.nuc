@@ -315,9 +315,9 @@ setup(args: string[]) int
   m = readMachine()
   if p.coder != null
     print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
-    print("Your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients. State: nuclear-builder setup --status")
+    print("${clientsLine()} State: nuclear-builder setup --status")
   else
-    print("\nDone: your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients. The local agents: nuclear-builder setup again, another profile.")
+    print("\nDone. ${clientsLine()} The local agents: nuclear-builder setup again, another profile.")
   0
 
 // A list option (`--skills a,b`): its items trimmed, none empty; null when it is not given.
@@ -520,3 +520,7 @@ main(argv: string[]? = null) void
       throw e
     print("nuclear-builder: ${e}", file = sys.stderr)
     sys.exit(1)
+
+// What the set-up's last line says of the AI clients: they have the MCP server only when one was found.
+clientsLine() string
+  anyAiClient() ? "Your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients." : "No AI client was found (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): after installing one, nuclear-builder setup --clients."

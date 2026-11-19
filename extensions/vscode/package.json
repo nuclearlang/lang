@@ -2,7 +2,7 @@
   "name": "nuclearlang",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.70.0",
+  "version": "0.71.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
@@ -199,6 +199,41 @@
             "type": "boolean",
             "default": true,
             "markdownDescription": "%nuclear.buildOnSave.md%"
+          }
+        }
+      },
+      {
+        "id": "toolchains",
+        "title": "%config.toolchains%",
+        "order": 1,
+        "properties": {
+          "nuclear.toolchains.python": {
+            "type": "string",
+            "default": "",
+            "description": "%nuclear.toolchains.python.desc%"
+          },
+          "nuclear.toolchains.node": {
+            "type": "string",
+            "default": "",
+            "description": "%nuclear.toolchains.node.desc%"
+          },
+          "nuclear.toolchains.flutter": {
+            "type": "string",
+            "default": "",
+            "description": "%nuclear.toolchains.flutter.desc%"
+          },
+          "nuclear.toolchains.platforms": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string",
+              "enum": [
+                "mobile",
+                "backend",
+                "web"
+              ]
+            },
+            "description": "%nuclear.toolchains.platforms.desc%"
           }
         }
       },
@@ -507,7 +542,7 @@
       {
         "id": "codemetrics",
         "title": "%config.codemetrics%",
-        "order": 9,
+        "order": 10,
         "properties": {
           "nuclear.codemetrics.basics.CodeLensEnabled": {
             "default": true,
@@ -2160,7 +2195,7 @@
     "theme": "node theme/build.mjs && node theme/icons.mjs",
     "server": "node scripts/bundle-server.mjs",
     "package": "npm run theme && npm run compile && npm run server && vsce package --no-dependencies --allow-missing-repository",
-    "test": "esbuild ../tools/nuclear-builder/test/editors.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/editors.test.js && esbuild ../tools/nuclear-http-connections/test/sockets.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-http-connections/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/sockets.test.js && esbuild ../tools/nuclear-monitor/test/monitor.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/monitor.test.js && esbuild test/chat.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/chat.test.js && esbuild test/notify.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/notify.test.js && npm run -s test:compat",
+    "test": "esbuild ../tools/nuclear-builder/test/editors.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/editors.test.js && esbuild ../tools/nuclear-http-connections/test/sockets.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-http-connections/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/sockets.test.js && esbuild ../tools/nuclear-monitor/test/monitor.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/monitor.test.js && esbuild test/chat.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/chat.test.js && esbuild test/notify.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/notify.test.js && esbuild test/toolchains.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/toolchains.test.js && npm run -s test:compat",
     "test:compat": "esbuild ../tools/nuclear-builder/test/compat.test.ts --log-level=error --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/compat.test.js",
     "chat": "node -e \"const fs=require('fs');const f='../../nuclear-chat/ui/build/app/dist-embed/embed.js';if(!fs.existsSync(f)){console.error('Nuclear Chat UI not built: run nuclear-chat/ui/build-embed.sh (after npm ci in nuclearlang/tools/node)');process.exit(1)}fs.mkdirSync('out',{recursive:true});fs.copyFileSync(f,'out/chat-embed.js')\""
   },

@@ -20,7 +20,7 @@ controller DeveloperController(coder: Coder, tester: Tester, security: Security,
 
   @post("chat", status = 200)
   chat(input: ChatRequest) PieceReply
-    state = { "task": input.message, "platform": input.platform, "map": input.map, "history": input.history, "root": input.root }
+    state = { "task": input.message, "platform": input.platform, "map": input.map, "history": input.history, "root": input.root, "query": input.query }
     reply(~assistant.run(state, thread = fresh()))
 
   // Why a step failed: `task` is the step, `context` its output, `path` the project's folder.

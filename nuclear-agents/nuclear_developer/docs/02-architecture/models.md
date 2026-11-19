@@ -1,13 +1,15 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [overview.md, ../05-standards/testing.md, ../06-runbooks/run.md, ../06-runbooks/evaluation.md]
 ---
 # The models
 
 Two models, both on Ollama (`config/project_config.nuc`): a small coder model writes the code (`CODER_MODEL`,
-`qwen2.5-coder:3b`), a small general model plans, reviews, analyses and answers (`ASSISTANT_MODEL`, `gemma4:e2b`).
+`qwen2.5-coder:3b`), a small general model plans, reviews and analyses (`ASSISTANT_MODEL`, `gemma4:e2b`). The chat
+(`/developer/chat`) answers with a third, small one of its own, so a message never loads the factory's models
+(below, "The chat's model").
 Neither may be larger than 3B parameters of effective size (the user's rule). Each runs with a context window of
 `CONTEXT_TOKENS` (8192 by default).
 
@@ -83,3 +85,42 @@ What follows from them:
 
 Which profiles the set-up offers after these measures is a decision of the installer, still open: its roadmap
 (`installer/docs/01-product/roadmap.md`).
+
+## The chat's model
+
+`CHAT_MODEL` (`qwen3.5:2b`), with a context of `CHAT_CONTEXT_TOKENS` (4096), no thinking (`reasoning = false`), an
+answer of 1024 tokens at most (without it `qwen2.5:1.5b` wrote 35 000 tokens, Ollama shifting its context, until its
+caller was killed) and `CHAT_KEEP_ALIVE` (3m): Ollama frees it three minutes after the last message. The set-up
+writes it with the profile (`lite`: its one model). The graph's `embeddinggemma` still embeds the question: the
+cards are what make a knowledge answer right (the exact `nuclear gen resource` command), so retrieval stays; Ollama
+frees it five minutes after.
+
+Measured on 2026-11-18 (Ryzen AI 9 HX 370, 28 GB, Radeon 890M; the GPU's memory is the system's), each model alone
+(`free -m` before and after loading it):
+
+| Model | `ollama ps` | Memory it takes |
+|---|---|---|
+| `gemma4:e2b` (the chat's model before) | 1.8 GB | 7.9 GB (5.1B parameters with its audio and image parts; 8192 or 4096 of context the same) |
+| `qwen3.5:2b` (in use) | 2.4 GB | 4.1 GB |
+| `qwen3.5:2b-q4_K_M` | 1.6 GB | 3.2 GB |
+| `qwen2.5:1.5b` | 1.2 GB | 1.7 GB |
+| `embeddinggemma` | 0.7 GB | 1.7 GB |
+
+A chat message through Nuclear Builder's member took 9–10 GB with `gemma4:e2b` (the first answer 37 s, cold) and
+5.7 GB with `qwen3.5:2b` (13 s cold, 10 s the next). The member's prompt was 20 900 characters (the factory's 55
+tools described, four cards searched with the whole prompt, the assistant's guide); with `query` and the tools a
+chat calls most it is 8 700 (2 200 tokens).
+
+Five chat messages (a greeting in Spanish, "who are you" in English, a spec with its criteria in Spanish, how to
+write a CRUD resource in English, the project's specs in Spanish), through the member with each model as
+`CHAT_MODEL`:
+
+| Model | Answers right | Per message |
+|---|---|---|
+| `qwen3.5:2b` | 3: the language every time, `spec_new` right, the resource from the cards; "who are you" says the Developer, and the project's specs are answered without `spec_list` | 9–11 s |
+| `qwen3.5:2b-q4_K_M` | 2: it invented a tool's result for the resource | 6–8 s |
+| `qwen2.5:1.5b` | 2: `spec_new` and the resource; it repeats the greeting and recites its prompt | 3–8 s |
+| `gemma4:e2b` | 2: `spec_new` and `spec_list`; the greeting and "who are you" loop on tools for six rounds | 7–44 s |
+| `llama3.2:3b` | 1: tool calls loop and repeat `spec_new` | 8–112 s |
+| `llama3.2:1b` | 0 | 3–36 s |
+

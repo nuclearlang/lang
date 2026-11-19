@@ -1,9 +1,10 @@
 // The welcome (spec 011, requirement 14): the first-run onboarding, *Next, Next*, over every setting of the platform,
 // each step with its defaults. 1 this machine and where the agents run, 2 the profile (which models are downloaded and
 // how far each works, one suggested for the hardware), 3 what is needed (found by itself once installed, or installed
-// in a terminal), 4 the installation with its progress (ADR-installer-0002), 5 the providers (the agents found on the
-// PATH, the API keys handed to the vault, who works the Builder's chat), 6 the team (the squad screen: the new-team wizard when there is none), 7 the
-// spending, 8 the settings of each tool, then a summary. Everything lands in the settings or, for the teams and the
+// in a terminal), 4 the installation with its progress (ADR-installer-0002), 5 the toolchains of the platforms the user builds
+// (toolchainHost.ts: Python included, Flutter and Node.js installed by the user or by `nuclear setup`), 6 the providers (the agents found on the
+// PATH, the API keys handed to the vault, who works the Builder's chat), 7 the team (the squad screen: the new-team wizard when there is none), 8 the
+// spending, 9 the settings of each tool, then a summary. Everything lands in the settings or, for the teams and the
 // keys, in what `nuclear-builder` keeps. The set-up of the services is `nuclear-builder setup` (written in Nuclear),
 // run as a process: its plan (`--plan --json`) and its steps (`--events`, one JSON line each). It can be run again
 // from Settings and integrations. Plain HTML and script, no framework; its texts are setupL10n.ts.
@@ -20,6 +21,7 @@ import { webviewFaceUrl } from '../../tools/nuclear-builder/src/teams/faceUrl';
 import { SQUAD } from '../../tools/nuclear-builder/src/teams/l10n';
 import { SQUAD_CSS, SQUAD_SCRIPT } from '../../tools/nuclear-builder/src/teams/page';
 import { showTeam, vaultList } from '../../tools/nuclear-builder/src/teams/cli';
+import { handleToolchain, TC_CSS, TC_JS, TC_TEXTS, toolchainState } from './toolchainHost';
 
 /** What `nuclear-builder setup --plan --json` gives: the page's state (this machine, the profiles, the requirements). */
 interface Plan {
@@ -80,7 +82,7 @@ export class SetupPanel {
       localized.dispose();
     });
     this.panel.webview.onDidReceiveMessage((m: Message) => void this.receive(m).catch((e) => void vscode.window.showErrorMessage(l10n.t('Nuclear set-up: {0}', e instanceof Error ? e.message : String(e)))));
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('nuclear') && SetupPanel.current === this && this.post({ type: 'sections', sections: settingSections(this.context) })));
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('nuclear') && SetupPanel.current === this && (this.post({ type: 'sections', sections: settingSections(this.context) }), e.affectsConfiguration('nuclear.toolchains') && void this.toolchains())));
   }
 
   static show(context: vscode.ExtensionContext): void {
@@ -117,6 +119,7 @@ export class SetupPanel {
 
   private async receive(m: Message): Promise<void> {
     if (await this.teams.handle(m as { type: string })) return;
+    if (await handleToolchain(m as { type: string }, () => void this.toolchains())) return;
     switch (m.type) {
       case 'ready':
         this.post({ type: 'sections', sections: settingSections(this.context) });
@@ -155,6 +158,8 @@ export class SetupPanel {
       }
       case 'setSetting':
         return applySetting(this.context, String((m as { key: string }).key), (m as { value: unknown }).value);
+      case 'toolchains':
+        return this.toolchains();
       case 'summary':
         return this.summary();
       case 'finish':
@@ -170,6 +175,10 @@ export class SetupPanel {
     const agents = await Promise.all(AGENTS.map(async (a) => ({ id: a.id, name: a.name, command: a.setting ? c.get<string>(a.setting, a.fallback) : a.fallback, enable: a.enable ?? null, enabled: a.enable ? c.get<boolean>(a.enable, false) : null, ...(await found(a.setting ? c.get<string>(a.setting, a.fallback) : a.fallback)) })));
     const vault = await vaultList().then((v) => ({ keys: v, missing: '' }), (e: unknown) => ({ keys: null, missing: e instanceof Error ? e.message : String(e) }));
     this.post({ type: 'providers', agents, api: API_PROVIDERS, vault });
+  }
+
+  private async toolchains(): Promise<void> {
+    this.post({ type: 'toolchains', ...(await toolchainState()) });
   }
 
   private async summary(): Promise<void> {
@@ -229,6 +238,7 @@ export function html(webview: vscode.Webview): string {
   .sum b { font-weight: 600; } #squadHost { height: calc(100vh - 230px); min-height: 640px; }
   ${FORM_CSS}
   ${SQUAD_CSS}
+  ${TC_CSS}
 </style></head><body>
 <div id="frame" class="narrow">
 <div class="head"><h1 id="title"></h1>${langButton()}</div>
@@ -239,16 +249,17 @@ export function html(webview: vscode.Webview): string {
 <div class="nav" id="nav"></div>
 </div>
 <script nonce="${nonce}">
-${pageI18n(SETUP, SQUAD)}
+${pageI18n(SETUP, SQUAD, TC_TEXTS)}
 // a text the set-up computed, in the page's language: its kind's text (prefix + key), else its English (an older
 // set-up); the remote profile's graph step installs only the MCP server (it has no models)
 const said = (prefix, key, args, english) => key && T[prefix + key] ? t(prefix + key, ...(args ?? [])) : english;
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 ${FORM_JS}
 ${SQUAD_SCRIPT}
-const PAGES = ['machine', 'profile', 'requirements', 'install', 'providers', 'team', 'spending', 'tools', 'summary'];
+${TC_JS}
+const PAGES = ['machine', 'profile', 'requirements', 'install', 'toolchains', 'providers', 'team', 'spending', 'tools', 'summary'];
 // the step shown survives a re-render (a change of language)
-let S = null, missing = '', page = Math.max(0, Math.min(PAGES.length - 1, Math.floor(Number(vscode.getState()?.page)) || 0)), local = true, profile = '', run = null, timer = null, sections = [], prov = null, summary = null, squad = false;
+let S = null, missing = '', page = Math.max(0, Math.min(PAGES.length - 1, Math.floor(Number(vscode.getState()?.page)) || 0)), local = true, profile = '', run = null, timer = null, sections = [], prov = null, summary = null, squad = false, tc = null, later = {};
 const chosen = () => S.profiles.find((p) => p.id === (local ? profile : 'remote'));
 const needs = () => S.requirements[local ? 'local' : 'remote'];
 const sectionOf = (id) => sections.find((s) => s.id === id);
@@ -297,14 +308,14 @@ function machinePages() {
     + (run.done ? '<div>' + esc(run.local ? t('installedLocal', run.profile) : t('installedRemote')) + '</div>' : ''), nav: navBtns(2, run.done ? 4 : null) };
 }
 function providersPage() {
-  if (!prov) return { out: '<h2>' + esc(t('step.providers')) + '</h2><div class="muted">' + esc(t('lookingProviders')) + '</div>', nav: navBtns(3, 5) };
+  if (!prov) return { out: '<h2>' + esc(t('step.providers')) + '</h2><div class="muted">' + esc(t('lookingProviders')) + '</div>', nav: navBtns(4, 6) };
   const agents = prov.agents.map((a) => '<div class="card plain"><div class="row"><span class="' + (a.found ? 'ok' : 'muted') + '">' + (a.found ? '✓' : '○') + '</span><div class="grow"><b>' + esc(a.name) + '</b> <code>' + esc(a.command) + '</code><div class="muted">' + esc(a.found ? (a.version || t('found')) : t('notFound')) + '</div></div>'
     + (a.enable && a.found ? '<label class="sf-sw" title="' + esc(t('useIt')) + '"><input type="checkbox" data-setting="' + esc(a.enable) + '" data-t="boolean"' + (a.enabled ? ' checked' : '') + ' aria-label="' + esc(t('useIt') + ' ' + a.name) + '"><span></span></label>' : '') + '</div></div>').join('');
   const keys = prov.vault.keys === null ? '<div class="warn">' + esc(t('vaultMissing', prov.vault.missing)) + '</div>'
     : prov.api.map((p) => '<div class="card plain"><div class="row"><span class="' + (prov.vault.keys[p] ? 'ok' : 'muted') + '">' + (prov.vault.keys[p] ? '✓' : '○') + '</span><div class="grow"><b>' + esc(t('api.' + p)) + '</b><div class="muted">' + esc(prov.vault.keys[p] ? t('keyKept') : t('noKey')) + '</div></div><button' + (prov.vault.keys[p] ? '' : ' class="primary"') + ' data-key="' + p + '">' + esc(prov.vault.keys[p] ? t('changeKey') : t('setKey')) + '</button></div></div>').join('');
   return { out: '<h2>' + esc(t('step.providers')) + '</h2><div class="muted">' + esc(t('providersIntro')) + '</div><h3 class="sec">' + esc(t('agentsHere')) + '</h3><div class="muted">' + esc(t('agentsHint')) + '</div>' + agents
     + '<h3 class="sec">' + esc(t('apiKeys')) + '</h3><div class="muted">' + esc(t('apiKeysHint')) + '</div>' + keys + '<div class="row" style="margin-top:8px"><button data-recheck="1">↻ ' + esc(t('checkAgain')) + '</button></div>'
-    + (chatItem() ? '<h3 class="sec">' + esc(t('chatWho')) + '</h3><div class="muted">' + esc(t('chatWhoHint')) + '</div>' + settingsForm({ items: [chatItem()] }) : ''), nav: navBtns(3, 5) };
+    + (chatItem() ? '<h3 class="sec">' + esc(t('chatWho')) + '</h3><div class="muted">' + esc(t('chatWhoHint')) + '</div>' + settingsForm({ items: [chatItem()] }) : ''), nav: navBtns(4, 6) };
 }
 /** Who works the Builder's chat (nuclear.builder.chat), chosen with the providers just found. */
 function chatItem() {
@@ -312,10 +323,24 @@ function chatItem() {
 }
 function toolsPage() {
   const ids = ['builder', 'chat', 'atlas', 'http', 'devices', 'language'];
-  return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + ids.map((id) => sectionOf(id) ? '<h3 class="sec">' + esc(sectionOf(id).title) + '</h3>' + settingsForm(sectionOf(id), ['nuclear.builder.team', 'nuclear.builder.chat', 'nuclear.language']) : '').join(''), nav: navBtns(6, 8) };
+  return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + ids.map((id) => sectionOf(id) ? '<h3 class="sec">' + esc(sectionOf(id).title) + '</h3>' + settingsForm(sectionOf(id), ['nuclear.builder.team', 'nuclear.builder.chat', 'nuclear.language']) : '').join(''), nav: navBtns(7, 9) };
+}
+/** The toolchains of the platforms the user builds: found where, or installed by them, by NuclearLang, or later. */
+function toolchainsPage() {
+  const head = '<h2>' + esc(t('step.toolchains')) + '</h2><div class="muted">' + esc(t('tc.intro')) + '</div>';
+  if (!tc) return { out: head + '<div class="muted">…</div>', nav: navBtns(3, 5) };
+  return { out: head + '<h3 class="sec">' + esc(t('tc.platforms')) + '</h3><div class="muted">' + esc(t('tc.platformsHint')) + '</div>' + platformChecks(tc)
+    + '<h3 class="sec">' + esc(t('tc.title')) + '</h3>' + toolchainCards(tc, true, later) + '<div class="row" style="margin-top:8px"><button data-tc="tcCheck">↻ ' + esc(t('checkAgain')) + '</button></div>', nav: navBtns(3, 5) };
+}
+function tcSummary() {
+  if (!tc) return '…';
+  const want = tcPlatforms(tc);
+  const list = TC.filter((x) => x.platforms.some((p) => want.includes(p)));
+  if (!list.length) return esc(t('tc.none'));
+  return esc(want.map((p) => t('tc.p.' + p)).join(', ')) + '<div class="muted">' + list.map((x) => { const s = tc.statuses.find((y) => y.id === x.id) || { id: x.id, where: 'missing' }; return esc(x.name + ': ' + (s.where === 'missing' && later[x.id] ? t('tc.later') : tcWhere(s))); }).join(' · ') + '</div>';
 }
 function summaryPage() {
-  if (!summary) return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted">…</div>', nav: navBtns(7, null) };
+  if (!summary) return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted">…</div>', nav: navBtns(8, null) };
   const m = summary.machine, sp = summary.spending, keys = summary.vault ? Object.entries(summary.vault).filter(([, v]) => v).map(([k]) => t('api.' + k)) : [];
   const PN = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
   // the members by role: how many, and who works the first (the one a station takes)
@@ -324,20 +349,21 @@ function summaryPage() {
   const row = (label, value, go) => '<b>' + esc(label) + '</b><div>' + value + '</div><a data-go="' + go + '">' + esc(t('change')) + '</a>';
   return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('summaryIntro')) + '</div><div class="sum">'
     + row(t('sumMachine'), esc(m.NUCLEAR_AI_PROFILE ? t('sumProfile', m.NUCLEAR_AI_PROFILE) : t('sumNotInstalled')), 0)
-    + row(t('sumProviders'), esc((prov ? prov.agents.filter((a) => a.found).map((a) => a.name).join(', ') : '') || t('sumNone')) + (keys.length ? '<div class="muted">' + esc(t('sumKeys', keys.join(', '))) + '</div>' : ''), 4)
-    + row(t('sumTeam'), summary.team ? '<b>' + esc(summary.team.name) + '</b><div class="muted">' + esc(roles) + '</div>' : esc(t('sumNoTeam')), 5)
-    + row(t('sumSpending'), esc(t('sumBudget', sp.budgetUsd > 0 ? sp.budgetUsd.toFixed(2) + ' USD' : t('noLimit'))) + ' · ' + esc(sp.forceConfirm ? t('sumForced') : sp.confirm ? t('sumTwice') : t('sumNoAsk')), 6)
-    + row(t('sumTools'), esc(t('sumToolsText')), 7)
-    + '</div>', nav: '<button data-go="7">' + esc(t('back')) + '</button><div class="grow"></div><button data-settings="1">' + esc(t('openSettings')) + '</button><button class="primary" data-finish="1">' + esc(t('finish')) + '</button>' };
+    + row(t('sumToolchains'), tcSummary(), 4)
+    + row(t('sumProviders'), esc((prov ? prov.agents.filter((a) => a.found).map((a) => a.name).join(', ') : '') || t('sumNone')) + (keys.length ? '<div class="muted">' + esc(t('sumKeys', keys.join(', '))) + '</div>' : ''), 5)
+    + row(t('sumTeam'), summary.team ? '<b>' + esc(summary.team.name) + '</b><div class="muted">' + esc(roles) + '</div>' : esc(t('sumNoTeam')), 6)
+    + row(t('sumSpending'), esc(t('sumBudget', sp.budgetUsd > 0 ? sp.budgetUsd.toFixed(2) + ' USD' : t('noLimit'))) + ' · ' + esc(sp.forceConfirm ? t('sumForced') : sp.confirm ? t('sumTwice') : t('sumNoAsk')), 7)
+    + row(t('sumTools'), esc(t('sumToolsText')), 8)
+    + '</div>', nav: '<button data-go="8">' + esc(t('back')) + '</button><div class="grow"></div><button data-settings="1">' + esc(t('openSettings')) + '</button><button class="primary" data-finish="1">' + esc(t('finish')) + '</button>' };
 }
 function draw() {
   document.getElementById('steps').innerHTML = PAGES.map((id, i) => '<a data-go="' + i + '" class="' + (i === page ? 'now' : i < page ? 'done' : '') + '" tabindex="0"><i>' + (i < page ? '✓' : i + 1) + '</i>' + esc(t('step.' + id)) + '</a>').join('');
   document.getElementById('progress').style.width = Math.round((page / (PAGES.length - 1)) * 100) + '%';
   const id = PAGES[page];
   document.getElementById('frame').className = id === 'team' ? 'wide' : 'narrow';
-  const v = page <= 3 ? machinePages() : id === 'providers' ? providersPage() : id === 'team' ? { out: '<h2>' + esc(t('step.team')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('teamIntro')) + '</div>', nav: navBtns(4, 6) }
-    : id === 'spending' ? { out: '<h2>' + esc(t('step.spending')) + '</h2><div class="muted">' + esc(t('spendingIntro')) + '</div>' + (sectionOf('spending') ? settingsForm(sectionOf('spending')) : ''), nav: navBtns(5, 7) }
-    : id === 'tools' ? toolsPage() : summaryPage();
+  const v = page <= 3 ? machinePages() : id === 'providers' ? providersPage() : id === 'team' ? { out: '<h2>' + esc(t('step.team')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('teamIntro')) + '</div>', nav: navBtns(5, 7) }
+    : id === 'spending' ? { out: '<h2>' + esc(t('step.spending')) + '</h2><div class="muted">' + esc(t('spendingIntro')) + '</div>' + (sectionOf('spending') ? settingsForm(sectionOf('spending')) : ''), nav: navBtns(6, 8) }
+    : id === 'toolchains' ? toolchainsPage() : id === 'tools' ? toolsPage() : summaryPage();
   // the first step asks the language first (nuclear.language); the tools' step leaves it out
   const language = sectionOf('language')?.items.find((i) => i.key === 'nuclear.language');
   if (page === 0 && language) v.out = '<h3 class="sec">' + esc(t('lang.title')) + '</h3>' + settingsForm({ items: [language] }) + v.out;
@@ -353,11 +379,14 @@ function goTo(n) {
   page = Math.max(0, Math.min(PAGES.length - 1, n));
   vscode.setState({ page });
   if (PAGES[page] === 'providers' && !prov) vscode.postMessage({ type: 'providers' });
-  if (PAGES[page] === 'summary') { summary = null; vscode.postMessage({ type: 'summary' }); if (!prov) vscode.postMessage({ type: 'providers' }); }
+  if (PAGES[page] === 'toolchains' && !tc) vscode.postMessage({ type: 'toolchains' });
+  if (PAGES[page] === 'summary') { summary = null; vscode.postMessage({ type: 'summary' }); if (!prov) vscode.postMessage({ type: 'providers' }); vscode.postMessage({ type: 'toolchains' }); }
   window.scrollTo(0, 0);
   draw();
 }
 document.addEventListener('click', (e) => {
+  const tcb = e.target.closest('[data-tc]');
+  if (tcb) { if (tcb.dataset.tc === 'tcLater') { later[tcb.dataset.tcId] = true; return draw(); } return vscode.postMessage({ type: tcb.dataset.tc, id: tcb.dataset.tcId }); }
   const d = e.target.closest('[data-go],[data-local],[data-profile],[data-install],[data-open],[data-remote],[data-run],[data-settings],[data-key],[data-recheck],[data-skip],[data-finish]'); if (!d || d.disabled || document.getElementById('squadHost').contains(d)) return;
   if (d.dataset.go) return goTo(Number(d.dataset.go));
   if (d.dataset.local) local = d.dataset.local === '1';
@@ -383,6 +412,7 @@ window.addEventListener('message', (e) => {
     if (first || page === 2) draw();
   } else if (m.type === 'sections') { sections = m.sections; if (page === 0 || PAGES[page] === 'spending' || PAGES[page] === 'tools' || PAGES[page] === 'providers') draw(); }
   else if (m.type === 'providers') { prov = m; if (PAGES[page] === 'providers' || PAGES[page] === 'summary') draw(); }
+  else if (m.type === 'toolchains') { tc = m; if (PAGES[page] === 'toolchains' || PAGES[page] === 'summary') draw(); }
   else if (m.type === 'summary') { summary = m; if (PAGES[page] === 'summary') draw(); }
   else if (m.type === 'steps') {
     run = run && m.from ? { ...run, failed: null } : { titles: m.titles, ids: m.ids ?? [], models: m.models ?? '', status: [], line: [], failed: null, done: false };

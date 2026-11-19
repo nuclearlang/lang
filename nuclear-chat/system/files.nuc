@@ -33,6 +33,16 @@ ChatFiles()
     part.writeText(text, encoding = "utf-8")
     os.replace(part, file)
 
+  // Moves a file to `to` (its folder made), never over one there; false when there was no file.
+  move(file: string, to: string) boolean
+    if not Path(file).isFile()
+      return false
+    if Path(to).exists()
+      throw FileExistsError(to)
+    Path(to).parent.mkdir(parents = true, existOk = true)
+    os.replace(file, to)
+    true
+
   // Whether a folder exists (a project's root).
   isFolder(path: string) boolean
     Path(path).isDir()

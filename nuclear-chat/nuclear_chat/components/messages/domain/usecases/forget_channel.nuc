@@ -1,0 +1,5 @@
+// A conversation deleted: its history moved to `.nuclear/chat/deleted/<channel>-<time>.jsonl`. The file's new path,
+// empty when it had no history.
+usecase ForgetChannel(store: MessageStore)
+  exec(ws: Workspace, channel: string) Result<Error, string>
+    Ok(store.forget(ws, channel))

@@ -1,0 +1,4 @@
+// What MessagesRepository.deleteMessage answers, for the screens of messages.
+usecase DeleteMessage(repository: MessagesRepository)
+  exec(workspace: string, id: string) Result<NuclearChatError, Message>
+    ~repository.deleteMessage(workspace, id)

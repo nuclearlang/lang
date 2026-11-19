@@ -81,7 +81,8 @@ Every provider of a role is called the same way (`adapter.nuc`):
   first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·
   opus 5.5 (claude-opus-5-5)*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*) and every
   group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a
-  key*, *Local — this machine, free*).
+  key*, *Local — this machine, free*). The general agent's chat is the exception: its local choice offers only the machine's chat
+  model (`CHAT_MODEL`, [chat.md](chat.md)).
 - **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and
   `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows
   `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per

@@ -23,8 +23,8 @@ The service's components (`nuclear_chat/components/`):
 | Component | What it holds |
 |---|---|
 | `workspaces` | a project registered by its host: members, teams (their tech lead), channels (`channels.json`) |
-| `channels` | the list with unread counts, a new channel, a channel read |
-| `messages` | the history (`<channel>.jsonl`, edits and reactions folded), threads, what the user says, what a host posts, buttons, the search |
+| `channels` | the list with unread counts, a new channel, a channel read, renamed, closed, archived or deleted (its history moved to `deleted/`) |
+| `messages` | the history (`<channel>.jsonl`, edits and reactions folded), threads, what the user says, what a host posts, edits, a message deleted, buttons, the search (`from:@member`, `in:#channel`) |
 | `members` | who answers (`Routing`: a DM's member, `@member`, `@role`, the team's tech lead) and the responders' runs (`Responders`) |
 | `gifs` | the pack, the picker's search, a member's GIF by personality, Tenor and Giphy (HTTP repositories), the one question |
 | `events` | the one place events pass through (`EventLog`, `chat.event` and `chat.<workspace>`, pushed to subscribed sockets) and the cursor read |
@@ -90,10 +90,10 @@ This project is written in NuclearLang (`.nuc`): `nuclear_chat/` with the dialec
 - **Nothing written is rewritten**: a channel's file is appended; an edit or a reaction is a line that names its
   message; a line cut by a crash is skipped. Only `channels.json` and `gifs.json` are replaced whole (atomically).
 - **Events pass through one place**: `EventsAppComponent.emit` (the `EventLog` and the topic `chat.event`).
-- **Local and private**: `127.0.0.1` only; a GIF service's key lives only in the keyring and never reaches a file,
-  an answer or an event; a search leaves the machine only after the project said yes once.
+- **Local and private**: `127.0.0.1` only; a GIF service's key lives only in the keyring (a `0600` file of the chat's data
+  folder without one) and never reaches a file of the project, an answer or an event; a search leaves the machine only after the project said yes once.
 - **The service is never served without its guards** (`config/project_config.nuc`): a route starts a member's
-  command. Its token lives only in the keyring ([security.md](docs/05-standards/security.md)).
+  command. Its token lives in the keyring, or a `0600` file without one ([security.md](docs/05-standards/security.md)).
 - A change to a route, a model of the API or an event updates [api.md](docs/02-architecture/api.md); to the
   responders' protocol, [responders.md](docs/02-architecture/responders.md).
 

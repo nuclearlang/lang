@@ -51,6 +51,9 @@ testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) 
   // the screens say why in their language: its kind and arguments beside the English
   expect((byId["google"] as <string, any>)["whyKey"] == "noKey" and (byId["google"] as <string, any>)["whyArgs"] == ["google"])
   // the general agent's choices: each with the command that answers as it
+  // the local one offers only the machine's chat model
+  local = chatChoices(found)[0]
+  expect(local["id"] == "nuclear-developer" and local["models"] == [local["defaultModel"]] and "${local["defaultModel"]}".length > 0)
   choice = chatChoices(found)[1]
   expect(choice["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "agent", "--provider", "claude-code"])
 

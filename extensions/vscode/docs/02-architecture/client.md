@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [overview.md, debugging.md, ../../../docs/02-architecture/language-server.md]
 ---
 # The client and Synapsis projects (`src/extension.ts`, `src/card.ts`)
@@ -19,6 +19,10 @@ related: [overview.md, debugging.md, ../../../docs/02-architecture/language-serv
 `card.ts` reads the card (`readCard(root)`, `projectCard(file)`, `appDir`, `isInstalled`): the platform, the
 dialect, the output folder and the toolchain of a project, so the client never assumes a path, a port or a command
 of a dialect.
+
+The toolchains' settings (`nuclear.toolchains.*`) are in the environment of every process the extension starts and
+every terminal: `NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`/`FLUTTER`, which `nuclear` reads before its own and
+the PATH ([ai-services.md](ai-services.md#the-toolchains-toolchainsts-toolchainhostts)).
 
 Settings: `nuclear.dialect` (`flutter` by default; `base` checks only the base language), `nuclear.dialectPaths`,
 `nuclear.server.path`, `nuclear.trace.server`.

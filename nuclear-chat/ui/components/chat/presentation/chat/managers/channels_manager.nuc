@@ -1,5 +1,6 @@
 // The sidebar's channels with their unread counts: read again when the service says a message or a channel came;
-// the open channel is marked read as its messages arrive; the agent a direct message is answered by, chosen.
+// the open channel is marked read as its messages arrive; the agent a direct message is answered by, chosen; a
+// channel made, renamed, closed, archived or deleted.
 @stateModel(ChannelsState)
 statemanager ChannelsManager
   (channels: ChannelsComponent, events: EventsComponent)
@@ -29,6 +30,18 @@ statemanager ChannelsManager
   chooseAgent(channel: string, agent: string, model: string)
     ~channels.chooseAgent(workspace, channel, AgentChoice(agent = agent, model = model))
     load()
+
+  // A channel the user makes, with the members they chose.
+  create(input: NewChannel) Result<NuclearChatError, Channel>
+    ~channels.createChannel(workspace, input)
+
+  // A conversation renamed, its topic changed, closed, archived or opened again.
+  change(channel: string, changes: ChannelChanges) Result<NuclearChatError, Channel>
+    ~channels.changeChannel(workspace, channel, changes)
+
+  // A conversation deleted: its history moved to `.nuclear/chat/deleted/`.
+  deleteChannel(channel: string) Result<NuclearChatError, Channel>
+    ~channels.deleteChannel(workspace, channel)
 
   @state(ChannelsState.ready)
   load() Result<NuclearChatError, Channel[]>

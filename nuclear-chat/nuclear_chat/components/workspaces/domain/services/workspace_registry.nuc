@@ -43,14 +43,14 @@ service WorkspaceRegistry(files: ChatFiles)
       for c in decoded as <string, any>[]
         id = "${c["id"] ?? ""}"
         if Regex(r"^[a-z0-9][a-z0-9_.-]{0,79}$").test(id)
-          found.add(Channel(id = id, name = "${c["name"] ?? id}", topic = "${c["topic"] ?? ""}", kind = c["kind"] == "dm" ? "dm" : "channel", members = (c["members"] ?? []) as string[], team = "${c["team"] ?? ""}", lastRead = (c["lastRead"] ?? 0) as int, agent = "${c["agent"] ?? ""}", model = "${c["model"] ?? ""}"))
+          found.add(Channel(id = id, name = "${c["name"] ?? id}", topic = "${c["topic"] ?? ""}", kind = c["kind"] == "dm" ? "dm" : "channel", members = (c["members"] ?? []) as string[], team = "${c["team"] ?? ""}", lastRead = (c["lastRead"] ?? 0) as int, agent = "${c["agent"] ?? ""}", model = "${c["model"] ?? ""}", state = c["state"] == "closed" or c["state"] == "archived" ? "${c["state"]}" : "open"))
     catch e
       return []
     found
 
 // A channel as `channels.json` keeps it (spec 013, design.md "On disk").
 channelMap(c: Channel) <string, any>
-  { "id": c.id, "name": c.name, "topic": c.topic, "kind": c.kind, "members": c.members, "team": c.team, "lastRead": c.lastRead, "agent": c.agent, "model": c.model }
+  { "id": c.id, "name": c.name, "topic": c.topic, "kind": c.kind, "members": c.members, "team": c.team, "lastRead": c.lastRead, "agent": c.agent, "model": c.model, "state": c.state }
 
 // The channels a host opens: `#general`, its own, a direct message with every member.
 hostChannels(input: NewWorkspace) Channel[]
@@ -61,7 +61,8 @@ hostChannels(input: NewWorkspace) Channel[]
     found.add(Channel(id = "dm-${m.id.lower()}", name = m.name, kind = "dm", members = ["you", m.id]))
   found
 
-// The host's channels, each with what the project kept of it (its last read), then the user's own.
+// The host's channels, each with what the project kept of it (its last read, its agent, its state, and the name
+// and topic the user gave a channel), then the user's own.
 mergedChannels(kept: Channel[], wanted: Channel[]) Channel[]
   found: Channel[] = []
   for w in wanted
@@ -72,6 +73,10 @@ mergedChannels(kept: Channel[], wanted: Channel[]) Channel[]
       w.lastRead = before!.lastRead
       w.agent = before!.agent
       w.model = before!.model
+      w.state = before!.state
+      if w.kind == "channel"
+        w.name = before!.name
+        w.topic = before!.topic
     found.add(w)
   for k in kept
     if k.kind == "channel" and not found.any((f) => f.id == k.id)

@@ -1,4 +1,4 @@
-// The user opened a channel: everything in it until now is read.
+// The user opened a channel: everything in it until now is read, and a conversation they had closed is open again.
 usecase ReadChannel(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
   exec(workspace: string, channel: string) Result<Error, Channel>
     // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
@@ -11,6 +11,8 @@ usecase ReadChannel(workspaces: WorkspacesAppComponent, events: EventsAppCompone
       return Err(NotFound("no channel ${channel} in this workspace"))
     shown!.lastRead = DateTime.now().millis
     shown!.unread = 0
+    if shown!.state == "closed"
+      shown!.state = "open"
     workspaces.keepChannels(ws)
     ~events.emit(ws.id, "channels", channel, { "read": channel })
     Ok(shown!)

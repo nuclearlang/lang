@@ -13,7 +13,8 @@ The platform's rules are the root [`AGENTS.md`](../../AGENTS.md); the agents' in
 - **Source:** Nuclear, a Synapsis backend (platform `backend`, dialect `fastapi`; `config.nuc`). `build/` is the
   generated FastAPI + LangGraph application.
 - **Models:** two, on Ollama: `qwen2.5-coder:3b` (the coder) and `gemma4:e2b` (the default); `CODER_MODEL`,
-  `ASSISTANT_MODEL`, `OLLAMA_URL`, `CONTEXT_TOKENS`.
+  `ASSISTANT_MODEL`, `OLLAMA_URL`, `CONTEXT_TOKENS`. The chat answers with one small model of its own
+  (`CHAT_MODEL`, `qwen3.5:2b`; `CHAT_CONTEXT_TOKENS` 4096, `CHAT_KEEP_ALIVE` 3m, no thinking, 1024 tokens at most).
 - **Knowledge:** the [Smart Graph](../../nuclear-graph-storage/AGENTS.md) on `127.0.0.1:7878`, through its client
   package (`nuclear_graph`, typed by `defs/`). The prompts are the skills of the roles
   ([`../roles/`](../roles/README.md), `skills/step-<step>.md`), served by the graph.

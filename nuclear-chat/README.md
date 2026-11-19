@@ -36,12 +36,12 @@ that both Nuclear Builder and Nuclear Atlas use.
 
 ```sh
 cd nuclear-chat/system && nuclear build .
-cd ../nuclear_chat && nuclear build . && nuclear install && nuclear test     # 11 passed
-nuclear-builder setup                  # its last step starts the service at login (port 7880, token in the keyring)
+cd ../nuclear_chat && nuclear build . && nuclear install && nuclear test     # 18 passed
+nuclear-builder setup                  # its last step starts the service at login (port 7880, token in the keyring or, without one, a 0600 file)
 nuclear-chat connect --json            # {"url": "http://127.0.0.1:7880", "header": "X-Chat-Token", "token": "…"}
 curl -s 127.0.0.1:7880/gifs/pack       # 401: every route needs the token (and no Origin: 403)
 nuclear-chat pack                                                            # the pack's folder
-cd ../ui && nuclear build && nuclear install && nuclear test                 # the page: 9 passed
+cd ../ui && nuclear build && nuclear install && nuclear test                 # the page: 18 passed
 cd build/app && npm run build:embed                                          # dist-embed/embed.js, mounted by a host
 ```
 

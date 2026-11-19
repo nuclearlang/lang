@@ -54,6 +54,9 @@ testTheChatsFilesAppendReadAndReplaceWhole(tmpPath: Path) void
   files.writeText("${tmpPath}/a/channels.json", "[]")
   expect(files.readText("${tmpPath}/a/channels.json") == "[]" and not Path("${tmpPath}/a/channels.json.part").exists())
   expect(files.isFolder("${tmpPath}/a") and not files.isFolder("${tmpPath}/none"))
+  expect(files.move(file, "${tmpPath}/a/.nuclear/chat/deleted/general-1.jsonl"))
+  expect(files.readText(file) == null and files.readLines("${tmpPath}/a/.nuclear/chat/deleted/general-1.jsonl").length == 2)
+  expect(not files.move(file, "${tmpPath}/a/x.jsonl"))
 
 testAResponderRunsItsLinesComeAndALineIsWrittenToIt(tmpPath: Path, monkeypatch: any) void
   bin = script(tmpPath, "stub-responder", STUB)
@@ -141,6 +144,31 @@ testTheServicesTokenIsMadeOnceKeptInTheKeyringAndAClosedKeyringIsRefused(tmpPath
   catch e
     said = "${e}"
   expect("closed" in said and not keys.joinpath("token").exists())
+
+// No keyring on the machine (a server, a container): the token and a GIF key in 0600 files of the chat's data folder,
+// read back; a keyring installed later does not take the file's token for a closed keyring's.
+testWithoutAKeyringTheSecretsAreKeptInFilesOnlyTheOwnerReads(tmpPath: Path, monkeypatch: any) void
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  monkeypatch.setenv("PATH", "${bin}")
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  monkeypatch.setenv("XDG_DATA_HOME", "${tmpPath.joinpath("data")}")
+  monkeypatch.setattr(sys, "platform", "linux")
+  keyring = Keyring()
+  expect(not keyring.available())
+  first = serviceToken(keyring, 0)
+  file = tmpPath.joinpath("data", "nuclear-chat", ".token")
+  expect(serviceToken(keyring, 0) == first and file.readText() == first and not noteFile().exists())
+  expect(file.stat().stMode % 512 == 384 and file.parent.stat().stMode % 512 == 448)
+  expect(not keyring.keep("tenor", "tk-secret\n") and keyring.key("tenor") == "tk-secret")
+  keyring.remove("tenor")
+  expect(keyring.key("tenor") == null)
+  // a keyring installed later answers nothing for the token: the file's, never a second one
+  keys = tmpPath.joinpath("keys")
+  keys.mkdir()
+  monkeypatch.setenv("KEYS_DIR", "${keys}")
+  script(tmpPath, "secret-tool", FAKE_SECRET_TOOL)
+  expect(keyring.available() and serviceToken(keyring, 0) == first)
 
 testTheServiceIsFoundOnTheMachinesPort(tmpPath: Path, monkeypatch: any) void
   monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath}")

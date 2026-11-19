@@ -1,6 +1,6 @@
 // The thread beside the channel: the message that opened it, its replies, who is typing in it, its questions and a
 // composer that replies in it (with the GIF picker when it was opened from here).
-stateless ThreadPanel(ws: Workspace, channels: Channel[], texts: Texts, picker: Element?, onClose: () => void, onGif: (q: string) => void, onChannel: (id: string) => void)
+stateless ThreadPanel(ws: Workspace, channels: Channel[], texts: Texts, picker: Element?, onClose: () => void, onGif: (q: string) => void, onChannel: (id: string) => void, focus: string = "")
   build() Element
     ThreadStateBuilder(
       ready = (t: Thread) =>
@@ -21,9 +21,9 @@ stateless ThreadPanel(ws: Workspace, channels: Channel[], texts: Texts, picker: 
               children = div(
                 className = "rows",
                 children = [
-                  MessageRow(key = t.root.id, message = t.root, ws = ws, texts = texts, first = true, inThread = true, onThread = (m) => {}, onChannel = onChannel),
+                  MessageRow(key = t.root.id, message = t.root, ws = ws, texts = texts, first = true, inThread = true, onThread = (m) => {}, onChannel = onChannel, focused = t.root.id == focus),
                   div(className = "thread-count", children = span(children = t.replies.isEmpty ? texts.get("threadEmpty") : (t.replies.length == 1 ? texts.get("replies.one") : texts.format("replies.many", { "count": "${t.replies.length}" })))),
-                  MessageList(messages = t.replies, ws = ws, texts = texts, inThread = true, onThread = (m) => {}, onChannel = onChannel, after = t.root.at),
+                  MessageList(messages = t.replies, ws = ws, texts = texts, inThread = true, onThread = (m) => {}, onChannel = onChannel, after = t.root.at, focus = focus),
                   Streaming(ws = ws, channel = t.channel, thread = t.root.id, texts = texts),
                 ],
               ),

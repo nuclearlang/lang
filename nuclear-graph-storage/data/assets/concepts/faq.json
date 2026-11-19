@@ -117,10 +117,10 @@
    "id": "faq:local-models",
    "type": "faq",
    "title": "Which models do the local agents use, and can I change them?",
-   "summary": "On Ollama, by the profile the set-up installed. `hard`: `qwen2.5-coder:3b` writes code and `gemma4:e2b` plans, reviews and answers; `medium`: `qwen2.5-coder:3b`; `lite`: `qwen2.5-coder:1.5b`. `embeddinggemma` makes the graph's vectors in all three. None is larger than 3B parameters of effective size, and no GPU is needed.",
+   "summary": "On Ollama, by the profile the set-up installed. `hard`: `qwen2.5-coder:3b` writes code and `gemma4:e2b` plans and reviews; `medium`: `qwen2.5-coder:3b`; `lite`: `qwen2.5-coder:1.5b`. The chat answers with one small model of its own, `qwen3.5:2b` (`lite`: its one model), loaded only while you chat. `embeddinggemma` makes the graph's vectors in all three. None is over 3B parameters of effective size; no GPU is needed.",
    "body": [
     "- Which set a machine gets: `nuclear-builder setup` suggests one for its memory and disk (`concept:ai-setup` has what each downloads and how far it works); `nuclear-builder setup --status` says which one is installed.",
-    "- Another profile: run the set-up again. One model by hand: `CODER_MODEL`, `ASSISTANT_MODEL` and `NUCLEAR_GRAPH_EMBED` in `~/.config/nuclearlang/ai.env`, then restart the services.",
+    "- Another profile: run the set-up again. One model by hand: `CODER_MODEL`, `ASSISTANT_MODEL`, `CHAT_MODEL` and `NUCLEAR_GRAPH_EMBED` in `~/.config/nuclearlang/ai.env`, then restart the services.",
     "- In VS Code: the *Settings and integrations* page (`Ctrl+Alt+S`) lists the Ollama models under the 3B rule, pulls one and restarts the services with it.",
     "- A model over 3B parameters is not accepted: the agents are built for small models (fixed steps, the graph as memory, the compiler as judge).",
     "- Without a GPU an answer takes from seconds to a few minutes; Ollama uses a GPU when the machine has one."

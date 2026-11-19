@@ -1,0 +1,6 @@
+// A search's words and filters: the author (`from:`, a member's id or `you`) and the channel (`in:`); `-` when the
+// filter named nobody.
+SearchQuery
+  words: string[] = []
+  author: string = ""
+  inChannel: string = ""

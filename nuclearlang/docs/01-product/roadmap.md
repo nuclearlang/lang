@@ -31,6 +31,10 @@ The pending work of the language, the compiler and the language server. A done i
 ## Pending
 
 - **`nuclear check` lets wrong types through** (found writing the skills library, 2026-11-18): an undeclared type of a field, and `x: int = "s"`, report no diagnostic.
+- **A spread of a conditional is invalid Python** (found by Nuclear Builder's chat choices, 2026-11-18):
+  `{ ...a, ...(c ? x : y) }` is written `{**a, **x if c else y}`, a syntax error the build does not report. Wanted:
+  the operand of `**` (and `*`) parenthesized when it is not atomic. Worked around in
+  `extensions/tools/nuclear-builder/chat_agents.nuc` (`chatChoices`).
 - **A method's argument loses its parentheses** (found by Nuclear Builder's MCP tools, 2026-11-18): `"x".repeat(a + b)`
   is written `"x" * a + b` in Python, a wrong value with no diagnostic. Wanted: the operand of an emitted operator
   parenthesized when it is not atomic. Worked around in `extensions/tools/nuclear-builder/tests/test_tools.nuc`.

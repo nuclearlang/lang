@@ -1,0 +1,11 @@
+// What the user changes of a conversation: a channel's name (its id stays: its history is kept by the id) and topic,
+// and its state: open, closed (out of the sidebar until it is opened again or a message comes) or archived (kept,
+// read only, out of the sidebar).
+ChannelChanges
+  @minLength(1)
+  @maxLength(80)
+  name?: string
+  @maxLength(500)
+  topic?: string
+  @pattern(r"^(open|closed|archived)$")
+  state?: string

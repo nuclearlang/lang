@@ -87,6 +87,6 @@ export function followChatNotices(): void {
     const name = chat().nameOf(root, c.member);
     const title = c.what === 'asks' ? l10n.t('{0} asks you', name) : c.what === 'mentioned' ? l10n.t('{0} mentioned you', name) : l10n.t('{0} answered you', name);
     const text = c.text.replace(/\s+/g, ' ').slice(0, 140);
-    notices.add({ tool: 'atlas', kind: 'mention', title, text, level: c.what === 'asks' ? 'warning' : 'info', root, channel: c.channel, place: `chat:${root}:${c.channel}`, key: chatKey(root, c) });
+    notices.add({ tool: 'atlas', kind: 'mention', title, text, level: c.what === 'asks' ? 'warning' : 'info', root, channel: c.channel, message: c.message, thread: c.thread, place: `chat:${root}:${c.channel}`, key: chatKey(root, c) });
   });
 }

@@ -72,7 +72,7 @@ the ones about the target languages and the dialects underneath (`agents: false`
 | Tester | `qwen2.5-coder:3b` | `POST /developer/test` | writes the Nuclear tests (`tests` kind) of a piece of code | delete a failing test |
 | Security | `gemma4:e2b` | `POST /developer/security` | reviews code against the platform's security rules + the compiler | change the code |
 | Documenter | `gemma4:e2b` | `POST /developer/document` | reads a run's journal and writes what was done: what it built, how it checked it, what is left (only facts of the journal) | change the code |
-| Assistant | `gemma4:e2b` | `POST /developer/chat` | answers a message of the editor's chat about the project, from the project's map, the session's last messages and the graph; a question with one right answer (which, how many, what are) gets the rows of the graph's exact facts, which end the answer as they are (`ADR-graph-0002`) | change a file (an order is a Builder run) |
+| Assistant | `qwen3.5:2b` (the chat's own model) | `POST /developer/chat` | answers a message of the editor's chat about the project, from the project's map, the session's last messages and the graph; a question with one right answer (which, how many, what are) gets the rows of the graph's exact facts, which end the answer as they are (`ADR-graph-0002`) | change a file (an order is a Builder run) |
 | Diagnoser | `gemma4:e2b` | `POST /developer/diagnose` | when a pipeline stage fails: the kind of failure by fixed rules (transient, environment, code, test, spec), the evidence from the tools (`nuclear check`, `nuclear doctor`) and the next step in plain words | change anything |
 | Acceptor | `gemma4:e2b` | `POST /developer/accept` | after a run's verification passes: holds each acceptance criterion against what the run left (its files, its tests, the commands that passed) and says which are shown met, with the evidence | fail a run (its verdict is for the reviewer) |
 | Planner | `gemma4:e2b` | `POST /developer/plan` | splits a spec into pieces of one file, in order; each path comes from the platform's layout (`nuclear help layout`), each kind and forgotten piece from the spec's own words | choose a folder, or plan what the spec does not name |
@@ -117,8 +117,8 @@ procedure to follow when a task is beyond them (`playbook:escalate`).
   component after the first model of a plain spec (`newbooks`).
 - A value that comes from a library method has no known type: declare it (`card: string = ~knowledge.card(...)`)
   before using a member of the standard library on it.
-- The connections set no limit on the length of an answer (`config/project_config.nuc` gives the context window
-  only): a model that enters an answer without end holds the Developer and every call after it until the process
+- The coder's and the assistant's connections set no limit on the length of an answer (the chat's does: 1024
+  tokens): a model that enters an answer without end holds the Developer and every call after it until the process
   is killed. Seen with `qwen2.5-coder:3b` as assistant, `llama3.2:1b` and `phi3:3.8b`; the evaluation has no watch
   on a call that stalls.
 - On features of several files written by the local agents alone, a piece renames a method the spec writes, or two

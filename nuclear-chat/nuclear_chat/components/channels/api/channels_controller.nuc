@@ -18,3 +18,11 @@ controller ChannelsController(channels: ChannelsAppComponent)
   @put("{workspace}/{channel}/agent")
   chooseAgent(workspace: string, channel: string, input: AgentChoice) Result<Error, Channel>
     ~channels.chooseAgent(workspace, channel, input)
+
+  @patch("{workspace}/{channel}")
+  changeChannel(workspace: string, channel: string, changes: ChannelChanges) Result<Error, Channel>
+    ~channels.changeChannel(workspace, channel, changes)
+
+  @delete("{workspace}/{channel}")
+  deleteChannel(workspace: string, channel: string) Result<Error, Channel>
+    ~channels.deleteChannel(workspace, channel)

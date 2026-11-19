@@ -22,6 +22,7 @@ import { applySetting, FORM_CSS, FORM_JS, settingSections } from './settingsForm
 import { CommandMissing, listTeams } from '../../tools/nuclear-builder/src/teams/cli';
 import { chatGifKey } from './chatView';
 import { TeamsPanel } from '../../tools/nuclear-builder/src/teams/panel';
+import { handleToolchain, TC_CSS, TC_JS, TC_TEXTS, toolchainState } from './toolchainHost';
 
 type Message =
   | { type: 'ready' }
@@ -93,7 +94,7 @@ export class SettingsPanel {
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('nuclear') && void this.state()));
   }
 
-  /** The page, on a section (`language`, `ai`, `builder`, `spending`, `chat`, `atlas`, `http`, `devices`). */
+  /** The page, on a section (`language`, `toolchains`, `ai`, `builder`, `spending`, `chat`, `atlas`, `http`, `devices`). */
   static show(context: vscode.ExtensionContext, section?: string): void {
     const p = SettingsPanel.current ?? (SettingsPanel.current = new SettingsPanel(context));
     p.panel.reveal(vscode.ViewColumn.Active);
@@ -195,10 +196,12 @@ export class SettingsPanel {
       integrations,
       sections: settingSections(this.context),
       teams,
+      toolchains: await toolchainState(),
     });
   }
 
   private async receive(m: Message): Promise<void> {
+    if (await handleToolchain(m as { type: string }, () => void this.state())) return;
     switch (m.type) {
       case 'ready':
         return this.state();
@@ -364,14 +367,16 @@ export function html(webview: vscode.Webview): string {
   .hero { display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background, #8881); margin: 10px 0 6px; }
   .hero .grow { flex: 1; } .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   ${FORM_CSS}
+  ${TC_CSS}
 </style></head><body>
 <div class="page"><nav id="nav"></nav><div><div id="head"></div><div id="root">…</div></div></div>
 <script nonce="${nonce}">
-${pageI18n(SETTINGS)}
+${pageI18n(SETTINGS, TC_TEXTS)}
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const gb = (n) => (n / 1e9).toFixed(1) + ' GB';
 ${FORM_JS}
-const SECTIONS = ['language', 'ai', 'builder', 'spending', 'chat', 'atlas', 'http', 'devices'];
+${TC_JS}
+const SECTIONS = ['language', 'toolchains', 'ai', 'builder', 'spending', 'chat', 'atlas', 'http', 'devices'];
 // the section shown survives a re-render (a change of language)
 let S = null, section = vscode.getState()?.section ?? 'ai';
 function field(key, label, value, help, type) {
@@ -454,10 +459,14 @@ function drawSpending() {
 function drawChat() {
   return '<div class="hero"><div style="font-size:28px">💬</div><div class="grow"><b>' + esc(t('chatTitle')) + '</b><div class="muted">' + esc(t('chatHint')) + '</div></div><button data-act="gifKey">' + esc(t('gifKey')) + '</button></div>' + settingsForm(sectionOf('chat'));
 }
+function drawToolchains() {
+  return '<div class="hero"><div style="font-size:28px">🧰</div><div class="grow"><b>' + esc(t('tc.title')) + '</b><div class="muted">' + esc(t('tc.intro')) + '</div></div><button data-tc="tcCheck">↻ ' + esc(t('tc.check')) + '</button></div>'
+    + toolchainCards(S.toolchains, false) + settingsForm(sectionOf('toolchains'));
+}
 function draw() {
   drawNav();
   const sec = sectionOf(section);
-  document.getElementById('root').innerHTML = section === 'ai' ? drawAi() : section === 'builder' ? drawBuilder() : section === 'spending' ? drawSpending() : section === 'chat' ? drawChat()
+  document.getElementById('root').innerHTML = section === 'ai' ? drawAi() : section === 'builder' ? drawBuilder() : section === 'spending' ? drawSpending() : section === 'chat' ? drawChat() : section === 'toolchains' ? drawToolchains()
     : '<h2>' + esc(sec?.title ?? section) + '</h2>' + (sec ? settingsForm(sec) : '');
 }
 document.addEventListener('change', (e) => {
@@ -466,8 +475,9 @@ document.addEventListener('change', (e) => {
   vscode.postMessage({ type: 'set', key: k, value: v });
 });
 document.addEventListener('click', (e) => {
-  const d = e.target.closest('[data-section],[data-start],[data-pull],[data-mcp],[data-allow],[data-deny],[data-revoke],[data-act],#openSettings'); if (!d) return;
+  const d = e.target.closest('[data-tc],[data-section],[data-start],[data-pull],[data-mcp],[data-allow],[data-deny],[data-revoke],[data-act],#openSettings'); if (!d) return;
   e.preventDefault();
+  if (d.dataset.tc) return vscode.postMessage({ type: d.dataset.tc, id: d.dataset.tcId });
   if (d.dataset.section) { section = d.dataset.section; vscode.setState({ section }); window.scrollTo(0, 0); return S && draw(); }
   if (d.id === 'openSettings') return vscode.postMessage({ type: 'openSettings' });
   if (d.dataset.start) { d.disabled = true; d.textContent = t('starting'); return vscode.postMessage({ type: 'start', service: d.dataset.start }); }

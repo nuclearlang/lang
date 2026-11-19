@@ -1,0 +1,111 @@
+// What the user does with the open conversation (the header's ⋯): rename a channel and change its topic, close it
+// (out of the sidebar until it is opened again or a message comes), archive a channel or open it again, delete it
+// (its history moved to `.nuclear/chat/deleted/`, after a confirmation). `#general` is never archived nor deleted;
+// a direct message keeps its member's name.
+stateful ConversationMenu(channel: Channel, title: string, texts: Texts, onLeave: () => void)
+  open: boolean = false
+  // rename, topic or delete: the step asked in the menu
+  mode: string = ""
+  value: string = ""
+  failed: string = ""
+
+  build() Element
+    div(
+      className = "conv-menu ${open ? "open" : ""}",
+      children = [
+        button(className = "head-button", title = texts.get("conversation"), onClick = () => toggle(), children = span(className = "icon icon-more")),
+        open ? div(className = "agent-scrim", onClick = () => toggle()) : null,
+        open ? div(className = "agent-menu conv-list", onKeyDown = (e) => key(e), children = body()) : null,
+      ],
+    )
+
+  body() Element[]
+    room = channel.kind != "dm"
+    general = channel.id == "general"
+    shown: Element[] = if mode == "rename" or mode == "topic"
+      [
+        div(className = "agent-head", children = texts.get(mode == "rename" ? "rename" : "editTopic")),
+        input(className = "agent-input conv-input", autoFocus = true, value = value, onChange = (e) => typed(e.target.value)),
+        div(className = "dialog-actions", children = [button(className = "action", onClick = () => step(""), children = texts.get("cancel")), button(className = "action primary", onClick = () => save(), children = texts.get("save"))]),
+      ]
+    else if mode == "delete"
+      [
+        p(className = "conv-confirm", children = texts.format("deleteConversation.confirm", { "name": title })),
+        div(className = "dialog-actions", children = [button(className = "action", autoFocus = true, onClick = () => step(""), children = texts.get("cancel")), button(className = "action danger", onClick = () => remove(), children = texts.get("delete"))]),
+      ]
+    else
+      [
+        room ? item("edit", "rename", () => step("rename")) : null,
+        room ? item("edit", "editTopic", () => step("topic")) : null,
+        channel.state != "archived" ? item("close", "closeConversation", () => change(ChannelChanges(name = null, topic = null, state = "closed"), true)) : null,
+        room and not general and channel.state != "archived" ? item("archive", "archive", () => change(ChannelChanges(name = null, topic = null, state = "archived"), false)) : null,
+        channel.state == "archived" ? item("archive", "unarchive", () => change(ChannelChanges(name = null, topic = null, state = "open"), false)) : null,
+        not general ? item("trash", "deleteConversation", () => step("delete")) : null,
+      ]
+    if failed != ""
+      shown.add(p(className = "failed", children = texts.format("failed", { "error": failed })))
+    shown
+
+  item(icon: string, label: string, run: () => void) Element
+    button(key = label, className = "agent-item ${label == "deleteConversation" ? "danger" : ""}", onClick = () => run(), children = [span(className = "icon icon-${icon}"), span(className = "agent-name", children = texts.get(label))])
+
+  toggle()
+    setState(() =>
+      open = not open
+      mode = ""
+      failed = ""
+    )
+
+  step(next: string)
+    setState(() =>
+      mode = next
+      value = next == "rename" ? channel.name : (next == "topic" ? channel.topic : "")
+      failed = ""
+    )
+
+  typed(text: string)
+    setState(() =>
+      value = text
+    )
+
+  key(e: KeyboardEvent)
+    if e.key == "Escape"
+      e.preventDefault()
+      toggle()
+    else if e.key == "Enter" and (mode == "rename" or mode == "topic")
+      e.preventDefault()
+      save()
+
+  save()
+    if mode == "rename"
+      change(ChannelChanges(name = value, topic = null, state = null), false)
+    else
+      change(ChannelChanges(name = null, topic = value, state = null), false)
+
+  // A change asked; `leave`: the conversation goes out of the sidebar, so the page opens another first.
+  change(changes: ChannelChanges, leave: boolean)
+    if leave
+      onLeave()
+    done: Result<NuclearChatError, Channel> = ~ChannelsManager.change(channel.id, changes)
+    match done
+      Ok(c) -> closed()
+      Err(e) -> refused(e.message)
+
+  remove()
+    onLeave()
+    done: Result<NuclearChatError, Channel> = ~ChannelsManager.deleteChannel(channel.id)
+    match done
+      Ok(c) -> closed()
+      Err(e) -> refused(e.message)
+
+  closed()
+    setState(() =>
+      open = false
+      mode = ""
+      failed = ""
+    )
+
+  refused(why: string)
+    setState(() =>
+      failed = why
+    )

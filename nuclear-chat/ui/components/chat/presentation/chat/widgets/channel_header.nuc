@@ -1,8 +1,8 @@
 // The top of the open channel: its name (a member's for a direct message, the team's for a team's channel), its topic,
 // its tech lead and how many are in it; a direct message with a member who has agents to choose, who answers it
 // (AgentPicker), else the brain that answers as the member under their name (BrainLine); on a narrow page, the button
-// that shows the channels.
-stateless ChannelHeader(ws: Workspace, channel: Channel?, open: string, texts: Texts, onSidebar: () => void)
+// that shows the channels; the search, the members and what the user does with the conversation (⋯).
+stateless ChannelHeader(ws: Workspace, channel: Channel?, open: string, texts: Texts, onSidebar: () => void, onSearch: () => void, onPeople: () => void, onLeave: () => void)
   build() Element
     lead = channel != null ? leadOf(ws, channel!) : null
     member = channel != null and channel!.kind == "dm" ? dmMember(ws, channel!) : null
@@ -24,7 +24,10 @@ stateless ChannelHeader(ws: Workspace, channel: Channel?, open: string, texts: T
         lead != null ? span(className = "chip lead", title = texts.format("leadOf", { "name": lead!.name }), children = [Avatar(member = lead, author = lead!.id, size = "tiny"), span(children = "${texts.get("lead")}: ${lead!.name}")]) : null,
         channel != null and channel!.topic != "" ? span(className = "topic", children = channel!.topic) : null,
         picks ? AgentPicker(ws = ws, channel = channel!, member = member!, texts = texts) : null,
-        channel != null and channel!.kind != "dm" and channel!.members.length > 0 ? span(className = "count", children = texts.format("members", { "count": "${channel!.members.length}" })) : null,
+        channel != null and channel!.state == "archived" ? span(className = "chip", children = texts.get("state.archived")) : null,
+        channel != null and channel!.kind != "dm" and channel!.members.length > 0 ? button(className = "count", title = texts.get("people"), onClick = () => onPeople(), children = texts.format("members", { "count": "${channel!.members.length}" })) : null,
+        button(className = "search-open", title = texts.get("search.placeholder"), onClick = () => onSearch(), children = [span(className = "icon icon-search"), span(className = "search-label", children = texts.get("search"))]),
+        channel != null ? ConversationMenu(key = channel!.id, channel = channel!, title = title, texts = texts, onLeave = onLeave) : null,
       ],
     )
 

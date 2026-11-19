@@ -60,6 +60,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `root: string` — the project's folder ("" when the caller gave none)
     - `map: string` — the chat: the project's map and the last messages of the session
     - `history: string`
+    - `query: string` — the chat: the developer's own words when the message is a whole prompt of its own ("" otherwise)
     - `facts: string` — the chat: the exact facts the graph's planner gave for the message (the rows of its database)
     - `failure: string` — the diagnoser: the kind of a failure (transient, environment, code, test, spec, unknown)
     - `guide: string`
@@ -89,7 +90,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
   - tools `Workbench(knowledge: GraphClient, toolchain: Toolchain)` — What every local agent shares: the Nuclear Smart Graph, the NuclearLang tools and the models. No method has a doc comment, so none is offered to a model as a tool: the graphs call them in a fixed order, because a small model follows steps better than it chooses tools.  The prompts are the skills of the roles (`nuclear-agents/roles/<role>/skills/step-<name>.md`, ADR-developer-0002), served by the graph and read with `prompt(name, values)`: nothing a model reads is written inside this code.
     - `recall(query: string, platform: string, useCase: string, kind: string) Recall` — What the graph holds for a piece of work: the guide of the use case and, for a piece of one kind, the kind's own card, every mistake small models repeat with that kind, the rules closest to the task and validated examples of that kind (solved tasks, and a file of an example project; two files when no task of that kind was solved).
     - `lookup(question: string, platform: string) string` — What the graph answers to a question in plain words: the closest cards of every shelf a local agent reads, each with a line for the rows it links to.
-    - `answer(question: string, platform: string, history: string) <string, string>` — What the graph gives for a question of the chat before the model reads it (the graph's query planner; no model is asked): `facts`, the exact answer of every question with one right answer the question is (the rows of the graph's database, whole); `knowledge`, the cards the shelves answer by meaning; `needs`, the exact questions it is close to that lack a name. `history`: the conversation so far, read for the names a follow-up leaves out. A graph that cannot plan (an older one) gives only the cards.
+    - `answer(question: string, platform: string, history: string, k: int) <string, string>` — What the graph gives for a question of the chat before the model reads it (the graph's query planner; no model is asked): `facts`, the exact answer of every question with one right answer the question is (the rows of the graph's database, whole); `knowledge`, the cards the shelves answer by meaning; `needs`, the exact questions it is close to that lack a name. `history`: the conversation so far, read for the names a follow-up leaves out. A graph that cannot plan (an older one) gives only the cards. `k`: how many cards.
     - `read(text: string) string` — The cards a text of the graph holds, by name: `[shelf/type] Title` is the first line of each. What an agent's step says it read, so a run's trace names its sources.
     - `explain(text: string) string` — The cards of the diagnostics a text names (`N0114`...), at most three: what each error means and how it is fixed.
     - `failures(text: string, platform: string) string` — The failures of the tools and the services closest to a text (the end of a log).
@@ -171,11 +172,12 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `map: string` — the project's map (.nuclear/map.md): every declaration with its kind, description and members
     - `history: string` — the last messages of the session, oldest first, as `you: ...` / `agent: ...` lines
     - `root: string` — the project's folder: with it the assistant reads the files that declare the names the question writes
+    - `query: string` — the developer's own words when `message` is a whole prompt of its own (Nuclear Builder's chat member: who it is, its tools, the conversation): the graph and the files are searched with them, and the assistant's guide is left out (the prompt brings its own)
 
 ## `config/`
 
 - `config/project_config.nuc`
-  - appConfig `ProjectConfig` — The models of the local agents, both on Ollama: a small coder model writes the code, a small general model plans and reviews. Neither may be larger than 3B parameters of effective size (the user's rule). Their context window is CONTEXT_TOKENS (8192 by default; the editor passes its nuclear.ai.contextTokens).
+  - appConfig `ProjectConfig` — The models of the local agents, both on Ollama: a small coder model writes the code, a small general model plans and reviews. Neither may be larger than 3B parameters of effective size (the user's rule). Their context window is CONTEXT_TOKENS (8192 by default; the editor passes its nuclear.ai.contextTokens). The chat answers with one small model of its own (CHAT_MODEL), a small window (CHAT_CONTEXT_TOKENS) and no thinking, an answer of 1024 tokens at most (a small model may never stop), and Ollama frees it CHAT_KEEP_ALIVE after the last message: a chat never holds the factory's models.
     - `connections: Connection[]`
 
 ## `test/`

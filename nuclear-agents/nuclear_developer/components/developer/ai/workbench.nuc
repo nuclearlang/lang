@@ -36,10 +36,10 @@ tools Workbench(knowledge: GraphClient, toolchain: Toolchain)
   // is asked): `facts`, the exact answer of every question with one right answer the question is (the rows of the
   // graph's database, whole); `knowledge`, the cards the shelves answer by meaning; `needs`, the exact questions it
   // is close to that lack a name. `history`: the conversation so far, read for the names a follow-up leaves out. A
-  // graph that cannot plan (an older one) gives only the cards.
-  answer(question: string, platform: string, history: string) <string, string>
+  // graph that cannot plan (an older one) gives only the cards. `k`: how many cards.
+  answer(question: string, platform: string, history: string, k: int = 4) <string, string>
     try
-      ~knowledge.answer(question, platform = platform, history = history, agents = true)
+      ~knowledge.answer(question, platform = platform, history = history, agents = true, k = k)
     catch e
       { "facts": "", "knowledge": ~lookup(question, platform), "needs": "" }
 

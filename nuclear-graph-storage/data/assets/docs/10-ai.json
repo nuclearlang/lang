@@ -1566,25 +1566,72 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.559be8",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.05e2c1",
    "type": "context",
    "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
-   "summary": "`{id, label, kind, command, paid, models, defaultModel, available, why?}` and its command `member --role chat conversation's header; the chat runs that choice's command with `--model`.",
+   "summary": "than it tells the message's language itself (checked with the local 3B model: Spanish and English messages, both registrations).",
    "body": [
-    "`{id, label, kind, command, paid, models, defaultModel, available, why?}` and its command `member --role chat",
-    "  --kind … --provider …`), and `choice: \"nuclear-developer\"`. The user picks the agent and its model in the",
-    "  conversation's header; the chat runs that choice's command with `--model`. A spending confirmation holds only for",
-    "  the provider it named: another agent chosen for the same conversation asks twice again.",
-    "- **The answer as it is written**: a chat's turn asks its adapter to stream (`inputs.stream`): Claude Code runs with",
-    "  `--include-partial-messages` and each piece of text is a `text-delta` event, told to the chat as",
-    "  `{\"type\": \"text-delta\", \"text\"}` (the event `message.delta`); the final `text` is still the answer. The other",
-    "  adapters give their text whole.",
-    "- **The language of an answer**: the prompt opens with it and says it again under the message to answer: the",
-    "  user's chosen language (the input's `lang`, `nuclear.language` resolved by the host), said in it too (*Responde en",
-    "  español.*); when the message's own words tell English from Spanish (`messageLanguage`) and that is not the chosen",
-    "  one, the member answers in the language the user wrote in. A small model follows one language it is told better",
-    "  than it tells the message's language itself (checked with the local 3B model: Spanish and English messages, both",
-    "  registrations)."
+    "than it tells the message's language itself (checked with the local 3B model: Spanish and English messages, both",
+    "  registrations).",
+    "- **A member's GIF**: when their personality sends GIFs (`gifs`: `sometimes` or `often`) and the chat gave the",
+    "  pack's tags (`gifTags`), the prompt says they may end an answer with one line `gif: <tag>` from that list, with",
+    "  their temperament's GIF habit (the sentences of its `voice` about GIFs), their moments (`on`) and when it fits (the",
+    "  user sent a GIF, a joke); a GIF the user sent is in the conversation (`[a GIF: <title>]`) and, just before the",
+    "  message, asks for a GIF back. `MemberLines` never tells that line as text (nor while it is being written: an end",
+    "  that may become it is held back) and gives its tag in `done` (`\"gif\": \"<tag>\"`); the chat chooses the GIF and",
+    "  caps it by the personality.",
+    "- A member's turn is `Chat`'s (`chat.nuc`, the base class): the whole conversation as one prompt, its factory tools",
+    "  run, six rounds at most, a role's files put back, the money confirmed twice inside the team's budget.",
+    "- **The factory's tools** are every action of the Builder ([actions.md](actions.md), ADR-platform-0009): a member",
+    "  can read a document of the project (`project_read`: slides as PDF or `.pptx`), write specs with their criteria"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.4673e6",
+   "type": "context",
+   "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
+   "summary": "`spending` (`run-spending-1`, `-2`), and on two yeses the confirmation is kept in the run, which goes on.",
+   "body": [
+    "`spending` (`run-spending-1`, `-2`), and on two yeses the confirmation is kept in the run, which goes on. The",
+    "  member's own tools and its agent's MCP tool results (the adapter's `tool-result` events) are both read.",
+    "- `nuclear-builder spec accept <id>` puts the draft over the spec (atomically) and `spec discard <id>` throws it",
+    "  away (`spec_line.nuc`)."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.70a75b",
+   "type": "context",
+   "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
+   "summary": "(`spec_new` refuses one without them), start runs (`run_start`, apart: the host tells the run in its thread), answer their gates (`run_answer`), keep the teams and the line.",
+   "body": [
+    "(`spec_new` refuses one without them), start runs (`run_start`, apart: the host tells the run in its thread),",
+    "  answer their gates (`run_answer`), keep the teams and the line. An agent or an API model has them as the MCP",
+    "  server `nuclear_builder` beside `nuclear`; the local Nuclear Developer (no MCP) writes them in its answer (`---",
+    "  tool: <name> ---` and its JSON, listed from the same server, called through it: `callBuilderTool`). Its model's",
+    "  window is small (the Developer's `CHAT_MODEL`, 4096 tokens), so its prompt describes the tools a chat calls most",
+    "  (`LOCAL_CHAT_TOOLS`: `project_read`, the specs' `new`, `list` and `show`, `run_start`, `runs`, `run_file`,",
+    "  `run_answer`, `team_list`, `team_show`) and names the rest; and the body gives the Developer the user's last",
+    "  words as `query`, what it searches its graph and the project's files with (not the whole prompt).",
+    "  `spec_draft` (`id`, `text`: the spec's whole new markdown) writes `spec.draft.md` beside the spec, never over it.",
+    "- **What is the user's is asked in the chat**: a tool's `needsUser` (accept or discard a draft, delete a spec or a",
+    "  team, restart a run, the delivery gate, the line's gates, commands or forceConfirm, a CI file replaced) is an",
+    "  `ask` of kind `confirm`, applied on a yes (`applyForUser`); a run's `waiting: spending` is two `ask` of kind"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
@@ -1625,50 +1672,24 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.babd4c",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.e4e168",
    "type": "context",
    "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
-   "summary": "server `nuclear_builder` beside `nuclear`; the local Nuclear Developer (no MCP) writes them in its answer (`--- tool: <name> ---` and its JSON, listed from the same server, called through it: `callBuilderTool`).",
+   "summary": "`{id, label, kind, command, paid, models, defaultModel, available, why?}` and its command `member --role chat setup.json's `chat`), and `choice: \"nuclear-developer\"`.",
    "body": [
-    "server `nuclear_builder` beside `nuclear`; the local Nuclear Developer (no MCP) writes them in its answer (`---",
-    "  tool: <name> ---` and its JSON, listed from the same server, called through it: `callBuilderTool`).",
-    "  `spec_draft` (`id`, `text`: the spec's whole new markdown) writes `spec.draft.md` beside the spec, never over it.",
-    "- **What is the user's is asked in the chat**: a tool's `needsUser` (accept or discard a draft, delete a spec or a",
-    "  team, restart a run, the delivery gate, the line's gates, commands or forceConfirm, a CI file replaced) is an",
-    "  `ask` of kind `confirm`, applied on a yes (`applyForUser`); a run's `waiting: spending` is two `ask` of kind",
-    "  `spending` (`run-spending-1`, `-2`), and on two yeses the confirmation is kept in the run, which goes on. The",
-    "  member's own tools and its agent's MCP tool results (the adapter's `tool-result` events) are both read.",
-    "- `nuclear-builder spec accept <id>` puts the draft over the spec (atomically) and `spec discard <id>` throws it",
-    "  away (`spec_line.nuc`)."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/chat.md#what-the-engine-gives-member-nuc-chat-nuc.db7b53",
-   "type": "context",
-   "title": "The Builder in Nuclear Chat — What the engine gives (`member.nuc`, `chat.nuc`)",
-   "summary": "pack's tags (`gifTags`), the prompt says they may end an answer with one line `gif: <tag>` from that list, with their temperament's GIF habit (the sentences of its `voice` about GIFs), their moments (`on`) and when it fits (the user sent a GIF, a joke); a GIF the user sent is in the conversation…",
-   "body": [
-    "- **A member's GIF**: when their personality sends GIFs (`gifs`: `sometimes` or `often`) and the chat gave the",
-    "  pack's tags (`gifTags`), the prompt says they may end an answer with one line `gif: <tag>` from that list, with",
-    "  their temperament's GIF habit (the sentences of its `voice` about GIFs), their moments (`on`) and when it fits (the",
-    "  user sent a GIF, a joke); a GIF the user sent is in the conversation (`[a GIF: <title>]`) and, just before the",
-    "  message, asks for a GIF back. `MemberLines` never tells that line as text (nor while it is being written: an end",
-    "  that may become it is held back) and gives its tag in `done` (`\"gif\": \"<tag>\"`); the chat chooses the GIF and",
-    "  caps it by the personality.",
-    "- A member's turn is `Chat`'s (`chat.nuc`, the base class): the whole conversation as one prompt, its factory tools",
-    "  run, six rounds at most, a role's files put back, the money confirmed twice inside the team's budget.",
-    "- **The factory's tools** are every action of the Builder ([actions.md](actions.md), ADR-platform-0009): a member",
-    "  can read a document of the project (`project_read`: slides as PDF or `.pptx`), write specs with their criteria",
-    "  (`spec_new` refuses one without them), start runs (`run_start`, apart: the host tells the run in its thread),",
-    "  answer their gates (`run_answer`), keep the teams and the line. An agent or an API model has them as the MCP"
+    "`{id, label, kind, command, paid, models, defaultModel, available, why?}` and its command `member --role chat",
+    "  --kind … --provider …`; the local one offers only the machine's chat model, `CHAT_MODEL` of `ai.env`, else",
+    "  setup.json's `chat`), and `choice: \"nuclear-developer\"`. The user picks the agent and its model in the",
+    "  conversation's header; the chat runs that choice's command with `--model`. A spending confirmation holds only for",
+    "  the provider it named: another agent chosen for the same conversation asks twice again.",
+    "- **The answer as it is written**: a chat's turn asks its adapter to stream (`inputs.stream`): Claude Code runs with",
+    "  `--include-partial-messages` and each piece of text is a `text-delta` event, told to the chat as",
+    "  `{\"type\": \"text-delta\", \"text\"}` (the event `message.delta`); the final `text` is still the answer. The other",
+    "  adapters give their text whole.",
+    "- **The language of an answer**: the prompt opens with it and says it again under the message to answer: the",
+    "  user's chosen language (the input's `lang`, `nuclear.language` resolved by the host), said in it too (*Responde en",
+    "  español.*); when the message's own words tell English from Spanish (`messageLanguage`) and that is not the chosen",
+    "  one, the member answers in the language the user wrote in. A small model follows one language it is told better"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/chat.md"
@@ -2802,24 +2823,15 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.371915",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.2daa24",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a key*, *Local — this machine, free*).",
+   "summary": "tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer `needsUser` for a too-big one, applied only after the user's yes.",
    "body": [
-    "group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a",
-    "  key*, *Local — this machine, free*).",
-    "- **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and",
-    "  `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows",
-    "  `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per",
-    "  weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at",
-    "  Ollama's default context), and its fit `fitOf`: **too-big** when the need passes the machine's memory less what",
-    "  the system and the editor keep (2 GB, or 15% of a bigger machine), since it can make the computer freeze or",
-    "  restart; **tight** when it passes the memory free now (it swaps unless other programs give memory back); else",
-    "  **fits**. A margin, not a measure; the GPU's own memory is not counted. The pickers draw too-big in red and ask",
-    "  before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or",
-    "  tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer",
-    "  `needsUser` for a too-big one, applied only after the user's yes."
+    "tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer",
+    "  `needsUser` for a too-big one, applied only after the user's yes.",
+    "- The flags of `claude` were checked against Claude Code 2.1.327's `--help`, those of `opencode` against OpenCode",
+    "  2.2.7's. Codex and Gemini CLI are written from their documented headless modes, untested here (roadmap)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2831,13 +2843,23 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.407586",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.359c20",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "2.2.7's.",
+   "summary": "group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a key*, *Local — this machine, free*).",
    "body": [
-    "- The flags of `claude` were checked against Claude Code 2.1.327's `--help`, those of `opencode` against OpenCode",
-    "  2.2.7's. Codex and Gemini CLI are written from their documented headless modes, untested here (roadmap)."
+    "group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a",
+    "  key*, *Local — this machine, free*). The general agent's chat is the exception: its local choice offers only the machine's chat",
+    "  model (`CHAT_MODEL`, [chat.md](chat.md)).",
+    "- **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and",
+    "  `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows",
+    "  `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per",
+    "  weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at",
+    "  Ollama's default context), and its fit `fitOf`: **too-big** when the need passes the machine's memory less what",
+    "  the system and the editor keep (2 GB, or 15% of a bigger machine), since it can make the computer freeze or",
+    "  restart; **tight** when it passes the memory free now (it swaps unless other programs give memory back); else",
+    "  **fits**. A margin, not a measure; the GPU's own memory is not counted. The pickers draw too-big in red and ask",
+    "  before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -5619,7 +5641,8 @@
     "- **Source:** Nuclear, a Synapsis backend (platform `backend`, dialect `fastapi`; `config.nuc`). `build/` is the",
     "  generated FastAPI + LangGraph application.",
     "- **Models:** two, on Ollama: `qwen2.5-coder:3b` (the coder) and `gemma4:e2b` (the default); `CODER_MODEL`,",
-    "  `ASSISTANT_MODEL`, `OLLAMA_URL`, `CONTEXT_TOKENS`.",
+    "  `ASSISTANT_MODEL`, `OLLAMA_URL`, `CONTEXT_TOKENS`. The chat answers with one small model of its own",
+    "  (`CHAT_MODEL`, `qwen3.5:2b`; `CHAT_CONTEXT_TOKENS` 4096, `CHAT_KEEP_ALIVE` 3m, no thinking, 1024 tokens at most).",
     "- **Knowledge:** the [Smart Graph](../../nuclear-graph-storage/AGENTS.md) on `127.0.0.1:7878`, through its client",
     "  package (`nuclear_graph`, typed by `defs/`). The prompts are the skills of the roles",
     "  ([`../roles/`](../roles/README.md), `skills/step-<step>.md`), served by the graph.",
@@ -5791,6 +5814,29 @@
     "  reference's guides from the roles. The doc comments name the prompts by name (`agent.repair`).",
     "- Evaluation round 24 with the moved prompts: 41 / 39 (held out 15 / 17), two tasks lost to examples the knowledge",
     "  base gained since round 23 (`docs/05-standards/evaluation-rounds.md`)."
+   ],
+   "sources": [
+    "nuclear-agents/nuclear_developer/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-agents/nuclear_developer/CHANGELOG.md#unreleased-2026-11-18",
+   "type": "changelog",
+   "title": "Changelog — Unreleased (2026-11-18)",
+   "summary": "`CHAT_KEEP_ALIVE` 3m, no thinking, 1024 tokens at most): a message no longer loads `gemma4:e2b` (7.9 GB); a chat turn takes 5.7 GB instead of 9–10 GB, its first answer 13 s instead of 37 s.",
+   "body": [
+    "- The chat answers with one small model of its own, `CHAT_MODEL` (`qwen3.5:2b`; `CHAT_CONTEXT_TOKENS` 4096,",
+    "  `CHAT_KEEP_ALIVE` 3m, no thinking, 1024 tokens at most): a message no longer loads `gemma4:e2b` (7.9 GB); a chat",
+    "  turn takes 5.7 GB instead of 9–10 GB, its first answer 13 s instead of 37 s. Five messages measured against five",
+    "  models (`docs/02-architecture/models.md`, \"The chat's model\").",
+    "- `POST /developer/chat` takes `query`: the developer's own words when `message` is a whole prompt (Nuclear",
+    "  Builder's member). The graph (two cards) and the files are searched with them and the assistant's guide is left",
+    "  out; the member's prompt went from 20 900 to 8 700 characters."
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/CHANGELOG.md"
@@ -5999,28 +6045,7 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md#the-http-api.22a619",
-   "type": "context",
-   "title": "Integrations and contracts — The HTTP API",
-   "summary": "a dialect's name) is refused with 400 (the validation error, naming the field) before an agent runs (it was a 500 from the graph's `/v1/kinds/`).",
-   "body": [
-    "- `platform` is `backend`, `mobile` or `web`: the agents name a platform, never a dialect. Any other value (`\"\"`,",
-    "  a dialect's name) is refused with 400 (the validation error, naming the field) before an agent runs (it was a 500 from the graph's `/v1/kinds/`).",
-    "- `root` is the project's folder: with it an agent reads the project by itself.",
-    "- `trace` is the steps the agent followed, with what it read.",
-    "- The analysis runs before a run generates or plans anything: [strategies.md](strategies.md)."
-   ],
-   "sources": [
-    "nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md#the-http-api.31ca32",
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md#the-http-api.3458c1",
    "type": "context",
    "title": "Integrations and contracts — The HTTP API",
    "summary": "On `127.0.0.1:7879`.",
@@ -6033,9 +6058,33 @@
     "| `document` | the same; the run's journal in `context` | the same; the summary in `report` |",
     "| `diagnose` | the same; `task` is the step, `context` its output, `path` the project's folder | the same |",
     "| `accept` | the same; `task` the criteria, numbered; `context` the facts and the files of the run | the same |",
-    "| `chat` | `{message, platform, map, history, root}` | the same answer (`report`) |",
+    "| `chat` | `{message, platform, map, history, root, query}` | the same answer (`report`) |",
     "| `plan` | `{spec, platform, root}` | `{pieces: [{path, kind, task}], raw, trace, tree, limits}` |",
     "| `analyze` | `{spec, platform, root, strategy}` | `{strategy, title, why, mode, stages, lead, source, generate, pieces, questions, limits, report, trace}` |"
+   ],
+   "sources": [
+    "nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md#the-http-api.eea4da",
+   "type": "context",
+   "title": "Integrations and contracts — The HTTP API",
+   "summary": "a dialect's name) is refused with 400 (the validation error, naming the field) before an agent runs (it was a 500 from the graph's `/v1/kinds/`).",
+   "body": [
+    "- `platform` is `backend`, `mobile` or `web`: the agents name a platform, never a dialect. Any other value (`\"\"`,",
+    "  a dialect's name) is refused with 400 (the validation error, naming the field) before an agent runs (it was a 500 from the graph's `/v1/kinds/`).",
+    "- `root` is the project's folder: with it an agent reads the project by itself.",
+    "- `query` (chat): the developer's own words when `message` is a whole prompt of its own (Nuclear Builder's chat",
+    "  member: who it is, its tools, the conversation). The graph (two cards instead of four) and the project's files are",
+    "  searched with them, and the assistant's guide is left out: the prompt brings its own.",
+    "- `trace` is the steps the agent followed, with what it read.",
+    "- The analysis runs before a run generates or plans anything: [strategies.md](strategies.md)."
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/docs/02-architecture/integrations.md"
@@ -6055,7 +6104,7 @@
     "| Service | Use | Setting |",
     "|---|---|---|",
     "| The [Smart Graph](../../../../nuclear-graph-storage/AGENTS.md) (`127.0.0.1:7878`) | every recall, the strategy of a request, the exact facts, the prompts (the roles' skills); the client `nuclear-developer` with the scopes `read,write` | `NUCLEAR_GRAPH_URL`, `nuclear-graph connect nuclear-developer --scopes read,write` |",
-    "| Ollama | the two models | `OLLAMA_URL`, `CODER_MODEL`, `ASSISTANT_MODEL`, `CONTEXT_TOKENS` |",
+    "| Ollama | the two models, and the chat's own | `OLLAMA_URL`, `CODER_MODEL`, `ASSISTANT_MODEL`, `CONTEXT_TOKENS`, `CHAT_MODEL`, `CHAT_CONTEXT_TOKENS`, `CHAT_KEEP_ALIVE` |",
     "| The `nuclear` command | `nuclear check --platform` of every answer, `nuclear help layout`, `nuclear gen ... --dry-run`, `nuclear explain`, `nuclear doctor` | on the `PATH` |",
     "| The graph's package (`nuclear_graph.client`, `.toolchain`, `.workspace`) | the client, the compiler for an agent, a project's files | a dependency of `config.nuc`, typed by `defs/` |"
    ],
@@ -6240,13 +6289,81 @@
    }
   },
   {
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/models.md#the-chat-s-model.9c0dad",
+   "type": "context",
+   "title": "The models — The chat's model",
+   "summary": "A chat message through Nuclear Builder's member took 9–10 GB with `gemma4:e2b` (the first answer 37 s, cold) and 5.7 GB with `qwen3.5:2b` (13 s cold, 10 s the next).",
+   "body": [
+    "A chat message through Nuclear Builder's member took 9–10 GB with `gemma4:e2b` (the first answer 37 s, cold) and",
+    "5.7 GB with `qwen3.5:2b` (13 s cold, 10 s the next). The member's prompt was 20 900 characters (the factory's 55",
+    "tools described, four cards searched with the whole prompt, the assistant's guide); with `query` and the tools a",
+    "chat calls most it is 8 700 (2 200 tokens).",
+    "",
+    "Five chat messages (a greeting in Spanish, \"who are you\" in English, a spec with its criteria in Spanish, how to",
+    "write a CRUD resource in English, the project's specs in Spanish), through the member with each model as",
+    "`CHAT_MODEL`:",
+    "",
+    "| Model | Answers right | Per message |",
+    "|---|---|---|",
+    "| `qwen3.5:2b` | 3: the language every time, `spec_new` right, the resource from the cards; \"who are you\" says the Developer, and the project's specs are answered without `spec_list` | 9–11 s |",
+    "| `qwen3.5:2b-q4_K_M` | 2: it invented a tool's result for the resource | 6–8 s |",
+    "| `qwen2.5:1.5b` | 2: `spec_new` and the resource; it repeats the greeting and recites its prompt | 3–8 s |",
+    "| `gemma4:e2b` | 2: `spec_new` and `spec_list`; the greeting and \"who are you\" loop on tools for six rounds | 7–44 s |",
+    "| `llama3.2:3b` | 1: tool calls loop and repeat `spec_new` | 8–112 s |",
+    "| `llama3.2:1b` | 0 | 3–36 s |"
+   ],
+   "sources": [
+    "nuclear-agents/nuclear_developer/docs/02-architecture/models.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/models.md#the-chat-s-model.cb82d6",
+   "type": "context",
+   "title": "The models — The chat's model",
+   "summary": "`CHAT_MODEL` (`qwen3.5:2b`), with a context of `CHAT_CONTEXT_TOKENS` (4096), no thinking (`reasoning = false`), an answer of 1024 tokens at most (without it `qwen2.5:1.5b` wrote 35 000 tokens, Ollama shifting its context, until its caller was killed) and `CHAT_KEEP_ALIVE` (3m): Ollama frees it…",
+   "body": [
+    "`CHAT_MODEL` (`qwen3.5:2b`), with a context of `CHAT_CONTEXT_TOKENS` (4096), no thinking (`reasoning = false`), an",
+    "answer of 1024 tokens at most (without it `qwen2.5:1.5b` wrote 35 000 tokens, Ollama shifting its context, until its",
+    "caller was killed) and `CHAT_KEEP_ALIVE` (3m): Ollama frees it three minutes after the last message. The set-up",
+    "writes it with the profile (`lite`: its one model). The graph's `embeddinggemma` still embeds the question: the",
+    "cards are what make a knowledge answer right (the exact `nuclear gen resource` command), so retrieval stays; Ollama",
+    "frees it five minutes after.",
+    "",
+    "Measured on 2026-11-18 (Ryzen AI 9 HX 370, 28 GB, Radeon 890M; the GPU's memory is the system's), each model alone",
+    "(`free -m` before and after loading it):",
+    "",
+    "| Model | `ollama ps` | Memory it takes |",
+    "|---|---|---|",
+    "| `gemma4:e2b` (the chat's model before) | 1.8 GB | 7.9 GB (5.1B parameters with its audio and image parts; 8192 or 4096 of context the same) |",
+    "| `qwen3.5:2b` (in use) | 2.4 GB | 4.1 GB |",
+    "| `qwen3.5:2b-q4_K_M` | 1.6 GB | 3.2 GB |",
+    "| `qwen2.5:1.5b` | 1.2 GB | 1.7 GB |",
+    "| `embeddinggemma` | 0.7 GB | 1.7 GB |"
+   ],
+   "sources": [
+    "nuclear-agents/nuclear_developer/docs/02-architecture/models.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/models.md#the-models",
    "type": "context",
    "title": "The models",
-   "summary": "Two models, both on Ollama (`config/project_config.nuc`): a small coder model writes the code (`CODER_MODEL`, `qwen2.5-coder:3b`), a small general model plans, reviews, analyses and answers (`ASSISTANT_MODEL`, `gemma4:e2b`).",
+   "summary": "Two models, both on Ollama (`config/project_config.nuc`): a small coder model writes the code (`CODER_MODEL`, `qwen2.5-coder:3b`), a small general model plans, reviews and analyses (`ASSISTANT_MODEL`, `gemma4:e2b`).",
    "body": [
     "Two models, both on Ollama (`config/project_config.nuc`): a small coder model writes the code (`CODER_MODEL`,",
-    "`qwen2.5-coder:3b`), a small general model plans, reviews, analyses and answers (`ASSISTANT_MODEL`, `gemma4:e2b`).",
+    "`qwen2.5-coder:3b`), a small general model plans, reviews and analyses (`ASSISTANT_MODEL`, `gemma4:e2b`). The chat",
+    "(`/developer/chat`) answers with a third, small one of its own, so a message never loads the factory's models",
+    "(below, \"The chat's model\").",
     "Neither may be larger than 3B parameters of effective size (the user's rule). Each runs with a context window of",
     "`CONTEXT_TOKENS` (8192 by default)."
    ],
@@ -6406,7 +6523,7 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#known-limits.c39a56",
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#known-limits.6ff112",
    "type": "context",
    "title": "Architecture — Known limits",
    "summary": "model got a test of an application component from the examples): the run fails at *Tests first* with the diagnosis instead of passing without tests; Claude-led runs fix it.",
@@ -6418,8 +6535,8 @@
     "  component after the first model of a plain spec (`newbooks`).",
     "- A value that comes from a library method has no known type: declare it (`card: string = ~knowledge.card(...)`)",
     "  before using a member of the standard library on it.",
-    "- The connections set no limit on the length of an answer (`config/project_config.nuc` gives the context window",
-    "  only): a model that enters an answer without end holds the Developer and every call after it until the process",
+    "- The coder's and the assistant's connections set no limit on the length of an answer (the chat's does: 1024",
+    "  tokens): a model that enters an answer without end holds the Developer and every call after it until the process",
     "  is killed. Seen with `qwen2.5-coder:3b` as assistant, `llama3.2:1b` and `phi3:3.8b`; the evaluation has no watch",
     "  on a call that stalls.",
     "- On features of several files written by the local agents alone, a piece renames a method the spec writes, or two",
@@ -6438,17 +6555,15 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#the-agents.46c33f",
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#the-agents.199c78",
    "type": "context",
    "title": "Architecture — The agents",
-   "summary": "Each request runs on a thread of its own, so nothing of one request reaches the next.",
+   "summary": "The agents",
    "body": [
+    "| Diagnoser | `gemma4:e2b` | `POST /developer/diagnose` | when a pipeline stage fails: the kind of failure by fixed rules (transient, environment, code, test, spec), the evidence from the tools (`nuclear check`, `nuclear doctor`) and the next step in plain words | change anything |",
     "| Acceptor | `gemma4:e2b` | `POST /developer/accept` | after a run's verification passes: holds each acceptance criterion against what the run left (its files, its tests, the commands that passed) and says which are shown met, with the evidence | fail a run (its verdict is for the reviewer) |",
     "| Planner | `gemma4:e2b` | `POST /developer/plan` | splits a spec into pieces of one file, in order; each path comes from the platform's layout (`nuclear help layout`), each kind and forgotten piece from the spec's own words | choose a folder, or plan what the spec does not name |",
-    "| Analyst | `gemma4:e2b`, for one question only | `POST /developer/analyze` | before a run generates or plans anything: which kind of request the spec is, the stages that run, the generator calls, the pieces the tools give, the questions ([strategies.md](strategies.md)) | choose the strategy by a model, or guess a missing fact |",
-    "",
-    "Each request runs on a thread of its own, so nothing of one request reaches the next. The models and their",
-    "profiles: [models.md](models.md). The shape of each request and answer: [integrations.md](integrations.md)."
+    "| Analyst | `gemma4:e2b`, for one question only | `POST /developer/analyze` | before a run generates or plans anything: which kind of request the spec is, the stages that run, the generator calls, the pieces the tools give, the questions ([strategies.md](strategies.md)) | choose the strategy by a model, or guess a missing fact |"
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md"
@@ -6460,7 +6575,7 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#the-agents.a065bc",
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#the-agents.bfd284",
    "type": "context",
    "title": "Architecture — The agents",
    "summary": "The agents",
@@ -6471,8 +6586,25 @@
     "| Tester | `qwen2.5-coder:3b` | `POST /developer/test` | writes the Nuclear tests (`tests` kind) of a piece of code | delete a failing test |",
     "| Security | `gemma4:e2b` | `POST /developer/security` | reviews code against the platform's security rules + the compiler | change the code |",
     "| Documenter | `gemma4:e2b` | `POST /developer/document` | reads a run's journal and writes what was done: what it built, how it checked it, what is left (only facts of the journal) | change the code |",
-    "| Assistant | `gemma4:e2b` | `POST /developer/chat` | answers a message of the editor's chat about the project, from the project's map, the session's last messages and the graph; a question with one right answer (which, how many, what are) gets the rows of the graph's exact facts, which end the answer as they are (`ADR-graph-0002`) | change a file (an order is a Builder run) |",
-    "| Diagnoser | `gemma4:e2b` | `POST /developer/diagnose` | when a pipeline stage fails: the kind of failure by fixed rules (transient, environment, code, test, spec), the evidence from the tools (`nuclear check`, `nuclear doctor`) and the next step in plain words | change anything |"
+    "| Assistant | `qwen3.5:2b` (the chat's own model) | `POST /developer/chat` | answers a message of the editor's chat about the project, from the project's map, the session's last messages and the graph; a question with one right answer (which, how many, what are) gets the rows of the graph's exact facts, which end the answer as they are (`ADR-graph-0002`) | change a file (an order is a Builder run) |"
+   ],
+   "sources": [
+    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#the-agents.ed916a",
+   "type": "context",
+   "title": "Architecture — The agents",
+   "summary": "Each request runs on a thread of its own, so nothing of one request reaches the next.",
+   "body": [
+    "Each request runs on a thread of its own, so nothing of one request reaches the next. The models and their",
+    "profiles: [models.md](models.md). The shape of each request and answer: [integrations.md](integrations.md)."
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md"
@@ -7316,6 +7448,9 @@
     "|---|---|---|",
     "| `CODER_MODEL` | `qwen2.5-coder:3b` | the model that writes code and tests |",
     "| `ASSISTANT_MODEL` | `gemma4:e2b` | the model that plans, reviews, analyses and answers |",
+    "| `CHAT_MODEL` | `qwen3.5:2b` | the one model the chat answers with (`/developer/chat`), never the two above |",
+    "| `CHAT_CONTEXT_TOKENS` | `4096` | the chat model's context window |",
+    "| `CHAT_KEEP_ALIVE` | `3m` | how long Ollama keeps the chat model after the last message |",
     "| `OLLAMA_URL` | `http://localhost:11434` | where Ollama listens |",
     "| `CONTEXT_TOKENS` | `8192` | the context window of each model; the editor passes its `nuclear.ai.contextTokens` |",
     "| `NUCLEAR_GRAPH_URL` | `http://127.0.0.1:7878` | where the graph listens |",
@@ -13792,6 +13927,21 @@
    }
   },
   {
+   "id": "doc:nuclear-chat/AGENTS.md#commands.ab866f",
+   "type": "readme",
+   "title": "Nuclear Chat (`nuclear-chat/`) — Commands",
+   "summary": "Commands",
+   "body": "- The UI's embedded bundle for the editors: `ui/build-embed.sh` (the CI's extension job and the release run it).",
+   "sources": [
+    "nuclear-chat/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-chat/AGENTS.md#commands.fde7a2",
    "type": "readme",
    "title": "Nuclear Chat (`nuclear-chat/`) — Commands",
@@ -13900,7 +14050,22 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/AGENTS.md#rules",
+   "id": "doc:nuclear-chat/AGENTS.md#rules.193275",
+   "type": "readme",
+   "title": "Nuclear Chat (`nuclear-chat/`) — Rules",
+   "summary": "responders' protocol, responders.md.",
+   "body": "responders' protocol, [responders.md](docs/02-architecture/responders.md).",
+   "sources": [
+    "nuclear-chat/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/AGENTS.md#rules.cd9513",
    "type": "readme",
    "title": "Nuclear Chat (`nuclear-chat/`) — Rules",
    "summary": "host's; the service only routes, keeps and tells.",
@@ -13912,12 +14077,11 @@
     "- **Nothing written is rewritten**: a channel's file is appended; an edit or a reaction is a line that names its",
     "  message; a line cut by a crash is skipped. Only `channels.json` and `gifs.json` are replaced whole (atomically).",
     "- **Events pass through one place**: `EventsAppComponent.emit` (the `EventLog` and the topic `chat.event`).",
-    "- **Local and private**: `127.0.0.1` only; a GIF service's key lives only in the keyring and never reaches a file,",
-    "  an answer or an event; a search leaves the machine only after the project said yes once.",
+    "- **Local and private**: `127.0.0.1` only; a GIF service's key lives only in the keyring (a `0600` file of the chat's data",
+    "  folder without one) and never reaches a file of the project, an answer or an event; a search leaves the machine only after the project said yes once.",
     "- **The service is never served without its guards** (`config/project_config.nuc`): a route starts a member's",
-    "  command. Its token lives only in the keyring ([security.md](docs/05-standards/security.md)).",
-    "- A change to a route, a model of the API or an event updates [api.md](docs/02-architecture/api.md); to the",
-    "  responders' protocol, [responders.md](docs/02-architecture/responders.md)."
+    "  command. Its token lives in the keyring, or a `0600` file without one ([security.md](docs/05-standards/security.md)).",
+    "- A change to a route, a model of the API or an event updates [api.md](docs/02-architecture/api.md); to the"
    ],
    "sources": [
     "nuclear-chat/AGENTS.md"
@@ -13975,7 +14139,7 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/AGENTS.md#where-the-code-is.4c348e",
+   "id": "doc:nuclear-chat/AGENTS.md#where-the-code-is.422421",
    "type": "readme",
    "title": "Nuclear Chat (`nuclear-chat/`) — Where the code is",
    "summary": "`nuclear_chat/defs/python/nuclear_chat_system/` types `system/` for the service (generated, see Commands).",
@@ -13983,8 +14147,8 @@
     "| Component | What it holds |",
     "|---|---|",
     "| `workspaces` | a project registered by its host: members, teams (their tech lead), channels (`channels.json`) |",
-    "| `channels` | the list with unread counts, a new channel, a channel read |",
-    "| `messages` | the history (`<channel>.jsonl`, edits and reactions folded), threads, what the user says, what a host posts, buttons, the search |",
+    "| `channels` | the list with unread counts, a new channel, a channel read, renamed, closed, archived or deleted (its history moved to `deleted/`) |",
+    "| `messages` | the history (`<channel>.jsonl`, edits and reactions folded), threads, what the user says, what a host posts, edits, a message deleted, buttons, the search (`from:@member`, `in:#channel`) |",
     "| `members` | who answers (`Routing`: a DM's member, `@member`, `@role`, the team's tech lead) and the responders' runs (`Responders`) |",
     "| `gifs` | the pack, the picker's search, a member's GIF by personality, Tenor and Giphy (HTTP repositories), the one question |",
     "| `events` | the one place events pass through (`EventLog`, `chat.event` and `chat.<workspace>`, pushed to subscribed sockets) and the cursor read |",
@@ -14046,16 +14210,16 @@
    "id": "doc:nuclear-chat/README.md#try-it",
    "type": "readme",
    "title": "Nuclear Chat — Try it",
-   "summary": "cd nuclear-chat/system && nuclear build . cd ../nuclear_chat && nuclear build . && nuclear install && nuclear test # 11 passed nuclear-builder setup # its last step starts the service at login (port 7880, token in the keyring) nuclear-chat connect --json # {\"url\": \"http://127.0.0.1:7880\",…",
+   "summary": "cd nuclear-chat/system && nuclear build . cd ../nuclear_chat && nuclear build . && nuclear install && nuclear test # 18 passed nuclear-builder setup # its last step starts the service at login (port 7880, token in the keyring or, without one, a 0600 file) nuclear-chat connect --json # {\"url\":…",
    "body": [
     "```sh",
     "cd nuclear-chat/system && nuclear build .",
-    "cd ../nuclear_chat && nuclear build . && nuclear install && nuclear test     # 11 passed",
-    "nuclear-builder setup                  # its last step starts the service at login (port 7880, token in the keyring)",
+    "cd ../nuclear_chat && nuclear build . && nuclear install && nuclear test     # 18 passed",
+    "nuclear-builder setup                  # its last step starts the service at login (port 7880, token in the keyring or, without one, a 0600 file)",
     "nuclear-chat connect --json            # {\"url\": \"http://127.0.0.1:7880\", \"header\": \"X-Chat-Token\", \"token\": \"…\"}",
     "curl -s 127.0.0.1:7880/gifs/pack       # 401: every route needs the token (and no Origin: 403)",
     "nuclear-chat pack                                                            # the pack's folder",
-    "cd ../ui && nuclear build && nuclear install && nuclear test                 # the page: 9 passed",
+    "cd ../ui && nuclear build && nuclear install && nuclear test                 # the page: 18 passed",
     "cd build/app && npm run build:embed                                          # dist-embed/embed.js, mounted by a host",
     "```"
    ],
@@ -14286,7 +14450,7 @@
     "| `type` | `data` |",
     "|---|---|",
     "| `message` | `{message}` (a new or changed message, folded, as the file keeps it); `said: true` on the user's new message |",
-    "| `channels` | `{channel}` (made) or `{read}` |",
+    "| `channels` | `{channel}` (made), `{read}`, `{changed}` (renamed, topic, state) or `{deleted}` |",
     "| `typing` | `{member, thread}` |",
     "| `tool` | `{member, thread, tool}` (the responder's line) |",
     "| `ask` | the responder's `ask` line with `member`, `thread` |",
@@ -14308,23 +14472,17 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.5df31c",
+   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.0077fc",
    "type": "context",
    "title": "The API — Routes",
    "summary": "Routes",
    "body": [
-    "| `GET messages/{ws}/{channel}?thread=` | | `Message[]` (one thread with `thread`) |",
-    "| `POST messages/{ws}/{channel}` | `Said` `{text, thread?}` | `Message` (201): the user's; who it brings in answers (events) |",
     "| `POST messages/{ws}/{channel}/gif` | `SentGif` `{gif: {src, title, source}, thread?}` | `Message` (201) |",
     "| `POST messages/{ws}/{channel}/post` | `Posted` `{author, text, thread?, buttons, links, moment?, gif?, answersGif, costUsd?}` | `Message` (201): a host's, as a member or `system`; a GIF may follow by the member's personality: at a `moment`, or of the pack's tag `gif` (`answersGif`: the member answers a GIF of the user, likelier) |",
     "| `PATCH messages/{ws}/message/{id}` | `Changes` `{text?, buttons?}` | `Message` |",
+    "| `DELETE messages/{ws}/message/{id}` | | `Message` with `deleted` (the user's or a member's: the workspace is the user's): a line `{\"edit\": id, \"deleted\": true}`; its text, GIF, buttons, links and reactions are gone, its thread's replies stay; a later edit or reaction changes nothing |",
     "| `POST messages/{ws}/message/{id}/reactions` | `Reaction` `{emoji, by = you}` | `Message` (the same emoji again takes it away) |",
-    "| `POST messages/{ws}/message/{id}/click` | `Click` `{button}` | `ChatEvent` (`action`) |",
-    "| `GET messages/{ws}/search?words=` | | `Found[]` `{channel, message}`, newest first |",
-    "| `POST members/{ws}/answers` | `Answer` `{id, answer}` | `Answer`: written to the responder that asked |",
-    "| `GET gifs/pack` | | `PackGif[]` `{id, file, title, tags, svg}` |",
-    "| `GET gifs/{ws}/search?q=` | | `GifResults` `{q, source, results, ask, service, note}` |",
-    "| `POST gifs/{ws}/consent` | `Consent` `{online}` | `Consent`: the one question's answer |"
+    "| `POST messages/{ws}/message/{id}/click` | `Click` `{button}` | `ChatEvent` (`action`) |"
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/api.md"
@@ -14336,11 +14494,39 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.793598",
+   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.03066d",
+   "type": "context",
+   "title": "The API — Routes",
+   "summary": "Routes",
+   "body": [
+    "| Route | Body | Answer |",
+    "|---|---|---|",
+    "| `POST workspaces` | `NewWorkspace` `{root, host, members, teams, channels, lang: en\\|es, gifs: pack\\|tenor\\|giphy}` (a member's `face`: the picture the page draws, a `data:` or `https:` URL, 400 000 characters at most; its `responder` `{command, paid, choice, model, choices}`: `choices` the agents a conversation with it can choose, each `Choice` `{id, label, kind, command, paid, models, defaultModel, available, why}`, `choice` and `model` the host's default; its `brain` `{agent, kind, provider, model, paid}`: who works it, as the host says, drawn under its name in a direct message) | `Workspace` (its `id`, the channels merged: `general`, the host's, a `dm-<member>` each, the user's) |",
+    "| `GET workspaces/{id}` | | `Workspace` |",
+    "| `GET channels/{ws}` | | `Channel[]` with `unread` |",
+    "| `POST channels/{ws}` | `NewChannel` `{name, topic, members, team}` | `Channel` (201) |",
+    "| `POST channels/{ws}/{channel}/read` | | `Channel` (`lastRead` now) |"
+   ],
+   "sources": [
+    "nuclear-chat/docs/02-architecture/api.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.2e94bf",
    "type": "context",
    "title": "The API — Routes",
    "summary": "A channel called `search` or `message` is shadowed by those routes: do not use those names.",
    "body": [
+    "| `GET messages/{ws}/search?words=` | | `Found[]` `{channel, message}`, newest first: every channel (closed and archived too), messages that hold every word (text or a GIF's title); `from:@<member>` (id, name, first name; `from:@you`) and `in:#<channel>` (id or name) narrow it, alone too; a filter that names nobody finds nothing; a deleted message is never found |",
+    "| `POST members/{ws}/answers` | `Answer` `{id, answer}` | `Answer`: written to the responder that asked |",
+    "| `GET gifs/pack` | | `PackGif[]` `{id, file, title, tags, svg}` |",
+    "| `GET gifs/{ws}/search?q=` | | `GifResults` `{q, source, results, ask, service, note}` |",
+    "| `POST gifs/{ws}/consent` | `Consent` `{online}` | `Consent`: the one question's answer |",
     "| `GET events/{ws}?since=` | | `ChatEvent[]` after the event `since` |",
     "",
     "A channel called `search` or `message` is shadowed by those routes: do not use those names."
@@ -14355,19 +14541,16 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.a1354a",
+   "id": "doc:nuclear-chat/docs/02-architecture/api.md#routes.47dedf",
    "type": "context",
    "title": "The API — Routes",
    "summary": "Routes",
    "body": [
-    "| Route | Body | Answer |",
-    "|---|---|---|",
-    "| `POST workspaces` | `NewWorkspace` `{root, host, members, teams, channels, lang: en\\|es, gifs: pack\\|tenor\\|giphy}` (a member's `face`: the picture the page draws, a `data:` or `https:` URL, 400 000 characters at most; its `responder` `{command, paid, choice, model, choices}`: `choices` the agents a conversation with it can choose, each `Choice` `{id, label, kind, command, paid, models, defaultModel, available, why}`, `choice` and `model` the host's default; its `brain` `{agent, kind, provider, model, paid}`: who works it, as the host says, drawn under its name in a direct message) | `Workspace` (its `id`, the channels merged: `general`, the host's, a `dm-<member>` each, the user's) |",
-    "| `GET workspaces/{id}` | | `Workspace` |",
-    "| `GET channels/{ws}` | | `Channel[]` with `unread` |",
-    "| `POST channels/{ws}` | `NewChannel` `{name, topic, members, team}` | `Channel` (201) |",
-    "| `POST channels/{ws}/{channel}/read` | | `Channel` (`lastRead` now) |",
-    "| `PUT channels/{ws}/{channel}/agent` | `AgentChoice` `{agent, model}` | `Channel` (`agent`, `model` kept in `channels.json`): who answers a direct message, one of its member's `responder.choices` (400: not a direct message with a member who has choices, no such choice, one not `available`, a model it does not offer when it offers some); `agent: \"\"` is the host's default again |"
+    "| `PATCH channels/{ws}/{channel}` | `ChannelChanges` `{name?, topic?, state?: open\\|closed\\|archived}` | `Channel`: a channel renamed (its id stays) or its topic changed (kept over the host's when it registers again); a conversation closed (out of the sidebar until it is opened, `POST …/read`, or a message comes), archived (read only: a said message is 400) or open again. 400: a direct message's name or topic, `#general` or a direct message archived |",
+    "| `DELETE channels/{ws}/{channel}` | | `Channel`: its history moved to `.nuclear/chat/deleted/<channel>-<ms>.jsonl` (never destroyed); a channel leaves the workspace (a host's comes back, empty, when the host registers again), a direct message stays empty and closed. 400: `#general` |",
+    "| `PUT channels/{ws}/{channel}/agent` | `AgentChoice` `{agent, model}` | `Channel` (`agent`, `model` kept in `channels.json`): who answers a direct message, one of its member's `responder.choices` (400: not a direct message with a member who has choices, no such choice, one not `available`, a model it does not offer when it offers some); `agent: \"\"` is the host's default again |",
+    "| `GET messages/{ws}/{channel}?thread=` | | `Message[]` (one thread with `thread`) |",
+    "| `POST messages/{ws}/{channel}` | `Said` `{text, thread?}` | `Message` (201): the user's; who it brings in answers (events) |"
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/api.md"
@@ -14387,11 +14570,16 @@
     "The service on `127.0.0.1`, at the port the set-up chose (`NUCLEAR_CHAT_PORT` of `ai.env`, 7880 by default). JSON",
     "in and out. Every route needs the header `X-Chat-Token` with the service's token (401 without it or with another);",
     "a request with an `Origin` header (a web page) is refused (403); there are no documentation pages. A host gets the",
-    "URL, the header and the token from `nuclear-chat connect --json` (ADR-synapsis-0007, `config/project_config.nuc`).",
+    "URL, the header and the token from `nuclear-chat connect --json` (ADR-synapsis-0007, `config/project_config.nuc`);",
+    "the token lives in the system's keyring, or in `~/.local/share/nuclear-chat/.token` (`0600`) on a machine without",
+    "one ([security.md](../05-standards/security.md)).",
     "`nuclear_chat/test/api_test.nuc` checks the guards and the socket through the app (`appClient()`, with the test",
     "token of `testEnv` in `config.nuc`, never the keyring's; ADR-synapsis-0010).",
     "An error answers its status with `{\"detail\": \"…\"}`: 400 a body that is not valid or a name not in the workspace,",
     "404 no workspace, channel, message or waiting question, 409 a channel's name taken.",
+    "",
+    "A `Channel` carries `state` (`open`, `closed`, `archived`, kept in `channels.json`; a new message in a closed one opens",
+    "it again); a `Message` carries `deleted` (its time, 0 when it is not).",
     "",
     "The fields of an answer have Nuclear's names (`lastRead`, `costUsd`), as the files on disk (ADR-synapsis-0012)."
    ],
@@ -14451,10 +14639,11 @@
    "id": "doc:nuclear-chat/docs/02-architecture/overview.md#dependencies",
    "type": "context",
    "title": "Overview — Dependencies",
-   "summary": "`synapsis-py` (the fastapi dialect's runtime, with its guards and `WebSocketServer`), `websockets`, `nuclear_chat_system` (`../system`, a folder dependency of `config.nuc`), the system's `secret-tool` / `security` / PowerShell for the keyring, `sh` only in the tests.",
+   "summary": "`synapsis-py` (the fastapi dialect's runtime, with its guards and `WebSocketServer`), `websockets`, `nuclear_chat_system` (`../system`, a folder dependency of `config.nuc`), the system's `secret-tool` / `security` / PowerShell for the keyring (without one, `0600` files of…",
    "body": [
     "`synapsis-py` (the fastapi dialect's runtime, with its guards and `WebSocketServer`), `websockets`, `nuclear_chat_system` (`../system`, a folder dependency of",
-    "`config.nuc`), the system's `secret-tool` / `security` / PowerShell for the keyring, `sh` only in the tests."
+    "`config.nuc`), the system's `secret-tool` / `security` / PowerShell for the keyring (without one, `0600` files of",
+    "`~/.local/share/nuclear-chat`), `sh` only in the tests."
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/overview.md"
@@ -14469,12 +14658,13 @@
    "id": "doc:nuclear-chat/docs/02-architecture/overview.md#on-disk-in-the-project",
    "type": "context",
    "title": "Overview — On disk, in the project",
-   "summary": ".nuclear/chat/ channels.json [{ \"id\", \"name\", \"topic\", \"kind\": \"channel|dm\", \"members\", \"team\", \"lastRead\", \"agent\", \"model\" }] replaced whole gifs.json { \"online\": true|false }: the one question's answer",
+   "summary": ".nuclear/chat/ channels.json [{ \"id\", \"name\", \"topic\", \"kind\": \"channel|dm\", \"members\", \"team\", \"lastRead\", \"agent\", \"model\", \"state\" }] replaced whole deleted/ <channel>-<ms>.jsonl: a deleted conversation's history, moved, never destroyed gifs.json { \"online\": true|false }: the one question's…",
    "body": [
     "```",
     ".nuclear/chat/",
-    "  channels.json     [{ \"id\", \"name\", \"topic\", \"kind\": \"channel|dm\", \"members\", \"team\", \"lastRead\", \"agent\", \"model\" }]   replaced whole",
-    "  <channel>.jsonl   one message per line, appended; {\"edit\": \"<id>\", …} lines fold into it",
+    "  channels.json     [{ \"id\", \"name\", \"topic\", \"kind\": \"channel|dm\", \"members\", \"team\", \"lastRead\", \"agent\", \"model\", \"state\" }]   replaced whole",
+    "  <channel>.jsonl   one message per line, appended; {\"edit\": \"<id>\", …} lines fold into it ({\"deleted\": true}: deleted)",
+    "  deleted/          <channel>-<ms>.jsonl: a deleted conversation's history, moved, never destroyed",
     "  gifs.json         { \"online\": true|false }: the one question's answer",
     "```"
    ],
@@ -14513,20 +14703,35 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/overview.md#the-components-nuclear-chat-components",
+   "id": "doc:nuclear-chat/docs/02-architecture/overview.md#the-components-nuclear-chat-components.1064ed",
    "type": "context",
    "title": "Overview — The components (`nuclear_chat/components/`)",
    "summary": "Each one is used by the others only through its appcomponent (`nuclear check` enforces it).",
    "body": [
     "Each one is used by the others only through its appcomponent (`nuclear check` enforces it). Who depends on whom:",
     "`workspaces` ← `events`, `gifs` ← `messages` ← `channels`, `members`. The members answer by listening to the",
-    "events (`listener MemberAnswers` on `chat.event`), so `messages` never depends on `members`.",
-    "",
+    "events (`listener MemberAnswers` on `chat.event`), so `messages` never depends on `members`."
+   ],
+   "sources": [
+    "nuclear-chat/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/docs/02-architecture/overview.md#the-components-nuclear-chat-components.eb02c9",
+   "type": "context",
+   "title": "Overview — The components (`nuclear_chat/components/`)",
+   "summary": "The components (`nuclear_chat/components/`)",
+   "body": [
     "| Component | Holds |",
     "|---|---|",
     "| `workspaces` | `WorkspaceRegistry`: the registered projects (in memory: a host registers on start), their channels kept in `channels.json`; `Workspace.chatFile(name)` |",
-    "| `channels` | `ListChannels` (unread counts), `CreateChannel` (`Release Plan` → `release-plan`), `ReadChannel`, `ChooseAgent` (a direct message's agent) |",
-    "| `messages` | `MessageStore`: append, read, fold (edits, reactions, threads), locate a message, unread, search; the use cases of saying, posting, editing, reacting, GIFs, buttons |",
+    "| `channels` | `ListChannels` (unread counts), `CreateChannel` (`Release Plan` → `release-plan`), `ReadChannel` (a closed one opens again), `ChooseAgent` (a direct message's agent), `ChangeChannel` (name, topic, open, closed, archived), `DeleteChannel` (its history moved, `ForgetChannel`) |",
+    "| `messages` | `MessageStore`: append, read, fold (edits, reactions, threads), locate a message, unread, search (`from:`, `in:`), a deleted history moved; the use cases of saying, posting, editing, deleting, reacting, GIFs, buttons |",
     "| `members` | `Routing` (who answers), `Responders` (a run per answer, its asks), `AnswerMessage`, `AnswerQuestion` |",
     "| `gifs` | `GifChoice` (the pack, the personality's draw, the one question), `TenorRepository`, `GiphyRepository`, `SearchGifs` |",
     "| `events` | `EventLog` (the last 1000 events of each workspace, numbered), `Emit` (kept, published on `chat.event` and `chat.<workspace>`, which the app's WebSocket pushes to its subscribers) |"
@@ -14740,17 +14945,19 @@
    "id": "doc:nuclear-chat/docs/02-architecture/ui.md#commands",
    "type": "context",
    "title": "The UI (`ui/`) — Commands",
-   "summary": "cd ui && nuclear check --json && nuclear build && nuclear install # [] then build/app with its packages nuclear test # vitest: 12 tests cd build/app && npm run build:embed # dist-embed/embed.js, what a host carries nuclear fmt --check . The page was checked rendered in headless Chromium with a…",
+   "summary": "cd ui && nuclear check --json && nuclear build && nuclear install # [] then build/app with its packages nuclear test # vitest: 18 tests cd build/app && npm run build:embed # dist-embed/embed.js, what a host carries nuclear fmt --check . The page was checked rendered in headless Chromium with a…",
    "body": [
     "```sh",
     "cd ui && nuclear check --json && nuclear build && nuclear install    # [] then build/app with its packages",
-    "nuclear test                                                         # vitest: 12 tests",
+    "nuclear test                                                         # vitest: 18 tests",
     "cd build/app && npm run build:embed                                  # dist-embed/embed.js, what a host carries",
     "nuclear fmt --check .",
     "```",
     "The page was checked rendered in headless Chromium with a fake bridge answering the frames with sample data (en and",
     "es, dark and light from VS Code's variables, wide, a 300 px dock, 420 px narrow; the agent's menu open, an answer",
-    "streamed with code and tool chips)."
+    "streamed with code and tool chips), and the conversations and the search against the live service through a relay",
+    "that adds the token (the quick switcher, the members list, a search and its jump into a thread, a deleted message",
+    "and its confirmation, a direct message closed, an archived channel, the new channel dialog; en and es, a dock)."
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/ui.md"
@@ -14811,8 +15018,8 @@
     "| Folder | What |",
     "|---|---|",
     "| `config.nuc` | `contracts(nuclear_chat = \"../nuclear_chat\")`: every build writes `contracts/nuclear_chat/` (the models and one repository per controller) from the service's `.nuclear/contract.json` |",
-    "| `components/{channels,messages,members,gifs,events}/` | a facade and a use case per call, all written by `nuclear gen usecase <c> <Name> --calls <Repository>.<method>`; `events/data/live_repository.nuc`: `@on(\"chat.${workspace}\") events(workspace: string) Stream<ChatEvent>` |",
-    "| `components/chat/` | the screen: `chat_screen.nuc`, its eight managers and state models, `widgets/` by feature (sidebar, channel header, the agent's picker, message list and row, an answer being written, markdown, composer, GIF picker, thread, typing and questions, avatar, times), models `Thread`, `Activity`, `Part`, `Question`, `Completion` |",
+    "| `components/{channels,messages,members,gifs,events}/` | a facade and a use case per call (the conversations' `ChangeChannel`, `DeleteChannel`, `UpdateMessage`, `DeleteMessage`, `SearchMessages` too), all written by `nuclear gen usecase <c> <Name> --calls <Repository>.<method>`; `events/data/live_repository.nuc`: `@on(\"chat.${workspace}\") events(workspace: string) Stream<ChatEvent>` |",
+    "| `components/chat/` | the screen: `chat_screen.nuc`, its nine managers and state models, `widgets/` by feature (sidebar, channel header, the conversation's menu, the agent's picker, message list and row, an answer being written, markdown, composer, GIF picker, thread, search, quick switcher and members list, new channel, typing and questions, avatar, times), models `Thread`, `Activity`, `Part`, `Question`, `Completion`, `Target` |",
     "| `shared/models/texts.nuc` | every text in English and Spanish (`Texts(lang)`, `get`, `format`) |",
     "| `public/styles.css` | the stylesheet, inside the shadow root |",
     "| `test/chat_test.nuc` | the tests (vitest + jsdom) |"
@@ -14827,24 +15034,25 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.773d72",
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.5bf078",
    "type": "context",
    "title": "The UI (`ui/`) — The screen",
-   "summary": "`ChatScreen(workspace, channel)` provides eight managers; each reads one thing and listens to the service's events of its workspace:",
+   "summary": "`ChannelsManager` also makes a channel, changes one (`PATCH`: name, topic, closed, archived, open) and deletes one; `MessagesManager` edits the user's own message (`PATCH …/message/{id}`) and deletes any (`DELETE`).",
    "body": [
-    "`ChatScreen(workspace, channel)` provides eight managers; each reads one thing and listens to the service's events",
-    "of its workspace:",
+    "`ChannelsManager` also makes a channel, changes one (`PATCH`: name, topic, closed, archived, open) and deletes one;",
+    "`MessagesManager` edits the user's own message (`PATCH …/message/{id}`) and deletes any (`DELETE`).",
     "",
-    "| Manager | State | Reads again when |",
-    "|---|---|---|",
-    "| `WorkspaceManager` | the workspace (members, teams, `lang`) | the screen opens |",
-    "| `PackManager` | the pack's drawings (`GET gifs/pack`) | once |",
-    "| `ChannelsManager` | the channels with unread counts and each direct message's agent | a `message`, `channels` or `agent.changed` event; the open channel is marked read (`POST …/read`); `chooseAgent` (`PUT …/agent`) |",
-    "| `MessagesManager` | the open channel's messages outside threads | a `message` event of that channel; it also says, sends a GIF, reacts, clicks |",
-    "| `ThreadManager` | the open thread (`?thread=`) | a `message` event of its channel |",
-    "| `ActivityManager` | who is typing or using a tool, and the answer as it is written (its text and tools, `Part`s) | `typing`, `tool`, `message.delta`, `done`, the member's `message` |",
-    "| `QuestionsManager` | the members' questions (`ask`), answered yes or no (`POST members/{ws}/answers`) | `ask`, `done` |",
-    "| `PickerManager` | a GIF search, the one question (`ask: online` → `POST gifs/{ws}/consent`) | each search |"
+    "A message event makes its channel read again (one `GET`), not decoded from the event: an event carries the raw line",
+    "of the file (a said message has no `buttons`), and the read answer is the folded message.",
+    "",
+    "What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead,",
+    "also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's",
+    "`face`, else their initials on a color of their own, or the chat's own mark, name, role chip, *Tech lead* and *paid* chips, time, cost); the text as markdown built into",
+    "elements (fenced code, inline code, bold, italic, strike, quotes, lists, links, `@mentions`, `#channels` that open",
+    "them, `spec:`/`run:`), never as HTML; the pack's GIFs drawn from their SVG as an image (`data:` URL: its scripts",
+    "never run) and a service's by URL; the buttons of a member's question; reactions (the user's own marked, click to",
+    "add or take away) and six quick ones on hover with *Reply in thread*; a thread's count and last reply. The thread",
+    "opens beside the channel."
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/ui.md"
@@ -14856,11 +15064,15 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.981bfd",
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.8d12ed",
    "type": "context",
    "title": "The UI (`ui/`) — The screen",
-   "summary": "(`BrainLine`, from the host's `brain`): the agent's mark, `<agent> · <model>` and a *paid* or *local* chip; a team's channel is titled with the team's name.",
+   "summary": "`in:#channel`, each result with its conversation, *in a thread*, author, day and time and its words marked; a click opens its channel at the message (and its thread for a reply), lit and scrolled to once.",
    "body": [
+    "`in:#channel`, each result with its conversation, *in a thread*, author, day and time and its words marked; a click",
+    "opens its channel at the message (and its thread for a reply), lit and scrolled to once. The route's query does the",
+    "same for a host: `/<workspace>/<channel>?message=<id>&thread=<id>` (a notification opens the exact message).",
+    "",
     "**Who answers is in sight**: a direct message with a member shows under their name the brain that answers as them",
     "(`BrainLine`, from the host's `brain`): the agent's mark, `<agent> · <model>` and a *paid* or *local* chip; a team's",
     "channel is titled with the team's name. While a local member answers, the typing line says it is the local model and",
@@ -14876,22 +15088,53 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.bb9381",
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.b845d0",
    "type": "context",
    "title": "The UI (`ui/`) — The screen",
-   "summary": "A message event makes its channel read again (one `GET`), not decoded from the event: an event carries the raw line of the file (a said message has no `buttons`), and the read answer is the folded message.",
+   "summary": "`ChatScreen(workspace, channel, message, thread)` provides nine managers; each reads one thing and listens to the service's events of its workspace:",
    "body": [
-    "A message event makes its channel read again (one `GET`), not decoded from the event: an event carries the raw line",
-    "of the file (a said message has no `buttons`), and the read answer is the folded message.",
+    "`ChatScreen(workspace, channel, message, thread)` provides nine managers; each reads one thing and listens to the service's events",
+    "of its workspace:",
     "",
-    "What it shows: the channels and the direct messages with their unread badges (a team's channel with its tech lead,",
-    "also as a chip in the channel's header); the messages grouped by author and minute with a divider per day (the member's",
-    "`face`, else their initials on a color of their own, or the chat's own mark, name, role chip, *Tech lead* and *paid* chips, time, cost); the text as markdown built into",
-    "elements (fenced code, inline code, bold, italic, strike, quotes, lists, links, `@mentions`, `#channels` that open",
-    "them, `spec:`/`run:`), never as HTML; the pack's GIFs drawn from their SVG as an image (`data:` URL: its scripts",
-    "never run) and a service's by URL; the buttons of a member's question; reactions (the user's own marked, click to",
-    "add or take away) and six quick ones on hover with *Reply in thread*; a thread's count and last reply. The thread",
-    "opens beside the channel."
+    "| Manager | State | Reads again when |",
+    "|---|---|---|",
+    "| `WorkspaceManager` | the workspace (members, teams, `lang`) | the screen opens |",
+    "| `PackManager` | the pack's drawings (`GET gifs/pack`) | once |",
+    "| `ChannelsManager` | the channels with unread counts and each direct message's agent | a `message`, `channels` or `agent.changed` event; the open channel is marked read (`POST …/read`); `chooseAgent` (`PUT …/agent`) |",
+    "| `MessagesManager` | the open channel's messages outside threads | a `message` event of that channel; it also says, sends a GIF, reacts, clicks |",
+    "| `ThreadManager` | the open thread (`?thread=`) | a `message` event of its channel |",
+    "| `ActivityManager` | who is typing or using a tool, and the answer as it is written (its text and tools, `Part`s) | `typing`, `tool`, `message.delta`, `done`, the member's `message` |",
+    "| `QuestionsManager` | the members' questions (`ask`), answered yes or no (`POST members/{ws}/answers`) | `ask`, `done` |",
+    "| `PickerManager` | a GIF search, the one question (`ask: online` → `POST gifs/{ws}/consent`) | each search |",
+    "| `SearchManager` | the search of every message (`GET messages/{ws}/search`): idle, searching, found | each word typed |"
+   ],
+   "sources": [
+    "nuclear-chat/docs/02-architecture/ui.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/docs/02-architecture/ui.md#the-screen.bc1d12",
+   "type": "context",
+   "title": "The UI (`ui/`) — The screen",
+   "summary": "switcher, also Ctrl+K or ⌘K anywhere in the chat: a name, a first name or a role opens the direct message with any member of the workspace, a channel's name jumps to it (a closed or archived one too, marked); the arrows move, Enter opens, Escape closes.",
+   "body": [
+    "**Conversations, as in Slack** (requirement 14): the sidebar's pencil (*New message*) and *Jump to…* open the quick",
+    "switcher, also Ctrl+K or ⌘K anywhere in the chat: a name, a first name or a role opens the direct message with any",
+    "member of the workspace, a channel's name jumps to it (a closed or archived one too, marked); the arrows move, Enter",
+    "opens, Escape closes. *Members* (and a channel's member count) opens the members list: each one's face, name, role,",
+    "*Tech lead* and the brain that answers as them, and *Message*. The + of *Channels* makes a channel (name, topic, the",
+    "members chosen by their faces; a name taken is said in the dialog). The header's ⋯ renames a channel and edits its",
+    "topic, closes the conversation (out of the sidebar; the page goes to `#general`; opening it again from the switcher,",
+    "a search or a member's new message brings it back), archives a channel (read only: where the composer was, a bar",
+    "with *Open it again*) and deletes the conversation after a confirmation in the menu (its history moved to",
+    "`.nuclear/chat/deleted/`). On a message's toolbar: *Edit* on the user's own (in place: Enter saves, Escape cancels)",
+    "and *Delete* on any, confirmed in the row; a deleted message says *This message was deleted.* and keeps its thread.",
+    "The header's *Search* opens the search where the thread goes: every message as the user types, `from:@member` and"
    ],
    "sources": [
     "nuclear-chat/docs/02-architecture/ui.md"
@@ -14952,8 +15195,11 @@
    "id": "doc:nuclear-chat/docs/02-architecture/ui.md#what-it-waits-for",
    "type": "context",
    "title": "The UI (`ui/`) — What it waits for",
-   "summary": "propagate a `Result` yet (the compiler's roadmap).",
+   "summary": "platform's roadmap): the dialogs and the icon buttons are named by `title`.",
    "body": [
+    "- An attribute whose name is not an identifier (`aria-label`, `aria-selected`) cannot be written yet (the web",
+    "  platform's roadmap): the dialogs and the icon buttons are named by `title`.",
+    "- Ctrl+K reaches the chat while the focus is inside it; an editor may keep the chord for itself when it is not.",
     "- The texts are in one Nuclear model (`shared/models/texts.nuc`): the web platform has no translations yet.",
     "- A manager keeps an alias's `Result` and matches it (each marked `shortcut:`): an appcomponent alias does not",
     "  propagate a `Result` yet (the compiler's roadmap)."
@@ -14968,7 +15214,7 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/05-standards/security.md#security.6cf32b",
+   "id": "doc:nuclear-chat/docs/05-standards/security.md#security.861034",
    "type": "context",
    "title": "Security",
    "summary": "`127.0.0.1` only and every route, and the WebSocket's upgrade, is guarded (ADR-synapsis-0007): the header `X-Chat-Token` must carry the service's token (401), and a request with an `Origin` header (a web page) is refused (403).",
@@ -14977,15 +15223,15 @@
     "  `127.0.0.1` only and every route, and the WebSocket's upgrade, is guarded (ADR-synapsis-0007): the header",
     "  `X-Chat-Token` must carry the service's token (401), and a request with an `Origin` header (a web page) is refused",
     "  (403). Never a query parameter, which reaches the access log. An unset token refuses every request.",
-    "- **The service's token** is made once (`secrets`, 32 bytes) by `nuclear-chat serve` and kept only in the system's",
-    "  keyring (service `nuclear-chat`, account `token`), as the Smart Graph keeps its owner token, never in a file:",
-    "  `~/.config/nuclearlang/nuclear-chat.json` only notes that one is kept, so a keyring closed at login is waited for",
-    "  (90 s) and then refused, never answered with a second token. The service gets it in its environment",
-    "  (`NUCLEAR_CHAT_TOKEN`); a host gets it from `nuclear-chat connect --json` (the editors' extension host only). No",
-    "  keyring on the machine: the service does not start.",
-    "- **A responder runs in the project's folder** with the service's user; the chat gives it the conversation, never",
-    "  a key. A paid provider's money is the responder's (two confirmations, spec 011).",
-    "- **A GIF service's key** is kept in the system's keyring (service `nuclear-chat`, account `tenor` or `giphy`), read"
+    "- **The service's token** is made once (`secrets`, 32 bytes) by `nuclear-chat serve` and kept in the system's",
+    "  keyring (service `nuclear-chat`, account `token`), as the Smart Graph keeps its owner token. A machine without a",
+    "  keyring tool (`secret-tool`, `security`, PowerShell; a server, a container) keeps it in a file only the owner reads:",
+    "  `$XDG_DATA_HOME/nuclear-chat/.token` (`~/.local/share/nuclear-chat/`, folder `0700`, file `0600`).",
+    "  `~/.config/nuclearlang/nuclear-chat.json` notes that the keyring keeps it (no secret in it): a keyring closed at",
+    "  login is waited for (90 s) and then refused, never answered with a second token or with a file, and a keyring",
+    "  installed later on a machine that kept the file does not take it for a closed one. The service gets it in its",
+    "  environment (`NUCLEAR_CHAT_TOKEN`); a host gets it from `nuclear-chat connect --json` (the editors' extension host",
+    "  only)."
    ],
    "sources": [
     "nuclear-chat/docs/05-standards/security.md"
@@ -14997,12 +15243,16 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/05-standards/security.md#security.b954c0",
+   "id": "doc:nuclear-chat/docs/05-standards/security.md#security.abec49",
    "type": "context",
    "title": "Security",
-   "summary": "from stdin by `nuclear-chat gif-key`, never from the command line (but macOS's `security`, a `shortcut:` in `system/keyring.nuc`).",
+   "summary": "a key.",
    "body": [
-    "from stdin by `nuclear-chat gif-key`, never from the command line (but macOS's `security`, a `shortcut:` in",
+    "- **A responder runs in the project's folder** with the service's user; the chat gives it the conversation, never",
+    "  a key. A paid provider's money is the responder's (two confirmations, spec 011).",
+    "- **A GIF service's key** is kept in the system's keyring (service `nuclear-chat`, account `tenor` or `giphy`), or",
+    "  without one in a `0600` file of the same folder (`.tenor`, `.giphy`), read",
+    "  from stdin by `nuclear-chat gif-key`, never from the command line (but macOS's `security`, a `shortcut:` in",
     "  `system/keyring.nuc`). It never reaches a file of the project, an answer or an event. Tenor and Giphy take it as a",
     "  query parameter of their own API: a failed search answers `note: \"failed\"`, never the service's error, which",
     "  holds the URL.",
@@ -15110,10 +15360,34 @@
    }
   },
   {
-   "id": "doc:nuclear-chat/docs/08-guides/connect-a-host.md#3-answer-a-member-s-question-take-an-action",
+   "id": "doc:nuclear-chat/docs/08-guides/connect-a-host.md#3-conversations-and-the-search",
    "type": "guide",
-   "title": "Connect a host — 3. Answer a member's question, take an action",
-   "summary": "3. Answer a member's question, take an action",
+   "title": "Connect a host — 3. Conversations and the search",
+   "summary": "Every action of the page is a route a host or an agent calls too (ADR-platform-0009): messages/{ws}/message/<id>` (it shows deleted, its thread stays).",
+   "body": [
+    "Every action of the page is a route a host or an agent calls too (ADR-platform-0009):",
+    "- Edit the user's message: `PATCH messages/{ws}/message/<id> {\"text\": \"…\"}`; delete any: `DELETE",
+    "  messages/{ws}/message/<id>` (it shows deleted, its thread stays).",
+    "- Close, archive, open again, rename, change the topic: `PATCH channels/{ws}/<channel> {\"state\": \"closed\"}` (or",
+    "  `\"archived\"`, `\"open\"`, `{\"name\": \"…\"}`, `{\"topic\": \"…\"}`); delete: `DELETE channels/{ws}/<channel>` (its history",
+    "  moved to `.nuclear/chat/deleted/`); make one: `POST channels/{ws} {\"name\", \"topic\", \"members\"}`.",
+    "- Search: `GET messages/{ws}/search?words=schema%20from:@ada%20in:%23core`.",
+    "- Open the page at a message: mount it on `/<ws>/<channel>?message=<id>&thread=<id>` (VS Code's notifications do)."
+   ],
+   "sources": [
+    "nuclear-chat/docs/08-guides/connect-a-host.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-chat/docs/08-guides/connect-a-host.md#4-answer-a-member-s-question-take-an-action",
+   "type": "guide",
+   "title": "Connect a host — 4. Answer a member's question, take an action",
+   "summary": "4. Answer a member's question, take an action",
    "body": [
     "- An event `ask` `{id, question, member}`: the user's answer is `POST members/{ws}/answers {\"id\", \"answer\"}`.",
     "- An event `action`: a button clicked (`{button, message}`) or `/poc <what>`; what it does is the host's."
@@ -18197,7 +18471,8 @@
    "body": [
     "1. A new project: `nuclear new <name> -p mobile|backend|web [-d <dialect>]` (mobile: `flutter`; backend: `fastapi`,",
     "   `nestjs`; web: `react`). Inside it, `nuclear help` lists every command of its platform. `nuclear doctor` says",
-    "   what this machine lacks for it; a mobile app needs Flutter, which `nuclear setup` installs.",
+    "   what this machine lacks for it: a mobile app needs Flutter (`nuclear setup flutter`), a `nestjs` or `react` project",
+    "   Node.js (`nuclear setup node`); Python for `fastapi` comes with NuclearLang.",
     "2. Read: the brief of the dialect, the platform's topic (`mobile`, `backend`, `web`), its first-project guide",
     "   (`onboarding-mobile`, `onboarding-backend`, `onboarding-web`) and `nuclear help layout --dialect <dialect>` (where",
     "   each kind's file goes).",

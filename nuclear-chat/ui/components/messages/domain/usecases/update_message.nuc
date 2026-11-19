@@ -1,0 +1,4 @@
+// What MessagesRepository.update answers, for the screens of messages.
+usecase UpdateMessage(repository: MessagesRepository)
+  exec(workspace: string, id: string, changes: Changes) Result<NuclearChatError, Message>
+    ~repository.update(workspace, id, changes)

@@ -33,10 +33,22 @@ service MessageStore(files: ChatFiles, workspaces: WorkspacesAppComponent)
         continue
     found
 
+  // A line appended; a new message opens its conversation again when the user had closed it.
   append(ws: Workspace, channel: string, entry: <string, any>) void
     files.appendLine(file(ws, channel), Json.encode(entry))
     if entry["id"] != null
       where["${ws.id}/${entry["id"]}"] = channel
+      shown = ws.channel(channel)
+      if shown != null and shown!.state == "closed"
+        shown!.state = "open"
+        workspaces.keepChannels(ws)
+
+  // A conversation's history moved to `deleted/` (never destroyed): its new path, empty when it had none.
+  forget(ws: Workspace, channel: string) string
+    to = ws.chatFile("deleted/${channel}-${DateTime.now().millis}.jsonl")
+    for k in where.keys.filter((k) => k.startsWith("${ws.id}/") and where[k] == channel)
+      where.remove(k)
+    files.move(file(ws, channel), to) ? to : ""
 
   // The messages of a channel, folded, as maps (what a line holds).
   folded(ws: Workspace, channel: string) <string, any>[]
@@ -67,23 +79,45 @@ service MessageStore(files: ChatFiles, workspaces: WorkspacesAppComponent)
   unread(ws: Workspace, channel: Channel) int
     unreadCount(folded(ws, channel.id), channel.lastRead)
 
-  // The messages of every channel that hold every word (in the text or a GIF's title), newest first.
+  // The messages of every channel (closed and archived too) that hold every word (in the text or a GIF's title),
+  // newest first; `from:@<member>` (`from:@you`) and `in:#<channel>` narrow it. Deleted messages are never found.
   search(ws: Workspace, words: string) Found[]
-    wanted = words.lower().split(Regex(r"\s+")).filter((w: string) => not w.isEmpty)
-    if wanted.isEmpty
+    query = searchQuery(ws, words)
+    if query.words.isEmpty and query.author.isEmpty and query.inChannel.isEmpty
       return []
     found: Found[] = []
     for c in ws.channels
+      if not query.inChannel.isEmpty and c.id != query.inChannel
+        continue
       for m in folded(ws, c.id)
+        if (m["deleted"] ?? 0) != 0 or not query.author.isEmpty and m["author"] != query.author
+          continue
         gif: <string, any> = m["gif"] ?? ({} as <string, any>)
         text = "${m["text"] ?? ""} ${gif["title"] ?? ""}".lower()
-        if wanted.all((w) => w in text)
+        if query.words.all((w) => w in text)
           found.add(Found(channel = c.id, message = messageOf(m)))
     found.sortedBy((f) => -f.message.at)
 
 // A new message's id: its time and a random tail (the GIF personality's seed).
 newMessageId() string
   "${DateTime.now().millis}-${(Math.random() * 16_777_216).floor().toRadix(16)}"
+
+// A search's words and filters from what the user typed: `from:@ada` (a member by id, name or first name; `you`,
+// `me`), `in:#backend` (a channel by id or name). A filter that names nobody finds nothing (`-` matches none).
+searchQuery(ws: Workspace, text: string) SearchQuery
+  q = SearchQuery()
+  for w in text.lower().split(Regex(r"\s+")).filter((w: string) => not w.isEmpty)
+    if w.startsWith("from:")
+      who = w.substring(5).replaceAll(Regex(r"^@"), "")
+      member = ws.members.find((m) => m.id.lower() == who or m.name.lower().replaceAll(Regex(r"\s+"), "") == who or m.name.lower().split(Regex(r"\s+"))[0] == who)
+      q.author = who == "you" or who == "me" ? "you" : (member?.id ?? "-")
+    else if w.startsWith("in:")
+      room = w.substring(3).replaceAll(Regex(r"^#"), "")
+      named = ws.channels.find((c) => c.id == room or c.name.lower() == room)
+      q.inChannel = named?.id ?? "-"
+    else
+      q.words.add(w)
+  q
 
 // What an edit line may change of its message.
 EDITABLE = ["text", "buttons", "links", "gif"]
@@ -105,7 +139,16 @@ fold(lines: <string, any>[]) <string, any>[]
       byId[id] = m
       continue
     shown = byId[target]
-    if shown == null
+    if shown == null or (shown!["deleted"] ?? 0) != 0
+      continue
+    if l["deleted"] == true
+      gone: <string, any> = shown!
+      gone["deleted"] = l["at"] ?? 1
+      gone["text"] = ""
+      gone["gif"] = null
+      gone["buttons"] = []
+      gone["links"] = {}
+      gone["reactions"] = {}
       continue
     if l["react"] != null
       toggle(shown!["reactions"]!, "${l["react"]}", "${l["by"] ?? "you"}")
@@ -148,4 +191,4 @@ messageOf(m: <string, any>) Message
     shownGif = Gif(src = "${gif!["src"] ?? ""}", title = "${gif!["title"] ?? ""}", source = source in ["pack", "tenor", "giphy"] ? source : "pack")
   buttons = ((m["buttons"] ?? []) as <string, any>[]).map((b) => Button(id = "${b["id"]}", label = "${b["label"] ?? b["id"]}", style = "${b["style"] ?? ""}"))
   thread: string? = m["thread"] == null ? null : "${m["thread"]}"
-  Message(id = "${m["id"]}", at = (m["at"] ?? 0) as int, author = "${m["author"] ?? "system"}", text = "${m["text"] ?? ""}", thread = thread, gif = shownGif, reactions = (m["reactions"] ?? {}) as <string, string[]>, buttons = buttons, links = (m["links"] ?? {}) as <string, string>, costUsd = m["costUsd"], edited = (m["edited"] ?? 0) as int, replies = (m["replies"] ?? 0) as int, lastReply = (m["lastReply"] ?? 0) as int)
+  Message(id = "${m["id"]}", at = (m["at"] ?? 0) as int, author = "${m["author"] ?? "system"}", text = "${m["text"] ?? ""}", thread = thread, gif = shownGif, reactions = (m["reactions"] ?? {}) as <string, string[]>, buttons = buttons, links = (m["links"] ?? {}) as <string, string>, costUsd = m["costUsd"], edited = (m["edited"] ?? 0) as int, deleted = (m["deleted"] ?? 0) as int, replies = (m["replies"] ?? 0) as int, lastReply = (m["lastReply"] ?? 0) as int)

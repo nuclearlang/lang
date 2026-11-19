@@ -1,34 +1,118 @@
 // One message of a channel or a thread, as Slack shows it: the first of a group with the author's picture, name,
 // chips and time; the others only their text, their time shown on hover. Its GIF, its buttons (a member's
-// question), its reactions, its thread's count, and the actions on hover (quick reactions, reply in thread).
-stateless MessageRow(message: Message, ws: Workspace, texts: Texts, first: boolean, inThread: boolean, onThread: (m: Message) => void, onChannel: (id: string) => void)
+// question), its reactions, its thread's count, and the actions on hover or focus (quick reactions, reply in thread,
+// edit the user's own, delete any after a confirmation). A deleted message says so; its thread stays. `focused`: the
+// message a search or a notification opened, lit and scrolled to once.
+stateful MessageRow(message: Message, ws: Workspace, texts: Texts, first: boolean, inThread: boolean, onThread: (m: Message) => void, onChannel: (id: string) => void, focused: boolean = false)
+  // edit or delete: the step asked on the message
+  mode: string = ""
+  draft: string = ""
+  failed: string = ""
+
   build() Element
     m = message
     member = memberOf(ws, m.author)
+    gone = m.deleted > 0
     div(
-      className = "msg ${first ? "first" : "cont"}",
+      className = "msg ${first ? "first" : "cont"} ${focused ? "focused" : ""} ${gone ? "gone" : ""}",
+      ref = (el: any) => seen(el),
       children = [
         div(className = "gutter", children = first ? Avatar(member = member, author = m.author, label = authorName(ws, m.author, texts)) : span(className = "hover-time", children = clock(m.at))),
         div(
           className = "body",
           children = [
             first ? MessageMeta(message = m, member = member, ws = ws, texts = texts) : null,
-            m.text != "" ? Markdown(text = m.text, onChannel = onChannel) : null,
-            m.edited > 0 ? span(className = "edited", children = texts.get("edited")) : null,
+            gone ? span(className = "deleted", children = texts.get("deleted")) : null,
+            mode == "edit" ? editor() : (m.text != "" ? Markdown(text = m.text, onChannel = onChannel) : null),
+            m.edited > 0 and not gone ? span(className = "edited", children = texts.get("edited")) : null,
             m.gif != null ? GifImage(gif = m.gif!) : null,
             m.buttons.length > 0 ? div(className = "actions", children = m.buttons.map((b) => button(key = b.id, className = "action ${b.style}", onClick = () => MessagesManager.click(m.id, b.id), children = b.label))) : null,
             m.reactions.length > 0 ? Reactions(message = m, ws = ws, texts = texts) : null,
             not inThread and m.replies > 0 ? ThreadSummary(message = m, texts = texts, onThread = onThread) : null,
+            mode == "delete" ? confirm() : null,
+            failed != "" ? p(className = "failed", children = texts.format("failed", { "error": failed })) : null,
           ],
         ),
-        div(
-          className = "toolbar",
-          children = [
-            ...quick.map((e) => button(key = e, className = "tool-emoji", title = texts.format("react", { "emoji": e }), onClick = () => MessagesManager.react(m.id, e), children = e)),
-            not inThread ? button(className = "tool-reply", title = texts.get("reply"), onClick = () => onThread(m), children = span(className = "icon icon-thread")) : null,
-          ],
-        ),
+        gone or mode != "" ? null : toolbar(),
       ],
+    )
+
+  toolbar() Element
+    m = message
+    div(
+      className = "toolbar",
+      children = [
+        ...quick.map((e) => button(key = e, className = "tool-emoji", title = texts.format("react", { "emoji": e }), onClick = () => MessagesManager.react(m.id, e), children = e)),
+        not inThread ? button(className = "tool-reply", title = texts.get("reply"), onClick = () => onThread(m), children = span(className = "icon icon-thread")) : null,
+        m.author == "you" and m.text != "" ? button(className = "tool-edit", title = texts.get("editMessage"), onClick = () => step("edit"), children = span(className = "icon icon-edit")) : null,
+        button(className = "tool-delete", title = texts.get("deleteMessage"), onClick = () => step("delete"), children = span(className = "icon icon-trash")),
+      ],
+    )
+
+  // The user's own text, edited in place: Enter saves, Shift+Enter breaks the line, Escape cancels.
+  editor() Element
+    div(
+      className = "edit-box",
+      children = [
+        textarea(className = "edit-input", autoFocus = true, rows = 2, value = draft, title = texts.get("editMessage"), onChange = (e) => typed(e.target.value), onKeyDown = (e) => editKey(e)),
+        div(className = "edit-tools", children = [span(className = "edit-hint", children = texts.get("edit.hint")), button(className = "action", onClick = () => step(""), children = texts.get("cancel")), button(className = "action primary", disabled = draft.trim() == "", onClick = () => save(), children = texts.get("save"))]),
+      ],
+    )
+
+  // Deleting asks first.
+  confirm() Element
+    div(className = "confirm", onKeyDown = (e) => confirmKey(e), children = [span(children = texts.get("deleteMessage.confirm")), button(className = "action", autoFocus = true, onClick = () => step(""), children = texts.get("cancel")), button(className = "action danger", onClick = () => remove(), children = texts.get("delete"))])
+
+  // The focused message scrolls into sight once (the same row again does not).
+  seen(el: any)
+    if focused and el != null and el.dataset.seen != "1"
+      el.dataset.seen = "1"
+      el.scrollIntoView({ "block": "center" })
+
+  step(next: string)
+    setState(() =>
+      mode = next
+      draft = message.text
+      failed = ""
+    )
+
+  typed(text: string)
+    setState(() =>
+      draft = text
+    )
+
+  editKey(e: KeyboardEvent)
+    if e.key == "Escape"
+      e.preventDefault()
+      step("")
+    else if e.key == "Enter" and not e.shiftKey and not e.nativeEvent.isComposing
+      e.preventDefault()
+      save()
+
+  confirmKey(e: KeyboardEvent)
+    if e.key == "Escape"
+      e.preventDefault()
+      step("")
+
+  save()
+    text = draft.trim()
+    if text == "" or text == message.text
+      step("")
+      return
+    done: Result<NuclearChatError, Message> = ~MessagesManager.edit(message.id, text)
+    match done
+      Ok(m) -> step("")
+      Err(e) -> refused(e.message)
+
+  remove()
+    done: Result<NuclearChatError, Message> = ~MessagesManager.deleteMessage(message.id)
+    match done
+      Ok(m) -> step("")
+      Err(e) -> refused(e.message)
+
+  refused(why: string)
+    setState(() =>
+      failed = why
     )
 
 // The reactions the toolbar offers.

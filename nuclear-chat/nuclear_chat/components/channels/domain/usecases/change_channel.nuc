@@ -1,0 +1,28 @@
+// The user renames a channel, changes its topic, or closes, archives or opens again a conversation. A direct
+// message keeps its member's name and has no topic; `#general` is never archived.
+usecase ChangeChannel(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
+  exec(workspace: string, channel: string, changes: ChannelChanges) Result<Error, Channel>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(workspace)
+    if found.isErr
+      return Err(found.error)
+    ws = found.value
+    shown = ws.channel(channel)
+    if shown == null
+      return Err(NotFound("no channel ${channel} in this workspace"))
+    if shown!.kind == "dm" and (changes.name != null or changes.topic != null)
+      return Err(Invalid("a direct message has its member's name and no topic"))
+    if changes.state == "archived" and (shown!.kind == "dm" or channel == "general")
+      return Err(Invalid("only a channel other than #general is archived; a direct message is closed"))
+    if changes.name != null
+      name = changes.name!.trim().replaceAll(Regex(r"^#"), "")
+      if name.isEmpty
+        return Err(Invalid("a channel's name is not empty"))
+      shown!.name = name
+    if changes.topic != null
+      shown!.topic = changes.topic!.trim()
+    if changes.state != null
+      shown!.state = changes.state!
+    workspaces.keepChannels(ws)
+    ~events.emit(ws.id, "channels", channel, { "changed": channel })
+    Ok(shown!)

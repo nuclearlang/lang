@@ -1,5 +1,5 @@
 // The open channel's messages, read again when the service says one of them came or changed; what the user says,
-// sends, reacts or clicks goes to the service, which tells it back as an event.
+// sends, edits, deletes, reacts or clicks goes to the service, which tells it back as an event.
 @stateModel(MessagesState)
 statemanager MessagesManager
   (messages: MessagesComponent, events: EventsComponent)
@@ -43,3 +43,11 @@ statemanager MessagesManager
 
   click(message: string, button: string)
     ~messages.clickButton(workspace, message, Click(button = button))
+
+  // The user's own message edited: the service keeps a line that names it.
+  edit(message: string, text: string) Result<NuclearChatError, Message>
+    ~messages.updateMessage(workspace, message, Changes(text = text))
+
+  // A message deleted (the user's or a member's): it shows "deleted", its thread stays.
+  deleteMessage(message: string) Result<NuclearChatError, Message>
+    ~messages.deleteMessage(workspace, message)

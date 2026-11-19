@@ -43,7 +43,17 @@ channels/{ws}/dm-<member>/agent {"agent", "model"}`) and the chat runs that comm
   each event arrives as `{"event": "chat.<ws>", "data": {…}}` (`message`, `typing`, `ask`, `done`, `action`…).
   After a reconnection, `GET events/{ws}?since=<the last n it saw>` gives what was missed.
 
-## 3. Answer a member's question, take an action
+## 3. Conversations and the search
+Every action of the page is a route a host or an agent calls too (ADR-platform-0009):
+- Edit the user's message: `PATCH messages/{ws}/message/<id> {"text": "…"}`; delete any: `DELETE
+  messages/{ws}/message/<id>` (it shows deleted, its thread stays).
+- Close, archive, open again, rename, change the topic: `PATCH channels/{ws}/<channel> {"state": "closed"}` (or
+  `"archived"`, `"open"`, `{"name": "…"}`, `{"topic": "…"}`); delete: `DELETE channels/{ws}/<channel>` (its history
+  moved to `.nuclear/chat/deleted/`); make one: `POST channels/{ws} {"name", "topic", "members"}`.
+- Search: `GET messages/{ws}/search?words=schema%20from:@ada%20in:%23core`.
+- Open the page at a message: mount it on `/<ws>/<channel>?message=<id>&thread=<id>` (VS Code's notifications do).
+
+## 4. Answer a member's question, take an action
 - An event `ask` `{id, question, member}`: the user's answer is `POST members/{ws}/answers {"id", "answer"}`.
 - An event `action`: a button clicked (`{button, message}`) or `/poc <what>`; what it does is the host's.
 

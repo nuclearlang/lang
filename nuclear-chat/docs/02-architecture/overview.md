@@ -32,8 +32,8 @@ events (`listener MemberAnswers` on `chat.event`), so `messages` never depends o
 | Component | Holds |
 |---|---|
 | `workspaces` | `WorkspaceRegistry`: the registered projects (in memory: a host registers on start), their channels kept in `channels.json`; `Workspace.chatFile(name)` |
-| `channels` | `ListChannels` (unread counts), `CreateChannel` (`Release Plan` → `release-plan`), `ReadChannel`, `ChooseAgent` (a direct message's agent) |
-| `messages` | `MessageStore`: append, read, fold (edits, reactions, threads), locate a message, unread, search; the use cases of saying, posting, editing, reacting, GIFs, buttons |
+| `channels` | `ListChannels` (unread counts), `CreateChannel` (`Release Plan` → `release-plan`), `ReadChannel` (a closed one opens again), `ChooseAgent` (a direct message's agent), `ChangeChannel` (name, topic, open, closed, archived), `DeleteChannel` (its history moved, `ForgetChannel`) |
+| `messages` | `MessageStore`: append, read, fold (edits, reactions, threads), locate a message, unread, search (`from:`, `in:`), a deleted history moved; the use cases of saying, posting, editing, deleting, reacting, GIFs, buttons |
 | `members` | `Routing` (who answers), `Responders` (a run per answer, its asks), `AnswerMessage`, `AnswerQuestion` |
 | `gifs` | `GifChoice` (the pack, the personality's draw, the one question), `TenorRepository`, `GiphyRepository`, `SearchGifs` |
 | `events` | `EventLog` (the last 1000 events of each workspace, numbered), `Emit` (kept, published on `chat.event` and `chat.<workspace>`, which the app's WebSocket pushes to its subscribers) |
@@ -41,8 +41,9 @@ events (`listener MemberAnswers` on `chat.event`), so `messages` never depends o
 ## On disk, in the project
 ```
 .nuclear/chat/
-  channels.json     [{ "id", "name", "topic", "kind": "channel|dm", "members", "team", "lastRead", "agent", "model" }]   replaced whole
-  <channel>.jsonl   one message per line, appended; {"edit": "<id>", …} lines fold into it
+  channels.json     [{ "id", "name", "topic", "kind": "channel|dm", "members", "team", "lastRead", "agent", "model", "state" }]   replaced whole
+  <channel>.jsonl   one message per line, appended; {"edit": "<id>", …} lines fold into it ({"deleted": true}: deleted)
+  deleted/          <channel>-<ms>.jsonl: a deleted conversation's history, moved, never destroyed
   gifs.json         { "online": true|false }: the one question's answer
 ```
 
@@ -56,4 +57,5 @@ events (`listener MemberAnswers` on `chat.event`), so `messages` never depends o
 
 ## Dependencies
 `synapsis-py` (the fastapi dialect's runtime, with its guards and `WebSocketServer`), `websockets`, `nuclear_chat_system` (`../system`, a folder dependency of
-`config.nuc`), the system's `secret-tool` / `security` / PowerShell for the keyring, `sh` only in the tests.
+`config.nuc`), the system's `secret-tool` / `security` / PowerShell for the keyring (without one, `0600` files of
+`~/.local/share/nuclear-chat`), `sh` only in the tests.

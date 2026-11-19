@@ -1,0 +1,116 @@
+// Where the user starts a conversation with anyone, as Slack's quick switcher (Ctrl+K, the pencil): a name or a
+// role opens the direct message with that member, a channel's name jumps to it (a closed or archived one too).
+// `people` is the members list: each member's face, name, role and brain, and *Message* to open the direct message.
+// The arrows move, Enter opens, Escape closes.
+stateful Finder(ws: Workspace, channels: Channel[], texts: Texts, people: boolean, onOpen: (id: string) => void, onClose: () => void)
+  query: string = ""
+  marked: int = 0
+
+  build() Element
+    found = targets(ws, channels, query, people, texts)
+    div(
+      className = "overlay",
+      onMouseDown = (e) => outside(e),
+      children = div(
+        className = "dialog finder ${people ? "people" : ""}",
+        role = "dialog",
+        children = [
+          div(
+            className = "dialog-head",
+            children = [
+              span(className = "icon ${people ? "icon-people" : "icon-search"}"),
+              input(className = "finder-input", autoFocus = true, value = query, placeholder = texts.get(people ? "people.placeholder" : "finder.placeholder"), title = texts.get(people ? "people" : "jumpTo"), onChange = (e) => typed(e.target.value), onKeyDown = (e) => key(e, found)),
+              button(className = "close", title = texts.get("close"), onClick = () => onClose(), children = span(className = "icon icon-close")),
+            ],
+          ),
+          div(
+            className = "finder-list",
+            role = "listbox",
+            children = found.isEmpty ? [p(className = "finder-none", children = texts.format("finder.none", { "q": query }))] : rows(found),
+          ),
+          div(className = "dialog-foot", children = texts.get("finder.hint")),
+        ],
+      ),
+    )
+
+  rows(found: Target[]) Element[]
+    found.map((t) => people ? personRow(t, found.indexOf(t) == marked) : targetRow(t, found.indexOf(t) == marked))
+
+  // A line of the quick switcher: the member's face or `#`, the name, the role or topic, the channel's state.
+  targetRow(t: Target, on: boolean) Element
+    button(
+      key = t.channel,
+      className = "finder-item ${on ? "marked" : ""}",
+      role = "option",
+      onMouseDown = (e) => pick(e, t),
+      children = [
+        t.member != null ? Avatar(member = t.member, author = t.member!.id, size = "small") : span(className = "hash", children = "#"),
+        span(className = "finder-label", children = t.label),
+        t.hint != "" ? span(className = "finder-hint", children = t.hint) : null,
+        t.state != "open" ? span(className = "chip", children = texts.get("state.${t.state}")) : null,
+      ],
+    )
+
+  // A member of the members list: face, name, role, who answers as them, and *Message*.
+  personRow(t: Target, on: boolean) Element
+    m = t.member!
+    div(
+      key = t.channel,
+      className = "person ${on ? "marked" : ""}",
+      role = "option",
+      children = [
+        Avatar(member = m, author = m.id),
+        div(
+          className = "person-text",
+          children = [
+            div(children = [strong(children = m.name), m.role != "" ? span(className = "chip role", children = m.role) : null, leads(ws, m.id) ? span(className = "chip lead", children = texts.get("lead")) : null]),
+            m.brain.agent != "" ? BrainLine(brain = m.brain, texts = texts) : null,
+          ],
+        ),
+        button(className = "action", onClick = () => onOpen(t.channel), children = texts.get("message")),
+      ],
+    )
+
+  typed(value: string)
+    setState(() =>
+      query = value
+      marked = 0
+    )
+
+  key(e: KeyboardEvent, found: Target[])
+    if e.key == "ArrowDown" or e.key == "ArrowUp"
+      e.preventDefault()
+      if found.length > 0
+        step = e.key == "ArrowDown" ? 1 : found.length - 1
+        setState(() =>
+          marked = (marked + step) % found.length
+        )
+    else if e.key == "Enter" and found.length > 0
+      e.preventDefault()
+      onOpen(found[Math.min(marked, found.length - 1)].channel)
+    else if e.key == "Escape"
+      e.preventDefault()
+      onClose()
+
+  pick(e: MouseEvent, t: Target)
+    e.preventDefault()
+    onOpen(t.channel)
+
+  // A click on the shade around the dialog closes it.
+  outside(e: MouseEvent)
+    if e.target == e.currentTarget
+      onClose()
+
+// What a text finds: the members (by name, first name, id or role; each one's direct message) and, but in the
+// members list, the channels (by name or id). An empty text lists them all.
+targets(ws: Workspace, channels: Channel[], query: string, people: boolean, texts: Texts) Target[]
+  q = query.trim().lower().replaceAll(Regex(r"^[@#]"), "")
+  members = ws.members.filter((m) => q == "" or m.name.lower().startsWith(q) or m.id.lower().startsWith(q) or m.role.lower().startsWith(q) or m.name.lower().split(" ").any((w) => w.startsWith(q)))
+  found: Target[] = members.map((m) =>
+    dm = channels.find((c) => c.kind == "dm" and dmMember(ws, c)?.id == m.id)
+    Target(channel = dm?.id ?? "dm-${m.id.lower()}", label = m.name, hint = m.role, member = m, state = dm?.state ?? "open")
+  )
+  if people
+    return found
+  rooms = channels.filter((c) => c.kind != "dm" and (q == "" or c.name.lower().startsWith(q) or c.id.startsWith(q) or c.name.lower().split(Regex(r"[\s_.-]+")).any((w) => w.startsWith(q))))
+  [...found, ...rooms.map((c) => Target(channel = c.id, label = c.name != "" ? c.name : c.id, hint = c.topic, state = c.state))].take(12)
