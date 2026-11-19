@@ -7,6 +7,4 @@ usecase ClickButton(store: MessageStore, events: EventsAppComponent)
     buttons = (shown["buttons"] ?? []) as <string, any>[]
     if not buttons.any((b) => b["id"] == click.button)
       return Err(Invalid("the message ${id} has no button ${click.button}"))
-    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is returned whole
-    told: Result<Error, ChatEvent> = ~events.emit(ws.id, "action", channel, { "action": "button", "message": id, "button": click.button })
-    told
+    ~events.emit(ws.id, "action", channel, { "action": "button", "message": id, "button": click.button })

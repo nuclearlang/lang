@@ -693,7 +693,6 @@ impl<'a> Indexer<'a> {
             }
             Stmt::Throw { value, .. } => self.expr(value, false),
             Stmt::Yield { value, .. } => self.expr(value, false),
-            Stmt::Use(u) => self.use_item(u),
             Stmt::Break(_) | Stmt::Continue(_) => {}
         }
     }

@@ -192,8 +192,6 @@ pub struct Block {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Expr(Expr),
-    /// `use lib{ a }` inside a function: its names exist to the end of the block (ADR-lang-0012).
-    Use(Use),
     Assign(Assign),
     If(If),
     For(For),
@@ -237,7 +235,6 @@ impl Stmt {
             | Stmt::Continue(span) => *span,
             Stmt::Match(m) => m.span,
             Stmt::Try(t) => t.span,
-            Stmt::Use(u) => u.span,
         }
     }
 }

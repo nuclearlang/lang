@@ -91,6 +91,24 @@ ask = "how do I handle errors in nuclear"
 expect = ["concept:result"]
 
 [[question]]
+ask = "how do I handle a Result in a void method"
+expect = ["pitfall:result-never-discarded", "error:N0108"]
+
+[[question]]
+ask = "como manejo un Result en un metodo void"
+expect = ["pitfall:result-never-discarded", "error:N0108"]
+
+[[question]]
+ask = "a plain name in a method writes an inherited attribute"
+expect = ["error:N0118"]
+
+[[question]]
+ask = "why are imports made lazy by the transpiler where a project asks"
+agents = false
+shelves = "docs"
+expect = ["doc:nuclearlang/docs/03-adr/0012-lazy-imports.md*"]
+
+[[question]]
 ask = "what are type definitions"
 expect = ["concept:type-definitions"]
 top = 1

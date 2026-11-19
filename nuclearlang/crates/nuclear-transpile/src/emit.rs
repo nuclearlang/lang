@@ -239,6 +239,8 @@ struct ModCtx {
     param_access: Option<Template>,
     /// It extends something declared outside this file, whose members are unknown.
     open: bool,
+    /// The members only a base class declares (not the module itself): a plain name assigned to one warns (N0118).
+    inherited: HashSet<String>,
 }
 
 /// What a file of a project knows about the other files (`project::build`).
@@ -265,6 +267,8 @@ pub(crate) struct ProjectCtx {
     pub plugins: Option<HashSet<String>>,
     /// Built with `--monitor`: each function and method gets the dialect's `monitor_body` (spec 015).
     pub monitor: bool,
+    /// `[project] lazy_imports`: imports only function bodies use go into the block that uses them.
+    pub lazy_imports: bool,
     /// Target name → Nuclear name of the names a dialect renamed (`get_user` → `getUser`): the monitor's labels.
     pub source_names: HashMap<String, String>,
     /// `[project] sources` and `[project.outputs]`: where each file goes (for relative imports).
@@ -366,6 +370,8 @@ pub struct Emitter<'a> {
     project: Option<&'a ProjectCtx>,
     /// The plugins of a file built alone (`transpile_with_plugins`); a project's come from its `config.nuc`.
     plugins: HashSet<String>,
+    /// `lazy_imports` of a file built alone (`transpile_alone`); a project's comes from its `nuclear.toml`.
+    pub lazy_alone: bool,
     /// This file's path in the project, without extension.
     file_path: String,
     /// Names written in this file (project mode: the files to import).
@@ -451,8 +457,6 @@ pub struct Emitter<'a> {
     source: String,
     /// The next Member rendered is the callee of a call that is not a library call: no property rewrite.
     callee_member: bool,
-    /// The `use` lines inside functions of a dialect without `use_local`: imported with the file's others.
-    local_uses: Vec<Use>,
     /// The type being written is a cast's (`x as T`): not checked against the known classes (N0220).
     in_cast: bool,
     /// The list being written is a `[options] slot_lists` argument's (`children`); `slot_item`: the item is its `if`.
@@ -462,6 +466,9 @@ pub struct Emitter<'a> {
     assign_target: bool,
     /// Helpers of `[library.*]` members the file uses (`base.member` → text), written once after the imports.
     helpers: BTreeMap<String, String>,
+    /// Lazy imports (`[project] lazy_imports` and `[syntax] local_import`, ADR-lang-0012): each block of a function
+    /// body is written between marker lines, so `place_lazy_imports` knows which block uses which imported name.
+    lazy: Lazy,
     /// Types for the untyped parameters of the next lambda (the element type of a library receiver).
     lambda_hints: Vec<Type>,
     /// Functions and lambdas being emitted (innermost last).
@@ -545,23 +552,6 @@ fn default_name(path: &str) -> String {
     out
 }
 
-/// `./member` from `tools/cli` → `tools/member`; `../x` goes up a folder. Paths of the project, without extension.
-fn join_relative(file: &str, rel: &str) -> String {
-    let mut parts: Vec<&str> = file.split('/').collect();
-    parts.pop();
-    for piece in rel.split('/') {
-        match piece {
-            "." | "" => {}
-            ".." => {
-                parts.pop();
-            }
-            p => parts.push(p),
-        }
-    }
-    let joined = parts.join("/");
-    joined.strip_suffix(".nuc").map(str::to_string).unwrap_or(joined)
-}
-
 /// The placeholder of a library template's argument `i` while the template is rendered (private-use characters).
 fn arg_marker(i: usize) -> String {
     format!("\u{E010}{i}\u{E011}")
@@ -642,6 +632,7 @@ impl<'a> Emitter<'a> {
             d,
             project: None,
             plugins: HashSet::new(),
+            lazy_alone: false,
             file_path: String::new(),
             used_names: HashSet::new(),
             local_names: HashSet::new(),
@@ -688,12 +679,12 @@ impl<'a> Emitter<'a> {
             uses_monitor: false,
             source: String::new(),
             in_cast: false,
-            local_uses: Vec::new(),
             callee_member: false,
             slot_list: false,
             slot_item: false,
             assign_target: false,
             helpers: BTreeMap::new(),
+            lazy: Lazy::default(),
             lambda_hints: Vec::new(),
             fn_ctx: Vec::new(),
             line_starts: vec![0],
@@ -1005,6 +996,11 @@ impl<'a> Emitter<'a> {
     /// A parameter of a function: renamed only when it is a word of the target, as a field is (it is the API).
     fn declare_param(&mut self, name: &str) -> String {
         let out = self.escape(name);
+        match self.lazy.open.first() {
+            Some(&root) => _ = self.lazy.locals.entry(root).or_default().insert(out.clone()),
+            None if self.lazy.on => self.lazy.params.push(out.clone()),
+            None => {}
+        }
         if let Some(f) = self.frames.last_mut() {
             f.vars.insert(name.to_string(), out.clone());
         }
@@ -1017,6 +1013,10 @@ impl<'a> Emitter<'a> {
             names.insert(name.to_string());
         }
         let out = self.escape_value(name);
+        // a function that has a local of an imported name never reads the import (Python: the name is local in all of it)
+        if let Some(&root) = self.lazy.open.first() {
+            self.lazy.locals.entry(root).or_default().insert(out.clone());
+        }
         if let Some(f) = self.frames.last_mut() {
             f.vars.insert(name.to_string(), out.clone());
         }
@@ -1058,6 +1058,7 @@ impl<'a> Emitter<'a> {
 
     pub fn file(&mut self, f: &File) -> String {
         self.collect(f);
+        self.lazy.on = self.project.map_or(self.lazy_alone, |p| p.lazy_imports) && self.has("local_import");
         let mut top = Frame::default();
         let top_stmts: Vec<Stmt> =
             f.items.iter().filter_map(|i| if let Item::Stmt(s) = i { Some(s.clone()) } else { None }).collect();
@@ -1160,9 +1161,8 @@ impl<'a> Emitter<'a> {
             self.used_names.extend(written.iter().cloned());
         }
         self.written_words = Some(written.clone());
-        let local_uses = std::mem::take(&mut self.local_uses);
-        let uses: Vec<&Use> = uses.into_iter().chain(&local_uses).collect();
         let imports = self.imports(&uses);
+        let imports = if self.lazy.on { self.place_lazy_imports(imports, &mut decl_out) } else { imports };
 
         let mut out = String::new();
         if self.has("file_prelude") {
@@ -1472,6 +1472,7 @@ impl<'a> Emitter<'a> {
         };
         let mut lines: Vec<String> = Vec::new();
         let mut seen_modules: HashSet<String> = HashSet::new();
+        self.lazy.lines.clear();
         for u in uses {
             for c in &u.clauses {
                 if !self.d.use_clauses.contains(&c.word.name) {
@@ -1522,16 +1523,23 @@ impl<'a> Emitter<'a> {
                     .set("alias", &alias.name)
                     .set("default_name", &alias.name)
                     .value("clauses", clauses);
-                lines.push(self.tpl(key, ctx, u.span));
+                let line = self.tpl(key, ctx, u.span);
+                self.lazy.lines.push((line.clone(), None, vec![alias.name.clone()]));
+                lines.push(line);
             } else if !names.is_empty() && u.clauses.is_empty() && self.has("import_names") {
                 add_named(&mut named, &module, &names);
             } else {
+                let plain = names.is_empty() && u.clauses.is_empty();
                 let ctx = Ctx::new()
                     .set("module", &module)
                     .set("default_name", default_name(&module))
                     .set("names", names.join(", "))
                     .value("clauses", clauses);
-                lines.push(self.tpl("import_default", ctx, u.span));
+                let line = self.tpl("import_default", ctx, u.span);
+                if plain {
+                    self.lazy.lines.push((line.clone(), None, vec![default_name(&module)]));
+                }
+                lines.push(line);
             }
         }
         // auto-imports: names used but not declared anywhere
@@ -1667,23 +1675,170 @@ impl<'a> Emitter<'a> {
                 let ctx = Ctx::new()
                     .set("module", &module)
                     .set("default_name", whole.first().cloned().unwrap_or_else(|| default_name(&module)))
-                    .value("clauses", Value::Map(clauses));
-                auto_lines.push(self.tpl("import_default", ctx, Span::default()));
+                    .value("clauses", Value::Map(clauses.clone()));
+                let line = self.tpl("import_default", ctx, Span::default());
+                if clauses.is_empty() {
+                    self.lazy.lines.push((line.clone(), None, vec![whole.first().cloned().unwrap_or_else(|| default_name(&module))]));
+                }
+                auto_lines.push(line);
             }
         }
         let mut out = Vec::new();
         for (module, names) in named {
             let list: Vec<String> = names.into_iter().collect();
-            let ctx = Ctx::new()
-                .set("module", &module)
-                .set("names", list.join(", "))
-                .value("clauses", Value::Map(BTreeMap::new()));
-            out.push(self.tpl("import_names", ctx, Span::default()));
+            let line = self.import_names_line(&module, &list);
+            self.lazy.lines.push((line.clone(), Some(module), list));
+            out.push(line);
         }
         out.extend(lines);
         out.extend(auto_lines);
         out.extend(type_block);
         out
+    }
+
+    /// `from m import a, b` (the `import_names` template).
+    fn import_names_line(&mut self, module: &str, names: &[String]) -> String {
+        let ctx = Ctx::new().set("module", module).set("names", names.join(", ")).value("clauses", Value::Map(BTreeMap::new()));
+        self.tpl("import_names", ctx, Span::default())
+    }
+
+    /// Lazy imports (ADR-lang-0012): a name of an import line that only function bodies use is imported at the start
+    /// of the narrowest block of each function that holds all its uses (`local_import`), not at the top of the file.
+    /// The uses are the words of the written code, as for the imports at the top. Returns the top's lines left, and
+    /// takes the marker lines out of the declarations.
+    fn place_lazy_imports(&mut self, imports: Vec<String>, decls: &mut [(bool, String)]) -> Vec<String> {
+        // the text of each block and of what is outside every function body
+        let mut texts: Vec<String> = vec![String::new(); self.lazy.blocks.len()];
+        let mut outside = String::new();
+        for h in self.helpers.values() {
+            outside.push_str(h);
+            outside.push('\n');
+        }
+        for (_, code) in decls.iter() {
+            let mut open: Vec<usize> = Vec::new();
+            for line in code.lines() {
+                match lazy_marker(line) {
+                    Some((id, false)) => open.push(id),
+                    Some((_, true)) => {
+                        open.pop();
+                    }
+                    None => {
+                        let into = match open.last() {
+                            Some(&id) => &mut texts[id],
+                            None => &mut outside,
+                        };
+                        into.push_str(line);
+                        into.push('\n');
+                    }
+                }
+            }
+        }
+        let outside = free_code_words(&outside);
+        let words: Vec<HashSet<String>> = texts.iter().map(|t| free_code_words(t)).collect();
+        let parent = self.lazy.blocks.clone();
+        let chain = |mut b: usize| {
+            let mut c = vec![b];
+            while let Some(p) = parent[b] {
+                c.push(p);
+                b = p;
+            }
+            c
+        };
+        // block → (line, names it imports there); the names that leave the top
+        let mut placed: BTreeMap<usize, Vec<(usize, Vec<String>)>> = BTreeMap::new();
+        let mut moved: HashSet<(usize, String)> = HashSet::new();
+        for (li, (_, _, names)) in self.lazy.lines.iter().enumerate() {
+            for n in names {
+                let users: Vec<usize> = (0..words.len()).filter(|&b| words[b].contains(n)).collect();
+                if outside.contains(n) || users.is_empty() {
+                    continue;
+                }
+                // per function (the root of its blocks): the deepest block that holds every use
+                let mut by_root: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+                for &b in &users {
+                    let c = chain(b);
+                    by_root.entry(*c.last().unwrap_or(&b)).or_default().push(b);
+                }
+                // a function with a local or a parameter of that name: the import stays at the top, as it was
+                if by_root.keys().any(|r| self.lazy.locals.get(r).is_some_and(|l| l.contains(n))) {
+                    continue;
+                }
+                for blocks in by_root.values() {
+                    let mut common = chain(blocks[0]);
+                    for &b in &blocks[1..] {
+                        let c = chain(b);
+                        common.retain(|x| c.contains(x));
+                    }
+                    // never inside a loop: its first block outside every loop that holds the uses
+                    let at = common.iter().rposition(|b| self.lazy.loops.contains(b)).map_or(common[0], |i| common[i + 1]);
+                    let entry = placed.entry(at).or_default();
+                    match entry.iter_mut().find(|(l, _)| *l == li) {
+                        Some((_, ns)) => ns.push(n.clone()),
+                        None => entry.push((li, vec![n.clone()])),
+                    }
+                }
+                moved.insert((li, n.clone()));
+            }
+        }
+        // the import lines of each block
+        let mut at_block: HashMap<usize, Vec<String>> = HashMap::new();
+        for (b, lines) in placed {
+            let mut out = Vec::new();
+            for (li, names) in lines {
+                let (line, module, _) = self.lazy.lines[li].clone();
+                let text = match module {
+                    Some(m) => self.import_names_line(&m, &names),
+                    None => line,
+                };
+                out.push(self.tpl("local_import", Ctx::new().set("import", text), Span::default()));
+            }
+            at_block.insert(b, out);
+        }
+        for (_, code) in decls.iter_mut() {
+            let mut out = String::with_capacity(code.len());
+            for line in code.lines() {
+                match lazy_marker(line) {
+                    Some((id, false)) => {
+                        let indent: String = line.chars().take_while(|c| c.is_whitespace()).collect();
+                        for l in at_block.get(&id).into_iter().flatten() {
+                            for part in l.lines() {
+                                out.push_str(&indent);
+                                out.push_str(part);
+                                out.push('\n');
+                            }
+                        }
+                    }
+                    Some((_, true)) => {}
+                    None => {
+                        out.push_str(line);
+                        out.push('\n');
+                    }
+                }
+            }
+            if !code.ends_with('\n') {
+                out.pop();
+            }
+            *code = out;
+        }
+        // the top keeps each line's names that did not move
+        let lazy_lines = std::mem::take(&mut self.lazy.lines);
+        let mut top = Vec::new();
+        for line in imports {
+            let Some((li, (_, module, names))) = lazy_lines.iter().enumerate().find(|(_, (l, _, _))| *l == line) else {
+                top.push(line);
+                continue;
+            };
+            let kept: Vec<String> = names.iter().filter(|n| !moved.contains(&(li, (*n).clone()))).cloned().collect();
+            if kept.len() == names.len() {
+                top.push(line);
+            } else if !kept.is_empty() {
+                top.push(match module {
+                    Some(m) => self.import_names_line(m, &kept),
+                    None => line,
+                });
+            }
+        }
+        top
     }
 
     /// N0116: a member of a value typed with a closed declaration of the project must exist. Closed: every member is
@@ -2369,7 +2524,13 @@ impl<'a> Emitter<'a> {
                 let v = s.tail_expr(e, &Tail::Return);
                 s.tpl("return", Ctx::new().set("value", v), e.span)
             }),
-            None => self.body(&stmts, returns),
+            None => {
+                // a function's body is the outermost block a lazy import can go to
+                let marking = std::mem::replace(&mut self.lazy.marking, true);
+                let body = self.body(&stmts, returns);
+                self.lazy.marking = marking;
+                body
+            }
         };
         let body = if inits.is_empty() { body } else { format!("{}\n{body}", inits.join("\n")) };
         let globals = std::mem::replace(&mut self.global_names, saved_globals);
@@ -2801,6 +2962,7 @@ impl<'a> Emitter<'a> {
             .filter_map(|t| if let TypeKind::Named { name, .. } = &t.kind { Some(name.clone()) } else { None })
             .collect();
         let (inherited, all_known) = self.inherited_members_known(pending);
+        let inherited_only: HashSet<String> = inherited.difference(&member_names).cloned().collect();
         member_names.extend(inherited);
         let open = !all_known;
         // the classes a kind extends (`inherits`) and the class every class extends (`implicit_base`)
@@ -2830,6 +2992,7 @@ impl<'a> Emitter<'a> {
             ctor_defaults,
             param_access: kind.as_ref().and_then(|(_, k)| k.param_access.clone()),
             open,
+            inherited: inherited_only,
         });
         let mut overrides: Vec<String> = kind.as_ref().map(|(_, k)| k.overrides.clone()).unwrap_or_default();
         overrides.extend(implicit_members);
@@ -3544,8 +3707,8 @@ impl<'a> Emitter<'a> {
                 }
                 continue;
             };
-            if let Some(s) = info.method_sigs.get(method) {
-                return Some(s.clone());
+            if let Some(s) = self.sig_of_method(info, method) {
+                return Some(s);
             }
             pending.extend(info.bases.iter().cloned());
         }
@@ -3694,7 +3857,7 @@ impl<'a> Emitter<'a> {
 
     /// A call of an async function that returns a Result, written without `~`: its value is a promise.
     /// Reports it (N0111) and returns true.
-    fn result_needs_await(&mut self, e: &Expr) -> bool {
+    fn result_needs_await(&mut self, e: &Expr, method: Option<&str>) -> bool {
         if !matches!(e.kind, ExprKind::Call { .. }) || self.result_info(e, false).is_some() {
             return false;
         }
@@ -3703,11 +3866,12 @@ impl<'a> Emitter<'a> {
             return false;
         }
         let source = Self::result_source(e);
-        self.error(
-            codes::RESULT_PATTERN,
-            e.span,
-            format!("'{source}' is async: write ~ before the call to get its Result (~{source}(...))"),
-        );
+        let msg = match method {
+            // `~f().error(...)` awaits the whole chain: the call is awaited first
+            Some(m) => format!("'{source}' is async: await the call before .{m}(...): (~{source}(...)).{m}(...)"),
+            None => format!("'{source}' is async: write ~ before the call to get its Result (~{source}(...))"),
+        };
+        self.error(codes::RESULT_PATTERN, e.span, msg);
         true
     }
 
@@ -3877,7 +4041,7 @@ impl<'a> Emitter<'a> {
             self.error(
                 codes::UNHANDLED_RESULT,
                 e.span,
-                format!("'{source}' returns a Result that can fail and this function does not return a Result: handle it with match (Ok(x) -> ... / Err(e) -> ...), keep it in a variable typed Result<E, T>, or make this function return Result<E, ...>"),
+                format!("'{source}' returns a Result that can fail and this function does not return a Result; a Result is always handled: handle its error with {call}.error((e) => ...) or a match (Ok(x) -> ... / Err(e) -> ...), or make this function return Result<E, ...> to propagate it", call = if matches!(e.kind, ExprKind::Unary { op: UnaryOp::Await, .. }) { format!("(~{source}(...))") } else { format!("{source}(...)") }),
             );
             return None;
         };
@@ -3996,7 +4160,7 @@ impl<'a> Emitter<'a> {
         if !on_result {
             return None;
         }
-        self.result_needs_await(&m.subject);
+        self.result_needs_await(&m.subject, None);
         let mut arms = Vec::new();
         for arm in &m.arms {
             let parsed = match arm.patterns.as_slice() {
@@ -4083,10 +4247,10 @@ impl<'a> Emitter<'a> {
                 f.vars.insert(name, text);
             }
             match arm.body {
-                ArmBody::Expr(x) => {
+                ArmBody::Expr(x) => e.lazy_block(|e| {
                     let v = e.tail_expr(x, tail);
                     e.tail_value(tail, v, x.span)
-                }
+                }),
                 ArmBody::Block(b) => e.stmts(&b.stmts, tail),
             }
         })
@@ -4228,6 +4392,35 @@ impl<'a> Emitter<'a> {
 
     /// The statements of one block. A variable created here is mutable when it is assigned again later.
     fn stmts(&mut self, stmts: &[Stmt], tail: &Tail) -> String {
+        self.lazy_block(|e| e.stmts_in(stmts, tail))
+    }
+
+    /// Writes one block of a function body between the marker lines of lazy imports (when they are on).
+    fn lazy_block(&mut self, f: impl FnOnce(&mut Self) -> String) -> String {
+        let is_loop = std::mem::take(&mut self.lazy.loop_next);
+        if !self.lazy.on || !self.lazy.marking {
+            return f(self);
+        }
+        let id = self.lazy.blocks.len();
+        if is_loop {
+            self.lazy.loops.insert(id);
+        }
+        if self.lazy.open.is_empty() {
+            // a function's body: its parameters are its locals
+            let params = std::mem::take(&mut self.lazy.params);
+            self.lazy.locals.entry(id).or_default().extend(params);
+        }
+        self.lazy.blocks.push(self.lazy.open.last().copied());
+        self.lazy.open.push(id);
+        let code = f(self);
+        self.lazy.open.pop();
+        if code.is_empty() {
+            return code;
+        }
+        format!("{LAZY_OPEN}{id}{LAZY_CLOSE}\n{code}\n{LAZY_OPEN}/{id}{LAZY_CLOSE}")
+    }
+
+    fn stmts_in(&mut self, stmts: &[Stmt], tail: &Tail) -> String {
         let reassigned = analysis::reassigned_after(stmts);
         if let Some(f) = self.frames.last_mut() {
             f.mutable.extend(reassigned);
@@ -4237,16 +4430,18 @@ impl<'a> Emitter<'a> {
         for (i, s) in stmts.iter().enumerate() {
             let pre = self.comments_before(s.span().start);
             let code = self.with_pending(|e| if i + 1 == n { e.stmt_tail(s, tail) } else { e.stmt(s) });
-            // a `use` whose import went to the top of the file writes nothing here
-            if code.is_empty() && pre.is_empty() && matches!(s, Stmt::Use(_)) {
-                continue;
-            }
             lines.push(attach(pre, mark(s.span().start, code)));
         }
         lines.join("\n")
     }
 
     /// A nested block (if, for, while, match, try): the variables created in it end with it.
+    /// The body of a `for` or a `while`: a lazy import never goes into it (it would run on every turn).
+    fn loop_body(&mut self, b: &Block) -> String {
+        self.lazy.loop_next = true;
+        self.block(b, &Tail::None)
+    }
+
     fn block(&mut self, b: &Block, tail: &Tail) -> String {
         self.scoped(|e| e.stmts(&b.stmts, tail))
     }
@@ -4336,7 +4531,6 @@ impl<'a> Emitter<'a> {
 
     fn stmt(&mut self, s: &Stmt) -> String {
         match s {
-            Stmt::Use(u) => self.local_use(u),
             Stmt::Expr(e) => {
                 if let Some(info) = self.result_info(e, false) {
                     let in_result_fn = self.fn_ctx.last().is_some_and(|c| c.result.is_some());
@@ -4368,7 +4562,7 @@ impl<'a> Emitter<'a> {
                 let c = self.expr(cond).0;
                 self.hoist_blocked -= 1;
                 self.loop_names.push(HashSet::new());
-                let b = self.block(body, &Tail::None);
+                let b = self.loop_body(body);
                 self.loop_names.pop();
                 self.tpl("while", Ctx::new().set("cond", c).set("body", b), *span)
             }
@@ -4399,65 +4593,6 @@ impl<'a> Emitter<'a> {
             Stmt::Break(span) => self.plain("break", *span),
             Stmt::Continue(span) => self.plain("continue", *span),
         }
-    }
-
-    /// A `use` inside a function (ADR-lang-0012): its names are locals of the block; with `use_local` the import is
-    /// written here, without it the import goes with the file's others (a project file's names are imported there
-    /// as any project name is).
-    fn local_use(&mut self, u: &Use) -> String {
-        let project_module = match &u.path {
-            UsePath::File(rel) => {
-                let target = join_relative(&self.file_path, rel);
-                let found = self.project.filter(|p| p.decls.values().any(|e| e.path == target));
-                let Some(p) = found else {
-                    self.error(codes::UNDEFINED_NAME, u.span, format!("'{rel}' is not a file of this project (a path relative to this file, without `.nuc`)"));
-                    return String::new();
-                };
-                for n in &u.names {
-                    if p.decls.get(&n.name).is_none_or(|e| e.path != target) {
-                        self.error(codes::UNDEFINED_NAME, n.span, format!("'{}' is not declared in '{rel}'", self.src_name(n)));
-                    }
-                }
-                Some(self.project_module(p, &target))
-            }
-            UsePath::Module(_) => None,
-        };
-        if !self.has("use_local") {
-            // the names are still the block's, as in a dialect that writes the `use` in place (N0105 after it); not
-            // local names of the file, so the top of the file imports them
-            for n in u.names.iter().chain(&u.alias) {
-                let out = self.escape_value(&n.name);
-                if let Some(f) = self.frames.last_mut() {
-                    f.vars.insert(n.name.clone(), out);
-                }
-            }
-            match project_module {
-                // the names stay the project's: imported at the top of the file
-                Some(_) => {}
-                None => self.local_uses.push(u.clone()),
-            }
-            return String::new();
-        }
-        let names: Vec<String> = u.names.iter().map(|n| self.declare_local(&n.name)).collect();
-        let alias = u.alias.as_ref().map(|a| self.declare_local(&a.name));
-        let line = match project_module {
-            Some(module) => {
-                let ctx = Ctx::new().set("module", module).set("names", names.join(", ")).value("clauses", Value::Map(BTreeMap::new()));
-                self.tpl("import_names", ctx, u.span)
-            }
-            None => {
-                let mut one = u.clone();
-                if let Some(a) = alias {
-                    one.alias = Some(Ident { name: a, span: u.span });
-                }
-                // the import lines of a top-level `use`, without the file's auto-imports
-                let saved = (std::mem::take(&mut self.refs), self.project.take(), self.written_words.take());
-                let lines = self.imports(&[&one]);
-                (self.refs, self.project, self.written_words) = saved;
-                lines.join("\n")
-            }
-        };
-        self.tpl("use_local", Ctx::new().set("import", line), u.span)
     }
 
     /// The target's module of a file of the project (`project_import`): `nuclear_builder.member`.
@@ -4507,6 +4642,14 @@ impl<'a> Emitter<'a> {
                 format!("'{n}' is a method of '{m}': it cannot be assigned; give the variable another name"),
             );
         }
+        // `given = x` in a method of `Member: Chat`: it writes Chat's attribute, which the subclass may not know of
+        if let ExprKind::Name(n) = &a.target.kind
+            && self.lookup_local(n).is_none()
+            && let Some(m) = self.module.as_ref().filter(|m| m.inherited.contains(n))
+        {
+            let msg = format!("'{n}' is an attribute '{}' inherits: this writes it; write ${n} to say the attribute is meant, or give the local another name", m.name);
+            self.diags.push(Diagnostic::warning(codes::INHERITED_ASSIGN, a.target.span, msg).with_fix(a.target.span, format!("${n}")));
+        }
         if a.op == AssignOp::Set
             && let Some(code) =
                 self.assign_branching(a).or_else(|| self.destructure(a)).or_else(|| self.cascade_statements(a))
@@ -4520,7 +4663,12 @@ impl<'a> Emitter<'a> {
         }
         // `r: Result<E, T> = call()` keeps the Result; `x = call()` unwraps it (x is the Ok value)
         let value_result = self.result_info(&a.value, false);
-        if a.ty.as_ref().is_some_and(|t| self.result_type(t).is_some()) {
+        // also a name already typed Result given another one (`chosen = gifs.pick(...)`)
+        let kept_name = match &a.target.kind {
+            ExprKind::Name(n) if a.ty.is_none() => self.var_type(n).is_some_and(|t| self.result_type(&t).is_some()),
+            _ => false,
+        };
+        if kept_name || a.ty.as_ref().is_some_and(|t| self.result_type(t).is_some()) {
             self.keep_next = true;
         } else if value_result.is_some()
             && let ExprKind::Name(n) = &a.target.kind
@@ -4797,14 +4945,16 @@ impl<'a> Emitter<'a> {
     /// `x = if ...` / `x = match ...` with branches of several lines: x is declared, and the last line
     /// of each branch is assigned to it. Branches of one expression stay a ternary (see `expr`).
     fn assign_branching(&mut self, a: &Assign) -> Option<String> {
+        // with lazy imports, a branch is a block that can import what only it uses (one-line branches too)
+        let blocks = self.lazy.on && self.lazy.marking;
         match &a.value.kind {
-            ExprKind::If(i) if !single_expr_if(i) => {
+            ExprKind::If(i) if !single_expr_if(i) || blocks => {
                 if i.otherwise.is_none() {
                     self.error(codes::BRANCHING_VALUE, i.span, "an if used as a value needs an else branch");
                     return Some(String::new());
                 }
             }
-            ExprKind::Match(m) if !single_expr_match(m) => {
+            ExprKind::Match(m) if !single_expr_match(m) || blocks => {
                 let exhaustive = match self.result_arms(m) {
                     Some(arms) => Self::result_arms_exhaustive(&arms),
                     None => m.arms.iter().any(|arm| arm.patterns.iter().any(|p| matches!(p, Pattern::Wildcard(_)))),
@@ -4878,7 +5028,7 @@ impl<'a> Emitter<'a> {
                 fr.types.insert(f.vars[0].name.clone(), k);
                 fr.types.insert(f.vars[1].name.clone(), v);
             }
-            let body = self.block(&f.body, &Tail::None);
+            let body = self.loop_body(&f.body);
             return self.tpl(
                 "for_entries",
                 Ctx::new()
@@ -4898,7 +5048,7 @@ impl<'a> Emitter<'a> {
             if let Some(fr) = self.frames.last_mut() {
                 fr.types.insert(f.vars[0].name.clone(), named_type("int", Vec::new(), f.span));
             }
-            let body = self.block(&f.body, &Tail::None);
+            let body = self.loop_body(&f.body);
             return self.tpl(
                 "for_range",
                 Ctx::new().set("var", var).set("start", start).set("end", end).set("body", body),
@@ -4912,7 +5062,7 @@ impl<'a> Emitter<'a> {
         {
             fr.types.insert(f.vars[0].name.clone(), t);
         }
-        let body = self.block(&f.body, &Tail::None);
+        let body = self.loop_body(&f.body);
         self.tpl("for_in", Ctx::new().set("var", var).set("iter", iter).set("body", body), f.span)
     }
 
@@ -4953,10 +5103,10 @@ impl<'a> Emitter<'a> {
         let mut first = true;
         for arm in &m.arms {
             let body = match &arm.body {
-                ArmBody::Expr(e) => {
-                    let v = self.tail_expr(e, tail);
-                    self.tail_value(tail, v, e.span)
-                }
+                ArmBody::Expr(e) => self.lazy_block(|s| {
+                    let v = s.tail_expr(e, tail);
+                    s.tail_value(tail, v, e.span)
+                }),
                 ArmBody::Block(b) => self.block(b, tail),
             };
             match self.arm_condition(&m.subject, &arm.patterns) {
@@ -6467,7 +6617,7 @@ impl<'a> Emitter<'a> {
                     return self.result_method(object, &name.name, &args[0].value, span);
                 }
                 ExprKind::Member { object, name, .. } if name.name == "ok" || name.name == "error" => {
-                    self.result_needs_await(object);
+                    self.result_needs_await(object, Some(&name.name));
                 }
                 _ => {}
             }
@@ -6815,7 +6965,10 @@ impl<'a> Emitter<'a> {
                     self.lambda_names = names;
                     self.expr_lambda(params, x, is_async, e.span, l.span)
                 } else {
+                    // a lambda's body runs later: what it uses is imported in the block that makes it
+                    let marking = std::mem::replace(&mut self.lazy.marking, false);
                     let body = self.body(&b.stmts, returns);
+                    self.lazy.marking = marking;
                     self.lambda_names = names;
                     self.block_lambda(params, body, is_async, l.span)
                 }
@@ -7139,6 +7292,41 @@ fn reorder(args: &[Arg], params: &[Param], native: bool, props: bool) -> Option<
 /// Comment lines above a piece of code.
 // Line map (output line → source line, for debuggers): the code of each statement, member and declaration starts
 // with `MARK <source offset> END`; `file` removes the marks once the output is laid out.
+/// The marker lines around a block of a function body while lazy imports are placed (`{LAZY_OPEN}3{LAZY_CLOSE}`
+/// opens block 3, `{LAZY_OPEN}/3{LAZY_CLOSE}` closes it).
+const LAZY_OPEN: char = '\u{E020}';
+const LAZY_CLOSE: char = '\u{E021}';
+
+/// What lazy imports need while a file is written.
+#[derive(Default)]
+struct Lazy {
+    on: bool,
+    /// Inside a function body (not a lambda's): its blocks are marked.
+    marking: bool,
+    /// Each marked block's parent block (None: a function body).
+    blocks: Vec<Option<usize>>,
+    open: Vec<usize>,
+    /// The names each function body (its outermost block) declares as locals or parameters (a lambda's included).
+    locals: HashMap<usize, HashSet<String>>,
+    /// The parameters of the function being written, before its body opens.
+    params: Vec<String>,
+    /// The blocks that are the body of a loop, and whether the next block is one.
+    loops: HashSet<usize>,
+    loop_next: bool,
+    /// The import lines a block can take: the line, its module when it imports names (`from m import a, b`), and the
+    /// names it binds.
+    lines: Vec<(String, Option<String>, Vec<String>)>,
+}
+
+/// A marker line of lazy imports: its block and whether it closes it.
+fn lazy_marker(line: &str) -> Option<(usize, bool)> {
+    let inner = line.trim().strip_prefix(LAZY_OPEN)?.strip_suffix(LAZY_CLOSE)?;
+    match inner.strip_prefix('/') {
+        Some(id) => id.parse().ok().map(|i| (i, true)),
+        None => inner.parse().ok().map(|i| (i, false)),
+    }
+}
+
 const MARK: char = '\u{E000}';
 const END: char = '\u{E001}';
 

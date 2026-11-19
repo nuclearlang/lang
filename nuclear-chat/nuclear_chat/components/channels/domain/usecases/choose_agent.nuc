@@ -2,11 +2,7 @@
 // offers (any model when it offers none), or nothing (the host's default again). Kept with the channel.
 usecase ChooseAgent(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
   exec(workspace: string, channel: string, input: AgentChoice) Result<Error, Channel>
-    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
-    found: Result<Error, Workspace> = workspaces.workspace(workspace)
-    if found.isErr
-      return Err(found.error)
-    ws = found.value
+    ws = workspaces.workspace(workspace)
     shown = ws.channel(channel)
     if shown == null
       return Err(NotFound("no channel ${channel} in this workspace"))

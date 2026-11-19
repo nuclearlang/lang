@@ -2,11 +2,7 @@
 // message keeps its member's name and has no topic; `#general` is never archived.
 usecase ChangeChannel(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
   exec(workspace: string, channel: string, changes: ChannelChanges) Result<Error, Channel>
-    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
-    found: Result<Error, Workspace> = workspaces.workspace(workspace)
-    if found.isErr
-      return Err(found.error)
-    ws = found.value
+    ws = workspaces.workspace(workspace)
     shown = ws.channel(channel)
     if shown == null
       return Err(NotFound("no channel ${channel} in this workspace"))

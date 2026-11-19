@@ -244,7 +244,6 @@ impl Renamer {
                     self.expr(e);
                 }
             }
-            Stmt::Use(u) => u.names.iter_mut().for_each(|n| self.ident(n)),
             Stmt::Break(_) | Stmt::Continue(_) => {}
         }
     }

@@ -15,8 +15,11 @@ graph Planner(tasks: TasksAppComponent)
   @next("end")
   save(state: PlanState) <string, any>
     created = 0
+    failed: string[] = []
     for title in state.titles
-      made = ~tasks.create(NewTask(title = title))
+      made: Result<Error, Task> = ~tasks.create(NewTask(title = title))
       if made.isOk
         created += 1
-    { "created": created }
+      else
+        failed.add("${title}: ${made.error.message}")
+    { "created": created, "failed": failed }

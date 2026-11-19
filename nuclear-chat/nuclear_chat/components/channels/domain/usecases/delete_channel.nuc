@@ -3,19 +3,13 @@
 // `#general` is the whole project's and is never deleted.
 usecase DeleteChannel(workspaces: WorkspacesAppComponent, messages: MessagesAppComponent, events: EventsAppComponent)
   exec(workspace: string, channel: string) Result<Error, Channel>
-    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
-    found: Result<Error, Workspace> = workspaces.workspace(workspace)
-    if found.isErr
-      return Err(found.error)
-    ws = found.value
+    ws = workspaces.workspace(workspace)
     shown = ws.channel(channel)
     if shown == null
       return Err(NotFound("no channel ${channel} in this workspace"))
     if channel == "general"
       return Err(Invalid("#general is the whole project's: it is never deleted"))
-    moved: Result<Error, string> = messages.forgetChannel(ws, channel)
-    if moved.isErr
-      return Err(moved.error)
+    messages.forgetChannel(ws, channel)
     if shown!.kind == "dm"
       shown!.state = "closed"
       shown!.lastRead = 0

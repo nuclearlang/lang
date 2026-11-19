@@ -485,6 +485,8 @@ main(argv: string[]? = null) void
     return
   try
     rest = args.skip(1)
+    // `member` and `mcp` load the `mcp` library (some 300 ms): `lazy_imports` (nuclear.toml) imports each in its
+    // arm, so every other command starts without it
     code = match args[0]
       "setup" -> setup(rest)
       "team" -> team(rest)
@@ -496,14 +498,8 @@ main(argv: string[]? = null) void
       "runs" -> runsLine(rest)
       "checks" -> checksLine(rest)
       "spec" -> specLine(rest)
-      // `member` and `mcp` load the `mcp` library (some 300 ms): imported when their command runs, so every other
-      // command starts without it
-      "member" ->
-        use './member'{ memberLine }
-        memberLine(rest)
-      "chat-host" ->
-        use './member'{ chatHostLine }
-        chatHostLine(rest)
+      "member" -> memberLine(rest)
+      "chat-host" -> chatHostLine(rest)
       "agents" -> agentsLine(rest)
       "models" -> modelsLine(rest)
       "ci" -> ciLine(rest)
@@ -511,9 +507,7 @@ main(argv: string[]? = null) void
       "line" -> lineLine(rest)
       "read" -> readLineCommand(rest)
       "connections" -> connectionsLine(rest)
-      "mcp" ->
-        use './mcp'{ mcpLine }
-        mcpLine(rest)
+      "mcp" -> mcpLine(rest)
       _ -> usageError(args[0])
     sys.exit(code)
   catch e

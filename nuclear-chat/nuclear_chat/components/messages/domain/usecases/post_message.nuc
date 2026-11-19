@@ -19,9 +19,15 @@ usecase PostMessage(store: MessageStore, events: EventsAppComponent, gifs: GifsA
     store.append(ws, channel, entry)
     ~events.emit(ws.id, "message", channel, { "message": entry })
     if member != null and (posted.moment != null or posted.gif != null)
-      // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
-      chosen: Result<Error, Gif?> = posted.gif != null ? gifs.pick(member!, posted.gif!, "${entry["id"]}", posted.answersGif) : gifs.choose(member!, posted.moment!, "${entry["id"]}")
-      if chosen.isOk and chosen.value != null
+      // the message is posted even when its GIF cannot be chosen: that failure is logged
+      chosen: Result<Error, Gif?> = Ok(null)
+      if posted.gif != null
+        chosen = gifs.pick(member!, posted.gif!, "${entry["id"]}", posted.answersGif)
+      else
+        chosen = gifs.choose(member!, posted.moment!, "${entry["id"]}")
+      if chosen.isErr
+        print("warning: no GIF after the message ${entry["id"]} of ${posted.author}: ${chosen.error.message}")
+      else if chosen.value != null
         after: <string, any> = { "id": newMessageId(), "at": DateTime.now().millis, "author": posted.author, "text": "", "gif": Json.decode(Json.encode(chosen.value!)) }
         if posted.thread != null
           after["thread"] = posted.thread

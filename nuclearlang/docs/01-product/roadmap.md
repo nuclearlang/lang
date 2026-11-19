@@ -129,26 +129,11 @@ and Dart's `operator ==` compare fields, Nuclear's `==` of two modules compares 
   `null` when absent. Also a typed map whose values are not nullable, indexed by a plain name or a call
   (`ADAPTERS[provider] == null` in Nuclear Builder's `chat.nuc`, where `ADAPTERS["${p}"]` is `.get`): Python's
   subscript, `KeyError`. Workaround: `key in map` first.
-- **A local named like an inherited attribute writes the attribute** (2026-11-18): in a method of `Member: Chat`,
-  `given = …` (Chat's `given`) is written `self.given = …`. It follows the rule that a member's name assigned in a
-  method is the member (nuclear-base §4.2, also for a module's own fields), but the subclass may not know the base
-  has it. To decide with the user: keep the rule, or require `$given` for an inherited one (a new N-code for the
-  plain name), or a warning.
 - **`try` is not a value in the middle of a block** (`raw = try ... catch e ...`): only as the last line of a
   function. Workaround: a helper function whose last line is the `try`.
 
 ### Found writing Nuclear Chat's service (spec 013, 2026-11-18)
 
-- **An appcomponent alias's `Result` does not propagate**: inside a use case returning `Result`,
-  `ws = workspaces.workspace(id)` (an alias of another component's use case) keeps the `Result` (N0114 then says
-  `ws.value.id`), where a method written in Nuclear with that return type unwraps it. Workaround: a typed
-  `Result` and `if found.isErr` + `return Err(found.error)`, marked `shortcut:` in `nuclear-chat/nuclear_chat/`.
-  Wanted: aliases propagate like the method they name.
-  The fix is one line (`method_sig` follows `DeclInfo.aliases` as `sig_of_method` does), tried 2026-11-18: it makes
-  17 places invalid that discard an alias's Result (a `~` statement in a `void` method or a lambda: N0108; a typed
-  `Result` from a ternary: N0110) in `nuclear-chat/` and the backend example `tasks_api` (`made.isOk` in
-  `planner.nuc`). To decide with the user: how a statement discards a Result on purpose (`~f().error(...)` does not
-  chain on an async call; an unused typed variable trips pyright strict), then the fix and those places.
 - **A block lambda given where `(…) => Future<void>` is expected**: it is async only when it holds a `~`, and its
   last line is returned (`told = ~emit(…)` then `told.isOk` makes it return a `bool`). Workaround: a `~` inside and
   an `if` as the last statement. Wanted: the expected type decides both.
@@ -162,9 +147,14 @@ and Dart's `operator ==` compare fields, Nuclear's `==` of two modules compares 
 
 ### Found building Nuclear Chat's UI (spec 013, 2026-11-18)
 
-- **An appcomponent alias's `Result`** (above, found in the service): typed `all: Message[] = ~messages.history(…)`
-  is accepted and written as an assignment of the `Result` (only `tsc` catches it); and a named argument to an
-  alias (`searchGifs(workspace, q = q)`) is written as an object (`{ q }`) where the use case takes it positionally.
+- **A named argument to an appcomponent's alias** (`searchGifs(workspace, q = q)`) is written as an object
+  (`{ q }`) where the use case takes it positionally.
+- **A `Result` a lambda or a method without a written return type gives back is not checked where its caller drops
+  it** (found handling every Result of the chat, 2026-11-19): `onClick = () => ChannelsManager.change(…)` returns
+  the `Result` to a callback that ignores it, and `react()` whose last line is a `Result` call gives it to a caller
+  that sees no type. A `Result` is always handled (nuclear-base §3.2): wanted, N0108 where the expected type of the
+  callback is `void` and where an untyped method's last line is a `Result`; also a variable typed `Result` that is
+  never read.
 - **A test's top-level function can be imported by the app**: `project.rs` puts a `test/` file in `synapsis.g.ts`'s
   imports when a name it declares is "written" elsewhere (a helper `channel(...)` in `test/chat_test.nuc`), and
   vitest lands in the embedded bundle (it then fails at load: `lr.config`). Wanted: `test/` never imported by the

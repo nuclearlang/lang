@@ -20,7 +20,7 @@ export class AssistantController {
   @Post('plan')
   @HttpCode(200)
   async plan(@Body() input: PlanRequest): Promise<PlanReply> {
-    const state = await this.planner.run({ 'goal': input.goal, 'titles': [], 'created': 0 });
-    return new PlanReply({ titles: state['titles'], created: state['created'] });
+    const state = await this.planner.run({ 'goal': input.goal, 'titles': [], 'created': 0, 'failed': [] });
+    return new PlanReply({ titles: state['titles'], created: state['created'], failed: state['failed'] });
   }
 }

@@ -20,9 +20,9 @@ statemanager QuestionsManager
     else if e.type == "done"
       show(waiting.filter((q) => q.member != member))
 
-  // The user's answer, written to the member that asked.
+  // The user's answer, written to the member that asked; one no run waits for any more is logged and dropped.
   answer(question: Question, answer: string)
-    ~members.answerQuestion(workspace, Answer(id = question.id, answer = answer))
+    (~members.answerQuestion(workspace, Answer(id = question.id, answer = answer))).error((e) => print("warning: the answer to ${question.member}'s question was not given: ${e.message}"))
     show(waiting.filter((q) => q.id != question.id))
 
   @state(QuestionsState.ready)

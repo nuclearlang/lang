@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-19
 related: [emitter.md, ../03-adr/0006-results.md, ../03-adr/0003-functions-lambdas-and-async.md]
 ---
 # Result and aliases
@@ -25,9 +25,14 @@ AST changes (`Ok(x) ->` already parsed as a value pattern). All of it lives in `
   `[names] written` + `[auto_imports]`; `result_value` = `(r as Right<E, T>).value` with `result_types`).
 - A file that declares Result/Ok/Err sets `result_builtin = false`. Diagnostics N0108–N0111.
 
+- A Result is always handled (N0108 names the ways: `.error(...)`, `match`, propagation). `method_sig` follows
+  `DeclInfo.aliases` through `sig_of_method`, so an appcomponent's alias (`ws = workspaces.workspace(id)`, its
+  target in another file) propagates like the method it names.
+- `~` awaits the whole chain after it: `~f().error(...)` is N0111 with the fix `(~f()).error(...)`
+  (`result_needs_await` with the method's name).
+
 Limits: Result only propagates through functions/methods written in Nuclear with a Result return (not
-external libraries nor methods of external bases, except those the type definitions mark in `ClassDef.results`);
-`~f().error(...)` on an async function does not chain (store it first in a variable typed `Result`).
+external libraries nor methods of external bases, except those the type definitions mark in `ClassDef.results`).
 
 ## Aliases
 

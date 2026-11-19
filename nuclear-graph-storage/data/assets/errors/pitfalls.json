@@ -416,6 +416,55 @@
    }
   },
   {
+   "id": "pitfall:result-never-discarded",
+   "type": "pitfall",
+   "title": "Pitfall: a `Result` dropped in a function that does not return one",
+   "summary": "A `Result` is always handled; there is no way to discard it. In a `void` method, `~events.emit(...)` as a statement is `N0108`: handle its error with `(~events.emit(...)).error((e) => ...)` (the `~` awaits the whole chain, so the call goes in parentheses), a `match`, or return `Result<E, ...>` so it propagates. An appcomponent's alias gives the `Result` of the use case it names.",
+   "body": [
+    "```nuclear",
+    "service Notifier(events: EventsAppComponent)",
+    "  // a failure is logged and the caller goes on",
+    "  ~tell(workspace: string, type: string) void",
+    "    (~events.emit(workspace, type)).error((e) => print(\"warning: ${type} was not told: ${e.message}\"))",
+    "",
+    "usecase OpenChannel(workspaces: WorkspacesAppComponent)",
+    "  // inside a use case the alias's Result propagates: `ws` is the Workspace",
+    "  exec(id: string) Result<Error, Workspace>",
+    "    ws = workspaces.workspace(id)",
+    "    Ok(ws)",
+    "```"
+   ],
+   "keys": [
+    "result discarded",
+    "n0108",
+    "always handled",
+    "void method"
+   ],
+   "links": [
+    {
+     "rel": "reported-as",
+     "to": "error:N0108"
+    },
+    {
+     "rel": "concept",
+     "to": "concept:result"
+    }
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ],
+   "meta": {
+    "family": "result",
+    "code": "N0108",
+    "kinds": [
+     "service",
+     "usecase",
+     "statemanager",
+     "listener"
+    ]
+   }
+  },
+  {
    "id": "pitfall:test-reads-an-empty-database",
    "type": "pitfall",
    "title": "Pitfall: a test that reads rows it never created",

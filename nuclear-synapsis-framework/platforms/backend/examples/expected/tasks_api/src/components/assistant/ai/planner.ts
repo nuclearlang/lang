@@ -1,7 +1,9 @@
+import { Task } from '../../tasks/data/entities/task.js';
 import { NewTask } from '../../tasks/domain/models/task_models.js';
 import { TasksAppComponent } from '../../tasks/tasks_appcomponent.js';
 import { PlanState } from './states/plan_state.js';
 import { Injectable } from '@nestjs/common';
+import { AppError, Result } from 'synapsis-nest';
 import { Graph, chatModel, next, start, textOf } from 'synapsis-nest/ai';
 
 function _replaceWith(s: string, re: RegExp, f: (m: RegExpMatchArray) => string): string {
@@ -40,12 +42,15 @@ export class Planner extends Graph<typeof PlanState> {
   @next('end')
   async save(state: PlanState): Promise<Record<string, any>> {
     let created = 0;
+    const failed: string[] = [];
     for (const title of state.titles) {
-      const made = await this.tasks.create(new NewTask({ title: title }));
+      const made: Result<AppError, Task> = await this.tasks.create(new NewTask({ title: title }));
       if (made.isOk) {
         created += 1;
+      } else {
+        failed.push(`${title}: ${(made.error as AppError).message}`);
       }
     }
-    return { 'created': created };
+    return { 'created': created, 'failed': failed };
   }
 }

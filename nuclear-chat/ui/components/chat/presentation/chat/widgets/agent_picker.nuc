@@ -4,6 +4,7 @@
 stateful AgentPicker(ws: Workspace, channel: Channel, member: Member, texts: Texts)
   open: boolean = false
   custom: string = ""
+  failed: string = ""
 
   build() Element
     choice = chosenAgent(member, channel)
@@ -23,6 +24,7 @@ stateful AgentPicker(ws: Workspace, channel: Channel, member: Member, texts: Tex
             span(className = "icon icon-chevron"),
           ],
         ),
+        failed != "" ? p(className = "failed", children = texts.format("failed", { "error": failed })) : null,
         open ? div(className = "agent-scrim", onClick = () => toggle()) : null,
         open ? menu(choice, model) : null,
       ],
@@ -72,8 +74,16 @@ stateful AgentPicker(ws: Workspace, channel: Channel, member: Member, texts: Tex
   pick(agent: string, model: string)
     setState(() =>
       open = false
+      failed = ""
     )
-    ChannelsManager.chooseAgent(channel.id, agent, model)
+    chosen: Result<NuclearChatError, Channel> = ~ChannelsManager.chooseAgent(channel.id, agent, model)
+    if chosen.isErr
+      refused(chosen.error.message)
+
+  refused(why: string)
+    setState(() =>
+      failed = why
+    )
 
 // An agent's mark by its kind: the local agent, an agent's command line, an API.
 stateless AgentMark(kind: string)

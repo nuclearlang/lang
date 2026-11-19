@@ -41,10 +41,13 @@ the code (`emit::code_words`: no comments, no string text). A module is not impo
 module re-exports it (`[reexports]`). A file imports an auto-import name only if its generated code writes it
 (`written_words`).
 
-A `use` inside a function (`Stmt::Use`, ADR-lang-0012) goes through `local_use`: with `use_local` its line is
-written in place (rendered by `imports` with the file's auto-imports set aside) and its names are locals, so a
-project file's names are not imported at the top unless the file also writes them free; without it the `use` joins
-the file's imports (`local_uses`) and its names are only the block's (N0105 after it).
+Lazy imports (ADR-lang-0012: `[project] lazy_imports` and `[syntax] local_import`; `transpile_alone` for a file
+alone): each block of a function body (`stmts`, a one-line `match` arm) is written between marker lines
+(`lazy_block`; a lambda's body is not marked, a loop's body is flagged, a branching assignment is written as blocks).
+`imports` records which names each line binds (`Lazy.lines`); `place_lazy_imports` reads the free words of each
+block and of what lies outside every function body, as the top imports do (`free_code_words`), and moves a name
+that only bodies use to the deepest block of each function holding its uses, outside any loop; a function with a
+local or parameter of that name keeps it at the top. The markers are then taken out.
 
 ## Layout and comments
 

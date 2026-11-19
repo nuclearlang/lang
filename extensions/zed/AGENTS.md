@@ -1,6 +1,6 @@
 # Zed extension
 
-The NuclearLang extension for Zed (`nuclearlang`, 0.71.0): a tree-sitter grammar of tokens, the client of the
+The NuclearLang extension for Zed (`nuclearlang`, 0.72.0): a tree-sitter grammar of tokens, the client of the
 language server, the Chernobyl theme and icons, and the Synapsis tasks and runnables. What the three extensions
 share: [`../AGENTS.md`](../AGENTS.md).
 

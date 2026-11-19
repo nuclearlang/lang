@@ -278,9 +278,9 @@ use fs/promises{ readFile }     // import { readFile } from 'node:fs/promises';
 
 A path that is not a shortcut goes through the `[syntax] module_path` template (Dart: `package:{{path}}.dart`).
 
-A `use` inside a function (ADR-lang-0012) is written where it stands through the optional `[syntax] use_local`
-template, whose `import` is the line the templates above give (Python: `use_local = "{{import}}"`, a local import).
-A dialect without it writes that import with the file's others; the program means the same.
+The optional `[syntax] local_import` template writes an import inside a block, for a project with `lazy_imports`
+([projects.md](projects.md), ADR-lang-0012); its `import` is the line the templates above give (Python:
+`local_import = "{{import}}"`). A dialect without it keeps every import at the top.
 
 ### 5.2 `[auto_imports]`: automatic imports
 

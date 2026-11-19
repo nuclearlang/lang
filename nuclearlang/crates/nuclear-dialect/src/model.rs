@@ -657,7 +657,7 @@ impl Dialect {
             "import_alias",
             "import_names",
             "type_imports",
-            "use_local",
+            "local_import",
             "super_call",
             "super_param",
             "field_init",

@@ -1,8 +1,5 @@
 // The events of a workspace after the one a client read last.
 usecase EventsSince(log: EventLog, workspaces: WorkspacesAppComponent)
   exec(workspace: string, since: int = 0) Result<Error, ChatEvent[]>
-    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
-    found: Result<Error, Workspace> = workspaces.workspace(workspace)
-    if found.isErr
-      return Err(found.error)
-    Ok(log.since(found.value.id, since))
+    ws = workspaces.workspace(workspace)
+    Ok(log.since(ws.id, since))

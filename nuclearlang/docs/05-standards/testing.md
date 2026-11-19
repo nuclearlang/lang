@@ -48,7 +48,9 @@ From `nuclearlang/`:
 - **Equivalences of a reference:**
   `tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` must give 0
   problems; the briefs the same way (`.../07-reference/brief/<dialect>.md`). On the guide when the output changes:
-  `tools/spec-check/check.py docs/08-guides/<chapter>.md typescript typescript --fix`.
+  `tools/spec-check/check.py docs/08-guides/<chapter>.md typescript typescript --fix`. A Nuclear block whose first
+  line is `// config.nuc: plugins(x = true)` is built with those plugins, one with `// nuclear.toml: lazy_imports = true`
+  as a file of a project with lazy imports (each followed by an empty line).
 - **The standard library in the three targets:** `tools/stdlib-check.sh [area...]` builds each program of
   `examples/stdlib/`, checks it (`tsc --strict`, pyright), runs it (node, `dart run`, python) and compares what it
   prints with `<area>.out`. `UPDATE=1` makes the TypeScript output the expected one. It needs node, dart,

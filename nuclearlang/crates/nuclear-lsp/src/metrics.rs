@@ -611,7 +611,6 @@ impl Walker<'_> {
                 self.node(parent, *span, "ContinueStatement", None);
             }
             Stmt::Yield { value, .. } => self.expr(parent, value),
-            Stmt::Use(_) => {}
         }
     }
 

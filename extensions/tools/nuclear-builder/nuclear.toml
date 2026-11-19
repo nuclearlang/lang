@@ -8,6 +8,8 @@ package = "nuclear_builder"
 version = "0.1.0"
 description = "Nuclear Builder: the set-up of the AI services of NuclearLang and the nuclear-builder command."
 out = "build"
+# an import that only function bodies use goes into the block that uses it: a command loads only what it runs
+lazy_imports = true
 
 [dependencies]
 httpx = ">=0.28"

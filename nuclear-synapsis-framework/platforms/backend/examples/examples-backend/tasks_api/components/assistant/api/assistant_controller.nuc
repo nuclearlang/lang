@@ -9,5 +9,5 @@ controller AssistantController(agent: AssistantAgent, planner: Planner)
   @post("plan")
   @status(200)
   plan(input: PlanRequest) PlanReply
-    state = ~planner.run({ "goal": input.goal, "titles": [], "created": 0 })
-    PlanReply(titles = state["titles"], created = state["created"])
+    state = ~planner.run({ "goal": input.goal, "titles": [], "created": 0, "failed": [] })
+    PlanReply(titles = state["titles"], created = state["created"], failed = state["failed"])

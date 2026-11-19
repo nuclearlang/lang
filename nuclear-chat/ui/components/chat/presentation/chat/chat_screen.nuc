@@ -86,12 +86,16 @@ stateful ChatScreen(workspace: string, channel: string, message: string = "", th
 
   // An archived channel is read only: where the composer was, what it is and *Open it again*.
   archived(current: Channel, texts: Texts) Element
-    div(className = "archived-bar", children = [span(children = texts.format("archived.bar", { "name": current.name })), button(className = "action primary", onClick = () => ChannelsManager.change(current.id, ChannelChanges(name = null, topic = null, state = "open")), children = texts.get("unarchive"))])
+    div(className = "archived-bar", children = [span(children = texts.format("archived.bar", { "name": current.name })), button(className = "action primary", onClick = () => unarchive(current.id), children = texts.get("unarchive"))])
 
   gifPicker(texts: Texts) Element
     GifPicker(key = "picker-${pickerThread}-${pickerStart}", texts = texts, start = pickerStart, thread = pickerThread, onClose = () => closePicker())
 
   // What the composer says before the user writes: the channel's name, or the member's of a direct message.
+  // The archived conversation opened again; a failure is logged and the bar stays.
+  unarchive(id: string)
+    (~ChannelsManager.change(id, ChannelChanges(name = null, topic = null, state = "open"))).error((e) => print("warning: #${id} was not opened again: ${e.message}"))
+
   placeholder(ws: Workspace, current: Channel?, texts: Texts) string
     member = current != null and current!.kind == "dm" ? dmMember(ws, current!) : null
     if member != null

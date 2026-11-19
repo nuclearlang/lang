@@ -565,22 +565,36 @@ def now() -> str:
     return json.dumps({"at": 1})
 ```
 
-A `use` inside a function is a local import: the module loads when the line runs (a command that does not run it
-does not pay for it). In a project, `use './mcp'{ mcpLine }` imports that file's names there.
+With `lazy_imports = true` in `[project]` of `nuclear.toml`, an import whose names only function bodies use is
+written at the start of the narrowest block of each function that holds its uses (never inside a loop): a command
+loads a module only when its branch runs. A name of a signature, a class base, a field or top-level code keeps its
+import at the top; without the option every import is at the top.
 
 ```nuclear
-heavy(text: string) string
-  use textwrap{ dedent }
-  dedent(text)
+// nuclear.toml: lazy_imports = true
+
+use textwrap{ dedent }
+use json
+
+run(command: string, text: string) string
+  match command
+    "dedent" -> dedent(text)
+    _ -> json.dumps(text)
 ```
 
 ```python
 from __future__ import annotations
 
 
-def heavy(text: str) -> str:
-    from textwrap import dedent
-    return dedent(text)
+# nuclear.toml: lazy_imports = true
+
+def run(command: str, text: str) -> str:
+    if command == "dedent":
+        from textwrap import dedent
+        return dedent(text)
+    else:
+        import json
+        return json.dumps(text)
 ```
 
 ## 4. The standard library

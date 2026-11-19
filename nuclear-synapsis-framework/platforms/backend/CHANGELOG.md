@@ -4,6 +4,9 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- The example `tasks_api`: the planner reports each step that could not become a task (`PlanReply.failed`, the
+  reason with it) instead of leaving it out; an appcomponent's alias propagates its `Result` like the use case it
+  names.
 - One JSON per model in every dialect (ADR-synapsis-0012): a `fastapi` model extends `synapsis.Model` and its JSON
   has Nuclear's names (`lastRead`, not `last_read`), as `nestjs` and the contract; an entity's answer too.
 - A client generated from the contract sends a route's model parameter as the body itself (`@body input: NewTask`),

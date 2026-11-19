@@ -997,35 +997,54 @@ fn the_monitor_measures_each_function_only_when_asked() {
     }
 }
 
-/// A `use` of a file of the project inside a function (ADR-lang-0012): Python imports its names there, not at the top
-/// of the file; TypeScript imports them at the top as any project name; a path that is not a file is N0106.
+/// `[project] lazy_imports` (ADR-lang-0012): an import whose names only function bodies use goes into the narrowest
+/// block of each function that holds its uses (a one-line arm too); a name in a signature, in top-level code or a
+/// function with a local of that name keeps it at the top; off, and in TypeScript, every import stays at the top.
 #[test]
-fn a_use_of_a_project_file_inside_a_function() {
-    let root = std::env::temp_dir().join(format!("nuclear-project-local-use-{}", std::process::id()));
+fn lazy_imports_move_into_the_blocks_that_use_them() {
+    let root = std::env::temp_dir().join(format!("nuclear-project-lazy-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
     let files = [
-        ("nuclear.toml", "[project]\nname = \"cli\"\ndialect = \"python\"\npackage = \"cli\"\n"),
-        ("tools/heavy.nuc", "heavyLine(n: int) int\n  n + 1\n"),
-        ("main.nuc", "run(n: int) int\n  use './tools/heavy'{ heavyLine }\n  heavyLine(n)\n"),
-        ("wrong.nuc", "other(n: int) int\n  use './nope'{ heavyLine }\n  n\n"),
+        ("tools/heavy.nuc", "heavyLine(n: int) int\n  n + 1\n\nHeavy\n  n: int = 0\n"),
+        ("tools/light.nuc", "lightLine(n: int) int\n  n\n"),
+        (
+            "main.nuc",
+            "use textwrap{ dedent }\nuse json\n\n// what a command runs\nrun(args: string[]) int\n  code = match args[0]\n    \"heavy\" -> heavyLine(1)\n    \"light\" -> lightLine(2)\n    _ -> 0\n  print(dedent(\"x\"))\n  code\n\nkeep(h: Heavy) int\n  h.n\n\nshadow(n: int) int\n  json = n\n  json\n\neach(xs: string[]) void\n  for x in xs\n    print(lightLine(x.length))\n\nencoded = json.dumps(1)\n",
+        ),
     ];
     for (rel, text) in files {
         let path = root.join(rel);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(path, text).unwrap();
     }
-    let manifest = Manifest::read(&root).unwrap();
-    for (dialect, want) in [("python", "def run(n: int) -> int:\n    from cli.tools.heavy import heavy_line\n    return heavy_line(n)"), ("typescript", "import { heavyLine } from './tools/heavy';")] {
+    let build = |toml: &str, dialect: &str| {
+        std::fs::write(root.join("nuclear.toml"), format!("[project]\nname = \"cli\"\ndialect = \"{dialect}\"\npackage = \"cli\"\n{toml}")).unwrap();
+        let manifest = Manifest::read(&root).unwrap();
         let d = loader(None).load(dialect).0.unwrap();
         let out = project::build(&root, &manifest, &d);
         let main = out.files.iter().find(|f| f.source_path.ends_with("main.nuc")).unwrap();
-        assert!(main.diagnostics.is_empty(), "{dialect}: {:?}", main.diagnostics);
-        assert!(main.code.contains(want), "{dialect}: {}", main.code);
-        if dialect == "python" {
-            assert!(!main.code.starts_with("from cli.tools.heavy") && main.code.matches("import heavy_line").count() == 1, "{}", main.code);
-        }
-        let wrong = out.files.iter().find(|f| f.source_path.ends_with("wrong.nuc")).unwrap();
-        assert!(wrong.diagnostics.iter().any(|x| x.code.id == "N0106"), "{dialect}: {:?}", wrong.diagnostics);
+        assert!(main.diagnostics.iter().all(|x| !x.is_error()), "{dialect}: {:?}", main.diagnostics);
+        main.code.clone()
+    };
+    let on = build("lazy_imports = true\n", "python");
+    // each arm imports what only it uses; a name used in the whole body is imported at its start
+    for want in [
+        "    if args[0] == \"heavy\":\n        from cli.tools.heavy import heavy_line\n        code = heavy_line(1)",
+        "    elif args[0] == \"light\":\n        from cli.tools.light import light_line\n        code = light_line(2)",
+        "def run(args: list[str]) -> int:\n    \"\"\"what a command runs\"\"\"\n    from textwrap import dedent\n",
+        // never inside a loop
+        "def each(xs: list[str]) -> None:\n    from cli.tools.light import light_line\n    for x in xs:",
+    ] {
+        assert!(on.contains(want), "{want}\n--- in ---\n{on}");
     }
+    // a name of a signature (Heavy) and a name top-level code uses (json) stay at the top
+    assert!(on.contains("from cli.tools.heavy import Heavy\n") && on.contains("import json\n"), "{on}");
+    assert!(!on.contains("from textwrap import dedent\n\n") && on.matches("import dedent").count() == 1, "{on}");
+    // off, and in TypeScript: every import at the top, as an expert writes them
+    let off = build("", "python");
+    assert!(off.contains("from cli.tools.heavy import Heavy, heavy_line") && off.contains("from textwrap import dedent"), "{off}");
+    assert!(off.contains("code = heavy_line(1) if args[0] == \"heavy\""), "{off}");
+    let ts = build("lazy_imports = true\n", "typescript");
+    assert!(ts.contains("import { Heavy, heavyLine } from './tools/heavy';"), "{ts}");
     let _ = std::fs::remove_dir_all(&root);
 }

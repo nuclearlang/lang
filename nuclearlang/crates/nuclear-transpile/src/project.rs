@@ -46,6 +46,9 @@ pub struct Manifest {
     /// Built with `--monitor` (spec 015): each function and method measured. Set by the tool that builds, never by
     /// the manifest's file.
     pub monitor: bool,
+    /// `[project] lazy_imports` of `nuclear.toml` (ADR-lang-0012): an import whose names only function bodies use is
+    /// written in the block that uses it, where the dialect can (`[syntax] local_import`).
+    pub lazy_imports: bool,
 }
 
 impl Manifest {
@@ -88,6 +91,7 @@ impl Manifest {
             test_env: BTreeMap::new(),
             package: None,
             monitor: false,
+            lazy_imports: false,
         }
     }
 
@@ -205,6 +209,7 @@ impl Manifest {
             test_env: BTreeMap::new(),
             package,
             monitor: false,
+            lazy_imports: p.get("lazy_imports").and_then(|v| v.as_bool()).unwrap_or(false),
         })
     }
 }
@@ -690,6 +695,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
         outputs: dialect.project.outputs.clone(),
         plugins: (!dialect.project.plugins.is_empty()).then(|| enabled_plugins(root, dialect).into_iter().collect()),
         monitor: manifest.monitor,
+        lazy_imports: manifest.lazy_imports,
         source_names: names.clone(),
         ..Default::default()
     };

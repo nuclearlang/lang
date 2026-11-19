@@ -5,5 +5,6 @@ export const PlanState = Annotation.Root({
   goal: Annotation<string>,
   titles: Annotation<string[]>,
   created: Annotation<number>,
+  failed: Annotation<string[]>,
 });
 export type PlanState = typeof PlanState.State;

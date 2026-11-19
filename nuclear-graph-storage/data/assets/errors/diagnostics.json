@@ -1306,15 +1306,15 @@
    "id": "error:N0108",
    "type": "diagnostic",
    "title": "N0108 — result that can fail is not handled",
-   "summary": "Unhandled `Result` outside a function that returns `Result`",
+   "summary": "Unhandled `Result` outside a function that returns `Result`: a `Result` is always handled, there is no way to discard it",
    "body": [
     "`N0108` · resolver · error",
     "",
-    "**What it is.** Unhandled `Result` outside a function that returns `Result`",
+    "**What it is.** Unhandled `Result` outside a function that returns `Result`: a `Result` is always handled, there is no way to discard it",
     "",
-    "**Why.** A call that returns Result<E, T> propagates its error automatically only inside a function that also returns a Result. Elsewhere, handle it with match (Ok(x) -> ... / Err(e) -> ...), keep it in a variable typed Result<T, E>, or declare the function's return type as Result<T, E>.",
+    "**Why.** A Result is always handled: there is no way to discard it. A call that returns Result<E, T> propagates its error automatically inside a function that also returns a Result. Elsewhere, handle its error: f(x).error((e) => ...) as a statement ((~f(x)).error((e) => ...) when f is async), a match (Ok(x) -> ... / Err(e) -> ...), or declare the function's return type as Result<E, T> to propagate it.",
     "",
-    "**Example.** `user = findUser(id)` in a function that returns `string`",
+    "**Example.** `user = findUser(id)` in a function that returns `string`; `~load(id)` as a statement of a `void` method (fix: `(~load(id)).error((e) => print(e.message))`, a `match`, or return `Result<E, ...>` to propagate it)",
     "",
     "**Right.** Either make the function return a `Result` (then `user = findUser(id)` unwraps it and an `Err` leaves by itself), or handle both cases: `match findUser(id)` + `Ok(user) -> ...` / `Err(e) -> ...`."
    ],
@@ -1334,9 +1334,9 @@
    "data": {
     "stage": "resolver",
     "title": "result that can fail is not handled",
-    "what": "Unhandled `Result` outside a function that returns `Result`",
+    "what": "Unhandled `Result` outside a function that returns `Result`: a `Result` is always handled, there is no way to discard it",
     "fix": "",
-    "example": "`user = findUser(id)` in a function that returns `string`"
+    "example": "`user = findUser(id)` in a function that returns `string`; `~load(id)` as a statement of a `void` method (fix: `(~load(id)).error((e) => print(e.message))`, a `match`, or return `Result<E, ...>` to propagate it)"
    },
    "links": [
     {
@@ -1836,6 +1836,41 @@
     "what": "A value of another basic type: the name is declared `int`, `double`, `string` or `boolean` (also nullable) and its value is known to be another one; an `int` is a `double`",
     "fix": "",
     "example": "`x: int = \"s\"`, `on: boolean = 1.5` as a field's default (fix: change the value or the type; `h: double = 3` is valid)"
+   }
+  },
+  {
+   "id": "error:N0118",
+   "type": "diagnostic",
+   "title": "N0118 — a plain name writes an inherited attribute (warning)",
+   "summary": "A plain name assigned inside a method writes an attribute that a base class declares (warning): it follows the rule of a member's name (nuclear-base §4.2), but the subclass may not know the base has it",
+   "body": [
+    "`N0118` · resolver · warning",
+    "",
+    "**What it is.** A plain name assigned inside a method writes an attribute that a base class declares (warning): it follows the rule of a member's name (nuclear-base §4.2), but the subclass may not know the base has it",
+    "",
+    "**Why.** Inside a method, a name assigned that is a member of the module is that member, also when a base class declares it: `given = x` in a method of `Member: Chat` writes Chat's `given`. The subclass may not know the base has it. Write `$given = x` to say the attribute is meant (it silences the warning), or rename the local.",
+    "",
+    "**Example.** `given = text` in a method of `Member: Chat` where `Chat` has `given` (fix: `$given = text` says the attribute is meant and silences it; or rename the local)"
+   ],
+   "keys": [
+    "n0118",
+    "a plain name writes an inherited attribute (warning)"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0118",
+    "family": "resolver",
+    "severity": "warning"
+   },
+   "data": {
+    "stage": "resolver",
+    "title": "a plain name writes an inherited attribute (warning)",
+    "what": "A plain name assigned inside a method writes an attribute that a base class declares (warning): it follows the rule of a member's name (nuclear-base §4.2), but the subclass may not know the base has it",
+    "fix": "",
+    "example": "`given = text` in a method of `Member: Chat` where `Chat` has `given` (fix: `$given = text` says the attribute is meant and silences it; or rename the local)"
    }
   },
   {

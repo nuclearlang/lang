@@ -2,4 +2,4 @@
 listener MemberAnswers(members: MembersAppComponent)
   @consumer("chat.event")
   onEvent(event: ChatEvent) void
-    ~members.answer(event)
+    (~members.answer(event)).error((e) => print("warning: the members could not answer in #${event.channel}: ${e.message}"))

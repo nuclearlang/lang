@@ -404,7 +404,8 @@
     "```",
     "",
     "- `Ok(v)` and `Err(e)` build a result; `x = f()` inside a function that returns `Result` gives the value and propagates the error. No `try`, no checks by hand.",
-    "- Outside such a function a `Result` must be handled (`N0108`): with `match r` + `Ok(v) -> ...` / `Err(e) -> ...`, or with its members `isOk`, `value`, `error`.",
+    "- A `Result` is always handled; there is no way to discard it. Outside such a function (`N0108`): its error with `.error((e) => ...)` as a statement (`(~f(x)).error(...)` when `f` is async: `~` awaits the whole chain), with `match r` + `Ok(v) -> ...` / `Err(e) -> ...`, or kept and read (`isOk`, `value`, `error`); or the function returns `Result<E, ...>` so it propagates.",
+    "- An appcomponent's alias (`workspace() = GetWorkspace.exec`) gives the `Result` of the use case it names: `ws = workspaces.workspace(id)` in a use case is the value.",
     "- The error propagates only when the error types are the same; convert it first otherwise (`N0109`).",
     "- A backend controller answers the value of an `Ok`, or the status of the error: `NotFound` 404, `Invalid` 400, `Unauthorized` 401, `Forbidden` 403, `Conflict` 409.",
     "- In a test, keep the result and read it: `found = ~books.byId(1)`, then `found.isOk`, `found.value.title`, `found.error.status`.",
@@ -444,7 +445,8 @@
    ],
    "sources": [
     "nuclearlang/docs/02-architecture/result.md",
-    "nuclearlang/docs/07-reference/brief/nuclear-base.md"
+    "nuclearlang/docs/07-reference/brief/nuclear-base.md",
+    "nuclearlang/docs/07-reference/nuclear-base.md"
    ],
    "meta": {
     "topic": "language"

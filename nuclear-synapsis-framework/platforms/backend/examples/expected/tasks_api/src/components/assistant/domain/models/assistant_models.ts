@@ -39,6 +39,9 @@ export class PlanReply {
   titles!: string[];
   @IsInt()
   created!: number;
+  @IsString()
+  @IsArray()
+  failed!: string[];
 
   constructor(values: Partial<PlanReply> = {}) {
     Object.assign(this, values);

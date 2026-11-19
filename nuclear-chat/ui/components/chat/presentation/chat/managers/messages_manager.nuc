@@ -25,11 +25,8 @@ statemanager MessagesManager
 
   @state(MessagesState.ready)
   load() Result<NuclearChatError, Message[]>
-    // shortcut: an appcomponent's alias does not propagate a Result yet (the compiler's roadmap): kept and matched
-    all: Result<NuclearChatError, Message[]> = ~messages.history(workspace, channel)
-    match all
-      Ok(list) -> Ok(list.filter((m) => m.thread == null))
-      Err(e) -> Err(e)
+    all = ~messages.history(workspace, channel)
+    Ok(all.filter((m) => m.thread == null))
 
   // What the user says: the composer keeps the text when it fails.
   say(text: string, thread: string? = null) Result<NuclearChatError, Message>
@@ -38,11 +35,12 @@ statemanager MessagesManager
   sendGif(gif: Gif, thread: string? = null) Result<NuclearChatError, Message>
     ~messages.sendGif(workspace, channel, SentGif(gif = gif, thread = thread))
 
+  // A reaction or a click the service refused is logged: the message shows what the service kept.
   react(message: string, emoji: string)
-    ~messages.react(workspace, message, Reaction(emoji = emoji, by = "you"))
+    (~messages.react(workspace, message, Reaction(emoji = emoji, by = "you"))).error((e) => print("warning: the reaction ${emoji} was not kept: ${e.message}"))
 
   click(message: string, button: string)
-    ~messages.clickButton(workspace, message, Click(button = button))
+    (~messages.clickButton(workspace, message, Click(button = button))).error((e) => print("warning: the button ${button} was not clicked: ${e.message}"))
 
   // The user's own message edited: the service keeps a line that names it.
   edit(message: string, text: string) Result<NuclearChatError, Message>

@@ -30,11 +30,7 @@ statemanager ThreadManager
 
   @state(ThreadState.ready)
   load() Result<NuclearChatError, Thread>
-    // shortcut: an appcomponent's alias does not propagate a Result yet (the compiler's roadmap): kept and matched
-    all: Result<NuclearChatError, Message[]> = ~messages.history(workspace, channel, root)
-    match all
-      Ok(list) -> thread(list)
-      Err(e) -> Err(e)
+    thread(~messages.history(workspace, channel, root))
 
   thread(list: Message[]) Result<NuclearChatError, Thread>
     first = list.find((m) => m.id == root)

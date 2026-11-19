@@ -23,13 +23,14 @@ statemanager ChannelsManager
   // The user opened a channel: it is read now.
   read(channel: string)
     open = channel
-    ~channels.readChannel(workspace, channel)
+    (~channels.readChannel(workspace, channel)).error((e) => print("warning: #${channel} was not marked read: ${e.message}"))
     load()
 
   // Who answers a direct message: one of its member's agents and its model (empty: the host's default).
-  chooseAgent(channel: string, agent: string, model: string)
-    ~channels.chooseAgent(workspace, channel, AgentChoice(agent = agent, model = model))
+  chooseAgent(channel: string, agent: string, model: string) Result<NuclearChatError, Channel>
+    chosen = ~channels.chooseAgent(workspace, channel, AgentChoice(agent = agent, model = model))
     load()
+    Ok(chosen)
 
   // A channel the user makes, with the members they chose.
   create(input: NewChannel) Result<NuclearChatError, Channel>

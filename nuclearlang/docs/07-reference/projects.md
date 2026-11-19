@@ -33,6 +33,8 @@ out = "build"           # output folder, relative to the project (default: build
 package = "rick_demo"   # optional: the folder the files go to and the name they import each other by, instead of
                         # the dialect's `[project] sources` (`app` in Python); snake_case. A library sets it, so
                         # other code imports it by its own name: `from rick_demo.models.user import User`
+lazy_imports = true     # optional (default false): an import only function bodies use is written in the block that
+                        # uses it, where the dialect can (ADR-lang-0012); for a command line program
 
 [dependencies]          # packages of the target's package manager the project uses
 httpx = "0.28"

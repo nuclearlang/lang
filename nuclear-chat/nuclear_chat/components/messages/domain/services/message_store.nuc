@@ -7,9 +7,7 @@ service MessageStore(files: ChatFiles, workspaces: WorkspacesAppComponent)
   where: <string, string> = {}
 
   workspace(id: string) Result<Error, Workspace>
-    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is returned whole
-    found: Result<Error, Workspace> = workspaces.workspace(id)
-    found
+    workspaces.workspace(id)
 
   channel(ws: Workspace, id: string) Result<Error, Channel>
     found = ws.channel(id)
@@ -33,15 +31,18 @@ service MessageStore(files: ChatFiles, workspaces: WorkspacesAppComponent)
         continue
     found
 
-  // A line appended; a new message opens its conversation again when the user had closed it.
-  append(ws: Workspace, channel: string, entry: <string, any>) void
-    files.appendLine(file(ws, channel), Json.encode(entry))
+  // A line appended; a new message opens its conversation again when the user had closed it (kept first: a
+  // conversation that cannot be opened again gets no line).
+  append(ws: Workspace, channel: string, entry: <string, any>) Result<Error, void>
     if entry["id"] != null
-      where["${ws.id}/${entry["id"]}"] = channel
       shown = ws.channel(channel)
       if shown != null and shown!.state == "closed"
         shown!.state = "open"
         workspaces.keepChannels(ws)
+    files.appendLine(file(ws, channel), Json.encode(entry))
+    if entry["id"] != null
+      where["${ws.id}/${entry["id"]}"] = channel
+    Ok()
 
   // A conversation's history moved to `deleted/` (never destroyed): its new path, empty when it had none.
   forget(ws: Workspace, channel: string) string

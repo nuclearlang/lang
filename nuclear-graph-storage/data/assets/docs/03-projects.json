@@ -279,14 +279,19 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/result.md#result-e-t.40b3ef",
+   "id": "doc:nuclearlang/docs/02-architecture/result.md#result-e-t.319dbd",
    "type": "context",
    "title": "Result and aliases — Result<E, T>",
-   "summary": "Limits: Result only propagates through functions/methods written in Nuclear with a Result return (not external libraries nor methods of external bases, except those the type definitions mark in `ClassDef.results`); `~f().error(...)` on an async function does not chain (store it first in a variable…",
+   "summary": "`DeclInfo.aliases` through `sig_of_method`, so an appcomponent's alias (`ws = workspaces.workspace(id)`, its target in another file) propagates like the method it names.",
    "body": [
+    "- A Result is always handled (N0108 names the ways: `.error(...)`, `match`, propagation). `method_sig` follows",
+    "  `DeclInfo.aliases` through `sig_of_method`, so an appcomponent's alias (`ws = workspaces.workspace(id)`, its",
+    "  target in another file) propagates like the method it names.",
+    "- `~` awaits the whole chain after it: `~f().error(...)` is N0111 with the fix `(~f()).error(...)`",
+    "  (`result_needs_await` with the method's name).",
+    "",
     "Limits: Result only propagates through functions/methods written in Nuclear with a Result return (not",
-    "external libraries nor methods of external bases, except those the type definitions mark in `ClassDef.results`);",
-    "`~f().error(...)` on an async function does not chain (store it first in a variable typed `Result`)."
+    "external libraries nor methods of external bases, except those the type definitions mark in `ClassDef.results`)."
    ],
    "sources": [
     "nuclearlang/docs/02-architecture/result.md"
@@ -475,11 +480,43 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.31a951",
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.3b89db",
    "type": "context",
    "title": "Testing — Checking against the real target",
-   "summary": "`../nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]` (its host project is `tools/defs/flutter_project`; `flutter_lints`, 0 warnings).",
+   "summary": "`tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` must give 0 problems; the briefs the same way (`.../07-reference/brief/<dialect>.md`).",
    "body": [
+    "- **Equivalences of a reference:**",
+    "  `tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` must give 0",
+    "  problems; the briefs the same way (`.../07-reference/brief/<dialect>.md`). On the guide when the output changes:",
+    "  `tools/spec-check/check.py docs/08-guides/<chapter>.md typescript typescript --fix`. A Nuclear block whose first",
+    "  line is `// config.nuc: plugins(x = true)` is built with those plugins, one with `// nuclear.toml: lazy_imports = true`",
+    "  as a file of a project with lazy imports (each followed by an empty line).",
+    "- **The standard library in the three targets:** `tools/stdlib-check.sh [area...]` builds each program of",
+    "  `examples/stdlib/`, checks it (`tsc --strict`, pyright), runs it (node, `dart run`, python) and compares what it",
+    "  prints with `<area>.out`. `UPDATE=1` makes the TypeScript output the expected one. It needs node, dart,",
+    "  TypeScript and `tools/python/.venv`; the cargo test only checks that the programs transpile.",
+    "- **The rules a target could break:** `DIR=examples/semantics tools/stdlib-check.sh` the same way, over the programs",
+    "  of `examples/semantics/`: a name that a target's function has, a lambda made in a loop, a default list, a static",
+    "  field, `~/` with negatives, a chain after `?.`, a variable of the file a function changes, `==` of two lists or"
+   ],
+   "sources": [
+    "nuclearlang/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.614b1e",
+   "type": "context",
+   "title": "Testing — Checking against the real target",
+   "summary": "maps, a decimal and a missing value printed, named arguments, a function type of types only, an argument or a spread next to an operator (`operands`).",
+   "body": [
+    "maps, a decimal and a missing value printed, named arguments, a function type of types only, an argument or a",
+    "  spread next to an operator (`operands`). Each passed",
+    "  `nuclear check` and was wrong in a target once; a fix of that kind adds its case here.",
     "- **TypeScript by hand:** `tools/node/node_modules/.bin/tsc --strict --noEmit --target es2022 --lib es2022,dom x.ts`.",
     "- **Dart and Flutter:** the mobile platform's",
     "  `../nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]` (its host project is",
@@ -492,36 +529,6 @@
     "The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and",
     "`base/docs.toml`; the lexer test and the loader test name those files in their messages. A test that cannot find a",
     "folder of the tree fails; none skips itself."
-   ],
-   "sources": [
-    "nuclearlang/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.b1b7e1",
-   "type": "context",
-   "title": "Testing — Checking against the real target",
-   "summary": "`tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` must give 0 problems; the briefs the same way (`.../07-reference/brief/<dialect>.md`).",
-   "body": [
-    "- **Equivalences of a reference:**",
-    "  `tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` must give 0",
-    "  problems; the briefs the same way (`.../07-reference/brief/<dialect>.md`). On the guide when the output changes:",
-    "  `tools/spec-check/check.py docs/08-guides/<chapter>.md typescript typescript --fix`.",
-    "- **The standard library in the three targets:** `tools/stdlib-check.sh [area...]` builds each program of",
-    "  `examples/stdlib/`, checks it (`tsc --strict`, pyright), runs it (node, `dart run`, python) and compares what it",
-    "  prints with `<area>.out`. `UPDATE=1` makes the TypeScript output the expected one. It needs node, dart,",
-    "  TypeScript and `tools/python/.venv`; the cargo test only checks that the programs transpile.",
-    "- **The rules a target could break:** `DIR=examples/semantics tools/stdlib-check.sh` the same way, over the programs",
-    "  of `examples/semantics/`: a name that a target's function has, a lambda made in a loop, a default list, a static",
-    "  field, `~/` with negatives, a chain after `?.`, a variable of the file a function changes, `==` of two lists or",
-    "  maps, a decimal and a missing value printed, named arguments, a function type of types only, an argument or a",
-    "  spread next to an operator (`operands`). Each passed",
-    "  `nuclear check` and was wrong in a target once; a fix of that kind adds its case here."
    ],
    "sources": [
     "nuclearlang/docs/05-standards/testing.md"
@@ -806,7 +813,27 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest.4c1ad7",
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest.26d9c9",
+   "type": "spec",
+   "title": "Multi-file projects — 1. Manifest",
+   "summary": "`nuclear.toml` is optional when the dialect declares a file that marks its projects (`[project] marker`, §3): the folder that has it is a project of that dialect, its name is the folder's (in snake_case) unless `app(name)` says otherwise, and its output, `[project] output`.",
+   "body": [
+    "`nuclear.toml` is optional when the dialect declares a file that marks its projects (`[project] marker`, §3):",
+    "the folder that has it is a project of that dialect, its name is the folder's (in snake_case) unless `app(name)`",
+    "says otherwise, and its output, `[project] output`. Every Synapsis dialect marks its projects with `config.nuc`,",
+    "whose `synapsis(...)` names the dialect (§3.1)."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest.71e3b0",
    "type": "spec",
    "title": "Multi-file projects — 1. Manifest",
    "summary": "nuclear build <folder> # transpiles the project into <folder>/<out> nuclear build <folder> -o <output> # into another folder nuclear check <folder> [--json] # only the errors of every file An error in any file stops writing: nothing is written.",
@@ -817,12 +844,7 @@
     "nuclear check <folder> [--json]      # only the errors of every file",
     "```",
     "",
-    "An error in any file stops writing: nothing is written.",
-    "",
-    "`nuclear.toml` is optional when the dialect declares a file that marks its projects (`[project] marker`, §3):",
-    "the folder that has it is a project of that dialect, its name is the folder's (in snake_case) unless `app(name)`",
-    "says otherwise, and its output, `[project] output`. Every Synapsis dialect marks its projects with `config.nuc`,",
-    "whose `synapsis(...)` names the dialect (§3.1)."
+    "An error in any file stops writing: nothing is written."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"

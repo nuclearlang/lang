@@ -20,5 +20,6 @@ statemanager PickerManager
 
   // The project's answer to the one question, then the same search again.
   answer(online: boolean)
-    ~gifs.keepConsent(workspace, Consent(online = online))
+    // not kept: the search asks again
+    (~gifs.keepConsent(workspace, Consent(online = online))).error((e) => print("warning: the answer about GIF searches was not kept: ${e.message}"))
     search(words)

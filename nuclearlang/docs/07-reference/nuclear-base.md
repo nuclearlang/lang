@@ -306,8 +306,11 @@ buy(id: string) Result<string, Order>
   propagate into a function that returns `Result<AppError, Order>` (error `N0109`). Convert it with
   `.error(e => Err(AppError(e)))`.
 - Outside a function that returns `Result` there is nowhere to propagate: an unhandled `Result` is error
-  `N0108`. Handle it with `match`, by storing it in a variable typed `Result`, with `.error(...)` in a
-  statement, or by declaring the function's return as `Result<E, T>`.
+  `N0108`. A `Result` is always handled; there is no way to discard it. Handle its error with `.error(...)` in a
+  statement (`(~load(id)).error(e => log(e))` when the call is async: `~` awaits the whole chain after it), with
+  `match`, or by declaring the function's return as `Result<E, T>` so it propagates.
+- An alias (`find() = Repo.find`, §4.1.2) gives the `Result` of the method it names: it propagates and is handled
+  as that method's.
 
 #### Keeping a `Result`
 
@@ -318,6 +321,8 @@ A `Result` is not unwrapped when:
   write its return type;
 - it is the argument of a parameter typed `Result`;
 - it is the subject of a `match` or the object of `.ok()` / `.error()`.
+
+A kept `Result` is still handled: matched, read (`r.isOk`, `r.error`), returned or passed on.
 
 #### `.ok()` and `.error()`
 
@@ -670,6 +675,19 @@ Dog: Animal
 A method with the same name as a member of a base or interface declared in the file overrides it; the
 dialect marks it as its target requires.
 
+An attribute of a base is a member of the module: a plain name assigned inside a method writes it, as it writes
+the module's own. A subclass may not know its base has that attribute, so the plain assignment is warning
+`N0118`; `$name = value` says the attribute is meant and gives no warning. A local is given another name.
+
+```nuclear
+Chat
+  given: string = ""
+
+Member: Chat
+  hear(text: string)
+    $given = text                 // Chat's attribute; `given = text` writes it too, with warning N0118
+```
+
 ### 4.3 Interfaces and enums
 
 Interfaces have the same syntax as modules; the only way to tell them apart is that their methods and
@@ -1007,19 +1025,7 @@ use * as path from path
 use './setup'
 ```
 
-A `use` can also stand inside a function or method: its names exist from its line to the end of its block, and
-the module is loaded when that line runs where the target can do it (elsewhere, at start: the program means the
-same). In a project, a path in quotes that names a file of the project, relative to this file, brings that file's
-declarations there instead of at the top of the file:
-
-```nuclear
-main(args: string[]) int
-  match args[0]
-    "mcp" ->
-      use './mcp'{ mcpLine }
-      mcpLine(args.skip(1))
-    _ -> 2
-```
+A `use` stands only at the top of a file.
 
 Dialects can **auto-import**: a name of a native library of the technology is imported when the code uses
 it, so the code does not fill up with imports. The words after a `use` path (`show`, `hide`...) and the

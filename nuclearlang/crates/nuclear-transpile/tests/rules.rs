@@ -817,8 +817,13 @@ fn result_must_be_handled_outside_result_functions() {
     assert!(ids("f(id: string) User\n  findUser(id)\n").contains(&"N0108"));
     // handled: the error branch of a chain, a typed variable, a function without a written type
     assert!(!ids("f(id: string) void\n  findUser(id).error(e => print(e))\n").contains(&"N0108"));
+    let msg = nuclear_transpile::transpile(&format!("{FIND}f(id: string) void\n  findUser(id)\n"), &dialect("typescript")).diagnostics.into_iter().find(|d| d.code.id == "N0108").unwrap().message;
+    assert!(msg.contains("always handled") && msg.contains("findUser(...).error((e) => ...)") && !msg.contains("keep it"), "{msg}");
     assert!(!ids("f(id: string) void\n  r: Result<string, User> = findUser(id)\n  print(r)\n").contains(&"N0108"));
     assert!(!ids("f(id: string)\n  findUser(id)\n").contains(&"N0108"));
+    // a name typed Result keeps the Result it is given again, also inside a function that returns one
+    let code = ts(&format!("{FIND}f(id: string) Result<string, boolean>\n  r: Result<string, User> = findUser(\"a\")\n  r = findUser(id)\n  Ok(r.isOk)\n"));
+    has(&code, "r = findUser(id);");
 }
 
 #[test]
@@ -1095,6 +1100,46 @@ fn tilde_on_a_call_that_awaits_nothing_is_reported() {
 }
 
 #[test]
+fn an_appcomponent_alias_propagates_its_result() {
+    // `ws = workspaces.find(name)` unwraps like the use case it names; a Result is always handled
+    let base = "Registry\n  ~find(name: string) Result<Error, string>\n    ~publish(\"found\", name)\n    Ok(name)\n\nusecase Find(registry: Registry)\n  exec(name: string) Result<Error, string>\n    ~registry.find(name)\n\nappcomponent Workspaces\n  find() = Find.exec\n\n";
+    let used = format!("{base}usecase Open(workspaces: Workspaces)\n  exec(name: string) Result<Error, int>\n    ws = ~workspaces.find(name)\n    Ok(ws.length)\n");
+    let py = build(&used, "fastapi");
+    has(&py, "ws_result = await self.workspaces.find(name)");
+    has(&py, "len(ws)");
+    // a statement of a void method: N0108, whose message names the ways to handle it
+    let dropped = format!("{base}Caller\n  (workspaces: Workspaces)\n  ~go(name: string) void\n    ~workspaces.find(name)\n");
+    let out = nuclear_transpile::transpile(&dropped, &dialect("fastapi"));
+    let d = out.diagnostics.iter().find(|d| d.code.id == "N0108").expect("N0108");
+    assert!(d.message.contains("(~find(...)).error((e) => ...)") && d.message.contains("propagate"), "{}", d.message);
+    // handled: its error logged (the call awaited first), or matched
+    build(&format!("{base}Caller\n  (workspaces: Workspaces)\n  ~go(name: string) void\n    (~workspaces.find(name)).error((e) => print(e.message))\n"), "fastapi");
+    build(&format!("{base}Caller\n  (workspaces: Workspaces)\n  ~go(name: string) void\n    match ~workspaces.find(name)\n      Ok(n) -> print(n)\n      Err(e) -> print(e.message)\n"), "fastapi");
+    // `~` awaits the whole chain: `~f().error(...)` says to await the call first
+    let chained = format!("{base}Caller\n  (workspaces: Workspaces)\n  ~go(name: string) void\n    ~workspaces.find(name).error((e) => print(e.message))\n");
+    let out = nuclear_transpile::transpile(&chained, &dialect("fastapi"));
+    assert!(out.diagnostics.iter().any(|d| d.code.id == "N0111" && d.message.contains("(~find(...)).error(...)")), "{:#?}", out.diagnostics);
+}
+
+#[test]
+fn a_plain_name_that_writes_an_inherited_attribute_warns() {
+    // N0118: the rule stays (it writes the attribute), with a warning and the fix `$given`
+    let src = "Chat\n  given: string = \"\"\n\nMember: Chat\n  hear(text: string) void\n    given = text\n";
+    let out = nuclear_transpile::transpile(src, &dialect("python"));
+    let w = out.diagnostics.iter().find(|d| d.code.id == "N0118").expect("N0118");
+    assert!(!w.is_error() && w.fix.as_ref().is_some_and(|f| f.replacement == "$given"), "{w:#?}");
+    has(&out.code, "self.given = text");
+    // `$given` says the attribute is meant; an own field and a new local are no warning
+    for quiet in [
+        "Chat\n  given: string = \"\"\n\nMember: Chat\n  hear(text: string) void\n    $given = text\n",
+        "Member\n  given: string = \"\"\n  hear(text: string) void\n    given = text\n",
+        "Chat\n  given: string = \"\"\n\nMember: Chat\n  hear(text: string) void\n    heard = text\n    print(heard)\n",
+    ] {
+        assert!(!codes(quiet, "python").contains(&"N0118"), "{quiet}");
+    }
+}
+
+#[test]
 fn an_inherited_attribute_keeps_its_type() {
     // `history` of `Member: Chat` is Chat's `<string, any>[]`: its library members are rewritten
     let src = "Chat\n  history: <string, any>[] = []\n\nMember: Chat\n  count() int\n    history.isEmpty ? 0 : history.length\n";
@@ -1102,16 +1147,7 @@ fn an_inherited_attribute_keeps_its_type() {
 }
 
 #[test]
-fn a_use_inside_a_function_is_written_where_it_stands_or_at_the_top() {
-    // ADR-lang-0012: Python imports when the line runs; TypeScript and Dart import at the top, the names are the block's
-    let src = "heavy(x: string) string\n  use textwrap{ dedent }\n  dedent(x)\n";
-    has(&build(src, "python"), "def heavy(x: str) -> str:\n    from textwrap import dedent\n    return dedent(x)");
-    let code = ts(src);
-    has(&code, "import { dedent } from 'textwrap';");
-    has(&code, "export function heavy(x: string): string {\n  return dedent(x);\n}");
-    // its names end with its block, in every dialect
-    let outside = "f(on: boolean) string\n  if on\n    use textwrap{ dedent }\n    print(dedent(\"a\"))\n  dedent(\"b\")\n";
-    for d in ["python", "typescript", "dart"] {
-        assert!(codes(outside, d).contains(&"N0105"), "{d}");
-    }
+fn a_use_stands_only_at_the_top_of_a_file() {
+    // ADR-lang-0012: no `use` inside a function; a project's `lazy_imports` moves an import into a body instead
+    assert!(!codes("heavy(x: string) string\n  use textwrap{ dedent }\n  dedent(x)\n", "python").is_empty());
 }

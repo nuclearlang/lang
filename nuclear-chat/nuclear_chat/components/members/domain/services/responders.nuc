@@ -30,26 +30,27 @@ service Responders(processes: Processes, messages: MessagesAppComponent, events:
     outcome: <string, any> = {}
     ask: <string, any> = { "workspace": ws.id, "root": ws.root, "member": member.id, "channel": channel, "thread": thread, "messages": conversation.length > context ? conversation.skip(conversation.length - context) : conversation, "said": said["text"] ?? "", "lang": member.profile.lang.isEmpty ? ws.lang : member.profile.lang }
     if member.personality.gifs != "never"
-      // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
       tags: Result<Error, string[]> = gifs.tags()
       if tags.isOk
         ask["gifTags"] = tags.value
+      else
+        print("warning: ${member.name} is given no GIF tags: ${tags.error.message}")
     input = Json.encode(ask)
     answersGif = sentGif(conversation)
     onLine = (line: string) =>
       e = eventOf(line)
       kind = "${e["type"] ?? ""}"
       if kind == "typing"
-        ~events.emit(ws.id, "typing", channel, { "member": member.id, "thread": thread })
+        ~tell(ws.id, "typing", channel, { "member": member.id, "thread": thread })
       else if kind == "text"
         texts.add("${e["text"] ?? ""}")
       else if kind == "text-delta"
-        ~events.emit(ws.id, "message.delta", channel, { "member": member.id, "thread": thread, "text": "${e["text"] ?? ""}" })
+        ~tell(ws.id, "message.delta", channel, { "member": member.id, "thread": thread, "text": "${e["text"] ?? ""}" })
       else if kind == "tool"
-        ~events.emit(ws.id, "tool", channel, { "member": member.id, "thread": thread, "tool": e })
+        ~tell(ws.id, "tool", channel, { "member": member.id, "thread": thread, "tool": e })
       else if kind == "ask" and not "${e["id"] ?? ""}".isEmpty
         waiting["${ws.id}/${e["id"]}"] = run
-        ~events.emit(ws.id, "ask", channel, { ...e, "member": member.id, "thread": thread })
+        ~tell(ws.id, "ask", channel, { ...e, "member": member.id, "thread": thread })
       else if kind == "done"
         outcome["done"] = e
     onEnd = (code: int, err: string) =>
@@ -61,11 +62,13 @@ service Responders(processes: Processes, messages: MessagesAppComponent, events:
       asked = "${done["gif"] ?? ""}".lower()
       failure = failureOf(done, code, err, not ("type" in done))
       if not text.isEmpty
-        ~messages.post(ws.id, channel, Posted(author = member.id, text = text, thread = thread, costUsd = done["costUsd"], moment = moment in ["failure", "success", "question"] ? moment : null, gif = GIF_TAG.test(asked) ? asked : null, answersGif = answersGif))
+        lost = ~post(ws.id, channel, Posted(author = member.id, text = text, thread = thread, costUsd = done["costUsd"], moment = moment in ["failure", "success", "question"] ? moment : null, gif = GIF_TAG.test(asked) ? asked : null, answersGif = answersGif))
+        if not lost.isEmpty
+          failure = failure.isEmpty ? "its answer could not be posted: ${lost}" : "${failure}; its answer could not be posted: ${lost}"
       if not failure.isEmpty
-        ~messages.post(ws.id, channel, Posted(author = "system", text = "${member.name} could not answer: ${failure}", thread = thread))
+        ~post(ws.id, channel, Posted(author = "system", text = "${member.name} could not answer: ${failure}", thread = thread))
       // done once everything it said is posted (its answer, its GIF, a failure): a client reading on `done` sees it all
-      ~events.emit(ws.id, "done", channel, { "member": member.id, "thread": thread, "costUsd": done["costUsd"] ?? 0, "error": failure })
+      ~tell(ws.id, "done", channel, { "member": member.id, "thread": thread, "costUsd": done["costUsd"] ?? 0, "error": failure })
     processes.start(run, command, ws.root, input, onLine, onEnd)
 
   // Writes the user's answer to the run that asked; false when no run waits for that question.
@@ -76,6 +79,18 @@ service Responders(processes: Processes, messages: MessagesAppComponent, events:
       return false
     waiting.remove(key)
     ~processes.write(run!, Json.encode({ "type": "answer", "id": id, "answer": answer }))
+
+  // Tells an event of a run; one that cannot be told is logged and the run goes on.
+  ~tell(workspace: string, type: string, channel: string, data: <string, any>) void
+    (~events.emit(workspace, type, channel, data)).error((e) => print("warning: the event ${type} of #${channel} was not told: ${e.message}"))
+
+  // Posts what a run said: why it could not be posted (logged), or nothing.
+  ~post(workspace: string, channel: string, posted: Posted) string
+    told: Result<Error, Message> = ~messages.post(workspace, channel, posted)
+    if told.isOk
+      return ""
+    print("warning: a message of ${posted.author} in #${channel} was not posted: ${told.error.message}")
+    told.error.message
 
 // A GIF's tag a responder may ask for (anything else is left out).
 GIF_TAG = Regex(r"^[a-z][a-z-]{0,39}$")

@@ -170,7 +170,7 @@ pub mod codes {
     pub const UNHANDLED_RESULT: Code = Code {
         id: "N0108",
         title: "result that can fail is not handled",
-        explanation: "A call that returns Result<E, T> propagates its error automatically only inside a function that also returns a Result. Elsewhere, handle it with match (Ok(x) -> ... / Err(e) -> ...), keep it in a variable typed Result<T, E>, or declare the function's return type as Result<T, E>.",
+        explanation: "A Result is always handled: there is no way to discard it. A call that returns Result<E, T> propagates its error automatically inside a function that also returns a Result. Elsewhere, handle its error: f(x).error((e) => ...) as a statement ((~f(x)).error((e) => ...) when f is async), a match (Ok(x) -> ... / Err(e) -> ...), or declare the function's return type as Result<E, T> to propagate it.",
     };
     pub const RESULT_ERROR_TYPE: Code = Code {
         id: "N0109",
@@ -231,6 +231,11 @@ pub mod codes {
         id: "N0117",
         title: "a value of another type",
         explanation: "The value given to a name declared with a basic type (`int`, `double`, `string`, `boolean`) is known to be another basic type: `x: int = \"s\"`. An `int` is a `double` (`h: double = 3`); every other pair is an error, because each target would keep or reject the value differently. Change the value, or the type.",
+    };
+    pub const INHERITED_ASSIGN: Code = Code {
+        id: "N0118",
+        title: "a plain name writes an inherited attribute (warning)",
+        explanation: "Inside a method, a name assigned that is a member of the module is that member, also when a base class declares it: `given = x` in a method of `Member: Chat` writes Chat's `given`. The subclass may not know the base has it. Write `$given = x` to say the attribute is meant (it silences the warning), or rename the local.",
     };
     pub const NOT_ASYNC: Code = Code {
         id: "N0224",
@@ -429,6 +434,7 @@ pub mod codes {
         PLATFORM_DECORATOR,
         UNKNOWN_MEMBER,
         WRONG_TYPE,
+        INHERITED_ASSIGN,
         NOT_ASYNC,
         SINGLE_BASE,
         KIND_REQUIRES_MEMBER,
