@@ -19,8 +19,8 @@ jobs:
         include:
           - { runner: ubuntu-latest, target: x86_64-unknown-linux-musl }
           - { runner: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
-          - { runner: macos-13, target: x86_64-apple-darwin }
-          - { runner: macos-14, target: aarch64-apple-darwin }
+          - { runner: macos-15-intel, target: x86_64-apple-darwin }
+          - { runner: macos-15, target: aarch64-apple-darwin }
           - { runner: windows-latest, target: x86_64-pc-windows-msvc }
           - { runner: windows-latest, target: aarch64-pc-windows-msvc }
     runs-on: ${{ matrix.runner }}
@@ -81,8 +81,8 @@ jobs:
         include:
           - { runner: ubuntu-latest }
           - { runner: ubuntu-24.04-arm }
-          - { runner: macos-13 }
-          - { runner: macos-14 }
+          - { runner: macos-15-intel }
+          - { runner: macos-15 }
           - { runner: windows-latest }
     runs-on: ${{ matrix.runner }}
     defaults:
@@ -93,6 +93,11 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.13.8'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: The JavaScript runtimes (stage.sh copies their dist/)
+        run: installer/release/build-runtimes.sh
       - name: nuclear, to build the services from their .nuc
         run: |
           cargo build --release --quiet -p nuclear-cli
