@@ -13,6 +13,10 @@ related: [installer/release/package.sh, installer/release/clean-machine/Dockerfi
    publishes them, with `install.sh` and `install.ps1`, in the GitHub release of that tag. It can also be started
    by hand (`workflow_dispatch`).
 3. The public one-liners download from that release: without a release they fail with a clear error.
+4. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows
+   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the
+   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R
+   nuclearlang/lang -f version=<version>`.
 
 The workflow has never run ([roadmap](../01-product/roadmap.md)).
 

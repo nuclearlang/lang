@@ -1,3 +1,4 @@
+use os
 use sys
 use json
 
@@ -27,6 +28,23 @@ ask(question: string, fallback: string) string
     if not isinstance(e, EOFError)
       throw e
     fallback
+
+// Text in one of `nuclear`'s colors (its header, tools/cli/src/framework/landing.rs): `yellow`, `purple`, `green`,
+// `red`, `bold` or `dim`. Only on a terminal and without NO_COLOR; 24-bit where the terminal says so (COLORTERM),
+// else the closest of the 256 (macOS Terminal).
+paint(text: string, color: string) string
+  if not sys.stdout.isatty() or (os.environ.get("NO_COLOR") ?? "").length > 0 or (os.environ.get("TERM") ?? "dumb") == "dumb"
+    return text
+  deep = (os.environ.get("COLORTERM") ?? "") in ["truecolor", "24bit"]
+  code = match color
+    "yellow" -> deep ? "38;2;253;216;63" : "38;5;220"
+    "purple" -> deep ? "38;2;176;84;255" : "38;5;135"
+    "green" -> deep ? "38;2;120;230;150" : "38;5;114"
+    "red" -> deep ? "38;2;255;95;95" : "38;5;203"
+    "bold" -> "1"
+    "dim" -> "2"
+    _ -> "0"
+  "\u{1b}[${code}m${text}\u{1b}[0m"
 
 yes(answer: string) boolean
   answer.lower().startsWith("y")

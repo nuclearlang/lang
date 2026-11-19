@@ -162,6 +162,10 @@ testAnUninstallTakesAwayWhatTheSetUpMadeAndOnlyThat(tmpPath: Path) void
   expect(ollamaRemoval("darwin") == ["brew services stop ollama", "brew uninstall ollama"])
   expect(ollamaRemoval("linux").all((s) => s.startsWith("sudo ")))
 
+// Colors only on a terminal: what the editors read and CI logs stay plain text.
+testThePaintIsPlainTextWithoutATerminal() void
+  expect(paint("Hard", "yellow") == "Hard" and paint("✓", "green") == "✓")
+
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   held.bind(socket.getaddrinfo("127.0.0.1", 0, socket.AF_INET, socket.SOCK_STREAM)[0][4])

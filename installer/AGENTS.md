@@ -24,6 +24,9 @@ installer/release/ai-runtime.sh          # the AI services' archive of this mach
 nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services
 ```
 
+After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it
+(`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).
+
 The public one-liners (they need a published release):
 
 ```sh

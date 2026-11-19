@@ -1,0 +1,64 @@
+# The public Windows installer (installer/release/install.ps1) on a real Windows: Windows PowerShell 5.1 with the AI
+# services (profile `remote`: the Smart Graph, its own model, no Ollama) and PowerShell 7 without them, on x64 and on
+# arm64; then the uninstall, which must leave nothing. It runs after every release (`workflow_run`: a release made by
+# the release workflow's token triggers no `release` event) and by hand:
+#   gh workflow run installer-windows -R nuclearlang/lang [-f version=0.1.5]
+name: installer-windows
+
+on:
+  workflow_run:
+    workflows: [release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "the release to install (0.1.5); empty: the latest"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: windows-latest, shell: powershell, ai: remote }
+          - { runner: windows-latest, shell: pwsh, ai: "" }
+          - { runner: windows-11-arm, shell: powershell, ai: "" }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      WANTED: ${{ inputs.version || github.event.workflow_run.head_branch }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        shell: ${{ matrix.shell }}
+        run: |
+          $v = "$env:WANTED".TrimStart('v'); if (-not $v) { $v = 'latest' }
+          $options = @{ Version = $v; NoVSCode = $true }
+          if ('${{ matrix.ai }}') { $options.AiProfile = '${{ matrix.ai }}' } else { $options.NoAi = $true }
+          & ./installer/release/install.ps1 @options
+      - name: "nuclear runs"
+        shell: ${{ matrix.shell }}
+        run: |
+          $nuclear = Join-Path $env:LOCALAPPDATA 'nuclearlang\bin\nuclear.exe'
+          & $nuclear dialect list
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: "The AI services: the Smart Graph runs"
+        if: matrix.ai != ''
+        shell: ${{ matrix.shell }}
+        run: |
+          $builder = Join-Path $env:LOCALAPPDATA 'nuclearlang\ai\bin\nuclear-builder.cmd'
+          $status = & $builder setup --status --json | Out-String | ConvertFrom-Json
+          $status | ConvertTo-Json -Depth 4
+          if (-not $status.graph) { Write-Error 'the Smart Graph does not answer'; exit 1 }
+      - name: Uninstall
+        shell: ${{ matrix.shell }}
+        run: |
+          & ./installer/release/install.ps1 -Uninstall
+          $left = @((Join-Path $env:LOCALAPPDATA 'nuclearlang'), (Join-Path $env:APPDATA 'nuclearlang')) | Where-Object { Test-Path $_ }
+          if ($left) { Write-Error "left behind: $($left -join ', ')"; exit 1 }

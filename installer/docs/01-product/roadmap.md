@@ -41,11 +41,10 @@ The pending work of the installers, the release and the set-up of the AI service
   models), the VS Code extension (no `.vsix` in the mirror, and the extension is on no marketplace), Codex,
   Claude Code.
 
-- The public installers (ADR-installer-0001): `install.sh` on macOS (Intel, Apple silicon, the Rosetta detection),
-  `install.ps1` on Windows, `--version`, the latest-release lookup against GitHub, the VS Code `.vsix` step. Only
-  the Linux x86_64 archive from a local mirror ran.
-- The `release.yml` workflow never ran: musl, the arm runners, the Windows zip. It was rewritten for one
-  repository with the rest of `.github/workflows/`.
+- The public installers (ADR-installer-0001): `install.sh` ran on macOS Apple silicon (2026-11-19, from the
+  release) and on Linux x86_64; not tried: macOS Intel, the Rosetta detection, Linux aarch64. `install.ps1` is run on
+  Windows by `installer-windows.yml` after each release (x64 with PowerShell 5.1 and 7, arm64); not tried there: the
+  editors' extension (the runners have no editor) and a profile with local agents.
 - The AI set-up (ADR-installer-0002):
   - macOS (launch agents, Homebrew) and Windows (the Startup script, `winget`, `install.ps1 -AiProfile`,
     `nuclear-developer.cmd`) are written and never ran;

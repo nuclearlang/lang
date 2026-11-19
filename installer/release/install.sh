@@ -36,7 +36,62 @@ SKILL_DIRS="$HOME/.claude/skills $HOME/.agents/skills $HOME/.codex/skills"
 MARK="# added by the NuclearLang installer"
 
 say() { printf '%s\n' "$*" >&2; }
-fail() { say "error: $*"; exit 1; }
+
+# --- the look: the colors and the sign of `nuclear`'s own header (tools/cli/src/framework/landing.rs) ---
+# Only on a terminal and without NO_COLOR; 24-bit color where the terminal says so (COLORTERM), else the closest of
+# the 256 (macOS Terminal).
+if [ -t 2 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ]; then
+  esc=$(printf '\033')
+  case ${COLORTERM:-} in
+    truecolor|24bit) rgb() { printf '%s' "$esc[38;2;$1;$2;$3m"; }; YELLOW=$(rgb 253 216 63); PURPLE=$(rgb 176 84 255)
+      GREEN=$(rgb 120 230 150); RED=$(rgb 255 95 95); BLUE=$(rgb 90 180 255); TC=1 ;;
+    *) YELLOW="$esc[38;5;220m"; PURPLE="$esc[38;5;135m"; GREEN="$esc[38;5;114m"; RED="$esc[38;5;203m"
+      BLUE="$esc[38;5;75m"; TC=0 ;;
+  esac
+  BOLD="$esc[1m"; DIM="$esc[2m"; OFF="$esc[0m"
+else
+  YELLOW=""; PURPLE=""; GREEN=""; RED=""; BLUE=""; BOLD=""; DIM=""; OFF=""; TC=0; esc=""
+fi
+# A path as the user reads it: the home folder as ~.
+short() { case $1 in "$HOME"/*) printf '~%s' "${1#"$HOME"}" ;; *) printf '%s' "$1" ;; esac; }
+step() { say "  ${YELLOW}◆${OFF} $*"; }
+ok() { say "  ${GREEN}✓${OFF} $*"; }
+warn() { say "  ${YELLOW}!${OFF} $*"; }
+fail() { say "  ${RED}✗ error:${OFF} $*"; exit 1; }
+# A section: its title and a faint rule.
+section() { say ""; say "  ${BOLD}$1${OFF} ${DIM}$(printf '%*s' $((60 - ${#1})) '' | sed 's/ /─/g')${OFF}"; }
+
+# The NuclearLang sign (the radiation trefoil, as `nuclear` draws it: 16 × 12 pixels, two per cell, ▀ and ▄), with
+# the header's text beside it. `y` is the sign's yellow, `s` its slate, `.` nothing.
+SIGN=".....yyyyyy..... ...yyyssssyyy... ..yyyssssssyyyy. .yyyyyssssyyyyy. yyyyyyyyyyyyyyyy yyyyyyssssyyyyyy
+yyssssssssssssyy yysssssyysssssyy .yysssyyyysssyy. ..yysyyyyyysyyy. ...yyyyyyyyyy... .....yyyyyy....."
+banner() {
+  title=$1
+  if [ -z "$esc" ]; then
+    say ""; say "  NuclearLang · $title"; say "  Write only the logic; transpilers do the rest."; say ""; return
+  fi
+  printf '%s\n' $SIGN | awk -v e="$esc" -v tc="$TC" -v t1="${BOLD}${YELLOW}NuclearLang${OFF}   ${DIM}·${OFF}   ${BOLD}${PURPLE}Synapsis${OFF}" \
+    -v t2="${DIM}Write only the logic; transpilers do the rest.${OFF}" -v t3="Mobile, web and backend in Nuclear" \
+    -v t4="${DIM}$title${OFF}" '
+    function fg(c) { return c == "y" ? (tc ? "38;2;253;216;63" : "38;5;220") : (tc ? "38;2;55;71;79" : "38;5;239") }
+    function bg(c) { return c == "y" ? (tc ? "48;2;253;216;63" : "48;5;220") : (tc ? "48;2;55;71;79" : "48;5;239") }
+    { px[NR] = $0 }
+    END {
+      text[1] = t1; text[2] = t2; text[3] = t3; text[4] = ""; text[5] = t4
+      printf "\n"
+      for (row = 0; row < 6; row++) {
+        line = "  "; top = px[row * 2 + 1]; bot = px[row * 2 + 2]
+        for (i = 1; i <= 16; i++) {
+          t = substr(top, i, 1); b = substr(bot, i, 1)
+          if (t == "." && b == ".") line = line " "
+          else if (t != ".") line = line e "[0;" fg(t) (b != "." ? ";" bg(b) : "") "m▀" e "[0m"
+          else line = line e "[0;" fg(b) "m▄" e "[0m"
+        }
+        printf "%s    %s\n", line, text[row]
+      }
+      printf "\n"
+    }' >&2
+}
 # The command line of every editor of the VS Code family on this machine, one per line: on the PATH, or inside its app
 # on macOS (where `code` is on the PATH only after "Shell Command: Install 'code' command in PATH").
 editors() {
@@ -50,6 +105,12 @@ editors() {
   done | awk -F/ '!seen[$NF]++'
 }
 
+case " $* " in
+  *" --uninstall "*) banner "Uninstaller" ;;
+  *" -h "*|*" --help "*) ;;
+  *) banner "Installer" ;;
+esac
+
 while [ $# -gt 0 ]; do
   case $1 in
     --version) VERSION=${2:?--version needs a value}; shift ;;
@@ -61,7 +122,11 @@ while [ $# -gt 0 ]; do
     --uninstall)
       # the AI services first, with everything their set-up installed and made (the models it downloaded, Ollama when
       # it installed it, the graph's and the chat's data and secrets, the MCP server in each AI client)
-      [ -x "$INSTALL/ai/bin/nuclear-builder" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$INSTALL/ai/bin/nuclear-builder" setup --remove --all >&2 || true
+      if [ -x "$INSTALL/ai/bin/nuclear-builder" ]; then
+        section "The AI services"
+        NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$INSTALL/ai/bin/nuclear-builder" setup --remove --all 2>&1 | sed 's/^/    /' >&2 || true
+      fi
+      section "NuclearLang"
       rm -f "$BIN/nuclear-developer"
       rm -f "$BIN/nuclear" "$BIN/nuclear-lsp" "$BIN/nuclear-builder"
       rm -rf "$INSTALL"
@@ -71,8 +136,13 @@ while [ $# -gt 0 ]; do
       for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
         [ -f "$rc" ] && grep -q "$MARK" "$rc" && { grep -v "$MARK" "$rc" > "$rc.nuclear" && mv "$rc.nuclear" "$rc"; }
       done
-      editors | while IFS= read -r cli; do "$cli" --uninstall-extension nuclearlang.nuclearlang >/dev/null 2>&1 || true; done
-      say "NuclearLang uninstalled."
+      editors | while IFS= read -r cli; do
+        if "$cli" --uninstall-extension nuclearlang.nuclearlang >/dev/null 2>&1; then ok "Editor extension removed from $(basename "$cli")"; fi
+      done
+      ok "Commands, installation, skill, caches and PATH lines removed"
+      say ""
+      say "  ${GREEN}${BOLD}NuclearLang is uninstalled.${OFF} ${DIM}What was on this machine before stays.${OFF}"
+      say ""
       exit 0 ;;
     -h|--help) sed -n '2,20p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) fail "unknown option: $1" ;;
@@ -99,9 +169,12 @@ fi
 
 if command -v curl >/dev/null 2>&1; then
   get() { curl -fsSL --retry 3 "$1" -o "$2"; }
+  # a large file: with a progress bar on a terminal
+  getbar() { if [ -n "$esc" ]; then curl -fL --retry 3 --progress-bar "$1" -o "$2"; else get "$1" "$2"; fi; }
   read_url() { curl -fsSL --retry 3 "$1"; }
 elif command -v wget >/dev/null 2>&1; then
   get() { wget -q "$1" -O "$2"; }
+  getbar() { if [ -n "$esc" ]; then wget -q --show-progress "$1" -O "$2"; else get "$1" "$2"; fi; }
   read_url() { wget -qO- "$1"; }
 else
   fail "curl or wget is needed"
@@ -131,13 +204,18 @@ base=${NUCLEAR_DOWNLOAD:-https://github.com/$REPO/releases/download/v$VERSION}
 # --- download and check ---
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT INT TERM
-say "Downloading NuclearLang $VERSION for $os $arch..."
-get "$base/$name" "$tmp/$name" || fail "could not download $base/$name"
+case $os-$arch in
+  macos-aarch64) where="macOS · Apple silicon" ;; macos-x86_64) where="macOS · Intel" ;; *) where="Linux · $arch" ;;
+esac
+section "NuclearLang $VERSION"
+step "Downloading for ${BOLD}$where${OFF}"
+getbar "$base/$name" "$tmp/$name" || fail "could not download $base/$name"
 get "$base/$name.sha256" "$tmp/$name.sha256" || fail "could not download the checksum of $name"
 want=$(cut -d ' ' -f 1 < "$tmp/$name.sha256")
 if command -v sha256sum >/dev/null 2>&1; then got=$(sha256sum "$tmp/$name" | cut -d ' ' -f 1)
 else got=$(shasum -a 256 "$tmp/$name" | cut -d ' ' -f 1); fi
 [ "$want" = "$got" ] || fail "the download is damaged (SHA-256 does not match); try again"
+ok "Checked ${DIM}(SHA-256)${OFF}"
 
 # --- install ---
 tar -xzf "$tmp/$name" -C "$tmp"
@@ -146,11 +224,13 @@ mkdir -p "$(dirname "$INSTALL")" "$BIN"
 mv "$tmp/nuclearlang" "$INSTALL"
 for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
 "$BIN/nuclear" dialect list >/dev/null || fail "the installed nuclear does not run on this system"
+ok "Installed ${DIM}nuclear and nuclear-lsp in $(short "$BIN")${OFF}"
 
 if [ "$AGENT" = 1 ]; then
   for d in $SKILL_DIRS; do
     mkdir -p "$d" && rm -rf "$d/nuclear" && cp -R "$INSTALL/agents/skills/nuclear" "$d/"
   done
+  ok "The ${BOLD}nuclear${OFF} skill for Claude Code, Codex, Cursor and OpenCode"
 fi
 
 if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
@@ -158,8 +238,9 @@ if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
   if get "$base/$vsix" "$tmp/$vsix" 2>/dev/null; then
     editors | while IFS= read -r cli; do
       name=$(basename "$cli")
-      if "$cli" --install-extension "$tmp/$vsix" --force >/dev/null 2>&1; then say "Editor extension installed in $name."
-      else say "The editor extension did not install in $name: $cli --install-extension $base/$vsix"; fi
+      if "$cli" --install-extension "$tmp/$vsix" --force >/dev/null 2>&1; then
+        ok "Editor extension in ${BOLD}$name${OFF}"; printf '%s ' "$name" >> "$tmp/editors"
+      else warn "The editor extension did not install in $name: $cli --install-extension $base/$vsix"; fi
     done
   fi
 fi
@@ -192,8 +273,10 @@ tty=0
 [ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null && tty=1
 if [ "$AI" = 1 ] && [ -z "$PROFILE" ]; then
   if [ "$tty" = 1 ]; then
-    say ""
-    printf 'The AI services: the Smart Graph (what agents know of NuclearLang), the MCP server and local agents that\nwrite code. Download them (about 160 MB)? [Y/n] ' >&2
+    section "The AI services"
+    say "  The Smart Graph (what agents know of NuclearLang), the MCP server and the local agents that"
+    say "  write code. ${DIM}Nothing else is downloaded before you choose.${OFF}"
+    printf '\n  %sDownload them%s (about 160 MB)? %s[Y/n]%s ' "$BOLD" "$OFF" "$YELLOW" "$OFF" >&2
     read -r answer < /dev/tty || answer=n
     case $answer in [nN]*) AI=0; ai_note="The AI services are not installed: run this installer again when you want them." ;; esac
   else
@@ -204,8 +287,9 @@ fi
 if [ "$AI" = 1 ]; then
   # their archive: a Python of their own with the services in it, unpacked as the installation's ai/
   ai_name="nuclearlang-ai-$VERSION-$os-$arch.tar.gz"
-  say "Downloading the AI services..."
-  if get "$base/$ai_name" "$tmp/$ai_name" && get "$base/$ai_name.sha256" "$tmp/$ai_name.sha256"; then
+  [ "$tty" = 1 ] && [ -z "$PROFILE" ] || section "The AI services"
+  step "Downloading the AI services"
+  if getbar "$base/$ai_name" "$tmp/$ai_name" && get "$base/$ai_name.sha256" "$tmp/$ai_name.sha256"; then
     want=$(cut -d ' ' -f 1 < "$tmp/$ai_name.sha256")
     if command -v sha256sum >/dev/null 2>&1; then got=$(sha256sum "$tmp/$ai_name" | cut -d ' ' -f 1)
     else got=$(shasum -a 256 "$tmp/$ai_name" | cut -d ' ' -f 1); fi
@@ -220,6 +304,7 @@ if [ "$AI" = 1 ]; then
     else
       # nuclear-builder is the archive's from now on: `nuclear-builder setup` works before the set-up ran
       ln -sf "$INSTALL/ai/bin/nuclear-builder" "$BIN/nuclear-builder"
+      ok "The AI services ${DIM}(their own Python: nothing else is needed on this machine)${OFF}"
     fi
   else
     AI=0
@@ -232,13 +317,11 @@ if [ "$AI" = 1 ]; then
   if [ ! -x "$builder" ]; then
     ai_note="The AI archive has no set-up: run this installer again."
   elif [ -n "$PROFILE" ]; then
-    say ""
-    say "The AI services, profile $PROFILE..."
+    step "Setting them up with the profile ${BOLD}$PROFILE${OFF}"
     NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile "$PROFILE" --yes >&2 \
       || ai_note="The AI services are not set up: run \`nuclear-builder setup\`."
   elif [ "$tty" = 1 ]; then
-    say ""
-    say "The AI services: local agents that write the code, and the Smart Graph. You choose what is downloaded."
+    section "Set-up"
     NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup < /dev/tty >&2 \
       || ai_note="The AI services are not set up: run \`nuclear-builder setup\` when you want them."
   else
@@ -246,11 +329,20 @@ if [ "$AI" = 1 ]; then
   fi
 fi
 
+# --- the summary ---
+section "Ready"
+say "  ${GREEN}${BOLD}✓ NuclearLang $VERSION is installed${OFF}"
 say ""
-say "NuclearLang $VERSION is installed: nuclear in $BIN."
-[ -z "$ai_note" ] || say "$ai_note"
+say "    ${DIM}Command${OFF}       $(short "$BIN")/nuclear"
+[ -s "$tmp/editors" ] && say "    ${DIM}Editors${OFF}       $(cat "$tmp/editors")"
+if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then say "    ${DIM}AI services${OFF}   set up ${DIM}(nuclear-builder setup --status)${OFF}"; fi
+[ -z "$ai_note" ] || { say ""; warn "$ai_note"; }
 if [ "$on_path" = 0 ]; then
-  if [ "$MODIFY_PATH" = 1 ]; then say "Open a new terminal (or run: export PATH=\"$BIN:\$PATH\")."
-  else say "Add $BIN to your PATH: export PATH=\"$BIN:\$PATH\""; fi
+  say ""
+  if [ "$MODIFY_PATH" = 1 ]; then warn "Open a new terminal ${DIM}(or run: export PATH=\"$(short "$BIN" | sed 's|^~|$HOME|'):\$PATH\")${OFF}"
+  else warn "Add $BIN to your PATH: export PATH=\"$BIN:\$PATH\""; fi
 fi
-say "Start with: nuclear help   ·   nuclear new my_app   ·   nuclear doctor"
+say ""
+say "  ${BOLD}Start with${OFF}    ${YELLOW}nuclear new my_app${OFF}   ${DIM}·${OFF}   ${YELLOW}nuclear doctor${OFF}   ${DIM}·${OFF}   ${YELLOW}nuclear help${OFF}"
+say "  ${DIM}Docs          https://nuclearlang.github.io${OFF}"
+say ""

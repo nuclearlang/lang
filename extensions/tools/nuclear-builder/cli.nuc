@@ -216,21 +216,22 @@ setupEvents(args: string[]) int
   0
 
 describeProfiles(hw: Hardware, suggested: string) void
-  print("This machine: ${hw.cpu}, ${hw.cores} threads, ${hw.ram} GB of memory, ${hw.gpu.isEmpty ? "no GPU with memory of its own" : hw.gpu}, ${hw.disk} GB of disk free.\n")
+  print("  ${paint("This machine", "bold")}  ${hw.cpu}, ${hw.cores} threads, ${hw.ram} GB of memory, ${hw.gpu.isEmpty ? "no GPU with memory of its own" : hw.gpu}, ${hw.disk} GB of disk free.\n")
   for p in PROFILES
     f = fit(p, hw)
-    mark = p.id == suggested ? "→" : " "
-    best = p.id == suggested ? "   (suggested for this machine)" : ""
-    print("${mark} ${p.id.padEnd(7)} ${p.title}: downloads ${p.data["gb"]} GB${best}")
-    print("          ${p.data["summary"]}")
+    chosen = p.id == suggested
+    mark = chosen ? paint("→", "yellow") : " "
+    best = chosen ? "   ${paint("suggested for this machine", "yellow")}" : ""
+    print("  ${mark} ${paint(p.id.padEnd(7), chosen ? "yellow" : "bold")} ${paint(p.title, "bold")} ${paint("· downloads ${p.data["gb"]} GB", "dim")}${best}")
+    print("            ${p.data["summary"]}")
     if p.coder != null
-      sits = f.fit == "no" ? "✗ not for this machine" : f.fit == "tight" ? "! tight on this machine" : "on this machine"
-      print("          ${sits}: ${f.note}")
-      print("          measured: ${p.data["measured"]}")
+      sits = f.fit == "no" ? paint("✗ not for this machine", "red") : f.fit == "tight" ? paint("! tight on this machine", "yellow") : paint("on this machine", "dim")
+      print("            ${sits}: ${f.note}")
+      print("            ${paint("measured: ${p.data["measured"]}", "dim")}")
     for w in p.data["works"] as string[]
-      print("          ✓ ${w}")
+      print("            ${paint("✓", "green")} ${w}")
     for l in p.data["limits"] as string[]
-      print("          ✗ ${l}")
+      print("            ${paint("✗", "red")} ${paint(l, "dim")}")
     print("")
 
 // What a profile needs, found or installed by its own installer, one at a time; false when it is still missing.
@@ -241,7 +242,7 @@ haveRequirements(p: Profile, always: boolean) boolean
     if missing == null
       return true
     command: string? = (missing["install"] as <string, string>)[sys.platform]
-    print("\n${missing["title"]} is needed (${missing["why"]}): ${missing["detail"]}.")
+    print("\n  ${paint("!", "yellow")} ${paint(missing["title"], "bold")} is needed (${missing["why"]}): ${missing["detail"]}.")
     other = missing["local"] == true ? ", or choose the profile `remote`" : ""
     by = "Install it from ${missing["url"]} and run `nuclear-builder setup` again${other}."
     // installed but stopped: started here, then used as it is
@@ -285,10 +286,10 @@ haveModels(p: Profile, always: boolean) boolean
   missing = missingOf(wanted, installedModels(urls()["ollama"]!))
   here = wanted.filter((m) => not (m in missing))
   if not here.isEmpty
-    print("\nAlready in Ollama, used as they are: ${here.join(", ")}.")
+    print("\n  ${paint("✓", "green")} Already in Ollama, used as they are: ${here.join(", ")}.")
   if missing.isEmpty
     return true
-  if yes(always ? "y" : ask("\nDownload ${missing.join(", ")} (up to ${p.gb} GB)? [Y/n]: ", "y"))
+  if yes(always ? "y" : ask("\n  ${paint("Download", "bold")} ${missing.join(", ")} ${paint("(up to ${p.gb} GB)", "dim")}? ${paint("[Y/n]", "yellow")}: ", "y"))
     return true
   print("Nothing is downloaded. Run `nuclear-builder setup` again when you want the models, or choose the profile `remote`.")
   false
@@ -329,7 +330,7 @@ setup(args: string[]) int
   suggested = recommend(hw)
   describeProfiles(hw, suggested)
   names = PROFILES.map((x) => x.id).join(", ")
-  p = profileOf(option(args, "--profile") ?? (always ? suggested : ask("Which one? ${names} [${suggested}]: ", suggested)))
+  p = profileOf(option(args, "--profile") ?? (always ? suggested : ask("  ${paint("Which one?", "bold")} ${names} ${paint("[${suggested}]", "yellow")}: ", suggested)))
   if p == null
     print("no such profile: ${names}", file = sys.stderr)
     return 2
@@ -346,14 +347,14 @@ setup(args: string[]) int
     return 1
   all = steps(p)
   for i in 0..all.length
-    print("\n[${i + 1}/${all.length}] ${all[i].title}", flush = true)
+    print("\n  ${paint("[${i + 1}/${all.length}]", "yellow")} ${paint(all[i].title, "bold")}", flush = true)
     runStep(all[i].id, p, root, (line) => print("    ${line}", flush = true))
   m = readMachine()
   if p.coder != null
-    print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
+    print("\n  ${paint("✓ Done:", "green")} the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
     print("${clientsLine()} State: nuclear-builder setup --status")
   else
-    print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) runs, now and at every login. ${clientsLine()} The local agents: nuclear-builder setup again, another profile.")
+    print("\n  ${paint("✓ Done:", "green")} the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) runs, now and at every login. ${clientsLine()} The local agents: nuclear-builder setup again, another profile.")
   0
 
 // A list option (`--skills a,b`): its items trimmed, none empty; null when it is not given.

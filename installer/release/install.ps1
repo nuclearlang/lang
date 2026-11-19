@@ -37,9 +37,45 @@ function Set-UserPath([string[]]$Parts) {
 }
 $UserPath = @(([Environment]::GetEnvironmentVariable('Path', 'User') -split ';') | Where-Object { $_ })
 
+# --- the look: the colors and the sign of `nuclear`'s own header (tools/cli/src/framework/landing.rs) ---
+try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { }
+# the symbols from their code points: Windows PowerShell 5.1 may read this file in another encoding
+$Dia = [string][char]0x25C6; $Tick = [string][char]0x2713; $Rule = [string][char]0x2500; $Up = [string][char]0x2580; $Down = [string][char]0x2584; $Dot = [string][char]0x00B7
+function Step([string]$Text) { Write-Host "  $Dia " -ForegroundColor Yellow -NoNewline; Write-Host $Text }
+function Ok([string]$Text) { Write-Host "  $Tick " -ForegroundColor Green -NoNewline; Write-Host $Text }
+function Warn([string]$Text) { Write-Host '  ! ' -ForegroundColor Yellow -NoNewline; Write-Host $Text }
+function Section([string]$Title) {
+  Write-Host ''; Write-Host "  $Title " -NoNewline; Write-Host ($Rule * [Math]::Max(4, 60 - $Title.Length)) -ForegroundColor DarkGray
+}
+# The radiation trefoil as `nuclear` draws it (16 x 12 pixels, two per cell): y yellow, s slate, . nothing.
+$Sign = @('.....yyyyyy.....', '...yyyssssyyy...', '..yyyssssssyyyy.', '.yyyyyssssyyyyy.', 'yyyyyyyyyyyyyyyy', 'yyyyyyssssyyyyyy',
+  'yyssssssssssssyy', 'yysssssyysssssyy', '.yysssyyyysssyy.', '..yysyyyyyysyyy.', '...yyyyyyyyyy...', '.....yyyyyy.....')
+function Banner([string]$Title) {
+  $Color = @{ 'y' = [ConsoleColor]::Yellow; 's' = [ConsoleColor]::DarkGray }
+  $Text = @(@('NuclearLang', 'Yellow'), @('Write only the logic; transpilers do the rest.', 'DarkGray'),
+    @('Mobile, web and backend in Nuclear', 'Gray'), @('', 'Gray'), @($Title, 'DarkGray'), @('', 'Gray'))
+  Write-Host ''
+  for ($row = 0; $row -lt 6; $row++) {
+    Write-Host '  ' -NoNewline
+    for ($i = 0; $i -lt 16; $i++) {
+      $t = $Sign[$row * 2][$i]; $b = $Sign[$row * 2 + 1][$i]
+      if ($t -eq '.' -and $b -eq '.') { Write-Host ' ' -NoNewline }
+      elseif ($t -ne '.' -and $b -ne '.') { Write-Host $Up -ForegroundColor $Color["$t"] -BackgroundColor $Color["$b"] -NoNewline }
+      elseif ($t -ne '.') { Write-Host $Up -ForegroundColor $Color["$t"] -NoNewline }
+      else { Write-Host $Down -ForegroundColor $Color["$b"] -NoNewline }
+    }
+    Write-Host '    ' -NoNewline
+    Write-Host $Text[$row][0] -ForegroundColor $Text[$row][1] -NoNewline
+    if ($row -eq 0) { Write-Host "   $Dot   " -ForegroundColor DarkGray -NoNewline; Write-Host 'Synapsis' -ForegroundColor Magenta -NoNewline }
+    Write-Host ''
+  }
+}
+
 # the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
 $Builder = Join-Path $Install 'ai\bin\nuclear-builder.cmd'
 $env:NUCLEAR_INSTALL = $Install
+
+Banner $(if ($Uninstall) { 'Uninstaller' } else { 'Installer' })
 
 if ($Uninstall) {
   # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
@@ -52,7 +88,9 @@ if ($Uninstall) {
   foreach ($e in @('code', 'code-insiders', 'cursor', 'codium', 'windsurf')) {
     if (Get-Command $e -ErrorAction SilentlyContinue) { & $e --uninstall-extension nuclearlang.nuclearlang *> $null }
   }
-  Write-Host 'NuclearLang uninstalled.'
+  Write-Host ''
+  Write-Host '  NuclearLang is uninstalled. ' -ForegroundColor Green -NoNewline; Write-Host 'What was on this machine before stays.' -ForegroundColor DarkGray
+  Write-Host ''
   return
 }
 
@@ -79,12 +117,14 @@ $Base = if ($env:NUCLEAR_DOWNLOAD) { $env:NUCLEAR_DOWNLOAD } else { "https://git
 $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("nuclearlang-" + [Guid]::NewGuid())
 New-Item -ItemType Directory -Path $Tmp | Out-Null
 try {
-  Write-Host "Downloading NuclearLang $Version for Windows $Arch..."
+  Section "NuclearLang $Version"
+  Step "Downloading for Windows $Dot $Arch"
   $Zip = Join-Path $Tmp $Name
   Invoke-WebRequest "$Base/$Name" -OutFile $Zip -UseBasicParsing
   $Want = ((Invoke-WebRequest "$Base/$Name.sha256" -UseBasicParsing).Content.ToString() -split '\s+')[0].ToLower()
   $Got = (Get-FileHash $Zip -Algorithm SHA256).Hash.ToLower()
   if ($Want -ne $Got) { throw 'the download is damaged (SHA-256 does not match); try again' }
+  Ok 'Checked (SHA-256)'
 
   # --- install ---
   Expand-Archive $Zip -DestinationPath $Tmp -Force
@@ -93,6 +133,7 @@ try {
   Move-Item (Join-Path $Tmp 'nuclearlang') $Install
   & (Join-Path $Bin 'nuclear.exe') dialect list | Out-Null
   if ($LASTEXITCODE -ne 0) { throw 'the installed nuclear does not run on this system' }
+  Ok "Installed: nuclear and nuclear-lsp in $Bin"
 
   if (-not $NoAgent) {
     foreach ($d in $SkillDirs) {
@@ -103,6 +144,7 @@ try {
   }
 
   # every editor of the VS Code family on the PATH
+  $Installed = @()
   $Editors = @('code', 'code-insiders', 'cursor', 'codium', 'windsurf') | Where-Object { Get-Command $_ -ErrorAction SilentlyContinue }
   if (-not $NoVSCode -and $Editors) {
     $Vsix = Join-Path $Tmp "nuclearlang-$Version.vsix"
@@ -110,8 +152,8 @@ try {
       Invoke-WebRequest "$Base/nuclearlang-$Version.vsix" -OutFile $Vsix -UseBasicParsing
       foreach ($e in $Editors) {
         & $e --install-extension $Vsix --force *> $null
-        if ($LASTEXITCODE -eq 0) { Write-Host "Editor extension installed in $e." }
-        else { Write-Host "The editor extension did not install in ${e}: $e --install-extension $Base/nuclearlang-$Version.vsix" }
+        if ($LASTEXITCODE -eq 0) { Ok "Editor extension in $e"; $Installed += $e }
+        else { Warn "The editor extension did not install in ${e}: $e --install-extension $Base/nuclearlang-$Version.vsix" }
       }
     } catch { }
   }
@@ -136,8 +178,12 @@ $AiNote = ''
 $Interactive = -not $env:CI -and [Environment]::UserInteractive
 if (-not $NoAi -and -not $AiProfile) {
   if ($Interactive) {
+    Section 'The AI services'
+    Write-Host '  The Smart Graph (what agents know of NuclearLang), the MCP server and the local agents that write code.'
+    Write-Host '  Nothing else is downloaded before you choose.' -ForegroundColor DarkGray
     Write-Host ''
-    $Answer = Read-Host 'The AI services: the Smart Graph (what agents know of NuclearLang), the MCP server and local agents that write code. Download them (about 160 MB)? [Y/n]'
+    Write-Host '  Download them (about 160 MB)? ' -NoNewline; Write-Host '[Y/n] ' -ForegroundColor Yellow -NoNewline
+    $Answer = Read-Host
     if ($Answer -match '^[nN]') { $NoAi = $true; $AiNote = 'The AI services are not installed: run this installer again when you want them.' }
   } else {
     $NoAi = $true
@@ -150,7 +196,7 @@ if (-not $NoAi) {
   $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("nuclearlang-ai-" + [Guid]::NewGuid())
   New-Item -ItemType Directory -Path $Tmp | Out-Null
   try {
-    Write-Host 'Downloading the AI services...'
+    Step 'Downloading the AI services'
     $AiZip = Join-Path $Tmp $AiName
     $Want = ''
     try {
@@ -175,13 +221,11 @@ if (-not $NoAi) {
   if (-not (Test-Path $Builder)) {
     $AiNote = 'The AI archive has no set-up: run this installer again.'
   } elseif ($AiProfile) {
-    Write-Host ''
-    Write-Host "The AI services, profile $AiProfile..."
+    Step "Setting them up with the profile $AiProfile"
     & $Builder setup --profile $AiProfile --yes
     if ($LASTEXITCODE -ne 0) { $AiNote = 'The AI services are not set up: run `nuclear-builder setup`.' }
   } elseif ($Interactive) {
-    Write-Host ''
-    Write-Host 'The AI services: local agents that write the code, and the Smart Graph. You choose what is downloaded.'
+    Section 'Set-up'
     & $Builder setup
     if ($LASTEXITCODE -ne 0) { $AiNote = 'The AI services are not set up: run `nuclear-builder setup` when you want them.' }
   } else {
@@ -189,7 +233,18 @@ if (-not $NoAi) {
   }
 }
 
+Section 'Ready'
+Write-Host "  $Tick NuclearLang $Version is installed" -ForegroundColor Green
 Write-Host ''
-Write-Host "NuclearLang $Version is installed: nuclear in $Bin."
-if ($AiNote) { Write-Host $AiNote }
-Write-Host 'Open a new terminal, then start with: nuclear help   ·   nuclear new my_app   ·   nuclear doctor'
+Write-Host '    Command       ' -ForegroundColor DarkGray -NoNewline; Write-Host (Join-Path $Bin 'nuclear.exe')
+if ($Installed) { Write-Host '    Editors       ' -ForegroundColor DarkGray -NoNewline; Write-Host ($Installed -join ', ') }
+if ($AiNote) { Write-Host ''; Warn $AiNote }
+Write-Host ''
+Warn 'Open a new terminal so the PATH includes NuclearLang.'
+Write-Host ''
+Write-Host '  Start with    ' -NoNewline
+Write-Host 'nuclear new my_app' -ForegroundColor Yellow -NoNewline; Write-Host "   $Dot   " -ForegroundColor DarkGray -NoNewline
+Write-Host 'nuclear doctor' -ForegroundColor Yellow -NoNewline; Write-Host "   $Dot   " -ForegroundColor DarkGray -NoNewline
+Write-Host 'nuclear help' -ForegroundColor Yellow
+Write-Host '  Docs          https://nuclearlang.github.io' -ForegroundColor DarkGray
+Write-Host ''
