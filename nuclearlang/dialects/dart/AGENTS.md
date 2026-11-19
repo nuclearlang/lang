@@ -48,7 +48,8 @@ What each check needs and proves: [docs/05-standards/testing.md](docs/05-standar
 - `keywords.toml`: Dart's reserved words and how each is produced from Nuclear.
 - `library.toml`: Nuclear's standard library written in Dart (one template per member).
 - `docs.toml`: what the editor shows for each kind and header word.
-- `templates/`: `extension.tpl`, `mixin.tpl`, `data.tpl`, `doc_comment.tpl`.
+- `templates/`: `extension.tpl`, `mixin.tpl`, `data.tpl`, `doc_comment.tpl`, `monitor.tpl` (the monitor's runtime of a
+  project built with `--monitor`; `dart:io`: not for the web yet).
 - `frameworks/flutter/`: the framework dialect (`dialect.toml`, `docs.toml`, `templates/`).
 - `defs/<package>/<version>/`: type definitions. Generated.
 - `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and

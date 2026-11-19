@@ -30,12 +30,15 @@ nuclear new shop_app && cd shop_app && nuclear code
 
 ## Folders
 
-- `src/main.rs`: the binary: the compiler's commands (the `USAGE` text, the embedded `TOPICS`); a command line
+- `src/main.rs`: the binary: the compiler's commands (the `USAGE` text); a command line
   `framework::claims` takes goes to `framework::main`.
+- `src/atlas.rs`: the atlas: every documentation topic by group (embedded, found in the installation, the
+  examples), links resolved for a reader without the source tree (spec 016).
 - `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.
 - `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,
   `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `vscode.rs`, `watch.rs`)
   ([code map](docs/02-architecture/overview.md)).
+- `agent-files/start.md`: the `start` topic, the onboarding of an agent with no context (MCP `nuclear_start`).
 - `agent-files/project/`: what `agent init` writes into a project (`AGENTS.md` section, the Cursor rule).
 - `agent-files/skills/nuclear/`: the `nuclear` skill the installer copies into the agents' folders.
 - `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary.
@@ -62,8 +65,10 @@ nuclear new shop_app && cd shop_app && nuclear code
    stays clean.
 7. **When a dialect or a platform changes** (`@screen`, kinds, events), update the skeletons and test `new` +
    `make` + `check` + `analyze` + `test`.
-8. **`agent-files/` is embedded in the binary** (`include_str!`) and the documentation topics too
-   (`nuclearlang/docs/07-reference/`, `08-guides/`): a file renamed there breaks the build here.
+8. **`agent-files/` is embedded in the binary** (`include_str!`) and the documentation topics too (`atlas::TOPICS`:
+   the language's references and guides, the tools' user guides): a file renamed there breaks the build here.
+10. **What an agent reads names no path of the source tree** (root rule 14): every topic is printed through
+    `atlas::resolve`; the test `no_topic_links_into_the_source_tree` holds it.
 9. Done = `cargo test` + `cargo clippy --all-targets` green and `installer/install.sh --no-vscode`.
 
 ## Documents

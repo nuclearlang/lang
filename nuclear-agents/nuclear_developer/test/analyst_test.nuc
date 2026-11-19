@@ -57,3 +57,14 @@ tests AnalystTests
     expect(analyst.unmet("names", "rename it", "", true, 0, 0) and not analyst.unmet("names", "rename it", "", true, 0, 2))
     // the file a change starts in: asked for when the request names nothing of the project, never without a project
     expect(analyst.unmet("declaration", "add a note", "", true, 0, 0) and not analyst.unmet("declaration", "add a note", "", false, 0, 0))
+
+  @test("a request without a platform, or with a dialect's name, is refused before an agent runs (422, not a 500)")
+  platform() void
+    expect(AnalyzeRequest(spec = "a CRUD of books", platform = "mobile").platform == "mobile")
+    for wrong in ["", "fastapi", "flutter"]
+      refused = false
+      try
+        AnalyzeRequest(spec = "a CRUD of books", platform = wrong)
+      catch e
+        refused = true
+      expect(refused, "platform '${wrong}' was taken")

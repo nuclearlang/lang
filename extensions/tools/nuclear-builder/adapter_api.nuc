@@ -1,0 +1,156 @@
+use os
+use json
+use shutil
+use subprocess
+use httpx
+
+// The factory's own loop for the `api` providers (Anthropic, OpenAI, Google, OpenRouter; design.md "Who does a
+// role"): an API model is only a model, so the factory runs the loop. The role is the system prompt, the Nuclear MCP
+// server's tools and the Builder's are the model's tools (`nuclear-mcp` and `nuclear-builder mcp` on stdio, JSON-RPC), the key comes from the vault and never
+// goes anywhere else. Each turn's tokens are priced (or the provider says the cost, as OpenRouter does) and the loop
+// stops before the step's budget is passed.
+
+// What one turn of a model said: its text, the tools it called, its tokens, its cost when the provider reports it.
+ModelTurn(text: string, calls: <string, any>[], inputTokens: int, outputTokens: int, reportedUsd: double? = null)
+
+// The USD per million tokens (input, output) of the models whose prices are known here (Anthropic's, 2026-11-03).
+// Others come from `.nuclear/builder.json` "prices" ({ "<provider>/<model>": [input, output] }); a model with no
+// price is refused before any call: the budget could not hold.
+PRICES: <string, double[]> = { "anthropic/claude-fable-5-2": [8.0, 40.0], "anthropic/claude-opus-5-5": [4.0, 20.0], "anthropic/claude-opus-5": [5.0, 25.0], "anthropic/claude-sonnet-5-5": [2.0, 10.0], "anthropic/claude-sonnet-5": [2.0, 10.0], "anthropic/claude-sonnet-4-6": [3.0, 15.0], "anthropic/claude-haiku-5-5": [0.1, 0.5], "anthropic/claude-haiku-4-5": [1.0, 5.0] }
+
+MAX_TURNS = 30
+
+priceOf(provider: string, model: string, given: <string, any> = {}) double[]?
+  key = "${provider}/${model}"
+  own = given[key]
+  if isinstance(own, list) and (own as any[]).length == 2
+    return own
+  PRICES[key]
+
+turnCost(turn: ModelTurn, price: double[]?) double
+  if turn.reportedUsd != null
+    return turn.reportedUsd!
+  price == null ? 0.0 : (turn.inputTokens * price![0] + turn.outputTokens * price![1]) / 1_000_000
+
+// ---------- the Nuclear MCP server, as a client ----------
+
+// The MCP server on stdio: one JSON-RPC message per line.
+McpClient(process: subprocess.Popen, next: int = 1)
+
+  call(method: string, params: <string, any>) <string, any>
+    id = next
+    next += 1
+    send({ "jsonrpc": "2.0", "id": id, "method": method, "params": params })
+    for line in process.stdout!
+      found = jsonLine("${line}".trim())
+      if found != null and found!["id"] == id
+        if found!["error"] != null
+          throw RuntimeError("the MCP server refused ${method}: ${json.dumps(found!["error"])}")
+        return found!["result"] ?? ({} as <string, any>)
+    throw RuntimeError("the MCP server ended before it answered ${method}")
+
+  send(message: <string, any>) void
+    process.stdin!.write(json.dumps(message) + "\n")
+    process.stdin!.flush()
+
+  close() void
+    try
+      process.stdin!.close()
+      process.wait(timeout = 5)
+    catch e
+      process.kill()
+
+// Starts the MCP server in the project and says hello: the client and its tools.
+startMcp(command: string, root: string, args: string[] = []) McpClient
+  env = toolEnv()
+  found = shutil.which(command, path = env["PATH"])
+  if found == null
+    throw RuntimeError("the MCP server `${command}` is not installed: nuclear-builder setup")
+  p = subprocess.Popen([found!, ...args], cwd = root, env = env, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.DEVNULL, text = true)
+  client = McpClient(p)
+  client.call("initialize", { "protocolVersion": "2025-06-18", "capabilities": {} as <string, any>, "clientInfo": { "name": "nuclear-builder", "version": "0.1.0" } })
+  client.send({ "jsonrpc": "2.0", "method": "notifications/initialized" })
+  client
+
+mcpTools(client: McpClient) <string, any>[]
+  tools: <string, any>[] = client.call("tools/list", {})["tools"] ?? []
+  tools.map((t) => { "name": t["name"], "description": t["description"] ?? "", "schema": t["inputSchema"] ?? { "type": "object", "properties": {} as <string, any> } })
+
+// A tool call through the MCP server: its text, and whether it failed.
+mcpCall(client: McpClient, name: string, input: <string, any>) <string, any>
+  try
+    result = client.call("tools/call", { "name": name, "arguments": input })
+    parts: <string, any>[] = result["content"] ?? []
+    { "text": parts.map((p) => "${p["text"] ?? ""}").join("\n"), "error": result["isError"] == true }
+  catch e
+    if not isinstance(e, RuntimeError)
+      throw e
+    { "text": "${e}", "error": true }
+
+// ---------- the loop ----------
+
+// The loop of an API provider: `ask` is its wire format (one turn of the model from the system prompt, the turns so
+// far and the tools). Turns are kept in one shape for every provider: { "role": "user", "text" } · { "role":
+// "assistant", "text", "calls": [{ id, name, input }] } · { "role": "tool", "results": [{ id, name, text, error }] }.
+apiLoop(provider: string, ask: (key: string, model: string, system: string, turns: <string, any>[], tools: <string, any>[], client: httpx.Client) => ModelTurn, role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  events: <string, any>[] = []
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  if work.model.isEmpty
+    return Outcome(false, "", {}, [], 0, events, "${provider}: the team names no model for the ${role.title}")
+  price = priceOf(provider, work.model, work.inputs["prices"] ?? ({} as <string, any>))
+  if price == null and provider != "openrouter"
+    return Outcome(false, "", {}, [], 0, events, "no price for ${provider}/${work.model}: add it to .nuclear/builder.json \"prices\" ({ \"${provider}/${work.model}\": [input, output] } USD per million tokens)")
+  key: string? = work.inputs["key"] ?? vaultKey(provider)
+  if key == null
+    return Outcome(false, "", {}, [], 0, events, "no API key for ${provider}: nuclear-builder vault set ${provider}")
+  mcp = startMcp(work.mcpCommand, work.root)
+  builder: McpClient? = null
+  http = httpx.Client(transport = work.inputs["transport"], timeout = work.timeoutMs / 1000)
+  cost = 0.0
+  try
+    // the Builder's MCP server beside NuclearLang's: each call goes to the server that has the tool
+    builder = startMcp(builderMcpCommand(), work.root, builderMcpArgs(work.root))
+    own = mcpTools(mcp)
+    theirs = mcpTools(builder!)
+    builderNames = theirs.map((t) => "${t["name"]}")
+    tools = [...own, ...theirs]
+    turns: <string, any>[] = [{ "role": "user", "text": stationPrompt(role, station, work, true) }]
+    for n in 0..MAX_TURNS
+      if work.budgetUsd > 0 and cost >= work.budgetUsd
+        return Outcome(false, "", {}, [], cost, events, "the step spent its budget (${work.budgetUsd.toFixed(2)} USD) before it ended")
+      turn: ModelTurn = ask(key!, work.model, role.text(), turns, tools, http)
+      spent = turnCost(turn, price)
+      cost += spent
+      say({ "type": "cost", "usd": spent, "inputTokens": turn.inputTokens, "outputTokens": turn.outputTokens })
+      if turn.text.length > 0
+        say({ "type": "text", "text": turn.text })
+      turns.add({ "role": "assistant", "text": turn.text, "calls": turn.calls })
+      if turn.calls.isEmpty
+        return Outcome(true, turn.text, collectDocuments(work, turn.text), [], cost, events)
+      results: <string, any>[] = []
+      for c in turn.calls
+        say({ "type": "tool", "id": c["id"], "tool": c["name"], "input": json.dumps(c["input"]).substring(0, 4000) })
+        r = mcpCall("${c["name"]}" in builderNames ? builder! : mcp, c["name"]!, c["input"] ?? ({} as <string, any>))
+        say({ "type": "tool-result", "id": c["id"], "ok": r["error"] != true, "text": "${r["text"]}".substring(0, 20000) })
+        results.add({ "id": c["id"], "name": c["name"], "text": r["text"], "error": r["error"] })
+      turns.add({ "role": "tool", "results": results })
+    Outcome(false, "", {}, [], cost, events, "${provider}: no answer after ${MAX_TURNS} turns")
+  catch e
+    if not isinstance(e, httpx.HTTPError) and not isinstance(e, RuntimeError) and not isinstance(e, KeyError)
+      throw e
+    // the key is never in an error: only the provider's status and message
+    Outcome(false, "", {}, [], cost, events, "${provider}: ${e}".replace(key!, "<key>"))
+  finally
+    http.close()
+    mcp.close()
+    if builder != null
+      builder!.close()
+
+// The answer of a provider's API, or an error with its status (and never the request: it holds the key).
+answerOf(r: httpx.Response, provider: string) <string, any>
+  if r.statusCode >= 300
+    said: string = r.text
+    throw RuntimeError("${provider} answered ${r.statusCode}: ${said.substring(0, Math.min(400, said.length))}")
+  r.json()

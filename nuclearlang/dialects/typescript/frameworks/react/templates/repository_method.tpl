@@ -1,3 +1,9 @@
+{{#decor.on}}
+{{name}}({{params}}): {{ret_info.type}} {
+  return this.stream({{decor.on.arg}}, (data) => {{#ret_info.args}}{{#model}}{{item}}.fromJson(data as Json){{/model}}{{^model}}data as {{type}}{{/model}}{{/ret_info.args}});
+}
+{{/decor.on}}
+{{^decor.on}}
 {{#ret_info.result}}
 {{name}}({{params}}): {{ret}} {
   return this.result(
@@ -66,3 +72,4 @@ purge{{name|pascal}}(): void {
   this.purgeCache({{#deco_args.cacheKey}}{{deco_args.cacheKey}}{{/deco_args.cacheKey}}{{^deco_args.cacheKey}}'{{owner}}.{{name}}'{{/deco_args.cacheKey}});
 }
 {{/deco_args.cache}}
+{{/decor.on}}

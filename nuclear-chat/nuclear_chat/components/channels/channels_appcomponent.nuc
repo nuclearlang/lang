@@ -1,0 +1,7 @@
+// What the rest of the app sees of the channels: the list with the unread counts, a new channel, a channel read, the agent of a
+// direct message.
+appcomponent ChannelsAppComponent
+  list() = ListChannels.exec
+  create() = CreateChannel.exec
+  read() = ReadChannel.exec
+  chooseAgent() = ChooseAgent.exec

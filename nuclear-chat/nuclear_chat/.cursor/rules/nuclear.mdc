@@ -1,0 +1,10 @@
+---
+description: NuclearLang (.nuc) code
+globs: **/*.nuc
+alwaysApply: false
+---
+
+The `.nuc` files are NuclearLang, not TypeScript nor Dart. Follow AGENTS.md: read
+`nuclear spec --brief --dialect fastapi` before writing, and run `nuclear check --json` after each change.
+Make it with the tools (`nuclear gen`, `nuclear make`, the MCP server, `nuclear add`): never write target code for a
+feature nor translate TypeScript, Dart or Python into Nuclear by hand.

@@ -8,7 +8,19 @@ async {{name}}({{params}}): Promise<void> {
   this.emit(result.match({{owner_decor.stateModel.arg}}.error, {{decor.state.arg}}));
 {{/ret_info.result}}
 {{^ret_info.result}}
+{{#ret}}
+{{#ret_info.void}}
+  {{#async}}await {{/async}}this._{{name}}({{call_args}});
+  this.emit({{decor.state.arg}}());
+{{/ret_info.void}}
+{{^ret_info.void}}
   this.emit({{decor.state.arg}}({{#async}}await {{/async}}this._{{name}}({{call_args}})));
+{{/ret_info.void}}
+{{/ret}}
+{{^ret}}
+  {{#async}}await {{/async}}this._{{name}}({{call_args}});
+  this.emit({{decor.state.arg}}());
+{{/ret}}
 {{/ret_info.result}}
 {{#decor.after}}
   {{decor.after.arg}}();

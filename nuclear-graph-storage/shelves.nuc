@@ -92,7 +92,7 @@ SHELVES = {
 // The shelf of the exact questions: read by the planner of an answer, never by a search of every shelf.
 EXACT = "queries"
 
-// Not made from the knowledge base: the prompt files of this package, and what agents keep about a project.
+// Not made from the knowledge base: the prompts (the skills of the roles), and what agents keep about a project.
 RUNTIME = ["prompts", "memory"]
 COLLECTIONS = [...SHELVES.keys, ...RUNTIME]
 // The collections of before ADR-graph-0001: an ingest removes them.

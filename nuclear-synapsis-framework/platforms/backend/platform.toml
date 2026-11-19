@@ -20,8 +20,10 @@ decorators = [
   "required", "email", "url", "minLength", "maxLength", "min", "max", "pattern",
   # a model field's name in the JSON when it is not the field's (`@key("air_date")`)
   "key",
+  # no span for this use case, route or controller when telemetry is on (spec 012)
+  "untraced",
 ]
-plugins = ["sqlite", "postgres", "mysql", "mariadb", "redis", "kafka", "events", "ai", "openai", "ollama", "chroma"]
+plugins = ["sqlite", "postgres", "mysql", "mariadb", "redis", "kafka", "events", "websocket", "ai", "openai", "ollama", "chroma", "telemetry"]
 
 # The arguments and the rules of the data decorators (ADR-backend-0001), the same for every backend dialect.
 [decorators.args]

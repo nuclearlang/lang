@@ -1,0 +1,4 @@
+// The GIF a member sends after a message at a moment, by their personality (null: none this time).
+usecase ChooseGif(choice: GifChoice)
+  exec(member: Member, moment: string, seed: string) Result<Error, Gif?>
+    Ok(choice.choose(member, moment, seed))

@@ -1,8 +1,8 @@
 {
   "name": "nuclearlang",
-  "displayName": "NuclearLang",
-  "description": "NuclearLang (.nuc) support: the Nuclear workspace (projects as tabs, tools full screen, keyboard first), language server, semantic highlighting, code metrics, the Synapsis dialects (flutter, fastapi, nestjs, react) and the Chernobyl theme",
-  "version": "0.53.0",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.70.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
@@ -73,7 +73,7 @@
     "semanticTokenModifiers": [
       {
         "id": "kind",
-        "description": "A dialect kind in a declaration header (stateless, stateful, extension...)"
+        "description": "%semanticTokenModifier.kind%"
       }
     ],
     "semanticTokenScopes": [
@@ -94,8 +94,42 @@
     ],
     "configuration": [
       {
-        "title": "NuclearLang",
+        "id": "language",
+        "title": "%config.language%",
+        "order": 1,
         "properties": {
+          "nuclear.language": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "en",
+              "es"
+            ],
+            "enumDescriptions": [
+              "%nuclear.language.enum.auto%",
+              "%nuclear.language.enum.en%",
+              "%nuclear.language.enum.es%"
+            ],
+            "description": "%nuclear.language.desc%",
+            "order": 0
+          },
+          "nuclear.notifications": {
+            "type": "string",
+            "default": "all",
+            "enum": [
+              "all",
+              "mentions-and-gates",
+              "off"
+            ],
+            "enumDescriptions": [
+              "%nuclear.notifications.all%",
+              "%nuclear.notifications.mentions%",
+              "%nuclear.notifications.off%"
+            ],
+            "description": "%nuclear.notifications.desc%",
+            "order": 1
+          },
           "nuclear.dialect": {
             "type": "string",
             "default": "flutter",
@@ -110,16 +144,16 @@
               "base"
             ],
             "enumDescriptions": [
-              "Synapsis mobile: Flutter widgets, Dart output",
-              "Synapsis backend: FastAPI, Python output",
-              "Synapsis backend: NestJS, TypeScript output",
-              "Synapsis web: React, TypeScript output",
-              "Dart language only",
-              "Python language only",
-              "TypeScript language only",
-              "Only the base language (syntax and reserved words), without a dialect"
+              "%nuclear.dialect.enum.flutter%",
+              "%nuclear.dialect.enum.fastapi%",
+              "%nuclear.dialect.enum.nestjs%",
+              "%nuclear.dialect.enum.react%",
+              "%nuclear.dialect.enum.dart%",
+              "%nuclear.dialect.enum.python%",
+              "%nuclear.dialect.enum.typescript%",
+              "%nuclear.dialect.enum.base%"
             ],
-            "markdownDescription": "Dialect used to check `.nuc` files outside a project. A project names its platform and dialect in `config.nuc` (or `nuclear.toml`) and the server uses those. `base` checks only the base language.",
+            "markdownDescription": "%nuclear.dialect.md%",
             "scope": "resource"
           },
           "nuclear.dialectPaths": {
@@ -128,13 +162,13 @@
               "type": "string"
             },
             "default": [],
-            "markdownDescription": "Extra directories with dialects (absolute or relative to the workspace). `<workspace>/dialects` is always searched.",
+            "markdownDescription": "%nuclear.dialectPaths.md%",
             "scope": "resource"
           },
           "nuclear.server.path": {
             "type": "string",
             "default": "",
-            "markdownDescription": "Path to the `nuclear-lsp` binary. Empty: the one bundled with the extension, then `nuclear-lsp` on the `PATH`."
+            "markdownDescription": "%nuclear.server.path.md%"
           },
           "nuclear.trace.server": {
             "type": "string",
@@ -144,301 +178,434 @@
               "verbose"
             ],
             "default": "off",
-            "description": "Traces the communication between VS Code and the Nuclear language server."
+            "description": "%nuclear.trace.server.desc%"
           },
           "nuclear.debug.followInNuclear": {
             "type": "boolean",
             "default": true,
-            "description": "When a Synapsis app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code."
+            "description": "%nuclear.debug.followInNuclear.desc%"
           },
           "nuclear.debug.explainErrors": {
             "type": "boolean",
             "default": true,
-            "description": "Show Dart run-time errors of a Synapsis app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error."
+            "description": "%nuclear.debug.explainErrors.desc%"
           },
           "nuclear.workspace.welcome": {
             "type": "boolean",
             "default": true,
-            "description": "Show the Nuclear workspace welcome page (projects and shortcuts) when VS Code starts with no editor open. Ctrl+Alt+W opens it any time."
+            "description": "%nuclear.workspace.welcome.desc%"
           },
           "nuclear.buildOnSave": {
             "type": "boolean",
             "default": true,
-            "markdownDescription": "Saving a `.nuc` of a backend or web project runs `nuclear build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session."
-          },
+            "markdownDescription": "%nuclear.buildOnSave.md%"
+          }
+        }
+      },
+      {
+        "id": "ai",
+        "title": "%config.ai%",
+        "order": 2,
+        "properties": {
           "nuclear.ai.developerUrl": {
             "type": "string",
             "default": "http://127.0.0.1:7879",
-            "description": "Where the Nuclear Developer (the local agents) answers."
+            "description": "%nuclear.ai.developerUrl.desc%"
           },
           "nuclear.ai.graphUrl": {
             "type": "string",
             "default": "http://127.0.0.1:7878",
-            "description": "Where the Nuclear Smart Graph answers."
+            "description": "%nuclear.ai.graphUrl.desc%"
           },
           "nuclear.ai.ollamaUrl": {
             "type": "string",
             "default": "http://localhost:11434",
-            "description": "Where Ollama runs the local models."
+            "description": "%nuclear.ai.ollamaUrl.desc%"
           },
           "nuclear.ai.models.coder": {
             "type": "string",
             "default": "qwen2.5-coder:3b",
-            "description": "The local model that writes and repairs code and tests (at most 3B parameters). Applies when the Developer is started from Settings and integrations."
+            "description": "%nuclear.ai.models.coder.desc%"
           },
           "nuclear.ai.models.assistant": {
             "type": "string",
             "default": "gemma4:e2b",
-            "description": "The local model that plans, reviews, documents, diagnoses and chats (at most 3B effective parameters)."
+            "description": "%nuclear.ai.models.assistant.desc%"
           },
           "nuclear.ai.models.embeddings": {
             "type": "string",
             "default": "embeddinggemma",
-            "description": "The embeddings model of the Smart Graph's search (re-ingest after changing it)."
-          },
-          "nuclear.ai.claudeModel": {
-            "type": "string",
-            "enum": [
-              "sonnet",
-              "opus",
-              "haiku"
-            ],
-            "default": "sonnet",
-            "description": "Claude's model when Claude leads a Builder run."
+            "description": "%nuclear.ai.models.embeddings.desc%"
           },
           "nuclear.ai.mcpCommand": {
             "type": "string",
             "default": "nuclear-mcp",
-            "description": "The program that serves the Nuclear MCP server (an AI client starts it with no argument)."
+            "description": "%nuclear.ai.mcpCommand.desc%"
           },
           "nuclear.ai.graphCommand": {
             "type": "string",
             "default": "nuclear-graph",
-            "description": "The Smart Graph's program (serve, connect, requests, revoke)."
+            "description": "%nuclear.ai.graphCommand.desc%"
           },
           "nuclear.ai.retry.attempts": {
             "type": "number",
             "default": 5,
             "minimum": 1,
             "maximum": 10,
-            "description": "Tries of a call to the local agents that fails for a passing reason (down, busy, 5xx), the first included."
+            "description": "%nuclear.ai.retry.attempts.desc%"
           },
           "nuclear.ai.retry.baseMs": {
             "type": "number",
             "default": 1000,
             "minimum": 100,
-            "description": "The ceiling of the first wait before a retry, in milliseconds; it doubles at each retry (exponential backoff with full jitter)."
+            "description": "%nuclear.ai.retry.baseMs.desc%"
           },
           "nuclear.ai.retry.maxMs": {
             "type": "number",
             "default": 30000,
             "minimum": 1000,
-            "description": "The longest wait before a retry, in milliseconds."
-          },
-          "nuclear.ai.contextTokens": {
-            "type": "number",
-            "default": 8192,
-            "minimum": 2048,
-            "description": "The context window of the local models, in tokens: what Nuclear Atlas's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx)."
+            "description": "%nuclear.ai.retry.maxMs.desc%"
           },
           "nuclear.ai.claude.command": {
             "type": "string",
             "default": "claude",
-            "description": "Claude Code's command: the Builder's lead when Claude leads, checked before every such run."
-          },
-          "nuclear.ai.claude.maxBudgetUsd": {
-            "type": "number",
-            "default": 2,
-            "minimum": 0,
-            "description": "The most a Builder run led by Claude may spend, in USD (0: no limit)."
+            "description": "%nuclear.ai.claude.command.desc%"
           },
           "nuclear.ai.codex.enabled": {
             "type": "boolean",
             "default": false,
-            "description": "Use Codex (its MCP server entry and its regular check)."
+            "description": "%nuclear.ai.codex.enabled.desc%"
           },
           "nuclear.ai.codex.command": {
             "type": "string",
             "default": "codex",
-            "description": "Codex's command."
+            "description": "%nuclear.ai.codex.command.desc%"
           },
           "nuclear.ai.opencode.enabled": {
             "type": "boolean",
             "default": false,
-            "description": "Use OpenCode (its MCP server entry and its regular check)."
+            "description": "%nuclear.ai.opencode.enabled.desc%"
           },
           "nuclear.ai.opencode.command": {
             "type": "string",
             "default": "opencode",
-            "description": "OpenCode's command."
+            "description": "%nuclear.ai.opencode.command.desc%"
           },
           "nuclear.ai.opencode.configFile": {
             "type": "string",
             "default": "~/.config/opencode/opencode.json",
-            "description": "OpenCode's configuration file, where the Nuclear MCP server is added."
+            "description": "%nuclear.ai.opencode.configFile.desc%"
           },
           "nuclear.ai.cursor.mcpFile": {
             "type": "string",
             "default": "~/.cursor/mcp.json",
-            "description": "Cursor's MCP configuration file, where the Nuclear MCP server is added."
+            "description": "%nuclear.ai.cursor.mcpFile.desc%"
           },
           "nuclear.ai.github.command": {
             "type": "string",
             "default": "gh",
-            "description": "GitHub's command line (issues imported as Builder specs), checked with `gh auth status`."
+            "description": "%nuclear.ai.github.command.desc%"
           },
           "nuclear.ai.jira.site": {
             "type": "string",
             "default": "",
-            "description": "Your Jira site (https://your-team.atlassian.net): issues imported as Builder specs. The API token is kept in the secret storage."
+            "description": "%nuclear.ai.jira.site.desc%"
           },
           "nuclear.ai.jira.email": {
             "type": "string",
             "default": "",
-            "description": "The email of your Atlassian account (Jira)."
+            "description": "%nuclear.ai.jira.email.desc%"
           },
           "nuclear.ai.jira.criteriaField": {
             "type": "string",
             "default": "",
-            "description": "Optional: the Jira field that holds the acceptance criteria (customfield_10050); empty: read them from the description."
+            "description": "%nuclear.ai.jira.criteriaField.desc%"
           },
           "nuclear.ai.watch.callTimeoutMinutes": {
             "type": "number",
             "default": 15,
             "minimum": 1,
-            "description": "A call to the local agents that takes longer is cut and retried."
+            "description": "%nuclear.ai.watch.callTimeoutMinutes.desc%"
           },
           "nuclear.ai.watch.stallSeconds": {
             "type": "number",
             "default": 90,
             "minimum": 10,
-            "description": "A call is stalled (cut and retried) when, this long, the Developer does not answer or Ollama holds no model."
-          },
-          "nuclear.ai.watch.minFreeMb": {
-            "type": "number",
-            "default": 500,
-            "minimum": 50,
-            "description": "Free disk space (the project and the temporary folder) a Builder run needs before it starts."
-          },
-          "nuclear.ai.resumeInterrupted": {
-            "type": "boolean",
-            "default": true,
-            "description": "A Builder run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped."
+            "description": "%nuclear.ai.watch.stallSeconds.desc%"
           },
           "nuclear.ai.checkEveryMinutes": {
             "type": "number",
             "default": 5,
             "minimum": 0,
-            "description": "How often every connection (the Developer, the Smart Graph, Ollama and its models, Claude, Codex, OpenCode, GitHub, Jira) is checked; a notification says when one stops answering (0: only before each task)."
-          },
-          "nuclear.ai.watch.commandTimeoutMinutes": {
-            "type": "number",
-            "default": 20,
-            "minimum": 1,
-            "description": "A command of the Builder (a build, the tests) that runs longer is killed with its children and the step fails."
+            "description": "%nuclear.ai.checkEveryMinutes.desc%"
           }
         }
       },
       {
-        "title": "Code Metrics",
+        "id": "builder",
+        "title": "%config.builder%",
+        "order": 3,
+        "properties": {
+          "nuclear.builder.team": {
+            "type": "string",
+            "default": "",
+            "description": "%nuclear.builder.team.desc%"
+          },
+          "nuclear.builder.claudeModel": {
+            "type": "string",
+            "enum": [
+              "sonnet",
+              "opus",
+              "haiku"
+            ],
+            "default": "haiku",
+            "description": "%nuclear.builder.claudeModel.desc%"
+          },
+          "nuclear.builder.resumeInterrupted": {
+            "type": "boolean",
+            "default": true,
+            "description": "%nuclear.builder.resumeInterrupted.desc%"
+          },
+          "nuclear.builder.minFreeMb": {
+            "type": "number",
+            "default": 500,
+            "minimum": 50,
+            "description": "%nuclear.builder.minFreeMb.desc%"
+          },
+          "nuclear.builder.commandTimeoutMinutes": {
+            "type": "number",
+            "default": 20,
+            "minimum": 1,
+            "description": "%nuclear.builder.commandTimeoutMinutes.desc%"
+          },
+          "nuclear.builder.chat": {
+            "type": "object",
+            "default": {
+              "kind": "local",
+              "provider": "nuclear-developer",
+              "model": ""
+            },
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "local",
+                  "agent",
+                  "api"
+                ],
+                "description": "%nuclear.builder.chat.kind.desc%"
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "nuclear-developer",
+                  "claude-code",
+                  "codex",
+                  "gemini-cli",
+                  "opencode",
+                  "anthropic",
+                  "openai",
+                  "google",
+                  "openrouter"
+                ],
+                "description": "%nuclear.builder.chat.provider.desc%"
+              },
+              "model": {
+                "type": "string",
+                "description": "%nuclear.builder.chat.model.desc%"
+              }
+            },
+            "additionalProperties": false,
+            "description": "%nuclear.builder.chat.desc%"
+          }
+        }
+      },
+      {
+        "id": "spending",
+        "title": "%config.spending%",
+        "order": 4,
+        "properties": {
+          "nuclear.spending.budgetUsd": {
+            "type": "number",
+            "default": 5,
+            "minimum": 0,
+            "description": "%nuclear.spending.budgetUsd.desc%"
+          },
+          "nuclear.spending.confirm": {
+            "type": "boolean",
+            "default": true,
+            "description": "%nuclear.spending.confirm.desc%"
+          },
+          "nuclear.spending.forceConfirm": {
+            "type": "boolean",
+            "default": false,
+            "description": "%nuclear.spending.forceConfirm.desc%"
+          }
+        }
+      },
+      {
+        "id": "atlas",
+        "title": "%config.atlas%",
+        "order": 5,
+        "properties": {
+          "nuclear.atlas.contextTokens": {
+            "type": "number",
+            "default": 8192,
+            "minimum": 2048,
+            "description": "%nuclear.atlas.contextTokens.desc%"
+          }
+        }
+      },
+      {
+        "id": "chat",
+        "title": "%config.chat%",
+        "order": 5,
+        "properties": {
+          "nuclear.chat.gifs": {
+            "type": "string",
+            "enum": [
+              "pack",
+              "tenor",
+              "giphy"
+            ],
+            "enumDescriptions": [
+              "%nuclear.chat.gifs.pack%",
+              "%nuclear.chat.gifs.tenor%",
+              "%nuclear.chat.gifs.giphy%"
+            ],
+            "default": "pack",
+            "description": "%nuclear.chat.gifs.desc%"
+          }
+        }
+      },
+      {
+        "id": "http",
+        "title": "%config.http%",
+        "order": 6,
+        "properties": {
+          "nuclear.http.timeoutSeconds": {
+            "type": "number",
+            "default": 30,
+            "minimum": 1,
+            "description": "%nuclear.http.timeoutSeconds.desc%"
+          }
+        }
+      },
+      {
+        "id": "devices",
+        "title": "%config.devices%",
+        "order": 7,
+        "properties": {
+          "nuclear.devices.idleMinutes": {
+            "type": "number",
+            "default": 30,
+            "minimum": 1,
+            "description": "%nuclear.devices.idleMinutes.desc%"
+          }
+        }
+      },
+      {
+        "id": "codemetrics",
+        "title": "%config.codemetrics%",
+        "order": 9,
         "properties": {
           "nuclear.codemetrics.basics.CodeLensEnabled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are shown as code lens",
+            "description": "%codemetrics.basics.CodeLensEnabled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.CodeLensHiddenUnder": {
             "default": 3,
-            "description": "Threshold to show code lens for code metrics",
+            "description": "%codemetrics.basics.CodeLensHiddenUnder%",
             "type": "number"
           },
           "nuclear.codemetrics.basics.ComplexityColorExtreme": {
             "default": "#ff0000",
-            "description": "Color for the extreme complexity level",
+            "description": "%codemetrics.basics.ComplexityColorExtreme%",
             "type": "string",
             "format": "color-hex"
           },
           "nuclear.codemetrics.basics.ComplexityColorHigh": {
             "default": "#f44034",
-            "description": "Color for the high complexity level",
+            "description": "%codemetrics.basics.ComplexityColorHigh%",
             "type": "string",
             "format": "color-hex"
           },
           "nuclear.codemetrics.basics.ComplexityColorLow": {
             "default": "#4bb14f",
-            "description": "Color for the low complexity level",
+            "description": "%codemetrics.basics.ComplexityColorLow%",
             "type": "string",
             "format": "color-hex"
           },
           "nuclear.codemetrics.basics.ComplexityColorNormal": {
             "default": "#ffc208",
-            "description": "Color for the normal complexity level",
+            "description": "%codemetrics.basics.ComplexityColorNormal%",
             "type": "string",
             "format": "color-hex"
           },
           "nuclear.codemetrics.basics.ComplexityLevelExtreme": {
             "default": 25,
-            "description": "Threshold to determine extreme high complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelExtreme%",
             "type": "number"
           },
           "nuclear.codemetrics.basics.ComplexityLevelExtremeDescription": {
             "default": "Bloody hell...",
-            "description": "Code lens message for extreme high complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelExtremeDescription%",
             "type": "string"
           },
           "nuclear.codemetrics.basics.ComplexityLevelHigh": {
             "default": 10,
-            "description": "Threshold to determine high complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelHigh%",
             "type": "number"
           },
           "nuclear.codemetrics.basics.ComplexityLevelHighDescription": {
             "default": "You must be kidding",
-            "description": "Code lens message for high complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelHighDescription%",
             "type": "string"
           },
           "nuclear.codemetrics.basics.ComplexityLevelLow": {
             "default": 0,
-            "description": "Threshold to determine low complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelLow%",
             "type": "number"
           },
           "nuclear.codemetrics.basics.ComplexityLevelLowDescription": {
             "default": "Everything is cool!",
-            "description": "Code lens message for low complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelLowDescription%",
             "type": "string"
           },
           "nuclear.codemetrics.basics.ComplexityLevelNormal": {
             "default": 5,
-            "description": "Threshold to determine normal complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelNormal%",
             "type": "number"
           },
           "nuclear.codemetrics.basics.ComplexityLevelNormalDescription": {
             "default": "It's time to do something...",
-            "description": "Code lens message for normal complexity level",
+            "description": "%codemetrics.basics.ComplexityLevelNormalDescription%",
             "type": "string"
           },
           "nuclear.codemetrics.basics.ComplexityTemplate": {
             "default": "Complexity is {0} {1}",
-            "description": "Code lens message template {0} stands for the actual value {1} is for the complexity level description",
+            "description": "%codemetrics.basics.ComplexityTemplate%",
             "type": "string"
           },
           "nuclear.codemetrics.basics.DecorationModeEnabled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are shown as inline decoration",
+            "description": "%codemetrics.basics.DecorationModeEnabled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.DecorationTemplate": {
             "default": "<svg xmlns='http://www.w3.org/2000/svg' width='{{size}}px' height='{{size}}px' viewbox='0 0 {{size}} {{size}}'><rect width='{{size}}' height='{{size}}' style='fill:{{color}};stroke-width:1;stroke:#fff'/></svg>",
-            "description": "A flag which indicates whether code metrics are shown as inline decoration",
+            "description": "%codemetrics.basics.DecorationTemplate%",
             "type": "string"
           },
           "nuclear.codemetrics.basics.DiagnosticsEnabled": {
             "default": false,
-            "description": "A flag which indicates whether code metrics are shown as diagnostics",
+            "description": "%codemetrics.basics.DiagnosticsEnabled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.Exclude": {
             "default": [],
-            "description": "Array of exclusion patterns (in glob format)",
+            "description": "%codemetrics.basics.Exclude%",
             "type": "array",
             "items": {
               "type": "string"
@@ -446,12 +613,12 @@
           },
           "nuclear.codemetrics.basics.FileSizeLimitMB": {
             "default": 0.5,
-            "description": "File size limit in megabytes, above this codemetrics are not going to be computed, use a negative number to allow any size",
+            "description": "%codemetrics.basics.FileSizeLimitMB%",
             "type": "number"
           },
           "nuclear.codemetrics.basics.IgnoredFunctionNames": {
             "default": [],
-            "description": "A set of function names to ignore from calculations",
+            "description": "%codemetrics.basics.IgnoredFunctionNames%",
             "type": "array",
             "items": {
               "type": "string"
@@ -459,423 +626,423 @@
           },
           "nuclear.codemetrics.basics.MetricsForArrowFunctionsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for arrow functions (can also be toggled via a command)",
+            "description": "%codemetrics.basics.MetricsForArrowFunctionsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.MetricsForClassDeclarationsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for class declarations",
+            "description": "%codemetrics.basics.MetricsForClassDeclarationsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.MetricsForConstructorsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for constructors",
+            "description": "%codemetrics.basics.MetricsForConstructorsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.MetricsForEnumDeclarationsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for enum declarations",
+            "description": "%codemetrics.basics.MetricsForEnumDeclarationsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.MetricsForFunctionDeclarationsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for function declarations",
+            "description": "%codemetrics.basics.MetricsForFunctionDeclarationsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.MetricsForFunctionExpressionsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for function expressions",
+            "description": "%codemetrics.basics.MetricsForFunctionExpressionsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.MetricsForMethodDeclarationsToggled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are enabled for methods declarations",
+            "description": "%codemetrics.basics.MetricsForMethodDeclarationsToggled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.basics.OverviewRulerModeEnabled": {
             "default": true,
-            "description": "A flag which indicates whether code metrics are shown on the overview ruler",
+            "description": "%codemetrics.basics.OverviewRulerModeEnabled%",
             "type": "boolean"
           },
           "nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of list literal `[a, b]`"
+            "markdownDescription": "%codemetrics.node.ArrayLiteralExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpressionDescription": {
             "type": "string",
             "default": "Array literal expression",
-            "markdownDescription": "Text of list literal `[a, b]` in the details list"
+            "markdownDescription": "%codemetrics.node.ArrayLiteralExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ArrowFunction": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of lambda `(x) => ...`"
+            "markdownDescription": "%codemetrics.node.ArrowFunction%"
           },
           "nuclear.codemetrics.nodeconfiguration.ArrowFunctionDescription": {
             "type": "string",
             "default": "Arrow function",
-            "markdownDescription": "Text of lambda `(x) => ...` in the details list"
+            "markdownDescription": "%codemetrics.node.ArrowFunctionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.BinaryExpression": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `and` / `or`"
+            "markdownDescription": "%codemetrics.node.BinaryExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.BinaryExpressionDescription": {
             "type": "string",
             "default": "Binary expression",
-            "markdownDescription": "Text of `and` / `or` in the details list"
+            "markdownDescription": "%codemetrics.node.BinaryExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.BreakStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `break`"
+            "markdownDescription": "%codemetrics.node.BreakStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.BreakStatementDescription": {
             "type": "string",
             "default": "Break statement",
-            "markdownDescription": "Text of `break` in the details list"
+            "markdownDescription": "%codemetrics.node.BreakStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.CallExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of call `f(x)`"
+            "markdownDescription": "%codemetrics.node.CallExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.CallExpressionDescription": {
             "type": "string",
             "default": "Call expression",
-            "markdownDescription": "Text of call `f(x)` in the details list"
+            "markdownDescription": "%codemetrics.node.CallExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.CaseClause": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of arm of a `match`"
+            "markdownDescription": "%codemetrics.node.CaseClause%"
           },
           "nuclear.codemetrics.nodeconfiguration.CaseClauseDescription": {
             "type": "string",
             "default": "Case clause",
-            "markdownDescription": "Text of arm of a `match` in the details list"
+            "markdownDescription": "%codemetrics.node.CaseClauseDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.CatchClause": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `catch`"
+            "markdownDescription": "%codemetrics.node.CatchClause%"
           },
           "nuclear.codemetrics.nodeconfiguration.CatchClauseDescription": {
             "type": "string",
             "default": "Catch clause",
-            "markdownDescription": "Text of `catch` in the details list"
+            "markdownDescription": "%codemetrics.node.CatchClauseDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ClassDeclaration": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of module or dialect kind (`User`, `stateless Home`)"
+            "markdownDescription": "%codemetrics.node.ClassDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.ClassDeclarationDescription": {
             "type": "string",
             "default": "Class declaration",
-            "markdownDescription": "Text of module or dialect kind (`User`, `stateless Home`) in the details list"
+            "markdownDescription": "%codemetrics.node.ClassDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ConditionalExpression": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `cond ? a : b`"
+            "markdownDescription": "%codemetrics.node.ConditionalExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.ConditionalExpressionDescription": {
             "type": "string",
             "default": "Conditional expression",
-            "markdownDescription": "Text of `cond ? a : b` in the details list"
+            "markdownDescription": "%codemetrics.node.ConditionalExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.Constructor": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `(params)` line of a module"
+            "markdownDescription": "%codemetrics.node.Constructor%"
           },
           "nuclear.codemetrics.nodeconfiguration.ConstructorDescription": {
             "type": "string",
             "default": "Constructor",
-            "markdownDescription": "Text of `(params)` line of a module in the details list"
+            "markdownDescription": "%codemetrics.node.ConstructorDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ContinueStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `continue`"
+            "markdownDescription": "%codemetrics.node.ContinueStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.ContinueStatementDescription": {
             "type": "string",
             "default": "Continue statement",
-            "markdownDescription": "Text of `continue` in the details list"
+            "markdownDescription": "%codemetrics.node.ContinueStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.DefaultClause": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `_` arm of a `match`"
+            "markdownDescription": "%codemetrics.node.DefaultClause%"
           },
           "nuclear.codemetrics.nodeconfiguration.DefaultClauseDescription": {
             "type": "string",
             "default": "Default case",
-            "markdownDescription": "Text of `_` arm of a `match` in the details list"
+            "markdownDescription": "%codemetrics.node.DefaultClauseDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ElementAccessExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `list[i]`"
+            "markdownDescription": "%codemetrics.node.ElementAccessExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.ElementAccessExpressionDescription": {
             "type": "string",
             "default": "Element access expression",
-            "markdownDescription": "Text of `list[i]` in the details list"
+            "markdownDescription": "%codemetrics.node.ElementAccessExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.EnumDeclaration": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of enum"
+            "markdownDescription": "%codemetrics.node.EnumDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.EnumDeclarationDescription": {
             "type": "string",
             "default": "Enum declaration",
-            "markdownDescription": "Text of enum in the details list"
+            "markdownDescription": "%codemetrics.node.EnumDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ForStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `for x in xs`"
+            "markdownDescription": "%codemetrics.node.ForStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.ForStatementDescription": {
             "type": "string",
             "default": "For statement",
-            "markdownDescription": "Text of `for x in xs` in the details list"
+            "markdownDescription": "%codemetrics.node.ForStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.FunctionDeclaration": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of top-level function"
+            "markdownDescription": "%codemetrics.node.FunctionDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.FunctionDeclarationDescription": {
             "type": "string",
             "default": "Function declaration",
-            "markdownDescription": "Text of top-level function in the details list"
+            "markdownDescription": "%codemetrics.node.FunctionDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.GetAccessor": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `get name`"
+            "markdownDescription": "%codemetrics.node.GetAccessor%"
           },
           "nuclear.codemetrics.nodeconfiguration.GetAccessorDescription": {
             "type": "string",
             "default": "Get accessor",
-            "markdownDescription": "Text of `get name` in the details list"
+            "markdownDescription": "%codemetrics.node.GetAccessorDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.IfStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `if` / `else if` without `else`, `if` inside a list"
+            "markdownDescription": "%codemetrics.node.IfStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.IfStatementDescription": {
             "type": "string",
             "default": "If statement",
-            "markdownDescription": "Text of `if` / `else if` without `else`, `if` inside a list in the details list"
+            "markdownDescription": "%codemetrics.node.IfStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.IfWithElseStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `if` / `else if` followed by another branch"
+            "markdownDescription": "%codemetrics.node.IfWithElseStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.IfWithElseStatementDescription": {
             "type": "string",
             "default": "If with else statement",
-            "markdownDescription": "Text of `if` / `else if` followed by another branch in the details list"
+            "markdownDescription": "%codemetrics.node.IfWithElseStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ImportDeclaration": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `use`"
+            "markdownDescription": "%codemetrics.node.ImportDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.ImportDeclarationDescription": {
             "type": "string",
             "default": "Import declaration",
-            "markdownDescription": "Text of `use` in the details list"
+            "markdownDescription": "%codemetrics.node.ImportDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.InterfaceDeclaration": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of module with signatures only"
+            "markdownDescription": "%codemetrics.node.InterfaceDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.InterfaceDeclarationDescription": {
             "type": "string",
             "default": "Interface declaration",
-            "markdownDescription": "Text of module with signatures only in the details list"
+            "markdownDescription": "%codemetrics.node.InterfaceDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.MethodDeclaration": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of method of a module"
+            "markdownDescription": "%codemetrics.node.MethodDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.MethodDeclarationDescription": {
             "type": "string",
             "default": "Method declaration",
-            "markdownDescription": "Text of method of a module in the details list"
+            "markdownDescription": "%codemetrics.node.MethodDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.MethodSignature": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of method without body"
+            "markdownDescription": "%codemetrics.node.MethodSignature%"
           },
           "nuclear.codemetrics.nodeconfiguration.MethodSignatureDescription": {
             "type": "string",
             "default": "Method signature",
-            "markdownDescription": "Text of method without body in the details list"
+            "markdownDescription": "%codemetrics.node.MethodSignatureDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.NewExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `User(...)` (PascalCase call)"
+            "markdownDescription": "%codemetrics.node.NewExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.NewExpressionDescription": {
             "type": "string",
             "default": "New expression",
-            "markdownDescription": "Text of `User(...)` (PascalCase call) in the details list"
+            "markdownDescription": "%codemetrics.node.NewExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of map literal `{ a: 1 }`"
+            "markdownDescription": "%codemetrics.node.ObjectLiteralExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpressionDescription": {
             "type": "string",
             "default": "Object literal expression",
-            "markdownDescription": "Text of map literal `{ a: 1 }` in the details list"
+            "markdownDescription": "%codemetrics.node.ObjectLiteralExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.Parameter": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of parameter"
+            "markdownDescription": "%codemetrics.node.Parameter%"
           },
           "nuclear.codemetrics.nodeconfiguration.ParameterDescription": {
             "type": "string",
             "default": "Parameter",
-            "markdownDescription": "Text of parameter in the details list"
+            "markdownDescription": "%codemetrics.node.ParameterDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `not x`, `-x`, `~call()`"
+            "markdownDescription": "%codemetrics.node.PrefixUnaryExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpressionDescription": {
             "type": "string",
             "default": "Prefix unary expression",
-            "markdownDescription": "Text of `not x`, `-x`, `~call()` in the details list"
+            "markdownDescription": "%codemetrics.node.PrefixUnaryExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.PropertyAccessExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `a.b`"
+            "markdownDescription": "%codemetrics.node.PropertyAccessExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.PropertyAccessExpressionDescription": {
             "type": "string",
             "default": "Property access expression",
-            "markdownDescription": "Text of `a.b` in the details list"
+            "markdownDescription": "%codemetrics.node.PropertyAccessExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.PropertyDeclaration": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of field of a module"
+            "markdownDescription": "%codemetrics.node.PropertyDeclaration%"
           },
           "nuclear.codemetrics.nodeconfiguration.PropertyDeclarationDescription": {
             "type": "string",
             "default": "Property declaration",
-            "markdownDescription": "Text of field of a module in the details list"
+            "markdownDescription": "%codemetrics.node.PropertyDeclarationDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ReturnStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `return`"
+            "markdownDescription": "%codemetrics.node.ReturnStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.ReturnStatementDescription": {
             "type": "string",
             "default": "Return statement",
-            "markdownDescription": "Text of `return` in the details list"
+            "markdownDescription": "%codemetrics.node.ReturnStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.SetAccessor": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `set name`"
+            "markdownDescription": "%codemetrics.node.SetAccessor%"
           },
           "nuclear.codemetrics.nodeconfiguration.SetAccessorDescription": {
             "type": "string",
             "default": "Set accessor",
-            "markdownDescription": "Text of `set name` in the details list"
+            "markdownDescription": "%codemetrics.node.SetAccessorDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.StringLiteral": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of text without interpolation"
+            "markdownDescription": "%codemetrics.node.StringLiteral%"
           },
           "nuclear.codemetrics.nodeconfiguration.StringLiteralDescription": {
             "type": "string",
             "default": "String literal",
-            "markdownDescription": "Text of text without interpolation in the details list"
+            "markdownDescription": "%codemetrics.node.StringLiteralDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.SwitchStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `match`"
+            "markdownDescription": "%codemetrics.node.SwitchStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.SwitchStatementDescription": {
             "type": "string",
             "default": "Switch statement",
-            "markdownDescription": "Text of `match` in the details list"
+            "markdownDescription": "%codemetrics.node.SwitchStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.TemplateExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of text with `${...}`"
+            "markdownDescription": "%codemetrics.node.TemplateExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.TemplateExpressionDescription": {
             "type": "string",
             "default": "Template expression",
-            "markdownDescription": "Text of text with `${...}` in the details list"
+            "markdownDescription": "%codemetrics.node.TemplateExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.ThrowStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `throw`"
+            "markdownDescription": "%codemetrics.node.ThrowStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.ThrowStatementDescription": {
             "type": "string",
             "default": "Throw statement",
-            "markdownDescription": "Text of `throw` in the details list"
+            "markdownDescription": "%codemetrics.node.ThrowStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.TryStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `try`"
+            "markdownDescription": "%codemetrics.node.TryStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.TryStatementDescription": {
             "type": "string",
             "default": "Try statement",
-            "markdownDescription": "Text of `try` in the details list"
+            "markdownDescription": "%codemetrics.node.TryStatementDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.TypeAssertionExpression": {
             "type": "number",
             "default": 0,
-            "markdownDescription": "Complexity increment of `x as T`"
+            "markdownDescription": "%codemetrics.node.TypeAssertionExpression%"
           },
           "nuclear.codemetrics.nodeconfiguration.TypeAssertionExpressionDescription": {
             "type": "string",
             "default": "Type assertion expression",
-            "markdownDescription": "Text of `x as T` in the details list"
+            "markdownDescription": "%codemetrics.node.TypeAssertionExpressionDescription%"
           },
           "nuclear.codemetrics.nodeconfiguration.WhileStatement": {
             "type": "number",
             "default": 1,
-            "markdownDescription": "Complexity increment of `while`"
+            "markdownDescription": "%codemetrics.node.WhileStatement%"
           },
           "nuclear.codemetrics.nodeconfiguration.WhileStatementDescription": {
             "type": "string",
             "default": "While statement",
-            "markdownDescription": "Text of `while` in the details list"
+            "markdownDescription": "%codemetrics.node.WhileStatementDescription%"
           }
         }
       }
@@ -883,7 +1050,7 @@
     "debuggers": [
       {
         "type": "synapsis",
-        "label": "Synapsis (Flutter app)",
+        "label": "%debugger.synapsis%",
         "languages": [
           "nuclear"
         ]
@@ -891,390 +1058,416 @@
     ],
     "commands": [
       {
+        "command": "nuclear.chooseLanguage",
+        "title": "%command.nuclear.chooseLanguage%",
+        "category": "%category.nuclear%",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "nuclear.monitor.open",
+        "title": "%command.nuclear.monitor.open%",
+        "category": "%category.nuclear%"
+      },
+      {
         "command": "nuclear.workspace.action",
-        "title": "Run an Action of the Active Project (run, debug, build, test…)",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.action%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.workspace.addToVsCode",
-        "title": "Add the Active Project to the VS Code Workspace",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.addToVsCode%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.workspace.welcome",
-        "title": "Welcome Page",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.welcome%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.ai.setup",
-        "title": "Set Up the AI Services",
-        "category": "Nuclear"
+        "title": "%command.nuclear.ai.setup%",
+        "category": "%category.nuclear%"
+      },
+      {
+        "command": "nuclear.builder.teams",
+        "title": "%command.nuclear.builder.teams%",
+        "category": "%category.nuclear%"
+      },
+      {
+        "command": "nuclear.chat.open",
+        "title": "%command.nuclear.chat.open%",
+        "category": "%category.nuclear%"
+      },
+      {
+        "command": "nuclear.chat.gifKey",
+        "title": "%command.nuclear.chat.gifKey%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.workspace.tool",
-        "title": "Open a Tool",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.tool%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.workspace.openProject",
-        "title": "Open a Project as a Tab",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.openProject%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.workspace.project",
-        "title": "Go to Project Tab",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.project%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.workspace.show",
-        "title": "Show the Nuclear Workspace",
-        "category": "Nuclear"
+        "title": "%command.nuclear.workspace.show%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.httpConnections.refresh",
-        "title": "Refresh",
-        "category": "HTTP Connections",
+        "title": "%command.nuclear.httpConnections.refresh%",
+        "category": "%category.http-connections%",
         "icon": "$(refresh)"
       },
       {
         "command": "nuclear.httpConnections.selectEnvironment",
-        "title": "Select Environment",
-        "category": "HTTP Connections",
+        "title": "%command.nuclear.httpConnections.selectEnvironment%",
+        "category": "%category.http-connections%",
         "icon": "$(server-environment)"
       },
       {
         "command": "nuclear.httpConnections.editEnvironments",
-        "title": "Edit Environments (variables, headers, base urls)",
-        "category": "HTTP Connections",
+        "title": "%command.nuclear.httpConnections.editEnvironments%",
+        "category": "%category.http-connections%",
         "icon": "$(settings-gear)"
       },
       {
         "command": "nuclear.httpConnections.addOpenApi",
-        "title": "Add an OpenAPI Document",
-        "category": "HTTP Connections",
+        "title": "%command.nuclear.httpConnections.addOpenApi%",
+        "category": "%category.http-connections%",
         "icon": "$(add)"
       },
       {
         "command": "nuclear.httpConnections.open",
-        "title": "Open Request",
-        "category": "HTTP Connections"
+        "title": "%command.nuclear.httpConnections.open%",
+        "category": "%category.http-connections%"
       },
       {
         "command": "nuclear.contracts.update",
-        "title": "Update Contracts (nuclear contracts update)",
-        "category": "Nuclear",
+        "title": "%command.nuclear.contracts.update%",
+        "category": "%category.nuclear%",
         "icon": "$(cloud-download)"
       },
       {
         "command": "nuclear.run",
-        "title": "Run",
-        "category": "Nuclear",
+        "title": "%command.nuclear.run%",
+        "category": "%category.nuclear%",
         "icon": "$(play)"
       },
       {
         "command": "nuclear.debug",
-        "title": "Debug",
-        "category": "Nuclear",
+        "title": "%command.nuclear.debug%",
+        "category": "%category.nuclear%",
         "icon": "$(debug-alt)"
       },
       {
         "command": "nuclear.showGeneratedCode",
-        "title": "Show Generated Code",
-        "category": "Nuclear",
+        "title": "%command.nuclear.showGeneratedCode%",
+        "category": "%category.nuclear%",
         "icon": "$(open-preview)"
       },
       {
         "command": "nuclear.selectDialect",
-        "title": "Select Dialect",
-        "category": "Nuclear"
+        "title": "%command.nuclear.selectDialect%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.restartServer",
-        "title": "Restart Language Server",
-        "category": "Nuclear"
+        "title": "%command.nuclear.restartServer%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.toggleCodeMetricsForArrowFunctions",
-        "title": "Toggle code lenses for arrow functions",
-        "category": "Nuclear"
+        "title": "%command.nuclear.toggleCodeMetricsForArrowFunctions%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.toggleCodeMetricsDisplayed",
-        "title": "Toggle code metrics",
-        "category": "Nuclear"
+        "title": "%command.nuclear.toggleCodeMetricsDisplayed%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.showCodeMetricsCodeLensInfo",
-        "title": "Show code metrics details",
-        "category": "Nuclear"
+        "title": "%command.nuclear.showCodeMetricsCodeLensInfo%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.openDevice",
-        "title": "Open Synapsis Device",
-        "category": "Synapsis",
+        "title": "%command.nuclear.openDevice%",
+        "category": "%category.synapsis%",
         "icon": "$(device-mobile)"
       },
       {
         "command": "nuclear.runOnDevice",
-        "title": "Run on Synapsis Device",
-        "category": "Synapsis",
+        "title": "%command.nuclear.runOnDevice%",
+        "category": "%category.synapsis%",
         "icon": "$(device-mobile)"
       },
       {
         "command": "nuclear.debug.stepOver",
-        "title": "Step Over (Nuclear Line)",
-        "category": "Nuclear",
+        "title": "%command.nuclear.debug.stepOver%",
+        "category": "%category.nuclear%",
         "icon": "$(debug-step-over)"
       },
       {
         "command": "nuclear.debug.stepInto",
-        "title": "Step Into (Nuclear Line)",
-        "category": "Nuclear",
+        "title": "%command.nuclear.debug.stepInto%",
+        "category": "%category.nuclear%",
         "icon": "$(debug-step-into)"
       },
       {
         "command": "nuclear.debug.stepOut",
-        "title": "Step Out (Nuclear)",
-        "category": "Nuclear",
+        "title": "%command.nuclear.debug.stepOut%",
+        "category": "%category.nuclear%",
         "icon": "$(debug-step-out)"
       },
       {
         "command": "nuclear.debug.otherSide",
-        "title": "Go to the Same Line in Nuclear / Dart",
-        "category": "Nuclear",
+        "title": "%command.nuclear.debug.otherSide%",
+        "category": "%category.nuclear%",
         "icon": "$(arrow-swap)"
       },
       {
         "command": "nuclear.debug.openPlace",
-        "title": "Open Frame",
-        "category": "Nuclear"
+        "title": "%command.nuclear.debug.openPlace%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.action.run",
-        "title": "Run",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.run%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(play)"
       },
       {
         "command": "nuclear.action.serve",
-        "title": "Serve",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.serve%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(play)"
       },
       {
         "command": "nuclear.action.debug",
-        "title": "Debug",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.debug%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(debug-alt)"
       },
       {
         "command": "nuclear.action.reload",
-        "title": "Hot Reload",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.reload%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(refresh)"
       },
       {
         "command": "nuclear.action.device",
-        "title": "Run on a Synapsis Device",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.device%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(device-mobile)"
       },
       {
         "command": "nuclear.action.build",
-        "title": "Build",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.build%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(tools)"
       },
       {
         "command": "nuclear.action.test",
-        "title": "Test",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.test%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(beaker)"
       },
       {
         "command": "nuclear.action.check",
-        "title": "Check",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.check%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(check-all)"
       },
       {
         "command": "nuclear.action.api",
-        "title": "Routes in HTTP Connections",
-        "category": "Nuclear workspace",
+        "title": "%command.nuclear.action.api%",
+        "category": "%category.nuclear-workspace%",
         "icon": "$(arrow-swap)"
       },
       {
         "command": "nuclear.webDevice.open",
-        "title": "Open the web device",
-        "category": "Nuclear",
+        "title": "%command.nuclear.webDevice.open%",
+        "category": "%category.nuclear%",
         "icon": "$(globe)"
       },
       {
         "command": "nuclear.webDevice.debug",
-        "title": "Debug on the web device",
-        "category": "Nuclear",
+        "title": "%command.nuclear.webDevice.debug%",
+        "category": "%category.nuclear%",
         "icon": "$(debug-alt)"
       },
       {
         "command": "nuclear.webDevice.reload",
-        "title": "Reload the web device",
-        "category": "Nuclear",
+        "title": "%command.nuclear.webDevice.reload%",
+        "category": "%category.nuclear%",
         "icon": "$(refresh)"
       },
       {
         "command": "nuclear.tree.make.usecase",
-        "title": "New Use case",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.usecase%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.model",
-        "title": "New Model",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.model%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.service",
-        "title": "New Service",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.service%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.aggregate",
-        "title": "New Aggregate",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.aggregate%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.repository",
-        "title": "New Repository",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.repository%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.entity",
-        "title": "New Entity",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.entity%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.controller",
-        "title": "New Controller",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.controller%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.listener",
-        "title": "New Listener",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.listener%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.agent",
-        "title": "New Agent",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.agent%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.graph",
-        "title": "New Graph",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.graph%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.tools",
-        "title": "New Tools",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.tools%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.state",
-        "title": "New State",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.state%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.stateful",
-        "title": "New Stateful widget",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.stateful%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.stateless",
-        "title": "New Stateless widget",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.stateless%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.statemodel",
-        "title": "New State model",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.statemodel%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.statemanager",
-        "title": "New State manager",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.statemanager%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.widget",
-        "title": "New Shared widget",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.widget%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.guard",
-        "title": "New Guard",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.guard%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.event",
-        "title": "New Event",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.event%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.global",
-        "title": "New Global component",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.global%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.page",
-        "title": "New Page",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.page%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.integration",
-        "title": "New Integration test",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.integration%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.component",
-        "title": "New Component",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.component%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.screen",
-        "title": "New Screen",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.screen%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.config",
-        "title": "New Config",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.config%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.test",
-        "title": "New Test",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.test%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.make.resource",
-        "title": "New Resource (from fields)",
-        "category": "Synapsis"
+        "title": "%command.nuclear.tree.make.resource%",
+        "category": "%category.synapsis%"
       },
       {
         "command": "nuclear.tree.newFile",
-        "title": "New File…",
-        "category": "Nuclear"
+        "title": "%command.nuclear.tree.newFile%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.tree.newFolder",
-        "title": "New Folder…",
-        "category": "Nuclear"
+        "title": "%command.nuclear.tree.newFolder%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.tree.rename",
-        "title": "Rename…",
-        "category": "Nuclear"
+        "title": "%command.nuclear.tree.rename%",
+        "category": "%category.nuclear%"
       },
       {
         "command": "nuclear.tree.delete",
-        "title": "Delete",
-        "category": "Nuclear"
+        "title": "%command.nuclear.tree.delete%",
+        "category": "%category.nuclear%"
       }
     ],
     "menus": {
@@ -1784,6 +1977,16 @@
         "key": "ctrl+alt+s"
       },
       {
+        "command": "nuclear.workspace.tool",
+        "args": "teams",
+        "key": "ctrl+alt+e"
+      },
+      {
+        "command": "nuclear.workspace.tool",
+        "args": "monitor",
+        "key": "ctrl+alt+f"
+      },
+      {
         "command": "nuclear.debug.stepOver",
         "key": "f10",
         "when": "inDebugMode && debugState == 'stopped' && nuclear.pausedInNuc && (editorLangId == nuclear || nuclear.nucStepping)"
@@ -1837,7 +2040,7 @@
     "colors": [
       {
         "id": "nuclearHttpConnections.get",
-        "description": "HTTP Connections: a GET endpoint",
+        "description": "%color.nuclearHttpConnections.get%",
         "defaults": {
           "dark": "#4EC9B0",
           "light": "#2E8B57",
@@ -1847,7 +2050,7 @@
       },
       {
         "id": "nuclearHttpConnections.post",
-        "description": "HTTP Connections: a POST endpoint",
+        "description": "%color.nuclearHttpConnections.post%",
         "defaults": {
           "dark": "#569CD6",
           "light": "#1E6FD9",
@@ -1857,7 +2060,7 @@
       },
       {
         "id": "nuclearHttpConnections.put",
-        "description": "HTTP Connections: a PUT endpoint",
+        "description": "%color.nuclearHttpConnections.put%",
         "defaults": {
           "dark": "#DCDCAA",
           "light": "#B8860B",
@@ -1867,7 +2070,7 @@
       },
       {
         "id": "nuclearHttpConnections.patch",
-        "description": "HTTP Connections: a PATCH endpoint",
+        "description": "%color.nuclearHttpConnections.patch%",
         "defaults": {
           "dark": "#CE9178",
           "light": "#C46A2B",
@@ -1877,7 +2080,7 @@
       },
       {
         "id": "nuclearHttpConnections.delete",
-        "description": "HTTP Connections: a DELETE endpoint",
+        "description": "%color.nuclearHttpConnections.delete%",
         "defaults": {
           "dark": "#F14C4C",
           "light": "#D32F2F",
@@ -1887,7 +2090,7 @@
       },
       {
         "id": "nuclearHttpConnections.platform",
-        "description": "HTTP Connections: a platform (backend, mobile, web) or an OpenAPI document",
+        "description": "%color.nuclearHttpConnections.platform%",
         "defaults": {
           "dark": "#FFD600",
           "light": "#B59400",
@@ -1897,7 +2100,7 @@
       },
       {
         "id": "nuclearHttpConnections.project",
-        "description": "HTTP Connections: a project and its contracts",
+        "description": "%color.nuclearHttpConnections.project%",
         "defaults": {
           "dark": "#C586C0",
           "light": "#8A4FAE",
@@ -1907,7 +2110,7 @@
       },
       {
         "id": "nuclearHttpConnections.component",
-        "description": "HTTP Connections: a component",
+        "description": "%color.nuclearHttpConnections.component%",
         "defaults": {
           "dark": "#9CDCFE",
           "light": "#2B6CB0",
@@ -1920,7 +2123,7 @@
       "activitybar": [
         {
           "id": "nuclear",
-          "title": "Nuclear",
+          "title": "%viewsContainer.nuclear%",
           "icon": "icons/nuclear.svg"
         }
       ]
@@ -1930,15 +2133,15 @@
         {
           "type": "webview",
           "id": "nuclear.workspace",
-          "name": "Workspace",
+          "name": "%view.nuclear.workspace%",
           "icon": "icons/nuclear.svg",
-          "contextualTitle": "Nuclear workspace"
+          "contextualTitle": "%view.nuclear.workspace.contextual%"
         }
       ],
       "debug": [
         {
           "id": "nuclear.callStack",
-          "name": "Nuclear Call Stack",
+          "name": "%view.nuclear.callStack%",
           "when": "nuclear.pausedInNuc"
         }
       ]
@@ -1946,18 +2149,20 @@
     "submenus": [
       {
         "id": "nuclear.tree.new",
-        "label": "New with Synapsis"
+        "label": "%submenu.nuclear.tree.new%"
       }
     ]
   },
   "scripts": {
-    "compile": "tsc -p . --noEmit && esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node18 --sourcemap && npm run builder",
-    "builder": "esbuild ../tools/nuclear-builder/src/cli.ts --bundle --outfile=out/nuclear-builder.js --format=cjs --platform=node --target=node18",
+    "compile": "tsc -p . --noEmit && tsc -p ../tools/nuclear-builder/tsconfig.flow.json && npm run flow && npm run chat && esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node18 --sourcemap",
+    "flow": "NODE_PATH=node_modules esbuild ../tools/nuclear-builder/src/flow.tsx --bundle --outfile=out/builder-flow.js --format=iife --platform=browser --target=es2022 --jsx=automatic --minify --define:process.env.NODE_ENV=\\\"production\\\"",
     "watch": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node18 --sourcemap --watch",
     "theme": "node theme/build.mjs && node theme/icons.mjs",
     "server": "node scripts/bundle-server.mjs",
     "package": "npm run theme && npm run compile && npm run server && vsce package --no-dependencies --allow-missing-repository",
-    "test": "esbuild ../tools/nuclear-builder/test/engine.test.ts --bundle --platform=node --target=node18 --external:vscode --outdir=out/test --entry-names=[name] && node --test out/test/engine.test.js"
+    "test": "esbuild ../tools/nuclear-builder/test/editors.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/editors.test.js && esbuild ../tools/nuclear-http-connections/test/sockets.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-http-connections/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/sockets.test.js && esbuild ../tools/nuclear-monitor/test/monitor.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/monitor.test.js && esbuild test/chat.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/chat.test.js && esbuild test/notify.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/notify.test.js && npm run -s test:compat",
+    "test:compat": "esbuild ../tools/nuclear-builder/test/compat.test.ts --log-level=error --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/compat.test.js",
+    "chat": "node -e \"const fs=require('fs');fs.mkdirSync('out',{recursive:true});fs.copyFileSync('../../nuclear-chat/ui/build/app/dist-embed/embed.js','out/chat-embed.js')\""
   },
   "dependencies": {
     "vscode-languageclient": "9.0.1"
@@ -1966,7 +2171,12 @@
     "@types/node": "20.14.10",
     "@types/vscode": "1.90.0",
     "@vscode/vsce": "3.2.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@xyflow/react": "12.12.1",
     "esbuild": "^0.24.1",
+    "react": "19.2.9",
+    "react-dom": "19.2.9",
     "typescript": "5.5.4"
   },
   "repository": {
@@ -1977,5 +2187,6 @@
   "homepage": "https://nuclearlang.github.io",
   "bugs": {
     "url": "https://github.com/nuclearlang/lang/issues"
-  }
+  },
+  "l10n": "./l10n"
 }

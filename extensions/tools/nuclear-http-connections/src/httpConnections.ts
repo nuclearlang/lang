@@ -1,16 +1,19 @@
 // HTTP Connections: every project's endpoints (read from the contract the compiler writes, `.nuclear/contract.json`,
 // ADR-synapsis-0006), as a tree by platform, project and component like the code; the contracts a client declares; OpenAPI
 // documents of APIs that are not Nuclear; environments with variables and headers. The tree is drawn by the Nuclear
-// workspace (workspace.ts); a component is a panel with one tab per endpoint (httpPanel.ts). A basic Bruno / Postman
-// inside the editor (ADR-extensions-0002).
+// workspace (workspace.ts); a component is a panel with one tab per endpoint (panel.ts), and what is served over
+// WebSockets opens in a socket panel (socketPanel.ts). A basic Bruno / Postman inside the editor (ADR-extensions-0002).
 
 import { execFile } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { l10n } from '../../../vscode/src/i18n';
 import { readCard } from '../../../vscode/src/card';
 import { ComponentPanel } from './panel';
+import { eventsOf, guardHeadersOf, Protocol, socketPathOf, transportsOf } from './socket';
+import { SocketPanel } from './socketPanel';
 
 export interface Field {
   name: string;
@@ -72,10 +75,10 @@ export interface Project {
   contract?: Contract;
   contracts: DeclaredContract[];
 }
-/** One request the tree offers: a backend route, a client call or an OpenAPI operation. */
+/** One request the tree offers: a backend route, a client call, an OpenAPI operation, a pushed event or a socket url. */
 export interface Endpoint {
   project: string;
-  kind: 'route' | 'call' | 'openapi';
+  kind: 'route' | 'call' | 'openapi' | 'event' | 'socket';
   owner: string;
   component: string;
   verb: string;
@@ -88,6 +91,12 @@ export interface Endpoint {
   body?: unknown;
   /** The environment variable the base url comes from (`baseUrl`, or the client's connection name). */
   connection?: string;
+  /** `websocket`: it opens in the socket panel (absent: HTTP). */
+  protocol?: Protocol;
+  /** Where the project's socket answers (`/ws`), for a `websocket` endpoint of a contract; a `socket` one is a full url. */
+  socketPath?: string;
+  /** The headers the backend's token guards read, with the value to fill (`Bearer {{token}}` in `Authorization`). */
+  guardHeaders?: [string, string][];
 }
 
 export interface Environment {
@@ -97,6 +106,8 @@ export interface Environment {
   baseUrls: Record<string, string>;
   /** OpenAPI documents (urls or files) of APIs that are not Nuclear projects. */
   openapi: string[];
+  /** WebSocket urls (ws:// or wss://) of servers that are not Nuclear projects. */
+  sockets: string[];
 }
 export interface Environments {
   active: string;
@@ -121,7 +132,7 @@ export function activateHttpConnections(context: vscode.ExtensionContext): HttpM
     watcher.onDidDelete(refresh),
     vscode.workspace.onDidChangeWorkspaceFolders(refresh),
     vscode.commands.registerCommand('nuclear.httpConnections.refresh', refresh),
-    vscode.commands.registerCommand('nuclear.httpConnections.open', (e: Endpoint) => ComponentPanel.open(context, model, e)),
+    vscode.commands.registerCommand('nuclear.httpConnections.open', (e: Endpoint) => (e.protocol === 'websocket' ? SocketPanel.open(context, model, e) : ComponentPanel.open(context, model, e))),
     vscode.commands.registerCommand('nuclear.httpConnections.selectEnvironment', () => model.selectEnvironment()),
     vscode.commands.registerCommand('nuclear.httpConnections.editEnvironments', () => model.editEnvironments()),
     vscode.commands.registerCommand('nuclear.httpConnections.addOpenApi', () => model.addOpenApi()),
@@ -152,8 +163,14 @@ export interface TreeNode {
   endpoint?: Endpoint;
   /** A small button at the end of the row. */
   button?: { label: string; title: string; action: NodeAction };
+  /** A protocol badge after the label (`WS`); with an action it is a button too. */
+  badge?: { label: string; title: string; action?: NodeAction };
 }
-export type NodeAction = { type: 'updateContracts'; root: string; name?: string } | { type: 'addOpenApi' };
+export type NodeAction =
+  | { type: 'updateContracts'; root: string; name?: string }
+  | { type: 'addOpenApi' }
+  | { type: 'addSocket' }
+  | { type: 'open'; endpoint: Endpoint };
 
 /** What a component panel keeps between its closings: the webview's own state (tabs, forms, responses). */
 export interface PanelMemory {
@@ -167,6 +184,8 @@ export class HttpModel {
   readonly onDidChange = this.changed.event;
   private projects: Project[] = [];
   private openapiDocs: OpenApiDoc[] = [];
+  /** The ws:// urls of the active environment (read on refresh: `tree()` is drawn often). */
+  private sockets: string[] = [];
   /** The state of every component panel ever opened in this window, by key, so a closed one comes back as it was. */
   readonly memory = new Map<string, PanelMemory>();
   /** The panels open when the HTTP Connections workspace was left, to reopen on return. */
@@ -182,6 +201,7 @@ export class HttpModel {
   refresh(): void {
     this.projects = findProjects(this.extraRoots());
     const env = this.environments();
+    this.sockets = env.environments[env.active]?.sockets ?? [];
     void this.loadOpenApi(env.environments[env.active]?.openapi ?? []).then(() => this.changed.fire());
     this.changed.fire();
   }
@@ -195,15 +215,15 @@ export class HttpModel {
     }
     const docs: TreeNode = {
       id: 'openapi',
-      label: 'OpenAPI documents',
+      label: l10n.t('OpenAPI documents'),
       icon: 'book',
       color: 'platform',
-      tooltip: 'APIs that are not Nuclear projects: add a url or a file with +',
-      button: { label: '+', title: 'Add an OpenAPI document (url or file) to this environment', action: { type: 'addOpenApi' } },
+      tooltip: l10n.t('APIs that are not Nuclear projects: add a url or a file with +'),
+      button: { label: '+', title: l10n.t('Add an OpenAPI document (url or file) to this environment'), action: { type: 'addOpenApi' } },
       children: this.openapiDocs.map((doc) => ({
         id: `openapi:${doc.source}`,
         label: doc.title,
-        desc: doc.error ? 'could not load' : doc.source,
+        desc: doc.error ? l10n.t('could not load') : doc.source,
         tooltip: doc.error ?? doc.source,
         icon: doc.error ? 'warning' : 'cloud',
         color: doc.error ? 'delete' : undefined,
@@ -216,7 +236,24 @@ export class HttpModel {
       })),
     };
     out.push(docs);
+    out.push({
+      id: 'sockets',
+      label: l10n.t('WebSockets'),
+      icon: 'http',
+      color: 'platform',
+      tooltip: l10n.t('WebSocket servers that are not Nuclear projects: add a ws:// or wss:// url with +'),
+      button: { label: '+', title: l10n.t('Add a WebSocket url (ws:// or wss://) to this environment'), action: { type: 'addSocket' } },
+      children: this.sockets.map((url) =>
+        endpointNode({ project: 'WebSockets', kind: 'socket', owner: '', component: 'WebSockets', verb: 'ws', path: url, params: [], returns: '', protocol: 'websocket' }),
+      ),
+    });
     return out;
+  }
+
+  /** The actions of the tree's rows that are not the contracts' (the workspace forwards them). */
+  runAction(a: NodeAction): void {
+    if (a.type === 'open') void vscode.commands.executeCommand('nuclear.httpConnections.open', a.endpoint);
+    if (a.type === 'addSocket') void this.addSocket();
   }
 
   private projectNode(p: Project): TreeNode {
@@ -224,15 +261,15 @@ export class HttpModel {
     if (p.contracts.length) {
       children.push({
         id: `contracts:${p.root}`,
-        label: 'Contracts',
+        label: l10n.t('Contracts'),
         icon: 'law',
         color: 'project',
-        button: { label: '↓', title: 'nuclear contracts update (every contract of the project)', action: { type: 'updateContracts', root: p.root } },
+        button: { label: '↓', title: l10n.t('nuclear contracts update (every contract of the project)'), action: { type: 'updateContracts', root: p.root } },
         children: p.contracts.map((c) => ({
           id: `contract:${p.root}:${c.name}`,
           label: c.name,
-          desc: `${c.version ?? 'not fetched'} · ${c.source}`,
-          tooltip: `contract ${c.name} from ${c.source}: generated into contracts/${c.name}/ (nuclear contracts update)`,
+          desc: `${c.version ?? l10n.t('not fetched')} · ${c.source}`,
+          tooltip: l10n.t('contract {0} from {1}: generated into contracts/{0}/ (nuclear contracts update)', c.name, c.source),
           icon: c.version ? 'check' : 'warning',
           color: c.version ? 'get' : 'put',
           button: { label: '↓', title: `nuclear contracts update ${c.name}`, action: { type: 'updateContracts', root: p.root, name: c.name } },
@@ -245,11 +282,32 @@ export class HttpModel {
       const key = api.component || 'shared';
       byComponent.set(key, [...(byComponent.get(key) ?? []), ...api.routes.map((route) => endpointOf(p, owner, api, route))]);
     }
+    // the topics the app publishes, under the component that publishes them (a backend with a WebSocket)
+    const socketPath = socketPathOf(p.contract);
+    if (p.platform === 'backend' && socketPath) {
+      for (const ev of eventsOf(p.contract)) {
+        const event: Endpoint = {
+          project: p.name,
+          kind: 'event',
+          owner: '',
+          component: ev.component,
+          verb: 'event',
+          path: ev.topic,
+          description: ev.fields ? `{ ${ev.fields.join(', ')} }` : undefined,
+          params: [],
+          returns: ev.payload,
+          protocol: 'websocket',
+          socketPath,
+          guardHeaders: guardHeadersOf(p.contract),
+        };
+        byComponent.set(ev.component, [...(byComponent.get(ev.component) ?? []), event]);
+      }
+    }
     for (const [name, endpoints] of [...byComponent.entries()].sort(([a], [b]) => a.localeCompare(b))) {
       children.push({ id: `component:${p.root}:${name}`, label: name, icon: 'component', color: 'component', children: endpoints.map((e) => endpointNode(e)) });
     }
     if (!apis.length && !p.contracts.length) {
-      children.push({ id: `empty:${p.root}`, label: 'no endpoints', desc: 'no controller or repository with http methods in the contract', icon: 'info' });
+      children.push({ id: `empty:${p.root}`, label: l10n.t('no endpoints'), desc: l10n.t('no controller or repository with http methods in the contract'), icon: 'info' });
     }
     return { id: `project:${p.root}`, label: p.name, desc: p.dialect, tooltip: p.root, icon: 'project', color: 'project', children };
   }
@@ -269,13 +327,13 @@ export class HttpModel {
     });
     const fallback: Environments = {
       active: 'local',
-      environments: { local: { vars: { baseUrl: urls[0]?.[1] ?? '' }, headers: {}, baseUrls: Object.fromEntries(urls), openapi: [] } },
+      environments: { local: { vars: { baseUrl: urls[0]?.[1] ?? '' }, headers: {}, baseUrls: Object.fromEntries(urls), openapi: [], sockets: [] } },
     };
     try {
       const read = JSON.parse(fs.readFileSync(this.envFile(), 'utf8')) as Partial<Environments>;
       const environments: Record<string, Environment> = {};
       for (const [name, e] of Object.entries(read.environments ?? {})) {
-        environments[name] = { vars: e.vars ?? {}, headers: e.headers ?? {}, baseUrls: e.baseUrls ?? {}, openapi: e.openapi ?? [] };
+        environments[name] = { vars: e.vars ?? {}, headers: e.headers ?? {}, baseUrls: e.baseUrls ?? {}, openapi: e.openapi ?? [], sockets: e.sockets ?? [] };
       }
       if (Object.keys(environments).length === 0) return fallback;
       const active = read.active && environments[read.active] ? read.active : Object.keys(environments)[0];
@@ -302,15 +360,16 @@ export class HttpModel {
   async selectEnvironment(): Promise<void> {
     const envs = this.environments();
     const names = Object.keys(envs.environments);
+    const add = l10n.t('$(add) New environment…');
     const picked = await vscode.window.showQuickPick(
-      [...names.map((n) => ({ label: n, description: n === envs.active ? 'active' : '' })), { label: '$(add) New environment…', description: '' }],
-      { placeHolder: 'Environment for the requests (variables, headers, base urls)' },
+      [...names.map((n) => ({ label: n, description: n === envs.active ? l10n.t('active') : '', add: false })), { label: add, description: '', add: true }],
+      { placeHolder: l10n.t('Environment for the requests (variables, headers, base urls)') },
     );
     if (!picked) return;
-    if (picked.label.startsWith('$(add)')) {
-      const name = await vscode.window.showInputBox({ prompt: 'Name of the environment', value: 'staging' });
+    if (picked.add) {
+      const name = await vscode.window.showInputBox({ prompt: l10n.t('Name of the environment'), value: 'staging' });
       if (!name) return;
-      envs.environments[name] = { vars: { baseUrl: 'https://' }, headers: {}, baseUrls: {}, openapi: [] };
+      envs.environments[name] = { vars: { baseUrl: 'https://' }, headers: {}, baseUrls: {}, openapi: [], sockets: [] };
       envs.active = name;
       this.writeEnvironments(envs);
       await this.editEnvironments();
@@ -329,8 +388,8 @@ export class HttpModel {
 
   async addOpenApi(): Promise<void> {
     const source = await vscode.window.showInputBox({
-      prompt: 'OpenAPI document of an API that is not a Nuclear project: a url or a file path',
-      placeHolder: 'https://api.example.com/openapi.json or ./openapi.yaml',
+      prompt: l10n.t('OpenAPI document of an API that is not a Nuclear project: a url or a file path'),
+      placeHolder: l10n.t('https://api.example.com/openapi.json or ./openapi.yaml'),
     });
     if (!source) return;
     const envs = this.environments();
@@ -340,6 +399,22 @@ export class HttpModel {
     this.refresh();
   }
 
+  /** A WebSocket url of a server that is not a Nuclear project: kept in the environment, opened in the socket panel. */
+  async addSocket(): Promise<void> {
+    const url = await vscode.window.showInputBox({
+      prompt: l10n.t('WebSocket url of a server that is not a Nuclear project'),
+      placeHolder: 'wss://echo.example.com/ws  ·  ws://localhost:8080  ·  {{socketUrl}}',
+      validateInput: (v) => (/^(wss?:\/\/|\{\{)/i.test(v.trim()) ? undefined : l10n.t('A ws:// or wss:// url (it may start with a {{variable}})')),
+    });
+    if (!url) return;
+    const envs = this.environments();
+    const env = envs.environments[envs.active];
+    if (!env.sockets.includes(url.trim())) env.sockets.push(url.trim());
+    this.writeEnvironments(envs);
+    this.refresh();
+    await vscode.commands.executeCommand('nuclear.httpConnections.open', { project: 'WebSockets', kind: 'socket', owner: '', component: 'WebSockets', verb: 'ws', path: url.trim(), params: [], returns: '', protocol: 'websocket' } satisfies Endpoint);
+  }
+
   // ---------- contracts ----------
 
   async updateContracts(root?: string, name?: string): Promise<void> {
@@ -347,7 +422,7 @@ export class HttpModel {
     if (!target) {
       const pick = await vscode.window.showQuickPick(
         this.projects.filter((p) => p.contracts.length > 0).map((p) => ({ label: p.name, description: p.root, p })),
-        { placeHolder: 'Project whose contracts to update' },
+        { placeHolder: l10n.t('Project whose contracts to update') },
       );
       target = pick?.p;
     }
@@ -358,10 +433,10 @@ export class HttpModel {
     try {
       const text = await run(nuclearBinary(), ['contracts', 'update', ...names], target.root);
       this.output.appendLine(text.trim());
-      void vscode.window.showInformationMessage(`Nuclear: contracts of ${target.name} updated`);
+      void vscode.window.showInformationMessage(l10n.t('Nuclear: contracts of {0} updated', target.name));
     } catch (e) {
       this.output.appendLine(String(e));
-      void vscode.window.showErrorMessage(`Nuclear: contracts update failed (see the HTTP Connections output)`);
+      void vscode.window.showErrorMessage(l10n.t('Nuclear: contracts update failed (see the HTTP Connections output)'));
     }
     this.refresh();
   }
@@ -386,13 +461,25 @@ export class HttpModel {
 }
 
 function endpointNode(e: Endpoint): TreeNode {
+  const socket = { ...e, protocol: 'websocket' as const };
+  const badge =
+    e.kind === 'socket'
+      ? undefined
+      : e.kind === 'event'
+      ? { label: 'WS', title: l10n.t('pushed over WebSockets: open it to subscribe') }
+      : e.protocol === 'websocket'
+        ? { label: 'WS', title: l10n.t('served over WebSockets') }
+        : e.socketPath
+          ? { label: 'WS', title: l10n.t('also served over WebSockets: open it over the socket'), action: { type: 'open' as const, endpoint: socket } }
+          : undefined;
   return {
+    badge,
     id: `endpoint:${componentKey(e)}:${e.verb} ${e.path} ${e.owner}`,
     label: `${e.verb.toUpperCase()} ${e.path}`,
-    desc: e.kind === 'call' ? `${e.owner} · ${e.connection ?? ''}`.replace(/ · $/, '') : e.owner,
-    tooltip: `${e.verb.toUpperCase()} ${e.path}\n${e.description ?? ''}\nreturns ${e.returns}` + (e.params.length ? '\n' + e.params.map((p) => `${p.name}: ${p.type} (${p.in})`).join('\n') : ''),
-    icon: e.verb.toLowerCase(),
-    color: e.verb.toLowerCase(),
+    desc: e.kind === 'event' ? (e.description ? `${e.returns} ${e.description}` : e.returns) : e.kind === 'call' ? `${e.owner} · ${e.connection ?? ''}`.replace(/ · $/, '') : e.owner,
+    tooltip: `${e.verb.toUpperCase()} ${e.path}\n${e.description ?? ''}\n${l10n.t('returns {0}', e.returns)}` + (e.params.length ? '\n' + e.params.map((p) => `${p.name}: ${p.type} (${p.in})`).join('\n') : ''),
+    icon: e.kind === 'socket' ? 'ws' : e.verb.toLowerCase(),
+    color: e.kind === 'socket' ? 'ws' : e.verb.toLowerCase(),
     endpoint: e,
   };
 }
@@ -493,7 +580,16 @@ function endpointOf(project: Project, owner: string, api: Api, route: Route): En
     returns: route.returns,
     body: bodyParam ? sampleOf(bodyParam.type, project.contract?.models ?? {}, 0) : undefined,
     connection: backend ? undefined : api.connection || undefined,
+    ...socketFields(project, api),
   };
+}
+
+/** What a route its controller also serves over the app's WebSocket adds: the socket's path and the guards' headers
+ * (`protocol` stays HTTP unless the controller has no HTTP). */
+function socketFields(project: Project, api: Api): Partial<Endpoint> {
+  const transports = transportsOf(api);
+  if (!transports.has('websocket')) return {};
+  return { protocol: transports.has('http') ? undefined : 'websocket', socketPath: socketPathOf(project.contract) ?? '/ws', guardHeaders: guardHeadersOf(project.contract, api) };
 }
 
 /** A sample value of a Nuclear type, from the contract's models (what a request body looks like). */

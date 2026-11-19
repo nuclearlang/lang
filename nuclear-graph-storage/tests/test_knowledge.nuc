@@ -139,3 +139,12 @@ testAHelpTextBecomesOneRowPerCommandWithItsUsageAsData() void
   made = ExtractTools.entryOf(entries[2].lines, "tool make")
   expect(made == { "what": "usecase", "usage": "tool make usecase <component> <name>", "alias": "uc", "note": "", "does": "A use case" })
   expect(ExtractTools.entryOf(entries[1].lines, "tool")["alias"] == "n")
+
+testThePromptsAreTheRolesSkillsWithoutTheirFrontMatter() void
+  prompts = Ingest.prompts()
+  byName: <string, string> = {}
+  for p in prompts
+    byName["${p["meta"]!["use_case"]}"] = "${p["document"]}"
+  expect("feature" in byName and "agent.repair" in byName and not ("write-a-piece" in byName))
+  expect(byName["agent.repair"]!.startsWith("{{prompt}}") and byName["piece"]!.startsWith("# Use case: one piece of code"))
+  expect(prompts.all((p) => not "${p["document"]}".startsWith("---")))

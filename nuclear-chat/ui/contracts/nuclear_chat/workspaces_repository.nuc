@@ -1,0 +1,9 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// The workspaces API: a host registers its project when it starts, and reads it back.
+@repository(path = "workspaces", connection = "nuclear_chat")
+repository WorkspacesRepository
+  @post
+  register(@body input: NewWorkspace) Result<NuclearChatError, Workspace>
+
+  @get(path = ":id")
+  one(id: string) Result<NuclearChatError, Workspace>

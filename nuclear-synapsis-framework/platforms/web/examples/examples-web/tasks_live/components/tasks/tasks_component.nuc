@@ -1,0 +1,5 @@
+// What the screens and the other components see of tasks: an alias for each of its use cases.
+appcomponent TasksComponent
+  listTasks() = ListTasks.exec
+  createTask() = CreateTask.exec
+  watchCreatedTasks() = WatchCreatedTasks.exec

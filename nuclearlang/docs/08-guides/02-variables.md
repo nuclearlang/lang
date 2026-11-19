@@ -11,8 +11,8 @@ age: int = 30
 ```
 
 ```typescript
-const name = 'Ana';
-const age: number = 30;
+export const name = 'Ana';
+export const age: number = 30;
 ```
 
 - `x = value` **declares** `x` if the name does not exist yet in the block nor in the blocks that contain

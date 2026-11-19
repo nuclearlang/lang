@@ -31,7 +31,8 @@
     "reflect-metadata": ">=0.1",
     "rxjs": ">=7",
     "sequelize": ">=6",
-    "sequelize-typescript": ">=2"
+    "sequelize-typescript": ">=2",
+    "ws": ">=8"
   },
   "type": "module",
   "exports": {
@@ -54,6 +55,10 @@
     "./migrate": {
       "types": "./dist/migrate.d.ts",
       "default": "./dist/migrate.js"
+    },
+    "./sockets": {
+      "types": "./dist/sockets.d.ts",
+      "default": "./dist/sockets.js"
     }
   },
   "peerDependenciesMeta": {
@@ -83,6 +88,9 @@
     },
     "@nestjs/testing": {
       "optional": true
+    },
+    "ws": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -96,6 +104,7 @@
     "@nestjs/sequelize": "^12.0.0",
     "@nestjs/testing": "^12.3.2",
     "@types/node": "^26.6.6",
+    "@types/ws": "^8.18.2",
     "chromadb": "^3.5.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -107,7 +116,8 @@
     "sequelize": "^6.37.8",
     "sequelize-typescript": "^2.1.6",
     "sqlite3": "^6.0.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "ws": "^8.23.0"
   },
   "allowScripts": {
     "sqlite3": true

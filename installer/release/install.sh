@@ -128,9 +128,6 @@ rm -rf "$INSTALL"
 mkdir -p "$(dirname "$INSTALL")" "$BIN"
 mv "$tmp/nuclearlang" "$INSTALL"
 for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
-# nuclear-builder: the AI archive's replaces this link when it is installed (its pipeline commands still run this one's
-# engine with node, ADR-platform-0003)
-if [ -f "$INSTALL/bin/nuclear-builder" ]; then ln -sf "$INSTALL/bin/nuclear-builder" "$BIN/nuclear-builder"; fi
 "$BIN/nuclear" dialect list >/dev/null || fail "the installed nuclear does not run on this system"
 
 if [ "$AGENT" = 1 ]; then

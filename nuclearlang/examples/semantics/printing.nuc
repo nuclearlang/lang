@@ -1,0 +1,11 @@
+// A decimal prints with its `.0` and a missing value as `null`, in print and in a text.
+User(name: string, friend: User? = null)
+
+half(n: int) double = n / 2
+
+main() void
+  price: double = 10 / 5
+  u = User("ana")
+  print(price, 3.0, half(4), u.friend?.name)
+  ok = price > 1
+  print("price ${price}, friend ${u.friend?.name}, ok ${ok}")

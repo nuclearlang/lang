@@ -1,0 +1,114 @@
+use os
+use sys
+use json
+use time
+use secrets
+use subprocess
+use pathlib{ Path }
+
+// Nuclear Chat's service as this machine runs it (spec 013 T1.5): its port, its token and how it starts. The token is
+// made once and kept only in the system's keyring (service `nuclear-chat`, account `token`), as the Smart Graph keeps
+// its owner token: never in a file. A note (`~/.config/nuclearlang/nuclear-chat.json`, no secret in it) says one was
+// kept, so a keyring that is closed at login is waited for, never answered with a second token. The service gets it
+// in its environment (`NUCLEAR_CHAT_TOKEN`, its guard's value) and a host from `nuclear-chat connect --json`.
+
+CHAT_PORT = 7880
+TOKEN_HEADER = "X-Chat-Token"
+// How long a closed keyring is waited for (a service started at login, before the user's session opens it).
+KEYRING_WAIT = 90
+
+// The machine's file of the AI set-up (`ai.env`), where it writes the ports it chose.
+machineFile() string
+  if sys.platform == "win32"
+    return "${Path(os.environ.get("APPDATA") ?? "${Path.home()}", "nuclearlang", "ai.env")}"
+  given: string = os.environ.get("XDG_CONFIG_HOME") ?? ""
+  "${Path(given.isEmpty ? "${Path.home().joinpath(".config")}" : given, "nuclearlang", "ai.env")}"
+
+machineValue(name: string) string?
+  file = Path(machineFile())
+  if not file.isFile()
+    return null
+  text: string = file.readText(encoding = "utf-8")
+  for line in text.split("\n")
+    if line.startsWith("${name}=")
+      return line.substring(name.length + 1).trim()
+  null
+
+// The service's port: the environment, else the machine's file, else 7880.
+chatPort() int
+  given: string = os.environ.get("NUCLEAR_CHAT_PORT") ?? machineValue("NUCLEAR_CHAT_PORT") ?? ""
+  given.toInt() ?? CHAT_PORT
+
+chatUrl() string
+  given: string = os.environ.get("NUCLEAR_CHAT_URL") ?? ""
+  given.isEmpty ? "http://127.0.0.1:${chatPort()}" : given
+
+// The note that a token is kept (no secret in it).
+noteFile() Path
+  Path(Path(machineFile()).parent, "nuclear-chat.json")
+
+// The service's token: the one the keyring keeps; made and kept the first time. A token noted but not answered is a
+// closed keyring: waited for `wait` seconds, then refused (a second token would lock the hosts out).
+serviceToken(keyring: Keyring, wait: int = KEYRING_WAIT) string
+  found = keyring.lookup(TOKEN_ACCOUNT)
+  waited = 0
+  while found == null and noteFile().isFile() and waited < wait
+    time.sleep(1)
+    waited += 1
+    found = keyring.lookup(TOKEN_ACCOUNT)
+  if found != null
+    return found!
+  if noteFile().isFile()
+    throw KeyringError("the keyring that keeps Nuclear Chat's token is closed: open it (log in) and start the service again")
+  made: string = secrets.tokenUrlsafe(32)
+  keyring.keep(TOKEN_ACCOUNT, made)
+  noteFile().parent.mkdir(parents = true, existOk = true)
+  noteFile().writeText(json.dumps({ "token": "in the keyring (service ${KEYRING_SERVICE}, account ${TOKEN_ACCOUNT})" }) + "\n", encoding = "utf-8")
+  made
+
+// The service's built folder (its `app/`): `NUCLEAR_CHAT_SERVICE` (the AI archive's launcher sets it), else the
+// working tree's `nuclear_chat/build` beside this package.
+serviceFolder() string
+  given: string = os.environ.get("NUCLEAR_CHAT_SERVICE") ?? ""
+  if not given.isEmpty
+    return given
+  // a checkout: system/build/nuclear_chat_system/service.py, the service is ../../../nuclear_chat/build
+  "${Path(__file__).resolve().parents[3].joinpath("nuclear_chat", "build")}"
+
+// The Python that runs the service: the service's own environment (a working tree), else this one (the AI archive).
+servicePython(folder: string) string
+  own = sys.platform == "win32" ? Path(folder, ".venv", "Scripts", "python.exe") : Path(folder, ".venv", "bin", "python")
+  own.exists() ? "${own}" : sys.executable
+
+// `serve`: the service on 127.0.0.1 with its token, until it is stopped.
+serve() int
+  token = serviceToken(Keyring())
+  folder = serviceFolder()
+  if not Path(folder, "app", "main.py").isFile()
+    throw RuntimeError("Nuclear Chat's service is not built in ${folder}: nuclear-chat install")
+  env: <string, string> = dict(keyringEnv())
+  env["NUCLEAR_CHAT_TOKEN"] = token
+  subprocess.run([servicePython(folder), "-m", "uvicorn", "app.main:app", "--app-dir", folder, "--host", "127.0.0.1", "--port", "${chatPort()}"], cwd = folder, env = env).returncode
+
+// `connect --json`: what a host needs to reach the service (only the editors' extension host asks it).
+connect(asJson: boolean) int
+  if not asJson
+    print("${chatUrl()}  (header ${TOKEN_HEADER}; the token is in the keyring: nuclear-chat connect --json)")
+    return 0
+  print(json.dumps({ "url": chatUrl(), "header": TOKEN_HEADER, "token": serviceToken(Keyring(), 0) }))
+  0
+
+// `install`: builds the service of a working tree in place (`nuclear build`, `nuclear install`), with this package.
+install() int
+  folder = Path(serviceFolder())
+  project = folder.parent
+  system = Path(__file__).resolve().parents[2]
+  if not project.joinpath("config.nuc").isFile() or not system.joinpath("nuclear.toml").isFile()
+    throw RuntimeError("no working tree of Nuclear Chat here (${project}): the AI archive brings the service built")
+  for step in [["nuclear", "build", "${system}"], ["nuclear", "install"]]
+    if subprocess.run(step, cwd = "${project}").returncode != 0
+      return 1
+  // shortcut: `nuclear install` keeps a folder dependency it installed before; upgrade when it reinstalls one that changed
+  subprocess.run([servicePython("${folder}"), "-m", "pip", "install", "--quiet", "--force-reinstall", "--no-deps", "${system}"], check = true)
+  print("Nuclear Chat's service is built in ${folder}")
+  0

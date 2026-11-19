@@ -1,0 +1,4 @@
+// The GIF pack made for the project, with each drawing's SVG.
+usecase PackGifs(choice: GifChoice)
+  exec() Result<Error, PackGif[]>
+    Ok(choice.all())

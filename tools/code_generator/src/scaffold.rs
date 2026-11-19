@@ -262,18 +262,40 @@ pub fn project(name: &str) -> Files {
 
 /// A backend project (ADR-synapsis-0002): its manifest and the app's connections; `nuclear build .` builds it with
 /// the dialect (`fastapi`, `nestjs`). Components come from the platform's spec (`nuclear help backend`).
-pub fn backend_project(name: &str, dialect: &str) -> Files {
+/// What `nuclear new` adds to a project's configuration (ADR-synapsis-0007, ADR-synapsis-0008): `websocket`, the
+/// app's WebSocket (backend) or a `WebSocket` connection instead of `Http` (web); `token`, the environment variable of
+/// the token every request of a backend carries (with `NoOrigin`).
+#[derive(Debug, Default, Clone)]
+pub struct NewOptions {
+    pub websocket: bool,
+    pub token: Option<String>,
+}
+
+pub fn backend_project(name: &str, dialect: &str, options: &NewOptions) -> Files {
+    let plugins = if options.websocket { "sqlite = true, events = true, websocket = true" } else { "sqlite = true" };
     let config = format!(
         "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002).\n\
          synapsis(platform = \"backend\", dialect = \"{dialect}\")\n\
          app(name = \"{name}\", description = \"A Synapsis backend.\", version = \"0.1.0\")\n\n\
          // The optional parts this project uses, only these go to the generated project (nuclear help backend):\n\
-         // sqlite, postgres, mysql, mariadb, redis, kafka, events, ai, openai, ollama, chroma\n\
-         plugins(sqlite = true)\n"
+         // sqlite, postgres, mysql, mariadb, redis, kafka, events, websocket, ai, openai, ollama, chroma, telemetry\n\
+         plugins({plugins})\n"
     );
+    let mut project_config = BACKEND_PROJECT_CONFIG.to_string();
+    if options.websocket {
+        project_config = project_config.replace(
+            "    SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true),\n",
+            "    SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true),\n    // the same routes over a WebSocket at /ws, and what the app publishes, pushed to the subscribed\n    WebSocketServer(path = \"ws\"),\n",
+        );
+    }
+    if let Some(var) = &options.token {
+        project_config.push_str(&format!(
+            "  // every route: no request from a web page, and the token of {var} (`Authorization: Bearer <token>`)\n  guards: Guard[] = [NoOrigin(), Token(value = env(\"{var}\"))]\n"
+        ));
+    }
     vec![
         (PathBuf::from(MANIFEST), config),
-        (PathBuf::from("config/project_config.nuc"), BACKEND_PROJECT_CONFIG.to_string()),
+        (PathBuf::from("config/project_config.nuc"), project_config),
         (PathBuf::from("test/app_test.nuc"), BACKEND_TEST.to_string()),
     ]
 }
@@ -282,17 +304,24 @@ pub fn backend_project(name: &str, dialect: &str) -> Files {
 /// connections; `nuclear build .` builds it with the `react` dialect. Screens come from the generators.
 /// A web project of `dialect`; its `Http` connection points to `backend` (the url of the backend platform's default
 /// dialect: where a new backend answers).
-pub fn web_project(name: &str, dialect: &str, backend: &str) -> Files {
+pub fn web_project(name: &str, dialect: &str, backend: &str, options: &NewOptions) -> Files {
     let config = format!(
         "// The platform this project is written for and the dialect it is built with (ADR-synapsis-0002, ADR-web-0001).\n\
          synapsis(platform = \"web\", dialect = \"{dialect}\")\n\
          app(name = \"{name}\", description = \"A Synapsis web app.\", version = \"0.1.0\")\n"
     );
     let base = format!("{}/", backend.trim_end_matches('/'));
+    let project_config = if options.websocket {
+        // the backend's WebSocket (ADR-synapsis-0008): its url with ws(s):// and /ws
+        let socket = format!("{}ws", base.replacen("http", "ws", 1));
+        WEB_PROJECT_CONFIG_SOCKET.replace("{{socket}}", &socket)
+    } else {
+        WEB_PROJECT_CONFIG.replace("{{backend}}", &base)
+    };
     vec![
         (PathBuf::from(MANIFEST), config),
         (PathBuf::from("main.nuc"), WEB_MAIN.to_string()),
-        (PathBuf::from("config/project_config.nuc"), WEB_PROJECT_CONFIG.replace("{{backend}}", &base)),
+        (PathBuf::from("config/project_config.nuc"), project_config),
     ]
 }
 
@@ -306,6 +335,14 @@ const WEB_PROJECT_CONFIG: &str = r#"// The connections and services of the whole
 appConfig ProjectConfig
   connections: Connection[] = [
     Http(baseUrl = "{{backend}}", timeout = 5000),
+  ]
+"#;
+
+const WEB_PROJECT_CONFIG_SOCKET: &str = r#"// The connections and services of the whole app (nuclear help web). The repositories' calls, and what the
+// backend pushes, go over its WebSocket; Http(baseUrl = ...) here is the same app over HTTP.
+appConfig ProjectConfig
+  connections: Connection[] = [
+    WebSocket(url = "{{socket}}", timeout = 5000),
   ]
 "#;
 
@@ -492,8 +529,8 @@ mod tests {
     #[test]
     fn every_skeleton_parses() {
         let mut files = project("demo_app");
-        files.extend(backend_project("demo_api", "fastapi"));
-        files.extend(web_project("demo_web", "react", "http://localhost:8000"));
+        files.extend(backend_project("demo_api", "fastapi", &NewOptions::default()));
+        files.extend(web_project("demo_web", "react", "http://localhost:8000", &NewOptions::default()));
         files.extend(in_component("usecase", "home", "find_user").unwrap());
         files.extend(in_component("repository", "home", "user").unwrap());
         files.extend(in_component("service", "home", "user_mapper").unwrap());
@@ -525,9 +562,13 @@ mod tests {
         let l = nuclear_dialect::Loader::of(Vec::new(), &[nuclear_dialect::Home::tree()]);
         for (dialect, files) in [
             ("flutter", project("demo_app")),
-            ("fastapi", backend_project("demo_api", "fastapi")),
-            ("nestjs", backend_project("demo_api", "nestjs")),
-            ("react", web_project("demo_web", "react", "http://localhost:8000")),
+            ("fastapi", backend_project("demo_api", "fastapi", &NewOptions::default())),
+            ("nestjs", backend_project("demo_api", "nestjs", &NewOptions::default())),
+            ("react", web_project("demo_web", "react", "http://localhost:8000", &NewOptions::default())),
+            // real time and guards (ADR-synapsis-0007, ADR-synapsis-0008)
+            ("fastapi", backend_project("demo_api", "fastapi", &live())),
+            ("nestjs", backend_project("demo_api", "nestjs", &live())),
+            ("react", web_project("demo_web", "react", "http://localhost:8000", &live())),
         ] {
             let Some(d) = l.load(dialect).0 else {
                 eprintln!("skipped {dialect}: its platform repository is not in this working tree");
@@ -550,6 +591,10 @@ mod tests {
             assert!(errors.is_empty(), "{dialect}: {errors:?}");
             let _ = std::fs::remove_dir_all(&root);
         }
+    }
+
+    fn live() -> NewOptions {
+        NewOptions { websocket: true, token: Some("DEMO_TOKEN".into()) }
     }
 
     fn nuclear_syntax_check(text: &str) -> Vec<String> {

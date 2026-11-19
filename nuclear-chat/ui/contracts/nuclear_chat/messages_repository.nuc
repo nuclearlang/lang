@@ -1,0 +1,27 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// The messages API: a channel's history (or one thread), what the user says and sends, what a host posts and changes, reactions, buttons and the search.
+@repository(path = "messages", connection = "nuclear_chat")
+repository MessagesRepository
+  @get(path = ":workspace/search")
+  search(workspace: string, words: string) Result<NuclearChatError, Found[]>
+
+  @get(path = ":workspace/:channel")
+  history(workspace: string, channel: string, thread?: string) Result<NuclearChatError, Message[]>
+
+  @post(path = ":workspace/:channel")
+  say(workspace: string, channel: string, @body said: Said) Result<NuclearChatError, Message>
+
+  @post(path = ":workspace/:channel/gif")
+  gif(workspace: string, channel: string, @body sent: SentGif) Result<NuclearChatError, Message>
+
+  @post(path = ":workspace/:channel/post")
+  hostPost(workspace: string, channel: string, @body posted: Posted) Result<NuclearChatError, Message>
+
+  @patch(path = ":workspace/message/:id")
+  update(workspace: string, id: string, @body changes: Changes) Result<NuclearChatError, Message>
+
+  @post(path = ":workspace/message/:id/reactions")
+  react(workspace: string, id: string, @body reaction: Reaction) Result<NuclearChatError, Message>
+
+  @post(path = ":workspace/message/:id/click")
+  click(workspace: string, id: string, @body click: Click) Result<NuclearChatError, ChatEvent>

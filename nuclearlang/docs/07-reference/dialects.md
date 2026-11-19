@@ -251,6 +251,12 @@ The templates of `Result<E, T>` (nuclear-base.md §3.2) are optional: `result_ru
 `Either`, with `[types] Result = "Either"` and `[names] written`). Example of an own runtime:
 `nuclearlang/dialects/typescript/templates/result.tpl`.
 
+The templates of the monitor (`--monitor`) are optional too: `monitor_body` (the body of a function or method
+measured: `body`, `label` the Nuclear name, `Owner.name` for a method, `path` its `.nuc` file, `line`, `async`)
+and `monitor_runtime` (the class `NuclearMonitor`, written once to `nuclear/monitor` of a project built with
+`--monitor`; `app` the project's name). A dialect without them builds without measuring. A generator gets no
+`monitor_body`. Example: `nuclearlang/dialects/typescript/templates/monitor.tpl`.
+
 ## 5. Shortcuts: code compression
 
 A shortcut replaces a repeated text with a shorter one, as in a compression algorithm. The developer writes
@@ -320,7 +326,9 @@ sleep = { template = "await new Promise((r) => setTimeout(r, {{arg0}}))" }
 ```
 
 The template receives `args` (the positional arguments), `arg0`, `arg1`... and `call_args` (every argument, a named
-one as the dialect's `named_arg` writes it: Python's `print(line, flush=True)`).
+one as the dialect's `named_arg` writes it: Python's `print(line, flush=True)`), and `shown` (the positional arguments
+as Nuclear prints them, through `[syntax] show_double`, `show_nullable` and `show_bool` when the dialect has them:
+TypeScript's `print` is `console.log({{shown}})`).
 
 #### 5.3.1 `[call_site]`: where a call was written
 
@@ -514,7 +522,7 @@ sqrt = "Math.sqrt({{arg0}})"
 | Key | Use |
 |---|---|
 | bases | `string`, `list`, `map`, `set`, `int`, `double`, `number` (what `int` and `double` share), `boolean`, `bytes`, `datetime`, `duration`, `regex`, `match`, `error`, `any` (`toString`); objects `Math`, `Json`, `String`, `DateTime`, `Duration`, `Regex`, `Set`, `Bytes`, `Error` (`new` is the constructor) |
-| variables | `recv` (the value before the dot), `args`, `arg0`..., `has_args`, `n`, `named.<name>` (a named argument; a literal `true`/`false` is a flag), `call_args` (every argument as the target writes a call), `argN_is.<base>` (the static type of an argument: `split` takes a string or a Regex), `elem` (the element type), `type_args`, and for the first expression lambda among the arguments `fn.param`, `fn.params`, `fn.p0`, `fn.p1`, `fn.body` |
+| variables | `recv` (the value before the dot), `args`, `arg0`..., `has_args`, `n`, `named.<name>` (a named argument; a literal `true`/`false` is a flag), `call_args` (every argument as the target writes a call), `argN_is.<base>` (the static type of an argument: `split` takes a string or a Regex), `elem` (the element type), `type_args`, and for the first expression lambda among the arguments `fn.param`, `fn.params`, `fn.p0`, `fn.p1`, `fn.body`, `fn.cond` (the body where a condition goes: a conditional expression keeps its parentheses) |
 | `helper` | A function the template calls, written once per file after the imports. `[functions]`, `[syntax]` and `[operators]` entries take `helper` too (`print` in Python, `non_null`, `coalesce_once`) |
 | extensions | A member Nuclear does not define (`[library.string] tr` in the mobile platform) is the dialect's own: rendered the same way, its result type unknown |
 

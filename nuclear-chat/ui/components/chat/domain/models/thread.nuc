@@ -1,0 +1,5 @@
+// A thread open beside the channel: the message that opened it and its replies.
+Thread
+  channel: string
+  root: Message
+  replies: Message[] = []

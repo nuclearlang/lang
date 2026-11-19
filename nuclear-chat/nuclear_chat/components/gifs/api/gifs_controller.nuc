@@ -1,0 +1,14 @@
+// The GIFs API: the pack made for the project, the picker's search, the project's one answer.
+@controller("gifs")
+controller GifsController(gifs: GifsAppComponent)
+  @get("pack")
+  pack() Result<Error, PackGif[]>
+    gifs.pack()
+
+  @get("{workspace}/search")
+  search(workspace: string, q: string = "") Result<Error, GifResults>
+    ~gifs.search(workspace, q)
+
+  @post("{workspace}/consent")
+  consent(workspace: string, consent: Consent) Result<Error, Consent>
+    gifs.keepConsent(workspace, consent)

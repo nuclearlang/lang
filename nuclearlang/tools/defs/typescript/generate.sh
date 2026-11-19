@@ -23,6 +23,6 @@ gen nestjs_sequelize "$(v @nestjs/sequelize)" "$backend" @nestjs/sequelize --dep
 gen class_validator "$(v class-validator)" "$backend" class-validator --depends "$TS" --description "class-validator: validation decorators"
 gen class_transformer "$(v class-transformer)" "$backend" class-transformer --depends "$TS" --description "class-transformer: plain objects to classes"
 gen nestjs_testing "$(v @nestjs/testing)" "$backend" @nestjs/testing --depends "$TS" --description "NestJS testing module"
-gen synapsis-nest "$(v synapsis-nest)" "$backend" synapsis-nest synapsis-nest/ai synapsis-nest/events synapsis-nest/testing --depends "$TS" --description "Synapsis for NestJS: the runtime of the nestjs dialect"
+gen synapsis-nest "$(v synapsis-nest)" "$backend" synapsis-nest synapsis-nest/ai synapsis-nest/events synapsis-nest/sockets synapsis-nest/testing --depends "$TS" --description "Synapsis for NestJS: the runtime of the nestjs dialect"
 cp -R "$out/typescript/." "$root/dialects/typescript/defs/"
 rm -rf "$out"

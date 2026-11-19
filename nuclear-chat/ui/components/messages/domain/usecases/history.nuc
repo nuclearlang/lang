@@ -1,0 +1,4 @@
+// What MessagesRepository.history answers, for the screens of messages.
+usecase History(repository: MessagesRepository)
+  exec(workspace: string, channel: string, thread?: string) Result<NuclearChatError, Message[]>
+    ~repository.history(workspace, channel, thread)

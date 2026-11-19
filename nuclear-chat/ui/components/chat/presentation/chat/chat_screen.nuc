@@ -1,0 +1,115 @@
+// The chat, as Slack: the channels and direct messages on the left, the open channel in the middle, its thread
+// beside it. The host's path names the workspace and the first channel (`/<workspace>/general`); every call and event goes
+// through the host's bridge. On a narrow page the channels fold behind a button and the thread covers the channel.
+@screen(route = "/:workspace/:channel", providers = [WorkspaceManager, PackManager, ChannelsManager, MessagesManager, ThreadManager, ActivityManager, QuestionsManager, PickerManager])
+stateful ChatScreen(workspace: string, channel: string)
+  open: string = "general"
+  sidebar: boolean = false
+  picker: boolean = false
+  pickerStart: string = ""
+  pickerThread: string = ""
+
+  initState() void
+    open = channel
+    WorkspaceManager.load(workspace)
+    ChannelsManager.start(workspace, open)
+    MessagesManager.start(workspace)
+    MessagesManager.open(open)
+    ThreadManager.start(workspace)
+    ActivityManager.start(workspace)
+    QuestionsManager.start(workspace)
+    PickerManager.start(workspace)
+
+  build() Element
+    WorkspaceStateBuilder(
+      ready = (ws: Workspace) => page(ws, Texts(lang = ws.lang)),
+      error = (e: NuclearChatError) => div(className = "chat-state", children = [p(children = Texts(lang = "en").format("error", { "error": e.message })), button(className = "action primary", onClick = () => WorkspaceManager.load(workspace), children = Texts(lang = "en").get("retry"))]),
+      orElse = () => div(className = "chat-state", children = [span(className = "spinner"), p(children = Texts(lang = "en").get("loading"))]),
+    )
+
+  page(ws: Workspace, texts: Texts) Element
+    ChannelsStateBuilder(
+      ready = (channels: Channel[]) => layout(ws, channels, texts),
+      orElse = () => layout(ws, [], texts),
+    )
+
+  layout(ws: Workspace, channels: Channel[], texts: Texts) Element
+    current = channels.find((c) => c.id == open)
+    div(
+      className = "chat ${sidebar ? "sidebar-open" : ""}",
+      children = [
+        Sidebar(ws = ws, channels = channels, open = open, texts = texts, onOpen = (id) => go(id)),
+        div(className = "scrim", onClick = () => toggle()),
+        section(
+          className = "channel",
+          children = [
+            ChannelHeader(ws = ws, channel = current, open = open, texts = texts, onSidebar = () => toggle()),
+            MessagesStateBuilder(
+              ready = (messages: Message[]) =>
+                if messages.isEmpty
+                  EmptyChannel(ws = ws, channel = current, open = open, texts = texts)
+                else
+                  div(className = "scroll", children = div(children = [MessageList(messages = messages, ws = ws, texts = texts, inThread = false, onThread = (m) => thread(m), onChannel = (id) => go(id)), Streaming(ws = ws, channel = open, thread = "", texts = texts)]))
+              ,
+              error = (e: NuclearChatError) => div(className = "scroll", children = div(className = "chat-state", children = [p(children = texts.format("error", { "error": e.message })), button(className = "action primary", onClick = () => MessagesManager.open(open), children = texts.get("retry"))])),
+              orElse = () => div(className = "scroll", children = div(className = "skeleton", children = [div(), div(), div()])),
+            ),
+            Questions(ws = ws, channel = open, thread = "", texts = texts),
+            Typing(ws = ws, channel = open, thread = "", texts = texts),
+            div(
+              className = "composer-area",
+              children = [
+                picker and pickerThread == "" ? gifPicker(texts) : null,
+                Composer(key = "composer-${open}", ws = ws, channels = channels, texts = texts, placeholder = placeholder(ws, current, texts), onGif = (q) => gif(q, "")),
+              ],
+            ),
+          ],
+        ),
+        ThreadPanel(ws = ws, channels = channels, texts = texts, picker = picker and pickerThread != "" ? gifPicker(texts) : null, onClose = () => ThreadManager.hide(), onGif = (q) => gif(q, threadOpen()), onChannel = (id) => go(id)),
+      ],
+    )
+
+  gifPicker(texts: Texts) Element
+    GifPicker(key = "picker-${pickerThread}-${pickerStart}", texts = texts, start = pickerStart, thread = pickerThread, onClose = () => closePicker())
+
+  // What the composer says before the user writes: the channel's name, or the member's of a direct message.
+  placeholder(ws: Workspace, current: Channel?, texts: Texts) string
+    member = current != null and current!.kind == "dm" ? dmMember(ws, current!) : null
+    if member != null
+      texts.format("placeholder.dm", { "name": member!.name })
+    else
+      texts.format("placeholder.channel", { "name": current?.name ?? open })
+
+  // Opens a channel: its messages, read; the thread of another channel closes.
+  go(id: string)
+    setState(() =>
+      open = id
+      sidebar = false
+      picker = false
+    )
+    ThreadManager.hide()
+    MessagesManager.open(id)
+    ChannelsManager.read(id)
+
+  thread(m: Message)
+    ThreadManager.open(open, m.id)
+
+  threadOpen() string
+    ThreadManager.root
+
+  toggle()
+    setState(() =>
+      sidebar = not sidebar
+    )
+
+  gif(q: string, inThread: string)
+    setState(() =>
+      picker = true
+      pickerStart = q
+      pickerThread = inThread
+    )
+
+  closePicker()
+    setState(() =>
+      picker = false
+    )

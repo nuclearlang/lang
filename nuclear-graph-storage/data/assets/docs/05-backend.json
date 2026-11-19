@@ -126,6 +126,39 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.50de7f",
+   "type": "readme",
+   "title": "The backend platform — Folders",
+   "summary": "`nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/backend/generators.toml`.",
+   "body": [
+    "- `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`. What",
+    "  `nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is",
+    "  `tools/code_generator/platforms/backend/generators.toml`.",
+    "- `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).",
+    "- `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).",
+    "- `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.",
+    "- `examples/examples-fastapi/rick_api/`: the example of the fastapi check.",
+    "- `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.",
+    "- `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
+    "  website runs those commands again and fails if they do not give it).",
+    "- `examples/expected/{rick_api,tasks_api,todos_api}/`: the golden output of the projects.",
+    "- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the",
+    "  guards and the WebSocket of `tasks_api`; `smoke.mjs`).",
+    "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.81e09f",
    "type": "readme",
    "title": "The backend platform — Folders",
@@ -148,43 +181,12 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#folders.d54de2",
-   "type": "readme",
-   "title": "The backend platform — Folders",
-   "summary": "`nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/backend/generators.toml`.",
-   "body": [
-    "- `platform.toml`: the contract: kinds, decorators, plugins, the rules of the data decorators, `[layout]`. What",
-    "  `nuclear make` and `gen` write (`[skeletons]`, `[gen]`, `[[generators.*]]`) is",
-    "  `tools/code_generator/platforms/backend/generators.toml`.",
-    "- `packages/synapsis-py/`: the runtime of the Python dialect (`src/synapsis/`, `tests/`).",
-    "- `packages/synapsis-nest/`: the runtime of the TypeScript dialect (`src/`, `test/`).",
-    "- `examples/examples-backend/tasks_api/`: the conformance example, built with every dialect.",
-    "- `examples/examples-fastapi/rick_api/`: the example of the fastapi check.",
-    "- `examples/examples-nestjs/users.nuc`, `users.ts`: a one-file golden.",
-    "- `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
-    "  website runs those commands again and fails if they do not give it).",
-    "- `examples/expected/{rick_api,tasks_api,todos_api}/`: the golden output of the projects.",
-    "- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live run (`smoke.py`, `smoke.mjs`).",
-    "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/AGENTS.md"
-   ],
-   "meta": {
-    "section": "05-backend",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#rules.07e5d0",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#rules.2a6bcf",
    "type": "readme",
    "title": "The backend platform — Rules",
-   "summary": "7. A file's name in `docs/07-reference/` and `docs/08-guides/` is its topic: `nuclear help backend` and `nuclear spec --brief` find them by name, and the installer copies both folders with `platform.toml` and `packages/`.",
+   "summary": "6. The examples are goldens.",
    "body": [
+    "6. **The examples are goldens.** Output that changed on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff.",
     "7. **A file's name in `docs/07-reference/` and `docs/08-guides/` is its topic**: `nuclear help backend` and",
     "   `nuclear spec --brief` find them by name, and the installer copies both folders with `platform.toml` and",
     "   `packages/`. They are normative: changed only with the feature they describe.",
@@ -204,7 +206,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#rules.43f55b",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/AGENTS.md#rules.ab63e7",
    "type": "readme",
    "title": "The backend platform — Rules",
    "summary": "1. The platform names no dialect.",
@@ -219,10 +221,10 @@
     "   loader refuses the dialect (N0305). The rules of a decorator are data there (`[decorators.args]`,",
     "   `[decorators.fields]`): no decorator name is written in Rust.",
     "4. **The runtimes behave the same.** A behaviour added to one is added to the other, with the same test in both",
-    "   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).",
+    "   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the guards and the",
+    "   WebSocket: `tests/test_sockets.py`, `test/sockets.test.ts`).",
     "5. **A changed public API of a runtime** means its type definitions are regenerated",
-    "   ([runbook](docs/06-runbooks/change-a-runtime.md)).",
-    "6. **The examples are goldens.** Output that changed on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff."
+    "   ([runbook](docs/06-runbooks/change-a-runtime.md))."
    ],
    "platforms": [
     "backend"
@@ -310,11 +312,25 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.3031d4",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.10ebbd",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- nestjs: `npm test` (what `nuclear test` runs) removes `dist/test` before compiling: `tsc` never deletes the output of a source that is gone, so a test that was deleted or renamed kept running from its old `.js` and failed the project.",
+   "summary": "`WebSocketServer(path = \"ws\")` in `connections` serve the same controllers over one socket (JSON frames: requests and their answers, `subscribe`/`unsubscribe`), and `~publish(topic, value)` pushes to the subscribed clients.",
+   "body": [
+    "- The app's WebSocket (ADR-synapsis-0008), fastapi and nestjs: `plugins(websocket = true)` and",
+    "  `WebSocketServer(path = \"ws\")` in `connections` serve the same controllers over one socket (JSON frames: requests",
+    "  and their answers, `subscribe`/`unsubscribe`), and `~publish(topic, value)` pushes to the subscribed clients.",
+    "- The contract (`.nuclear/contract.json`) says `webSocket`, each controller's `transports` and `guards`, the app's",
+    "  `guards` and the `events` it publishes (topic, component, payload).",
+    "- Telemetry (spec 012), fastapi: `plugins(telemetry = true)` and one of `Datadog(...)`, `NewRelic(...)`, `Grafana(...)`,",
+    "  `Otlp(url)` in `connections` send traces and metrics over OTLP; every request and use case is a span by itself,",
+    "  `Metric.count` / `Metric.record` write metrics, `@untraced` leaves out a use case, a route or a controller,",
+    "  `sample` keeps a share of the traces. nestjs accepts `@untraced` and does not bring the plugin yet.",
+    "- `[toolchain] package_*` in fastapi (pip) and nestjs (npm, with the `@types` package of one that ships no types):",
+    "  `nuclear add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,",
+    "  `koa` are added with a word on what the platform already gives.",
+    "- First public version."
+   ],
    "platforms": [
     "backend"
    ],
@@ -328,19 +344,48 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.fdd6b2",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.6ecb14",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "`nuclear add|remove <package>` (ADR-lang-0008).",
+   "summary": "has Nuclear's names (`lastRead`, not `last_read`), as `nestjs` and the contract; an entity's answer too.",
    "body": [
-    "- `[toolchain] package_*` in fastapi (pip) and nestjs (npm, with the `@types` package of one that ships no types):",
-    "  `nuclear add|remove <package>` (ADR-lang-0008). `[project.manifest.advice]`: `flask`, `django`, `express`, `fastify`,",
-    "  `koa` are added with a word on what the platform already gives.",
-    "- First public version.",
+    "- One JSON per model in every dialect (ADR-synapsis-0012): a `fastapi` model extends `synapsis.Model` and its JSON",
+    "  has Nuclear's names (`lastRead`, not `last_read`), as `nestjs` and the contract; an entity's answer too.",
+    "- A client generated from the contract sends a route's model parameter as the body itself (`@body input: NewTask`),",
+    "  and keeps a list's and a map's default (`members: string[] = []`).",
+    "- Tests that call the app (ADR-synapsis-0010), fastapi and nestjs: `appClient()` sends requests over HTTP",
+    "  (`get`/`post`/`put`/`patch`/`delete`/`request`: `HttpAnswer` with `status`, `body`) and opens the app's WebSocket",
+    "  (`socket(path, headers)`: `Err` with 401/403 when refused; `request`, `subscribe`, `next(seconds)`, `close`);",
+    "  `testEnv(NAME = \"value\")` in `config.nuc` is the tests' environment (a test token). fastapi's `app/main.py` gains",
+    "  `create()`; nestjs gets `src/test_env.ts` and `npm test` imports it first.",
+    "- Guards (ADR-synapsis-0007), fastapi and nestjs: `guards: Guard[] = [NoOrigin(), Token(value = env(\"T\"), header =",
+    "  \"X-Token\")]` in the `appConfig` checks every route, the contract's routes and the WebSocket's upgrade;",
+    "  `@controller(\"x\", guards = [...])` adds a controller's own. Headers only (never a token in the query); an empty",
+    "  token refuses everything; a guarded app serves no documentation pages."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/CHANGELOG.md#unreleased.bb7027",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
     "- HTTP repositories (`Http` connection, bodiless `@get`/`@post`...) in fastapi and nestjs; `@key` for a JSON key that differs from the field; `[[generators]]` for `nuclear gen` (ADR-codegen-0001).",
     "- `[[generators.usecase]]`: `nuclear gen usecase` writes a use case over a repository method, its alias in the facade and its route (ADR-codegen-0001).",
     "- The order of a controller's routes no longer matters, in both dialects: a fixed segment wins over a parameter. Before, fastapi added the routes by method name (`GET <prefix>/search` of a generated resource answered 400, taken by `{id}`) and nestjs in the order written (`synapsis-py` `router_of`, `synapsis-nest` `configureApp`; `spec/backend.md` §2.7).",
-    "- `[[generators.resource]]`: the repository and the controller are merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001)."
+    "- `[[generators.resource]]`: the repository and the controller are merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001).",
+    "- nestjs: `npm test` (what `nuclear test` runs) removes `dist/test` before compiling: `tsc` never deletes the output of a source that is gone, so a test that was deleted or renamed kept running from its old `.js` and failed the project."
    ],
    "platforms": [
     "backend"
@@ -726,6 +771,7 @@
     "|---|---|---|",
     "| ioredis | ≥ 5 | `synapsis-nest/events` (Redis, the cache) |",
     "| kafkajs | ≥ 2 | `synapsis-nest/events` (Kafka) |",
+    "| ws | ≥ 8 | `synapsis-nest/sockets` (the app's WebSocket) |",
     "| langchain, @langchain/core, @langchain/langgraph, @langchain/ollama, @langchain/openai | ≥ 1 | `synapsis-nest/ai` |",
     "| chromadb | ≥ 3 | `synapsis-nest/ai` (`ChromaStore`) |",
     "| @nestjs/testing | ≥ 10 | `synapsis-nest/testing` |",
@@ -772,6 +818,7 @@
     "| `sqlite` | aiosqlite ≥ 0.20 |",
     "| `redis` | redis ≥ 5.2 |",
     "| `kafka` | aiokafka ≥ 0.12 |",
+    "| `websocket` | websockets ≥ 13 (uvicorn's WebSocket protocol; the runtime uses Starlette's) |",
     "| `openai` | langchain-openai ≥ 0.3 |",
     "| `ollama` | langchain-ollama ≥ 0.3 |",
     "| `chroma` | langchain-chroma ≥ 0.2, chromadb ≥ 0.6 |",
@@ -1095,25 +1142,21 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.6e20eb",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.0a4cac",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Modules",
-   "summary": "Behaviour worth knowing: reference §2.7).",
+   "summary": "Behaviour worth knowing:",
    "body": [
     "| `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |",
-    "| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`) |",
+    "| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |",
+    "| `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |",
+    "| `sockets` (optional, plugin `websocket`) | `WebSocketServer`: a Starlette WebSocket route; each request frame goes through the app with httpx's ASGI transport; a sink of `events` sends the published to the subscribed (ADR-synapsis-0008) |",
+    "| `telemetry` (optional) | `Telemetry`, `Otlp`, `Datadog`, `NewRelic`, `Grafana` (OTLP/HTTP), `Metric`, `traced` (the span the dialect writes on each use case's `exec`). Its own providers, not OpenTelemetry's global ones (a process may set those only once): without an open connection `traced` and `Metric` do nothing. A sampler drops the traces of the `@untraced` routes and keeps `sample` of the rest |",
     "| `testing` | `running`, `client`, `FakeModel`, `memory_database` |",
     "| `validators` | `is_email`, `is_url` |",
     "| `migrate` | the migrations (below) |",
     "",
-    "Behaviour worth knowing:",
-    "",
-    "- The controller decorators add the leading slash to the platform's segments; an invalid body answers 400.",
-    "- The order of a controller's routes does not matter: a fixed segment wins over a parameter (`router_of`;",
-    "  reference §2.7).",
-    "- `publish` works in process when the app has no Kafka connection; the tests' `conftest` creates the listeners.",
-    "- The extras of the package are the platform's plugins (`ai`, `postgres`, `mysql`, `sqlite`, `redis`, `kafka`,",
-    "  `openai`, `ollama`, `chroma`); `core` brings no driver ([dependencies](dependencies.md))."
+    "Behaviour worth knowing:"
    ],
    "platforms": [
     "backend"
@@ -1128,7 +1171,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.afec4a",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.812589",
    "type": "context",
    "title": "The Python runtime: `synapsis-py` — Modules",
    "summary": "Modules",
@@ -1141,9 +1184,36 @@
     "| `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |",
     "| `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |",
     "| `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `one_of`, `is_null`, `between`), `Page`, `transactional` |",
-    "| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |",
+    "| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |",
     "| `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`) |",
     "| `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md"
+   ],
+   "meta": {
+    "section": "05-backend",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-python.md#modules.be01eb",
+   "type": "context",
+   "title": "The Python runtime: `synapsis-py` — Modules",
+   "summary": "reference §2.7).",
+   "body": [
+    "- The controller decorators add the leading slash to the platform's segments; an invalid body answers 400.",
+    "- The order of a controller's routes does not matter: a fixed segment wins over a parameter (`router_of`;",
+    "  reference §2.7).",
+    "- `create_app` keeps the mounted routes in `app.state.synapsis_routes` and then calls `instrument(app)` of every",
+    "  connection (a no-op but in `Telemetry`).",
+    "- `publish` works in process when the app has no Kafka connection; the tests' `conftest` creates the listeners.",
+    "- The extras of the package are the platform's plugins (`ai`, `postgres`, `mysql`, `sqlite`, `redis`, `kafka`,",
+    "  `openai`, `ollama`, `chroma`, `telemetry`); `core` brings no driver ([dependencies](dependencies.md))."
    ],
    "platforms": [
     "backend"
@@ -1234,24 +1304,24 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.924969",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.118ab7",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
-   "summary": "Entry points and modules",
+   "summary": "Behaviour worth knowing: client still loads the base (they are optional peers: dependencies).",
    "body": [
-    "| Import | Module | Holds |",
-    "|---|---|---|",
-    "| `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |",
-    "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
-    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
-    "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
-    "| | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |",
-    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |",
-    "| | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |",
-    "| `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`) |",
     "| `synapsis-nest/ai` | `ai` | `ChatModel` / `Ollama` / `OpenAI`, `Embeddings` (`'provider:model'`), `Chroma` + `ChromaStore`, `vectorStore`, `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `StateOf`, `FakeModel` |",
     "| `synapsis-nest/testing` | `testing` | `startTestApp`, `stopTestApp`, `useConnection` |",
-    "| `synapsis-nest/migrate` | `migrate` | the migrations (below); also the bin `synapsis-nest-migrate` |"
+    "| `synapsis-nest/migrate` | `migrate` | the migrations (below); also the bin `synapsis-nest-migrate` |",
+    "",
+    "Behaviour worth knowing:",
+    "",
+    "- The entry points are apart so a production install without `@nestjs/testing`, the AI libraries or a broker's",
+    "  client still loads the base (they are optional peers: [dependencies](dependencies.md)).",
+    "- `ChromaStore` is chromadb's client behind a LangChain `VectorStore`. `@langchain/community` was rejected: its",
+    "  peers conflict with zod 4 and ioredis 6.",
+    "- The order of a controller's routes does not matter: a fixed segment wins over a parameter (`configureApp`;",
+    "  reference §2.7).",
+    "- In the tests the databases are SQLite in memory (`SYNAPSIS_DATABASE=memory`, set by `startTestApp`)."
    ],
    "platforms": [
     "backend"
@@ -1266,20 +1336,22 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.c65b4b",
+   "id": "doc:nuclear-synapsis-framework/platforms/backend/docs/02-architecture/runtime-typescript.md#entry-points-and-modules.a74a88",
    "type": "context",
    "title": "The TypeScript runtime: `synapsis-nest` — Entry points and modules",
-   "summary": "Behaviour worth knowing: client still loads the base (they are optional peers: dependencies).",
+   "summary": "Entry points and modules",
    "body": [
-    "Behaviour worth knowing:",
-    "",
-    "- The entry points are apart so a production install without `@nestjs/testing`, the AI libraries or a broker's",
-    "  client still loads the base (they are optional peers: [dependencies](dependencies.md)).",
-    "- `ChromaStore` is chromadb's client behind a LangChain `VectorStore`. `@langchain/community` was rejected: its",
-    "  peers conflict with zod 4 and ioredis 6.",
-    "- The order of a controller's routes does not matter: a fixed segment wins over a parameter (`configureApp`;",
-    "  reference §2.7).",
-    "- In the tests the databases are SQLite in memory (`SYNAPSIS_DATABASE=memory`, set by `startTestApp`)."
+    "| Import | Module | Holds |",
+    "|---|---|---|",
+    "| `synapsis-nest` | `result` | `Result`, `Ok`, `Err` |",
+    "| | `errors` | `AppError`, `Invalid`, `Unauthorized`, `Forbidden`, `NotFound`, `Conflict` |",
+    "| | `config` | `AppConfig`, `ComponentConfig`, `env`, `databaseOf`, and the databases (`Postgres`, `MySQL`, `MariaDB`, `SQLite`) with `url` or `file` + `createTables` |",
+    "| | `repository` | `Entity`, `Repository`, `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `oneOf`, `isNull`, `between`), `Page`, `transactional`, `joinTable`, `Related` |",
+    "| | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |",
+    "| | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |",
+    "| | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |",
+    "| `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`), `sinks` |",
+    "| `synapsis-nest/sockets` | `websocket` | `WebSocketServer`: `ws` on the app's HTTP server (`Connection.instrument`, called by `configureApp`); each request frame goes through the app over the loopback (ADR-synapsis-0008) |"
    ],
    "platforms": [
     "backend"
@@ -1365,7 +1437,7 @@
     "  them ([testing](../05-standards/testing.md)).",
     "- The compiler and the editors know the runtime's names from its type definitions,",
     "  `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,",
-    "  `synapsis-nest/events`, `synapsis-nest/testing`): regenerated after a change of the public API",
+    "  `synapsis-nest/events`, `synapsis-nest/sockets`, `synapsis-nest/testing`): regenerated after a change of the public API",
     "  ([runbook](../06-runbooks/change-a-runtime.md))."
    ],
    "platforms": [

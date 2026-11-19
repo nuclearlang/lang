@@ -1,0 +1,6 @@
+// What the chat service pushes over its WebSocket (or the host's bridge): a workspace's events, on its topic
+// `chat.<workspace>`.
+@repository(path = "events", connection = "nuclear_chat")
+repository LiveRepository
+  @on("chat.${workspace}")
+  events(workspace: string) Stream<ChatEvent>

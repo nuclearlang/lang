@@ -1,0 +1,117 @@
+// One message of a channel or a thread, as Slack shows it: the first of a group with the author's picture, name,
+// chips and time; the others only their text, their time shown on hover. Its GIF, its buttons (a member's
+// question), its reactions, its thread's count, and the actions on hover (quick reactions, reply in thread).
+stateless MessageRow(message: Message, ws: Workspace, texts: Texts, first: boolean, inThread: boolean, onThread: (m: Message) => void, onChannel: (id: string) => void)
+  build() Element
+    m = message
+    member = memberOf(ws, m.author)
+    div(
+      className = "msg ${first ? "first" : "cont"}",
+      children = [
+        div(className = "gutter", children = first ? Avatar(member = member, author = m.author, label = authorName(ws, m.author, texts)) : span(className = "hover-time", children = clock(m.at))),
+        div(
+          className = "body",
+          children = [
+            first ? MessageMeta(message = m, member = member, ws = ws, texts = texts) : null,
+            m.text != "" ? Markdown(text = m.text, onChannel = onChannel) : null,
+            m.edited > 0 ? span(className = "edited", children = texts.get("edited")) : null,
+            m.gif != null ? GifImage(gif = m.gif!) : null,
+            m.buttons.length > 0 ? div(className = "actions", children = m.buttons.map((b) => button(key = b.id, className = "action ${b.style}", onClick = () => MessagesManager.click(m.id, b.id), children = b.label))) : null,
+            m.reactions.length > 0 ? Reactions(message = m, ws = ws, texts = texts) : null,
+            not inThread and m.replies > 0 ? ThreadSummary(message = m, texts = texts, onThread = onThread) : null,
+          ],
+        ),
+        div(
+          className = "toolbar",
+          children = [
+            ...quick.map((e) => button(key = e, className = "tool-emoji", title = texts.format("react", { "emoji": e }), onClick = () => MessagesManager.react(m.id, e), children = e)),
+            not inThread ? button(className = "tool-reply", title = texts.get("reply"), onClick = () => onThread(m), children = span(className = "icon icon-thread")) : null,
+          ],
+        ),
+      ],
+    )
+
+// The reactions the toolbar offers.
+quick: string[] = ["👍", "🎉", "👀", "✅", "❤️", "😂"]
+
+// The member who wrote a message, or null (the user, the chat itself).
+memberOf(ws: Workspace, author: string) Member?
+  ws.members.find((m) => m.id == author)
+
+// The name the chat shows for an author.
+authorName(ws: Workspace, author: string, texts: Texts) string
+  if author == "you"
+    return texts.get("you")
+  if author == "system"
+    return texts.get("system")
+  memberOf(ws, author)?.name ?? author
+
+// Whether a member is the tech lead of a team.
+leads(ws: Workspace, member: string) boolean
+  ws.teams.any((t) => t.lead == member)
+
+// The first line of a group: name, role, the tech lead's and a paid provider's chips, the time.
+stateless MessageMeta(message: Message, member: Member?, ws: Workspace, texts: Texts)
+  build() Element
+    div(
+      className = "meta",
+      children = [
+        strong(className = "author", children = authorName(ws, message.author, texts)),
+        member != null and member!.role != "" ? span(className = "chip role", children = member!.role) : null,
+        member != null and leads(ws, member!.id) ? span(className = "chip lead", children = texts.get("lead")) : null,
+        member != null and member!.responder.paid ? span(className = "chip paid", children = texts.get("paid")) : null,
+        span(className = "time", title = dayLabel(message.at, texts), children = clock(message.at)),
+        message.costUsd != null and message.costUsd! > 0 ? span(className = "cost", children = texts.format("cost", { "usd": message.costUsd!.toFixed(2) })) : null,
+      ],
+    )
+
+// A message's reactions: each emoji with how many, the user's own marked; clicking one adds or takes away the user's.
+stateless Reactions(message: Message, ws: Workspace, texts: Texts)
+  build() Element
+    div(
+      className = "reactions",
+      children = message.reactions.keys.map((emoji) =>
+        who = message.reactions[emoji] ?? []
+        button(
+          key = emoji,
+          className = "reaction ${"you" in who ? "mine" : ""}",
+          title = who.map((w) => authorName(ws, w, texts)).join(", "),
+          onClick = () => MessagesManager.react(message.id, emoji),
+          children = [span(className = "emoji", children = emoji), span(className = "count", children = "${who.length}")],
+        )
+      ),
+    )
+
+// The thread under a message: how many replies, and when the last one came.
+stateless ThreadSummary(message: Message, texts: Texts, onThread: (m: Message) => void)
+  build() Element
+    count = message.replies == 1 ? texts.get("replies.one") : texts.format("replies.many", { "count": "${message.replies}" })
+    button(
+      className = "replies",
+      onClick = () => onThread(message),
+      children = [
+        span(className = "icon icon-thread"),
+        strong(children = count),
+        message.lastReply > 0 ? span(className = "last", children = texts.format("lastReply", { "time": clock(message.lastReply) })) : null,
+      ],
+    )
+
+// A message's GIF: a drawing of the pack (its SVG, from the pack read once) or a service's image.
+stateless GifImage(gif: Gif)
+  build() Element
+    if not gif.src.startsWith("pack/")
+      return img(className = "gif", src = gif.src, alt = gif.title, loading = "lazy")
+    PackStateBuilder(
+      ready = (pack: PackGif[]) =>
+        drawing = pack.find((p) => "pack/${p.file}" == gif.src or p.file == gif.src.substring(5))
+        if drawing == null
+          span(className = "gif missing", children = gif.title)
+        else
+          img(className = "gif", src = svgSource(drawing!.svg), alt = gif.title)
+      ,
+      orElse = () => span(className = "gif loading"),
+    )
+
+// An SVG text as an image's source: drawn as an image, its scripts never run.
+svgSource(svg: string) string
+  "data:image/svg+xml;base64,${svg.toBytes().toBase64()}"

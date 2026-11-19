@@ -65,7 +65,8 @@ stays comment gray) and the `language-configuration.json` without `onEnterRules`
 - The Nuclear workspace: it has tool windows and actions with shortcuts instead (ADR-extensions-0002).
 - The project card in the status bar: only the tool windows read `.nuclear/project.json`, to find the projects.
 - The devices inside the editor: the Synapsis device is a Flutter custom device of VS Code only.
-- Nuclear Atlas, the settings page, the notifications and the Retry buttons of Nuclear Builder.
+- Nuclear Atlas, the settings page, the notifications, and Nuclear Builder's diagram, avatars and checks' console (its
+  tool window is a tree, with dialogs for what a station asks).
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../../docs/03-adr/old-numbers.md).

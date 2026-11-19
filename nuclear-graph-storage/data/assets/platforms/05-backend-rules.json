@@ -8,13 +8,43 @@
    "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project-plugins",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — Plugins",
-   "summary": "The optional parts of the platform (projects.md §3.3), the same list in every dialect: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma`.",
+   "summary": "The optional parts of the platform (projects.md §3.3), the same list in every dialect: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `websocket`, `ai`, `openai`, `ollama`, `chroma`, `telemetry`.",
    "body": [
     "The optional parts of the platform ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §3.3), the same list in every dialect:",
-    "`sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma`. Only the",
+    "`sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `websocket`, `ai`, `openai`, `ollama`, `chroma`,",
+    "`telemetry`. Only the",
     "enabled ones reach the generated project's dependencies. A kind or a name of a plugin not enabled is N0304, with",
     "the line to add: `tools`, `agent`, `state`, `graph` need `ai`; `listener`, `publish` need `events` (or `kafka`",
-    "for a broker); `cacheGet`, `cacheSet` need `redis`; a database connection needs its plugin."
+    "for a broker); `WebSocketServer` needs `websocket` (which needs `events`); `cacheGet`, `cacheSet` need `redis`; `Datadog`, `NewRelic`, `Grafana`, `Otlp`, `Metric` need `telemetry`; a",
+    "database connection needs its plugin."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.67b50a",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 1. Project",
+   "summary": "`config.nuc` is the only manifest (projects.md §1): the platform and dialect, the app and the plugins it uses, `testEnv(NAME = \"value\")` for the environment of its tests (§2.14), and `dependencies(name = \"version\")` for a package the framework does not bring: any package of the dialect's technology.",
+   "body": [
+    "`config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app and the",
+    "plugins it uses, `testEnv(NAME = \"value\")` for the environment of its tests (§2.14), and `dependencies(name = \"version\")` for a package the framework does not bring: any package of the",
+    "dialect's technology. `nuclear add <package>[@version]` installs it with the dialect's package manager, writes it",
+    "there (`\"name@version\"` when the name is not an identifier) and generates its type definitions into the project's",
+    "`defs/`, so its names are known to the compiler and the editor and imported where they are used; `nuclear remove",
+    "<package>` takes it out (ADR-lang-0008, projects.md §3.2). A package the platform already covers is added with a word of",
+    "advice. A version that starts with `.` or `/` is a folder on disk, which brings its definitions by hand. `nuclear build",
+    ".` (or the `nuclear` CLI) writes `build/`: the dialect's project, never edited.",
+    "",
+    "```nuclear",
+    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
+    "app(name = \"tasks_api\", description = \"Tasks and an assistant.\", version = \"0.1.0\")",
+    "plugins(sqlite = true, events = true, ollama = true)",
+    "```"
    ],
    "platforms": [
     "backend"
@@ -74,34 +104,6 @@
     "`agent`, `state` and `graph` are visible. A `usecase` is called only from the facade; a `service` from a use case",
     "or an aggregate; an `aggregate` from a use case; a `repository` from a use case, an aggregate or a `tools`.",
     "`test/` is exempt."
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#1-project.c07e7e",
-   "type": "spec",
-   "title": "The `backend` platform of Synapsis — 1. Project",
-   "summary": "`config.nuc` is the only manifest (projects.md §1): the platform and dialect, the app and the plugins it uses, and `dependencies(name = \"version\")` for a package the framework does not bring: any package of the dialect's technology.",
-   "body": [
-    "`config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app and the",
-    "plugins it uses, and `dependencies(name = \"version\")` for a package the framework does not bring: any package of the",
-    "dialect's technology. `nuclear add <package>[@version]` installs it with the dialect's package manager, writes it",
-    "there (`\"name@version\"` when the name is not an identifier) and generates its type definitions into the project's",
-    "`defs/`, so its names are known to the compiler and the editor and imported where they are used; `nuclear remove",
-    "<package>` takes it out (ADR-lang-0008, projects.md §3.2). A package the platform already covers is added with a word of",
-    "advice. A version that starts with `.` or `/` is a folder on disk, which brings its definitions by hand. `nuclear build",
-    ".` (or the `nuclear` CLI) writes `build/`: the dialect's project, never edited.",
-    "",
-    "```nuclear",
-    "synapsis(platform = \"backend\", dialect = \"fastapi\")",
-    "app(name = \"tasks_api\", description = \"Tasks and an assistant.\", version = \"0.1.0\")",
-    "plugins(sqlite = true, events = true, ollama = true)",
-    "```"
    ],
    "platforms": [
     "backend"
@@ -335,7 +337,42 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-14-tests",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-14-tests.186cc3",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.14 Tests",
+   "summary": "`testEnv(NAME = \"value\")` in `config.nuc` is the environment the tests run with, set before the app is loaded: the test's own token for a guard, never the user's.",
+   "body": [
+    "`testEnv(NAME = \"value\")` in `config.nuc` is the environment the tests run with, set before the app is loaded: the",
+    "test's own token for a guard, never the user's.",
+    "",
+    "```nuclear",
+    "// config.nuc: testEnv(TASKS_TOKEN = \"test-tasks-token\")",
+    "TOKEN = { \"X-Tasks-Token\": \"test-tasks-token\" }",
+    "",
+    "tests Api",
+    "  @test(\"the guards and the socket\")",
+    "  guarded() void",
+    "    app = appClient()",
+    "    expect((~app.get(\"/tasks\")).status == 401)",
+    "    expect((~app.get(\"/tasks\", headers = TOKEN)).status == 200)",
+    "    expect((~app.socket(\"/ws\")).error.status == 401)",
+    "    ws = (~app.socket(\"/ws\", headers = TOKEN)).value",
+    "    ~ws.subscribe(\"tasks.created\")",
+    "    made = ~ws.request(\"POST\", \"/tasks\", body = { \"title\": \"call mom\" })",
+    "    expect(made.status == 201)",
+    "    expect((~ws.next())!.data[\"title\"] == \"call mom\")",
+    "    ~ws.close()",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-14-tests.64bbf5",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.14 Tests",
    "summary": "In `test/*_test.nuc`: `tests Name` + `@test(\"what it checks\")` methods.",
@@ -352,6 +389,73 @@
     "    ~tasks.create(NewTask(title = \"call mom\"))",
     "    again = ~tasks.create(NewTask(title = \"call mom\"))",
     "    expect(again.error.status == 409)",
+    "```",
+    "",
+    "#### The app as its clients call it (ADR-synapsis-0010)",
+    "",
+    "`appClient()` gives the app over HTTP and over its WebSocket, with the test's connections: `~app.get(path,",
+    "headers)`, `~app.post(path, body, headers)`, `put`, `patch`, `delete` and `~app.request(method, path, body,",
+    "headers)` answer an `HttpAnswer` (`status`, `body`); `~app.socket(path = \"/ws\", headers)` is `Ok` of an `AppSocket`,",
+    "or `Err` with the status of the guard that refused it. A socket's `~ws.request(...)` is a request frame and its",
+    "answer, `~ws.subscribe(topic)` / `unsubscribe(topic)` follow a topic, `~ws.next(seconds = 2)` is the next pushed",
+    "`SocketEvent` (`topic`, `data`) or `null`, `~ws.close()` ends it. `body` and `headers` are always named."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-15-telemetry.ad29f3",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.15 Telemetry",
+   "summary": "With `plugins(telemetry = true)` the app sends its traces and metrics over OTLP (the OpenTelemetry protocol) to the connection of `config/` that says where: `Datadog(apiKey, url)` (the local Agent on `http://localhost:4318` by default), `NewRelic(licenseKey, region)` (`us` or `eu`), `Grafana(url,…",
+   "body": [
+    "With `plugins(telemetry = true)` the app sends its traces and metrics over OTLP (the OpenTelemetry protocol) to the",
+    "connection of `config/` that says where: `Datadog(apiKey, url)` (the local Agent on `http://localhost:4318` by",
+    "default), `NewRelic(licenseKey, region)` (`us` or `eu`), `Grafana(url, instanceId, token)` (a local Alloy by",
+    "default, or the stack's OTLP gateway) or `Otlp(url)` (any collector). Every one takes `service` (the name the",
+    "vendor shows; default `OTEL_SERVICE_NAME`) and `sample` (the share of the traces kept, `1` = all, decided once at the",
+    "root of each trace). Keys come from `env(...)`.",
+    "",
+    "```nuclear",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    SQLite(file = env(\"DATABASE\", \"orders.sqlite\")),",
+    "    Datadog(apiKey = env(\"DD_API_KEY\"), sample = 0.5),",
+    "  ]",
+    "```",
+    "",
+    "Measured without code: every HTTP request, and every use case's `exec` as a span named with its place",
+    "(`orders › usecase › FindOrder.exec`), a child of the request that called it. An `Err` marks the span as an error",
+    "with the error's name. Two words write metrics: `Metric.count(name, value = 1, attributes...)` and",
+    "`Metric.record(name, value, attributes...)`; the attributes are named arguments."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-15-telemetry.fd62ab",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.15 Telemetry",
+   "summary": "`@untraced` leaves something out: on a use case, its span; on a route, the whole request (nothing it calls is traced); on a controller, every route of it.",
+   "body": [
+    "`@untraced` leaves something out: on a use case, its span; on a route, the whole request (nothing it calls is",
+    "traced); on a controller, every route of it. Without the plugin `@untraced` does nothing, and no use case carries a",
+    "span.",
+    "",
+    "```nuclear",
+    "controller HealthController",
+    "  @get(\"health\")",
+    "  @untraced",
+    "  health() Result<Error, Health>",
+    "    Ok(Health(ok = true))",
     "```"
    ],
    "platforms": [
@@ -556,6 +660,7 @@
     "in the path is a path parameter; any other parameter is a query parameter (optional when `T?` or defaulted).",
     "`@status(201)` changes the success status. A `Result` answer becomes the value or its error's status. The order of",
     "the routes does not matter: a fixed segment wins over a parameter (`page` is never taken by `{id}`).",
+    "`@controller(\"x\", guards = [...])` checks every route of the controller with its guards, after the app's (§2.8).",
     "",
     "```nuclear",
     "@controller(\"tasks\")",
@@ -585,24 +690,38 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.57f491",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.d25158",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`, `components/<c>/config/`): opened at start, closed at stop, never opened by hand.",
+   "summary": "appConfig ProjectConfig connections: Connection[] = [ SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true), Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")), ] `guards: Guard[]` in the `appConfig` checks every route, the…",
    "body": [
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`,",
-    "`components/<c>/config/`): opened at start, closed at stop, never opened by hand. Each has a `name` (default",
-    "`\"default\"`); `connectionName` in a kind picks another. `env(\"VAR\", \"default\")` reads the environment.",
+    "```nuclear",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [",
+    "    SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true),",
+    "    Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")),",
+    "  ]",
+    "```",
     "",
-    "| Connection | Plugin | Parameters |",
-    "|---|---|---|",
-    "| `SQLite(file)` | `sqlite` | `file` (`\":memory:\"` in tests), `createTables` |",
-    "| `Postgres(url)` `MySQL(url)` `MariaDB(url)` | `postgres` `mysql` `mariadb` | `url` (`\"postgres://user:pass@host/db\"`, `\"mysql://...\"`, `\"mariadb://...\"`: the dialect adds its driver), `createTables` (creates the entities' tables: development) |",
-    "| `Redis(url)` | `redis` | `url` |",
-    "| `Kafka(servers, group)` | `kafka` | `servers` (`\"a:9092,b:9092\"`), `group` |",
-    "| `Ollama(model, baseUrl)` `OpenAI(model, apiKey)` | `ollama` `openai` (both `ai`) | the chat model; `Embeddings(model)` for vectors (`\"ollama:nomic-embed-text\"`, `\"openai:text-embedding-3-small\"`) |",
-    "| `Http(baseUrl, headers, timeout)` | — | another API, for the HTTP repositories (§2.2): `baseUrl` (`\"https://rickandmortyapi.com/api\"`), `headers` (an API key), `timeout` (seconds) |",
-    "| `Chroma(collection, embeddings, url)` | `chroma` | a vector store on a Chroma server (`url`, default `http://localhost:8000`); `embeddings` names the `Embeddings` connection |"
+    "#### Guards (ADR-synapsis-0007)",
+    "",
+    "`guards: Guard[]` in the `appConfig` checks every route, the contract's routes and the upgrade of the app's",
+    "WebSocket; `@controller(\"x\", guards = [...])` adds a controller's own, checked after them. They run in order and the",
+    "first that refuses answers:",
+    "",
+    "| Guard | Refuses |",
+    "|---|---|",
+    "| `Token(value, header = \"Authorization\")` | **401** when `header` does not carry `value` (`Authorization: Bearer <value>`; another header: the value alone). An empty `value` refuses every request |",
+    "| `NoOrigin()` | **403** when the request has an `Origin` header (a web page): a local service is not reachable from a browser |",
+    "",
+    "A guard reads only headers, never the query: a token in a URL would reach the access logs. A guarded app serves no",
+    "documentation pages. Over the WebSocket, each request carries the upgrade's headers and its own, so a controller's",
+    "guards answer as over HTTP.",
+    "",
+    "```nuclear",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [SQLite(file = env(\"DATABASE\", \"tasks.sqlite\")), WebSocketServer(path = \"ws\")]",
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"TASKS_TOKEN\"), header = \"X-Tasks-Token\")]"
    ],
    "platforms": [
     "backend"
@@ -612,11 +731,70 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.83e7ed",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.dfd543",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "column shows as a drop and an add (`make` warns of every drop), so edit it into a rename to keep the data.",
+   "summary": "2.8 Configuration and connections",
    "body": [
+    "| Connection | Plugin | Parameters |",
+    "|---|---|---|",
+    "| `SQLite(file)` | `sqlite` | `file` (`\":memory:\"` in tests), `createTables` |",
+    "| `Postgres(url)` `MySQL(url)` `MariaDB(url)` | `postgres` `mysql` `mariadb` | `url` (`\"postgres://user:pass@host/db\"`, `\"mysql://...\"`, `\"mariadb://...\"`: the dialect adds its driver), `createTables` (creates the entities' tables: development) |",
+    "| `Redis(url)` | `redis` | `url` |",
+    "| `Kafka(servers, group)` | `kafka` | `servers` (`\"a:9092,b:9092\"`), `group` |",
+    "| `Ollama(model, baseUrl)` `OpenAI(model, apiKey)` | `ollama` `openai` (both `ai`) | the chat model; `Embeddings(model)` for vectors (`\"ollama:nomic-embed-text\"`, `\"openai:text-embedding-3-small\"`) |",
+    "| `Http(baseUrl, headers, timeout)` | — | another API, for the HTTP repositories (§2.2): `baseUrl` (`\"https://rickandmortyapi.com/api\"`), `headers` (an API key), `timeout` (seconds) |",
+    "| `Chroma(collection, embeddings, url)` | `chroma` | a vector store on a Chroma server (`url`, default `http://localhost:8000`); `embeddings` names the `Embeddings` connection |",
+    "| `WebSocketServer(path)` | `websocket` | the app also answers over a WebSocket at `/<path>` (§2.9): the same controllers, and the events it publishes |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.ecf8f4",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`, `components/<c>/config/`): opened at start, closed at stop, never opened by hand.",
+   "body": [
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`,",
+    "`components/<c>/config/`): opened at start, closed at stop, never opened by hand. Each has a `name` (default",
+    "`\"default\"`); `connectionName` in a kind picks another. `env(\"VAR\", \"default\")` reads the environment."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.ee2bcd",
+   "type": "spec",
+   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
+   "summary": "@controller(\"projects\", guards = [Token(value = env(\"OWNER_TOKEN\"))]) controller ProjectsController(tasks: TasksAppComponent) @get(\"{id}\") one(id: int) Result<Error, Project> ~tasks.project(id) `createTables` is for development and tests.",
+   "body": [
+    "@controller(\"projects\", guards = [Token(value = env(\"OWNER_TOKEN\"))])",
+    "controller ProjectsController(tasks: TasksAppComponent)",
+    "  @get(\"{id}\")",
+    "  one(id: int) Result<Error, Project>",
+    "    ~tasks.project(id)",
+    "```",
+    "",
+    "#### Migrations of the database (ADR-backend-0001)",
+    "",
+    "`createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the",
+    "project's `migrations/` folder (with the sources, not in `build/`):",
+    "",
+    "```sh",
+    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the last migration",
+    "nuclear migrate                         # applies the pending ones to the default database",
+    "nuclear migrate down                    # reverts the last one applied",
+    "```",
+    "",
     "- `make` compares the entities with the last migration, never with a database; with no change it writes nothing.",
     "- A migration is a file of the dialect's migration tool, written once and then the project's: a renamed table or",
     "  column shows as a drop and an add (`make` warns of every drop), so edit it into a rename to keep the data.",
@@ -633,29 +811,15 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-8-configuration-and-connections.b43570",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache.b12777",
    "type": "spec",
-   "title": "The `backend` platform of Synapsis — 2.8 Configuration and connections",
-   "summary": "appConfig ProjectConfig connections: Connection[] = [ SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true), Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")), ] `createTables` is for development and tests.",
+   "title": "The `backend` platform of Synapsis — 2.9 Listener, events and cache",
+   "summary": "The upgrade passes the app's guards; a request that does not parse closes the socket.",
    "body": [
-    "```nuclear",
-    "appConfig ProjectConfig",
-    "  connections: Connection[] = [",
-    "    SQLite(file = env(\"DATABASE\", \"tasks.sqlite\"), createTables = true),",
-    "    Ollama(model = env(\"CHAT_MODEL\", \"qwen3.5:4b\"), baseUrl = env(\"OLLAMA_URL\", \"http://localhost:11434\")),",
-    "  ]",
-    "```",
-    "",
-    "#### Migrations of the database (ADR-backend-0001)",
-    "",
-    "`createTables` is for development and tests. A database that keeps its data changes by migrations, kept in the",
-    "project's `migrations/` folder (with the sources, not in `build/`):",
-    "",
-    "```sh",
-    "nuclear migrate make \"notes on tasks\"   # one migration: what the entities changed since the last migration",
-    "nuclear migrate                         # applies the pending ones to the default database",
-    "nuclear migrate down                    # reverts the last one applied",
-    "```"
+    "The upgrade passes the app's guards; a request that does not parse closes the socket. A `web` client gets this",
+    "with a `WebSocket(url)` connection and its repositories as they are (web.md §3.2). With Kafka, a socket receives what",
+    "its own process publishes. The contract says which transports serve each controller (`transports`), the path",
+    "(`webSocket`) and the events published (`events`: topic, component, payload; projects.md §1.2)."
    ],
    "platforms": [
     "backend"
@@ -665,13 +829,13 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md#2-kinds-2-9-listener-events-and-cache.eca022",
    "type": "spec",
    "title": "The `backend` platform of Synapsis — 2.9 Listener, events and cache",
-   "summary": "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka` connection exists (plugin `kafka`).",
+   "summary": "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka` connection exists (plugin `kafka`), and to the clients of the app's WebSocket subscribed to the topic.",
    "body": [
     "`~publish(\"topic\", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka`",
-    "connection exists (plugin `kafka`). A `listener` receives them: each `@consumer(\"topic\")` method gets the",
+    "connection exists (plugin `kafka`), and to the clients of the app's WebSocket subscribed to the topic. A `listener` receives them: each `@consumer(\"topic\")` method gets the",
     "messages of the topic, parsed as the type of its parameter (a model or a map). The Redis cache: `~cacheGet(key)`,",
     "`~cacheSet(key, value, seconds = 60)`.",
     "",
@@ -682,7 +846,19 @@
     "  @consumer(\"tasks.created\")",
     "  onCreated(event: <string, any>) void",
     "    created.add(event[\"title\"])",
-    "```"
+    "```",
+    "",
+    "#### The app's WebSocket (ADR-synapsis-0008)",
+    "",
+    "With `WebSocketServer(path = \"ws\")` in its connections, the app answers its same controllers over one socket at",
+    "`/ws`, and pushes what it publishes; nothing else changes in the project. The frames are JSON text:",
+    "",
+    "| Direction | Frame |",
+    "|---|---|",
+    "| client → app | `{\"id\": 1, \"method\": \"GET\", \"path\": \"/tasks/1\", \"headers\": {...}, \"body\": ...}`: a request |",
+    "| app → client | `{\"id\": 1, \"status\": 200, \"body\": ...}`: its answer, the same as over HTTP |",
+    "| client → app | `{\"subscribe\": \"tasks.created\"}`, `{\"unsubscribe\": \"tasks.created\"}` |",
+    "| app → client | `{\"event\": \"tasks.created\", \"data\": ...}`: an event published by the app |"
    ],
    "platforms": [
     "backend"
@@ -729,20 +905,11 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.83279c",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.1d5ef7",
    "type": "spec",
    "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
-   "summary": "Dependencies are constructor parameters, injected by type.",
+   "summary": "// The characters table.",
    "body": [
-    "| `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next(\"node\")` above the node it leaves |",
-    "| `ai/states/` | state | the graph's state (`messages: Messages`) |",
-    "| `events/` | `listener Name(deps)` | `@consumer(\"topic\")` methods; `~publish(\"topic\", value)` |",
-    "| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = \"app.sqlite\"), Postgres(url = env(\"DATABASE_URL\", \"...\")), Redis(...), Kafka(...), Ollama(model = \"...\")]` |",
-    "| `test/` | `tests Name` | `@test(\"...\")` methods, `inject<X>()`, `expect(cond)` |",
-    "",
-    "Dependencies are constructor parameters, injected by type. Repository methods are awaited: `~repo.byName(name)`.",
-    "Only the `appcomponent` calls use cases; only use cases, aggregates and tools call repositories.",
-    "",
     "```nuclear",
     "// The characters table.",
     "@entity(\"characters\")",
@@ -762,21 +929,8 @@
     "    ~characters.byName(name)",
     "",
     "appcomponent CharactersAppComponent",
-    "  byName() = FindCharacter.exec"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "sources": [
-    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
-   ]
-  },
-  {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.9d093e",
-   "type": "spec",
-   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
-   "summary": "@controller(\"characters\") controller CharactersController(characters: CharactersAppComponent) @get(\"name/{name}\") one(name: string) Result<Error, Character> ~characters.byName(name) `config.nuc` enables the optional parts: `plugins(sqlite = true, ollama = true)` (sqlite, postgres, mysql, mariadb,…",
-   "body": [
+    "  byName() = FindCharacter.exec",
+    "",
     "@controller(\"characters\")",
     "controller CharactersController(characters: CharactersAppComponent)",
     "  @get(\"name/{name}\")",
@@ -785,8 +939,10 @@
     "```",
     "",
     "`config.nuc` enables the optional parts: `plugins(sqlite = true, ollama = true)` (sqlite, postgres, mysql, mariadb,",
-    "redis, kafka, events, ai, openai, ollama, chroma); a kind or class of one not enabled is N0304 (it says which line to",
-    "add)."
+    "redis, kafka, events, websocket, ai, openai, ollama, chroma, telemetry); a kind or class of one not enabled is N0304 (it says",
+    "which line to add). Telemetry: one of `Datadog(apiKey = env(...))`, `NewRelic(...)`, `Grafana(...)`, `Otlp(url)` in",
+    "`connections`; requests and use cases are traced by themselves, `Metric.count` / `Metric.record` for business",
+    "metrics, `@untraced` on a use case, route or controller to leave it out."
    ],
    "platforms": [
     "backend"
@@ -796,7 +952,7 @@
    ]
   },
   {
-   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.f68f1f",
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.5ba5cc",
    "type": "spec",
    "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
    "summary": "Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
@@ -808,8 +964,30 @@
     "| `domain/models/` | model | validated fields: `@minLength(1) name: string`, `@email`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")` |",
     "| `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |",
     "| `domain/services/` | `service Name(deps)` | rules several use cases share |",
-    "| `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |",
-    "| `api/` | `@controller(\"tasks\") controller Name(deps)` | `@get(\"{id}\")`, `@post()`, `@status(201)`... (segments, no leading slash); a `Result` answers its value or the error's status |"
+    "| `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md"
+   ]
+  },
+  {
+   "id": "spec:nuclear-synapsis-framework/platforms/backend/docs/07-reference/brief/backend.md#kinds-components-c-the-folder-gives-the-kind-of-entity-model-and-state.76bfc0",
+   "type": "spec",
+   "title": "Platform `backend` brief: Synapsis backends — Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`)",
+   "summary": "Dependencies are constructor parameters, injected by type.",
+   "body": [
+    "| `api/` | `@controller(\"tasks\") controller Name(deps)` | `@get(\"{id}\")`, `@post()`, `@status(201)`... (segments, no leading slash); a `Result` answers its value or the error's status; `guards = [Token(value = env(\"T\"))]` for its own token |",
+    "| `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next(\"node\")` above the node it leaves |",
+    "| `ai/states/` | state | the graph's state (`messages: Messages`) |",
+    "| `events/` | `listener Name(deps)` | `@consumer(\"topic\")` methods; `~publish(\"topic\", value)` |",
+    "| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = \"app.sqlite\"), Postgres(url = env(\"DATABASE_URL\", \"...\")), Redis(...), Kafka(...), Ollama(model = \"...\"), WebSocketServer(path = \"ws\")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"), header = \"X-Token\")]` (every route: headers only) |",
+    "| `test/` | `tests Name` | `@test(\"...\")` methods, `inject<X>()`, `expect(cond)` |",
+    "",
+    "Dependencies are constructor parameters, injected by type. Repository methods are awaited: `~repo.byName(name)`.",
+    "Only the `appcomponent` calls use cases; only use cases, aggregates and tools call repositories."
    ],
    "platforms": [
     "backend"

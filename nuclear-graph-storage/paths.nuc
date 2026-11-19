@@ -52,8 +52,9 @@ Paths
   static grants() Path
     Paths.home().joinpath("grants.json")
 
-  // The prompt files: next to the package when it is installed, else the checkout's `prompts/` folder.
-  static prompts() Path
+  // The roles of the software factory, whose skills are the prompt files (ADR-developer-0002): next to the package
+  // when it is installed, else the checkout's `nuclear-agents/roles/` folder.
+  static roles() Path
     here = Path(__file__).resolve().parent
-    packaged = here.joinpath("prompts")
-    packaged.isDir() ? packaged : here.parent.parent.joinpath("prompts")
+    packaged = here.joinpath("roles")
+    packaged.isDir() ? packaged : here.parent.parent.parent.joinpath("nuclear-agents", "roles")

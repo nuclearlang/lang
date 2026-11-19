@@ -19,23 +19,7 @@
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#rules-that-change.281c5a",
-   "type": "reference",
-   "title": "NuclearLang brief (base language) — Rules that change",
-   "summary": "Rules that change",
-   "body": [
-    "| `x!`, `x?.y`, `x ?? y` | the same | |",
-    "| `` `Hi ${name}` `` | `\"Hi ${name}\"` (both quotes are the same) | `r\"\\d+\"` = raw text (regex) |",
-    "| `Math.pow(a, b)`, `a ~/ b` | `a ** b`, `a ~/ b` (integer division) | `-2 ** 2` is -4 |",
-    "| bitwise `& \\| ^ ~ << >> >>>` | `& \\| ^ ^x << >> >>>` | `^x` is the complement (`~` is await) |",
-    "| `import` | nothing: the target's library names are imported automatically; `use path{ a, b }` for others | |"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/brief/nuclear-base.md"
-   ]
-  },
-  {
-   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#rules-that-change.ebe997",
+   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#rules-that-change.651637",
    "type": "reference",
    "title": "NuclearLang brief (base language) — Rules that change",
    "summary": "Rules that change",
@@ -49,32 +33,32 @@
     "| `new User(\"Ana\")` | `User(\"Ana\")` | no `new` |",
     "| `f(name: \"Ana\")`, `f({ name })` | `f(name = \"Ana\")` | named arguments use `=` |",
     "| `await load()`, `async` | `~load()` | a function that uses `~` is async by itself |",
-    "| `&&` `\\|\\|` `!x` `===` | `and` `or` `not x` `==` | comparisons are always strict |",
+    "| `&&` `\\|\\|` `!x` `===` | `and` `or` `not x` `==` | comparisons are always strict; two lists, maps or sets are equal when they hold equal values |",
     "| `a.contains(x)` / `a.includes(x)` | `x in a` | also `key in map` |",
     "| `class User extends Person implements Named` | `User(name: string) : Person > Named` + block | the header holds the constructor |",
+    "| `count = 0` as a class field | `count: int = 0` | a field always has its type (N0017); a constructor parameter is a field too |",
     "| `this.name` | `name`; `$name` when a parameter hides it | |",
-    "| `interface`, `enum` | the shape decides: only signatures = interface; only names (or `name(\"value\")`) = enum | |",
-    "| `cond ? a : b` statements | `if`/`match` are values | `x = if c` + branches |",
-    "| `switch` | `match value` + `pattern -> value`, `_` = else | `is Type ->`, `a \\| b ->` |",
-    "| `try/catch (e)` | `try` / `catch e` / `finally` | as the last line, its value is returned |"
+    "| `interface`, `enum` | the shape decides: only signatures = interface; only names (or `name(\"value\")`) = enum | |"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/brief/nuclear-base.md"
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#shapes.3c738e",
+   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#rules-that-change.6c6fdd",
    "type": "reference",
-   "title": "NuclearLang brief (base language) — Shapes",
-   "summary": "returns the `Err` by itself (`nuclear help results`).",
+   "title": "NuclearLang brief (base language) — Rules that change",
+   "summary": "Rules that change",
    "body": [
-    "- Types: `string int double number boolean void`, `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.",
-    "- Literals: `1_000`, `0xff`, `0b1010`, `1.5e-3`, `[a, ...b]`, `{ key: value }`, `0..10` (0 to 9), `\"\"\"` multi-line.",
-    "- Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block.",
-    "- `Result<E, T>` (error first): `Ok(v)`, `Err(e)`; `x = f()` inside a function returning `Result` unwraps it and",
-    "  returns the `Err` by itself (`nuclear help results`).",
-    "- Comments `//`; the comment right above a declaration is its doc comment.",
-    "- Names: `PascalCase` = types and constructors, `camelCase` = the rest. No visibility words: everything is exported."
+    "| `cond ? a : b` | the same, for a value inside an expression (an argument, a list) | `if c then a` does not exist |",
+    "| `if` / `switch` returning a value | `if`/`match` are values, as blocks | `x = if c` + indented branches; never inside an argument list |",
+    "| `switch` | `match value` + `pattern -> value`, `_` = else | `is Type ->`, `a \\| b ->` |",
+    "| `try/catch (e)` | `try` / `catch e` / `finally` | as the last line, its value is returned |",
+    "| `x!`, `x?.y`, `x ?? y` | the same | |",
+    "| `` `Hi ${name}` `` | `\"Hi ${name}\"` (both quotes are the same) | `r\"\\d+\"` = raw text (regex) |",
+    "| `Math.pow(a, b)`, `a ~/ b` | `a ** b`, `a ~/ b` (integer division) | `-2 ** 2` is -4 |",
+    "| bitwise `& \\| ^ ~ << >> >>>` | `& \\| ^ ^x << >> >>>` | `^x` is the complement (`~` is await) |",
+    "| `import` | nothing: the target's library names are imported automatically; `use path{ a, b }` for others | |"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/brief/nuclear-base.md"
@@ -138,6 +122,25 @@
    ]
   },
   {
+   "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#shapes.d00db0",
+   "type": "reference",
+   "title": "NuclearLang brief (base language) — Shapes",
+   "summary": "a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.",
+   "body": [
+    "- Types: `string int double number boolean void`, `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.",
+    "- Literals: `1_000`, `0xff`, `0b1010`, `1.5e-3`, `[a, ...b]`, `{ key: value }`, `0..10` (0 to 9), `\"\"\"` multi-line.",
+    "- Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block;",
+    "  a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.",
+    "- `Result<E, T>` (error first): `Ok(v)`, `Err(e)`; `x = f()` inside a function returning `Result` unwraps it and",
+    "  returns the `Err` by itself (`nuclear help results`).",
+    "- Comments `//`; the comment right above a declaration is its doc comment.",
+    "- Names: `PascalCase` = types and constructors, `camelCase` = the rest. No visibility words: everything is exported."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/brief/nuclear-base.md"
+   ]
+  },
+  {
    "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#the-compiler-corrects-habits",
    "type": "reference",
    "title": "NuclearLang brief (base language) — The compiler corrects habits",
@@ -157,13 +160,13 @@
    "id": "lang:nuclearlang/docs/07-reference/brief/nuclear-base.md#the-library-is-nuclear-s",
    "type": "reference",
    "title": "NuclearLang brief (base language) — The library is Nuclear's",
-   "summary": "Base types have one name per operation in every dialect (`nuclearlang/docs/07-reference/library.md`, `nuclear help library`): `xs.length`, `xs.add(x)`, `s.upper()`, `x in xs`; the dialect writes the target's code (`len(xs)`, `xs.push(x)`).",
+   "summary": "Base types have one name per operation in every dialect (`nuclear help library`): `xs.length`, `xs.add(x)`, `s.upper()`, `x in xs`; the dialect writes the target's code (`len(xs)`, `xs.push(x)`).",
    "body": [
-    "Base types have one name per operation in every dialect (`nuclearlang/docs/07-reference/library.md`, `nuclear help library`): `xs.length`,",
+    "Base types have one name per operation in every dialect (`nuclear help library`): `xs.length`,",
     "`xs.add(x)`, `s.upper()`, `x in xs`; the dialect writes the target's code (`len(xs)`, `xs.push(x)`). A target's name",
     "on a base type (`push`, `len`, `toUpperCase`, `contains`) is an error with the Nuclear name as its fix. Library",
     "classes of a type definition (`dio`, `numpy`, `Text(...)`) are written as the library names them and tie the code to",
-    "that dialect. Each area has an example in `examples/stdlib/`. Not sure an API exists: `nuclear defs show <Name>",
+    "that dialect. Not sure an API exists: `nuclear defs show <Name>",
     "--dialect <d>` instead of guessing."
    ],
    "sources": [
@@ -487,11 +490,13 @@
    "id": "lang:nuclearlang/docs/07-reference/library.md#12-output-and-errors",
    "type": "rule",
    "title": "The standard library of Nuclear — 12. Output and errors",
-   "summary": "`print(a, b, ...)` writes the values separated by spaces and a newline.",
+   "summary": "`print(a, b, ...)` writes the values separated by spaces and a newline, and `\"${x}\"` writes a value the same way: a decimal with its decimals (`2.0`, `1000.0`), a boolean as `true` / `false`, a missing value as `null`, in every dialect.",
    "body": [
-    "`print(a, b, ...)` writes the values separated by spaces and a newline. `x.toString()` exists on every value;",
-    "only numbers, booleans, strings, `DateTime` (`toIso()`) and `Duration` print the same text in every dialect: a",
-    "list or a map is printed through `join` or `Json.encode`.",
+    "`print(a, b, ...)` writes the values separated by spaces and a newline, and `\"${x}\"` writes a value the same way:",
+    "a decimal with its decimals (`2.0`, `1000.0`), a boolean as `true` / `false`, a missing value as `null`, in every",
+    "dialect. The dialect knows a decimal by its type (a decimal literal, a division, a value declared `double`).",
+    "`x.toString()` exists on every value; only numbers, booleans, strings, `DateTime` (`toIso()`) and `Duration` print the",
+    "same text in every dialect: a list or a map is printed through `join` or `Json.encode`.",
     "",
     "`Error(message)` is the base error (`e.message`); `throw`, `try`/`catch` and `Result` are in",
     "[nuclear-base.md](nuclear-base.md) §3.2 and §7."
@@ -1867,22 +1872,14 @@
    ]
   },
   {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#6-expressions-6-1-operators-lowest-to-highest-precedence.2e1841",
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#6-expressions-6-1-operators-lowest-to-highest-precedence.58e9ea",
    "type": "rule",
    "title": "NuclearLang — Base language v0.1 (draft) — 6.1 Operators (lowest to highest precedence)",
-   "summary": "(`nuclearlang/tools/stdlib-check.sh` runs them); `nuclear help operations` lists them.",
-   "body": "(`nuclearlang/tools/stdlib-check.sh` runs them); `nuclear help operations` lists them.",
-   "sources": [
-    "nuclearlang/docs/07-reference/nuclear-base.md"
-   ]
-  },
-  {
-   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#6-expressions-6-1-operators-lowest-to-highest-precedence.ad795e",
-   "type": "rule",
-   "title": "NuclearLang — Base language v0.1 (draft) — 6.1 Operators (lowest to highest precedence)",
-   "summary": "`]`.",
+   "summary": "values (`[1, 2] == [1, 2]` is `true` in every dialect); two objects of a module, when they are the same object.",
    "body": [
-    "- `==` is always a strict comparison. There is no `===`.",
+    "- `==` is always a strict comparison. There is no `===`. Two lists, maps or sets are equal when they hold equal",
+    "  values (`[1, 2] == [1, 2]` is `true` in every dialect); two objects of a module, when they are the same object.",
+    "  A value whose type is not known (`any`) is compared as the target compares it.",
     "- `and`/`or`/`not` instead of `&&`/`||`/`!`.",
     "- `x is User` checks whether `x` is of type `User`.",
     "- `x as Type` converts the type: `data = read(file) as <string, int>`.",
@@ -1890,13 +1887,26 @@
     "  `]`. Before a value, `!` is an error: write `not`.",
     "- `a / b` is always a decimal division; `a ~/ b` drops the decimals (toward zero). `%`, the bitwise operators and",
     "  the integer width are the target's: TypeScript's `%` keeps the dividend's sign and its bitwise operators work on",
-    "  32 bits; Dart's `%` is never negative and its integers have 64 bits.",
+    "  32 bits; Dart's `%` is never negative and its integers have 64 bits; Python's `%` has the divisor's sign and its",
+    "  integers have no limit.",
     "- The bitwise operators bind tighter than the comparisons (unlike C): `flags & READ != 0` is `(flags & READ) != 0`.",
     "  `~` is await, so the complement is `^x`. Compound forms: `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`, `>>>=`.",
-    "- `x in xs` asks whether a list contains `x`; with a map, whether it has the key `x`.",
+    "- `x in xs` asks whether a list contains `x`; with a map, whether it has the key `x`."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/nuclear-base.md"
+   ]
+  },
+  {
+   "id": "lang:nuclearlang/docs/07-reference/nuclear-base.md#6-expressions-6-1-operators-lowest-to-highest-precedence.daca51",
+   "type": "rule",
+   "title": "NuclearLang — Base language v0.1 (draft) — 6.1 Operators (lowest to highest precedence)",
+   "summary": "and async come from the target (`Math.sqrt` in TypeScript, `sqrt` of `dart:math` in Dart), imported automatically.",
+   "body": [
     "- Nuclear has no standard library of its own: math, text, regular expressions, collections, dates, JSON, bytes",
     "  and async come from the target (`Math.sqrt` in TypeScript, `sqrt` of `dart:math` in Dart), imported",
-    "  automatically. `examples/stdlib/` has one program per area and target that prints the same result in both"
+    "  automatically. `examples/stdlib/` has one program per area and target that prints the same result in both",
+    "  (`nuclearlang/tools/stdlib-check.sh` runs them); `nuclear help operations` lists them."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/nuclear-base.md"
@@ -2198,6 +2208,7 @@
     "| `reserved` | Can never be used as an identifier | Yes |",
     "| `strict` | Reserved in strict mode / modules (TS: `let`, `static`...) | Yes (Nuclear emits modules) |",
     "| `builtin` | Dart: cannot be a type name, can be a variable | No |",
+    "| `shadowed` | A function of the target the dialect writes (Python's `sorted`, `len`, `max`) | A local, a lambda's parameter, a function or a constant of the file: yes (`sorted_`); a field and a function's parameter: no (they are the API) |",
     "| `contextual` | A keyword only in some places | No |"
    ],
    "sources": [

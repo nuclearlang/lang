@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from synapsis import Model
 
 
-class NewTodo(BaseModel):
+class NewTodo(Model):
     """What it takes to add or change a todo."""
 
     title: str

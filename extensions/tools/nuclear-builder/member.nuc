@@ -1,0 +1,338 @@
+use sys
+use json
+use httpx
+use pathlib{ Path }
+
+// A member of a team in Nuclear Chat (spec 013, design.md "The responder" and "The process"): `nuclear-builder
+// member --team <id> --member <member id> --events` (or `--role <role|chat>`: the role's first member, or the general
+// agent) answers one message as that member, and `nuclear-builder chat-host --json` gives the chat the project's
+// members and channels. A member is a member of the team (ADR-platform-0010) worked by its provider through the factory's adapters, with the factory's tools, the role files' guard and the two spending
+// confirmations of the chat (chat.nuc); it speaks as its profile (the roster's bio and HR note, its personality,
+// the team's instructions for its role). `--role chat` is the general agent.
+
+LANGUAGES: <string, string> = { "en": "English", "es": "Spanish" }
+
+// The language rule said in the language itself too: a small model follows it better.
+SAY_IN: <string, string> = { "en": "Answer in English.", "es": "Responde en español." }
+
+// The general agent's member in the chat: its id names its direct message, `dm-atlas`.
+GENERAL_AGENT = "atlas"
+
+GENERAL_AGENT_BIO: <string, string> = { "en": "The general agent of the factory: I read the project, its specs and its runs, and I write a spec when you ask me to.", "es": "El agente general de la fábrica: leo el proyecto, sus specs y sus ejecuciones, y escribo una spec cuando me la pides." }
+
+// The member's spending, cost and tool results of a conversation (a channel, or one of its threads) are kept as a
+// chat's history (`.nuclear/builder/chat/member-<team>-<member>-<channel>[-<thread>].jsonl`): the confirmation holds
+// for the conversation and its budget is the team's.
+memberChatId(team: string, member: string, channel: string, thread: string) string
+  "member-${team}-${member}-${channel}${thread.isEmpty ? "" : "-${thread}"}".replaceAll(Regex(r"[^\w.-]+"), "-")
+
+// A member's GIF is one last line of the answer, `gif: <tag>` (a tag of the chat's GIF pack); a line so written, or the
+// same words at the end of the answer, is never shown: it goes in `done` as `gif`.
+GIF_LINE = Regex(r"^[^\w\n]*gif[^\w\n]*:[^\w\n]*([a-z][a-z-]*)[^\w\n]*$", ignoreCase = true, multiline = true)
+GIF_TAIL = Regex(r"\s*[^\w\s]*\bgif[^\w\n]*:[^\w\n]*([a-z][a-z-]*)[^\w\n]*\s*$", ignoreCase = true)
+// the end of an answer being written that may still become a GIF line (`g`, `gi`, `gif…`): held back
+GIF_COMING = Regex(r"(?:^|\s)[^\w\s]*g(?:i(?:f[^\w\n]*(?::[^\w\n]*[a-z-]*)?)?)?$", ignoreCase = true)
+
+// An answer without its GIF line, and the GIF's tag (lowercase; empty without one).
+gifOf(text: string) <string, string>
+  tag = ""
+  for m in GIF_LINE.findAll(text)
+    tag = "${m[1]}".lower()
+  tail = GIF_TAIL.find(text)
+  if tail != null
+    tag = "${tail![1]}".lower()
+  { "text": text.replaceAll(GIF_TAIL, "").replaceAll(GIF_LINE, "").trimEnd(), "tag": tag }
+
+// What the chat's events are in the responder's protocol: `text`, `text-delta`, `tool` (a factory tool's call, then
+// its result), `ask` and `done` (with the answer's `gif` tag); the rest (the provider's cost, tokens, traces) stays
+// out. The answer's GIF line is never told as text.
+MemberLines(tell: (e: <string, any>) => void)
+  // the answer as written so far, how much of it was told, and the GIF the answer ends with
+  streamed: string = ""
+  told: int = 0
+  gif: string = ""
+
+  on(e: <string, any>) void
+    ev: <string, any> = e["event"] ?? ({} as <string, any>)
+    if e["type"] == "event" and ev["type"] == "text"
+      found = gifOf("${ev["text"]}")
+      if not found["tag"]!.isEmpty
+        gif = found["tag"]!
+      if not found["text"]!.trim().isEmpty
+        tell({ "type": "text", "text": found["text"] })
+    else if e["type"] == "event" and ev["type"] == "text-delta"
+      streamed += "${ev["text"]}"
+      shown = gifOf(streamed)["text"]!
+      coming = GIF_COMING.find(shown)
+      if coming != null
+        shown = shown.substring(0, coming!.start)
+      if shown.length > told
+        tell({ "type": "text-delta", "text": shown.substring(told) })
+        told = shown.length
+    else if e["type"] == "event" and ev["type"] == "tool"
+      tell({ "type": "tool", "id": ev["id"], "tool": ev["tool"], "input": ev["input"] })
+    else if e["type"] == "event" and ev["type"] == "tool-result"
+      tell({ "type": "tool", "id": ev["id"], "tool": ev["tool"], "ok": ev["ok"], "text": ev["text"] })
+    else if e["type"] == "ask" or e["type"] == "typing"
+      tell(e)
+    else if e["type"] == "done"
+      done: <string, any> = { "type": "done", "costUsd": e["costUsd"] ?? 0.0 }
+      if e["error"] != null
+        done["error"] = e["error"]
+      if not gif.isEmpty
+        done["gif"] = gif
+      tell(done)
+
+// One answer of a member: the chat's turn (its provider, its tools, its guard, its spending) with the member's own
+// prompt. `ask` is the responder's input: `{ member, channel, thread, messages, said, lang }`; `given` is the team's
+// member who answers (its id, role, employee, who works it), or the general agent's choice.
+Member: Chat
+  (root: string, id: string, given: <string, any>, line: <string, any>, read: () => string?, out: (e: <string, any>) => void, options: <string, any>, team: <string, any>, role: string, ask: <string, any>)
+    super(root, id, given, line, read, out, options)
+  assigned() <string, any>
+    role == "chat" ? ({} as <string, any>) : given
+
+  lang() string
+    "${ask["lang"] ?? "en"}"
+
+  languageRule() string
+    languageRuleIn(lang(), "${ask["said"] ?? ""}")
+
+  // The title of the GIF the user sent just before the message to answer (the messages since the last of another
+  // author's), or nothing.
+  userGif() string
+    messages: <string, any>[] = ask["messages"] ?? []
+    at = messages.length - 1
+    while at >= 0 and messages[at]["author"] == "you"
+      if messages[at]["gif"] != null
+        return "${messages[at]["gif"]}"
+      at -= 1
+    ""
+
+  // What the member may do with GIFs: one last line `gif: <tag>` from the chat's pack (`gifTags`), by their
+  // personality (`gifs`: never, sometimes, often; `on`: failure, success, question) and their temperament's habit
+  // (the sentences of its voice about GIFs); nothing when they never send one or the chat gave no tags.
+  gifSection(personality: <string, any>, voice: string) string
+    often = "${personality["gifs"] ?? "never"}"
+    tags: string[] = ask["gifTags"] ?? []
+    if role == "chat" or not (often in ["sometimes", "often"]) or tags.isEmpty
+      return ""
+    habit = voice.split(Regex(r"(?<=\.)\s+")).filter((l) => "GIF" in l).join(" ")
+    moments: string[] = personality["on"] ?? []
+    how = often == "often" ? "You like GIFs: add one whenever it fits." : "Now and then, only when it really fits."
+    "## GIFs\n\nYou may end your answer with one last line `gif: <tag>`, a tag of this list, and the chat shows a GIF of it after your message: ${tags.join(", ")}. Never describe the GIF nor write a link. ${how}${habit.isEmpty ? "" : " ${habit}"} It fits when the user sent a GIF or made a joke${moments.isEmpty ? "" : ", and at ${moments.map((m) => "a ${m}").join(", ")}"}. Most answers have no GIF. Example of an answer that has one:\n\n${lang() == "es" ? "¡Por fin en verde!" : "Finally green!"}\ngif: celebrate"
+
+  // The member's employee in the roster, in the conversation's language; empty when the role has none.
+  profile() <string, any>
+    staff = roster(role, lang())
+    staff.find((p) => p["id"] == assigned()["employee"]) ?? ({} as <string, any>)
+
+  name() string
+    own = "${assigned()["name"] ?? ""}".trim()
+    own.isEmpty ? "${profile()["name"] ?? ROLE_TITLES[role] ?? "the general agent"}" : own
+
+  // The answer to the message said, once: `typing`, then the chat's turn told in the responder's protocol.
+  respond() int
+    load()
+    out({ "type": "typing" })
+    answer("${ask["said"] ?? ""}".trim())
+    0
+
+  persona() Role
+    if role == "chat"
+      return Role("chat", "general agent", "You are the general agent of Nuclear Builder, NuclearLang's software factory.", {}, {}, [], [])
+    // the team's and the member's skills (library.nuc), a base agent's text before the member's instructions
+    who = withSkills(team, assigned())
+    skills: <string, string> = {}
+    sources: <string, string> = {}
+    for shared in who["sharedSkills"] as <string, any>[]
+      skills["${shared["id"]}"] = "${shared["markdown"]}"
+      sources["${shared["id"]}"] = "${shared["from"]}"
+    Role(role, ROLE_TITLES[role] ?? role, "You are ${name()}, the ${ROLE_TITLES[role] ?? role} of the team ${team["name"]} in Nuclear Builder, NuclearLang's software factory.", skills, {}, [], [], "${who["instructions"] ?? ""}", "${assigned()["employee"] ?? ""}", sources)
+
+  // The tech lead answers for the whole team (spec 013 requirement 4b); a member knows who theirs is.
+  leadSection() string
+    lead = "${team["techLead"] ?? ""}"
+    if assigned()["id"] == lead
+      return "## You are the team's tech lead\n\nYou answer for the whole team: a message to the team is yours, and you speak for everyone. When a question belongs to another member, say who owns it (by name and role) and bring them in. You are accountable for the team's work."
+    own: <string, any> = ((team["members"] ?? []) as <string, any>[]).find((m) => m["id"] == lead) ?? ({} as <string, any>)
+    leadRole = "${own["role"] ?? DEFAULT_LEAD}"
+    staff = roster(leadRole, lang())
+    hired = staff.find((p) => p["id"] == own["employee"]) ?? ({} as <string, any>)
+    leadName = "${own["name"] ?? ""}".trim()
+    named = leadName.isEmpty ? "${hired["name"] ?? ""}" : leadName
+    "## Your tech lead\n\n${named.isEmpty ? "The" : "${named}, the"} ${ROLE_TITLES[leadRole] ?? leadRole}${named.isEmpty ? "" : ","} answers for the team and is accountable for its work; you answer what is asked of you."
+
+  // Who the member is, the factory's tools, the project, the conversation of the chat, the message to answer and the
+  // tools' results of this turn.
+  chatPrompt(project: string, platform: string) string
+    channel = "#${ask["channel"] ?? "general"}${"${ask["thread"] ?? ""}".isEmpty ? "" : ", a thread"}"
+    where = "the project ${project}${platform.isEmpty ? "" : " (${platform})"}"
+    rules = "You never edit a role's files (nuclear-agents/roles/) nor the project's files: a spec is written with `spec_new`, a change of the project is a run of the factory. Answer as a message in a team's chat: short."
+    // the language first and again at the end, where small and large models both follow it
+    parts: string[] = [languageRule()]
+    if role == "chat"
+      parts.add("You are the general agent of Nuclear Builder, NuclearLang's software factory, in ${where}, talking in Nuclear Chat (${channel}). You do everything Nuclear Builder does: read a document of the project (project_read), write specs with their acceptance criteria, start their runs and answer their gates, keep the teams and the line, with the factory's tools below (and the Nuclear MCP server's when you have them). ${rules}")
+    else
+      p = profile()
+      personality: <string, any> = assigned()["personality"] ?? ({} as <string, any>)
+      mood = temperamentOf(personality, p)
+      named: <string, any> = mood["name"] ?? ({} as <string, any>)
+      about = ["- Bio: ${p["bio"] ?? ""}", "- HR's note: ${p["hrNote"] ?? ""}", "- Temperament: ${named["en"] ?? ""}", "- Personality: ${personality["note"] ?? ""}"].filter((l) => not l.endsWith(": "))
+      parts.add("You are ${name()}, the ${ROLE_TITLES[role] ?? role} of the team ${team["name"]} in Nuclear Builder, NuclearLang's software factory, working on ${where}. You talk with the user and your teammates in Nuclear Chat (${channel}). Speak as yourself: your profile is your character. ${rules}")
+      if not about.isEmpty
+        parts.add("## Who you are\n\n${about.join("\n")}")
+      if not mood.isEmpty
+        parts.add("## How you write\n\n${mood["voice"] ?? ""}")
+      gifs = gifSection(personality, "${mood["voice"] ?? ""}")
+      if not gifs.isEmpty
+        parts.add(gifs)
+      parts.add(leadSection())
+      instructions = "${assigned()["instructions"] ?? ""}".trim()
+      if not instructions.isEmpty
+        parts.add("## The team's instructions for your role\n\n${instructions}")
+    parts.add(toolsSection())
+    parts.add(componentsSection())
+    messages: <string, any>[] = ask["messages"] ?? []
+    if not messages.isEmpty
+      parts.add("## The conversation so far\n\n${messages.map((m) => "${m["author"] ?? "?"}: ${m["gif"] == null ? m["text"] ?? "" : "[a GIF: ${m["gif"]}]"}").join("\n\n")}")
+    now = "## The message to answer\n\nyou: ${ask["said"] ?? ""}\n\n${languageRule()}"
+    sent = userGif()
+    if not sent.isEmpty and not gifSection(assigned()["personality"] ?? ({} as <string, any>), "").isEmpty
+      now += "\n\nThe user just sent a GIF (\"${sent}\"): answer it with a GIF of your own, ending your answer with one line `gif: <tag>` (for example `gif: laugh`)."
+    parts.add(now)
+    // this turn's tool results: what the history kept after the message said
+    // shortcut: typed again here, the transpiler does not know an inherited attribute's type yet (nuclearlang roadmap)
+    kept: <string, any>[] = history
+    at = kept.length
+    while at > 0 and kept[at - 1]["role"] != "you"
+      at -= 1
+    results = kept.skip(at).filter((h) => h["role"] == "tool")
+    if not results.isEmpty
+      parts.add("## The tools answered (for you only)\n\n${results.map((h) => "${h["tool"]}${h["error"] == true ? " (failed)" : ""}:\n${h["text"]}").join("\n\n")}\n\nTell the user in a few sentences what was done and where (never the results whole), or call another tool.")
+    parts.join("\n\n")
+
+// The words that tell English from Spanish in a short chat message (the languages the chat speaks).
+LANGUAGE_WORDS: <string, string[]> = { "en": ["the", "is", "are", "what", "you", "your", "hi", "hello", "hey", "and", "this", "that", "how", "can", "do", "does", "it", "in", "of", "to", "my", "please", "thanks", "haha", "lol"], "es": ["el", "la", "los", "las", "es", "son", "que", "qué", "tu", "tú", "hola", "y", "este", "esta", "cómo", "como", "puedes", "haces", "lo", "en", "de", "mi", "por", "favor", "gracias", "jaja", "nuevo", "nombre"] }
+
+// The language a message is written in, `en` or `es`, or nothing when its words do not tell (a small model answers
+// in one language it is told better than it tells the message's language itself).
+messageLanguage(text: string) string
+  words = text.lower().split(Regex(r"[^\wáéíóúüñ]+")).filter((w) => not w.isEmpty)
+  en = words.count((w) => w in LANGUAGE_WORDS["en"]!)
+  es = words.count((w) => w in LANGUAGE_WORDS["es"]!) + (Regex(r"[¿¡ñ]").test(text) ? 2 : 0)
+  en > es ? "en" : es > en ? "es" : ""
+
+// The language of the answer: the user's chosen language, else the one the user's message is written in.
+languageRuleIn(lang: string, said: string) string
+  wrote = messageLanguage(said)
+  chosen = LANGUAGES[lang] ?? "the language ${lang}"
+  if not wrote.isEmpty and wrote != lang
+    return "Language: answer in ${LANGUAGES[wrote]}: the user chose ${chosen}, but wrote this message in ${LANGUAGES[wrote]}. ${SAY_IN[wrote]}"
+  "Language: answer in ${chosen}, the user's chosen language. ${SAY_IN[lang] ?? ""} But when the user's message is written in another language, answer in the language of that message.".replace("  ", " ")
+
+// A member's temperament (temperaments.json): the team's override, else the hired employee's of the roster; empty
+// when it has none or the list is not there.
+temperamentOf(personality: <string, any>, profile: <string, any>) <string, any>
+  id = personality["temperament"] ?? profile["temperament"]
+  temperaments().find((t) => t["id"] == id) ?? ({} as <string, any>)
+
+// `nuclear-builder member --team <id> (--member <member id> | --role <role|chat>) --events [--root <dir>] [--provider <p>] [--model <m>]
+// [--kind …] [--budget <usd>] [--confirm-spending] [--force-confirm]`: one answer of a member, the responder of
+// Nuclear Chat. A usage error is a `done` with its error and exit code 2.
+memberLine(args: string[]) int
+  tellIt = (e: <string, any>) => print(json.dumps(e, ensureAscii = false), flush = true)
+  refuse = (why: string) =>
+    tellIt({ "type": "done", "costUsd": 0.0, "error": why })
+    2
+  root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
+  memberId = option(args, "--member")
+  // `--role delivery` (the role's id before DevOps) is still taken for one release: roles.nuc's OLD_ROLES
+  role = roleId(option(args, "--role") ?? (memberId == null ? "" : "member"))
+  if not (role in ROLES) and role != "chat" and memberId == null
+    return refuse("--member <member id> of the team, or --role one of ${ROLES.join(", ")} or chat")
+  if not ("--events" in args)
+    return refuse("a member answers with --events: the conversation as one JSON line on stdin")
+  asked = option(args, "--team")
+  if asked == null and role != "chat"
+    return refuse("--team <id> names the member's team")
+  team: <string, any> = {}
+  try
+    team = asked == null ? teamOfRun(root, null) : teamOfRetry(root, null, asked!)
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    return refuse("${e}")
+  // a role named goes to the member who works it (its first; teams.nuc's `memberFor`)
+  given: <string, any> = (memberId != null ? ((team["members"] ?? []) as <string, any>[]).find((m) => m["id"] == memberId) : memberFor(team, role)) ?? ({} as <string, any>)
+  if memberId != null and given.isEmpty
+    return refuse("the team ${team["id"]} has no member `${memberId}`")
+  if not given.isEmpty
+    role = "${given["role"]}"
+  if role == "chat"
+    provider = option(args, "--provider") ?? "nuclear-developer"
+    given = { "provider": provider, "kind": option(args, "--kind") ?? kindOf(provider), "model": option(args, "--model") ?? "" }
+  else if given.isEmpty
+    return refuse("the team ${team["id"]} has no ${role}")
+  if not ("${given["provider"] ?? "nuclear-developer"}" in ADAPTERS)
+    return refuse("no provider `${given["provider"]}`: ${ADAPTERS.keys.join(", ")}")
+  request = jsonLine("${sys.stdin.readline()}".trim())
+  if request == null or "${request!["said"] ?? ""}".trim().isEmpty
+    return refuse("the conversation is one JSON line: {\"member\", \"channel\", \"thread\", \"messages\", \"said\", \"lang\"}")
+  budget = (option(args, "--budget") ?? "${team["budgetUsd"] ?? 5.0}").toDouble() ?? 0.0
+  options: <string, any> = { "events": true, "budgetUsd": budget, "confirmSpending": "--confirm-spending" in args, "forceConfirm": "--force-confirm" in args }
+  card = projectCard(root)
+  id = memberChatId("${team["id"]}", role == "chat" ? "chat" : "${given["id"]}", "${request!["channel"] ?? "general"}", "${request!["thread"] ?? ""}")
+  readIt = () => readUser(true)
+  lines = MemberLines(tellIt)
+  member = Member(root, id, given, readLine(root, "${card["platform"] ?? ""}"), readIt, (e: <string, any>) => lines.on(e), options, team, role, request!)
+  member.respond()
+
+// The host file of Nuclear Chat for a project (spec 013, design.md "The process"): the members of its team (the
+// run's team, line.nuc's `teamOfRun`: the project's, the default, the only saved one, else the local team), each
+// member of it (any number per role; id `<team>-<member id>`), their profile in `lang`, the brain that answers as them
+// (`brain`: the agent's name, its kind, provider and model, paid or local),
+// their face (the thumbnail's whole path, a chat's avatar; the portrait's without one; null without either), their temperament, their personality and their
+// responder; the channels `general` and the team's; the team with its tech lead, who
+// answers a message to the team.
+chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <string, any>
+  team = teamShown(teamOfRun(root, null), rosters(lang))
+  teamId = "${team["id"]}"
+  members: <string, any>[] = []
+  for r in team["members"] as <string, any>[]
+    role = "${r["role"]}"
+    own = "${r["id"]}"
+    staff = roster(role, lang)
+    p = staff.find((x) => x["id"] == r["employee"]) ?? ({} as <string, any>)
+    name = "${r["name"] ?? ""}".isEmpty ? ROLE_TITLES[role] ?? role : "${r["name"]}"
+    personality: <string, any> = r["personality"] ?? ({} as <string, any>)
+    members.add({ "id": "${teamId}-${own}", "name": name, "role": role, "member": own, "team": teamId, "avatar": "${r["employee"] ?? "${teamId}-${own}"}", "face": p["thumb"] ?? p["face"], "temperament": personality["temperament"] ?? p["temperament"], "profile": { "bio": p["bio"] ?? "", "hrNote": p["hrNote"] ?? "", "lang": lang }, "personality": r["personality"], "brain": brainOf(r), "responder": { "command": ["nuclear-builder", "member", "--team", teamId, "--member", own], "paid": r["kind"] != "local" } })
+  ids = members.map((m) => "${m["id"]}")
+  // the general agent: answered by the choice of its conversation (the local Nuclear Developer unless the host says)
+  choices = chatChoices(agentsHere(root, transport))
+  members.add({ "id": GENERAL_AGENT, "name": "Atlas", "role": "chat", "team": "", "avatar": GENERAL_AGENT, "face": null, "temperament": null, "profile": { "bio": GENERAL_AGENT_BIO[lang] ?? GENERAL_AGENT_BIO["en"], "hrNote": "", "lang": lang }, "personality": { "gifs": "never", "on": [] as string[] }, "responder": { "command": choices[0]["command"], "paid": false, "choice": "nuclear-developer", "model": "", "choices": choices } })
+  // a message to the team goes to its tech lead; `@<role>` to the role's first member as listed here (Nuclear Chat)
+  teams = [{ "id": teamId, "name": team["name"], "lead": team["techLead"] == null ? "" : "${teamId}-${team["techLead"]}" }]
+  project = "${projectCard(root)["name"] ?? Path(root).name}"
+  description = "${team["description"] ?? ""}"
+  channels = [{ "id": "general", "name": "general", "topic": "The project ${project}", "members": ids }, { "id": teamId, "name": teamId, "topic": description.isEmpty ? "${team["name"]}" : description, "members": ids }]
+  { "host": "builder", "members": members, "channels": channels, "teams": teams, "lang": lang }
+
+// Who works a member, as the chat shows it under their name: `Claude Code · opus · paid`.
+brainOf(r: <string, any>) <string, any>
+  provider = "${r["provider"] ?? "nuclear-developer"}"
+  kind = "${r["kind"] ?? kindOf(provider)}"
+  { "agent": AGENT_LABELS[provider] ?? provider, "kind": kind, "provider": provider, "model": "${r["model"] ?? ""}", "paid": kind != "local" }
+
+// `nuclear-builder chat-host --json [--root <dir>] [--lang en|es]`; several teams and none chosen: the error with
+// `chooseTeam`, the teams the editor offers to choose from (saved as the project's, `line set team=<id>`).
+chatHostLine(args: string[]) int
+  root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
+  try
+    printJson(chatHost(root, option(args, "--lang") ?? "en"))
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson(isinstance(e, TeamChoice) ? { "error": "${e}", "chooseTeam": listTeams().map((t) => ({ "id": t["id"], "name": t["name"] })) } : { "error": "${e}" })
+    return 1
+  0

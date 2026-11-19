@@ -46,15 +46,20 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -63,7 +68,8 @@ import java.util.stream.Stream;
  * The "HTTP Connections" tool window (ADR-synapsis-0006), the same as the VS Code view: every project under the IDE's project
  * (`.nuclear/project.json`) grouped by platform, its components and endpoints read from `.nuclear/contract.json`,
  * the contracts a client declares with an Update action, OpenAPI documents, environments in `.nuclear/http.json`
- * (variables, headers, base urls) and a request panel. Alt+Shift+H opens it.
+ * (variables, headers, base urls) and a request panel. What the contract serves over WebSockets (and the ws:// urls of
+ * the environment) opens in a socket panel instead, with `java.net.http.WebSocket`. Alt+Shift+H opens it.
  */
 public final class HttpConnections {
     private static final Gson PRETTY = new GsonBuilder().setPrettyPrinting().create();
@@ -93,13 +99,16 @@ public final class HttpConnections {
 
     record Param(String name, String type, boolean optional, String def, String in) {}
 
-    /** A backend route, a client call or an OpenAPI operation: one request the tree offers. */
+    /**
+     * A backend route, a client call, an OpenAPI operation, a pushed event or a ws:// url: one request the tree offers.
+     * `protocol` "websocket" opens it in the socket panel; `socketPath` is set when the contract also serves it there.
+     */
     record Endpoint(String project, String kind, String owner, String component, String verb, String path, String description,
-                    List<Param> params, String returns, String body, String connection) {}
+                    List<Param> params, String returns, String body, String connection, String protocol, String socketPath, List<String[]> guardHeaders) {}
 
     record OpenApiDoc(String source, String title, List<Endpoint> endpoints, String error) {}
 
-    record Environment(Map<String, String> vars, Map<String, String> headers, Map<String, String> baseUrls, List<String> openapi) {}
+    record Environment(Map<String, String> vars, Map<String, String> headers, Map<String, String> baseUrls, List<String> openapi, List<String> sockets) {}
 
     record Environments(String active, Map<String, Environment> environments) {}
 
@@ -173,11 +182,23 @@ public final class HttpConnections {
         JsonObject apis = p.contract().getAsJsonObject(backend ? "controllers" : "repositories");
         if (apis == null) return out;
         JsonObject models = p.contract().getAsJsonObject("models");
+        String socketPath = socketPathOf(p.contract());
+        Map<String, List<Endpoint>> events = new LinkedHashMap<>();
+        if (backend && socketPath != null) {
+            for (String[] ev : eventsOf(p.contract())) {
+                events.computeIfAbsent(ev[1], c -> new ArrayList<>()).add(new Endpoint(p.name(), "event", "", ev[1], "event", ev[0],
+                        ev[3], List.of(), ev[2], null, null, "websocket", socketPath, guardHeadersOf(p.contract(), null)));
+            }
+        }
         for (String owner : apis.keySet()) {
             JsonObject api = apis.getAsJsonObject(owner);
             String base = str(api, "path") == null ? "" : str(api, "path");
             String component = str(api, "component");
             if (component == null || component.isEmpty()) component = "shared";
+            List<String[]> guards = guardHeadersOf(p.contract(), api);
+            Set<String> transports = transportsOf(api);
+            boolean ws = transports.contains("websocket");
+            String connection = backend ? null : str(api, "connection");
             for (JsonElement r : api.getAsJsonArray("routes")) {
                 JsonObject route = r.getAsJsonObject();
                 List<Param> params = new ArrayList<>();
@@ -192,7 +213,68 @@ public final class HttpConnections {
                         .map(s -> s.replaceAll("^/|/$", "")).filter(s -> !s.isEmpty()).toList());
                 full = full.replaceAll(":([A-Za-z_][A-Za-z0-9_]*)", "{$1}");
                 out.add(new Endpoint(p.name(), backend ? "route" : "call", owner, component, str(route, "verb"), full,
-                        str(route, "description"), params, str(route, "returns"), body, backend ? null : str(api, "connection")));
+                        str(route, "description"), params, str(route, "returns"), body, connection,
+                        ws && !transports.contains("http") ? "websocket" : null, ws ? (socketPath == null ? "/ws" : socketPath) : null, ws ? guards : null));
+            }
+            // the topics the app publishes, after the routes of the component that publishes them
+            List<Endpoint> own = events.remove(component);
+            if (own != null) out.addAll(own);
+        }
+        events.values().forEach(out::addAll);
+        return out;
+    }
+
+    // ---------- the WebSocket fields of the contract (ADR-synapsis-0008, projects.md §1.2; absent = HTTP only) ----------
+
+    /** A controller's `transports`; absent: HTTP only. */
+    static Set<String> transportsOf(JsonObject api) {
+        Set<String> out = new java.util.HashSet<>();
+        if (api.has("transports") && api.get("transports").isJsonArray()) {
+            for (JsonElement x : api.getAsJsonArray("transports")) {
+                String t = x.isJsonPrimitive() ? x.getAsString() : "";
+                if (t.equals("http") || t.equals("websocket")) out.add(t);
+            }
+        }
+        return out.isEmpty() ? Set.of("http") : out;
+    }
+
+    /** The contract's `events`: {topic, component, payload, "{ fields }" or null}. */
+    static List<String[]> eventsOf(JsonObject contract) {
+        List<String[]> out = new ArrayList<>();
+        if (!contract.has("events") || !contract.get("events").isJsonObject()) return out;
+        JsonObject all = contract.getAsJsonObject("events");
+        for (String topic : all.keySet()) {
+            JsonObject e = all.get(topic).isJsonObject() ? all.getAsJsonObject(topic) : new JsonObject();
+            String component = str(e, "component");
+            String payload = str(e, "payload");
+            String fields = null;
+            if (e.has("fields") && e.get("fields").isJsonArray()) {
+                List<String> fs = new ArrayList<>();
+                e.getAsJsonArray("fields").forEach(f -> fs.add(f.getAsString()));
+                fields = "{ " + String.join(", ", fs) + " }";
+            }
+            out.add(new String[]{topic, component == null || component.isEmpty() ? "shared" : component, payload == null ? "any" : payload, fields});
+        }
+        return out;
+    }
+
+    /** `webSocket`: the path of the app's socket, or null when it has none. */
+    static String socketPathOf(JsonObject contract) {
+        String p = str(contract, "webSocket");
+        return p == null || p.isEmpty() ? null : p.startsWith("/") ? p : "/" + p;
+    }
+
+    /** The headers the token guards read, the app's then the controller's, with the value to fill ({{token}}; Bearer in Authorization). */
+    static List<String[]> guardHeadersOf(JsonObject contract, JsonObject api) {
+        List<String[]> out = new ArrayList<>();
+        for (JsonObject owner : new JsonObject[]{contract, api}) {
+            if (owner == null || !owner.has("guards") || !owner.get("guards").isJsonArray()) continue;
+            for (JsonElement g : owner.getAsJsonArray("guards")) {
+                if (!g.isJsonObject() || !"token".equals(str(g.getAsJsonObject(), "guard"))) continue;
+                String h = str(g.getAsJsonObject(), "header");
+                String header = h == null || h.isEmpty() ? "Authorization" : h;
+                if (out.stream().anyMatch(x -> x[0].equalsIgnoreCase(header))) continue;
+                out.add(new String[]{header, header.equalsIgnoreCase("Authorization") ? "Bearer {{token}}" : "{{token}}"});
             }
         }
         return out;
@@ -228,7 +310,7 @@ public final class HttpConnections {
 
     static Environments environments(Path base) {
         Environments fallback = new Environments("local", new LinkedHashMap<>(Map.of("local",
-                new Environment(new LinkedHashMap<>(Map.of("baseUrl", "http://localhost:3000")), new LinkedHashMap<>(), new LinkedHashMap<>(), new ArrayList<>()))));
+                new Environment(new LinkedHashMap<>(Map.of("baseUrl", "http://localhost:3000")), new LinkedHashMap<>(), new LinkedHashMap<>(), new ArrayList<>(), new ArrayList<>()))));
         Path file = base.resolve(".nuclear/http.json");
         if (!Files.exists(file)) return fallback;
         try {
@@ -240,7 +322,9 @@ public final class HttpConnections {
                     JsonObject e = all.getAsJsonObject(name);
                     List<String> openapi = new ArrayList<>();
                     if (e.has("openapi")) for (JsonElement x : e.getAsJsonArray("openapi")) openapi.add(x.getAsString());
-                    envs.put(name, new Environment(strings(e.getAsJsonObject("vars")), strings(e.getAsJsonObject("headers")), strings(e.getAsJsonObject("baseUrls")), openapi));
+                    List<String> sockets = new ArrayList<>();
+                    if (e.has("sockets")) for (JsonElement x : e.getAsJsonArray("sockets")) sockets.add(x.getAsString());
+                    envs.put(name, new Environment(strings(e.getAsJsonObject("vars")), strings(e.getAsJsonObject("headers")), strings(e.getAsJsonObject("baseUrls")), openapi, sockets));
                 }
             }
             if (envs.isEmpty()) return fallback;
@@ -268,6 +352,7 @@ public final class HttpConnections {
             o.add("headers", PRETTY.toJsonTree(e.getValue().headers()));
             o.add("baseUrls", PRETTY.toJsonTree(e.getValue().baseUrls()));
             o.add("openapi", PRETTY.toJsonTree(e.getValue().openapi()));
+            o.add("sockets", PRETTY.toJsonTree(e.getValue().sockets()));
             all.add(e.getKey(), o);
         }
         root.add("environments", all);
@@ -303,7 +388,7 @@ public final class HttpConnections {
                             params.add(new Param(str(pm, "name"), type == null ? "string" : type, !(pm.has("required") && pm.get("required").getAsBoolean()), null, in));
                         }
                         String tag = op.has("tags") && op.getAsJsonArray("tags").size() > 0 ? op.getAsJsonArray("tags").get(0).getAsString() : "default";
-                        endpoints.add(new Endpoint(source, "openapi", str(op, "operationId") == null ? "" : str(op, "operationId"), tag, verb, p, str(op, "summary"), params, "", op.has("requestBody") ? "{}" : null, null));
+                        endpoints.add(new Endpoint(source, "openapi", str(op, "operationId") == null ? "" : str(op, "operationId"), tag, verb, p, str(op, "summary"), params, "", op.has("requestBody") ? "{}" : null, null, null, null, null));
                     }
                 }
             }
@@ -319,9 +404,12 @@ public final class HttpConnections {
         @Override
         public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow window) {
             Panel panel = new Panel(project);
-            window.getContentManager().addContent(ContentFactory.getInstance().createContent(panel, "", false));
+            com.intellij.ui.content.Content content = ContentFactory.getInstance().createContent(panel, "", false);
+            content.setDisposer(panel.sockets::close);
+            window.getContentManager().addContent(content);
             window.setTitleActions(List.of(panel.action("Select Environment", AllIcons.General.Settings, panel::selectEnvironment),
                     panel.action("Add an OpenAPI Document", AllIcons.General.Add, panel::addOpenApi),
+                    panel.action("Add a WebSocket Url (ws:// or wss://)", AllIcons.General.Web, panel::addSocket),
                     panel.action("Update Contracts (nuclear contracts update)", AllIcons.Actions.Download, panel::updateContracts),
                     panel.action("Refresh", AllIcons.Actions.Refresh, panel::refresh)));
         }
@@ -358,6 +446,10 @@ public final class HttpConnections {
         private Endpoint current;
         private String baseUrl = "{{baseUrl}}";
         private List<Proj> projects = List.of();
+        private final JButton overSocket = new JButton("Open over WebSocket");
+        private final CardLayout cards = new CardLayout();
+        private final JPanel right = new JPanel(cards);
+        final SocketPanel sockets = new SocketPanel(this::env);
 
         Panel(Project project) {
             super(new BorderLayout());
@@ -368,11 +460,16 @@ public final class HttpConnections {
             tree.setCellRenderer(new Renderer());
             tree.addTreeSelectionListener(e -> {
                 DefaultMutableTreeNode n = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                if (n != null && n.getUserObject() instanceof Endpoint ep) load(ep);
+                if (n != null && n.getUserObject() instanceof Endpoint ep) {
+                    if ("websocket".equals(ep.protocol())) openSocket(ep);
+                    else load(ep);
+                }
             });
             OnePixelSplitter split = new OnePixelSplitter(false, 0.38f);
             split.setFirstComponent(new JBScrollPane(tree));
-            split.setSecondComponent(requestPanel());
+            right.add(requestPanel(), "http");
+            right.add(sockets, "ws");
+            split.setSecondComponent(right);
             add(split, BorderLayout.CENTER);
             refresh();
         }
@@ -399,7 +496,13 @@ public final class HttpConnections {
             send.addActionListener(e -> send());
             top.add(method, BorderLayout.WEST);
             top.add(url, BorderLayout.CENTER);
-            top.add(send, BorderLayout.EAST);
+            JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+            overSocket.setVisible(false);
+            overSocket.setToolTipText("The contract also serves this route over WebSockets");
+            overSocket.addActionListener(e -> { if (current != null) openSocket(current); });
+            buttons.add(overSocket);
+            buttons.add(send);
+            top.add(buttons, BorderLayout.EAST);
             JPanel head = new JPanel(new BorderLayout());
             head.add(top, BorderLayout.NORTH);
             envLabel.setForeground(JBColor.GRAY);
@@ -492,6 +595,12 @@ public final class HttpConnections {
                     }
                 }
             }
+            Environment env = env();
+            if (env != null && !env.sockets().isEmpty()) {
+                DefaultMutableTreeNode wn = new DefaultMutableTreeNode(new Label("WebSockets", "platform"));
+                root.add(wn);
+                for (String u : env.sockets()) wn.add(new DefaultMutableTreeNode(new Endpoint("WebSockets", "socket", "", "WebSockets", "ws", u, null, List.of(), "", null, null, "websocket", null, null)));
+            }
             if (root.getChildCount() == 0) root.add(new DefaultMutableTreeNode(new Label("No Nuclear project found: build one, or add an OpenAPI document", "message")));
             return root;
         }
@@ -525,7 +634,9 @@ public final class HttpConnections {
                     setIcon(AllIcons.Nodes.Method);
                     append(e.verb().toUpperCase() + " ", new SimpleTextAttributes(SimpleTextAttributes.STYLE_BOLD, verbColor(e.verb())));
                     append(e.path(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
-                    append("  " + e.owner() + (e.connection() == null || e.connection().isEmpty() ? "" : " · " + e.connection()), SimpleTextAttributes.GRAYED_ATTRIBUTES);
+                    if (!"socket".equals(e.kind()) && ("websocket".equals(e.protocol()) || e.socketPath() != null)) append("  WS", new SimpleTextAttributes(SimpleTextAttributes.STYLE_BOLD | SimpleTextAttributes.STYLE_SMALLER, COMPONENT));
+                    String side = "event".equals(e.kind()) ? (e.returns() + (e.description() == null ? "" : " " + e.description())) : e.owner() + (e.connection() == null || e.connection().isEmpty() ? "" : " · " + e.connection());
+                    append("  " + side, SimpleTextAttributes.GRAYED_ATTRIBUTES);
                 } else {
                     append(String.valueOf(o));
                 }
@@ -538,14 +649,54 @@ public final class HttpConnections {
                 case "put" -> PUT;
                 case "patch" -> PATCH;
                 case "delete" -> DELETE;
+                case "event", "ws" -> COMPONENT;
                 default -> GET;
             };
         }
 
         // ---------- request ----------
 
+        private Environment env() {
+            Environments envs = environments(base);
+            return envs.environments().get(envs.active());
+        }
+
+        /** The endpoint in the socket panel: its backend's url with the socket's path, or the environment's ws:// url. */
+        private void openSocket(Endpoint e) {
+            Environment env = env();
+            String url = e.path();
+            List<String[]> headers = new ArrayList<>();
+            String template = null;
+            if (!"socket".equals(e.kind())) {
+                String b = "{{baseUrl}}";
+                if (env != null) {
+                    if (e.connection() != null && env.baseUrls().containsKey(e.connection())) b = env.baseUrls().get(e.connection());
+                    else if (env.baseUrls().containsKey(e.project())) b = env.baseUrls().get(e.project());
+                }
+                url = SocketPanel.toSocketScheme(b.replaceAll("/$", "") + (e.socketPath() == null ? "/ws" : e.socketPath()));
+                if (e.guardHeaders() != null) for (String[] g : e.guardHeaders()) {
+                    if (env == null || env.headers().keySet().stream().noneMatch(h -> h.equalsIgnoreCase(g[0]))) headers.add(g);
+                }
+                // the frames of ADR-synapsis-0008: a request through the app, or a subscription
+                JsonObject m = new JsonObject();
+                if ("event".equals(e.kind())) m.addProperty("subscribe", e.path());
+                else {
+                    m.addProperty("id", 1);
+                    m.addProperty("method", e.verb().toUpperCase());
+                    m.addProperty("path", e.path());
+                    m.add("headers", new JsonObject());
+                    if (e.body() != null) m.add("body", JsonParser.parseString(e.body()));
+                }
+                template = PRETTY.toJson(m);
+            }
+            sockets.load(url, headers, template, e.guardHeaders() == null || e.guardHeaders().isEmpty() ? null : String.join(", ", e.guardHeaders().stream().map(g -> g[0]).toList()));
+            cards.show(right, "ws");
+        }
+
         private void load(Endpoint e) {
             current = e;
+            cards.show(right, "http");
+            overSocket.setVisible(e.socketPath() != null);
             Environments envs = environments(base);
             Environment env = envs.environments().get(envs.active());
             baseUrl = "{{baseUrl}}";
@@ -660,7 +811,7 @@ public final class HttpConnections {
             if (i == names.size() - 1) {
                 String name = Messages.showInputDialog(project, "Name of the environment", "HTTP Connections", null, "staging", null);
                 if (name == null || name.isBlank()) return;
-                envs.environments().put(name, new Environment(new LinkedHashMap<>(Map.of("baseUrl", "https://")), new LinkedHashMap<>(), new LinkedHashMap<>(), new ArrayList<>()));
+                envs.environments().put(name, new Environment(new LinkedHashMap<>(Map.of("baseUrl", "https://")), new LinkedHashMap<>(), new LinkedHashMap<>(), new ArrayList<>(), new ArrayList<>()));
                 envs = new Environments(name, envs.environments());
                 write(envs);
                 editEnvironments();
@@ -691,6 +842,20 @@ public final class HttpConnections {
             Environments envs = environments(base);
             Environment env = envs.environments().get(envs.active());
             if (env != null && !env.openapi().contains(source)) env.openapi().add(source);
+            write(envs);
+            refresh();
+        }
+
+        void addSocket() {
+            String url = Messages.showInputDialog(project, "WebSocket url of a server that is not a Nuclear project (ws:// or wss://)", "HTTP Connections", null, "ws://localhost:8080", null);
+            if (url == null || url.isBlank()) return;
+            if (!url.trim().matches("(?i)^(wss?://|\\{\\{).*")) {
+                Messages.showErrorDialog(project, "A ws:// or wss:// url (it may start with a {{variable}})", "HTTP Connections");
+                return;
+            }
+            Environments envs = environments(base);
+            Environment env = envs.environments().get(envs.active());
+            if (env != null && !env.sockets().contains(url.trim())) env.sockets().add(url.trim());
             write(envs);
             refresh();
         }
@@ -729,6 +894,316 @@ public final class HttpConnections {
                     refresh();
                 });
             });
+        }
+    }
+
+    /**
+     * The socket panel: one socket at a time, opened by the IDE with `java.net.http.WebSocket` (which sends no `Origin`,
+     * so a guard that refuses one lets the tool in), `{{var}}` resolved from the active environment, its headers once at
+     * the handshake; the message (JSON or text) with the sent ones as history; the log of both directions, filtered.
+     * Closed when the tool window's content is disposed.
+     */
+    static final class SocketPanel extends JPanel {
+        private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+        private static final int LOG_MAX = 500;
+        private static final int HISTORY_MAX = 30;
+
+        record Entry(String time, String dir, String text) {}
+
+        private final java.util.function.Supplier<Environment> env;
+        private final JTextField url = new JTextField();
+        private final JButton connect = new JButton("Connect");
+        private final JLabel state = new JLabel("disconnected");
+        private final JLabel hint = new JLabel();
+        private final DefaultTableModel headers = new DefaultTableModel(new Object[]{"Header", "Value"}, 0);
+        private final JBTextArea draft = new JBTextArea(5, 40);
+        private final JComboBox<String> format = new JComboBox<>(new String[]{"JSON", "Text"});
+        private final JButton send = new JButton("Send");
+        private final JComboBox<String> history = new JComboBox<>();
+        private final JLabel problem = new JLabel();
+        private final JTextField filter = new JTextField(14);
+        private final JComboBox<String> dir = new JComboBox<>(new String[]{"all", "received", "sent"});
+        private final JBTextArea log = new JBTextArea();
+        private final List<Entry> entries = new ArrayList<>();
+        private final List<String> sent = new ArrayList<>();
+        private WebSocket socket;
+        private String status = "closed";
+
+        SocketPanel(java.util.function.Supplier<Environment> env) {
+            super(new BorderLayout(6, 6));
+            this.env = env;
+            setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+            JPanel top = new JPanel(new BorderLayout(6, 0));
+            state.setPreferredSize(new Dimension(110, state.getPreferredSize().height));
+            top.add(state, BorderLayout.WEST);
+            top.add(url, BorderLayout.CENTER);
+            top.add(connect, BorderLayout.EAST);
+            connect.addActionListener(e -> {
+                if ("closed".equals(status)) connect();
+                else close();
+            });
+            JPanel head = new JPanel(new BorderLayout());
+            head.add(top, BorderLayout.NORTH);
+            hint.setForeground(JBColor.GRAY);
+            head.add(hint, BorderLayout.SOUTH);
+            add(head, BorderLayout.NORTH);
+
+            JTabbedPane tabs = new JTabbedPane();
+            JPanel message = new JPanel(new BorderLayout(4, 4));
+            draft.setFont(new Font(Font.MONOSPACED, Font.PLAIN, draft.getFont().getSize()));
+            message.add(new JBScrollPane(draft), BorderLayout.CENTER);
+            JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+            actions.add(format);
+            actions.add(send);
+            actions.add(history);
+            problem.setForeground(JBColor.RED);
+            actions.add(problem);
+            message.add(actions, BorderLayout.SOUTH);
+            tabs.addTab("Message", message);
+            JPanel headersPanel = new JPanel(new BorderLayout());
+            headersPanel.add(new JBScrollPane(new JBTable(headers)), BorderLayout.CENTER);
+            JButton addHeader = new JButton("+ header");
+            addHeader.addActionListener(e -> headers.addRow(new Object[]{"", ""}));
+            headersPanel.add(addHeader, BorderLayout.SOUTH);
+            tabs.addTab("Headers", headersPanel);
+            send.addActionListener(e -> send());
+            history.addActionListener(e -> {
+                int i = history.getSelectedIndex();
+                if (i > 0) draft.setText(sent.get(i - 1));
+            });
+
+            JPanel logPanel = new JPanel(new BorderLayout(4, 4));
+            JPanel logHead = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+            logHead.add(new JLabel("Messages"));
+            logHead.add(filter);
+            logHead.add(dir);
+            JButton clear = new JButton("clear");
+            clear.addActionListener(e -> {
+                entries.clear();
+                render();
+            });
+            logHead.add(clear);
+            logPanel.add(logHead, BorderLayout.NORTH);
+            log.setEditable(false);
+            log.setFont(new Font(Font.MONOSPACED, Font.PLAIN, log.getFont().getSize()));
+            logPanel.add(new JBScrollPane(log), BorderLayout.CENTER);
+            filter.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+                public void insertUpdate(javax.swing.event.DocumentEvent e) { render(); }
+                public void removeUpdate(javax.swing.event.DocumentEvent e) { render(); }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) { render(); }
+            });
+            dir.addActionListener(e -> render());
+
+            OnePixelSplitter v = new OnePixelSplitter(true, 0.4f);
+            v.setFirstComponent(tabs);
+            v.setSecondComponent(logPanel);
+            add(v, BorderLayout.CENTER);
+            showStatus();
+            renderHistory();
+        }
+
+        static String toSocketScheme(String u) {
+            return u.replaceFirst("(?i)^http(s?)://", "ws$1://");
+        }
+
+        private static String resolve(String text, Map<String, String> vars) {
+            Matcher m = VAR.matcher(text);
+            StringBuilder sb = new StringBuilder();
+            while (m.find()) m.appendReplacement(sb, Matcher.quoteReplacement(vars.getOrDefault(m.group(1), m.group(0))));
+            m.appendTail(sb);
+            return sb.toString();
+        }
+
+        /** A new target: the socket of the previous one is closed; the contract's message goes into the draft. */
+        void load(String target, List<String[]> guardHeaders, String template, String guardHeader) {
+            if (!target.equals(url.getText())) {
+                close();
+                url.setText(target);
+                headers.setRowCount(0);
+                for (String[] h : guardHeaders) headers.addRow(new Object[]{h[0], h[1]});
+            }
+            Environment e = env.get();
+            String vars = e == null ? "" : String.join(" ", e.vars().keySet().stream().map(k -> "{{" + k + "}}").toList());
+            hint.setText((guardHeader == null ? "" : "its guards read a token from: " + guardHeader + "   ") + "variables: " + vars);
+            if (template != null) {
+                draft.setText(template);
+                format.setSelectedItem("JSON");
+            }
+        }
+
+        private void add(String dirName, String text) {
+            SwingUtilities.invokeLater(() -> {
+                entries.add(new Entry(LocalTime.now().format(TIME), dirName, text));
+                if (entries.size() > LOG_MAX) entries.subList(0, entries.size() - LOG_MAX).clear();
+                render();
+            });
+        }
+
+        private void setStatus(String s) {
+            SwingUtilities.invokeLater(() -> {
+                status = s;
+                showStatus();
+            });
+        }
+
+        private void showStatus() {
+            state.setText("open".equals(status) ? "● connected" : "connecting".equals(status) ? "● connecting…" : "○ disconnected");
+            state.setForeground("open".equals(status) ? GET : "connecting".equals(status) ? PUT : JBColor.GRAY);
+            connect.setText("closed".equals(status) ? "Connect" : "Disconnect");
+            url.setEnabled("closed".equals(status));
+            send.setEnabled("open".equals(status));
+        }
+
+        private void renderHistory() {
+            history.removeAllItems();
+            history.addItem(sent.isEmpty() ? "Nothing sent yet" : "Sent before (" + sent.size() + ")");
+            for (String m : sent) history.addItem(m.replaceAll("\\s+", " ").substring(0, Math.min(60, m.replaceAll("\\s+", " ").length())));
+            history.setEnabled(!sent.isEmpty());
+        }
+
+        private void render() {
+            String q = filter.getText().trim().toLowerCase();
+            String d = String.valueOf(dir.getSelectedItem());
+            String want = "received".equals(d) ? "in" : "sent".equals(d) ? "out" : null;
+            StringBuilder sb = new StringBuilder();
+            for (Entry e : entries) {
+                if (want != null && !want.equals(e.dir())) continue;
+                if (!q.isEmpty() && !e.text().toLowerCase().contains(q)) continue;
+                String arrow = switch (e.dir()) {
+                    case "in" -> "↓";
+                    case "out" -> "↑";
+                    case "error" -> "!";
+                    default -> "•";
+                };
+                String text = e.text();
+                try {
+                    JsonElement j = JsonParser.parseString(text);
+                    if (j.isJsonObject() || j.isJsonArray()) text = PRETTY.toJson(j).replace("\n", "\n                   ");
+                } catch (Exception ignored) {
+                    // not JSON: as it came
+                }
+                sb.append(e.time()).append("  ").append(arrow).append("  ").append(text).append('\n');
+            }
+            log.setText(sb.toString());
+            log.setCaretPosition(log.getDocument().getLength());
+        }
+
+        private void connect() {
+            Environment e = env.get();
+            Map<String, String> vars = e == null ? Map.of() : e.vars();
+            String target = toSocketScheme(resolve(url.getText().trim(), vars));
+            if (VAR.matcher(target).find()) {
+                add("error", "a variable of " + target + " is not in the environment");
+                return;
+            }
+            if (!target.matches("(?i)^wss?://.+")) {
+                add("error", "not a ws:// or wss:// url: " + target);
+                return;
+            }
+            Map<String, String> hs = new LinkedHashMap<>();
+            if (e != null) for (Map.Entry<String, String> h : e.headers().entrySet()) hs.put(h.getKey(), resolve(h.getValue(), vars));
+            for (int i = 0; i < headers.getRowCount(); i++) {
+                String k = String.valueOf(headers.getValueAt(i, 0)).trim();
+                if (!k.isEmpty()) hs.put(k, resolve(String.valueOf(headers.getValueAt(i, 1)), vars));
+            }
+            WebSocket.Builder b = HttpClient.newHttpClient().newWebSocketBuilder().connectTimeout(Duration.ofSeconds(10));
+            for (Map.Entry<String, String> h : hs.entrySet()) {
+                try {
+                    b.header(h.getKey(), h.getValue());
+                } catch (IllegalArgumentException ex) {
+                    add("error", "header " + h.getKey() + " not allowed: " + ex.getMessage());
+                }
+            }
+            setStatus("connecting");
+            add("info", "connecting to " + target + (hs.isEmpty() ? "" : " · headers: " + String.join(", ", hs.keySet())));
+            b.buildAsync(URI.create(target), new WebSocket.Listener() {
+                private final StringBuilder text = new StringBuilder();
+
+                @Override
+                public void onOpen(WebSocket ws) {
+                    socket = ws;
+                    setStatus("open");
+                    add("info", "connected to " + target);
+                    ws.request(1);
+                }
+
+                @Override
+                public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
+                    text.append(data);
+                    if (last) {
+                        add("in", text.toString());
+                        text.setLength(0);
+                    }
+                    ws.request(1);
+                    return null;
+                }
+
+                @Override
+                public CompletionStage<?> onBinary(WebSocket ws, java.nio.ByteBuffer data, boolean last) {
+                    add("in", "[binary, " + data.remaining() + " bytes]");
+                    ws.request(1);
+                    return null;
+                }
+
+                @Override
+                public CompletionStage<?> onClose(WebSocket ws, int code, String reason) {
+                    if (socket == ws) socket = null;
+                    setStatus("closed");
+                    add("info", "closed (" + code + (reason == null || reason.isEmpty() ? "" : " " + reason) + ")");
+                    return CompletableFuture.completedFuture(null);
+                }
+
+                @Override
+                public void onError(WebSocket ws, Throwable error) {
+                    if (socket == ws) socket = null;
+                    setStatus("closed");
+                    add("error", String.valueOf(error.getMessage() == null ? error : error.getMessage()));
+                }
+            }).whenComplete((ws, error) -> {
+                if (error != null) {
+                    setStatus("closed");
+                    Throwable cause = error.getCause() == null ? error : error.getCause();
+                    add("error", String.valueOf(cause.getMessage() == null ? cause : cause.getMessage()));
+                }
+            });
+        }
+
+        private void send() {
+            String text = draft.getText();
+            if (text.isBlank()) return;
+            if ("JSON".equals(format.getSelectedItem())) {
+                try {
+                    JsonParser.parseString(text);
+                    problem.setText("");
+                } catch (Exception ex) {
+                    problem.setText("Not valid JSON");
+                    return;
+                }
+            }
+            WebSocket ws = socket;
+            if (ws == null) {
+                add("error", "not connected: connect first");
+                return;
+            }
+            Environment e = env.get();
+            String resolved = resolve(text, e == null ? Map.of() : e.vars());
+            ws.sendText(resolved, true).whenComplete((w, error) -> add(error == null ? "out" : "error", error == null ? resolved : String.valueOf(error.getMessage())));
+            sent.remove(text);
+            sent.add(0, text);
+            if (sent.size() > HISTORY_MAX) sent.remove(sent.size() - 1);
+            renderHistory();
+        }
+
+        /** Closes the socket (a normal closure), if one is open. */
+        void close() {
+            WebSocket ws = socket;
+            socket = null;
+            if (ws != null && !ws.isOutputClosed()) ws.sendClose(WebSocket.NORMAL_CLOSURE, "").exceptionally(error -> {
+                ws.abort();
+                return null;
+            });
+            status = "closed";
+            showStatus();
         }
     }
 }

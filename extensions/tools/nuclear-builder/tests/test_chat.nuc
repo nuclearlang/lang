@@ -1,0 +1,149 @@
+use json
+use httpx
+use pathlib{ Path }
+
+// The chat (design.md "The chat"): one conversation, JSON lines both ways, its history kept and resumed, the
+// factory's tools (a spec's base written in its component's folder), the spending confirmed twice, a role's files
+// put back. The Nuclear Developer is an httpx stub, Claude Code a fake command: no paid call.
+
+chatProject(tmpPath: Path, monkeypatch: any) string
+  root = tmpPath.joinpath("app")
+  root.joinpath("components", "booking").mkdir(parents = true)
+  root.joinpath("config.nuc").writeText("")
+  root.joinpath(".nuclear").mkdir()
+  root.joinpath(".nuclear", "project.json").writeText(json.dumps({ "name": "app", "platform": "backend" }))
+  monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("roles")}")
+  monkeypatch.chdir(root)
+  "${root}"
+
+// The local assistant: its answers in order (the last one again), and the bodies it was sent.
+assistant(bodies: <string, any>[], answers: string[]) httpx.MockTransport
+  answer = (request: httpx.Request) =>
+    if request.url.path != "/developer/chat"
+      return httpx.Response(404, text = "no route")
+    bodies.add(json.loads(request.content))
+    httpx.Response(200, json = { "report": answers.length > 1 ? answers.removeAt(0) : answers[0], "trace": [{ "step": "recall", "detail": "3 cards" }] })
+  httpx.MockTransport(answer)
+
+// The next line the user sends, or null when none is left.
+nextLine(lines: string[]) string?
+  lines.isEmpty ? null : lines.removeAt(0)
+
+say(text: string) string
+  json.dumps({ "type": "say", "text": text })
+
+chatOf(root: string, id: string, given: <string, any>, lines: string[], events: <string, any>[], options: <string, any> = {}) Chat
+  opts: <string, any> = { "events": true }
+  for k, v in options
+    opts[k] = v
+  Chat(root, id, given, readLine(root, "backend"), () => nextLine(lines), (e: <string, any>) => events.add(e), opts)
+
+kinds(events: <string, any>[]) string[]
+  events.map((e) => e["type"] == "event" ? "${(e["event"] as <string, any>)["type"]}" : "${e["type"]}")
+
+testTheChatWritesASpecsBaseWithTheFactorysToolAndKeepsItsHistory(tmpPath: Path, monkeypatch: any) void
+  root = chatProject(tmpPath, monkeypatch)
+  bodies: <string, any>[] = []
+  first = "I write its base.\n--- tool: spec_new ---\n{\"title\": \"Book a room\", \"component\": \"booking\", \"layer\": \"domain\", \"description\": \"A guest books a free room.\", \"criteria\": [\"a booked room is not free\"]}"
+  local = assistant(bodies, [first, "Its base is in specs/booking/domain/book-a-room/spec.md."])
+  events: <string, any>[] = []
+  code = chatOf(root, "c1", {}, [say("write a spec's base for booking a room"), "not json", ""], events, { "transport": local }).start()
+  expect(code == 0)
+  expect(kinds(events) == ["history", "trace", "text", "tool", "tool-result", "trace", "text", "done", "error"], json.dumps(kinds(events)))
+  spec = Path(root, "specs", "booking", "domain", "book-a-room", "spec.md")
+  expect(spec.isFile() and "- Component: booking\n- Layer: domain\n" in spec.readText() and "A guest books a free room." in spec.readText())
+  result = events.find((e) => e["type"] == "event" and (e["event"] as <string, any>)["type"] == "tool-result")!
+  expect((result["event"] as <string, any>)["ok"] == true and "specs/booking/domain/book-a-room" in "${(result["event"] as <string, any>)["text"]}")
+  done = events.find((e) => e["type"] == "done")!
+  expect(done["status"] == "answered" and done["step"] == "turn-1" and done["costUsd"] == 0)
+  // the assistant's route, with the conversation, the factory's tools and the components; the tool's result in the
+  // second call
+  expect(bodies.length == 2 and bodies[0]["platform"] == "backend" and bodies[0]["root"] == root)
+  message = "${bodies[0]["message"]}"
+  expect("you: write a spec's base for booking a room" in message and "`spec_new`" in message and "- booking" in message and "never edit a role's files" in message)
+  expect("the result of the tool spec_new" in "${bodies[1]["message"]}" and "## Now" in "${bodies[1]["message"]}" and "book-a-room" in "${bodies[1]["message"]}")
+  // the history, appended; a conversation resumed shows it and goes on with it
+  kept = Path(root, CHAT_DIR, "c1.jsonl").readText().trim().split("\n").map((l) => json.loads(l))
+  expect(kept.map((h) => h["role"]) == ["you", "agent", "tool", "agent"] and kept[1]["text"] == "I write its base.")
+  again: <string, any>[] = []
+  chatOf(root, "c1", {}, [say("and now?")], again, { "transport": assistant(bodies, ["Nothing else."]) }).start()
+  expect((again[0]["messages"] as <string, any>[]).length == 4 and again.last["step"] == "turn-2" and "you: and now?" in "${bodies.last["message"]}" and "Its base is in" in "${bodies.last["message"]}")
+
+testAPaidProviderIsConfirmedTwiceOnceForTheConversation(tmpPath: Path, monkeypatch: any) void
+  root = chatProject(tmpPath, monkeypatch)
+  log = fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "assistant", "message": { "content": [{ "type": "text", "text": "Two runs passed." }] } }, { "type": "result", "result": "Two runs passed.", "total_cost_usd": 0.02, "is_error": false }])
+  claude: <string, any> = { "kind": "agent", "provider": "claude-code", "model": "haiku" }
+  // no: nothing is called
+  refused: <string, any>[] = []
+  chatOf(root, "paid", claude, [say("what was done?"), json.dumps({ "answer": "no" })], refused).start()
+  expect(kinds(refused) == ["history", "ask", "done"] and refused.last["status"] == "stopped" and not log.exists())
+  // yes twice: the call, its cost; a message said while it asks waits its turn
+  events: <string, any>[] = []
+  chatOf(root, "paid", claude, [say("what was done?"), say("and the cost?"), json.dumps({ "answer": "yes" }), json.dumps({ "answer": "yes" })], events, { "budgetUsd": 1.5 }).start()
+  asks = events.filter((e) => e["type"] == "ask")
+  expect(asks.map((a) => a["id"]) == ["spending-1", "spending-2"] and asks[1]["budgetUsd"] == 1.5 and asks[0]["providers"] == ["claude-code"], json.dumps(events))
+  dones = events.filter((e) => e["type"] == "done")
+  expect(dones.map((d) => d["status"]) == ["answered", "answered"] and dones[0]["costUsd"] == 0.02 and dones[1]["totalUsd"] == 0.04, json.dumps(dones))
+  args = log.readText().split("\n")
+  expect(args[args.indexOf("--model") + 1] == "haiku" and "--mcp-config" in args)
+  // resumed, it does not ask again; --confirm-spending is refused when the project forces the confirmation
+  more: <string, any>[] = []
+  chatOf(root, "paid", claude, [say("thanks")], more).start()
+  expect(not ("ask" in kinds(more)) and more.last["status"] == "answered")
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "forceConfirm": true }))
+  forced: <string, any>[] = []
+  threw = false
+  try
+    chatOf(root, "new", claude, [say("hi")], forced, { "confirmSpending": true }).start()
+  catch e
+    threw = "forces the confirmation" in "${e}"
+  expect(threw)
+
+testWhatTheChatsAgentChangesInARolesFilesIsPutBack(tmpPath: Path, monkeypatch: any) void
+  root = chatProject(tmpPath, monkeypatch)
+  role = tmpPath.joinpath("roles", "analyst", "role.md")
+  role.parent.mkdir(parents = true)
+  role.writeText("# Analyst\n")
+  fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "result", "result": "Changed it.", "total_cost_usd": 0.0, "is_error": false }])
+  // the fake agent writes its document where FAKE_DOC says: here, over the role
+  monkeypatch.setenv("FAKE_DOC", "${role}")
+  events: <string, any>[] = []
+  chatOf(root, "g", { "provider": "claude-code" }, [say("make the analyst funnier")], events, { "confirmSpending": true }).start()
+  expect(role.readText() == "# Analyst\n")
+  guard = events.find((e) => e["type"] == "event" and (e["event"] as <string, any>)["step"] == "guard")
+  expect(guard != null and "${role}" in "${(guard!["event"] as <string, any>)["detail"]}")
+
+testTheFactorysToolsAndTheirCalls(tmpPath: Path, monkeypatch: any) void
+  root = chatProject(tmpPath, monkeypatch)
+  found = toolCalls("Here.\n--- tool: runs ---\n\n--- tool: run-file ---\n```json\n{\"id\": \"a\"}\n```\n--- tool: checks ---\nnot json")
+  calls: <string, any>[] = found["calls"]!
+  expect(found["text"] == "Here." and calls.map((c) => c["name"]) == ["runs", "run_file", "checks"] and calls[1]["input"] == { "id": "a" } and calls[2]["bad"] == "not json")
+  sloppy = toolCalls("--- tool: spec_new\n{\"title\": \"T\"}---")["calls"] as <string, any>[]
+  expect(sloppy.length == 1 and sloppy[0]["input"] == { "title": "T" })
+  // the local assistant's `/task` form, as a 3B model wrote it from the editor's chat; a real order is words, not a call
+  asTask = toolCalls("/task spec_new {\"title\": \"Basic mobile\", \"component\": \"mobile\"}")
+  expect((asTask["calls"] as <string, any>[]).map((c) => c["name"]) == ["spec_new"] and (asTask["calls"] as <string, any>[])[0]["input"] == { "title": "Basic mobile", "component": "mobile" } and "${asTask["text"]}".isEmpty)
+  expect((toolCalls("Send it as an order:\n/task build the login screen")["calls"] as any[]).isEmpty)
+  // the server's name before the tool is left out
+  named = toolCalls("--- tool: nuclear_builder run_start ---\n{\"spec\": \"lend-a-book\"}")["calls"] as <string, any>[]
+  expect(named[0]["name"] == "run_start" and named[0]["input"] == { "spec": "lend-a-book" })
+  // a bare value is the tool's first argument
+  bare = toolCalls("/task project_read docs/slides.pdf")["calls"] as <string, any>[]
+  expect(bare[0]["name"] == "project_read" and bare[0]["input"] == { "_": "docs/slides.pdf" })
+  Path(root, "docs").mkdir()
+  Path(root, "docs", "slides.pdf.md").writeText("# Slides")
+  expect(chatTool(root, "project_read", { "_": "docs/slides.pdf.md" })["error"] == false)
+  // a small model's arguments as the schema takes them
+  loose = smallModelArguments(builderToolList(root).find((t) => t["name"] == "spec_new")!, { "title": "T", "component": "_global", "criteria": "A lent book is not free. It lasts 14 days.", "layer": null, "use_case": "bug" })
+  expect(loose == { "title": "T", "component": "_global", "criteria": ["A lent book is not free.", "It lasts 14 days."], "useCase": "bug" }, json.dumps(loose))
+  // a small model's `key: value` lines are its arguments too
+  lines = toolCalls("--- tool: spec_new ---\ntitle: Lend a book,\ncriteria: [\"a lent book is not free\"]")["calls"] as <string, any>[]
+  expect(lines[0]["input"] == { "title": "Lend a book", "criteria": ["a lent book is not free"] }, json.dumps(lines))
+  expect(toolCalls("Only words.")["text"] == "Only words." and (toolCalls("Only words.")["calls"] as any[]).isEmpty)
+  expect(chatTool(root, "rm", {})["error"] == true and chatTool(root, "run_file", { "id": "none" })["error"] == true)
+  Path(root, RUNS_DIR).mkdir(parents = true)
+  Path(root, RUNS_DIR, "a.json").writeText(json.dumps({ "id": "a", "status": "passed", "created": 1, "spec": { "title": "A" }, "stages": [{ "id": "analysis", "status": "passed", "steps": [{ "id": "analysis-1", "log": "x" }] }], "writes": [{ "path": "lib/a.nuc", "before": "secret text" }] }))
+  shown = chatTool(root, "run_file", { "id": "a" })
+  expect(shown["error"] == false and not ("secret text" in "${shown["text"]}"))
+  expect(json.loads("${chatTool(root, "runs", {})["text"]}") == [{ "id": "a", "title": "A", "status": "passed", "costUsd": 0, "specPath": "specs/a", "stations": [{ "id": "analysis", "status": "passed" }] }])
+  expect(kindOf("nuclear-developer") == "local" and kindOf("codex") == "agent" and kindOf("openrouter") == "api")

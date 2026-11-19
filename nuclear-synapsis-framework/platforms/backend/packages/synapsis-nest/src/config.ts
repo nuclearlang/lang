@@ -2,6 +2,7 @@
 // database goes to SequelizeModule.forRoot, the others are opened when the app starts and closed when it stops.
 // Values usually come from the environment: env('X', 'default').
 import type { SequelizeModuleOptions } from '@nestjs/sequelize';
+import type { Guard } from './guards.js';
 
 /** The environment variable `name`, or `fallback`. */
 export function env(name: string, fallback = ''): string {
@@ -15,6 +16,9 @@ export abstract class Connection {
   async open(): Promise<void> {}
 
   async close(): Promise<void> {}
+
+  /** Called by configureApp with the Nest app before it starts (the app's WebSocket hooks in here). */
+  instrument(_app: unknown): void {}
 }
 
 export interface DatabaseOptions {
@@ -76,6 +80,8 @@ export class SQLite extends Database {
 /** The project configuration (config/project_config.nuc): its connections. */
 export abstract class AppConfig {
   abstract readonly connections: Connection[];
+  // the guards every route passes (ADR-synapsis-0007), when the project config lists them
+  readonly guards?: Guard[];
 }
 
 /** The configuration of one component: connections only it uses. */

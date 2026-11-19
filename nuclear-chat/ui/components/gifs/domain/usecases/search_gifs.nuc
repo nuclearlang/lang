@@ -1,0 +1,4 @@
+// What GifsRepository.search answers, for the screens of gifs.
+usecase SearchGifs(repository: GifsRepository)
+  exec(workspace: string, q: string) Result<NuclearChatError, GifResults>
+    ~repository.search(workspace, q)

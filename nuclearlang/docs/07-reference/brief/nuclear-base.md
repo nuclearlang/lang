@@ -15,12 +15,14 @@ and usually the exact `fix`). Format before finishing: `nuclear fmt <file|folder
 | `new User("Ana")` | `User("Ana")` | no `new` |
 | `f(name: "Ana")`, `f({ name })` | `f(name = "Ana")` | named arguments use `=` |
 | `await load()`, `async` | `~load()` | a function that uses `~` is async by itself |
-| `&&` `\|\|` `!x` `===` | `and` `or` `not x` `==` | comparisons are always strict |
+| `&&` `\|\|` `!x` `===` | `and` `or` `not x` `==` | comparisons are always strict; two lists, maps or sets are equal when they hold equal values |
 | `a.contains(x)` / `a.includes(x)` | `x in a` | also `key in map` |
 | `class User extends Person implements Named` | `User(name: string) : Person > Named` + block | the header holds the constructor |
+| `count = 0` as a class field | `count: int = 0` | a field always has its type (N0017); a constructor parameter is a field too |
 | `this.name` | `name`; `$name` when a parameter hides it | |
 | `interface`, `enum` | the shape decides: only signatures = interface; only names (or `name("value")`) = enum | |
-| `cond ? a : b` statements | `if`/`match` are values | `x = if c` + branches |
+| `cond ? a : b` | the same, for a value inside an expression (an argument, a list) | `if c then a` does not exist |
+| `if` / `switch` returning a value | `if`/`match` are values, as blocks | `x = if c` + indented branches; never inside an argument list |
 | `switch` | `match value` + `pattern -> value`, `_` = else | `is Type ->`, `a \| b ->` |
 | `try/catch (e)` | `try` / `catch e` / `finally` | as the last line, its value is returned |
 | `x!`, `x?.y`, `x ?? y` | the same | |
@@ -80,7 +82,8 @@ main() void
 
 - Types: `string int double number boolean void`, `T[]`, `<K, V>` (map), `T?`, `A | B`, `(a: int) => T`.
 - Literals: `1_000`, `0xff`, `0b1010`, `1.5e-3`, `[a, ...b]`, `{ key: value }`, `0..10` (0 to 9), `"""` multi-line.
-- Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block.
+- Lambdas: `x => x * 2`, `(a, b) => a + b`; a block as the last argument: `items.forEach(item)` + indented block;
+  a block as a named argument: `onTap = () =>` + indented block, then `, child = ...` on the line after it.
 - `Result<E, T>` (error first): `Ok(v)`, `Err(e)`; `x = f()` inside a function returning `Result` unwraps it and
   returns the `Err` by itself (`nuclear help results`).
 - Comments `//`; the comment right above a declaration is its doc comment.
@@ -88,11 +91,11 @@ main() void
 
 ## The library is Nuclear's
 
-Base types have one name per operation in every dialect (`nuclearlang/docs/07-reference/library.md`, `nuclear help library`): `xs.length`,
+Base types have one name per operation in every dialect (`nuclear help library`): `xs.length`,
 `xs.add(x)`, `s.upper()`, `x in xs`; the dialect writes the target's code (`len(xs)`, `xs.push(x)`). A target's name
 on a base type (`push`, `len`, `toUpperCase`, `contains`) is an error with the Nuclear name as its fix. Library
 classes of a type definition (`dio`, `numpy`, `Text(...)`) are written as the library names them and tie the code to
-that dialect. Each area has an example in `examples/stdlib/`. Not sure an API exists: `nuclear defs show <Name>
+that dialect. Not sure an API exists: `nuclear defs show <Name>
 --dialect <d>` instead of guessing.
 
 ## The compiler corrects habits

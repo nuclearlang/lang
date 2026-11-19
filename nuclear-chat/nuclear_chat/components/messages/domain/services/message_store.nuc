@@ -1,0 +1,151 @@
+// The history of a workspace's channels (spec 013, design.md "On disk"): one file per channel in the project
+// (`.nuclear/chat/<channel>.jsonl`), one JSON line per message, appended. An edit or a reaction is a new line that
+// names its message (`{"edit": "<id>", …}`); reading folds them. A line cut by a crash is skipped. Nothing written
+// is ever rewritten.
+service MessageStore(files: ChatFiles, workspaces: WorkspacesAppComponent)
+  // the channel each message was seen in, by workspace and message id
+  where: <string, string> = {}
+
+  workspace(id: string) Result<Error, Workspace>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is returned whole
+    found: Result<Error, Workspace> = workspaces.workspace(id)
+    found
+
+  channel(ws: Workspace, id: string) Result<Error, Channel>
+    found = ws.channel(id)
+    if found == null
+      return Err(NotFound("no channel ${id} in this workspace"))
+    Ok(found!)
+
+  file(ws: Workspace, channel: string) string
+    ws.chatFile("${channel}.jsonl")
+
+  // Every line of a channel that is a message or names one, in order.
+  lines(ws: Workspace, channel: string) <string, any>[]
+    found: <string, any>[] = []
+    for l in files.readLines(file(ws, channel))
+      try
+        entry = Json.decode(l) as <string, any>
+        if entry["id"] != null or entry["edit"] != null
+          found.add(entry)
+      catch e
+        // a line cut by a crash
+        continue
+    found
+
+  append(ws: Workspace, channel: string, entry: <string, any>) void
+    files.appendLine(file(ws, channel), Json.encode(entry))
+    if entry["id"] != null
+      where["${ws.id}/${entry["id"]}"] = channel
+
+  // The messages of a channel, folded, as maps (what a line holds).
+  folded(ws: Workspace, channel: string) <string, any>[]
+    fold(lines(ws, channel))
+
+  history(ws: Workspace, channel: string) Message[]
+    folded(ws, channel).map((m) => messageOf(m))
+
+  // The channel a message is in.
+  locate(ws: Workspace, id: string) Result<Error, string>
+    known = where["${ws.id}/${id}"]
+    if known != null
+      return Ok(known!)
+    for c in ws.channels
+      if lines(ws, c.id).any((l) => l["id"] == id)
+        where["${ws.id}/${id}"] = c.id
+        return Ok(c.id)
+    Err(NotFound("no message ${id} in this workspace"))
+
+  // One message, folded.
+  message(ws: Workspace, channel: string, id: string) Result<Error, <string, any>>
+    found = folded(ws, channel).find((m) => m["id"] == id)
+    if found == null
+      return Err(NotFound("no message ${id} in this workspace"))
+    Ok(found!)
+
+  // The messages of a channel after the last one the user read, but the user's own.
+  unread(ws: Workspace, channel: Channel) int
+    unreadCount(folded(ws, channel.id), channel.lastRead)
+
+  // The messages of every channel that hold every word (in the text or a GIF's title), newest first.
+  search(ws: Workspace, words: string) Found[]
+    wanted = words.lower().split(Regex(r"\s+")).filter((w: string) => not w.isEmpty)
+    if wanted.isEmpty
+      return []
+    found: Found[] = []
+    for c in ws.channels
+      for m in folded(ws, c.id)
+        gif: <string, any> = m["gif"] ?? ({} as <string, any>)
+        text = "${m["text"] ?? ""} ${gif["title"] ?? ""}".lower()
+        if wanted.all((w) => w in text)
+          found.add(Found(channel = c.id, message = messageOf(m)))
+    found.sortedBy((f) => -f.message.at)
+
+// A new message's id: its time and a random tail (the GIF personality's seed).
+newMessageId() string
+  "${DateTime.now().millis}-${(Math.random() * 16_777_216).floor().toRadix(16)}"
+
+// What an edit line may change of its message.
+EDITABLE = ["text", "buttons", "links", "gif"]
+
+// The messages of a channel's lines: each edit folded into the message it names (a reaction line toggles who reacted
+// with that emoji), and each message that opened a thread with its count and its last reply's time.
+fold(lines: <string, any>[]) <string, any>[]
+  messages: <string, any>[] = []
+  byId: <string, <string, any>> = {}
+  for l in lines
+    target = "${l["edit"] ?? ""}"
+    if target.isEmpty
+      id = "${l["id"]}"
+      if id in byId
+        continue
+      reactions: <string, any> = { ...(l["reactions"] ?? ({} as <string, any>)) }
+      m: <string, any> = { ...l, "reactions": reactions }
+      messages.add(m)
+      byId[id] = m
+      continue
+    shown = byId[target]
+    if shown == null
+      continue
+    if l["react"] != null
+      toggle(shown!["reactions"]!, "${l["react"]}", "${l["by"] ?? "you"}")
+      continue
+    for k in EDITABLE
+      if k in l
+        shown![k] = l[k]
+    edited: <string, any> = shown!
+    edited["edited"] = l["at"] ?? 0
+  for m in messages
+    opened = m["thread"] == null ? null : byId["${m["thread"]}"]
+    if opened != null
+      root: <string, any> = opened!
+      root["replies"] = (root["replies"] ?? 0) + 1
+      root["lastReply"] = m["at"] ?? 0
+  messages
+
+// Who reacted with an emoji: the same person again takes it away.
+toggle(reactions: <string, any>, emoji: string, who: string) void
+  people: string[] = ((reactions[emoji] ?? []) as string[]).copy()
+  if who in people
+    people.remove(who)
+  else
+    people.add(who)
+  if people.isEmpty
+    reactions.remove(emoji)
+  else
+    reactions[emoji] = people
+
+// The messages after the last one the user read, but the user's own.
+unreadCount(messages: <string, any>[], lastRead: int) int
+  messages.count((m) => (m["at"] ?? 0) > lastRead and m["author"] != "you")
+
+// A message as the API answers it.
+messageOf(m: <string, any>) Message
+  gif: <string, any>? = m["gif"]
+  shownGif: Gif? = null
+  if gif != null
+    source = "${gif!["source"] ?? "pack"}"
+    shownGif = Gif(src = "${gif!["src"] ?? ""}", title = "${gif!["title"] ?? ""}", source = source in ["pack", "tenor", "giphy"] ? source : "pack")
+  buttons = ((m["buttons"] ?? []) as <string, any>[]).map((b) => Button(id = "${b["id"]}", label = "${b["label"] ?? b["id"]}", style = "${b["style"] ?? ""}"))
+  thread: string? = m["thread"] == null ? null : "${m["thread"]}"
+  Message(id = "${m["id"]}", at = (m["at"] ?? 0) as int, author = "${m["author"] ?? "system"}", text = "${m["text"] ?? ""}", thread = thread, gif = shownGif, reactions = (m["reactions"] ?? {}) as <string, string[]>, buttons = buttons, links = (m["links"] ?? {}) as <string, string>, costUsd = m["costUsd"], edited = (m["edited"] ?? 0) as int, replies = (m["replies"] ?? 0) as int, lastReply = (m["lastReply"] ?? 0) as int)

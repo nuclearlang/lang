@@ -1,0 +1,4 @@
+// What EventsRepository.since answers, for the screens of events.
+usecase EventsSince(repository: EventsRepository)
+  exec(workspace: string, since: int) Result<NuclearChatError, ChatEvent[]>
+    ~repository.since(workspace, since)

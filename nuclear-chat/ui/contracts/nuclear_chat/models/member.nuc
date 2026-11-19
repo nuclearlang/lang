@@ -1,0 +1,16 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// A member of the factory, as its host gives it: who they are, how they speak and how they answer.
+Member
+  id: string
+  name: string
+  role: string = ""
+  team: string = ""
+  // the host's id of the member's portrait (a roster's employee)
+  avatar: string = ""
+  // the portrait the page draws: a `data:` or `https:` URL (the host reads its file), empty for the initials
+  face: string = ""
+  profile: Profile
+  personality: Personality
+  responder: Responder
+  // who works the member (an agent and its model), drawn in a direct message's header
+  brain: Brain

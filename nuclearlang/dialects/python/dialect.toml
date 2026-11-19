@@ -86,13 +86,18 @@ method_signature = """
 {{/mods.static}}{{#mods.get}}@property
 {{/mods.get}}{{#override}}@override
 {{/override}}{{#async}}async {{/async}}def {{name}}{{generics}}({{^mods.static}}self{{#params}}, {{/params}}{{/mods.static}}{{params}}) -> {{#ret}}{{ret}}{{/ret}}{{^ret}}None{{/ret}}: ..."""
-field = "{{decorators}}{{name}}: {{#type}}{{type}}{{#optional}} | None{{/optional}}{{/type}}{{^type}}Any{{/type}}{{^in_init}}{{#default}} = {{default}}{{/default}}{{/in_init}}"
+# a static field is the class's own (`ClassVar`), with its value; the others are set by `__init__` (init_fields)
+field = "{{decorators}}{{name}}: {{#static}}ClassVar[{{/static}}{{#type}}{{type}}{{#optional}} | None{{/optional}}{{/type}}{{^type}}Any{{/type}}{{#static}}]{{/static}}{{^in_init}}{{#default}} = {{default}}{{/default}}{{/in_init}}"
 constructor = """
 def __init__(self{{#params}}, {{params}}{{/params}}) -> None:
     {{#body}}{{body}}{{/body}}{{^body}}pass{{/body}}"""
 field_init = "self.{{name}} = {{value}}"
 super_ctor = "super().__init__({{args}})"
 ctor_param = "{{name}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}}{{^default}}{{#optional}} = None{{/optional}}{{/default}}"
+# a function that assigns a variable of its file names it first (else Python makes it a local of the function)
+global_decl = "global {{names}}"
+# a parameter whose default is a list or a map: None, and the function makes a new one (a default is made once)
+default_init = "if {{name}} is None:\n    {{name}} = {{value}}"
 param = "{{decorators}}{{name}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}}{{^default}}{{#optional}} = None{{/optional}}{{/default}}"
 params_named_group = "*, {{params}}"
 decorator = "@{{name}}{{#has_args}}({{args}}){{/has_args}}"
@@ -174,7 +179,14 @@ cascade_self = ""
 pattern_ignore = "_"
 pattern_assign = "{{target}} = {{value}}"
 member = "{{object}}.{{name}}"
+# in an interpolated text a missing value is `null` and a boolean `true` / `false`, as Nuclear writes them (print
+# does it through `_print`)
+show_nullable = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
+show_bool = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }
 optional_member = "({{object}}.{{name}} if {{object}} is not None else None)"
+# a chain after a `?.` (`u?.name.upper()`): all of it waits for each receiver, as `?.` does in TypeScript and Dart
+optional_chain = "({{value}} if {{conds}} else None)"
+optional_cond = "{{object}} is not None"
 # a map read is None when the key is absent (nuclearlang/docs/07-reference/library.md §3); a list index stays an index
 index = "{{#map}}{{object}}.get({{index}}){{/map}}{{^map}}{{object}}[{{index}}]{{/map}}"
 await = "await {{expr}}"
@@ -185,7 +197,19 @@ cast = "cast({{type}}, {{expr}})"
 non_null = { template = "_sure({{expr}})", helper = "def _sure[T](x: T | None) -> T:\n    assert x is not None\n    return x" }   # pyright: the value is not None
 # never written: options.hoist_block_lambdas turns a lambda with a block into a local_function
 lambda = "lambda {{names}}: {{body}}"
+# a name of the loop around a lambda, bound when the lambda is made: Python binds a closure late (in a loop every
+# lambda would see the last turn; TypeScript and Dart give each turn its own binding)
+bound_param = "{{name}}{{#type}}: {{type}} = {{/type}}{{^type}}={{/type}}{{name}}"
 lambda_expr = "lambda{{#names}} {{names}}{{/names}}: {{expr}}"
+
+# --- the monitor (`--monitor`, spec 015): a context variable follows the call, sync or async ---
+monitor_body = """
+nuclear_span = NuclearMonitor.enter("{{label}}", "{{path}}", {{line}}, {{#async}}True{{/async}}{{^async}}False{{/async}})
+try:
+    {{body}}
+finally:
+    NuclearMonitor.exit(nuclear_span)"""
+monitor_runtime = { file = "templates/monitor.tpl" }
 
 # --- Result<E, T> (nuclearlang/docs/07-reference/nuclear-base.md §3.2): templates/result.tpl, the dialect's own runtime ---
 result_runtime = { file = "templates/result.tpl" }
@@ -257,7 +281,8 @@ rem = "%"
 coalesce = "{{left}} if {{left}} is not None else {{right}}"
 # a call or a map read on the left is evaluated once (and pyright narrows the value); the right side stays lazy
 coalesce_once = { template = "_coalesce({{left_arg}}, lambda: {{right_arg}})", helper = "def _coalesce[T](value: T | None, fallback: Callable[[], T]) -> T:\n    return value if value is not None else fallback()" }
-int_div = "//"
+# `~/` drops the decimals toward zero, as in TypeScript and Dart (Python's `//` floors: -7 // 2 is -4); exact on big ints
+int_div = { template = "_idiv({{left_arg}}, {{right_arg}})", helper = "def _idiv(a: int | float, b: int | float) -> int:\n    if isinstance(a, int) and isinstance(b, int):\n        q = a // b\n        return q + 1 if q < 0 and q * b != a else q\n    return int(a / b)" }
 pow = "**"
 bit_and = "&"
 bit_or = "|"
@@ -272,7 +297,7 @@ range = "range({{left}}, {{right}})"
 
 [names]
 # names the templates write: imported from typing / enum when the generated code uses them
-written = ["Any", "Protocol", "Callable", "Literal", "Iterator", "AsyncIterator", "Awaitable", "cast", "override", "Enum", "auto", "math", "json", "re", "base64", "datetime", "functools", "random", "asyncio"]
+written = ["Any", "ClassVar", "Protocol", "Callable", "Literal", "Iterator", "AsyncIterator", "Awaitable", "cast", "override", "Enum", "auto", "math", "json", "re", "base64", "datetime", "functools", "random", "asyncio"]
 
 [auto_imports]
 "typing" = ["TYPE_CHECKING", "Any", "Protocol", "Callable", "Literal", "Iterator", "AsyncIterator", "Awaitable", "cast", "override", "Never", "TypedDict", "Annotated", "ClassVar", "Final", "Self"]

@@ -1,0 +1,26 @@
+use os
+use pathlib{ Path }
+
+// The GIF pack made for the project (`nuclear-chat/pack/`: animated SVG files and `pack.json`, their tags). It
+// travels inside this package; a checkout reads the project's own. `NUCLEAR_CHAT_PACK` names another folder.
+ChatPack()
+  // The pack's folder.
+  folder() string
+    given: string? = os.environ.get("NUCLEAR_CHAT_PACK")
+    if given != null and not given!.isEmpty
+      return given!
+    here = Path(__file__).resolve().parent
+    inside = here.joinpath("pack")
+    // a checkout: build/nuclear_chat_system/pack.py, the pack is ../../../pack
+    "${inside.isDir() ? inside : here.parents[2].joinpath("pack")}"
+
+  // The text of `pack.json`.
+  index() string
+    Path(folder(), "pack.json").readText(encoding = "utf-8")
+
+  // The text of one drawing of the pack (an SVG file named in `pack.json`; never a path out of the pack).
+  drawing(file: string) string?
+    if not Regex(r"^[a-z0-9-]+\.svg$").test(file)
+      return null
+    f = Path(folder(), file)
+    f.isFile() ? f.readText(encoding = "utf-8") : null

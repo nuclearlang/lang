@@ -20,6 +20,9 @@ so: the tool that should have done it is missing something.
 
 ## 1. Load the sheet (once per task, ~3k tokens)
 
+New to Nuclear: `nuclear help start` (MCP `nuclear_start`) first: what it is, the rules, the cycle; then
+`nuclear help atlas` lists every topic (the platforms, the dialects, the tools, `example/<name>`).
+
 ```sh
 nuclear spec --brief --dialect flutter     # Synapsis app (config.nuc + main.nuc, no nuclear.toml)
 nuclear spec --brief --dialect <dialect>   # the dialect of config.nuc (fastapi, nestjs) or nuclear.toml (typescript, dart, python)
@@ -72,7 +75,13 @@ The compiler catches the habits of TypeScript, Dart and Python (`N0022`, with an
 - Writing `return`, `;`, `{ }`, `new`, `await`, `const`/`final`/`var`, `&&`, `!x`, `name: value` arguments: use the
   sheet's forms (`~x`, `x = 1`, `and`, `not x`, `name = value`).
 - The return type goes after the parameters: `load(id: int) User`.
+- Porting TypeScript: `===` and `!==` are `==` and `!=`. Between lists, maps or sets Nuclear's `==` compares what
+  they hold, not whether they are the same object: check each `===` between arrays or maps the original relied on.
 - In Synapsis, a screen calls its `statemanager`, which calls the component's `appcomponent`; only the use case
   calls the repository. Another component sees only the `appcomponent`, models, events, guards and screens.
+- Real time, guards and a host page are configuration, never hand-written sockets or middleware: a backend's
+  `WebSocketServer(path = "ws")` and `guards: Guard[] = [NoOrigin(), Token(value = env("T"))]` in its `appConfig`
+  (`nuclear new -p backend --websocket --token T`); a web app's `WebSocket(url = ...)` connection, `@on("topic")`
+  repository methods returning `Stream<T>`, `listen(stream, ...)` in a manager; `mount(element, host)` for a host page.
 - Texts shown to the user are translation keys: `"component.screen.key".tr()` plus the key in
   `assets/i18n/<locale>/<component>.json`.

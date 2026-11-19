@@ -23,7 +23,7 @@ every step shows who did it. In VS Code (`Ctrl+Alt+P`), JetBrains (`Alt+Shift+P`
 
 ```sh
 nuclear-builder setup                                  # installs the services and the models
-nuclear-builder run specs/<id>/spec.md --lead local    # one line per step; the journal in .nuclear/builder/runs/
+nuclear-builder run specs/<component>/<id>/spec.md    # one line per step; the journal in .nuclear/builder/runs/
 ```
 
 ## Read next

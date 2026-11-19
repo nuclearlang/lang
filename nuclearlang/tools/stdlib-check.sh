@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# Runs every program of examples/stdlib/ in the three language dialects and compares what it prints with
+# Runs every program of examples/stdlib/ (or of DIR: examples/semantics/, the rules a target could break) in the three
+# language dialects and compares what it prints with
 # <area>.out: <area>.nuc → TypeScript (tsc --strict → node), Dart (dart run) and Python (pyright --strict →
 # python). The three must print the same text (docs/07-reference/library.md, ADR-lang-0009).
 #   nuclearlang/tools/stdlib-check.sh [area...]        (UPDATE=1: the TypeScript output becomes the expected <area>.out)
+#   DIR=examples/semantics nuclearlang/tools/stdlib-check.sh
 # Needs node, dart (FLUTTER_ROOT or PATH), TypeScript (TSC=<path to tsc>, or tsc in PATH) and nuclearlang/tools/python/.venv
 # (pyright there; PY=<python> to use another interpreter).
 set -uo pipefail
 cd "$(dirname "$0")/.."
+DIR="${DIR:-examples/stdlib}"
 DART="${DART:-$(command -v dart || echo "${FLUTTER_ROOT:-$HOME/develop/flutter}/bin/dart")}"
 TSC="${TSC:-$(command -v tsc || echo tools/node/node_modules/typescript/bin/tsc)}"
 PY="${PY:-tools/python/.venv/bin/python3}"
@@ -17,11 +20,11 @@ trap 'rm -rf "$OUT"' EXIT
 cargo build -q --bin nuclear || exit 2
 NUC=../target/debug/nuclear
 areas=("$@")
-[ ${#areas[@]} -gt 0 ] || areas=($(ls examples/stdlib/*.out | xargs -n1 basename | sed 's/\.out$//'))
+[ ${#areas[@]} -gt 0 ] || areas=($(ls "$DIR"/*.out | xargs -n1 basename | sed 's/\.out$//'))
 fail=0
 for a in "${areas[@]}"; do
-  want="examples/stdlib/$a.out"
-  src="examples/stdlib/$a.nuc"
+  want="$DIR/$a.out"
+  src="$DIR/$a.nuc"
   mkdir -p "$OUT/$a"
   if $NUC build "$src" --dialect typescript -o "$OUT/$a/$a.ts" \
     && printf 'import { main } from "./%s.js";\nawait main();\n' "$a" > "$OUT/$a/run.ts" \

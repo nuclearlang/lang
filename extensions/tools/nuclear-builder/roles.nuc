@@ -1,0 +1,85 @@
+use os
+use json
+use pathlib{ Path }
+
+// The five roles of the software factory, the stations of a run, and where the roles' folders are
+// (`nuclear-agents/roles/<role>/`: role.md, skills/, templates/, checks.toml, roster/{en,es}.json). The roles' files
+// are only read here: a team composes a role from them, never changes them.
+
+ROLES = ["analyst", "architect", "developer", "qa", "devops"]
+
+// The role ids earlier versions wrote, read as today's (spec 011's amendment: the role of the Delivery station is
+// DevOps). A team, a run, a member's or a tool's role named by its old id is converted on read.
+OLD_ROLES: <string, string> = { "delivery": "devops" }
+
+// How each role is called to the user and in a member's prompt.
+ROLE_TITLES: <string, string> = { "analyst": "Analyst", "architect": "Architect", "developer": "Developer", "qa": "QA", "devops": "DevOps" }
+
+// The stations of a run, in order (today's stages map onto them: docs/02-architecture/engine.md).
+STATIONS = ["analysis", "design", "tests", "code", "quality", "delivery"]
+
+// Which role works a station when its role.md does not say otherwise.
+STATION_ROLE: <string, string> = { "analysis": "analyst", "design": "architect", "tests": "developer", "code": "developer", "quality": "qa", "delivery": "devops" }
+
+// A role's id as today's engine names it: an old id (`OLD_ROLES`) becomes its new one; any other is given back.
+roleId(role: string) string
+  OLD_ROLES[role] ?? role
+
+// The folder that holds the roles: `NUCLEAR_ROLES`, the package's own (`roles/` beside it, shipped with it), the AI
+// services' installation, or the working tree this package was built in. Null when none has them.
+rolesDir(env: <string, string>? = null) Path?
+  e = env ?? dict(os.environ)
+  given = e["NUCLEAR_ROLES"] ?? ""
+  if given.length > 0
+    return Path(given)
+  here = Path(__file__).resolve().parent
+  found: Path[] = [here.joinpath("roles")]
+  root = aiRoot(e)
+  if root != null
+    found.add(Path(root!, "nuclear-agents", "roles"))
+  for up in here.parents
+    found.add(up.joinpath("nuclear-agents", "roles"))
+  found.find((d) => d.isDir())
+
+// The employees of a role in a language (`roster/<lang>.json`), English when that language is missing, none when
+// the role has no roster yet. Each one whose portrait is there (`roster/faces/<id>.webp`, painted by
+// `nuclear-agents/roles/faces.nuc`) gets its whole path as `face`, and its thumbnail (`roster/faces/thumb/<id>.webp`,
+// 128 px: the tiles, the cards and the avatars) as `thumb`.
+roster(role: string, lang: string = "en", dir: Path? = null) <string, any>[]
+  at = dir ?? rolesDir()
+  if at == null
+    return []
+  folder = roleId(role)
+  for name in [lang, "en"]
+    file = at!.joinpath(folder, "roster", "${name}.json")
+    if file.isFile()
+      found = json.loads(file.readText(encoding = "utf-8"))
+      // `{ "role", "stats": [names], "employees": [...] }` (nuclear-agents/roles/README.md), or the list alone
+      people: <string, any>[] = isinstance(found, dict) ? (found as <string, any>)["employees"] ?? [] : found
+      for p in people
+        faces = at!.joinpath(folder, "roster", "faces")
+        face = faces.joinpath("${p["id"] ?? ""}.webp")
+        if face.isFile()
+          p["face"] = "${face}"
+        thumb = faces.joinpath("thumb", "${p["id"] ?? ""}.webp")
+        if thumb.isFile()
+          p["thumb"] = "${thumb}"
+      return people
+  []
+
+// The temperaments a member can have (`temperaments.json` of the roles' folder): `[{ id, name: { en, es }, description: { en, es }, voice, look }]`,
+// none when the folder is not there.
+temperaments(dir: Path? = null) <string, any>[]
+  at = dir ?? rolesDir()
+  file = at == null ? null : at!.joinpath("temperaments.json")
+  if file == null or not file!.isFile()
+    return []
+  found: <string, any> = json.loads(file!.readText(encoding = "utf-8"))
+  found["temperaments"] ?? []
+
+// The roster of every role: `{ "<role>": [employees] }`.
+rosters(lang: string = "en", dir: Path? = null) <string, any>
+  all: <string, any> = {}
+  for role in ROLES
+    all[role] = roster(role, lang, dir)
+  all

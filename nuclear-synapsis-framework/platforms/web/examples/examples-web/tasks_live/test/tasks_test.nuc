@@ -1,0 +1,10 @@
+// The tests of tasks: the repository is a mock; everything else is the real code.
+@mock([TaskRepository])
+TasksTest
+  beforeEach()
+    when(TaskRepository.all).thenReturn(Ok([]))
+
+  @test("ListTasks answers the tasks of the API")
+  lists()
+    result = ~ListTasks.exec()
+    expect(okOf(result)).toEqual([])

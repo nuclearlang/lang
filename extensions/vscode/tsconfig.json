@@ -14,7 +14,11 @@
   },
   "include": [
     "src",
+    "test",
     "../tools/*/src",
     "../tools/*/test"
+  ],
+  "exclude": [
+    "../tools/*/src/**/*.tsx"
   ]
 }

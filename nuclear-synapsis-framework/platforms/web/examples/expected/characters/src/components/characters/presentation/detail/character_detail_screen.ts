@@ -43,7 +43,7 @@ const CharacterDetailScreenView = statefulOf(
         className: 'detail',
         children: [
           button({ onClick: () => goBack(), children: 'Back' }),
-          ...(this.error != null ? [p({ className: 'error', children: this.error })] : []),
+          this.error != null ? p({ className: 'error', children: this.error }) : null,
           this.character != null ? CharacterCard({ character: this.character! }) : p({ children: 'Loading...' }),
         ],
       });

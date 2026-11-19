@@ -2573,22 +2573,22 @@
   {
    "id": "error:N0219",
    "type": "diagnostic",
-   "title": "N0219 — named argument the constructor does not have",
-   "summary": "Named argument the constructor does not have (from the type definitions; files of a project)",
+   "title": "N0219 — named argument the callee does not have",
+   "summary": "Named argument the callee does not have: a function or method declared in Nuclear, or a constructor of the type definitions (files of a project)",
    "body": [
     "`N0219` · dialects · error",
     "",
-    "**What it is.** Named argument the constructor does not have (from the type definitions; files of a project)",
+    "**What it is.** Named argument the callee does not have: a function or method declared in Nuclear, or a constructor of the type definitions (files of a project)",
     "",
-    "**Why.** The type definitions list the parameters of the constructor; the message names the closest one and all of them. `nuclear defs show <Class> --dialect <d>` prints the constructor.",
+    "**Why.** A function or method declared in Nuclear, or a constructor of the type definitions, has no parameter of that name; the message names the closest one and all of them. `nuclear defs show <Class> --dialect <d>` prints the constructor.",
     "",
-    "**Example.** `Text(\"a\", colour = c)`",
+    "**Example.** `Text(\"a\", colour = c)`, `row(nme = \"a\")`",
     "",
-    "**Fix.** the closest parameter (`style`); the message lists all of them"
+    "**Fix.** the closest parameter (`style`, `name`); the message lists all of them"
    ],
    "keys": [
     "n0219",
-    "named argument the constructor does not have"
+    "named argument the callee does not have"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/diagnostics.md",
@@ -2601,10 +2601,10 @@
    },
    "data": {
     "stage": "dialects",
-    "title": "named argument the constructor does not have",
-    "what": "Named argument the constructor does not have (from the type definitions; files of a project)",
-    "fix": "the closest parameter (`style`); the message lists all of them",
-    "example": "`Text(\"a\", colour = c)`"
+    "title": "named argument the callee does not have",
+    "what": "Named argument the callee does not have: a function or method declared in Nuclear, or a constructor of the type definitions (files of a project)",
+    "fix": "the closest parameter (`style`, `name`); the message lists all of them",
+    "example": "`Text(\"a\", colour = c)`, `row(nme = \"a\")`"
    },
    "links": [
     {
@@ -2819,6 +2819,43 @@
     "how do I await a call",
     "why is my result empty"
    ]
+  },
+  {
+   "id": "error:N0223",
+   "type": "diagnostic",
+   "title": "N0223 — a method named like a member the kind's runtime owns",
+   "summary": "A method named like a member the kind's runtime owns (`[kinds.<k>] sealed`)",
+   "body": [
+    "`N0223` · dialects · error",
+    "",
+    "**What it is.** A method named like a member the kind's runtime owns (`[kinds.<k>] sealed`)",
+    "",
+    "**Why.** The class the kind extends keeps that member for itself ([kinds.<k>] sealed): a method of that name would replace it silently (a state manager's `close`, which stops its listeners when the screen leaves). Give the method another name.",
+    "",
+    "**Example.** `close()` in a `statemanager` (it would replace the runtime's, so the screen's listeners are never stopped)",
+    "",
+    "**Fix.** another name: `closeThread()`"
+   ],
+   "keys": [
+    "n0223",
+    "a method named like a member the kind's runtime owns"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0223",
+    "family": "dialect",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "dialects",
+    "title": "a method named like a member the kind's runtime owns",
+    "what": "A method named like a member the kind's runtime owns (`[kinds.<k>] sealed`)",
+    "fix": "another name: `closeThread()`",
+    "example": "`close()` in a `statemanager` (it would replace the runtime's, so the screen's listeners are never stopped)"
+   }
   },
   {
    "id": "error:N0301",

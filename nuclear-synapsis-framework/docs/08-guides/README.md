@@ -66,6 +66,24 @@ for its own tables.
 Rules and the generated Dart: [flutter.md §6.3](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md); the package API: [synapsis.md
 §3.2](../../platforms/mobile/docs/07-reference/synapsis.md).
 
+## Real time, guards and a host page: configuration
+
+Real time is configured, not written (ADR-synapsis-0008). A backend with `WebSocketServer(path = "ws")` in its
+connections (plugin `websocket`) serves its same controllers over a WebSocket, and `~publish("topic", value)` reaches
+the clients subscribed to the topic. A web app with `WebSocket(url = "ws://localhost:8000/ws")` instead of `Http(...)`
+sends its repositories' calls over it, unchanged; a repository method `@on("topic")` that returns `Stream<T>` is what
+the server pushes, and a state manager follows it with `listen(stream, (value) => ...)`.
+
+A backend's `guards: Guard[] = [NoOrigin(), Token(value = env("TOKEN"))]` checks the headers of every request, over
+both transports; `@controller("x", guards = [...])` adds a controller's own (ADR-synapsis-0007). A web app also builds
+as a bundle that mounts in another page, `mount(element, { bridge, path })`, in a shadow root with the host's CSS
+variables, and sends its calls through the host's bridge (ADR-synapsis-0009).
+
+```sh
+nuclear new chat_api -p backend --websocket --token CHAT_TOKEN   # the WebSocket and the guards in its config
+nuclear new chat_ui -p web --websocket                           # a WebSocket connection instead of Http
+```
+
 ## Plugins: only what the project uses
 
 The optional parts of each framework are **plugins**, enabled in the project's `config.nuc`. A project without a

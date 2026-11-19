@@ -32,11 +32,12 @@
    "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#1-project-plugins-config-nuc",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — Plugins (`config.nuc`)",
-   "summary": "The optional parts are plugins (projects.md §3.3): `plugins(sqlite = true, postgres = true, mysql = true, redis = true, kafka = true, ai = true, openai = true, ollama = true, chroma = true)`.",
+   "summary": "The optional parts are plugins (projects.md §3.3): `plugins(sqlite = true, postgres = true, mysql = true, redis = true, kafka = true, events = true, websocket = true, ai = true, openai = true, ollama = true, chroma = true, telemetry = true)`.",
    "body": [
     "The optional parts are plugins ([projects.md](../../../../docs/07-reference/projects.md) §3.3): `plugins(sqlite = true, postgres = true, mysql =",
-    "true, redis = true, kafka = true, ai = true, openai = true, ollama = true, chroma = true)`. Only the enabled ones go to",
-    "`pyproject.toml`, and the runtime imports them only then (`synapsis.ai`, `synapsis.events`). A kind or a name of a",
+    "true, redis = true, kafka = true, events = true, websocket = true, ai = true, openai = true, ollama = true, chroma = true,",
+    "telemetry = true)`. Only the enabled ones go to `pyproject.toml`, and the runtime imports them only then (`synapsis.ai`,",
+    "`synapsis.events`, `synapsis.sockets`, `synapsis.telemetry`). A kind or a name of a",
     "plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `listener` needs `kafka`; `Redis` needs",
     "`redis`."
    ],
@@ -397,7 +398,52 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-12-tests",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-12-tests.032d5a",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.12 Tests",
+   "summary": "tests Api @test(\"the guards and the socket\") guarded() void app = appClient() expect((~app.get(\"/tasks\", headers = { \"X-Tasks-Token\": \"t\" })).status == 200) ws = (~app.socket(\"/ws\", headers = { \"X-Tasks-Token\": \"t\" })).value made = ~ws.request(\"POST\", \"/tasks\", body = { \"title\": \"call mom\" })…",
+   "body": [
+    "```nuclear",
+    "tests Api",
+    "  @test(\"the guards and the socket\")",
+    "  guarded() void",
+    "    app = appClient()",
+    "    expect((~app.get(\"/tasks\", headers = { \"X-Tasks-Token\": \"t\" })).status == 200)",
+    "    ws = (~app.socket(\"/ws\", headers = { \"X-Tasks-Token\": \"t\" })).value",
+    "    made = ~ws.request(\"POST\", \"/tasks\", body = { \"title\": \"call mom\" })",
+    "    expect(made.status == 201)",
+    "```",
+    "",
+    "```python",
+    "from __future__ import annotations",
+    "",
+    "from synapsis.testing import app_client",
+    "",
+    "class TestApi:",
+    "    async def test_guarded(self) -> None:",
+    "        \"the guards and the socket\"",
+    "        app = app_client()",
+    "        assert (await app.get(\"/tasks\", headers={\"X-Tasks-Token\": \"t\"})).status == 200",
+    "        ws = (await app.socket(\"/ws\", headers={\"X-Tasks-Token\": \"t\"})).value",
+    "        made = await ws.request(\"POST\", \"/tasks\", body={\"title\": \"call mom\"})",
+    "        assert made.status == 201",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-12-tests.ef00a6",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.12 Tests",
    "summary": "In `test/*_test.nuc` (written to `tests/`, pytest's folder): `tests Name` + `@test(\"what it checks\")` methods → a pytest class.",
@@ -426,6 +472,66 @@
     "        missing = await app.character(99)",
     "        assert missing.is_err",
     "        assert missing.error.status == 404",
+    "```",
+    "",
+    "#### The app over HTTP and its WebSocket (ADR-synapsis-0010)",
+    "",
+    "`appClient()` is `synapsis.testing.app_client()`: it builds the app again from `app/main.py`'s `create()` (the",
+    "test's connections), sends HTTP through httpx's ASGI transport and opens the socket as an ASGI connection in the",
+    "test's event loop. `testEnv(...)` of `config.nuc` is `os.environ.update({...})` at the top of `tests/conftest.py`."
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-13-telemetry",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.13 Telemetry",
+   "summary": "`plugins(telemetry = true)` adds the OpenTelemetry SDK, its OTLP/HTTP exporter and its FastAPI instrumentation to `pyproject.toml`.",
+   "body": [
+    "`plugins(telemetry = true)` adds the OpenTelemetry SDK, its OTLP/HTTP exporter and its FastAPI instrumentation to",
+    "`pyproject.toml`. The connections (`Datadog`, `NewRelic`, `Grafana`, `Otlp`) and `Metric` come from",
+    "`synapsis.telemetry`; their named arguments are snake_case (`api_key`). Every use case's `exec` gets",
+    "`@traced(\"<component> › usecase › <Class>.exec\")`, the name written as a constant (`app` for a file outside a",
+    "component, as below); `@untraced` is",
+    "`synapsis.untraced`, a marker: on a use case it removes `@traced`, on a route or a controller the request starts no",
+    "trace.",
+    "",
+    "```nuclear",
+    "// config.nuc: plugins(telemetry = true)",
+    "",
+    "usecase FindOrder(orders: OrderRepository)",
+    "  exec(id: int) Result<Error, Order>",
+    "    Metric.count(\"orders.read\", region = \"eu\")",
+    "    ~orders.find(id)",
+    "```",
+    "",
+    "```python",
+    "from __future__ import annotations",
+    "",
+    "from synapsis import AppError, Result",
+    "from synapsis.telemetry import Metric, traced",
+    "",
+    "# config.nuc: plugins(telemetry = true)",
+    "",
+    "class FindOrder:",
+    "    def __init__(self, orders: OrderRepository) -> None:",
+    "        self.orders = orders",
+    "",
+    "    @traced(\"app › usecase › FindOrder.exec\")",
+    "    async def exec(self, id: int) -> Result[AppError, Order]:",
+    "        Metric.count(\"orders.read\", region=\"eu\")",
+    "        return await self.orders.find(id)",
     "```"
    ],
    "platforms": [
@@ -594,9 +700,11 @@
    "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-3-model",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.3 Model",
-   "summary": "What the API reads and answers: a pydantic model (in `domain/models/` by folder).",
+   "summary": "What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`: its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's (ADR-synapsis-0012); it reads either name.",
    "body": [
-    "What the API reads and answers: a pydantic model (in `domain/models/` by folder). The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An invalid body is a 422.",
+    "What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:",
+    "its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's",
+    "(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r\"...\")`, `@email`, `@url`. An invalid body is a 422.",
     "",
     "```nuclear",
     "model NewCharacter",
@@ -612,11 +720,12 @@
     "from __future__ import annotations",
     "",
     "from annotated_types import MaxLen, MinLen",
-    "from pydantic import AfterValidator, BaseModel",
+    "from pydantic import AfterValidator",
+    "from synapsis import Model",
     "from synapsis.validators import is_email",
     "from typing import Annotated",
     "",
-    "class NewCharacter(BaseModel):",
+    "class NewCharacter(Model):",
     "    name: Annotated[str, MinLen(1), MaxLen(100)]",
     "    status: str = \"alive\"",
     "    contact: Annotated[str | None, AfterValidator(is_email)] = None",
@@ -693,7 +802,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-4-use-case.be20ef",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-4-use-case.dac5cc",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.4 Use case",
    "summary": "One business operation: its dependencies are injected by type; `exec` returns `Result<E, T>`.",
@@ -722,10 +831,9 @@
     "```python",
     "from __future__ import annotations",
     "",
-    "from pydantic import BaseModel",
-    "from synapsis import AppError, Conflict, Entity, Err, Mapped, Ok, Result, column, primary",
+    "from synapsis import AppError, Conflict, Entity, Err, Mapped, Model, Ok, Result, column, primary",
     "",
-    "class NewCharacter(BaseModel):",
+    "class NewCharacter(Model):",
     "    name: str",
     "    status: str = \"alive\"",
     "",
@@ -844,7 +952,37 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.781a5e",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
+   "summary": "class ProjectConfig(AppConfig): connections: list[Connection] = [SQLite(file=\"chat.sqlite\"), WebSocketServer(path=\"ws\")] guards: list[Guard] = [NoOrigin(), Token(value=env(\"CHAT_TOKEN\"), header=\"X-Chat-Token\")] @controller(\"admin\", guards=[Token(value=env(\"ADMIN_TOKEN\"))]) class AdminController:…",
+   "body": [
+    "class ProjectConfig(AppConfig):",
+    "    connections: list[Connection] = [SQLite(file=\"chat.sqlite\"), WebSocketServer(path=\"ws\")]",
+    "    guards: list[Guard] = [NoOrigin(), Token(value=env(\"CHAT_TOKEN\"), header=\"X-Chat-Token\")]",
+    "",
+    "@controller(\"admin\", guards=[Token(value=env(\"ADMIN_TOKEN\"))])",
+    "class AdminController:",
+    "    @get()",
+    "    def info(self) -> str:",
+    "        return \"ok\"",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.868f1c",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
    "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop.",
@@ -873,7 +1011,56 @@
     "        Kafka(servers=env(\"KAFKA\", \"localhost:9092\"), group=\"rick\"),",
     "        OpenAI(model=\"gpt-4o-mini\"),",
     "    ]",
-    "```"
+    "```",
+    "",
+    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-7-configuration.c468dc",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.7 Configuration",
+   "summary": "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
+   "body": [
+    "`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app",
+    "serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.",
+    "`Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:",
+    "`websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards",
+    "on the upgrade and sends every request frame through the app with httpx's ASGI transport.",
+    "",
+    "```nuclear",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
+    "",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]",
+    "",
+    "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])",
+    "controller AdminController()",
+    "  @get()",
+    "  info() string",
+    "    \"ok\"",
+    "```",
+    "",
+    "```python",
+    "from __future__ import annotations",
+    "",
+    "from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get",
+    "from synapsis.sockets import WebSocketServer",
+    "",
+    "# config.nuc: plugins(sqlite = true, events = true, websocket = true)"
    ],
    "platforms": [
     "backend"
@@ -1513,11 +1700,12 @@
    "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#1-project-plugins-config-nuc",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — Plugins (`config.nuc`)",
-   "summary": "The optional parts are plugins (projects.md §3.3): `plugins(sqlite = true, postgres = true, mysql = true, mariadb = true, redis = true, kafka = true, events = true, ai = true, openai = true, ollama = true)`.",
+   "summary": "The optional parts are plugins (projects.md §3.3): `plugins(sqlite = true, postgres = true, mysql = true, mariadb = true, redis = true, kafka = true, events = true, websocket = true, ai = true, openai = true, ollama = true)`.",
    "body": [
     "The optional parts are plugins ([projects.md](../../../../docs/07-reference/projects.md) §3.3): `plugins(sqlite = true, postgres = true, mysql =",
-    "true, mariadb = true, redis = true, kafka = true, events = true, ai = true, openai = true, ollama = true)`. Only the",
-    "enabled ones go to `package.json`, and the runtime loads them only then (`synapsis-nest/ai`, `synapsis-nest/events`).",
+    "true, mariadb = true, redis = true, kafka = true, events = true, websocket = true, ai = true, openai = true, ollama =",
+    "true)`. Only the enabled ones go to `package.json`, and the runtime loads them only then (`synapsis-nest/ai`,",
+    "`synapsis-nest/events`, `synapsis-nest/sockets`).",
     "A kind or a name of a plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `listener` and",
     "`publish` need `events` (Kafka with `kafka`)."
    ],
@@ -1936,7 +2124,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-12-tests",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-12-tests.87700e",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.12 Tests",
    "summary": "In `test/`: `tests Name` + `@test(\"what it checks\")` methods → a `node:test` suite.",
@@ -1975,6 +2163,89 @@
     "    const tasks = inject(TasksAppComponent);",
     "    const missing = await tasks.task(99);",
     "    assert.ok(missing.error.status === 404);",
+    "  });",
+    "});",
+    "```",
+    "",
+    "#### The app over HTTP and its WebSocket (ADR-synapsis-0010)"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-12-tests.be1163",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.12 Tests",
+   "summary": "`appClient()` is `synapsis-nest/testing`'s: the test's app listens on a free port of `127.0.0.1` (`fetch`, and `ws` for the socket); named arguments become the options object (`{ body, headers }`).",
+   "body": [
+    "`appClient()` is `synapsis-nest/testing`'s: the test's app listens on a free port of `127.0.0.1` (`fetch`, and",
+    "`ws` for the socket); named arguments become the options object (`{ body, headers }`). `testEnv(...)` of `config.nuc`",
+    "is `src/test_env.ts`, imported before the tests (`node --import ./dist/src/test_env.js --test`, `npm test`).",
+    "",
+    "```nuclear",
+    "tests Api",
+    "  @test(\"the guards and the socket\")",
+    "  guarded() void",
+    "    app = appClient()",
+    "    expect((~app.get(\"/tasks\", headers = { \"X-Tasks-Token\": \"t\" })).status == 200)",
+    "    ws = (~app.socket(\"/ws\", headers = { \"X-Tasks-Token\": \"t\" })).value",
+    "    made = ~ws.request(\"POST\", \"/tasks\", body = { \"title\": \"call mom\" })",
+    "    expect(made.status == 201)",
+    "```",
+    "",
+    "```typescript",
+    "import { INestApplication } from '@nestjs/common';",
+    "import { afterEach, beforeEach, describe, it } from 'node:test';",
+    "import { appClient, startTestApp, stopTestApp } from 'synapsis-nest/testing';",
+    "",
+    "import assert from 'node:assert/strict';",
+    "",
+    "describe('Api', () => {",
+    "  let app: INestApplication;",
+    "",
+    "  beforeEach(async () => {",
+    "    app = await startTestApp(AppModule);",
+    "  });",
+    "",
+    "  afterEach(async () => {",
+    "    await stopTestApp(app);",
+    "  });"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-12-tests.f7e08d",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.12 Tests",
+   "summary": "it('the guards and the socket', async () => { const app = appClient(); assert.ok((await app.get('/tasks', { headers: { 'X-Tasks-Token': 't' } })).status === 200); const ws = (await app.socket('/ws', { headers: { 'X-Tasks-Token': 't' } })).value; const made = await ws.request('POST', '/tasks', {…",
+   "body": [
+    "it('the guards and the socket', async () => {",
+    "    const app = appClient();",
+    "    assert.ok((await app.get('/tasks', { headers: { 'X-Tasks-Token': 't' } })).status === 200);",
+    "    const ws = (await app.socket('/ws', { headers: { 'X-Tasks-Token': 't' } })).value;",
+    "    const made = await ws.request('POST', '/tasks', { body: { 'title': 'call mom' } });",
+    "    assert.ok(made.status === 201);",
     "  });",
     "});",
     "```"
@@ -2523,7 +2794,44 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.13ddad",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
+   "summary": "export class ProjectConfig extends AppConfig { readonly connections: Connection[] = [new SQLite({ file: 'chat.sqlite' }), new WebSocketServer({ path: 'ws' })]; readonly guards: Guard[] = [ new NoOrigin(), new Token({ value: env('CHAT_TOKEN'), header: 'X-Chat-Token' }), ]; } @Controller('admin')…",
+   "body": [
+    "export class ProjectConfig extends AppConfig {",
+    "  readonly connections: Connection[] = [new SQLite({ file: 'chat.sqlite' }), new WebSocketServer({ path: 'ws' })];",
+    "  readonly guards: Guard[] = [",
+    "    new NoOrigin(),",
+    "    new Token({ value: env('CHAT_TOKEN'), header: 'X-Chat-Token' }),",
+    "  ];",
+    "}",
+    "",
+    "@Controller('admin')",
+    "@guardedBy([new Token({ value: env('ADMIN_TOKEN') })])",
+    "export class AdminController {",
+    "  @Get()",
+    "  info(): string {",
+    "    return 'ok';",
+    "  }",
+    "}",
+    "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.900831",
    "type": "spec",
    "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
    "summary": "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`), the platform's (backend.md §2.8).",
@@ -2544,6 +2852,54 @@
     "  readonly connections: Connection[] = [new Postgres({ url: env('DATABASE_URL', 'postgres://localhost/tasks') })];",
     "}",
     "```"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/nestjs.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "nestjs"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/nestjs.md#2-kinds-2-7-configuration.d7c239",
+   "type": "spec",
+   "title": "Dialect `nestjs`: the `backend` platform in TypeScript — 2.7 Configuration",
+   "summary": "`guards` in the `appConfig` become a global Nest guard (`GuardsOf`, also checked by the contract's routes); `@controller(..., guards = [...])` writes `@guardedBy([...])` under `@Controller`.",
+   "body": [
+    "#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)",
+    "",
+    "`guards` in the `appConfig` become a global Nest guard (`GuardsOf`, also checked by the contract's routes);",
+    "`@controller(..., guards = [...])` writes `@guardedBy([...])` under `@Controller`. `Token`, `NoOrigin` and `guardedBy`",
+    "are `synapsis-nest`'s. `WebSocketServer` (plugin `websocket`: `ws`) is `synapsis-nest/sockets`'s: it listens to the",
+    "upgrades of the app's HTTP server at its path, checks the app's guards, and sends every request frame through the",
+    "app over the loopback.",
+    "",
+    "```nuclear",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)",
+    "",
+    "appConfig ProjectConfig",
+    "  connections: Connection[] = [SQLite(file = \"chat.sqlite\"), WebSocketServer(path = \"ws\")]",
+    "  guards: Guard[] = [NoOrigin(), Token(value = env(\"CHAT_TOKEN\"), header = \"X-Chat-Token\")]",
+    "",
+    "@controller(\"admin\", guards = [Token(value = env(\"ADMIN_TOKEN\"))])",
+    "controller AdminController()",
+    "  @get()",
+    "  info() string",
+    "    \"ok\"",
+    "```",
+    "",
+    "```typescript",
+    "import { Controller, Get } from '@nestjs/common';",
+    "import { AppConfig, Connection, Guard, NoOrigin, SQLite, Token, env, guardedBy } from 'synapsis-nest';",
+    "import { WebSocketServer } from 'synapsis-nest/sockets';",
+    "",
+    "// config.nuc: plugins(sqlite = true, events = true, websocket = true)"
    ],
    "platforms": [
     "backend"

@@ -1,43 +1,44 @@
 # nuclear-atlas
 
 **Nuclear Atlas**, the local agent integrated with the RAG (the tool `atlas` of the Nuclear workspace,
-`Ctrl+Alt+A`): a chat with the local agents of the Nuclear Developer over the active project, on the developer's
-machine, like the chats of Claude or Cursor. A message is a question, answered from the project's map and the
-Nuclear Smart Graph (the 100% local knowledge base the agents also read through the MCP server); `/task <what to do>` is an order, run as a Nuclear Builder run by the local agents. VS Code only.
+`Ctrl+Alt+A`): Nuclear Chat (spec 013) mounted as the page, on the direct message with the general agent (`dm-atlas`,
+by default the local Nuclear Developer over the Nuclear Smart Graph); `/task <what to do>` said there is an order, run
+as a Nuclear Builder run (the software factory, with the project's team). VS Code only.
 
 ## Where the code is
 In this folder; the VS Code extension compiles and bundles `src/` (`extensions/vscode/tsconfig.json`).
 
 | File | What it is |
 |---|---|
-| `src/chat.ts` | Nuclear Atlas without the editor: sessions on disk, the history the assistant reads, the templates |
-| `src/panel.ts` | the page and its jobs |
+| `src/chat.ts` | the templates from the project's map; no `vscode` import |
+| `src/panel.ts` | the page (the templates over the mounted chat) and `/task` (Atlas's host listens to `dm-atlas`) |
+| `src/l10n.ts` | the texts of the page and of what Atlas posts, English and Spanish |
 
 The rule of the local models (`extensions/vscode/src/localModels.ts`) stays with
 [the settings page](../../vscode/docs/02-architecture/ai-services.md), its only importer.
 
 ## Stack
-- TypeScript; the page is plain HTML and script and renders the answers' markdown itself
-- The Nuclear Developer over HTTP (`POST /developer/chat`); Nuclear Builder's engine for `/task`
+- TypeScript; the page is plain HTML and script around Nuclear Chat's embedded UI (`out/chat-embed.js`)
+- Nuclear Chat through the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`); Nuclear Builder's runs (the Builder's `driveRun`) for `/task`
 
 ## Commands
-Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-builder/test/engine.test.ts` covers the
-templates, the history and the token estimate).
+Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-builder/test/editors.test.ts` covers the
+templates; `test/chat.test.ts` the chat's host).
 
 ## Rules
 - `chat.ts` has no `vscode` import.
-- The work does not belong to the page: a question or an order is a job of the extension (`jobs`, module-level).
-  Closing the page or switching tools leaves it thinking; the answer is saved in its session and a notice says so.
-- Sessions are kept in the project: `.nuclear/chat/<id>.json`.
-- Nuclear Atlas never calls a model by itself: questions go to the Developer, orders to Nuclear Builder.
+- The work does not belong to the page: the members answer through the chat service, and an order is a run of the
+  extension; closing the page leaves both going, and a notice says when an order ends.
+- The conversation is Nuclear Chat's (`.nuclear/chat/` of the project); the page never holds the service's token.
+- Nuclear Atlas never calls a model by itself: questions go to the general agent, orders to Nuclear Builder.
 - The decision: ADR-platform-0003
 
 ## Documents (read by task)
 | You need… | Read |
 |---|---|
-| How a question and an order travel, the sessions, what the page draws | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
-| What a user reads: what Nuclear Atlas needs, questions, `/task`, sessions | [docs/08-guides/README.md](docs/08-guides/README.md) |
+| How a question and an order travel, what the page draws | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
+| What a user reads: what Nuclear Atlas needs, questions, `/task`, the templates | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | The pending work | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | The Nuclear Builder run behind `/task` | [`nuclear-builder`](../nuclear-builder/AGENTS.md) |
 | The notices, the checked connections, the context setting | [the VS Code extension](../../vscode/docs/02-architecture/ai-services.md) |
-| The assistant that answers | `nuclear-agents/nuclear_developer/` |
+| The assistant that answers | the Builder's `member --role chat` ([chat.md](../nuclear-builder/docs/02-architecture/chat.md)), `nuclear-agents/nuclear_developer/` |

@@ -20,7 +20,8 @@ in `src/`, tests in `test/`, built to `dist/` (`npm run build` = `tsc -p tsconfi
 | | `web` | `ResultInterceptor`, `configureApp`; serves the contract (`serveContract`) |
 | | `http` | `Http` and `HttpRepository`; the answer is the raw JSON, not decoded by the model |
 | | `app` | `createApp`, `Connections`, `inject`, `connection`, `register` |
-| `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`) |
+| `synapsis-nest/events` | `events` | `Redis`, `Kafka(servers, group)`, `Listener`, `consumer`, `publish`, the cache (`cacheGet`, `cacheSet`), `sinks` |
+| `synapsis-nest/sockets` | `websocket` | `WebSocketServer`: `ws` on the app's HTTP server (`Connection.instrument`, called by `configureApp`); each request frame goes through the app over the loopback (ADR-synapsis-0008) |
 | `synapsis-nest/ai` | `ai` | `ChatModel` / `Ollama` / `OpenAI`, `Embeddings` (`'provider:model'`), `Chroma` + `ChromaStore`, `vectorStore`, `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `StateOf`, `FakeModel` |
 | `synapsis-nest/testing` | `testing` | `startTestApp`, `stopTestApp`, `useConnection` |
 | `synapsis-nest/migrate` | `migrate` | the migrations (below); also the bin `synapsis-nest-migrate` |
@@ -84,5 +85,5 @@ npx synapsis-nest-migrate down --dir <migrations>                       # revert
   them ([testing](../05-standards/testing.md)).
 - The compiler and the editors know the runtime's names from its type definitions,
   `nuclearlang/dialects/typescript/defs/synapsis-nest/<version>/` (modules `synapsis-nest`, `synapsis-nest/ai`,
-  `synapsis-nest/events`, `synapsis-nest/testing`): regenerated after a change of the public API
+  `synapsis-nest/events`, `synapsis-nest/sockets`, `synapsis-nest/testing`): regenerated after a change of the public API
   ([runbook](../06-runbooks/change-a-runtime.md)).

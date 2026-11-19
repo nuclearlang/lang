@@ -1,0 +1,373 @@
+use os
+use re
+use sys
+use json
+use pathlib{ Path }
+
+// The factory's agent in a conversation (spec 011, design.md "The chat"): the base of Nuclear Chat's members
+// (member.nuc, `nuclear-builder member`, docs/02-architecture/chat.md). It is worked by the provider the editor gives it (the setting
+// `nuclear.builder.chat`; by default the local Nuclear Developer's assistant) through the same adapters as a run's
+// roles, with the Nuclear MCP server (agents and API models) and the factory's own tools: `spec_new`, `spec_list`,
+// `runs`, `run_file`, `checks`, `spec_draft`. It never edits a role's files: what an agent changes there is put back. Anything it
+// spends is confirmed twice, as a run's spending is.
+
+CHAT_DIR = ".nuclear/builder/chat"
+// The rounds of tool calls one message may take before the agent must answer.
+CHAT_ROUNDS = 6
+
+// One factory tool call of the local member (a text block): the Builder's MCP tool of that name (tools.nuc, the same
+// arguments, checked against its schema), its text and whether it failed.
+chatTool(root: string, name: string, input: <string, any>) <string, any>
+  if not (name in builderToolNames())
+    return { "text": "no tool `${name}`: ${builderToolNames().join(", ")}", "error": true }
+  r = callBuilderTool(root, name, smallModelArguments(builderToolList(root).find((t) => t["name"] == name)!, input))
+  text: string = r["text"]!
+  { "text": text.substring(0, Math.min(text.length, 20000)), "error": r["error"] }
+
+// A small model's arguments as the tool's schema takes them: a bare value its first argument, a null left out (the
+// default), `use_case` as `useCase`, a text where a list is asked its sentences. The MCP server stays strict.
+smallModelArguments(tool: <string, any>, input: <string, any>) <string, any>
+  schema: <string, any> = tool["schema"] ?? ({} as <string, any>)
+  props: <string, any> = schema["properties"] ?? ({} as <string, any>)
+  required: string[] = schema["required"] ?? []
+  given: <string, any> = {}
+  for key, value in input
+    if value == null
+      continue
+    name = key == "_" and not required.isEmpty ? required[0] : re.sub(r"_([a-z])", (m: re.Match) => "${m.group(1)}".upper(), key)
+    kind: <string, any> = props[name] ?? ({} as <string, any>)
+    given[name] = kind["type"] == "array" and isinstance(value, str) ? re.split(r"(?<=[.;])\s+|\n+", "${value}".trim()).filter((x: string) => not x.trim().isEmpty) : value
+  given
+
+// A tool as the local member's prompt lists it: `name` {arguments, optional?}: its first sentence.
+toolLine(t: <string, any>) string
+  schema: <string, any> = t["schema"] ?? ({} as <string, any>)
+  required: string[] = schema["required"] ?? []
+  props: <string, any> = schema["properties"] ?? ({} as <string, any>)
+  args = props.keys.map((k) => k in required ? k : "${k}?").join(", ")
+  about = "${t["description"] ?? ""}".replaceAll(Regex(r"\s+"), " ").trim()
+  first = about.split(". ")[0].trimEnd(".")
+  "- `${t["name"]}` {${args}}: ${first}"
+
+// The factory tools an answer calls: each a line `--- tool: <name> ---` with its JSON object under it (a small
+// model's `--- tool: <name>` without its closing dashes, or the object closed by `---`, are taken too; so is
+// `/task <tool> {…}`, which the local assistant's own guide teaches it, when it names a factory tool; the server's
+// name before the tool, `nuclear_builder run_start`, is left out); and the
+// answer's text without them.
+toolCalls(text: string) <string, any>
+  calls: <string, any>[] = []
+  found: re.Match[] = list(re.finditer(r"(?m)^(?:---[ \t]*tool:[ \t]*(?:nuclear_builder[ \t_]+)?([\w-]+)[ \t]*(?:---)?|/task[ \t]+(?:nuclear_builder[ \t_]+)?([\w-]+))[ \t]*(?=\{|$|\S)", text))
+  names = builderToolNames()
+  marks = found.filter((m) => m.group(1) != null or "${m.group(2)}".replace("-", "_") in names)
+  for i in 0..marks.length
+    start: int = marks[i].end()
+    end: int = i + 1 < marks.length ? marks[i + 1].start() : text.length
+    body = text.substring(start, end).trim().replaceAll(Regex(r"^```(?:json)?\s*|\s*(?:```|---)$"), "")
+    // a bare value after `/task <tool>` (`/task project_read docs/slides.pdf`) is the tool's first argument (`chatTool`)
+    bareOk = marks[i].group(2) != null and not ("\n" in body)
+    input = jsonLine(body.isEmpty ? "{}" : body) ?? keyLines(body) ?? (bareOk ? { "_": body } : null)
+    calls.add({ "name": "${marks[i].group(1) ?? marks[i].group(2)}".replace("-", "_"), "input": input ?? ({} as <string, any>), "bad": input == null ? body : null })
+  { "calls": calls, "text": marks.isEmpty ? text.trim() : text.substring(0, marks[0].start()).trim() }
+
+// A small model's arguments written as `key: value` lines instead of JSON (`path: docs/slides.pdf`): each value its
+// JSON when it is one (`criteria: ["a", "b"]`), else its text; null when a line is not `key: value`.
+keyLines(body: string) <string, any>?
+  found: <string, any> = {}
+  for line in body.split("\n").map((l: string) => l.trim()).filter((l: string) => not l.isEmpty)
+    m = re.match(r"^\W?(\w+)\W?\s*:\s*(.*)$", line)
+    if m == null
+      return null
+    raw = "${m!.group(2)}".trim().replaceAll(Regex(r",$"), "")
+    found["${m!.group(1)}"] = jsonValue(raw)
+  found.isEmpty ? null : found
+
+// The kind of a provider when the editor does not say it.
+kindOf(provider: string) string
+  provider == "nuclear-developer" ? "local" : provider in ["claude-code", "opencode", "codex", "gemini-cli"] ? "agent" : "api"
+
+// Every file of the roles' folder, as it is: what the chat's agent must leave as it found it.
+roleFiles(dir: Path?) <string, any>
+  found: <string, any> = {}
+  if dir != null and dir!.isDir()
+    for f in dir!.rglob("*")
+      if f.isFile()
+        found["${f}"] = f.readBytes()
+  found
+
+// Puts back what changed in the roles' folder since `before`: the files changed or removed, and those added.
+restoreRoleFiles(dir: Path?, before: <string, any>) string[]
+  now = roleFiles(dir)
+  fixed: string[] = []
+  for name, data in before
+    if now[name] != data
+      Path(name).parent.mkdir(parents = true, existOk = true)
+      Path(name).writeBytes(data)
+      fixed.add(name)
+  for name in now.keys.filter((n) => not (n in before))
+    Path(name).unlink(missingOk = true)
+    fixed.add(name)
+  fixed
+
+// A conversation: its history (`.nuclear/builder/chat/<id>.jsonl`, one line per entry, appended), its provider, its
+// spending. `read` gives the next line of the user (null: the conversation ends), `out` takes each event.
+Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: () => string?, out: (e: <string, any>) => void, options: <string, any> = {})
+  history: <string, any>[] = []
+  waiting: string[] = []
+  spentUsd: double = 0.0
+  confirmed: boolean = false
+  turn: int = 0
+
+  file() Path
+    Path(root, CHAT_DIR, "${id}.jsonl")
+
+  provider() string
+    "${given["provider"] ?? "nuclear-developer"}"
+
+  kind() string
+    "${given["kind"] ?? kindOf(provider())}"
+
+  paid() boolean
+    kind() != "local"
+
+  budget() double
+    options["budgetUsd"] ?? 5.0
+
+  // The history kept, read again (a line cut by a crash is skipped); the spending it confirmed holds.
+  load() void
+    if not file().isFile()
+      return
+    for l in file().readText(encoding = "utf-8").split("\n")
+      entry = jsonLine(l.trim())
+      if entry == null
+        continue
+      if entry!["role"] == "spending"
+        // a confirmation holds for the providers it named: another agent chosen for the conversation asks again
+        named: string[] = entry!["providers"] ?? [provider()]
+        confirmed = entry!["confirmed"] == true and provider() in named
+        continue
+      history.add(entry!)
+      spentUsd += entry!["costUsd"] ?? 0.0
+    // the turns go on numbered from the conversation's
+    turn = history.count((h) => h["role"] == "you")
+
+  keep(entry: <string, any>) void
+    entry["at"] = nowMs()
+    if entry["role"] != "spending"
+      history.add(entry)
+    file().parent.mkdir(parents = true, existOk = true)
+    f = file().open("a", encoding = "utf-8")
+    f.write(json.dumps(entry, ensureAscii = false) + "\n")
+    f.close()
+
+  // The conversation: its history first, then each message of the user answered, until stdin ends.
+  start() int
+    load()
+    out({ "type": "history", "id": id, "provider": provider(), "kind": kind(), "model": given["model"] ?? "", "messages": history.copy(), "costUsd": spentUsd })
+    while true
+      said = nextMessage()
+      if said == null
+        return 0
+      answer(said!)
+
+  // The next message of the user: `{"type": "say", "text"}` (a plain line without --events); null at the end.
+  nextMessage() string?
+    if not waiting.isEmpty
+      return waiting.removeAt(0)
+    while true
+      l = read()
+      if l == null or l!.trim().isEmpty
+        return null
+      if options["events"] != true
+        return l!.trim()
+      m = jsonLine(l!.trim())
+      if m != null and m!["type"] == "say" and not "${m!["text"] ?? ""}".trim().isEmpty
+        return "${m!["text"]}".trim()
+      out({ "type": "error", "error": "a message is {\"type\": \"say\", \"text\": \"…\"}" })
+
+  // The answer to a question (the spending's); a message said meanwhile waits its turn.
+  askUser(q: <string, any>) <string, any>?
+    out({ "type": "ask", ...q })
+    while true
+      l = read()
+      if l == null or l!.trim().isEmpty
+        return null
+      if options["events"] != true
+        return { "answer": l!.trim().lower() }
+      m = jsonLine(l!.trim())
+      if m != null and m!["answer"] != null
+        return m!
+      if m != null and m!["type"] == "say"
+        waiting.add("${m!["text"] ?? ""}")
+
+  // The two confirmations before the first paid call (or `--confirm-spending`, refused when the project or the
+  // editor forces them); kept in the history: a resumed conversation does not ask again.
+  confirmSpending() boolean
+    if not paid() or confirmed
+      return true
+    forced = line["forceConfirm"] == true or options["forceConfirm"] == true
+    if options["confirmSpending"] == true
+      if forced
+        throw RuntimeError("this project forces the confirmation of spending (.nuclear/builder.json \"forceConfirm\"): --confirm-spending is refused; chat where you can answer")
+      keep({ "role": "spending", "confirmed": true, "by": "--confirm-spending", "budgetUsd": budget(), "providers": [provider()] })
+      confirmed = true
+      return true
+    first = askUser({ "id": "spending-1", "kind": "spending", "question": "The chat uses a paid provider: ${provider()}${"${given["model"] ?? ""}".isEmpty ? "" : " ${given["model"]}"}. Go on?", "providers": [provider()] })
+    if first == null or first!["answer"] != "yes"
+      return false
+    second = askUser({ "id": "spending-2", "kind": "spending", "question": "It may spend up to ${budget().toFixed(2)} USD with ${provider()}. Confirm the spending?", "budgetUsd": budget(), "providers": [provider()] })
+    if second == null or second!["answer"] != "yes"
+      return false
+    keep({ "role": "spending", "confirmed": true, "by": "you", "budgetUsd": budget(), "providers": [provider()] })
+    confirmed = true
+    true
+
+  // One message of the user answered: the agent's turns, each tool it calls run and its result given back, until it
+  // answers without one.
+  answer(text: string) void
+    turn += 1
+    step = "turn-${turn}"
+    keep({ "role": "you", "text": text })
+    cost = 0.0
+    for round in 0..CHAT_ROUNDS
+      if not confirmSpending()
+        done(step, "stopped", cost, "the spending was not confirmed")
+        return
+      left = budget() - spentUsd
+      if paid() and left <= 0
+        done(step, "failed", cost, "the chat spent its budget (${budget().toFixed(2)} USD)")
+        return
+      got: Outcome = callProvider(step, left)
+      cost += got.costUsd
+      spentUsd += got.costUsd
+      if not got.ok
+        keep({ "role": "agent", "text": "", "error": got.error, "costUsd": got.costUsd })
+        done(step, "failed", cost, got.error)
+        return
+      // what the agent's own MCP tools asked of the user (a `needsUser`, a run's spending), asked now
+      decided = 0
+      told: <string, any>[] = got.events
+      for ev in told.filter((x) => x["type"] == "tool-result")
+        decision = decide(step, "${ev["tool"] ?? "tool"}", "${ev["text"] ?? ""}")
+        if decision != null
+          keep({ "role": "tool", "tool": "${ev["tool"] ?? "tool"} (the user's answer)", "input": {} as <string, any>, "text": decision!, "error": false })
+          decided += 1
+      found = toolCalls(got.text)
+      said = "${found["text"]}"
+      if not said.isEmpty
+        out({ "type": "event", "step": step, "event": { "type": "text", "text": said } })
+      keep({ "role": "agent", "text": said, "costUsd": got.costUsd, "provider": provider(), "model": given["model"] ?? "" })
+      calls: <string, any>[] = found["calls"]!
+      if calls.isEmpty and decided == 0
+        done(step, "answered", cost)
+        return
+      for i in 0..calls.length
+        c = calls[i]
+        callId = "${step}-${round + 1}-${i + 1}"
+        out({ "type": "event", "step": step, "event": { "type": "tool", "id": callId, "tool": c["name"], "input": json.dumps(c["input"]) } })
+        r: <string, any> = c["bad"] != null ? { "text": "the arguments are not one JSON object: ${c["bad"]}", "error": true } : chatTool(root, "${c["name"]}", c["input"]!)
+        out({ "type": "event", "step": step, "event": { "type": "tool-result", "id": callId, "tool": c["name"], "ok": r["error"] != true, "text": r["text"] } })
+        keep({ "role": "tool", "tool": c["name"], "input": c["input"], "text": r["text"], "error": r["error"] })
+        decision = decide(step, "${c["name"]}", "${r["text"]}")
+        if decision != null
+          keep({ "role": "tool", "tool": "${c["name"]} (the user's answer)", "input": c["input"], "text": decision!, "error": false })
+    done(step, "failed", cost, "no answer after ${CHAT_ROUNDS} rounds of tools")
+
+  // What a tool asked of the user, asked through the chat and applied on a yes (tools.nuc `applyForUser`): a
+  // `needsUser` once, a run's spending twice (the chat's ask honours forceConfirm: it is the user who answers).
+  // Null when the tool asked nothing.
+  decide(step: string, tool: string, text: string) string?
+    found = userDecision(text)
+    if found == null
+      return null
+    try
+      if found!["needsUser"] != null
+        n: <string, any> = found!["needsUser"]!
+        yes = askUser({ "id": "confirm-${step}-${n["tool"]}", "kind": "confirm", "question": n["question"] })
+        if yes == null or yes!["answer"] != "yes"
+          return "the user said no to: ${n["question"]}"
+        return json.dumps(applyForUser(root, "${n["tool"]}", n["input"] ?? ({} as <string, any>)), ensureAscii = false)
+      id = "${found!["run"] ?? ""}"
+      spending: <string, any> = found!["spending"] ?? ({} as <string, any>)
+      providers: string[] = spending["providers"] ?? []
+      limit: double = spending["budgetUsd"] ?? 5.0
+      first = askUser({ "id": "run-spending-1", "kind": "spending", "question": "The run ${id} uses paid providers: ${providers.join(", ")}. Go on?", "providers": providers })
+      if first == null or first!["answer"] != "yes"
+        return "the user did not confirm the spending of the run ${id}: it waits"
+      second = askUser({ "id": "run-spending-2", "kind": "spending", "question": "It may spend up to ${limit.toFixed(2)} USD with ${providers.join(", ")}. Confirm the spending?", "budgetUsd": limit, "providers": providers })
+      if second == null or second!["answer"] != "yes"
+        return "the user did not confirm the spending of the run ${id}: it waits"
+      json.dumps(applyForUser(root, "run_spending", { "id": id }), ensureAscii = false)
+    catch e
+      if not isinstance(e, ValueError) and not isinstance(e, OSError)
+        throw e
+      "${e}"
+
+  done(step: string, status: string, cost: double, error: string = "") void
+    e: <string, any> = { "type": "done", "step": step, "status": status, "costUsd": cost, "totalUsd": spentUsd }
+    if not error.isEmpty
+      e["error"] = error
+    out(e)
+
+  // One call of the provider with the conversation so far; what an agent changed in the roles' folder is put back.
+  callProvider(step: string, left: double) Outcome
+    if not (provider() in ADAPTERS)
+      return Outcome(false, "", {}, [], 0, [], "no adapter for the provider ${provider()}")
+    adapter = ADAPTERS[provider()]!
+    card = projectCard(root)
+    platform = "${card["platform"] ?? ""}"
+    prompt = chatPrompt("${card["name"] ?? Path(root).name}", platform)
+    inputs: <string, any> = { "platform": platform, "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }, "route": "/developer/chat", "stream": true, "body": { "message": prompt, "history": "", "platform": platform in ["backend", "mobile", "web"] ? platform : "backend", "root": root } }
+    work = Work(root, "${Path(root, CHAT_DIR)}", prompt, {}, [], "${given["model"] ?? ""}", paid() ? left : 0, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, inputs)
+    roles = rolesDir()
+    before = roleFiles(roles)
+    got = runAdapter(adapter!, persona(), "chat", work, (e) => onEvent(step, e))
+    fixed = restoreRoleFiles(roles, before)
+    if not fixed.isEmpty
+      out({ "type": "event", "step": step, "event": { "type": "trace", "step": "guard", "detail": "a role's files are not the chat's: put back ${fixed.join(", ")}" } })
+    changed = got.files.filter((f) => not f.startsWith(CHAT_DIR))
+    if not changed.isEmpty
+      out({ "type": "event", "step": step, "event": { "type": "trace", "step": "files", "detail": "the agent changed in the project: ${changed.join(", ")}" } })
+    got
+
+  // What the provider does, as the run's events; its text is told once, without its tool calls, after the call (its
+  // `text-delta`s, the text as it is written, pass: the chat shows them until the answer comes).
+  onEvent(step: string, e: <string, any>) void
+    if e["type"] != "text"
+      out({ "type": "event", "step": step, "event": e })
+
+  // Who answers, as the adapter gives it to the provider.
+  persona() Role
+    Role("chat", "general agent", "You are the general agent of Nuclear Builder, NuclearLang's software factory.", {}, {}, [], [])
+
+  // The factory's tools, as a prompt's section: an agent or an API model has them as the MCP server
+  // `nuclear_builder` (beside `nuclear`); the local member calls them as text blocks.
+  toolsSection() string
+    if kind() != "local"
+      return "## The factory's tools\n\nThe MCP server `nuclear_builder` gives you every action of Nuclear Builder (specs, runs and their answers, checks, teams, the line, the CI file, reading a file of the project): call them as tools. A tool that answers `waiting: spending` or `needsUser` waits for the user: say so, never answer it yourself."
+    tools = builderToolList(root).map((t) => toolLine(t)).join("\n")
+    "## The factory's tools\n\nTo call one, end your answer with a line `--- tool: <name> ---` and its JSON arguments on the next line (several calls: one block each). The results come back in the next message; answer the user once you have them. For example:\n\n--- tool: project_read ---\n{\"path\": \"docs/brief.pdf\"}\n\nA tool that answers `waiting: spending` or `needsUser` is asked of the user: never answer it yourself.\n\n${tools}"
+
+  // The project's business components (`components/`), as a prompt's section.
+  componentsSection() string
+    components = Path(root, "components").isDir() ? (list(Path(root, "components").iterdir()) as Path[]).filter((d) => d.isDir()).map((d) => d.name).sorted() : ([] as string[])
+    "## The project's business components\n\n${components.isEmpty ? "(none: specs go to _global or to the component the user names)" : components.map((c) => "- ${c}").join("\n")}"
+
+  // The whole conversation as the agent reads it: who it is, the factory's tools, the project, what was said.
+  chatPrompt(project: string, platform: string) string
+    said = history.map((h) => h["role"] == "tool" ? "(the result of the tool ${h["tool"]}${h["error"] == true ? ", failed" : ""}, for you only)\n${h["text"]}" : "${h["role"]}: ${h["text"]}${h["error"] != null ? " (failed: ${h["error"]})" : ""}")
+    parts = ["You are the general agent of Nuclear Builder, NuclearLang's software factory, in the project ${project}${platform.isEmpty ? "" : " (${platform})"}. You do everything Nuclear Builder does: read a document of the project (project_read), write specs with their acceptance criteria, start their runs and answer their gates, keep the teams and the line, with the factory's tools below (and the Nuclear MCP server's when you have them). You never edit a role's files (nuclear-agents/roles/) nor the project's files: a spec is written with `spec_new`, a change of the project is a run of the factory.", toolsSection(), componentsSection(), "## The conversation\n\n${said.join("\n\n")}"]
+    if not history.isEmpty and history.last["role"] == "tool"
+      parts.add("## Now\n\nThe tools answered: tell the user in a few sentences what was done and where (never the results whole), or call another tool.")
+    parts.join("\n\n")
+
+// A line of the user: stdin as it comes; in a terminal, after a prompt.
+readUser(asJson: boolean) string?
+  if not asJson and sys.stdin.isatty()
+    try
+      return input("> ")
+    catch e
+      if not isinstance(e, EOFError)
+        throw e
+      return null
+  l: string = sys.stdin.readline()
+  l.isEmpty ? null : l

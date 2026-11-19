@@ -94,6 +94,15 @@ and where each goes: `path`, `query` or `body`, the answer and error types, the 
 `.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the
 runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`.
 
+A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):
+
+| Field | Holds |
+|---|---|
+| `webSocket` | the path of the app's WebSocket (`"/ws"`), or `null` when its config has no `WebSocketServer` |
+| `controllers.<C>.transports` | `["http"]`, or `["http", "websocket"]` when the app has a WebSocket |
+| `guards`, `controllers.<C>.guards` | the app's guards and each controller's own, in order: `{"guard": "token", "header": "X-Token"}`, `{"guard": "noOrigin"}`; a token's value is never written |
+| `events.<topic>` | each topic the app publishes (`~publish("topic", value)`): the `component` that publishes it and its `payload`: the model built in place, a typed parameter's type, or `<string, any>` with the map's `fields`; `any` when the source does not say |
+
 A client declares the backends it talks to in its manifest, with the name of the connection its calls use:
 
 ```nuclear
@@ -203,6 +212,10 @@ A backend dialect has the `dependencies` section too (`dependencies(nuclear_grap
 the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,
 `version`, `path`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root
 (`nuclear_graph @ file:///...`, `"file:/..."`).
+
+`testEnv(NAME = "value")` (a section the dialect lists in `sections`) is the environment the project's tests run
+with (ADR-synapsis-0010): the template variable `test_env` (`name`, `value`) of the project files, which set it
+before the app is loaded (`tests/conftest.py`, `src/test_env.ts`). Only the tests see it.
 
 ### 3.2 Type definitions of the project: `build/defs.lock` and `defs/`
 
@@ -323,6 +336,9 @@ A framework's kinds generate code from decorators and signatures. Besides the us
 | `ret_info`, `tinfo` | methods, functions, parameters | of the type: `type`, `list`, `item`, `name` (name in Nuclear, without type arguments), `args` (the type arguments, each with this same data: `Page<Character>`), `generic` (a type parameter of the declaration: `T`), `model` (a class of the program, or of the type definitions that reads itself from JSON: the runtime's `PageOf`), `runtime` (a `model` of the type definitions, not of the program), `fields_decor.<decorator>` and `decor` of a model (its first field with that decorator: `primary` → `id`; its own decorators: `decor.entity.arg`, the table), `primitive`, `void`, `nullable`, `is.<name>`; of a `Result<T, E>`: `result`, `full`, `err`, `err_is.<name>` and the rest describes `T` |
 | `override` | `field` | the field replaces a member of a base |
 | `file`, `project`, `component`, `kind` | kind | name of the file, the project, the component and the kind |
+| `plugins.<name>` | kind, `method` | the plugins `config.nuc` enables (with the ones they require): a dialect writes a plugin's part only when it is on (`{{#plugins.telemetry}}`) |
+| `site.component`, `site.kind`, `site.path`, `site.line` | `method` | where the method is written, the parts of `[call_site]`'s breadcrumb as constants (a span's name: `orders › usecase › FindOrder.exec`) |
+| `is.<name>` | `method` | the method's own name, to write something for one method of a kind (`{{#is.exec}}`) |
 | `app.name`, `app.title`, `app.description`, `app.version` | project files | `app(...)` of `config.nuc` (`title`: the name when absent) |
 | `asset.<path>` | project files | a file of the `[project] assets` folders exists, its path with `/`, `.` and `-` as `_` (`asset.public_styles_css`: index.html links the stylesheet only when the project has one) |
 

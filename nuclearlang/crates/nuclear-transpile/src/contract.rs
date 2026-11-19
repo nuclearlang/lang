@@ -35,6 +35,9 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
     let mut models = Map::new();
     let mut controllers = Map::new();
     let mut repositories = Map::new();
+    let mut events = Map::new();
+    let mut web_socket = Value::Null;
+    let mut guards = Vec::new();
     for rel in project::sources(root, &out_dir) {
         if dialect.project.manifest.as_ref().is_some_and(|m| rel == Path::new(&m.file)) {
             continue;
@@ -52,12 +55,30 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
             let Item::Decl(d) = item else { continue };
             let kind = d.words.iter().find(|w| dialect.kinds.contains_key(&w.name)).map(|w| w.name.clone());
             let kind = kind.or_else(|| default_kind.clone()).unwrap_or_default();
+            if dialect.platform.as_deref() == Some("backend") {
+                published(d, &component, &mut events);
+            }
             match kind.as_str() {
                 "model" | "entity" | "event" => {
                     models.insert(d.name.name.clone(), model(d, &lines));
                 }
                 "controller" => {
                     controllers.insert(d.name.name.clone(), api(d, &lines, &component, true));
+                }
+                // ADR-synapsis-0007/0008: the app's guards and its WebSocket, for the tools that call it
+                "appConfig" if dialect.platform.as_deref() == Some("backend") => {
+                    for (field, value) in config_lists(d) {
+                        match field.as_str() {
+                            "guards" => guards = value.iter().map(guard).collect(),
+                            "connections" => {
+                                if let Some(ws) = value.iter().find(|c| callee(c) == Some("WebSocketServer")) {
+                                    let path = call_args(ws).and_then(|a| named_or_first(Some(a), "path")).unwrap_or_else(|| "ws".into());
+                                    web_socket = format!("/{}", path.trim_matches('/')).into();
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
                 }
                 // a mobile or web repository is http calls; a backend one is a table (no contract)
                 "repository" if dialect.platform.as_deref() != Some("backend") && has_verbs(d) => {
@@ -67,7 +88,14 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
             }
         }
     }
-    json!({
+    // every controller is served over HTTP, and over the app's WebSocket when its config has one
+    let transports: Value = if web_socket.is_null() { json!(["http"]) } else { json!(["http", "websocket"]) };
+    for c in controllers.values_mut() {
+        if let Value::Object(m) = c {
+            m.insert("transports".into(), transports.clone());
+        }
+    }
+    let mut out = json!({
         "app": manifest.name,
         "version": manifest.version,
         "platform": manifest.platform,
@@ -75,7 +103,114 @@ pub fn contract(root: &Path, manifest: &Manifest, dialect: &Dialect) -> Value {
         "models": models,
         "controllers": controllers,
         "repositories": repositories,
-    })
+    });
+    if dialect.platform.as_deref() == Some("backend") {
+        out["webSocket"] = web_socket;
+        out["guards"] = Value::Array(guards);
+        out["events"] = Value::Object(events);
+    }
+    out
+}
+
+/// The list fields of an `appConfig` (`connections`, `guards`) with their items.
+fn config_lists(d: &Decl) -> Vec<(String, &[Expr])> {
+    let Body::Members(ms) = &d.body else { return Vec::new() };
+    ms.iter()
+        .filter_map(|m| match m {
+            Member::Field(f) => match f.default.as_ref().map(|e| &e.kind) {
+                Some(ExprKind::List(items)) => Some((f.name.name.clone(), items.as_slice())),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect()
+}
+
+fn callee(e: &Expr) -> Option<&str> {
+    match &e.kind {
+        ExprKind::Call { callee, .. } => match &callee.kind {
+            ExprKind::Name(n) => Some(n.as_str()),
+            _ => None,
+        },
+        ExprKind::Name(n) => Some(n.as_str()),
+        _ => None,
+    }
+}
+
+fn call_args(e: &Expr) -> Option<&[Arg]> {
+    match &e.kind {
+        ExprKind::Call { args, .. } => Some(args.as_slice()),
+        _ => None,
+    }
+}
+
+/// A guard as the contract says it (ADR-synapsis-0007): `{"guard": "token", "header": "X-Token"}`, `{"guard":
+/// "noOrigin"}`. The token's value is never written.
+fn guard(e: &Expr) -> Value {
+    match callee(e) {
+        Some("Token") => {
+            let header = call_args(e).and_then(|a| named_str(Some(a), "header")).unwrap_or_else(|| "Authorization".into());
+            json!({ "guard": "token", "header": header })
+        }
+        Some("NoOrigin") => json!({ "guard": "noOrigin" }),
+        Some(other) => json!({ "guard": other }),
+        None => json!({ "guard": "unknown" }),
+    }
+}
+
+/// The events a declaration publishes (`~publish("tasks.created", value)`, ADR-synapsis-0008): the topic, the component
+/// and the payload's type as far as the source says it (a model built in place, a typed parameter, a map's keys).
+fn published(d: &Decl, component: &str, events: &mut Map<String, Value>) {
+    let Body::Members(ms) = &d.body else { return };
+    for m in ms {
+        let Member::Method(x) = m else { continue };
+        let params: Vec<_> = x.params.as_ref().map(|p| p.list.iter().collect()).unwrap_or_default();
+        let mut found = |e: &Expr| {
+            let ExprKind::Call { callee: c, args, .. } = &e.kind else { return };
+            if !matches!(&c.kind, ExprKind::Name(n) if n == "publish") {
+                return;
+            }
+            let Some(topic) = args.first().and_then(|a| literal(&a.value)).and_then(|v| v.as_str().map(String::from)) else {
+                return;
+            };
+            let mut ev = Map::new();
+            ev.insert("component".into(), component.into());
+            let value = args.get(1).map(|a| &a.value);
+            let payload = match value.map(|v| &v.kind) {
+                Some(ExprKind::Call { callee: k, .. }) => match &k.kind {
+                    ExprKind::Name(n) if n.starts_with(char::is_uppercase) => n.clone(),
+                    _ => "any".into(),
+                },
+                Some(ExprKind::Object(entries)) => {
+                    let keys: Vec<Value> = entries
+                        .iter()
+                        .filter_map(|en| match en {
+                            nuclear_syntax::ast::ObjEntry::Pair { key, .. } => Some(match key {
+                                nuclear_syntax::ast::ObjKey::Ident(i) => i.name.clone().into(),
+                                nuclear_syntax::ast::ObjKey::Str(s) => s.clone().into(),
+                            }),
+                            _ => None,
+                        })
+                        .collect();
+                    ev.insert("fields".into(), Value::Array(keys));
+                    "<string, any>".into()
+                }
+                Some(ExprKind::Name(n)) => params
+                    .iter()
+                    .find(|p| &p.name.name == n)
+                    .map(|p| type_text(p.ty.as_ref()))
+                    .unwrap_or_else(|| "any".into()),
+                _ => "any".into(),
+            };
+            ev.insert("payload".into(), payload.into());
+            events.entry(topic).or_insert(Value::Object(ev));
+        };
+        match &x.body {
+            Body::Block(b) => b.stmts.iter().for_each(|s| crate::analysis::walk_stmt_exprs(s, &mut found)),
+            Body::Expr(e) => crate::analysis::walk_expr(e, &mut found),
+            _ => {}
+        }
+    }
 }
 
 fn has_verbs(d: &Decl) -> bool {
@@ -194,6 +329,15 @@ fn api(d: &Decl, lines: &Lines, component: &str, backend: bool) -> Value {
     let mut m = Map::new();
     m.insert("component".into(), component.into());
     m.insert("path".into(), base.into());
+    if backend {
+        // its own guards, checked after the app's (ADR-synapsis-0007)
+        let own = head.and_then(|x| x.args.as_deref()).and_then(|a| a.iter().find(|a| a.name.as_ref().is_some_and(|n| n.name == "guards")));
+        let own: Vec<Value> = match own.map(|a| &a.value.kind) {
+            Some(ExprKind::List(items)) => items.iter().map(guard).collect(),
+            _ => Vec::new(),
+        };
+        m.insert("guards".into(), Value::Array(own));
+    }
     if !backend {
         m.insert("connection".into(), connection.into());
     }
@@ -269,6 +413,20 @@ fn literal(e: &Expr) -> Option<Value> {
         }
         ExprKind::Bool(b) => Some(Value::Bool(*b)),
         ExprKind::Null => Some(Value::Null),
+        // a list or a map of literals (`[]`, `{}`, `["a"]`): a default the contract keeps
+        ExprKind::List(items) => items.iter().map(literal).collect::<Option<Vec<_>>>().map(Value::Array),
+        ExprKind::Object(entries) => {
+            let mut m = Map::new();
+            for en in entries {
+                let nuclear_syntax::ast::ObjEntry::Pair { key, value } = en else { return None };
+                let key = match key {
+                    nuclear_syntax::ast::ObjKey::Ident(i) => i.name.clone(),
+                    nuclear_syntax::ast::ObjKey::Str(s) => s.clone(),
+                };
+                m.insert(key, literal(value)?);
+            }
+            Some(Value::Object(m))
+        }
         _ => None,
     }
 }
@@ -694,6 +852,7 @@ pub fn generate(name: &str, contract: &Value, dialect: &Dialect) -> Vec<(PathBuf
             let deco = if args.is_empty() { format!("  @{verb}\n") } else { format!("  @{verb}({})\n", args.join(", ")) };
             text.push_str(&deco);
             let mut params = Vec::new();
+            let bodies = r["params"].as_array().into_iter().flatten().filter(|p| p["in"] == "body").count();
             for p in r["params"].as_array().into_iter().flatten() {
                 let place = p["in"].as_str().unwrap_or("query");
                 let read = verb == "get" || verb == "delete";
@@ -704,7 +863,10 @@ pub fn generate(name: &str, contract: &Value, dialect: &Dialect) -> Vec<(PathBuf
                 } else {
                     "body"
                 };
-                let prefix = if place != natural { format!("@{place} ") } else { String::new() };
+                let ty = p["type"].as_str().unwrap_or("any");
+                // a model the route reads as its body is the body itself, never a field named like the parameter
+                let model_body = place == "body" && bodies == 1 && !is_primitive_text(ty);
+                let prefix = if place != natural || model_body { format!("@{place} ") } else { String::new() };
                 let opt = if p["optional"].as_bool().unwrap_or(false) { "?" } else { "" };
                 let default = p.get("default").map(|d| format!(" = {}", nuclear_literal(d))).unwrap_or_default();
                 params.push(format!("{prefix}{}{opt}: {}{default}", p["name"].as_str().unwrap_or(""), p["type"].as_str().unwrap_or("any")));
@@ -739,6 +901,12 @@ fn type_names(t: &str) -> Vec<String> {
         }
     }
     out
+}
+
+/// A type's text whose base is not a model nor a map (`int`, `string[]`, `boolean?`).
+fn is_primitive_text(t: &str) -> bool {
+    let base = t.trim_end_matches('?').trim_end_matches("[]").trim_end_matches('?');
+    PRIMITIVES.contains(&base)
 }
 
 fn nuclear_literal(v: &Value) -> String {
@@ -791,4 +959,21 @@ pub fn fetch(source: &str, root: &Path) -> Result<String, String> {
     }
     let path = root.join(source).join(CONTRACT_FILE);
     std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A list's and a map's default reach the contract and the client's models.
+    #[test]
+    fn defaults_of_lists_and_maps_are_kept() {
+        let parsed = nuclear_syntax::parse("Message\n  buttons: string[] = []\n  tags: string[] = [\"a\"]\n  reactions: <string, string[]> = {}\n");
+        let Item::Decl(d) = &parsed.file.items[0] else { panic!() };
+        let lines = Lines::new("", &[]);
+        let m = model(d, &lines);
+        let defaults: Vec<&Value> = m["fields"].as_array().unwrap().iter().map(|f| &f["default"]).collect();
+        assert_eq!(defaults, [&json!([]), &json!(["a"]), &json!({})]);
+        assert_eq!(nuclear_literal(&json!({})), "{}");
+    }
 }

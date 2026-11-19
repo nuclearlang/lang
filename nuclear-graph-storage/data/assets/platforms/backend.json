@@ -60,8 +60,8 @@
    "id": "decorator:backend.controller",
    "type": "decorator",
    "title": "`@controller` — a decorator of the backend platform",
-   "summary": "On a controller: `@controller(\"path\")`, the prefix of its routes.",
-   "body": "On a controller: `@controller(\"path\")`, the prefix of its routes.",
+   "summary": "On a controller: `@controller(\"path\")`, the prefix of its routes; `guards = [Token(value = env(\"TOKEN\"))]` adds guards that check every route of it, after the app's (ADR-synapsis-0007).",
+   "body": "On a controller: `@controller(\"path\")`, the prefix of its routes; `guards = [Token(value = env(\"TOKEN\"))]` adds guards that check every route of it, after the app's (ADR-synapsis-0007).",
    "keys": [
     "@controller",
     "controller"
@@ -893,6 +893,43 @@
    }
   },
   {
+   "id": "decorator:backend.untraced",
+   "type": "decorator",
+   "title": "`@untraced` — a decorator of the backend platform",
+   "summary": "With `plugins(telemetry = true)`: no span for this use case, route or controller (every route of it).",
+   "body": [
+    "With `plugins(telemetry = true)`: no span for this use case, route or controller (every route of it). A route marked",
+    "`@untraced` starts no trace, so what it calls is not traced either. Without the plugin it does nothing.",
+    "",
+    "```nuclear",
+    "controller HealthController",
+    "  @get(\"health\")",
+    "  @untraced",
+    "  health() Result<Error, Health>",
+    "    Ok(Health(ok = true))",
+    "```"
+   ],
+   "keys": [
+    "@untraced",
+    "untraced"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/platform.toml",
+    "nuclearlang/dialects/python/frameworks/fastapi/docs.toml"
+   ],
+   "meta": {
+    "name": "untraced"
+   },
+   "data": {
+    "platform": "backend",
+    "decorator": "untraced",
+    "args": []
+   }
+  },
+  {
    "id": "decorator:backend.updated",
    "type": "decorator",
    "title": "`@updated` — a decorator of the backend platform",
@@ -1039,7 +1076,7 @@
    "body": [
     "The **configuration of the app**: its connections (databases, Redis, Kafka, models, vectors).",
     "",
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment.",
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment. `WebSocketServer(path = \\\"ws\\\")` (plugin `websocket`) serves the same controllers over a WebSocket and pushes what `publish` sends to the subscribed clients; `guards: Guard[] = [NoOrigin(), Token(value = env(\\\"TOKEN\\\"), header = \\\"X-Token\\\")]` checks the headers of every request (ADR-synapsis-0007, ADR-synapsis-0008).",
     "",
     "```nuclear",
     "appConfig ProjectConfig",
@@ -1150,7 +1187,7 @@
    "body": [
     "The **configuration of one component**: connections only it uses.",
     "",
-    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment.",
+    "The connections of the app (`appConfig`, `config/project_config.nuc`) and of a component (`config`): opened at start and closed at stop. Databases: `Postgres`, `MySQL`, `SQLite` (`url` picks the async driver, `createTables = true` creates the tables); `Redis`; `Kafka(servers, group)`; models: `OpenAI(model)`, `Ollama(model, baseUrl)`, `Embeddings(model)`; `Chroma(collection, embeddings, path)`. Each has a `name` (default `\"default\"`). `env(\"VAR\", \"default\")` reads the environment. `WebSocketServer(path = \\\"ws\\\")` (plugin `websocket`) serves the same controllers over a WebSocket and pushes what `publish` sends to the subscribed clients; `guards: Guard[] = [NoOrigin(), Token(value = env(\\\"TOKEN\\\"), header = \\\"X-Token\\\")]` checks the headers of every request (ADR-synapsis-0007, ADR-synapsis-0008).",
     "",
     "```nuclear",
     "appConfig ProjectConfig",
@@ -2108,7 +2145,7 @@
    "id": "platform:backend",
    "type": "platform",
    "title": "The backend platform of Synapsis",
-   "summary": "The backend platform: HTTP APIs, data, events and AI agents. 16 kinds, 34 decorators, 11 plugins; built by the dialects fastapi, nestjs (default: fastapi).",
+   "summary": "The backend platform: HTTP APIs, data, events and AI agents. 16 kinds, 35 decorators, 13 plugins; built by the dialects fastapi, nestjs (default: fastapi).",
    "body": [
     "A project of the platform is written once in Nuclear and builds with any of its dialects (`fastapi`, `nestjs`; `fastapi` when none is named). Create one: `nuclear new <name> -p backend`.",
     "",
@@ -2131,7 +2168,7 @@
     "- `graph`: A graph of steps: its methods are the nodes.",
     "- `tests`: A group of tests (in `test/`).",
     "",
-    "Its plugins: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma`."
+    "Its plugins: `sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `websocket`, `ai`, `openai`, `ollama`, `chroma`, `telemetry`."
    ],
    "keys": [
     "backend",
@@ -2275,7 +2312,8 @@
      "min",
      "max",
      "pattern",
-     "key"
+     "key",
+     "untraced"
     ],
     "plugins": [
      "sqlite",
@@ -2285,10 +2323,12 @@
      "redis",
      "kafka",
      "events",
+     "websocket",
      "ai",
      "openai",
      "ollama",
-     "chroma"
+     "chroma",
+     "telemetry"
     ]
    }
   },
@@ -2720,6 +2760,84 @@
     "plugin": "sqlite",
     "kinds": [],
     "requires": []
+   }
+  },
+  {
+   "id": "plugin:backend.telemetry",
+   "type": "plugin",
+   "title": "`telemetry` — a plugin of the backend platform",
+   "summary": "Traces and metrics over OpenTelemetry (OTLP/HTTP): Datadog(...), NewRelic(...), Grafana(...), Otlp(...) in connections; Metric.count, Metric.record; @untraced",
+   "body": [
+    "Traces and metrics over OpenTelemetry (OTLP/HTTP): Datadog(...), NewRelic(...), Grafana(...), Otlp(...) in connections; Metric.count, Metric.record; @untraced",
+    "",
+    "Enable it in `config.nuc`: `plugins(telemetry = true)`. A kind or a name of a plugin that is not enabled is `N0304`, which says the line to add."
+   ],
+   "keys": [
+    "telemetry",
+    "plugin telemetry"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "links": [
+    {
+     "rel": "missing-is",
+     "to": "error:N0304"
+    }
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/platform.toml",
+    "nuclearlang/dialects/python/frameworks/fastapi/dialect.toml"
+   ],
+   "meta": {
+    "name": "telemetry"
+   },
+   "data": {
+    "platform": "backend",
+    "plugin": "telemetry",
+    "kinds": [],
+    "requires": []
+   }
+  },
+  {
+   "id": "plugin:backend.websocket",
+   "type": "plugin",
+   "title": "`websocket` — a plugin of the backend platform",
+   "summary": "The app's WebSocket (uvicorn's websockets): WebSocketServer(path = \"ws\") in connections serves the same controllers and pushes what publish sends to the subscribed clients",
+   "body": [
+    "The app's WebSocket (uvicorn's websockets): WebSocketServer(path = \"ws\") in connections serves the same controllers and pushes what publish sends to the subscribed clients",
+    "",
+    "It enables: `events`.",
+    "",
+    "Enable it in `config.nuc`: `plugins(websocket = true)`. A kind or a name of a plugin that is not enabled is `N0304`, which says the line to add."
+   ],
+   "keys": [
+    "websocket",
+    "plugin websocket"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "links": [
+    {
+     "rel": "missing-is",
+     "to": "error:N0304"
+    }
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/backend/platform.toml",
+    "nuclearlang/dialects/python/frameworks/fastapi/dialect.toml"
+   ],
+   "meta": {
+    "name": "websocket"
+   },
+   "data": {
+    "platform": "backend",
+    "plugin": "websocket",
+    "kinds": [],
+    "requires": [
+     "events"
+    ]
    }
   }
  ]

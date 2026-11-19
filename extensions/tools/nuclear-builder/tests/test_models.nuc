@@ -1,0 +1,120 @@
+use json
+use httpx
+use pathlib{ Path }
+
+// The models of each provider and the memory guard (spec 011 requirement 35): this machine's memory read, a local
+// model's need estimated and held against it, Ollama's models listed (an embedding model left out, the pullable ones
+// added), the APIs' lists read, Claude Code's aliases, a command's list kept a while, and the warnings of a team's
+// members. Ollama and the APIs are httpx stubs, the commands fakes: no paid call.
+
+TAGS = { "models": [
+  { "name": "qwen2.5-coder:3b", "size": 1929912626, "details": { "family": "qwen2", "parameter_size": "3.1B", "quantization_level": "Q4_K_M" } },
+  { "name": "gemma4:26b", "size": 18731025629, "details": { "family": "gemma4", "parameter_size": "25.2B", "quantization_level": "Q4_K_M" } },
+  { "name": "embeddinggemma:latest", "size": 621875917, "details": { "family": "gemma3", "parameter_size": "307.58M", "quantization_level": "BF16" } }
+] }
+
+ollamaUp() httpx.MockTransport
+  httpx.MockTransport((request: httpx.Request) => httpx.Response(200, json = TAGS))
+
+ollamaDown() httpx.MockTransport
+  httpx.MockTransport((request: httpx.Request) => httpx.Response(503, text = "no"))
+
+// A machine of 16 GB with 6 GB free.
+SMALL: <string, any> = { "totalGb": 16.0, "availableGb": 6.0 }
+
+testThisMachinesMemoryIsReadFromTheSystem(tmpPath: Path) void
+  info = tmpPath.joinpath("meminfo")
+  info.writeText("MemTotal:       30382152 kB\nMemFree:         1000000 kB\nMemAvailable:    6448364 kB\n")
+  expect(machineMemory("${info}", "linux") == { "totalGb": 31.1, "availableGb": 6.6 }, json.dumps(machineMemory("${info}", "linux")))
+  expect(machineMemory("${tmpPath.joinpath("none")}", "linux") == { "totalGb": 0.0, "availableGb": 0.0 })
+
+testALocalModelsMemoryIsItsWeightsWithAMargin() void
+  // its size on disk, a fifth more, 1 GB of context
+  expect(memoryNeed(1.9) == 3.3, "${memoryNeed(1.9)}")
+  // not installed and no size: its parameters by its quantization's bytes
+  expect(memoryNeed(0.0, "7.6B", "Q4_K_M") == 6.3, "${memoryNeed(0.0, "7.6B", "Q4_K_M")}")
+  expect(memoryNeed(0.0, "494.03M", "Q8_0") == 1.6, "${memoryNeed(0.0, "494.03M", "Q8_0")}")
+  expect(memoryNeed(0.0) == 0.0)
+  // too big: more than the machine less what the system keeps; tight: more than is free now
+  expect(fitOf(3.3, SMALL) == "fits" and fitOf(9.0, SMALL) == "tight" and fitOf(14.0, SMALL) == "too-big")
+  expect(fitOf(30.0, { "totalGb": 64.0, "availableGb": 40.0 }) == "fits" and fitOf(3.0, { "totalGb": 0.0 }) == "unknown")
+
+testOllamasModelsAreListedWithTheirFitAndThePullableOnes() void
+  found = ollamaModels(SMALL, ollamaUp())
+  models: <string, any>[] = found["models"]!
+  ids = models.map((m) => "${m["id"]}")
+  expect(found["source"] == "ollama" and found["free"] == false and not ("embeddinggemma:latest" in ids), json.dumps(ids))
+  coder = models[0]
+  expect(coder == { "id": "qwen2.5-coder:3b", "installed": true, "sizeGb": 1.9, "params": "3.1B", "quant": "Q4_K_M", "needGb": 3.3, "fit": "fits" }, json.dumps(coder))
+  big = models[1]
+  expect(big["id"] == "gemma4:26b" and big["fit"] == "too-big" and big["needGb"] == 23.4, json.dumps(big))
+  // the small ones it can pull, not installed, with what they download
+  pull = models.find((m) => m["id"] == "gemma4:e2b")!
+  expect(pull["installed"] == false and pull["downloadGb"] == 7.2 and pull["fit"] == "tight", json.dumps(pull))
+  expect(ids.filter((id) => id == "qwen2.5-coder:3b").length == 1)
+  // Ollama down: the pullable ones, with why
+  off = ollamaModels(SMALL, ollamaDown())
+  expect(off["source"] == "pullable" and "Ollama does not answer" in "${off["why"]}" and (off["models"] as <string, any>[]).length == PULLABLE.length)
+
+testTheAPIsListsAreReadAndSayWhichHaveAPrice() void
+  answers: <string, any> = {
+    "api.anthropic.com": { "data": [{ "id": "claude-opus-5-5" }, { "id": "claude-new-6" }] },
+    "api.openai.com": { "data": [{ "id": "gpt-x" }, { "id": "text-embedding-3-small" }, { "id": "a-model" }] },
+    "generativelanguage.googleapis.com": { "models": [{ "name": "models/gemini-x", "supportedGenerationMethods": ["generateContent"] }, { "name": "models/embed-x", "supportedGenerationMethods": ["embedContent"] }] },
+    "openrouter.ai": { "data": [{ "id": "z/model" }, { "id": "a/model" }] }
+  }
+  seen: string[] = []
+  answer = (request: httpx.Request) =>
+    seen.add("${request.headers.get("x-api-key") ?? request.headers.get("x-goog-api-key") ?? request.headers.get("authorization")}")
+    httpx.Response(200, json = answers[request.url.host])
+  client = httpx.Client(transport = httpx.MockTransport(answer))
+  expect(apiListed("anthropic", "k1", client) == ["claude-opus-5-5", "claude-new-6"])
+  expect(apiListed("openai", "k2", client) == ["a-model", "gpt-x"])
+  expect(apiListed("google", "k3", client) == ["gemini-x"])
+  expect(apiListed("openrouter", "k4", client) == ["a/model", "z/model"])
+  expect(seen == ["k1", "Bearer k2", "k3", "Bearer k4"], json.dumps(seen))
+  client.close()
+
+testClaudeCodeGivesItsAliasesAndACommandsListIsKeptAWhile(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  monkeypatch.setenv("HOME", "${tmpPath}")
+  root = tmpPath.joinpath("app")
+  root.mkdir()
+  claude = providerModels("claude-code", "${root}", SMALL)
+  ids = (claude["models"] as <string, any>[]).map((m) => "${m["id"]}")
+  expect(claude["free"] == true and CLAUDE_ALIASES.all((a) => a in ids) and ids.indexOf("claude-opus-5-5") == ids.indexOf("opus") + 1 and (claude["models"] as <string, any>[])[ids.indexOf("opus")]["alias"] == true, json.dumps(ids))
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  fake = bin.joinpath("opencode")
+  fake.writeText("#!/bin/sh\necho 'ollama/qwen2.5-coder:3b'\n")
+  fake.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}")
+  first = providerModels("opencode", "${root}", SMALL)
+  fake.writeText("#!/bin/sh\necho 'anthropic/claude-x'\n")
+  kept = providerModels("opencode", "${root}", SMALL)
+  again = providerModels("opencode", "${root}", SMALL, true)
+  expect((first["models"] as <string, any>[])[0]["id"] == "ollama/qwen2.5-coder:3b" and kept == first and first["free"] == true)
+  expect((again["models"] as <string, any>[])[0]["id"] == "anthropic/claude-x", json.dumps(again))
+  // an API with no key: its priced models
+  api = providerModels("anthropic", "${root}", SMALL, true)
+  expect(api["source"] == "prices" and (api["models"] as <string, any>[]).all((m) => m["priced"] == true))
+
+testAMemberWithATooBigLocalModelIsWarned() void
+  local: <string, any>[] = ollamaModels(SMALL, ollamaUp())["models"]!
+  members = [{ "id": "dev", "role": "developer", "kind": "local", "model": "gemma4:26b" }, { "id": "qa", "role": "qa", "kind": "local", "model": "qwen2.5-coder:3b" }, { "id": "ana", "role": "analyst", "kind": "agent", "model": "gemma4:26b" }, { "id": "arc", "role": "architect", "kind": "local", "model": "gemma4:e2b" }]
+  warned = memoryWarnings(members, local, SMALL)
+  expect(warned.length == 2, json.dumps(warned))
+  expect(warned[0]["member"] == "dev" and warned[0]["fit"] == "too-big" and "can make the computer freeze or restart" in "${warned[0]["text"]}" and "16.0 GB" in "${warned[0]["text"]}", json.dumps(warned[0]))
+  expect(warned[1]["member"] == "arc" and warned[1]["fit"] == "tight")
+
+testEveryModelSaysItsFamilyAndVersion() void
+  expect(modelNamed("opus") == { "family": "opus", "version": "latest", "label": "opus (latest)", "alias": true })
+  expect(modelNamed("claude-opus-5-5") == { "family": "opus", "version": "5.5", "label": "opus 5.5" }, json.dumps(modelNamed("claude-opus-5-5")))
+  expect(modelNamed("claude-fable-5")["label"] == "fable 5" and modelNamed("anthropic/claude-haiku-4.5")["label"] == "anthropic/haiku 4.5")
+  expect(modelNamed("qwen2.5-coder:3b") == { "family": "qwen2.5-coder", "version": "3b", "label": "qwen2.5-coder 3b" })
+  expect(modelNamed("ollama/gemma4:e2b")["label"] == "ollama/gemma4 e2b")
+  expect(modelNamed("gemini-2.5-pro") == { "family": "gemini", "version": "2.5", "label": "gemini 2.5 pro" }, json.dumps(modelNamed("gemini-2.5-pro")))
+  expect(modelNamed("deepseek/deepseek-v4-pro")["label"] == "deepseek/deepseek 4 pro" and modelNamed("deepseek/deepseek-flash") == { "family": "deepseek-flash", "version": "", "label": "deepseek/deepseek-flash" })
+  // Claude Code: each alias, then the versions of its family, the newest first
+  ids = claudeCodeIds(["claude-sonnet-4-6", "claude-opus-5", "claude-opus-5-5", "claude-sonnet-5-5"])
+  expect(ids == ["fable", "opus", "claude-opus-5-5", "claude-opus-5", "sonnet", "claude-sonnet-5-5", "claude-sonnet-4-6", "haiku"], json.dumps(ids))

@@ -1,0 +1,89 @@
+// The text of a message as the chat shows it: paragraphs, fenced code blocks, quotes, lists and the inline marks
+// (`code`, **bold**, *italic*, ~strike~, links, @mentions, #channels, spec: and run: links). Built as elements, never
+// as HTML: a member's text cannot reach the page as markup.
+stateless Markdown(text: string, onChannel: (id: string) => void)
+  build() Element
+    div(className = "md", children = blocks(text, onChannel))
+
+// The blocks of a text: what is between ``` fences is code; the rest is paragraphs, quotes and lists.
+blocks(text: string, onChannel: (id: string) => void) Element[]
+  out: Element[] = []
+  parts = text.split("```")
+  for i in 0..parts.length
+    part = parts[i]
+    if i % 2 == 1 and i < parts.length - 1
+      out.add(pre(key = "c${i}", className = "md-code", children = fenced(part)))
+    else
+      out.addAll(lines(part, "${i}", onChannel))
+  out
+
+// A fence's code without its first line when that line names the language (```ts).
+fenced(part: string) string
+  nl = part.indexOf("\n")
+  first = nl >= 0 ? part.substring(0, nl).trim() : ""
+  body = if nl >= 0 and not (" " in first) and first.length < 20
+    part.substring(nl + 1)
+  else
+    part
+  body.trimEnd()
+
+// Paragraphs (their line breaks kept), quotes (`> `) and list items (`- `, `* `, `1. `).
+lines(text: string, prefix: string, onChannel: (id: string) => void) Element[]
+  out: Element[] = []
+  paragraph: string[] = []
+  n = 0
+  for line in text.split("\n")
+    item = Regex(r"^\s*(?:[-*•]|\d+\.)\s+(.*)$").find(line)
+    if line.startsWith(">") or item != null
+      if paragraph.length > 0
+        out.add(div(key = "${prefix}p${n}", className = "md-p", children = inline(paragraph.join("\n"), onChannel)))
+        paragraph = []
+      n += 1
+      if item != null
+        out.add(div(key = "${prefix}l${n}", className = "md-li", children = inline(item![1] ?? "", onChannel)))
+      else
+        out.add(div(key = "${prefix}q${n}", className = "md-quote", children = inline(line.substring(1).trimStart(), onChannel)))
+    else
+      paragraph.add(line)
+  rest = paragraph.join("\n").trim()
+  if rest.length > 0
+    out.add(div(key = "${prefix}p${n + 1}", className = "md-p", children = inline(rest, onChannel)))
+  out
+
+// The inline marks of a line, each one its element; the text between them as it is.
+inline(text: string, onChannel: (id: string) => void) Element[]
+  marks = Regex(r"(`[^`\n]+`)|(\*\*[^*\n]+\*\*)|(\*[^*\s][^*\n]*\*)|(_[^_\s][^_\n]*_)|(~~?[^~\n]+~~?)|(\[[^\]\n]+\]\(https?://[^)\s]+\))|(https?://[^\s<>()]+)|((?<![\w@])@[\w.-]*\w)|((?<![\w&#])#[a-z0-9][\w.-]*)|((?<![\w])(?:spec|run):[\w.-]*\w)")
+  out: Element[] = []
+  at = 0
+  for m in marks.findAll(text)
+    if m.start > at
+      out.add(span(key = "t${at}", children = text.substring(at, m.start)))
+    out.add(mark(m, onChannel))
+    at = m.end
+  if at < text.length
+    out.add(span(key = "t${at}", children = text.substring(at)))
+  out
+
+// One inline mark as its element.
+mark(m: Match, onChannel: (id: string) => void) Element
+  t = m.text
+  key = "m${m.start}"
+  if m[1] != null
+    span(key = key, className = "md-inline-code", children = t.substring(1, t.length - 1))
+  else if m[2] != null
+    strong(key = key, children = t.substring(2, t.length - 2))
+  else if m[3] != null or m[4] != null
+    em(key = key, children = t.substring(1, t.length - 1))
+  else if m[5] != null
+    span(key = key, className = "md-strike", children = t.replaceAll("~", ""))
+  else if m[6] != null
+    close = t.indexOf("](")
+    a(key = key, href = t.substring(close + 2, t.length - 1), target = "_blank", rel = "noreferrer", children = t.substring(1, close))
+  else if m[7] != null
+    a(key = key, href = t, target = "_blank", rel = "noreferrer", children = t)
+  else if m[8] != null
+    span(key = key, className = "mention", children = t)
+  else if m[9] != null
+    button(key = key, className = "channel-link", onClick = () => onChannel(t.substring(1)), children = t)
+  else
+    span(key = key, className = "work-link", children = t)

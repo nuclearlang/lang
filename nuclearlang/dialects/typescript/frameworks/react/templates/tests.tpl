@@ -6,5 +6,10 @@
 {{/decor.mock.items}}
   });
 
+  // a screen a test rendered leaves the page before the next test
+  afterEach(() => {
+    cleanup();
+  });
+
   {{members}}
 });

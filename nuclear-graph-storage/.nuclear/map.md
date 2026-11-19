@@ -158,7 +158,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `mcp(ctx: Context) <string, any>[]`
     - `runs(source: string, tool: string) string` — The command line a tool of the MCP server runs, read from its own source ("" when it runs none): `nuclear gen resource` for `generate_resource`, `nuclear check` for `nuclear_check`.
     - `http(ctx: Context) <string, any>[]`
-    - `stages(ctx: Context) <string, any>[]`
+    - `stages(ctx: Context) <string, any>[]` — The stations of the software factory, from its engine (nuclear-builder's run.nuc and roles.nuc): their order, title, what each does and the role that works it.
     - `agents(ctx: Context) <string, any>[]` — The local agents of the Nuclear Developer, from their own sources: the comment above each one says what it does.
     - `editor(ctx: Context) <string, any>[]`
     - `components(ctx: Context) <string, any>[]`
@@ -174,8 +174,8 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `pairs(sql: string) string[][]` — The first two columns of every row a query gives, as texts: what people write and the value it means (the `values` of a query's parameter).
     - `problems(rows: <string, any>[]) string[]` — What is wrong with the catalogue of exact questions (the rows of the `queries` shelf): a query that the tables cannot run, a parameter it names and does not declare, a declared one it never uses. Checked against empty tables: the build fails before a broken query reaches the graph.
 - `ingest.nuc`
-  - `Ingest` — Fills the shelves of the graph from the knowledge base folder (`nuclear-graph knowledge build` wrote it; ADR-graph-0001), its table of exact facts, and the `prompts` collection from this package's prompt files. Only what changed is embedded again; a row the base no longer has is removed, and what an agent wrote at run time (`origin: runtime`) is kept.
-    - `prompts() <string, any>[]` — The validated prompt of each use case (`prompts/<use_case>.md`) and of each agent step (`agents/<step>.md`: `agent.<step>`).
+  - `Ingest` — Fills the shelves of the graph from the knowledge base folder (`nuclear-graph knowledge build` wrote it; ADR-graph-0001), its table of exact facts, and the `prompts` collection from the skills of the roles. Only what changed is embedded again; a row the base no longer has is removed, and what an agent wrote at run time (`origin: runtime`) is kept.
+    - `prompts() <string, any>[]` — The validated prompt of each use case (`feature`, `piece`...) and of each agent step (`agent.repair`...): every skill of the roles (`nuclear-agents/roles/<role>/skills/*.md`, ADR-developer-0002) that names one in its front matter (`prompt: agent.repair`). The prompt is the text after the front matter; a name given twice is refused.
     - `stored(store: Store) <string, Loaded[]>` — The rows of the base as the store holds them (each shelf's cards, read back from their sealed documents and their metadata): what the exact facts are made from when the graph starts. What an agent kept at run time is not a card, and is left out.
     - `sync(store: Store, collection: string, items: <string, any>[], keep: string[], log: (line: string) => void) <string, int>` — Makes a collection hold exactly `items` (and the ids of `keep`), embedding only the ones whose hash changed.
     - `ingest(store: Store, folder: Path, log: (line: string) => void, facts: Facts?) <string, any>` — The knowledge base folder `root` becomes what the graph knows: its shelves, and with `facts` its exact facts, made again whole. An invalid base is refused whole: the graph never holds half of a revision.
@@ -206,7 +206,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `machine() <string, string>` — What the AI set-up chose on this machine (`machineValues`).
     - `db() Path` — The vectors of the shelves (Chroma).
     - `grants() Path`
-    - `prompts() Path` — The prompt files: next to the package when it is installed, else the checkout's `prompts/` folder.
+    - `roles() Path` — The roles of the software factory, whose skills are the prompt files (ADR-developer-0002): next to the package when it is installed, else the checkout's `nuclear-agents/roles/` folder.
 - `planner.nuc`
   - `Planner` — The plan of an answer (the query planner of the Smart Graph): what a question needs from the graph before any model reads it. A question with one right answer (every command of a tool, the parameters of an MCP tool, the commands that write a kind) is not searched by meaning: it is matched to its row of the catalogue of exact questions (by meaning and by the names it writes), the names it writes fill the query's parameters, and the query runs over the exact facts (SQLite). What is left (what something is, why, how it is done) is searched in the shelves as always, and the shelves decide which of the two a question is: a query runs only when its exact question is closer to the question than the closest card. A model then writes the answer from both: it copies the facts, it never recalls them.
     - `said(facts: Facts, param: <string, any>) string[][]` — The values a parameter takes from words: each [what people write, the value it means], longest first.
@@ -327,7 +327,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
   - `closest(got: any, vector: double[]) <string, any>[]` — What a read of a collection with its vectors becomes for a search: each item (id, metadata) with how far its vector is from `vector` by direction (cosine: 0 is the same one), the closest first.
   - `textOr(first: any, second: any) string` — The first of two values that is a text with something in it.
   - `storable(meta: <string, any>) <string, any>` — What Chroma keeps as metadata: texts, numbers, booleans and lists of texts that are not empty.
-  - `Store(path: string, key: Bytes?, embed: (shaped: string[]) => double[][]?)` — The graph's store: one Chroma collection per shelf (ADR-graph-0001), whose documents are encrypted and whose vectors come from a local embeddings model (Ollama). Only the server process opens it.  A row's metadata is in clear (ids, names, keys, filters: what Chroma searches by); its text is sealed. The shelves of the knowledge base are made by `ingest`; `prompts` holds the prompt files of this package and `memory` what an agent decided to keep about a project while working on it.
+  - `Store(path: string, key: Bytes?, embed: (shaped: string[]) => double[][]?)` — The graph's store: one Chroma collection per shelf (ADR-graph-0001), whose documents are encrypted and whose vectors come from a local embeddings model (Ollama). Only the server process opens it.  A row's metadata is in clear (ids, names, keys, filters: what Chroma searches by); its text is sealed. The shelves of the knowledge base are made by `ingest`; `prompts` holds the prompts (the skills of the roles) and `memory` what an agent decided to keep about a project while working on it.
     - `client: any`
     - `box: Box`
     - `embedder: (shaped: string[]) => double[][]`
@@ -446,5 +446,6 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
   - `testAnOverlayAddsHandWrittenFieldsToGeneratedRows(tmpPath: Path) void` — (no description)
   - `testAnIngestEmbedsOnlyWhatChangedKeepsWhatAgentsWroteAndFillsTheFacts(tmpPath: Path) void` — (no description)
   - `testAHelpTextBecomesOneRowPerCommandWithItsUsageAsData() void` — (no description)
+  - `testThePromptsAreTheRolesSkillsWithoutTheirFrontMatter() void` — (no description)
 - `tests/test_secrets.nuc`
   - `testASecretOfAClosedKeyringIsRefusedAndNeverMadeAgain(tmpPath: Path, monkeypatch: any) void` — (no description)

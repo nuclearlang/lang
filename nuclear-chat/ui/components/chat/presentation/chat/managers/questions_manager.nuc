@@ -1,0 +1,31 @@
+// The members' questions (the event `ask`) until the user answers them or the member is done.
+@stateModel(QuestionsState)
+statemanager QuestionsManager
+  (members: MembersComponent, events: EventsComponent)
+  workspace: string = ""
+  waiting: Question[] = []
+
+  start(id: string)
+    workspace = id
+    listen(events.watchEvents(workspace), (e) => changed(e))
+
+  changed(e: ChatEvent)
+    if e.workspace != workspace
+      return
+    member = "${e.data["member"] ?? ""}"
+    if e.type == "ask"
+      id = "${e.data["id"] ?? ""}"
+      asked = Question(id = id, member = member, channel = e.channel, thread = "${e.data["thread"] ?? ""}", kind = "${e.data["kind"] ?? ""}", question = "${e.data["question"] ?? ""}")
+      show([...waiting.filter((q) => q.id != id), asked])
+    else if e.type == "done"
+      show(waiting.filter((q) => q.member != member))
+
+  // The user's answer, written to the member that asked.
+  answer(question: Question, answer: string)
+    ~members.answerQuestion(workspace, Answer(id = question.id, answer = answer))
+    show(waiting.filter((q) => q.id != question.id))
+
+  @state(QuestionsState.ready)
+  show(list: Question[]) Question[]
+    waiting = list
+    list

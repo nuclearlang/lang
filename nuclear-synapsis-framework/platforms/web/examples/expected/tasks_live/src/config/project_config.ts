@@ -1,0 +1,10 @@
+import { AppConfig, Connection, WebSocket } from 'synapsis-web';
+
+/**
+ * The connections and services of the whole app (nuclear help web). The repositories' calls, and what the API
+ * pushes, go over the API's WebSocket: `Http(baseUrl = "http://localhost:3000/")` here would be the same app over
+ * HTTP, without what is pushed. Mounted in a host's page with a bridge, every call goes through the host.
+ */
+export class ProjectConfig extends AppConfig {
+  override readonly connections: Connection[] = [new WebSocket({ url: 'ws://localhost:3000/ws', timeout: 5000 })];
+}

@@ -643,12 +643,12 @@
    "id": "doc:installer/AGENTS.md#commands",
    "type": "readme",
    "title": "The installers and the release — Commands",
-   "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/build-runtimes.sh # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder…",
+   "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/build-runtimes.sh # a fresh checkout: the JavaScript runtimes' dist/ installer/release/package.sh [<rust target>]…",
    "body": [
     "```sh",
     "installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)",
     "installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall",
-    "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder",
+    "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/",
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
     "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
     "nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services",
@@ -705,10 +705,10 @@
    "id": "doc:installer/AGENTS.md#folders",
    "type": "readme",
    "title": "The installers and the release — Folders",
-   "summary": "`nuclear-builder` and `nuclear-lsp`, installs the skill and the editor extensions).",
+   "summary": "`nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).",
    "body": [
     "- `install.sh`: the installer from the source tree (builds `nuclear` and `nuclear-lsp`, stages, links `nuclear`,",
-    "  `nuclear-builder` and `nuclear-lsp`, installs the skill and the editor extensions).",
+    "  `nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).",
     "- `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`",
     "  and `package.sh`.",
     "- `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.",
@@ -902,25 +902,15 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.3e653b",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.29a115",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
-   "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
+   "summary": "6. A check: the installed `nuclear dialect list` must run.",
    "body": [
-    "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
-    "2. The pipeline's engine: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.",
-    "3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear`, `nuclear-lsp` and",
-    "   `nuclear-builder` in `$PREFIX/bin`.",
-    "4. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the",
-    "   set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself",
-    "   (`extensions/tools/nuclear-builder`, Nuclear) is built and installed editable with uv as `nuclear-builder`, in",
-    "   place of the node link. With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as",
-    "   `ai/` and its own `nuclear-builder setup`.",
-    "5. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).",
-    "6. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the",
-    "   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the",
-    "   installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
-    "   `wasm32-wasip2` is there (`--no-zed`)."
+    "6. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.",
+    "",
+    "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph`, `nuclear-mcp` and `nuclear-chat-system`, the Zed extension, the installation, the skill,",
+    "the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -932,15 +922,25 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.6cbb30",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.6e6d8d",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
-   "summary": "7. A check: the installed `nuclear dialect list` must run.",
+   "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
    "body": [
-    "7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.",
-    "",
-    "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,",
-    "the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension."
+    "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
+    "2. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear` and `nuclear-lsp` in",
+    "   `$PREFIX/bin`.",
+    "3. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the",
+    "   set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself",
+    "   (`extensions/tools/nuclear-builder`, Nuclear: the set-up and the software factory's line) is built and installed",
+    "   editable with uv as `nuclear-builder`; Nuclear Chat's command (`nuclear-chat/system`, Nuclear) the same way as",
+    "   `nuclear-chat` (its service is built and started by the set-up's last step, `chat-service`). With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as",
+    "   `ai/` and its own `nuclear-builder setup`.",
+    "4. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).",
+    "5. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the",
+    "   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the",
+    "   installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
+    "   `wasm32-wasip2` is there (`--no-zed`)."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -966,8 +966,8 @@
     "- With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without",
     "  one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.",
     "- Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),",
-    "  so `nuclear-builder setup` works before the set-up ran; its pipeline commands run the installation's",
-    "  `bin/nuclear-builder.js` with node.",
+    "  so `nuclear-builder setup` works before the set-up ran; its line's commands (`run`, `retry`, `ci`…) are the software",
+    "  factory's, in Nuclear too: no node is needed.",
     "- The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.",
     "- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`",
     "  (`systemctl --user restart nuclear-developer` after a change to its code;",
@@ -1007,19 +1007,22 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.7f3508",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.623478",
    "type": "context",
    "title": "The installers: overview — The layout of an installation (`release/stage.sh <dest> <binary>...`)",
-   "summary": "`build-runtimes.sh`).",
+   "summary": "The layout of an installation (`release/stage.sh <dest> <binary>...`)",
    "body": [
-    "| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer`, `ai/tools/mcp` (the folders of the tree, so a relative path between them holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `prompts`, `data` (the knowledge base); the Developer's `config.nuc`, `components`, `config`, `defs`; the MCP server's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `defs`, `tests` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/`, `tools/mcp/` |",
-    "",
-    "- A JavaScript package whose `main` is in `dist/` and is not built stops the staging (`npm run build` there, or",
-    "  `build-runtimes.sh`).",
-    "- What a build or a test leaves inside a package is removed (`build`, `.dart_tool`, `node_modules`, `__pycache__`,",
-    "  `.pytest_cache`, `*.egg-info`, `dist-test`, `pubspec.lock`): a stale `build/` would make pip reuse an old wheel.",
-    "- A release archive also has `VERSION`. Definitions generated for projects go to `~/.cache/nuclearlang/defs`, not",
-    "  into the installation."
+    "| Folder | Holds | From |",
+    "|---|---|---|",
+    "| `bin/` | `nuclear`, `nuclear-lsp` | the binaries given |",
+    "| `dialects/<language>/` | each language with its frameworks, type definitions and docs | `nuclearlang/dialects/` |",
+    "| `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `examples/` (only their `.nuc` and `nuclear.toml`, without `build/` nor `expected/`: `nuclear help example/<name>`) | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |",
+    "| `generators/<platform>/` | `generators.toml`: what the code generator writes | `tools/code_generator/platforms/` |",
+    "| `docs/08-guides/` | the framework's guides | `nuclear-synapsis-framework/docs/08-guides/` |",
+    "| `kinds/` | the kind packages of the platforms | `platforms/<platform>/kinds/` |",
+    "| `packages/` | every runtime package as it is: `synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`, `synapsis-web` | `platforms/<platform>/packages/` |",
+    "| `tools/defs/` | the definitions generator `nuclear flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |",
+    "| `agents/skills/` | the `nuclear` skill | `tools/cli/agent-files/skills/` |"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1031,22 +1034,21 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.a4aca5",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-layout-of-an-installation-release-stage-sh-dest-binary.6a0def",
    "type": "context",
    "title": "The installers: overview — The layout of an installation (`release/stage.sh <dest> <binary>...`)",
-   "summary": "The layout of an installation (`release/stage.sh <dest> <binary>...`)",
+   "summary": "staging (root rule 14): what an agent reads on the user's machine never points to this one.",
    "body": [
-    "| Folder | Holds | From |",
-    "|---|---|---|",
-    "| `bin/` | `nuclear`, `nuclear-lsp`; `nuclear-builder.js` with its launchers `nuclear-builder` and `nuclear-builder.cmd` (when `extensions/vscode/out/nuclear-builder.js` is built) | the binaries given; the VS Code extension |",
-    "| `dialects/<language>/` | each language with its frameworks, type definitions and docs | `nuclearlang/dialects/` |",
-    "| `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/` | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |",
-    "| `generators/<platform>/` | `generators.toml`: what the code generator writes | `tools/code_generator/platforms/` |",
-    "| `docs/08-guides/` | the framework's guides | `nuclear-synapsis-framework/docs/08-guides/` |",
-    "| `kinds/` | the kind packages of the platforms | `platforms/<platform>/kinds/` |",
-    "| `packages/` | every runtime package as it is: `synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`, `synapsis-web` | `platforms/<platform>/packages/` |",
-    "| `tools/defs/` | the definitions generator `nuclear flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |",
-    "| `agents/skills/` | the `nuclear` skill | `tools/cli/agent-files/skills/` |"
+    "| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer`, `ai/tools/mcp` (the folders of the tree, so a relative path between them holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `data` (the knowledge base); the roles of the software factory (`ai/nuclear-agents/roles`, whose skills are the graph's prompts); the Developer's `config.nuc`, `components`, `config`, `defs`; the MCP server's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `defs`, `tests` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/`, `tools/mcp/` |",
+    "",
+    "- A staged file (the binaries left out) that names the working tree or the staging machine's home stops the",
+    "  staging (root rule 14): what an agent reads on the user's machine never points to this one.",
+    "- A JavaScript package whose `main` is in `dist/` and is not built stops the staging (`npm run build` there, or",
+    "  `build-runtimes.sh`).",
+    "- What a build or a test leaves inside a package is removed (`build`, `.dart_tool`, `node_modules`, `__pycache__`,",
+    "  `.pytest_cache`, `*.egg-info`, `dist-test`, `pubspec.lock`): a stale `build/` would make pip reuse an old wheel.",
+    "- A release archive also has `VERSION`. Definitions generated for projects go to `~/.cache/nuclearlang/defs`, not",
+    "  into the installation."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1124,7 +1126,34 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.a3a962",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.788d47",
+   "type": "context",
+   "title": "The installers: overview — The release",
+   "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base.",
+   "body": [
+    "`ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base. Before packing it fails if a `.pth` points into the",
+    "  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it",
+    "  (`installer/install.sh --ai`).",
+    "- `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets",
+    "  (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,",
+    "  `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:",
+    "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each",
+    "  system (Linux x86_64 and arm64, macOS Intel and Apple silicon, Windows), so each AI archive is tried where it",
+    "  runs. Job `publish`: every archive,",
+    "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
+    "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.cdd2d6",
    "type": "context",
    "title": "The installers: overview — The release",
    "summary": "`platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
@@ -1138,35 +1167,9 @@
     "- `release/ai-runtime.sh`: the AI archive of this machine (ADR-installer-0003),",
     "  `dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows) and its `.sha256`, unpacked as the",
     "  installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer",
-    "  installed from what `nuclear build` writes, pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the",
+    "  installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the",
     "  MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,",
-    "  `nuclear-mcp`, `nuclear-developer`, and the knowledge base. Before packing it fails if a `.pth` points into the",
-    "  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it"
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.b0d364",
-   "type": "context",
-   "title": "The installers: overview — The release",
-   "summary": "(`installer/install.sh --ai`).",
-   "body": [
-    "(`installer/install.sh --ai`).",
-    "- `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets",
-    "  (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `x86_64-apple-darwin`, `aarch64-apple-darwin`,",
-    "  `x86_64-pc-windows-msvc`, `aarch64-pc-windows-msvc`), each `build-runtimes.sh` then `package.sh`. Job `vscode`:",
-    "  the `.vsix` as `nuclearlang-<version>.vsix` (its bundled server is the Linux one). Job `ai`: `ai-runtime.sh` on a runner of each",
-    "  system (Linux x86_64 and arm64, macOS Intel and Apple silicon, Windows), so each AI archive is tried where it",
-    "  runs. Job `publish`: every archive,",
-    "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
-    "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
+    "  `nuclear-mcp`, `nuclear-developer`, `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1322,7 +1325,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.305f2f",
    "type": "guide",
    "title": "Set up the AI services — 2. The steps",
    "summary": "1. This machine.",
@@ -1338,10 +1341,27 @@
     "   |---|---|---|",
     "   | NuclearLang | the `nuclear` command, the code of the services | its installer |",
     "   | [uv](https://docs.astral.sh/uv/) | the Python environments of the services (it brings its own Python) | its installer, in your user folder |",
-    "   | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |",
-    "",
-    "   Without Ollama there are no local agents: install it, or go back and choose the remote agents only.",
-    "4. **Install.** The Smart Graph and the MCP server, the Nuclear Developer, the models, the knowledge base loaded",
+    "   | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |"
+   ],
+   "sources": [
+    "installer/docs/08-guides/ai-setup.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.d526f1",
+   "type": "guide",
+   "title": "Set up the AI services — 2. The steps",
+   "summary": "Without Ollama there are no local agents: install it, or go back and choose the remote agents only.",
+   "body": [
+    "Without Ollama there are no local agents: install it, or go back and choose the remote agents only.",
+    "4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine",
+    "   (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of",
+    "   yours), the Nuclear Developer, the models, the knowledge base loaded",
     "   into the graph (about two minutes the first time), and both services started. A step that fails says why and is",
     "   tried again from there."
    ],
@@ -1442,10 +1462,10 @@
    "id": "doc:installer/docs/08-guides/ai-setup.md#4-remote-agents-only",
    "type": "guide",
    "title": "Set up the AI services — 4. Remote agents only",
-   "summary": "Nothing runs on your machine and nothing is downloaded but the MCP server.",
+   "summary": "Nothing runs on your machine and nothing is downloaded but the MCP server, which the set-up adds to every AI client it finds.",
    "body": [
-    "Nothing runs on your machine and nothing is downloaded but the MCP server. Claude Code, Codex, Cursor or OpenCode",
-    "get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
+    "Nothing runs on your machine and nothing is downloaded but the MCP server, which the set-up adds to every AI",
+    "client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
     "([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). What you give up: the Smart Graph (no strategy for a request, no search of the knowledge",
     "base), the Builder panel and Nuclear Atlas of the editor, and the local agents themselves, so your remote",
     "agent writes every line the generators do not and all of it is paid tokens."
@@ -1460,17 +1480,19 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.5888bb",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.8b9dd7",
    "type": "guide",
    "title": "Set up the AI services — 5. After the set-up",
-   "summary": "The services start at every login and are started again if they fail: `nuclear-builder setup --status` says on every system what is installed and running.",
+   "summary": "The services start at every login and are started again if they fail: the Smart Graph, the Nuclear Developer and Nuclear Chat (the factory's workplace: its token is made the first time and kept in your keyring; the editors get it from `nuclear-chat connect --json`).",
    "body": [
-    "The services start at every login and are started again if they fail:",
+    "The services start at every login and are started again if they fail: the Smart Graph, the Nuclear Developer and",
+    "Nuclear Chat (the factory's workplace: its token is made the first time and kept in your keyring; the editors get",
+    "it from `nuclear-chat connect --json`).",
     "",
     "| | Linux | macOS | Windows |",
     "|---|---|---|---|",
-    "| What starts them | two systemd user units | two launch agents | a script of the Startup folder |",
-    "| State | `systemctl --user status nuclear-graph nuclear-developer` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |",
+    "| What starts them | three systemd user units | three launch agents | a script of the Startup folder |",
+    "| State | `systemctl --user status nuclear-graph nuclear-developer nuclear-chat` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |",
     "| Restart | `systemctl --user restart nuclear-developer` | `launchctl kickstart -k gui/$UID/io.github.nuclearlang.developer` | sign out and in |",
     "| Their output | `journalctl --user -u nuclear-graph -n 50` | `~/Library/Logs/nuclear-graph.log` | |",
     "",
@@ -1482,10 +1504,7 @@
     "| Your choice (the mode, the profile, its models) | `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`) |",
     "| The code of the services | `~/.local/share/nuclearlang/ai/` (`%LOCALAPPDATA%\\nuclearlang\\ai\\`) |",
     "| The graph's data, encrypted | `~/.local/share/nuclear-graph/` |",
-    "| The models | Ollama's own folder (`ollama list`) |",
-    "",
-    "In idle the two services take about 150 MB of memory. A model is loaded by Ollama when an agent asks and freed a few",
-    "minutes later."
+    "| The models | Ollama's own folder (`ollama list`) |"
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1497,11 +1516,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.93fe10",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.8c939d",
    "type": "guide",
    "title": "Set up the AI services — 5. After the set-up",
-   "summary": "To give your agent the MCP server: the buttons of *Settings and integrations*, or `claude mcp add --scope user nuclear -- nuclear-mcp` (every client).",
+   "summary": "In idle the two services take about 150 MB of memory.",
    "body": [
+    "In idle the two services take about 150 MB of memory. A model is loaded by Ollama when an agent asks and freed a few",
+    "minutes later.",
+    "",
     "To give your agent the MCP server: the buttons of *Settings and integrations*, or",
     "`claude mcp add --scope user nuclear -- nuclear-mcp` ([every client](../../../tools/mcp/docs/08-guides/mcp.md#1-set-up))."
    ],
@@ -1524,7 +1546,10 @@
     "  you had, without questions.",
     "- **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama",
     "  (`ollama rm <model>` frees their disk).",
-    "- **Remove:** `nuclear-builder setup --remove` takes the services away; the installer's `--uninstall` does it too.",
+    "- **A client installed later** (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`",
+    "  adds the MCP server to it.",
+    "- **Remove:** `nuclear-builder setup --remove` takes the services away, and the MCP server out of each AI client;",
+    "  the installer's `--uninstall` does it too.",
     "  Ollama, its models and the graph's data stay: they are yours.",
     "- **In a script or CI:** `--no-ai` skips the set-up, `--profile <id>` takes that profile without questions, and",
     "  without a terminal nothing is asked or downloaded."
@@ -1546,7 +1571,7 @@
    "body": [
     "| It says | What to do |",
     "|---|---|",
-    "| the graph or the Developer on a port other than 7878 / 7879 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`); the tools and the editor read it there. Nothing to do |",
+    "| the graph, the Developer or Nuclear Chat on a port other than 7878 / 7879 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. Nothing to do |",
     "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
     "| `Ollama refused to pull ...`, or a model stays at the same percent | check the disk and the connection; the download goes on from where it stopped when the step is tried again |",
     "| `no Python 3.12 or newer, and uv could not install one` | install Python 3.12 or newer and try again |",
@@ -1873,12 +1898,15 @@
    "title": "The command line tool — Folders",
    "summary": "`framework::claims` takes goes to `framework::main`.",
    "body": [
-    "- `src/main.rs`: the binary: the compiler's commands (the `USAGE` text, the embedded `TOPICS`); a command line",
+    "- `src/main.rs`: the binary: the compiler's commands (the `USAGE` text); a command line",
     "  `framework::claims` takes goes to `framework::main`.",
+    "- `src/atlas.rs`: the atlas: every documentation topic by group (embedded, found in the installation, the",
+    "  examples), links resolved for a reader without the source tree (spec 016).",
     "- `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.",
     "- `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,",
     "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `vscode.rs`, `watch.rs`)",
     "  ([code map](docs/02-architecture/overview.md)).",
+    "- `agent-files/start.md`: the `start` topic, the onboarding of an agent with no context (MCP `nuclear_start`).",
     "- `agent-files/project/`: what `agent init` writes into a project (`AGENTS.md` section, the Cursor rule).",
     "- `agent-files/skills/nuclear/`: the `nuclear` skill the installer copies into the agents' folders.",
     "- `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary.",
@@ -1923,7 +1951,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#rules.bbd719",
+   "id": "doc:tools/cli/AGENTS.md#rules.a8fc28",
    "type": "readme",
    "title": "The command line tool — Rules",
    "summary": "skeletons of the code generator when it creates files, the skill and `agent-files/` when an agent should use it, and an ADR when it is a decision.",
@@ -1934,8 +1962,10 @@
     "   stays clean.",
     "7. **When a dialect or a platform changes** (`@screen`, kinds, events), update the skeletons and test `new` +",
     "   `make` + `check` + `analyze` + `test`.",
-    "8. **`agent-files/` is embedded in the binary** (`include_str!`) and the documentation topics too",
-    "   (`nuclearlang/docs/07-reference/`, `08-guides/`): a file renamed there breaks the build here.",
+    "8. **`agent-files/` is embedded in the binary** (`include_str!`) and the documentation topics too (`atlas::TOPICS`:",
+    "   the language's references and guides, the tools' user guides): a file renamed there breaks the build here.",
+    "10. **What an agent reads names no path of the source tree** (root rule 14): every topic is printed through",
+    "    `atlas::resolve`; the test `no_topic_links_into_the_source_tree` holds it.",
     "9. Done = `cargo test` + `cargo clippy --all-targets` green and `installer/install.sh --no-vscode`."
    ],
    "sources": [
@@ -2251,7 +2281,26 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#the-pieces",
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#the-pieces.0573f2",
+   "type": "context",
+   "title": "What a project and a machine get for AI agents — The pieces",
+   "summary": "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`, the MCP server, `add`), never by writing target code or translating native code by hand (ADR-platform-0004).",
+   "body": [
+    "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,",
+    "the MCP server, `add`), never by writing target code or translating native code by hand",
+    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/agent-support.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#the-pieces.21f1ef",
    "type": "context",
    "title": "What a project and a machine get for AI agents — The pieces",
    "summary": "The skill does not copy the brief: it asks the installed binary for it, so it is never out of date.",
@@ -2260,14 +2309,12 @@
     "|---|---|---|",
     "| The brief: the short sheet of what changes from TypeScript / Dart / Python | `docs/07-reference/brief/` of the language, of each language dialect and of each platform | Written by hand; printed by `nuclear spec --brief` ([nuclear-command.md](nuclear-command.md)) |",
     "| The `nuclear` skill | `tools/cli/agent-files/skills/nuclear/SKILL.md` → `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` | [The installers](../../../../installer/AGENTS.md) (`--no-agent` skips it); the installation keeps it in `agents/skills/` |",
+    "| The onboarding (`start`) and the atlas of every topic | `agent-files/start.md` and the topics of [nuclear-command.md](nuclear-command.md) | `nuclear help start`, `nuclear help atlas`; the MCP server's `nuclear_start` and `nuclear_doc` |",
+    "| The project's context documents (`AGENTS.md`, `CLAUDE.md`, `docs/`) | the code generator's `context/` templates | `nuclear new` (`new_agent_files`), once: the user's from then on |",
     "| The project's `AGENTS.md` section and the Cursor rule | `tools/cli/agent-files/project/AGENTS.md`, `nuclear.mdc`, embedded in the binary | `nuclear agent init` |",
     "| The check hook | `.claude/settings.json` of the project | `nuclear agent init`; it runs `nuclear agent hook` |",
     "",
-    "The skill does not copy the brief: it asks the installed binary for it, so it is never out of date.",
-    "",
-    "The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,",
-    "the MCP server, `add`), never by writing target code or translating native code by hand",
-    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+    "The skill does not copy the brief: it asks the installed binary for it, so it is never out of date."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/agent-support.md"
@@ -2284,6 +2331,28 @@
    "title": "What a project and a machine get for AI agents",
    "summary": "Why it is built this way: ADR-cli-0002.",
    "body": "Why it is built this way: [ADR-cli-0002](../03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md).",
+   "sources": [
+    "tools/cli/docs/02-architecture/agent-support.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/agent-support.md#what-nuclear-new-writes-for-agents-framework-new-agent-files",
+   "type": "context",
+   "title": "What a project and a machine get for AI agents — What `nuclear new` writes for agents (`framework::new_agent_files`)",
+   "summary": "First the context documents of the project (spec 016; the code generator): `AGENTS.md`, `CLAUDE.md` and `docs/` in layers, filled with its name, platform, dialect, commands, folders and layout; a file that exists is kept.",
+   "body": [
+    "First the context documents of the project (spec 016; [the code generator](../../../code_generator/docs/08-guides/context-docs.md)):",
+    "`AGENTS.md`, `CLAUDE.md` and `docs/` in layers, filled with its name, platform, dialect, commands, folders and",
+    "layout; a file that exists is kept. Then `agent::init` below, which appends the marked NuclearLang section to that",
+    "`AGENTS.md`. The section tells an agent that nothing about Nuclear is in its training, to call the MCP server's",
+    "`nuclear_start` first (`nuclear help start` without it), and that the project's own `docs/README.md` wins over the",
+    "default way of documenting."
+   ],
    "sources": [
     "tools/cli/docs/02-architecture/agent-support.md"
    ],
@@ -2456,20 +2525,19 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.22c53f",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.02ac92",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Commands",
    "body": [
     "| Command | What it does | Function |",
     "|---|---|---|",
-    "| `help [<topic>\\|<command>]` | The help, a documentation topic, or the usage lines of a command | `help`, `help_topic` |",
+    "| `help [<topic>\\|<command>]` | The help (with the atlas), a documentation topic, or the usage lines of a command; a word that is neither says which topics explain it (`atlas::not_a_topic`) | `help`, `help_topic` |",
+    "| `help start`, `help atlas [--json]` | The onboarding of an agent with no context; every topic by group | `atlas::TOPICS`, `atlas::atlas` |",
     "| `help <word>\\|words\\|layout --dialect <d>` | A kind, decorator or header word of the dialect (`docs.toml` of its chain); `words` lists them all; `layout` says where each kind's file goes (only a platform's dialect has one) | `dialect_word` |",
     "| `build <file.nuc> --dialect <name\\|path> [-o <out>]` | Transpiles a file (stdout without `-o`) | `file_command` |",
     "| `build <folder> [-o <out>]` | Transpiles a project (a folder with `nuclear.toml` or `config.nuc`); the output of a removed `.nuc` is removed, from the previous line map | `project_command` |",
-    "| `check <folder\\|file.nuc> [--dialect] [--json]` | The errors of a file or of every file of a project; JSON for agents and the language server: one document on stdout (the dialect's own report is printed only when it stops the command, `load_dialect`) | `file_command`, `project_command`, `report` |",
-    "| `fix <folder\\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |",
-    "| `fmt <file.nuc\\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |"
+    "| `check <folder\\|file.nuc> [--dialect] [--json]` | The errors of a file or of every file of a project; JSON for agents and the language server: one document on stdout (the dialect's own report is printed only when it stops the command, `load_dialect`) | `file_command`, `project_command`, `report` |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -2481,11 +2549,37 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.6c0ab9",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.1101d4",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
+   "summary": "Commands",
+   "body": [
+    "| `fix <folder\\|file.nuc>` | Applies every exact fix of the errors (the editor's quick fixes), then reports what is left | `apply_fixes` |",
+    "| `fmt <file.nuc\\|folder>... [--check]` | The canonical layout (spacing, indentation, blank lines; never reorders); `--check` lists what would change, exit 1 | `fmt_command` |",
+    "| `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |",
+    "| `dialect list`, `dialect check <name\\|path> [--json]` | The dialects found; a dialect's files validated | `dialect_check`, `print_report` |",
+    "| `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |",
+    "| `spec [--dialect <d>\\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet; `--platform` alone: the platform's sheet and the topics of the platform and its dialects | `spec`, `brief`, `platform_spec`, `dialect_spec` |",
+    "| `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.994469",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
    "summary": "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`, `--defs-path <dir>`.",
    "body": [
+    "| `contracts list`, `contracts update [<name>...]` | The contracts the project declares and their state; fetch each (a url: `GET <url>/.nuclear/contract.json`; a path: its `.nuclear/contract.json`) and regenerate `contracts/<name>/*.nuc` | `contracts_list`, `contracts_update`, `current_project` |",
+    "| `defs list [--dialect]`, `defs show <Name\\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |",
+    "",
     "Options of every command: `--dialect` / `-d`, `--platform` / `-p` (the platform's default dialect: the Nuclear of a",
     "platform is the same in all of them; `kind new` takes both), `--out` / `-o`, `--json`, `--dialect-path <dir>`,",
     "`--defs-path <dir>`. An unknown option or command prints `USAGE` and exits 2; errors in the code exit 1."
@@ -2500,36 +2594,14 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#commands.cff106",
-   "type": "context",
-   "title": "The compiler's commands (`tools/cli/src/main.rs`) — Commands",
-   "summary": "Commands",
-   "body": [
-    "| `tokens <file.nuc>`, `ast <file.nuc>` | The lexer's tokens, the syntax tree | `file_command` |",
-    "| `dialect list`, `dialect check <name\\|path> [--json]` | The dialects found; a dialect's files validated | `dialect_check`, `print_report` |",
-    "| `kind new <name> -p <platform> -d <dialect>` | A kind package skeleton in `kinds/<name>/` | `kind_new` |",
-    "| `spec [--dialect <d>\\|--platform <p>] [--brief]` | The base language and the dialect format for agents; with a dialect, its spec and its parents'; `--brief`: the short sheet | `spec`, `brief`, `dialect_spec` |",
-    "| `agent init [--dialect <d>]`, `agent hook` | A project's files for AI agents; the check hook | [agent-support.md](agent-support.md) |",
-    "| `contracts list`, `contracts update [<name>...]` | The contracts the project declares and their state; fetch each (a url: `GET <url>/.nuclear/contract.json`; a path: its `.nuclear/contract.json`) and regenerate `contracts/<name>/*.nuc` | `contracts_list`, `contracts_update`, `current_project` |",
-    "| `defs list [--dialect]`, `defs show <Name\\|Name.member> --dialect <d> [--json] [--inherited]`, `defs search <text> --dialect <d>` | The type definitions packages, a declaration, a search by name | `defs_list`, `defs_show`, `defs_search`, `defs_dialect` |"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/nuclear-command.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#tests",
    "type": "context",
    "title": "The compiler's commands (`tools/cli/src/main.rs`) — Tests",
-   "summary": "added to `TOPICS`), `briefs_are_found_and_short` (the whole flutter sheet stays ≤ 16 KB, about 4k tokens; with `--platform` nothing of the language underneath comes out), `help_finds_topics_and_commands`.",
+   "summary": "added to `TOPICS`), `no_topic_links_into_the_source_tree` (every topic, brief and platform sheet), `links_name_topics_and_keep_web_links`, `the_atlas_groups_every_topic`, `briefs_are_found_and_short` (the whole flutter sheet stays ≤ 16 KB, about 4k tokens; with `--platform` nothing of the language…",
    "body": [
     "- `src/main.rs`: `every_document_is_a_help_topic` (a new guide chapter or reference file of the language must be",
-    "  added to `TOPICS`), `briefs_are_found_and_short` (the whole flutter sheet stays ≤ 16 KB, about 4k tokens; with",
+    "  added to `TOPICS`), `no_topic_links_into_the_source_tree` (every topic, brief and platform sheet),",
+    "  `links_name_topics_and_keep_web_links`, `the_atlas_groups_every_topic`, `briefs_are_found_and_short` (the whole flutter sheet stays ≤ 16 KB, about 4k tokens; with",
     "  `--platform` nothing of the language underneath comes out), `help_finds_topics_and_commands`.",
     "- `src/agent.rs`: `init_keeps_the_project_files_and_runs_twice`,",
     "  `the_hook_reads_the_type_definitions_of_the_project`.",
@@ -2569,14 +2641,22 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation.575b4b",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.271de7",
    "type": "context",
-   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation",
-   "summary": "(`brief.md` in a dialect's own folder, else the embedded `BRIEFS` of `typescript`, `dart`, `python`, else `docs/07-reference/brief/<name>.md`).",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation: the atlas (`src/atlas.rs`, spec 016)",
+   "summary": "the dialect's folder, else `docs/07-reference/<name>.md` of its language; then the dialect format and the contract generated from the transpiler (`nuclear_dialect::contract::markdown()`), then the available dialects.",
    "body": [
-    "(`brief.md` in a dialect's own folder, else the embedded `BRIEFS` of `typescript`, `dart`, `python`, else",
+    "- `mentions` / `not_a_topic`: a word that is not a topic lists the topics that explain it, most mentions first.",
+    "- `spec`: the base reference, then (with a dialect) the spec of each dialect of its chain, base first: `spec.md` in",
+    "  the dialect's folder, else `docs/07-reference/<name>.md` of its language; then the dialect format and the",
+    "  contract generated from the transpiler (`nuclear_dialect::contract::markdown()`), then the available dialects.",
+    "- `spec --brief`: the base brief (`nuclearlang/docs/07-reference/brief/nuclear-base.md`), the brief of the dialect's",
+    "  platform (`docs/07-reference/brief/<platform>.md` of the platform), then the brief of each dialect of the chain",
+    "  (`brief.md` in a dialect's own folder, else the embedded `BRIEFS` of `typescript`, `dart`, `python`, else",
     "  `docs/07-reference/brief/<name>.md`). With `--platform`: only the base and the platform's sheet, what an agent",
-    "  that writes only Nuclear reads."
+    "  that writes only Nuclear reads.",
+    "- `spec --platform <p>` (without `--brief`): that sheet and the platform's topics (`platform_spec`), never every",
+    "  document joined."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
@@ -2588,25 +2668,40 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation.57a947",
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.36540f",
    "type": "context",
-   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation",
-   "summary": "guide's chapters, `reference`, `new-dialect`), `nuclearlang/docs/07-reference/` (`base`, `library`, `grammar`, `keywords`, `diagnostics`, `projects`, `dialects`, `defs`, `decisions`) and each language dialect's reference (`typescript`, `nodejs`, `dart`, `python`).",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation: the atlas (`src/atlas.rs`, spec 016)",
+   "summary": "`agent-files/start.md`), `context-docs` (the code generator's guide), the language's guides and references, each language dialect's reference, and the user guides of the tools (`cli`, `commands`, `mcp`, `ai-setup`, `graph`, `editors`, `vscode`, `builder`...), each embedded from its own project's…",
    "body": [
-    "- `TOPICS`: (topic, what it is, text), compiled in with `include_str!` from `nuclearlang/docs/08-guides/` (the",
-    "  guide's chapters, `reference`, `new-dialect`), `nuclearlang/docs/07-reference/` (`base`, `library`, `grammar`,",
-    "  `keywords`, `diagnostics`, `projects`, `dialects`, `defs`, `decisions`) and each language dialect's reference",
-    "  (`typescript`, `nodejs`, `dart`, `python`).",
-    "- `platform_topics()`: found when asked, not embedded: every `docs/07-reference/<name>.md` and",
-    "  `docs/08-guides/<name>.md` of the installation and the working tree (`doc_roots()`: the folders of",
-    "  `nuclear_dialect::homes()` that have a `docs/`) whose name is not an embedded topic. This is how the framework's,",
-    "  each platform's and each framework dialect's documents are help topics (`nuclear help flutter`).",
-    "- `spec`: the base reference, then (with a dialect) the spec of each dialect of its chain, base first: `spec.md` in",
-    "  the dialect's folder, else `docs/07-reference/<name>.md` of its language; then the dialect format and the",
-    "  contract generated from the transpiler (`nuclear_dialect::contract::markdown()`), then the available dialects.",
-    "- `spec --brief`: the base brief (`nuclearlang/docs/07-reference/brief/nuclear-base.md`), the brief of the dialect's",
-    "  platform (`docs/07-reference/brief/<platform>.md` of the platform), then the brief of each dialect of the chain"
+    "- `TOPICS`: each embedded topic with its group and the file it comes from (`topic!`): `start` (the onboarding,",
+    "  `agent-files/start.md`), `context-docs` (the code generator's guide), the language's guides and references, each",
+    "  language dialect's reference, and the user guides of the tools (`cli`, `commands`, `mcp`, `ai-setup`, `graph`,",
+    "  `editors`, `vscode`, `builder`...), each embedded from its own project's `docs/08-guides/`.",
+    "- `found()`: found when asked, not embedded: every `docs/07-reference/<name>.md` and `docs/08-guides/<name>.md` of",
+    "  the installation and the working tree (the roots of `nuclear_dialect::homes()`) whose name is not embedded; its",
+    "  group comes from where it lives (a platform's, a dialect's, the framework's).",
+    "- `examples()`: every example of a platform (`platforms/<p>/examples/`, staged by the release): a folder with a",
+    "  `config.nuc` or `nuclear.toml`, or one `.nuc` file. `nuclear help example/<name>` prints its `.nuc` files.",
+    "- `GROUPS`: the order and meaning of the groups `nuclear help atlas` prints (`--json`: `[{name, group, what}]`).",
+    "- `resolve`: every text printed (a topic, `spec`, `spec --brief`, a dialect word) has its relative links resolved: a",
+    "  link to a topic becomes `label (`nuclear help <topic>`)`, any other keeps its label; web and anchor links, code",
+    "  blocks and inline code stay."
    ],
+   "sources": [
+    "tools/cli/docs/02-architecture/nuclear-command.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/nuclear-command.md#the-embedded-documentation-the-atlas-src-atlas-rs-spec-016.89e302",
+   "type": "context",
+   "title": "The compiler's commands (`tools/cli/src/main.rs`) — The embedded documentation: the atlas (`src/atlas.rs`, spec 016)",
+   "summary": "What an agent with no context reads to learn Nuclear, on any machine: never a path of the source tree.",
+   "body": "What an agent with no context reads to learn Nuclear, on any machine: never a path of the source tree.",
    "sources": [
     "tools/cli/docs/02-architecture/nuclear-command.md"
    ],
@@ -2701,19 +2796,18 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.154b84",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.08dd5a",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
    "summary": "Code map of `src/framework/`",
    "body": [
-    "| File | What it does | More |",
-    "|---|---|---|",
-    "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
-    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |",
     "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
     "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
     "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |",
-    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |"
+    "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
+    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
+    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
+    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -2725,15 +2819,32 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.59d647",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.806c48",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "Code map of `src/framework/`",
+   "body": [
+    "| File | What it does | More |",
+    "|---|---|---|",
+    "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
+    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |",
+    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.caaac0",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
    "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
    "body": [
-    "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
-    "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
-    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |",
-    "",
     "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
     "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
     "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
@@ -2794,10 +2905,10 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.271729",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.7812a8",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
-   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `pub`, `flutter`, `doctor`, `setup`,…",
+   "summary": "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`, `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`, `clean`, `repair`, `explain`, `monitor`, `pub`, `flutter`, `doctor`,…",
    "body": [
     "| Commands | Code | What they are for |",
     "|---|---|---|",
@@ -2806,7 +2917,7 @@
     "",
     "`main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,",
     "`run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,",
-    "`clean`, `repair`, `explain`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
+    "`clean`, `repair`, `explain`, `monitor`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing",
     "page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a",
     "project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both",
     "usages, the framework's under \"projects of the framework\"."
@@ -2841,7 +2952,32 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.437057",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.07bec9",
+   "type": "context",
+   "title": "The command line tool: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
+   "summary": "`nuclear agent init`.",
+   "body": [
+    "`nuclear agent init`.",
+    "- `manifest()` reads `config.nuc` through `Manifest::read` (`synapsis(platform, dialect)`, `app(name)`). An app",
+    "  without that line is an app of the mobile platform's default dialect (`any_manifest`); its `nuclear check`",
+    "  reports N0303 with the line to add. `packages::template` writes the `synapsis(...)` line first.",
+    "- `build` writes the project card `.nuclear/project.json` (`project::write_metadata`;",
+    "  `nuclearlang/docs/07-reference/projects.md` §1.1).",
+    "- Dialects and the runtime packages are found in the installation (`nuclear_dialect::install_dir()`:",
+    "  `$NUCLEAR_HOME`, or the folder above the binary's `bin/`), else in the working tree it was built in.",
+    "  `NUCLEAR_DIALECT_PATH` adds dialect folders; `SYNAPSIS_PACKAGE` names the `synapsis` Dart package."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.dd1bf9",
    "type": "context",
    "title": "The command line tool: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
    "summary": "gives its platform (`-d nestjs` is backend), a platform alone its default dialect (`[platform] default_dialect` of `platform.toml`); neither is mobile.",
@@ -2855,31 +2991,9 @@
     "  `SQLite(file = env(\"DATABASE\", \"app.sqlite\"), createTables = true)`, `plugins(sqlite = true)` and a first test in",
     "  `test/app_test.nuc`. A web project gets `scaffold::web_project`: `config.nuc`, `main.nuc` (the App with",
     "  `createElement(RouterProvider, router = appRouter())`), an `Http` connection and `config/project_config.nuc`;",
-    "  screens are added with `nuclear make screen`. Every `new` also runs `nuclear agent init`.",
-    "- `manifest()` reads `config.nuc` through `Manifest::read` (`synapsis(platform, dialect)`, `app(name)`). An app",
-    "  without that line is an app of the mobile platform's default dialect (`any_manifest`); its `nuclear check`"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#platforms-and-the-manifest-adr-synapsis-0002.eca724",
-   "type": "context",
-   "title": "The command line tool: overview — Platforms and the manifest (`ADR-synapsis-0002`)",
-   "summary": "reports N0303 with the line to add.",
-   "body": [
-    "reports N0303 with the line to add. `packages::template` writes the `synapsis(...)` line first.",
-    "- `build` writes the project card `.nuclear/project.json` (`project::write_metadata`;",
-    "  `nuclearlang/docs/07-reference/projects.md` §1.1).",
-    "- Dialects and the runtime packages are found in the installation (`nuclear_dialect::install_dir()`:",
-    "  `$NUCLEAR_HOME`, or the folder above the binary's `bin/`), else in the working tree it was built in.",
-    "  `NUCLEAR_DIALECT_PATH` adds dialect folders; `SYNAPSIS_PACKAGE` names the `synapsis` Dart package."
+    "  screens are added with `nuclear make screen`. `--websocket` gives a backend `plugins(events, websocket)` and",
+    "  `WebSocketServer(path = \"ws\")`, a web app a `WebSocket` connection instead of `Http`; `--token <ENV_VAR>` gives a",
+    "  backend `guards = [NoOrigin(), Token(value = env(ENV_VAR))]` (`scaffold::NewOptions`). Every `new` also runs"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3496,14 +3610,32 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.1ba849",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.4a5f5b",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "options FLUTTER the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)",
+   "summary": "monitor [--json] the report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time",
+   "body": [
+    "monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
+    "                                             calls in a loop, connections, memory) and each function's time"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.5746dd",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "options FLUTTER the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)",
    "body": [
     "options",
     "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
-    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)",
+    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)",
     "```"
    ],
    "sources": [
@@ -3537,12 +3669,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.7e573b",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.83def1",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "analyze build and run flutter analyze on the generated app check [--json] errors and architecture rules of every .nuc (no Flutter needed)",
+   "summary": "test [--integration] [-- <args>] build and run test/, or integration_test/ on a device analyze build and run flutter analyze on the generated app check [--json] errors and architecture rules of every .nuc (no Flutter needed)",
    "body": [
-    "analyze                                    build and run flutter analyze on the generated app",
+    "test [--integration] [-- <args>]           build and run test/, or integration_test/ on a device",
+    "  analyze                                    build and run flutter analyze on the generated app",
     "  check [--json]                             errors and architecture rules of every .nuc (no Flutter needed)"
    ],
    "sources": [
@@ -3555,7 +3688,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.917886",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.8e93a1",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
    "summary": "project new <name> [-p mobile] [-d flutter] (n) new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): [--org com.example] only .nuc files (+ the Flutter app in build/app for mobile) code open the project in VS Code (Flutter run, debug, devices, hot reload) watch…",
@@ -3568,12 +3701,12 @@
     "  build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
     "                                             transpile, pub get and build_runner (and flutter build <target>)",
     "  run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)",
+    "  build --monitor, run --monitor             each Nuclear function and method measured: .nuclear/monitor/report.json",
     "  device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,",
     "                                             iphone14pro, ipadair...; several at once: device 1, 2, 3)",
     "  device list                                the running devices and the devices it can be",
     "  terminal-device [<device>] [--render kitty|sixel|text|blocks]",
-    "                                        (td) the Synapsis Terminal device: the app inside this terminal",
-    "  test [--integration] [-- <args>]           build and run test/, or integration_test/ on a device"
+    "                                        (td) the Synapsis Terminal device: the app inside this terminal"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -3763,6 +3896,7 @@
     "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what the generators do not write yet, or what is untested |",
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `generate.rs` or `scaffold.rs`, add a piece to a `generators.toml`, or need how fields become files |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the generators exist and why they never write placeholders |",
+    "| [docs/08-guides/context-docs.md](docs/08-guides/context-docs.md) | You need the standard of a project's context documents (the `context-docs` topic every agent reads) |",
     "| [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: why generators, what `new`, `gen` and `make` write on each platform |",
     "",
     "Elsewhere:",
@@ -3786,9 +3920,12 @@
    "id": "doc:tools/code_generator/AGENTS.md#folders",
    "type": "readme",
    "title": "The code generator — Folders",
-   "summary": "`[gen]` (the forms of the `Http` connection), `[skeletons]` (what `make <kind>` writes; backend and web) and the `[[generators.<what>]]` pieces.",
+   "summary": "embedded; `{{name}}`, `{{platform}}`, `{{dialect}}`, `{{stack}}`, `{{date}}`, `{{commands}}`, `{{test}}`, `{{folders}}`, `{{layout}}` are filled by `context::documents`, the rest is a `TODO(user):` line.",
    "body": [
-    "- `src/`: the crate (`lib.rs`, `generate.rs`, `scaffold.rs`).",
+    "- `src/`: the crate (`lib.rs`, `generate.rs`, `scaffold.rs`, `context.rs`).",
+    "- `context/`: the templates of a new project's context documents (`AGENTS.md`, `CLAUDE.md`, `docs/` in layers),",
+    "  embedded; `{{name}}`, `{{platform}}`, `{{dialect}}`, `{{stack}}`, `{{date}}`, `{{commands}}`, `{{test}}`,",
+    "  `{{folders}}`, `{{layout}}` are filled by `context::documents`, the rest is a `TODO(user):` line.",
     "- `platforms/<platform>/generators.toml` (`backend`, `mobile`, `web`): the generators' data of each platform:",
     "  `[gen]` (the forms of the `Http` connection), `[skeletons]` (what `make <kind>` writes; backend and web) and the",
     "  `[[generators.<what>]]` pieces. The loader finds it through `Home.generators` / `Loader::generators_file`",
@@ -3841,11 +3978,11 @@
    "id": "doc:tools/code_generator/AGENTS.md#stack",
    "type": "readme",
    "title": "The code generator — Stack",
-   "summary": "skeletons and the files of a new project).",
+   "summary": "skeletons and the files of a new project) and `src/context.rs` (the context documents of a new project).",
    "body": [
-    "- Rust, the library crate `nuclear-codegen` (`src/lib.rs`): `src/generate.rs` (`gen`) and `src/scaffold.rs` (the",
-    "  skeletons and the files of a new project). It writes files and reports `(Wrote::Created | Kept, path)`; the",
-    "  command prints.",
+    "- Rust, the library crate `nuclear-codegen` (`src/lib.rs`): `src/generate.rs` (`gen`), `src/scaffold.rs` (the",
+    "  skeletons and the files of a new project) and `src/context.rs` (the context documents of a new project). It",
+    "  writes files and reports `(Wrote::Created | Kept, path)`; the command prints.",
     "- The templates are the Mustache subset of `nuclear-dialect` (`nuclearlang/crates/nuclear-dialect/src/template.rs`);",
     "  what it writes goes through `nuclear_syntax::fmt::format`; a use case's signature is read with",
     "  `nuclear_transpile::map::shape`.",
@@ -3985,6 +4122,739 @@
    }
   },
   {
+   "id": "doc:tools/code_generator/context/AGENTS.md#documents-read-by-task",
+   "type": "readme",
+   "title": "{{name}} — Documents (read by task)",
+   "summary": "Documents (read by task)",
+   "body": [
+    "| You need | Read |",
+    "|---|---|",
+    "| The business and the domain | `docs/00-context/` |",
+    "| The product's requirements | `docs/01-product/prd.md` |",
+    "| The architecture and dependencies | `docs/02-architecture/` |",
+    "| Why something was decided | `docs/03-adr/README.md` |",
+    "| The work in progress | `docs/04-specs/README.md` |",
+    "| Code and test conventions | `docs/05-standards/` |",
+    "| Deploying or operating | `docs/06-runbooks/` |"
+   ],
+   "sources": [
+    "tools/code_generator/context/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/AGENTS.md#name",
+   "type": "readme",
+   "title": "{{name}}",
+   "summary": "TODO(user): one or two sentences: what it is, for whom, and the problem it solves.",
+   "body": "TODO(user): one or two sentences: what it is, for whom, and the problem it solves.",
+   "sources": [
+    "tools/code_generator/context/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/AGENTS.md#rules",
+   "type": "readme",
+   "title": "{{name}} — Rules",
+   "summary": "Rules",
+   "body": [
+    "- Never commit secrets.",
+    "- Before building a feature, read or write its spec in `docs/04-specs/`.",
+    "- A structural decision (a library, a pattern, infrastructure) is an ADR in `docs/03-adr/`.",
+    "- A changed API or contract updates `docs/02-architecture/integrations.md`.",
+    "- What is not documented and cannot be read from the code is asked, never invented.",
+    "- A change is done when its tests pass and the documents it touches say it, in the same change."
+   ],
+   "sources": [
+    "tools/code_generator/context/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/AGENTS.md#stack",
+   "type": "readme",
+   "title": "{{name}} — Stack",
+   "summary": "dialect ({{stack}}).",
+   "body": [
+    "- A Synapsis project of the `{{platform}}` platform, written in NuclearLang (`.nuc`), built with the `{{dialect}}`",
+    "  dialect ({{stack}}). The target code is generated in `build/`: never edited by hand.",
+    "- Infrastructure: TODO(user): cloud, databases, queues, CI/CD."
+   ],
+   "sources": [
+    "tools/code_generator/context/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/AGENTS.md#structure",
+   "type": "readme",
+   "title": "{{name}} — Structure",
+   "summary": "{{folders}}",
+   "body": [
+    "{{folders}}",
+    "- `docs/`: the context documents (the map below)."
+   ],
+   "sources": [
+    "tools/code_generator/context/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/domain.md#main-entities",
+   "type": "context",
+   "title": "Domain model — Main entities",
+   "summary": "TODO(user): the real entities (each one becomes a model of a component: `nuclear gen resource`).",
+   "body": "TODO(user): the real entities (each one becomes a model of a component: `nuclear gen resource`).",
+   "sources": [
+    "tools/code_generator/context/docs/00-context/domain.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/glossary.md#glossary",
+   "type": "context",
+   "title": "Glossary",
+   "summary": "Always use these terms in the code, the documents and conversations.",
+   "body": [
+    "Always use these terms in the code, the documents and conversations.",
+    "",
+    "| Term | Definition | Synonyms to avoid | Where it is in the code |",
+    "|---|---|---|---|",
+    "| TODO(user) | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/00-context/glossary.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/vision.md#constraints",
+   "type": "context",
+   "title": "Vision — Constraints",
+   "summary": "Constraints",
+   "body": [
+    "- Legal: TODO(user)",
+    "- Technical: a Synapsis `{{platform}}` project in NuclearLang, built with `{{dialect}}`.",
+    "- Business: TODO(user)"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/vision.md#goals-measurable",
+   "type": "context",
+   "title": "Vision — Goals (measurable)",
+   "summary": "Goals (measurable)",
+   "body": [
+    "| Goal | Metric | Target |",
+    "|---|---|---|",
+    "| TODO(user) | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/vision.md#non-goals",
+   "type": "context",
+   "title": "Vision — Non-goals",
+   "summary": "TODO(user): what this project does NOT do, so nobody (and no agent) builds it by mistake.",
+   "body": "TODO(user): what this project does NOT do, so nobody (and no agent) builds it by mistake.",
+   "sources": [
+    "tools/code_generator/context/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/vision.md#problem",
+   "type": "context",
+   "title": "Vision — Problem",
+   "summary": "TODO(user): what problem the project solves, and for whom.",
+   "body": "TODO(user): what problem the project solves, and for whom.",
+   "sources": [
+    "tools/code_generator/context/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/00-context/vision.md#users",
+   "type": "context",
+   "title": "Vision — Users",
+   "summary": "Users",
+   "body": "- TODO(user): <kind of user>: <what they need>",
+   "sources": [
+    "tools/code_generator/context/docs/00-context/vision.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/01-product/prd.md#functional-requirements",
+   "type": "context",
+   "title": "PRD: {{name}} — Functional requirements",
+   "summary": "Functional requirements",
+   "body": [
+    "| ID | Requirement | Priority (MoSCoW) | Spec |",
+    "|---|---|---|---|",
+    "| FR-001 | TODO(user) | Must | `04-specs/001-...` |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/01-product/prd.md#non-functional-requirements",
+   "type": "context",
+   "title": "PRD: {{name}} — Non-functional requirements",
+   "summary": "Non-functional requirements",
+   "body": [
+    "| ID | Category | Measurable requirement |",
+    "|---|---|---|",
+    "| NFR-001 | Performance | TODO(user): e.g. p95 < 300 ms |",
+    "| NFR-002 | Availability | |",
+    "| NFR-003 | Security | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/01-product/prd.md#personas",
+   "type": "context",
+   "title": "PRD: {{name}} — Personas",
+   "summary": "Personas",
+   "body": "- TODO(user): <persona>: <context, goals, frustrations>",
+   "sources": [
+    "tools/code_generator/context/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/01-product/prd.md#summary",
+   "type": "context",
+   "title": "PRD: {{name}} — Summary",
+   "summary": "TODO(user): what the product is, in one paragraph.",
+   "body": "TODO(user): what the product is, in one paragraph.",
+   "sources": [
+    "tools/code_generator/context/docs/01-product/prd.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/dependencies.md#dependencies",
+   "type": "context",
+   "title": "Dependencies",
+   "summary": "The libraries the project adds are in `config.nuc` (`nuclear add <package>`, never installed by hand in `build/`).",
+   "body": "The libraries the project adds are in `config.nuc` (`nuclear add <package>`, never installed by hand in `build/`).",
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/dependencies.md#external",
+   "type": "context",
+   "title": "Dependencies — External",
+   "summary": "External",
+   "body": [
+    "| Dependency | Version | Use | Why this one | ADR | Risk if it fails |",
+    "|---|---|---|---|---|---|",
+    "| | | | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/dependencies.md#internal-between-projects-and-packages",
+   "type": "context",
+   "title": "Dependencies — Internal (between projects and packages)",
+   "summary": "Internal (between projects and packages)",
+   "body": [
+    "| Consumer | Depends on | Kind (lib / API / event) | Notes |",
+    "|---|---|---|---|",
+    "| | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/dependencies.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/integrations.md#apis-offered",
+   "type": "context",
+   "title": "Integrations and contracts — APIs offered",
+   "summary": "APIs offered",
+   "body": [
+    "| Endpoint / service | Method | Description | Contract (OpenAPI) |",
+    "|---|---|---|---|",
+    "| | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/integrations.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/integrations.md#apis-used",
+   "type": "context",
+   "title": "Integrations and contracts — APIs used",
+   "summary": "APIs used",
+   "body": [
+    "| Provider | Use | Authentication | Limits | Docs |",
+    "|---|---|---|---|---|",
+    "| | | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/integrations.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/integrations.md#events",
+   "type": "context",
+   "title": "Integrations and contracts — Events",
+   "summary": "Events",
+   "body": [
+    "| Event | Producer | Consumers | Payload (AsyncAPI / schema) |",
+    "|---|---|---|---|",
+    "| | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/integrations.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/overview.md#architecture",
+   "type": "context",
+   "title": "Architecture",
+   "summary": "{{name}} is a Synapsis project of the `{{platform}}` platform: the business is written in NuclearLang and the transpiler writes the {{stack}} project in `build/` with the `{{dialect}}` dialect.",
+   "body": [
+    "{{name}} is a Synapsis project of the `{{platform}}` platform: the business is written in NuclearLang and the",
+    "transpiler writes the {{stack}} project in `build/` with the `{{dialect}}` dialect. The same `.nuc` builds with every",
+    "dialect of the platform. The platform's architecture and the meaning of each kind: `nuclear help {{platform}}` (MCP",
+    "`nuclear_doc`)."
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/overview.md#containers-c4-level-2",
+   "type": "context",
+   "title": "Architecture — Containers (C4 level 2)",
+   "summary": "Containers (C4 level 2)",
+   "body": [
+    "| Container | Technology | Responsibility | Folder |",
+    "|---|---|---|---|",
+    "| {{name}} | NuclearLang → {{stack}} | TODO(user) | `.` |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/overview.md#critical-flows",
+   "type": "context",
+   "title": "Architecture — Critical flows",
+   "summary": "TODO(user): a sequence diagram of each flow that matters.",
+   "body": "TODO(user): a sequence diagram of each flow that matters.",
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/overview.md#quality-attributes-and-how-they-are-reached",
+   "type": "context",
+   "title": "Architecture — Quality attributes and how they are reached",
+   "summary": "Quality attributes and how they are reached",
+   "body": [
+    "| Attribute | Strategy |",
+    "|---|---|",
+    "| TODO(user) | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/02-architecture/overview.md#where-each-kind-of-piece-goes",
+   "type": "context",
+   "title": "Architecture — Where each kind of piece goes",
+   "summary": "The platform's layout (`nuclear help layout --dialect {{dialect}}`); `nuclear make` and `nuclear gen` write each piece there: {{layout}}",
+   "body": [
+    "The platform's layout (`nuclear help layout --dialect {{dialect}}`); `nuclear make` and `nuclear gen` write each",
+    "piece there:",
+    "",
+    "{{layout}}"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/coding.md#git",
+   "type": "context",
+   "title": "Code conventions — Git",
+   "summary": "Git",
+   "body": [
+    "- Branches: TODO(user)",
+    "- Commits: TODO(user): e.g. Conventional Commits",
+    "- Pull requests name their spec (`04-specs/NNN-...`)"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/coding.md#nuclearlang",
+   "type": "context",
+   "title": "Code conventions — NuclearLang",
+   "summary": "NuclearLang",
+   "body": [
+    "- The syntax and the rules: `nuclear spec --brief --dialect {{dialect}}` (MCP `nuclear_brief`), `nuclear help atlas`.",
+    "- Names: `PascalCase` for types and constructors, `camelCase` for the rest, files in `snake_case`.",
+    "- Every piece is made with its generator (`nuclear make`, `nuclear gen`) where the platform puts it.",
+    "- Only Nuclear's standard library on strings, lists and maps (`nuclear help library`).",
+    "- `nuclear check --json` prints `[]` and `nuclear fmt .` leaves nothing to change before a change is done."
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/coding.md#project-conventions",
+   "type": "context",
+   "title": "Code conventions — Project conventions",
+   "summary": "Project conventions",
+   "body": [
+    "- Error handling: TODO(user)",
+    "- Logs: TODO(user): what is logged and what never is"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/security.md#secrets",
+   "type": "context",
+   "title": "Security — Secrets",
+   "summary": "Secrets",
+   "body": [
+    "- Where they live: TODO(user): a secrets manager or environment variables.",
+    "- Never in the repository nor in logs."
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/security.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/security.md#sensitive-data",
+   "type": "context",
+   "title": "Security — Sensitive data",
+   "summary": "Sensitive data",
+   "body": [
+    "| Data | Classification | How it is protected |",
+    "|---|---|---|",
+    "| | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/security.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/testing.md#conventions",
+   "type": "context",
+   "title": "Testing — Conventions",
+   "summary": "Conventions",
+   "body": [
+    "- Test names: TODO(user)",
+    "- Fixtures and mocks: TODO(user)"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/05-standards/testing.md#what-each-level-tests",
+   "type": "context",
+   "title": "Testing — What each level tests",
+   "summary": "What each level tests",
+   "body": [
+    "| Level | What it covers | Tool |",
+    "|---|---|---|",
+    "| Unit | use cases, models, state managers | tests written in Nuclear (`nuclear make test`) |",
+    "| Integration | TODO(user) | |",
+    "| E2E | TODO(user) | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/06-runbooks/deploy.md#configuration",
+   "type": "context",
+   "title": "Deploy — Configuration",
+   "summary": "TODO(user): where each variable lives.",
+   "body": "TODO(user): where each variable lives. Never the values.",
+   "sources": [
+    "tools/code_generator/context/docs/06-runbooks/deploy.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/06-runbooks/deploy.md#environments",
+   "type": "context",
+   "title": "Deploy — Environments",
+   "summary": "Environments",
+   "body": [
+    "| Environment | URL | Branch | How it is deployed |",
+    "|---|---|---|---|",
+    "| dev | | | |",
+    "| staging | | | |",
+    "| production | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/06-runbooks/deploy.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/06-runbooks/incidents.md#postmortems",
+   "type": "context",
+   "title": "Incidents — Postmortems",
+   "summary": "Postmortems",
+   "body": [
+    "| Date | Incident | Root cause | Link |",
+    "|---|---|---|---|",
+    "| | | | |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/06-runbooks/incidents.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/README.md#a-new-feature",
+   "type": "readme",
+   "title": "Context documents — A new feature",
+   "summary": "1. Copy `04-specs/_template/` to `04-specs/NNN-feature-name/`.",
+   "body": [
+    "1. Copy `04-specs/_template/` to `04-specs/NNN-feature-name/`.",
+    "2. Write `requirements.md` (what and why, acceptance criteria in EARS). A person reviews it.",
+    "3. Write `design.md` (how). A structural decision is also an ADR. A person reviews it.",
+    "4. Write `tasks.md` (small tasks, each verifiable).",
+    "5. Build task by task, marking the progress.",
+    "6. To close it: update the state documents it touched and mark the spec `done` in `04-specs/README.md`."
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/context/docs/README.md#context-documents",
+   "type": "readme",
+   "title": "Context documents",
+   "summary": "The source of truth of {{name}} for people and AI agents.",
+   "body": [
+    "The source of truth of {{name}} for people and AI agents. **These documents and this file are the project's own:",
+    "when they differ from NuclearLang's default (`nuclear help context-docs`), they win.** Change or extend them as the",
+    "project needs.",
+    "",
+    "The numbered prefixes only fix the reading order, from the general to the concrete.",
+    "",
+    "| Folder | Kind | What it holds | Changes? |",
+    "|---|---|---|---|",
+    "| `00-context/` | State | Vision, glossary, domain | Updated |",
+    "| `01-product/` | State | PRD, roadmap | Updated |",
+    "| `02-architecture/` | State | Architecture, dependencies, integrations | Updated |",
+    "| `03-adr/` | Decisions | Architecture Decision Records | Never edited: a new ADR replaces one |",
+    "| `04-specs/` | Changes | A folder per feature: requirements, design, tasks | Its own life cycle |",
+    "| `05-standards/` | State | Code, test and security conventions | Updated |",
+    "| `06-runbooks/` | State | Deploy, incidents | Updated |"
+   ],
+   "sources": [
+    "tools/code_generator/context/docs/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#gen-from-a-resource-s-data-to-files.0bcf83",
    "type": "context",
    "title": "The code generator: overview — `gen`: from a resource's data to files",
@@ -4099,15 +4969,39 @@
    "id": "doc:tools/code_generator/docs/02-architecture/overview.md#make-one-skeleton-of-a-kind",
    "type": "context",
    "title": "The code generator: overview — `make`: one skeleton of a kind",
-   "summary": "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`), the name helpers `snake` / `pascal`, and `write`, which never overwrites.",
+   "summary": "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`: `websocket` and `token`, ADR-synapsis-0007/0008), the name helpers `snake` / `pascal`, and `write`, which never overwrites.",
    "body": [
     "| Project | Where the skeleton is | Code |",
     "|---|---|---|",
     "| Mobile | Rust templates in `scaffold.rs`: project, component, screen (`--manager`, `--state`, `--route`), statemanager / statemodel (`presentation`), stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page (`--route`, `--not-found`), integration | `make` of the command; `component`, `screen`, `config`, `in_component`, `test`, `shared`, `presentation`, `app_wide` of `scaffold.rs` |",
     "| Backend, web | The `[skeletons]` entry of the kind in the platform's `generators.toml`, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` of the command |",
     "",
-    "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`), the name helpers",
+    "`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`:",
+    "`websocket` and `token`, ADR-synapsis-0007/0008), the name helpers",
     "`snake` / `pascal`, and `write`, which never overwrites. Names are given in any case and normalized."
+   ],
+   "sources": [
+    "tools/code_generator/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/02-architecture/overview.md#new-the-context-documents-context-rs-spec-016",
+   "type": "context",
+   "title": "The code generator: overview — `new`: the context documents (`context.rs`, spec 016)",
+   "summary": "`context::documents(Project)` fills the templates of `context/` (embedded, one per file a new project gets: `AGENTS.md`, `CLAUDE.md`, `docs/` in layers) with what is known: the name, platform, dialect and its chain (`{{stack}}`), today (`today`, UTC), the `nuclear` commands of the platform…",
+   "body": [
+    "`context::documents(Project)` fills the templates of `context/` (embedded, one per file a new project gets:",
+    "`AGENTS.md`, `CLAUDE.md`, `docs/` in layers) with what is known: the name, platform, dialect and its chain",
+    "(`{{stack}}`), today (`today`, UTC), the `nuclear` commands of the platform (`commands`), the top folders and the",
+    "kind → file table of the platform's `[layout]` (`folders`, `{{layout}}`). The command",
+    "(`framework::new_agent_files`) writes them with `scaffold::write` (a file that exists is kept), then appends the",
+    "NuclearLang section with `agent::init`. Test: `every_template_is_filled_and_short` (no placeholder left, each under",
+    "150 lines)."
    ],
    "sources": [
     "tools/code_generator/docs/02-architecture/overview.md"
@@ -4462,7 +5356,7 @@
    "id": "doc:tools/code_generator/docs/08-guides/README.md#nuclear-new",
    "type": "readme",
    "title": "The generators: `nuclear new`, `gen` and `make` — `nuclear new`",
-   "summary": "The `.nuc` files `new` writes (the output of a real run):",
+   "summary": "The `.nuc` files `new` writes (the output of a real run): Every platform also gets its context documents, the project's from then on: `AGENTS.md`, `CLAUDE.md` and `docs/` in layers (vision, PRD, roadmap, architecture with the platform's layout, ADRs, specs and their template, standards, runbooks),…",
    "body": [
     "The `.nuc` files `new` writes (the output of a real run):",
     "",
@@ -4470,7 +5364,12 @@
     "|---|---|",
     "| `backend` (`fastapi`, `nestjs`) | `config.nuc`, `config/project_config.nuc`, `test/app_test.nuc` |",
     "| `web` (`react`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` |",
-    "| `mobile` (`flutter`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` and a `home` component: `home_component.nuc`, `domain/usecases/hello_home_usecase.nuc`, `presentation/home/home_screen.nuc`, `presentation/home/managers/home_manager.nuc`, `presentation/home/state_models/home_state.nuc`; then the Flutter app in `build/app` |"
+    "| `mobile` (`flutter`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` and a `home` component: `home_component.nuc`, `domain/usecases/hello_home_usecase.nuc`, `presentation/home/home_screen.nuc`, `presentation/home/managers/home_manager.nuc`, `presentation/home/state_models/home_state.nuc`; then the Flutter app in `build/app` |",
+    "",
+    "Every platform also gets its context documents, the project's from then on: `AGENTS.md`, `CLAUDE.md` and `docs/`",
+    "in layers (vision, PRD, roadmap, architecture with the platform's layout, ADRs, specs and their template, standards,",
+    "runbooks), filled with what `new` knows; the rest is a `TODO(user):` line. How they are written:",
+    "[context-docs.md](context-docs.md) (`nuclear help context-docs`)."
    ],
    "sources": [
     "tools/code_generator/docs/08-guides/README.md"
@@ -4527,6 +5426,145 @@
    ],
    "sources": [
     "tools/code_generator/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/context-docs.md#a-new-feature",
+   "type": "guide",
+   "title": "The context documents of a project — A new feature",
+   "summary": "1. Copy `docs/04-specs/_template/` to `docs/04-specs/NNN-feature-name/`.",
+   "body": [
+    "1. Copy `docs/04-specs/_template/` to `docs/04-specs/NNN-feature-name/`.",
+    "2. Write `requirements.md`: the goal, the user stories, their criteria in EARS. A person reviews it.",
+    "3. Write `design.md`: the pieces (each a kind of the platform, made with `nuclear gen` or `nuclear make`), the data,",
+    "   the contracts, the tests of each criterion. A structural decision is also an ADR. A person reviews it.",
+    "4. Write `tasks.md` and build task by task, marking the progress.",
+    "5. To close it: the state documents it touched say what changed, the spec is `done` in `04-specs/README.md`, the",
+    "   roadmap loses the item."
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/context-docs.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/context-docs.md#the-context-documents-of-a-project",
+   "type": "guide",
+   "title": "The context documents of a project",
+   "summary": "How a project made with Nuclear documents itself for people and AI agents, by default.",
+   "body": [
+    "How a project made with Nuclear documents itself for people and AI agents, by default. `nuclear new` writes these",
+    "files, filled with what it knows (the platform, the dialect, the commands, the folders, where each kind goes); what it",
+    "cannot know is a `TODO(user):` line. From then on they are the project's: **the project's own `docs/README.md` wins",
+    "over this default**. When the user wants another way, follow the user and write it in that file."
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/context-docs.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/context-docs.md#the-files",
+   "type": "guide",
+   "title": "The context documents of a project — The files",
+   "summary": "AGENTS.md the index: what it is, stack, commands, structure, rules, the map of docs/ (< 150 lines) CLAUDE.md only `@AGENTS.md` (Claude Code reads CLAUDE.md; the other agents read AGENTS.md) docs/ README.md the project's rules for its documents (this default, or the user's) 00-context/ vision.md,…",
+   "body": [
+    "```",
+    "AGENTS.md                 the index: what it is, stack, commands, structure, rules, the map of docs/ (< 150 lines)",
+    "CLAUDE.md                 only `@AGENTS.md` (Claude Code reads CLAUDE.md; the other agents read AGENTS.md)",
+    "docs/",
+    "  README.md               the project's rules for its documents (this default, or the user's)",
+    "  00-context/             vision.md, glossary.md, domain.md",
+    "  01-product/             prd.md, roadmap.md",
+    "  02-architecture/        overview.md, dependencies.md, integrations.md",
+    "  03-adr/                 README.md, 0000-template.md, 0001-record-architecture-decisions.md",
+    "  04-specs/               README.md, _template/{requirements,design,tasks}.md, NNN-feature/",
+    "  05-standards/           coding.md, testing.md, security.md",
+    "  06-runbooks/            deploy.md, incidents.md",
+    "```"
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/context-docs.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/context-docs.md#the-rules.eb99e8",
+   "type": "guide",
+   "title": "The context documents of a project — The rules",
+   "summary": "The rules",
+   "body": "- Never overwrite a document that exists: merge what is missing into it.",
+   "sources": [
+    "tools/code_generator/docs/08-guides/context-docs.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/context-docs.md#the-rules.fb3081",
+   "type": "guide",
+   "title": "The context documents of a project — The rules",
+   "summary": "`06-runbooks`.",
+   "body": [
+    "- **State** (how the system is today): `00-context`, `01-product`, `02-architecture`, `05-standards`,",
+    "  `06-runbooks`. Kept true: a change that makes one of them wrong updates it in the same change.",
+    "- **Decisions** (why it is so): `03-adr`, MADR format. An accepted ADR is never edited: a new ADR replaces it and the",
+    "  old one is marked `superseded by ADR-XXXX`.",
+    "- **Changes** (what is being built): `04-specs/NNN-feature/` with `requirements.md` (what and why),",
+    "  `design.md` (how) and `tasks.md` (small, verifiable tasks); life cycle `draft → approved → in-progress → done`,",
+    "  listed in `04-specs/README.md`. This is how spec-driven development works (as in Spec Kit and OpenSpec): the",
+    "  spec of a change is written and reviewed before its code, and the state documents are the current truth.",
+    "- The prefixes `00-` … `06-` only fix the reading order, from the general to the concrete.",
+    "- Acceptance criteria are written in **EARS**: `WHEN <trigger> THE SYSTEM SHALL <response>`,",
+    "  `IF <unwanted condition> THEN THE SYSTEM SHALL <response>`, `WHILE <state> ...`, `WHERE <feature> ...`.",
+    "- Every document starts with the frontmatter `status`, `owner`, `updated` (YYYY-MM-DD), `related`.",
+    "- Short files, one subject each. A document that grows past a few hundred lines is split by subject.",
+    "- Never invent: what cannot be read from the code or the user's words is a `TODO(user): <concrete question>`."
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/context-docs.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/code_generator/docs/08-guides/context-docs.md#what-a-nuclear-project-adds",
+   "type": "guide",
+   "title": "The context documents of a project — What a Nuclear project adds",
+   "summary": "Nuclear (the MCP server's `nuclear_start`) and checks its work.",
+   "body": [
+    "- `AGENTS.md` ends with a section between `<!-- nuclearlang -->` and `<!-- /nuclearlang -->`: how an agent learns",
+    "  Nuclear (the MCP server's `nuclear_start`) and checks its work. `nuclear agent init` refreshes only that section.",
+    "- `02-architecture/overview.md` holds the platform's layout: where each kind of piece goes. The meaning of each",
+    "  kind is the platform's topic (`nuclear help <platform>`), never copied into the project: it always comes from the",
+    "  installed version.",
+    "- `02-architecture/dependencies.md`: the libraries are in `config.nuc` (`nuclear add <package>`)."
+   ],
+   "sources": [
+    "tools/code_generator/docs/08-guides/context-docs.md"
    ],
    "meta": {
     "section": "08-cli",

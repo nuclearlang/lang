@@ -1,0 +1,137 @@
+{
+  "id": "payments",
+  "name": "Payments",
+  "description": "",
+  "purpose": "A shop that takes payments",
+  "skills": [
+    "testing",
+    "Flutter apps",
+    "payments"
+  ],
+  "logo": null,
+  "techLead": "lead-arc",
+  "updated": 1763300000000,
+  "budgetUsd": 8,
+  "members": [
+    {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "ana-001",
+      "skills": [
+        "ask-the-client"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": {
+        "gifs": "sometimes",
+        "on": [
+          "failure"
+        ],
+        "note": ""
+      },
+      "id": "analyst",
+      "role": "analyst"
+    },
+    {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "arc-001",
+      "skills": [
+        "follow-the-adrs"
+      ],
+      "extraSkills": [
+        {
+          "name": "PCI rules",
+          "text": "Never log a card number."
+        }
+      ],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": {
+        "gifs": "sometimes",
+        "on": [
+          "failure"
+        ],
+        "note": ""
+      },
+      "id": "lead-arc",
+      "role": "architect"
+    },
+    {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "dev-001",
+      "skills": [
+        "write-tests"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": {
+        "gifs": "sometimes",
+        "on": [
+          "failure"
+        ],
+        "note": ""
+      },
+      "id": "developer",
+      "role": "developer"
+    },
+    {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "dev-002",
+      "skills": [
+        "refactor"
+      ],
+      "extraSkills": [
+        {
+          "name": "Money",
+          "text": "Amounts are integers of cents."
+        }
+      ],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": {
+        "gifs": "sometimes",
+        "on": [
+          "failure"
+        ],
+        "note": ""
+      },
+      "id": "dev-2",
+      "role": "developer"
+    },
+    {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "qa-001",
+      "skills": [
+        "review-security"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": {
+        "gifs": "sometimes",
+        "on": [
+          "failure"
+        ],
+        "note": ""
+      },
+      "id": "qa",
+      "role": "qa"
+    }
+  ]
+}

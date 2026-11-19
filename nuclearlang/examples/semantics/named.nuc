@@ -1,0 +1,17 @@
+// Named arguments reach their parameters in any order, `{ }` parameters too, and the positional parameters of a
+// function or of a method, called with or without `this`.
+greet({ name: string, age: int = 0 }) string = "${name} ${age}"
+
+row(name: string, free: int = 0) string = "${name}:${free}"
+
+Person({ name: string, age: int = 0 })
+
+Box
+  cell(name: string, free: int) string = "${name}/${free}"
+
+  show() string = cell(free = 2, name = "b")
+
+main() void
+  p = Person(age = 30, name = "Ana")
+  print(greet(name = "Bo", age = 3), greet(age = 4, name = "Cy"), p.name, p.age)
+  print(row(free = 1, name = "a"), row("c"), Box().show(), Box().cell(name = "d", free = 4))

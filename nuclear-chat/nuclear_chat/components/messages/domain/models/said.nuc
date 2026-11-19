@@ -1,0 +1,6 @@
+// What the user says in a channel (or in a thread of it).
+Said
+  @minLength(1)
+  @maxLength(20000)
+  text: string
+  thread?: string

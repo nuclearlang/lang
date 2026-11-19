@@ -1,0 +1,12 @@
+// The tasks of the API (task): each method is an http call.
+@repository(path = "tasks")
+repository TaskRepository
+  @get
+  all() Result<TaskError, Task[]>
+
+  @post
+  create(input: Task) Result<TaskError, Task>
+
+  // what the API pushes when a task is created (over a connection that can push: WebSocket)
+  @on("tasks.created")
+  created() Stream<TaskCreated>

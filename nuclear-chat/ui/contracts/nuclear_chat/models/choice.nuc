@@ -1,0 +1,16 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// One agent a member's conversation can be answered by, as its host gives it (the dropdown of a direct message): the command the chat runs (with `--model <model>` added when a model is chosen), its models and whether it is on this machine. What each one is, is the host's.
+Choice
+  id: string
+  label: string
+  // local, agent or api: the page's icon
+  kind: string = ""
+  command: string[] = []
+  paid: boolean = false
+  // the models it offers; none: its own default, or one written by hand
+  models: string[] = []
+  // the model it starts with (empty: the agent's own default)
+  defaultModel: string = ""
+  available: boolean = true
+  // why it is not available (or what to know about it)
+  why: string = ""

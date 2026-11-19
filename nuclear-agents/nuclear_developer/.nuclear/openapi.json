@@ -96,6 +96,7 @@
         "properties": {
           "platform": {
             "default": "backend",
+            "pattern": "^(backend|mobile|web)$",
             "type": "string"
           },
           "root": {
@@ -138,6 +139,7 @@
           "platform": {
             "default": "backend",
             "description": "backend, mobile or web",
+            "pattern": "^(backend|mobile|web)$",
             "type": "string"
           },
           "root": {
@@ -217,6 +219,7 @@
           "platform": {
             "default": "backend",
             "description": "backend, mobile or web: the agents write Nuclear for a platform, never for a dialect",
+            "pattern": "^(backend|mobile|web)$",
             "type": "string"
           },
           "root": {
@@ -238,6 +241,7 @@
         "description": "The pieces of a plan, in the order they can be written; the same plan as a tree (the big parts, their tasks, the pieces of each); and what of the spec is beyond the platform or the local agents, for the user to know.",
         "properties": {
           "limits": {
+            "default": [],
             "items": {
               "type": "string"
             },
@@ -272,8 +276,7 @@
         "required": [
           "pieces",
           "raw",
-          "trace",
-          "limits"
+          "trace"
         ],
         "type": "object"
       },
@@ -283,6 +286,7 @@
           "platform": {
             "default": "backend",
             "description": "backend, mobile or web: the agents write Nuclear for a platform, never for a dialect",
+            "pattern": "^(backend|mobile|web)$",
             "type": "string"
           },
           "root": {

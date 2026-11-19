@@ -1,0 +1,10 @@
+// A piece of an answer while it is written: its text so far, or a tool the member called (`ok` once it answered:
+// done, failed, or still running).
+Part
+  // text or tool
+  kind: string
+  text: string = ""
+  // the tool's call id, to find it when its result comes
+  id: string = ""
+  // running, done or failed
+  state: string = "running"

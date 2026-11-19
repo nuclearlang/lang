@@ -39,6 +39,11 @@ The `.nuc` files `new` writes (the output of a real run):
 | `web` (`react`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` |
 | `mobile` (`flutter`) | `config.nuc`, `main.nuc`, `config/project_config.nuc` and a `home` component: `home_component.nuc`, `domain/usecases/hello_home_usecase.nuc`, `presentation/home/home_screen.nuc`, `presentation/home/managers/home_manager.nuc`, `presentation/home/state_models/home_state.nuc`; then the Flutter app in `build/app` |
 
+Every platform also gets its context documents, the project's from then on: `AGENTS.md`, `CLAUDE.md` and `docs/`
+in layers (vision, PRD, roadmap, architecture with the platform's layout, ADRs, specs and their template, standards,
+runbooks), filled with what `new` knows; the rest is a `TODO(user):` line. How they are written:
+[context-docs.md](context-docs.md) (`nuclear help context-docs`).
+
 ## `nuclear gen resource <component> <Name>`
 
 A resource is something the app lists, reads and changes. The fields come from one of three sources:

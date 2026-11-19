@@ -2,8 +2,8 @@
 // comment, so none is offered to a model as a tool: the graphs call them in a fixed order, because a small model
 // follows steps better than it chooses tools.
 //
-// The prompts are files of the graph (`nuclear-graph/prompts/agents/<name>.md`), read with
-// `prompt(name, values)`: nothing a model reads is written inside this code.
+// The prompts are the skills of the roles (`nuclear-agents/roles/<role>/skills/step-<name>.md`, ADR-developer-0002),
+// served by the graph and read with `prompt(name, values)`: nothing a model reads is written inside this code.
 tools Workbench(knowledge: GraphClient, toolchain: Toolchain)
 
   // ---- what the graph knows ----
@@ -89,9 +89,9 @@ tools Workbench(knowledge: GraphClient, toolchain: Toolchain)
 
   // ---- the prompts ----
 
-  // The prompt file `agents/<name>.md` with each `{{key}}` filled. A `## ` section all of whose values are empty is
-  // dropped whole, with the words the file writes around them: a model never reads an empty heading, nor what to do
-  // with rows it was not given (it copies those words into its answer).
+  // The prompt `agent.<name>` (a step skill of a role) with each `{{key}}` filled. A `## ` section all of whose values
+  // are empty is dropped whole, with the words the file writes around them: a model never reads an empty heading, nor
+  // what to do with rows it was not given (it copies those words into its answer).
   prompt(name: string, values: <string, string>) string
     text = ~knowledge.prompt("agent.${name}")
     parts = text.split("\n## ")

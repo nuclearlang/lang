@@ -70,7 +70,9 @@ config CharactersConfig
 
 repository = '''
 The **http calls** of a component (in `data/`). Each method **without a body** and with a verb decorator is one
-request (fetch); its return type says how the response is decoded.
+request (fetch); its return type says how the response is decoded. The calls travel over the connection the
+repository is bound to: `Http`, or `WebSocket` with the same methods (and `@on("topic")` methods that return a
+`Stream<T>` of what the server pushes).
 
 ```nuclear
 @repository(path = "character")
@@ -144,7 +146,8 @@ aggregate Cart(items: ItemRepository)
 '''
 
 statemanager = '''
-The **state of a screen**: a `StateManager` whose methods emit the states of its state model.
+The **state of a screen**: a `StateManager` whose methods emit the states of its state model. `listen(stream, (v)
+=> ...)` follows a `Stream` until the screen leaves.
 
 ```nuclear
 @stateModel(CharactersState)
@@ -410,6 +413,8 @@ Navigate with the screen, not the address: `goTo(UserScreen, id = 7)`, `goBack()
 
 on = '''
 On a method of a global `component`: the method runs with **every event** of that class, wherever the user is.
+On a method of a `repository` without a body that returns `Stream<T>`, `@on("topic")`: what the server pushes on
+that topic, over a `WebSocket` connection or the host's bridge (ADR-synapsis-0008).
 
 ```nuclear
 @on(ForceLogout)

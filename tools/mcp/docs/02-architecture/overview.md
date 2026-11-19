@@ -39,6 +39,8 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 - `mcpTools()` gives the instructions and the tools as data (`{instructions, tools: [{name, description, schema}]}`)
   to the knowledge base's build (it runs `nuclear-mcp tools`), so the graph has a row per tool (`mcp:<tool>`) and
   answers "which tools" exactly.
+- This is the pattern of an MCP server written in Nuclear: the Builder's, `nuclear-builder mcp`, is made the same way
+  (its own project, [actions.md](../../../../extensions/tools/nuclear-builder/docs/02-architecture/actions.md)).
 
 ## Two modes
 
@@ -47,10 +49,17 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 
 | Mode | Tools | Instructions |
 |---|---|---|
-| `local` | all | `LEAD` + `GENERATORS` + `LOCAL`: call `graph_strategy` first; generate; give `developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed; `developer_review` |
-| `remote` (remote agents only) | every tool whose name does not start with `graph_` or `developer_` | `REMOTE_LEAD` + `GENERATORS` + `REMOTE`: generate; the model writes what is left after reading `nuclear_brief` and `nuclear_help`; validate and correct |
+| `local` | all | `FIRST` + `LOCAL_FIRST`: call `nuclear_start` before anything about Nuclear, then `graph_strategy` |
+| `remote` (remote agents only) | every tool whose name does not start with `graph_` or `developer_` | `FIRST`: call `nuclear_start` before anything about Nuclear |
 
-The generators' part of the instructions (`GENERATORS`) is the same in both. Both leads open with the rule that a
+The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).
+The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `GENERATORS` + `LOCAL` (generate; give
+`developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed;
+`developer_review`); remote, `REMOTE_NOTE` + `GENERATORS` + `REMOTE` (generate; the model writes what is left after
+reading `nuclear_brief` and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that
+cycle and `nuclear help atlas`; with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear
+help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does
+not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a
 product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand
 ([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).
 

@@ -1,4 +1,5 @@
 use os
+use json
 use socket
 use subprocess
 use pathlib{ Path }
@@ -21,6 +22,19 @@ testTheProfilesGoFromNothingLocalToTheHeaviestAndEachSaysHowFarItWorks() void
       expect(p.gb > 0 and p.minRam <= p.ram)
   sizes = all.map((p) => p.gb)
   expect(sizes == sizes.sorted())
+
+// The set-up page's texts in Spanish: setup.json's `<field>_es` beside each English field takes its place, no `_es`
+// field is left; a machine's fit says its kind and arguments for the page's dictionary.
+testThePlanSaysItsTextsInTheLanguageAsked() void
+  for p in PROFILES
+    for key in ["title", "summary", "works", "limits", "measured"]
+      expect(p.data["${key}_es"] != null, "${p.id}: ${key}_es")
+  es = localized(profileOnMachine(PROFILES[1], machine(16)), "es") as <string, any>
+  en = localized(profileOnMachine(PROFILES[1], machine(16)), "en") as <string, any>
+  expect(es["title"] == "Ligero" and en["title"] == "Lite" and not ("title_es" in es) and not ("works_es" in en))
+  expect(es["noteKey"] == "noGpu" and fit(PROFILES[1], machine(2)).key == "noMemory" and fit(PROFILES[1], machine(2)).args == ["4", "2"])
+  for r in REQUIREMENTS
+    expect(r["why_es"] != null, "${r["id"]}: why_es")
 
 testTheGuideSaysOfEachProfileWhatItsDataSays() void
   // only in the working tree: installer/docs/08-guides/ai-setup.md
@@ -67,7 +81,8 @@ testTheChoiceIsKeptInTheMachineFileAndReadBack(tmpPath: Path) void
 
 testEachSystemGetsTheFilesThatStartTheServicesAtLogin() void
   linux = serviceFiles("linux", "/home/u", "/home/u/.local/bin", "/home/u/.config/nuclearlang/ai.env", "/usr/bin")
-  expect(linux.map((f) => f.path) == ["/home/u/.config/systemd/user/nuclear-graph.service", "/home/u/.config/systemd/user/nuclear-developer.service"])
+  expect(linux.map((f) => f.path) == ["/home/u/.config/systemd/user/nuclear-graph.service", "/home/u/.config/systemd/user/nuclear-developer.service", "/home/u/.config/systemd/user/nuclear-chat.service"])
+  expect("ExecStart=/home/u/.local/bin/nuclear-chat serve\n" in linux[2].text)
   expect("ExecStart=/home/u/.local/bin/nuclear-graph serve\n" in linux[0].text)
   expect("EnvironmentFile=-/home/u/.config/nuclearlang/ai.env" in linux[0].text)
   expect("After=nuclear-graph.service" in linux[1].text and "WantedBy=default.target" in linux[1].text)
@@ -77,7 +92,7 @@ testEachSystemGetsTheFilesThatStartTheServicesAtLogin() void
   expect(mac[0].text.startsWith("<?xml"))
   windows = serviceFiles("win32", "C:\\Users\\u", "C:\\n\\bin", "C:\\Users\\u\\AppData\\Roaming\\nuclearlang\\ai.env", "")
   expect(windows.length == 1 and windows[0].path.endsWith("Startup\\nuclear-ai.cmd"))
-  expect("nuclear-graph.exe\" serve" in windows[0].text and "nuclear-developer.cmd\"" in windows[0].text)
+  expect("nuclear-graph.exe\" serve" in windows[0].text and "nuclear-developer.cmd\"" in windows[0].text and "nuclear-chat.exe\" serve" in windows[0].text)
   expect(serviceFiles("freebsd", "/home/u", "/b", "/m", "").isEmpty)
   // a service runs with the tools' folders, not with the PATH of whoever ran the set-up
   unit = serviceFiles("linux", "/home/u", "/home/u/.local/bin", "/m")[0].text
@@ -98,9 +113,9 @@ testTheLauncherTakesTheMachineModelsUnlessTheCallerGivesItsOwn(tmpPath: Path) vo
   expect(launcher("C:\\ai", "C:\\m\\ai.env", "win32").path == "nuclear-developer.cmd")
 
 testAProfileIsInstalledInItsStepsAndRemoteAgentsAloneTakeTwo() void
-  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "machine"])
-  expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "developer", "models", "graph-service", "knowledge", "developer-service"])
-  expect(EMBEDDINGS in steps(profileOf("hard")!)[2].title)
+  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "machine"])
+  expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "clients", "developer", "models", "graph-service", "knowledge", "developer-service", "chat-service"])
+  expect(EMBEDDINGS in steps(profileOf("hard")!)[3].title)
 
 testEveryRequirementCanBeInstalledOnTheThreeSystemsOrByHand() void
   expect(REQUIREMENTS.map((r) => "${r["id"]}") == ["nuclearlang", "uv", "ollama"])
@@ -128,7 +143,7 @@ testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
     expect(choosePort(port, (p: int) => p == port) == port)
   finally
     held.close()
-  expect(PORTS == { "graph": 7878, "developer": 7879 })
+  expect(PORTS == { "graph": 7878, "developer": 7879, "chat": 7880 })
 
 testTheAiArchiveIsFoundByItsLaunchersAndTheyAreLinkedOntoThePath(tmpPath: Path) void
   root = tmpPath.joinpath("ai")
@@ -152,3 +167,24 @@ testTheToolsFindTheFoldersOfNuclearLangOnTheirPath() void
   dirs = e["PATH"]!.split(":")
   expect(dirs[0] == "/usr/bin" and dirs.count((d) => d == "/usr/bin") == 1)
   expect("/opt/homebrew/bin" in dirs and dirs.any((d) => d.endsWith("/.local/bin")))
+
+// Each AI client gets the MCP server in the shape it reads; what else its file holds is kept, a file that is not JSON
+// is left as it is, and taking the server out leaves the rest.
+testTheMcpServerIsAddedToAClientsFileAndTakenOutKeepingTheRest(tmpPath: Path) void
+  file = tmpPath.joinpath("opencode", "opencode.json")
+  file.parent.mkdir(parents = true)
+  file.writeText(json.dumps({ "theme": "dark", "mcp": { "other": { "type": "local", "command": ["x"] } } }))
+  expect("wrote" in addJsonEntry(file, "mcp", mcpEntry("OpenCode", "/opt/bin/nuclear-mcp")))
+  written: <string, any> = json.loads(file.readText())
+  expect(written["theme"] == "dark" and written["mcp"]!["other"] != null)
+  expect(written["mcp"]!["nuclear"] == { "type": "local", "command": ["/opt/bin/nuclear-mcp"], "enabled": true })
+  expect("already" in addJsonEntry(file, "mcp", mcpEntry("OpenCode", "/opt/bin/nuclear-mcp")))
+  expect(removeJsonEntry(file, "mcp") != null and removeJsonEntry(file, "mcp") == null)
+  left: <string, any> = json.loads(file.readText())
+  servers: <string, any> = left["mcp"]!
+  expect(not ("nuclear" in servers) and "other" in servers)
+  broken = tmpPath.joinpath("broken.json")
+  broken.writeText("{ not json")
+  expect("left as it is" in addJsonEntry(broken, "mcpServers", mcpEntry("Cursor", "nuclear-mcp")) and broken.readText() == "{ not json")
+  expect(mcpEntry("Gemini CLI", "nuclear-mcp") == { "command": "nuclear-mcp" })
+  expect(jsonClients({ "XDG_CONFIG_HOME": "/cfg" })[1].file == "${Path("/cfg", "opencode", "opencode.json")}")

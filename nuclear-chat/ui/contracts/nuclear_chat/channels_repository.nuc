@@ -1,0 +1,15 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// The channels API: the channels and direct messages of a workspace with their unread counts, a new channel, a channel opened (read), the agent a direct message is answered by.
+@repository(path = "channels", connection = "nuclear_chat")
+repository ChannelsRepository
+  @get(path = ":workspace")
+  list(workspace: string) Result<NuclearChatError, Channel[]>
+
+  @post(path = ":workspace")
+  create(workspace: string, @body input: NewChannel) Result<NuclearChatError, Channel>
+
+  @post(path = ":workspace/:channel/read")
+  read(workspace: string, channel: string) Result<NuclearChatError, Channel>
+
+  @put(path = ":workspace/:channel/agent")
+  chooseAgent(workspace: string, channel: string, @body input: AgentChoice) Result<NuclearChatError, Channel>

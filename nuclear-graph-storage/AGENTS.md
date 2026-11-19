@@ -39,7 +39,6 @@ In this folder:
 - `*.nuc`: the source ([what each file is](docs/02-architecture/overview.md#parts)); `nuclear.toml`,
   `pyproject.toml`.
 - `tests/`: the tests, in Nuclear.
-- `prompts/`: the prompt files every model reads (`<use case>.md`, `agents/<step>.md`).
 - `data/`: the knowledge base ([`data/README.md`](data/README.md)): `assets/<shelf>/`, `sections.toml`,
   `questions.toml`, and what the build writes (`schema.json`, `manifest.json`, `revisions.json`, `INDEX.md`).
 - `build/`, `.venv/`: generated. Never edited, never committed.
@@ -62,8 +61,10 @@ In this folder:
   row with its parameters, and an entry of `data/questions.toml` with `exact = true`.
 - **After any change here or in the tree:** `nuclear-graph knowledge build`, `knowledge check`, `ingest`,
   `knowledge ask` (every question finds its row) and `knowledge examples` (every Nuclear example compiles).
-- **The prompts in `prompts/` are measured** by the evaluation of the Nuclear Developer
-  (`../nuclear-agents/nuclear_developer/eval`): a change is a new round, recorded in its report.
+- **The prompts are the skills of the roles** (`../nuclear-agents/roles/<role>/skills/*.md` whose front matter names
+  a `prompt`, ADR-developer-0002): `ingest` makes the `prompts` collection from them. They are measured by the
+  evaluation of the Nuclear Developer (`../nuclear-agents/nuclear_developer/eval`): a change is a new round,
+  recorded in its report.
 - A change to a route, to the client or to a setting updates `docs/02-architecture/integrations.md`. A structural
   decision is a new ADR in `docs/03-adr/`. What cannot be read from the code or the documents is asked, not
   invented.

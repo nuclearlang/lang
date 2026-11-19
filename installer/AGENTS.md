@@ -18,7 +18,7 @@ the set-up of the AI services the installers call at their end.
 ```sh
 installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)
 installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall
-installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/ and nuclear-builder
+installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/
 installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256
 installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it
 nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services
@@ -34,7 +34,7 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 ## Folders
 
 - `install.sh`: the installer from the source tree (builds `nuclear` and `nuclear-lsp`, stages, links `nuclear`,
-  `nuclear-builder` and `nuclear-lsp`, installs the skill and the editor extensions).
+  `nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).
 - `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`
   and `package.sh`.
 - `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.

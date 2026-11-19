@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-18
 related: [../../../docs/01-product/roadmap.md, ../02-architecture/workspace.md, ../02-architecture/ai-services.md]
 ---
 # Roadmap of the VS Code extension
@@ -14,15 +14,23 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **The language button (Unreleased, spec 011 T5.13)**: compiled, tested (`npm test`), the Builder page and the
+  company screen rendered headless in English and Spanish with the globe's menu open; never clicked in a running
+  VS Code (the re-render of every open page, the status bar item, Nuclear Chat registered again). A WebSocket panel
+  re-rendered by a change of language shows its open sockets as closed until they are reconnected.
+- **0.58.0, the welcome over every setting, the squad screen, the settings by section and the Spanish**: compiled,
+  tested (`npm test`), rendered headless in English and Spanish with the real roster and teams; never opened in a
+  running VS Code (the migration of the moved settings neither).
 - **0.52.0, the renamed tools** (HTTP Connections, Nuclear Atlas: new command, colour and tool ids), and **0.52.2,
   the ports the set-up chooses**: compiled, tested (`npm test`), packaged and installed (0.52.2), never opened in a
   running VS Code.
-- **0.53.0, the set-up page and the settings page over `nuclear-builder setup`** (the plan, the steps as JSON
+- **0.53.0 and 0.53.1** (0.53.1: only the bundled dialects). **0.53.0, the set-up page and the settings page over `nuclear-builder setup`** (the plan, the steps as JSON
   lines, `--status --json`, `--restart`, `--set`): compiled and packaged; the commands they run were tried in a
   terminal (`--plan --json`, `--status --json`, a whole set-up), the pages never opened in a running VS Code.
 Done, and never tried in a running VS Code (only headless renders, node checks, HTTP calls and `nuclear-builder`):
 
-- **The Nuclear workspace** (ADR-extensions-0002): the icon theme on the file tree, the editors swapped per
+- **The Nuclear workspace** (ADR-extensions-0002): the file tree drawn like the explorer (the twistie, the indent
+  guides, the keyboard, the reveal of the active editor's file, the redraw after a build), the editors swapped per
   workspace (a dirty editor stays open), the terminals of build / test / serve and the web commands, the toolbar
   glyphs with an open editor, the tool template pages, the `Ctrl+Alt+<letter>` chords a desktop environment may
   swallow.

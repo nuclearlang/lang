@@ -83,7 +83,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/prompts/test.md"
+    "nuclear-agents/roles/developer/skills/write-tests.md"
    ],
    "meta": {
     "use_case": "test",
@@ -148,7 +148,7 @@
    ],
    "sources": [
     "nuclearlang/docs/07-reference/diagnostics.md",
-    "nuclear-graph-storage/prompts/agents/repair.md"
+    "nuclear-agents/roles/developer/skills/step-repair.md"
    ],
    "meta": {
     "use_case": "bug",
@@ -195,7 +195,7 @@
     },
     {
      "rel": "stage",
-     "to": "stage:verify"
+     "to": "stage:quality"
     }
    ],
    "sources": [
@@ -243,7 +243,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/prompts/bug.md"
+    "nuclear-agents/roles/developer/skills/fix-a-bug.md"
    ],
    "meta": {
     "use_case": "bug",
@@ -285,7 +285,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/prompts/refactor.md"
+    "nuclear-agents/roles/developer/skills/refactor.md"
    ],
    "meta": {
     "use_case": "refactor",
@@ -326,7 +326,7 @@
     },
     {
      "rel": "stage",
-     "to": "stage:security"
+     "to": "stage:quality"
     },
     {
      "rel": "role",
@@ -338,7 +338,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/prompts/security.md"
+    "nuclear-agents/roles/qa/skills/review-security.md"
    ],
    "meta": {
     "use_case": "security",
@@ -377,7 +377,7 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/prompts/docs.md"
+    "nuclear-agents/roles/devops/skills/write-documentation.md"
    ],
    "meta": {
     "use_case": "docs",
@@ -478,8 +478,8 @@
      "to": "tool:nuclear-builder.export"
     },
     {
-     "rel": "stage",
-     "to": "stage:deploy"
+     "rel": "command",
+     "to": "tool:nuclear-builder.ci"
     },
     {
      "rel": "role",
@@ -578,6 +578,7 @@
    "body": [
     "**For the lead.**",
     "",
+    "0. Nothing about Nuclear known yet: `nuclear_start` first (the rules, the work cycle, the atlas; `nuclear_doc` for a topic).",
     "1. `project_inspect`; for every resource the spec names, `generate_resource` (fields from the spec, `api_inspect`, or the documentation with `web_search` and `web_read`; ask the user when none gives them).",
     "2. `developer_task(project, title, description, criteria)` with only what the generators did not write. Write each piece as an order a junior can follow: the path, the kind, every name and signature, the pieces it uses, the acceptance criterion it serves. A use case it wrote is wired with `generate_usecase` (its alias in the facade; backend: its route), not by another order.",
     "3. Read the journal it returns: what each agent did, the files, what is left.",
@@ -632,8 +633,8 @@
    ],
    "sources": [
     "tools/mcp/server.nuc",
-    "nuclear-graph-storage/prompts/plan.md",
-    "nuclear-graph-storage/prompts/feature.md"
+    "nuclear-agents/roles/architect/skills/plan-for-a-local-developer.md",
+    "nuclear-agents/roles/developer/skills/build-a-feature.md"
    ],
    "meta": {
     "use_case": "lead",
@@ -706,7 +707,7 @@
    "id": "playbook:set-up-the-ai-services",
    "type": "playbook",
    "title": "Playbook: set up the AI services (the Smart Graph, the local agents, the models)",
-   "summary": "Run the set-up: `nuclear-builder setup` in a terminal, *Nuclear: Set Up the AI Services* in VS Code, or the last step of the installer. It reads the machine, suggests a profile of models, installs what is missing and starts the Smart Graph and the Nuclear Developer, now and at every login. Nothing is downloaded before you choose.",
+   "summary": "Run the set-up: `nuclear-builder setup` in a terminal, *Nuclear: Set Up the AI Services* in VS Code, or the last step of the installer. It reads the machine, suggests a profile of models, installs what is missing and starts the Smart Graph, the Nuclear Developer and Nuclear Chat, now and at every login. Nothing is downloaded before you choose.",
    "body": [
     "```sh",
     "nuclear-builder setup                          # asks where the agents run and which profile",
@@ -718,7 +719,7 @@
     "1. **This machine**: its processor, memory, GPU and free disk; and where the agents run: on this machine (suggested: it saves tokens) or remote agents only.",
     "2. **The profile**: `lite`, `medium` or `hard`: what each downloads, the memory it wants, what works with it and what does not. One is suggested; the choice is yours.",
     "3. **What it needs**: NuclearLang with its AI archive (nothing else: the set-up and the services bring their own Python), and Ollama for a local profile. Each is found by itself once installed, or installed for you in a terminal (Ollama's installer asks for your password on Linux).",
-    "4. **Install**: the Smart Graph and the MCP server, the Nuclear Developer, the models, the knowledge base into the graph (about two minutes the first time), both services started. A step that fails says why; try again from it.",
+    "4. **Install**: the Smart Graph and the MCP server, the Nuclear Developer, the models, the knowledge base into the graph (about two minutes the first time), the services started (Nuclear Chat last: from the source tree it is built by `nuclear-chat install`), the MCP server added to every AI client found (Claude Code, Codex, Cursor, OpenCode, Gemini CLI; a client installed later: `nuclear-builder setup --clients`). A step that fails says why; try again from it.",
     "",
     "- Afterwards, give your agent the MCP server: `claude mcp add --scope user nuclear -- nuclear-mcp`, or the buttons of *Settings and integrations* in VS Code.",
     "- Another profile later: run it again; what is installed is kept.",
@@ -770,7 +771,7 @@
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md#2. The steps",
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/setup.nuc"
    ],
    "platforms": [],
    "meta": {

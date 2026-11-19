@@ -20,6 +20,9 @@
 |---|---|
 | Declaration | `export` before functions, classes, interfaces and enums |
 | Variable that is not reassigned / that is reassigned | `const` / `let` |
+| `a == b` of two lists, maps or sets | `_equals(a, b)` (what they hold; `===` compares the objects) |
+| `print(x)`, `"${x}"` of a decimal or of a value that may be missing | `_double(x)` (`2.0`, not `2`), `(x ?? null)` (`null`, not `undefined`) |
+| A list of nullable values or of functions (`int?[]`, `(() => int)[]`) | `(number \| null)[]`, `(() => number)[]` |
 | A constant at the top of a file (`PORTS = { ... }`) | `export const PORTS = { ... };` (the other files of a project import it) |
 | `x = if ...` with multi-line branches | `let x;` and an `if` that assigns in each branch |
 | Members of the module | `this.` |

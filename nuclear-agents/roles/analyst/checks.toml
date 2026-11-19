@@ -1,0 +1,29 @@
+# The checks the Analyst proposes (nuclear-agents/roles/README.md). `by = "role"`: the role runs it; `by = "user"`:
+# the user runs it and marks it done or failed. A `command` is a key of the `commands` of `.nuclear/builder.json`.
+
+[[check]]
+id = "analyst.criteria-checkable"
+title = "Every acceptance criterion says what is checked, how, and with which numbers"
+title_es = "Cada criterio de aceptación dice qué se comprueba, cómo y con qué números"
+station = "analysis"
+on = true
+by = "role"
+prompt = "Read specs/{{id}}/analysis.md. For each acceptance criterion, answer whether it names what is checked, how (test, command or a person's look) and its numbers; rewrite each one that does not."
+
+[[check]]
+id = "analyst.facts-sourced"
+title = "Every fact names its source; nothing is invented"
+title_es = "Cada hecho nombra su fuente; no se inventa nada"
+station = "analysis"
+on = true
+by = "role"
+prompt = "Read specs/{{id}}/analysis.md. List every fact without a source (the user's words, a URL, a row of the Smart Graph) and either give its source or move it to questions.md."
+
+[[check]]
+id = "analyst.user-approves"
+title = "The user reads the analysis and answers the questions"
+title_es = "El usuario lee el análisis y responde las preguntas"
+station = "analysis"
+on = true
+by = "user"
+prompt = "Read specs/{{id}}/analysis.md and questions.md; answer the questions and approve, or change, the acceptance criteria."

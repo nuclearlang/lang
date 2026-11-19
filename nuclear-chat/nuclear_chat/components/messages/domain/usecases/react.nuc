@@ -1,0 +1,11 @@
+// An emoji on a message; the same one again by the same person takes it away.
+usecase React(store: MessageStore, events: EventsAppComponent)
+  exec(workspace: string, id: string, reaction: Reaction) Result<Error, Message>
+    ws = store.workspace(workspace)
+    if reaction.by != "you" and ws.member(reaction.by) == null
+      return Err(Invalid("no member ${reaction.by} in this workspace (or you)"))
+    channel = store.locate(ws, id)
+    store.append(ws, channel, { "edit": id, "at": DateTime.now().millis, "react": reaction.emoji, "by": reaction.by })
+    shown = store.message(ws, channel, id)
+    ~events.emit(ws.id, "message", channel, { "message": shown })
+    Ok(messageOf(shown))

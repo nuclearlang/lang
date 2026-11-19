@@ -43,11 +43,11 @@
    "id": "habit:and-or-not-x",
    "type": "habit",
    "title": "Not `&&` `||` `!x` `===` — in Nuclear: `and` `or` `not x` `==`",
-   "summary": "In Nuclear write `and` `or` `not x` `==` instead of `&&` `||` `!x` `===`. Comparisons are always strict.",
+   "summary": "In Nuclear write `and` `or` `not x` `==` instead of `&&` `||` `!x` `===`. Comparisons are always strict; two lists, maps or sets are equal when they hold equal values.",
    "body": [
     "Someone who knows TypeScript, Dart or Python writes `&&` `||` `!x` `===`.",
     "",
-    "In Nuclear: `and` `or` `not x` `==`. Comparisons are always strict.",
+    "In Nuclear: `and` `or` `not x` `==`. Comparisons are always strict; two lists, maps or sets are equal when they hold equal values.",
     "",
     "When the compiler sees the habit it reports `N0022` with the Nuclear form, and `nuclear fix` applies the exact ones."
    ],
@@ -67,7 +67,7 @@
    "data": {
     "wrong": "`&&` `||` `!x` `===`",
     "right": "`and` `or` `not x` `==`",
-    "note": "comparisons are always strict"
+    "note": "comparisons are always strict; two lists, maps or sets are equal when they hold equal values"
    }
   },
   {
@@ -204,14 +204,14 @@
    }
   },
   {
-   "id": "habit:cond-a-b-statements",
+   "id": "habit:cond-a-b",
    "type": "habit",
-   "title": "Not `cond ? a : b` statements — in Nuclear: `if`/`match` are values",
-   "summary": "In Nuclear write `if`/`match` are values instead of `cond ? a : b` statements. `x = if c` + branches.",
+   "title": "Not `cond ? a : b` — in Nuclear: the same, for a value inside an expression (an argument, a list)",
+   "summary": "In Nuclear write the same, for a value inside an expression (an argument, a list) instead of `cond ? a : b`. `if c then a` does not exist.",
    "body": [
-    "Someone who knows TypeScript, Dart or Python writes `cond ? a : b` statements.",
+    "Someone who knows TypeScript, Dart or Python writes `cond ? a : b`.",
     "",
-    "In Nuclear: `if`/`match` are values. `x = if c` + branches.",
+    "In Nuclear: the same, for a value inside an expression (an argument, a list). `if c then a` does not exist.",
     "",
     "When the compiler sees the habit it reports `N0022` with the Nuclear form, and `nuclear fix` applies the exact ones."
    ],
@@ -229,9 +229,9 @@
     "code": "N0022"
    },
    "data": {
-    "wrong": "`cond ? a : b` statements",
-    "right": "`if`/`match` are values",
-    "note": "`x = if c` + branches"
+    "wrong": "`cond ? a : b`",
+    "right": "the same, for a value inside an expression (an argument, a list)",
+    "note": "`if c then a` does not exist"
    }
   },
   {
@@ -269,6 +269,37 @@
     "wrong": "`const x = 1`, `let`, `var`, `final`",
     "right": "`x = 1`",
     "note": "const or mutable is decided by the transpiler"
+   }
+  },
+  {
+   "id": "habit:count-0-as-a-class-field",
+   "type": "habit",
+   "title": "Not `count = 0` as a class field — in Nuclear: `count: int = 0`",
+   "summary": "In Nuclear write `count: int = 0` instead of `count = 0` as a class field. Afield always has its type (N0017); a constructor parameter is a field too.",
+   "body": [
+    "Someone who knows TypeScript, Dart or Python writes `count = 0` as a class field.",
+    "",
+    "In Nuclear: `count: int = 0`. A field always has its type (N0017); a constructor parameter is a field too.",
+    "",
+    "When the compiler sees the habit it reports `N0022` with the Nuclear form, and `nuclear fix` applies the exact ones."
+   ],
+   "links": [
+    {
+     "rel": "reported-as",
+     "to": "error:N0022"
+    }
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/brief/nuclear-base.md#Rules that change"
+   ],
+   "meta": {
+    "family": "habit",
+    "code": "N0022"
+   },
+   "data": {
+    "wrong": "`count = 0` as a class field",
+    "right": "`count: int = 0`",
+    "note": "a field always has its type (N0017); a constructor parameter is a field too"
    }
   },
   {
@@ -365,6 +396,40 @@
     "wrong": "`` `Hi ${name}` ``",
     "right": "`\"Hi ${name}\"` (both quotes are the same)",
     "note": "`r\"\\d+\"` = raw text (regex)"
+   }
+  },
+  {
+   "id": "habit:if-switch-returning-a-value",
+   "type": "habit",
+   "title": "Not `if` / `switch` returning a value — in Nuclear: `if`/`match` are values, as blocks",
+   "summary": "In Nuclear write `if`/`match` are values, as blocks instead of `if` / `switch` returning a value. `x = if c` + indented branches; never inside an argument list.",
+   "body": [
+    "Someone who knows TypeScript, Dart or Python writes `if` / `switch` returning a value.",
+    "",
+    "In Nuclear: `if`/`match` are values, as blocks. `x = if c` + indented branches; never inside an argument list.",
+    "",
+    "When the compiler sees the habit it reports `N0022` with the Nuclear form, and `nuclear fix` applies the exact ones."
+   ],
+   "keys": [
+    "switch"
+   ],
+   "links": [
+    {
+     "rel": "reported-as",
+     "to": "error:N0022"
+    }
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/brief/nuclear-base.md#Rules that change"
+   ],
+   "meta": {
+    "family": "habit",
+    "code": "N0022"
+   },
+   "data": {
+    "wrong": "`if` / `switch` returning a value",
+    "right": "`if`/`match` are values, as blocks",
+    "note": "`x = if c` + indented branches; never inside an argument list"
    }
   },
   {

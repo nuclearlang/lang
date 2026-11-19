@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [README.md, run-and-debug.md, ../02-architecture/workspace.md, ../../../docs/03-adr/0002-the-nuclear-workspace.md]
 ---
 # The Nuclear workspace
@@ -18,8 +18,9 @@ the ones you opened with *Open a Project as a Tab* (`Ctrl+Alt+O`). That command 
 adding it to the VS Code workspace. Each tab shows its platform's glyph with the dialect's icon as a badge.
 `Ctrl+1` … `Ctrl+9` go to the first nine projects. `+` opens another one.
 
-The pane of a project is its file tree, with the icons of the Chernobyl icon theme. It follows `files.exclude`.
-A click opens a file.
+The pane of a project is its file tree, beside the strip, drawn like VS Code's explorer, with the icons of the
+Chernobyl icon theme. It follows `files.exclude` and selects the file of the active editor. A click opens a file;
+the keyboard walks it (arrows, Home, End, Enter).
 
 ### The right-click menu of the file tree
 
@@ -66,17 +67,20 @@ How a run and a debug session work: [run, debug and tasks](run-and-debug.md).
 
 ## Tool tabs
 
-The tools are at the bottom of the strip.
+The tools are at the bottom of the strip, each an icon in its colour over a word; hover one (or reach it with Tab)
+to see its name and key. The open one has a frame and a glowing bar; a dashed icon is a tool not built yet.
 
-| Tool | Key | State | Guide |
-|---|---|---|---|
-| HTTP Connections | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |
-| Devices | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |
-| Nuclear Builder | `Ctrl+Alt+P` | built | [Nuclear Builder](../../../tools/nuclear-builder/docs/08-guides/README.md) |
-| UI designer | `Ctrl+Alt+D` | a template page that lists what is planned | — |
-| AI documenter | `Ctrl+Alt+M` | a template page that lists what is planned | — |
-| Nuclear Atlas | `Ctrl+Alt+A` | built | [Nuclear Atlas](../../../tools/nuclear-atlas/docs/08-guides/README.md) |
-| Settings and integrations | `Ctrl+Alt+S` | built | below |
+| Tool | Icon | Key | State | Guide |
+|---|---|---|---|---|
+| Nuclear Builder | a factory | `Ctrl+Alt+P` | built | [Nuclear Builder](../../../tools/nuclear-builder/docs/08-guides/README.md) |
+| Your software company | three people | `Ctrl+Alt+E` | built: the teams, their members and the new-team wizard | [Make a team](../../../tools/nuclear-builder/docs/08-guides/make-a-team.md) |
+| Nuclear Atlas | a chat bubble | `Ctrl+Alt+A` | built | [Nuclear Atlas](../../../tools/nuclear-atlas/docs/08-guides/README.md) |
+| HTTP Connections | a plug | `Ctrl+Alt+H` | built | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) |
+| Devices | a phone | `Ctrl+Alt+V` | built | [Devices](../../../tools/nuclear-device-manager/docs/08-guides/README.md) |
+| Nuclear Monitor | a gauge | `Ctrl+Alt+F` | built | [Nuclear Monitor](../../../tools/nuclear-monitor/AGENTS.md) |
+| UI designer | a pen's nib | `Ctrl+Alt+D` | a template page that lists what is planned | — |
+| AI documenter | a page | `Ctrl+Alt+M` | a template page that lists what is planned | — |
+| Settings and integrations | a gear | `Ctrl+Alt+S` | built | below |
 
 The tools act on the last project you were in.
 
@@ -99,10 +103,14 @@ that was never set up.
 
 ## Notifications
 
-A chat answer or a Nuclear Builder run keeps working when you close its page or switch tabs. When it ends, a
-notification with *Open* tells you, unless you are already looking at it. Unread notices show as a badge on the
-Nuclear icon of the activity bar, a count on the tab of *Nuclear Atlas*, *Nuclear Builder* or *Settings and
-integrations*, and a list in that tool's pane. Every `nuclear.ai.checkEveryMinutes` (5 by default) the extension
+A chat answer or a Nuclear Builder run keeps working when you close its page or switch tabs. When a member of your
+team answers you, mentions you (`@you`) or asks you something in Nuclear Chat, when a run waits for your approval,
+and when a run passes or fails, a notification tells you, unless you are already looking at that conversation or
+tool. *Open* takes you there: Nuclear Atlas on the conversation (the direct message with Askia, the team's
+channel), the Builder on the run, or on the step that failed. Unread notices show as a badge on the Nuclear icon of
+the activity bar, a badge on the tool's icon in the strip, and the list at the bottom of the column, where a click
+goes to the same place. Opening the tool clears its badge. `nuclear.notifications` chooses what pops up: `all`,
+`mentions-and-gates` (what is addressed to you and what waits for you) or `off` (only the badges and the list). Every `nuclear.ai.checkEveryMinutes` (5 by default) the extension
 checks each connection. If one stops answering, or answers again, you get a notice in *Settings and
 integrations*.
 

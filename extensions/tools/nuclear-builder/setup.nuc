@@ -70,7 +70,7 @@ DEVELOPER = "nuclear-agents/nuclear_developer"
 MCP = "tools/mcp"
 
 // The services' commands in the AI archive (ADR-installer-0003), the set-up's own with them.
-RUNTIME_COMMANDS = ["nuclear-graph", "nuclear-mcp", "nuclear-developer", "nuclear-builder"]
+RUNTIME_COMMANDS = ["nuclear-graph", "nuclear-mcp", "nuclear-developer", "nuclear-builder", "nuclear-chat"]
 
 // Whether the services' folder is the AI archive of a release: a Python of its own with the services installed in it
 // and their launchers (`installer/release/ai-runtime.sh`). Then nothing is built, and neither uv nor a Python is needed.
@@ -258,19 +258,34 @@ hardware() Hardware
   Hardware(sys.platform, arch, cpuName(), os.cpuCount() ?? 1, ram, gpu, vram, disk)
 
 // How a profile sits on a machine (`fits`, `tight`, `no`), and why, in words for the user.
-Fit(fit: string, note: string)
+// `key` and `args`: the note's kind for the screens' dictionaries (`fit.<key>`); `note` stays the English one.
+Fit(fit: string, note: string, key: string = "", args: string[] = [])
+
+// A text of setup.json in `lang`: each `<field>_<lang>` takes the place of its English `<field>`, and no `_<lang>` field
+// of any language is left (a list of them, each); English, or a field with no translation, stays as it is.
+localized(value: any, lang: string) any
+  if isinstance(value, list)
+    return (value as any[]).map((v) => localized(v, lang))
+  if not isinstance(value, dict)
+    return value
+  given = value as <string, any>
+  out: <string, any> = {}
+  for key, v in given
+    if not Regex(r"_[a-z]{2}$").test(key)
+      out[key] = localized(given["${key}_${lang}"] ?? v, lang)
+  out
 
 fit(p: Profile, hw: Hardware) Fit
   if p.coder == null
-    return Fit("fits", "nothing runs on this machine")
+    return Fit("fits", "nothing runs on this machine", "nothingHere")
   if hw.disk > 0 and hw.disk < p.gb + 2
-    return Fit("no", "it downloads ${p.gb} GB and ${hw.disk} GB of disk are free")
+    return Fit("no", "it downloads ${p.gb} GB and ${hw.disk} GB of disk are free", "noDisk", ["${p.gb}", "${hw.disk}"])
   if hw.ram < p.minRam
-    return Fit("no", "its models do not load: it needs ${p.minRam.round()} GB of memory, this machine has ${hw.ram} GB")
+    return Fit("no", "its models do not load: it needs ${p.minRam.round()} GB of memory, this machine has ${hw.ram} GB", "noMemory", ["${p.minRam.round()}", "${hw.ram}"])
   at = hw.vram >= p.gb ? "the models fit in the GPU (${hw.gpu})" : "no GPU with memory of its own was found: an answer takes from seconds to a few minutes"
   if hw.ram < p.ram
-    return Fit("tight", "it runs with little else open (${p.ram.round()} GB of memory recommended, this machine has ${hw.ram} GB); ${at}")
-  Fit("fits", at)
+    return Fit("tight", "it runs with little else open (${p.ram.round()} GB of memory recommended, this machine has ${hw.ram} GB); ${at}", hw.vram >= p.gb ? "tightGpu" : "tightNoGpu", ["${p.ram.round()}", "${hw.ram}", hw.gpu])
+  Fit("fits", at, hw.vram >= p.gb ? "gpu" : "noGpu", [hw.gpu])
 
 // The profile suggested for a machine: the heaviest local one that fits, else the lightest that still runs, else the
 // remote agents alone. The user decides.
@@ -282,7 +297,7 @@ recommend(hw: Hardware, profiles: Profile[] = PROFILES) string
 // ---------- the ports ----------
 
 // The ports the services listen on (127.0.0.1) when nothing else holds them.
-PORTS: <string, int> = { "graph": 7878, "developer": 7879 }
+PORTS: <string, int> = { "graph": 7878, "developer": 7879, "chat": 7880 }
 
 // Whether a port of 127.0.0.1 can be listened on now: not held by another program and, on Windows, not in a range
 // the system keeps for itself (Hyper-V, WSL, Docker: `netsh interface ipv4 show excludedportrange protocol=tcp`). A
@@ -313,26 +328,29 @@ choosePort(preferred: int, ours: (port: int) => boolean, taken: int[] = []) int
       return port
   throw RuntimeError("no free port of 127.0.0.1 between ${preferred} and ${preferred + 99}")
 
-// The ports of both services on this machine, chosen now and written to the machine's file with the rest of the
+// The ports of the services on this machine, chosen now and written to the machine's file with the rest of the
 // choice: every service and client reads them there (ADR-installer-0003).
 servicePorts(say: (line: string) => void) <string, string>
   m = readMachine()
   graph = choosePort((m["NUCLEAR_GRAPH_PORT"] ?? "").toInt() ?? PORTS["graph"]!, (p) => up("http://127.0.0.1:${p}/v1/health"))
   developer = choosePort((m["NUCLEAR_DEVELOPER_PORT"] ?? "").toInt() ?? PORTS["developer"]!, (p) => up("http://127.0.0.1:${p}/docs"), [graph])
   say(portLine("Smart Graph", graph, PORTS["graph"]!))
+  chat = choosePort((m["NUCLEAR_CHAT_PORT"] ?? "").toInt() ?? PORTS["chat"]!, (p) => up("http://127.0.0.1:${p}/workspaces"), [graph, developer])
   say(portLine("Nuclear Developer", developer, PORTS["developer"]!))
-  { "NUCLEAR_GRAPH_PORT": "${graph}", "NUCLEAR_DEVELOPER_PORT": "${developer}" }
+  say(portLine("Nuclear Chat", chat, PORTS["chat"]!))
+  { "NUCLEAR_GRAPH_PORT": "${graph}", "NUCLEAR_DEVELOPER_PORT": "${developer}", "NUCLEAR_CHAT_PORT": "${chat}" }
 
 portLine(name: string, port: int, usual: int) string
   port == usual ? "${name}: port ${port}" : "${name}: port ${port} (${usual} is held by another program)"
 
-// Where the graph, the Developer and Ollama answer: the environment, else the machine's file, else the usual ports.
+// Where the graph, the Developer, Nuclear Chat and Ollama answer: the environment, else the machine's file, else the usual ports.
 urls(env: <string, string>? = null) <string, string>
   e = env ?? dict(os.environ)
   m = readMachine()
   {
     "graph": e["NUCLEAR_GRAPH_URL"] ?? "http://127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? PORTS["graph"]}",
     "developer": e["NUCLEAR_DEVELOPER_URL"] ?? "http://127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? PORTS["developer"]}",
+    "chat": e["NUCLEAR_CHAT_URL"] ?? "http://127.0.0.1:${m["NUCLEAR_CHAT_PORT"] ?? PORTS["chat"]}",
     "ollama": e["OLLAMA_URL"] ?? m["OLLAMA_URL"] ?? "http://localhost:11434"
   }
 
@@ -356,13 +374,16 @@ requirements(local: boolean, u: <string, string>? = null) <string, any>[]
     if r["id"] == "nuclearlang"
       item["found"] = command != null and root != null
       item["detail"] = command == null ? "not installed" : root != null ? command : "installed without the AI services: update it"
+      item["detailKey"] = command == null ? "notInstalled" : root != null ? "" : "noAiServices"
     else if r["id"] == "ollama"
       answers = up("${at["ollama"]}/api/tags")
       item["found"] = answers
       item["detail"] = answers ? at["ollama"] : command != null ? "installed, not running: start it (its app, or `ollama serve`)" : "not installed"
+      item["detailKey"] = answers ? "" : command != null ? "notRunning" : "notInstalled"
     else
       item["found"] = command != null
       item["detail"] = command ?? "not installed"
+      item["detailKey"] = command == null ? "notInstalled" : ""
     found.add(item)
   found
 
@@ -393,6 +414,8 @@ status(u: <string, string>? = null) <string, any>
     "file": machineFile(),
     "graph": up("${at["graph"]}/v1/health"),
     "developer": up("${at["developer"]}/docs"),
+    // the chat answers 401 without its token: it answers
+    "chat": up("${at["chat"]}/workspaces"),
     "ollama": up("${at["ollama"]}/api/tags"),
     "atLogin": files.length > 0 and files.all((f) => Path(f.path).exists()),
     "missingModels": wanted.filter((m) => not hasModel(models, m))
@@ -403,7 +426,7 @@ status(u: <string, string>? = null) <string, any>
 // A service of the set-up: its name, its title and the command that runs it.
 Service(name: string, title: string, args: string[])
 
-SERVICES = [Service("graph", "Nuclear Smart Graph", ["nuclear-graph", "serve"]), Service("developer", "Nuclear Developer", ["nuclear-developer"])]
+SERVICES = [Service("graph", "Nuclear Smart Graph", ["nuclear-graph", "serve"]), Service("developer", "Nuclear Developer", ["nuclear-developer"]), Service("chat", "Nuclear Chat", ["nuclear-chat", "serve"])]
 
 serviceOf(name: string) Service
   SERVICES.find((s) => s.name == name) ?? SERVICES[0]
@@ -525,7 +548,7 @@ startService(name: string, url: string, say: (line: string) => void) void
   else if sys.platform == "darwin"
     ours = capture(["launchctl", "print", "${gui()}/${label(name)}"]).code == 0
   if not ours and up(url)
-    stop = name == "graph" ? "pkill -f 'nuclear-graph serve'" : "pkill -f 'uvicorn app.main:app'"
+    stop = name == "developer" ? "pkill -f 'uvicorn app.main:app'" : "pkill -f '${s.args.join(" ")}'"
     throw RuntimeError("a ${s.title} started by hand already answers at ${url}: stop it (${stop}) and run the set-up again, so the service of this system takes its place")
   if not restartService(name)
     env = toolEnv()
@@ -609,6 +632,113 @@ pull(ollama: string, model: string, say: (line: string) => void) void
   finally
     client.close()
 
+// ---------- the AI clients ----------
+
+// The AI clients the set-up connects to the MCP server (spec 016): an agent opened in any of them on a machine the
+// installer set up finds Nuclear's MCP server with no step of its own, and the server's instructions send it to
+// `nuclear_start`. A client is connected only when it is on this machine (its command or its folder); what else its
+// files hold is kept, and a file that is not valid JSON is left as it is.
+
+// The MCP server's command: the installed one's full path (an editor started from the desktop may not have the
+// commands' folder on its PATH), else its name.
+mcpCommand(bin: string = binDir()) string
+  for name in ["nuclear-mcp", "nuclear-mcp.exe", "nuclear-mcp.cmd"]
+    at = Path(bin, name)
+    if at.exists()
+      return "${at}"
+  "nuclear-mcp"
+
+// A client whose MCP servers are a table of a JSON file under the home.
+JsonClient(name: string, command: string, folder: string, file: string, table: string)
+
+// Cursor, OpenCode and Gemini CLI, with where each keeps its MCP servers.
+jsonClients(env: <string, string>? = null) JsonClient[]
+  e = env ?? dict(os.environ)
+  config = (e["XDG_CONFIG_HOME"] ?? "").length > 0 ? e["XDG_CONFIG_HOME"]! : "${Path(home(), ".config")}"
+  [
+    JsonClient("Cursor", "cursor", "${Path(home(), ".cursor")}", "${Path(home(), ".cursor", "mcp.json")}", "mcpServers"),
+    JsonClient("OpenCode", "opencode", "${Path(config, "opencode")}", "${Path(config, "opencode", "opencode.json")}", "mcp"),
+    JsonClient("Gemini CLI", "gemini", "${Path(home(), ".gemini")}", "${Path(home(), ".gemini", "settings.json")}", "mcpServers"),
+  ]
+
+// The entry of the server in a client's table, in the shape that client reads.
+mcpEntry(client: string, command: string) <string, any>
+  match client
+    "OpenCode" -> { "type": "local", "command": [command], "enabled": true }
+    "Cursor" -> { "command": command, "args": [] }
+    _ -> { "command": command }
+
+// The server written into the `table` of a JSON settings file, every other key kept.
+addJsonEntry(file: Path, table: string, entry: <string, any>) string
+  data: <string, any> = {}
+  if file.exists()
+    try
+      data = json.loads(file.readText(encoding = "utf-8"))
+    catch e
+      return "${file} is not valid JSON (${e}): left as it is, add the nuclear MCP server by hand"
+  servers: <string, any> = data[table] ?? {}
+  if servers["nuclear"] == entry
+    return "the nuclear MCP server is already in ${file}"
+  servers["nuclear"] = entry
+  data[table] = servers
+  file.parent.mkdir(parents = true, existOk = true)
+  file.writeText("${json.dumps(data, indent = 2)}\n", encoding = "utf-8")
+  "wrote the nuclear MCP server in ${file}"
+
+// The server taken out of the `table` of a JSON settings file; null when it was not there.
+removeJsonEntry(file: Path, table: string) string?
+  if not file.exists()
+    return null
+  try
+    data: <string, any> = json.loads(file.readText(encoding = "utf-8"))
+    servers: <string, any> = data[table] ?? {}
+    if servers["nuclear"] == null
+      return null
+    servers.remove("nuclear")
+    data[table] = servers
+    file.writeText("${json.dumps(data, indent = 2)}\n", encoding = "utf-8")
+    "removed the nuclear MCP server from ${file}"
+  catch e
+    null
+
+// The step `clients`: the server added to every AI client of this machine.
+connectClients(say: (line: string) => void) void
+  command = mcpCommand()
+  found = false
+  if which("claude") != null
+    found = true
+    if capture(["claude", "mcp", "get", "nuclear"]).code == 0
+      say("Claude Code: the nuclear MCP server is already there")
+    else
+      ran = capture(["claude", "mcp", "add", "--scope", "user", "nuclear", "--", command])
+      say(ran.code == 0 ? "Claude Code: added the nuclear MCP server" : "Claude Code: ${ran.out.trim()}")
+  if which("codex") != null
+    found = true
+    if Regex(r"\bnuclear\b").test(capture(["codex", "mcp", "list"]).out)
+      say("Codex: the nuclear MCP server is already there")
+    else
+      ran = capture(["codex", "mcp", "add", "nuclear", "--", command])
+      say(ran.code == 0 ? "Codex: added the nuclear MCP server" : "Codex: ${ran.out.trim()}")
+  for c in jsonClients()
+    if which(c.command) != null or Path(c.folder).isDir()
+      found = true
+      say("${c.name}: ${addJsonEntry(Path(c.file), c.table, mcpEntry(c.name, command))}")
+  if not found
+    say("no AI client found (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): run this step again after installing one (nuclear-builder setup --clients), or add `${command}` as an MCP server by hand")
+
+// The server taken out of every client, when the services are removed (its command goes with them).
+disconnectClients(say: (line: string) => void) void
+  if which("claude") != null and capture(["claude", "mcp", "get", "nuclear"]).code == 0
+    capture(["claude", "mcp", "remove", "--scope", "user", "nuclear"])
+    say("Claude Code: removed the nuclear MCP server")
+  if which("codex") != null and Regex(r"\bnuclear\b").test(capture(["codex", "mcp", "list"]).out)
+    capture(["codex", "mcp", "remove", "nuclear"])
+    say("Codex: removed the nuclear MCP server")
+  for c in jsonClients()
+    done = removeJsonEntry(Path(c.file), c.table)
+    if done != null
+      say("${c.name}: ${done!}")
+
 // ---------- the steps ----------
 
 // A step of the set-up: what it is called and what it says it does.
@@ -620,26 +750,30 @@ modelsOf(p: Profile) string[]
 // The steps that leave a profile installed and running, in order. Each can be run again: what is there is kept.
 steps(p: Profile) Step[]
   if p.coder == null
-    return [Step("graph", "Install the MCP server"), Step("machine", "Keep the choice")]
+    return [Step("graph", "Install the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("machine", "Keep the choice")]
   [
     Step("graph", "Install the Smart Graph and the MCP server"),
+    Step("clients", "Add the MCP server to the AI clients of this machine"),
     Step("developer", "Build and install the Nuclear Developer"),
     Step("models", "Download the models (${modelsOf(p).join(", ")})"),
     Step("graph-service", "Start the Smart Graph, now and at every login"),
     Step("knowledge", "Load the knowledge base into the graph"),
-    Step("developer-service", "Start the Nuclear Developer, now and at every login")
+    Step("developer-service", "Start the Nuclear Developer, now and at every login"),
+    Step("chat-service", "Start Nuclear Chat, now and at every login")
   ]
 
 // Runs one step of a profile, with the services' folder `root`.
 runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
   match id
     "graph" -> installGraph(p, root, say)
+    "clients" -> connectClients(say)
     "machine" -> keepRemote(p, say)
     "developer" -> installDeveloper(root, say)
     "models" -> downloadModels(p, say)
     "graph-service" -> startGraph(p, say)
     "knowledge" -> loadKnowledge(root, say)
     "developer-service" -> startService("developer", "${urls()["developer"]}/docs", say)
+    "chat-service" -> startChat(root, say)
     _ ->
       throw RuntimeError("no step ${id}")
 
@@ -677,6 +811,23 @@ installDeveloper(root: string, say: (line: string) => void) void
   file.chmod(493)
   say("wrote ${file}")
 
+// Nuclear Chat's service (nuclear-chat/docs/02-architecture/overview.md): the AI archive brings it built; a working
+// tree builds it in place (`nuclear-chat install`, the command installer/install.sh installs). It makes its token
+// in the keyring the first time it starts (never in a file); its port is chosen with the others (`servicePorts`).
+startChat(root: string, say: (line: string) => void) void
+  if not hasRuntime(root)
+    if which("nuclear-chat") == null
+      throw RuntimeError("`nuclear-chat` is not installed: run installer/install.sh again")
+    python = pythonDir("${Path(root, DEVELOPER, "build")}", say)
+    runCommand(["nuclear-chat", "install"], say, env = { "PATH": "${python}${os.pathsep}${toolEnv()["PATH"]}" })
+  // its port and its file at login, also when the set-up runs again from this step (`--from chat-service`)
+  choice = readMachine()
+  for k, v in servicePorts(say)
+    choice[k] = v
+  writeMachine(choice)
+  enableServices(say)
+  startService("chat", "${urls()["chat"]}/workspaces", say)
+
 downloadModels(p: Profile, say: (line: string) => void) void
   ollama = urls()["ollama"]!
   have = installedModels(ollama)
@@ -708,6 +859,7 @@ loadKnowledge(root: string, say: (line: string) => void) void
 // and the machine's file. The models and Ollama stay (they are the user's), and so does the graph's data.
 remove(say: (line: string) => void) void
   removeServices(say)
+  disconnectClients(say)
   if which("uv") != null
     for tool in ["nuclear-graph", "nuclear-mcp"]
       capture(["uv", "tool", "uninstall", tool])

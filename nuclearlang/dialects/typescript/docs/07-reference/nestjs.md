@@ -40,8 +40,9 @@ nestjs`): an invented class is N0220.
 ### Plugins (`config.nuc`)
 
 The optional parts are plugins ([projects.md](../../../../docs/07-reference/projects.md) §3.3): `plugins(sqlite = true, postgres = true, mysql =
-true, mariadb = true, redis = true, kafka = true, events = true, ai = true, openai = true, ollama = true)`. Only the
-enabled ones go to `package.json`, and the runtime loads them only then (`synapsis-nest/ai`, `synapsis-nest/events`).
+true, mariadb = true, redis = true, kafka = true, events = true, websocket = true, ai = true, openai = true, ollama =
+true)`. Only the enabled ones go to `package.json`, and the runtime loads them only then (`synapsis-nest/ai`,
+`synapsis-nest/events`, `synapsis-nest/sockets`).
 A kind or a name of a plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `listener` and
 `publish` need `events` (Kafka with `kafka`).
 
@@ -553,6 +554,53 @@ export class ProjectConfig extends AppConfig {
 }
 ```
 
+#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)
+
+`guards` in the `appConfig` become a global Nest guard (`GuardsOf`, also checked by the contract's routes);
+`@controller(..., guards = [...])` writes `@guardedBy([...])` under `@Controller`. `Token`, `NoOrigin` and `guardedBy`
+are `synapsis-nest`'s. `WebSocketServer` (plugin `websocket`: `ws`) is `synapsis-nest/sockets`'s: it listens to the
+upgrades of the app's HTTP server at its path, checks the app's guards, and sends every request frame through the
+app over the loopback.
+
+```nuclear
+// config.nuc: plugins(sqlite = true, events = true, websocket = true)
+
+appConfig ProjectConfig
+  connections: Connection[] = [SQLite(file = "chat.sqlite"), WebSocketServer(path = "ws")]
+  guards: Guard[] = [NoOrigin(), Token(value = env("CHAT_TOKEN"), header = "X-Chat-Token")]
+
+@controller("admin", guards = [Token(value = env("ADMIN_TOKEN"))])
+controller AdminController()
+  @get()
+  info() string
+    "ok"
+```
+
+```typescript
+import { Controller, Get } from '@nestjs/common';
+import { AppConfig, Connection, Guard, NoOrigin, SQLite, Token, env, guardedBy } from 'synapsis-nest';
+import { WebSocketServer } from 'synapsis-nest/sockets';
+
+// config.nuc: plugins(sqlite = true, events = true, websocket = true)
+
+export class ProjectConfig extends AppConfig {
+  readonly connections: Connection[] = [new SQLite({ file: 'chat.sqlite' }), new WebSocketServer({ path: 'ws' })];
+  readonly guards: Guard[] = [
+    new NoOrigin(),
+    new Token({ value: env('CHAT_TOKEN'), header: 'X-Chat-Token' }),
+  ];
+}
+
+@Controller('admin')
+@guardedBy([new Token({ value: env('ADMIN_TOKEN') })])
+export class AdminController {
+  @Get()
+  info(): string {
+    return 'ok';
+  }
+}
+```
+
 ### 2.8 Listener
 
 A Kafka consumer: each `@consumer("topic")` method receives the messages of the topic, as the type of its parameter (a model). `~publish("topic", value)` sends one; without a `Kafka` connection it reaches the listeners of the same process (development, tests). The topics a listener consumes are created if they do not exist. The Redis cache: `~cacheGet(key)`, `~cacheSet(key, value, 60)`.
@@ -752,6 +800,51 @@ describe('Tasks', () => {
     const tasks = inject(TasksAppComponent);
     const missing = await tasks.task(99);
     assert.ok(missing.error.status === 404);
+  });
+});
+```
+
+#### The app over HTTP and its WebSocket (ADR-synapsis-0010)
+
+`appClient()` is `synapsis-nest/testing`'s: the test's app listens on a free port of `127.0.0.1` (`fetch`, and
+`ws` for the socket); named arguments become the options object (`{ body, headers }`). `testEnv(...)` of `config.nuc`
+is `src/test_env.ts`, imported before the tests (`node --import ./dist/src/test_env.js --test`, `npm test`).
+
+```nuclear
+tests Api
+  @test("the guards and the socket")
+  guarded() void
+    app = appClient()
+    expect((~app.get("/tasks", headers = { "X-Tasks-Token": "t" })).status == 200)
+    ws = (~app.socket("/ws", headers = { "X-Tasks-Token": "t" })).value
+    made = ~ws.request("POST", "/tasks", body = { "title": "call mom" })
+    expect(made.status == 201)
+```
+
+```typescript
+import { INestApplication } from '@nestjs/common';
+import { afterEach, beforeEach, describe, it } from 'node:test';
+import { appClient, startTestApp, stopTestApp } from 'synapsis-nest/testing';
+
+import assert from 'node:assert/strict';
+
+describe('Api', () => {
+  let app: INestApplication;
+
+  beforeEach(async () => {
+    app = await startTestApp(AppModule);
+  });
+
+  afterEach(async () => {
+    await stopTestApp(app);
+  });
+
+  it('the guards and the socket', async () => {
+    const app = appClient();
+    assert.ok((await app.get('/tasks', { headers: { 'X-Tasks-Token': 't' } })).status === 200);
+    const ws = (await app.socket('/ws', { headers: { 'X-Tasks-Token': 't' } })).value;
+    const made = await ws.request('POST', '/tasks', { body: { 'title': 'call mom' } });
+    assert.ok(made.status === 201);
   });
 });
 ```

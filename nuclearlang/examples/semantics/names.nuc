@@ -1,0 +1,9 @@
+// A name of the program that a target's own function has: it never hides that function.
+sorted(n: int) int = n * 10
+
+main() void
+  xs = [3, 1, 2]
+  max = xs.max()
+  sum = xs.sum()
+  len = xs.length
+  print(xs.sorted().join(","), sorted(2), max, sum, len)

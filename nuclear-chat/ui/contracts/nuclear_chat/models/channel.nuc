@@ -1,0 +1,17 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// A channel of the project: `general`, a team's, one the user made, or a direct message (`dm-<member>`).
+Channel
+  id: string
+  name: string = ""
+  topic: string = ""
+  // channel or dm
+  kind: string = "channel"
+  members: string[] = []
+  // the team the channel is of: its tech lead answers a message without a mention
+  team: string = ""
+  // the time (ms) of the last message the user read
+  lastRead: int = 0
+  unread: int = 0
+  // the choice of its member's responder that answers it (a direct message), and its model; empty: the default
+  agent: string = ""
+  model: string = ""

@@ -1,0 +1,7 @@
+// The messages of a channel, folded; with `thread`, only that thread (the message that opened it and its replies).
+usecase History(store: MessageStore)
+  exec(workspace: string, channel: string, thread: string? = null) Result<Error, Message[]>
+    ws = store.workspace(workspace)
+    store.channel(ws, channel)
+    all = store.history(ws, channel)
+    Ok(thread == null ? all : all.filter((m) => m.id == thread or m.thread == thread))

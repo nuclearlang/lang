@@ -1,0 +1,56 @@
+// Who is at work on an answer: a member is typing (or using a tool) from the event `typing` (or `tool`) until
+// their `done`; the answer as it is written, from `message.delta` (its text) and `tool` (each call, then its result),
+// shown until the answer is posted.
+@stateModel(ActivityState)
+statemanager ActivityManager
+  (events: EventsComponent)
+  workspace: string = ""
+  now: Activity[] = []
+
+  start(id: string)
+    workspace = id
+    listen(events.watchEvents(workspace), (e) => changed(e))
+
+  changed(e: ChatEvent)
+    if e.workspace != workspace
+      return
+    member = "${e.data["member"] ?? ""}"
+    thread = "${e.data["thread"] ?? ""}"
+    if e.type == "typing" or e.type == "tool" or e.type == "message.delta"
+      before = now.find((a) => a.member == member)
+      parts = before?.parts ?? []
+      tool = before?.tool ?? ""
+      if e.type == "message.delta"
+        parts = withText(parts, "${e.data["text"] ?? ""}")
+        tool = ""
+      else if e.type == "tool"
+        line = (e.data["tool"] ?? {}) as <string, any>
+        parts = withTool(parts, line)
+        tool = "${line["tool"] ?? ""}"
+      show([...without(member), Activity(member = member, channel = e.channel, thread = thread, tool = tool, parts = parts)])
+    else if e.type == "done" or (e.type == "message" and e.data["said"] != true)
+      show(without(member == "" ? "${(e.data["message"] ?? {})["author"] ?? ""}" : member))
+
+  without(member: string) Activity[]
+    now.filter((a) => a.member != member)
+
+  @state(ActivityState.ready)
+  show(list: Activity[]) Activity[]
+    now = list
+    list
+
+// The answer's pieces with a piece of text added: to the text being written, or a new text after a tool.
+withText(parts: Part[], text: string) Part[]
+  if parts.length > 0 and parts.last.kind == "text"
+    return [...parts.take(parts.length - 1), Part(kind = "text", text = parts.last.text + text)]
+  [...parts, Part(kind = "text", text = text)]
+
+// The answer's pieces with a tool's line: a call is a new chip; its result (`ok`) marks the chip of its id.
+withTool(parts: Part[], line: <string, any>) Part[]
+  id = "${line["id"] ?? ""}"
+  if line["ok"] == null
+    return [...parts, Part(kind = "tool", text = "${line["tool"] ?? ""}", id = id)]
+  state = line["ok"] == true ? "done" : "failed"
+  if not parts.any((p) => p.kind == "tool" and p.id == id)
+    return [...parts, Part(kind = "tool", text = "${line["tool"] ?? ""}", id = id, state = state)]
+  parts.map((p) => p.kind == "tool" and p.id == id ? Part(kind = "tool", text = p.text, id = id, state = state) : p)

@@ -804,7 +804,9 @@ Maps:
 | 15 | `a ** b` (power, right associative: `2 ** 3 ** 2` is `2 ** 9`, `-2 ** 2` is `-4`) |
 | 16 | `a.b` `a?.b` `a(...)` `a<T>(...)` `a[i]` `a!` |
 
-- `==` is always a strict comparison. There is no `===`.
+- `==` is always a strict comparison. There is no `===`. Two lists, maps or sets are equal when they hold equal
+  values (`[1, 2] == [1, 2]` is `true` in every dialect); two objects of a module, when they are the same object.
+  A value whose type is not known (`any`) is compared as the target compares it.
 - `and`/`or`/`not` instead of `&&`/`||`/`!`.
 - `x is User` checks whether `x` is of type `User`.
 - `x as Type` converts the type: `data = read(file) as <string, int>`.
@@ -812,7 +814,8 @@ Maps:
   `]`. Before a value, `!` is an error: write `not`.
 - `a / b` is always a decimal division; `a ~/ b` drops the decimals (toward zero). `%`, the bitwise operators and
   the integer width are the target's: TypeScript's `%` keeps the dividend's sign and its bitwise operators work on
-  32 bits; Dart's `%` is never negative and its integers have 64 bits.
+  32 bits; Dart's `%` is never negative and its integers have 64 bits; Python's `%` has the divisor's sign and its
+  integers have no limit.
 - The bitwise operators bind tighter than the comparisons (unlike C): `flags & READ != 0` is `(flags & READ) != 0`.
   `~` is await, so the complement is `^x`. Compound forms: `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=`, `>>>=`.
 - `x in xs` asks whether a list contains `x`; with a map, whether it has the key `x`.

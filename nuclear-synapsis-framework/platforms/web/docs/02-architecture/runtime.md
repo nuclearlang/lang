@@ -16,8 +16,10 @@ related: [overview.md, dependencies.md, ../06-runbooks/change-the-runtime.md]
 | `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |
 | | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |
 | | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |
-| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, the `Http` connection and `HttpInterceptor` |
-| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector) |
+| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, `Transport` (what a repository's calls travel over), the `Http` connection and `HttpInterceptor` |
+| | `sockets` | the platform's frames (`Frames`), the `WebSocket` connection, the host's `Bridge` and `BridgeTransport`, `Stream` (ADR-synapsis-0008) |
+| | `embed` | `mountApp`, `Host`: the embedded mode (ADR-synapsis-0009) |
+| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector; `transport`, `embed`) |
 | | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |
 | | `state` | `StateManager` |
 | | `react` | `View`, `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, the hooks `useManager`, `useStateOf`, `useManagerState`, the type `Element` |
@@ -41,13 +43,18 @@ The base entry also re-exports what a view needs from React (`createElement`, `F
   given in place of the props is the children.
 - **State.** A `StateManager` holds one state model and emits a new one; React reads it with
   `useSyncExternalStore`. The same shape as the mobile platform's state manager. The dialect generates a
-  `<Model>Builder` component for each state model.
+  `<Model>Builder` component for each state model. `listen(stream, on)` follows a `Stream` until `close()`.
 - **Providers.** `@screen(providers)` wraps the screen in `Providers`; `Manager.method()` inside its views is
   `this.manager(Manager).method()`, which reads the provided manager without a hook, so it works in a callback.
   `useManager` and `useStateOf` are hooks: only in `build`.
-- **Repositories.** Each method is an http call through `send` (fetch), with the mobile platform's rules: the path
-  is appended to the connection's `baseUrl`, `:name` takes a parameter, the other parameters go to the query (GET,
-  DELETE) or the JSON body; a cache by key with a ttl; retries on transient failures.
+- **Repositories.** Each method is an http call through `send`, with the mobile platform's rules: the path is
+  appended to the connection's base, `:name` takes a parameter, the other parameters go to the query (GET, DELETE)
+  or the JSON body; a cache by key with a ttl; retries on transient failures. The adapter is the `Transport` the
+  repository is bound to (`Synapsis.transport(name)`): `Http` (fetch), `WebSocket` (a request frame and its answer)
+  or, mounted with a bridge, the host's `BridgeTransport` for every repository; the connection's interceptors run
+  around it either way. `stream(topic, decode)` gives a `Stream` of what the transport receives on a topic.
+- **Mounted in a host.** `mountApp` calls `Synapsis.embed(host)` (the in-memory router at `host.path`, the bridge),
+  starts the app once, renders it in a shadow root of the element with the stylesheet as a `<style>`.
 - **Router.** One route per `@screen(route = "/path/:id")`, built by the transpiler; navigation is by screen
   (`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.
 - **Session and access.** `SessionManager` keeps who is signed in; `Acl` the roles, permissions and guards;

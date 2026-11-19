@@ -88,6 +88,13 @@ def _print(*args: object, **options: Any) -> None:
     print(*(_show(a) for a in args), **options)
 
 
+def _idiv(a: int | float, b: int | float) -> int:
+    if isinstance(a, int) and isinstance(b, int):
+        q = a // b
+        return q + 1 if q < 0 and q * b != a else q
+    return int(a / b)
+
+
 class Role(Enum):
     admin = auto()
     user = auto()
@@ -152,7 +159,7 @@ class Box[T]:
 def divide(a: int, b: int) -> Result[str, int]:
     if b == 0:
         return Err("division by zero")
-    return Ok(a // b)
+    return Ok(_idiv(a, b))
 
 
 def half(n: int) -> Result[str, int]:
@@ -191,7 +198,7 @@ def run() -> None:
     total = 0
     for i in range(0, 5):
         total += i
-    _print(total, 2 ** 10, 7 // 2, 7 % 3, 0xff & 0x0f, 1 << 4)
+    _print(total, 2 ** 10, _idiv(7, 2), 7 % 3, 0xff & 0x0f, 1 << 4)
     m = {"a": 1, "b": 2}
     for k, v in m.items():
         _print(k, v)

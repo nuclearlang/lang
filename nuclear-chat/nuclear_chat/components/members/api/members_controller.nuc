@@ -1,0 +1,6 @@
+// The members API: the user's answer to a member's question (an event `ask`).
+@controller("members")
+controller MembersController(members: MembersAppComponent)
+  @post("{workspace}/answers")
+  answer(workspace: string, answer: Answer) Result<Error, Answer>
+    ~members.reply(workspace, answer)

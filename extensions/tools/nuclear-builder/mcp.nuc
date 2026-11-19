@@ -1,0 +1,64 @@
+use json
+use asyncio
+use logging
+use pathlib{ Path }
+use mcp/server/mcpserver{ MCPServer }
+use mcp/server/mcpserver/exceptions{ MCPServerError }
+
+// `nuclear-builder mcp`: the Builder's MCP server on stdio (ADR-platform-0009), built as the Nuclear MCP server is
+// (tools/mcp: the `mcp` library's MCPServer, a tool per method with its comment): every action of the Builder's pages,
+// a tool of the same name and arguments as its command (tools.nuc), in one project (`--root`, else the project of
+// the folder it starts in). The factory gives it to every agent it runs, beside `nuclear-mcp`.
+
+BUILDER_INSTRUCTIONS = "Nuclear Builder, NuclearLang's software factory, in one project: everything its pages do. A spec (spec_new, with acceptance criteria: ask the user for them when they are not given) goes through a run (run_start) worked by a team; a run stops at its gates for an answer (run_answer) and its progress is in runs and run_file. To work from a document (slides, a brief), read it with project_read, write one spec per feature with its criteria, then start their runs. What is the user's stays the user's: a tool that answers `waiting: spending` or `needsUser` is waiting for the user's confirmation; tell the user and never answer it yourself. Merging a pull request is never yours."
+
+// The tool's name of a method: its own without `Tool` (`specNewTool` → `spec_new`).
+toolName(method: any) string
+  name: string = method.__name__
+  name.endsWith("_tool") ? name.substring(0, name.length - 5) : name
+
+// The Builder's MCP server for the project `root`.
+builderMcpServer(root: string) MCPServer
+  server = MCPServer("nuclear_builder", instructions = BUILDER_INSTRUCTIONS)
+  for tool in BuilderTools(root).all()
+    server.addTool(tool, name = toolName(tool))
+  server
+
+// The tools of the server as data: [{name, description, schema}] (what the chat's local member and the knowledge base
+// read).
+builderToolList(root: string = ".") <string, any>[]
+  logging.getLogger("httpx").setLevel(logging.WARNING)
+  found: <string, any>[] = []
+  for tool in asyncio.run(builderMcpServer(root).listTools())
+    found.add({ "name": tool.name, "description": tool.description ?? "", "schema": tool.inputSchema })
+  found
+
+// One call of a tool by its name, as the MCP server makes it (the arguments checked against its schema): its text and
+// whether it failed. The chat's local member calls the tools this way.
+callBuilderTool(root: string, name: string, input: <string, any>) <string, any>
+  try
+    result: any = asyncio.run(builderMcpServer(root).callTool(name, input))
+    parts: any[] = result.content
+    text = parts.map((p) => "${p.text}").join("\n")
+    failed = result.isError == true or (jsonLine(text.trim()) ?? ({} as <string, any>))["error"] != null
+    { "text": text, "error": failed }
+  catch e
+    if not isinstance(e, MCPServerError) and not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    cause = e.__cause__
+    { "text": cause != null and (isinstance(cause, ValueError) or isinstance(cause, OSError)) ? "${cause}" : "${e}", "error": true }
+
+// `nuclear-builder mcp [--root <dir>]`: the server on stdio · `nuclear-builder mcp tools`: its instructions and tools as
+// JSON.
+mcpLine(args: string[]) int
+  root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
+  if not args.isEmpty and args[0] == "tools"
+    print(json.dumps({ "instructions": BUILDER_INSTRUCTIONS, "tools": builderToolList(root) }, indent = 1))
+    return 0
+  logging.getLogger("httpx").setLevel(logging.WARNING)
+  builderMcpServer("${Path(root).resolve()}").run()
+  0
+
+// The names of the tools, in their order (no server needed).
+builderToolNames() string[]
+  BuilderTools("").all().map((t) => toolName(t))

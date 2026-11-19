@@ -3,12 +3,13 @@ use sys
 use json
 use time
 use shutil
+use getpass
+use importlib
 use subprocess
 use pathlib{ Path }
 
-// `nuclear-builder`: the set-up of the AI services in a terminal and for the editors, which run it as a process and
-// draw what it prints. The pipeline's commands (run, retry, restart, ci, export, runs) are still the TypeScript engine
-// of the installation (`bin/nuclear-builder.js`, run by node) until it is written in Nuclear (spec 009, phase 3).
+// `nuclear-builder`: the set-up of the AI services, the software factory's teams, vault and line, in a terminal and
+// for the editors, which run it as a process and draw what it prints (line.nuc has the line's commands).
 
 USAGE = """
   nuclear-builder setup [--profile remote|lite|medium|hard] [--yes]
@@ -17,6 +18,8 @@ USAGE = """
                                   missing (Ollama), downloads the models, loads the knowledge base and starts the
                                   services, now and at every login (--yes: no questions, the suggested profile)
   nuclear-builder setup --status [--json]      what is installed and running
+  nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,
+                                  Codex, Cursor, OpenCode, Gemini CLI): after installing a client
   nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)
   nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements
   nuclear-builder setup --events --profile <id> [--from <step>]
@@ -24,29 +27,112 @@ USAGE = """
   nuclear-builder setup --restart graph|developer   a service again, through the system's manager
   nuclear-builder setup --set KEY=value ...    writes the machine's choice (ai.env)
 
-  nuclear-builder run | retry | restart | ci | export | runs ...
-                                  the pipeline (nuclear-builder help): still the TypeScript engine, run by node
+  nuclear-builder team list|show <id>|save|delete <id>|default <id>|export <id> <file>|import <file>|roster [--lang en|es]|temperaments [--json]
+                                  the teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on
+                                  stdout, an error as {"error": "..."} with exit code 1; `save` reads the team on stdin
+  nuclear-builder team screen [--lang en|es] [--json]
+                                  everything the company screen draws, in one call: {teams (as list), shown (each
+                                  team as show, or {error}), roster, temperaments, vault (as vault list, or null),
+                                  library and agents (as skills list, each with its markdown)}
+  nuclear-builder team create [--json]         a new team from the wizard's draft on stdin: {name, description,
+                                  purpose, skills, budgetUsd, techLead, logoFile, members: [{role, employee, kind,
+                                  provider, model, name}]} (who works a member not said: the local defaults)
+  nuclear-builder team suggest [--purpose <text>] [--skills a,b] [--lang en|es] [--limit <n>] [--json]
+                                  the employees of each role that fit the purpose and skills, each with why
+  nuclear-builder team name-suggest [--purpose <text>] [--lang en|es] [--json]
+                                  five satirical names for a team
+  nuclear-builder team runnable <id> [--json]  whether the team has a member of each role the project's stations need
+  nuclear-builder team update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>] | duplicate <id> [--name …] [--json]
+  nuclear-builder team member add <id> --role <role> [--employee …] [--kind …] [--provider …] [--model …] [--name …] [--count <n>] [--json]
+                                  members hired (several: --count, or a JSON list of members on stdin without --role)
+  nuclear-builder team member remove <id> <member> | member update <id> <member> [--kind …] [--provider …] [--model …] [--employee …] [--name …] [--skills a,b] [--extra-skills <json>] [--instructions …] [--temperament …] [--gifs …] [--on …] [--note …] [--agent <library agent>] [--json]
+                                  a member let go, or changed (by its id in the team); who works a member is one
+                                  this machine has (agents --json), else it is refused with why
+  nuclear-builder team skills set <id> [--member <m>] --skills a,b [--json]
+                                  the library skills of the team (every member inherits them) or of a member
+                                  (beside its role skills switched on): skills list gives their ids
+  nuclear-builder team logo <id> <image> | logo <id> --clear [--json]
+                                  the team's logo: a .png, .svg or .jpg of 1 MB at most, copied beside the team as
+                                  <id>.logo.<kind>; --clear takes it away
+
+  nuclear-builder skills list [--team <id>] [--member <m>] [--lang en|es] [--json]
+                                  the library of skills and agents (nuclear-agents/skills, nuclear-agents/agents);
+                                  with a team, its skills and its own; with a member, its own, its base agent and
+                                  every skill it gets (composed: from library, team or member; what it overrides)
+  nuclear-builder skills show <id> [--team <id>] [--member <m>] [--lang en|es] [--json]
+                                  a skill's SKILL.md as that place sees it (the member's own, the team's own, the
+                                  library's, the role's), where it comes from and whether it can be changed there
+  nuclear-builder skills clone <id> --team <id> [--member <m>] [--json]
+                                  a copy of the skill as the team's own (every member inherits it) or the member's,
+                                  with the same id: it wins over the one it came from
+  nuclear-builder skills create|update <id>|delete <id> --team <id> [--member <m>] [--json]
+                                  an own skill of the team or the member: create and update read its SKILL.md on
+                                  stdin (front matter name, title, description, title_es, description_es, kind,
+                                  tags); a library skill is read-only (clone it to change it)
+
+  nuclear-builder vault set <provider> | remove <provider> | list [--json]
+                                  the API keys of anthropic, openai, google, openrouter in the system's keyring
+                                  (service nuclear-factory); `set` reads the key on stdin (asked for, hidden, in a
+                                  terminal), never from the command line
+
+  nuclear-builder run [spec.md] [--team <id>] [--events] [--confirm-spending] [--force-confirm]
+                                  the software factory: the spec through Analysis, Design, Tests first, Code,
+                                  Quality and Delivery, each station worked by its role as the team assigned it (no
+                                  file: the spec of specs/ changed last); it stops at the gates for you; --events:
+                                  JSON lines on stdout, the answers as JSON lines on stdin (what the editors use)
+  nuclear-builder run ... --detach             the run in a process of its own (no stdin: it waits at the first
+                                  question): {run, detached, log}; with a paid provider, waiting: spending
+  nuclear-builder run --resume <id>            a run that waits for you, from where it waits
+  nuclear-builder run answer <id> --answer approve|change|stop|yes|no [--text …] [--events] [--detach]
+                                  the answer to the question a run waits on (its process gets it, or the run goes
+                                  on with it); never the spending: that is confirmed twice where you answer
+  nuclear-builder run stop <id> | show <id> | journal <id>
+                                  a run's process stopped (a run that asks waits) · its file (JSON) · its journal
+  nuclear-builder retry <id> [--from <station>]   a run again from the station that failed (or --from that one)
+  nuclear-builder retry <id> --step <step>        a run again from one step (it and every step after it)
+  nuclear-builder restart <id>                 the whole run again: every file it wrote goes back first
+  nuclear-builder runs [--json]                the runs of this project
+  nuclear-builder checks <id> [list|on <check>|off <check>|add --title … --station … [--by user|role] [--prompt …]|mark <check> passed|failed|skipped] [--json]
+                                  the run's checks (checks.json in the spec's folder): QA's plan, yours
+  nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]
+                                  the base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance
+                                  criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}
+  nuclear-builder spec show <id> | delete <id> [--json]
+                                  a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/
+  nuclear-builder spec list [--json]           the specs by component and layer, with their runs
+  nuclear-builder spec move <id> --component … [--layer …] [--json]
+                                  a spec's folder to another component or layer (its run follows)
+  nuclear-builder spec migrate [--json]        the specs of the flat specs/<id>/ to their component
+  nuclear-builder spec accept <id> | discard <id> [--json]
+                                  a spec's draft (spec.draft.md, written by a member in Nuclear Chat) over the spec,
+                                  or thrown away
+  nuclear-builder member --team <id> --role analyst|architect|developer|qa|devops|chat --events [--root <dir>]
+                                  a member of a team answers once in Nuclear Chat (its responder): the conversation as
+                                  one JSON line on stdin ({member, channel, thread, messages, said, lang}), the answer
+                                  as JSON lines on stdout (typing, text, tool, ask, done); the role's provider with
+                                  the factory's tools, the spending confirmed twice; --role chat is the general agent
+                                  ([--provider <p>] [--model <m>] [--kind …], the local Nuclear Developer by default)
+  nuclear-builder chat-host --json [--root <dir>] [--lang en|es]
+                                  the host file of Nuclear Chat for this project: the members of its team (the run's
+                                  team), their responders, the general agent `atlas` with its choices (the
+                                  agents below), the channels general and the team's
+  nuclear-builder agents [--json] [--root <dir>]
+                                  the agents that can answer a conversation on this machine: the local Nuclear
+                                  Developer (always), each agent whose command is on the PATH, each API provider with
+                                  a key in the vault ({id, kind, provider, label, models, defaultModel, available, why})
+  nuclear-builder models [--provider <id>] [--fresh] [--json] [--root <dir>]
+                                  the models of each provider that can work here (one when asked), from the provider:
+                                  Claude Code's aliases and ids, opencode models, an API's list (a key in the vault),
+                                  Ollama's installed models with their memory need and fit (fits, tight, too-big)
+                                  plus the small ones it can pull; and this machine's memory (lists kept 10 minutes)
+  nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json
+  nuclear-builder export github|gitlab|bitbucket [--json]   writes the CI file that runs `nuclear-builder ci`
+  nuclear-builder line show | set KEY=<json> ...   the project's line (.nuclear/builder.json): read, or keys set
+  nuclear-builder connections [--team <id>] [--json]   Check the connections of a team
+  nuclear-builder read <path> [--json]         a file of the project as text (a PDF by pdftotext, a .pptx, markdown)
+  nuclear-builder mcp [--root <dir>] | mcp tools   the Builder's MCP server on stdio: every action above as a tool
+                                  (docs/02-architecture/actions.md) · its instructions and tools as JSON
 """
-
-// `--name value` of the arguments, or null.
-option(args: string[], name: string) string?
-  at = args.indexOf(name)
-  at >= 0 and at + 1 < args.length ? args[at + 1] : null
-
-// A question in the terminal; without one (or with no answer) the fallback.
-ask(question: string, fallback: string) string
-  if not sys.stdin.isatty()
-    return fallback
-  try
-    answer = input(question).trim()
-    answer.length > 0 ? answer : fallback
-  catch e
-    if not isinstance(e, EOFError)
-      throw e
-    fallback
-
-yes(answer: string) boolean
-  answer.lower().startsWith("y")
 
 event(value: <string, any>) void
   print(json.dumps(value), flush = true)
@@ -75,10 +161,10 @@ showStatus(asJson: boolean) int
   ready ? 0 : 1
 
 // This machine, the profiles with how each sits on it, and the requirements of both modes: what the editors' set-up
-// page draws.
-plan() <string, any>
+// page draws, its texts in `lang` (setup.json's `<field>_<lang>` beside each English field; `localized`).
+plan(lang: string = "en") <string, any>
   hw = hardware()
-  onMachine = PROFILES.map((p) => profileOnMachine(p, hw))
+  onMachine = PROFILES.map((p) => localized(profileOnMachine(p, hw), lang))
   {
     "hw": hw.asMap(),
     "platform": sys.platform,
@@ -86,7 +172,7 @@ plan() <string, any>
     "profiles": onMachine,
     "machine": readMachine(),
     "root": aiRoot(),
-    "requirements": { "local": requirements(true), "remote": requirements(false) }
+    "requirements": { "local": localized(requirements(true), lang), "remote": localized(requirements(false), lang) }
   }
 
 profileOnMachine(p: Profile, hw: Hardware) <string, any>
@@ -94,11 +180,13 @@ profileOnMachine(p: Profile, hw: Hardware) <string, any>
   f = fit(p, hw)
   shown["fit"] = f.fit
   shown["note"] = f.note
+  shown["noteKey"] = f.key
+  shown["noteArgs"] = f.args
   shown
 
 // The steps of a profile as JSON lines, from the step `from` on: `steps`, then `step` (running, a line, done or
 // failed), then `done`. The requirements are the caller's (the page installs them in a terminal the user sees).
-events(args: string[]) int
+setupEvents(args: string[]) int
   p = profileOf(option(args, "--profile") ?? "")
   root = aiRoot()
   if p == null or root == null
@@ -106,7 +194,8 @@ events(args: string[]) int
     return 2
   first = (option(args, "--from") ?? "0").toInt() ?? 0
   all = steps(p)
-  event({ "type": "steps", "titles": all.map((s) => s.title), "from": first })
+  // `ids`: each step's kind, said by the editors in their language (`models`: what the `models` step downloads)
+  event({ "type": "steps", "titles": all.map((s) => s.title), "ids": all.map((s) => s.id), "models": modelsOf(p).join(", "), "from": first })
   for i in 0..all.length
     if i < first
       continue
@@ -180,13 +269,16 @@ setup(args: string[]) int
     remove((line) => print(line))
     print("The AI services are removed. Ollama, its models and the graph's data stay.")
     return 0
+  if "--clients" in args
+    connectClients((line) => print(line))
+    return 0
   if "--status" in args
     return showStatus("--json" in args)
   if "--plan" in args
-    print(json.dumps(plan(), indent = 1))
+    print(json.dumps(plan(option(args, "--lang") ?? "en"), indent = 1))
     return 0
   if "--events" in args
-    return events(args)
+    return setupEvents(args)
   restart = option(args, "--restart")
   if restart != null
     return restartService(restart) ? 0 : 1
@@ -223,30 +315,206 @@ setup(args: string[]) int
   m = readMachine()
   if p.coder != null
     print("\nDone: the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
-    print("Your agents: nuclear-mcp (claude mcp add --scope user nuclear -- nuclear-mcp). State: nuclear-builder setup --status")
+    print("Your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients. State: nuclear-builder setup --status")
   else
-    print("\nDone: add the MCP server to your agent (claude mcp add --scope user nuclear -- nuclear-mcp). The local agents: nuclear-builder setup again, another profile.")
+    print("\nDone: your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients. The local agents: nuclear-builder setup again, another profile.")
   0
 
-// The pipeline's commands: the TypeScript engine of the installation, run by node.
-pipeline(args: string[]) int
-  given = os.environ.get("NUCLEAR_BUILDER_JS") ?? ""
-  engine = given.length > 0 ? Path(given) : Path(installDir(), "bin", "nuclear-builder.js")
-  node = shutil.which("node", path = toolEnv()["PATH"])
-  if node == null or not engine.exists()
-    print("nuclear-builder ${args.first}: the pipeline still needs Node.js and ${engine} (spec 009, phase 3)", file = sys.stderr)
+// A list option (`--skills a,b`): its items trimmed, none empty; null when it is not given.
+listOption(args: string[], name: string) string[]?
+  given = option(args, name)
+  given == null ? null : given!.split(",").map((x: string) => x.trim()).filter((x: string) => not x.isEmpty)
+
+// Each role's employees (each with `face` and `thumb`), the names of its skills (what a member can switch on) and what
+// the screens show of each skill in `lang` (`skillTexts`).
+rosterByRole(lang: string) <string, any>
+  people = rosters(lang)
+  byRole: <string, any> = {}
+  for r in ROLES
+    byRole[r] = { "employees": people[r], "skills": roleSkills(r), "skillTexts": skillTexts(r, lang) }
+  byRole
+
+// Everything the company screen draws, in one process (`team screen`): the teams, each one shown (its members and the
+// roles it lacks; a file that cannot be read, its error), the hiring pool, the temperaments and which keys the vault
+// keeps (null when the keyring cannot be asked).
+teamScreen(lang: string) <string, any>
+  found = listTeams()
+  shown: <string, any> = {}
+  for t in found
+    id = "${t["id"]}"
+    try
+      shown[id] = teamShown(loadTeam(id))
+    catch e
+      if not isinstance(e, ValueError) and not isinstance(e, OSError)
+        throw e
+      shown[id] = { "error": "${e}" }
+  vault: <string, boolean>? = null
+  try
+    vault = vaultList()
+  catch e
+    if not isinstance(e, RuntimeError) and not isinstance(e, OSError)
+      throw e
+  // the library of skills and agents with their files: the wizard's chips, the previews, the editor's clones
+  { "teams": found, "shown": shown, "roster": rosterByRole(lang), "temperaments": temperaments(), "vault": vault, "library": librarySkills(lang), "agents": libraryAgents(lang) }
+
+// The teams' commands: one call per action, JSON on stdout (the editors' contract, design.md "Teams").
+team(args: string[]) int
+  what = args.isEmpty ? "list" : args[0]
+  valued = ["--role", "--count", "--purpose", "--extra-skills", "--limit", "--seed", "--name", "--lang", "--description", "--lead", "--budget", "--kind", "--provider", "--model", "--employee", "--instructions", "--temperament", "--gifs", "--note", "--skills", "--on", "--member", "--agent"]
+  rest = args.skip(1).filter((a) => not a.startsWith("--")).filter((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in valued))
+  asJson = "--json" in args
+  need = (n: int) => rest.length >= n
+  try
+    if what == "list"
+      found = listTeams()
+      if asJson
+        printJson(found)
+      else
+        for t in found
+          print("${t["default"] == true ? "*" : " "} ${"${t["id"]}".padEnd(24)} ${t["name"]}")
+    else if what == "show" and need(1)
+      printJson(teamShown(loadTeam(rest[0])))
+    else if what == "save"
+      printJson(saveTeam(json.loads(sys.stdin.read())))
+    else if what == "delete" and need(1)
+      deleteTeam(rest[0])
+      printJson({ "deleted": rest[0] })
+    else if what == "default" and need(1)
+      loadTeam(rest[0])
+      setDefaultTeam(rest[0])
+      printJson({ "default": rest[0] })
+    else if what == "export" and need(2)
+      exportTeam(rest[0], rest[1])
+      printJson({ "exported": rest[0], "file": rest[1] })
+    else if what == "import" and need(1)
+      printJson(importTeam(rest[0]))
+    else if what == "logo" and need(1) and ("--clear" in args or need(2))
+      printJson(teamShown(setLogo(rest[0], "--clear" in args ? null : rest[1])))
+    else if what == "roster"
+      printJson(rosterByRole(option(args, "--lang") ?? "en"))
+    else if what == "screen"
+      printJson(teamScreen(option(args, "--lang") ?? "en"))
+    else if what == "temperaments"
+      printJson(temperaments())
+    else if what == "create"
+      draft = json.loads(sys.stdin.read())
+      workableAll(isinstance(draft, dict) ? (draft as <string, any>)["members"] : null)
+      printJson(withWarnings(teamShown(createTeam(draft)), isinstance(draft, dict) ? (draft as <string, any>)["members"] : null))
+    else if what == "suggest"
+      limit = (option(args, "--limit") ?? "3").toInt() ?? 3
+      printJson(suggestMembers(option(args, "--purpose") ?? "", listOption(args, "--skills") ?? ([] as string[]), rosters(option(args, "--lang") ?? "en"), limit))
+    else if what == "name-suggest"
+      seed = option(args, "--seed")
+      printJson(suggestNames(option(args, "--lang") ?? "en", option(args, "--purpose") ?? "", 5, seed == null ? null : seed!.toInt()))
+    else if what == "runnable" and need(1)
+      root = projectRoot("${Path.cwd()}")
+      line = readLine(root, "${projectCard(root)["platform"] ?? ""}")
+      printJson(runnable(loadTeam(rest[0]), line["stations"] ?? STATIONS))
+    else if what == "update" and need(1)
+      fields: <string, any> = { "name": option(args, "--name"), "description": option(args, "--description"), "purpose": option(args, "--purpose"), "skills": listOption(args, "--skills"), "techLead": option(args, "--lead") }
+      budget = option(args, "--budget")
+      if budget != null
+        fields["budgetUsd"] = budget!.toDouble() ?? -1.0
+      printJson(teamShown(updateTeam(rest[0], fields)))
+    else if what == "member" and need(2) and rest[0] == "add"
+      role = option(args, "--role")
+      given: <string, any>[] = []
+      if role == null
+        found = json.loads(sys.stdin.read())
+        given = isinstance(found, list) ? found : [found]
+      else
+        one: <string, any> = { "role": role, "employee": option(args, "--employee"), "kind": option(args, "--kind"), "provider": option(args, "--provider"), "model": option(args, "--model"), "name": option(args, "--name") }
+        given = (0..Math.max(1, (option(args, "--count") ?? "1").toInt() ?? 1)).map((i) => dict(one))
+      workableAll(given)
+      printJson(withWarnings(teamShown(addMembers(rest[1], given)), given))
+    else if what == "member" and need(3) and rest[0] == "remove"
+      printJson(teamShown(removeMember(rest[1], rest[2])))
+    else if what == "member" and need(3) and rest[0] == "update"
+      member: <string, any> = { "kind": option(args, "--kind"), "provider": option(args, "--provider"), "model": option(args, "--model"), "employee": option(args, "--employee"), "name": option(args, "--name"), "instructions": option(args, "--instructions"), "temperament": option(args, "--temperament"), "gifs": option(args, "--gifs"), "note": option(args, "--note"), "skills": listOption(args, "--skills"), "on": listOption(args, "--on"), "agent": option(args, "--agent") }
+      extra = option(args, "--extra-skills")
+      if extra != null
+        member["extraSkills"] = json.loads(extra!)
+      workableChange(rest[2], member)
+      changed = teamShown(updateMember(rest[1], rest[2], member))
+      printJson(withWarnings(changed, ((changed["members"] ?? []) as <string, any>[]).filter((m) => m["id"] == rest[2])))
+    else if what == "skills" and need(2) and rest[0] == "set"
+      printJson(setSkills(rest[1], listOption(args, "--skills") ?? ([] as string[]), option(args, "--member")))
+    else if what == "duplicate" and need(1)
+      printJson(teamShown(duplicateTeam(rest[0], option(args, "--name"))))
+    else
+      printJson({ "error": "usage: nuclear-builder team list|show <id>|screen|save|create|suggest|name-suggest|runnable <id>|delete <id>|default <id>|export <id> <file>|import <file>|logo <id> <image>|logo <id> --clear|roster [--lang en|es]|temperaments|update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>]|member add <id> --role <role> [--employee …] [--count <n>] …|member remove <id> <member>|member update <id> <member> [--kind …] [--provider …] [--model …] …|duplicate <id> [--name …] (nuclear-builder --help)" })
+      return 1
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
     return 1
-  subprocess.run([node!, "${engine}", ...args], env = toolEnv()).returncode
+  0
+
+// The vault's commands: the key of `set` comes on stdin (hidden in a terminal); nothing prints a key.
+vault(args: string[]) int
+  what = args.isEmpty ? "list" : args[0]
+  rest = args.skip(1).filter((a) => not a.startsWith("--"))
+  try
+    if what == "list"
+      printJson(vaultList())
+    else if what == "set" and rest.length >= 1
+      key = sys.stdin.isatty() ? getpass.getpass("The API key of ${rest[0]}: ") : sys.stdin.read()
+      vaultSet(rest[0], key)
+      printJson({ "kept": rest[0] })
+    else if what == "remove" and rest.length >= 1
+      vaultRemove(rest[0])
+      printJson({ "removed": rest[0] })
+    else
+      printJson({ "error": "usage: nuclear-builder vault set <provider> | remove <provider> | list" })
+      return 1
+  catch e
+    if not isinstance(e, RuntimeError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0
+
+// A module of the command imported when its command runs: `member` and `mcp` load the `mcp` library (some 300 ms), so
+// every other command starts without it. shortcut: Nuclear has no lazy `use` yet (nuclearlang's roadmap); its form
+// replaces this when it comes.
+lazy(module: string) any
+  importlib.importModule(".${module}", __package__)
+
+usageError(command: string) int
+  print("nuclear-builder: no command `${command}`\n${USAGE}", file = sys.stderr)
+  2
 
 main(argv: string[]? = null) void
   args: string[] = argv ?? sys.argv.slice(1)
-  if args.isEmpty or args[0] == "--help" or args[0] == "-h"
+  if args.isEmpty or args[0] == "help" or args[0] == "--help" or args[0] == "-h"
     print("nuclear-builder — the Nuclear Builder without the editor\n${USAGE}")
-    if args.isEmpty
-      sys.exit(pipeline(["help"]))
     return
   try
-    sys.exit(args[0] == "setup" ? setup(args.skip(1)) : pipeline(args))
+    rest = args.skip(1)
+    code = match args[0]
+      "setup" -> setup(rest)
+      "team" -> team(rest)
+      "skills" -> skillsLine(rest)
+      "vault" -> vault(rest)
+      "run" -> runLine(rest)
+      "retry" -> retryLine(rest, false)
+      "restart" -> retryLine(rest, true)
+      "runs" -> runsLine(rest)
+      "checks" -> checksLine(rest)
+      "spec" -> specLine(rest)
+      "member" -> lazy("member").memberLine(rest)
+      "chat-host" -> lazy("member").chatHostLine(rest)
+      "agents" -> agentsLine(rest)
+      "models" -> modelsLine(rest)
+      "ci" -> ciLine(rest)
+      "export" -> exportLine(rest)
+      "line" -> lineLine(rest)
+      "read" -> readLineCommand(rest)
+      "connections" -> connectionsLine(rest)
+      "mcp" -> lazy("mcp").mcpLine(rest)
+      _ -> usageError(args[0])
+    sys.exit(code)
   catch e
     if not isinstance(e, RuntimeError) and not isinstance(e, OSError)
       throw e

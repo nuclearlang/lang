@@ -11,7 +11,7 @@ What is common to the three editors, also what was never tried in a running Zed:
 
 ## Untested
 
-- **0.52.0 to 0.53.0** (the version raised with the other two extensions; the themes regenerated, identical): not built nor installed
+- **0.52.0 to 0.53.1** (the version raised with the other two extensions; the themes regenerated, identical): not built nor installed
   into Zed (`installer/install.sh --no-zed`); run `./build.sh` once.
 
 ## Pending

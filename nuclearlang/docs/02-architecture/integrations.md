@@ -31,7 +31,7 @@ a changed signature above is caught by the workspace build (`cargo build` from t
 | Commands | `nuclear.toggleCodeMetricsDisplayed`, `nuclear.toggleCodeMetricsForArrowFunctions`, `nuclear.codeMetrics`, `nuclear.showCodeMetricsCodeLensInfo` |
 | `nuclear-lsp --version` | the version |
 | `nuclear-lsp --codemetrics-defaults` | every code metrics setting with its default, as JSON: the editors generate their settings pages from it |
-| `nuclear-lsp --check-bundle` | loads every dialect next to the binary; exit code 1 on any diagnostic: the last step of an editor package |
+| `nuclear-lsp --check-bundle` | loads every dialect next to the binary; exit code 1 on any error (warnings are printed): the last step of an editor package |
 
 The extensions talk to the server only through LSP and these requests.
 
@@ -45,6 +45,7 @@ The extensions talk to the server only through LSP and these requests.
 | `.nuclear/openapi.json` | `contract::write`, only for a `backend` project | any OpenAPI tool |
 | `contracts/<name>/` | `contract::sync`, at the start of `project::build` | the client project's own build |
 | `<output>/.nuclear/lines.json` (the line map) | the command line tools, from `project::line_map` (`LINE_MAP_FILE`) | the editors' debuggers |
+| `<output>/<sources>/nuclear/monitor.<ext>` (`Manifest.monitor`, `--monitor`) | `project::build`, from the dialect's `monitor_runtime` | the generated files that measure; it writes `<project>/.nuclear/monitor/report.json` (`nuclear monitor`, the editors, the MCP server) |
 
 The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).
 The commands that write them (`nuclear build`, `nuclear contracts list|update`) are documented in `../tools/cli/`.

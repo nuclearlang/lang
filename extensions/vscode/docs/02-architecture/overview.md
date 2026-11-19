@@ -6,8 +6,9 @@ related: [client.md, debugging.md, workspace.md, ai-services.md, theme.md, ../..
 ---
 # The VS Code extension: its files
 
-One bundle, `out/extension.js` (entry `src/extension.ts`), and a second one for the terminal, `out/nuclear-builder.js`
-(entry `../tools/nuclear-builder/src/cli.ts`). It activates on a `.nuc` file, on a workspace that contains one, and when startup
+One bundle, `out/extension.js` (entry `src/extension.ts`), and the Builder's diagram bundled apart for its page
+(`out/builder-flow.js` and `.css`, entry `../tools/nuclear-builder/src/flow.tsx`); the Builder's runs are processes of
+`nuclear-builder` (Nuclear), not code of the bundle. It activates on a `.nuc` file, on a workspace that contains one, and when startup
 finishes (`onStartupFinished`).
 
 ## `src/`
@@ -19,9 +20,13 @@ finishes (`onStartupFinished`).
 | `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |
 | `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |
 | `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |
-| `notifications.ts` | the notices of what the local agents did | [ai-services.md](ai-services.md) |
-| `aiMachine.ts`, `setupPanel.ts` | the set-up of the AI services: the machine's choice and `nuclear-builder setup` run as a process, its wizard | [ai-services.md](ai-services.md) |
-| `settingsPanel.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool and the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |
+| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |
+| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |
+| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |
+| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |
+| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |
+| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |
+| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |
 | `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |
 
 ## The tools it bundles
@@ -31,7 +36,8 @@ Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.jso
 [Nuclear Builder](../../../tools/nuclear-builder/AGENTS.md),
 [HTTP Connections](../../../tools/nuclear-http-connections/AGENTS.md),
 [Nuclear Atlas](../../../tools/nuclear-atlas/AGENTS.md),
-[the devices](../../../tools/nuclear-device-manager/AGENTS.md).
+[the devices](../../../tools/nuclear-device-manager/AGENTS.md). Nuclear Chat's host, shared by the Builder and Atlas,
+is here: `src/chatHost.ts` and `src/chatView.ts` ([ai-services.md](ai-services.md), "Nuclear Chat").
 
 ## What `package.json` contributes
 
@@ -45,11 +51,15 @@ Their code is in `../tools/<tool>/src/` (compiled by this folder's `tsconfig.jso
 - The commands (category **Nuclear**), the `editor/title` buttons of each platform, the `webview/context` menu of
   the file tree, the keybindings.
 - The colors `nuclearHttpConnections.*`.
-- The settings: `nuclear.dialect`, `nuclear.dialectPaths`, `nuclear.server.path`, `nuclear.trace.server`,
-  `nuclear.buildOnSave`, `nuclear.workspace.welcome`, `nuclear.debug.followInNuclear`, `nuclear.debug.explainErrors`,
-  `nuclear.ai.*` (among them `nuclear.ai.mcpCommand`, default `nuclear-mcp`, the MCP server an AI client starts
-  with no argument, and `nuclear.ai.graphCommand`, default `nuclear-graph`) and the generated
-  `nuclear.codemetrics.*`.
+- The settings, one section per tool (`contributes.configuration`, each with its `id`): the language and editor
+  (`nuclear.dialect`, `nuclear.dialectPaths`, `nuclear.server.path`, `nuclear.trace.server`, `nuclear.buildOnSave`,
+  `nuclear.workspace.welcome`, `nuclear.debug.*`), the AI services `nuclear.ai.*` (among them `nuclear.ai.mcpCommand`,
+  default `nuclear-mcp`, and `nuclear.ai.graphCommand`, default `nuclear-graph`), Nuclear Builder
+  `nuclear.builder.*`, the spending `nuclear.spending.*` (`budgetUsd` 5, `confirm` on, `forceConfirm` off), Nuclear
+  Chat `nuclear.chat.gifs` (`pack`), Nuclear Atlas `nuclear.atlas.*`, HTTP Connections `nuclear.http.*`, the devices `nuclear.devices.*`, and the generated
+  `nuclear.codemetrics.*`. Each tool reads its own through the `settings.ts` of its folder.
+- Every text is a `%key%` of `package.nls.json` (English) and `package.nls.es.json` (Spanish); the host's texts are
+  `l10n.t` of `i18n.ts` with `l10n/bundle.l10n.es.json`, in the language of `nuclear.language`.
 
 ## Other files
 

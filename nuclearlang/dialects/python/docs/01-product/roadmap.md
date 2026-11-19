@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [../02-architecture/fastapi.md, ../05-standards/testing.md]
 ---
 # Roadmap of the `python` dialect
@@ -26,5 +26,9 @@ package, its commands) is in that platform's roadmap.
   Developer's `PieceState` (`nuclear-agents/nuclear_developer/components/developer/ai/states/piece_state.nuc`) is
   written with `= {}` by hand. Generic fix: `tinfo.map` in `nuclearlang/crates/nuclear-transpile/src/emit.rs` and
   the template, for both backend dialects.
+- **Found writing Nuclear Chat's service (spec 013, 2026-11-18):**
+  - a controller method named like a route decorator (`post`, `get`) hides the decorator in the class body: the
+    module fails to import (`TypeError: post() missing 3 required positional arguments`) and `nuclear check` says
+    nothing. Wanted: N-code, or the decorators imported under names no method takes.
 - **Logs with call sites for Python.** `fastapi` has no `[call_site]` section (the `flutter` and `react` dialects
   have `[call_site.Log]`).

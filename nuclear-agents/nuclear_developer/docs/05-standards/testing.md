@@ -6,7 +6,7 @@ related: [evaluation-rounds.md, ../06-runbooks/evaluation.md, ../02-architecture
 ---
 # Testing
 
-**A change to an agent, or to a prompt of the graph, is measured**: run the evaluation and keep the report. The
+**A change to an agent, or to a prompt (a skill of a role, `../roles/`), is measured**: run the evaluation and keep the report. The
 project's own tests check the code; the evaluation checks what the agents answer.
 
 ## The project's tests
@@ -15,6 +15,7 @@ project's own tests check the code; the evaluation checks what the agents answer
 |---|---|---|
 | The compiler | `nuclear check . --json` reports no errors | — |
 | The tests in Nuclear (`test/analyst_test.nuc`, `test/workbench_test.nuc`) | `nuclear test` | the graph running (`nuclear-graph serve`) |
+| The roles of the software factory (`test/roles_test.nuc`): every folder of `../roles/` complete (`role.md` with its front matter and sections, every skill and template named and present, `checks.toml` valid), the rosters (40 employees, the same ids and numbers in `en` and `es`, each with its gender, temperament and LinkedIn-like profile fields), every prompt the agents read given by one skill | `nuclear test` | — |
 | The generated Python, strict | `cd build && ../../../nuclearlang/tools/python/.venv/bin/pyright --pythonpath .venv/bin/python app` → 0 errors | `nuclear install` |
 
 ## Evaluation: how it was trained
@@ -52,7 +53,9 @@ of those texts.
 ## Where it stands
 
 - Single files: the local 3B coder passes every task of the bank in round 22 and all but one in round 23 (42 and
-  41 of 42; Sonnet 36). All 45: local 43, Sonnet 39; held out: 16 of 18, Sonnet 17.
+  41 of 42; Sonnet 36). All 45: local 43, Sonnet 39; held out: 16 of 18, Sonnet 17. Round 24 (the prompts in the
+  roles, the same text, on a newer knowledge base): all 45, local 41; held out 15 of 18 (two tasks copy examples
+  that came in since: [the roadmap](../01-product/roadmap.md)).
 - Features of several files, by the local agents alone: one or two of the three, depending on the round, where
   Sonnet passes all three.
 - The analyst: 10 of 11, 4 of the 5 that ask the model (the one that fails drops a field twice, and then asks the

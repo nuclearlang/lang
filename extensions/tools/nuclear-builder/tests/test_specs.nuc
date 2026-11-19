@@ -1,0 +1,118 @@
+use json
+use pathlib{ Path }
+
+// The specs by business component and layer (design.md "Specs by component and layer"): `spec new | list | move |
+// migrate`, their JSON, a run that follows its spec's folder, and the flat layout of before moved without a file lost.
+
+specsProject(tmpPath: Path, monkeypatch: any) string
+  root = tmpPath.joinpath("app")
+  root.mkdir()
+  root.joinpath("config.nuc").writeText("")
+  monkeypatch.chdir(root)
+  "${root}"
+
+said(code: int, capsys: any) <string, any>
+  out: string = capsys.readouterr().out
+  { "code": code, "out": json.loads(out) }
+
+testANewSpecIsWrittenInItsComponentAndLayerWithAnIdNeverInUse(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  made = said(specLine(["new", "--title", "Count the rooms", "--component", "booking", "--layer", "domain", "--description", "How many rooms are free.", "--json"]), capsys)
+  out: <string, any> = made["out"]!
+  expect(made["code"] == 0 and out["id"] == "count-the-rooms" and out["path"] == "specs/booking/domain/count-the-rooms", json.dumps(out))
+  text = Path(root, "specs", "booking", "domain", "count-the-rooms", "spec.md").readText()
+  expect("- Component: booking\n- Layer: domain\n" in text and "How many rooms are free." in text)
+  spec: <string, any> = out["spec"]!
+  expect(spec["component"] == "booking" and spec["layer"] == "domain" and spec["title"] == "Count the rooms" and spec["useCase"] == "feature")
+  again: <string, any> = said(specLine(["new", "--title", "Count the rooms", "--component", "_global", "--json"]), capsys)["out"]!
+  expect(again["id"] == "count-the-rooms-2" and again["path"] == "specs/_global/count-the-rooms-2")
+  // a component is needed, a layer is one of three, the whole project has none
+  for wrong in [["--title", "X", "--json"], ["--title", "X", "--component", "booking", "--layer", "ui", "--json"], ["--title", "X", "--component", "_global", "--layer", "data", "--json"], ["--title", "X", "--component", "../up", "--json"], ["--title", "X", "--component", "booking", "--use-case", "Cancel a booking", "--json"]]
+    refused = said(specLine(["new", ...wrong]), capsys)
+    expect(refused["code"] == 1 and (refused["out"] as <string, any>)["error"] != null, json.dumps(refused))
+
+testTheSpecsAreListedByComponentAndLayerWithTheirRuns(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  specNew(root, "Pay a booking", "booking", "data")
+  specNew(root, "Book a room", "booking")
+  specNew(root, "The style", "_global")
+  Path(root, RUNS_DIR).mkdir(parents = true)
+  Path(root, RUNS_DIR, "book-a-room.json").writeText(json.dumps({ "id": "book-a-room", "created": 1, "spec": { "id": "book-a-room" } }))
+  found = said(specLine(["list", "--json"]), capsys)["out"] as <string, any>[]
+  expect(found.map((s) => [s["component"], s["layer"], s["id"]]) == [["_global", "", "the-style"], ["booking", "", "book-a-room"], ["booking", "data", "pay-a-booking"]], json.dumps(found))
+  expect(found[1]["runs"] == ["book-a-room"] and found[0]["runs"] == [] and found[1]["title"] == "Book a room" and found[1]["path"] == "specs/booking/book-a-room" and (found[1]["updated"] ?? 0) > 0)
+
+testAMovedSpecTakesItsFilesItsLinesAndItsRunWithIt(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  specNew(root, "Count the rooms", "booking", "domain")
+  Path(root, "specs", "booking", "domain", "count-the-rooms", "analysis.md").writeText("# Analysis\n")
+  Path(root, RUNS_DIR).mkdir(parents = true)
+  Path(root, RUNS_DIR, "count-the-rooms.json").writeText(json.dumps({ "id": "count-the-rooms", "root": root, "status": "passed", "specPath": "specs/booking/domain/count-the-rooms", "stages": [{ "id": "analysis", "title": "Analysis", "status": "passed", "steps": [{ "id": "analysis-1", "title": "Analysis", "actor": "analyst", "status": "passed", "files": ["specs/booking/domain/count-the-rooms/analysis.md", "lib/a.nuc"] }] }], "writes": [{ "path": "specs/booking/domain/count-the-rooms/analysis.md", "step": "analysis-1", "before": null, "after": "x" }] }))
+  moved = said(specLine(["move", "count-the-rooms", "--component", "rooms", "--json"]), capsys)
+  expect(moved["code"] == 0 and (moved["out"] as <string, any>)["path"] == "specs/rooms/count-the-rooms", json.dumps(moved))
+  at = Path(root, "specs", "rooms", "count-the-rooms")
+  expect(at.joinpath("analysis.md").readText() == "# Analysis\n" and not Path(root, "specs", "booking").exists())
+  text = at.joinpath("spec.md").readText()
+  expect("- Component: rooms\n" in text and not ("- Layer:" in text))
+  run = loadRun(root, "count-the-rooms")!
+  expect(run["specPath"] == "specs/rooms/count-the-rooms" and (run["writes"] as <string, any>[])[0]["path"] == "specs/rooms/count-the-rooms/analysis.md")
+  step = ((run["stages"] as <string, any>[])[0]["steps"] as <string, any>[])[0]
+  expect(step["files"] == ["specs/rooms/count-the-rooms/analysis.md", "lib/a.nuc"])
+  expect(specHome(root, "count-the-rooms") == "specs/rooms/count-the-rooms" and "- Spec: specs/rooms/count-the-rooms/spec.md" in Path(root, RUNS_DIR, "count-the-rooms.md").readText())
+  // a folder that is there already is never written over
+  specNew(root, "Other", "booking")
+  Path(root, "specs", "booking", "count-the-rooms").mkdir(parents = true)
+  refused = said(specLine(["move", "count-the-rooms", "--component", "booking", "--json"]), capsys)
+  expect(refused["code"] == 1 and "is there already" in "${(refused["out"] as <string, any>)["error"]}" and at.joinpath("spec.md").isFile())
+
+testTheFlatSpecsMoveToTheirComponentWithoutLosingAFile(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  flat = (id: string, text: string) =>
+    Path(root, "specs", id).mkdir(parents = true)
+    Path(root, "specs", id, "spec.md").writeText(text)
+    Path(root, "specs", id, "checks.json").writeText("[]\n")
+  flat("said", "# Said\n\n- Use case: feature\n- Component: booking\n\n## Description\n\nx\n")
+  flat("touched", "# Touched\n\n- Use case: feature\n\n## Description\n\nx\n")
+  flat("nothing", "# Nothing\n\n## Description\n\nx\n")
+  // a spec named as its component goes into a folder of its own name
+  flat("rooms", "# Rooms\n\n- Component: rooms\n")
+  Path(root, RUNS_DIR).mkdir(parents = true)
+  Path(root, RUNS_DIR, "touched.json").writeText(json.dumps({ "id": "touched", "root": root, "status": "passed", "created": 1, "stages": [] as any[], "writes": [{ "path": "components/catalog/data/book_repository.nuc", "step": "code-1" }, { "path": "components/catalog/data/models/book.nuc", "step": "code-1" }, { "path": "specs/touched/analysis.md", "step": "analysis-1" }] }))
+  done = said(specLine(["migrate", "--json"]), capsys)
+  expect(done["code"] == 0, json.dumps(done))
+  moved: <string, string> = {}
+  for d in done["out"] as <string, any>[]
+    moved["${d["id"]}"] = "${d["path"]}"
+  expect(moved == { "said": "specs/booking/said", "touched": "specs/catalog/data/touched", "nothing": "specs/_global/nothing", "rooms": "specs/rooms/rooms" }, json.dumps(moved))
+  for id, path in moved
+    expect(Path(root, path, "spec.md").isFile() and Path(root, path, "checks.json").readText() == "[]\n", path)
+  expect(specFolders(root).all((s) => not "${s["component"]}".isEmpty))
+  // the run keeps working: it names its spec's new folder, and its ledger the files there
+  run = loadRun(root, "touched")!
+  expect(run["specPath"] == "specs/catalog/data/touched" and (run["writes"] as <string, any>[])[2]["path"] == "specs/catalog/data/touched/analysis.md")
+  expect(specList(root).length == 4 and said(specLine(["migrate", "--json"]), capsys)["out"] == [])
+
+testTheLayoutOfASpecFolder(tmpPath: Path, monkeypatch: any) void
+  expect(layoutPath("booking", "", "a") == "specs/booking/a" and layoutPath("booking", "domain", "a") == "specs/booking/domain/a" and layoutPath("", "", "a") == "specs/_global/a")
+  expect(specPathFor("${tmpPath}", "a", { "component": "booking", "layer": "presentation" }) == "specs/booking/presentation/a")
+  expect(withField("# T\n\n- Use case: feature\n\n## Description\n", "Component", "booking") == "# T\n\n- Use case: feature\n- Component: booking\n\n## Description\n")
+  expect(withField("# T\n\n## Description\n", "Layer", "data") == "# T\n\n- Layer: data\n\n## Description\n")
+
+testAMembersDraftOfASpecIsWrittenBesideItAndOnlyAcceptedByTheUser(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  specNew(root, "Lend a book", "books")
+  spec = Path(root, "specs", "books", "lend-a-book", "spec.md")
+  before = spec.readText()
+  // the member's tool: the draft beside the spec, the spec untouched
+  drafted = chatTool(root, "spec_draft", { "id": "lend-a-book", "text": "# Lend a book for two weeks\n\n- Component: books\n" })
+  expect(drafted["error"] == false and spec.readText() == before, "${drafted["text"]}")
+  expect(Path(root, "specs", "books", "lend-a-book", "spec.draft.md").readText() == "# Lend a book for two weeks\n\n- Component: books\n")
+  expect(chatTool(root, "spec_draft", { "id": "lend-a-book", "text": "no title" })["error"] == true and chatTool(root, "spec_draft", { "id": "nope", "text": "# X" })["error"] == true)
+  // discarded: the spec as it was; accepted: the draft is the spec
+  expect(said(specLine(["discard", "lend-a-book", "--json"]), capsys)["out"] == { "id": "lend-a-book", "path": "specs/books/lend-a-book", "accepted": false } and spec.readText() == before)
+  refused = said(specLine(["accept", "lend-a-book", "--json"]), capsys)
+  expect(refused["code"] == 1 and "no draft" in "${(refused["out"] as <string, any>)["error"]}")
+  chatTool(root, "spec_draft", { "id": "lend-a-book", "text": "# Lend a book for two weeks\n\n- Component: books\n" })
+  accepted = said(specLine(["accept", "lend-a-book", "--json"]), capsys)
+  expect(accepted["code"] == 0 and ((accepted["out"] as <string, any>)["spec"] as <string, any>)["title"] == "Lend a book for two weeks")
+  expect(spec.readText().startsWith("# Lend a book for two weeks") and not Path(root, "specs", "books", "lend-a-book", "spec.draft.md").exists())

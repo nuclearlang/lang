@@ -1,0 +1,1535 @@
+{
+  "app": "nuclear_chat",
+  "controllers": {
+    "ChannelsController": {
+      "component": "channels",
+      "description": "The channels API: the channels and direct messages of a workspace with their unread counts, a new channel, a channel opened (read), the agent a direct message is answered by.",
+      "guards": [],
+      "path": "channels",
+      "routes": [
+        {
+          "error": "Error",
+          "name": "list",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}",
+          "returns": "Channel[]",
+          "verb": "get"
+        },
+        {
+          "error": "Error",
+          "name": "create",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "input",
+              "type": "NewChannel"
+            }
+          ],
+          "path": "{workspace}",
+          "returns": "Channel",
+          "status": 201,
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "read",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}/{channel}/read",
+          "returns": "Channel",
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "chooseAgent",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "input",
+              "type": "AgentChoice"
+            }
+          ],
+          "path": "{workspace}/{channel}/agent",
+          "returns": "Channel",
+          "verb": "put"
+        }
+      ],
+      "transports": [
+        "http",
+        "websocket"
+      ]
+    },
+    "EventsController": {
+      "component": "events",
+      "description": "The events API: what happened in a workspace after the event `since` (the number of the last one read).",
+      "guards": [],
+      "path": "events",
+      "routes": [
+        {
+          "error": "Error",
+          "name": "since",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "default": 0,
+              "in": "query",
+              "name": "since",
+              "type": "int"
+            }
+          ],
+          "path": "{workspace}",
+          "returns": "ChatEvent[]",
+          "verb": "get"
+        }
+      ],
+      "transports": [
+        "http",
+        "websocket"
+      ]
+    },
+    "GifsController": {
+      "component": "gifs",
+      "description": "The GIFs API: the pack made for the project, the picker's search, the project's one answer.",
+      "guards": [],
+      "path": "gifs",
+      "routes": [
+        {
+          "error": "Error",
+          "name": "pack",
+          "params": [],
+          "path": "pack",
+          "returns": "PackGif[]",
+          "verb": "get"
+        },
+        {
+          "error": "Error",
+          "name": "search",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "default": "",
+              "in": "query",
+              "name": "q",
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}/search",
+          "returns": "GifResults",
+          "verb": "get"
+        },
+        {
+          "error": "Error",
+          "name": "consent",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "consent",
+              "type": "Consent"
+            }
+          ],
+          "path": "{workspace}/consent",
+          "returns": "Consent",
+          "verb": "post"
+        }
+      ],
+      "transports": [
+        "http",
+        "websocket"
+      ]
+    },
+    "MembersController": {
+      "component": "members",
+      "description": "The members API: the user's answer to a member's question (an event `ask`).",
+      "guards": [],
+      "path": "members",
+      "routes": [
+        {
+          "error": "Error",
+          "name": "answer",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "answer",
+              "type": "Answer"
+            }
+          ],
+          "path": "{workspace}/answers",
+          "returns": "Answer",
+          "verb": "post"
+        }
+      ],
+      "transports": [
+        "http",
+        "websocket"
+      ]
+    },
+    "MessagesController": {
+      "component": "messages",
+      "description": "The messages API: a channel's history (or one thread), what the user says and sends, what a host posts and changes, reactions, buttons and the search.",
+      "guards": [],
+      "path": "messages",
+      "routes": [
+        {
+          "error": "Error",
+          "name": "search",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "query",
+              "name": "words",
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}/search",
+          "returns": "Found[]",
+          "verb": "get"
+        },
+        {
+          "error": "Error",
+          "name": "history",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "in": "query",
+              "name": "thread",
+              "optional": true,
+              "type": "string"
+            }
+          ],
+          "path": "{workspace}/{channel}",
+          "returns": "Message[]",
+          "verb": "get"
+        },
+        {
+          "error": "Error",
+          "name": "say",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "said",
+              "type": "Said"
+            }
+          ],
+          "path": "{workspace}/{channel}",
+          "returns": "Message",
+          "status": 201,
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "gif",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "sent",
+              "type": "SentGif"
+            }
+          ],
+          "path": "{workspace}/{channel}/gif",
+          "returns": "Message",
+          "status": 201,
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "hostPost",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "channel",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "posted",
+              "type": "Posted"
+            }
+          ],
+          "path": "{workspace}/{channel}/post",
+          "returns": "Message",
+          "status": 201,
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "update",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "changes",
+              "type": "Changes"
+            }
+          ],
+          "path": "{workspace}/message/{id}",
+          "returns": "Message",
+          "verb": "patch"
+        },
+        {
+          "error": "Error",
+          "name": "react",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "reaction",
+              "type": "Reaction"
+            }
+          ],
+          "path": "{workspace}/message/{id}/reactions",
+          "returns": "Message",
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "click",
+          "params": [
+            {
+              "in": "path",
+              "name": "workspace",
+              "type": "string"
+            },
+            {
+              "in": "path",
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "click",
+              "type": "Click"
+            }
+          ],
+          "path": "{workspace}/message/{id}/click",
+          "returns": "ChatEvent",
+          "verb": "post"
+        }
+      ],
+      "transports": [
+        "http",
+        "websocket"
+      ]
+    },
+    "WorkspacesController": {
+      "component": "workspaces",
+      "description": "The workspaces API: a host registers its project when it starts, and reads it back.",
+      "guards": [],
+      "path": "workspaces",
+      "routes": [
+        {
+          "error": "Error",
+          "name": "register",
+          "params": [
+            {
+              "in": "body",
+              "name": "input",
+              "type": "NewWorkspace"
+            }
+          ],
+          "path": "",
+          "returns": "Workspace",
+          "verb": "post"
+        },
+        {
+          "error": "Error",
+          "name": "one",
+          "params": [
+            {
+              "in": "path",
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "path": "{id}",
+          "returns": "Workspace",
+          "verb": "get"
+        }
+      ],
+      "transports": [
+        "http",
+        "websocket"
+      ]
+    }
+  },
+  "dialect": "fastapi",
+  "events": {
+    "chat.event": {
+      "component": "events",
+      "payload": "any"
+    }
+  },
+  "guards": [
+    {
+      "guard": "noOrigin"
+    },
+    {
+      "guard": "token",
+      "header": "X-Chat-Token"
+    }
+  ],
+  "models": {
+    "AgentChoice": {
+      "description": "The agent a direct message is answered by: a choice of its member (empty: the host's default) and its model.",
+      "fields": [
+        {
+          "default": "",
+          "name": "agent",
+          "rules": {
+            "maxLength": 64
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "model",
+          "rules": {
+            "maxLength": 200
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Answer": {
+      "description": "The user's answer to a member's question (a responder's `ask`), by the question's id.",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "name": "answer",
+          "rules": {
+            "maxLength": 20000
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Brain": {
+      "description": "What answers as a member, as its host gives it, shown under the member's name: the agent, its kind (local, agent, api), its provider and model, and whether it spends money.",
+      "fields": [
+        {
+          "default": "",
+          "name": "agent",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "kind",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "provider",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "model",
+          "type": "string"
+        },
+        {
+          "default": false,
+          "name": "paid",
+          "type": "boolean"
+        }
+      ],
+      "key": null
+    },
+    "Button": {
+      "description": "A button under a message (a member's question): clicking it is the host's action.",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "description": "primary, danger or empty",
+          "name": "style",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Changes": {
+      "description": "What a host changes of a message it posted: its text, its buttons (a question answered has none).",
+      "fields": [
+        {
+          "name": "text",
+          "optional": true,
+          "rules": {
+            "maxLength": 20000
+          },
+          "type": "string"
+        },
+        {
+          "name": "buttons",
+          "optional": true,
+          "type": "Button[]"
+        }
+      ],
+      "key": null
+    },
+    "Channel": {
+      "description": "A channel of the project: `general`, a team's, one the user made, or a direct message (`dm-<member>`).",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "pattern": "^[a-z0-9][a-z0-9_.-]{0,79}$"
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "topic",
+          "type": "string"
+        },
+        {
+          "default": "channel",
+          "description": "channel or dm",
+          "name": "kind",
+          "rules": {
+            "pattern": "^(channel|dm)$"
+          },
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "members",
+          "type": "string[]"
+        },
+        {
+          "default": "",
+          "description": "the team the channel is of: its tech lead answers a message without a mention",
+          "name": "team",
+          "type": "string"
+        },
+        {
+          "default": 0,
+          "description": "the time (ms) of the last message the user read",
+          "name": "lastRead",
+          "type": "int"
+        },
+        {
+          "default": 0,
+          "name": "unread",
+          "type": "int"
+        },
+        {
+          "default": "",
+          "description": "the choice of its member's responder that answers it (a direct message), and its model; empty: the default",
+          "name": "agent",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "model",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "ChatEvent": {
+      "description": "What happened in a workspace, for whoever shows it: a message (new or changed), the channels, a member typing or using a tool, a member's question, a button clicked or a command for the host (`action`). `n` orders them.",
+      "fields": [
+        {
+          "name": "n",
+          "type": "int"
+        },
+        {
+          "name": "workspace",
+          "type": "string"
+        },
+        {
+          "description": "message, channels, typing, tool, ask, action, error",
+          "name": "type",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "channel",
+          "type": "string"
+        },
+        {
+          "default": {},
+          "name": "data",
+          "type": "<string, any>"
+        },
+        {
+          "default": 0,
+          "name": "at",
+          "type": "int"
+        }
+      ],
+      "key": null
+    },
+    "Choice": {
+      "description": "One agent a member's conversation can be answered by, as its host gives it (the dropdown of a direct message): the command the chat runs (with `--model <model>` added when a model is chosen), its models and whether it is on this machine. What each one is, is the host's.",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "pattern": "^[A-Za-z0-9][\\w.-]{0,63}$"
+          },
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "description": "local, agent or api: the page's icon",
+          "name": "kind",
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "command",
+          "type": "string[]"
+        },
+        {
+          "default": false,
+          "name": "paid",
+          "type": "boolean"
+        },
+        {
+          "default": [],
+          "description": "the models it offers; none: its own default, or one written by hand",
+          "name": "models",
+          "type": "string[]"
+        },
+        {
+          "default": "",
+          "description": "the model it starts with (empty: the agent's own default)",
+          "name": "defaultModel",
+          "type": "string"
+        },
+        {
+          "default": true,
+          "name": "available",
+          "type": "boolean"
+        },
+        {
+          "default": "",
+          "description": "why it is not available (or what to know about it)",
+          "name": "why",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Click": {
+      "description": "A button of a message clicked.",
+      "fields": [
+        {
+          "name": "button",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Consent": {
+      "description": "The project's answer to the one question: may its GIF searches leave the machine?",
+      "fields": [
+        {
+          "name": "online",
+          "type": "boolean"
+        }
+      ],
+      "key": null
+    },
+    "Found": {
+      "description": "A message a search found, with its channel.",
+      "fields": [
+        {
+          "name": "channel",
+          "type": "string"
+        },
+        {
+          "name": "message",
+          "type": "Message"
+        }
+      ],
+      "key": null
+    },
+    "Gif": {
+      "description": "A GIF of a message: a drawing of the pack (`pack/<file>`) or a service's image (its URL).",
+      "fields": [
+        {
+          "name": "src",
+          "rules": {
+            "maxLength": 2000,
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "default": "pack",
+          "description": "pack, tenor or giphy",
+          "name": "source",
+          "rules": {
+            "pattern": "^(pack|tenor|giphy)$"
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "GifResults": {
+      "description": "What a GIF search found: the pack's first, then the service's when it is on. `ask` is `online` when the project has not said yet whether its searches may leave the machine (asked once); `note` is `no-key` (no key in the keyring) or `failed` (the service did not answer).",
+      "fields": [
+        {
+          "name": "q",
+          "type": "string"
+        },
+        {
+          "default": "pack",
+          "description": "pack, or the service searched too (tenor, giphy)",
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "results",
+          "type": "Gif[]"
+        },
+        {
+          "default": "",
+          "name": "ask",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "service",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "note",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Giphy": {
+      "description": "Giphy, as the API answers it.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "images",
+          "type": "GiphyImages"
+        },
+        {
+          "default": "",
+          "name": "title",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "GiphyFixedHeight": {
+      "description": "GiphyFixedHeight, as the API answers it.",
+      "fields": [
+        {
+          "default": "",
+          "name": "height",
+          "type": "string"
+        },
+        {
+          "name": "url",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "width",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "GiphyImages": {
+      "description": "GiphyImages, as the API answers it.",
+      "fields": [
+        {
+          "json": "fixed_height",
+          "name": "fixedHeight",
+          "type": "GiphyFixedHeight"
+        }
+      ],
+      "key": null
+    },
+    "GiphyPage": {
+      "description": "GiphyPage, as the API answers it.",
+      "fields": [
+        {
+          "name": "pagination",
+          "optional": true,
+          "type": "GiphyPagePagination"
+        },
+        {
+          "name": "data",
+          "type": "Giphy[]"
+        }
+      ],
+      "key": null
+    },
+    "GiphyPagePagination": {
+      "description": "GiphyPagePagination, as the API answers it.",
+      "fields": [
+        {
+          "name": "count",
+          "type": "int"
+        },
+        {
+          "name": "offset",
+          "type": "int"
+        },
+        {
+          "json": "total_count",
+          "name": "totalCount",
+          "type": "int"
+        }
+      ],
+      "key": null
+    },
+    "Member": {
+      "description": "A member of the factory, as its host gives it: who they are, how they speak and how they answer.",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "pattern": "^[A-Za-z0-9][\\w.-]{0,63}$"
+          },
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "role",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "team",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "description": "the host's id of the member's portrait (a roster's employee)",
+          "name": "avatar",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "description": "the portrait the page draws: a `data:` or `https:` URL (the host reads its file), empty for the initials",
+          "name": "face",
+          "rules": {
+            "maxLength": 400000
+          },
+          "type": "string"
+        },
+        {
+          "name": "profile",
+          "type": "Profile"
+        },
+        {
+          "name": "personality",
+          "type": "Personality"
+        },
+        {
+          "name": "responder",
+          "type": "Responder"
+        },
+        {
+          "description": "who works the member (an agent and its model), drawn in a direct message's header",
+          "name": "brain",
+          "type": "Brain"
+        }
+      ],
+      "key": null
+    },
+    "Message": {
+      "description": "A message of a channel, as the chat shows it: its edits and reactions folded in, and, when it opened a thread, how many replies it has and when the last one came.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "at",
+          "type": "int"
+        },
+        {
+          "description": "a member's id, you or system",
+          "name": "author",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "text",
+          "type": "string"
+        },
+        {
+          "description": "the message whose thread this one is in",
+          "name": "thread",
+          "optional": true,
+          "type": "string"
+        },
+        {
+          "name": "gif",
+          "optional": true,
+          "type": "Gif"
+        },
+        {
+          "default": {},
+          "description": "who reacted with each emoji",
+          "name": "reactions",
+          "type": "<string, string[]>"
+        },
+        {
+          "default": [],
+          "name": "buttons",
+          "type": "Button[]"
+        },
+        {
+          "default": {},
+          "description": "the factory's work it names: spec, run",
+          "name": "links",
+          "type": "<string, string>"
+        },
+        {
+          "name": "costUsd",
+          "optional": true,
+          "type": "double"
+        },
+        {
+          "default": 0,
+          "description": "the time of its last edit, 0 when never edited",
+          "name": "edited",
+          "type": "int"
+        },
+        {
+          "default": 0,
+          "name": "replies",
+          "type": "int"
+        },
+        {
+          "default": 0,
+          "name": "lastReply",
+          "type": "int"
+        }
+      ],
+      "key": null
+    },
+    "NewChannel": {
+      "description": "A channel the user makes: its name (its id is the name in lower case, `Release plan` → `release-plan`), its topic and its members.",
+      "fields": [
+        {
+          "name": "name",
+          "rules": {
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "topic",
+          "rules": {
+            "maxLength": 500
+          },
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "members",
+          "type": "string[]"
+        },
+        {
+          "default": "",
+          "description": "the team it is of, when it is one's (its tech lead answers a message without a mention)",
+          "name": "team",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "NewWorkspace": {
+      "description": "What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.",
+      "fields": [
+        {
+          "description": "the project's folder (absolute): its chat is kept in `.nuclear/chat/`",
+          "name": "root",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "description": "builder or atlas",
+          "name": "host",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "members",
+          "type": "Member[]"
+        },
+        {
+          "default": [],
+          "name": "teams",
+          "type": "Team[]"
+        },
+        {
+          "default": [],
+          "name": "channels",
+          "type": "Channel[]"
+        },
+        {
+          "default": "en",
+          "name": "lang",
+          "rules": {
+            "pattern": "^(en|es)$"
+          },
+          "type": "string"
+        },
+        {
+          "default": "pack",
+          "description": "where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)",
+          "name": "gifs",
+          "rules": {
+            "pattern": "^(pack|tenor|giphy)$"
+          },
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "PackGif": {
+      "description": "A drawing of the GIF pack made for the project, with its SVG text (the picker shows it as it is).",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "file",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "tags",
+          "type": "string[]"
+        },
+        {
+          "default": "",
+          "name": "svg",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Personality": {
+      "description": "How often a member sends a GIF, and at which moments.",
+      "fields": [
+        {
+          "default": "never",
+          "description": "never, sometimes (one in five of its moments) or often (one in two)",
+          "name": "gifs",
+          "rules": {
+            "pattern": "^(never|sometimes|often)$"
+          },
+          "type": "string"
+        },
+        {
+          "default": [],
+          "description": "the moments: failure, success, question",
+          "name": "on",
+          "type": "string[]"
+        }
+      ],
+      "key": null
+    },
+    "Posted": {
+      "description": "What a host posts as a member (or as `system`): a run's station, a member's question with its buttons; with a moment (failure, success, question) or a GIF's tag the member may send a GIF after it, by their personality.",
+      "fields": [
+        {
+          "name": "author",
+          "rules": {
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "text",
+          "rules": {
+            "maxLength": 20000
+          },
+          "type": "string"
+        },
+        {
+          "name": "thread",
+          "optional": true,
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "buttons",
+          "type": "Button[]"
+        },
+        {
+          "default": {},
+          "name": "links",
+          "type": "<string, string>"
+        },
+        {
+          "name": "moment",
+          "optional": true,
+          "rules": {
+            "pattern": "^(failure|success|question)$"
+          },
+          "type": "string"
+        },
+        {
+          "description": "a tag of the GIF pack the member asked for after this message (a responder's `done`), by their personality",
+          "name": "gif",
+          "optional": true,
+          "rules": {
+            "pattern": "^[a-z][a-z-]{0,39}$"
+          },
+          "type": "string"
+        },
+        {
+          "default": false,
+          "description": "the member answers a GIF the user sent: the GIF is likelier",
+          "name": "answersGif",
+          "type": "boolean"
+        },
+        {
+          "name": "costUsd",
+          "optional": true,
+          "type": "double"
+        }
+      ],
+      "key": null
+    },
+    "Profile": {
+      "description": "The character a member speaks as: the roster's profile.",
+      "fields": [
+        {
+          "default": "",
+          "name": "bio",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "hrNote",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "description": "the language the member answers in when the user's is not known (en, es)",
+          "name": "lang",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Reaction": {
+      "description": "An emoji on a message: the same one again by the same person takes it away.",
+      "fields": [
+        {
+          "name": "emoji",
+          "rules": {
+            "maxLength": 32,
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "default": "you",
+          "name": "by",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Responder": {
+      "description": "How a member answers: the command the chat runs once per answer (with `--events`), and whether it spends money. A member with `choices` is answered by the choice of each conversation (`PUT channels/{ws}/{channel}/agent`), else by `choice` with `model` (the host's default), else by `command`.",
+      "fields": [
+        {
+          "default": [],
+          "name": "command",
+          "type": "string[]"
+        },
+        {
+          "default": false,
+          "name": "paid",
+          "type": "boolean"
+        },
+        {
+          "default": "",
+          "name": "choice",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "model",
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "choices",
+          "type": "Choice[]"
+        }
+      ],
+      "key": null
+    },
+    "Said": {
+      "description": "What the user says in a channel (or in a thread of it).",
+      "fields": [
+        {
+          "name": "text",
+          "rules": {
+            "maxLength": 20000,
+            "minLength": 1
+          },
+          "type": "string"
+        },
+        {
+          "name": "thread",
+          "optional": true,
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "SentGif": {
+      "description": "A GIF the user sends from the picker.",
+      "fields": [
+        {
+          "name": "gif",
+          "type": "Gif"
+        },
+        {
+          "name": "thread",
+          "optional": true,
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Team": {
+      "description": "A team at work in the project; its tech lead answers for it.",
+      "fields": [
+        {
+          "name": "id",
+          "rules": {
+            "pattern": "^[a-z0-9][\\w.-]{0,63}$"
+          },
+          "type": "string"
+        },
+        {
+          "default": "",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "description": "the member id of its tech lead",
+          "name": "lead",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Tenor": {
+      "description": "Tenor, as the API answers it.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "default": "",
+          "json": "content_description",
+          "name": "contentDescription",
+          "type": "string"
+        },
+        {
+          "json": "media_formats",
+          "name": "mediaFormats",
+          "type": "TenorMediaFormats"
+        },
+        {
+          "default": "",
+          "name": "title",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "TenorGif": {
+      "description": "TenorGif, as the API answers it.",
+      "fields": [
+        {
+          "default": [],
+          "name": "dims",
+          "type": "int[]"
+        },
+        {
+          "name": "url",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "TenorMediaFormats": {
+      "description": "TenorMediaFormats, as the API answers it.",
+      "fields": [
+        {
+          "name": "gif",
+          "type": "TenorGif"
+        },
+        {
+          "name": "tinygif",
+          "type": "TenorTinygif"
+        }
+      ],
+      "key": null
+    },
+    "TenorPage": {
+      "description": "TenorPage, as the API answers it.",
+      "fields": [
+        {
+          "default": "",
+          "name": "next",
+          "type": "string"
+        },
+        {
+          "name": "results",
+          "type": "Tenor[]"
+        }
+      ],
+      "key": null
+    },
+    "TenorTinygif": {
+      "description": "TenorTinygif, as the API answers it.",
+      "fields": [
+        {
+          "default": [],
+          "name": "dims",
+          "type": "int[]"
+        },
+        {
+          "name": "url",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Workspace": {
+      "description": "A project registered by its host: its id names it in every route.",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "root",
+          "type": "string"
+        },
+        {
+          "name": "host",
+          "type": "string"
+        },
+        {
+          "default": [],
+          "name": "members",
+          "type": "Member[]"
+        },
+        {
+          "default": [],
+          "name": "teams",
+          "type": "Team[]"
+        },
+        {
+          "default": [],
+          "name": "channels",
+          "type": "Channel[]"
+        },
+        {
+          "default": "en",
+          "name": "lang",
+          "type": "string"
+        },
+        {
+          "default": "pack",
+          "name": "gifs",
+          "type": "string"
+        }
+      ],
+      "key": null
+    }
+  },
+  "platform": "backend",
+  "repositories": {},
+  "version": "0.1.0",
+  "webSocket": "/ws"
+}

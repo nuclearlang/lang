@@ -82,6 +82,8 @@ constructor = """
 }{{/body}}{{^body}};{{/body}}"""
 ctor_param = "{{#required}}required {{/required}}this.{{name}}{{#default}} = {{default}}{{/default}}"
 super_param = "{{#required}}required {{/required}}super.{{name}}{{#default}} = {{default}}{{/default}}"
+# a parameter whose default is a list or a map: nullable, and the function makes it (a default must be const)
+default_init = "{{name}} ??= {{value}};"
 param = "{{decorators}}{{#required}}required {{/required}}{{#type}}{{type}} {{/type}}{{name}}{{#default}} = {{default}}{{/default}}"
 params_optional_group = "[{{params}}]"
 params_named_group = "{{{params}}}"
@@ -101,6 +103,8 @@ const_decl = "final {{#type}}{{type}} {{/type}}{{name}} = {{value}};"
 let_decl = "{{#type}}{{type}}{{/type}}{{^type}}var{{/type}} {{name}} = {{value}};"
 declare = "{{#type}}{{type}}{{/type}}{{^type}}var{{/type}} {{name}};"
 assign = "{{target}} {{op}} {{value}};"
+# `m["a"] += 1`: a map's read is nullable, so the map updates the value it has (an absent key throws)
+map_compound = "{{object}}.update({{key}}, (v) => v {{op}} {{value}});"
 expr_stmt = "{{expr}};"
 return = "return{{#value}} {{value}}{{/value}};"
 if = """
@@ -211,6 +215,23 @@ result_map = "{{target}}.map({{callback}})"
 result_get_or_else = "{{target}}.getOrElse({{callback}})"
 result_ok = "Right({{#value}}{{value}}{{/value}}{{^value}}null{{/value}})"
 
+# --- the monitor (`--monitor`, spec 015): an async body runs in a zone of its own, so its children find it ---
+monitor_body = """
+{{#async}}
+return NuclearMonitor.run('{{label}}', '{{path}}', {{line}}, () async {
+  {{body}}
+});
+{{/async}}
+{{^async}}
+final nuclearSpan = NuclearMonitor.enter('{{label}}', '{{path}}', {{line}});
+try {
+  {{body}}
+} finally {
+  NuclearMonitor.exit(nuclearSpan);
+}
+{{/async}}"""
+monitor_runtime = { file = "templates/monitor.tpl" }
+
 [types]
 Result = "Either"
 Error = "NuclearError"
@@ -246,6 +267,10 @@ not = "!"
 neg = "-"
 eq = "=="
 not_eq = "!="
+# `==` of two lists, maps or sets compares what they hold, as in Python (nuclear-base.md §6): the target compares
+# the objects
+eq_deep = { template = "_equals({{left_arg}}, {{right_arg}})", helper = "bool _equals(Object? a, Object? b) {\n  if (identical(a, b) || a == b) return true;\n  if (a is List && b is List) {\n    if (a.length != b.length) return false;\n    for (var i = 0; i < a.length; i++) {\n      if (!_equals(a[i], b[i])) return false;\n    }\n    return true;\n  }\n  if (a is Map && b is Map) {\n    if (a.length != b.length) return false;\n    for (final k in a.keys) {\n      if (!b.containsKey(k) || !_equals(a[k], b[k])) return false;\n    }\n    return true;\n  }\n  if (a is Set && b is Set) return a.length == b.length && a.containsAll(b);\n  return false;\n}" }
+not_eq_deep = { template = "!_equals({{left_arg}}, {{right_arg}})", helper = "bool _equals(Object? a, Object? b) {\n  if (identical(a, b) || a == b) return true;\n  if (a is List && b is List) {\n    if (a.length != b.length) return false;\n    for (var i = 0; i < a.length; i++) {\n      if (!_equals(a[i], b[i])) return false;\n    }\n    return true;\n  }\n  if (a is Map && b is Map) {\n    if (a.length != b.length) return false;\n    for (final k in a.keys) {\n      if (!b.containsKey(k) || !_equals(a[k], b[k])) return false;\n    }\n    return true;\n  }\n  if (a is Set && b is Set) return a.length == b.length && a.containsAll(b);\n  return false;\n}" }
 lt = "<"
 gt = ">"
 lt_eq = "<="

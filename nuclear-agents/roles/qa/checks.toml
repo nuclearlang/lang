@@ -1,0 +1,83 @@
+# The checks QA proposes (nuclear-agents/roles/README.md). `by = "role"`: the role runs it; `by = "user"`: the user
+# runs it and marks it done or failed. A `command` is a key of the `commands` of `.nuclear/builder.json`.
+
+[[check]]
+id = "qa.plan-approved"
+title = "The user approves the test plan before any check runs"
+title_es = "El usuario aprueba el plan de pruebas antes de que corra ninguna comprobación"
+station = "quality"
+on = true
+by = "user"
+prompt = "Read specs/{{id}}/test-plan.md; switch checks on or off, add your own, and approve."
+
+[[check]]
+id = "qa.functional"
+title = "Every acceptance criterion is met, with its evidence"
+title_es = "Cada criterio de aceptación se cumple, con su evidencia"
+station = "quality"
+on = true
+by = "role"
+command = "test"
+
+[[check]]
+id = "qa.edge-cases"
+title = "The edge cases of every new action answer as planned"
+title_es = "Los casos límite de cada acción nueva responden como se planificó"
+station = "quality"
+on = true
+by = "role"
+prompt = "Run each edge case of specs/{{id}}/test-plan.md (the skill find-the-edge-cases) and record the input, the answer and whether it is the planned one."
+
+[[check]]
+id = "qa.security-command"
+title = "The project's security command passes"
+title_es = "El comando de seguridad del proyecto pasa"
+station = "quality"
+on = true
+by = "role"
+command = "security"
+
+[[check]]
+id = "qa.security-review"
+title = "The security review of the change finds nothing it can show"
+title_es = "La revisión de seguridad del cambio no encuentra nada que pueda demostrar"
+station = "quality"
+on = true
+by = "role"
+prompt = "Review the change of specs/{{id}} with the skill review-security; each finding with its file:line, its attack and its fix in Nuclear."
+
+[[check]]
+id = "qa.good-practices"
+title = "The change follows the platform's architecture and reads well"
+title_es = "El cambio sigue la arquitectura de la plataforma y se lee bien"
+station = "quality"
+on = true
+by = "role"
+prompt = "Review the change of specs/{{id}} with the skill review-good-practices; each finding with its file:line, the rule and the change."
+
+[[check]]
+id = "qa.performance"
+title = "Each new route or screen answers within the analysis's time"
+title_es = "Cada ruta o pantalla nueva responde dentro del tiempo del análisis"
+station = "quality"
+on = false
+by = "role"
+prompt = "Measure the answer time of each new route or screen of specs/{{id}} on a local build, as the skill measure-load-and-performance says, against the analysis's numbers."
+
+[[check]]
+id = "qa.load"
+title = "The load test at the analysis's numbers"
+title_es = "La prueba de carga con los números del análisis"
+station = "quality"
+on = false
+by = "user"
+prompt = "Run the load test of specs/{{id}}/test-plan.md on your machine and paste its output; QA reads it against the threshold."
+
+[[check]]
+id = "qa.manual"
+title = "A person tries the change as a user would"
+title_es = "Una persona prueba el cambio como lo haría un usuario"
+station = "quality"
+on = false
+by = "user"
+prompt = "Follow the steps of specs/{{id}}/test-plan.md marked manual, and mark each one done or failed with what you saw."

@@ -146,17 +146,18 @@
    "id": "limit:backend-not-yet",
    "type": "limit",
    "title": "Limit: what the backend platform does not have yet",
-   "summary": "Not in the backend platform yet: access control and guards on routes, sessions, background jobs, file uploads, a Dockerfile, observability, and CORS for a browser client on another origin. Authentication is written by hand in a use case today.",
+   "summary": "Not in the backend platform yet: users and sessions, a guard kind for checks beyond headers, background jobs, file uploads, a Dockerfile, telemetry with the nestjs dialect, and CORS for a browser client on another origin. The header guards `Token` and `NoOrigin` exist (ADR-synapsis-0007).",
    "body": [
-    "- No `@acl` or guards on a controller's routes, and no sessions (the mobile platform has them).",
+    "- Guards check headers only (`Token`, `NoOrigin`); no `@acl`, no users and no sessions (the mobile platform has them). With Kafka, the app's WebSocket pushes only what its own process publishes.",
     "- No background jobs and no file uploads.",
-    "- No generated Dockerfile; no observability (metrics, traces).",
+    "- No password hashing nor JWT, no multipart upload, no documented way to read a raw request body or headers (a webhook's signature); no `graph` make-kind.",
+    "- No generated Dockerfile. Telemetry (plugins(telemetry = true), Datadog/NewRelic/Grafana/Otlp, @untraced) works with fastapi only: nestjs does not bring the plugin yet.",
     "- No CORS: a web app on another origin cannot call the API (the browser blocks it).",
     "- `nuclear watch` does not exist for backend projects.",
     "- A `@transactional` use case uses the default database only.",
     "- The join table of a `@manyToMany` is always named `<owner table>_<field>`.",
     "",
-    "A task that needs one of these is written with the kinds that exist (a use case that checks a token) or reported as not possible yet."
+    "A task that needs one of these is written with the kinds that exist (a use case with its own rules) or reported as not possible yet."
    ],
    "keys": [
     "auth",
@@ -221,6 +222,7 @@
    "summary": "Not in the web platform yet: forms and form managers, converters, translations, the local database, plugins and AI kinds, a generated tests file, navigation by address inside rendered content, attributes whose name is not an identifier (`aria-label`), some HTML elements (`figure`, `kbd`), and the browser's globals (`window`, `document`) in the type definitions.",
    "body": [
     "- No `form` / `formmanager`, `converter`, translations (`.tr()`), `@primary` / `saveLocal`, plugins.",
+    "- The mobile platform has no `WebSocket` connection nor `@on` stream methods yet; `nuclear build` does not run `build:embed` (it is `npm run build:embed` in `build/app`).",
     "- `@acl(guards)` only in a use case that awaits something; a view's arguments must be named.",
     "- The type of a state builder's callback parameter is not known to the compiler: write `list.length == 0` instead of `list.isEmpty` there.",
     "- A link inside rendered content reloads the page: navigation is by screen (`goTo`).",
@@ -269,6 +271,7 @@
    "title": "Limit: what the mobile platform does not have yet",
    "summary": "Not in the mobile platform yet: offline write sync and conflict handling for the local database, push notifications, OAuth, analytics and crash reporting, deep links, and CI templates and store publishing from the command line.",
    "body": [
+    "- No plurals in `tr`; no portable words for push notifications, location or in-app purchases.",
     "- The local database keeps what a GET answered; it does not queue writes made offline.",
     "- A GET under `saveLocal` whose model has no `@primary` fails at run time.",
     "- An enum field of a model gets `null` in the generated tests.",
@@ -407,13 +410,13 @@
    "id": "limit:untested",
    "type": "limit",
    "title": "Limit: done but never run for real",
-   "summary": "Some parts are built and pass their automated checks but were never run against the real thing: a real phone, macOS and Windows, PostgreSQL, MySQL, MariaDB, Redis, Kafka and OpenAI with real services, the public installers on macOS and Windows, several editor features in a running IDE. The migrations ran only on SQLite, the installers only on Linux.",
+   "summary": "Some parts are built and pass their automated checks but were never run against the real thing: a real phone, macOS and Windows, PostgreSQL, MySQL, MariaDB, Redis, Kafka, OpenAI and the telemetry of Datadog, New Relic and Grafana with real services, the public installers on macOS and Windows, several editor features in a running IDE. The migrations ran only on SQLite, the installers only on Linux.",
    "body": [
     "Say it when a task depends on one of them: it should work, and it was not proven.",
     "",
     "- Mobile: a real phone, macOS; the local database on a real device and on web.",
     "- Backend: PostgreSQL, MySQL, MariaDB, Redis, Kafka with a broker, OpenAI; migrations on anything but SQLite; `nuclear migrate` on Windows.",
-    "- Web: the `characters` example in a browser; the website's animations, its screenshots' windows and callouts and its logos per theme on Safari and Firefox (only Chromium ran).",
+    "- Web: the `characters` example in a browser; the `WebSocket` connection and a mounted app against a running backend (only a fake socket and bridge); the website's animations, its screenshots' windows and callouts and its logos per theme on Safari and Firefox (only Chromium ran).",
     "- Installers: `install.sh` on macOS, `install.ps1` on Windows, the AI set-up on macOS and Windows; only the Linux x86_64 archive ran. No release is published yet. The AI archive (its own Python with the services, ADR-installer-0003) was built and tried only for Linux x86_64, on a clean machine without Python or uv; the AI set-up still needs Node.js until Nuclear Builder is written in Nuclear (spec 009, phase 3).",
     "- Editors: the Nuclear workspace and the AI pages inside a running VS Code; the JetBrains plugin in a running IDE (only compiled). The extensions' 0.52.x (HTTP Connections and Nuclear Atlas renamed, the ports the set-up chooses) were never opened in a running VS Code or IDE; the VS Code extension inside Cursor was never tried."
    ],

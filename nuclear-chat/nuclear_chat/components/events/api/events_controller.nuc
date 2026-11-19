@@ -1,0 +1,6 @@
+// The events API: what happened in a workspace after the event `since` (the number of the last one read).
+@controller("events")
+controller EventsController(events: EventsAppComponent)
+  @get("{workspace}")
+  since(workspace: string, since: int = 0) Result<Error, ChatEvent[]>
+    events.since(workspace, since)

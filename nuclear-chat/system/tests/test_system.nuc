@@ -1,0 +1,157 @@
+use os
+use sys
+use asyncio
+use pathlib{ Path }
+
+// What the chat needs of the machine: its files (a line appended, a file replaced whole), a responder's command (its
+// lines as they come, a line written to it while it runs, its end), the keyring (a fake `secret-tool` on the PATH)
+// and the pack's folder.
+
+FAKE_SECRET_TOOL = """#!/bin/sh
+# a keyring in a folder: store reads the secret on stdin, lookup prints it, clear removes it
+echo "$@" >> "$KEYS_DIR/calls.log"
+for account; do :; done
+case "$1" in
+  store) cat > "$KEYS_DIR/$account" ;;
+  lookup) [ -f "$KEYS_DIR/$account" ] && cat "$KEYS_DIR/$account" || exit 1 ;;
+  clear) rm -f "$KEYS_DIR/$account" ;;
+esac
+"""
+
+// A responder that says what it was given, asks, and answers with what it was told.
+STUB = """#!/bin/sh
+read first
+echo '{"type": "typing"}'
+echo "{\\"type\\": \\"text\\", \\"text\\": \\"got $first\\"}"
+echo '{"type": "ask", "id": "q1"}'
+read answer
+echo "{\\"type\\": \\"done\\", \\"said\\": $answer}"
+echo "bye" >&2
+exit 3
+"""
+
+script(tmpPath: Path, name: string, text: string) Path
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath(name)
+  tool.writeText(text)
+  tool.chmod(493)
+  bin
+
+testTheChatsFilesAppendReadAndReplaceWhole(tmpPath: Path) void
+  files = ChatFiles()
+  file = "${tmpPath}/a/.nuclear/chat/general.jsonl"
+  expect(files.readLines(file).isEmpty and files.readText(file) == null)
+  files.appendLine(file, "{\"id\": 1}")
+  files.appendLine(file, "{\"id\": 2}")
+  expect(files.readLines(file) == ["{\"id\": 1}", "{\"id\": 2}"])
+  said = ""
+  try
+    files.appendLine(file, "two\nlines")
+  catch e
+    said = "${e}"
+  expect("line break" in said)
+  files.writeText("${tmpPath}/a/channels.json", "[]")
+  expect(files.readText("${tmpPath}/a/channels.json") == "[]" and not Path("${tmpPath}/a/channels.json.part").exists())
+  expect(files.isFolder("${tmpPath}/a") and not files.isFolder("${tmpPath}/none"))
+
+testAResponderRunsItsLinesComeAndALineIsWrittenToIt(tmpPath: Path, monkeypatch: any) void
+  bin = script(tmpPath, "stub-responder", STUB)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  lines: string[] = []
+  ended: any[] = []
+  processes = Processes()
+  run = () =>
+    onLine = (line: string) =>
+      lines.add(line)
+      if "\"ask\"" in line
+        ~processes.write("r1", "{\"answer\": \"yes\"}")
+    onEnd = (code: int, said: string) =>
+      ~asyncio.sleep(0)
+      ended.add(code)
+      ended.add(said)
+    expect(processes.start("r1", ["stub-responder", "--events"], "${tmpPath}", "{\"said\": \"hi\"}", onLine, onEnd) == null)
+    expect(processes.isRunning("r1"))
+    while processes.isRunning("r1")
+      ~asyncio.sleep(0.01)
+    expect(not ~processes.write("r1", "late"))
+  asyncio.run(run())
+  expect(lines.length == 4 and lines[1] == "{\"type\": \"text\", \"text\": \"got {\"said\": \"hi\"}\"}" and lines[3] == "{\"type\": \"done\", \"said\": {\"answer\": \"yes\"}}", "${lines}")
+  expect(ended == [3, "bye\n"], "${ended}")
+
+testACommandThatIsNotThereIsSaidNotRun(tmpPath: Path) void
+  processes = Processes()
+  noLine = (line: string) =>
+    ~asyncio.sleep(0)
+    expect(false)
+  noEnd = (code: int, said: string) =>
+    ~asyncio.sleep(0)
+    expect(false)
+  expect("not installed" in "${processes.start("r", ["no-such-responder-here"], "${tmpPath}", "", noLine, noEnd)}")
+  expect("no folder" in "${processes.start("r", ["sh"], "${tmpPath}/none", "", noLine, noEnd)}")
+
+testAKeyIsKeptInTheKeyringReadBackAndRemoved(tmpPath: Path, monkeypatch: any) void
+  bin = script(tmpPath, "secret-tool", FAKE_SECRET_TOOL)
+  keys = tmpPath.joinpath("keys")
+  keys.mkdir()
+  monkeypatch.setenv("KEYS_DIR", "${keys}")
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  monkeypatch.setattr(sys, "platform", "linux")
+  keyring = Keyring()
+  expect(keyring.key("tenor") == null)
+  keyring.keep("tenor", "tk-secret\n")
+  expect(keyring.key("tenor") == "tk-secret" and keyring.key("giphy") == null)
+  // the key went on stdin: no command line held it
+  expect(not ("tk-secret" in keys.joinpath("calls.log").readText()) and "service nuclear-chat account tenor" in keys.joinpath("calls.log").readText())
+  keyring.remove("tenor")
+  expect(keyring.key("tenor") == null)
+  said = ""
+  try
+    keyring.keep("imgur", "x")
+  catch e
+    said = "${e}"
+  expect("no GIF service" in said)
+
+testThePackIsFoundInACheckoutAndNoPathLeavesIt(tmpPath: Path, monkeypatch: any) void
+  pack = ChatPack()
+  expect(Path(pack.folder(), "pack.json").isFile(), pack.folder())
+  expect(pack.drawing("../pack.json") == null and pack.drawing("nope.svg") == null)
+  monkeypatch.setenv("NUCLEAR_CHAT_PACK", "${tmpPath}")
+  expect(pack.folder() == "${tmpPath}")
+
+testTheServicesTokenIsMadeOnceKeptInTheKeyringAndAClosedKeyringIsRefused(tmpPath: Path, monkeypatch: any) void
+  bin = script(tmpPath, "secret-tool", FAKE_SECRET_TOOL)
+  keys = tmpPath.joinpath("keys")
+  keys.mkdir()
+  monkeypatch.setenv("KEYS_DIR", "${keys}")
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  monkeypatch.setattr(sys, "platform", "linux")
+  keyring = Keyring()
+  first = serviceToken(keyring, 0)
+  expect(first.length >= 40 and serviceToken(keyring, 0) == first)
+  // the note says where the token is, never the token
+  note = noteFile().readText()
+  expect("keyring" in note and not (first in note))
+  // the keyring closed (it answers nothing): refused, never a second token
+  keys.joinpath("token").unlink()
+  said = ""
+  try
+    serviceToken(keyring, 0)
+  catch e
+    said = "${e}"
+  expect("closed" in said and not keys.joinpath("token").exists())
+
+testTheServiceIsFoundOnTheMachinesPort(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath}")
+  monkeypatch.delenv("NUCLEAR_CHAT_PORT", raising = false)
+  monkeypatch.delenv("NUCLEAR_CHAT_URL", raising = false)
+  monkeypatch.setattr(sys, "platform", "linux")
+  expect(chatUrl() == "http://127.0.0.1:7880")
+  tmpPath.joinpath("nuclearlang").mkdir()
+  tmpPath.joinpath("nuclearlang", "ai.env").writeText("NUCLEAR_DEVELOPER_PORT=7879\nNUCLEAR_CHAT_PORT=7881\n")
+  expect(chatUrl() == "http://127.0.0.1:7881")
+  monkeypatch.setenv("NUCLEAR_CHAT_PORT", "7890")
+  expect(chatPort() == 7890)
+  // a working tree's service is the built nuclear_chat beside this package
+  expect(serviceFolder().endsWith("nuclear_chat/build"))

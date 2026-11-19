@@ -1,0 +1,4 @@
+// What GifsRepository.pack answers, for the screens of gifs.
+usecase PackGifs(repository: GifsRepository)
+  exec() Result<NuclearChatError, PackGif[]>
+    ~repository.pack()

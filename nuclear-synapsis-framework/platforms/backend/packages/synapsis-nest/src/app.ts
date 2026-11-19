@@ -58,6 +58,11 @@ export async function createApp(module: Type<unknown>): Promise<INestApplication
   return app;
 }
 
+/** The running app (the tests' appClient). */
+export function currentApp(): INestApplication | undefined {
+  return current;
+}
+
 /** Remembers an app built elsewhere (the testing module) for `inject`. */
 export function useApp(app: INestApplication | undefined): void {
   current = app;

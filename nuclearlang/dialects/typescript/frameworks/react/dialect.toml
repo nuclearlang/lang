@@ -22,12 +22,16 @@ defs = [
 replaces = ["auto_imports.createElement", "auto_imports.useState", "auto_imports.useEffect", "auto_imports.useMemo", "auto_imports.useRef", "auto_imports.useCallback", "auto_imports.Fragment"]
 
 [syntax]
+list_if_slot = "{{cond}} ? {{value}} : null"
 # Vite and Vitest resolve a relative import without an extension (TypeScript's `bundler` resolution)
 project_import = "{{relative}}"
 
 [options]
 builtin_result = false             # Result, Ok and Err are the runtime's (synapsis-web)
 type_args_as_args = ["inject"]     # inject<Repo>() → inject(Repo): the class is the token
+# `if c x` in `children = [...]` keeps its place (`c ? x : null`): a spread would move the siblings after it, and React
+# would remount them (a textarea loses its focus while the user types)
+slot_lists = ["children"]
 
 [types]
 Error = "AppError"
@@ -38,7 +42,8 @@ written = ["Result", "Ok", "Err", "AppError", "AppConfig", "ComponentConfig", "R
   "Cache", "Json", "StateManager", "StatelessView", "StatefulView", "statelessOf", "statefulOf", "Providers",
   "useManager", "useStateOf", "createElement", "Element", "inject", "register", "Guards", "Guard", "AppEvent",
   "Events", "Synapsis", "buildRouter", "AnyRoute", "SynapsisTest", "describe", "test", "beforeEach", "expect",
-  "when", "verify", "renderScreen", "statesOf", "okOf", "errOf", "screen", "act"]
+  "when", "verify", "renderScreen", "statesOf", "okOf", "errOf", "screen", "act", "afterEach", "beforeAll", "afterAll",
+  "cleanup"]
 
 [decorators]
 # read by the templates (decor) and not written as TypeScript decorators
@@ -127,7 +132,7 @@ method_signature = { file = "templates/repository_method.tpl" }
 description = "usecase Name(deps) + exec(...) Result<E, T> → one business operation"
 imports = ["Guards", "Err"]
 methods = ["exec"]
-returns = "Result"
+returns = ["Result", "Stream"]
 template = { file = "templates/injectable.tpl" }
 [kinds.usecase.syntax]
 ctor_param = "{{decorators}}private readonly {{name}}{{#optional}}?{{/optional}}{{#type}}: {{type}}{{/type}}{{#default}} = {{default}}{{/default}}"
@@ -170,6 +175,8 @@ ctor_param = "{{decorators}}private readonly {{name}}{{#optional}}?{{/optional}}
 
 # --- state ---
 [kinds.statemanager]
+# the runtime's StateManager keeps these: a method of that name would replace it (N0223)
+sealed = ["close", "emit", "subscribe", "listen", "state"]
 description = "@stateModel(S) statemanager Name(deps) + @state methods → the state of a screen (StateManager<S>)"
 inherits = ["StateManager"]
 imports = ["StateManager"]
@@ -277,6 +284,14 @@ template = { file = "templates/synapsis_g.tpl" }
 
 [project.files."src/index.ts"]
 template = { file = "templates/index_ts.tpl" }
+
+# the embedded mode (ADR-synapsis-0009): mount(element, host), built by `npm run build:embed`
+[project.files."src/embed.ts"]
+names = ["mount"]
+template = { file = "templates/embed_ts.tpl" }
+
+[project.files."vite.embed.config.ts"]
+template = { file = "templates/vite_embed_config.tpl" }
 
 [project.files."index.html"]
 template = { file = "templates/index_html.tpl" }

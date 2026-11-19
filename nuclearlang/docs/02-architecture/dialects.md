@@ -43,7 +43,8 @@ N0209), `members` (names the kind brings, like `setState`), `param_access`, `imp
 Framework fields: `async_methods`, `methods`, `returns`, `file_header`, `alias_via`, `declares`, `provide`,
 `results`, `void_methods`. Template variables: `name`, `members`, `body`, `methods_code`, `fields`,
 `params_list`, `ctor`, `decorators`, `decor`, `deco_args`, `param_groups`, `ret_info`, `owner_decor`,
-`call_args`, `generic_list`, `tinfo` (the full table: `docs/07-reference/projects.md` §5).
+`call_args`, `generic_list`, `tinfo`, `plugins`, and on methods `site` and `is` (the full table:
+`docs/07-reference/projects.md` §5).
 
 - `fields` carry `decor` (decorators of the field), `decorators` (text of the non-consumed ones) and
   `class_decorator` (first `@PascalCase` without parentheses); `methods` carry `is.<name>`.

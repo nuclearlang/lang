@@ -152,6 +152,10 @@ cascade_self = "$"
 pattern_ignore = ""
 pattern_assign = "({{target}} = {{value}});"
 member = "{{object}}.{{name}}"
+# a decimal written as Nuclear writes it (`2.0`, not `2`) and a missing value as `null` (not `undefined`), in print
+# and in an interpolated text
+show_double = { template = "_double({{expr}})", helper = "function _double(n: number): string {\n  return Number.isInteger(n) && Math.abs(n) < 1e16 ? n.toFixed(1) : String(n);\n}" }
+show_nullable = "({{expr}} ?? null)"
 optional_member = "{{object}}?.{{name}}"
 index = "{{object}}[{{index}}]"
 await = "await {{expr}}"
@@ -165,6 +169,23 @@ lambda = """
   {{body}}
 }"""
 lambda_expr = "{{#async}}async {{/async}}({{params}}) => {{expr}}"
+
+# --- the monitor (`--monitor`, spec 015): an async body runs inside the runtime, so its children find it ---
+monitor_body = """
+{{#async}}
+return NuclearMonitor.run('{{label}}', '{{path}}', {{line}}, async () => {
+  {{body}}
+});
+{{/async}}
+{{^async}}
+const nuclearSpan = NuclearMonitor.enter('{{label}}', '{{path}}', {{line}});
+try {
+  {{body}}
+} finally {
+  NuclearMonitor.exit(nuclearSpan);
+}
+{{/async}}"""
+monitor_runtime = { file = "templates/monitor.tpl" }
 
 # --- Result<T, E> (nuclearlang/docs/07-reference/nuclear-base.md §3.2) ---
 result_runtime = { file = "templates/result.tpl" }
@@ -193,7 +214,7 @@ void = "void"
 any = "any"
 dynamic = "any"
 unknown = "any"
-list = "{{item}}[]"
+list = "{{item_group}}[]"
 map = "Record<{{key}}, {{value}}>"
 nullable = "{{type}} | null"
 union = "{{types|join:\" | \"}}"
@@ -219,6 +240,10 @@ neg = "-"
 # null is "no value": == null / != null also covers undefined (an optional property, a missing argument)
 eq = "{{left_infix}} {{#null}}=={{/null}}{{^null}}==={{/null}} {{right_infix}}"
 not_eq = "{{left_infix}} {{#null}}!={{/null}}{{^null}}!=={{/null}} {{right_infix}}"
+# `==` of two lists, maps or sets compares what they hold, as in Python (nuclear-base.md §6): the target compares
+# the objects
+eq_deep = { template = "_equals({{left_arg}}, {{right_arg}})", helper = "function _equals(a: unknown, b: unknown): boolean {\n  if (a === b) return true;\n  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => _equals(x, b[i]));\n  if (a instanceof Map && b instanceof Map) return a.size === b.size && [...a].every(([k, v]) => b.has(k) && _equals(v, b.get(k)));\n  if (a instanceof Set && b instanceof Set) return a.size === b.size && [...a].every((x) => b.has(x));\n  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null && Object.getPrototypeOf(a) === Object.prototype && Object.getPrototypeOf(b) === Object.prototype) {\n    const x = a as Record<string, unknown>;\n    const y = b as Record<string, unknown>;\n    const keys = Object.keys(x);\n    return keys.length === Object.keys(y).length && keys.every((k) => k in y && _equals(x[k], y[k]));\n  }\n  return false;\n}" }
+not_eq_deep = { template = "!_equals({{left_arg}}, {{right_arg}})", helper = "function _equals(a: unknown, b: unknown): boolean {\n  if (a === b) return true;\n  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => _equals(x, b[i]));\n  if (a instanceof Map && b instanceof Map) return a.size === b.size && [...a].every(([k, v]) => b.has(k) && _equals(v, b.get(k)));\n  if (a instanceof Set && b instanceof Set) return a.size === b.size && [...a].every((x) => b.has(x));\n  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null && Object.getPrototypeOf(a) === Object.prototype && Object.getPrototypeOf(b) === Object.prototype) {\n    const x = a as Record<string, unknown>;\n    const y = b as Record<string, unknown>;\n    const keys = Object.keys(x);\n    return keys.length === Object.keys(y).length && keys.every((k) => k in y && _equals(x[k], y[k]));\n  }\n  return false;\n}" }
 lt = "<"
 gt = ">"
 lt_eq = "<="
@@ -254,7 +279,8 @@ globals = [
 not_constructors = ["String", "Number", "Boolean", "Symbol", "BigInt"]
 
 [functions]
-print = "console.log"
+# print writes a decimal with its `.0` and a missing value as `null`, as the other targets do (library.md §12)
+print = { template = "console.log({{shown}})" }
 now = { template = "new Date()" }
 # the standard library (nuclearlang/docs/07-reference/library.md §10)
 delay = { template = "new Promise<void>((resolve) => setTimeout(resolve, {{arg0}}))" }

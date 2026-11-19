@@ -1,0 +1,119 @@
+use re
+use json
+use random
+use pathlib{ Path }
+
+// What the new-team wizard suggests (ADR-platform-0010), deterministic and with no model: the employees of each role
+// whose profile meets the team's purpose and skills (`team suggest`), and names for the team, rolled like a game's
+// nickname dice from the word lists of `team-names.json` in the roles' folder (`team name-suggest`).
+
+// Where a word of the team met an employee's profile, and what it weighs.
+SOURCES: <string, int> = { "skill": 3, "endorsement": 2, "headline": 2, "experience": 1, "profile": 1, "bio": 1 }
+
+// Words that say nothing of the work, in both languages.
+STOPWORDS = ["the", "and", "for", "with", "that", "this", "our", "your", "from", "into", "who", "what", "are", "was", "will", "una", "uno", "los", "las", "del", "con", "para", "por", "que", "como", "sus", "nuestro", "nuestra", "team", "equipo", "app", "make", "build", "hacer", "crear", "first", "strong", "good", "great", "best", "fast", "new", "primero", "mucha", "mucho", "buena", "bueno", "nueva", "nuevo"]
+
+// A word as it is compared: lowercase, its plural or its -ing taken away (tests, testing and tester meet).
+stem(word: string) string
+  for suffix in ["ations", "ation", "ings", "ing", "ers", "er", "ies", "es", "ed", "s"]
+    if word.endsWith(suffix) and word.length - suffix.length >= 4
+      return word.substring(0, word.length - suffix.length)
+  word
+
+// The words of a text that count: three letters or more, no stopword, stemmed, each once.
+terms(text: string) string[]
+  found: string[] = re.findall(r"[a-z0-9áéíóúñü+#]+", text.lower())
+  found.filter((w) => w.length >= 3 and not (w in STOPWORDS)).map((w) => stem(w)).unique()
+
+// Two stemmed words meet when they are the same, or one starts the other (five letters or more: design, designer).
+meets(a: string, b: string) boolean
+  a == b or (Math.min(a.length, b.length) >= 5 and (a.startsWith(b) or b.startsWith(a)))
+
+// The texts of an employee's profile by source: their skills, endorsed skills, headline, experience, profile, bio.
+profileTexts(p: <string, any>) <string, any>[]
+  out: <string, any>[] = []
+  for s in (p["skills"] ?? []) as any[]
+    out.add({ "in": "skill", "text": "${s}" })
+  endorsed: <string, any> = isinstance(p["endorsements"], dict) ? p["endorsements"] as <string, any> : ({} as <string, any>)
+  for s in endorsed.keys
+    out.add({ "in": "endorsement", "text": "${s}" })
+  out.add({ "in": "headline", "text": "${p["headline"] ?? ""}" })
+  for e in (p["experience"] ?? []) as any[]
+    job: <string, any> = isinstance(e, dict) ? e : ({} as <string, any>)
+    out.add({ "in": "experience", "text": "${job["title"] ?? ""}: ${job["line"] ?? ""}" })
+  out.add({ "in": "profile", "text": "${p["profile"] ?? ""}" })
+  out.add({ "in": "bio", "text": "${p["bio"] ?? ""}" })
+  out.filter((t) => not "${t["text"]}".trim().isEmpty)
+
+// An employee against the team's words: the score (each word counts once, by the heaviest source it met) and why
+// (`[{ term, in, text }]`, the heaviest first).
+employeeFit(p: <string, any>, words: string[]) <string, any>
+  texts = profileTexts(p).map((t) => { "in": t["in"], "text": t["text"], "terms": terms("${t["text"]}") })
+  score = 0
+  why: <string, any>[] = []
+  for w in words
+    best: <string, any>? = null
+    for t in texts
+      if (t["terms"] as string[]).any((x) => meets(x, w)) and (best == null or SOURCES["${t["in"]}"]! > SOURCES["${best!["in"]}"]!)
+        best = t
+    if best != null
+      score += SOURCES["${best!["in"]}"]!
+      why.add({ "term": w, "in": best!["in"], "text": best!["text"] })
+  { "score": score, "why": why.sortedBy((x) => -SOURCES["${x["in"]}"]!) }
+
+// The mean of an employee's stats: the tie-break, the all-rounder first.
+statMean(p: <string, any>) double
+  stats: <string, any> = isinstance(p["stats"], dict) ? p["stats"] as <string, any> : ({} as <string, any>)
+  values = stats.values.filter((v) => isNumber(v))
+  values.isEmpty ? 0.0 : values.reduce(0.0, (a: double, b: any) => a + (b as double)) / values.length
+
+// `team suggest`: the best `limit` employees of each role for a team's purpose and skills (always some of each role
+// with a roster: with no word met, the best all-rounders), each with its score and why.
+suggestMembers(purpose: string, skills: string[], known: <string, any>, limit: int = 3) <string, any>
+  // a library skill stands for its title and tags (library.nuc `skillWords`)
+  words = terms([purpose, ...skillWords(skills)].join(" "))
+  roles: <string, any>[] = []
+  for role in ROLES
+    staff: <string, any>[] = known[role] ?? []
+    ranked: <string, any>[] = []
+    for p in staff
+      f = employeeFit(p, words)
+      ranked.add({ "employee": p["id"], "name": p["name"] ?? "", "role": role, "headline": p["headline"] ?? p["profile"] ?? "", "face": p["face"], "temperament": p["temperament"], "gender": p["gender"], "score": f["score"], "why": f["why"], "mean": statMean(p) })
+    best: <string, any>[] = ranked.sortedBy((c) => [-(c["score"] as int), -(c["mean"] as double)]).take(limit)
+    for c in best
+      c.remove("mean")
+    roles.add({ "role": role, "candidates": best })
+  { "purpose": purpose, "skills": skills, "terms": words, "roles": roles }
+
+// The word lists of the team names (`team-names.json` of the roles' folder): `{ <lang>: { patterns, <list>: [words] } }`;
+// none when the folder is not there.
+nameLists(dir: Path? = null) <string, any>
+  at = dir ?? rolesDir()
+  file = at == null ? null : at!.joinpath("team-names.json")
+  if file == null or not file!.isFile()
+    return {}
+  json.loads(file!.readText(encoding = "utf-8"))
+
+// `team name-suggest`: `count` different team names in `lang` (English when it has no lists), each a pattern of the
+// lists filled at random (`seed`: the same names again, for the tests); `{topic}` is a word of the purpose, and a
+// pattern with it is used only when there is a purpose.
+suggestNames(lang: string = "en", purpose: string = "", count: int = 5, seed: int? = null, dir: Path? = null) string[]
+  all = nameLists(dir)
+  lists: <string, any> = all[lang] ?? all["en"] ?? ({} as <string, any>)
+  patterns: string[] = lists["patterns"] ?? []
+  found: string[] = re.findall(r"[^\W\d_]{5,}", purpose)
+  topics = found.filter((w) => not (w.lower() in STOPWORDS)).map((w) => w.substring(0, 1).upper() + w.substring(1).lower())
+  usable = patterns.filter((p) => not topics.isEmpty or not ("{topic}" in p))
+  dice = random.Random(seed)
+  names: string[] = []
+  tries = 0
+  while names.length < count and tries < count * 40 and not usable.isEmpty
+    tries += 1
+    name: string = dice.choice(usable)
+    for key in re.findall(r"\{(\w+)\}", name)
+      words: string[] = key == "topic" ? topics : lists["${key}"] ?? []
+      name = name.replace("{${key}}", words.isEmpty ? "" : dice.choice(words))
+    name = name.split(" ").filter((w) => not w.isEmpty).join(" ")
+    if not name.isEmpty and not (name in names)
+      names.add(name)
+  names

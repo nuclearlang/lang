@@ -400,6 +400,14 @@ fn a_list_with_spreads_has_the_type_of_their_elements() {
 }
 
 #[test]
+fn a_conditional_body_keeps_its_parentheses_where_a_condition_goes() {
+    let py = build("f(xs: string[], fixing: boolean, paths: string[]) string[]\n  xs.filter((x) => fixing ? not x.startsWith('t') : x in paths)\n", "python");
+    has(&py, "if (not x.startswith(\"t\") if fixing else x in paths)]");
+    let plain = build("f(xs: int[]) int\n  xs.count((x) => x > 1)\n", "python");
+    has(&plain, "if x > 1)");
+}
+
+#[test]
 fn an_optional_member_before_coalesce_is_evaluated_once() {
     // `?.` is a conditional in Python: `??` must not write it twice (pyright cannot narrow the repetition)
     let py = build("Item(id: string)\npick(item: Item?) string\n  item?.id ?? 'none'\n", "python");
@@ -1027,4 +1035,14 @@ fn a_map_from_a_call_is_read_with_a_lookup_in_python() {
     for read in ["m.get(\"x\")", "Conf.all().get(\"x\")", "map_of().get(\"x\")"] {
         assert!(py.contains(read), "{read} missing in:\n{py}");
     }
+}
+
+#[test]
+fn a_conditional_value_of_a_match_arm_keeps_its_parentheses() {
+    // Python's `t if c else o`: an arm's own conditional would otherwise join the next arm (the first arm won always)
+    let src = "rate(kind: string, often: boolean) double\n  r = match kind\n    \"some\" -> often ? 0.8 : 0.5\n    \"many\" -> often ? 1.0 : 0.9\n    _ -> 0.0\n  r\n";
+    let code = build(src, "python");
+    has(&code, "(0.8 if often else 0.5) if kind == \"some\" else (1.0 if often else 0.9) if kind == \"many\" else 0.0");
+    let chosen = build("pick(a: boolean, b: boolean) int\n  n = if a\n    b ? 1 : 2\n  else\n    3\n  n\n", "python");
+    has(&chosen, "(1 if b else 2) if a else 3");
 }

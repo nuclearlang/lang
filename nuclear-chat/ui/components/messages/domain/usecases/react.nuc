@@ -1,0 +1,4 @@
+// What MessagesRepository.react answers, for the screens of messages.
+usecase React(repository: MessagesRepository)
+  exec(workspace: string, id: string, reaction: Reaction) Result<NuclearChatError, Message>
+    ~repository.react(workspace, id, reaction)

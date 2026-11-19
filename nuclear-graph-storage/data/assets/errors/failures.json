@@ -58,7 +58,7 @@
     "",
     "**Cause.** `nuclear`, the language server and the editors' bundled copies are installed copies; a project's folder dependency is installed into its `build/.venv`.",
     "",
-    "**Next step.** `installer/install.sh` (it rebuilds and reinstalls everything); in a project, `nuclear install` reinstalls folder dependencies. Restart the editor to load the new server."
+    "**Next step.** `installer/install.sh` (it rebuilds and reinstalls everything); in a project, a folder dependency is not reinstalled by `nuclear install` once installed: `build/.venv/bin/pip install --force-reinstall --no-deps <the folder>` ; in a web project, delete `build/app/node_modules/synapsis-web` and run `nuclear install` again (the CLI's roadmap). Restart the editor to load the new server."
    ],
    "keys": [
     "unknown command",
@@ -78,7 +78,8 @@
    ],
    "sources": [
     "AGENTS.md#Commands of the whole tree",
-    "installer/docs/02-architecture/overview.md#From source (`install.sh`)"
+    "installer/docs/02-architecture/overview.md#From source (`install.sh`)",
+    "tools/cli/docs/01-product/roadmap.md"
    ],
    "meta": {
     "family": "environment",
@@ -226,13 +227,13 @@
    "id": "failure:a-service-started-by-hand-holds-its-port",
    "type": "failure",
    "title": "Failure: the set-up stops because a service started by hand answers on its port",
-   "summary": "The set-up of the AI services stops at *Start the Smart Graph* (or *the Nuclear Developer*) with `a ... started by hand already answers at ...`: a graph or a Developer started in a terminal holds the port, so the system's service cannot take it. Stop that process with the command the message gives and try the step again.",
+   "summary": "The set-up of the AI services stops at *Start the Smart Graph* (or *the Nuclear Developer*, *Nuclear Chat*) with `a ... started by hand already answers at ...`: a graph, a Developer or a chat service started in a terminal holds the port, so the system's service cannot take it. Stop that process with the command the message gives and try the step again.",
    "body": [
     "**Looks like.** `a Nuclear Smart Graph started by hand already answers at http://127.0.0.1:7878/v1/health: stop it (pkill -f 'nuclear-graph serve') and run the set-up again, so the service of this system takes its place`.",
     "",
     "**Cause.** Before the set-up existed the services were started with `nuclear-graph serve &` and `nuclear-developer &`. Such a process keeps running old code and is gone after a restart of the machine; the set-up does not kill a process it did not start.",
     "",
-    "**Next step.** `pkill -f 'nuclear-graph serve'` (the graph) or `pkill -f 'uvicorn app.main:app'` (the Developer); then *Try again* in the wizard, or `nuclear-builder setup --profile <the same> --yes`. A service the editor started (the settings page's *Start*) stops when the editor closes."
+    "**Next step.** `pkill -f 'nuclear-graph serve'` (the graph) or `pkill -f 'uvicorn app.main:app'` (the Developer), `pkill -f 'nuclear-chat serve'` (Nuclear Chat); then *Try again* in the wizard, or `nuclear-builder setup --profile <the same> --yes`. A service the editor started (the settings page's *Start*) stops when the editor closes."
    ],
    "keys": [
     "started by hand",
@@ -240,7 +241,8 @@
     "holds the port",
     "pkill",
     "7878",
-    "7879"
+    "7879",
+    "7880"
    ],
    "links": [
     {
@@ -694,7 +696,7 @@
     "severity": "error"
    },
    "sources": [
-    "extensions/tools/nuclear-builder/src/safety.ts",
+    "extensions/tools/nuclear-builder/preflight.nuc",
     "nuclear-agents/nuclear_developer/components/developer/ai/diagnoser.nuc"
    ]
   },

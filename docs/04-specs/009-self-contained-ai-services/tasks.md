@@ -33,7 +33,8 @@ related: [requirements.md, design.md]
       spreads, a local or a member importing another file, `for k, v in m ?? {}`, `print`'s named arguments, a
       constant of a file seen by the other files of the project).
 - [ ] T3.1b The engine (`src/engine.ts`, `src/safety.ts`, the pipeline of `src/cli.ts`, about 2,400 lines) with its
-      tests.
+      tests. Done by [spec 011](../011-software-factory/tasks.md) (the software factory, Phases 2–3): its engine in
+      Nuclear replaces this port of the TypeScript engine (ADR-platform-0005).
 - [x] T3.2a The VS Code set-up and settings pages run `nuclear-builder setup` as a process; their pages stay.
 - [ ] T3.2b The Builder's page and the JetBrains tool window run the engine in Nuclear.
 - [x] T3.3a `nuclear-builder` from the AI archive: the installers' set-up needs no Node.js.

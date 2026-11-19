@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [tools/cli/src/main.rs, tools/cli/src/framework/mod.rs, tools/cli/docs/08-guides/README.md]
 ---
 # Every command of `nuclear`
@@ -68,6 +68,7 @@ project
   build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]
                                              transpile, pub get and build_runner (and flutter build <target>)
   run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)
+  build --monitor, run --monitor             each Nuclear function and method measured: .nuclear/monitor/report.json
   device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,
                                              iphone14pro, ipadair...; several at once: device 1, 2, 3)
   device list                                the running devices and the devices it can be
@@ -91,6 +92,8 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
                                              from scratch, then flutter clean + everything again, until
                                              flutter analyze finds no errors (exit 2: the .nuc have errors)
   explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained
+  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
+                                             calls in a loop, connections, memory) and each function's time
 
 code generation: nuclear make <what> ...   (alias: nuclear g <alias> ...)
   component <component>                 (c)  facade + an example use case
@@ -147,7 +150,7 @@ setup
 
 options
   --project <dir>   project folder (default: the folder with main.nuc, here or above)
-  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)
+  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)
 ```
 
 ## `nuclear gen`

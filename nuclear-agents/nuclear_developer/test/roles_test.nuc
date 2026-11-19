@@ -1,0 +1,129 @@
+use json
+use tomllib
+use pathlib{ Path }
+
+// The five roles of the software factory (ADR-developer-0002) and the prompts the agents read from their skills.
+ROLES = ["analyst", "architect", "developer", "qa", "devops"]
+STATIONS = ["analysis", "design", "tests", "code", "quality", "delivery"]
+SECTIONS = ["## Mission", "## Inputs", "## Outputs", "## Definition of done", "## Never", "## Skills"]
+FIELDS = ["id", "name", "location", "age", "university", "profile", "bio", "hrNote", "headline", "connections", "experience", "education", "skills", "endorsements", "recommendations", "openTo", "gender", "temperament", "stats"]
+PROMPTS = ["agent.accept", "agent.analyze", "agent.chat", "agent.diagnose", "agent.document", "agent.faithful", "agent.piece", "agent.plan", "agent.plan-again", "agent.repair", "agent.security", "agent.test", "bug", "chat", "diagram", "docs", "feature", "piece", "plan", "refactor", "security", "test"]
+
+// `nuclear-agents/roles`, from wherever the tests run (the project's folder or its build).
+rolesFolder() Path
+  for folder in Path(__file__).resolve().parents
+    if folder.joinpath("roles", "README.md").isFile()
+      return folder.joinpath("roles")
+  Path("roles")
+
+// The `key: value` lines of a file's front matter, and the text after it (empty when it has none).
+frontMatter(text: string) <string, string>
+  found: <string, string> = {}
+  end = text.indexOf("\n---\n")
+  if not text.startsWith("---\n") or end < 0
+    return found
+  for line in text.substring(4, end).split("\n")
+    cut = line.indexOf(":")
+    if cut > 0 and not line.startsWith(" ")
+      found[line.substring(0, cut)] = line.substring(cut + 1).trim()
+  found["body"] = text.substring(end + 5)
+  found
+
+// The problems of one role's folder: what is missing, what is not named, what is malformed.
+problemsOf(role: string) string[]
+  folder = rolesFolder().joinpath(role)
+  problems: string[] = []
+  for part in ["role.md", "checks.toml", "roster/en.json", "roster/es.json"]
+    if not folder.joinpath(part).isFile()
+      problems.add("${role}: no ${part}")
+  if problems.length > 0
+    return problems
+  text: string = folder.joinpath("role.md").readText()
+  head = frontMatter(text)
+  if (head["id"] ?? "") != role
+    problems.add("${role}: role.md's id is '${head["id"] ?? ""}'")
+  for key in ["title", "stations", "default"]
+    if not (key in head)
+      problems.add("${role}: role.md has no ${key}")
+  for section in SECTIONS
+    if not ("\n${section}\n" in text)
+      problems.add("${role}: role.md has no '${section}'")
+  for kind in ["skills", "templates"]
+    files: Path[] = list(folder.joinpath(kind).glob("*.md"))
+    if files.length == 0
+      problems.add("${role}: no ${kind}")
+    for file in files
+      if not ("(${kind}/${file.name})" in text)
+        problems.add("${role}: role.md does not name ${kind}/${file.name}")
+    for m in Regex(r"\((${kind}/[\w.-]+\.md)\)").findAll(text)
+      if not folder.joinpath(m[1] ?? "").isFile()
+        problems.add("${role}: role.md names ${m[1] ?? ""}, which does not exist")
+  for file in folder.joinpath("skills").glob("*.md")
+    skill = frontMatter(file.readText())
+    if (skill["name"] ?? "") != "${file.stem}" or (skill["description"] ?? "").length == 0
+      problems.add("${role}: skills/${file.name} needs the front matter name: ${file.stem} and a description")
+  checks: <string, any>[] = tomllib.loads(folder.joinpath("checks.toml").readText())["check"] ?? []
+  if checks.length == 0
+    problems.add("${role}: checks.toml has no [[check]]")
+  for check in checks
+    where = "${role}: check '${check["id"] ?? ""}'"
+    if not "${check["id"] ?? ""}".startsWith("${role}.") or "${check["title"] ?? ""}".length == 0
+      problems.add("${where} needs an id '${role}.<name>' and a title")
+    if not ("${check["station"] ?? ""}" in STATIONS) or not ("${check["station"] ?? ""}" in (head["stations"] ?? ""))
+      problems.add("${where}: its station is not one of the role's")
+    if not (check["on"] == true or check["on"] == false) or not ("${check["by"] ?? ""}" in ["role", "user"])
+      problems.add("${where} needs on = true|false and by = \"role\"|\"user\"")
+    if ("command" in check) == ("prompt" in check)
+      problems.add("${where} needs a command or a prompt, not both")
+  problems
+
+// The problems of one role's roster: 40 employees, the same ids and numbers in English and Spanish.
+rosterProblems(role: string) string[]
+  folder = rolesFolder().joinpath(role, "roster")
+  en: <string, any> = json.loads(folder.joinpath("en.json").readText())
+  es: <string, any> = json.loads(folder.joinpath("es.json").readText())
+  problems: string[] = []
+  stats: string[] = en["stats"] ?? []
+  people: <string, any>[] = en["employees"] ?? []
+  others: <string, any>[] = es["employees"] ?? []
+  if en["role"] != role or es["role"] != role or stats.length != 6 or es["stats"] != stats
+    problems.add("${role}: the roster's role or its six stats differ")
+  if people.length != 40 or others.length != 40
+    return [...problems, "${role}: ${people.length} and ${others.length} employees, not 40"]
+  for at in 0..40
+    one = people[at]
+    other = others[at]
+    if one["id"] != other["id"] or one["stats"] != other["stats"]
+      problems.add("${role}: employee ${at + 1} differs between en and es")
+    for card in [one, other]
+      if card.keys.sorted() != FIELDS.sorted() or FIELDS.any((f) => "${card[f] ?? ""}".length == 0)
+        problems.add("${role}: ${card["id"] ?? at} needs exactly ${FIELDS.join(", ")}, none empty")
+      numbers: <string, any> = card["stats"] ?? {}
+      if numbers.keys != stats or numbers.values.any((n) => not (n is int) or n < 0 or n > 99)
+        problems.add("${role}: ${card["id"] ?? at}'s stats are not the six, 0 to 99")
+  problems
+
+// The roles' folders: the one source of each role, complete and named.
+tests RolesTests
+  @test("every role folder is complete and names every skill and template it has")
+  complete() void
+    problems: string[] = []
+    for role in ROLES
+      problems.addAll(problemsOf(role))
+    expect(problems == [])
+
+  @test("every roster has 40 employees, with the same ids and numbers in English and Spanish")
+  rosters() void
+    problems: string[] = []
+    for role in ROLES
+      problems.addAll(rosterProblems(role))
+    expect(problems == [])
+
+  @test("each prompt the agents read is a skill of one role, given once")
+  prompts() void
+    named: string[] = []
+    for file in rolesFolder().glob("*/skills/*.md")
+      name = frontMatter(file.readText())["prompt"] ?? ""
+      if name.length > 0
+        named.add(name)
+    expect(named.sorted() == PROMPTS)

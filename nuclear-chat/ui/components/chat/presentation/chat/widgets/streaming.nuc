@@ -1,0 +1,40 @@
+// The answers being written in this channel (or this thread), as they come: the member's picture and name, the text
+// so far as markdown (a code block not closed yet is shown as code), and each tool it called as a small chip that
+// spins while it runs.
+stateless Streaming(ws: Workspace, channel: string, thread: string, texts: Texts)
+  build() Element
+    ActivityStateBuilder(
+      ready = (all: Activity[]) =>
+        here = all.filter((a) => a.channel == channel and a.thread == thread and a.parts.length > 0)
+        div(className = "streaming", children = here.map((a) => StreamingRow(key = a.member, activity = a, ws = ws, texts = texts)))
+      ,
+      orElse = () => div(className = "streaming"),
+    )
+
+stateless StreamingRow(activity: Activity, ws: Workspace, texts: Texts)
+  build() Element
+    a = activity
+    member = memberOf(ws, a.member)
+    div(
+      className = "msg first live",
+      children = [
+        div(className = "gutter", children = Avatar(member = member, author = a.member)),
+        div(
+          className = "body",
+          children = [
+            div(className = "meta", children = [strong(className = "author", children = authorName(ws, a.member, texts)), member != null and member!.role != "" ? span(className = "chip role", children = member!.role) : null, span(className = "time", children = texts.get("writing"))]),
+            ...a.parts.map((p, i) => p.kind == "tool" ? ToolChip(key = "t${i}", part = p, texts = texts) : div(key = "x${i}", className = "live-text", children = Markdown(text = openFence(p.text), onChannel = (id) => {}))),
+            span(className = "caret"),
+          ],
+        ),
+      ],
+    )
+
+// One tool the member called: its name, and whether it is running, done or failed.
+stateless ToolChip(part: Part, texts: Texts)
+  build() Element
+    span(className = "tool-chip ${part.state}", title = texts.get("toolState.${part.state}"), children = [span(className = "tool-mark"), span(children = part.text)])
+
+// A text being written with a code fence not closed yet: closed, so it shows as code.
+openFence(text: string) string
+  text.split("```").length % 2 == 0 ? "${text}\n```" : text

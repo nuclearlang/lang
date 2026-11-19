@@ -1,8 +1,11 @@
-// The Settings and integrations tool (Ctrl+Alt+S): every setting of the AI loop in one page. The services (the Smart
-// Graph, the Nuclear Developer, Ollama) with their state and Start / Restart with the chosen models; the local models
-// (installed, their size against the 3B rule, pull); the MCP server in Claude Code, Codex and Cursor; the connections
-// (the graph's clients and pending access requests, Jira, GitHub); the pipeline (Claude's model, retries). Values are
-// the editor's `nuclear.ai.*` settings (aiSettings.ts). Plain HTML and script, no framework.
+// The Settings and integrations tool (Ctrl+Alt+S): every setting of the platform, one section per tool (spec 011,
+// settings by component), the same sections as VS Code's settings. *AI services*: the services (the Smart Graph, the
+// Nuclear Developer, Ollama) with their state and Start / Restart with the chosen models, the local models (installed,
+// their size against the 3B rule, pull), the MCP server in Claude Code, Codex, Cursor and OpenCode, the connections
+// (the graph's clients and pending access requests, Jira, GitHub), the retries (`nuclear.ai.*`, aiSettings.ts). The
+// Builder (its default team and the squad screen), the spending, Nuclear Atlas, HTTP Connections, the devices and the
+// language are drawn from their contributed settings (settingsForm.ts). The welcome can be run again from here.
+// Plain HTML and script, no framework; its texts are settingsL10n.ts.
 import { ChildProcess, execFile, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -13,6 +16,12 @@ import { builder, builderJson, readMachine } from './aiMachine';
 import { billionsOf, MAX_BILLIONS } from './localModels';
 import { checkAll } from './connections';
 import { notices } from './notifications';
+import { lang, localize, pageI18n, l10n } from './i18n';
+import { SETTINGS } from './settingsL10n';
+import { applySetting, FORM_CSS, FORM_JS, settingSections } from './settingsForm';
+import { CommandMissing, listTeams } from '../../tools/nuclear-builder/src/teams/cli';
+import { chatGifKey } from './chatView';
+import { TeamsPanel } from '../../tools/nuclear-builder/src/teams/panel';
 
 type Message =
   | { type: 'ready' }
@@ -23,7 +32,8 @@ type Message =
   | { type: 'allow' | 'deny'; id: string }
   | { type: 'revoke'; client: string }
   | { type: 'connectMcp' }
-  | { type: 'jira' | 'jiraOff' | 'openSettings' | 'setup' };
+  | { type: 'setSetting'; key: string; value: unknown }
+  | { type: 'jira' | 'jiraOff' | 'openSettings' | 'setup' | 'teams' | 'gifKey' };
 
 export interface LocalModel {
   name: string;
@@ -41,6 +51,21 @@ function run(cmd: string, args: string[], cwd?: string): Promise<{ code: number;
   });
 }
 
+/** Claude Code on this machine: missing, or whether the Nuclear MCP server is added to it. The Builder asks it too. */
+export async function claudeMcpState(): Promise<'not installed' | 'added' | 'not added'> {
+  const cmd = vscode.workspace.getConfiguration('nuclear.ai').get('claude.command', 'claude');
+  if ((await run('sh', ['-c', 'command -v "$1"', 'sh', cmd])).code !== 0) return 'not installed';
+  return (await run(cmd, ['mcp', 'get', 'nuclear'])).code === 0 ? 'added' : 'not added';
+}
+
+/** `claude mcp add --scope user nuclear -- nuclear-mcp`, with the commands of the settings. */
+export async function addClaudeMcp(): Promise<void> {
+  const args = ['mcp', 'add', '--scope', 'user', 'nuclear', '--', aiSettings().mcpCommand];
+  const cmd = vscode.workspace.getConfiguration('nuclear.ai').get('claude.command', 'claude');
+  const r = await run(cmd, args);
+  if (r.code !== 0) throw new Error(`${cmd} ${args.join(' ')}: ${r.out.trim()}`);
+}
+
 async function up(url: string): Promise<boolean> {
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(2500) });
@@ -55,22 +80,25 @@ export class SettingsPanel {
   private readonly panel: vscode.WebviewPanel;
 
   private constructor(private readonly context: vscode.ExtensionContext) {
-    this.panel = vscode.window.createWebviewPanel('nuclear.settings', 'Settings and integrations', vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
+    this.panel = vscode.window.createWebviewPanel('nuclear.settings', l10n.t('Settings and integrations'), vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
     this.panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
-    this.panel.webview.html = html(this.panel.webview);
+    const localized = localize(this.panel.webview, () => html(this.panel.webview));
     this.panel.onDidDispose(() => {
       SettingsPanel.current = undefined;
+      localized.dispose();
       notices.watch('settings', false);
     });
     this.panel.onDidChangeViewState((e) => notices.watch('settings', e.webviewPanel.visible && e.webviewPanel.active));
-    this.panel.webview.onDidReceiveMessage((m: Message) => void this.receive(m).catch((e) => void vscode.window.showErrorMessage(`Nuclear settings: ${e instanceof Error ? e.message : e}`)));
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('nuclear.ai') && void this.state()));
+    this.panel.webview.onDidReceiveMessage((m: Message) => void this.receive(m).catch((e) => void vscode.window.showErrorMessage(l10n.t('Nuclear settings: {0}', e instanceof Error ? e.message : String(e)))));
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('nuclear') && void this.state()));
   }
 
-  static show(context: vscode.ExtensionContext): void {
+  /** The page, on a section (`language`, `ai`, `builder`, `spending`, `chat`, `atlas`, `http`, `devices`). */
+  static show(context: vscode.ExtensionContext, section?: string): void {
     const p = SettingsPanel.current ?? (SettingsPanel.current = new SettingsPanel(context));
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('settings', true);
+    if (section) p.post({ type: 'section', id: section });
     void p.state();
   }
 
@@ -94,14 +122,14 @@ export class SettingsPanel {
       const data = (await r.json()) as { models: { name: string; size: number; details?: { parameter_size?: string } }[] };
       return data.models.map((m) => ({ name: m.name, size: m.size, parameters: m.details?.parameter_size ?? '', billions: billionsOf(m.name, m.details?.parameter_size ?? '') })).sort((a, b) => a.billions - b.billions);
     } catch (e) {
-      return `Ollama does not answer at ${aiSettings().ollamaUrl} (${e instanceof Error ? e.message : e})`;
+      return l10n.t('Ollama does not answer at {0} ({1})', aiSettings().ollamaUrl, e instanceof Error ? e.message : String(e));
     }
   }
 
   private async mcpState(): Promise<Record<string, string>> {
     const has = async (cmd: string) => (await run('sh', ['-c', 'command -v "$1"', 'sh', cmd])).code === 0;
     const out: Record<string, string> = {};
-    out.claude = !(await has('claude')) ? 'not installed' : (await run('claude', ['mcp', 'get', 'nuclear'])).code === 0 ? 'added' : 'not added';
+    out.claude = await claudeMcpState();
     out.codex = !(await has('codex')) ? 'not installed' : /\bnuclear\b/.test((await run('codex', ['mcp', 'list'])).out) ? 'added' : 'not added';
     const c = vscode.workspace.getConfiguration('nuclear.ai');
     const home = (f: string) => f.replace(/^~(?=\/|$)/, os.homedir());
@@ -131,14 +159,13 @@ export class SettingsPanel {
     }
     const c = vscode.workspace.getConfiguration('nuclear.ai');
     const integrations = {
-      claude: { command: c.get('claude.command', 'claude'), maxBudgetUsd: c.get('claude.maxBudgetUsd', 2) },
+      claude: { command: c.get('claude.command', 'claude') },
       codex: { enabled: c.get('codex.enabled', false), command: c.get('codex.command', 'codex') },
       opencode: { enabled: c.get('opencode.enabled', false), command: c.get('opencode.command', 'opencode'), configFile: c.get('opencode.configFile', '~/.config/opencode/opencode.json') },
       cursor: { mcpFile: c.get('cursor.mcpFile', '~/.cursor/mcp.json') },
       github: { command: c.get('github.command', 'gh') },
       jira: { site: c.get('jira.site', ''), email: c.get('jira.email', ''), criteriaField: c.get('jira.criteriaField', '') },
-      watch: { callTimeoutMinutes: c.get('watch.callTimeoutMinutes', 15), stallSeconds: c.get('watch.stallSeconds', 90), minFreeMb: c.get('watch.minFreeMb', 500) },
-      resumeInterrupted: c.get('resumeInterrupted', true),
+      watch: { callTimeoutMinutes: c.get('watch.callTimeoutMinutes', 15), stallSeconds: c.get('watch.stallSeconds', 90) },
       checkEveryMinutes: c.get('checkEveryMinutes', 5),
     };
     const [checks, graph, developer, ollama, models, mcp, gh, machine] = await Promise.all([
@@ -151,6 +178,8 @@ export class SettingsPanel {
       run('gh', ['auth', 'status']),
       builderJson<{ atLogin: boolean }>(['--status', '--json']),
     ]);
+    // the Builder's teams, from nuclear-builder (a missing command is said on the page, not as an error)
+    const teams = await listTeams().then((list) => ({ list, missing: '' }), (e: unknown) => ({ list: [], missing: e instanceof CommandMissing ? l10n.t('This nuclear-builder has no teams yet: update NuclearLang.') : e instanceof Error ? e.message : String(e) }));
     this.post({
       type: 'state',
       settings: s,
@@ -164,6 +193,8 @@ export class SettingsPanel {
       github: gh.code === 0,
       checks,
       integrations,
+      sections: settingSections(this.context),
+      teams,
     });
   }
 
@@ -174,6 +205,12 @@ export class SettingsPanel {
       case 'set':
         await vscode.workspace.getConfiguration('nuclear.ai').update(m.key, m.value, vscode.ConfigurationTarget.Global);
         return; // onDidChangeConfiguration redraws
+      case 'setSetting':
+        return applySetting(this.context, m.key, m.value);
+      case 'teams':
+        return TeamsPanel.show(this.context);
+      case 'gifKey':
+        return chatGifKey();
       case 'start':
         return this.start(m.service);
       case 'pull':
@@ -182,7 +219,7 @@ export class SettingsPanel {
         return this.addMcp(m.client);
       case 'connectMcp': {
         const r = await run(aiSettings().graphCommand, ['connect', 'mcp', '--scopes', 'read,write']);
-        void vscode.window.showInformationMessage(r.out.trim() || 'done');
+        void vscode.window.showInformationMessage(r.out.trim() || l10n.t('done'));
         return this.state();
       }
       case 'allow':
@@ -192,8 +229,9 @@ export class SettingsPanel {
         return this.state();
       }
       case 'revoke': {
-        const ok = await vscode.window.showWarningMessage(`Take the graph's access away from '${m.client}'?`, { modal: true }, 'Revoke');
-        if (ok !== 'Revoke') return;
+        const revoke = l10n.t('Revoke');
+        const ok = await vscode.window.showWarningMessage(l10n.t("Take the graph's access away from '{0}'?", m.client), { modal: true }, revoke);
+        if (ok !== revoke) return;
         await run(aiSettings().graphCommand, ['revoke', m.client]);
         return this.state();
       }
@@ -204,7 +242,7 @@ export class SettingsPanel {
         await this.context.secrets.delete(JIRA_SECRET);
         return this.state();
       case 'openSettings':
-        await vscode.commands.executeCommand('workbench.action.openSettings', 'nuclear.ai');
+        await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:nuclearlang.nuclearlang');
         return;
       case 'setup':
         await vscode.commands.executeCommand('nuclear.ai.setup');
@@ -229,11 +267,11 @@ export class SettingsPanel {
       own.delete(service);
       await new Promise((r) => setTimeout(r, 800));
     } else if (await up(url)) {
-      void vscode.window.showWarningMessage(`The ${service === 'graph' ? 'Smart Graph' : 'Nuclear Developer'} is already running, started outside the editor: stop it there to restart it with these settings.`);
+      void vscode.window.showWarningMessage(l10n.t('The {0} is already running, started outside the editor: stop it there to restart it with these settings.', service === 'graph' ? 'Smart Graph' : 'Nuclear Developer'));
       return;
     }
     if ((await run('sh', ['-c', 'command -v "$1"', 'sh', cmd])).code !== 0) {
-      const go = await vscode.window.showErrorMessage(`${cmd} is not installed.`, 'Set up the AI services');
+      const go = await vscode.window.showErrorMessage(l10n.t('{0} is not installed.', cmd), l10n.t('Set up the AI services'));
       if (go) await vscode.commands.executeCommand('nuclear.ai.setup');
       return;
     }
@@ -274,7 +312,7 @@ export class SettingsPanel {
       try {
         json = JSON.parse(fs.readFileSync(file, 'utf8'));
       } catch {
-        if (fs.existsSync(file)) throw new Error(`${file} is not valid JSON: fix it first`);
+        if (fs.existsSync(file)) throw new Error(l10n.t('{0} is not valid JSON: fix it first', file));
       }
       json.mcp = { ...(json.mcp ?? {}), nuclear: { type: 'local', command: [cmd], enabled: true } };
       fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -285,27 +323,34 @@ export class SettingsPanel {
       try {
         json = JSON.parse(fs.readFileSync(file, 'utf8'));
       } catch {
-        if (fs.existsSync(file)) throw new Error(`${file} is not valid JSON: fix it first`);
+        if (fs.existsSync(file)) throw new Error(l10n.t('{0} is not valid JSON: fix it first', file));
       }
       json.mcpServers = { ...(json.mcpServers ?? {}), nuclear: { command: cmd, args: [] } };
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
+    } else if (client === 'claude') {
+      await addClaudeMcp();
     } else {
-      const args = client === 'claude' ? ['mcp', 'add', '--scope', 'user', 'nuclear', '--', cmd] : ['mcp', 'add', 'nuclear', '--', cmd];
-      const r = await run(client === 'claude' ? c.get('claude.command', 'claude') : c.get('codex.command', 'codex'), args);
-      if (r.code !== 0) throw new Error(`${client} ${args.join(' ')}: ${r.out.trim()}`);
+      const args = ['mcp', 'add', 'nuclear', '--', cmd];
+      const r = await run(c.get('codex.command', 'codex'), args);
+      if (r.code !== 0) throw new Error(`codex ${args.join(' ')}: ${r.out.trim()}`);
     }
-    void vscode.window.showInformationMessage(`The Nuclear MCP server is in ${{ claude: 'Claude Code', codex: 'Codex', cursor: 'Cursor', opencode: 'OpenCode' }[client]}.`);
+    void vscode.window.showInformationMessage(l10n.t('The Nuclear MCP server is in {0}.', { claude: 'Claude Code', codex: 'Codex', cursor: 'Cursor', opencode: 'OpenCode' }[client]));
     return this.state();
   }
 }
 
 export function html(webview: vscode.Webview): string {
   const nonce = Math.random().toString(36).slice(2);
-  return `<!doctype html><html><head><meta charset="utf-8">
+  return `<!doctype html><html lang="${lang()}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
 <style>
-  body { margin: 0; padding: 16px 28px 40px; font-family: var(--vscode-font-family); font-size: var(--vscode-font-size); color: var(--vscode-foreground); background: var(--vscode-editor-background); max-width: 980px; }
+  body { margin: 0; font-family: var(--vscode-font-family); font-size: var(--vscode-font-size); color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+  .page { display: grid; grid-template-columns: 220px minmax(0, 980px); gap: 28px; padding: 16px 28px 40px; }
+  nav { position: sticky; top: 16px; align-self: start; display: flex; flex-direction: column; gap: 2px; }
+  nav a { padding: 7px 10px; border-radius: 6px; cursor: pointer; color: var(--vscode-foreground); text-decoration: none; border-left: 2px solid transparent; }
+  nav a:hover { background: var(--vscode-list-hoverBackground); } nav a.sel { background: var(--vscode-list-activeSelectionBackground, #8883); color: var(--vscode-list-activeSelectionForeground, inherit); border-left-color: var(--vscode-focusBorder); font-weight: 600; }
+  nav .sep { height: 1px; background: var(--vscode-panel-border); margin: 8px 0; }
   h1 { font-size: 20px; margin: 4px 0 2px; } h2 { font-size: 14px; margin: 26px 0 8px; text-transform: uppercase; letter-spacing: .05em; opacity: .8; }
   .muted { opacity: .65; } .grid { display: grid; grid-template-columns: 220px 1fr; gap: 8px 16px; align-items: center; }
   input, select, button { font: inherit; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-panel-border)); border-radius: 4px; padding: 3px 8px; }
@@ -316,30 +361,40 @@ export function html(webview: vscode.Webview): string {
   .on { background: #16a34a; } .off { background: #b91c1c; }
   table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--vscode-panel-border); }
   .over { color: var(--vscode-errorForeground); } .badge { font-size: 11px; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--vscode-panel-border); }
+  .hero { display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background, #8881); margin: 10px 0 6px; }
+  .hero .grow { flex: 1; } .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  ${FORM_CSS}
 </style></head><body>
-<h1>Settings and integrations</h1>
-<div class="muted">The AI loop of NuclearLang: everything here is a setting of the editor (<a href="#" id="openSettings">nuclear.ai</a>); a project's <code>.nuclear/builder.json</code> still wins for its own pipeline.</div>
-<div id="root">Loading…</div>
+<div class="page"><nav id="nav"></nav><div><div id="head"></div><div id="root">…</div></div></div>
 <script nonce="${nonce}">
-const vscode = acquireVsCodeApi();
+${pageI18n(SETTINGS)}
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const gb = (n) => (n / 1e9).toFixed(1) + ' GB';
-let S = null;
+${FORM_JS}
+const SECTIONS = ['language', 'ai', 'builder', 'spending', 'chat', 'atlas', 'http', 'devices'];
+// the section shown survives a re-render (a change of language)
+let S = null, section = vscode.getState()?.section ?? 'ai';
 function field(key, label, value, help, type) {
   return '<label>' + esc(label) + '<div class="muted">' + esc(help) + '</div></label><input data-key="' + key + '" type="' + (type || 'text') + '" value="' + esc(value) + '">';
 }
 function modelSelect(key, label, value, help) {
   const list = Array.isArray(S.models) ? S.models : [];
   const names = list.map((m) => m.name);
-  const opts = (names.includes(value) ? names : [value, ...names]).map((n) => { const m = list.find((x) => x.name === n); return '<option value="' + esc(n) + '"' + (n === value ? ' selected' : '') + '>' + esc(n) + (m ? ' · ' + esc(m.parameters) + (m.billions > S.max ? ' · over 3B' : '') : ' · not installed') + '</option>'; }).join('');
+  const opts = (names.includes(value) ? names : [value, ...names]).map((n) => { const m = list.find((x) => x.name === n); return '<option value="' + esc(n) + '"' + (n === value ? ' selected' : '') + '>' + esc(n) + (m ? ' · ' + esc(m.parameters) + (m.billions > S.max ? ' · ' + t('over3b') : '') : ' · ' + t('notInstalled')) + '</option>'; }).join('');
   const m = list.find((x) => x.name === value);
-  const warn = !m ? ' <button data-pull="' + esc(value) + '">Pull</button>' : m.billions > S.max ? ' <span class="over">over the 3B rule</span>' : '';
+  const warn = !m ? ' <button data-pull="' + esc(value) + '">' + esc(t('pull')) + '</button>' : m.billions > S.max ? ' <span class="over">' + esc(t('over3bRule')) + '</span>' : '';
   return '<label>' + esc(label) + '<div class="muted">' + esc(help) + '</div></label><div><select data-key="' + key + '">' + opts + '</select>' + warn + '</div>';
 }
 function service(id, name, on, what, startable) {
-  return '<div class="card"><span class="dot ' + (on ? 'on' : 'off') + '"></span><div class="grow"><b>' + esc(name) + '</b> <span class="muted">' + esc(what) + '</span></div>' + (startable ? '<button data-start="' + id + '">' + (S.services.own.includes(id) || (S.services.atLogin && on) ? 'Restart' : on ? 'Running' : 'Start') + '</button>' : '') + '</div>';
+  return '<div class="card"><span class="dot ' + (on ? 'on' : 'off') + '"></span><div class="grow"><b>' + esc(name) + '</b> <span class="muted">' + esc(what) + '</span></div>' + (startable ? '<button data-start="' + id + '">' + esc(S.services.own.includes(id) || (S.services.atLogin && on) ? t('restart') : on ? t('running') : t('start')) + '</button>' : '') + '</div>';
 }
-function draw() {
+const sectionOf = (id) => (S.sections || []).find((s) => s.id === id);
+function drawNav() {
+  document.getElementById('nav').innerHTML = SECTIONS.map((id) => '<a data-section="' + id + '" class="' + (id === section ? 'sel' : '') + '" tabindex="0">' + esc(sectionOf(id)?.title ?? t('nav.' + id)) + '</a>').join('')
+    + '<div class="sep"></div><a data-act="setup" tabindex="0">↻ ' + esc(t('runWelcome')) + '</a><a id="openSettings" tabindex="0">' + esc(t('vsSettings')) + '</a>';
+  document.getElementById('head').innerHTML = '<div class="head"><h1>' + esc(t('title')) + '</h1>' + langButton() + '</div><div class="muted">' + esc(t('intro')) + '</div>';
+}
+function drawAi() {
   const s = S.settings;
   const models = Array.isArray(S.models) ? S.models : [];
   const access = S.graphAccess;
@@ -347,50 +402,63 @@ function draw() {
   const I = S.integrations;
   const check = (c) => '<div class="card"><span class="dot ' + (c.ok ? 'on' : 'off') + '"></span><div class="grow"><b>' + esc(c.name) + '</b> <span class="muted">' + esc(c.detail) + '</span></div></div>';
   const toggle = (key, label, value, help) => '<label>' + esc(label) + '<div class="muted">' + esc(help) + '</div></label><div><input type="checkbox" data-key="' + key + '"' + (value ? ' checked' : '') + ' style="width:auto"></div>';
-  document.getElementById('root').innerHTML =
-    '<h2>Connections, checked now</h2><div class="muted">Every external connection, checked before each task and every ' + I.checkEveryMinutes + ' min; a notification says when one stops answering.</div>'
+  return '<h2>' + esc(t('checkedNow')) + '</h2><div class="muted">' + esc(t('checkedNowHint', I.checkEveryMinutes)) + '</div>'
     + S.checks.map(check).join('')
-    + '<h2>Services</h2><div class="muted" style="margin-bottom:8px">' + (S.profile ? 'Profile <b>' + esc(S.profile) + '</b>' + (S.services.atLogin ? ', started at every login' : '') + '. ' : 'Not set up yet. ') + '<button data-act="setup">Set-up…</button></div>'
-    + service('graph', 'Nuclear Smart Graph', S.services.graph, s.graphUrl + ' · the private knowledge base and the MCP server', true)
-    + service('developer', 'Nuclear Developer', S.services.developer, s.developerUrl + ' · the local agents (started with the models below)', true)
-    + service('ollama', 'Ollama', S.services.ollama, s.ollamaUrl + ' · runs the local models', false)
-    + '<div class="grid">' + field('graphUrl', 'Smart Graph url', s.graphUrl, 'nuclear-graph serve') + field('developerUrl', 'Developer url', s.developerUrl, 'nuclear-developer') + field('ollamaUrl', 'Ollama url', s.ollamaUrl, 'where the models run') + '</div>'
-    + '<h2>Local models</h2><div class="muted">At most 3B parameters (effective size for e2b/e4b models). A change applies when the service restarts.</div><div class="grid" style="margin-top:8px">'
-    + modelSelect('models.coder', 'Coder', s.coderModel, 'writes and repairs the code, the tests')
-    + modelSelect('models.assistant', 'Assistant', s.assistantModel, 'plans, reviews, documents, diagnoses, chats')
-    + modelSelect('models.embeddings', 'Embeddings', s.embeddingsModel, 'the graph\\'s search (re-ingest after a change)')
-    + '</div>' + (typeof S.models === 'string' ? '<p class="over">' + esc(S.models) + '</p>' : '<details style="margin-top:8px"><summary>Installed models (' + models.length + ')</summary><table><tr><th>Model</th><th>Parameters</th><th>Size</th><th></th></tr>' + models.map((m) => '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.parameters) + '</td><td>' + gb(m.size) + '</td><td>' + (m.billions > S.max ? '<span class="over">over 3B</span>' : '<span class="badge">allowed</span>') + '</td></tr>').join('') + '</table></details>')
-    + '<h2>MCP server</h2><div class="muted">The Nuclear MCP server (<code>' + esc(s.mcpCommand) + '</code>) lets Claude, Codex or Cursor give each task to the local developer first, then validate and correct.</div>'
-    + Object.keys(mcpName).map((c) => '<div class="card"><span class="dot ' + (S.mcp[c] === 'added' ? 'on' : 'off') + '"></span><div class="grow"><b>' + mcpName[c] + '</b> <span class="muted">' + esc(S.mcp[c]) + '</span></div>' + (S.mcp[c] === 'not added' ? '<button class="primary" data-mcp="' + c + '">Add</button>' : '') + '</div>').join('')
-    + '<div class="grid">' + field('mcpCommand', 'MCP command', s.mcpCommand, 'the program that serves it') + field('graphCommand', 'Graph command', s.graphCommand, 'the Smart Graph\'s program') + '</div>'
-    + '<h2>Connections</h2>'
-    + '<div class="card"><div class="grow"><b>Smart Graph clients</b> <span class="muted">programs that may read the graph</span></div>' + (access && !access.clients.mcp ? '<button data-act="connectMcp">Allow MCP clients</button>' : '') + '</div>'
-    + (access ? '<table>' + Object.entries(access.clients).map(([name, c]) => '<tr><td>' + esc(name) + '</td><td>' + esc(c.scopes.join(', ')) + '</td><td><button data-revoke="' + esc(name) + '">Revoke</button></td></tr>').join('')
-      + Object.entries(access.requests).filter(([, r]) => r.status === 'pending').map(([id, r]) => '<tr><td><b>' + esc(r.client) + '</b> asks</td><td>' + esc(r.scopes.join(', ')) + ' · ' + esc(r.reason) + '</td><td><button class="primary" data-allow="' + esc(id) + '">Allow</button> <button data-deny="' + esc(id) + '">Deny</button></td></tr>').join('') + '</table>' : '<p class="muted">The graph\\'s access list is not readable (is nuclear-graph installed?).</p>')
-    + '<div class="card"><span class="dot ' + (S.jira ? 'on' : 'off') + '"></span><div class="grow"><b>Jira</b> <span class="muted">import issues as specs in the Builder · secret storage</span></div><button data-act="jira">' + (S.jira ? 'Change' : 'Connect') + '</button>' + (S.jira ? '<button data-act="jiraOff">Disconnect</button>' : '') + '</div>'
-    + '<div class="card"><span class="dot ' + (S.github ? 'on' : 'off') + '"></span><div class="grow"><b>GitHub</b> <span class="muted">' + (S.github ? 'gh is signed in' : 'run gh auth login in a terminal') + '</span></div></div>'
-    + '<h2>Integrations</h2><div class="grid">'
-    + field('claude.command', 'Claude Code: command', I.claude.command, 'the lead of a Builder run when Claude leads')
-    + field('claude.maxBudgetUsd', 'Claude: budget per run (USD)', I.claude.maxBudgetUsd, 'the most a Builder run led by Claude may spend; 0: no limit', 'number')
-    + toggle('codex.enabled', 'Codex', I.codex.enabled, 'its MCP entry and its regular check') + field('codex.command', 'Codex: command', I.codex.command, '')
-    + toggle('opencode.enabled', 'OpenCode', I.opencode.enabled, 'its MCP entry and its regular check') + field('opencode.command', 'OpenCode: command', I.opencode.command, '') + field('opencode.configFile', 'OpenCode: config file', I.opencode.configFile, 'where the MCP server is added')
-    + field('cursor.mcpFile', 'Cursor: MCP file', I.cursor.mcpFile, 'where the MCP server is added')
-    + field('github.command', 'GitHub: command', I.github.command, 'issues imported as specs (gh auth login once)')
-    + field('jira.site', 'Jira: site', I.jira.site, 'https://your-team.atlassian.net; the API token is a secret (Connect)') + field('jira.email', 'Jira: email', I.jira.email, 'of your Atlassian account') + field('jira.criteriaField', 'Jira: criteria field', I.jira.criteriaField, 'optional: customfield_10050')
+    + '<h2>' + esc(t('services')) + '</h2><div class="muted" style="margin-bottom:8px">' + (S.profile ? esc(t('profile', S.profile)) + (S.services.atLogin ? esc(t('atLogin')) : '') + '. ' : esc(t('notSetUp')) + ' ') + '<button data-act="setup">' + esc(t('setUp')) + '</button></div>'
+    + service('graph', 'Nuclear Smart Graph', S.services.graph, s.graphUrl + ' · ' + t('graphWhat'), true)
+    + service('developer', 'Nuclear Developer', S.services.developer, s.developerUrl + ' · ' + t('developerWhat'), true)
+    + service('ollama', 'Ollama', S.services.ollama, s.ollamaUrl + ' · ' + t('ollamaWhat'), false)
+    + '<div class="grid">' + field('graphUrl', t('graphUrl'), s.graphUrl, 'nuclear-graph serve') + field('developerUrl', t('developerUrl'), s.developerUrl, 'nuclear-developer') + field('ollamaUrl', t('ollamaUrl'), s.ollamaUrl, t('ollamaUrlHint')) + '</div>'
+    + '<h2>' + esc(t('localModels')) + '</h2><div class="muted">' + esc(t('localModelsHint')) + '</div><div class="grid" style="margin-top:8px">'
+    + modelSelect('models.coder', t('coder'), s.coderModel, t('coderHint'))
+    + modelSelect('models.assistant', t('assistant'), s.assistantModel, t('assistantHint'))
+    + modelSelect('models.embeddings', t('embeddings'), s.embeddingsModel, t('embeddingsHint'))
+    + '</div>' + (typeof S.models === 'string' ? '<p class="over">' + esc(S.models) + '</p>' : '<details style="margin-top:8px"><summary>' + esc(t('installedModels', models.length)) + '</summary><table><tr><th>' + esc(t('model')) + '</th><th>' + esc(t('parameters')) + '</th><th>' + esc(t('size')) + '</th><th></th></tr>' + models.map((m) => '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.parameters) + '</td><td>' + gb(m.size) + '</td><td>' + (m.billions > S.max ? '<span class="over">' + esc(t('over3b')) + '</span>' : '<span class="badge">' + esc(t('allowed')) + '</span>') + '</td></tr>').join('') + '</table></details>')
+    + '<h2>' + esc(t('mcp')) + '</h2><div class="muted">' + esc(t('mcpHint', s.mcpCommand)) + '</div>'
+    + Object.keys(mcpName).map((c) => '<div class="card"><span class="dot ' + (S.mcp[c] === 'added' ? 'on' : 'off') + '"></span><div class="grow"><b>' + mcpName[c] + '</b> <span class="muted">' + esc(t('mcp.' + S.mcp[c])) + '</span></div>' + (S.mcp[c] === 'not added' ? '<button class="primary" data-mcp="' + c + '">' + esc(t('add')) + '</button>' : '') + '</div>').join('')
+    + '<div class="grid">' + field('mcpCommand', t('mcpCommand'), s.mcpCommand, t('mcpCommandHint')) + field('graphCommand', t('graphCommand'), s.graphCommand, t('graphCommandHint')) + '</div>'
+    + '<h2>' + esc(t('connections')) + '</h2>'
+    + '<div class="card"><div class="grow"><b>' + esc(t('graphClients')) + '</b> <span class="muted">' + esc(t('graphClientsHint')) + '</span></div>' + (access && !access.clients.mcp ? '<button data-act="connectMcp">' + esc(t('allowMcp')) + '</button>' : '') + '</div>'
+    + (access ? '<table>' + Object.entries(access.clients).map(([name, c]) => '<tr><td>' + esc(name) + '</td><td>' + esc(c.scopes.join(', ')) + '</td><td><button data-revoke="' + esc(name) + '">' + esc(t('revoke')) + '</button></td></tr>').join('')
+      + Object.entries(access.requests).filter(([, r]) => r.status === 'pending').map(([id, r]) => '<tr><td>' + esc(t('asks', r.client)) + '</td><td>' + esc(r.scopes.join(', ')) + ' · ' + esc(r.reason) + '</td><td><button class="primary" data-allow="' + esc(id) + '">' + esc(t('allow')) + '</button> <button data-deny="' + esc(id) + '">' + esc(t('deny')) + '</button></td></tr>').join('') + '</table>' : '<p class="muted">' + esc(t('accessUnreadable')) + '</p>')
+    + '<div class="card"><span class="dot ' + (S.jira ? 'on' : 'off') + '"></span><div class="grow"><b>Jira</b> <span class="muted">' + esc(t('jiraHint')) + '</span></div><button data-act="jira">' + esc(S.jira ? t('change') : t('connect')) + '</button>' + (S.jira ? '<button data-act="jiraOff">' + esc(t('disconnect')) + '</button>' : '') + '</div>'
+    + '<div class="card"><span class="dot ' + (S.github ? 'on' : 'off') + '"></span><div class="grow"><b>GitHub</b> <span class="muted">' + esc(S.github ? t('ghIn') : t('ghOut')) + '</span></div></div>'
+    + '<h2>' + esc(t('integrations')) + '</h2><div class="grid">'
+    + field('claude.command', t('claudeCommand'), I.claude.command, t('claudeCommandHint'))
+    + toggle('codex.enabled', 'Codex', I.codex.enabled, t('useHint')) + field('codex.command', t('codexCommand'), I.codex.command, '')
+    + toggle('opencode.enabled', 'OpenCode', I.opencode.enabled, t('useHint')) + field('opencode.command', t('opencodeCommand'), I.opencode.command, '') + field('opencode.configFile', t('opencodeFile'), I.opencode.configFile, t('mcpFileHint'))
+    + field('cursor.mcpFile', t('cursorFile'), I.cursor.mcpFile, t('mcpFileHint'))
+    + field('github.command', t('ghCommand'), I.github.command, t('ghCommandHint'))
+    + field('jira.site', t('jiraSite'), I.jira.site, t('jiraSiteHint')) + field('jira.email', t('jiraEmail'), I.jira.email, t('jiraEmailHint')) + field('jira.criteriaField', t('jiraField'), I.jira.criteriaField, t('jiraFieldHint'))
     + '</div>'
-    + '<h2>When something fails</h2><div class="grid">'
-    + toggle('resumeInterrupted', 'Resume interrupted runs', I.resumeInterrupted, 'a run the editor left half done goes on from the step where it stopped')
-    + field('watch.callTimeoutMinutes', 'Longest call (min)', I.watch.callTimeoutMinutes, 'a call to the local agents that takes longer is cut and retried', 'number')
-    + field('watch.stallSeconds', 'Stalled after (s)', I.watch.stallSeconds, 'the Developer silent or Ollama holding no model this long: cut and retried', 'number')
-    + field('watch.minFreeMb', 'Free disk needed (MB)', I.watch.minFreeMb, 'checked before every run', 'number')
-    + field('checkEveryMinutes', 'Check connections every (min)', I.checkEveryMinutes, '0: only before each task', 'number')
-    + '</div>'
-    + '<h2>Pipeline</h2><div class="grid">'
-    + '<label>Claude\\'s model<div class="muted">when Claude leads a Builder run</div></label><select data-key="claudeModel">' + ['sonnet', 'opus', 'haiku'].map((m) => '<option' + (m === s.claudeModel ? ' selected' : '') + '>' + m + '</option>').join('') + '</select>'
-    + field('retry.attempts', 'Tries of a call', s.retry.attempts, 'a call to the local agents that fails for a passing reason (down, busy, 5xx) is retried', 'number')
-    + field('retry.baseMs', 'First wait (ms)', s.retry.baseMs, 'doubles at each retry, with random jitter', 'number')
-    + field('retry.maxMs', 'Longest wait (ms)', s.retry.maxMs, 'the cap of a wait', 'number')
+    + '<h2>' + esc(t('whenFails')) + '</h2><div class="grid">'
+    + field('watch.callTimeoutMinutes', t('callTimeout'), I.watch.callTimeoutMinutes, t('callTimeoutHint'), 'number')
+    + field('watch.stallSeconds', t('stall'), I.watch.stallSeconds, t('stallHint'), 'number')
+    + field('checkEveryMinutes', t('checkEvery'), I.checkEveryMinutes, t('checkEveryHint'), 'number')
+    + field('retry.attempts', t('tries'), s.retry.attempts, t('triesHint'), 'number')
+    + field('retry.baseMs', t('firstWait'), s.retry.baseMs, t('firstWaitHint'), 'number')
+    + field('retry.maxMs', t('longestWait'), s.retry.maxMs, t('longestWaitHint'), 'number')
     + '</div>';
+}
+function drawBuilder() {
+  const sec = sectionOf('builder'), team = sec?.items.find((i) => i.key === 'nuclear.builder.team');
+  const T0 = S.teams;
+  const opts = '<option value="">' + esc(t('teamOnboarding')) + '</option>' + T0.list.map((x) => '<option value="' + esc(x.id) + '"' + (x.id === team?.value ? ' selected' : '') + '>' + esc(x.name) + (x.default ? ' ★' : '') + '</option>').join('');
+  return '<div class="hero"><div style="font-family:var(--vscode-editor-font-family,monospace);font-size:11px;letter-spacing:.12em;border:1px solid currentColor;padding:6px 8px">TEAMS</div><div class="grow"><b>' + esc(t('squadTitle')) + '</b><div class="muted">' + esc(T0.missing || t('squadHint')) + '</div></div><button class="primary" data-act="teams">' + esc(t('openSquad')) + '</button></div>'
+    + '<div class="sf"><div class="sf-row"><label class="sf-l"><b>team</b><code>nuclear.builder.team</code><div class="sf-d">' + esc(team?.description ?? '') + '</div></label><div class="sf-i"><select data-setting="nuclear.builder.team" data-t="string"' + (T0.missing ? ' disabled' : '') + '>' + opts + '</select></div></div></div>'
+    + settingsForm(sec, ['nuclear.builder.team']);
+}
+function drawSpending() {
+  return '<div class="hero"><div style="font-size:28px">💰</div><div class="grow"><b>' + esc(t('spendTitle')) + '</b><div class="muted">' + esc(t('spendHint')) + '</div></div></div>' + settingsForm(sectionOf('spending'));
+}
+function drawChat() {
+  return '<div class="hero"><div style="font-size:28px">💬</div><div class="grow"><b>' + esc(t('chatTitle')) + '</b><div class="muted">' + esc(t('chatHint')) + '</div></div><button data-act="gifKey">' + esc(t('gifKey')) + '</button></div>' + settingsForm(sectionOf('chat'));
+}
+function draw() {
+  drawNav();
+  const sec = sectionOf(section);
+  document.getElementById('root').innerHTML = section === 'ai' ? drawAi() : section === 'builder' ? drawBuilder() : section === 'spending' ? drawSpending() : section === 'chat' ? drawChat()
+    : '<h2>' + esc(sec?.title ?? section) + '</h2>' + (sec ? settingsForm(sec) : '');
 }
 document.addEventListener('change', (e) => {
   const k = e.target.dataset.key; if (!k) return;
@@ -398,18 +466,23 @@ document.addEventListener('change', (e) => {
   vscode.postMessage({ type: 'set', key: k, value: v });
 });
 document.addEventListener('click', (e) => {
-  const d = e.target.closest('[data-start],[data-pull],[data-mcp],[data-allow],[data-deny],[data-revoke],[data-act],#openSettings'); if (!d) return;
+  const d = e.target.closest('[data-section],[data-start],[data-pull],[data-mcp],[data-allow],[data-deny],[data-revoke],[data-act],#openSettings'); if (!d) return;
   e.preventDefault();
+  if (d.dataset.section) { section = d.dataset.section; vscode.setState({ section }); window.scrollTo(0, 0); return S && draw(); }
   if (d.id === 'openSettings') return vscode.postMessage({ type: 'openSettings' });
-  if (d.dataset.start) { d.disabled = true; d.textContent = 'Starting…'; return vscode.postMessage({ type: 'start', service: d.dataset.start }); }
-  if (d.dataset.pull) { d.disabled = true; d.textContent = 'Pulling…'; return vscode.postMessage({ type: 'pull', model: d.dataset.pull }); }
+  if (d.dataset.start) { d.disabled = true; d.textContent = t('starting'); return vscode.postMessage({ type: 'start', service: d.dataset.start }); }
+  if (d.dataset.pull) { d.disabled = true; d.textContent = t('pulling'); return vscode.postMessage({ type: 'pull', model: d.dataset.pull }); }
   if (d.dataset.mcp) return vscode.postMessage({ type: 'mcp', client: d.dataset.mcp });
   if (d.dataset.allow) return vscode.postMessage({ type: 'allow', id: d.dataset.allow });
   if (d.dataset.deny) return vscode.postMessage({ type: 'deny', id: d.dataset.deny });
   if (d.dataset.revoke) return vscode.postMessage({ type: 'revoke', client: d.dataset.revoke });
   if (d.dataset.act) return vscode.postMessage({ type: d.dataset.act });
 });
-window.addEventListener('message', (e) => { if (e.data.type === 'state') { S = e.data; draw(); } });
+document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('nav a')) { e.preventDefault(); e.target.click(); } });
+window.addEventListener('message', (e) => {
+  if (e.data.type === 'state') { S = e.data; draw(); }
+  if (e.data.type === 'section' && SECTIONS.includes(e.data.id)) { section = e.data.id; vscode.setState({ section }); if (S) draw(); }
+});
 vscode.postMessage({ type: 'ready' });
 </script></body></html>`;
 }

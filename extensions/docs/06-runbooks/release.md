@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-18
 related: [../02-architecture/language-server.md, ../../vscode/AGENTS.md, ../../jetbrains/AGENTS.md, ../../zed/AGENTS.md]
 ---
 # Release the extensions
@@ -31,6 +31,46 @@ asking. The three extensions share one version; Zed's follows VS Code's.
    `nuclear-builder`, and runs `extensions/zed/build.sh` when Zed is installed (`--no-zed` skips it).
 5. Tell the user to quit VS Code completely (*File → Exit*: a reload does not refresh a theme) and to install the zip
    in Android Studio (*Settings → Plugins → ⚙ → Install Plugin from Disk…*).
+
+## Backward compatibility (before every release)
+
+A user updates over data an earlier version wrote. Before packaging:
+
+1. Run the battery, from the tree's root, with a project of this machine's (read-only: the teams are read from a
+   copy of `~/.config/nuclearlang/factory`, the `.bak` of each earlier version among them as `old-<id>`):
+
+   ```sh
+   extensions/scripts/compat-check.sh --real <a project folder>
+   ```
+
+   It ends `compat: all passed`, or stops at the first failure. It runs the fixtures of every earlier stored format
+   through today's code:
+   - the Builder's engine (`tools/nuclear-builder/tests/test_compat.nuc`, fixtures in its `tests/fixtures/compat/`):
+     a team of each earlier shape (`teams/v1-roles.json` 0.58–0.61: `roles`, a preset's fields, `techLead` a role;
+     `v1-personality.json` 0.62–0.65: names, personalities, temperaments; `v2-members.json` 0.66–0.69: `members`,
+     free-word team skills, `extraSkills`; `v2-gone-values.json`: a temperament, a base agent, a provider, a kind,
+     an employee and a tech lead that no longer exist, read with a warning each) through `team list|show --json`, `teamShown` and `chat-host`; run files
+     of earlier engines (`runs/engine2.json`, the TypeScript engine's nine stages; `engine3-no-team.json` 0.58–0.60;
+     `engine3-no-keys.json`) through `runs --json`, `run show|journal` and a retry from a station; the flat
+     `specs/<id>/` through `spec list` and `spec migrate`; the line of earlier versions (`builder-json/`) through
+     `line show|set` and the run's team; an older Builder chat (`builder-chat/`, `.nuclear/builder/chat/<id>.jsonl`); in each team and run of 0.69 and
+     before, the role `delivery` read as `devops` (the member keeping its id; `test_teams.nuc` too);
+   - Nuclear Chat's service (`nuclear-chat/nuclear_chat/test/chat_test.nuc`, `firstHistory`, fixtures in its
+     `test/fixtures/compat/`): `channels.json` and the `.jsonl` histories of its first version;
+   - the editors (`npm run test:compat` in `vscode/`, also part of `npm test`: `tools/nuclear-builder/test/compat.test.ts`,
+     fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title
+     without `key` in English), every setting under an id that moved, the projects saved for every folder before
+     0.63.0, the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and
+     opened from the offer, never asked again once declined or done).
+
+   Each loads without an error, converts on read where its format changed (the original kept as `.bak`) and says
+   the same things (names, members, skills, the words moved into the purpose).
+2. A change of a stored format adds its fixture in the same change (the earlier shape, as a file under the tests'
+   fixtures), and a line here if it needs a manual step.
+3. Install over the previous version on this machine (`installer/install.sh` with the previous `.vsix` installed
+   first when the change touches stored data) and open the Builder, the company screen and the chat with the
+   user's real data, read-only.
+4. What cannot be converted is told to the user (a notification with what to do), and recorded in the CHANGELOG.
 
 ## Verification
 

@@ -45,7 +45,8 @@ What each check needs and proves: [docs/05-standards/testing.md](docs/05-standar
 - `keywords.toml`: Python's reserved words and how each is produced from Nuclear.
 - `library.toml`: Nuclear's standard library written in Python (one template per member).
 - `docs.toml`: what the editor and `nuclear help <word> --dialect python` show for each header word.
-- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (docstrings).
+- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (docstrings), `monitor.tpl` (the
+  monitor's runtime of a project built with `--monitor`).
 - `frameworks/fastapi/`: the framework dialect (`dialect.toml`, `docs.toml`, `templates/`).
 - `defs/<package>/<version>/`: type definitions. Generated.
 - `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and

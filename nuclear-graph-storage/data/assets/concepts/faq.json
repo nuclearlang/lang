@@ -250,12 +250,14 @@
    "id": "faq:ask-the-agent",
    "type": "faq",
    "title": "How do I ask the local agent to do something?",
-   "summary": "In VS Code open Nuclear Atlas (`Ctrl+Alt+A`): a question is answered from the project's map and the Smart Graph; `/task <what to do>` is an order, run as a Builder by the local agents. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
+   "summary": "In VS Code open Nuclear Atlas (`Ctrl+Alt+A`): your direct message with the general agent in Nuclear Chat, answered from the project and the Smart Graph; `/task <what to do>` there is an order, run by the Builder with your team and told in the team's channel. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
    "body": [
     "- **A question** (\"what does `BooksAppComponent` expose?\", \"how do I add a route?\"): the assistant answers and changes nothing.",
-    "- **An order** (`/task add a use case that lists the books of an author`): a run of the Builder with the local agents; its journal says what was done.",
-    "- **A feature**: the Builder's spec page. Name each piece with the platform's words (a model `Book`, a repository `BookRepository`, a use case `ListBooks`) and add one acceptance criterion per behaviour. For a resource of an API, add its `GET <url>` line or an example answer and the generators write it.",
-    "- **From a terminal**: `nuclear-builder run specs/<id>/spec.md --lead local`.",
+    "- **An order** (`/task add a use case that lists the books of an author`): a run of the Builder with the project's team; its members tell each station as a thread of the team's channel, and its journal says what was done.",
+    "- **A feature**: a spec in the Builder (*+ New spec*, `Ctrl+Alt+P`). Name each piece with the platform's words (a model `Book`, a repository `BookRepository`, a use case `ListBooks`) and add one acceptance criterion per behaviour. For a resource of an API, add its `GET <url>` line or an example answer and the generators write it.",
+    "- **Talk to a member** in the Builder's chat: `@qa`, `@<name>`, or the team's channel (its tech lead answers).",
+    "- **Choose who answers**: the dropdown in Atlas's header picks the agent (the local Nuclear Developer by default, Claude Code, OpenCode, Codex, Gemini CLI, an API model) and its model, per conversation; it works with the Builder's MCP tools, so it can read a document, write the specs and start their runs.",
+    "- **From a terminal**: `nuclear-builder run specs/<component>/<id>/spec.md` (the run's team decides who works each station).",
     "- **From Claude Code, Codex or Cursor**: the MCP tool `developer_task`.",
     "",
     "The agent tells you when a task is beyond it; then let a frontier model lead or split the task."
@@ -290,7 +292,8 @@
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md",
-    "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md"
+    "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md",
+    "extensions/tools/nuclear-atlas/docs/08-guides/README.md"
    ],
    "meta": {
     "topic": "ai"
@@ -351,9 +354,9 @@
    "id": "faq:learn-the-syntax",
    "type": "faq",
    "title": "How do I learn the syntax quickly?",
-   "summary": "Read the short sheet: `nuclear spec --brief` (the base language) and `nuclear spec --brief --platform backend|mobile|web`. For one topic, `nuclear help <topic>`; for a kind or decorator, `nuclear help <word> --platform <p>`. The compiler corrects the habits of other languages with exact fixes.",
+   "summary": "Begin with `nuclear help start` (MCP `nuclear_start`): what Nuclear is, the rules and the atlas of every topic. Then the short sheet: `nuclear spec --brief --dialect <d>` (or `--platform backend|mobile|web`). For one topic, `nuclear help <topic>`; for a kind or decorator, `nuclear help <word> --platform <p>`. The compiler corrects the habits of other languages with exact fixes.",
    "body": [
-    "The ten things that differ from TypeScript, Dart or Python:",
+    "The eleven things that differ from TypeScript, Dart or Python:",
     "",
     "1. Blocks by indentation of 2 spaces; no braces, no semicolons.",
     "2. The type goes after the name: `name: string`, `f(a: int) string`.",
@@ -362,9 +365,10 @@
     "5. `User(\"Ana\")` constructs; no `new`. Named arguments use `=`: `f(name = \"Ana\")`.",
     "6. `~load()` awaits; no `await`, no `async`.",
     "7. `and`, `or`, `not`; `x in xs` for membership.",
-    "8. `if` and `match` are values.",
+    "8. `if` and `match` are values, as indented blocks; inside an argument list the value is `cond ? a : b`.",
     "9. `\"Hi ${name}\"` interpolates in every string; comments are `//`.",
     "10. No imports: the names of the target's libraries are imported by themselves.",
+    "11. A field of a module always has its type: `count: int = 0`.",
     "",
     "Then write, run `nuclear check <file> --json`, and apply what each error says (`nuclear fix` applies the exact ones)."
    ],

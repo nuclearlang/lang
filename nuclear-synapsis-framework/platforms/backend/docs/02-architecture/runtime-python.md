@@ -19,11 +19,14 @@ related: [overview.md, runtime-typescript.md, dependencies.md, ../06-runbooks/ch
 | `config` | `AppConfig`, `ComponentConfig`, `env`, and the connections: `Postgres`, `MySQL`, `MariaDB`, `SQLite(file)`, `Redis`, `Kafka(servers, group)`, `OpenAI`, `Ollama`, `Embeddings`, `Chroma(collection, embeddings, url)`. A plain `postgres://` url gets its async driver in `_with_driver` |
 | `orm` | `Entity`, the column helpers (`primary`, `column`, `created`, `updated`), the relations, `EntitySchema`, `schema_of` |
 | `repository` | `Repository` (CRUD), `Query`, the operators (`gt`, `gte`, `lt`, `lte`, `ne`, `like`, `ilike`, `one_of`, `is_null`, `between`), `Page`, `transactional` |
-| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |
+| `web` | the controller decorators (`controller`, `get`, `post`, `put`, `patch`, `delete`, `status`), `untraced` (a marker) and `router_of`: a `Result` becomes an HTTP answer, an entity its schema |
 | `app` | `create_app`, the lifespan, `connection`, `connections`; serves the contract (`_serve_contract`) |
 | `http` | the `Http(base_url)` connection and `HttpRepository`: methods without a body under `@get` / `@post`..., an error status becomes an `Err`, the answer is validated by the declared type (ADR-codegen-0001) |
 | `ai` (optional) | `Tools`, `Agent`, `Graph`, `start` / `next`, `Messages`, `chat_model`, `vector_store` |
-| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`) |
+| `events` (optional) | `Listener`, `consumer`, `publish`, the cache (`cache_get`, `cache_set`); `sinks`, who else receives what is published |
+| `guards` | `Guard`, `Token`, `NoOrigin`, `refusal` (ADR-synapsis-0007): `web.guarded` makes them a FastAPI dependency of every router |
+| `sockets` (optional, plugin `websocket`) | `WebSocketServer`: a Starlette WebSocket route; each request frame goes through the app with httpx's ASGI transport; a sink of `events` sends the published to the subscribed (ADR-synapsis-0008) |
+| `telemetry` (optional) | `Telemetry`, `Otlp`, `Datadog`, `NewRelic`, `Grafana` (OTLP/HTTP), `Metric`, `traced` (the span the dialect writes on each use case's `exec`). Its own providers, not OpenTelemetry's global ones (a process may set those only once): without an open connection `traced` and `Metric` do nothing. A sampler drops the traces of the `@untraced` routes and keeps `sample` of the rest |
 | `testing` | `running`, `client`, `FakeModel`, `memory_database` |
 | `validators` | `is_email`, `is_url` |
 | `migrate` | the migrations (below) |
@@ -33,9 +36,11 @@ Behaviour worth knowing:
 - The controller decorators add the leading slash to the platform's segments; an invalid body answers 400.
 - The order of a controller's routes does not matter: a fixed segment wins over a parameter (`router_of`;
   reference §2.7).
+- `create_app` keeps the mounted routes in `app.state.synapsis_routes` and then calls `instrument(app)` of every
+  connection (a no-op but in `Telemetry`).
 - `publish` works in process when the app has no Kafka connection; the tests' `conftest` creates the listeners.
 - The extras of the package are the platform's plugins (`ai`, `postgres`, `mysql`, `sqlite`, `redis`, `kafka`,
-  `openai`, `ollama`, `chroma`); `core` brings no driver ([dependencies](dependencies.md)).
+  `openai`, `ollama`, `chroma`, `telemetry`); `core` brings no driver ([dependencies](dependencies.md)).
 
 ## Data
 

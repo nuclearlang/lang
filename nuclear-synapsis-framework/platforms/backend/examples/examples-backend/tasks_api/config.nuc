@@ -3,4 +3,7 @@ synapsis(platform = "backend", dialect = "nestjs")
 app(name = "tasks_api", description = "Tasks and an assistant.", version = "0.1.0")
 
 // The optional parts this project uses: only these go to the generated project.
-plugins(sqlite = true, events = true, ollama = true)
+plugins(sqlite = true, events = true, websocket = true, ollama = true)
+
+// The environment the tests run with: their own tokens, never a real one.
+testEnv(TASKS_TOKEN = "test-tasks-token", OWNER_TOKEN = "test-owner-token")

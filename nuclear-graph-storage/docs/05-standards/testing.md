@@ -68,8 +68,9 @@ ones that name one thing ([the roadmap](../01-product/roadmap.md) has what is le
 
 ## The prompts
 
-The prompt files in `prompts/` are measured by the evaluation of the Nuclear Developer: a change to one is a new
-round, recorded in its report
+The prompts are the skills of the roles (`nuclear-agents/roles/<role>/skills/*.md` that name a `prompt`); the test
+`testThePromptsAreTheRolesSkillsWithoutTheirFrontMatter` holds what `ingest` reads from them. They are measured by
+the evaluation of the Nuclear Developer: a change to one is a new round, recorded in its report
 ([how](../../../nuclear-agents/nuclear_developer/docs/06-runbooks/evaluation.md)).
 
 The MCP test (`tests/test_agents.nuc`) holds every MCP tool to the MCP server's guide,

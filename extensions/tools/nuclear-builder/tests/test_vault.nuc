@@ -1,0 +1,84 @@
+use os
+use io
+use sys
+use json
+use pathlib{ Path }
+
+// The vault: the API keys in the system's keyring (a fake `secret-tool` here, on the PATH), the providers it keeps
+// noted without their keys, a closed keyring refused, and a key never on a command line.
+
+FAKE_SECRET_TOOL = """#!/bin/sh
+# a keyring in a folder: store reads the secret on stdin, lookup prints it, clear removes it
+echo "$@" >> "$VAULT_DIR/calls.log"
+[ -n "$VAULT_CLOSED" ] && [ "$1" = lookup ] && exit 1
+for provider; do :; done
+case "$1" in
+  store) cat > "$VAULT_DIR/$provider" ;;
+  lookup) [ -f "$VAULT_DIR/$provider" ] && cat "$VAULT_DIR/$provider" || exit 1 ;;
+  clear) rm -f "$VAULT_DIR/$provider" ;;
+esac
+"""
+
+fakeKeyring(tmpPath: Path, monkeypatch: any) Path
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  tool = bin.joinpath("secret-tool")
+  tool.writeText(FAKE_SECRET_TOOL)
+  tool.chmod(493)
+  keys = tmpPath.joinpath("keys")
+  keys.mkdir()
+  monkeypatch.setenv("VAULT_DIR", "${keys}")
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  monkeypatch.setattr(sys, "platform", "linux")
+  keys
+
+testAKeyIsKeptInTheKeyringReadBackAndRemoved(tmpPath: Path, monkeypatch: any) void
+  keys = fakeKeyring(tmpPath, monkeypatch)
+  expect(vaultKey("anthropic") == null)
+  vaultSet("anthropic", "sk-secret-1\n")
+  expect(vaultKey("anthropic") == "sk-secret-1")
+  expect(vaultList() == { "anthropic": true, "openai": false, "google": false, "openrouter": false })
+  // the note names the provider, never the key
+  notes = tmpPath.joinpath("factory", "vault.json").readText()
+  expect("anthropic" in notes and not ("sk-secret" in notes))
+  // the key went on stdin: no command line held it
+  expect(not ("sk-secret" in keys.joinpath("calls.log").readText()))
+  vaultRemove("anthropic")
+  expect(vaultKey("anthropic") == null and notedProviders().isEmpty)
+
+testAClosedKeyringIsRefusedNeverReplaced(tmpPath: Path, monkeypatch: any) void
+  fakeKeyring(tmpPath, monkeypatch)
+  vaultSet("openai", "sk-2")
+  monkeypatch.setenv("VAULT_CLOSED", "1")
+  said = ""
+  try
+    vaultKey("openai", 0)
+  catch e
+    said = "${e}"
+  expect("closed" in said)
+
+testOnlyTheApiProvidersHaveKeys(tmpPath: Path, monkeypatch: any) void
+  fakeKeyring(tmpPath, monkeypatch)
+  said = ""
+  try
+    vaultSet("claude-code", "x")
+  catch e
+    said = "${e}"
+  expect("no API provider" in said)
+
+testTheVaultCommandReadsTheKeyOnStdinAndPrintsNoKey(tmpPath: Path, monkeypatch: any, capsys: any) void
+  fakeKeyring(tmpPath, monkeypatch)
+  monkeypatch.setattr(sys, "stdin", io.StringIO("sk-from-stdin"))
+  expect(vault(["set", "google"]) == 0)
+  expect(vault(["list", "--json"]) == 0)
+  out: string = capsys.readouterr().out
+  expect(not ("sk-from-stdin" in out) and "\"google\": true" in out)
+  expect(vault(["set", "nobody"]) == 1)
+  expect("error" in json.loads(capsys.readouterr().out))
+
+testEachSystemHasItsKeyringCommand() void
+  expect(keyringCommand("lookup", "openai", "linux") == ["secret-tool", "lookup", "service", "nuclear-factory", "provider", "openai"])
+  expect(keyringCommand("lookup", "openai", "darwin") == ["security", "find-generic-password", "-s", "nuclear-factory", "-a", "openai", "-w"])
+  windows = keyringCommand("store", "openai", "win32")
+  expect(windows[0] == "powershell" and "PasswordVault" in windows.last and "ReadToEnd" in windows.last)

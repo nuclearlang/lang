@@ -1,0 +1,129 @@
+use os
+use sys
+use json
+use time
+use shutil
+use subprocess
+use pathlib{ Path }
+
+// The vault of the software factory (spec 011, design.md "The vault"): the API keys of the `api` providers, in the
+// system's keyring under the service `nuclear-factory` (libsecret's `secret-tool` on Linux, the Keychain's
+// `security` on macOS, the Credential Manager's password vault on Windows). The rules are the Smart Graph's
+// (`nuclear-graph-storage/secrets_store.nuc`): the providers the keyring keeps are noted (`factory/vault.json`, no
+// key in it), and one noted that the keyring does not answer for is a closed keyring: it is waited for, never
+// replaced by a file. A key is read from stdin, never from the command line, and never written to a log or a run.
+
+VAULT_SERVICE = "nuclear-factory"
+VAULT_WAIT = 90
+
+VaultError(message: string) : RuntimeError(message)
+
+vaultNotes() Path
+  Path(factoryDir(), "vault.json")
+
+notedProviders() string[]
+  file = vaultNotes()
+  if not file.isFile()
+    return []
+  try
+    found = json.loads(file.readText(encoding = "utf-8"))
+    isinstance(found, list) ? found : ([] as string[])
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    []
+
+noteProvider(provider: string, kept: boolean) void
+  names = notedProviders().filter((p) => p != provider)
+  if kept
+    names.add(provider)
+  writeAtomic(vaultNotes(), "${json.dumps(names.sorted())}\n")
+
+apiProvider(provider: string) string
+  allowed: string[] = PROVIDERS["api"]!
+  if not (provider in allowed)
+    throw VaultError("no API provider `${provider}`: ${allowed.join(", ")}")
+  provider
+
+// The environment with the user's session bus, where the keyring answers (an editor or a service may start this
+// command with a minimal one).
+keyringEnv() <string, string>
+  found = toolEnv()
+  if not ("DBUS_SESSION_BUS_ADDRESS" in found) and hasattr(os, "getuid")
+    bus = "/run/user/${os.getuid()}/bus"
+    if os.path.exists(bus)
+      found["DBUS_SESSION_BUS_ADDRESS"] = "unix:path=${bus}"
+  found
+
+// What runs the keyring's command: the system's, found on the tools' PATH.
+keyringRun(command: string[], input: string? = null) subprocess.CompletedProcess
+  found = shutil.which(command[0], path = toolEnv()["PATH"])
+  if found == null
+    throw VaultError("no keyring on this machine: `${command[0]}` is not installed")
+  subprocess.run([found!, ...command.skip(1)], input = input, text = true, captureOutput = true, env = keyringEnv())
+
+// The commands of each system: store (the key on stdin), lookup (the key on stdout), clear.
+keyringCommand(action: string, provider: string, system: string = sys.platform) string[]
+  if system == "darwin"
+    return match action
+      "store" -> ["security", "add-generic-password", "-U", "-s", VAULT_SERVICE, "-a", provider, "-w"]
+      "lookup" -> ["security", "find-generic-password", "-s", VAULT_SERVICE, "-a", provider, "-w"]
+      _ -> ["security", "delete-generic-password", "-s", VAULT_SERVICE, "-a", provider]
+  if system == "win32"
+    vault = "[void][Windows.Security.Credentials.PasswordVault,Windows.Security.Credentials,ContentType=WindowsRuntime]; $v = New-Object Windows.Security.Credentials.PasswordVault"
+    return match action
+      "store" -> ["powershell", "-NoProfile", "-Command", "${vault}; $k = [Console]::In.ReadToEnd().Trim(); $v.Add((New-Object Windows.Security.Credentials.PasswordCredential('${VAULT_SERVICE}', '${provider}', $k)))"]
+      "lookup" -> ["powershell", "-NoProfile", "-Command", "${vault}; $c = $v.Retrieve('${VAULT_SERVICE}', '${provider}'); $c.RetrievePassword(); $c.Password"]
+      _ -> ["powershell", "-NoProfile", "-Command", "${vault}; $v.Remove($v.Retrieve('${VAULT_SERVICE}', '${provider}'))"]
+  match action
+    "store" -> ["secret-tool", "store", "--label=NuclearLang factory ${provider}", "service", VAULT_SERVICE, "provider", provider]
+    "lookup" -> ["secret-tool", "lookup", "service", VAULT_SERVICE, "provider", provider]
+    _ -> ["secret-tool", "clear", "service", VAULT_SERVICE, "provider", provider]
+
+// Keeps the key of a provider in the keyring.
+vaultSet(provider: string, key: string) void
+  apiProvider(provider)
+  clean = key.trim()
+  if clean.isEmpty
+    throw VaultError("no key given for ${provider}")
+  if sys.platform == "darwin"
+    // shortcut: `security` takes the key as an argument only, seen by `ps` for that instant; upgrade with a Keychain library
+    r = keyringRun([...keyringCommand("store", provider), clean])
+    if r.returncode != 0
+      throw VaultError("the keyring did not keep the key of ${provider}: ${r.stderr.trim()}")
+  else
+    r = keyringRun(keyringCommand("store", provider), clean)
+    if r.returncode != 0
+      throw VaultError("the keyring did not keep the key of ${provider}: ${r.stderr.trim()}")
+  noteProvider(provider, true)
+
+vaultRemove(provider: string) void
+  apiProvider(provider)
+  keyringRun(keyringCommand("clear", provider))
+  noteProvider(provider, false)
+
+lookup(provider: string) string?
+  r = keyringRun(keyringCommand("lookup", provider))
+  out: string = r.stdout
+  r.returncode == 0 and not out.trim().isEmpty ? out.trim() : null
+
+// The key of a provider, or null when none was kept. One the keyring keeps while it is closed is waited for (`wait`
+// seconds), then refused.
+vaultKey(provider: string, wait: int = VAULT_WAIT) string?
+  apiProvider(provider)
+  key = lookup(provider)
+  waited = 0
+  while key == null and provider in notedProviders() and waited < wait
+    time.sleep(1)
+    waited += 1
+    key = lookup(provider)
+  if key == null and provider in notedProviders()
+    throw VaultError("the keyring that keeps the key of ${provider} is closed: open it (log in) and run again")
+  key
+
+// The API providers and whether the vault holds a key of each (never the key).
+vaultList() <string, boolean>
+  found: <string, boolean> = {}
+  for p in PROVIDERS["api"]!
+    found[p] = lookup(p) != null
+  found

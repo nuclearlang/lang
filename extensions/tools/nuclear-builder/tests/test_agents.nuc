@@ -1,0 +1,106 @@
+use os
+use json
+use pathlib{ Path }
+
+// The agent adapters with their command lines stubbed: a fake `claude`, `opencode`, `codex` and `gemini` on the PATH
+// write down their arguments and the files of the folders they were given, print the lines a real one prints, and
+// write the document in `specs/<id>/` as an agent edits files.
+
+FAKE_AGENT = """#!/bin/sh
+# a fake agent: its arguments and the rendered role, then the lines of $FAKE_OUT
+printf '%s\\n' "$@" > "$FAKE_LOG"
+for a in "$@"; do
+  case "$a" in /*.json) [ -f "$a" ] && cat "$a" >> "$FAKE_LOG.files" ;; esac
+  [ -d "$a" ] && find "$a" -type f -exec sh -c 'echo "== $1"; cat "$1"' _ {} \\; >> "$FAKE_LOG.files"
+done
+[ -n "$OPENCODE_CONFIG_DIR" ] && find "$OPENCODE_CONFIG_DIR" "$OPENCODE_CONFIG" -type f -exec sh -c 'echo "== $1"; cat "$1"' _ {} \\; >> "$FAKE_LOG.files"
+[ -n "$GEMINI_CLI_SYSTEM_SETTINGS_PATH" ] && cat "$GEMINI_CLI_SYSTEM_SETTINGS_PATH" >> "$FAKE_LOG.files"
+[ -n "$FAKE_DOC" ] && printf '# Analysis\\nby the agent\\n' > "$FAKE_DOC"
+cat "$FAKE_OUT"
+exit $((FAKE_EXIT + 0))
+"""
+
+// Puts the fake agent on the PATH under `name`; gives the file its arguments go to.
+fakeAgent(tmpPath: Path, monkeypatch: any, name: string, lines: <string, any>[]) Path
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath(name)
+  tool.writeText(FAKE_AGENT)
+  tool.chmod(493)
+  out = tmpPath.joinpath("out.jsonl")
+  out.writeText(lines.map((l) => json.dumps(l)).join("\n") + "\nnot json\n")
+  log = tmpPath.joinpath("args.log")
+  monkeypatch.setenv("FAKE_OUT", "${out}")
+  monkeypatch.setenv("FAKE_LOG", "${log}")
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  log
+
+agentWork(tmpPath: Path, monkeypatch: any, model: string = "haiku") Work
+  root = tmpPath.joinpath("app")
+  spec = root.joinpath("specs", "s1")
+  spec.mkdir(parents = true, existOk = true)
+  monkeypatch.setenv("FAKE_DOC", "${spec.joinpath("analysis.md")}")
+  Work("${root}", "${spec}", "Count the books", {}, ["analysis.md"], model, 0.75)
+
+analyst(tmpPath: Path) Role
+  Role("analyst", "Analyst", "You find what the client needs.", { "ask-the-client": "# Ask the client\nOne question at a time." }, {}, [], ["analysis"], "Be brief.")
+
+testClaudeCodeGetsTheRoleAsAPluginTheMcpServerAndTheBudgetAndReportsItsCost(tmpPath: Path, monkeypatch: any) void
+  lines = [{ "type": "assistant", "message": { "content": [{ "type": "tool_use", "id": "t1", "name": "mcp__nuclear__nuclear_check", "input": { "path": "." } }] } }, { "type": "user", "message": { "content": [{ "type": "tool_result", "tool_use_id": "t1", "content": [{ "type": "text", "text": "ok" }] }] } }, { "type": "assistant", "message": { "content": [{ "type": "text", "text": "Done." }] } }, { "type": "result", "result": "Done.", "total_cost_usd": 0.0123, "is_error": false }]
+  log = fakeAgent(tmpPath, monkeypatch, "claude", lines)
+  events: <string, any>[] = []
+  out = runAdapter(claudeCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => events.add(e))
+  expect(out.ok, out.error)
+  args = log.readText().split("\n")
+  for flag in ["-p", "--output-format", "stream-json", "--verbose", "--mcp-config", "--strict-mcp-config", "--plugin-dir", "--append-system-prompt", "--no-session-persistence"]
+    expect(flag in args, flag)
+  expect(args[args.indexOf("--model") + 1] == "haiku" and args[args.indexOf("--max-budget-usd") + 1] == "0.75")
+  // no shell among its tools
+  expect(args[args.indexOf("--tools") + 1] == "Read,Write,Edit,Glob,Grep")
+  files = Path("${log}.files").readText()
+  expect("skills/ask-the-client/SKILL.md" in files and "description: Ask the client" in files)
+  expect("agents/analyst.md" in files and "Be brief." in files and "\"command\": \"nuclear-mcp\"" in files)
+  expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text", "cost"])
+  expect(events[0]["tool"] == "nuclear_check" and events[1]["ok"] == true)
+  expect(out.text == "Done." and out.costUsd == 0.0123)
+  expect(out.documents == { "analysis.md": "# Analysis\nby the agent\n" })
+  // the temporary folder of the run is gone: nothing stays in the user's files
+  plugin = args[args.indexOf("--plugin-dir") + 1]
+  expect(not Path(plugin).exists() and not Path(agentWork(tmpPath, monkeypatch).root, ".claude").exists())
+
+testAnAgentThatFailsOrIsMissingIsAFailedOutcome(tmpPath: Path, monkeypatch: any) void
+  fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "result", "result": "over budget", "is_error": true, "total_cost_usd": 0.75 }])
+  out = runAdapter(claudeCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null)
+  expect(not out.ok and out.costUsd == 0.75)
+  monkeypatch.setenv("FAKE_EXIT", "3")
+  fakeAgent(tmpPath, monkeypatch, "claude", [])
+  expect("ended with 3" in runAdapter(claudeCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null).error)
+  monkeypatch.setenv("PATH", "${tmpPath.joinpath("nothing")}")
+  missing = runAdapter(codexAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch), (e) => null)
+  expect(not missing.ok and "`codex` is not installed" in missing.error)
+
+testOpenCodeGetsItsOwnAgentFileTheMcpServerAndNoShell(tmpPath: Path, monkeypatch: any) void
+  lines = [{ "type": "tool_use", "part": { "tool": "nuclear_generate_resource", "callID": "c1", "state": { "status": "completed", "input": { "name": "Book" }, "output": "6 files" } } }, { "type": "text", "part": { "text": "Written." } }, { "type": "step_finish", "part": { "cost": 0.002 } }, { "type": "step_finish", "part": { "cost": 0.003 } }]
+  log = fakeAgent(tmpPath, monkeypatch, "opencode", lines)
+  events: <string, any>[] = []
+  out = runAdapter(openCodeAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch, "anthropic/claude-haiku-4-5"), (e) => events.add(e))
+  expect(out.ok, out.error)
+  args = log.readText().split("\n")
+  expect(args.take(7) == ["run", "--agent", "analyst", "--format", "json", "--auto", "--model"] and args[7] == "anthropic/claude-haiku-4-5")
+  files = Path("${log}.files").readText()
+  expect("agent/analyst.md" in files and "bash: deny" in files and "\"nuclear-mcp\"" in files and "Be brief." in files)
+  expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text", "cost", "cost"])
+  expect(out.text == "Written." and (out.costUsd - 0.005).abs() < 0.000001)
+
+testCodexAndGeminiCliGetTheRoleInThePromptAndTheMcpServer(tmpPath: Path, monkeypatch: any) void
+  codexLog = fakeAgent(tmpPath, monkeypatch, "codex", [{ "type": "item.completed", "item": { "type": "agent_message", "text": "Codex done." } }, { "type": "turn.completed", "usage": { "input_tokens": 10, "output_tokens": 2 } }])
+  codex = runAdapter(codexAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch, ""), (e) => null)
+  expect(codex.ok and codex.text == "Codex done." and codex.costUsd == 0)
+  args = codexLog.readText()
+  expect(args.startsWith("exec\n--json\n") and "mcp_servers.nuclear.command=\"nuclear-mcp\"" in args and "Be brief." in args and not ("--model" in args))
+  geminiLog = fakeAgent(tmpPath, monkeypatch, "gemini", [{ "type": "message", "role": "assistant", "content": "Gemini ", "delta": true }, { "type": "message", "role": "assistant", "content": "done.", "delta": true }, { "type": "result", "status": "success", "stats": {} }])
+  gemini = runAdapter(geminiCliAdapter, analyst(tmpPath), "analysis", agentWork(tmpPath, monkeypatch, "gemini-2.5-flash"), (e) => null)
+  expect(gemini.ok and gemini.text == "Gemini done.")
+  said = geminiLog.readText()
+  expect("--output-format\nstream-json" in said and "--model\ngemini-2.5-flash" in said and "Be brief." in said)
+  expect("run_shell_command" in Path("${geminiLog}.files").readText())

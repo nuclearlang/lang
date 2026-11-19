@@ -1,0 +1,83 @@
+// The GIF picker: search as you write (the pack made for the project first), pick one to send it. The first search
+// that would leave the machine asks the project once; a missing key or a service that did not answer is said.
+stateful GifPicker(texts: Texts, start: string = "", thread: string = "", onClose: () => void)
+  q: string = ""
+  failed: string = ""
+
+  initState() void
+    q = start
+    PickerManager.search(start)
+
+  build() Element
+    div(
+      className = "picker",
+      children = [
+        div(
+          className = "picker-head",
+          children = [
+            input(className = "picker-search", autoFocus = true, value = q, placeholder = texts.get("gifs.search"), onChange = (e) => typed(e.target.value), onKeyDown = (e) => escape(e)),
+            button(className = "close", title = texts.get("close"), onClick = () => onClose(), children = span(className = "icon icon-close")),
+          ],
+        ),
+        failed != "" ? p(className = "failed", children = texts.format("notSent", { "error": failed })) : null,
+        PickerStateBuilder(
+          ready = (found: GifResults) => results(found),
+          searching = () => div(className = "picker-grid", children = [span(className = "gif loading"), span(className = "gif loading"), span(className = "gif loading")]),
+          error = (e: NuclearChatError) => p(className = "picker-note", children = texts.format("error", { "error": e.message })),
+          orElse = () => div(className = "picker-grid"),
+        ),
+      ],
+    )
+
+  results(found: GifResults) Element
+    service = found.service != "" ? found.service.substring(0, 1).upper() + found.service.substring(1) : ""
+    div(
+      className = "picker-body",
+      children = [
+        found.ask == "online" ? div(
+          className = "consent",
+          children = [
+            strong(children = texts.format("gifs.ask", { "service": service })),
+            p(children = texts.get("gifs.askWhy")),
+            div(
+              className = "actions",
+              children = [
+                button(className = "action primary", onClick = () => PickerManager.answer(true), children = texts.format("gifs.yes", { "service": service })),
+                button(className = "action", onClick = () => PickerManager.answer(false), children = texts.get("gifs.no")),
+              ],
+            ),
+          ],
+        ) : null,
+        found.note == "no-key" ? p(className = "picker-note", children = texts.format("gifs.noKey", { "service": service })) : null,
+        found.note == "failed" ? p(className = "picker-note", children = texts.format("gifs.failed", { "service": service })) : null,
+        found.results.isEmpty ? p(className = "picker-note", children = texts.format("gifs.none", { "q": found.q })) : null,
+        div(
+          className = "picker-grid",
+          children = found.results.map((g) => button(key = g.src, className = "pick", title = g.title, onClick = () => send(g), children = GifImage(gif = g))),
+        ),
+      ],
+    )
+
+  // Searches once the user stops writing for a moment.
+  typed(value: string)
+    setState(() =>
+      q = value
+    )
+    ~delay(250)
+    if q == value
+      PickerManager.search(value)
+
+  escape(e: KeyboardEvent)
+    if e.key == "Escape"
+      onClose()
+
+  send(gif: Gif)
+    result: Result<NuclearChatError, Message> = ~MessagesManager.sendGif(gif, thread == "" ? null : thread)
+    match result
+      Ok(m) -> onClose()
+      Err(e) -> show(e.message)
+
+  show(why: string)
+    setState(() =>
+      failed = why
+    )

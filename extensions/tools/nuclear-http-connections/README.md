@@ -2,21 +2,23 @@
 
 [![extension-vscode](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/extension-vscode.yml) · [Website](https://nuclearlang.github.io/tools/http-connections)
 
-An HTTP client like Postman or Bruno, inside the editor, that already knows every endpoint of your projects. In VS
-Code (`Ctrl+Alt+H`) and JetBrains (`Alt+Shift+H`).
+An HTTP and WebSocket client like Postman or Bruno, inside the editor, that already knows every endpoint of your
+projects. In VS Code (`Ctrl+Alt+H`) and JetBrains (`Alt+Shift+H`).
 
 ## Why
 
 - No retyping paths, parameters and bodies: the compiler already wrote them to `.nuclear/contract.json`.
 - One tree by platform, project and component: the routes a backend exposes and the calls an app makes.
+- WebSockets: what a backend serves over a socket and the events it pushes, connect, send JSON or text, a filtered
+  log of both directions; any ws:// url too.
 - Environments, app contracts and OpenAPI (JSON) documents of APIs that are not Nuclear.
-- Left out on purpose: it never reads your code; today only HTTP REST.
+- Left out on purpose: it never reads your code; raw sockets, gRPC and UDP are not there yet.
 
 ## How we made it
 
 - The endpoints come from the contract, never the code ([ADR-synapsis-0006](../../../nuclear-synapsis-framework/docs/03-adr/0006-shared-contracts.md); format in [projects §1.2](../../../nuclearlang/docs/07-reference/projects.md)).
 - A tool of the Nuclear workspace: one tab per component, endpoints inside it ([ADR-extensions-0002](../../docs/03-adr/0002-the-nuclear-workspace.md)).
-- The extension host sends the request and resolves `{{var}}`, not the page.
+- The extension host sends the request, holds the socket and resolves `{{var}}`, not the page.
 - TypeScript for VS Code, Java for JetBrains. Never yet run in a live editor ([roadmap](docs/01-product/roadmap.md)).
 
 ## Try it

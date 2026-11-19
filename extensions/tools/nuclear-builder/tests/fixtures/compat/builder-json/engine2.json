@@ -1,0 +1,19 @@
+{
+  "developerUrl": "http://127.0.0.1:9",
+  "mcpCommand": "nuclear-mcp",
+  "claudeModel": "sonnet",
+  "commands": { "check": ["echo checked"], "build": ["echo built"], "test": ["echo tested"], "security": [], "artifacts": [], "seed": [], "integration": [], "deploy": [] },
+  "branches": ["main"],
+  "retry": { "attempts": 5, "baseMs": 1000, "maxMs": 30000 },
+  "graphUrl": "http://127.0.0.1:8090",
+  "ollamaUrl": "http://127.0.0.1:11434",
+  "coderModel": "qwen2.5-coder:3b",
+  "assistantModel": "qwen2.5:3b",
+  "callTimeoutMs": 900000,
+  "stallSeconds": 90,
+  "minFreeMb": 500,
+  "claudeCommand": "claude",
+  "claudeBudgetUsd": 2,
+  "preflight": true,
+  "commandTimeoutMs": 1200000
+}

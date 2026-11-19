@@ -1,0 +1,421 @@
+use os
+use re
+use json
+use time
+use socket
+use hashlib
+use pathlib{ Path }
+
+// A run of the software factory as the editors draw it: `.nuclear/builder/runs/<id>.json`, today's format (a run
+// with its stages and steps) whose stages are the six stations and whose steps say the role, the employee, the
+// provider and the model that did them. Saved atomically on every change; every event also goes to the
+// append-only trace log `<id>.log`. What keeps a run safe (ADR-platform-0003): the owner's heartbeat, the ledger of
+// the files it wrote with what was there before, the rollback of the steps that did not pass, the recovery of a run
+// whose process stopped.
+
+RUNS_DIR = ".nuclear/builder/runs"
+// The engine of the software factory; the TypeScript engine's runs are 2.
+FACTORY_ENGINE = 3
+BEAT_SECONDS = 10
+STALE_SECONDS = 45
+
+// What each station is for and who takes part, shown before it runs.
+STATION_INFO: <string, <string, string>> = { "analysis": { "title": "Analysis", "about": "The spec read by the Analyst: what the client needs, the acceptance criteria, the questions to answer before anything is built (analysis.md)." }, "design": { "title": "Design", "about": "The generators write first what follows from the data (nuclear gen resource); then the Architect designs what is left, with Mermaid diagrams and the ADRs it follows, and splits it into a plan (design.md, plan.md)." }, "tests": { "title": "Tests first", "about": "Before any code, the tests from the acceptance criteria and the plan (test-plan.md and the tests in the project)." }, "code": { "title": "Code", "about": "The Developer writes what the generators did not, with the Nuclear MCP server; then the project's check (nuclear check)." }, "quality": { "title": "Quality", "about": "QA writes its plan into the run's checks and stops for you: switch checks, add your own, run yours; then the project is built and tested and QA runs the rest (qa-report.md)." }, "delivery": { "title": "Delivery", "about": "DevOps writes the definition of done, the user stories and the pull request's text (and the deployment, when the change touches it); once you approve, the branch, the commit in your name and the pull request with gh (never merged)." } }
+
+nowMs() int
+  (time.time() * 1000).round()
+
+runsDir(root: string) Path
+  Path(root, RUNS_DIR)
+
+runFile(root: string, id: string) Path
+  runsDir(root).joinpath("${id}.json")
+
+digestOf(text: string) string
+  hashlib.sha1(text.toBytes()).hexdigest()
+
+// ---------- the spec ----------
+
+runSlug(text: string) string
+  whole = text.lower().replaceAll(Regex(r"[^a-z0-9]+"), "-")
+  cut = whole.substring(0, Math.min(40, whole.length))
+  while cut.startsWith("-")
+    cut = cut.substring(1)
+  while cut.endsWith("-")
+    cut = cut.substring(0, cut.length - 1)
+  cut.isEmpty ? "spec" : cut
+
+// A section of a spec's markdown (`## Name` up to the next `##`), trimmed.
+specSection(text: string, name: string) string
+  found = re.search("(?ms)^## ${re.escape(name)}\\s*\\n(.*?)(?=^## |\\Z)", text)
+  found == null ? "" : "${found!.group(1)}".trim()
+
+specItems(body: string) string[]
+  found: string[] = []
+  for line in body.split("\n")
+    m = re.match(r"^\s*-\s+(?:\[[ x]\]\s+)?(.+)$", line)
+    if m != null and "${m!.group(1)}".trim() != "(none yet)"
+      found.add("${m!.group(1)}".trim())
+  found
+
+// A `- Name: value` line of a spec, or "".
+specField(text: string, name: string) string
+  m = re.search("(?m)^- ${name}:\\s*(.+)$", text)
+  m == null ? "" : "${m!.group(1)}".trim()
+
+// A spec read from its markdown (`specs/<id>/spec.md`, the shape the editors write): today's fields.
+parseSpec(text: string, id: string) <string, any>
+  title = re.search(r"(?m)^#\s+(.+)$", text)
+  pieces: <string, any>[] = []
+  for line in specItems(specSection(text, "Pieces"))
+    m = re.match(r"^`([^`]+\.nuc)`\s*\(([^)]*)\):\s*(.+)$", line)
+    if m != null
+      pieces.add({ "path": m!.group(1), "kind": m!.group(2), "task": m!.group(3), "by": "you" })
+  useCase = specField(text, "Use case")
+  strategy = specField(text, "Strategy").replace("strategy:", "")
+  spec: <string, any> = { "id": id, "title": title == null ? id : "${title!.group(1)}".trim(), "useCase": useCase.isEmpty ? "feature" : useCase, "description": specSection(text, "Description"), "criteria": specItems(specSection(text, "Acceptance criteria")), "context": specItems(specSection(text, "Context")), "source": { "kind": "local" }, "lead": specField(text, "Lead").startsWith("local") ? "local" : "claude", "pieces": pieces, "resources": specItems(specSection(text, "Resources")).map((r) => r.replaceAll("`", "")) }
+  if not strategy.isEmpty
+    spec["strategy"] = strategy
+  for field in ["Component", "Layer"]
+    value = specField(text, field)
+    if not value.isEmpty
+      spec[field.lower()] = value
+  spec
+
+// The resources a spec names (`nuclear gen resource` arguments): its Resources, else one per `GET <url>` line of its
+// description, named after the url's last segment (`/api/character` → `characters Character`); mobile and web get a
+// screen that lists it.
+specResources(spec: <string, any>, platform: string) string[]
+  own: string[] = spec["resources"] ?? []
+  if not own.isEmpty
+    return own
+  found: string[] = []
+  for m in re.finditer(r"(?m)^\s*GET\s+(https?://\S+)\s*$", "${spec["description"] ?? ""}")
+    segments = "${m.group(1)}".split("?")[0].split("/").filter((s) => s.length > 0)
+    last = segments.isEmpty ? "" : segments.last
+    if segments.length < 2 or re.fullmatch(r"[a-zA-Z][a-zA-Z0-9_-]*", last) == null
+      continue
+    word = last.replaceAll("-", "_").lower()
+    one = word.endsWith("ies") ? word.substring(0, word.length - 3) + "y" : word.endsWith("s") ? word.substring(0, word.length - 1) : word
+    many = one.endsWith("y") ? one.substring(0, one.length - 1) + "ies" : one.endsWith("s") ? one : one + "s"
+    name = one.split("_").map((w) => w.substring(0, 1).upper() + w.substring(1)).join("")
+    line = "${many} ${name}${platform == "backend" ? "" : " --screen ${many}"}"
+    if not (line in found)
+      found.add(line)
+  found
+
+// ---------- the run ----------
+
+// A station of a run, worked by the member of its role who works it (teams.nuc's `memberFor`).
+stationOf(id: string, team: <string, any>, roleOf: string, assign: <string, any>? = null) <string, any>
+  info = STATION_INFO[id]!
+  assigned: <string, any> = memberFor(team, roleOf, assign) ?? ({} as <string, any>)
+  { "id": id, "title": info["title"], "about": info["about"], "actors": [roleOf], "role": roleOf, "member": assigned["id"] ?? "", "provider": assigned["provider"] ?? "nuclear-developer", "model": assigned["model"] ?? "", "status": "pending", "steps": [] as <string, any>[] }
+
+// A new run of a spec by a team, at the stations the line runs (all six by default); `specPath` is the spec's folder
+// (specs.nuc: where it is, else where its component and layer say); `assign` is the tech lead's choice of who works
+// a role in this run (`{ <role>: <member id> }`, `run --assign`), kept in the run.
+newRun(root: string, card: <string, any>, spec: <string, any>, team: <string, any>, stations: string[] = STATIONS, specPath: string? = null, assign: <string, any>? = null) <string, any>
+  {
+    "id": spec["id"],
+    "root": root,
+    "specPath": specPath ?? specPathFor(root, "${spec["id"]}", spec),
+    "project": card["name"] ?? Path(root).name,
+    "platform": card["platform"] ?? "",
+    "dialect": card["dialect"] ?? "",
+    "spec": spec,
+    "status": "pending",
+    "created": nowMs(),
+    "assign": assign ?? ({} as <string, any>),
+    "stages": stations.map((s) => stationOf(s, team, STATION_ROLE[s]!, assign)),
+    "costUsd": 0.0,
+    "engine": FACTORY_ENGINE,
+    "team": { "id": team["id"], "name": team["name"] },
+    "factory": { "team": team["id"], "teamName": team["name"], "budgetUsd": team["budgetUsd"] ?? 5.0 },
+    "writes": [] as <string, any>[]
+  }
+
+// The folder of a run's spec (`specPath`; a run made before it: the flat `specs/<id>`).
+specPathOf(run: <string, any>) string
+  "${run["specPath"] ?? "${SPECS_DIR}/${run["id"]}"}"
+
+// The run file and its journal next to it, both rewritten on every change.
+saveRun(run: <string, any>) void
+  writeAtomic(runFile(run["root"]!, run["id"]!), json.dumps(run, indent = 2, ensureAscii = false))
+  writeAtomic(runsDir(run["root"]!).joinpath("${run["id"]}.md"), journalMarkdown(run))
+
+clip(text: string, lines: int) string
+  all = text.trimEnd().split("\n")
+  all.length > lines ? [...all.take(lines), "… (${all.length - lines} more lines in the run's .json)"].join("\n") : all.join("\n")
+
+when(at: int?) string
+  at == null ? "—" : time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(at! / 1000))
+
+// The journal of a run (`.nuclear/builder/runs/<id>.md`): everything the roles did, station by station, for the
+// person or the model that reviews it. The `.json` next to it keeps every log whole.
+journalMarkdown(run: <string, any>) string
+  spec: <string, any> = run["spec"] ?? ({} as <string, any>)
+  factory: <string, any> = run["factory"] ?? ({} as <string, any>)
+  out = ["# Journal: ${spec["title"] ?? run["id"]}", "", "- Run: ${run["id"]} · ${run["status"]} · ${when(run["created"])} → ${when(run["ended"])}", "- Project: ${run["project"]} (${run["platform"]}${"${run["dialect"] ?? ""}".isEmpty ? "" : " · ${run["dialect"]}"})", "- Team: ${factory["teamName"] ?? ""} (${factory["team"] ?? ""}) · ${(run["costUsd"] ?? 0.0 as double).toFixed(2)} of ${(factory["budgetUsd"] ?? 5.0 as double).toFixed(2)} USD", "- Spec: ${specPathOf(run)}/spec.md"]
+  analysis: <string, any>? = run["analysis"]
+  if analysis != null
+    why = "${analysis!["why"] ?? ""}"
+    out.add("- Strategy: ${"${analysis!["strategy"]}".replace("strategy:", "")} · ${"${analysis!["title"] ?? ""}".replace("Strategy: ", "")}${why.isEmpty ? "" : " (${why})"}")
+  if run["diagnosis"] != null
+    out.addAll(["", "## Why it failed (local diagnoser)", "", "${run["diagnosis"]}"])
+  for p in (run["previous"] ?? []) as <string, any>[]
+    undone: string[] = p["undone"] ?? []
+    out.addAll(["", "- Retried from ${p["from"]} at ${when(p["at"])}: ${p["why"] ?? ""} (the earlier attempt ${p["status"]}; kept in the run's .json)${undone.isEmpty ? "" : "; undone: ${undone.join(", ")}"}"])
+  for i in (run["interrupted"] ?? []) as <string, any>[]
+    undone: string[] = i["undone"] ?? []
+    out.addAll(["", "- Interrupted at ${i["stage"]}${"${i["step"] ?? ""}".isEmpty ? "" : " · ${i["step"]}"} (${when(i["at"])}): the process that ran it stopped; undone: ${undone.isEmpty ? "nothing" : undone.join(", ")}; the trace log is ${RUNS_DIR}/${run["id"]}.log"])
+  stations: <string, any>[] = run["stages"] ?? []
+  files: string[] = []
+  open: string[] = []
+  for st in stations
+    for s in st["steps"] as <string, any>[]
+      if "${s["file"] ?? ""}".endsWith(".nuc") and s["code"] != null
+        files.add("- `${s["file"]}` (${s["actor"]}, ${s["status"]})")
+      if s["status"] == "failed"
+        open.add("- ${st["title"]} · ${s["title"]}: ${s["summary"]}")
+  if not files.isEmpty
+    out.addAll(["", "## Files written", "", ...files.unique()])
+  acceptance: <string, any>[] = run["acceptance"] ?? []
+  unmet = acceptance.filter((a) => a["met"] != true).map((a) => "- Acceptance criterion not shown met: ${a["criterion"]} (${a["evidence"]})")
+  if not open.isEmpty or not unmet.isEmpty
+    out.addAll(["", "## Left for the reviewer", "", ...open, ...unmet])
+  if not acceptance.isEmpty
+    out.addAll(["", "## Acceptance criteria", "", ...acceptance.map((a) => "- [${a["met"] == true ? "x" : " "}] ${a["criterion"]} — ${a["evidence"]}")])
+  for st in stations
+    out.addAll(["", "## ${st["title"]} — ${st["status"]}"])
+    for s in st["steps"] as <string, any>[]
+      who = s["provider"] == null ? "${s["actor"]}" : "${s["role"]} · ${s["provider"]}${"${s["model"] ?? ""}".isEmpty ? "" : " ${s["model"]}"}"
+      out.addAll(["", "### ${s["title"]} (${who}, ${s["status"]})", ""])
+      if not "${s["summary"] ?? ""}".isEmpty
+        out.addAll(["${s["summary"]}", ""])
+      if s["file"] != null
+        out.addAll(["File: `${s["file"]}`", ""])
+      trace: <string, any>[] = s["trace"] ?? []
+      if not trace.isEmpty
+        out.addAll([...trace.map((t) => "1. **${t["step"]}**: ${"${t["detail"]}".replaceAll(Regex(r"\s+"), " ").substring(0, 300)}"), ""])
+      decisions: <string, any>[] = s["decisions"] ?? []
+      if not decisions.isEmpty
+        out.addAll(["Decisions:", "", ...decisions.map((d) => "- ${d["what"]} — because ${d["why"]}"), ""])
+      if s["agent"] != null
+        out.addAll(["What the agent read:", "", "```", clip("${s["agent"]}", 30), "```", ""])
+      if not "${s["log"] ?? ""}".isEmpty and s["status"] == "failed"
+        out.addAll(["Log:", "", "```", clip("${s["log"]}", 40), "```", ""])
+  out.join("\n").replaceAll(Regex(r"\n{3,}"), "\n\n") + "\n"
+
+// The folder of the spec of a run id: the run's `specPath`, the spec's folder, else the flat layout.
+specHome(root: string, id: string) string
+  run = loadRun(root, id)
+  if run != null and run!["specPath"] != null
+    return "${run!["specPath"]}"
+  found = findSpec(root, id)
+  found != null ? "${found!["path"]}" : "${SPECS_DIR}/${id}"
+
+loadRun(root: string, id: string) <string, any>?
+  file = runFile(root, id)
+  if not file.isFile()
+    return null
+  // the project it is in now: a run made before the project's folder moved names the old one
+  run: <string, any> = upgradeRun(json.loads(file.readText(encoding = "utf-8")))
+  run["root"] = root
+  run
+
+// A run an earlier version wrote, with today's role ids (roles.nuc's OLD_ROLES: `delivery` is `devops`) in its
+// stations, their steps and its `assign`; read so, the file is not rewritten (it is when the run is saved again).
+upgradeRun(run: <string, any>) <string, any>
+  stages = run["stages"]
+  for st in (isinstance(stages, list) ? stages : []) as <string, any>[]
+    if not isinstance(st, dict)
+      continue
+    if isinstance(st["role"], str)
+      st["role"] = roleId("${st["role"]}")
+    if isinstance(st["actors"], list)
+      st["actors"] = (st["actors"] as any[]).map((a) => isinstance(a, str) ? roleId(a) : a)
+    steps = st["steps"]
+    for step in (isinstance(steps, list) ? steps : []) as <string, any>[]
+      if isinstance(step, dict) and isinstance(step["role"], str)
+        step["role"] = roleId("${step["role"]}")
+  if isinstance(run["assign"], dict)
+    given: <string, any> = {}
+    for role, who in run["assign"] as <string, any>
+      given[roleId(role)] = who
+    run["assign"] = given
+  run
+
+// The runs of a project, newest first; a file that is not JSON is left out.
+listRuns(root: string) <string, any>[]
+  dir = runsDir(root)
+  if not dir.isDir()
+    return []
+  found: <string, any>[] = []
+  for f in dir.glob("*.json")
+    try
+      run: <string, any> = upgradeRun(json.loads(f.readText(encoding = "utf-8")))
+      run["root"] = root
+      found.add(run)
+    catch e
+      if not isinstance(e, ValueError)
+        throw e
+  found.sortedBy((r) => -(r["created"] ?? 0) as int)
+
+// Appends an event to the run's trace log (JSON lines; a line cut by a crash is skipped when read).
+traceEvent(run: <string, any>, event: string, detail: string = "", step: string = "") void
+  try
+    dir = runsDir(run["root"]!)
+    dir.mkdir(parents = true, existOk = true)
+    out = dir.joinpath("${run["id"]}.log").open("a", encoding = "utf-8")
+    out.write(json.dumps({ "at": nowMs(), "event": event, "step": step, "detail": detail }) + "\n")
+    out.close()
+  catch e
+    // the trace never stops a run: a full disk is caught by the preflight
+    if not isinstance(e, OSError)
+      throw e
+
+readTrace(root: string, id: string) <string, any>[]
+  file = runsDir(root).joinpath("${id}.log")
+  if not file.isFile()
+    return []
+  found: <string, any>[] = []
+  for line in file.readText(encoding = "utf-8").split("\n")
+    event = jsonLine(line)
+    if event != null
+      found.add(event!)
+  found
+
+// ---------- who runs it ----------
+
+owner() <string, any>
+  { "pid": os.getpid(), "host": socket.gethostname(), "beat": nowMs() }
+
+alive(pid: int) boolean
+  try
+    os.kill(pid, 0)
+    true
+  catch e
+    isinstance(e, PermissionError)
+
+// A run said to be running whose owner is gone: no beat for STALE_SECONDS, or its process is dead on this machine.
+orphaned(o: <string, any>?, now: int? = null) boolean
+  if o == null
+    return true
+  beat: int = o!["beat"] ?? 0
+  if (now ?? nowMs()) - beat > STALE_SECONDS * 1000
+    return true
+  o!["host"] == socket.gethostname() and o!["pid"] != os.getpid() and not alive(o!["pid"]!)
+
+// ---------- the ledger ----------
+
+// The text of every file of the project a step may change (not the build output nor the run's own files), to know
+// what was there before it.
+contents(root: string) <string, string>
+  seen: <string, string> = {}
+  for entry in os.walk(root)
+    dir: string = entry[0]
+    dirs: string[] = entry[1]
+    files: string[] = entry[2]
+    for d in dirs.copy()
+      if d in SKIPPED_DIRS
+        dirs.remove(d)
+    for f in files
+      full = Path(dir, f)
+      if full.stat().stSize <= 1_000_000
+        try
+          seen["${full.relativeTo(root)}"] = full.readText(encoding = "utf-8")
+        catch e
+          if not isinstance(e, UnicodeDecodeError)
+            throw e
+  seen
+
+// Notes in the ledger every file a step changed, with what was there before (null: it did not exist) and the
+// digest of what it left.
+ledger(run: <string, any>, step: string, before: <string, string>) string[]
+  after = contents(run["root"]!)
+  changed = [...after.keys.filter((f) => before[f] != after[f]), ...before.keys.filter((f) => not (f in after))].sorted()
+  writes: <string, any>[] = run["writes"]!
+  for f in changed
+    writes.add({ "path": f, "step": step, "before": before[f], "at": nowMs(), "after": after[f] == null ? null : digestOf(after[f]!) })
+  changed
+
+// Undoes the writes of the steps that did not pass, newest first: each file goes back to what it was. A file changed
+// since the run wrote it is the user's: it is kept and named in `changed`.
+rollback(root: string, writes: <string, any>[], passed: (step: string) => boolean, changed: string[] = []) string[]
+  undone: string[] = []
+  for w in writes.reversed()
+    if passed(w["step"]!)
+      continue
+    file = Path(root, w["path"]!)
+    now: string? = file.isFile() ? file.readText(encoding = "utf-8") : null
+    if w["after"] != null and now != null and digestOf(now!) != w["after"]
+      if not (w["path"] in changed)
+        changed.add(w["path"]!)
+      continue
+    if w["before"] == null
+      file.unlink(missingOk = true)
+    else
+      writeAtomic(file, w["before"]!)
+    undone.add(w["path"]!)
+  undone
+
+passedSteps(run: <string, any>) string[]
+  ids: string[] = []
+  for st in run["stages"] as <string, any>[]
+    for s in st["steps"] as <string, any>[]
+      if s["status"] == "passed"
+        ids.add(s["id"]!)
+  ids
+
+// A run left `running` by a process that stopped: its unfinished steps are failed, what they wrote is undone, and
+// it can go on from there. False when the run is not orphaned.
+recoverRun(run: <string, any>) boolean
+  if run["status"] != "running" or not orphaned(run["owner"])
+    return false
+  stage = ""
+  step = ""
+  stepId: string? = null
+  for st in run["stages"] as <string, any>[]
+    for s in st["steps"] as <string, any>[]
+      if s["status"] == "running"
+        s["status"] = "failed"
+        s["ended"] = nowMs()
+        s["summary"] = "interrupted: the process that ran it stopped (the editor was closed or crashed)"
+        if stage.isEmpty
+          stage = st["id"]!
+          step = s["title"]!
+          stepId = s["id"]
+    if st["status"] == "running"
+      st["status"] = "failed"
+      st["ended"] = nowMs()
+      if stage.isEmpty
+        stage = st["id"]!
+  kept = passedSteps(run)
+  undone = rollback(run["root"]!, run["writes"] ?? [], (id) => id in kept)
+  run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => w["step"] in kept)
+  interrupted: <string, any>[] = run["interrupted"] ?? []
+  interrupted.add({ "at": nowMs(), "stage": stage, "step": step, "stepId": stepId, "undone": undone })
+  run["interrupted"] = interrupted
+  run["status"] = "failed"
+  run["ended"] = nowMs()
+  saveRun(run)
+  traceEvent(run, "recovered", "undone: ${undone.isEmpty ? "nothing" : undone.join(", ")}")
+  true
+
+// A run as a list shows it: its id, title, status, cost and each station's status.
+runSummary(r: <string, any>) <string, any>
+  spec: <string, any> = r["spec"] ?? ({} as <string, any>)
+  { "id": r["id"], "title": spec["title"] ?? "", "status": r["status"], "costUsd": r["costUsd"] ?? 0, "specPath": specPathOf(r), "stations": ((r["stages"] ?? []) as <string, any>[]).map((st) => { "id": st["id"], "status": st["status"] }) }
+
+// A run file as the chat reads it: without its ledger (the texts of the files before), each log cut.
+runShown(root: string, id: string) <string, any>
+  run = loadRun(root, id)
+  if run == null
+    throw ValueError("no run `${id}` (the tool runs lists them)")
+  shown: <string, any> = dict(run!)
+  shown.remove("writes")
+  for st in (shown["stages"] ?? []) as <string, any>[]
+    for s in st["steps"] as <string, any>[]
+      s["log"] = clip("${s["log"] ?? ""}", 20)
+  shown

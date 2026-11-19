@@ -13,7 +13,9 @@ import 'reflect-metadata';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Observable, map } from 'rxjs';
+import { AppConfig } from './config.js';
 import { AppError } from './errors.js';
+import { Guard, GuardsOf, Headers, refusal } from './guards.js';
 import { Result } from './result.js';
 
 @Injectable()
@@ -34,11 +36,24 @@ export class ResultInterceptor implements NestInterceptor {
 /** What every Synapsis app has: validated bodies (class-validator), Result answers, routes whose order does not
  * matter and the contract it was built with. */
 export function configureApp(app: INestApplication): INestApplication {
+  const config = configOf(app);
+  const guards = config?.guards ?? [];
+  if (guards.length) app.useGlobalGuards(new GuardsOf(guards));
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.useGlobalInterceptors(new ResultInterceptor());
   fixedRoutesFirst(app);
-  serveContract(app);
+  serveContract(app, guards);
+  for (const c of config?.connections ?? []) c.instrument(app);
   return app;
+}
+
+/** The project config of the app; none in a module without it (the runtime's own tests). */
+function configOf(app: INestApplication): AppConfig | undefined {
+  try {
+    return app.get(AppConfig, { strict: false });
+  } catch {
+    return undefined;
+  }
 }
 
 /** A fixed segment wins over a parameter whatever the order of a controller's routes (`search` over `:id`): Nest adds
@@ -65,13 +80,15 @@ function fixedRoutesFirst(app: INestApplication): void {
 
 /** GET /.nuclear/contract.json and /.nuclear/openapi.json: what the transpiler wrote next to the app (ADR-synapsis-0006), so a
  * client project (`contracts(name = "https://...")`) and the editors' HTTP tools read the API as built. */
-function serveContract(app: INestApplication): void {
-  const server = app.getHttpAdapter().getInstance() as { get?: (path: string, handler: (req: unknown, res: { json(v: unknown): void; status(n: number): { json(v: unknown): void } }) => void) => void };
+function serveContract(app: INestApplication, guards: readonly Guard[]): void {
+  const server = app.getHttpAdapter().getInstance() as { get?: (path: string, handler: (req: { headers: Headers }, res: { json(v: unknown): void; status(n: number): { json(v: unknown): void } }) => void) => void };
   if (typeof server.get !== 'function') return;
   for (const name of ['contract', 'openapi']) {
     const file = join('.nuclear', `${name}.json`);
     if (!existsSync(file)) continue;
-    server.get(`/.nuclear/${name}.json`, (_req, res) => {
+    server.get(`/.nuclear/${name}.json`, (req, res) => {
+      const e = refusal(guards, req.headers);
+      if (e) return res.status(e.status).json({ statusCode: e.status, message: e.message });
       res.json(JSON.parse(readFileSync(file, 'utf8')));
     });
   }

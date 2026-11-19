@@ -29,6 +29,7 @@ cargo test -p nuclear-lsp          # the language server alone
 # from nuclearlang/
 tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language> [--fix]
 tools/stdlib-check.sh [area...]    # examples/stdlib/ in TypeScript, Dart and Python: the same output
+DIR=examples/semantics tools/stdlib-check.sh   # the rules a target could break, the same way
 FLUTTER_ROOT=~/develop/flutter tools/defs/generate.sh    # dialects/dart/defs/ (about 45 s)
 tools/defs/python/generate.sh      # dialects/python/defs/
 tools/defs/typescript/generate.sh  # dialects/typescript/defs/

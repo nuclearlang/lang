@@ -8,10 +8,10 @@ import { CharactersManager } from '../src/components/characters/presentation/lis
 import { CharactersState } from '../src/components/characters/presentation/list/state_models/characters_state';
 import { Page, PageInfo } from '../src/shared/models/page';
 import { registerSynapsis, synapsisConfig } from '../src/synapsis.g';
-import { screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import { Err, Ok, inject } from 'synapsis-web';
 import { SynapsisTest, errOf, okOf, renderScreen, statesOf, when } from 'synapsis-web/testing';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 /** Tests of the characters component: the repository is a mock; everything else is the real code. */
 export function character(name: string, status: string): Character {
@@ -39,6 +39,11 @@ describe('CharactersTest', () => {
   beforeEach(async () => {
     await SynapsisTest.start(synapsisConfig(), registerSynapsis);
     SynapsisTest.mock(CharacterRepository);
+  });
+
+  // a screen a test rendered leaves the page before the next test
+  afterEach(() => {
+    cleanup();
   });
 
   beforeEach(async () => {

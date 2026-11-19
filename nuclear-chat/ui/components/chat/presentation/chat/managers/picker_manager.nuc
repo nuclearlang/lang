@@ -1,0 +1,24 @@
+// The GIF picker: the pack's GIFs first, then the service's when the project said yes; the first search that would
+// leave the machine asks the project once (`ask: online`).
+@stateModel(PickerState)
+statemanager PickerManager
+  (gifs: GifsComponent)
+  workspace: string = ""
+  words: string = ""
+
+  start(id: string)
+    workspace = id
+
+  @state(PickerState.searching)
+  searching()
+
+  @before(searching)
+  @state(PickerState.ready)
+  search(q: string) Result<NuclearChatError, GifResults>
+    words = q
+    ~gifs.searchGifs(workspace, q)
+
+  // The project's answer to the one question, then the same search again.
+  answer(online: boolean)
+    ~gifs.keepConsent(workspace, Consent(online = online))
+    search(words)

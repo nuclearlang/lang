@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased (2026-11-17)
+
+- A request's `platform` must be `backend`, `mobile` or `web` (`@pattern` on the four request models): an empty
+  one, as a folder without a project card sends, is refused with 400 and the reason instead of a 500 from the
+  analyst's `GET /v1/kinds/` of the graph (`test/analyst_test.nuc`).
+- The prompts are the skills of the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,
+  ADR-developer-0002), with the same text; the graph serves them as before, so the graphs and routes do not change.
+  `test/roles_test.nuc` keeps the five role folders complete (the files, the front matter, every skill and template
+  named, the checks, the rosters in English and Spanish) and every prompt given once. `eval/run.py` reads the
+  reference's guides from the roles. The doc comments name the prompts by name (`agent.repair`).
+- Evaluation round 24 with the moved prompts: 41 / 39 (held out 15 / 17), two tasks lost to examples the knowledge
+  base gained since round 23 (`docs/05-standards/evaluation-rounds.md`).
+
 ## Unreleased (2026-11-11)
 
 - README, "Models measured": what other models (up to 7B) do as coder, as assistant and alone, and the three in

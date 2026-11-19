@@ -1,0 +1,42 @@
+# Nuclear Chat's system is written in Nuclear (the `.nuc` files of this folder, `nuclear.toml`): this file only
+# packages what `nuclear build .` writes in `build/nuclear_chat_system`. Build before installing or testing.
+[project]
+name = "nuclear-chat-system"
+version = "0.1.0"
+description = "Nuclear Chat's system: the chat's files, the members' responder commands, the keyring and the GIF pack, and the nuclear-chat command."
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+nuclear-chat = "nuclear_chat_system.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# `build/` is not kept in git (it is generated), but it is the package: without this the wheel would be empty
+[tool.hatch.build]
+artifacts = ["build/nuclear_chat_system/**/*.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["build/nuclear_chat_system"]
+exclude = ["build/nuclear_chat_system/tests"]
+
+# the GIF pack travels inside the package (a checkout reads the project's own, ../pack)
+[tool.hatch.build.targets.wheel.force-include]
+"../pack" = "nuclear_chat_system/pack"
+# the generated code is annotated: the service that uses the package is type-checked against it
+"py.typed" = "nuclear_chat_system/py.typed"
+
+[tool.pytest.ini_options]
+pythonpath = ["build"]
+testpaths = ["build/nuclear_chat_system/tests"]
+
+[tool.pyright]
+typeCheckingMode = "standard"
+extraPaths = ["build"]
+exclude = [".venv"]

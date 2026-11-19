@@ -1,0 +1,19 @@
+// How a member answers: the command the chat runs once per answer (with `--events`), and whether it spends money.
+// A member with `choices` is answered by the choice of each conversation (`PUT channels/{ws}/{channel}/agent`),
+// else by `choice` with `model` (the host's default), else by `command`.
+Responder
+  command: string[] = []
+  paid: boolean = false
+  choice: string = ""
+  model: string = ""
+  choices: Choice[] = []
+
+  // The command and whether it is paid for the choice `id` (empty: the default) with `model`; an unknown or
+  // unavailable choice falls back to the default, then to `command`.
+  run(id: string, model: string) Responder
+    wanted = choices.find((c) => c.id == id and c.available)
+    picked = wanted ?? choices.find((c) => c.id == choice and c.available)
+    if picked == null
+      return Responder(command = command, paid = paid)
+    chosen = wanted != null ? model : this.model
+    Responder(command = chosen.isEmpty ? picked!.command : [...picked!.command, "--model", chosen], paid = picked!.paid)

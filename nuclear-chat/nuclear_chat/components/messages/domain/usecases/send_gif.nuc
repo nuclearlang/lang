@@ -1,0 +1,13 @@
+// A GIF the user sends from the picker.
+usecase SendGif(store: MessageStore, events: EventsAppComponent)
+  exec(workspace: string, channel: string, sent: SentGif) Result<Error, Message>
+    ws = store.workspace(workspace)
+    store.channel(ws, channel)
+    if sent.thread != null
+      store.message(ws, channel, sent.thread!)
+    entry: <string, any> = { "id": newMessageId(), "at": DateTime.now().millis, "author": "you", "text": "", "gif": Json.decode(Json.encode(sent.gif)) }
+    if sent.thread != null
+      entry["thread"] = sent.thread
+    store.append(ws, channel, entry)
+    ~events.emit(ws.id, "message", channel, { "message": entry })
+    Ok(messageOf(entry))

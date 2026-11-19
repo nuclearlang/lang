@@ -41,12 +41,14 @@ npx tsc -p tsconfig.json && npx vitest run
 
 - `platform.toml`: the contract: kinds, decorators, `[layout]`. What `nuclear make` and `gen` write
   (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/web/generators.toml`.
-- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`).
+- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`, `test/sockets.test.ts`).
 - `examples/examples-web/characters/`: the complete example (list and detail screens, state, events, a guard,
   tests).
+- `examples/examples-web/tasks_live/`: real time and the embedded mode: tasks_api's tasks over its WebSocket, a
+  stream method listened to by a manager (made with `nuclear new` and `nuclear gen`).
 - `examples/onboarding/todos_web/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the
   website runs those commands again and fails if they do not give it).
-- `examples/expected/{characters,todos_web}/`: the golden output.
+- `examples/expected/{characters,tasks_live,todos_web}/`: the golden output.
 - `checks/react-check/check.sh`: the check.
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 

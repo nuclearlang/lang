@@ -1,0 +1,613 @@
+use os
+use json
+use time
+use threading
+use subprocess
+use httpx
+use pathlib{ Path }
+
+// The software factory's engine: the stations worked by the team's roles, the documents, the gates and the checks,
+// the money, and today's safety (the cases of test/engine.test.ts carried over): a failed step undone, a run again
+// from a station or from scratch, a crashed run recovered, a command that hangs killed, the connections checked
+// first, the delivery only after approval. The Nuclear Developer is an httpx stub; an agent is a fake command.
+
+SPEC = "# Count the books\n\n- Use case: feature\n- Source: local\n- Lead: local agents only\n\n## Description\n\nCount the books of the shelf.\n\n## Acceptance criteria\n\n- [ ] the count of an empty shelf is 0\n"
+
+FAKE_DEVELOPER: <string, any> = { "/developer/analyze": { "report": "The client needs a count.", "questions": [] as string[], "trace": [{ "step": "recall", "detail": "2 cards" }] }, "/developer/plan": { "pieces": [{ "path": "lib/count.nuc", "kind": "function", "task": "count the books" }], "raw": "One function.", "trace": [] as <string, any>[] }, "/developer/test": { "code": "testCount() void\n", "check": "ok", "attempts": 1 }, "/developer/code": { "code": "count() int = 0\n", "check": "ok", "attempts": 1 }, "/developer/security": { "report": "none" }, "/developer/document": { "report": "Every criterion is met." }, "/developer/accept": { "report": "1 | not met | no file of the run does it" }, "/developer/diagnose": { "report": "kind: command\nthe check of the project failed", "trace": [] as any[] } }
+
+// A fake Nuclear Developer: each route's answer (`answers` overrides some: a list is answered in order, its last one
+// again and again; "404" is no route), and the routes it was asked (not the watch's probes).
+developer(calls: string[], answers: <string, any> = {}) httpx.MockTransport
+  answer = (request: httpx.Request) =>
+    route = "${request.url.path}"
+    if route == "/docs" or route == "/api/ps"
+      return httpx.Response(404, text = "no route")
+    calls.add(route)
+    given: any = answers[route] ?? FAKE_DEVELOPER[route]
+    if isinstance(given, list)
+      queue: any[] = given
+      given = queue.length > 1 ? queue.removeAt(0) : queue[0]
+    given == null or given == "404" ? httpx.Response(404, text = "no route") : httpx.Response(200, json = given)
+  httpx.MockTransport(answer)
+
+// A project with the spec and a line whose commands only say what they do.
+lineProject(tmpPath: Path, monkeypatch: any, gates: string[] = ["analysis"], more: <string, any> = {}) string
+  root = tmpPath.joinpath("app")
+  root.joinpath("specs", "count-books").mkdir(parents = true)
+  root.joinpath("specs", "count-books", "spec.md").writeText(SPEC)
+  root.joinpath("config.nuc").writeText("")
+  root.joinpath(".nuclear").mkdir()
+  // no call reaches a real Nuclear Developer: a test's own transport answers, else nothing listens there
+  line: <string, any> = { "commands": { "check": ["echo checked"], "build": ["echo built"], "test": ["echo tested"], "security": [] as string[] }, "gates": gates, "developerUrl": "http://127.0.0.1:9" }
+  for k, v in more
+    line[k] = v
+  root.joinpath(".nuclear", "builder.json").writeText(json.dumps(line))
+  monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("no-roles")}")
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  "${root}"
+
+localCrew() <string, any>
+  team = crew("Local team", [], ROSTERLESS)
+  memberFor(team, "qa")!["tasks"] = [{ "id": "review", "title": "Review the security of the new files", "station": "quality", "on": true }]
+  team
+
+ROSTERLESS: <string, any> = { "analyst": [] as any[], "architect": [] as any[], "developer": [] as any[], "qa": [] as any[], "devops": [] as any[] }
+
+// The answers the user gives, in order; none left: nobody answers (the run waits).
+nextAnswer(given: <string, any>[], q: <string, any>) <string, any>?
+  given.isEmpty ? null : given.removeAt(0)
+
+factory(root: string, team: <string, any>, given: <string, any>[], transport: httpx.MockTransport, options: <string, any> = {}) Factory
+  run = newRun(root, { "name": "app", "platform": "backend", "dialect": "fastapi" }, parseSpec(SPEC, "count-books"), team)
+  opts: <string, any> = { "preflight": false, "transport": transport }
+  for k, v in options
+    opts[k] = v
+  Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, opts)
+
+stepsOf(run: <string, any>) <string, any>[]
+  ((run["stages"] as <string, any>[]).map((st) => st["steps"] as <string, any>[])).flatten()
+
+testARunGoesThroughTheSixStationsByItsTeamWritingTheDocumentsAndStoppingAtItsGates(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch)
+  calls: string[] = []
+  f = factory(root, localCrew(), [{ "answer": "approve" }, { "answer": "yes" }, { "answer": "no" }], developer(calls))
+  run = f.start()
+  expect(run["status"] == "passed", json.dumps(stepsOf(run).filter((s) => s["status"] == "failed").map((s) => s["summary"])))
+  expect((run["stages"] as <string, any>[]).map((s) => s["id"]) == STATIONS)
+  // every role's step says who did it
+  analysis = stepsOf(run).find((s) => s["role"] == "analyst")!
+  expect(analysis["provider"] == "nuclear-developer" and analysis["model"] == "gemma4:e2b" and analysis["kind"] == "local" and analysis["trace"] == [{ "step": "recall", "detail": "2 cards" }])
+  specs = Path(root, "specs", "count-books")
+  for doc in ["analysis.md", "design.md", "plan.md", "test-plan.md", "qa-report.md", "definition-of-done.md", "user-story.md", "pr.md", "checks.json"]
+    expect(specs.joinpath(doc).isFile(), doc)
+  expect("The client needs a count." in specs.joinpath("analysis.md").readText())
+  expect(Path(root, "lib", "count.nuc").readText() == "count() int = 0\n" and Path(root, "test", "count_the_books_test.nuc").isFile())
+  expect(calls == ["/developer/analyze", "/developer/plan", "/developer/test", "/developer/code", "/developer/accept", "/developer/security", "/developer/document"])
+  // each acceptance criterion is held against the result: one not shown met is left for the reviewer, the run still
+  // passes
+  expect(run["acceptance"] == [{ "criterion": "the count of an empty shelf is 0", "met": false, "evidence": "no file of the run does it" }])
+  accepted = stepsOf(run).find((s) => s["title"] == "Acceptance criteria")!
+  expect(accepted["status"] == "skipped" and "The run wrote 2 file(s)" in "${accepted["input"]}" and "They declare 0 test(s)" in "${accepted["input"]}")
+  journal = Path(root, RUNS_DIR, "count-books.md").readText()
+  expect("## Left for the reviewer" in journal and "Acceptance criterion not shown met: the count of an empty shelf is 0" in journal and "### Analyst: Analysis (analyst · nuclear-developer gemma4:e2b, passed)" in journal)
+  // the team's task is a check of QA by prompt: the local agents skip it, and say why; the delivery was not
+  // approved: no branch, no pull request
+  checks = loadChecks(root, "count-books")
+  expect(checks.map((c) => [c["id"], c["state"]]) == [["qa.review", "skipped"]] and "needs an agent" in "${checks[0]["note"]}")
+  expect(stepsOf(run).any((s) => s["title"] == "No pull request" and s["status"] == "skipped"))
+  saved = loadRun(root, "count-books")!
+  expect(saved["status"] == "passed" and saved["engine"] == FACTORY_ENGINE and (saved["factory"] as <string, any>)["team"] == "local-team")
+
+testARunWithoutAnAnswerWaitsAndGoesOnWhereItWaitedWhenResumed(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch)
+  calls: string[] = []
+  team = localCrew()
+  first = factory(root, team, [], developer(calls))
+  waited = first.start()
+  expect(waited["status"] == "waiting" and (waited["waiting"] as <string, any>)["id"] == "gate-analysis")
+  expect(waited["stages"]![0]["status"] == "waiting" and calls == ["/developer/analyze"])
+  run = loadRun(root, "count-books")!
+  given: <string, any>[] = [{ "answer": "approve" }, { "answer": "yes" }, { "answer": "no" }]
+  again = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) })
+  done = again.start()
+  expect(done["status"] == "passed")
+  // the analysis was not asked again
+  expect(calls.count((c) => c == "/developer/analyze") == 1)
+
+testAChangeAskedAtAGateRunsTheStationAgainWithIt(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, ["analysis"], { "stations": ["analysis"] })
+  calls: string[] = []
+  f = factory(root, localCrew(), [{ "answer": "change", "text": "count the shelves too" }, { "answer": "approve" }], developer(calls))
+  f.run["stages"] = [f.run["stages"]![0]]
+  run = f.start()
+  expect(run["status"] == "passed" and calls == ["/developer/analyze", "/developer/analyze"])
+  expect(stepsOf(run).map((s) => "${s["title"]}").filter((t: string) => t.startsWith("You")) == ["You asked for a change", "You approved it"])
+
+testTheUsersChecksAreMarkedBeforeQaGoesOn(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  addCheck(root, "count-books", "A load test of 100 users", "quality")
+  calls: string[] = []
+  f = factory(root, localCrew(), [{ "answer": "yes" }], developer(calls))
+  waited = f.start()
+  // its check is not marked: QA asks again, and nobody answers
+  expect(waited["status"] == "waiting" and stepsOf(waited).any((s) => s["title"] == "Your checks are not marked yet"))
+  markCheck(root, "count-books", "user.1", "passed", "p95 120 ms")
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  f.ask = (q: <string, any>) => nextAnswer(given, q)
+  expect(f.start()["status"] == "passed")
+  expect(findCheck(loadChecks(root, "count-books"), "user.1")["note"] == "p95 120 ms")
+
+// A fake Claude Code that costs `usd` a call.
+fakeClaude(tmpPath: Path, monkeypatch: any, usd: double) void
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath("claude")
+  line = json.dumps({ "type": "result", "result": "--- document: analysis.md ---\n# Analysis by Claude", "total_cost_usd": usd, "is_error": false })
+  tool.writeText("#!/bin/sh\ncat <<'EOF'\n${line}\nEOF\n")
+  tool.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+
+testTheSpendingIsConfirmedTwiceAsEventsAndHeldToTheBudget(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["analysis", "design"] })
+  fakeClaude(tmpPath, monkeypatch, 0.4)
+  team = crew("Claude", ["analyst", "architect"], ROSTERLESS)
+  team["budgetUsd"] = 0.5
+  asked: <string, any>[] = []
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "yes" }]
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["analysis", "design"])
+  f = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => e["type"] == "ask" ? asked.add(e) : null, { "preflight": false })
+  done = f.start()
+  expect(asked.map((q) => q["id"]) == ["spending-1", "spending-2"] and "0.50 USD" in "${asked[1]["question"]}" and "claude-code" in "${asked[1]["question"]}")
+  // the analysis cost 0.40 of 0.50; the design went over the budget: the run fails, and says so
+  expect(done["status"] == "failed" and ((done["costUsd"] as double) - 0.8).abs() < 0.000001)
+  expect(Path(root, "specs", "count-books", "analysis.md").readText().startsWith("# Analysis by Claude"))
+  design = stepsOf(done).find((s) => s["role"] == "architect")!
+  expect(design["provider"] == "claude-code" and design["model"] == "haiku" and design["status"] == "failed" and "over the run's budget: 0.80 of 0.50 USD" in "${design["summary"]}")
+  // nothing more is called once the budget is spent
+  again = Factory(done, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false })
+  expect(stepsOf(again.start()).filter((s) => s["role"] == "architect").last["summary"] == "the run's budget is spent (0.8 USD)")
+
+testNoSpendingWithoutBothYesesAndNoFlagWhereConfirmationIsForced(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["analysis"], "forceConfirm": true })
+  fakeClaude(tmpPath, monkeypatch, 0.1)
+  team = crew("Claude", ["analyst", "architect"], ROSTERLESS)
+  run = newRun(root, { "name": "app" }, parseSpec(SPEC, "count-books"), team, ["analysis"])
+  said = ""
+  try
+    Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false, "confirmSpending": true }).start()
+  catch e
+    said = "${e}"
+  expect("forces the confirmation" in said)
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  run2 = newRun(root, { "name": "app" }, parseSpec(SPEC, "count-books"), team, ["analysis"])
+  stopped = Factory(run2, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false }).start()
+  expect(stopped["status"] == "waiting" and run2["costUsd"] == 0)
+
+testWhatAFailedStepWroteIsUndoneAndARetryKeepsTheStationsThatPassed(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["test -f lib/never.nuc"], "build": [] as string[], "test": [] as string[] } })
+  calls: string[] = []
+  f = factory(root, localCrew(), [], developer(calls))
+  run = f.start()
+  // the code station's check failed: the run stops there; the steps that passed keep what they wrote
+  stages: <string, any>[] = run["stages"]!
+  expect(run["status"] == "failed" and stages.map((st) => "${st["status"]}") == ["passed", "passed", "passed", "failed", "pending", "pending"])
+  expect(Path(root, "lib", "count.nuc").exists() and Path(root, "test", "count_the_books_test.nuc").exists())
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "commands": { "check": ["echo checked"], "build": [] as string[], "test": [] as string[] }, "gates": [] as string[] }))
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  again = Factory(loadRun(root, "count-books")!, localCrew(), readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) })
+  done = again.start()
+  expect(done["status"] == "passed" and calls.count((c) => c == "/developer/analyze") == 1)
+  previous: <string, any>[] = done["previous"]!
+  // the retry went on from the code station: what it wrote before was undone first, then written again
+  expect(previous.length == 1 and previous[0]["from"] == "code" and previous[0]["undone"] == ["lib/count.nuc"])
+  // the failed station was diagnosed by the local diagnoser; the journal tells the retry
+  failedCode: <string, any>[] = previous[0]["stages"]![0]["steps"]!
+  expect(failedCode.last["title"] == "Why it failed" and failedCode.last["status"] == "skipped" and "/developer/diagnose" in calls)
+  expect("- Retried from code at " in Path(root, RUNS_DIR, "count-books.md").readText())
+
+testARunAgainFromScratchUndoesEveryFileButOneChangedSince(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  f = factory(root, localCrew(), given, developer(calls))
+  expect(f.start()["status"] == "passed")
+  // the user changes the test the run wrote
+  Path(root, "test", "count_the_books_test.nuc").writeText("mine\n")
+  f.forget(0, "from scratch")
+  expect(not Path(root, "lib", "count.nuc").exists() and Path(root, "test", "count_the_books_test.nuc").readText() == "mine\n")
+  last: <string, any> = (f.run["previous"] as <string, any>[]).last
+  expect("test/count_the_books_test.nuc" in (last["kept"] as string[]))
+
+testARunLeftRunningByAProcessThatStoppedIsRecoveredAndResumed(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team)
+  // it stopped in the code station, half way through the piece its plan has
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "lib/count.nuc", "kind": "function", "task": "count the books", "by": "planner" }]
+  run["status"] = "running"
+  run["owner"] = { "pid": 999_999_999, "host": "elsewhere", "beat": nowMs() - 60_000 }
+  for st in (run["stages"] as <string, any>[]).take(3)
+    st["status"] = "passed"
+  run["stages"][3]["status"] = "running"
+  run["stages"][3]["steps"] = [{ "id": "code-1", "title": "lib/count.nuc", "status": "running", "trace": [] as any[] }]
+  Path(root, "lib").mkdir()
+  Path(root, "lib", "count.nuc").writeText("half")
+  run["writes"] = [{ "path": "lib/count.nuc", "step": "code-1", "before": null, "at": nowMs(), "after": digestOf("half") }]
+  saveRun(run)
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  done = Factory(loadRun(root, "count-books")!, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) }).start()
+  interrupted: <string, any>[] = done["interrupted"]!
+  expect(interrupted[0]["stage"] == "code" and interrupted[0]["undone"] == ["lib/count.nuc"])
+  // it went on from the code station: the stations before were not asked again
+  expect(done["status"] == "passed" and not ("/developer/analyze" in calls) and Path(root, "lib", "count.nuc").readText() == "count() int = 0\n")
+  expect(readTrace(root, "count-books").any((e) => e["event"] == "recovered"))
+
+testACommandThatHangsIsKilledAfterItsLimit(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "commandTimeoutMs": 300 })
+  team = localCrew()
+  f = factory(root, team, [], developer([]))
+  st = f.stage("code")
+  started = time.time()
+  expect(not f.commands(st, ["sleep 30"]) and time.time() - started < 10)
+  expect("timed out" in "${(st["steps"] as <string, any>[]).last["summary"]}")
+
+testTheConnectionsAreCheckedFirstAndEachProblemIsSaid(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "minFreeMb": 100_000_000 })
+  down = (request: httpx.Request) => "${request.url.path}" == "/api/tags" ? httpx.Response(200, json = { "models": [{ "name": "gemma4:e2b" }] }) : httpx.Response(503, text = "down")
+  team = localCrew()
+  checks = checkConnections(team, root, readLine(root, "backend"), httpx.MockTransport(down))
+  said = checks.filter((c) => c["ok"] != true).map((c) => "${c["detail"]}").join("\n")
+  expect("does not answer (503)" in said and "ollama pull qwen2.5-coder:3b" in said and "MB are needed" in said)
+  expect(checks.any((c) => c["name"] == "model gemma4:e2b" and c["ok"] == true))
+  // a run stops at the check, before any station
+  f = factory(root, team, [], httpx.MockTransport(down), { "preflight": true })
+  run = f.start()
+  expect(run["status"] == "failed" and stepsOf(run).length == 1 and stepsOf(run)[0]["title"] == "Check the connections")
+
+// A spec of a component's layer: every document, the checks, the questions, the journal, a retry and the newest
+// spec follow its folder (`specPath`).
+testARunOnASpecOfAComponentsLayerKeepsEverythingInThatFolder(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, ["analysis", "design"])
+  Path(root, "specs", "booking", "domain").mkdir(parents = true)
+  Path(root, "specs", "count-books").rename(Path(root, "specs", "booking", "domain", "count-books"))
+  home = "specs/booking/domain/count-books"
+  expect(newestSpec(root) == "${Path(root, home, "spec.md")}")
+  asked: <string, any>[] = []
+  given: <string, any>[] = [{ "answer": "approve" }, { "answer": "approve" }, { "answer": "yes" }, { "answer": "no" }]
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend", "dialect": "fastapi" }, parseSpec(SPEC, "count-books"), team)
+  expect(run["specPath"] == home)
+  answer = (q: <string, any>) =>
+    asked.add(q)
+    nextAnswer(given, q)
+  done = Factory(run, team, readLine(root, "backend"), answer, (e: <string, any>) => null, { "preflight": false, "transport": developer([]) }).start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).filter((s) => s["status"] == "failed").map((s) => s["summary"])))
+  for doc in ["analysis.md", "design.md", "plan.md", "test-plan.md", "qa-report.md", "definition-of-done.md", "user-story.md", "pr.md", "checks.json"]
+    expect(Path(root, home, doc).isFile(), doc)
+  expect(not Path(root, "specs", "count-books").exists() and loadChecks(root, "count-books").length == 1)
+  expect(not ("specs/count-books" in json.dumps(asked)) and "${home}/analysis.md" in json.dumps(asked), json.dumps(asked))
+  expect((asked.find((q) => q["id"] == "qa-plan")!)["checks"] == "${home}/checks.json" and (asked.last["documents"] as string[]).all((d) => d.startsWith("${home}/")))
+  expect("- Spec: ${home}/spec.md" in Path(root, RUNS_DIR, "count-books.md").readText())
+  // a run again from a station reads and writes the same folder
+  given.addAll([{ "answer": "yes" }, { "answer": "no" }])
+  Path(root, home, "qa-report.md").unlink()
+  more = Factory(loadRun(root, "count-books")!, team, readLine(root, "backend"), answer, (e: <string, any>) => null, { "preflight": false, "transport": developer([]) }).start("quality")
+  expect(more["status"] == "passed" and Path(root, home, "qa-report.md").isFile() and not Path(root, "specs", "count-books").exists())
+
+testTheDeliveryMakesTheBranchTheCommitInTheUsersNameAndThePullRequestOnlyWhenApproved(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["delivery"] })
+  remote = tmpPath.joinpath("remote.git")
+  git = (args: string[], at: string) => subprocess.run(["git", ...args], cwd = at, captureOutput = true, text = true)
+  git(["init", "-q", "--bare", "${remote}"], "${tmpPath}")
+  git(["init", "-q", "-b", "main"], root)
+  git(["config", "user.name", "Ana Owner"], root)
+  git(["config", "user.email", "ana@example.com"], root)
+  git(["remote", "add", "origin", "${remote}"], root)
+  git(["add", "."], root)
+  git(["commit", "-q", "-m", "start"], root)
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  bin.joinpath("gh").writeText("#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$GH_LOG\"\necho https://github.com/o/r/pull/1\n")
+  bin.joinpath("gh").chmod(493)
+  monkeypatch.setenv("GH_LOG", "${tmpPath.joinpath("gh.log")}")
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  team = localCrew()
+  run = newRun(root, { "name": "app" }, parseSpec(SPEC, "count-books"), team, ["delivery"])
+  given: <string, any>[] = [{ "answer": "approve" }]
+  done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer([]) }).start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["summary"]])))
+  log = git(["log", "-1", "--format=%an <%ae>|%s|%b", "factory/count-books"], root).stdout
+  expect(log.startsWith("Ana Owner <ana@example.com>|Count the books|Made by NuclearLang's software factory") and not ("Co-Authored" in log))
+  pr = tmpPath.joinpath("gh.log").readText().split("\n")
+  expect(pr.take(2) == ["pr", "create"] and pr[pr.indexOf("--body-file") + 1] == "specs/count-books/pr.md" and not ("merge" in pr))
+  expect(git(["ls-remote", "--heads", "${remote}"], root).stdout.trim().endsWith("refs/heads/factory/count-books"))
+
+testTheSpecTheCiAndTheChecksOfTheLine(tmpPath: Path, monkeypatch: any) void
+  spec = parseSpec(SPEC, "count-books")
+  expect(spec["title"] == "Count the books" and spec["criteria"] == ["the count of an empty shelf is 0"] and spec["lead"] == "local")
+  expect(specResources({ "description": "GET https://rickandmortyapi.com/api/character\n" }, "mobile") == ["characters Character --screen characters"])
+  expect(specId(Path("specs", "count-books.md")) == "count-books" and specId(Path("specs", "count-books", "spec.md")) == "count-books")
+  // a spec names its resources: its Resources, else one per GET <url> line; and it may name its strategy
+  two = parseSpec("# Characters\n\n## Description\n\nthe url:\n\nGET https://rickandmortyapi.com/api/character\n\nGET https://example.com/v1/categories\n\n## Acceptance criteria\n\n- [ ] lists\n", "x")
+  expect(specResources(two, "backend") == ["characters Character", "categories Category"])
+  own = parseSpec("# Books\n\n- Use case: feature\n- Strategy: usecase\n\n## Resources\n\n- `catalog Book --fields \"title:string\" --source db`\n", "y")
+  expect(specResources(own, "backend") == ["catalog Book --fields \"title:string\" --source db"] and own["strategy"] == "usecase" and spec["strategy"] == null)
+  // the files a step changed are found without the build output
+  files = tmpPath.joinpath("files")
+  files.joinpath("components", "a").mkdir(parents = true)
+  files.joinpath("build").mkdir()
+  files.joinpath("components", "a", "x.nuc").writeText("X")
+  files.joinpath("build", "y.nuc").writeText("Y")
+  expect(contents("${files}").keys == ["components/a/x.nuc"])
+  root = lineProject(tmpPath, monkeypatch, [])
+  line = readLine(root, "backend")
+  expect(ciCommands(line)["test"] == ["echo built", "echo tested"] and ciCommands(line)["security"] == ["echo checked"])
+  github = ciFile("github", line, "backend")
+  expect(github["path"] == ".github/workflows/nuclear-builder.yml" and "  test:\n    runs-on: ubuntu-latest\n    needs: check" in github["text"]!)
+  expect(ciFile("gitlab", line, "backend")["text"]!.startsWith("# Generated by the Nuclear Builder") and "flutter" in ciFile("bitbucket", line, "mobile")["text"]!)
+  added = addCheck(root, "count-books", "Open it on a phone", "quality")
+  expect(added["id"] == "user.1" and added["by"] == "user" and added["role"] == "qa")
+  expect(switchCheck(root, "count-books", "user.1", false)["on"] == false)
+  failed = ""
+  try
+    markCheck(root, "count-books", "user.9", "passed")
+  catch e
+    failed = "${e}"
+  expect("no check `user.9`" in failed)
+
+// ---------- carried over from test/engine.test.ts, and today's agent steps in the stations ----------
+
+// A run of the code station alone, with two pieces.
+twoPieces(root: string, team: <string, any>) <string, any>
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["code"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "lib/a.nuc", "kind": "function", "task": "function A", "by": "planner" }, { "path": "lib/b.nuc", "kind": "function", "task": "function B", "by": "planner" }]
+  run
+
+again(run: <string, any>, root: string, team: <string, any>, transport: httpx.MockTransport) Factory
+  Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false, "transport": transport })
+
+testAnyStepIsRunAgainFromItsIdTheStepsBeforeItKeptWhatTheOthersWroteUndone(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  team = localCrew()
+  // the second piece fails the first time: the run stops at it
+  failing: <string, any> = { "code": "B\n", "check": "1:1 N0001 bad", "attempts": 3 }
+  run = again(twoPieces(root, team), root, team, developer(calls, { "/developer/code": [{ "code": "A\n", "check": "ok", "attempts": 1 }, failing, { "code": "B\n", "check": "ok", "attempts": 1 }] })).start()
+  expect(run["status"] == "failed" and Path(root, "lib", "a.nuc").exists() and not Path(root, "lib", "b.nuc").exists())
+  b = stepsOf(run).find((s) => s["file"] == "lib/b.nuc")!
+  // from the step that failed: the piece written before it is not written again
+  done = again(run, root, team, developer(calls, { "/developer/code": { "code": "B\n", "check": "ok", "attempts": 1 } })).start(null, b["id"])
+  expect(done["status"] == "passed" and calls.count((c) => c == "/developer/code") == 3 and Path(root, "lib", "b.nuc").readText() == "B\n")
+  ids = stepsOf(done).map((s) => "${s["id"]}")
+  expect(ids.unique().length == ids.length and stepsOf(done)[1]["file"] == "lib/a.nuc")
+  last: <string, any> = (done["previous"] as <string, any>[]).last
+  expect(last["from"] == "code" and last["step"] == b["id"] and "from the step \"lib/b.nuc\"" in "${last["why"]}")
+  // any step again, passed or failed: a file changed since the run wrote it is kept, and said
+  Path(root, "lib", "b.nuc").writeText("mine\n")
+  passedB = stepsOf(done).filter((s) => s["file"] == "lib/b.nuc" and s["status"] == "passed").last
+  more = again(done, root, team, developer(calls)).start(null, passedB["id"])
+  latest: <string, any> = (more["previous"] as <string, any>[]).last
+  expect(latest["kept"] == ["lib/b.nuc"] and latest["undone"] == [] and Path(root, "lib", "a.nuc").readText() == "A\n")
+  // the command checks the step it is given
+  monkeypatch.chdir(root)
+  expect(retryLine(["count-books", "--step", "code-99"], false) == 2)
+
+testARunLeftRunningGoesOnFromTheStepItWasInKeepingThePieceWrittenBefore(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  team = localCrew()
+  run = twoPieces(root, team)
+  st = run["stages"]![0]
+  st["status"] = "running"
+  st["steps"] = [{ "id": "code-1", "title": "Developer: Code", "actor": "developer", "status": "passed", "phase": "work", "trace": [] as any[] }, { "id": "code-2", "title": "lib/a.nuc", "actor": "developer", "status": "passed", "file": "lib/a.nuc", "code": "A\n", "phase": "work", "trace": [] as any[] }, { "id": "code-3", "title": "lib/b.nuc", "actor": "developer", "status": "running", "file": "lib/b.nuc", "phase": "work", "trace": [] as any[] }]
+  Path(root, "lib").mkdir()
+  Path(root, "lib", "a.nuc").writeText("A\n")
+  Path(root, "lib", "b.nuc").writeText("half written")
+  run["writes"] = [{ "path": "lib/a.nuc", "step": "code-2", "before": null, "at": 1, "after": digestOf("A\n") }, { "path": "lib/b.nuc", "step": "code-3", "before": null, "at": 2, "after": digestOf("half written") }]
+  run["status"] = "running"
+  run["owner"] = { "pid": 999_999_999, "host": "elsewhere", "beat": nowMs() - 60_000 }
+  saveRun(run)
+  done = again(loadRun(root, "count-books")!, root, team, developer(calls, { "/developer/code": { "code": "B\n", "check": "ok", "attempts": 1 } })).start()
+  expect(done["status"] == "passed" and calls.count((c) => c == "/developer/code") == 1)
+  expect((done["interrupted"] as <string, any>[])[0]["undone"] == ["lib/b.nuc"] and Path(root, "lib", "b.nuc").readText() == "B\n")
+
+testACallNothingWorksOnIsCutAsStalledAndRetried() void
+  hung = [true]
+  never = threading.Event()
+  answer = (request: httpx.Request) =>
+    route = "${request.url.path}"
+    if route == "/api/ps"
+      return httpx.Response(200, json = { "models": [] as any[] })
+    if route == "/developer/document" and hung[0]
+      never.wait(5)
+    httpx.Response(200, json = { "report": "done", "trace": [] as any[] })
+  events: <string, any>[] = []
+  release = () =>
+    hung[0] = false
+  threading.Timer(0.4, release).start()
+  got = developerCall("http://dev", "/developer/document", {}, 60_000, (e: <string, any>) => events.add(e), { "attempts": 2, "baseMs": 5, "maxMs": 10 }, httpx.MockTransport(answer), { "stallSeconds": 0.6, "ollamaUrl": "http://ollama" })
+  never.set()
+  expect(got["ok"] == true, json.dumps(events))
+  expect(events.any((e) => e["type"] == "retry" and "stalled: Ollama at http://ollama holds no model" in "${e["detail"]}"), json.dumps(events))
+  expect(events.any((e) => e["step"] == "watch" and e["detail"] == "Ollama holds no model yet"))
+
+testTestsThatInjectAClassThePlanDoesNotHaveStopTheRunAtTestsFirstSayingSo(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["tests"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "components/character/data/entities/character.nuc", "kind": "entity", "task": "entity Character. The spec says: ...", "by": "planner" }]
+  code = "tests Characters\n  @test(\"lists\")\n  lists() void\n    characters = inject<CharactersAppComponent>()\n    expect(true)\n"
+  done = again(run, root, team, developer([], { "/developer/test": { "code": code, "check": "ok", "attempts": 1 } })).start()
+  s = stepsOf(done).find((x) => x["role"] == "developer")!
+  expect(done["status"] == "failed" and s["status"] == "failed")
+  expect("the tests need CharactersAppComponent, which is not in the plan (the plan has 1 piece: entity Character)" in "${s["summary"]}", "${s["summary"]}")
+  // what the failed step wrote was undone
+  expect(not Path(root, "test", "count_the_books_test.nuc").exists())
+
+testWhenTheGeneratorsWroteEveryFileNothingIsAskedOfTheLocalTester(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design", "tests"])
+  design = run["stages"]![0]
+  design["status"] = "passed"
+  design["phases"] = ["generate", "work", "wire", "check", "checks", "end"]
+  design["steps"] = [{ "id": "design-1", "title": "nuclear gen resource characters Character", "actor": "shell", "status": "passed", "phase": "generate", "files": ["components/characters/data/repositories/character_repository.nuc"], "trace": [] as any[] }]
+  done = again(run, root, team, developer(calls)).start()
+  s = stepsOf(done).find((x) => x["role"] == "developer")!
+  expect(done["status"] == "passed" and s["status"] == "skipped" and "every file was generated and none is a test" in "${s["summary"]}")
+  expect((s["decisions"] as <string, any>[]).any((d) => "the generators wrote no test" in "${d["why"]}") and not ("/developer/test" in calls))
+
+// What the local analyst answers for a strategy (ADR-developer-0001), with `more` over it.
+analysisOf(more: <string, any>) <string, any>
+  found: <string, any> = { "strategy": "strategy:resource-db", "title": "Strategy: a resource stored in the database", "why": "it writes \"CRUD\"", "mode": "write", "stages": ["generate", "plan", "test", "code", "verify"], "lead": "local", "source": "plan", "generate": [] as any[], "pieces": [] as any[], "questions": [] as string[], "limits": [] as string[], "report": "the report", "trace": [] as any[] }
+  for k, v in more
+    found[k] = v
+  found
+
+testTheQuestionsOfTheAnalysisStopTheRunUntilTheClientAnswersThem(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["analysis"] })
+  calls: string[] = []
+  team = localCrew()
+  transport = developer(calls, { "/developer/analyze": [analysisOf({ "questions": ["Which fields does it have?", "Which url?"] }), analysisOf({})] })
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["analysis"])
+  waited = again(run, root, team, transport).start()
+  asked: <string, any> = waited["waiting"]!
+  expect(waited["status"] == "waiting" and asked["id"] == "gate-analysis" and asked["questions"] == ["Which fields does it have?", "Which url?"])
+  s = stepsOf(waited)[0]
+  expect(s["summary"] == "resource-db: the request does not say: Which fields does it have? (and 1 more: read this step)" and s["log"] == "the report")
+  expect(Path(root, "specs", "count-books", "questions.md").readText().endsWith("- Which url?\n"))
+  // the client's answers go to the analyst, who asks nothing more: the run goes on (the analysis is no gate here)
+  given: <string, any>[] = [{ "answer": "change", "text": "title and year; no url" }]
+  f = Factory(loadRun(root, "count-books")!, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": transport })
+  expect(f.start()["status"] == "passed" and calls == ["/developer/analyze", "/developer/analyze"])
+
+testARenameRunsOnlyItsStationsAndWritesTheFilesTheToolGaveNoAgentPlansOrWrites(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  calls: string[] = []
+  pieces = [{ "path": "components/books/domain/models/book.nuc", "kind": "", "task": "`Book` is now `Title`.", "code": "Title\n  name: string\n" }]
+  rename = analysisOf({ "strategy": "strategy:refactor-rename", "title": "Strategy: a rename", "why": "it writes \"rename\"", "stages": ["plan", "code", "verify"], "source": "naming", "pieces": pieces })
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  f = factory(root, localCrew(), given, developer(calls, { "/developer/analyze": rename }))
+  done = f.start()
+  status = (id: string) => "${f.stage(id)["status"]}"
+  expect(done["status"] == "passed" and Path(root, "components", "books", "domain", "models", "book.nuc").readText() == "Title\n  name: string\n")
+  expect(["analysis", "design", "tests", "code", "quality", "delivery"].map(status) == ["passed", "passed", "skipped", "passed", "passed", "passed"])
+  expect((f.stage("tests")["steps"] as <string, any>[])[0]["summary"] == "refactor-rename runs plan, code, verify")
+  expect(not calls.any((c) => c == "/developer/plan" or c == "/developer/code" or c == "/developer/test"))
+  expect("- Strategy: refactor-rename · a rename (it writes \"rename\")" in Path(root, RUNS_DIR, "count-books.md").readText())
+
+testARequestThatIsNotARunStopsAtTheAnalysisAndADeveloperWithoutAnAnalystChangesNothing(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  team = localCrew()
+  question = analysisOf({ "strategy": "strategy:question", "title": "Strategy: a question", "mode": "answer", "stages": [] as string[] })
+  stopped = factory(root, team, [], developer([], { "/developer/analyze": question })).start()
+  expect(stopped["status"] == "failed" and "question: this kind of request is not a run of the Builder (ask it in Nuclear Atlas)" in "${stepsOf(stopped)[0]["summary"]}")
+  // an older Developer answers 404 to /developer/analyze: the run goes on with every station, as before
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  done = factory(root, team, given, developer([], { "/developer/analyze": "404" })).start()
+  first = stepsOf(done)[0]
+  expect(done["status"] == "passed" and first["status"] == "skipped" and "no analysis, every station runs" in "${first["summary"]}" and done["analysis"] == null)
+
+testAPlanMadeAgainIsANewPlanThePlannersPiecesGoTheOnesTheUserWroteStay(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "lib/old.nuc", "kind": "entity", "task": "entity Old", "by": "planner" }]
+  run["stages"]![0]["status"] = "passed"
+  run["stages"]![0]["steps"] = [{ "id": "design-1", "title": "Architect: Design", "actor": "architect", "status": "passed", "phase": "work", "trace": [] as any[] }]
+  calls: string[] = []
+  done = again(run, root, team, developer(calls)).start("design")
+  expect(((done["spec"] as <string, any>)["pieces"] as <string, any>[]).map((p) => "${p["path"]} by ${p["by"]}") == ["lib/count.nuc by planner"] and "/developer/plan" in calls)
+  planner = stepsOf(done).find((s) => s["role"] == "architect")!
+  expect((planner["decisions"] as <string, any>[]).any((d) => d["what"] == "ask the local planner"))
+
+// A fake `nuclear` on the PATH: each call goes to `nuclear.log`; `check . --json` answers `errors`, `explain` the
+// frame of lib/count.nuc, `fix` changes nothing.
+fakeNuclear(tmpPath: Path, monkeypatch: any, errors: string = "[]") void
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  tool = bin.joinpath("nuclear")
+  tool.writeText("#!/bin/sh\necho \"$@\" >> \"${tmpPath.joinpath("nuclear.log")}\"\ncase \"$1\" in\n  check) cat <<'EOF'\n${errors}\nEOF\n  ;;\n  explain) cat > /dev/null; printf '{\"title\": \"count is wrong\", \"hint\": \"it answers 1\", \"frames\": [{\"source\": \"%s/lib/count.nuc\", \"line\": 1, \"name\": \"count\"}]}\\n' \"$PWD\" ;;\n  fix) exit 1 ;;\nesac\n")
+  tool.chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+
+testEachUseCaseTheCodeWroteIsWiredByTheGeneratorWithItsRoute(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  fakeNuclear(tmpPath, monkeypatch)
+  team = localCrew()
+  text = SPEC.replace("Count the books of the shelf.", "Count the books of the shelf: POST books/count.")
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(text, "count-books"), team, ["code"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "components/books/domain/usecases/count_books.nuc", "kind": "usecase", "task": "usecase CountBooks", "by": "planner" }]
+  done = again(run, root, team, developer([], { "/developer/code": { "code": "usecase CountBooks\n", "check": "ok", "attempts": 1 } })).start()
+  expect(done["status"] == "passed")
+  expect("gen usecase books CountBooks --route POST books/count" in tmpPath.joinpath("nuclear.log").readText())
+  wired = stepsOf(done).find((s) => "${s["title"]}".startsWith("nuclear gen usecase"))!
+  expect((wired["decisions"] as <string, any>[])[0]["what"] == "wire the use case CountBooks with the generator, not with a model")
+
+testTheProjectsErrorsGoToTheCoderFileByFileAfterTheCompilersOwnFixes(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["grep -q fixed lib/count.nuc"] } })
+  fakeNuclear(tmpPath, monkeypatch, "[{\"file\": \"lib/count.nuc\", \"line\": 1, \"col\": 1, \"code\": \"N0001\", \"message\": \"bad\", \"severity\": \"error\"}]")
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["code"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "lib/count.nuc", "kind": "function", "task": "function count", "by": "planner" }]
+  done = again(run, root, team, developer([], { "/developer/code": [{ "code": "count() int = 0\n", "check": "ok", "attempts": 1 }, { "code": "count() int = 0 // fixed\n", "check": "ok", "attempts": 1 }] })).start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["summary"]])))
+  titles = stepsOf(done).map((s) => "${s["title"]}")
+  expect("nuclear fix ." in titles and "Repair lib/count.nuc" in titles and Path(root, "lib", "count.nuc").readText().endsWith("// fixed\n"))
+  repair = stepsOf(done).find((s) => s["title"] == "Repair lib/count.nuc")!
+  expect("1:1 N0001 bad" in "${repair["input"]}")
+  // the screens say a step in their language from its kind and arguments; a command's step is named by itself
+  expect(repair["key"] == "repair" and repair["args"] == ["lib/count.nuc"] and stepsOf(done).find((s) => s["title"] == "nuclear fix .")!["key"] == null)
+
+testAFailingTestIsRepairedInRoundsToldInNuclear(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["echo checked"], "build": [] as string[], "test": ["grep -q fixed lib/count.nuc"] } })
+  fakeNuclear(tmpPath, monkeypatch)
+  team = localCrew()
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["code", "quality"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "lib/count.nuc", "kind": "function", "task": "function count", "by": "planner" }]
+  given: <string, any>[] = [{ "answer": "yes" }]
+  f = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer([], { "/developer/code": [{ "code": "count() int = 1\n", "check": "ok", "attempts": 1 }, { "code": "count() int = 0 // fixed\n", "check": "ok", "attempts": 1 }] }) })
+  done = f.start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["summary"]])))
+  failed = (f.stage("quality")["steps"] as <string, any>[]).find((s) => s["status"] == "skipped" and "${s["title"]}".startsWith("grep"))!
+  expect("Where, in Nuclear:\n- lib/count.nuc:1" in "${failed["agent"]}" and (failed["decisions"] as <string, any>[])[0]["what"] == "repair lib/count.nuc (round 1 of 3)")
+  expect(Path(root, "lib", "count.nuc").readText().endsWith("// fixed\n"))
+
+testAPieceTheLocalCoderLeavesWithErrorsGoesToTheLead(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [])
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  result = json.dumps({ "type": "result", "result": "fixed:\n```nuclear\ncount() int = 0\n```", "total_cost_usd": 0.05, "is_error": false })
+  bin.joinpath("claude").writeText("#!/bin/sh\nmkdir -p lib && printf 'count() int = 0\\n' > lib/count.nuc\ncat <<'EOF'\n${result}\nEOF\n")
+  bin.joinpath("claude").chmod(493)
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  team = crew("Claude", ["analyst", "architect"], ROSTERLESS)
+  run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["code"])
+  (run["spec"] as <string, any>)["pieces"] = [{ "path": "lib/count.nuc", "kind": "function", "task": "function count", "by": "planner" }]
+  done = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false, "confirmSpending": true, "transport": developer([], { "/developer/code": { "code": "count() int = \n", "check": "1:15 N0001 an expression is missing", "attempts": 3 } }) }).start()
+  expect(done["status"] == "passed", json.dumps(stepsOf(done).map((s) => [s["title"], s["summary"]])))
+  fix = stepsOf(done).find((s) => s["title"] == "The Architect fixes lib/count.nuc")!
+  expect(fix["key"] == "leadFixFile" and fix["args"] == ["architect", "lib/count.nuc"])
+  expect(fix["provider"] == "claude-code" and fix["status"] == "passed" and fix["code"] == "count() int = 0\n" and ((done["costUsd"] as double) - 0.05).abs() < 0.000001)
+  expect((done["spending"] as <string, any>)["providers"] == ["claude-code"])
+
+// A station run again judges its work again: a check of its role that failed in an earlier attempt runs again and
+// takes the new result, instead of failing Quality for good.
+testARoleCheckThatFailedBeforeRunsAgainWithItsStation(tmpPath: Path, monkeypatch: any) void
+  root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["echo checked"], "build": [] as string[], "test": [] as string[], "probe": ["test -f ready"] } })
+  calls: string[] = []
+  given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  first = factory(root, localCrew(), given, developer(calls)).start()
+  expect(first["status"] == "passed")
+  addCheck(root, "count-books", "The probe holds", "code", "role", null, "probe")
+  markCheck(root, "count-books", "user.1", "failed", "an earlier attempt")
+  Path(root, "ready").writeText("")
+  more: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+  again = Factory(loadRun(root, "count-books")!, localCrew(), readLine(root, "backend"), (q: <string, any>) => nextAnswer(more, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) })
+  done = again.start("code")
+  probe = loadChecks(root, "count-books").find((c) => c["id"] == "user.1")!
+  expect(probe["state"] == "passed")
+  stages: <string, any>[] = done["stages"]!
+  expect(stages.find((st) => st["id"] == "quality")!["status"] == "passed")

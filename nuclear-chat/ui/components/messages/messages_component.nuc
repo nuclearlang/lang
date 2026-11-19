@@ -1,0 +1,8 @@
+// What the screens and the other components see of messages: an alias for each of its use cases.
+appcomponent MessagesComponent
+  history() = History.exec
+  say() = Say.exec
+  sendGif() = SendGif.exec
+  react() = React.exec
+  clickButton() = ClickButton.exec
+  searchMessages() = SearchMessages.exec

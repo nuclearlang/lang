@@ -1,5 +1,7 @@
 // The state of a screen: a StateManager holds one state model and emits a new one; React reads it with
 // useSyncExternalStore (react.ts). The same shape as the mobile platform's StateManager (a Cubit).
+import type { Stream } from './sockets.js';
+
 export abstract class StateManager<S> {
   private current: S;
   private readonly listeners = new Set<() => void>();
@@ -25,8 +27,16 @@ export abstract class StateManager<S> {
     };
   }
 
+  private readonly stops: (() => void)[] = [];
+
+  /** Calls `on` with every value of `stream` until the screen that provided the manager leaves (ADR-synapsis-0008). */
+  listen<T>(stream: Stream<T>, on: (value: T) => void): void {
+    this.stops.push(stream.listen(on));
+  }
+
   /** Called when the screen that provided the manager leaves. */
   async close(): Promise<void> {
     this.listeners.clear();
+    for (const stop of this.stops.splice(0)) stop();
   }
 }

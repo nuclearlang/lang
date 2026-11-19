@@ -1,0 +1,30 @@
+// What a host posts as a member or as `system` (a run's station, a question with buttons) or what a member
+// answered: kept and told; with a moment or a GIF's tag, the member may send a GIF after it, by their personality.
+usecase PostMessage(store: MessageStore, events: EventsAppComponent, gifs: GifsAppComponent)
+  exec(workspace: string, channel: string, posted: Posted) Result<Error, Message>
+    ws = store.workspace(workspace)
+    store.channel(ws, channel)
+    member = ws.member(posted.author)
+    if member == null and posted.author != "system"
+      return Err(Invalid("no member ${posted.author} in this workspace (or system)"))
+    if posted.thread != null
+      store.message(ws, channel, posted.thread!)
+    entry: <string, any> = { "id": newMessageId(), "at": DateTime.now().millis, "author": posted.author, "text": posted.text, "links": posted.links }
+    if posted.thread != null
+      entry["thread"] = posted.thread
+    if not posted.buttons.isEmpty
+      entry["buttons"] = Json.decode(Json.encode(posted.buttons))
+    if posted.costUsd != null
+      entry["costUsd"] = posted.costUsd
+    store.append(ws, channel, entry)
+    ~events.emit(ws.id, "message", channel, { "message": entry })
+    if member != null and (posted.moment != null or posted.gif != null)
+      // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+      chosen: Result<Error, Gif?> = posted.gif != null ? gifs.pick(member!, posted.gif!, "${entry["id"]}", posted.answersGif) : gifs.choose(member!, posted.moment!, "${entry["id"]}")
+      if chosen.isOk and chosen.value != null
+        after: <string, any> = { "id": newMessageId(), "at": DateTime.now().millis, "author": posted.author, "text": "", "gif": Json.decode(Json.encode(chosen.value!)) }
+        if posted.thread != null
+          after["thread"] = posted.thread
+        store.append(ws, channel, after)
+        ~events.emit(ws.id, "message", channel, { "message": after })
+    Ok(messageOf(entry))

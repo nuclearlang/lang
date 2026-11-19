@@ -1,6 +1,6 @@
 #!/bin/sh
 # The AI archive of NuclearLang for this machine (ADR-installer-0003): a Python of its own with the Smart Graph, the MCP
-# server, the Nuclear Developer and Nuclear Builder's set-up installed in it, their launchers, and the knowledge base. Unpacked at
+# server, the Nuclear Developer, Nuclear Builder's set-up and Nuclear Chat's command installed in it, their launchers, and the knowledge base. Unpacked at
 # <installation>/ai/, it needs nothing on the user's machine: no Python, no uv.
 #   installer/dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz   (.zip on Windows)   and its .sha256
 #
@@ -21,6 +21,8 @@ MCP="$REPO/tools/mcp"
 DEVELOPER="$REPO/nuclear-agents/nuclear_developer"
 RUNTIME="$REPO/nuclear-synapsis-framework/platforms/backend/packages/synapsis-py"
 BUILDER="$REPO/extensions/tools/nuclear-builder"
+CHAT="$REPO/nuclear-chat/system"
+CHAT_SERVICE="$REPO/nuclear-chat/nuclear_chat"
 
 case "$(uname -s)" in
   Linux) os=linux ;;
@@ -56,13 +58,19 @@ find "$AI/python" -name EXTERNALLY-MANAGED -delete
 "$NUCLEAR" build "$MCP" >/dev/null 2>&1
 (cd "$DEVELOPER" && "$NUCLEAR" build >/dev/null 2>&1)
 "$NUCLEAR" build "$BUILDER" >/dev/null 2>&1
+"$NUCLEAR" build "$CHAT" >/dev/null 2>&1
+(cd "$CHAT_SERVICE" && "$NUCLEAR" build >/dev/null 2>&1)
 
 # 3. the packages: the versions the graph's tests ran with (its uv.lock) bind the whole resolution; --no-sources, or
 # the MCP server's editable source of the graph would install a link to this checkout instead of the graph itself
 uv export --quiet --project "$GRAPH" --frozen --extra server --no-dev --no-emit-project --no-hashes \
   --output-file "$work/tmp/constraints.txt"
 uv pip install --quiet --no-sources --python "$PY" --constraints "$work/tmp/constraints.txt" \
-  "$GRAPH[server]" "$MCP" "$RUNTIME" "$DEVELOPER/build" "$BUILDER"
+  "$GRAPH[server]" "$MCP" "$RUNTIME" "$DEVELOPER/build" "$BUILDER" "$CHAT" "websockets>=13"
+# Nuclear Chat's service is a Synapsis app too (its package is `app`, as the Developer's): its code goes in a folder of
+# its own, which `nuclear-chat serve` gives uvicorn (`--app-dir`); its packages are the ones above
+mkdir -p "$AI/nuclear-chat"
+cp -R "$CHAT_SERVICE/build/app" "$AI/nuclear-chat/"
 
 # 4. the launchers: the console scripts of pip name the Python by an absolute path, these by their own place
 launch() { # <name> <python code that runs it>
@@ -76,10 +84,11 @@ launch() { # <name> <python code that runs it>
 launch nuclear-graph 'import sys; from nuclear_graph.cli import main; sys.argv[0] = \"nuclear-graph\"; sys.exit(main())'
 launch nuclear-mcp 'import sys; from nuclear_mcp.cli import main; sys.argv[0] = \"nuclear-mcp\"; sys.exit(main())'
 launch nuclear-builder 'import sys; from nuclear_builder.cli import main; sys.argv[0] = \"nuclear-builder\"; sys.exit(main())'
+launch nuclear-chat 'import os, sys; os.environ.setdefault(\"NUCLEAR_CHAT_SERVICE\", os.path.join(sys.prefix, \"..\", \"nuclear-chat\")); from nuclear_chat_system.cli import main; sys.argv[0] = \"nuclear-chat\"; sys.exit(main())'
 # the Developer: its port is the machine's (ai.env, read by the set-up's service files), else 7879
 launch nuclear-developer 'import os, sys, uvicorn; sys.exit(uvicorn.run(\"app.main:app\", host=\"127.0.0.1\", port=int(os.environ.get(\"NUCLEAR_DEVELOPER_PORT\") or 7879)))'
 
-# 5. the knowledge base the set-up ingests, and the prompts the graph reads
+# 5. the knowledge base the set-up ingests (the prompts, the roles' skills, are inside the graph's package)
 mkdir -p "$AI/nuclear-graph-storage"
 cp -R "$GRAPH/data" "$AI/nuclear-graph-storage/"
 cp "$REPO/LICENSE" "$AI/"
@@ -100,6 +109,8 @@ run() { # <launcher> <args>: a .cmd is run by cmd.exe
 run nuclear-graph --help >/dev/null
 run nuclear-mcp tools >/dev/null
 run nuclear-builder setup --plan --json >/dev/null
+run nuclear-chat pack >/dev/null
+(cd "$AI/nuclear-chat" && "$PY" -c "import app.main") >/dev/null
 "$PY" -c "import app.main" >/dev/null
 port=$("$PY" -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
 # the server by the Python itself, so the process stopped below is the server and not a cmd.exe in front of it

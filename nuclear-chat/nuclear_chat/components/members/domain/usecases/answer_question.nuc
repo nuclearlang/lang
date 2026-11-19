@@ -1,0 +1,10 @@
+// The user's answer to a member's question: written to the responder that asked.
+usecase AnswerQuestion(responders: Responders, workspaces: WorkspacesAppComponent)
+  exec(workspace: string, answer: Answer) Result<Error, Answer>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(workspace)
+    if found.isErr
+      return Err(found.error)
+    if not ~responders.reply(found.value, answer.id, answer.answer)
+      return Err(NotFound("no member waits for an answer to ${answer.id}"))
+    Ok(answer)

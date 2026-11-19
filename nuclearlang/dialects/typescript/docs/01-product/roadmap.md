@@ -19,6 +19,15 @@ themselves (their kinds, their runtime packages, their commands) is in each plat
 
 ## Pending
 
+- **Found building Nuclear Chat's UI (spec 013, 2026-11-18)**, each worked around in `nuclear-chat/ui/` with a
+  `shortcut:` comment or a different form:
+  - a model declared with its fields in the header (`Texts(lang: string = "en")` plus methods) loses the fields
+    (`this.lang` does not exist); written with the field in the body;
+
+- **Telemetry in `nestjs`** (spec 012 of the tree): `[project.plugins.telemetry]`, the OpenTelemetry SDK started
+  before Nest is imported, `@traced` on each use case's `exec` from a template like `fastapi`'s
+  `usecase_method.tpl`, `@untraced` routes out of the traces (today it is only consumed), `Metric` with named
+  attributes (they arrive as one object).
 - **The base dialect lists no type definitions.** `dialect.toml` has no `defs` line (python's has
   `defs = ["python@3.14"]`), so `nuclear defs list --dialect typescript` prints nothing and a plain `typescript`
   file gets no automatic imports from TypeScript's library; `typescript@5.9.3` arrives only through `react` and

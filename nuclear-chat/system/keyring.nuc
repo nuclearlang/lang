@@ -1,0 +1,95 @@
+use os
+use sys
+use time
+use shutil
+use subprocess
+
+// The keys of the GIF services (Tenor, Giphy) in the system's keyring, under the service `nuclear-chat`
+// (libsecret's `secret-tool` on Linux, the Keychain's `security` on macOS, the Credential Manager's password vault
+// on Windows), as the factory's vault keeps its API keys. A key is read from stdin, never from the command line, and
+// never written to a log, a file of the project or an answer of the service.
+
+KEYRING_SERVICE = "nuclear-chat"
+// The services whose key the keyring may keep, and the service's own token.
+GIF_SERVICES = ["tenor", "giphy"]
+TOKEN_ACCOUNT = "token"
+
+KeyringError(message: string) : RuntimeError(message)
+
+// The environment with the user's session bus, where the keyring answers (a service started at login may have a
+// minimal one).
+keyringEnv() <string, string>
+  found: <string, string> = dict(os.environ)
+  if not ("DBUS_SESSION_BUS_ADDRESS" in found) and hasattr(os, "getuid")
+    bus = "/run/user/${os.getuid()}/bus"
+    if os.path.exists(bus)
+      found["DBUS_SESSION_BUS_ADDRESS"] = "unix:path=${bus}"
+  found
+
+// The commands of each system: store (the key on stdin), lookup (the key on stdout), clear.
+keyringCommand(action: string, account: string, system: string = sys.platform) string[]
+  if system == "darwin"
+    return match action
+      "store" -> ["security", "add-generic-password", "-U", "-s", KEYRING_SERVICE, "-a", account, "-w"]
+      "lookup" -> ["security", "find-generic-password", "-s", KEYRING_SERVICE, "-a", account, "-w"]
+      _ -> ["security", "delete-generic-password", "-s", KEYRING_SERVICE, "-a", account]
+  if system == "win32"
+    vault = "[void][Windows.Security.Credentials.PasswordVault,Windows.Security.Credentials,ContentType=WindowsRuntime]; $v = New-Object Windows.Security.Credentials.PasswordVault"
+    return match action
+      "store" -> ["powershell", "-NoProfile", "-Command", "${vault}; $k = [Console]::In.ReadToEnd().Trim(); $v.Add((New-Object Windows.Security.Credentials.PasswordCredential('${KEYRING_SERVICE}', '${account}', $k)))"]
+      "lookup" -> ["powershell", "-NoProfile", "-Command", "${vault}; $c = $v.Retrieve('${KEYRING_SERVICE}', '${account}'); $c.RetrievePassword(); $c.Password"]
+      _ -> ["powershell", "-NoProfile", "-Command", "${vault}; $v.Remove($v.Retrieve('${KEYRING_SERVICE}', '${account}'))"]
+  match action
+    "store" -> ["secret-tool", "store", "--label=Nuclear Chat ${account}", "service", KEYRING_SERVICE, "account", account]
+    "lookup" -> ["secret-tool", "lookup", "service", KEYRING_SERVICE, "account", account]
+    _ -> ["secret-tool", "clear", "service", KEYRING_SERVICE, "account", account]
+
+Keyring()
+  // Runs the keyring's command of this system, found on the PATH.
+  run(command: string[], input: string? = null) subprocess.CompletedProcess
+    env = keyringEnv()
+    found = shutil.which(command[0], path = env["PATH"])
+    if found == null
+      throw KeyringError("no keyring on this machine: `${command[0]}` is not installed")
+    subprocess.run([found!, ...command.skip(1)], input = input, text = true, captureOutput = true, env = env)
+
+  service(name: string) string
+    if not (name in GIF_SERVICES) and name != TOKEN_ACCOUNT
+      throw KeyringError("no GIF service `${name}`: ${GIF_SERVICES.join(", ")}")
+    name
+
+  // Keeps the key of a GIF service.
+  keep(name: string, key: string) void
+    service(name)
+    clean = key.trim()
+    if clean.isEmpty
+      throw KeyringError("no key given for ${name}")
+    if sys.platform == "darwin"
+      // shortcut: `security` takes the key as an argument only, seen by `ps` for that instant; upgrade with a Keychain library
+      r = run([...keyringCommand("store", name), clean])
+      if r.returncode != 0
+        throw KeyringError("the keyring did not keep the key of ${name}: ${r.stderr.trim()}")
+    else
+      r = run(keyringCommand("store", name), clean)
+      if r.returncode != 0
+        throw KeyringError("the keyring did not keep the key of ${name}: ${r.stderr.trim()}")
+
+  remove(name: string) void
+    service(name)
+    run(keyringCommand("clear", name))
+
+  // The key of a GIF service, or null when none is kept (or there is no keyring).
+  key(name: string) string?
+    try
+      lookup(name)
+    catch e
+      if not isinstance(e, KeyringError) and not isinstance(e, OSError)
+        throw e
+      null
+
+  // What the keyring keeps for an account, or null; no keyring at all is an error.
+  lookup(name: string) string?
+    service(name)
+    r = run(keyringCommand("lookup", name))
+    out: string = r.stdout
+    r.returncode == 0 and not out.trim().isEmpty ? out.trim() : null

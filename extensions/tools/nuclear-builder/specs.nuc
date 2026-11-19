@@ -1,0 +1,79 @@
+use pathlib{ Path }
+
+// The specs of a project by business component and layer (spec 011, design.md "Specs by component and layer"):
+// `specs/<component>/<id>/spec.md` by default, `specs/<component>/<layer>/<id>/spec.md` when the spec touches one
+// layer, `specs/_global/<id>/spec.md` for the whole project. A spec folder is a folder with a `spec.md`; one of the
+// earlier flat layout (`specs/<id>/`) keeps working until `spec migrate` moves it. A run names its spec's folder
+// (`specPath`), so the stations' documents, the checks and the delivery follow the spec wherever it is.
+
+SPECS_DIR = "specs"
+LAYERS = ["presentation", "domain", "data"]
+// The kinds of request a spec is (`- Use case:`), as the editors offer them.
+USE_CASES = ["feature", "refactor", "bug", "test", "security", "docs", "diagram"]
+GLOBAL_SPECS = "_global"
+
+// A spec folder: its id, component, layer and path from the project (`specs/booking/domain/count-rooms`); the
+// component is "" for a spec of the flat layout.
+specInfo(specs: Path, folder: Path) <string, any>?
+  parts: string[] = list(folder.relativeTo(specs).parts)
+  if parts.isEmpty or parts.length > 3 or parts.any((p) => p.startsWith("."))
+    return null
+  { "id": parts.last, "component": parts.length >= 2 ? parts[0] : "", "layer": parts.length == 3 ? parts[1] : "", "path": [SPECS_DIR, ...parts].join("/") }
+
+// Every spec folder of the project.
+specFolders(root: string) <string, any>[]
+  specs = Path(root, SPECS_DIR)
+  if not specs.isDir()
+    return []
+  found: <string, any>[] = []
+  for file in specs.rglob("spec.md")
+    info = specInfo(specs, file.parent)
+    if info != null
+      found.add(info!)
+  found.sortedBy((s) => "${s["path"]}")
+
+findSpec(root: string, id: string) <string, any>?
+  specFolders(root).find((s) => s["id"] == id)
+
+// The folder of a spec in the layout: a component (none: `_global`) and, when it touches one, a layer.
+layoutPath(component: string, layer: string, id: string) string
+  c = component.trim().isEmpty ? GLOBAL_SPECS : component.trim()
+  if not Regex(r"^[A-Za-z_][A-Za-z0-9_-]*$").test(c)
+    throw ValueError("`${c}` is not a component's name (a folder of components/, or ${GLOBAL_SPECS})")
+  l = layer.trim()
+  if not l.isEmpty and not (l in LAYERS)
+    throw ValueError("`${l}` is not a layer: ${LAYERS.join(", ")}")
+  if not l.isEmpty and c == GLOBAL_SPECS
+    throw ValueError("a spec of the whole project (${GLOBAL_SPECS}) has no layer")
+  [SPECS_DIR, c, ...(l.isEmpty ? ([] as string[]) : [l]), id].join("/")
+
+// Where the spec `id` lives: its folder if it has one, else the folder its `- Component:` and `- Layer:` say.
+specPathFor(root: string, id: string, spec: <string, any>) string
+  found = findSpec(root, id)
+  found != null ? "${found!["path"]}" : layoutPath("${spec["component"] ?? ""}", "${spec["layer"] ?? ""}", id)
+
+// The spec's text with its `- Name: value` line set (added after the other such lines under the title), or taken
+// out when the value is "".
+withField(text: string, name: string, value: string) string
+  lines = text.split("\n")
+  at = lines.findIndex((l) => l.startsWith("- ${name}:"))
+  if at >= 0
+    if value.isEmpty
+      lines.removeAt(at)
+    else
+      lines[at] = "- ${name}: ${value}"
+    return lines.join("\n")
+  if value.isEmpty
+    return text
+  title = lines.findIndex((l) => l.startsWith("# "))
+  i = title + 1
+  while i < lines.length and lines[i].trim().isEmpty
+    i += 1
+  if i < lines.length and lines[i].startsWith("- ")
+    while i < lines.length and lines[i].startsWith("- ")
+      i += 1
+    lines.insert(i, "- ${name}: ${value}")
+  else
+    lines.insert(title + 1, "")
+    lines.insert(title + 2, "- ${name}: ${value}")
+  lines.join("\n")

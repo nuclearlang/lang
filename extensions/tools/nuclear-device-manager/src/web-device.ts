@@ -8,6 +8,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { isInstalled, readCard } from '../../../vscode/src/card';
+import { lang, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
+import { WEB_DEVICE } from './l10n';
 import { ConsoleEntry, NetworkEntry, WEB_PRESETS, WebSession, WebView } from './web-session';
 
 const STATE_KEY = 'nuclear.webDevice.view';
@@ -58,13 +60,13 @@ class WebDevicePanel {
   /** Builds and installs the app when needed, serves it and opens it at the panel's viewport. */
   async start(): Promise<void> {
     this.stop(false);
-    this.post({ type: 'starting', text: 'Building the app…' });
-    if ((await synapsis(this.app, ['build'])) !== 0) return this.failed('the build failed (see the Web device output)');
+    this.post({ type: 'starting', text: l10n.t('Building the app…') });
+    if ((await synapsis(this.app, ['build'])) !== 0) return this.failed(l10n.t('the build failed (see the Web device output)'));
     if (!isInstalled(this.app.root)) {
-      this.post({ type: 'starting', text: 'Installing the packages (once)…' });
-      if ((await synapsis(this.app, ['install'])) !== 0) return this.failed('nuclear install failed (see the Web device output)');
+      this.post({ type: 'starting', text: l10n.t('Installing the packages (once)…') });
+      if ((await synapsis(this.app, ['install'])) !== 0) return this.failed(l10n.t('nuclear install failed (see the Web device output)'));
     }
-    this.post({ type: 'starting', text: 'Starting the dev server and the browser…' });
+    this.post({ type: 'starting', text: l10n.t('Starting the dev server and the browser…') });
     const s = (this.session = new WebSession(this.app.app, readCard(this.app.root)?.toolchain?.serve ?? this.app.serve, {
       frame: (data) => this.post({ type: 'frame', data }),
       console: (e: ConsoleEntry) => this.post({ type: 'console', entry: e }),
@@ -190,7 +192,8 @@ class WebDevicePanel {
     const nonce = Math.random().toString(36).slice(2);
     const presets = JSON.stringify(WEB_PRESETS.map((p) => ({ name: p.name, width: p.width, height: p.height, kind: p.kind })));
     const state = JSON.stringify(this.view);
-    return /* html */ `<!doctype html><html><head><meta charset="utf-8">
+    const L = texts(WEB_DEVICE);
+    return /* html */ `<!doctype html><html lang="${lang()}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src data:;">
 <style>
 :root { --line: var(--vscode-panel-border, #4446); }
@@ -248,47 +251,47 @@ td.n { text-align: right; opacity: .8; }
 .hidden { display: none; }
 </style></head><body>
 <div class="bar">
-  <button id="back" title="Back" disabled><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
-  <button id="forward" title="Forward" disabled><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
-  <button id="reload" title="Reload (Shift: without cache)"><svg viewBox="0 0 16 16"><path d="M13.5 8A5.5 5.5 0 1 1 11 3.4"/><path d="M11.5 1v3h-3"/></svg></button>
-  <input id="address" spellcheck="false" placeholder="/ (an address of the app)">
-  <button id="external" title="Open in the browser"><svg viewBox="0 0 16 16"><path d="M9 2.5h4.5V7M13.5 2.5 7.5 8.5M11.5 9.5v4h-9v-9h4"/></svg></button>
-  <button id="devtools" title="Chrome DevTools of this page"><svg viewBox="0 0 16 16"><path d="m5.5 4.5-4 3.5 4 3.5M10.5 4.5l4 3.5-4 3.5"/></svg></button>
+  <button id="back" title="${L.back}" disabled><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+  <button id="forward" title="${L.forward}" disabled><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
+  <button id="reload" title="${L.reload}"><svg viewBox="0 0 16 16"><path d="M13.5 8A5.5 5.5 0 1 1 11 3.4"/><path d="M11.5 1v3h-3"/></svg></button>
+  <input id="address" spellcheck="false" placeholder="${L.address}">
+  <button id="external" title="${L.browser}"><svg viewBox="0 0 16 16"><path d="M9 2.5h4.5V7M13.5 2.5 7.5 8.5M11.5 9.5v4h-9v-9h4"/></svg></button>
+  <button id="devtools" title="${L.devtools}"><svg viewBox="0 0 16 16"><path d="m5.5 4.5-4 3.5 4 3.5M10.5 4.5l4 3.5-4 3.5"/></svg></button>
   <span class="sep"></span>
-  <button id="debug" title="Debug: VS Code's debugger on the page (breakpoints in the .nuc)"><svg viewBox="0 0 16 16"><circle cx="8" cy="9" r="4"/><path d="M8 5V3M5 6 3 4M11 6l2-2M4 9H1.5M14.5 9H12M5 12l-2 2M11 12l2 2"/></svg></button>
-  <button id="stop" title="Stop the dev server and the browser"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></button>
+  <button id="debug" title="${L.debug}"><svg viewBox="0 0 16 16"><circle cx="8" cy="9" r="4"/><path d="M8 5V3M5 6 3 4M11 6l2-2M4 9H1.5M14.5 9H12M5 12l-2 2M11 12l2 2"/></svg></button>
+  <button id="stop" title="${L.stop}"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></button>
 </div>
 <div class="bar">
-  <select id="preset" title="Device"></select>
-  <input id="w" class="num" type="number" min="200" max="4000" title="Width">
+  <select id="preset" title="${L.device}"></select>
+  <input id="w" class="num" type="number" min="200" max="4000" title="${L.width}">
   <span>×</span>
-  <input id="h" class="num" type="number" min="200" max="4000" title="Height">
-  <button id="rotate" title="Rotate"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="13" rx="1.5"/><path d="M14.5 6.5a6 6 0 0 0-3-4M1.5 9.5a6 6 0 0 0 3 4"/></svg></button>
-  <select id="zoom" title="Zoom"><option value="fit">Fit</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option></select>
+  <input id="h" class="num" type="number" min="200" max="4000" title="${L.height}">
+  <button id="rotate" title="${L.rotate}"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="13" rx="1.5"/><path d="M14.5 6.5a6 6 0 0 0-3-4M1.5 9.5a6 6 0 0 0 3 4"/></svg></button>
+  <select id="zoom" title="${L.zoom}"><option value="fit">${L.fit}</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option></select>
   <span class="sep"></span>
-  <select id="scheme" title="prefers-color-scheme"><option value="system">Theme: system</option><option value="light">Light</option><option value="dark">Dark</option></select>
-  <select id="throttle" title="Network"><option value="none">No throttling</option><option value="fast-4g">Fast 4G</option><option value="slow-3g">Slow 3G</option><option value="offline">Offline</option></select>
-  <label title="Disable the cache while the device runs"><input id="nocache" type="checkbox">No cache</label>
+  <select id="scheme" title="prefers-color-scheme"><option value="system">${L.themeSystem}</option><option value="light">${L.light}</option><option value="dark">${L.dark}</option></select>
+  <select id="throttle" title="${L.network}"><option value="none">${L.noThrottling}</option><option value="fast-4g">Fast 4G</option><option value="slow-3g">Slow 3G</option><option value="offline">${L.offline}</option></select>
+  <label title="${L.noCacheTitle}"><input id="nocache" type="checkbox">${L.noCache}</label>
   <span class="grow"></span>
-  <button id="screenshot" title="Screenshot (saved in build/screenshots)"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="9.5" rx="1.5"/><circle cx="8" cy="8.7" r="2.5"/><path d="M5.5 4 6.5 2.5h3l1 1.5"/></svg></button>
+  <button id="screenshot" title="${L.screenshot}"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="9.5" rx="1.5"/><circle cx="8" cy="8.7" r="2.5"/><path d="M5.5 4 6.5 2.5h3l1 1.5"/></svg></button>
 </div>
 <div id="main">
   <div id="stage" tabindex="0"><div id="scaler"><div id="device"><div id="screen"><img id="app" alt=""><div id="cover"></div></div></div></div></div>
   <div id="dock">
     <div class="tabs" id="tabs">
-      <button class="tab active" data-tab="console">Console<span class="count" id="nconsole"></span></button>
-      <button class="tab" data-tab="network">Network<span class="count" id="nnetwork"></span></button>
+      <button class="tab active" data-tab="console">${L.console}<span class="count" id="nconsole"></span></button>
+      <button class="tab" data-tab="network">${L.network}<span class="count" id="nnetwork"></span></button>
       <span class="grow"></span>
-      <input id="filter" placeholder="Filter">
-      <button id="clear" title="Clear"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="m4 12 8-8"/></svg></button>
-      <button id="fold" title="Hide or show the panel"><svg viewBox="0 0 16 16"><path d="m4 10 4-4 4 4"/></svg></button>
+      <input id="filter" placeholder="${L.filter}">
+      <button id="clear" title="${L.clear}"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="m4 12 8-8"/></svg></button>
+      <button id="fold" title="${L.fold}"><svg viewBox="0 0 16 16"><path d="m4 10 4-4 4 4"/></svg></button>
     </div>
     <div class="list" id="console"></div>
-    <div class="list hidden" id="network"><table><thead><tr><th>Method</th><th>Status</th><th>Address</th><th>Type</th><th class="n">Size</th><th class="n">Time</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="list hidden" id="network"><table><thead><tr><th>${L.method}</th><th>${L.status}</th><th>${L.addressCol}</th><th>${L.type}</th><th class="n">${L.size}</th><th class="n">${L.time}</th></tr></thead><tbody id="rows"></tbody></table></div>
   </div>
 </div>
 <script nonce="${nonce}">
-const vscode = acquireVsCodeApi();
+${pageI18n(WEB_DEVICE)}
 const PRESETS = ${presets};
 const st = ${state};
 const $ = (id) => document.getElementById(id);
@@ -296,7 +299,7 @@ const preset = $('preset'), w = $('w'), h = $('h'), zoom = $('zoom'), img = $('a
 const device = $('device'), screen = $('screen'), scaler = $('scaler'), stage = $('stage');
 let groupOf = '';
 for (const p of PRESETS) {
-  const g = { desktop: 'Desktop', tablet: 'Tablets', phone: 'Phones' }[p.kind];
+  const g = { desktop: t('desktop'), tablet: t('tablets'), phone: t('phones') }[p.kind];
   let og = preset.querySelector('optgroup[label="' + g + '"]');
   if (!og) { og = document.createElement('optgroup'); og.label = g; preset.appendChild(og); }
   og.appendChild(new Option(p.name, p.name));
@@ -361,13 +364,13 @@ $('clear').onclick = () => { if (tab === 'console') { logs.length = 0; $('consol
 $('filter').oninput = () => { for (const r of document.querySelectorAll('.row, #rows tr')) r.classList.toggle('hidden', !match(r.textContent)); };
 const match = (t) => !$('filter').value || t.toLowerCase().includes($('filter').value.toLowerCase());
 const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
-function counts() { const errs = logs.filter((l) => l.level === 'error').length; $('nconsole').textContent = logs.length ? logs.length + (errs ? ' · ' + errs + ' errors' : '') : ''; $('nnetwork').textContent = reqs.size || ''; }
+function counts() { const errs = logs.filter((l) => l.level === 'error').length; $('nconsole').textContent = logs.length ? logs.length + (errs ? ' · ' + t('errors', errs) : '') : ''; $('nnetwork').textContent = reqs.size || ''; }
 function addLog(e) {
   logs.push(e);
   const row = document.createElement('div');
   row.className = 'row ' + e.level;
   const list = $('console'), stick = list.scrollTop + list.clientHeight >= list.scrollHeight - 4;
-  row.innerHTML = '<span>' + esc(e.text) + '</span>' + (e.source ? '<span class="src" title="Open the generated line">' + esc(e.source.replace(/^https?:\\/\\/[^/]+\\//, '')) + '</span>' : '');
+  row.innerHTML = '<span>' + esc(e.text) + '</span>' + (e.source ? '<span class="src" title="' + esc(t('openLine')) + '">' + esc(e.source.replace(/^https?:\\/\\/[^/]+\\//, '')) + '</span>' : '');
   if (e.source) row.querySelector('.src').onclick = () => vscode.postMessage({ type: 'open', source: e.source });
   if (!match(row.textContent)) row.classList.add('hidden');
   list.appendChild(row);
@@ -399,8 +402,8 @@ window.addEventListener('message', (ev) => {
   else if (m.type === 'live') { base = m.url; sent = ''; layout(); }
   else if (m.type === 'debugging') $('debug').classList.toggle('on', !!m.on);
   else if (m.type === 'starting') { live = false; img.removeAttribute('src'); setCover('<div class="spin"></div><div>' + esc(m.text) + '</div>'); }
-  else if (m.type === 'failed') setCover('<div>The web device could not show the app:<br><small>' + esc(m.message) + '</small></div><button class="run" id="run">▷ Try again</button>'), $('run').onclick = () => vscode.postMessage({ type: 'run' });
-  else if (m.type === 'stopped') { live = false; img.removeAttribute('src'); $('debug').classList.remove('on'); setCover('<div>The app is not running on the web device.</div><button class="run" id="run">▷ Run</button>'); $('run').onclick = () => vscode.postMessage({ type: 'run' }); }
+  else if (m.type === 'failed') setCover('<div>' + t('failed') + '<br><small>' + esc(m.message) + '</small></div><button class="run" id="run">' + t('tryAgain') + '</button>'), $('run').onclick = () => vscode.postMessage({ type: 'run' });
+  else if (m.type === 'stopped') { live = false; img.removeAttribute('src'); $('debug').classList.remove('on'); setCover('<div>' + t('notRunning') + '</div><button class="run" id="run">' + t('run') + '</button>'); $('run').onclick = () => vscode.postMessage({ type: 'run' }); }
 });
 layout();
 </script></body></html>`;
@@ -435,7 +438,7 @@ export function activateWebDevice(context: vscode.ExtensionContext, find: FindWe
   const withApp = async (root: string | undefined, f: (app: WebApp) => Promise<void> | void) => {
     const app = root ? find(root) : undefined;
     if (!app) {
-      void vscode.window.showInformationMessage('Not a web project with a build: run nuclear build in it first.');
+      void vscode.window.showInformationMessage(l10n.t('Not a web project with a build: run nuclear build in it first.'));
       return;
     }
     await f(app);
@@ -445,7 +448,7 @@ export function activateWebDevice(context: vscode.ExtensionContext, find: FindWe
     vscode.commands.registerCommand('nuclear.webDevice.open', (root?: string) => withApp(root, (a) => openWebDevice(a))),
     vscode.commands.registerCommand('nuclear.webDevice.debug', (root?: string) => withApp(root, (a) => openWebDevice(a, true))),
     vscode.commands.registerCommand('nuclear.webDevice.reload', (root?: string) => {
-      if (!root || !reloadWebDevice(root)) void vscode.window.showInformationMessage('No web device runs this project (▭ Device opens one).');
+      if (!root || !reloadWebDevice(root)) void vscode.window.showInformationMessage(l10n.t('No web device runs this project (▭ Device opens one).'));
     }),
     { dispose: () => [...panels.values()].forEach((p) => p.stop(true)) },
   );

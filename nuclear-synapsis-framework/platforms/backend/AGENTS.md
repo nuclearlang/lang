@@ -54,7 +54,8 @@ installer/install.sh                         # the user runs the installed copy:
 - `examples/onboarding/todos_api/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the
   website runs those commands again and fails if they do not give it).
 - `examples/expected/{rick_api,tasks_api,todos_api}/`: the golden output of the projects.
-- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live run (`smoke.py`, `smoke.mjs`).
+- `checks/fastapi-check/`, `checks/nestjs-check/`: `check.sh` and the live runs (`smoke.py`, `smoke_tasks.py`: the
+  guards and the WebSocket of `tasks_api`; `smoke.mjs`).
 - `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.
 
 Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fastapi/`,
@@ -73,7 +74,8 @@ Outside this folder: the dialects (`nuclearlang/dialects/python/frameworks/fasta
    loader refuses the dialect (N0305). The rules of a decorator are data there (`[decorators.args]`,
    `[decorators.fields]`): no decorator name is written in Rust.
 4. **The runtimes behave the same.** A behaviour added to one is added to the other, with the same test in both
-   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`).
+   (`packages/synapsis-py/tests/test_data.py`, `packages/synapsis-nest/test/data.test.ts`; the guards and the
+   WebSocket: `tests/test_sockets.py`, `test/sockets.test.ts`).
 5. **A changed public API of a runtime** means its type definitions are regenerated
    ([runbook](docs/06-runbooks/change-a-runtime.md)).
 6. **The examples are goldens.** Output that changed on purpose: `UPDATE_GOLDEN=1 cargo test`, then review the diff.

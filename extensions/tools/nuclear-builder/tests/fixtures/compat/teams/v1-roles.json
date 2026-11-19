@@ -1,0 +1,91 @@
+{
+  "id": "night-shift",
+  "name": "Night shift",
+  "description": "Made from a preset",
+  "preset": "mixed",
+  "logo": null,
+  "techLead": "architect",
+  "updated": 1763000000000,
+  "budgetUsd": 5,
+  "roles": {
+    "analyst": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "ana-001",
+      "skills": [
+        "answer-a-question",
+        "write-acceptance-criteria"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": []
+    },
+    "architect": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "arc-001",
+      "skills": [
+        "draw-a-diagram"
+      ],
+      "extraSkills": [],
+      "instructions": "Prefer small components.",
+      "behaviour": {},
+      "tasks": []
+    },
+    "developer": {
+      "kind": "local",
+      "provider": "nuclear-developer",
+      "model": "qwen2.5-coder:3b",
+      "employee": "dev-001",
+      "skills": [
+        "tdd-in-nuclear",
+        "write-tests"
+      ],
+      "extraSkills": [
+        {
+          "name": "Our naming",
+          "text": "Name a test after what it proves."
+        }
+      ],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": []
+    },
+    "qa": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "qa-001",
+      "skills": [
+        "review-security"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [
+        {
+          "id": "review",
+          "title": "Review the security of the new files",
+          "station": "quality",
+          "on": true
+        }
+      ]
+    },
+    "delivery": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "del-001",
+      "skills": [
+        "write-the-pull-request"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": []
+    }
+  }
+}

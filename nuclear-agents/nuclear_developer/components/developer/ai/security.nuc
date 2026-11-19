@@ -1,5 +1,5 @@
 // The security reviewer: the compiler's check plus a review guided by the graph's security rules. It reports; it does
-// not change the code. Prompt: agents/security.md.
+// not change the code. Prompt: `agent.security`.
 @state(PieceState)
 graph Security(bench: Workbench, toolchain: Toolchain)
   @start

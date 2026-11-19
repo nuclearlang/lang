@@ -6,6 +6,7 @@
 import { execFile } from 'node:child_process';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { l10n } from './i18n';
 
 interface Make {
   /** Where the kind's files go, relative to the project root; `{c}` component, `{s}` screen. */
@@ -104,9 +105,9 @@ const run = (cwd: string, args: string[]) =>
 
 async function make(id: string, x: Ctx): Promise<void> {
   const needsName = id !== 'test' && id !== 'config';
-  const name = needsName ? await vscode.window.showInputBox({ prompt: `Name of the new ${id}`, validateInput: (v) => (/^[A-Za-z][A-Za-z0-9_]*$/.test(v) ? undefined : 'letters, digits and _, starting with a letter') }) : '';
+  const name = needsName ? await vscode.window.showInputBox({ prompt: l10n.t('Name of the new {0}', id), validateInput: (v) => (/^[A-Za-z][A-Za-z0-9_]*$/.test(v) ? undefined : l10n.t('letters, digits and _, starting with a letter')) }) : '';
   if (needsName && !name) return;
-  const fields = id === 'resource' ? await vscode.window.showInputBox({ prompt: 'Fields (optional): id:int title:string origin:Origin?', value: 'id:int name:string' }) : '';
+  const fields = id === 'resource' ? await vscode.window.showInputBox({ prompt: l10n.t('Fields (optional): id:int title:string origin:Origin?'), value: 'id:int name:string' }) : '';
   if (fields === undefined) return;
   const args = makeArgs(x.nuclearPlatform, id, x.nuclearC ?? '', x.nuclearS ?? '', name ?? '', fields);
   if (!args) return;
@@ -114,14 +115,14 @@ async function make(id: string, x: Ctx): Promise<void> {
   if (!r.ok) return void vscode.window.showErrorMessage(`nuclear ${args.join(' ')}: ${r.out}`);
   const created = /created\s+(\S+\.nuc)/.exec(r.out)?.[1];
   if (created) void vscode.commands.executeCommand('vscode.open', vscode.Uri.file(path.join(x.nuclearRoot, created)));
-  else void vscode.window.showInformationMessage(r.out || 'Nothing to create.');
+  else void vscode.window.showInformationMessage(r.out || l10n.t('Nothing to create.'));
 }
 
 export function registerTreeCommands(context: vscode.ExtensionContext): void {
   const reg = (id: string, fn: (x: Ctx) => Promise<void>) => context.subscriptions.push(vscode.commands.registerCommand(id, (x?: Ctx) => (x?.nuclearPath ? fn(x) : undefined)));
   for (const id of MAKE_IDS) reg(`nuclear.tree.make.${id}`, (x) => make(id, x));
   const create = (folder: boolean) => async (x: Ctx) => {
-    const name = await vscode.window.showInputBox({ prompt: folder ? 'New folder' : 'New file' });
+    const name = await vscode.window.showInputBox({ prompt: folder ? l10n.t('New folder') : l10n.t('New file') });
     if (!name) return;
     const uri = vscode.Uri.file(path.join(x.nuclearPath, name));
     if (folder) await vscode.workspace.fs.createDirectory(uri);
@@ -134,11 +135,11 @@ export function registerTreeCommands(context: vscode.ExtensionContext): void {
   reg('nuclear.tree.newFolder', create(true));
   reg('nuclear.tree.rename', async (x) => {
     const old = path.basename(x.nuclearPath);
-    const name = await vscode.window.showInputBox({ prompt: `Rename ${old}`, value: old });
+    const name = await vscode.window.showInputBox({ prompt: l10n.t('Rename {0}', old), value: old });
     if (name && name !== old) await vscode.workspace.fs.rename(vscode.Uri.file(x.nuclearPath), vscode.Uri.file(path.join(path.dirname(x.nuclearPath), name)));
   });
   reg('nuclear.tree.delete', async (x) => {
-    const ok = await vscode.window.showWarningMessage(`Move ${path.basename(x.nuclearPath)} to the trash?`, { modal: true, detail: x.nuclearPath }, 'Move to trash');
+    const ok = await vscode.window.showWarningMessage(l10n.t('Move {0} to the trash?', path.basename(x.nuclearPath)), { modal: true, detail: x.nuclearPath }, l10n.t('Move to trash'));
     if (ok) await vscode.workspace.fs.delete(vscode.Uri.file(x.nuclearPath), { recursive: true, useTrash: true });
   });
 }

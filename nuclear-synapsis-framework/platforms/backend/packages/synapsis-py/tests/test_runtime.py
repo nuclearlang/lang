@@ -111,3 +111,16 @@ async def test_agent_and_graph_with_a_fake_model() -> None:
     out = await Flow().run({"messages": [], "steps": 1})
     assert out["steps"] == 20
     assert text_of(Ok("x").value) == "x"
+
+
+def test_a_model_has_nuclears_names_on_the_wire() -> None:
+    """ADR-synapsis-0012: the JSON of a model is the same in every dialect (synapsis-nest writes the fields as they are)."""
+    from synapsis import Model
+
+    class Read(Model):
+        last_read: int = 0
+        cost_usd: float | None = None
+
+    r = Read(last_read=3)
+    assert r.model_dump() == {"lastRead": 3, "costUsd": None}
+    assert Read.model_validate({"lastRead": 4}).last_read == 4 and Read.model_validate({"last_read": 5}).last_read == 5

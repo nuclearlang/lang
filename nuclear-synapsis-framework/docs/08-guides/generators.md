@@ -5,7 +5,10 @@ routes or the screen, the tests. `nuclear gen` writes that part, finished and co
 A person or an agent writes only what is particular to the app: a use case with rules of its own, the details of a
 view.
 
-`nuclear make` is the other command that creates files: one nearly empty declaration of a kind, to fill in.
+`nuclear make` is the other command that creates files: one nearly empty declaration of a kind, to fill in. On the
+web: `nuclear make screen|statemanager|widget|component|guard|stateless|stateful|statemodel|repository|usecase|... <component>
+<Name>` (a `statemanager` also writes its state model, `<Name without Manager>State`, when there is none; a screen
+goes to its own folder, `--screen` picks another).
 `nuclear gen` writes code that is already done.
 
 | Command | What it writes |
@@ -118,6 +121,13 @@ other parameters arrive as the verb sends them. The route calls the use case wit
 
 On mobile and web the command adds the alias (and, with `--calls`, writes the use case). What a screen shows of it,
 a method of its state manager and the state it emits, is written by hand.
+
+**A use case over a stream** (web, ADR-synapsis-0008): `--calls` over a repository method with `@on("topic")` that
+returns `Stream<T>` writes a use case that passes the stream on (`exec() Stream<T>`, no `~`), and its alias:
+
+```sh
+nuclear gen usecase tasks WatchCreatedTasks --calls TaskRepository.created
+```
 
 ## 3. What every generator keeps
 

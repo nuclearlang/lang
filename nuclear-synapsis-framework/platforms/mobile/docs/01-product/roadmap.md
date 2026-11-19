@@ -33,6 +33,7 @@ Done; each needs a manual test.
 
 ## Pending
 
+- **Found writing the skills library (2026-11-18)**: no plurals in `tr`; no portable words for push notifications, location or in-app purchases.
 - **Genkit:** interrupts (tool confirmations), middleware (retry), the Developer UI from `nuclear run`, the
   generators `nuclear g chat|flow|tools`, a persistent `Knowledge` (today in memory), multimodal parts (images)
   in chats.

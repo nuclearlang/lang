@@ -1,0 +1,109 @@
+use json
+use time
+use httpx
+use email/utils{ formatdate }
+use pathlib{ Path }
+
+// The adapters' interface: a role composed from its folder and the team, the documents of an answer, the files a
+// provider changed, the retries; and the `local` adapter against a fake Nuclear Developer.
+
+// A role's folder like nuclear-agents/roles/<role>/.
+roleFolder(tmpPath: Path) Path
+  at = tmpPath.joinpath("roles", "analyst")
+  at.joinpath("skills").mkdir(parents = true)
+  at.joinpath("templates").mkdir()
+  at.joinpath("role.md").writeText("---\nid: analyst\ntitle: Analyst\nstations: [analysis]\n---\nYou find what the client needs.\n")
+  at.joinpath("skills", "ask-the-client.md").writeText("Ask one question at a time.")
+  at.joinpath("skills", "read-the-graph.md").writeText("Search the graph first.")
+  at.joinpath("templates", "analysis.md").writeText("# Analysis\n\n## Needs\n")
+  at.joinpath("checks.toml").writeText("[[check]]\nid = \"criteria\"\ntitle = \"Every need has a criterion\"\nstation = \"analysis\"\non = true\nby = \"role\"\n")
+  tmpPath.joinpath("roles")
+
+project(tmpPath: Path) Work
+  root = tmpPath.joinpath("app")
+  root.joinpath("specs", "s1").mkdir(parents = true)
+  root.joinpath("main.nuc").writeText("main() void\n")
+  Work("${root}", "${root.joinpath("specs", "s1")}", "Count the books", { "spec.md": "# Count the books" }, ["analysis.md"], "", 1.0, inputs = { "retry": { "attempts": 4, "baseMs": 1, "maxMs": 2 } })
+
+testARoleIsItsFolderWithTheSkillsTheTeamSwitchedOnAndItsInstructions(tmpPath: Path) void
+  dir = roleFolder(tmpPath)
+  role = composeRole("analyst", { "skills": ["ask-the-client"], "instructions": "Be brief.", "extraSkills": [{ "name": "house-style", "text": "Short lines." }], "employee": "ana-001" }, dir)
+  expect(role.title == "Analyst" and role.stations == ["analysis"] and role.employee == "ana-001")
+  expect(role.skills.keys == ["ask-the-client", "house-style"])
+  text = role.text()
+  expect("You find what the client needs." in text and "Be brief." in text and "Short lines." in text and not ("Search the graph" in text))
+  expect(role.templates["analysis"] == "# Analysis\n\n## Needs\n")
+  expect(role.checks[0]["id"] == "criteria")
+  // no skills named: every skill of the role
+  expect(composeRole("analyst", {}, dir).skills.length == 2)
+  // the role's files are never changed
+  expect(dir.joinpath("analyst", "role.md").readText().endsWith("needs.\n"))
+  // a role without its folder still runs, and says so
+  missing = composeRole("qa", {}, dir)
+  expect("missing" in missing.mission and missing.stations == ["quality"])
+  expect(roleSkills("analyst", dir) == ["ask-the-client", "read-the-graph"])
+
+testTheDocumentsOfAnAnswerAreFoundByTheirMarks() void
+  two = documentsOf("intro\n--- document: design.md ---\n# Design\n--- document: plan.md ---\n# Plan\n", ["design.md", "plan.md"])
+  expect(two == { "design.md": "# Design\n", "plan.md": "# Plan\n" })
+  expect(documentsOf("# Analysis\nall of it", ["analysis.md"]) == { "analysis.md": "# Analysis\nall of it\n" })
+  expect(documentsOf("no marks", ["a.md", "b.md"]).isEmpty)
+
+testTheFilesAProviderChangedAreFoundAndAFailureIsAnOutcome(tmpPath: Path) void
+  work = project(tmpPath)
+  writer = (role: Role, station: string, w: Work, emit: (e: <string, any>) => void) =>
+    Path(w.root, "lib.nuc").writeText("x = 1\n")
+    Path(w.root, "build").mkdir()
+    Path(w.root, "build", "out.py").writeText("")
+    Path(w.specDir, "analysis.md").writeText("# A\n")
+    Outcome(true, "", collectDocuments(w, ""), [], 0.5, [])
+  out = runAdapter(writer, composeRole("analyst", {}, tmpPath), "analysis", work, (e) => null)
+  // the build output and the run's own documents are not the project's files
+  expect(out.ok and out.files == ["lib.nuc"] and out.documents == { "analysis.md": "# A\n" } and out.costUsd == 0.5)
+  broken = (role: Role, station: string, w: Work, emit: (e: <string, any>) => void) =>
+    throw RuntimeError("no such command")
+  failed = runAdapter(broken, composeRole("analyst", {}, tmpPath), "analysis", work, (e) => null)
+  expect(not failed.ok and failed.error == "no such command")
+
+testBackoffGrowsExponentiallyIsCappedAndJitteredAndHonoursRetryAfter() void
+  top = () => 0.999999
+  expect(backoff(1, 5, 1000, 30000, null, top) == 1000)
+  expect(backoff(3, 5, 1000, 30000, null, top) == 4000)
+  expect(backoff(10, 5, 1000, 30000, null, top) == 30000)
+  expect(backoff(3, 5, 1000, 30000, null, () => 0.0) == 0)
+  expect(backoff(1, 5, 1000, 30000, 5000) == 5000)
+  expect(backoff(1, 5, 1000, 30000, 120000) == 30000)
+  expect(retryAfter("2") == 2000)
+  expect(retryAfter(formatdate(time.time() + 3, usegmt = true))! > 1000)
+  expect(retryAfter("soon") == null)
+  expect(transientStatus(503) and transientStatus(429) and not transientStatus(422) and not transientStatus(404))
+
+testAPassingFailureOfTheLocalDeveloperIsRetriedAndEachRetryIsAnEvent(tmpPath: Path) void
+  calls: <string, any>[] = []
+  answer = (request: httpx.Request) =>
+    calls.add({ "path": request.url.path, "body": json.loads(request.content) })
+    if calls.length <= 2
+      return httpx.Response(503, text = "busy")
+    httpx.Response(200, json = { "report": "# Analysis\nthe needs", "trace": [{ "step": "recall", "detail": "3 cards" }] })
+  work = project(tmpPath)
+  work.inputs["transport"] = httpx.MockTransport(answer)
+  work.inputs["developerUrl"] = "http://dev"
+  events: <string, any>[] = []
+  out = runAdapter(localAdapter, composeRole("analyst", { "instructions": "x" }, tmpPath), "analysis", work, (e) => events.add(e))
+  expect(out.ok, out.error)
+  expect(calls.length == 3 and calls[0]["path"] == "/developer/analyze")
+  body: <string, any> = calls[2]["body"]!
+  expect(body["role"] == "analyst" and body["task"] == "Count the books" and "# Count the books" in "${body["context"]}" and body["root"] == work.root)
+  expect(events.map((e) => e["type"]) == ["retry", "retry", "trace"])
+  expect(out.documents == { "analysis.md": "# Analysis\nthe needs\n" })
+
+testAFailureThatWillNotPassIsNotRetried(tmpPath: Path) void
+  calls = [0]
+  answer = (request: httpx.Request) =>
+    calls[0] += 1
+    httpx.Response(422, text = "bad body")
+  work = project(tmpPath)
+  work.inputs["transport"] = httpx.MockTransport(answer)
+  work.inputs["route"] = "/developer/code"
+  out = localAdapter(composeRole("developer", {}, tmpPath), "code", work, (e) => null)
+  expect(not out.ok and calls[0] == 1 and "/developer/code: 422 bad body" in out.error)

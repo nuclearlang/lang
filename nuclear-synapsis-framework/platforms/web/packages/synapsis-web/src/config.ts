@@ -1,4 +1,5 @@
 // Configuration: the project config (`appConfig`) and a component's (`config`): connections and global services.
+import { AppError, HttpError } from './errors.js';
 import { register } from './inject.js';
 
 /** Something the app opens at start; `connectionName` tells two of a kind apart (`''` is the default one). */
@@ -48,19 +49,66 @@ export abstract class HttpInterceptor {
   }
 }
 
-/** An http API (fetch): `Http(baseUrl = "https://api.example.com/")`. */
-export class Http extends Connection {
-  readonly baseUrl: string;
+/** A connection a repository's calls travel over (ADR-synapsis-0008): `Http` or `WebSocket`, the same options. */
+export abstract class Transport extends Connection {
+  /** What a request's path is appended to: the API's url (`Http`), `/` for a socket's frames. */
+  abstract readonly base: string;
   readonly headers: Record<string, string>;
   readonly timeout: number;
   readonly interceptors: HttpInterceptor[];
 
-  constructor(options: HttpOptions) {
+  constructor(options: { connectionName?: string; headers?: Record<string, string>; timeout?: number; interceptors?: HttpInterceptor[] }) {
     super(options);
-    this.baseUrl = options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`;
     this.headers = options.headers ?? {};
     this.timeout = options.timeout ?? 10_000;
     this.interceptors = options.interceptors ?? [];
+  }
+
+  /** One request and its answer (the body parsed as JSON when it is JSON); a network failure throws HttpError(0). */
+  abstract exchange(request: HttpRequest): Promise<HttpResponse>;
+
+  /** Calls `on` with the data of every event `topic` the server pushes; gives back the function that stops. */
+  listen(_topic: string, _on: (data: unknown) => void): () => void {
+    throw new AppError(`the connection "${this.name || 'default'}" cannot receive what a server pushes: use a WebSocket connection`);
+  }
+}
+
+/** An http API (fetch): `Http(baseUrl = "https://api.example.com/")`. */
+export class Http extends Transport {
+  readonly baseUrl: string;
+
+  constructor(options: HttpOptions) {
+    super(options);
+    this.baseUrl = options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`;
+  }
+
+  get base(): string {
+    return this.baseUrl;
+  }
+
+  async exchange(request: HttpRequest): Promise<HttpResponse> {
+    let fetched: globalThis.Response;
+    try {
+      fetched = await fetch(request.url, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        signal: AbortSignal.timeout(this.timeout),
+      });
+    } catch (e) {
+      throw new HttpError(`${request.method} ${request.url}: ${(e as Error).message}`, 0);
+    }
+    return { status: fetched.status, headers: fetched.headers, body: parse(await fetched.text()) };
+  }
+}
+
+/** A body as JSON when it is JSON, else the text; `null` when empty. */
+export function parse(text: string): unknown {
+  if (text === '') return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
   }
 }
 

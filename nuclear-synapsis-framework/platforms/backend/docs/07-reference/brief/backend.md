@@ -22,11 +22,11 @@ file goes: `nuclear help layout --platform backend`.
 | `domain/usecases/` | `usecase Name(deps)` | one `exec(...) Result<Error, T>` (`@transactional`: one transaction, an `Err` rolls it back); errors `NotFound`, `Invalid`, `Conflict`, `Forbidden`, `Unauthorized` |
 | `domain/services/` | `service Name(deps)` | rules several use cases share |
 | `<c>_appcomponent.nuc` | `appcomponent Name` | only aliases, `find() = GetThing.exec`: all the rest of the app sees |
-| `api/` | `@controller("tasks") controller Name(deps)` | `@get("{id}")`, `@post()`, `@status(201)`... (segments, no leading slash); a `Result` answers its value or the error's status |
+| `api/` | `@controller("tasks") controller Name(deps)` | `@get("{id}")`, `@post()`, `@status(201)`... (segments, no leading slash); a `Result` answers its value or the error's status; `guards = [Token(value = env("T"))]` for its own token |
 | `ai/` | `tools Name(deps)`, `agent Name(tools: T)`, `@state(S) graph Name` | doc comment = tool description; `prompt`, `model`; `@start`, `@next("node")` above the node it leaves |
 | `ai/states/` | state | the graph's state (`messages: Messages`) |
 | `events/` | `listener Name(deps)` | `@consumer("topic")` methods; `~publish("topic", value)` |
-| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = "app.sqlite"), Postgres(url = env("DATABASE_URL", "...")), Redis(...), Kafka(...), Ollama(model = "...")]` |
+| `config/` | `appConfig` / `config` | `connections: Connection[] = [SQLite(file = "app.sqlite"), Postgres(url = env("DATABASE_URL", "...")), Redis(...), Kafka(...), Ollama(model = "..."), WebSocketServer(path = "ws")]` (the same routes over a WebSocket, `publish` pushed to the subscribed); `guards: Guard[] = [NoOrigin(), Token(value = env("TOKEN"), header = "X-Token")]` (every route: headers only) |
 | `test/` | `tests Name` | `@test("...")` methods, `inject<X>()`, `expect(cond)` |
 
 Dependencies are constructor parameters, injected by type. Repository methods are awaited: `~repo.byName(name)`.
@@ -61,5 +61,7 @@ controller CharactersController(characters: CharactersAppComponent)
 ```
 
 `config.nuc` enables the optional parts: `plugins(sqlite = true, ollama = true)` (sqlite, postgres, mysql, mariadb,
-redis, kafka, events, ai, openai, ollama, chroma); a kind or class of one not enabled is N0304 (it says which line to
-add).
+redis, kafka, events, websocket, ai, openai, ollama, chroma, telemetry); a kind or class of one not enabled is N0304 (it says
+which line to add). Telemetry: one of `Datadog(apiKey = env(...))`, `NewRelic(...)`, `Grafana(...)`, `Otlp(url)` in
+`connections`; requests and use cases are traced by themselves, `Metric.count` / `Metric.record` for business
+metrics, `@untraced` on a use case, route or controller to leave it out.

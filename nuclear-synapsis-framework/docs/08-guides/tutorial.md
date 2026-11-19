@@ -313,6 +313,10 @@ More things the editors do (nuclearlang/dialects/dart/docs/07-reference/flutter.
   explains it. From the terminal: `nuclear explain < error.txt`. In VS Code, after a `.nuc` breakpoint, F10
   advances one Nuclear line (not a Dart one), the mouse over a name shows its value and the *Nuclear Call Stack*
   view gives the stack in Nuclear.
+- **Where it is slow:** `nuclear run --monitor` runs the app with each Nuclear function and method measured; then
+  `nuclear monitor` prints the hot spots (a slow call, async calls one after another in a loop, many connections,
+  much memory) and the time of each function as a tree. In VS Code, *Nuclear: Open Monitor* draws that tree as an
+  accordion of bars; a click on a name opens its `.nuc` at the line. Without `--monitor` nothing is measured.
 - **If something fails without errors in the `.nuc` files** (packages, stale generated code, a broken build),
   the extensions run `nuclear repair` by themselves and relaunch the app; you can also run it by hand:
   `nuclear repair`.

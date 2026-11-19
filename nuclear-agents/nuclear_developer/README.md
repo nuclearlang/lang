@@ -14,7 +14,7 @@ as the junior developer of a frontier model. Their knowledge comes from the
 
 ## How we made it
 
-- The AI loop: retrieval and distillation, not weight training; prompts are files of the graph ([ADR-platform-0003](../../docs/03-adr/0003-the-ai-loop.md)).
+- The AI loop: retrieval and distillation, not weight training; prompts are the skills of the roles of the software factory ([`../roles/`](../roles/README.md)) ([ADR-platform-0003](../../docs/03-adr/0003-the-ai-loop.md)).
 - Fixed steps, not a toolbox: recall → write → `nuclear check` → repair (at most 3 attempts) → answer.
 - A strategy for each kind of request ([ADR-developer-0001](docs/03-adr/0001-a-strategy-for-each-kind-of-request.md)); tools before models ([ADR-platform-0004](../../docs/03-adr/0004-products-are-made-with-the-tools.md)).
 - Written in Nuclear: a Synapsis backend (`fastapi`), on `qwen2.5-coder:3b` and `gemma4:e2b`.

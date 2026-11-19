@@ -1,0 +1,80 @@
+use json
+use pathlib{ Path }
+
+// The checks of a run (design.md "A run", 3): one list, `checks.json` in the spec's folder (`specs/<component>/[<layer>/]<id>/`), made from every role's
+// `checks.toml` and the team's tasks, with the user's own. Each check: `id`, `title`, `station`, `on`, `by` (`role`:
+// the role runs it; `user`: the user runs it and marks it), `role`, a `command` of `.nuclear/builder.json` or a
+// `prompt`, its `state` (`pending`, `passed`, `failed`, `skipped`) and a `note`.
+
+CHECK_STATES = ["pending", "passed", "failed", "skipped"]
+
+checksFile(root: string, id: string) Path
+  Path(root, specHome(root, id), "checks.json")
+
+loadChecks(root: string, id: string) <string, any>[]
+  file = checksFile(root, id)
+  file.isFile() ? json.loads(file.readText(encoding = "utf-8")) : ([] as <string, any>[])
+
+saveChecks(root: string, id: string, checks: <string, any>[]) void
+  writeAtomic(checksFile(root, id), json.dumps(checks, indent = 2, ensureAscii = false) + "\n")
+
+// The checks a run starts with: each role's, then the tasks of the team's members of that role; a check already in
+// the list keeps what the user made of it.
+seedChecks(root: string, id: string, roles: Role[], team: <string, any>) <string, any>[]
+  have = loadChecks(root, id)
+  known = have.map((c) => "${c["id"]}")
+  for role in roles
+    tasks: <string, any>[] = membersOf(team, role.id).map((m) => (m["tasks"] ?? []) as <string, any>[]).reduce([] as <string, any>[], (a: <string, any>[], b: <string, any>[]) => [...a, ...b])
+    for c in [...role.checks, ...tasks]
+      own = "${c["id"]}"
+      check: <string, any> = { "id": own.startsWith("${role.id}.") ? own : "${role.id}.${own}", "title": c["title"] ?? c["id"], "station": c["station"] ?? role.stations.first, "on": c["on"] ?? true, "by": c["by"] ?? "role", "role": role.id, "state": "pending", "note": "" }
+      if c["command"] != null
+        check["command"] = c["command"]
+      // the title in Spanish beside the English (checks.toml's `title_es`): the screens show the one of their language
+      if c["title_es"] != null
+        check["title_es"] = c["title_es"]
+      prompt = c["prompt"] ?? (c["command"] == null ? c["title"] ?? c["id"] : null)
+      check["prompt"] = prompt == null ? null : "${prompt}".replaceAll("{{id}}", id)
+      if not (check["id"] in known)
+        have.add(check)
+        known.add(check["id"]!)
+  saveChecks(root, id, have)
+  have
+
+findCheck(checks: <string, any>[], id: string) <string, any>
+  found = checks.find((c) => c["id"] == id)
+  if found == null
+    throw ValueError("no check `${id}`: ${checks.map((c) => "${c["id"]}").join(", ")}")
+  found!
+
+// A check of the user's own: a prompt for a role, or one the user runs and marks.
+addCheck(root: string, id: string, title: string, station: string, by: string = "user", prompt: string? = null, command: string? = null) <string, any>
+  if not (station in STATIONS)
+    throw ValueError("no station `${station}`: ${STATIONS.join(", ")}")
+  if by != "user" and by != "role"
+    throw ValueError("a check is run by `user` or `role`")
+  checks = loadChecks(root, id)
+  n = checks.count((c) => "${c["id"]}".startsWith("user.")) + 1
+  check: <string, any> = { "id": "user.${n}", "title": title, "station": station, "on": true, "by": by, "role": STATION_ROLE[station]!, "state": "pending", "note": "", "prompt": prompt ?? (by == "role" and command == null ? title : null) }
+  if command != null
+    check["command"] = command
+  checks.add(check)
+  saveChecks(root, id, checks)
+  check
+
+switchCheck(root: string, id: string, check: string, on: boolean) <string, any>
+  checks = loadChecks(root, id)
+  found = findCheck(checks, check)
+  found["on"] = on
+  saveChecks(root, id, checks)
+  found
+
+markCheck(root: string, id: string, check: string, state: string, note: string = "") <string, any>
+  if not (state in CHECK_STATES)
+    throw ValueError("a check is ${CHECK_STATES.join(", ")}")
+  checks = loadChecks(root, id)
+  found = findCheck(checks, check)
+  found["state"] = state
+  found["note"] = note
+  saveChecks(root, id, checks)
+  found

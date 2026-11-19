@@ -1,0 +1,12 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// The GIFs API: the pack made for the project, the picker's search, the project's one answer.
+@repository(path = "gifs", connection = "nuclear_chat")
+repository GifsRepository
+  @get(path = "pack")
+  pack() Result<NuclearChatError, PackGif[]>
+
+  @get(path = ":workspace/search")
+  search(workspace: string, q: string = "") Result<NuclearChatError, GifResults>
+
+  @post(path = ":workspace/consent")
+  consent(workspace: string, @body consent: Consent) Result<NuclearChatError, Consent>

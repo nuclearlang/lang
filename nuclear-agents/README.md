@@ -13,9 +13,16 @@ The AI agents of NuclearLang that run on your machine, one project per folder. T
 ## How we made it
 
 - The AI loop: models of at most 3B parameters that write only Nuclear and learn by retrieval and distillation ([ADR-platform-0003](../docs/03-adr/0003-the-ai-loop.md)).
-- What an agent knows, and every prompt, is a row or file of the [Smart Graph](../nuclear-graph-storage/README.md).
+- What an agent knows is a row of the [Smart Graph](../nuclear-graph-storage/README.md); every prompt is a skill of a
+  role of the software factory ([`roles/`](roles/README.md)): Analyst, Architect, Developer, QA and DevOps, each a
+  folder that the local agents and every provider read, with a roster of 40 employees to hire.
 - Written in Nuclear: the Nuclear Developer is a Synapsis backend ([rule 9](../AGENTS.md)).
 - Tools before models: an agent writes only what no generator can ([ADR-platform-0004](../docs/03-adr/0004-products-are-made-with-the-tools.md)).
+
+- A library of skills and agents ready to use ([`skills/`](skills/README.md)): payments, bank accounts, authentication,
+  offline sync, the Synapsis backend, mobile and web, TDD, an OWASP review… as `SKILL.md` files any agent reads, and
+  five `agent.md` (backend, mobile and web engineers, a QA security tester, a tech writer). A team in Nuclear Builder
+  picks them, previews them, clones and changes them, or writes its own.
 
 ## Try it
 

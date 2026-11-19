@@ -2660,6 +2660,8 @@ nuclear test [--integration] [-- <flutter test arguments>]
 nuclear analyze | check [--json] | clean
 nuclear repair                             # when the build or the app fails: repairs in steps (see below)
 nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained
+nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)
+nuclear monitor [--json]                   # the report: hot spots, then each function's time, calls, connections, memory
 nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions
 nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)
 nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)

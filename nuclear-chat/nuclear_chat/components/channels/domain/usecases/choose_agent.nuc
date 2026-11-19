@@ -1,0 +1,28 @@
+// The user chose who answers a direct message: one of its member's choices (an available one), with a model it
+// offers (any model when it offers none), or nothing (the host's default again). Kept with the channel.
+usecase ChooseAgent(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
+  exec(workspace: string, channel: string, input: AgentChoice) Result<Error, Channel>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(workspace)
+    if found.isErr
+      return Err(found.error)
+    ws = found.value
+    shown = ws.channel(channel)
+    if shown == null
+      return Err(NotFound("no channel ${channel} in this workspace"))
+    member = shown!.kind == "dm" ? ws.member(shown!.members.find((m) => m != "you") ?? "") : null
+    if member == null or member!.responder.choices.isEmpty
+      return Err(Invalid("#${channel} is not a direct message with a member who has agents to choose"))
+    if not input.agent.isEmpty
+      choice = member!.responder.choices.find((c) => c.id == input.agent)
+      if choice == null
+        return Err(Invalid("no agent ${input.agent} for ${member!.name}"))
+      if not choice!.available
+        return Err(Invalid("${choice!.label} is not available: ${choice!.why}"))
+      if not input.model.isEmpty and not choice!.models.isEmpty and not (input.model in choice!.models)
+        return Err(Invalid("${choice!.label} has no model ${input.model}"))
+    shown!.agent = input.agent
+    shown!.model = input.agent.isEmpty ? "" : input.model
+    workspaces.keepChannels(ws)
+    ~events.emit(ws.id, "agent.changed", channel, { "member": member!.id, "agent": shown!.agent, "model": shown!.model })
+    Ok(shown!)

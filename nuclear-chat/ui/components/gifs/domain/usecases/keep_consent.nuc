@@ -1,0 +1,4 @@
+// What GifsRepository.consent answers, for the screens of gifs.
+usecase KeepConsent(repository: GifsRepository)
+  exec(workspace: string, consent: Consent) Result<NuclearChatError, Consent>
+    ~repository.consent(workspace, consent)

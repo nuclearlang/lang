@@ -29,6 +29,7 @@ platform**. Each project documents itself, in its own folder, the same way.
 | The code generator (the crate `nuclear-codegen`) | `tools/code_generator/` | `codegen` |
 | The MCP server (`nuclear-mcp`) | `tools/mcp/` | `mcp` |
 | The installers and the release | `installer/` | `installer` |
+| Nuclear Chat, the factory's workplace | `nuclear-chat/` | `chat` |
 | The devices (the crate `nuclear-devices`) | `device-emulators/` | `devices` |
 | The editor extensions | `extensions/`, `extensions/{vscode,jetbrains,zed}/` | `extensions` |
 | A tool of the editors | `extensions/tools/<tool>/` | — |

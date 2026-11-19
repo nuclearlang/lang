@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { toolEnv } from '../../tools/nuclear-builder/src/engine';
+import { toolEnv } from '../../tools/nuclear-builder/src/support';
 
 /** The folder of the installation (`NUCLEAR_INSTALL`), as the installers leave it. */
 export function installDir(env: NodeJS.ProcessEnv = process.env): string {
@@ -54,10 +54,13 @@ export function builderCommand(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 /** Runs `nuclear-builder <args>`; each line it prints goes to `line` as it comes. Resolves with its exit code and all it
- * printed on stdout (stderr only to `line`). */
-export function builder(args: string[], line: (text: string) => void = () => undefined): Promise<{ code: number; out: string }> {
+ * printed on stdout (stderr only to `line`). `input` is written to its stdin (a team to save, a key for the vault:
+ * never a command line argument, which other users of the machine can read). */
+export function builder(args: string[], line: (text: string) => void = () => undefined, input?: string): Promise<{ code: number; out: string }> {
   return new Promise((resolve) => {
     const p = spawn(builderCommand(), args, { env: toolEnv(), shell: process.platform === 'win32' });
+    p.stdin.on('error', () => undefined); // a command that exits before reading its input
+    p.stdin.end(input ?? '');
     let out = '';
     let rest = '';
     p.stdout.on('data', (d: Buffer) => {

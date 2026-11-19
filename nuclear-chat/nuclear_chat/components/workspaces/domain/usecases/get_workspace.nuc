@@ -1,0 +1,4 @@
+// A registered project.
+usecase GetWorkspace(registry: WorkspaceRegistry)
+  exec(id: string) Result<Error, Workspace>
+    registry.find(id)

@@ -54,6 +54,7 @@ All are in the Command Palette (`Ctrl+Shift+P`) under **Nuclear** unless the cat
 | Open a Project as a Tab | adds a project folder as a tab, without changing the VS Code workspace | `Ctrl+Alt+O` |
 | Open a Tool | opens a tool of the strip | see [the workspace](workspace.md) |
 | Welcome Page | the projects, the tools and the keys | `Ctrl+Alt+W` |
+| Choose the Language | *Automatic* (VS Code's language, else the operating system's), English or Español; also the globe of the status bar | |
 | Run an Action of the Active Project | run, debug, build, test… of the active tab | see [the workspace](workspace.md) |
 | Add the Active Project to the VS Code Workspace | adds the tab's folder to the explorer, search and git | |
 | Run / Debug | builds and launches a Synapsis mobile app (shown when the folder has one) | |
@@ -62,7 +63,8 @@ All are in the Command Palette (`Ctrl+Shift+P`) under **Nuclear** unless the cat
 | Restart Language Server | stops and starts `nuclear-lsp` | |
 | Toggle code metrics · Toggle code lenses for arrow functions | turn the metrics lenses off or on | |
 | Update Contracts (nuclear contracts update) | refreshes the contracts an app declares | |
-| Set Up the AI Services | the set-up wizard of the Smart Graph, the Developer and the models | |
+| Welcome and Set-Up | the welcome, step by step over every setting: this machine, the AI services, the providers and their keys, the team, the spending, each tool | |
+| Builder Teams: Hire the Squad | the squad screen: the five roles, the roster of employees, who does each role's work, several teams | |
 | Open the web device · Debug on the web device · Reload the web device | the [web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md) of a web project | |
 | *Synapsis:* Open Synapsis Device · Run on Synapsis Device | the [Synapsis device](../../../tools/nuclear-device-manager/docs/08-guides/README.md) | |
 | *HTTP Connections:* Refresh · Select Environment · Edit Environments · Add an OpenAPI Document · Open Request | [HTTP Connections](../../../tools/nuclear-http-connections/docs/08-guides/README.md) | |
@@ -76,6 +78,8 @@ the app is paused in code that comes from a `.nuc` ([run and debug](run-and-debu
 
 | Setting | Default | What it does |
 |---|---|---|
+| `nuclear.notifications` | `all` | which notices pop up: `all`, `mentions-and-gates` (a member addressing you, a run waiting for you), `off` (only the badges and the list); in *Settings and integrations* → language and editor |
+| `nuclear.language` | `auto` | the language of the pages, the messages, Nuclear Chat and the agents: `auto` (VS Code's, else the operating system's, else English), `en`, `es`; also the globe of every page and of the status bar |
 | `nuclear.dialect` | `flutter` | the dialect of `.nuc` files outside a project (`flutter`, `fastapi`, `nestjs`, `react`, `dart`, `python`, `typescript`, or `base` for the base language only); a project uses the dialect of its `config.nuc` or `nuclear.toml` |
 | `nuclear.dialectPaths` | `[]` | extra folders with dialects; `<workspace>/dialects` is always searched |
 | `nuclear.server.path` | `""` | another `nuclear-lsp` binary; empty: the bundled one, then the `PATH` |
@@ -86,19 +90,29 @@ the app is paused in code that comes from a `.nuc` ([run and debug](run-and-debu
 | `nuclear.debug.explainErrors` | `true` | Dart run-time errors at their `.nuc` line, with an explanation |
 | `nuclear.codemetrics.*` | (generated) | the costs and thresholds of the code metrics, the same names as CodeMetrics |
 
-The `nuclear.ai.*` settings (the services' addresses, the local models, Claude, Codex, OpenCode, Cursor, GitHub,
-Jira, retries, time limits) are edited in the *Settings and integrations* tool (`Ctrl+Alt+S`), where each one has
-its default. The most used:
+The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool
+(`Ctrl+Alt+S`), where each one has its default. The most used:
 
 | Setting | Default |
 |---|---|
 | `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |
 | `nuclear.ai.models.coder` · `.assistant` · `.embeddings` | `qwen2.5-coder:3b` · `gemma4:e2b` · `embeddinggemma` |
-| `nuclear.ai.claudeModel` · `nuclear.ai.claude.maxBudgetUsd` | `sonnet` · `2` |
 | `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |
-| `nuclear.ai.contextTokens` | `8192` |
 | `nuclear.ai.checkEveryMinutes` | `5` |
-| `nuclear.ai.resumeInterrupted` | `true` |
+| `nuclear.builder.team` | `""` (the default team) |
+| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |
+| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |
+| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |
+| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |
+
+A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`,
+`nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its
+new one by itself.
+
+The extension speaks English or Spanish: `nuclear.language` (`auto`: VS Code's display language when it is English
+or Spanish, else the operating system's, else English). The globe in every page's header and in the status bar
+changes it at once, with no restart: the pages, the messages, Nuclear Chat and what the agents answer in. Command
+titles and setting descriptions follow VS Code's own language (VS Code does not let an extension change them).
 
 A project's `.nuclear/builder.json` wins over these settings for its own Nuclear Builder runs.
 

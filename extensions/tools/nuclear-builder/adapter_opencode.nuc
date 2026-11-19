@@ -1,0 +1,65 @@
+use json
+use pathlib{ Path }
+
+// The OpenCode adapter (`opencode run`, its flags checked against OpenCode 2.2.7's `--help`: `--agent`, `--format
+// json`, `--model provider/model`, `--auto`). The role is rendered as OpenCode's own agent, `.opencode/agent/<role>.md`
+// in the run's temporary folder (`OPENCODE_CONFIG_DIR`), and the configuration there (`OPENCODE_CONFIG`) gives the
+// Nuclear MCP server and the Builder's (`nuclear_builder`) and denies the shell (commands are data: `.nuclear/builder.json`). OpenCode brings its own
+// login; the cost is the sum of what its steps report. The lines of `--format json` were read from OpenCode's
+// documentation, not yet from a real run (no paid call was made).
+
+renderOpenCode(role: Role, work: Work, at: Path) <string, string>
+  dir = at.joinpath(".opencode")
+  dir.joinpath("agent").mkdir(parents = true)
+  dir.joinpath("agent", "${role.id}.md").writeText("---\ndescription: The ${role.title} of the software factory\nmode: primary\npermission:\n  bash: deny\n  edit: allow\n---\n\n${role.text()}\n")
+  config = at.joinpath("opencode.json")
+  config.writeText(json.dumps({ "$schema": "https://opencode.ai/config.json", "mcp": { "nuclear": { "type": "local", "command": [work.mcpCommand], "enabled": true }, "nuclear_builder": { "type": "local", "command": [builderMcpCommand(), ...builderMcpArgs(work.root)], "enabled": true } }, "permission": { "bash": "deny", "edit": "allow" } }, indent = 2))
+  env = toolEnv()
+  env["OPENCODE_CONFIG"] = "${config}"
+  env["OPENCODE_CONFIG_DIR"] = "${dir}"
+  env
+
+openCodeArgs(role: Role, prompt: string, work: Work) string[]
+  args = ["opencode", "run", "--agent", role.id, "--format", "json", "--auto"]
+  if work.model.length > 0
+    args.addAll(["--model", work.model])
+  [...args, prompt]
+
+// One line of `--format json`: a text, a tool call (with its state when it ended), the end of a step with its cost.
+openCodeLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, any>) void
+  part: <string, any> = ev["part"] ?? ({} as <string, any>)
+  kind = "${ev["type"] ?? part["type"] ?? ""}"
+  if kind == "text"
+    found["text"] = part["text"] ?? ""
+    emit({ "type": "text", "text": found["text"] })
+  else if kind == "tool_use" or kind == "tool"
+    state: <string, any> = part["state"] ?? ({} as <string, any>)
+    emit({ "type": "tool", "id": part["callID"] ?? part["id"], "tool": "${part["tool"] ?? ""}".replace("nuclear_builder_", "").replace("nuclear_", ""), "input": json.dumps(state["input"] ?? {}).substring(0, 4000) })
+    if state["status"] == "completed" or state["status"] == "error"
+      emit({ "type": "tool-result", "id": part["callID"] ?? part["id"], "ok": state["status"] == "completed", "text": "${state["output"] ?? state["error"] ?? ""}".substring(0, 20000) })
+  else if kind == "step_finish" or kind == "step-finish"
+    cost: double = part["cost"] ?? 0
+    found["cost"] = (found["cost"] as double) + cost
+    emit({ "type": "cost", "usd": cost })
+  else if kind == "error"
+    found["failed"] = true
+    found["text"] = json.dumps(ev["error"] ?? ev)
+
+openCodeAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  at = renderDir("opencode")
+  events: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  try
+    env = renderOpenCode(role, work, at)
+    ran = streamCommand(openCodeArgs(role, stationPrompt(role, station, work, false), work), work.root, env, (line) => onOpenCodeLine(line, say, found), work.timeoutMs)
+    agentOutcome("OpenCode", ran, found, events, work)
+  finally
+    dropRenderDir(at)
+
+onOpenCodeLine(line: string, emit: (e: <string, any>) => void, found: <string, any>) void
+  ev = jsonLine(line)
+  if ev != null
+    openCodeLine(ev!, emit, found)

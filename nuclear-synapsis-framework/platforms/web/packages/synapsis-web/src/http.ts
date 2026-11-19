@@ -2,7 +2,8 @@
 // the mobile platform: the path is appended to the connection's baseUrl, `:name` takes a parameter, the other
 // parameters go to the query (GET, DELETE) or the JSON body; cache by key with a ttl; retries on transient failures.
 import { Synapsis } from './app.js';
-import { Http, HttpRequest, HttpResponse } from './config.js';
+import { HttpRequest, HttpResponse } from './config.js';
+import { Stream } from './sockets.js';
 import { AppError, HttpError } from './errors.js';
 import { Err, Ok, Result } from './result.js';
 
@@ -102,7 +103,7 @@ export class Repository {
     options: { params?: Record<string, unknown>; pathParams?: Record<string, unknown>; query?: Record<string, unknown> },
     read: boolean,
   ): { url: string; query: Record<string, unknown>; rest: Record<string, unknown> } {
-    const http = Synapsis.connection(Http, this.connection);
+    const transport = Synapsis.transport(this.connection);
     const rest = { ...options.params };
     let full = [this.path, path].filter((p) => p !== '').join('/');
     const inPath = { ...options.pathParams };
@@ -116,7 +117,7 @@ export class Repository {
       throw new AppError(`the path '${full}' needs a parameter named '${name}'`);
     });
     const query: Record<string, unknown> = { ...options.query, ...(read ? rest : {}) };
-    return { url: http.baseUrl + full.replace(/^\//, ''), query, rest };
+    return { url: transport.base + full.replace(/^\//, ''), query, rest };
   }
 
   /** One request: the cache first (when asked), then fetch with retries; throws HttpError. */
@@ -154,7 +155,8 @@ export class Repository {
     headers: Record<string, string>,
     decode: (body: unknown) => T,
   ): Promise<T> {
-    const http = Synapsis.connection(Http, this.connection);
+    // the adapter (ADR-synapsis-0008): the same request over Http, a WebSocket or the host's bridge
+    const transport = Synapsis.transport(this.connection);
     const qs = Object.entries(query)
       .filter(([, v]) => v !== undefined && v !== null)
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
@@ -162,36 +164,21 @@ export class Repository {
     let request: HttpRequest = {
       method,
       url: qs ? `${url}?${qs}` : url,
-      headers: { ...http.headers, ...headers, ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
+      headers: { ...transport.headers, ...headers, ...(body !== undefined ? { 'content-type': 'application/json' } : {}) },
       body: body !== undefined ? JSON.stringify(body) : undefined,
     };
-    for (const i of http.interceptors) request = await i.onRequest(request);
-    let fetched: globalThis.Response;
-    try {
-      fetched = await fetch(request.url, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-        signal: AbortSignal.timeout(http.timeout),
-      });
-    } catch (e) {
-      throw new HttpError(`${method} ${request.url}: ${(e as Error).message}`, 0);
-    }
-    const text = await fetched.text();
-    let parsed: unknown = null;
-    if (text !== '') {
-      try {
-        parsed = JSON.parse(text);
-      } catch {
-        parsed = text;
-      }
-    }
-    let response: HttpResponse = { status: fetched.status, headers: fetched.headers, body: parsed };
-    for (const i of http.interceptors) response = await i.onResponse(response);
+    for (const i of transport.interceptors) request = await i.onRequest(request);
+    let response: HttpResponse = await transport.exchange(request);
+    for (const i of transport.interceptors) response = await i.onResponse(response);
     if (response.status < 200 || response.status >= 300) {
       throw new HttpError(messageOf(response.body) ?? `${method} ${url} answered ${response.status}`, response.status, response.body);
     }
     return decode(response.body);
+  }
+
+  /** `@on("topic")` on a method that returns `Stream<T>`: what the server pushes on that topic, read by `decode`. */
+  stream<T>(topic: string, decode: (data: unknown) => T): Stream<T> {
+    return new Stream<T>((on) => Synapsis.transport(this.connection).listen(topic, (data) => on(decode(data))));
   }
 
   /** Turns a thrown AppError into a value: `attempt(() => send(...), Ok, (e) => Err(new X({ message: e.message })))`. */

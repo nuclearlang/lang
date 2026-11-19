@@ -2,13 +2,17 @@
 
 import { SettingsPanel } from './settingsPanel';
 import { SetupPanel } from './setupPanel';
+import { migrateSettings } from './migrateSettings';
+import { TeamsPanel } from '../../tools/nuclear-builder/src/teams/panel';
 import { execFile } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { l10n, registerLanguage } from './i18n';
 import { activateDebug } from './debug';
 import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
 import { activateHttpConnections } from '../../tools/nuclear-http-connections/src/httpConnections';
+import { activateMonitor } from '../../tools/nuclear-monitor/src/panel';
 import { appDir, CARD, projectCard, readCard } from './card';
 import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
 import { activateWorkspace } from './workspace';
@@ -28,6 +32,10 @@ let metricsDecoration: CodeMetricsDecoration;
 let debugNuc: { built(): void } | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  // the settings that moved to their tool's section, before any tool reads them
+  await migrateSettings();
+  // the language of every page and message (nuclear.language): the status bar's globe and the change event
+  registerLanguage(context);
   generated = new GeneratedCodeProvider();
   metricsDecoration = new CodeMetricsDecoration();
   statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -78,9 +86,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // the project of a folder (a session's cwd, a breakpoint's file), or the first one of the workspace
   debugNuc = activateDebug(context, (dir?: string) => (dir ? synapsisOf(path.join(dir, '_')) : findSynapsis()));
   const http = activateHttpConnections(context);
+  activateMonitor(context);
   activateWorkspace(context, http);
   // the set-up of the AI services (ADR-installer-0002): a command, and an offer on a machine that was never set up
-  context.subscriptions.push(vscode.commands.registerCommand('nuclear.ai.setup', () => SetupPanel.show()));
+  context.subscriptions.push(
+    vscode.commands.registerCommand('nuclear.ai.setup', () => SetupPanel.show(context)),
+    vscode.commands.registerCommand('nuclear.builder.teams', (o?: { wizard?: boolean }) => TeamsPanel.show(context, !!o?.wizard)),
+  );
   void SetupPanel.offer(context);
   activateDevice(context, findSynapsis, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));
   // a web project's app: from the workspace `nuclear build` writes, or (never built yet) its default place
@@ -200,13 +212,13 @@ const synapsisBuild = (d: Synapsis) => synapsis(d, 'build');
 function synapsisRepair(d: Synapsis, why: string): Thenable<boolean> {
   synapsisOutput?.appendLine(`\n--- ${why}: nuclear repair`);
   return vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: `Synapsis: ${why}, repairing the app…` },
+    { location: vscode.ProgressLocation.Notification, title: l10n.t('Synapsis: {0}, repairing the app…', why) },
     async () => (await synapsis(d, 'repair')) === 0,
   );
 }
 
 async function showBuildError(message: string): Promise<void> {
-  const choice = await vscode.window.showErrorMessage(`Synapsis: ${message}`, 'Show Output');
+  const choice = await vscode.window.showErrorMessage(`Synapsis: ${message}`, l10n.t('Show Output'));
   if (choice) synapsisOutput?.show();
 }
 
@@ -215,11 +227,11 @@ async function showBuildError(message: string): Promise<void> {
 async function synapsisLaunch(d: Synapsis, base: vscode.DebugConfiguration): Promise<vscode.DebugConfiguration | undefined> {
   const code = await synapsisBuild(d);
   if (code === CODE_ERRORS) {
-    await showBuildError('the project has errors.');
+    await showBuildError(l10n.t('the project has errors.'));
     return undefined;
   }
-  if (code !== 0 && !(await synapsisRepair(d, 'the build failed'))) {
-    await showBuildError('the build fails even after flutter clean.');
+  if (code !== 0 && !(await synapsisRepair(d, l10n.t('the build failed')))) {
+    await showBuildError(l10n.t('the build fails even after flutter clean.'));
     return undefined;
   }
   const config: vscode.DebugConfiguration = { ...d.launch, ...base, type: 'dart', request: 'launch' };
@@ -235,7 +247,7 @@ async function synapsisLaunch(d: Synapsis, base: vscode.DebugConfiguration): Pro
 async function runApp(noDebug: boolean, deviceId?: string, extra: Record<string, unknown> = {}, root?: string): Promise<void> {
   const d = findSynapsis(root);
   if (!d) {
-    void vscode.window.showWarningMessage('Not a Synapsis project: run `nuclear build` in the project first.');
+    void vscode.window.showWarningMessage(l10n.t('Not a Synapsis project: run `nuclear build` in the project first.'));
     return;
   }
   if (d.launch.type !== 'dart') return runPlatformApp(d, noDebug);
@@ -247,14 +259,14 @@ async function runApp(noDebug: boolean, deviceId?: string, extra: Record<string,
  * runs first in its terminal (`nuclear run`), as the launch's preLaunchTask would. */
 async function runPlatformApp(d: Synapsis, noDebug: boolean): Promise<void> {
   const code = await synapsisBuild(d);
-  if (code !== 0) return showBuildError(code === CODE_ERRORS ? 'the project has errors.' : 'the build failed.');
+  if (code !== 0) return showBuildError(code === CODE_ERRORS ? l10n.t('the project has errors.') : l10n.t('the build failed.'));
   const config: vscode.DebugConfiguration = { ...d.launch };
   if (config.type === 'chrome' && typeof config.url === 'string') {
     const name = `${path.basename(d.root)} · run`;
     const terminal = vscode.window.terminals.find((t) => t.name === name) ?? vscode.window.createTerminal({ name, cwd: d.root });
     if (!(await answers(config.url))) {
       terminal.sendText(`"${d.command}" run`);
-      if (!(await answers(config.url, 120))) return showBuildError(`the dev server did not answer at ${config.url}.`);
+      if (!(await answers(config.url, 120))) return showBuildError(l10n.t('the dev server did not answer at {0}.', config.url));
     }
   }
   delete config.preLaunchTask;
@@ -280,7 +292,7 @@ const synapsisDebugProvider: vscode.DebugConfigurationProvider = {
   resolveDebugConfiguration: async (_folder, config) => {
     const d = findSynapsis();
     if (!d) {
-      void vscode.window.showWarningMessage('Not a Synapsis project: run `nuclear build` in the project first.');
+      void vscode.window.showWarningMessage(l10n.t('Not a Synapsis project: run `nuclear build` in the project first.'));
       return undefined;
     }
     return synapsisLaunch(d, { ...config, type: 'dart', request: 'launch' });
@@ -301,7 +313,7 @@ async function reloadOnSave(doc: vscode.TextDocument): Promise<void> {
   if (session?.type !== 'dart') return;
   const code = await synapsisBuild(d);
   if (code === 0) await vscode.commands.executeCommand('flutter.hotReload');
-  else if (code !== CODE_ERRORS) await repairAndRelaunch(session, 'the build failed');
+  else if (code !== CODE_ERRORS) await repairAndRelaunch(session, l10n.t('the build failed'));
 }
 
 // What a `dart` session of the project did: the Flutter debug adapter sends `flutter.appStarted` once the app
@@ -339,7 +351,7 @@ function watchSession(session: vscode.DebugSession): vscode.DebugAdapterTracker 
       // a reload the VM cannot apply (e.g. a changed class shape) needs a restart; a compile error after a
       // clean transpile means stale generated code or packages
       if (RELOAD_REJECTED.test(text)) void vscode.commands.executeCommand('flutter.hotRestart');
-      else if (RELOAD_FAILED.test(text)) void repairAndRelaunch(session, 'hot reload failed');
+      else if (RELOAD_FAILED.test(text)) void repairAndRelaunch(session, l10n.t('hot reload failed'));
     },
   };
 }
@@ -349,7 +361,7 @@ function watchSession(session: vscode.DebugSession): vscode.DebugAdapterTracker 
 function sessionEnded(session: vscode.DebugSession): void {
   const state = sessions.get(session.id);
   sessions.delete(session.id);
-  if (state && !state.started && !state.stopped) void repairAndRelaunch(session, 'the app did not start', true);
+  if (state && !state.started && !state.stopped) void repairAndRelaunch(session, l10n.t('the app did not start'), true);
 }
 
 /** `nuclear repair` and, if it worked, the same launch again. Once per launch: a relaunch that fails
@@ -360,11 +372,11 @@ async function repairAndRelaunch(session: vscode.DebugSession, why: string, ende
   if (!d || state?.repairing) return;
   if (state) state.repairing = true;
   if (session.configuration.synapsisRepaired) {
-    await showBuildError(`${why} again after repairing the app (flutter clean included).`);
+    await showBuildError(l10n.t('{0} again after repairing the app (flutter clean included).', why));
     return;
   }
   if (!(await synapsisRepair(d, why))) {
-    await showBuildError(`${why}; it still fails after flutter clean.`);
+    await showBuildError(l10n.t('{0}; it still fails after flutter clean.', why));
     if (state) state.repairing = false;
     return;
   }
@@ -384,8 +396,8 @@ function watchAppCreation(context: vscode.ExtensionContext): void {
     if (appAtStart || !findSynapsis()) return;
     appAtStart = true;
     const choice = await vscode.window.showInformationMessage(
-      'Synapsis: the Flutter app was created. Reload the window to enable devices, Run and hot reload.',
-      'Reload Window',
+      l10n.t('Synapsis: the Flutter app was created. Reload the window to enable devices, Run and hot reload.'),
+      l10n.t('Reload Window'),
     );
     if (choice) void vscode.commands.executeCommand('workbench.action.reloadWindow');
   };
@@ -430,8 +442,8 @@ async function startClient(context: vscode.ExtensionContext): Promise<void> {
   const command = findServer(context);
   if (!command) {
     const choice = await vscode.window.showErrorMessage(
-      'Nuclear: the language server (nuclear-lsp) was not found. Build it with `cargo build --release -p nuclear-lsp` in the nuclear repository or set "nuclear.server.path".',
-      'Open Settings',
+      l10n.t('Nuclear: the language server (nuclear-lsp) was not found. Build it with `cargo build --release -p nuclear-lsp` in the nuclear repository or set "nuclear.server.path".'),
+      l10n.t('Open Settings'),
     );
     if (choice) {
       vscode.commands.executeCommand('workbench.action.openSettings', 'nuclear.server.path');
@@ -510,12 +522,12 @@ function updateStatus(): void {
   const card = editor.document.uri.scheme === 'file' ? projectCard(editor.document.uri.fsPath) : undefined;
   if (card) {
     statusItem.text = `$(symbol-namespace) ${card.platform ? `${card.platform} · ` : ''}${card.dialect}`;
-    statusItem.tooltip = `Nuclear project ${card.name}: ${card.platform ?? card.language} platform, ${card.dialect} dialect (config.nuc)`;
+    statusItem.tooltip = l10n.t('Nuclear project {0}: {1} platform, {2} dialect (config.nuc)', card.name, card.platform ?? card.language, card.dialect);
     statusItem.command = undefined;
   } else {
     const dialect = vscode.workspace.getConfiguration('nuclear', editor.document.uri).get<string>('dialect', 'flutter');
     statusItem.text = `$(symbol-namespace) ${dialect}`;
-    statusItem.tooltip = 'Nuclear dialect of files outside a project (click to change)';
+    statusItem.tooltip = l10n.t('Nuclear dialect of files outside a project (click to change)');
     statusItem.command = 'nuclear.selectDialect';
   }
   statusItem.show();
@@ -524,16 +536,16 @@ function updateStatus(): void {
 async function selectDialect(): Promise<void> {
   const picked = await vscode.window.showQuickPick(
     [
-      { label: 'flutter', description: 'Synapsis mobile: Flutter widgets, Dart output' },
-      { label: 'fastapi', description: 'Synapsis backend: FastAPI, Python output' },
-      { label: 'nestjs', description: 'Synapsis backend: NestJS, TypeScript output' },
-      { label: 'react', description: 'Synapsis web: React, TypeScript output' },
-      { label: 'dart', description: 'Dart language only' },
-      { label: 'python', description: 'Python language only' },
-      { label: 'typescript', description: 'TypeScript language only' },
-      { label: 'base', description: 'Base language only' },
+      { label: 'flutter', description: l10n.t('Synapsis mobile: Flutter widgets, Dart output') },
+      { label: 'fastapi', description: l10n.t('Synapsis backend: FastAPI, Python output') },
+      { label: 'nestjs', description: l10n.t('Synapsis backend: NestJS, TypeScript output') },
+      { label: 'react', description: l10n.t('Synapsis web: React, TypeScript output') },
+      { label: 'dart', description: l10n.t('Dart language only') },
+      { label: 'python', description: l10n.t('Python language only') },
+      { label: 'typescript', description: l10n.t('TypeScript language only') },
+      { label: 'base', description: l10n.t('Base language only') },
     ],
-    { placeHolder: 'Dialect used to check .nuc files' },
+    { placeHolder: l10n.t('Dialect used to check .nuc files') },
   );
   if (picked) {
     const target = vscode.workspace.workspaceFolders ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
@@ -562,12 +574,12 @@ class GeneratedCodeProvider implements vscode.TextDocumentContentProvider {
   async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
     const source = vscode.Uri.parse(uri.query);
     if (!client) {
-      return '// Nuclear: the language server is not running.';
+      return `// ${l10n.t('Nuclear: the language server is not running.')}`;
     }
     try {
       const result = await client.sendRequest<TranspileResult>('nuclear/transpile', { textDocument: { uri: source.toString() } });
       if (!result.code) {
-        return `// ${result.errors} error(s): fix them to see the generated ${result.dialect} code.`;
+        return `// ${l10n.t('{0} error(s): fix them to see the generated {1} code.', result.errors, result.dialect)}`;
       }
       return result.code;
     } catch (e) {
@@ -602,7 +614,7 @@ async function showGeneratedCode(): Promise<void> {
     return;
   }
   if (!client) {
-    vscode.window.showWarningMessage('Nuclear: the language server is not running.');
+    vscode.window.showWarningMessage(l10n.t('Nuclear: the language server is not running.'));
     return;
   }
   const source = editor.document.uri;

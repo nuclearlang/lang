@@ -31,7 +31,9 @@ The same steps run in the three. Run it again whenever you want another choice: 
    | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |
 
    Without Ollama there are no local agents: install it, or go back and choose the remote agents only.
-4. **Install.** The Smart Graph and the MCP server, the Nuclear Developer, the models, the knowledge base loaded
+4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine
+   (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of
+   yours), the Nuclear Developer, the models, the knowledge base loaded
    into the graph (about two minutes the first time), and both services started. A step that fails says why and is
    tried again from there.
 
@@ -78,20 +80,22 @@ In a terminal, without questions: `nuclear-builder setup --profile medium --yes`
 
 ## 4. Remote agents only
 
-Nothing runs on your machine and nothing is downloaded but the MCP server. Claude Code, Codex, Cursor or OpenCode
-get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
+Nothing runs on your machine and nothing is downloaded but the MCP server, which the set-up adds to every AI
+client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
 ([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). What you give up: the Smart Graph (no strategy for a request, no search of the knowledge
 base), the Builder panel and Nuclear Atlas of the editor, and the local agents themselves, so your remote
 agent writes every line the generators do not and all of it is paid tokens.
 
 ## 5. After the set-up
 
-The services start at every login and are started again if they fail:
+The services start at every login and are started again if they fail: the Smart Graph, the Nuclear Developer and
+Nuclear Chat (the factory's workplace: its token is made the first time and kept in your keyring; the editors get
+it from `nuclear-chat connect --json`).
 
 | | Linux | macOS | Windows |
 |---|---|---|---|
-| What starts them | two systemd user units | two launch agents | a script of the Startup folder |
-| State | `systemctl --user status nuclear-graph nuclear-developer` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |
+| What starts them | three systemd user units | three launch agents | a script of the Startup folder |
+| State | `systemctl --user status nuclear-graph nuclear-developer nuclear-chat` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |
 | Restart | `systemctl --user restart nuclear-developer` | `launchctl kickstart -k gui/$UID/io.github.nuclearlang.developer` | sign out and in |
 | Their output | `journalctl --user -u nuclear-graph -n 50` | `~/Library/Logs/nuclear-graph.log` | |
 
@@ -117,7 +121,10 @@ To give your agent the MCP server: the buttons of *Settings and integrations*, o
   you had, without questions.
 - **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama
   (`ollama rm <model>` frees their disk).
-- **Remove:** `nuclear-builder setup --remove` takes the services away; the installer's `--uninstall` does it too.
+- **A client installed later** (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`
+  adds the MCP server to it.
+- **Remove:** `nuclear-builder setup --remove` takes the services away, and the MCP server out of each AI client;
+  the installer's `--uninstall` does it too.
   Ollama, its models and the graph's data stay: they are yours.
 - **In a script or CI:** `--no-ai` skips the set-up, `--profile <id>` takes that profile without questions, and
   without a terminal nothing is asked or downloaded.
@@ -126,7 +133,7 @@ To give your agent the MCP server: the buttons of *Settings and integrations*, o
 
 | It says | What to do |
 |---|---|
-| the graph or the Developer on a port other than 7878 / 7879 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`); the tools and the editor read it there. Nothing to do |
+| the graph, the Developer or Nuclear Chat on a port other than 7878 / 7879 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. Nothing to do |
 | `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |
 | `Ollama refused to pull ...`, or a model stays at the same percent | check the disk and the connection; the download goes on from where it stopped when the step is tried again |
 | `no Python 3.12 or newer, and uv could not install one` | install Python 3.12 or newer and try again |

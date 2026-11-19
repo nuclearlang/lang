@@ -18,7 +18,7 @@ extension runs it as a process, one call per action, and keeps no process of it 
 
 | The extension asks | `nuclear-builder setup ...` | It gives |
 |---|---|---|
-| the page's state | `--plan --json` | this machine, the profiles with `fit` and `note`, the suggested one, the machine's choice, the AI root, the requirements of both modes |
+| the page's state | `--plan --json --lang <en\|es>` | this machine, the profiles with `fit` and `note` (and `noteKey`, `noteArgs`: the page says the note in its language), the suggested one, the machine's choice, the AI root, the requirements of both modes (a `detail` with its `detailKey`); the profiles' and requirements' texts in the language asked (setup.json's `<field>_es` beside each English field). `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |
 | the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |
 | whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |
 | the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=... NUCLEAR_GRAPH_EMBED=...` | written to `ai.env` |
@@ -30,15 +30,27 @@ extension runs it as a process, one call per action, and keeps no process of it 
   archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the
   PATH's.
 - The steps, in order, each can run again: the graph and the MCP server (the archive's launchers linked onto the
-  PATH; from source `uv tool install`, editable), the Developer (in the archive; from source `nuclear install` and
+  PATH; from source `uv tool install`, editable), the AI clients (the MCP server added to every client found:
+  Claude Code and Codex with their `mcp add`, Cursor, OpenCode and Gemini CLI in their JSON files, the rest of each file
+  kept; spec 016), the Developer (in the archive; from source `nuclear install` and
   the `nuclear-developer` launcher), the models (Ollama's `/api/pull`), the ports (each service keeps its port when
-  it already runs there, else the first one from 7878 / 7879 upward it can listen on, written to `ai.env`;
+  it already runs there, else the first one from 7878 / 7879 / 7880 (Nuclear Chat) upward it can listen on, written to `ai.env`;
   ADR-installer-0003 §5) and the graph's service, the knowledge base (`connect` twice, `ingest`), the Developer's
-  service.
-- `setupPanel.ts` is the page (*Nuclear: Set Up the AI Services*): four steps drawn from the plan. It polls `check`
-  every three seconds on the requirements step (a new plan). An installer runs in a terminal (`createTerminal` +
-  `sendText`), never hidden. `SetupPanel.offer` asks once on a machine with no machine file. Without the AI archive
-  the page says to run the installer again.
+  service, Nuclear Chat's service (from source `nuclear-chat install`; `nuclear-chat serve` at login).
+- `setupPanel.ts` is the welcome (*Nuclear: Welcome and Set-Up*, spec 011 requirement 14), *Next, Next* with a
+  default on every step: 1 this machine and where the agents run, 2 the profile, 3 what it needs (polled every three
+  seconds, a new plan), 4 the installation (an installer runs in a terminal, `createTerminal` + `sendText`, never
+  hidden), 5 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;
+  Codex's and OpenCode's switch is their `nuclear.ai.*.enabled`; the API keys go to `nuclear-builder vault set
+  <provider>` on stdin, asked hidden, never in a setting; and who works the Builder's chat by default, `nuclear.builder.chat`,
+  chosen among the local agents, the agents and the APIs, with its model; a conversation can choose another), 6 the team (the squad screen mounted in the page,
+  `TeamsHost`; with no team yet it opens the new-team wizard, `team create`: no team is cloned from a preset,
+  ADR-platform-0010), 7 the spending (the `spending` section),
+  8 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the
+  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 9 a summary with *Change* on every line.
+  *Keep the defaults of the rest* jumps to the summary. `SetupPanel.offer` asks once while the welcome was never
+  finished (`nuclear.onboarding.done`); *Settings and integrations* runs it again. Without the AI archive the
+  machine steps say to run the installer again and the other steps still work.
 
 ## Settings and integrations (`settingsPanel.ts`, `aiSettings.ts`, `localModels.ts`; ADR-platform-0003)
 
@@ -61,7 +73,62 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
   - **connections**: `nuclear.ai.graphCommand` (default `nuclear-graph`)
     `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage
     (`jiraAuth`), `gh auth status`;
-  - **pipeline**: Claude's model and the retry policy.
+  - **the language** is the first section (as it is the onboarding's first step): `nuclear.language`, *Automatic*
+    with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español;
+  - **the other sections** (Nuclear Builder, the spending, Nuclear Chat, Nuclear Atlas, HTTP Connections, the
+    devices): `settingSections` reads `contributes.configuration` with the texts of `package.nls*.json` in the
+    editor's language and the values now; the page draws each as a form (`FORM_JS`) and `applySetting` checks a
+    value against its contributed type, enum and range before it writes it (the page is a trust boundary). The
+    Builder's section has the default team (`nuclear.builder.team`, from `nuclear-builder team list`) and opens the
+    squad screen; Nuclear Chat's has where its GIFs come from (`nuclear.chat.gifs`: `pack`, `tenor`, `giphy`) and
+    *Keep a GIF service's key* (`chatGifKey`: the key asked in a password box and given to `nuclear-chat gif-key
+    <service>` on its stdin, never a setting or a file); the welcome's *tools* step shows the same section; *Run the
+    welcome again* opens the welcome.
+
+## Settings by component (spec 011)
+
+- One `contributes.configuration` section per tool, each read in code by its own module: `aiSettings.ts`
+  (`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`,
+  given to the chat as the workspace's `gifs`, every project registered again when it changes), and the `settings.ts`
+  of HTTP Connections and the devices. `nuclear.atlas.contextTokens` is read by nothing since Atlas's page is the
+  chat (Atlas's roadmap).
+- The settings that moved (`MOVED` in `migrateSettings.ts`: `nuclear.ai.claudeModel` → `nuclear.builder.claudeModel`,
+  `nuclear.ai.claude.maxBudgetUsd` → `nuclear.spending.budgetUsd`, `nuclear.ai.resumeInterrupted`,
+  `nuclear.ai.watch.minFreeMb` and `nuclear.ai.watch.commandTimeoutMinutes` → `nuclear.builder.*`,
+  `nuclear.ai.contextTokens` → `nuclear.atlas.contextTokens`) are copied at start-up at every level where the user
+  set them (user, workspace, folder); the old one is removed only once the new one holds the value, and a level
+  where the new id already has a value keeps both.
+- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless
+  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `"forceConfirm": true` in the project's
+  `.nuclear/builder.json` brings both questions back.
+
+## Languages (spec 011)
+
+English is the source and the fallback. The language is the setting `nuclear.language` (`auto`, the default; `en`;
+`es`), decided in one place: `language.ts` (no `vscode` import, tested) resolves `auto` to the editor's display
+language (`vscode.env.language`) when it is English or Spanish, else the operating system's (`LC_ALL`,
+`LC_MESSAGES`, `LANG`, else `Intl`), else English; `i18n.ts` gives it to the extension as `lang()`, `langState()`
+(the language and why: the setting, the editor, the system or the default) and `onDidChangeLang`.
+
+- The host's texts are `l10n.t` of `i18n.ts` (not `vscode.l10n.t`, which follows only VS Code's language): English
+  is the key, `l10n/bundle.l10n.es.json` the one Spanish source (`test/editors.test.ts` checks every one has its
+  Spanish with the same placeholders).
+- One dictionary per page (`en` and `es`, the same keys, checked by the compiler through `dictionary()` and by a
+  test), given to the page by `pageI18n` (`LANG`, `T`, `t(key, ...args)`, the webview's `vscode` API, which a page
+  never acquires again, and `langButton()`).
+- The globe: `langButton()` in every page's header (the Builder, the company screen, Nuclear Atlas, Settings and
+  integrations, the onboarding, HTTP Connections and its WebSockets panel, the workspace's column) and the status bar
+  item (`$(globe) Auto|EN|ES`, command `nuclear.chooseLanguage`, which also takes `auto|en|es` as an argument for
+  the agents). Its menu: *Automatic* (what it resolves to, and from where), English, Español, and one line saying
+  that command titles and setting descriptions follow VS Code's language: VS Code draws `package.nls*.json`
+  itself and an extension cannot change it.
+- A change re-renders every open page at once (`localize(webview, render, again)`: the HTML again, then what a page
+  without a `ready` of its own showed); Settings and integrations keeps its section and the onboarding its step.
+  Nuclear Chat registers every project again with the new `lang` (the members answer in it), and the engine's
+  calls pass it (`chat-host --lang`, `team roster|suggest|name-suggest --lang`). The devices' pages and the chat's
+  full tab take the new language when they open next (a re-render would cut a device's live screen).
+- The roster's profiles come from `nuclear-builder team roster --lang`. The machine's profiles and requirements in the welcome are `nuclear-builder setup --plan`'s texts, English
+only today.
 
 ## Checked connections (`connections.ts`; ADR-platform-0003)
 
@@ -75,14 +142,49 @@ and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitH
 
 ## Notifications (`notifications.ts`; ADR-platform-0003)
 
-What the local agents did while the user was elsewhere: a chat answered, a Nuclear Builder run passed, failed or
-needs the user.
+What the local agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear
+Chat, a Nuclear Builder run waits for the user, passed or failed, a connection stopped answering. One system every
+tool uses.
 
-- `notices` is one store: `add` (a toast with *Open*, unless that tool is on screen), `watch(tool, visible)` from
-  the panels' `onDidChangeViewState`, `unread(tool)`, `open` (set by the workspace: `openNotice` → the tool on that
-  run or session). The tools that have notices: `agent`, `builder`, `settings`.
-- The workspace shows them: the badge on the Nuclear icon of the activity bar, a count on the tool's tab, the list
-  in the tool's pane.
-- Nuclear Builder's engines (`engines` in `tools/nuclear-builder/src/panel.ts`) and Nuclear Atlas's jobs (`jobs` in
-  `tools/nuclear-atlas/src/panel.ts`) are module-level: a page is only a view, so closing it or switching tools
-  leaves the work running.
+- `src/notify.ts` holds the rules, with no `vscode` import (tested by `test/notify.test.ts`): `pops(kind, setting)`
+  (the kinds `mention`, `gate`, `failed`, `done`, `info`; `nuclear.notifications` `all` pops every one,
+  `mentions-and-gates` only `mention` and `gate`, `off` none), `seen` (the notice's tool or place is on screen),
+  `add` (newest first, 50 at most; an unread notice with the same `key` within two minutes takes the repeat in
+  instead of a new line and a new pop-up), `badges` (the unread count of each tool) and `chatCall` (below).
+- `src/notifications.ts`: `notices` is the one store. `add` records it, fires `onDidChange` (the workspace draws its
+  badges and list again) and pops a VS Code notification with *Open* unless it is seen, folded or not for this
+  setting. `watch(tool, visible)` from the panels' `onDidChangeViewState` (the tool's notices are read);
+  `look(place, visible)` for a place on screen (`chat:<root>:<channel>`: the Builder's docked chat on its team's
+  channel, the chat tab on its channel); `open` is set by the workspace's `openNotice`: a Builder notice opens the
+  page on its run (`ref`) and, for a failure, on the step that failed (`stage`, `step`, `BuilderPanel.drive`); a
+  chat notice opens Nuclear Atlas on its channel (`AtlasPanel.show(…, channel)`); a settings notice opens
+  *Settings and integrations*.
+- Nuclear Chat's notices (`followChatNotices`, once per window, on `chat().onEvent`): `chatCall` calls the user for
+  a member's message in a direct message (`dm-<member>`), a message with `@you`, a message with buttons (a spec's
+  draft), an `ask` event, and the `done` event of a member's answer (no error). Never for the user's own messages,
+  `system`'s, an edit or reaction of a message already met, a run's progress (`links.run`) or a run's question
+  (`run|…` buttons: the Builder notifies those). A member's message and its answer's end fold into one notice
+  (`chatKey`). They are Nuclear Atlas's notices; the chat opens on the channel, not on the message (the chat's page
+  cannot open a thread or scroll to a message from its path yet: Nuclear Chat's roadmap).
+- The workspace shows them: the badge on the Nuclear icon of the activity bar, a badge on the tool's icon of the
+  strip, and one list of every tool's notices at the bottom of the column ([workspace.md](workspace.md)).
+- Nuclear Builder's runs (`lines` in `tools/nuclear-builder/src/panel.ts`) and Nuclear Chat's connection
+  (`chat()` in `src/chatView.ts`, one per window) are module-level: a page is only a view, so closing it or switching
+  tools leaves the work running.
+
+## Nuclear Chat (spec 013)
+
+- `src/chatHost.ts` (no `vscode` import, tested by `test/chat.test.ts`): `readConnect` (`nuclear-chat connect
+  --json`, the extension host only), `Relay` (each page's request ids kept apart, the token header added, one
+  subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the
+  general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation
+  is the setting `nuclear.builder.chat` when that agent is available, else the local one; each conversation then
+  chooses its own in the chat's header), `ChatHost` (the one WebSocket, re-registered and caught up with `GET events?since=` after a
+  reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`,
+  `lineDiff`).
+- `src/chatView.ts`: the window's `chat()`, `wireChat` (a page's frames ↔ the connection; `chatOpen` → `chatPath`
+  or `chatError` with how to fix it), `chatScript` (the page's `nuclearChat(post)`: the embedded bundle imported
+  from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command
+  `nuclear.chat.open`) and the GIF key (`nuclear.chat.gifKey`).
+- `npm run chat` (in `compile`) copies `../../nuclear-chat/ui/build/app/dist-embed/embed.js` to `out/chat-embed.js`:
+  build it first there (`nuclear build`, `npm run build:embed`).

@@ -1,0 +1,27 @@
+// A channel the user makes; a name already taken is a conflict.
+usecase CreateChannel(workspaces: WorkspacesAppComponent, events: EventsAppComponent)
+  exec(workspace: string, input: NewChannel) Result<Error, Channel>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(workspace)
+    if found.isErr
+      return Err(found.error)
+    ws = found.value
+    id = channelIdOf(input.name)
+    if not Regex(r"^[a-z0-9][a-z0-9_.-]{0,79}$").test(id) or id.startsWith("dm-")
+      return Err(Invalid("a channel's name has a letter or a digit, and does not start with dm-"))
+    if ws.channel(id) != null
+      return Err(Conflict("there is already a channel #${id}"))
+    for m in input.members
+      if m != "you" and ws.member(m) == null
+        return Err(Invalid("no member ${m} in this workspace"))
+    if not input.team.isEmpty and not ws.teams.any((t) => t.id == input.team)
+      return Err(Invalid("no team ${input.team} in this workspace"))
+    made = Channel(id = id, name = id, topic = input.topic, members = ["you", ...input.members.filter((m) => m != "you")], team = input.team)
+    ws.channels.add(made)
+    workspaces.keepChannels(ws)
+    ~events.emit(ws.id, "channels", id, { "channel": made.id })
+    Ok(made)
+
+// A channel's id from the name the user gave it (`Release Plan` → `release-plan`).
+channelIdOf(name: string) string
+  name.trim().lower().replaceAll(Regex(r"^#"), "").replaceAll(Regex(r"[^a-z0-9_.-]+"), "-").replaceAll(Regex(r"^-+|-+$"), "")

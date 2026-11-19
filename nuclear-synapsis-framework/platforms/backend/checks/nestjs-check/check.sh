@@ -19,7 +19,7 @@ ln -sfn "$nm" "$p/build/node_modules"
 cd "$p/build"
 node "$nm/typescript/bin/tsc" -p tsconfig.json && echo "tsc --strict: 0 errors"
 tests() { out=$(node --test "$@" 2>&1) || { echo "$out"; exit 1; }; echo "$out" | grep -E '^ℹ (pass|fail)'; }
-tests "dist/test/**/*.js"
+tests --import ./dist/src/test_env.js "dist/test/**/*.js"
 node "$here/checks/nestjs-check/smoke.mjs" "$p/build"
 # ADR-backend-0001: the migrations of the example, made from its entities and applied to a fresh SQLite; then nothing is
 # left to make

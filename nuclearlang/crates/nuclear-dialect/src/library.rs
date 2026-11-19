@@ -422,5 +422,5 @@ pub const WRONG_STATIC: &[(&str, &str, &str)] = &[
 /// The variables a `[library.<base>]` template receives.
 pub const VARS: &[&str] = &[
     "recv", "args", "has_args", "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "n", "fn", "fn.param",
-    "fn.params", "fn.p0", "fn.p1", "fn.body", "named", "type_args", "elem", "arg0_is", "arg1_is", "arg2_is", "call_args",
+    "fn.params", "fn.p0", "fn.p1", "fn.body", "fn.cond", "named", "type_args", "elem", "arg0_is", "arg1_is", "arg2_is", "call_args",
 ];

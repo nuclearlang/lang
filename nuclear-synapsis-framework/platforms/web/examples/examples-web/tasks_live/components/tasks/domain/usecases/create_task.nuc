@@ -1,0 +1,4 @@
+// Adds a task.
+usecase CreateTask(repository: TaskRepository)
+  exec(input: Task) Result<TaskError, Task>
+    ~repository.create(input)

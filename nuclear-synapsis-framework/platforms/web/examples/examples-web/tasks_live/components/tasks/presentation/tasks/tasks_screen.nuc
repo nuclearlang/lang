@@ -1,0 +1,14 @@
+// The tasks, as a list.
+@screen(route = "/tasks", providers = [TasksManager])
+stateless TasksScreen
+  build() Element
+    main(
+      children = [
+        h1(children = "Tasks"),
+        TasksStateBuilder(
+          loading = () => p(children = "Loading..."),
+          full = (items) => ul(children = items.map((item) => li(key = item.id, children = item.title))),
+          error = (e) => p(className = "error", children = e.message),
+        ),
+      ],
+    )

@@ -42,7 +42,7 @@ for the analyst) and `[context]`. The Developer's address is `NUCLEAR_DEVELOPER_
 
 ## A round
 
-1. Change one thing: a rule of the guide, a row of the knowledge base, a prompt file, an agent.
+1. Change one thing: a rule of the guide, a row of the knowledge base, a prompt (a skill of a role), an agent.
 2. When the knowledge base or a prompt changed: `nuclear-graph knowledge build`, `check`, `ingest`
    ([the graph's runbook](../../../../nuclear-graph-storage/docs/06-runbooks/update-the-knowledge-base.md)).
 3. When an agent changed: `nuclear check . && nuclear build .` and restart the Developer.
@@ -66,6 +66,7 @@ address in `NUCLEAR_DEVELOPER_URL`. Record the result in
   end holds the Developer until its process is killed
   ([the limits](../02-architecture/overview.md#known-limits)).
 
-`run.py` reads the graph's prompts (`nuclear-graph-storage/prompts/`) and the chat questions
+`run.py` reads the prompts of the reference (the roles' skills, `nuclear-agents/roles/`, the text after the front
+matter) and the chat questions
 (`nuclear-graph-storage/data/questions.toml`) by path from the tree; `config.nuc` names the graph package as
 `dependencies(nuclear_graph = "../../nuclear-graph-storage")`.

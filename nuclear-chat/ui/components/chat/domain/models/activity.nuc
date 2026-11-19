@@ -1,0 +1,8 @@
+// A member at work on an answer: typing, or using a tool (its name), in a channel or one of its threads; the answer
+// as it is written (its text and the tools it called, in order) until it is posted.
+Activity
+  member: string
+  channel: string
+  thread: string = ""
+  tool: string = ""
+  parts: Part[] = []

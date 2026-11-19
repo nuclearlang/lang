@@ -1,0 +1,18 @@
+// A member of the factory, as its host gives it: who they are, how they speak and how they answer.
+Member
+  @pattern(r"^[A-Za-z0-9][\w.-]{0,63}$")
+  id: string
+  @minLength(1)
+  name: string
+  role: string = ""
+  team: string = ""
+  // the host's id of the member's portrait (a roster's employee)
+  avatar: string = ""
+  // the portrait the page draws: a `data:` or `https:` URL (the host reads its file), empty for the initials
+  @maxLength(400000)
+  face: string = ""
+  profile: Profile = Profile()
+  personality: Personality = Personality()
+  responder: Responder = Responder()
+  // who works the member (an agent and its model), drawn in a direct message's header
+  brain: Brain = Brain()

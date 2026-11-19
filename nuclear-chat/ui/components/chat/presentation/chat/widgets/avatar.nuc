@@ -1,0 +1,20 @@
+// A member's picture: their face (an image the host gave), or their initials on a color of their own.
+stateless Avatar(member: Member?, author: string, size: string = "", label: string = "")
+  build() Element
+    name = member?.name ?? (label != "" ? label : author)
+    picture = member?.face ?? ""
+    if picture.startsWith("https:") or picture.startsWith("data:image/")
+      img(className = "avatar ${size}", src = picture, alt = name)
+    else if author == "system"
+      span(className = "avatar ${size} system", children = "⚛")
+    else
+      span(className = "avatar ${size} tone-${tone(author)}", children = initials(name))
+
+// The initials of a name: the first letter of its first two words.
+initials(name: string) string
+  words = name.split(" ").filter((w) => w != "")
+  words.take(2).map((w) => w[0].upper()).join("")
+
+// One of eight colors, the same for the same id.
+tone(id: string) int
+  id.chars().reduce(0, (sum, c) => sum + c.codeAt(0)) % 8

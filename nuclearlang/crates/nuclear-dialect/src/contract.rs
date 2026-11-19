@@ -134,7 +134,7 @@ pub const SYNTAX: &[TemplateSpec] = &[
     ),
     t(
         "field",
-        &["name", "type", "default", "optional", "modifiers", "decorators", "uninitialized", "override", "decor", "in_init", "tinfo", "decorated"],
+        &["name", "type", "default", "optional", "modifiers", "decorators", "uninitialized", "override", "decor", "in_init", "tinfo", "decorated", "static"],
         "attribute of a class; uninitialized = no value, not optional and not set by the constructor; override = it replaces a member of a base",
     ),
     t(
@@ -245,6 +245,11 @@ pub const SYNTAX: &[TemplateSpec] = &[
     t("list", &["items"], "`[1, 2, 3]`"),
     t("list_if", &["cond", "value"], "`if cond value` inside a list"),
     t(
+        "list_if_slot",
+        &["cond", "value"],
+        "optional: `if cond value` in a list given to a named argument of `[options] slot_lists`: the item keeps its place (a UI library's children)",
+    ),
+    t(
         "cascade",
         &["target", "sections"],
         "an object followed by `..member = value` lines; sections is a list, each rendered from cascade_self",
@@ -262,6 +267,15 @@ pub const SYNTAX: &[TemplateSpec] = &[
     t("spread_arg", &["expr"], "`...list` in a call"),
     t("member", &["object", "name"], "`a.b`"),
     t("optional_member", &["object", "name"], "`a?.b`"),
+    t("default_init", &["name", "value"], "optional: the first line of a function whose parameter defaults to a list or a map; the parameter is then nullable (Python: a default is made once; Dart: it must be const)"),
+    t("map_compound", &["object", "key", "op", "value"], "optional: `m[k] += v` on a map whose read is nullable (Dart: `m.update(k, (v) => v + 1)`)"),
+    t("global_decl", &["names"], "optional: the first line of a function that assigns variables of its file (Python: `global counter`)"),
+    t("show_double", &["expr"], "optional: a decimal in print or an interpolated text, where the target writes `2.0` as `2` (TypeScript)"),
+    t("show_nullable", &["expr"], "optional: a value that may be missing in print or an interpolated text, where the target writes it as other than null (TypeScript's `undefined`)"),
+    t("show_bool", &["expr"], "optional: a boolean in an interpolated text, where the target writes it as other than `true` / `false` (Python's `True`)"),
+    t("bound_param", &["name", "type"], "optional: a name of the loop around a lambda, bound when the lambda is made, for a target that binds a closure late (Python: `i=i`, `i: int = i`)"),
+    t("optional_chain", &["value", "conds"], "optional: a chain after a `?.` where `?.` is not native: `value` is the chain without `?.`, `conds` its receivers' `optional_cond` joined with `and` (Python)"),
+    t("optional_cond", &["object"], "optional: one receiver of `optional_chain` is not null"),
     t("index", &["object", "index", "map"], "`a[i]`; `map`: the object is a map (`m[k]`, null when absent)"),
     t("await", &["expr"], "`~call()`"),
     t("ternary", &["cond", "then", "else"], "`c ? a : b`"),
@@ -270,6 +284,13 @@ pub const SYNTAX: &[TemplateSpec] = &[
     t("non_null", &["expr"], "`value!`: the value is not null"),
     t("lambda", &["params", "names", "body", "async"], "lambda with a block (names: the parameters without types)"),
     t("lambda_expr", &["params", "names", "expr", "async"], "lambda whose body is one expression (names: the parameters without types)"),
+    // the monitor (`--monitor`, spec 015): both optional; a dialect without them builds without measuring
+    t(
+        "monitor_body",
+        &["body", "label", "path", "line", "async"],
+        "optional: the body of a function or method measured by the monitor (label: `Owner.name` or `name`; path: the `.nuc` file; line: its line)",
+    ),
+    t("monitor_runtime", &["app"], "optional: the monitor's runtime `NuclearMonitor`, written once to `nuclear/monitor` of a project built with `--monitor`"),
     // Result<T, E> (all optional: a dialect without them cannot transpile code that uses Result)
     t(
         "result_runtime",
@@ -315,7 +336,7 @@ pub const TYPES: &[TemplateSpec] = &[
     t("any", &[], "any"),
     t("dynamic", &[], "dynamic"),
     t("unknown", &[], "type used when a parameter has no type and none can be inferred"),
-    t("list", &["item"], "`User[]`"),
+    t("list", &["item", "item_group"], "`User[]` (`item_group`: the element in parentheses when it is several types: `(number | null)[]`)"),
     t("map", &["key", "value"], "`<string, User>`"),
     t("nullable", &["type"], "`string?`"),
     t("union", &["types"], "`'a' | 'b'`; types is a list (use join). Identical members are merged first"),
@@ -360,6 +381,12 @@ pub const OPERATORS: &[TemplateSpec] = &[
         &["left", "right", "left_arg", "right_arg"],
         "`??` whose left side is not a plain name or member chain (a call, a map read): optional, for a target whose `coalesce` writes the left side twice (Python); usually a `{ template, helper }`",
     ),
+    t(
+        "eq_deep",
+        &["left", "right", "left_arg", "right_arg"],
+        "`==` of two lists, maps or sets: optional, for a target whose `==` compares the objects (TypeScript, Dart); usually a `{ template, helper }`",
+    ),
+    t("not_eq_deep", &["left", "right", "left_arg", "right_arg"], "`!=` of two lists, maps or sets: optional, as `eq_deep`"),
     t("in", &["left", "right", "map", "set", "object"], "`x in list`; `map`: the right side is a Map object, `set`: a Set, `object`: a map literal or `<K, V>` (`key in map`)"),
     t("range", &["left", "right"], "`a..b` used as a value (end excluded)"),
 ];
@@ -476,6 +503,12 @@ pub const OPTIONS: &[OptionSpec] = &[
         "string",
         "\"{name}\"",
         "how a path parameter is written in `decor.<decorator>.path`, the first text argument of a decorator with its `{x}` segments rewritten (`name` stands for the parameter): \":name\" for NestJS or Express",
+    ),
+    o(
+        "slot_lists",
+        "array",
+        "[]",
+        "named arguments whose list keeps each item's place (`children` of a UI library): `if c x` in it is `list_if_slot`, never a spread",
     ),
     o("max_bases", "integer", "1", "how many bases (`: A, B`) a class can extend; 0 = unlimited"),
     o("catch_var", "string", "\"error\"", "variable name for `catch` without a name"),

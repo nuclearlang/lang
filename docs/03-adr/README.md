@@ -10,5 +10,11 @@ is not edited: a new one replaces it.
 | [ADR-platform-0002](0002-one-repository-a-project-per-folder.md) | One repository; each project in its folder, with its own documents | accepted |
 | [ADR-platform-0003](0003-the-ai-loop.md) | The AI loop: a private knowledge base, local agents, one MCP server and a pipeline tool | accepted |
 | [ADR-platform-0004](0004-products-are-made-with-the-tools.md) | A product is made with the platform's tools, never by porting code by hand | accepted |
+| [ADR-platform-0005](0005-the-software-factory.md) | The software factory: stations, roles as files, providers as assignments, teams (amends 0003) | accepted |
+| [ADR-platform-0006](0006-the-builders-workbench.md) | The Builder is a workbench: specs by component and layer, a general agent's chat (amends 0005) | accepted |
+| [ADR-platform-0007](0007-everything-is-a-component.md) | Everything is a component, as in a framework: a piece two tools need is its own project | accepted |
+| [ADR-platform-0008](0008-nuclear-chat-the-factorys-workplace.md) | Nuclear Chat, the factory's workplace, is a project of its own (amends 0006) | accepted |
+| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |
+| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |
 
 [old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.

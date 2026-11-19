@@ -40,15 +40,40 @@ app(name = "my_store", title = "My Store", description = "A Synapsis web app.", 
 `title` is the browser tab's title and `description` the page's description. `public/` is served as it is: a
 `public/styles.css` is the app's stylesheet and a `public/favicon.svg` its icon (the page links them when they exist).
 
+### 1.1 Mounted in a host's page (ADR-synapsis-0009)
+
+Every build also writes the app's embedded entry, `mount(element, host)`: the same project, mounted in an element
+of another page (an editor's webview, another site), giving back the function that unmounts it. Its bundle is one
+module with the UI library inside (in the built app: `npm run build:embed` → `dist-embed/embed.js`). Mounted:
+
+- the router is an in-memory one, starting at `host.path` (default `/`); `goTo` and `goBack` work as always;
+- the app lives in a shadow root of `element` with `public/styles.css` inside: the host's rules do not reach it, and
+  its rules do not leak out;
+- the host's theme reaches it through CSS variables, which cross the shadow root: the stylesheet reads them
+  (`color: var(--accent, #0a84ff)`);
+- `host.bridge = { send(frame), onMessage(callback) }`: every repository's call and every `Stream` goes through the
+  host with the frames of the backend's WebSocket ([backend.md](../../../backend/docs/07-reference/backend.md) §2.9),
+  whatever the connection the configuration names; the host forwards them to its service, with its own token.
+  Without a bridge, the connections of the configuration work as in the normal app.
+
+```js
+// the host's page
+import { mount } from './embed.js';
+const unmount = await mount(document.getElementById('chat'), {
+  path: '/channels',
+  bridge: { send: (frame) => host.postMessage(frame), onMessage: (on) => host.onMessage(on) },
+});
+```
+
 ## 2. Kinds
 
 | Area | Kinds and decorators | Rules |
 |---|---|---|
 | Views | `stateless`, `stateful` (params = props; `build() Element`; HTML functions `div`, `ul`, `button`...) | §3.1 |
-| Configuration | `appConfig`, `config`; connection `Http(baseUrl, headers, timeout, interceptors)`; globals `SessionManager`, `Acl`, `NetworkManager` | §3.2 |
-| Data | models (`@key`), `repository` with `@get`/`@post`/`@put`/`@patch`/`@delete` (`path`, `cache`, `ttl`, `retry`; `@path`, `@query`, `@body`) | §3.3 |
-| Domain | `usecase` (`@requires`, `@acl`), `appcomponent`, `service`, `aggregate` | §3.4 |
-| State | state models, `statemanager` (`@stateModel`, `@state`, `@before`, `@after`), `<Model>Builder` | §3.5 |
+| Configuration | `appConfig`, `config`; connections `Http(baseUrl, headers, timeout, interceptors)`, `WebSocket(url, headers, timeout, interceptors)`; globals `SessionManager`, `Acl`, `NetworkManager` | §3.2 |
+| Data | models (`@key`), `repository` with `@get`/`@post`/`@put`/`@patch`/`@delete` (`path`, `cache`, `ttl`, `retry`; `@path`, `@query`, `@body`), `@on("topic")` → `Stream<T>` | §3.3 |
+| Domain | `usecase` (`@requires`, `@acl`; returns a `Result` or a `Stream`), `appcomponent`, `service`, `aggregate` | §3.4 |
+| State | state models, `statemanager` (`@stateModel`, `@state`, `@before`, `@after`, `listen`), `<Model>Builder` | §3.5 |
 | Screens | `@screen(route, providers, loggedIn, acl, notFound)`, `goTo`, `goBack` | §3.6 |
 | Events | `event`, `Events.publish`, `component` with `@on(Event)`, `useEvent` | §3.7 |
 | Session and access | `SessionManager`, `Acl`, `guard` with `canActivate` | §3.8 |
@@ -73,7 +98,8 @@ database (`@primary`, `saveLocal`), plugins and AI kinds. They come with the sam
 
 A view's parameters are its props; `build()` returns an `Element`. Elements are HTML functions with the
 attributes as named arguments and `children` (a text, an element or a list), and other views called like
-functions. A `stateful` keeps its fields while it is shown; `setState(() => ...)` changes them.
+functions; `if c x` in `children` keeps its place when `c` is false (the elements after it are not remade). A
+`stateful` keeps its fields while it is shown; `setState(() => ...)` changes them.
 
 ```nuclear
 stateless CharacterTile(character: Character)
@@ -89,15 +115,37 @@ stateful Counter(start: int = 0)
   initState() void
     count = start
 
+  add() void
+    setState(() =>
+      count = count + 1
+    )
+
   build() Element
-    button(onClick = () => setState(() => count = count + 1), children = "Clicked ${count}")
+    button(onClick = () => add(), children = "Clicked ${count}")
 ```
+
+An assignment is a statement: a lambda that assigns is a block (`() =>` and its lines), never one line.
 
 ### 3.2 Configuration
 
 `appConfig` (one per project) and `config` (per component) list `connections` and `globals`, as in the mobile
 platform. `Http` is the http connection; `SessionManager(timeout)`, `Acl(inherits)` and `NetworkManager()` the
 global services.
+
+`WebSocket(url, headers, timeout, interceptors)` is a connection with the options of `Http`, to a backend's
+WebSocket ([backend.md](../../../backend/docs/07-reference/backend.md) §2.9, ADR-synapsis-0008): the repositories
+bound to it are written as they are, and their calls travel over the socket; changing a repository from HTTP to
+WebSockets is changing its connection in the configuration. The socket opens on the first call, reconnects by
+itself with growing waits and subscribes again to what it listened to; a call during a reconnection fails like a
+network failure, which the repository's retries cover. A browser sends no headers on a socket's upgrade: `headers`
+go with every call, and a backend whose guards check the upgrade is reached through a host (§1.1).
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [
+    WebSocket(url = "ws://localhost:3000/ws", timeout = 5000),
+  ]
+```
 
 ### 3.3 Data
 
@@ -106,22 +154,48 @@ A `repository` is a class of http calls: the same decorators, parameters and ret
 the query (GET, DELETE) or the JSON body; a `Result` method answers `Err(E(message = ...))`; `cache`/`ttl`/`retry`.
 A model is its fields; it gets `fromJson`, `toJson` and `copyWith`; `@key` names a field in the JSON.
 
+What the server pushes is a method without a body with `@on("topic")` that returns `Stream<T>` (`T` a model, or a
+map): the events of that topic, read as `T`, over a connection that can push (`WebSocket`, or the host's bridge);
+over `Http`, listening to it is an error. `stream.listen((value) => ...)` gives back the function that stops. The
+topic may use the method's parameters: `@on("chat.${workspace}") events(workspace: string) Stream<ChatEvent>`.
+
+```nuclear
+@repository(path = "tasks")
+repository TaskRepository
+  @get
+  all() Result<TaskError, Task[]>
+
+  @on("tasks.created")
+  created() Stream<TaskCreated>
+```
+
 ### 3.4 Domain
 
 `usecase` (one `exec` that returns `Result`; `@requires(internet, session)`, `@acl(roles, permissions, guards)`),
-`appcomponent` (aliases to the use cases), `service`, `aggregate`: identical to the mobile platform.
+`appcomponent` (aliases to the use cases), `service`, `aggregate`: identical to the mobile platform. A use case
+may also return a `Stream` (it passes on a repository's, without `~`).
 
 ### 3.5 State
 
 A state model lists the states of a screen; a `statemanager` emits them (`@stateModel`, `@state`, `@before`,
 `@after`). The screen reads them with the model's builder: `CharactersStateBuilder(full = (list) => ..., error =
-(e) => ..., loading = () => ..., orElse = () => ...)`, which re-renders on every state.
+(e) => ..., loading = () => ..., orElse = () => ...)`, which re-renders on every state. `listen(stream, (value) =>
+...)` in a manager calls the function with every value until its screen leaves. A manager's method is never named
+like the runtime's own members (`close`, `emit`, `subscribe`, `listen`, `state`: N0223):
+
+```nuclear
+@stateModel(TasksState)
+statemanager TasksManager
+  (tasks: TasksComponent)
+    load()
+    listen(tasks.watchCreatedTasks(), (created) => load())
+```
 
 ### 3.6 Screens and navigation
 
 `@screen(route = "/characters/:id", providers = [Manager], loggedIn = { forward: "/login" }, acl = { roles,
 permissions, forward: "/denied" }, notFound = true)` on a view: a route of the router; `:id` becomes the screen's
-parameter of that type, the other parameters come from the query. Every address is a new instance of its screen:
+parameter of that type, the other parameters come from the query (`/channels/general?thread=t1`). Every address is a new instance of its screen:
 going from `/docs/a` to `/docs/b` builds the screen and its managers again. `providers` creates the managers for the screen
 and its views, where `Manager.method()` uses them. `goTo(Screen, id = 7)` and `goBack()` navigate by screen, never
 by address. The `App` view of `main.nuc` is the router.
@@ -160,8 +234,10 @@ nuclear gen usecase characters CharacterEpisodes --calls CharacterRepository.epi
 
 `tests` in `test/`: the app starts with its real config and every request answers what the test prepares
 (`SynapsisTest.respondWith`, `respond`); `@mock([Class])` makes a class a mock (`when(Class.method).thenReturn`,
-`verify`); `@test`, `@states` (the states a manager emits) and `@widget` (a screen rendered in a memory router,
-read with Testing Library's `screen`) as in the mobile platform; `beforeEach()`/`afterEach()` methods are the hooks.
+`verify`; an async method resolves with what `thenReturn` gives, a `Stream` method answers it as it is); `@test`,
+`@states` (the states a manager emits) and `@widget` (a screen rendered in a memory router, read with Testing
+Library's `screen`; it leaves the page after its test) as in the mobile platform; `beforeEach()`/`afterEach()`
+methods are the hooks.
 
 ## 5. Architecture
 

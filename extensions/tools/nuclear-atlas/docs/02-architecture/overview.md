@@ -1,54 +1,42 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
-related: [../01-product/roadmap.md, ../../../nuclear-builder/docs/02-architecture/engine.md, ../../../../vscode/docs/02-architecture/ai-services.md]
+updated: 2026-11-18
+related: [../01-product/roadmap.md, ../../../nuclear-builder/docs/02-architecture/chat.md, ../../../../../nuclear-chat/docs/02-architecture/ui.md]
 ---
 # Architecture of Nuclear Atlas
 
-The tool `atlas` of the strip (`Ctrl+Alt+A`; ADR-platform-0003). Never opened in a running VS Code
-([roadmap](../01-product/roadmap.md)).
+The tool `atlas` of the strip (`Ctrl+Alt+A`; ADR-platform-0003): Nuclear Chat mounted as the page (spec 013 T3.3),
+on the direct message with the general agent, `dm-atlas`.
+
+## The page (`src/panel.ts`)
+
+- On top: the project, and the templates (`templatesOf(map, platform, lang)`, `src/chat.ts`: built from the map's
+  components, use cases and controllers or screens). A template is put in the chat's composer (its `textarea`, in
+  the chat's open shadow root), its `…` selected to fill.
+- Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`
+  to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down
+  is said on the page with how to fix it.
 
 ## A question
 
-A message goes to `POST /developer/chat` of the Nuclear Developer with:
-
-- `message`: the question;
-- `platform`: the project's;
-- `map`: `.nuclear/map.md`, clipped to 12 000 characters (`MAP_LIMIT`);
-- `history`: the last 8 messages of the session (`HISTORY`, `historyOf`).
-
-The local assistant answers from the project's map and the Smart Graph. Before it, `checkForChat` checks what the
-question needs ([the checked connections](../../../../vscode/docs/02-architecture/ai-services.md)).
+A message in `dm-atlas` is answered by the member `atlas` (`nuclear-builder member --role chat`, the provider of
+`nuclear.builder.chat`: by default the local Nuclear Developer, which reads the Smart Graph). The conversation is the
+chat's, kept in the project (`.nuclear/chat/dm-atlas.jsonl`), the same in the Builder's chat.
 
 ## An order
 
-`/task <text>` builds a local-led `Spec` (`criteriaOf`) and runs a `BuilderEngine` in place: the local agents plan it,
-write the tests first, then the code, run the tests and the security review. Each step is drawn as it ends, and the
-answer is the run's `notes` and its journal (*Open the journal of the run*)
-([Nuclear Builder's engine](../../../nuclear-builder/docs/02-architecture/engine.md)).
-
-## Jobs and sessions
-
-- A job is `ask` or `drive`. Jobs are module-level (`jobs` in `panel.ts`): a job goes on with the page closed,
-  and `append` saves its answer in the session; a notice tells the user when it ends.
-- A session is `.nuclear/chat/<id>.json` (`CHAT_DIR`; `listSessions`, `saveSession`), listed on the left of the
-  page.
-
-## What the page draws (`panel.ts`)
-
-- The answers, with their markdown rendered by the page itself: code blocks, inline code, bold, lists.
-- Under each answer, folded in grey, what the agent did: its `steps`, its `seconds` and its `tokens` (the
-  assistant's `context` trace; `tokensOf` = characters / 4).
-- The context meter: how full the local model's window is (`nuclear.ai.contextTokens`); it tells the user to start
-  a new session when it is near.
-- ↑ / ↓ in the input go through the questions asked before (`askedOf`).
-- *↻ Retry* of a failed question (the `ask` message), or of a failed order from its failed step.
-- The templates above the input: `templatesOf(map, platform)`, built from the map's components, use cases and
-  controllers or screens.
-- A failed run's diagnosis.
+`/task <text>` said in `dm-atlas` (the chat answers no message that starts with `/`): Atlas's host sees the event,
+writes a spec (`specs/<id>/spec.md`, its criteria by `criteriaOf`) and runs it through the Builder's `driveRun` with
+the project's team. The run is told by its members as a thread of the team's channel; Atlas posts in the order's
+thread where it went and how it ended (passed, failed, waiting), and a notice says so when the page is closed.
 
 ## In the workspace
 
-The notices of Nuclear Atlas are the workspace's: the count on the `atlas` tab and the badge of the activity bar
-([the notifications](../../../../vscode/docs/02-architecture/ai-services.md)).
+The notices of Nuclear Atlas are the workspace's: its orders' ends and what members say to the user in Nuclear
+Chat (a direct message, `@you`, a question, an answer), counted on the `atlas` badge of the strip and the activity
+bar ([the notifications](../../../../vscode/docs/02-architecture/ai-services.md)). *Open* on a chat notice calls
+`AtlasPanel.show(…, channel)`: the page opens (or mounts the chat again) on that channel, the direct message with
+the member or the team's channel; choosing another project goes back to Atlas's direct message. Its texts are in English and Spanish in
+`src/l10n.ts`, in the chosen language (`nuclear.language`); the globe in its header changes it, and the page and the
+chat's registration follow at once.

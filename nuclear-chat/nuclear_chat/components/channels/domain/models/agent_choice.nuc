@@ -1,0 +1,6 @@
+// The agent a direct message is answered by: a choice of its member (empty: the host's default) and its model.
+AgentChoice
+  @maxLength(64)
+  agent: string = ""
+  @maxLength(200)
+  model: string = ""

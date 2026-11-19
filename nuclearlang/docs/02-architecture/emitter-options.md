@@ -52,7 +52,8 @@ The full list with its meaning is the contract (`crates/nuclear-dialect/src/cont
 - Kinds get `field_decor`; `field` gets `tinfo`; `methods` entries get `doc_text`/`doc_literal`.
 - Project templates get `components` and `uses`.
 - `type_args_as_args` takes a list of functions.
-- N0219 only with native named arguments.
+- N0219 of a constructor of the type definitions only with native named arguments; of a function or method
+  declared in Nuclear, always.
 
 ## Checks against the type definitions (ADR-lang-0010)
 

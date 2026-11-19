@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [mobile-device.md, web-device.md, ../../../../docs/03-adr/0002-the-nuclear-workspace.md, ../../../../vscode/docs/02-architecture/workspace.md]
 ---
 # Architecture of the devices
@@ -65,3 +65,11 @@ and the platform) and its frame (phone, tablet, none). The CLI's devices use the
 - `Workspace.pickDevice(p, mode)` for ▷ Run / ◉ Debug / ▭ Device: the devices shown or hidden, a new one, *Other
   Flutter device…* (`flutter.selectDevice`), or the Devices workspace. `Workspace.mobileRoot`: the Devices pane runs
   a mobile project only.
+
+## Settings and languages
+
+- The settings of the devices are its own section of the editor's settings, read only through `src/settings.ts`: `nuclear.devices.idleMinutes`, the minutes a device waits unused before it stops (30)
+  (spec 011, settings by component).
+- Its texts are in English and Spanish in `src/l10n.ts` (a dictionary of `extensions/vscode/src/i18n.ts`), for the Synapsis device (`mobile-device.ts`) and the web device (`web-device.ts`); device names, Hot Reload / Hot Restart and network presets stay as they are.
+  The host sends the page the texts of the chosen language (`nuclear.language`); English is the fallback. A change
+  of language reaches a device's page when it opens next: re-rendering it would cut its live screen.

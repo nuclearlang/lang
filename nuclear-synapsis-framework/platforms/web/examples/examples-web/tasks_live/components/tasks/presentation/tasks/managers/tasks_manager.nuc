@@ -1,0 +1,15 @@
+// The state of the tasks screen: it loads the tasks when it is created, and again each time the API says one was
+// created (until the screen leaves).
+@stateModel(TasksState)
+statemanager TasksManager
+  (tasks: TasksComponent)
+    load()
+    listen(tasks.watchCreatedTasks(), (created) => load())
+
+  @state(TasksState.loading)
+  loading()
+
+  @before(loading)
+  @state(TasksState.full)
+  load() Result<TaskError, Task[]>
+    ~tasks.listTasks()

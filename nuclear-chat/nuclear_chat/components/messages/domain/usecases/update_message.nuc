@@ -1,0 +1,14 @@
+// A host changes a message it posted (a question answered loses its buttons): a line that names it, folded on read.
+usecase UpdateMessage(store: MessageStore, events: EventsAppComponent)
+  exec(workspace: string, id: string, changes: Changes) Result<Error, Message>
+    ws = store.workspace(workspace)
+    channel = store.locate(ws, id)
+    edit: <string, any> = { "edit": id, "at": DateTime.now().millis }
+    if changes.text != null
+      edit["text"] = changes.text
+    if changes.buttons != null
+      edit["buttons"] = Json.decode(Json.encode(changes.buttons!))
+    store.append(ws, channel, edit)
+    shown = store.message(ws, channel, id)
+    ~events.emit(ws.id, "message", channel, { "message": shown })
+    Ok(messageOf(shown))

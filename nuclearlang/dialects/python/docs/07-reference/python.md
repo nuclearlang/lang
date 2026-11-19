@@ -22,7 +22,7 @@
 - **Types:** `string` `str`, `int` `int`, `double`/`number` `float`, `boolean` `bool`, `void` `None`, `any` `Any`,
   `T[]` `list[T]`, `<K, V>` `dict[K, V]`, `T?` `T | None`, `(a: A) => R` `Callable[[A], R]`, generators
   `Iterator[T]` / `AsyncIterator[T]`.
-- **Operators:** `and` `or` `not`, `~/` `//`, `**`, bitwise as in Python; `>>>` is written on a 32-bit value
+- **Operators:** `and` `or` `not`, `~/` `_idiv(a, b)` (toward zero, as TypeScript and Dart; `//` floors), `**`, bitwise as in Python; `>>>` is written on a 32-bit value
   (`(x % 0x100000000) >> n`), like TypeScript; `a in b` is Python's `in`.
 - **Type definitions:** `defs = ["python@3.14"]`: builtins (implicit), `typing`, `dataclasses`, `enum`, `abc`,
   `collections`, `functools`, `itertools`, `datetime`, `time`, `json`, `re`, `math`, `random`, `decimal`, `uuid`,
@@ -60,7 +60,15 @@ def greet(name: str) -> str:
 
 ### 3.2 Modules
 
-A module with header parameters gets class annotations and `__init__`; fields with a default are set in `__init__` (no shared mutable defaults). Members are written with `self.`.
+A module with header parameters gets class annotations and `__init__`; fields with a default are set in `__init__` (no shared mutable defaults). A `static` field is the class's (`count: ClassVar[int] = 0`). Members are written with `self.`.
+
+What Python binds otherwise is written so the code means what it says in every target: a parameter whose default is
+a list or a map is `xs: list[int] | None = None` and the function begins with `if xs is None: xs = []` (a default is
+made once); a lambda made in a loop binds the loop's names it reads (`lambda i=i: i`, Python binds a closure late); a
+function that assigns a variable of its file begins with `global counter`; a chain after `?.` is one conditional
+(`(u.name.upper() if u is not None else None)`); a local, a lambda's parameter, a function or a constant named like a
+function the dialect writes (`sorted`, `len`, `max`, `sum`, `list`, `type`...: `keywords.toml`, level `shadowed`) is
+renamed `sorted_`. In an interpolated text a missing value and a boolean go through `_text` (`null`, `true`).
 
 ```nuclear
 User(name: string, age: int = 0)
@@ -235,7 +243,7 @@ async def fetch_name(id: int) -> str:
 
 ### 3.8 Control flow
 
-`if` and `match` are values: as the last line each branch returns; inside an expression with one expression per branch they are a conditional expression (`a if c else b`). `match` becomes `if`/`elif`.
+`if` and `match` are values: as the last line each branch returns; inside an expression with one expression per branch they are a conditional expression (`a if c else b`); a branch that is itself a conditional keeps its parentheses (`(0.8 if often else 0.5) if kind == "some" else 0.0`), since Python's would join the next branch. `match` becomes `if`/`elif`.
 
 ```nuclear
 label(n: int) string
@@ -287,13 +295,14 @@ total(m: <string, int>) int
 ```python
 from __future__ import annotations
 
+
 def total(m: dict[str, int]) -> int:
-    sum = 0
+    sum_ = 0
     for k, v in m.items():
-        sum += v
+        sum_ += v
     for i in range(0, 3):
-        sum += i
-    return sum
+        sum_ += i
+    return sum_
 ```
 
 ### 3.10 Lambdas
@@ -486,10 +495,17 @@ def Err(error: _F) -> Result[_F, Never]:
     return Result[_F, Never](False, None, error)
 
 
+def _idiv(a: int | float, b: int | float) -> int:
+    if isinstance(a, int) and isinstance(b, int):
+        q = a // b
+        return q + 1 if q < 0 and q * b != a else q
+    return int(a / b)
+
+
 def divide(a: int, b: int) -> Result[str, int]:
     if b == 0:
         return Err("division by zero")
-    return Ok(a // b)
+    return Ok(_idiv(a, b))
 
 
 def half(n: int) -> Result[str, int]:
@@ -553,7 +569,8 @@ def now() -> str:
 
 [library.md](../../../../docs/07-reference/library.md) as `nuclearlang/dialects/python/library.toml` writes it: lists, dicts and sets are Python's; an
 expression lambda becomes a comprehension (`xs.map((x) => x * 2)` is `[x * 2 for x in xs]`, `filter`, `find`,
-`any`, `all`, `count` likewise; a function value goes through `map`/`filter`); `Bytes` is `bytes`; `DateTime` is
+`any`, `all`, `count` likewise, and a condition that is itself a conditional is put in parentheses: `xs.filter((x) =>
+ok ? x > 0 : x < 0)` is `[x for x in xs if (x > 0 if ok else x < 0)]`; a function value goes through `map`/`filter`); `Bytes` is `bytes`; `DateTime` is
 `datetime.datetime` (aware in UTC when built with `DateTime.utc`), `Duration` is `datetime.timedelta`; `Regex` is
 `re.compile` through `_regex`, which also writes `(?<name>...)` as `(?P<name>...)`; `Match` is `re.Match`;
 `Error(message)` is `Exception(message)` and `e.message` is `str(e)`; a map read `m[k]` is `m.get(k)` (`None`

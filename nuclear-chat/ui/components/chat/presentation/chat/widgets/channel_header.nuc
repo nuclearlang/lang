@@ -1,0 +1,35 @@
+// The top of the open channel: its name (a member's for a direct message, the team's for a team's channel), its topic,
+// its tech lead and how many are in it; a direct message with a member who has agents to choose, who answers it
+// (AgentPicker), else the brain that answers as the member under their name (BrainLine); on a narrow page, the button
+// that shows the channels.
+stateless ChannelHeader(ws: Workspace, channel: Channel?, open: string, texts: Texts, onSidebar: () => void)
+  build() Element
+    lead = channel != null ? leadOf(ws, channel!) : null
+    member = channel != null and channel!.kind == "dm" ? dmMember(ws, channel!) : null
+    team = channel != null and channel!.kind != "dm" ? ws.teams.find((t) => t.id == channel!.team or t.id == channel!.id) : null
+    title = if member != null
+      member!.name
+    else if team != null and team!.name != ""
+      "#${team!.name}"
+    else
+      "#${channel?.name ?? open}"
+    picks = member != null and member!.responder.choices.length > 0
+    header(
+      className = "channel-header",
+      children = [
+        button(className = "menu", title = texts.get("showChannels"), onClick = () => onSidebar(), children = span(className = "icon icon-menu")),
+        member != null ? Avatar(member = member, author = member!.id, size = "small") : null,
+        div(className = "channel-name", children = [strong(className = "channel-title", children = title), member != null and not picks and member!.brain.agent != "" ? BrainLine(brain = member!.brain, texts = texts) : null]),
+        member != null and member!.role != "" ? span(className = "chip role", children = member!.role) : null,
+        lead != null ? span(className = "chip lead", title = texts.format("leadOf", { "name": lead!.name }), children = [Avatar(member = lead, author = lead!.id, size = "tiny"), span(children = "${texts.get("lead")}: ${lead!.name}")]) : null,
+        channel != null and channel!.topic != "" ? span(className = "topic", children = channel!.topic) : null,
+        picks ? AgentPicker(ws = ws, channel = channel!, member = member!, texts = texts) : null,
+        channel != null and channel!.kind != "dm" and channel!.members.length > 0 ? span(className = "count", children = texts.format("members", { "count": "${channel!.members.length}" })) : null,
+      ],
+    )
+
+// Who answers as a member: `Claude Code · opus · paid`, `Nuclear Developer · gemma4:e2b · local`.
+stateless BrainLine(brain: Brain, texts: Texts)
+  build() Element
+    said = [brain.agent, brain.model].filter((x) => x != "").join(" · ")
+    span(className = "brain", title = texts.get("brain"), children = [AgentMark(kind = brain.kind), span(children = said), span(className = "chip ${brain.paid ? "paid" : "local"}", children = texts.get(brain.paid ? "paid" : "local"))])

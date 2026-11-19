@@ -1,0 +1,35 @@
+// The app as its clients see it: over HTTP and over its WebSocket, through the guards (testEnv of config.nuc
+// gives the tests their tokens).
+TOKEN = { "X-Tasks-Token": "test-tasks-token" }
+
+tests Api
+  @test("the guards: the app's token, no web page, a controller's own token")
+  guards() void
+    app = appClient()
+    expect((~app.get("/tasks")).status == 401)
+    expect((~app.get("/tasks", headers = { "X-Tasks-Token": "wrong" })).status == 401)
+    expect((~app.get("/tasks", headers = { "X-Tasks-Token": "test-tasks-token", "Origin": "https://example.com" })).status == 403)
+    expect((~app.get("/tasks", headers = TOKEN)).status == 200)
+    expect((~app.get("/projects/1", headers = TOKEN)).status == 401)
+    owner = { "X-Tasks-Token": "test-tasks-token", "Authorization": "Bearer test-owner-token" }
+    expect((~app.get("/projects/1", headers = owner)).status == 404)
+
+  @test("a request over HTTP answers its status and body")
+  http() void
+    app = appClient()
+    made = ~app.post("/tasks", body = { "title": "buy milk" }, headers = TOKEN)
+    expect(made.status == 201)
+    expect(made.body["title"] == "buy milk")
+
+  @test("the socket: refused without the token; a request answered; a published event pushed")
+  socket() void
+    app = appClient()
+    refused = ~app.socket("/ws")
+    expect(refused.error.status == 401)
+    ws = (~app.socket("/ws", headers = TOKEN)).value
+    ~ws.subscribe("tasks.created")
+    made = ~ws.request("POST", "/tasks", body = { "title": "call mom" })
+    expect(made.status == 201)
+    event = ~ws.next()
+    expect(event!.data["title"] == "call mom")
+    ~ws.close()

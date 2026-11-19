@@ -1,0 +1,83 @@
+use os
+use signal
+use shutil
+use asyncio
+use tempfile
+
+// The members' responder commands (spec 013, design.md "The responder"): each answer is one run of a command, with
+// one line on its stdin first; every line it prints is given as it comes, a line can be written to its stdin while
+// it runs (the user's answer to its question), and its end gives its exit code and the end of its stderr. What the
+// lines mean is the chat's (the service's members component); this only runs them.
+Processes()
+  // The runs going on, by id: the process and the task that reads it.
+  processes: <string, any> = {}
+  tasks: <string, any> = {}
+
+  // Starts `command` in `cwd` with `input` as its first line; null, or why it could not start.
+  start(id: string, command: string[], cwd: string, input: string, onLine: (line: string) => Future<void>, onEnd: (code: int, said: string) => Future<void>) string?
+    if command.isEmpty
+      return "no command"
+    found = shutil.which(command[0])
+    if found == null
+      return "`${command[0]}` is not installed or not on the PATH"
+    if not os.path.isdir(cwd)
+      return "no folder ${cwd}"
+    tasks[id] = asyncio.createTask(drive(id, [found!, ...command.skip(1)], cwd, input, onLine, onEnd))
+    null
+
+  drive(id: string, argv: string[], cwd: string, input: string, onLine: (line: string) => Future<void>, onEnd: (code: int, said: string) => Future<void>) void
+    err = tempfile.TemporaryFile()
+    code = -1
+    try
+      p = ~asyncio.createSubprocessExec(argv[0], ...argv.skip(1), cwd = cwd, stdin = asyncio.subprocess.PIPE, stdout = asyncio.subprocess.PIPE, stderr = err, startNewSession = os.name != "nt", limit = 16_777_216)
+      processes[id] = p
+      p.stdin!.write("${input}\n".toBytes())
+      ~p.stdin!.drain()
+      while true
+        raw: Bytes = ~p.stdout!.readline()
+        if raw.length == 0
+          break
+        ~onLine(raw.toText().trimEnd())
+      code = ~p.wait()
+    catch e
+      if not isinstance(e, OSError) and not isinstance(e, ValueError)
+        throw e
+      err.write("${e}".toBytes())
+    finally
+      processes.remove(id)
+      tasks.remove(id)
+    err.seek(0)
+    said: string = err.read().decode("utf-8", "replace")
+    err.close()
+    ~onEnd(code, said.substring(Math.max(0, said.length - 2000)))
+
+  // Writes one line to the stdin of a run going on; false when it ended.
+  write(id: string, line: string) boolean
+    p = processes[id]
+    if p == null or p.stdin == null or p.stdin.isClosing()
+      return false
+    p.stdin.write("${line}\n".toBytes())
+    ~p.stdin.drain()
+    true
+
+  // Whether a run is going on.
+  isRunning(id: string) boolean
+    id in tasks
+
+  // Stops a run and every process it started (its process group).
+  stop(id: string) void
+    p = processes[id]
+    if p == null
+      return
+    try
+      if os.name != "nt"
+        os.killpg(p.pid, signal.SIGKILL)
+      else
+        p.kill()
+    catch e
+      if not isinstance(e, OSError)
+        throw e
+
+  stopAll() void
+    for id in processes.keys.copy()
+      stop(id)

@@ -102,10 +102,16 @@ async function startConsumers(kafka: Kafka): Promise<void> {
   consumers.push(c);
 }
 
+/** Who else receives every event this process publishes (the app's WebSocket, synapsis-nest/sockets). */
+export const sinks: ((topic: string, value: unknown) => Promise<void>)[] = [];
+
 /** Sends `value` (a model, an object, a text) to the topic. */
 export async function publish(topic: string, value: unknown, name = 'default'): Promise<void> {
   const kafka = connections().find((c): c is Kafka => c instanceof Kafka && c.name === name);
-  if (!kafka?.producer) return deliver(topic, JSON.parse(JSON.stringify(value)));
+  const plain: unknown = JSON.parse(JSON.stringify(value ?? null));
+  // shortcut: with Kafka, a socket receives only what this process publishes; consume for sockets with several instances
+  for (const sink of sinks) await sink(topic, plain);
+  if (!kafka?.producer) return deliver(topic, plain);
   await kafka.producer.send({ topic, messages: [{ value: JSON.stringify(value) }] });
 }
 

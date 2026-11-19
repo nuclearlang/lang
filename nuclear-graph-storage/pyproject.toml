@@ -29,9 +29,10 @@ artifacts = ["build/nuclear_graph/**/*.py"]
 packages = ["build/nuclear_graph"]
 exclude = ["build/nuclear_graph/tests"]
 
-# the prompt files travel inside the package (a checkout reads them from `prompts/`: `Paths.prompts`)
+# the roles of the software factory, whose skills are the prompts, travel inside the package (a checkout reads them
+# from `../nuclear-agents/roles/`: `Paths.roles`)
 [tool.hatch.build.targets.wheel.force-include]
-"prompts" = "nuclear_graph/prompts"
+"../nuclear-agents/roles" = "nuclear_graph/roles"
 # the generated code is annotated: a project that uses the package is type-checked against it
 "py.typed" = "nuclear_graph/py.typed"
 

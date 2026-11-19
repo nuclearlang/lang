@@ -12,15 +12,16 @@ import typing
 from collections.abc import Callable
 from typing import Any, overload, get_args, get_origin
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, create_model
 
 from .errors import AppError
+from .guards import Guard, refusal
 from .orm import Entity, schema_of
 from .repository import Page
 from .result import Result
 
-__all__ = ["controller", "get", "post", "put", "patch", "delete", "status", "router_of"]
+__all__ = ["controller", "get", "post", "put", "patch", "delete", "status", "router_of", "untraced", "guarded"]
 
 
 def _segment(path: str) -> str:
@@ -29,15 +30,28 @@ def _segment(path: str) -> str:
     return f"/{path}" if path else ""
 
 
-def controller[C: type](prefix: str = "", tags: list[str] | None = None) -> Callable[[C], C]:
-    """@controller("characters"): the routes of the class start with the prefix."""
+def controller[C: type](prefix: str = "", tags: list[str] | None = None, guards: list[Guard] | None = None) -> Callable[[C], C]:
+    """@controller("characters"): the routes of the class start with the prefix; `guards` check every one of them
+    (ADR-synapsis-0007)."""
 
     def mark(cls: C) -> C:
         cls.__synapsis_prefix__ = _segment(prefix)  # type: ignore[attr-defined]
         cls.__synapsis_tags__ = tags or [prefix.strip("/").split("/")[0] or cls.__name__]  # type: ignore[attr-defined]
+        cls.__synapsis_guards__ = list(guards or [])  # type: ignore[attr-defined]
         return cls
 
     return mark
+
+
+def guarded(guards: list[Guard]) -> Any:
+    """The FastAPI dependency that runs `guards` on a request's headers: a refusal answers its status."""
+
+    async def check(request: Request) -> None:
+        e = refusal(guards, request.headers)
+        if e is not None:
+            raise HTTPException(e.status, e.message)
+
+    return Depends(check)
 
 
 def _route(method: str, path: str, status: int | None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
@@ -106,6 +120,13 @@ def status(code: int) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         return fn
 
     return mark
+
+
+def untraced[T](target: T) -> T:
+    """`@untraced`: no span for this route, use case or controller (every route of it). Without telemetry it does
+    nothing; with it, the request starts no trace (synapsis.telemetry)."""
+    setattr(target, "__synapsis_untraced__", True)
+    return target
 
 
 def _answer_type(t: Any) -> Any:
@@ -187,12 +208,19 @@ def router_of(instance: object) -> APIRouter:
     routes (`search` over `{id}`): FastAPI takes the first route that matches, so a route with a parameter earlier in
     its path is added later."""
     cls = type(instance)
-    router = APIRouter(prefix=getattr(cls, "__synapsis_prefix__", ""), tags=getattr(cls, "__synapsis_tags__", None))
+    guards: list[Guard] = getattr(cls, "__synapsis_guards__", [])
+    router = APIRouter(
+        prefix=getattr(cls, "__synapsis_prefix__", ""),
+        tags=getattr(cls, "__synapsis_tags__", None),
+        dependencies=[guarded(guards)] if guards else None,
+    )
     routes = [(name, r) for name in dir(cls) if (r := getattr(getattr(cls, name, None), "__synapsis_route__", None)) is not None]
     routes.sort(key=lambda found: [segment.startswith("{") for segment in found[1][1].split("/")])
     for name, (method, path, route_status) in routes:
         status = getattr(getattr(cls, name, None), "__synapsis_status__", None) or route_status
         endpoint = _endpoint(getattr(instance, name))
+        if getattr(cls, "__synapsis_untraced__", False):
+            setattr(endpoint, "__synapsis_untraced__", True)
         kw: dict[str, Any] = {"status_code": status} if status else {}
         router.add_api_route(path, endpoint, methods=[method], name=f"{cls.__name__}.{name}", **kw)
     return router

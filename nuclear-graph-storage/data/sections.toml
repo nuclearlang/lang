@@ -18,7 +18,8 @@ exclude = [
   "**/icon-themes/**", "**/icons/atom/**", "**/vendor/**",
   "nuclearlang/tools/defs/flutter_project/**",
   "nuclear-graph-storage/data/**",    # this folder
-  "nuclear-graph-storage/prompts/**", # the prompt files: the graph's `prompts` collection
+  "nuclear-agents/roles/*/skills/**",    # the roles' skills: the prompt files, the graph's `prompts` collection
+  "nuclear-agents/roles/*/templates/**", # the documents a station writes, with their `{{placeholders}}`
   "nuclearlang/docs/07-reference/diagnostics.md",  # one row per diagnostic, read from the compiler
   "**/docs/01-product/roadmap.md",    # the pending work of a project changes with every task: never part of the base
   "STATUS.md", "docs/context/**", "docs/ai/**",    # the old documents, until spec 008 deletes them
@@ -242,6 +243,7 @@ files = [
   "extensions/tools/nuclear-atlas/**",
   "nuclear-graph-storage/**",
   "nuclear-agents/**",
+  "nuclear-chat/**",
 ]
 
 [[section]]

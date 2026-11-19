@@ -32,6 +32,7 @@ extension = { level = "builtin", via = "kind", nuclear = "extension NumberParsin
 | `reserved` | Can never be used as an identifier | Yes |
 | `strict` | Reserved in strict mode / modules (TS: `let`, `static`...) | Yes (Nuclear emits modules) |
 | `builtin` | Dart: cannot be a type name, can be a variable | No |
+| `shadowed` | A function of the target the dialect writes (Python's `sorted`, `len`, `max`) | A local, a lambda's parameter, a function or a constant of the file: yes (`sorted_`); a field and a function's parameter: no (they are the API) |
 | `contextual` | A keyword only in some places | No |
 
 ### `via`: how Nuclear produces it

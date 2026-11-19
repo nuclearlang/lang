@@ -1,0 +1,22 @@
+// A project registered by its host: its id names it in every route.
+Workspace
+  id: string
+  root: string
+  host: string
+  members: Member[] = []
+  teams: Team[] = []
+  channels: Channel[] = []
+  lang: string = "en"
+  gifs: string = "pack"
+
+  // A file of the project's chat: `.nuclear/chat/<name>`.
+  chatFile(name: string) string
+    "${root}/.nuclear/chat/${name}"
+
+  // A channel of the workspace, or null.
+  channel(id: string) Channel?
+    channels.find((c) => c.id == id)
+
+  // A member of the workspace, or null.
+  member(id: string) Member?
+    members.find((m) => m.id == id)

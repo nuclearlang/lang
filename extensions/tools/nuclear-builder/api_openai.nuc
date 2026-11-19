@@ -1,0 +1,44 @@
+use json
+use httpx
+
+// The OpenAI adapter: the Chat Completions API (`POST /v1/chat/completions`) with the MCP server's tools as
+// functions; through the factory's loop (adapter_api.nuc). OpenRouter speaks the same format (api_openrouter.nuc).
+
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+
+chatMessages(system: string, turns: <string, any>[]) <string, any>[]
+  out: <string, any>[] = [{ "role": "system", "content": system }]
+  for t in turns
+    if t["role"] == "user"
+      out.add({ "role": "user", "content": t["text"] })
+    else if t["role"] == "assistant"
+      message: <string, any> = { "role": "assistant", "content": t["text"] ?? "" }
+      calls: <string, any>[] = t["calls"] ?? []
+      if not calls.isEmpty
+        message["tool_calls"] = calls.map((c) => { "id": c["id"], "type": "function", "function": { "name": c["name"], "arguments": json.dumps(c["input"]) } })
+      out.add(message)
+    else
+      for r in (t["results"] ?? []) as <string, any>[]
+        out.add({ "role": "tool", "tool_call_id": r["id"], "content": r["error"] == true ? "ERROR: ${r["text"]}" : r["text"] })
+  out
+
+// One turn in the Chat Completions format, against `url`: the text, the calls, the tokens and, from OpenRouter, the
+// cost it reports.
+askChat(url: string, provider: string, key: string, model: string, system: string, turns: <string, any>[], tools: <string, any>[], client: httpx.Client, extra: <string, any> = {}) ModelTurn
+  body: <string, any> = { "model": model, "messages": chatMessages(system, turns), "tools": tools.map((t) => { "type": "function", "function": { "name": t["name"], "description": t["description"], "parameters": t["schema"] } }) }
+  for k, v in extra
+    body[k] = v
+  data = answerOf(client.post(url, json = body, headers = { "authorization": "Bearer ${key}", "content-type": "application/json" }), provider)
+  choices: <string, any>[] = data["choices"] ?? []
+  if choices.isEmpty
+    throw RuntimeError("${provider} gave no answer: ${json.dumps(data).substring(0, 300)}")
+  message: <string, any> = choices[0]["message"] ?? ({} as <string, any>)
+  calls = ((message["tool_calls"] ?? []) as <string, any>[]).map((c) => { "id": c["id"], "name": c["function"]!["name"], "input": json.loads(c["function"]!["arguments"] ?? "{}") })
+  usage: <string, any> = data["usage"] ?? ({} as <string, any>)
+  ModelTurn("${message["content"] ?? ""}", calls, usage["prompt_tokens"] ?? 0, usage["completion_tokens"] ?? 0, provider == "openrouter" ? usage["cost"] : null)
+
+askOpenAI(key: string, model: string, system: string, turns: <string, any>[], tools: <string, any>[], client: httpx.Client) ModelTurn
+  askChat(OPENAI_URL, "openai", key, model, system, turns, tools, client)
+
+openAIAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  apiLoop("openai", askOpenAI, role, station, work, emit)

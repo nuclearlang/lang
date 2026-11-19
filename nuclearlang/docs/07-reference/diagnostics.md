@@ -80,9 +80,10 @@ Ranges: `N00xx` lexing and syntax · `N01xx` resolver (semantics) · `N02xx` dia
 | N0216 | The kind requires another return type | `exec() Character` in a `usecase` (it must return `Result<E, T>`) |
 | N0221 | A method of the kind needs a body | `booksOf(author: string) Result<Error, Book[]>` alone in an `appcomponent` (it would be generated empty) | an alias `booksOf() = BooksOfAuthor.exec`, or a body |
 | N0222 | An asynchronous call used without `~` | `expect(booksOfAuthor.exec("Ada").length > 0)` (the length of a promise); `found = books.all()` then `found.length` (the variable holds the call) | `(~booksOfAuthor.exec("Ada")).length`; `found = ~books.all()` |
+| N0223 | A method named like a member the kind's runtime owns (`[kinds.<k>] sealed`) | `close()` in a `statemanager` (it would replace the runtime's, so the screen's listeners are never stopped) | another name: `closeThread()` |
 | N0217 | Unknown or missing decorator argument (`[decorators.args]`) | `@screen(loggedIn = { })` (missing `forward`), `@screen(rute = "/")` |
 | N0218 | The kind does not write the declaration's generics (`<T>`) or interfaces (`> I`): they would be lost | `Page<T>` with a kind whose template does not use `generics`; `@stateModel(S) statemanager M > Comparable` |
-| N0219 | Named argument the constructor does not have (from the type definitions; files of a project) | `Text("a", colour = c)` | the closest parameter (`style`); the message lists all of them |
+| N0219 | Named argument the callee does not have: a function or method declared in Nuclear, or a constructor of the type definitions (files of a project) | `Text("a", colour = c)`, `row(nme = "a")` | the closest parameter (`style`, `name`); the message lists all of them |
 | N0220 | PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`), not a generic parameter | `Collumn(children = [])`; `inject<BooksAppComponent>()` with no such class | the closest known name (`Column`); `nuclear defs search` |
 
 ## Projects and architecture

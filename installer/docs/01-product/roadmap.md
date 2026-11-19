@@ -34,6 +34,13 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Untested
 
+- Tried on the clean machine on 2026-11-18 (spec 016), Linux x86_64 from a local mirror, profile `remote`: the
+  install, the `clients` step (OpenCode and Gemini CLI written), `nuclear help start` and the atlas, the MCP server
+  over stdio (`nuclear_start`, `nuclear_doc`), `nuclear new` of a backend and of a mobile app with its context
+  documents, `nuclear setup` (Flutter) then `nuclear analyze`. Not tried there: a local profile (Ollama and the
+  models), the VS Code extension (no `.vsix` in the mirror, and the extension is on no marketplace), Codex,
+  Claude Code.
+
 - The public installers (ADR-installer-0001): `install.sh` on macOS (Intel, Apple silicon, the Rosetta detection),
   `install.ps1` on Windows, `--version`, the latest-release lookup against GitHub, the VS Code `.vsix` step. Only
   the Linux x86_64 archive from a local mirror ran.

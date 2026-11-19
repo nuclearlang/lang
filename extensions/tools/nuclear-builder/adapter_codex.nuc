@@ -1,0 +1,57 @@
+use json
+use pathlib{ Path }
+
+// The Codex adapter (`codex exec`). UNTESTED against a real Codex: it is not installed on the machine this was
+// written on; the flags are those of Codex's documented headless mode (`exec --json`, `--model`, `--sandbox
+// workspace-write`, `--skip-git-repo-check`, `-C <dir>`, `-c key=value`). The role is rendered as an `AGENTS.md`
+// section in the run's temporary folder and given at the head of the prompt (Codex reads AGENTS.md only from the
+// project and its own home, which hold the user's files and login); the Nuclear MCP server and the Builder's are
+// `-c mcp_servers.*` settings. Codex brings its own login and does not report a cost: its tokens are events, its cost 0.
+
+renderCodex(role: Role, at: Path) string
+  text = "## The ${role.title} of the software factory\n\n${role.text()}\n"
+  at.joinpath("AGENTS.md").writeText(text)
+  text
+
+codexArgs(prompt: string, work: Work) string[]
+  args = ["codex", "exec", "--json", "--skip-git-repo-check", "--sandbox", "workspace-write", "-C", work.root, "-c", "mcp_servers.nuclear.command=${json.dumps(work.mcpCommand)}", "-c", "mcp_servers.nuclear.args=[]", "-c", "mcp_servers.nuclear_builder.command=${json.dumps(builderMcpCommand())}", "-c", "mcp_servers.nuclear_builder.args=${json.dumps(builderMcpArgs(work.root))}"]
+  if work.model.length > 0
+    args.addAll(["--model", work.model])
+  [...args, prompt]
+
+// One line of `exec --json`: an item that started or ended (a message, a command, an MCP tool call), a turn's usage.
+codexLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, any>) void
+  kind = "${ev["type"] ?? ""}"
+  item: <string, any> = ev["item"] ?? ({} as <string, any>)
+  itemKind = "${item["type"] ?? item["item_type"] ?? ""}"
+  if kind == "item.completed" and (itemKind == "agent_message" or itemKind == "assistant_message")
+    found["text"] = item["text"] ?? ""
+    emit({ "type": "text", "text": found["text"] })
+  else if kind == "item.started" and (itemKind == "mcp_tool_call" or itemKind == "command_execution")
+    emit({ "type": "tool", "id": item["id"], "tool": "${item["tool"] ?? item["command"] ?? itemKind}", "input": json.dumps(item["arguments"] ?? item["command"] ?? {}).substring(0, 4000) })
+  else if kind == "item.completed" and (itemKind == "mcp_tool_call" or itemKind == "command_execution")
+    emit({ "type": "tool-result", "id": item["id"], "ok": item["status"] != "failed", "text": "${item["result"] ?? item["aggregated_output"] ?? ""}".substring(0, 20000) })
+  else if kind == "turn.completed"
+    emit({ "type": "tokens", "usage": ev["usage"] ?? {} })
+  else if kind == "turn.failed" or kind == "error"
+    found["failed"] = true
+    found["text"] = json.dumps(ev["error"] ?? ev["message"] ?? ev)
+
+codexAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  at = renderDir("codex")
+  events: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  try
+    prompt = "${renderCodex(role, at)}\n${stationPrompt(role, station, work, false)}"
+    ran = streamCommand(codexArgs(prompt, work), work.root, toolEnv(), (line) => onCodexLine(line, say, found), work.timeoutMs)
+    agentOutcome("Codex", ran, found, events, work)
+  finally
+    dropRenderDir(at)
+
+onCodexLine(line: string, emit: (e: <string, any>) => void, found: <string, any>) void
+  ev = jsonLine(line)
+  if ev != null
+    codexLine(ev!, emit, found)

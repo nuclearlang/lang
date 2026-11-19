@@ -85,5 +85,6 @@ The details are in each editor's guide.
 | [HTTP Connections](../../tools/nuclear-http-connections/docs/08-guides/README.md) | call the endpoints of your projects, environments, OpenAPI |
 | [Devices](../../tools/nuclear-device-manager/docs/08-guides/README.md) | run a mobile app or a web app inside VS Code |
 | [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |
+| [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |
 | [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |
 | [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models Nuclear Atlas and the Builder need |

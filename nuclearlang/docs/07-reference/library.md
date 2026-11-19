@@ -157,9 +157,11 @@ gives their results in order. `~` and generators: [nuclear-base.md](nuclear-base
 
 ## 12. Output and errors
 
-`print(a, b, ...)` writes the values separated by spaces and a newline. `x.toString()` exists on every value;
-only numbers, booleans, strings, `DateTime` (`toIso()`) and `Duration` print the same text in every dialect: a
-list or a map is printed through `join` or `Json.encode`.
+`print(a, b, ...)` writes the values separated by spaces and a newline, and `"${x}"` writes a value the same way:
+a decimal with its decimals (`2.0`, `1000.0`), a boolean as `true` / `false`, a missing value as `null`, in every
+dialect. The dialect knows a decimal by its type (a decimal literal, a division, a value declared `double`).
+`x.toString()` exists on every value; only numbers, booleans, strings, `DateTime` (`toIso()`) and `Duration` print the
+same text in every dialect: a list or a map is printed through `join` or `Json.encode`.
 
 `Error(message)` is the base error (`e.message`); `throw`, `try`/`catch` and `Result` are in
 [nuclear-base.md](nuclear-base.md) §3.2 and §7.

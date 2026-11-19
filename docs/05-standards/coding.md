@@ -44,5 +44,6 @@ The rules every project shares. A project's own conventions are in its `docs/05-
 6. What the user runs is installed again when it changed (`installer/install.sh`; an extension: its version raised
    and installed).
 
-The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn (a file git
-ignores, such as a build's output, is not code for them).
+The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn. They compare
+contents through git, never file dates: a project is behind when its code differs from the last commit (or changed
+in this session) and none of its documents does; a file git ignores, such as a build's output, is not code for them.

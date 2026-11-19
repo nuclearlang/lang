@@ -1,0 +1,62 @@
+use sys
+use getpass
+
+// `nuclear-chat`: what a person does by hand for the chat. The chat itself is the Synapsis service (../nuclear_chat).
+
+USAGE = """
+  nuclear-chat gif-key tenor|giphy [--remove]
+                                  keeps the key of a GIF service in the system's keyring (service nuclear-chat),
+                                  read from stdin (asked for, hidden, in a terminal), never from the command line;
+                                  --remove takes it away. The chat searches that service only when the editor's
+                                  setting names it and the project said yes once: the search words leave the machine.
+  nuclear-chat pack               the folder of the GIF pack made for the project
+  nuclear-chat serve              the service on 127.0.0.1 (its port: NUCLEAR_CHAT_PORT, the set-up's ai.env, else
+                                  7880), with its token from the keyring (made the first time); the set-up starts it
+                                  at login
+  nuclear-chat connect [--json]   where the service answers; --json: {"url", "header", "token"} for the editors'
+                                  extension host (the token never leaves the keyring otherwise)
+  nuclear-chat install            builds the service of a working tree in place (what the set-up runs)
+"""
+
+// `gif-key <service> [--remove]`
+gifKey(args: string[]) int
+  if args.isEmpty or not (args[0] in GIF_SERVICES)
+    print("nuclear-chat gif-key ${GIF_SERVICES.join("|")} [--remove]", file = sys.stderr)
+    return 2
+  keyring = Keyring()
+  if "--remove" in args
+    keyring.remove(args[0])
+    print("the key of ${args[0]} is no longer kept")
+    return 0
+  key: string = sys.stdin.isatty() ? getpass.getpass("the key of ${args[0]}: ") : sys.stdin.read()
+  keyring.keep(args[0], key)
+  print("the key of ${args[0]} is kept in the keyring (service ${KEYRING_SERVICE})")
+  0
+
+main(argv: string[]? = null) void
+  args: string[] = argv ?? sys.argv.slice(1)
+  if args.isEmpty or args[0] in ["help", "--help", "-h"]
+    print("nuclear-chat — Nuclear Chat by hand\n${USAGE}")
+    return
+  try
+    code = match args[0]
+      "gif-key" -> gifKey(args.skip(1))
+      "pack" -> packLine()
+      "serve" -> serve()
+      "connect" -> connect("--json" in args)
+      "install" -> install()
+      _ -> unknown(args[0])
+    sys.exit(code)
+  catch e
+    if not isinstance(e, RuntimeError) and not isinstance(e, OSError)
+      throw e
+    print("nuclear-chat: ${e}", file = sys.stderr)
+    sys.exit(1)
+
+packLine() int
+  print(ChatPack().folder())
+  0
+
+unknown(command: string) int
+  print("nuclear-chat: no command `${command}`\n${USAGE}", file = sys.stderr)
+  2

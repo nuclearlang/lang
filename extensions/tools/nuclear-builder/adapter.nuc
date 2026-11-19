@@ -1,0 +1,319 @@
+use os
+use re
+use json
+use time
+use random
+use signal
+use shutil
+use tomllib
+use tempfile
+use threading
+use subprocess
+use pathlib{ Path }
+use email/utils{ parsedateToDatetime }
+
+// The adapters of the software factory (spec 011, design.md "Who does a role"): every provider is called through
+// one interface, `run(role, station, inputs) → events, documents, files, cost`. A role is composed from its folder
+// (`nuclear-agents/roles/<role>/`) and the team's choices; an adapter renders it into its provider's own format in a
+// temporary folder of the run, never in the user's files.
+
+// A role as a run gives it to a provider: role.md, the skills switched on, the team's instructions and the skills of
+// the team and the member (`sources`: where each skill that is not the role's comes from: library, team or member).
+Role(id: string, title: string, mission: string, skills: <string, string>, templates: <string, string>, checks: <string, any>[], stations: string[], instructions: string = "", employee: string = "", sources: <string, string> = {})
+
+  // The whole role as one text: what a system prompt or an instructions file holds.
+  text() string
+    parts = ["# ${title}", mission.trim()]
+    if instructions.trim().length > 0
+      parts.add("## The team's instructions\n\n${instructions.trim()}")
+    for name, body in skills
+      parts.add("## Skill: ${name}\n\n${"${frontMatter(body)["body"]}".trim()}")
+    parts.join("\n\n")
+
+  // The skills of the team and the member (not the role's) as one text: what the local Developer gets beside its
+  // own prompts.
+  sharedText() string
+    found: string[] = []
+    for name, body in skills
+      if name in sources
+        found.add("## Skill: ${name}\n\n${"${frontMatter(body)["body"]}".trim()}")
+    found.join("\n\n")
+
+// What a station gives a provider: the project, the task, the documents of the stations before it, the documents
+// it must write (in `specs/<id>/`), the model and the money it may spend, and the MCP server.
+Work(root: string, specDir: string, task: string, documents: <string, string>, writes: string[], model: string, budgetUsd: double, mcpCommand: string = "nuclear-mcp", timeoutMs: int = 1_200_000, inputs: <string, any> = {})
+
+// What a provider did: its events (text, tool calls, cost), the documents it wrote, the project files it changed,
+// what it cost, its last text, and why it failed when it did.
+Outcome(ok: boolean, text: string, documents: <string, string>, files: string[], costUsd: double, events: <string, any>[], error: string = "", data: <string, any> = {})
+
+// ---------- the role from its folder ----------
+
+// The front matter of a markdown file (`key: value` lines between `---`) and its body.
+frontMatter(text: string) <string, any>
+  found: <string, any> = { "body": text }
+  if not text.startsWith("---\n")
+    return found
+  end = text.indexOf("\n---", 4)
+  if end < 0
+    return found
+  for line in text.substring(4, end).split("\n")
+    at = line.indexOf(":")
+    // a nested key (`  kind: local` under `default:`) is not a key of the file
+    if at > 0 and not line.startsWith(" ")
+      value = line.substring(at + 1).trim()
+      found[line.substring(0, at).trim()] = value.startsWith("[") and value.endsWith("]") ? value.substring(1, value.length - 1).split(",").map((v: string) => v.trim()).filter((v: string) => v.length > 0) : value
+  found["body"] = text.substring(end + 4).trimStart()
+  found
+
+markdownFiles(dir: Path) <string, string>
+  found: <string, string> = {}
+  if dir.isDir()
+    for f in dir.glob("*.md").sorted()
+      found["${f.stem}"] = f.readText(encoding = "utf-8")
+  found
+
+// The names of a role's skills (`skills/*.md`) a provider is given: what a preset switches on. A skill that is a
+// prompt of a local agent's step (`prompt: agent.<step>`) is the Nuclear Developer's, not a skill to give.
+roleSkills(role: string, dir: Path? = null) string[]
+  at = dir ?? rolesDir()
+  if at == null
+    return []
+  all = markdownFiles(at!.joinpath(role, "skills"))
+  all.keys.filter((name) => not "${frontMatter(all[name]!)["prompt"] ?? ""}".startsWith("agent."))
+
+// What the screens show of a role's skills, by name, in `lang`: `{ title, description }`. The English title is the
+// name in words; a language's own is the front matter's `title_<lang>` and `description_<lang>` (the roles' README).
+skillTexts(role: string, lang: string = "en", dir: Path? = null) <string, <string, string>>
+  at = dir ?? rolesDir()
+  found: <string, <string, string>> = {}
+  if at == null
+    return found
+  all = markdownFiles(at!.joinpath(role, "skills"))
+  for name in roleSkills(role, at)
+    head = frontMatter(all[name]!)
+    words = name.replaceAll("-", " ")
+    title = "${head["title_${lang}"] ?? ""}"
+    said = "${head["description_${lang}"] ?? ""}"
+    found[name] = { "title": title.isEmpty ? words.substring(0, 1).upper() + words.substring(1) : title, "description": said.isEmpty ? "${head["description"] ?? ""}" : said }
+  found
+
+// A role composed for a run: its folder, the skills the team switched on, the team's instructions and extra skills.
+// A role whose folder is not there yet gets one line of mission, and says so.
+composeRole(id: string, assigned: <string, any>, dir: Path? = null) Role
+  base = dir ?? rolesDir()
+  at = base == null ? null : base!.joinpath(id)
+  file = at == null ? null : at!.joinpath("role.md")
+  there = at != null and file!.isFile()
+  all = there ? markdownFiles(at!.joinpath("skills")) : ({} as <string, string>)
+  on: string[] = assigned["skills"] ?? roleSkills(id, base)
+  skills: <string, string> = {}
+  for name in on
+    if all[name] != null
+      skills[name] = all[name]!
+  sources: <string, string> = {}
+  for extra in (assigned["extraSkills"] ?? []) as <string, any>[]
+    skills["${extra["name"]}"] = "${extra["text"]}"
+    sources["${extra["name"]}"] = "member"
+  // the team's and the member's skills (library.nuc `withSkills`): an own skill with a role skill's id replaces it
+  for shared in (assigned["sharedSkills"] ?? []) as <string, any>[]
+    skills["${shared["id"]}"] = "${shared["markdown"]}"
+    sources["${shared["id"]}"] = "${shared["from"]}"
+  if not there
+    return Role(id, id.substring(0, 1).upper() + id.substring(1), "You are the ${id} of a software factory that makes NuclearLang products with its tools (the role's folder nuclear-agents/roles/${id}/ is missing).", skills, {}, [], STATIONS.filter((s) => STATION_ROLE[s] == id), "${assigned["instructions"] ?? ""}", "${assigned["employee"] ?? ""}", sources)
+  head = frontMatter(file!.readText(encoding = "utf-8"))
+  checks: <string, any>[] = []
+  checksFile = at!.joinpath("checks.toml")
+  if checksFile.isFile()
+    table: <string, any> = tomllib.loads(checksFile.readText(encoding = "utf-8"))
+    checks = table["check"] ?? ([] as <string, any>[])
+  stations: string[] = isinstance(head["stations"], list) ? (head["stations"] as string[]) : STATIONS.filter((s) => STATION_ROLE[s] == id)
+  Role(id, "${head["title"] ?? id}", "${head["body"]}", skills, markdownFiles(at!.joinpath("templates")), checks, stations, "${assigned["instructions"] ?? ""}", "${assigned["employee"] ?? ""}", sources)
+
+// ---------- the documents and the files ----------
+
+// The documents of an answer: each one after a line `--- document: <name> ---`; one asked for and no marker: the
+// whole answer.
+documentsOf(text: string, names: string[]) <string, string>
+  found: <string, string> = {}
+  marks: re.Match[] = list(re.finditer(r"(?m)^--- document: ([\w.\-/]+) ---[ \t]*$", text))
+  for i in 0..marks.length
+    start: int = marks[i].end()
+    end: int = i + 1 < marks.length ? marks[i + 1].start() : text.length
+    found["${marks[i].group(1)}"] = text.substring(start, end).trim() + "\n"
+  if found.isEmpty and names.length == 1 and text.trim().length > 0
+    found[names[0]] = text.trim() + "\n"
+  found
+
+// The documents a provider wrote into `specs/<id>/` itself (an agent edits files), else those of its answer.
+collectDocuments(work: Work, text: string) <string, string>
+  found: <string, string> = {}
+  for name in work.writes
+    file = Path(work.specDir, name)
+    if file.isFile() and not (name in work.documents and work.documents[name] == file.readText(encoding = "utf-8"))
+      found[name] = file.readText(encoding = "utf-8")
+  answered = documentsOf(text, work.writes.filter((n) => not (n in found)))
+  for name, body in answered
+    if name in work.writes and not (name in found)
+      found[name] = body
+  found
+
+SKIPPED_DIRS = [".git", ".nuclear", "build", "node_modules", ".venv", "__pycache__", ".dart_tool"]
+
+// What each file of the project is now (its size and time), to tell which ones a provider changed.
+snapshot(root: string) <string, string>
+  seen: <string, string> = {}
+  for entry in os.walk(root)
+    dir: string = entry[0]
+    dirs: string[] = entry[1]
+    files: string[] = entry[2]
+    for d in dirs.copy()
+      if d in SKIPPED_DIRS
+        dirs.remove(d)
+    for f in files
+      full = Path(dir, f)
+      st = full.stat()
+      seen["${full.relativeTo(root)}"] = "${st.stSize}:${st.stMtimeNs}"
+  seen
+
+changedFiles(before: <string, string>, after: <string, string>) string[]
+  changed = after.keys.filter((f) => before[f] != after[f])
+  [...changed, ...before.keys.filter((f) => not (f in after))].sorted()
+
+// Runs an adapter: the files it changed are found by snapshots, a failure becomes an outcome, never an exception.
+// Every adapter is a function `(role, station, work, emit) => Outcome`, one per provider, each in its own file.
+runAdapter(adapter: (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome, role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  before = snapshot(work.root)
+  try
+    out = adapter(role, station, work, emit)
+    out.files = changedFiles(before, snapshot(work.root)).filter((f) => not f.startsWith("${Path(work.specDir).relativeTo(work.root)}"))
+    out
+  catch e
+    if not isinstance(e, RuntimeError) and not isinstance(e, OSError) and not isinstance(e, ValueError)
+      throw e
+    Outcome(false, "", {}, changedFiles(before, snapshot(work.root)), 0, [], "${e}")
+
+// ---------- the prompt every provider gets ----------
+
+// The task of a station as one prompt: the work, the documents before it, the templates of the documents to write.
+stationPrompt(role: Role, station: string, work: Work, inline: boolean) string
+  parts = ["You are the ${role.title} of the software factory, at the station ${station}. Make the product with NuclearLang's tools (the Nuclear MCP server): never write target code by hand.", "## The task\n\n${work.task.trim()}"]
+  for name, body in work.documents
+    parts.add("## ${name} (from the stations before)\n\n${body.trim()}")
+  if not work.writes.isEmpty
+    templates: string[] = []
+    for name in work.writes
+      template = role.templates[Path(name).stem]
+      templates.add(template == null ? "- ${name}" : "- ${name}, from this template:\n\n${template!.trim()}")
+    how = inline ? "Answer with each document after a line `--- document: <name> ---`." : "Write them as files in ${work.specDir}."
+    parts.add("## The documents to write\n\n${templates.join("\n\n")}\n\n${how}")
+  parts.join("\n\n")
+
+// ---------- a provider's command line ----------
+
+// The temporary folder of a run where an adapter renders a role (removed by `dropRenderDir`).
+renderDir(provider: string) Path
+  Path(tempfile.mkdtemp(prefix = "nuclear-factory-${provider}-"))
+
+dropRenderDir(dir: Path) void
+  shutil.rmtree(dir, ignoreErrors = true)
+
+// The Builder's MCP server (`nuclear-builder mcp`, ADR-platform-0009): `NUCLEAR_BUILDER_COMMAND`, else the one on PATH.
+builderMcpCommand() string
+  given: string = os.environ.get("NUCLEAR_BUILDER_COMMAND") ?? ""
+  given.isEmpty ? "nuclear-builder" : given
+
+// Its arguments for a project.
+builderMcpArgs(root: string) string[]
+  ["mcp", "--root", root]
+
+// The MCP servers every agent gets, as their configuration names them: NuclearLang's (`nuclear`) and the Builder's
+// (`nuclear_builder`, every action of the Builder's pages in the project `root`).
+mcpServers(command: string, root: string) <string, any>
+  { "nuclear": { "command": command, "args": [] as string[] }, "nuclear_builder": { "command": builderMcpCommand(), "args": builderMcpArgs(root) } }
+
+// Runs a command in the project and gives each line it prints to `onLine`; the whole process group is killed after
+// `timeoutMs`. The exit code, -9 when it was killed, and the end of what it said on stderr.
+streamCommand(command: string[], cwd: string, env: <string, string>, onLine: (line: string) => void, timeoutMs: int, input: string? = null) <string, any>
+  found = shutil.which(command[0], path = env["PATH"])
+  if found == null
+    throw RuntimeError("`${command[0]}` is not installed or not on the PATH")
+  err = tempfile.TemporaryFile()
+  p = subprocess.Popen([found!, ...command.skip(1)], cwd = cwd, env = env, stdin = input == null ? subprocess.DEVNULL : subprocess.PIPE, stdout = subprocess.PIPE, stderr = err, text = true, startNewSession = os.name != "nt")
+  killed = [false]
+  stop = () =>
+    killed[0] = true
+    try
+      if os.name != "nt"
+        os.killpg(p.pid, signal.SIGKILL)
+      else
+        p.kill()
+    catch e
+      if not isinstance(e, OSError)
+        throw e
+  timer = threading.Timer(timeoutMs / 1000, stop)
+  timer.start()
+  try
+    if input != null
+      p.stdin!.write(input!)
+      p.stdin!.close()
+    for line in p.stdout!
+      onLine(line.trimEnd())
+    p.wait()
+  finally
+    timer.cancel()
+  err.seek(0)
+  said: string = err.read().decode("utf-8", "replace")
+  err.close()
+  { "code": killed[0] ? -9 : p.returncode, "stderr": said.substring(Math.max(0, said.length - 2000)) }
+
+// What an agent's command line did, as an outcome.
+agentOutcome(name: string, ran: <string, any>, found: <string, any>, events: <string, any>[], work: Work) Outcome
+  text = "${found["text"] ?? ""}"
+  cost: double = found["cost"] ?? 0
+  code: int = ran["code"]!
+  failed = code != 0 or found["failed"] == true
+  why = code == -9 ? "${name} timed out (killed)" : "${name} ended with ${code}: ${ran["stderr"] ?? ""} ${failed ? text : ""}".trim()
+  Outcome(not failed, text, collectDocuments(work, text), [], cost, events, failed ? why : "")
+
+// Parses one line of JSON, or null when it is not.
+jsonLine(line: string) <string, any>?
+  if not line.startsWith("{")
+    return null
+  try
+    found = json.loads(line)
+    isinstance(found, dict) ? found : null
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    null
+
+// ---------- retries ----------
+
+// The wait before retry `n` (1 for the first): exponential backoff with full jitter, a random time between 0 and
+// min(maxMs, baseMs·2^(n-1)); a `Retry-After` the server gives wins, capped the same.
+backoff(n: int, attempts: int, baseMs: int, maxMs: int, retryAfterMs: int? = null, draw: () => double = random.random) int
+  ceiling = Math.min(maxMs, baseMs * 2 ** Math.max(0, n - 1))
+  retryAfterMs != null ? Math.min(maxMs, retryAfterMs!) : (draw() * ceiling).round()
+
+// A status worth retrying: the server is busy or briefly down. Another 4xx fails again the same way.
+transientStatus(status: int) boolean
+  status in [408, 425, 429, 500, 502, 503, 504]
+
+// `Retry-After` in milliseconds (seconds or an HTTP date), or null.
+retryAfter(value: string?, now: double? = null) int?
+  if value == null or value!.trim().isEmpty
+    return null
+  seconds = value!.trim().toDouble()
+  if seconds != null
+    return Math.max(0, (seconds! * 1000).round())
+  try
+    at = parsedate(value!)
+    Math.max(0, ((at - (now ?? time.time())) * 1000).round())
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, TypeError)
+      throw e
+    null
+
+parsedate(value: string) double
+  parsedateToDatetime(value).timestamp()

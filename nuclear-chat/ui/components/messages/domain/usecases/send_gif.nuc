@@ -1,0 +1,4 @@
+// What MessagesRepository.gif answers, for the screens of messages.
+usecase SendGif(repository: MessagesRepository)
+  exec(workspace: string, channel: string, sent: SentGif) Result<NuclearChatError, Message>
+    ~repository.gif(workspace, channel, sent)

@@ -1,0 +1,6 @@
+// An emoji on a message: the same one again by the same person takes it away.
+Reaction
+  @minLength(1)
+  @maxLength(32)
+  emoji: string
+  by: string = "you"

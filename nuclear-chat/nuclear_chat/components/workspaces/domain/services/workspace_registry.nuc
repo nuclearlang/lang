@@ -1,0 +1,88 @@
+// The projects registered by their hosts, in memory (a host registers its project when it starts), with their
+// channels kept in the project (`.nuclear/chat/channels.json`, replaced whole).
+service WorkspaceRegistry(files: ChatFiles)
+  known: <string, Workspace> = {}
+
+  // Registers a project: its id is its folder's fingerprint (the same folder, the same id); the channels the host
+  // opens, `#general` and a direct message with every member are merged into the ones the project keeps (their
+  // last read, the agent chosen, the user's own channels).
+  register(input: NewWorkspace) Result<Error, Workspace>
+    if not files.isFolder(input.root)
+      return Err(Invalid("no folder ${input.root}"))
+    ids = input.members.map((m) => m.id)
+    if ids.unique().length != ids.length
+      return Err(Invalid("two members have the same id"))
+    for t in input.teams
+      if not t.lead.isEmpty and not (t.lead in ids)
+        return Err(Invalid("the lead of the team ${t.id} is not a member: ${t.lead}"))
+    root = files.absolute(input.root)
+    ws = Workspace(id = workspaceId(root), root = root, host = input.host, members = input.members, teams = input.teams, lang = input.lang, gifs = input.gifs)
+    ws.channels = mergedChannels(kept(ws), hostChannels(input))
+    known[ws.id] = ws
+    keep(ws)
+    Ok(ws)
+
+  find(id: string) Result<Error, Workspace>
+    found = known[id]
+    if found == null
+      return Err(NotFound("no workspace ${id}: its host registers it first (POST workspaces)"))
+    Ok(found!)
+
+  // Writes the channels of a workspace.
+  keep(ws: Workspace) void
+    files.writeText(ws.chatFile("channels.json"), Json.encode(ws.channels.map((c) => channelMap(c))) + "\n")
+
+  // The channels a project keeps (one that cannot be read is left out: the host's are written again).
+  kept(ws: Workspace) Channel[]
+    text = files.readText(ws.chatFile("channels.json"))
+    if text == null
+      return []
+    found: Channel[] = []
+    try
+      decoded: any = Json.decode(text!)
+      for c in decoded as <string, any>[]
+        id = "${c["id"] ?? ""}"
+        if Regex(r"^[a-z0-9][a-z0-9_.-]{0,79}$").test(id)
+          found.add(Channel(id = id, name = "${c["name"] ?? id}", topic = "${c["topic"] ?? ""}", kind = c["kind"] == "dm" ? "dm" : "channel", members = (c["members"] ?? []) as string[], team = "${c["team"] ?? ""}", lastRead = (c["lastRead"] ?? 0) as int, agent = "${c["agent"] ?? ""}", model = "${c["model"] ?? ""}"))
+    catch e
+      return []
+    found
+
+// A channel as `channels.json` keeps it (spec 013, design.md "On disk").
+channelMap(c: Channel) <string, any>
+  { "id": c.id, "name": c.name, "topic": c.topic, "kind": c.kind, "members": c.members, "team": c.team, "lastRead": c.lastRead, "agent": c.agent, "model": c.model }
+
+// The channels a host opens: `#general`, its own, a direct message with every member.
+hostChannels(input: NewWorkspace) Channel[]
+  found: Channel[] = [Channel(id = "general", name = "general", topic = "the whole project", members = ["you", ...input.members.map((m) => m.id)])]
+  for c in input.channels
+    found.add(c)
+  for m in input.members
+    found.add(Channel(id = "dm-${m.id.lower()}", name = m.name, kind = "dm", members = ["you", m.id]))
+  found
+
+// The host's channels, each with what the project kept of it (its last read), then the user's own.
+mergedChannels(kept: Channel[], wanted: Channel[]) Channel[]
+  found: Channel[] = []
+  for w in wanted
+    if found.any((f) => f.id == w.id)
+      continue
+    before = kept.find((k) => k.id == w.id)
+    if before != null
+      w.lastRead = before!.lastRead
+      w.agent = before!.agent
+      w.model = before!.model
+    found.add(w)
+  for k in kept
+    if k.kind == "channel" and not found.any((f) => f.id == k.id)
+      found.add(k)
+  found
+
+// A short, stable fingerprint of a text, the same in every dialect: two rolling sums kept small.
+workspaceId(text: string) string
+  a = 7
+  b = 13
+  for i in 0..text.length
+    a = (a * 31 + text.codeAt(i)) % 1_000_003
+    b = (b * 37 + text.codeAt(i)) % 999_983
+  "w${a.toRadix(16)}${b.toRadix(16)}"

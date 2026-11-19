@@ -1,0 +1,4 @@
+// What TaskRepository.created receives from the API, for the screens of tasks.
+usecase WatchCreatedTasks(repository: TaskRepository)
+  exec() Stream<TaskCreated>
+    repository.created()

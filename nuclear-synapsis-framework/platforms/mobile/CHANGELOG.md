@@ -4,6 +4,7 @@ All notable changes to synapsis-mobile are written here; versions follow [Semant
 
 ## Unreleased
 
+- The flutter dialect's example `dart_extension` has its first comment in English (it was in Spanish), its output regenerated.
 - Fixed: an `Http` connection whose `baseUrl` has no final `/` (`https://jsonplaceholder.typicode.com`, as `nuclear gen
   --source rest:<url>` writes it) sent every request to a wrong host. Found by the onboarding app `todos_app`.
 - `examples/onboarding/todos_app` and the guide `onboarding-mobile.md`: a todos app made only by the tools.

@@ -6,15 +6,21 @@
 
 | Mode | Hook | What it does |
 |---|---|---|
-| `session` | `SessionStart` | lists the projects whose code is newer than their documents (their `AGENTS.md` or a file of their `docs/`): work of another session that was not recorded |
+| `session` | `SessionStart` | lists the projects whose code differs from the last commit while none of their documents (their `AGENTS.md` or a file of their `docs/`) does: work of another session that was not recorded |
 | `session` | `SessionStart` | lists the context documents over 250 lines: one is read in one go, or it is split (references, guides and plans are not counted) |
-| `stop` | `Stop` | if the session changed a project's code after that project's documents, it does not let the turn end (once per turn) and names the project |
+| `stop` | `Stop` | if the session changed a project's code and none of that project's documents, it does not let the turn end (once per turn) and names the project |
 | `stop` | `Stop` | if the session changed anything the knowledge base is made from, it runs `nuclear-graph knowledge check` and does not let the turn end while the base is behind the tree: build, review the rows it names, ingest |
 
 A project is a folder with an `AGENTS.md`; a file belongs to the closest one above it. Code is sources, data of the
 dialects, scripts and manifests; generated folders, type definitions and every file git ignores (a build's output, the
-website's content) are not counted. The session is marked with
-a file in `$XDG_RUNTIME_DIR` (`nuclear-context-<session_id>`), so `stop` only looks at what changed since it started.
+website's content) are not counted.
+
+It compares contents through git (`git diff HEAD`, the new files git does not ignore, `git hash-object`), never file
+dates: a checkout, a restore or a reboot changes dates, not work. At its start a session keeps a snapshot of what
+already differed from the last commit, with the hash of each file, in `$XDG_RUNTIME_DIR` (`nuclear-context-<session_id>`;
+a resumed or compacted session keeps the first one), so `stop` only looks at the files whose contents this session
+changed. Contents cannot say which came first, so a document changed earlier in the session counts for code changed
+after it.
 
 Trying it by hand:
 

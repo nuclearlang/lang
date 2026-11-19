@@ -1,0 +1,255 @@
+use sys
+use os
+use json
+use time
+use subprocess
+use pathlib{ Path }
+
+// The faces of the roster (spec 011 requirement 27, design.md "Faces and temperaments"): one painted cyberpunk bust
+// portrait per employee, made on this machine by an image model (stable-diffusion.cpp with FLUX.1-schnell, outside
+// the repository: README.md, "The faces"). This file writes each employee's prompt from their card (role, gender,
+// age, temperament, bio) with a fixed seed from their id, runs the model once per employee and writes
+// `<role>/roster/faces/<id>.webp` (512 px), then its thumbnail `<role>/roster/faces/thumb/<id>.webp` (128 px, what the
+// editors' tiles, cards and avatars draw). `roster/faces/faces.json` keeps the prompt and seed of every face, so one
+// can be made again; the images are checked in, and nobody needs the model to use them.
+
+ROLES = ["analyst", "architect", "developer", "qa", "devops"]
+
+// The neon of each role: its rim light (the same colours the editors use for the role).
+ROLE_NEON: <string, string> = { "analyst": "violet", "architect": "electric blue", "developer": "amber", "qa": "cyan", "devops": "crimson red" }
+
+// The whole set shares one style, so the 200 faces read as one cast.
+STYLE = "Realistic digital painting, cyberpunk concept art, a cinematic close-up portrait with realistic proportions and lifelike detailed skin texture."
+LIGHT = "Cinematic rim light in {neon} neon, a rainy night city behind as soft out-of-focus neon bokeh with no signs, 85mm lens, shallow depth of field, sharp focus on the eyes. No text, no letters, no logos."
+// FLUX.1-schnell runs without guidance (cfg 1), so this is kept for a model that reads one, and in faces.json.
+NEGATIVE = "cartoon, anime, 3d render, plastic skin, text, letters, watermark, signature, logo, deformed, extra fingers, extra limbs, blurry, lowres"
+
+ORIGINS = ["Nigerian", "Korean", "Mexican", "Indian", "Irish", "Japanese", "Brazilian", "Egyptian", "Swedish", "Vietnamese", "Ethiopian", "Italian", "Filipino", "Moroccan", "Polish", "Colombian", "Chinese", "Persian", "Samoan", "Kenyan", "Turkish", "Peruvian", "Thai", "Scottish", "Lebanese", "Jamaican", "Ukrainian", "Indonesian", "Senegalese", "Argentinian"]
+HAIR_FEMALE = ["long straight black hair with a neon streak", "a sharp asymmetric bob", "an undercut with long hair swept to one side", "tight curls in a high puff", "long braids with glowing beads", "a messy pixie cut dyed pink", "a slick high ponytail", "a shaved head with a tattooed scalp", "wavy shoulder-length auburn hair", "a buzz cut dyed electric blue", "a half-shaved head with a long fringe", "space buns", "locs tied up in a wrap"]
+HAIR_MALE = ["a short fade", "a neon-dyed mohawk", "slicked-back dark hair", "a shaved head", "long hair tied in a top knot", "messy curly hair", "short dreadlocks", "a buzz cut with a shaved line", "an undercut with a chrome-dyed quiff", "shoulder-length straight hair", "cornrows", "a tousled crop dyed green"]
+HAIR_NONBINARY = ["an asymmetric undercut dyed lilac", "a shaved head with a glowing scalp tattoo", "a messy silver crop", "a long fringe over one eye", "short bleached spikes"]
+IMPLANTS = ["a glowing cybernetic eye implant", "a thin chrome jaw plate", "a glowing chrome port on the side of the neck", "a translucent AR visor over one eye", "chrome cheekbone inlays", "a data cable plugged in behind the ear", "a row of small LED piercings on the ear", "a holographic monocle", "a metal temple implant with blinking lights", "a cybernetic arm in chrome", "subdermal glowing lines on the forehead", "a throat speaker implant"]
+JACKETS = ["a black tactical jacket with reflective trim", "a padded techwear bomber", "a worn leather jacket with neon piping", "a high-collar armoured coat", "a hooded rain shell", "a utility vest over a turtleneck", "an oversized holographic windbreaker", "a cropped moto jacket with patches"]
+
+// A detail from the bio, at most one: a word of the card and what the painter adds for it.
+DETAILS: string[][] = [["coffee", "holding a steaming paper coffee cup"], ["sticky note", "neon sticky notes on the wall behind"], ["whiteboard", "a glowing holographic whiteboard behind"], ["diagram", "holographic diagrams floating beside the head"], ["server", "server racks with blinking lights behind"], ["phone", "holding a cracked smartphone"], ["checklist", "a holographic checklist floating in front"], ["night", "late at night"], ["yaml", "lines of glowing code reflected on the face"], ["regular expression", "glowing symbols reflected on the face"], ["survey", "holding a tablet"], ["napkin", "holding a crumpled napkin"], ["stone", "a cracked marble texture on one cheek"], ["eagle", "a cybernetic eagle feather earring"], ["minotaur", "a labyrinth pattern glowing behind"], ["badge", "many glowing badges pinned on the jacket"], ["haiku", "holding an ink brush"], ["poet", "holding a glowing quill"], ["loop", "an infinity symbol pendant"], ["dream", "a dreamy haze"]]
+
+// ---------- the dice ----------
+
+// FNV-1a of the employee's id: the seed of their face and of the model.
+seedOf(text: string) int
+  h = 2166136261
+  for i in 0..text.length
+    h = ((h ^ text.codeAt(i)) * 16777619) & 0xffffffff
+  h == 0 ? 1 : h
+
+// The next number of the dice (xorshift32), in [0, 1).
+roll(dice: int[]) double
+  x = dice[0]
+  x = x ^ ((x << 13) & 0xffffffff)
+  x = x ^ (x >> 17)
+  x = x ^ ((x << 5) & 0xffffffff)
+  dice[0] = x
+  x / 4294967296.0
+
+pick(dice: int[], xs: string[]) string
+  xs[Math.min(xs.length - 1, (roll(dice) * xs.length).floor())]
+
+// ---------- who the face is ----------
+
+// The age in years a roster's text says, when it says one (`"3,643 years"` is 3643, `"Eternal"` is 9999); -1 when
+// it says none.
+yearsOf(age: string) int
+  low = age.lower()
+  if ["eternal", "ancient", "immortal", "billion", "million", "big bang", "paleozoic", "heat death", "bronze", "titanomachy", "antiquity", "end of days", "prophesied", "undead", "older than"].any((w) => w in low)
+    return 9999
+  digits = ""
+  for c in age.chars()
+    if c in "0123456789"
+      digits += c
+    else if c == "," and not digits.isEmpty
+      continue
+    else if not digits.isEmpty
+      break
+  digits.isEmpty ? -1 : (digits.substring(0, Math.min(digits.length, 6)).toInt() ?? -1)
+
+// The age the portrait shows: the card's when it is a person's (20 to 75), else one the dice pick (the ancient look
+// old more often, the ageless any age).
+apparentAge(card: <string, any>, dice: int[]) int
+  years = yearsOf("${card["age"] ?? ""}")
+  if years >= 20 and years <= 75
+    return years
+  if years > 75
+    return 45 + (roll(dice) * 30).floor()
+  22 + (roll(dice) * 36).floor()
+
+// "woman", "man" or "androgynous person", from the card's `gender`.
+personOf(gender: string) string
+  match gender
+    "female" -> "woman"
+    "male" -> "man"
+    _ -> "androgynous person"
+
+// The prompt of an employee's portrait: `looks` maps a temperament's id to its `look` (temperaments.json).
+promptOf(id: string, role: string, card: <string, any>, looks: <string, string>) string
+  dice = [seedOf(id)]
+  gender = "${card["gender"] ?? ""}"
+  temperament = "${card["temperament"] ?? ""}"
+  text = "${card["profile"] ?? ""} ${card["bio"] ?? ""}".lower()
+  age = temperament == "overconfident" ? 21 + (roll(dice) * 5).floor() : apparentAge(card, dice)
+  origin = pick(dice, ORIGINS)
+  hairs = gender == "female" ? HAIR_FEMALE : (gender == "male" ? HAIR_MALE : HAIR_NONBINARY)
+  hair = pick(dice, hairs)
+  one = pick(dice, IMPLANTS)
+  two = pick(dice, IMPLANTS.filter((i) => i != one))
+  jacket = pick(dice, JACKETS)
+  found = DETAILS.find((d) => d[0] in text)
+  look = looks[temperament] ?? "a confident expression"
+  // the temperament's look wins over the dice where both say the same thing
+  styled = ["hair", "head"].any((w) => w in look) ? "" : " Hair: ${hair}."
+  dressed = ["jacket", "coat", "suit", "hoodie", "robe", "vest", "cardigan", "streetwear"].any((w) => w in look) ? "" : " Wearing ${jacket}."
+  detail = found == null ? "" : " ${found![1].substring(0, 1).upper()}${found![1].substring(1)}."
+  grey = age >= 58 ? "grey-haired " : ""
+  light = LIGHT.replace("{neon}", ROLE_NEON[role] ?? "electric blue")
+  "${STYLE} Head and shoulders of a ${age}-year-old ${grey}${origin} ${personOf(gender)} with clearly visible cybernetic implants: ${one} and ${two}. Their temperament is ${temperament.replace("-", " ")}, which shows: ${look}.${styled}${dressed}${detail} ${light}"
+
+// ---------- the model ----------
+
+// Where the image tool and its models are (outside the repository): `NUCLEAR_IMAGE_MODELS`, else
+// `~/.local/share/nuclear-image-models` (`sd/sd-cli`, `models/`); never under `share/nuclearlang`, which every
+// install writes anew.
+toolFolder() Path
+  at = os.environ.get("NUCLEAR_IMAGE_MODELS")
+  at == null ? Path.home().joinpath(".local", "share", "nuclear-image-models") : Path(at!)
+
+// The command that paints one image: FLUX.1-schnell, 4 steps, no guidance, 512 × 512; the text encoder runs on the
+// processor so the diffusion model fits in the integrated GPU's memory.
+command(tool: Path, prompt: string, seed: int, out: Path) string[]
+  models = tool.joinpath("models")
+  ["${tool.joinpath("sd", "sd-cli")}", "--diffusion-model", "${models.joinpath("flux1-schnell-Q8_0.gguf")}", "--t5xxl", "${models.joinpath("t5-v1_1-xxl-encoder-Q8_0.gguf")}", "--clip_l", "${models.joinpath("clip_l.safetensors")}", "--vae", "${models.joinpath("ae.safetensors")}", "--cfg-scale", "1.0", "--sampling-method", "euler", "--steps", "4", "-W", "512", "-H", "512", "--backend", "diffusion=Vulkan0,te=cpu,vae=Vulkan0", "--mmap", "-s", "${seed}", "-p", prompt, "-o", "${out}"]
+
+// The face file of an employee: `<role>/roster/faces/<id>.webp` under the roles' folder.
+faceFile(roles: Path, role: string, id: string) Path
+  roles.joinpath(role, "roster", "faces", "${id}.webp")
+
+// The thumbnail of an employee's face: `<role>/roster/faces/thumb/<id>.webp` under the roles' folder.
+thumbFile(roles: Path, role: string, id: string) Path
+  roles.joinpath(role, "roster", "faces", "thumb", "${id}.webp")
+
+// What the faces of a role were made with: `<role>/roster/faces/faces.json`, `{ model, negative, faces: { <id>: { seed, prompt } } }`.
+recordFile(roles: Path, role: string) Path
+  roles.joinpath(role, "roster", "faces", "faces.json")
+
+readRecord(file: Path) <string, any>
+  file.isFile() ? (json.loads(file.readText(encoding = "utf-8")) as <string, any>) : ({} as <string, any>)
+
+writeRecord(file: Path, faces: <string, any>) void
+  file.parent.mkdir(parents = true, existOk = true)
+  sorted: <string, any> = {}
+  for key in faces.keys.sorted()
+    sorted[key] = faces[key]
+  file.writeText(json.dumps({ "model": "FLUX.1-schnell Q8_0 (stable-diffusion.cpp), 4 steps, euler, cfg 1, 512 x 512", "negative": NEGATIVE, "faces": sorted }, indent = 2, ensureAscii = false) + "\n", encoding = "utf-8")
+
+// Paints one face into `target` (a PNG from the model, then a WebP of quality 80 by ImageMagick); false when a tool
+// failed, with what it said.
+paint(tool: Path, prompt: string, seed: int, target: Path) boolean
+  png = target.withSuffix(".png")
+  made = subprocess.run(command(tool, prompt, seed, png), captureOutput = true, text = true)
+  if made.returncode != 0 or not png.isFile()
+    print("  the model failed: ${made.stderr.trim().split("\n").last}")
+    return false
+  converted = subprocess.run(["magick", "${png}", "-strip", "-quality", "80", "${target}"], captureOutput = true, text = true)
+  png.unlink()
+  if converted.returncode != 0
+    print("  magick failed: ${converted.stderr.trim()}")
+  converted.returncode == 0
+
+// The thumbnail of a face (ImageMagick: 128 × 128, WebP of quality 70, a few KB); false when `magick` failed, with
+// what it said.
+shrink(face: Path, thumb: Path) boolean
+  thumb.parent.mkdir(parents = true, existOk = true)
+  made = subprocess.run(["magick", "${face}", "-strip", "-resize", "128x128", "-quality", "70", "${thumb}"], captureOutput = true, text = true)
+  if made.returncode != 0
+    print("  magick failed: ${made.stderr.trim()}")
+  made.returncode == 0
+
+// Makes the thumbnail of every face under `roles` that has none, or one older than its face (`force`: all of them
+// again). Gives how many it made; the portraits are only read.
+writeThumbs(roles: Path, force: boolean = false) int
+  count = 0
+  for role in ROLES
+    folder = roles.joinpath(role, "roster", "faces")
+    if not folder.isDir()
+      continue
+    for face in folder.glob("*.webp").toList().sorted()
+      thumb = thumbFile(roles, role, face.stem)
+      if not force and thumb.isFile() and thumb.stat().stMtime >= face.stat().stMtime
+        continue
+      if shrink(face, thumb)
+        count += 1
+  count
+
+// Makes the faces of every employee under `roles` that has none (`force`: all of them again; `only`: one id; `seed`:
+// another seed for `only`, to remake a face that came out wrong). Gives how many it painted.
+writeFaces(roles: Path, only: string = "", force: boolean = false, seed: int = -1) int
+  tool = toolFolder()
+  if not tool.joinpath("sd", "sd-cli").isFile()
+    print("no image tool in ${tool}: install it as README.md says (\"The tool and the model\"), or set NUCLEAR_IMAGE_MODELS")
+    return 0
+  found: <string, any> = json.loads(roles.joinpath("temperaments.json").readText(encoding = "utf-8"))
+  looks: <string, string> = {}
+  for t in (found["temperaments"] ?? []) as <string, any>[]
+    looks["${t["id"]}"] = "${t["look"] ?? ""}"
+  count = 0
+  for role in ROLES
+    file = roles.joinpath(role, "roster", "en.json")
+    if not file.isFile()
+      continue
+    people: <string, any>[] = (json.loads(file.readText(encoding = "utf-8")) as <string, any>)["employees"] ?? []
+    records = recordFile(roles, role)
+    faces: <string, any> = readRecord(records)["faces"] ?? {}
+    for card in people
+      id = "${card["id"]}"
+      target = faceFile(roles, role, id)
+      if (not only.isEmpty and id != only) or (only.isEmpty and target.isFile() and not force)
+        continue
+      kept: <string, any> = faces[id] ?? {}
+      chosen = seed >= 0 and id == only ? seed : ((kept["seed"] ?? (seedOf(id) & 0x7fffffff)) as int)
+      prompt = promptOf(id, role, card, looks)
+      start = time.time()
+      target.parent.mkdir(parents = true, existOk = true)
+      if paint(tool, prompt, chosen, target)
+        faces[id] = { "seed": chosen, "prompt": prompt }
+        writeRecord(records, faces)
+        count += 1
+        print("${id} painted in ${(time.time() - start).round()} s")
+  count
+
+// `python -c "from nuclear_roles.faces import main; main()" [<roles folder>] [--only <id>] [--seed <n>] [--force]`
+// (the folder by default is the one this project is in): the faces, then their thumbnails · `--thumbs [--force]`: only
+// the thumbnails, from the portraits already there (no model).
+main(argv: string[]? = null) void
+  args: string[] = argv ?? sys.argv.slice(1)
+  only = ""
+  seed = -1
+  force = false
+  thumbs = false
+  roles = Path(__file__).resolve().parents[2]
+  at = 0
+  while at < args.length
+    if args[at] == "--only" and at + 1 < args.length
+      at += 1
+      only = args[at]
+    else if args[at] == "--seed" and at + 1 < args.length
+      at += 1
+      seed = args[at].toInt() ?? -1
+    else if args[at] == "--force"
+      force = true
+    else if args[at] == "--thumbs"
+      thumbs = true
+    else
+      roles = Path(args[at])
+    at += 1
+  if not thumbs
+    print("${writeFaces(roles, only, force, seed)} faces painted in ${roles}")
+  print("${writeThumbs(roles, thumbs and force)} thumbnails made in ${roles}")

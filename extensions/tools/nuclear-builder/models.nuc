@@ -1,0 +1,348 @@
+use re
+use os
+use sys
+use json
+use time
+use shutil
+use httpx
+use pathlib{ Path }
+
+// The models each provider offers on this machine (spec 011 requirement 35), and the memory guard of the local ones:
+// `nuclear-builder models [--provider <p>] [--fresh] --json` (the tool `models_list`), what the wizard's and the
+// member's model pickers list. Each list comes from the provider: Claude Code's aliases and the full ids it accepts,
+// `opencode models`, an API's model list (when the vault notes its key), every model Ollama has installed plus a few
+// small ones it can pull. A local model's memory is estimated and held against this machine's (`memoryNeed`, `fitOf`).
+
+// How long a list read from a command or an API is kept (`<factory>/cache/models-<provider>.json`): the pickers open
+// at once; `--fresh` reads it again.
+MODELS_TTL_SECONDS = 600
+
+// Claude Code's aliases of its latest models (`claude --help`: "an alias for the latest model ... or a model's full
+// name"); the full ids are the price table's.
+CLAUDE_ALIASES = ["fable", "opus", "sonnet", "haiku"]
+
+// Small models the local agents can pull, said as "not installed (downloads N GB)" when Ollama lacks them: their size
+// on disk and parameters as Ollama gives them.
+PULLABLE: <string, any>[] = [
+  { "id": "qwen2.5-coder:3b", "sizeGb": 1.9, "params": "3.1B", "quant": "Q4_K_M" },
+  { "id": "qwen2.5-coder:1.5b", "sizeGb": 1.0, "params": "1.5B", "quant": "Q4_K_M" },
+  { "id": "gemma4:e2b", "sizeGb": 7.2, "params": "5.1B", "quant": "Q4_K_M" },
+  { "id": "llama3.2:3b", "sizeGb": 2.0, "params": "3.2B", "quant": "Q4_K_M" },
+  { "id": "qwen3.5:4b", "sizeGb": 3.4, "params": "4.7B", "quant": "Q4_K_M" },
+  { "id": "qwen2.5-coder:7b", "sizeGb": 4.7, "params": "7.6B", "quant": "Q4_K_M" }
+]
+
+// The bytes one weight takes on disk for a quantization (with its scales), when only the parameters are known.
+BYTES_PER_WEIGHT: <string, double> = { "Q2": 0.35, "Q3": 0.45, "Q4": 0.58, "MXFP4": 0.53, "Q5": 0.69, "Q6": 0.82, "Q8": 1.06, "F16": 2.0, "BF16": 2.0, "F32": 4.0 }
+
+// The models' list endpoints of the API providers (free calls), each with how its key goes.
+ANTHROPIC_MODELS_URL = "https://api.anthropic.com/v1/models?limit=1000"
+OPENAI_MODELS_URL = "https://api.openai.com/v1/models"
+GOOGLE_MODELS_URL = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000"
+OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
+
+gbOf(bytes: double) double = roundTenth(bytes / 1_000_000_000)
+
+roundTenth(x: double) double = (x * 10).round() / 10.0
+
+// ---------- the machine's memory ----------
+
+// This machine's memory in GB: `totalGb`, and `availableGb` (what programs can take now without swapping). Linux
+// reads /proc/meminfo; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows the
+// operating system's counters (PowerShell). 0 when it cannot be read.
+machineMemory(meminfo: string = "/proc/meminfo", system: string = sys.platform) <string, any>
+  total = 0.0
+  free = 0.0
+  if system == "win32"
+    told = capture(["powershell", "-NoProfile", "-Command", "$o = Get-CimInstance Win32_OperatingSystem; \"$($o.TotalVisibleMemorySize) $($o.FreePhysicalMemory)\""]).out.trim().split(" ")
+    total = (told[0].toDouble() ?? 0.0) * 1024
+    free = (told.length > 1 ? told[1].toDouble() ?? 0.0 : 0.0) * 1024
+  else if system == "darwin"
+    total = capture(["sysctl", "-n", "hw.memsize"]).out.trim().toDouble() ?? 0.0
+    stat = capture(["vm_stat"]).out
+    page = 4096.0
+    found = re.search(r"page size of (\d+)", stat)
+    if found != null
+      page = "${found!.group(1)}".toDouble() ?? 4096.0
+    for kind in ["free", "inactive", "speculative"]
+      m = re.search("Pages ${kind}:\\s+(\\d+)", stat)
+      if m != null
+        free += ("${m!.group(1)}".toDouble() ?? 0.0) * page
+  else
+    try
+      lines: string[] = Path(meminfo).readText().split("\n")
+      for line in lines
+        m = re.match(r"^(MemTotal|MemAvailable):\s+(\d+)\s*kB", line)
+        if m != null
+          kb = ("${m!.group(2)}".toDouble() ?? 0.0) * 1024
+          if m!.group(1) == "MemTotal"
+            total = kb
+          else
+            free = kb
+    catch e
+      if not isinstance(e, OSError)
+        throw e
+  { "totalGb": gbOf(total), "availableGb": gbOf(free) }
+
+// The memory a local model takes when it answers, in GB: its weights (its size on disk, else its parameters by the
+// bytes of its quantization), a fifth more for the runner's buffers, and 1 GB for the context's cache at Ollama's
+// default context. A margin, not a measure: what the guard holds against the machine.
+memoryNeed(sizeGb: double, params: string = "", quant: string = "") double
+  weights = sizeGb
+  if weights <= 0
+    m = re.search(r"([\d.]+)\s*([BM])", params.upper())
+    billions = m == null ? 0.0 : ("${m!.group(1)}".toDouble() ?? 0.0) / (m!.group(2) == "M" ? 1000.0 : 1.0)
+    key = BYTES_PER_WEIGHT.keys.find((k) => quant.upper().startsWith(k)) ?? "Q4"
+    weights = billions * BYTES_PER_WEIGHT[key]!
+  weights <= 0 ? 0.0 : roundTenth(weights * 1.2 + 1.0)
+
+// How a model needing `needGb` sits on a machine: `too-big` when it needs more than the machine's memory less what the
+// system and the editor keep (2 GB, or 15% of a bigger machine): it can make the computer freeze or restart; `tight`
+// when it needs more than is free now (other programs must give memory back, or it swaps); `fits`; `unknown` when the
+// machine or the need cannot be told.
+fitOf(needGb: double, memory: <string, any>) string
+  total: double = memory["totalGb"] ?? 0.0
+  if total <= 0 or needGb <= 0
+    return "unknown"
+  usable = total - Math.max(2.0, total * 0.15)
+  if needGb > usable
+    return "too-big"
+  needGb > (memory["availableGb"] ?? total) ? "tight" : "fits"
+
+// A local model as the pickers list it: its size, parameters, quantization, memory need and fit.
+localModel(id: string, sizeGb: double, params: string, quant: string, installed: boolean, memory: <string, any>) <string, any>
+  need = memoryNeed(sizeGb, params, quant)
+  found: <string, any> = { "id": id, "installed": installed, "sizeGb": sizeGb, "params": params, "quant": quant, "needGb": need, "fit": fitOf(need, memory) }
+  if not installed
+    found["downloadGb"] = sizeGb
+  found
+
+// ---------- each provider's models ----------
+
+// Every model Ollama has installed (`/api/tags`), but the embedding models (they do not answer), then the pullable
+// ones it lacks; when Ollama does not answer, the pullable ones with why.
+ollamaModels(memory: <string, any>, transport: httpx.BaseTransport? = null) <string, any>
+  base = urls()["ollama"]!
+  out: <string, any>[] = []
+  why: string? = null
+  client = httpx.Client(transport = transport, timeout = 3.0)
+  try
+    r = client.get("${base}/api/tags")
+    for m in ((r.json() as <string, any>)["models"] ?? []) as <string, any>[]
+      name = "${m["name"] ?? m["model"] ?? ""}"
+      details: <string, any> = m["details"] ?? ({} as <string, any>)
+      family = "${details["family"] ?? ""}"
+      if name.isEmpty or "embed" in name.lower() or "embed" in family.lower() or "bert" in family.lower()
+        continue
+      out.add(localModel(name, gbOf((m["size"] ?? 0) * 1.0), "${details["parameter_size"] ?? ""}", "${details["quantization_level"] ?? ""}", true, memory))
+  catch e
+    if not isinstance(e, httpx.HTTPError) and not isinstance(e, ValueError)
+      throw e
+    why = "Ollama does not answer at ${base}: nuclear-builder setup"
+  finally
+    client.close()
+  have = out.map((m) => "${m["id"]}")
+  for p in PULLABLE
+    if not ("${p["id"]}" in have)
+      out.add(localModel("${p["id"]}", p["sizeGb"]!, "${p["params"]}", "${p["quant"]}", false, memory))
+  found: <string, any> = { "models": out, "free": false, "source": why == null ? "ollama" : "pullable" }
+  if why != null
+    found["why"] = why
+  found
+
+// The ids of a provider's priced models (the factory's table and the project's `prices`).
+pricedIds(provider: string, prices: <string, any>) string[]
+  apiModels(provider, prices)
+
+// An API provider's list endpoint read with its key: the ids it serves for chat.
+apiListed(provider: string, key: string, client: httpx.Client) string[]
+  if provider == "anthropic"
+    data = answerOf(client.get(ANTHROPIC_MODELS_URL, headers = { "x-api-key": key, "anthropic-version": "2026-10-21" }), provider)
+    return ((data["data"] ?? []) as <string, any>[]).map((m) => "${m["id"]}")
+  if provider == "openai"
+    data = answerOf(client.get(OPENAI_MODELS_URL, headers = { "authorization": "Bearer ${key}" }), provider)
+    ids = ((data["data"] ?? []) as <string, any>[]).map((m) => "${m["id"]}")
+    return ids.filter((id) => re.search(r"embedding|tts|whisper|dall-e|moderation|audio|realtime|image|transcribe|search|babbage|davinci", id) == null).sorted()
+  if provider == "google"
+    data = answerOf(client.get(GOOGLE_MODELS_URL, headers = { "x-goog-api-key": key }), provider)
+    chat = ((data["models"] ?? []) as <string, any>[]).filter((m) => "generateContent" in ((m["supportedGenerationMethods"] ?? []) as string[]))
+    return chat.map((m) => "${m["name"]}".replace("models/", ""))
+  data = answerOf(client.get(OPENROUTER_MODELS_URL, headers = { "authorization": "Bearer ${key}" }), provider)
+  ((data["data"] ?? []) as <string, any>[]).map((m) => "${m["id"]}").sorted()
+
+// An API provider's models: its list endpoint's when the vault notes its key, else its priced ones. Each says whether
+// it has a price (a run needs one to keep the budget; OpenRouter reports each call's cost).
+apiProviderModels(provider: string, prices: <string, any>, transport: httpx.BaseTransport? = null) <string, any>
+  priced = pricedIds(provider, prices)
+  ids = priced
+  source = "prices"
+  why: string? = null
+  if provider in notedProviders()
+    client = httpx.Client(transport = transport, timeout = 8.0)
+    try
+      key = vaultKey(provider, 0)
+      if key != null
+        ids = [...priced, ...apiListed(provider, key!, client)].unique()
+        source = "api"
+    catch e
+      if not isinstance(e, httpx.HTTPError) and not isinstance(e, RuntimeError) and not isinstance(e, ValueError)
+        throw e
+      why = "${e}"
+    finally
+      client.close()
+  models = ids.map((id) => { "id": id, "priced": provider == "openrouter" or id in priced })
+  found: <string, any> = { "models": models, "free": false, "source": source }
+  if why != null
+    found["why"] = why
+  found
+
+// ---------- a model's family and version ----------
+
+// What a model is, for the pickers: its `family`, its `version` ("latest" for an alias) and a `label` ("opus 5.5",
+// "qwen2.5-coder 3b", "gemini 2.5 pro"), `alias` when it names the latest of a family. Claude's ids
+// (`claude-<family>-<major>-<minor>`, with or without a provider before a slash), an Ollama tag (`<family>:<tag>`),
+// else the first number of the name (an optional `v` before it) is the version; a name with none is its own family.
+modelNamed(id: string) <string, any>
+  slash = id.lastIndexOf("/")
+  before = slash < 0 ? "" : id.substring(0, slash + 1)
+  name = id.substring(slash + 1)
+  if name in CLAUDE_ALIASES
+    return { "family": name, "version": "latest", "label": "${name} (latest)", "alias": true }
+  claude = re.match(r"^claude-([a-z]+)-(\d+(?:[-.]\d+)*)$", name)
+  if claude != null
+    version = "${claude!.group(2)}".replaceAll("-", ".")
+    return { "family": claude!.group(1), "version": version, "label": "${before}${claude!.group(1)} ${version}" }
+  if ":" in name
+    at = name.indexOf(":")
+    return { "family": name.substring(0, at), "version": name.substring(at + 1), "label": "${before}${name.substring(0, at)} ${name.substring(at + 1)}" }
+  found = re.match(r"^(.*?)[-_]v?(\d+(?:\.\d+)*)(.*)$", name)
+  if found == null
+    return { "family": name, "version": "", "label": id }
+  family = "${found!.group(1)}"
+  version = "${found!.group(2)}"
+  rest = "${found!.group(3)}".replaceAll(Regex(r"[-_]+"), " ").trim()
+  { "family": family, "version": version, "label": "${before}${family} ${version}${rest.isEmpty ? "" : " ${rest}"}" }
+
+// A provider's models with what each one is (`modelNamed`), what the provider gave kept over it.
+named(found: <string, any>) <string, any>
+  { ...found, "models": ((found["models"] ?? []) as <string, any>[]).map((m) => { ...modelNamed("${m["id"]}"), ...m }) }
+
+// Claude Code's models: each alias (the latest of its family), then every version of that family it accepts (the
+// price table's full ids), the newest first; a full id of another family after them.
+claudeCodeIds(full: string[]) string[]
+  out: string[] = []
+  for alias in CLAUDE_ALIASES
+    out.add(alias)
+    for id in full.filter((x) => modelNamed(x)["family"] == alias).sortedBy((x) => "${modelNamed(x)["version"]}").reversed()
+      out.add(id)
+  [...out, ...full.filter((x) => not (x in out))]
+
+// The models of one provider, read now (`providerModels` keeps the slow ones a while), each with what it is.
+readModels(provider: string, root: string, memory: <string, any>, transport: httpx.BaseTransport? = null) <string, any>
+  named(readProviderModels(provider, root, memory, transport))
+
+readProviderModels(provider: string, root: string, memory: <string, any>, transport: httpx.BaseTransport? = null) <string, any>
+  kind = providerKind(provider)
+  line = readLine(root, "")
+  prices: <string, any> = line["prices"] ?? ({} as <string, any>)
+  if kind == "local"
+    return ollamaModels(memory, transport)
+  if provider == "claude-code"
+    full = pricedIds("anthropic", prices).filter((id) => id.startsWith("claude-"))
+    return { "models": claudeCodeIds(full).map((id) => { "id": id }), "free": true, "source": "claude" }
+  if provider == "opencode"
+    found = shutil.which(AGENT_COMMANDS[provider]!, path = toolEnv()["PATH"])
+    ids = found == null ? ([] as string[]) : openCodeModels(found!, toolEnv())
+    return { "models": ids.map((id) => { "id": id }), "free": true, "source": "opencode" }
+  if kind == "agent"
+    // Codex and Gemini CLI list no models from their command line: their own default, or a model typed by hand
+    return { "models": [] as <string, any>[], "free": true, "source": "default" }
+  apiProviderModels(provider, prices, transport)
+
+modelsCache(provider: string) Path
+  Path(factoryDir(), "cache", "models-${provider}.json")
+
+// The models of one provider: a command's or an API's list kept MODELS_TTL_SECONDS (`fresh`: read again); the local
+// ones and Claude Code's always now (they cost nothing, and the memory free changes).
+providerModels(provider: string, root: string, memory: <string, any>, fresh: boolean = false, transport: httpx.BaseTransport? = null) <string, any>
+  cached = providerKind(provider) != "local" and provider != "claude-code"
+  file = modelsCache(provider)
+  if cached and not fresh and file.isFile()
+    try
+      kept: <string, any> = json.loads(file.readText())
+      if time.time() - (kept["at"] ?? 0) < MODELS_TTL_SECONDS
+        return kept["value"]!
+    catch e
+      if not isinstance(e, ValueError) and not isinstance(e, OSError)
+        throw e
+  found = readModels(provider, root, memory, transport)
+  if cached and found["why"] == null
+    try
+      file.parent.mkdir(parents = true, existOk = true)
+      file.writeText(json.dumps({ "at": time.time(), "value": found }))
+    catch e
+      if not isinstance(e, OSError)
+        throw e
+  found
+
+// Every provider that can work here with its models, and this machine's memory (`models --json`); one provider when
+// asked (`--provider`), whether it can work here or not.
+modelsHere(root: string, provider: string? = null, fresh: boolean = false, transport: httpx.BaseTransport? = null) <string, any>
+  memory = machineMemory()
+  ids = provider != null ? [provider!] : AGENT_ORDER.filter((p) => whyNotHere(p) == "")
+  out: <string, any> = {}
+  for id in ids
+    out[id] = { "kind": providerKind(id), ...providerModels(id, root, memory, fresh, transport) }
+  { "memory": memory, "providers": out }
+
+// ---------- the guard of who works a member ----------
+
+// The local members whose model is too big for this machine (or tight): `{ member, model, needGb, totalGb,
+// availableGb, fit, text }` each, against the local models listed (`ollamaModels`) and the machine's memory.
+memoryWarnings(members: any, local: <string, any>[], memory: <string, any>) <string, any>[]
+  out: <string, any>[] = []
+  given = ((isinstance(members, list) ? members : ([] as any[])) as any[]).filter((x) => isinstance(x, dict)) as <string, any>[]
+  for m in given
+    if "${m["kind"] ?? "local"}" != "local" or "${m["model"] ?? ""}".isEmpty
+      continue
+    model = local.find((x) => x["id"] == m["model"])
+    if model == null or not (model!["fit"] in ["too-big", "tight"])
+      continue
+    need = model!["needGb"]
+    text = model!["fit"] == "too-big" ? "${m["model"]} needs ~${need} GB; this machine has ${memory["totalGb"]} GB: it can make the computer freeze or restart" : "${m["model"]} needs ~${need} GB and ${memory["availableGb"]} GB are free now: close other programs or it will be slow"
+    out.add({ "member": m["id"] ?? m["role"], "model": m["model"], "needGb": need, "totalGb": memory["totalGb"], "availableGb": memory["availableGb"], "fit": model!["fit"], "text": text })
+  out
+
+// `memoryWarnings` with this machine's memory and Ollama's models.
+memoryWarningsHere(members: any) <string, any>[]
+  given = ((isinstance(members, list) ? members : ([] as any[])) as any[]).filter((x) => isinstance(x, dict)) as <string, any>[]
+  if not given.any((m) => "${m["kind"] ?? "local"}" == "local" and not "${m["model"] ?? ""}".isEmpty)
+    return []
+  memory = machineMemory()
+  memoryWarnings(given, ollamaModels(memory)["models"]!, memory)
+
+// A team as a command answers it, with the memory warnings of the members just given (empty: none).
+withWarnings(team: <string, any>, members: any) <string, any>
+  warnings = memoryWarningsHere(members)
+  warnings.isEmpty ? team : { ...team, "warnings": warnings }
+
+// `nuclear-builder models [--provider <p>] [--fresh] [--json] [--root <dir>]`
+modelsLine(args: string[]) int
+  root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
+  try
+    found = modelsHere(root, option(args, "--provider"), "--fresh" in args)
+    if "--json" in args
+      printJson(found)
+    else
+      mem: <string, any> = found["memory"]!
+      print("memory: ${mem["totalGb"]} GB, ${mem["availableGb"]} GB free")
+      for id, p in found["providers"] as <string, any>
+        print("${id}:")
+        for m in (p["models"] ?? []) as <string, any>[]
+          print("  ${m["id"]}${m["needGb"] == null ? "" : "  ~${m["needGb"]} GB ${m["fit"]}"}${m["installed"] == false ? " (not installed: ${m["downloadGb"]} GB)" : ""}")
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0

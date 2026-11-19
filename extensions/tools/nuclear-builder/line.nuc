@@ -1,0 +1,492 @@
+use os
+use sys
+use json
+use queue
+use signal
+use socket
+use shutil
+use threading
+use subprocess
+use pathlib{ Path }
+
+// The software factory's commands (`nuclear-builder run | retry | restart | runs | checks | ci | export`), run in a
+// terminal, a CI job or by an editor as a process: with `--events` each event is a JSON line on stdout and each
+// question (a gate, the spending) is answered by one JSON line on stdin (docs/02-architecture/engine.md).
+
+MARKS: <string, string> = { "passed": "✓", "failed": "✗", "skipped": "·", "running": "▶", "pending": " ", "waiting": "?" }
+
+// The closest folder up with a config.nuc or a nuclear.toml (the project), or `dir`.
+projectRoot(dir: string) string
+  start = Path(dir).resolve()
+  for d in [start, ...start.parents]
+    if d.joinpath("config.nuc").exists() or d.joinpath("nuclear.toml").exists()
+      return "${d}"
+  "${start}"
+
+// The project card `nuclear check` writes (`.nuclear/project.json`), written now when it is missing.
+projectCard(root: string) <string, any>
+  file = Path(root, ".nuclear", "project.json")
+  if not file.isFile() and shutil.which("nuclear", path = toolEnv()["PATH"]) != null
+    subprocess.run(["nuclear", "check", "."], cwd = root, captureOutput = true, env = toolEnv())
+  if file.isFile()
+    return json.loads(file.readText(encoding = "utf-8"))
+  { "name": Path(root).name, "platform": "", "dialect": "" }
+
+// The spec.md of specs/ changed last, in any component and layer (specs.nuc).
+newestSpec(root: string) string?
+  found = specFolders(root).map((s) => Path(root, "${s["path"]}", "spec.md"))
+  found.isEmpty ? null : "${found.sortedBy((f) => -f.stat().stMtime)[0]}"
+
+// The id of a spec file: its folder for `specs/[<component>/[<layer>/]]<id>/spec.md`, else its own name (`specs/count-books.md`).
+specId(file: Path) string
+  file.name == "spec.md" ? runSlug(file.parent.name) : runSlug(file.stem)
+
+// How a run tells: JSON lines (`--events`), or the end of the run in the terminal.
+tell(e: <string, any>, asJson: boolean, shown: string[]) void
+  if asJson
+    if e["type"] != "change"
+      print(json.dumps(e, ensureAscii = false), flush = true)
+    return
+  if e["type"] == "ask"
+    return
+  if e["type"] == "done"
+    print("\n${MARKS["${e["status"]}"] ?? ""} ${e["status"]}${(e["costUsd"] ?? 0) > 0 ? " · ${e["costUsd"]} USD" : ""}")
+
+// Each step of the run that ended, once, in the terminal.
+printSteps(run: <string, any>, shown: string[]) void
+  for st in run["stages"] as <string, any>[]
+    for s in st["steps"] as <string, any>[]
+      if s["status"] == "running" or s["status"] == "pending" or s["id"] in shown
+        continue
+      shown.add(s["id"]!)
+      who = s["provider"] == null ? "${s["actor"]}" : "${s["role"]} · ${s["provider"]}${"${s["model"] ?? ""}".isEmpty ? "" : " ${s["model"]}"}"
+      print("${MARKS["${s["status"]}"] ?? ""} ${st["title"]} · ${who} · ${s["title"]}${"${s["summary"]}".isEmpty ? "" : " — ${s["summary"]}"}", flush = true)
+
+// Where `run answer` and `run stop` leave the answer for the process that runs a run and waits on a question.
+answerFile(root: string, id: string) Path
+  runsDir(root).joinpath("${id}.answer.json")
+
+// The lines of stdin, read by a thread of their own into a queue (an empty line at its end), so that a process that
+// waits on a question also sees the answer another process left.
+INBOX: <string, queue.Queue> = {}
+
+feedLines(inbox: queue.Queue) void
+  for line in sys.stdin
+    inbox.put(line)
+  inbox.put("")
+
+stdinInbox() queue.Queue
+  if INBOX["stdin"] == null
+    inbox = queue.Queue()
+    INBOX["stdin"] = inbox
+    threading.Thread(target = () => feedLines(inbox), daemon = true).start()
+  INBOX["stdin"]!
+
+// The answer to the question `ask` left in the run's answer file, taken once; null when there is none for it.
+takeAnswer(root: string, id: string, ask: string) <string, any>?
+  file = answerFile(root, id)
+  if not file.isFile()
+    return null
+  left = jsonLine(file.readText(encoding = "utf-8").trim())
+  if left == null or left!["ask"] != ask
+    return null
+  file.unlink(missingOk = true)
+  left!.remove("ask")
+  left!
+
+// An answer with `--events`: a JSON line on stdin, or the one `run answer` left; null when stdin ends.
+eventAnswer(q: <string, any>, root: string, id: string) <string, any>?
+  inbox = stdinInbox()
+  while true
+    try
+      line: string = inbox.get(timeout = 0.5)
+      if line.trim().isEmpty
+        return null
+      return jsonLine(line.trim())
+    catch e
+      if not isinstance(e, queue.Empty)
+        throw e
+    left = takeAnswer(root, id, "${q["id"]}")
+    if left != null
+      return left
+
+// The user's answer: a JSON line on stdin (`--events`) or one `run answer` left, or a question in the terminal; null
+// when nobody answers.
+userAnswer(q: <string, any>, asJson: boolean, root: string = "", id: string = "") <string, any>?
+  if asJson
+    return eventAnswer(q, root, id)
+  if not sys.stdin.isatty()
+    print("\n? ${q["question"]}\n  (no terminal to answer in: the run waits; nuclear-builder run --resume <id>)")
+    return null
+  choices = q["kind"] == "spending" ? "yes/no" : "approve/change <what>/stop"
+  said = ask("\n? ${q["question"]} [${choices}]: ", "")
+  if said.startsWith("change")
+    return { "answer": "change", "text": said.substring(6).trim() }
+  { "answer": said.isEmpty ? "stop" : said.lower() }
+
+// The team of a run: the one asked for, the project's, the default, the only saved one; with no saved team, the local
+// team (teams.nuc's `localTeam`, not saved); several and none chosen is a `TeamChoice`.
+teamOfRun(root: string, asked: string?) <string, any>
+  found = runTeam(root, asked)
+  found ?? localTeam()
+
+// The team of a run again: the one asked for, else the run's own; a run of the local team that was never saved
+// (`local-team`, there was no team at all) gets it again.
+teamOfRetry(root: string, asked: string?, own: string) <string, any>
+  if asked != null or own.isEmpty
+    return teamOfRun(root, asked)
+  try
+    teamOfRun(root, own)
+  catch e
+    if not isinstance(e, TeamError) or own != LOCAL_TEAM
+      throw e
+    localTeam()
+
+// `--assign developer=dev-017,qa=qa-002`: the tech lead's choice of who works a role in a run (a member's id of the
+// team); a pair that is not `<role>=<member>` of the team is refused.
+assignOf(text: string?, team: <string, any>) <string, any>
+  out: <string, any> = {}
+  pairs: string[] = (text ?? "").split(",").map((x: string) => x.trim())
+  for pair in pairs.filter((x) => not x.isEmpty)
+    parts = pair.split("=")
+    if parts.length != 2 or not membersOf(team, parts[0].trim()).any((m) => m["id"] == parts[1].trim())
+      throw TeamError("--assign is <role>=<member id> of the team ${team["id"]}: `${pair}`")
+    out[roleId(parts[0].trim())] = parts[1].trim()
+  out
+
+// The factory of a run; `preset` answers the question it waits on once (`run answer`), the rest are the user's.
+factoryOf(run: <string, any>, team: <string, any>, args: string[], line: <string, any>, preset: <string, any>? = null) Factory
+  asJson = "--events" in args
+  shown: string[] = []
+  tellIt = (e: <string, any>) => tellRun(e, asJson, shown, run)
+  given: <string, any>[] = preset == null ? [] : [preset!]
+  asked = (q: <string, any>) => not given.isEmpty and given[0]["ask"] == q["id"] ? given.removeAt(0) : userAnswer(q, asJson, "${run["root"]}", "${run["id"]}")
+  Factory(run, team, line, asked, tellIt, { "confirmSpending": "--confirm-spending" in args, "forceConfirm": "--force-confirm" in args })
+
+tellRun(e: <string, any>, asJson: boolean, shown: string[], run: <string, any>) void
+  if not asJson and e["type"] == "change"
+    printSteps(run, shown)
+  tell(e, asJson, shown)
+
+exitOf(run: <string, any>) int
+  match "${run["status"]}"
+    "passed" -> 0
+    "waiting" -> 3
+    _ -> 1
+
+// The command that runs `nuclear-builder` again: `NUCLEAR_BUILDER_COMMAND`, else this program, else the one on PATH.
+builderCommand() string
+  given: string = os.environ.get("NUCLEAR_BUILDER_COMMAND") ?? ""
+  if not given.isEmpty
+    return given
+  own = Path(sys.argv[0])
+  own.name.startsWith("nuclear-builder") and own.isFile() ? "${own.resolve()}" : shutil.which("nuclear-builder", path = toolEnv()["PATH"]) ?? "nuclear-builder"
+
+// A run's command in a process of its own that outlives the caller (an agent's tool, a chat's member): no stdin, so
+// it waits at the first question; what it says goes to `.nuclear/builder/runs/<id>.out`.
+detachRun(root: string, id: string, args: string[]) <string, any>
+  runsDir(root).mkdir(parents = true, existOk = true)
+  out = runsDir(root).joinpath("${id}.out").open("a", encoding = "utf-8")
+  p = subprocess.Popen([builderCommand(), ...args], cwd = root, env = toolEnv(), stdin = subprocess.DEVNULL, stdout = out, stderr = subprocess.STDOUT, startNewSession = true)
+  out.close()
+  { "run": id, "detached": p.pid, "log": "${RUNS_DIR}/${id}.out" }
+
+// The roles a team gives a paid provider at the stations of a run (the member who works each, `memberFor`), and the
+// run's budget: what its spending asks.
+paidOf(run: <string, any>, team: <string, any>) <string, any>
+  workers: <string, any>[] = ((run["stages"] ?? []) as <string, any>[]).map((st) => "${st["role"]}").unique().map((r) => memberFor(team, r, run["assign"]) ?? ({ "role": r, "kind": "local" } as <string, any>))
+  paid = workers.filter((m) => "${m["kind"] ?? "local"}" != "local")
+  { "roles": paid.map((m) => "${m["role"]}"), "members": paid.map((m) => "${m["id"]}"), "providers": paid.map((m) => "${m["provider"]}").unique(), "budgetUsd": team["budgetUsd"] ?? 5.0 }
+
+// A new run of a spec file by a team, saved: the spec kept in its folder, the project's line, the team.
+prepareRun(root: string, file: string, asked: string?, assign: string? = null) <string, any>
+  path = Path(file).resolve()
+  id = specId(path)
+  text = path.readText(encoding = "utf-8")
+  spec = parseSpec(text, id)
+  // a spec given from elsewhere is kept in its folder: the one of its id, else its component's
+  specPath = specPathFor(root, id, spec)
+  home = Path(root, specPath, "spec.md")
+  if home.resolve() != path
+    writeAtomic(home, text)
+  card = projectCard(root)
+  line = readLine(root, "${card["platform"] ?? ""}")
+  team = teamOfRun(root, asked)
+  run = newRun(root, card, spec, team, line["stations"] ?? STATIONS, specPath, assignOf(assign, team))
+  { "run": run, "team": team, "line": line }
+
+// A run started in a process of its own (`run --detach`): the run file at once, the answer `{run, detached, log}`;
+// with a paid provider, `waiting: spending` (it waits for the user's two confirmations, asked where the user is).
+startDetached(root: string, file: string, asked: string?, assign: string? = null) <string, any>
+  made = prepareRun(root, file, asked, assign)
+  run: <string, any> = made["run"]!
+  if ((run["spec"] as <string, any>)["criteria"] as string[]).isEmpty
+    throw ValueError("the spec ${run["id"]} has no acceptance criteria: ask the user for them and write them first (spec_draft, or the Builder's form)")
+  current = loadRun(root, "${run["id"]}")
+  if current != null and current!["status"] == "running" and not orphaned(current!["owner"])
+    throw ValueError("the run ${run["id"]} is running already")
+  saveRun(run)
+  started = detachRun(root, "${run["id"]}", ["run", "--resume", "${run["id"]}", ...(asked == null ? [] as string[] : ["--team", asked!])])
+  paid = paidOf(run, made["team"]!)
+  if not (paid["roles"] as string[]).isEmpty
+    started["waiting"] = "spending"
+    started["spending"] = paid
+    started["how"] = "the user confirms the spending twice where they answer: the Builder page (Resume) or the chat"
+  started
+
+// `nuclear-builder run [spec.md] [--team <id>] [--assign <role>=<member>,…] [--resume <id>] [--events] [--detach] [--confirm-spending] [--force-confirm]`
+// · `run answer|stop|show|journal <id>`
+runLine(args: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  if not args.isEmpty and args[0] in ["answer", "stop", "show", "journal"]
+    return runSubcommand(root, args)
+  resume = option(args, "--resume")
+  if resume != null
+    return retryLine([resume!, ...args.filter((a) => a != "--resume" and a != resume)], false)
+  skip = ["--team", "--assign"]
+  given = args.filter((a) => not a.startsWith("--")).find((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in skip))
+  file = given ?? newestSpec(root)
+  if file == null
+    print("no spec: nuclear-builder spec new --title … --component … (or the Builder page), or pass its path", file = sys.stderr)
+    return 2
+  if "--detach" in args
+    try
+      printJson(startDetached(root, file!, option(args, "--team"), option(args, "--assign")))
+    catch e
+      if not isinstance(e, ValueError) and not isinstance(e, OSError)
+        throw e
+      printJson({ "error": "${e}" })
+      return 1
+    return 0
+  made = prepareRun(root, file!, option(args, "--team"), option(args, "--assign"))
+  exitOf(factoryOf(made["run"]!, made["team"]!, args, made["line"]!).start())
+
+// `nuclear-builder retry <id> [--from <station> | --step <step>] [--detach]` · `restart <id>`: what the stations (or
+// the steps) left out wrote is undone first; `--step` runs that step and every step after it. A run of the
+// TypeScript engine (engine 2) can only start again from scratch, with today's stations. `preset` answers the
+// question the run waits on (`run answer`).
+retryLine(args: string[], scratch: boolean, preset: <string, any>? = null) int
+  root = projectRoot("${Path.cwd()}")
+  id = args.filter((a) => not a.startsWith("--")).find((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in ["--from", "--step", "--team"]))
+  run: <string, any>? = id == null ? null : loadRun(root, id!)
+  if run == null
+    print("no run '${id ?? ""}' (nuclear-builder runs)", file = sys.stderr)
+    return 2
+  if "--detach" in args
+    if run!["status"] == "running" and not orphaned(run!["owner"])
+      printJson({ "error": "the run ${id} is running already" })
+      return 1
+    command = scratch ? "restart" : "retry"
+    printJson(detachRun(root, id!, [command, ...args.filter((a) => a != "--detach")]))
+    return 0
+  line = readLine(root, "${run!["platform"] ?? ""}")
+  team = teamOfRetry(root, option(args, "--team"), "${(run!["factory"] ?? ({} as <string, any>))["team"] ?? ""}")
+  if (run!["engine"] ?? 0) < FACTORY_ENGINE
+    if not scratch
+      print("the run ${id} was made by the earlier engine: nuclear-builder restart ${id}", file = sys.stderr)
+      return 2
+    rollback(root, run!["writes"] ?? [], (s) => false)
+    fresh = newRun(root, projectCard(root), run!["spec"]!, team, line["stations"] ?? STATIONS, run!["specPath"], run!["assign"])
+    fresh["previous"] = [{ "at": nowMs(), "from": "spec", "status": run!["status"], "stages": run!["stages"], "why": "from scratch, by today's engine" }]
+    run = fresh
+  fromStation = option(args, "--from")
+  stations: <string, any>[] = run!["stages"]!
+  if fromStation != null and not stations.any((s) => s["id"] == fromStation)
+    print("unknown station '${fromStation}' (${stations.map((s) => "${s["id"]}").join(", ")})", file = sys.stderr)
+    return 2
+  fromStep = scratch ? null : option(args, "--step")
+  if fromStep != null and not stations.any((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == fromStep))
+    print("the run ${id} has no step '${fromStep}' (the ids are in its .json: <station>-<n>)", file = sys.stderr)
+    return 2
+  first = scratch ? "${stations[0]["id"]}" : fromStation
+  exitOf(factoryOf(run!, team, args, line, preset).start(first, fromStep))
+
+runsLine(args: string[] = []) int
+  root = projectRoot("${Path.cwd()}")
+  if "--json" in args
+    printJson(listRuns(root).map((r) => runSummary(r)))
+    return 0
+  for r in listRuns(root)
+    lost = r["status"] == "running" and orphaned(r["owner"])
+    spec: <string, any> = r["spec"] ?? ({} as <string, any>)
+    how = lost ? "  interrupted: nuclear-builder retry ${r["id"]} goes on where it stopped" : r["status"] == "waiting" ? "  waiting for you: nuclear-builder run --resume ${r["id"]}" : ""
+    print("${lost ? "⚠" : MARKS["${r["status"]}"] ?? " "} ${r["id"]}  ${spec["title"] ?? ""}${how}")
+  0
+
+// `nuclear-builder checks <run> [list | on <check> | off <check> | add --title … --station … [--by user|role]
+// [--prompt …] [--command …] | mark <check> passed|failed|skipped [--note …]] [--json]`
+checksLine(args: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  words = args.filter((a) => not a.startsWith("--")).filter((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1].startsWith("--") and args[args.indexOf(a) - 1] != "--json"))
+  if words.isEmpty
+    printJson({ "error": "usage: nuclear-builder checks <run> [list|on|off|add|mark] ..." })
+    return 1
+  id = words[0]
+  what = words.length > 1 ? words[1] : "list"
+  try
+    if what == "list"
+      printJson(loadChecks(root, id))
+    else if (what == "on" or what == "off") and words.length > 2
+      printJson(switchCheck(root, id, words[2], what == "on"))
+    else if what == "add"
+      printJson(addCheck(root, id, option(args, "--title") ?? "", option(args, "--station") ?? "quality", option(args, "--by") ?? "user", option(args, "--prompt"), option(args, "--command")))
+    else if what == "mark" and words.length > 3
+      printJson(markCheck(root, id, words[2], words[3], option(args, "--note") ?? ""))
+    else
+      printJson({ "error": "usage: nuclear-builder checks <run> [list|on <check>|off <check>|add --title … --station …|mark <check> passed|failed|skipped]" })
+      return 1
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0
+
+// `nuclear-builder ci [check|test|security|artifacts|deploy ...]`: the commands of .nuclear/builder.json.
+ciLine(only: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  unknown = only.filter((s) => not (s in CI_STAGES))
+  if not unknown.isEmpty
+    print("unknown stage: ${unknown.join(", ")} (stages: ${CI_STAGES.join(", ")})", file = sys.stderr)
+    return 2
+  stages = ciCommands(readLine(root, "${projectCard(root)["platform"] ?? ""}"))
+  for stage in CI_STAGES
+    if not only.isEmpty and not (stage in only)
+      continue
+    for command in stages[stage]!
+      print("\n▶ ${stage}: ${command}", flush = true)
+      code = subprocess.run(command, shell = true, cwd = root, env = toolEnv()).returncode
+      if code != 0
+        print("✗ ${stage}: ${command} exited ${code}", file = sys.stderr)
+        return code
+    if not stages[stage]!.isEmpty
+      print("✓ ${stage}")
+  0
+
+// `nuclear-builder export github|gitlab|bitbucket [--json]`: writes the CI file that runs the line's commands.
+exportLine(args: string[]) int
+  if args.isEmpty or not (args[0] in CI_PROVIDERS)
+    print("usage: nuclear-builder export ${CI_PROVIDERS.join("|")} [--json]", file = sys.stderr)
+    return 2
+  wrote = writeCiFile(projectRoot("${Path.cwd()}"), args[0])
+  "--json" in args ? printJson({ "wrote": wrote }) : print("wrote ${wrote}")
+  0
+
+// The answers a run's question takes: a gate's and QA's plan's (`stop` is *later*: the run waits).
+ANSWERS = ["approve", "change", "stop", "yes", "no"]
+
+// `run answer`: the answer to the question a run waits on. A run whose process waits on it gets it through the answer
+// file; a run that stopped waiting is told to go on (`resume`). The spending is never answered here: it is confirmed
+// twice where the user answers (the Builder page, a terminal, the chat).
+answerRun(root: string, id: string, answer: string, text: string = "") <string, any>
+  run = loadRun(root, id)
+  if run == null
+    throw ValueError("no run `${id}` (nuclear-builder runs)")
+  q: <string, any>? = run!["waiting"]
+  if q == null
+    throw ValueError("the run ${id} waits for no answer (it is ${run!["status"]})")
+  if q!["kind"] == "spending"
+    throw ValueError("the run ${id} waits for the confirmation of its spending: the user confirms it twice where they answer (the Builder page, or nuclear-builder run --resume ${id} in a terminal)")
+  if not (answer in ANSWERS)
+    throw ValueError("an answer is one of ${ANSWERS.join(", ")}")
+  if answer == "change" and text.trim().isEmpty
+    throw ValueError("a change says what should change: --text …")
+  given: <string, any> = { "ask": q!["id"], "answer": answer }
+  if not text.trim().isEmpty
+    given["text"] = text.trim()
+  if run!["status"] == "running" and not orphaned(run!["owner"])
+    writeAtomic(answerFile(root, id), json.dumps(given))
+    return { "answered": id, "ask": q!["id"], "answer": answer, "by": "the process that runs it" }
+  { "answered": id, "ask": q!["id"], "answer": answer, "resume": true, "preset": given }
+
+// `run stop`: the process that runs a run stops: a run that asks waits (as it does when nobody answers), one that
+// works is interrupted (its unfinished steps fail, what they wrote is undone).
+stopRun(root: string, id: string) <string, any>
+  run = loadRun(root, id)
+  if run == null
+    throw ValueError("no run `${id}` (nuclear-builder runs)")
+  o: <string, any>? = run!["owner"]
+  if run!["status"] != "running" or o == null or orphaned(o)
+    return { "stopped": false, "id": id, "why": "the run ${id} is ${run!["status"]}: no process runs it" }
+  if o!["host"] != socket.gethostname()
+    throw ValueError("the run ${id} runs on ${o!["host"]}: stop it there")
+  q: <string, any>? = run!["waiting"]
+  if q != null
+    writeAtomic(answerFile(root, id), json.dumps({ "ask": q!["id"], "answer": "stop" }))
+    return { "stopped": true, "id": id, "how": "it waits" }
+  // shortcut: on Windows os.kill ends the process without the undo of KeyboardInterrupt; the recovery of the next retry undoes it
+  os.kill(o!["pid"]!, signal.SIGINT)
+  { "stopped": true, "id": id, "how": "interrupted" }
+
+// `nuclear-builder run answer <id> --answer approve|change|stop|yes|no [--text …] [--events] [--detach]` · `run stop <id>`
+// · `run show <id>` · `run journal <id>`: JSON on stdout, an error as {"error": "…"} with exit code 1.
+runSubcommand(root: string, args: string[]) int
+  what = args[0]
+  words = args.skip(1).filter((a) => not a.startsWith("--")).filter((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in ["--answer", "--text"]))
+  if words.isEmpty
+    printJson({ "error": "usage: nuclear-builder run ${what} <id>" })
+    return 1
+  id = words[0]
+  try
+    if what == "show"
+      printJson(runShown(root, id))
+    else if what == "journal"
+      run = loadRun(root, id)
+      if run == null
+        throw ValueError("no run `${id}` (nuclear-builder runs)")
+      print(journalMarkdown(run!))
+    else if what == "stop"
+      printJson(stopRun(root, id))
+    else
+      done = answerRun(root, id, option(args, "--answer") ?? "", option(args, "--text") ?? "")
+      if done["resume"] != true
+        printJson(done)
+        return 0
+      if "--detach" in args
+        printJson(detachRun(root, id, ["run", ...args.filter((a) => a != "--detach")]))
+        return 0
+      return retryLine([id, ...args.filter((a) => a == "--events" or a == "--force-confirm" or a == "--confirm-spending")], false, done["preset"])
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0
+
+// `nuclear-builder line show [--json]` · `line set KEY=<json> ...`: the project's line (`show`: with its defaults,
+// and the file's own keys as `own`).
+lineLine(args: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  what = args.isEmpty ? "show" : args[0]
+  try
+    if what == "show"
+      printJson({ "line": readLine(root, "${projectCard(root)["platform"] ?? ""}"), "own": ownLine(root), "keys": LINE_KEYS })
+    else if what == "set"
+      values: <string, any> = {}
+      for a in args.skip(1).filter((x) => not x.startsWith("--"))
+        at = a.indexOf("=")
+        if at <= 0
+          throw ValueError("a value is KEY=<json>: ${a}")
+        raw = a.substring(at + 1)
+        values[a.substring(0, at)] = jsonValue(raw)
+      printJson(setLine(root, values))
+    else
+      printJson({ "error": "usage: nuclear-builder line show | set KEY=<json> ..." })
+      return 1
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0
+
+// The CI file of a provider written in the project: its path.
+writeCiFile(root: string, provider: string) string
+  if not (provider in CI_PROVIDERS)
+    throw ValueError("no CI provider `${provider}`: ${CI_PROVIDERS.join(", ")}")
+  platform = "${projectCard(root)["platform"] ?? ""}"
+  out = ciFile(provider, readLine(root, platform), platform)
+  target = Path(root, out["path"]!)
+  target.parent.mkdir(parents = true, existOk = true)
+  target.writeText(out["text"]!, encoding = "utf-8")
+  out["path"]!

@@ -1,0 +1,7 @@
+// The connections of the whole app (nuclear help web): the chat service's WebSocket, named as its contract's
+// repositories ask (`nuclear_chat`). Mounted in a host's page with a bridge (the editors), every call and every event
+// goes through the host, which holds the service's token; this URL is only the app run on its own.
+appConfig ProjectConfig
+  connections: Connection[] = [
+    WebSocket(connectionName = "nuclear_chat", url = "ws://127.0.0.1:7880/ws", timeout = 10000),
+  ]

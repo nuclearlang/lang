@@ -1,0 +1,13 @@
+// The connections of the whole app (nuclear help backend, §2.8): the chat keeps no database (its history is the
+// project's `.nuclear/chat/` files); the app's WebSocket (`/ws`: the same routes, and each workspace's events on the
+// topic `chat.<workspace>`); the GIF services, Tenor and Giphy, HTTP connections called only when the workspace's
+// setting names one and the project said yes once.
+// The guards: no web page (an `Origin`), and the token the set-up keeps in the keyring and gives the service as
+// NUCLEAR_CHAT_TOKEN (unset: every request is refused). A route starts a member's command: never served without it.
+appConfig ProjectConfig
+  connections: Connection[] = [
+    WebSocketServer(path = "ws"),
+    Http(name = "tenor", baseUrl = env("NUCLEAR_CHAT_TENOR_URL", "https://tenor.googleapis.com/v2"), timeout = 10),
+    Http(name = "giphy", baseUrl = env("NUCLEAR_CHAT_GIPHY_URL", "https://api.giphy.com/v1"), timeout = 10),
+  ]
+  guards: Guard[] = [NoOrigin(), Token(value = env("NUCLEAR_CHAT_TOKEN"), header = "X-Chat-Token")]

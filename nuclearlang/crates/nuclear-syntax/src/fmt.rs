@@ -265,7 +265,9 @@ fn space(before: Option<&Token>, a: &Token, b: &Token, had: bool) -> bool {
         return before.is_some_and(operand);
     }
     if matches!(pb, Some(LParen | LBracket)) {
-        return !operand(a);
+        // a member named like a keyword (`re.match(...)`) is called, not a `match`
+        let member = matches!(a.kind, TokenKind::Keyword(_)) && before.is_some_and(|t| matches!(punct(t), Some(Dot | QuestionDot)));
+        return !(operand(a) || member);
     }
     true
 }
@@ -283,6 +285,11 @@ mod tests {
         // `/` separates the path of a module there, it is not a division
         let src = "use urllib/parse{ quote }\nuse a/b/c{ D, E }\n\nf() int = 6 /  2\n";
         assert_eq!(format(src).unwrap(), "use urllib/parse{ quote }\nuse a/b/c{ D, E }\n\nf() int = 6 / 2\n");
+    }
+
+    #[test]
+    fn a_member_named_like_a_keyword_is_a_call() {
+        same("f(t: string) any = re.match(r\"a\", t)\n");
     }
 
     #[test]

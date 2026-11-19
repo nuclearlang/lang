@@ -5,7 +5,11 @@
 // workspace switch comes back as it was. Plain HTML and script, no framework.
 
 import * as vscode from 'vscode';
+import { lang, langButton, localize, pageI18n, texts } from '../../../vscode/src/i18n';
+import { HTTP } from './l10n';
+import { httpSettings } from './settings';
 import { componentKey, Endpoint, HttpModel } from './httpConnections';
+import { SocketPanel } from './socketPanel';
 
 interface RequestMessage {
   type: 'send';
@@ -29,10 +33,16 @@ export class ComponentPanel {
   ) {
     this.panel = vscode.window.createWebviewPanel('nuclear.httpComponent', title, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
     this.panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
-    this.panel.webview.html = html(this.panel.webview);
+    const restore = () => {
+      this.environments();
+      const saved = model.memory.get(key);
+      if (saved) void this.panel.webview.postMessage({ type: 'restore', state: saved.state });
+    };
+    const localized = localize(this.panel.webview, () => html(this.panel.webview), restore);
     const listener = model.onDidChange(() => this.environments());
     this.panel.onDidDispose(() => {
       ComponentPanel.open_.delete(key);
+      localized.dispose();
       listener.dispose();
     });
     this.panel.webview.onDidReceiveMessage((m: Message) => {
@@ -42,9 +52,7 @@ export class ComponentPanel {
       if (m.type === 'selectEnvironment') void model.selectEnvironment();
     });
     ComponentPanel.open_.set(key, this);
-    this.environments();
-    const saved = model.memory.get(key);
-    if (saved) void this.panel.webview.postMessage({ type: 'restore', state: saved.state });
+    restore();
   }
 
   /** The endpoint's component panel, created or revealed, with the endpoint as its active inner tab. */
@@ -56,13 +64,18 @@ export class ComponentPanel {
     void p.panel.webview.postMessage({ type: 'open', endpoint });
   }
 
+  /** The keys of the open panels, the WebSocket ones (`ws::…`) too. */
   static openKeys(): string[] {
-    return [...ComponentPanel.open_.keys()];
+    return [...ComponentPanel.open_.keys(), ...SocketPanel.openKeys()];
   }
 
   /** Reopens the panels of `keys` from their memory (the HTTP Connections workspace entered again). */
   static restore(context: vscode.ExtensionContext, model: HttpModel, keys: string[]): void {
     for (const key of keys) {
+      if (key.startsWith('ws::')) {
+        SocketPanel.restore(context, model, key);
+        continue;
+      }
       const saved = model.memory.get(key);
       if (saved && !ComponentPanel.open_.has(key)) new ComponentPanel(context, model, key, saved.title);
     }
@@ -87,7 +100,7 @@ export class ComponentPanel {
     if (body !== undefined && !Object.keys(headers).some((h) => h.toLowerCase() === 'content-type')) headers['content-type'] = 'application/json';
     const started = Date.now();
     try {
-      const res = await fetch(url, { method: m.method, headers, body, signal: AbortSignal.timeout(30_000) });
+      const res = await fetch(url, { method: m.method, headers, body, signal: AbortSignal.timeout(httpSettings().timeoutMs) });
       const text = await res.text();
       void this.panel.webview.postMessage({
         type: 'response',
@@ -108,8 +121,9 @@ export class ComponentPanel {
 
 function html(webview: vscode.Webview): string {
   const nonce = Math.random().toString(36).slice(2);
+  const L = texts(HTTP);
   return /* html */ `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang()}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
@@ -122,6 +136,7 @@ function html(webview: vscode.Webview): string {
   .t .x { opacity: .5; padding: 0 2px; border-radius: 3px; } .t .x:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
   .verb { font-weight: 700; font-size: 11px; }
   .verb.get { color: var(--vscode-nuclearHttpConnections-get); } .verb.post { color: var(--vscode-nuclearHttpConnections-post); } .verb.put { color: var(--vscode-nuclearHttpConnections-put); } .verb.patch { color: var(--vscode-nuclearHttpConnections-patch); } .verb.delete { color: var(--vscode-nuclearHttpConnections-delete); }
+  .lang { display: flex; align-items: center; padding: 0 8px; flex: none; }
   .env { margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 11px; opacity: .8; white-space: nowrap; }
   .env a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   main { flex: 1; min-height: 0; overflow: auto; padding: 10px 16px; }
@@ -144,29 +159,29 @@ function html(webview: vscode.Webview): string {
 </style>
 </head>
 <body>
-<div class="bar"><div id="tabsBar" style="display:flex"></div><div class="env">env <b id="envName"></b> · <a id="pickEnv">change</a> · <a id="editEnv">edit</a></div></div>
+<div class="bar"><div id="tabsBar" style="display:flex"></div><div class="env">${L.env} <b id="envName"></b> · <a id="pickEnv">${L.change}</a> · <a id="editEnv">${L.edit}</a></div><div class="lang">${langButton()}</div></div>
 <main id="main">
-  <div class="empty" id="empty">Open an endpoint from the tree of the HTTP Connections workspace: it becomes a tab here.</div>
+  <div class="empty" id="empty">${L.empty}</div>
   <div id="form" style="display:none">
     <p class="desc" id="desc"></p>
     <div class="row">
       <select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select>
-      <input class="url" id="url" placeholder="{{baseUrl}}/path">
-      <button id="send">Send</button>
+      <input class="url" id="url" placeholder="${L.urlPlaceholder}">
+      <button id="send">${L.send}</button>
     </div>
-    <div class="muted">variables: <span id="vars"></span></div>
-    <div class="tabs"><span class="on" data-tab="params">Params</span><span data-tab="headers">Headers</span><span data-tab="body">Body</span></div>
+    <div class="muted">${L.variables} <span id="vars"></span></div>
+    <div class="tabs"><span class="on" data-tab="params">${L.params}</span><span data-tab="headers">Headers</span><span data-tab="body">Body</span></div>
     <div class="tab on" id="tab-params"><h3>Path</h3><table id="pathParams"></table><h3>Query</h3><table id="queryParams"></table></div>
-    <div class="tab" id="tab-headers"><table id="headers"></table><button class="secondary" id="addHeader">+ header</button></div>
-    <div class="tab" id="tab-body"><textarea id="body" placeholder="JSON body"></textarea></div>
-    <h3>Response</h3>
-    <div class="row"><span class="status" id="status">—</span><span class="muted" id="meta"></span><button class="secondary" id="copyCurl">copy as curl</button></div>
+    <div class="tab" id="tab-headers"><table id="headers"></table><button class="secondary" id="addHeader">${L.addHeader}</button></div>
+    <div class="tab" id="tab-body"><textarea id="body" placeholder="${L.bodyPlaceholder}"></textarea></div>
+    <h3>${L.response}</h3>
+    <div class="row"><span class="status" id="status">—</span><span class="muted" id="meta"></span><button class="secondary" id="copyCurl">${L.copyCurl}</button></div>
     <pre id="response"></pre>
-    <details><summary class="muted">response headers</summary><pre id="responseHeaders"></pre></details>
+    <details><summary class="muted">${L.responseHeaders}</summary><pre id="responseHeaders"></pre></details>
   </div>
 </main>
 <script nonce="${nonce}">
-  const vscode = acquireVsCodeApi();
+  ${pageI18n(HTTP)}
   const $ = (id) => document.getElementById(id);
   let envs = { active: 'local', names: [], vars: {}, headers: {}, baseUrls: {} };
   // tabs: [{ endpoint, form: { method, url, path: {name: value}, query: {...}, headers: [[k, v]], body, pane }, response }]
@@ -187,11 +202,11 @@ function html(webview: vscode.Webview): string {
     for (const it of items) {
       const tr = el('tr'); const td = el('td', 'muted', it.label); td.style.width = '30%'; const td2 = el('td'); const i = el('input'); i.dataset.name = it.name; i.value = it.value ?? ''; td2.appendChild(i); tr.append(td, td2); table.appendChild(tr);
     }
-    if (!items.length) table.innerHTML = '<tr><td class="muted">none</td></tr>';
+    if (!items.length) table.innerHTML = '<tr><td class="muted">' + t('none') + '</td></tr>';
   }
   function addHeader(k, v) {
-    const tr = el('tr'); const a = el('td'); a.style.width = '30%'; const ia = el('input'); ia.placeholder = 'Name'; ia.value = k ?? ''; a.appendChild(ia);
-    const b = el('td'); const ib = el('input'); ib.placeholder = 'Value'; ib.value = v ?? ''; b.appendChild(ib); tr.append(a, b); $('headers').appendChild(tr);
+    const tr = el('tr'); const a = el('td'); a.style.width = '30%'; const ia = el('input'); ia.placeholder = t('name'); ia.value = k ?? ''; a.appendChild(ia);
+    const b = el('td'); const ib = el('input'); ib.placeholder = t('value'); ib.value = v ?? ''; b.appendChild(ib); tr.append(a, b); $('headers').appendChild(tr);
   }
   function showPane(name) {
     document.querySelectorAll('.tabs span').forEach((s) => s.classList.toggle('on', s.dataset.tab === name));
@@ -216,7 +231,7 @@ function html(webview: vscode.Webview): string {
   }
   function showResponse(r) {
     if (!r) { $('status').textContent = '—'; $('status').className = 'status'; $('meta').textContent = ''; $('response').textContent = ''; $('responseHeaders').textContent = ''; return; }
-    if (r.error) { $('status').textContent = 'failed'; $('status').className = 'status fail'; $('response').textContent = r.error; $('meta').textContent = r.ms + ' ms · ' + r.url; $('responseHeaders').textContent = ''; return; }
+    if (r.error) { $('status').textContent = t('failed'); $('status').className = 'status fail'; $('response').textContent = r.error; $('meta').textContent = r.ms + ' ms · ' + r.url; $('responseHeaders').textContent = ''; return; }
     $('status').textContent = r.status + ' ' + r.statusText; $('status').className = 'status ' + (r.ok ? 'ok' : 'fail');
     $('meta').textContent = r.ms + ' ms · ' + r.body.length + ' bytes · ' + r.url;
     let text = r.body; try { text = JSON.stringify(JSON.parse(r.body), null, 2); } catch {}
@@ -226,31 +241,31 @@ function html(webview: vscode.Webview): string {
   function show(i) {
     if (active >= 0 && tabs[active]) tabs[active].form = readForm();
     active = i;
-    const t = tabs[i];
-    $('empty').style.display = t ? 'none' : ''; $('form').style.display = t ? '' : 'none';
+    const tab = tabs[i];
+    $('empty').style.display = tab ? 'none' : ''; $('form').style.display = tab ? '' : 'none';
     renderTabs();
-    if (!t) { save(); return; }
-    const e = t.endpoint, f = t.form;
-    $('desc').textContent = (e.description ? e.description + ' · ' : '') + (e.owner ? e.owner + ' · ' : '') + (e.returns ? 'returns ' + e.returns : '');
+    if (!tab) { save(); return; }
+    const e = tab.endpoint, f = tab.form;
+    $('desc').textContent = (e.description ? e.description + ' · ' : '') + (e.owner ? e.owner + ' · ' : '') + (e.returns ? t('returns', e.returns) : '');
     $('method').value = f.method;
     rows($('pathParams'), e.params.filter((p) => p.in === 'path').map((p) => ({ label: p.name + ': ' + p.type, name: p.name, value: f.path[p.name] })));
     rows($('queryParams'), e.params.filter((p) => p.in === 'query').map((p) => ({ label: p.name + (p.optional ? '?' : '') + ': ' + p.type, name: p.name, value: f.query[p.name] })));
     $('headers').innerHTML = ''; for (const [k, v] of f.headers) addHeader(k, v);
     $('body').value = f.body;
-    $('vars').textContent = Object.keys(envs.vars).map((k) => '{{' + k + '}}').join(' ') || 'none';
+    $('vars').textContent = Object.keys(envs.vars).map((k) => '{{' + k + '}}').join(' ') || t('none');
     if (f.url) $('url').value = f.url; else buildUrl();
     showPane(f.pane);
-    showResponse(t.response);
+    showResponse(tab.response);
     save();
   }
   function renderTabs() {
     const bar = $('tabsBar'); bar.innerHTML = '';
-    tabs.forEach((t, i) => {
+    tabs.forEach((tab, i) => {
       const d = el('div', 't' + (i === active ? ' on' : ''));
-      d.appendChild(el('span', 'verb ' + t.endpoint.verb.toLowerCase(), t.endpoint.verb.toUpperCase()));
-      d.appendChild(el('span', '', t.endpoint.path));
-      const x = el('span', 'x', '×'); x.title = 'Close'; x.addEventListener('click', (ev) => { ev.stopPropagation(); close(i); }); d.appendChild(x);
-      d.title = t.endpoint.owner; d.addEventListener('click', () => show(i)); bar.appendChild(d);
+      d.appendChild(el('span', 'verb ' + tab.endpoint.verb.toLowerCase(), tab.endpoint.verb.toUpperCase()));
+      d.appendChild(el('span', '', tab.endpoint.path));
+      const x = el('span', 'x', '×'); x.title = t('close'); x.addEventListener('click', (ev) => { ev.stopPropagation(); close(i); }); d.appendChild(x);
+      d.title = tab.endpoint.owner; d.addEventListener('click', () => show(i)); bar.appendChild(d);
     });
   }
   function close(i) { tabs.splice(i, 1); if (active >= i) active = Math.max(-1, active - 1); const a = active; active = -1; show(Math.min(a, tabs.length - 1) < 0 && tabs.length ? 0 : a); }
@@ -262,7 +277,7 @@ function html(webview: vscode.Webview): string {
   }
   window.addEventListener('message', (ev) => {
     const m = ev.data;
-    if (m.type === 'environments') { envs = m; $('envName').textContent = m.active; $('vars').textContent = Object.keys(m.vars).map((k) => '{{' + k + '}}').join(' ') || 'none'; }
+    if (m.type === 'environments') { envs = m; $('envName').textContent = m.active; $('vars').textContent = Object.keys(m.vars).map((k) => '{{' + k + '}}').join(' ') || t('none'); }
     if (m.type === 'open') open(m.endpoint);
     if (m.type === 'restore' && m.state && m.state.tabs) { tabs = m.state.tabs; active = -1; show(m.state.active >= 0 && m.state.active < tabs.length ? m.state.active : tabs.length ? 0 : -1); }
     if (m.type === 'response') { const t = tabs[m.tab]; if (t) { t.response = m; if (m.tab === active) showResponse(m); save(); } }
@@ -275,7 +290,7 @@ function html(webview: vscode.Webview): string {
   $('pickEnv').addEventListener('click', () => vscode.postMessage({ type: 'selectEnvironment' }));
   $('send').addEventListener('click', () => {
     const f = readForm();
-    $('status').textContent = 'sending…'; $('status').className = 'status';
+    $('status').textContent = t('sending'); $('status').className = 'status';
     vscode.postMessage({ type: 'send', tab: active, method: f.method, url: f.url, headers: Object.fromEntries(f.headers.filter(([k]) => k.trim())), body: f.body });
   });
   $('copyCurl').addEventListener('click', () => {

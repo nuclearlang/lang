@@ -25,6 +25,7 @@ sed -i 's/dialect = "nestjs"/dialect = "fastapi"/' "$c/config.nuc"
 cd "$c/build"
 last "$V/pyright" --pythonpath "$V/python"
 last "$V/python" -m pytest -q -p no:warnings
+PYTHONPATH=. "$V/python" "$here/checks/fastapi-check/smoke_tasks.py"
 # ADR-backend-0001: its migrations, made from the entities and applied to a fresh SQLite; then nothing is left to make
 export DATABASE="$c/fresh.sqlite"
 last "$V/python" -m synapsis.migrate make "first" --dir "$c/migrations"

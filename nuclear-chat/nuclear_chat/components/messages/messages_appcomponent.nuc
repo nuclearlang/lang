@@ -1,0 +1,12 @@
+// What the rest of the app sees of the messages: a channel's history and its threads, what the user says, what a
+// host or a member posts, edits, reactions, GIFs, buttons, the search and the unread counts.
+appcomponent MessagesAppComponent
+  history() = History.exec
+  say() = Say.exec
+  post() = PostMessage.exec
+  update() = UpdateMessage.exec
+  react() = React.exec
+  sendGif() = SendGif.exec
+  click() = ClickButton.exec
+  search() = SearchMessages.exec
+  unread() = UnreadCounts.exec

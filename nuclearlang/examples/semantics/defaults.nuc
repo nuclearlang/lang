@@ -1,0 +1,17 @@
+// A default list or map is a new one at every call; a static field is the class's.
+add(x: int, xs: int[] = [], seen: <string, int> = {}) int
+  xs.add(x)
+  seen["n"] = xs.length
+  xs.length + seen.length
+
+Counter()
+  static count: int = 0
+
+  static next() int
+    Counter.count = Counter.count + 1
+    Counter.count
+
+main() void
+  print(add(1), add(2))
+  Counter.next()
+  print(Counter.next(), Counter.count)

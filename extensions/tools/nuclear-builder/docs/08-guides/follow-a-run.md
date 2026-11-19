@@ -1,97 +1,145 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [write-a-spec.md, pipeline-commands.md, ../00-context/domain.md]
 ---
 # Follow a run
 
-## The graph of a run
+## Where things are
 
-The run is drawn as a graph, left to right:
+While the Builder is the open tool, the Nuclear Workspace's column (beside the strip) holds *+ New spec*, your specs
+by component and layer, and the runs as an accordion: open several at once (a running one opens by itself), each with
+its stations and, for the one working, waiting or failed, its steps live. A click there opens it on the page: a spec,
+a run, or a station or step picked in the diagram and the node.
 
-- **A column per stage**: Specification → Generate → Plan → Tests first → Code → Verification → Security →
-  Artifacts → Deploy. Each shows its state, its time and the agents that took part; a stage the strategy leaves out
-  says why.
-- **A node per step**, in the order it ran, and under it the steps its agent followed (recall from the graph, with
-  the cards it read by name → write → repair with the compiler).
-- **Click a node** and it opens beside the graph: what it did, **the decisions it took and why** (which strategy and
-  by which signs, why a piece was dropped or a file went to the tester), its input, its output and its code. The
-  step's *For the agent* tab shows what the agent read; *Output* keeps the real log.
+On the page, the diagram with Nuclear Chat under it; on the right, above, **the node**; below, **the log**, with the
+logo of the team doing the work. The right column and the chat fold (`»` `▾`) and resize (drag their edges); the
+page remembers both. *Open the chat* opens the chat as a full tab.
 
-## What each stage shows
+In the chat, each run is a thread of its team's channel: the tech lead starts it, each member says when their
+station passed or failed (a failure may come with the member's GIF), and a gate or QA's plan is the member's
+question with buttons: **Approve**, **Ask for a change** (the editor asks what), **Later**, **Go on**. A click answers
+the run as the page does. Money is never answered in the chat: the editor asks its two questions.
 
-- **Specification** ends with the **analysis**: which kind of request the spec is and the strategy the run follows.
-  The step says what it understood and why; a fact it lacks is asked there, before anything is written.
-- **Generate** runs `nuclear gen` for the resources the spec names
-  ([write a spec, §4](write-a-spec.md)). A crash undoes the generated files like an agent's.
-- **Plan** shows the work as a tree: the big parts (one per component), the tasks of each (a layer: data, domain,
-  the facade, the entry points, the tests) and the pieces of each task (one file). It also says, before any code,
-  what of the spec is beyond the platform or the local agents: the graph's capabilities whose trigger words the spec
-  writes ("authentication" on a backend, "form" on the web), a spec too long for a local model, a plan without
-  pieces. Then split the task, give the missing facts, or let a frontier model lead.
-- **Tests first** is skipped when the generators wrote every file of the run: they wrote its tests too, and the step
-  says which. A resource that reads another API gets no generated test (it would call the real one): the step says
-  so, and only the acceptance step holds the criteria against the result.
-- **Acceptance.** When the verification passes, each acceptance criterion is held against what the run left. The
-  ones the result does not show met are listed as left for the reviewer, in the page and in the journal. It
-  informs; it does not fail the run.
+Everywhere, *who* is one label: the member, the role, the provider and the model (*Neo · Developer · Claude Code ·
+haiku*; a local one *… · Nuclear Developer · qwen2.5-coder:3b*). The Smart Graph and the shell appear only where
+they took part.
+
+## What a station asks you
+
+At the top of the right column, a station that needs you says so (and the run's head shows *It waits for you*) (the run waits; the page, a notification and the badge on the
+Nuclear icon tell you):
+
+- **A gate** (after Analysis and Design, and before Delivery, by default; the line's `"gates"`): *Approve the Design
+  of <employee>?*, the documents to read first (a click opens them), *Approve*, *Ask for a change* (write what should
+  change: the station's role works again with it) or *Later*.
+- **QA's plan**: QA writes the run's checks and stops. In the drawer, the console lists every check: on or off, its
+  station, who runs it, its state; yours to do come first. Switch checks, *Add a check* of your own (a load test, a
+  look on a phone), run yours and mark each *Done* or *Failed*; *Go on* opens once every check of yours that is on is
+  marked, and QA runs the rest.
+- **The spending**: before the first call to a paid provider, two questions of the editor, the second with the
+  amount and the providers. *Settings and integrations → Spending* can turn them off, unless you or the project
+  (`"forceConfirm": true` in `.nuclear/builder.json`) force them.
+
+*Later*, or closing VS Code, leaves the run waiting; your answer later goes on from there (*Go on* asks again). In a
+terminal: `nuclear-builder run --resume <id>`.
+
+## The node, like a debugger
+
+The node shows the station you picked (or the whole run's stations) as a tree of titles: each step with its status,
+who did it and how long. Open a step (a click, or → on the keyboard) to see its inner process: its outcome, what its
+agent followed, each tool it called (open one for its input and output), the decisions it took (open one for why),
+the files it wrote (a click opens the file) and its log, only when you open it. Nothing is open that you did not
+open. ↑ ↓ move, ← closes or goes up, Enter opens. *Inside the step* shows the same in the diagram; *‹ The run* (or
+Escape) goes back to every station.
+
+## The log and the team
+
+Under the node, one line per step done, newest last: who and what, how long. A click opens its detail (its outcome,
+what its agent followed and the tools it called, *show in the node*). Under the log, the team doing the work: its
+logo and name and its tech lead; a click opens *Your software company*, where each team is a card (logo, name,
+description, its members, what it works on) and opens to its members (each one's name and personality, editable)
+and their settings.
+
+## The diagram of a run
+
+The run is a living work diagram in C4's four levels; the breadcrumb walks them, a double click goes down, Escape
+goes back up:
+
+- **Context** (where a run opens): the project in the middle; you; the team's members who work the run with their avatars and names and
+  who does their work; the providers in use (on this machine and free, or paid, with the run's budget); the Smart
+  Graph and GitHub. The edges say who talks to whom, and flow while they do: the role working and its provider, the
+  project asking you when a station waits.
+- **Stations**: a node per station, left to right (Analysis → Design → Tests first → Code → Quality → Delivery), with
+  the employee and the provider and model that work it, its state, time, progress and the step on now. A light runs
+  round the station working, one that waits for you breathes in amber, and the edge that hands the work to it flows.
+  The view opens on the station working (or waiting, or failed) and its neighbours.
+- **Inside a station** (its *⤢ Inside* or a double click): its steps with the employee and model that did each, and
+  under each step the steps its agent followed, the last one lit while it works. The stations before and after stand
+  at the sides.
+- **Inside a step**: what it followed, the decisions it took and why, the files it wrote and the tools it called, as
+  nodes.
+- Nodes can be dragged; the wheel zooms, a drag pans, the minimap shows the whole and the controls fit the view.
+- **Click a node** and the node beside the diagram picks it: its steps, each opening to what it did, **the decisions it
+  took and why**, its files and its log.
+
+## What each station leaves
+
+Each station writes its documents in the spec's folder (`specs/<component>/[<layer>/]<id>/`) from its role's templates: `analysis.md` and `questions.md`,
+`design.md` and `plan.md` (the generators write first what follows from the data, [write a spec, §4](write-a-spec.md)),
+`test-plan.md` and the tests, the code with `work-log.md`, `qa-report.md`, then `definition-of-done.md`,
+`user-story.md` and `pr.md`. DevOps (the Delivery station) makes the branch, the commit in your name and the pull request only after you
+approve; it never merges. The run's drawer lists the documents.
 
 ## Run anything again
 
-- *Run again from this step*, on every step, passed or failed: it and every step after it run again; the steps
+- *Run <station> again*, on every station and every step: it and every station after it run again; the stations
   before it are kept.
-- *Run <stage> again*, on every stage.
-- *Run again from scratch*, on the run: the whole pipeline from the specification.
+- *Run again from scratch*, on the run: every station from the Analysis.
 
 What the steps left out wrote is undone first. A file you changed since the run wrote it is kept, and the page says
-so. The attempt left behind stays under the run with its reason. A run made by an older version of the Builder starts
-from scratch at any retry.
+so. The attempt left behind stays under the run with its reason. A run made by the earlier engine can only run again
+from scratch.
 
 ```sh
-nuclear-builder retry <run> [--from <stage> | --step <id>]
+nuclear-builder retry <run> [--from <station>]
 nuclear-builder restart <run>
 ```
 
 Over MCP: `developer_retry`.
 
-## The journal
-
-Every run keeps `.nuclear/builder/runs/<id>.md` beside its `.json`: the files written, what is left for the reviewer,
-and every step with its agent, its trace and what the agent read. At the end the local **documenter** reads it and
-writes, at its top, what was built, how it was checked and what is left. A reviewer's notes go to
-`<id>.review.md`.
-
 ## When it fails
 
 - A call to the local agents that fails for a passing reason (the service starting, busy, a 5xx) is retried with
   exponential backoff; the settings say how many times and how long. Each retry is in the step's trace.
-- When a stage fails, the local diagnoser tells why and what to do. *↻ Retry from <stage>* (or
-  `nuclear-builder retry <run>`) runs it again from there, keeping every step that passed.
+- When a station fails, the local diagnoser tells why and what to do (its *Why it failed* step). *↻ Run <station>
+  again* (or `nuclear-builder retry <run>`) runs it again from there, keeping every station that passed.
 
 ## It survives the editor, and it keeps working
 
-- A run keeps a trace log, a heartbeat and a ledger of the files it writes. If VS Code closes or crashes in the
-  middle, the run is found interrupted when it opens again, what was left half written is undone, and it goes on
-  from that step. Two windows never run the same run.
-- Every run first checks its connections (the Developer, the graph, Ollama and the models, Claude when it leads,
-  free disk). Every few minutes every integration is checked again.
+- A run is a process of `nuclear-builder`, with a trace log, a heartbeat and a ledger of the files it writes. If VS
+  Code closes or crashes in the middle, the run is found interrupted when it opens again, what was left half written
+  is undone, and it goes on from that station (`nuclear.builder.resumeInterrupted`). Two windows never run the same
+  run. *Stop* interrupts a run that works (what its working steps wrote is undone) and leaves one that waits waiting.
+- Every run first checks its connections (the Developer, the graph, Ollama and the local roles' models, each agent's
+  command, a key in the vault for each API provider, the MCP server, free disk).
 - A run does not stop when you switch tools or close its page. A notification, and a badge on the Nuclear icon,
-  tell you when it ends.
+  tell you when it waits for you and when it ends.
 - *Settings and integrations* (`Ctrl+Alt+S`) holds the services, the local models, the MCP server for Claude Code,
   Codex and Cursor, the connections and the retries.
 
 ## The strategy of a request
 
 A whole system, one screen, a rename and a failing test are not done the same way. The graph holds a **strategy**
-for each kind of request (31 rows, `strategy:<name>`; ADR-developer-0001): how the kind is recognised, its plan with the
+for each kind of request (33 rows, `strategy:<name>`; ADR-developer-0001): how the kind is recognised, its plan with the
 tool of every step, and what it asks of a run. The local **analyst** picks it before anything is generated or
-planned. No model chooses: the request's exact signs decide (a diagnostic code, a test's output, `rename A to B`, a
+planned (its first step). No model chooses: the request's exact signs decide (a diagnostic code, a test's output, `rename A to B`, a
 `GET <url>` line), then its meaning, and whether the project already has the names it writes.
 
 | Family | Kinds of request |
 |---|---|
-| create | a whole system, a project, a component, a resource of another API, a stored resource, the app of a backend, only an interface, a repository, a use case, a route, one declaration |
+| create | a whole system, a visual prototype with fixed data, a project, a component, a resource of another API, a stored resource, the app of a backend, only an interface, a repository, a use case, a route, one declaration |
 | change | one more field, method or action; a rename; a move or an extraction; a break of the architecture's rules; the database's schema; the configuration; taking something out |
 | fix | it does not compile; a test fails; it does the wrong thing; it fails while running; the data does not match; a screen shows the wrong thing; the machine or a service fails |
 | verify and explain | tests for what exists; a security review; documentation; a question; building, running and shipping |
@@ -99,9 +147,9 @@ planned. No model chooses: the request's exact signs decide (a diagnostic code, 
 
 What a strategy changes in a run:
 
-- **The stages that run.** A compile error skips *Generate*, *Plan* and *Tests first*: the compiler's exact fixes
-  first (`nuclear fix .`), then each file with errors is repaired with the card of each error. A failing test goes
-  straight to *Verification*. A rename plans and writes, and writes no test.
+- **The stations that run.** A compile error skips the generators, the plan and *Tests first*: the compiler's exact
+  fixes first (`nuclear fix .`), then each file with errors is repaired with the card of each error. A failing test
+  goes straight to *Quality*. A rename plans and writes, and writes no test.
 - **Where the pieces come from.** For a new feature the planner splits what the generators left. For a change of
   something that exists (a field more, a column) the pieces are the files that declare it. For a rename a tool
   gives every file that writes the name, already rewritten: no model writes.

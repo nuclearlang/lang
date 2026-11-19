@@ -2,6 +2,7 @@
 // registered class, and screens rendered with @testing-library/react.
 import { createElement, ReactElement } from 'react';
 import { render, RenderResult } from '@testing-library/react';
+import { Stream } from './sockets.js';
 import { vi } from 'vitest';
 import { Synapsis } from './app.js';
 import { AppConfig } from './config.js';
@@ -95,7 +96,8 @@ export function when<F extends (...args: never[]) => unknown>(method: F) {
   const fn = method as unknown as ReturnType<typeof vi.fn>;
   return {
     thenReturn(value: Awaited<ReturnType<F>>): void {
-      fn.mockImplementation(() => Promise.resolve(value));
+      // a Stream method (`@on`) answers at once, as the repository does; any other resolves with it
+      fn.mockImplementation(() => (value instanceof Stream ? value : Promise.resolve(value)));
     },
     thenReturnSync(value: ReturnType<F>): void {
       fn.mockReturnValue(value);

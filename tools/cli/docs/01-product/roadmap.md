@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [tools/cli/docs/03-adr/0003-one-command-nuclear.md, tools/cli/docs/04-specs/README.md]
 ---
 # Roadmap of the command line tools
@@ -11,6 +11,12 @@ The pending work of `nuclear`. A done item is deleted. What `gen` and `make` wri
 [theirs](../../../../device-emulators/docs/01-product/roadmap.md).
 
 ## Half done
+
+- **A backend or web project on a new machine** (found by spec 016's clean-machine run, 2026-11-18): `nuclear
+  install` of a `fastapi` project needs `python3` (a `nestjs` or `react` one, Node.js), and nothing installs it:
+  `nuclear setup` installs only Flutter, and `nuclear doctor` checks only the mobile platform (in a backend
+  project it reports Flutter and never Python). TODO(user): how a new machine gets the backend and web toolchains
+  (`nuclear setup` per platform, the AI archive's Python, or the user's own).
 
 - **The `nuclear` CLI for backend projects** has `new`, `build`, `install`, `run`, `test`, `migrate`, `check` and
   `make` (every kind, from the platform's `[layout]` + `[skeletons]`). Missing: `watch` for backend projects, and
@@ -33,6 +39,22 @@ The pending work of `nuclear`. A done item is deleted. What `gen` and `make` wri
   `--dry-run`.
 
 ## Pending
+
+- **Found writing the skills library (2026-11-18)**: no OpenAPI importer; no dependency audit nor load-test command; `nuclear fmt --check` is not in the default CI line.
+- **`nuclear new .` is refused** ("'.' is not a project name"; found by spec 016's measured run, 2026-11-18): an
+  agent told "create it here" made a subfolder and moved its files up by hand. Wanted: `nuclear new .` creates the
+  project in the current empty folder, named after it.
+- **No way to look at a mobile app on a machine without a display** (same run): `nuclear device` needs one, so the
+  agent installed Xvfb and Chromium with `apt-get` and took screenshots of `nuclear build web`. Wanted: a headless
+  screenshot of a screen from the tools.
+- **`nuclear install` keeps a folder dependency it installed before** (backend, fastapi): a project whose
+  `dependencies(x = "../x")` changed still runs the old copy in `build/.venv` until it is reinstalled by hand
+  (`pip install --force-reinstall --no-deps ../x`, which `nuclear-chat install` does; found by Nuclear Chat,
+  2026-11-18). Wanted: a folder dependency reinstalled on every `nuclear install`, or installed editable.
+  The same with the runtime in a web project: `nuclear install` kept an old `synapsis-web` of the same version in
+  `build/app/node_modules` (npm does not copy a `file:` package again when its version is unchanged), so the tests
+  ran the old runtime until the folder was deleted by hand (found with `nuclear-chat/ui`, 2026-11-18). Wanted: the
+  runtime copied fresh on every `nuclear install`.
 
 - The mobile path still calls Flutter directly (the SDK lookup, the `flutter` commands, devices, hot reload): move
   it to the flutter dialect's `[toolchain]` like backend and web (the consequence ADR-cli-0001 names).

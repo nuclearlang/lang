@@ -33,7 +33,7 @@ it:
   (`nuclear-synapsis-framework/platforms/`)
 
 Both end with `nuclear-lsp --check-bundle`, which loads each bundled dialect without the tree and fails on any
-diagnostic (N0213, for example). The server finds the dialects next to its binary; it also searches
+error (N0213, for example); a warning (a platform plugin a dialect does not bring yet) is printed and does not fail. The server finds the dialects next to its binary; it also searches
 `nuclear_dialect::install_dir()` (the installed copy).
 
 ## Dialects of the user

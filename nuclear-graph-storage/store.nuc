@@ -63,7 +63,7 @@ storable(meta: <string, any>) <string, any>
 // come from a local embeddings model (Ollama). Only the server process opens it.
 //
 // A row's metadata is in clear (ids, names, keys, filters: what Chroma searches by); its text is sealed. The shelves
-// of the knowledge base are made by `ingest`; `prompts` holds the prompt files of this package and `memory` what an
+// of the knowledge base are made by `ingest`; `prompts` holds the prompts (the skills of the roles) and `memory` what an
 // agent decided to keep about a project while working on it.
 Store
   client: any

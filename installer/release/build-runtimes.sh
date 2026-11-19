@@ -12,8 +12,3 @@ for p in "$REPO"/nuclear-synapsis-framework/platforms/*/packages/*/package.json;
   else (cd "$d" && npm install --no-audit --no-fund >/dev/null); fi
   (cd "$d" && npm run --silent build)
 done
-# nuclear-builder (ADR-platform-0003): the Builder engine of the VS Code extension bundled for node; stage.sh copies it into bin/
-if [ -f "$REPO/extensions/vscode/package.json" ]; then
-  echo "building nuclear-builder"
-  (cd "$REPO/extensions/vscode" && npm ci --no-audit --no-fund >/dev/null && npm run --silent builder >/dev/null)
-fi

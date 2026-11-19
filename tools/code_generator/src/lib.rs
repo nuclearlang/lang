@@ -4,7 +4,10 @@
 //!   the platform's `[skeletons]` (backend, web).
 //! - [`generate`]: finished code from a resource's data (`nuclear gen`), from the platform's `[[generators]]`.
 //!
+//! - [`context`]: the context documents of a new project (`AGENTS.md`, `docs/`), from the templates of `context/`.
+//!
 //! It writes files and reports what it wrote; printing is the command's.
 
+pub mod context;
 pub mod generate;
 pub mod scaffold;

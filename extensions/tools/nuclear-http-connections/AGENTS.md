@@ -2,10 +2,12 @@
 
 The tool like Postman or Bruno inside the editor, **HTTP Connections**: every endpoint of every
 project as a tree by platform, project and component, read from the contract the compiler writes; the contracts an
-app declares; OpenAPI documents of APIs that are not Nuclear; environments; and a request panel. It is a tool of the
+app declares; OpenAPI documents of APIs that are not Nuclear; ws:// urls of servers that are not Nuclear;
+environments; a request panel and a WebSocket panel. It is a tool of the
 Nuclear workspace in VS Code (`Ctrl+Alt+H`) and a tool window in Android Studio / IntelliJ (`Alt+Shift+H`).
 
-Today it speaks only HTTP (REST). The user's plan is more protocols: http, sockets, grpc, udp
+It speaks HTTP (REST) and WebSockets: what a backend's contract says is served over WebSockets carries a `WS` badge
+and opens in the WebSocket panel, with the events the component pushes. Raw sockets, gRPC and UDP are next
 ([roadmap](docs/01-product/roadmap.md)).
 
 ## Where the code is
@@ -16,31 +18,39 @@ the JetBrains `build.sh` compiles `jetbrains/src/` with the plugin.
 |---|---|
 | `src/httpConnections.ts` | `HttpModel`: the projects, the tree, the environments, the commands |
 | `src/panel.ts` | `ComponentPanel`: one editor tab per component, one inner tab per endpoint |
-| `jetbrains/src/dev/nuclearlang/editor/HttpConnections.java` | the *HTTP Connections* tool window, in Swing |
+| `src/socket.ts` | no `vscode`: the contract's WebSocket fields, the urls, the message log and history, `SocketConnection` |
+| `src/socketPanel.ts` | `SocketPanel`: the WebSocket page, one editor tab per component, one inner tab per socket |
+| `src/l10n.ts`, `src/settings.ts` | the pages' texts (`HTTP`, `WS`); the `nuclear.http.*` settings |
+| `test/sockets.test.ts` | the tests (`vscode` stubbed by `test/vscode-stub.ts`), with a real echo server |
+| `jetbrains/src/dev/nuclearlang/editor/HttpConnections.java` | the *HTTP Connections* tool window, in Swing, with its socket panel |
 
 `extensions/vscode/src/connections.ts` is not part of this tool: it checks the connections of the AI services and
 stays with [the settings page](../../vscode/docs/02-architecture/ai-services.md).
 
 ## Stack
-- TypeScript; the request is sent by the extension host with `fetch`; the panel is plain HTML and script
-- Java with `java.net.http` and Gson for the JetBrains tool window
+- TypeScript; the request is sent by the extension host with `fetch`, the socket opened by it with Node's `WebSocket`
+  (Node 22: VS Code 1.101 or newer); the panels are plain HTML and script
+- Java with `java.net.http` (`HttpClient`, `WebSocket`) and Gson for the JetBrains tool window
 
 ## Commands
-Run in `extensions/vscode/`: `npm run compile`. In `extensions/jetbrains/`:
-`IDE_HOME=/opt/android-studio ./build.sh`. The tool has no test of its own.
+Run in `extensions/vscode/`: `npm run compile` and `npm test` (it ends with `test/sockets.test.ts`). In
+`extensions/jetbrains/`: `IDE_HOME=/opt/android-studio ./build.sh`.
 
 ## Rules
 - The endpoints come from `.nuclear/contract.json`, never from reading the project's code.
 - The tree in VS Code is drawn by the workspace's webview, with the `nuclearHttpConnections.*` colors of the theme.
 - A component is an editor tab and each endpoint a tab inside it: the tab bar never fills with requests.
-- A request is sent by the extension host, not by the webview; `{{var}}` is resolved there.
-- The decisions: ADR-extensions-0002 (the workspace), ADR-synapsis-0006 (the contract).
+- A request is sent by the extension host, not by the webview; `{{var}}` is resolved there. A socket is the host's
+  too, and closes with its tab.
+- The contract is read tolerantly: a field this tool does not find means HTTP only, never an error.
+- The decisions: ADR-extensions-0002 (the workspace), ADR-synapsis-0006 (the contract), ADR-synapsis-0007 (the guards)
+  and ADR-synapsis-0008 (the WebSocket and its frames).
 
 ## Documents (read by task)
 | You need… | Read |
 |---|---|
-| The model, the tree, the environments, the panel, the JetBrains window | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
-| What a user reads: the tree, sending a request, the environments | [docs/08-guides/README.md](docs/08-guides/README.md) |
+| The model, the tree, the environments, the panels, the contract's WebSocket fields, the JetBrains window | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
+| What a user reads: the tree, sending a request, a WebSocket, the environments | [docs/08-guides/README.md](docs/08-guides/README.md) |
 | The pending work: the protocols, what was never tried | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
 | The colors of the tree | [the theme](../../vscode/docs/02-architecture/theme.md) |
 | How the tree is drawn in the workspace's pane | [the workspace](../../vscode/docs/02-architecture/workspace.md) |

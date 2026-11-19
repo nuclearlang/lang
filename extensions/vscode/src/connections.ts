@@ -5,9 +5,10 @@
 import { execFile } from 'node:child_process';
 import * as os from 'node:os';
 import * as vscode from 'vscode';
+import { l10n } from './i18n';
 import { aiSettings, JIRA_SECRET } from './aiSettings';
-import { toolEnv } from '../../tools/nuclear-builder/src/engine';
-import { Check, checkConnections } from '../../tools/nuclear-builder/src/safety';
+import { toolEnv } from '../../tools/nuclear-builder/src/support';
+import { Check, checkConnections } from '../../tools/nuclear-builder/src/support';
 import { notices } from './notifications';
 
 function run(cmd: string, args: string[]): Promise<{ ok: boolean; out: string }> {
@@ -24,20 +25,20 @@ export async function checkAll(context: vscode.ExtensionContext): Promise<Check[
   const base = await checkConnections({ developerUrl: s.developerUrl, graphUrl: s.graphUrl, ollamaUrl: s.ollamaUrl, models: [s.coderModel, s.assistantModel, s.embeddingsModel], tools, folders: [os.tmpdir()], minFreeMb: c.get('watch.minFreeMb', 500) }, toolEnv());
   const gh = c.get('github.command', 'gh');
   const auth = await run(gh, ['auth', 'status']);
-  base.push({ name: 'GitHub', ok: auth.ok, detail: auth.ok ? 'signed in' : `${gh} auth status: ${auth.out.split('\n')[0] || 'not signed in'} (run gh auth login)` });
+  base.push({ name: 'GitHub', ok: auth.ok, detail: auth.ok ? l10n.t('signed in') : l10n.t('{0} auth status: {1} (run gh auth login)', gh, auth.out.split('\n')[0] || l10n.t('not signed in')) });
   const site = c.get('jira.site', '');
   const token = await context.secrets.get(JIRA_SECRET);
   if (site || token) {
-    let detail = 'no API token: Connect in Settings and integrations';
+    let detail = l10n.t('no API token: Connect in Settings and integrations');
     let ok = false;
     if (token) {
       try {
         const auth = JSON.parse(token) as { baseUrl: string; email: string; token: string };
         const r = await fetch(auth.baseUrl.replace(/\/$/, '') + '/rest/api/3/myself', { headers: { Authorization: `Basic ${Buffer.from(`${auth.email}:${auth.token}`).toString('base64')}`, Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
         ok = r.ok;
-        detail = r.ok ? auth.baseUrl : `${auth.baseUrl} answered ${r.status} (check the email and the token)`;
+        detail = r.ok ? auth.baseUrl : l10n.t('{0} answered {1} (check the email and the token)', auth.baseUrl, r.status);
       } catch (e) {
-        detail = `does not answer (${e instanceof Error ? e.message : e})`;
+        detail = l10n.t('does not answer ({0})', e instanceof Error ? e.message : String(e));
       }
     }
     base.push({ name: 'Jira', ok, detail });
@@ -66,7 +67,7 @@ export function watchConnections(context: vscode.ExtensionContext): void {
     for (const c of now) {
       const before = last.find((x) => x.name === c.name);
       if (before && before.ok !== c.ok) {
-        notices.add({ tool: 'settings', title: c.ok ? `${c.name} answers again` : `${c.name} stopped answering`, text: c.detail, level: c.ok ? 'info' : 'warning' });
+        notices.add({ tool: 'settings', title: c.ok ? l10n.t('{0} answers again', c.name) : l10n.t('{0} stopped answering', c.name), text: c.detail, level: c.ok ? 'info' : 'warning' });
       }
     }
     last = now;

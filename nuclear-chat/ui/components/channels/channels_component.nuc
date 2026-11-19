@@ -1,0 +1,6 @@
+// What the screens and the other components see of channels: an alias for each of its use cases.
+appcomponent ChannelsComponent
+  listChannels() = ListChannels.exec
+  readChannel() = ReadChannel.exec
+  createChannel() = CreateChannel.exec
+  chooseAgent() = ChooseAgent.exec

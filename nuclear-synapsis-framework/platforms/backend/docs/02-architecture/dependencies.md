@@ -44,6 +44,7 @@ The extras, one per plugin of the platform. The generated `pyproject.toml` lists
 | `sqlite` | aiosqlite ≥ 0.20 |
 | `redis` | redis ≥ 5.2 |
 | `kafka` | aiokafka ≥ 0.12 |
+| `websocket` | websockets ≥ 13 (uvicorn's WebSocket protocol; the runtime uses Starlette's) |
 | `openai` | langchain-openai ≥ 0.3 |
 | `ollama` | langchain-ollama ≥ 0.3 |
 | `chroma` | langchain-chroma ≥ 0.2, chromadb ≥ 0.6 |
@@ -66,6 +67,7 @@ Optional peers, loaded only by the entry point that needs them:
 |---|---|---|
 | ioredis | ≥ 5 | `synapsis-nest/events` (Redis, the cache) |
 | kafkajs | ≥ 2 | `synapsis-nest/events` (Kafka) |
+| ws | ≥ 8 | `synapsis-nest/sockets` (the app's WebSocket) |
 | langchain, @langchain/core, @langchain/langgraph, @langchain/ollama, @langchain/openai | ≥ 1 | `synapsis-nest/ai` |
 | chromadb | ≥ 3 | `synapsis-nest/ai` (`ChromaStore`) |
 | @nestjs/testing | ≥ 10 | `synapsis-nest/testing` |

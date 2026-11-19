@@ -1,0 +1,58 @@
+use json
+use httpx
+
+// The Google adapter: the Gemini API (`models/<model>:generateContent`, the key in `x-goog-api-key`) with the MCP
+// server's tools as function declarations; through the factory's loop (adapter_api.nuc).
+
+GOOGLE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+
+// Gemini's schemas take no `$schema` nor `additionalProperties`: they are dropped, at every level.
+geminiSchema(schema: any) any
+  if isinstance(schema, list)
+    return (schema as any[]).map((s) => geminiSchema(s))
+  if not isinstance(schema, dict)
+    return schema
+  clean: <string, any> = {}
+  for k, v in schema as <string, any>
+    if k != "$schema" and k != "additionalProperties"
+      clean[k] = geminiSchema(v)
+  clean
+
+geminiContents(turns: <string, any>[]) <string, any>[]
+  out: <string, any>[] = []
+  for t in turns
+    if t["role"] == "user"
+      out.add({ "role": "user", "parts": [{ "text": t["text"] }] })
+    else if t["role"] == "assistant"
+      parts: <string, any>[] = []
+      if "${t["text"] ?? ""}".length > 0
+        parts.add({ "text": t["text"] })
+      for c in (t["calls"] ?? []) as <string, any>[]
+        parts.add({ "functionCall": { "name": c["name"], "args": c["input"] } })
+      out.add({ "role": "model", "parts": parts })
+    else
+      results = ((t["results"] ?? []) as <string, any>[]).map((r) => { "functionResponse": { "name": r["name"], "response": r["error"] == true ? { "error": r["text"] } : { "result": r["text"] } } })
+      out.add({ "role": "user", "parts": results })
+  out
+
+askGoogle(key: string, model: string, system: string, turns: <string, any>[], tools: <string, any>[], client: httpx.Client) ModelTurn
+  declarations = tools.map((t) => { "name": t["name"], "description": t["description"], "parameters": geminiSchema(t["schema"]) })
+  body = { "systemInstruction": { "parts": [{ "text": system }] }, "contents": geminiContents(turns), "tools": [{ "functionDeclarations": declarations }] }
+  data = answerOf(client.post("${GOOGLE_URL}/${model}:generateContent", json = body, headers = { "x-goog-api-key": key, "content-type": "application/json" }), "google")
+  candidates: <string, any>[] = data["candidates"] ?? []
+  if candidates.isEmpty
+    throw RuntimeError("google gave no answer: ${json.dumps(data["promptFeedback"] ?? data).substring(0, 300)}")
+  content: <string, any> = candidates[0]["content"] ?? ({} as <string, any>)
+  parts: <string, any>[] = content["parts"] ?? []
+  text = parts.filter((p) => p["text"] != null).map((p) => "${p["text"]}").join("")
+  calls: <string, any>[] = []
+  for i in 0..parts.length
+    found = parts[i]["functionCall"]
+    if isinstance(found, dict)
+      call: <string, any> = found
+      calls.add({ "id": "call-${turns.length}-${i}", "name": call["name"], "input": call["args"] ?? ({} as <string, any>) })
+  usage: <string, any> = data["usageMetadata"] ?? ({} as <string, any>)
+  ModelTurn(text, calls, usage["promptTokenCount"] ?? 0, (usage["candidatesTokenCount"] ?? 0) + (usage["thoughtsTokenCount"] ?? 0))
+
+googleAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  apiLoop("google", askGoogle, role, station, work, emit)

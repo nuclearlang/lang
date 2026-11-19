@@ -8,9 +8,9 @@ a standard feature costs no model tokens.
 
 ## Stack
 
-- Rust, the library crate `nuclear-codegen` (`src/lib.rs`): `src/generate.rs` (`gen`) and `src/scaffold.rs` (the
-  skeletons and the files of a new project). It writes files and reports `(Wrote::Created | Kept, path)`; the
-  command prints.
+- Rust, the library crate `nuclear-codegen` (`src/lib.rs`): `src/generate.rs` (`gen`), `src/scaffold.rs` (the
+  skeletons and the files of a new project) and `src/context.rs` (the context documents of a new project). It
+  writes files and reports `(Wrote::Created | Kept, path)`; the command prints.
 - The templates are the Mustache subset of `nuclear-dialect` (`nuclearlang/crates/nuclear-dialect/src/template.rs`);
   what it writes goes through `nuclear_syntax::fmt::format`; a use case's signature is read with
   `nuclear_transpile::map::shape`.
@@ -29,7 +29,10 @@ nuclear help layout --platform <p>             # where each kind's file goes
 
 ## Folders
 
-- `src/`: the crate (`lib.rs`, `generate.rs`, `scaffold.rs`).
+- `src/`: the crate (`lib.rs`, `generate.rs`, `scaffold.rs`, `context.rs`).
+- `context/`: the templates of a new project's context documents (`AGENTS.md`, `CLAUDE.md`, `docs/` in layers),
+  embedded; `{{name}}`, `{{platform}}`, `{{dialect}}`, `{{stack}}`, `{{date}}`, `{{commands}}`, `{{test}}`,
+  `{{folders}}`, `{{layout}}` are filled by `context::documents`, the rest is a `TODO(user):` line.
 - `platforms/<platform>/generators.toml` (`backend`, `mobile`, `web`): the generators' data of each platform:
   `[gen]` (the forms of the `Http` connection), `[skeletons]` (what `make <kind>` writes; backend and web) and the
   `[[generators.<what>]]` pieces. The loader finds it through `Home.generators` / `Loader::generators_file`
@@ -63,6 +66,7 @@ The command side (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN
 | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what the generators do not write yet, or what is untested |
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change `generate.rs` or `scaffold.rs`, add a piece to a `generators.toml`, or need how fields become files |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the generators exist and why they never write placeholders |
+| [docs/08-guides/context-docs.md](docs/08-guides/context-docs.md) | You need the standard of a project's context documents (the `context-docs` topic every agent reads) |
 | [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: why generators, what `new`, `gen` and `make` write on each platform |
 
 Elsewhere:

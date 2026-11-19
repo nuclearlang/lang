@@ -4,6 +4,17 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each
+  command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with
+  every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six
+  stations (`stage:analysis` … `stage:delivery`), read from its engine (`run.nuc`, `roles.nuc`) since the TypeScript
+  engine is gone; `concept:loop` describes the factory, and the rows that linked the nine old stages link the
+  stations (`deploy` → `tool:nuclear-builder.ci`).
+- The prompts moved into the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,
+  ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps
+  the text after the front matter (`Paths.roles`, was `Paths.prompts`); the package carries `nuclear_graph/roles`; a
+  prompt named by two skills is refused. The folder `prompts/` is gone. The software factory is a row
+  (`concept:software-factory`).
 - The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them
   now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of
   the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).

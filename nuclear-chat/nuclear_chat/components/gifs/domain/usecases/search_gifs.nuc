@@ -1,0 +1,33 @@
+// A search of the GIF picker: the pack first; then, when the workspace's setting names a service (tenor, giphy)
+// and the project said yes once, that service with the key the keyring keeps. The first time, the results are the
+// pack's and `ask` is `online`: the search words leave the machine only after the user says yes.
+usecase SearchGifs(choice: GifChoice, keyring: Keyring, tenor: TenorRepository, giphy: GiphyRepository, workspaces: WorkspacesAppComponent)
+  exec(workspace: string, q: string = "") Result<Error, GifResults>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(workspace)
+    if found.isErr
+      return Err(found.error)
+    ws = found.value
+    local = choice.search(q)
+    if ws.gifs == "pack" or q.trim().isEmpty
+      return Ok(GifResults(q = q, results = local))
+    consent = choice.consent(ws)
+    if consent == null
+      return Ok(GifResults(q = q, results = local, ask = "online", service = ws.gifs))
+    if consent == false
+      return Ok(GifResults(q = q, results = local, service = ws.gifs))
+    key = keyring.key(ws.gifs)
+    if key == null
+      return Ok(GifResults(q = q, results = local, service = ws.gifs, note = "no-key"))
+    online: Gif[] = []
+    if ws.gifs == "tenor"
+      tenorPage: Result<Error, TenorPage> = ~tenor.search(q = q, key = key!)
+      if tenorPage.isErr
+        return Ok(GifResults(q = q, results = local, service = ws.gifs, note = "failed"))
+      online = choice.fromTenor(tenorPage.value)
+    else
+      giphyPage: Result<Error, GiphyPage> = ~giphy.search(q = q, apiKey = key!)
+      if giphyPage.isErr
+        return Ok(GifResults(q = q, results = local, service = ws.gifs, note = "failed"))
+      online = choice.fromGiphy(giphyPage.value)
+    Ok(GifResults(q = q, source = ws.gifs, results = [...local, ...online], service = ws.gifs))

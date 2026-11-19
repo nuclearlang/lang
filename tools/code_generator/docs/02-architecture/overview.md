@@ -1,8 +1,8 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
-related: [tools/code_generator/src/generate.rs, tools/code_generator/src/scaffold.rs, tools/code_generator/platforms/, nuclearlang/docs/07-reference/dialects.md, nuclear-synapsis-framework/docs/08-guides/generators.md]
+updated: 2026-11-18
+related: [tools/code_generator/src/generate.rs, tools/code_generator/src/scaffold.rs, tools/code_generator/src/context.rs, tools/code_generator/context/, tools/code_generator/platforms/, nuclearlang/docs/07-reference/dialects.md, nuclear-synapsis-framework/docs/08-guides/generators.md]
 ---
 # The code generator: overview
 
@@ -69,8 +69,19 @@ the place and the form to write it.
 | Mobile | Rust templates in `scaffold.rs`: project, component, screen (`--manager`, `--state`, `--route`), statemanager / statemodel (`presentation`), stateful, usecase, repository, model, service, aggregate, config, test, event, widget, guard, global, page (`--route`, `--not-found`), integration | `make` of the command; `component`, `screen`, `config`, `in_component`, `test`, `shared`, `presentation`, `app_wide` of `scaffold.rs` |
 | Backend, web | The `[skeletons]` entry of the kind in the platform's `generators.toml`, written at its `[layout]` path, with `{{Name}}`, `{{name}}`, `{{Component}}`, `{{component}}`, `{{table}}` filled | `make_from_layout` of the command |
 
-`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`), the name helpers
+`scaffold.rs` also holds the files of a new project (`project`, `backend_project`, `web_project`, with `NewOptions`:
+`websocket` and `token`, ADR-synapsis-0007/0008), the name helpers
 `snake` / `pascal`, and `write`, which never overwrites. Names are given in any case and normalized.
+
+## `new`: the context documents (`context.rs`, spec 016)
+
+`context::documents(Project)` fills the templates of `context/` (embedded, one per file a new project gets:
+`AGENTS.md`, `CLAUDE.md`, `docs/` in layers) with what is known: the name, platform, dialect and its chain
+(`{{stack}}`), today (`today`, UTC), the `nuclear` commands of the platform (`commands`), the top folders and the
+kind → file table of the platform's `[layout]` (`folders`, `{{layout}}`). The command
+(`framework::new_agent_files`) writes them with `scaffold::write` (a file that exists is kept), then appends the
+NuclearLang section with `agent::init`. Test: `every_template_is_filled_and_short` (no placeholder left, each under
+150 lines).
 
 ## The data of a platform
 

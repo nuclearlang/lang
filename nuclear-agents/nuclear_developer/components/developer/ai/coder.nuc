@@ -1,6 +1,6 @@
 // The coder: writes one .nuc file from a precise task, with the card of the kind it writes, the mistakes to avoid
 // with that kind and validated examples of it (all from the graph), and repairs it with the card of each error the
-// compiler reports until `nuclear check` reports none. Prompts: agents/piece.md, agents/repair.md.
+// compiler reports until `nuclear check` reports none. Prompts: `agent.piece`, `agent.repair`.
 @state(PieceState)
 graph Coder(bench: Workbench)
   @start

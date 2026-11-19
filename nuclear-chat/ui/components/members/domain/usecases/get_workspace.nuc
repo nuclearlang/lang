@@ -1,0 +1,4 @@
+// What WorkspacesRepository.one answers, for the screens of members.
+usecase GetWorkspace(repository: WorkspacesRepository)
+  exec(id: string) Result<NuclearChatError, Workspace>
+    ~repository.one(id)

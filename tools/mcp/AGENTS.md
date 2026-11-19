@@ -30,7 +30,8 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 
 ## Folders
 
-- `server.nuc`: the server, its instructions and every tool (`McpTools`, `mcpServer`, `mcpTools`, `remoteOnly`).
+- `server.nuc`: the server, its instructions (`FIRST`) and every tool (`McpTools`, `mcpServer`, `mcpTools`,
+  `remoteOnly`); `nuclearStart` and `nuclearDoc` teach Nuclear.
 - `cli.nuc`: `nuclear-mcp` and `nuclear-mcp tools`. `__init__.nuc`: the package's name.
 - `tests/`: `test_server.nuc` and `support.nuc` (`expect`).
 - `defs/python/nuclear_graph/0.2.0/`: the type definitions of the graph's package the server imports (generated:
@@ -39,10 +40,10 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 
 ## Rules
 
-1. **Every project created with Nuclear gets the documentation of the MCP server and of everything Nuclear can
-   do** (decided by the user). Today a project gets its agent files from `nuclear agent init`
-   ([the CLI's agent support](../cli/docs/02-architecture/agent-support.md)); what is missing is in the
-   [roadmap](docs/01-product/roadmap.md).
+1. **An agent with no context learns Nuclear from this server alone** (spec 016, root rule 14): the instructions
+   send it to `nuclear_start`, whose answer and every `nuclear_doc` come from the installed `nuclear` (never a path
+   of the source tree). Every project created with Nuclear gets its context documents and an `AGENTS.md` section
+   that names this server ([the CLI's agent support](../cli/docs/02-architecture/agent-support.md)).
 2. **A tool is a method with a comment**: the comment is the description the client reads. A tool added, renamed or
    given a parameter is also added to [the guide](docs/08-guides/mcp.md) (a test holds it to the server's list), and
    the knowledge base is rebuilt (the graph keeps a row per tool, `mcp:<tool>`, read with `nuclear-mcp tools`).

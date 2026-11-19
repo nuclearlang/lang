@@ -111,12 +111,14 @@
    "body": [
     "- `platform.toml`: the contract: kinds, decorators, `[layout]`. What `nuclear make` and `gen` write",
     "  (`[skeletons]`, `[gen]`, `[[generators.*]]`) is `tools/code_generator/platforms/web/generators.toml`.",
-    "- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`).",
+    "- `packages/synapsis-web/`: the runtime (`src/`, `test/runtime.test.ts`, `test/sockets.test.ts`).",
     "- `examples/examples-web/characters/`: the complete example (list and detail screens, state, events, a guard,",
     "  tests).",
+    "- `examples/examples-web/tasks_live/`: real time and the embedded mode: tasks_api's tasks over its WebSocket, a",
+    "  stream method listened to by a manager (made with `nuclear new` and `nuclear gen`).",
     "- `examples/onboarding/todos_web/`: the app of the onboarding, made only by `nuclear new` and `nuclear gen` (the",
     "  website runs those commands again and fails if they do not give it).",
-    "- `examples/expected/{characters,todos_web}/`: the golden output.",
+    "- `examples/expected/{characters,tasks_live,todos_web}/`: the golden output.",
     "- `checks/react-check/check.sh`: the check.",
     "- `docs/`: this project's documents (the table below). `CHANGELOG.md`: what changed for a user.",
     "",
@@ -259,17 +261,50 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased.beb43a",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "any npm package and generates its type definitions (ADR-lang-0008).",
+   "summary": "host's CSS variables, an in-memory router, and the host's bridge for every call.",
    "body": [
+    "host's CSS variables, an in-memory router, and the host's bridge for every call.",
+    "- The example `examples/examples-web/tasks_live`: tasks_api's tasks over its WebSocket, pushed as they are created.",
     "- `dependencies(...)` in `config.nuc` and `[toolchain] package_*` in react: `nuclear add|remove <package>` installs",
     "  any npm package and generates its type definitions (ADR-lang-0008).",
     "- First public version.",
     "- `[[generators]]` in the platform: `nuclear gen` writes a resource's models, repository, use cases, view with its state manager and tests (ADR-codegen-0001).",
     "- `[[generators.usecase]]`: `nuclear gen usecase` adds a use case's alias to its component's facade and, with `--calls`, writes a use case over a repository method (ADR-codegen-0001).",
     "- `[[generators.resource]]`: the repository is merged (`merge = true`), so an action added to a resource that exists gets the members it lacks (ADR-developer-0001)."
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/CHANGELOG.md#unreleased.cafdf2",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "its focus); `not xs.isEmpty` is `!(xs.length === 0)`; a model built in a view is `new Model(...)`; `fromJson` takes a field's default when the key is missing; `afterEach` is imported and a rendered screen is cleaned up after each test; a `@state` method with a body and no value emits its state;…",
+   "body": [
+    "- Found by Nuclear Chat's UI: `if c x` in `children` keeps its place (`c ? x : null`, no remount, a textarea keeps",
+    "  its focus); `not xs.isEmpty` is `!(xs.length === 0)`; a model built in a view is `new Model(...)`; `fromJson` takes",
+    "  a field's default when the key is missing; `afterEach` is imported and a rendered screen is cleaned up after each",
+    "  test; a `@state` method with a body and no value emits its state; `@on(\"chat.${workspace}\")` takes the method's",
+    "  parameters; a screen gets the query's parameters; a manager method named `close` (and the runtime's other members)",
+    "  is N0223; `thenReturn` of a `Stream` method answers the stream; `nuclear make screen|statemanager|widget|component|guard`.",
+    "- Real time (ADR-synapsis-0008): `WebSocket(url, headers, timeout, interceptors)` is a connection beside `Http`; a",
+    "  repository bound to it is written as it is and its calls travel over the socket (reconnecting by itself);",
+    "  `@on(\"topic\")` methods return `Stream<T>` of what the server pushes; a use case may return a `Stream`; a state",
+    "  manager follows one with `listen(stream, ...)`. `nuclear gen usecase --calls` writes a use case over a stream method.",
+    "- The embedded mode (ADR-synapsis-0009): every build also writes `src/embed.ts` (`mount(element, host)`) and",
+    "  `vite.embed.config.ts` (`npm run build:embed` → `dist-embed/embed.js`): a shadow root with the stylesheet, the"
    ],
    "platforms": [
     "web"
@@ -855,15 +890,24 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.2fca80",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.54ca03",
    "type": "context",
    "title": "The runtime: `synapsis-web` — Entry points and modules",
-   "summary": "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`).",
+   "summary": "Entry points and modules",
    "body": [
-    "| `synapsis-web/testing` | `testing` | `SynapsisTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |",
-    "",
-    "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`,",
-    "`useMemo`, `useRef`, `useCallback`)."
+    "| Import | Module | Holds |",
+    "|---|---|---|",
+    "| `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |",
+    "| | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |",
+    "| | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |",
+    "| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, `Transport` (what a repository's calls travel over), the `Http` connection and `HttpInterceptor` |",
+    "| | `sockets` | the platform's frames (`Frames`), the `WebSocket` connection, the host's `Bridge` and `BridgeTransport`, `Stream` (ADR-synapsis-0008) |",
+    "| | `embed` | `mountApp`, `Host`: the embedded mode (ADR-synapsis-0009) |",
+    "| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector; `transport`, `embed`) |",
+    "| | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |",
+    "| | `state` | `StateManager` |",
+    "| | `react` | `View`, `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, the hooks `useManager`, `useStateOf`, `useManagerState`, the type `Element` |",
+    "| | `html` | the HTML functions (`div`, `ul`, `button`, `input`...), `el`, `fragment` |"
    ],
    "platforms": [
     "web"
@@ -878,26 +922,19 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.c29a23",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#entry-points-and-modules.be4303",
    "type": "context",
    "title": "The runtime: `synapsis-web` — Entry points and modules",
-   "summary": "Entry points and modules",
+   "summary": "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`).",
    "body": [
-    "| Import | Module | Holds |",
-    "|---|---|---|",
-    "| `synapsis-web` | `result` | `Result`, `Ok`, `Err`: the same runtime the `typescript` dialect writes in a file and `synapsis-nest` exports |",
-    "| | `errors` | `AppError` (Nuclear's `Error(message)`), `HttpError` (a failed request), `NotFound` |",
-    "| | `inject` | the injector: `register`, `replace`, `inject`, `isRegistered`, `resetInjector`. Singletons are built once; factories (use cases, managers) on every `inject` |",
-    "| | `config` | `AppConfig`, `ComponentConfig`, `Connection`, `Global`, the `Http` connection and `HttpInterceptor` |",
-    "| | `app` | `Synapsis`: the entry point (the connections, the global services, the injector) |",
-    "| | `http` | `Repository`, `Decode`, `Cache`, `MemoryCache`, `HttpMethod` |",
-    "| | `state` | `StateManager` |",
-    "| | `react` | `View`, `StatelessView`, `StatefulView`, `statelessOf`, `statefulOf`, `Providers`, the hooks `useManager`, `useStateOf`, `useManagerState`, the type `Element` |",
-    "| | `html` | the HTML functions (`div`, `ul`, `button`, `input`...), `el`, `fragment` |",
     "| | `events` | `AppEvent`, `Events` (publish / subscribe), `useEvent` |",
     "| | `session` | `SessionManager`, `SessionStarted`, `SessionEnded`, `Acl`, `Guard`, `Guards`, `NetworkManager` |",
     "| | `router` | `buildRouter`, `goTo`, `pushTo`, `goBack`, `pathTo`, `RouterProvider` |",
-    "| | `log` | `Log` |"
+    "| | `log` | `Log` |",
+    "| `synapsis-web/testing` | `testing` | `SynapsisTest`, `when`, `verify`, `renderScreen`, `statesOf`, `okOf`, `errOf` |",
+    "",
+    "The base entry also re-exports what a view needs from React (`createElement`, `Fragment`, `useState`, `useEffect`,",
+    "`useMemo`, `useRef`, `useCallback`)."
    ],
    "platforms": [
     "web"
@@ -935,26 +972,13 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.32f103",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.04f2e7",
    "type": "context",
    "title": "The runtime: `synapsis-web` — How the pieces work",
-   "summary": "`statefulOf`), so hooks work inside `build`.",
+   "summary": "registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library; `statesOf` collects the states a manager emits.",
    "body": [
-    "- **Views.** A view is a class (`StatelessView` / `StatefulView`) shown through `createElement` (`statelessOf` /",
-    "  `statefulOf`), so hooks work inside `build`. A `stateless` is built on every render; a `stateful` keeps its",
-    "  instance, and so its fields, between renders and re-renders on `setState` (`initState`, `dispose`), the way the",
-    "  mobile platform's stateful view does.",
-    "- **HTML without JSX.** `div({ className: 'row', children: [...] })`; a string, a number, an element or a list",
-    "  given in place of the props is the children.",
-    "- **State.** A `StateManager` holds one state model and emits a new one; React reads it with",
-    "  `useSyncExternalStore`. The same shape as the mobile platform's state manager. The dialect generates a",
-    "  `<Model>Builder` component for each state model.",
-    "- **Providers.** `@screen(providers)` wraps the screen in `Providers`; `Manager.method()` inside its views is",
-    "  `this.manager(Manager).method()`, which reads the provided manager without a hook, so it works in a callback.",
-    "  `useManager` and `useStateOf` are hooks: only in `build`.",
-    "- **Repositories.** Each method is an http call through `send` (fetch), with the mobile platform's rules: the path",
-    "  is appended to the connection's `baseUrl`, `:name` takes a parameter, the other parameters go to the query (GET,",
-    "  DELETE) or the JSON body; a cache by key with a ttl; retries on transient failures."
+    "registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;",
+    "  `statesOf` collects the states a manager emits."
    ],
    "platforms": [
     "web"
@@ -969,11 +993,50 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.a3e417",
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.97a60f",
    "type": "context",
    "title": "The runtime: `synapsis-web` — How the pieces work",
-   "summary": "(`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.",
+   "summary": "`statefulOf`), so hooks work inside `build`.",
    "body": [
+    "- **Views.** A view is a class (`StatelessView` / `StatefulView`) shown through `createElement` (`statelessOf` /",
+    "  `statefulOf`), so hooks work inside `build`. A `stateless` is built on every render; a `stateful` keeps its",
+    "  instance, and so its fields, between renders and re-renders on `setState` (`initState`, `dispose`), the way the",
+    "  mobile platform's stateful view does.",
+    "- **HTML without JSX.** `div({ className: 'row', children: [...] })`; a string, a number, an element or a list",
+    "  given in place of the props is the children.",
+    "- **State.** A `StateManager` holds one state model and emits a new one; React reads it with",
+    "  `useSyncExternalStore`. The same shape as the mobile platform's state manager. The dialect generates a",
+    "  `<Model>Builder` component for each state model. `listen(stream, on)` follows a `Stream` until `close()`.",
+    "- **Providers.** `@screen(providers)` wraps the screen in `Providers`; `Manager.method()` inside its views is",
+    "  `this.manager(Manager).method()`, which reads the provided manager without a hook, so it works in a callback.",
+    "  `useManager` and `useStateOf` are hooks: only in `build`.",
+    "- **Repositories.** Each method is an http call through `send`, with the mobile platform's rules: the path is",
+    "  appended to the connection's base, `:name` takes a parameter, the other parameters go to the query (GET, DELETE)"
+   ],
+   "platforms": [
+    "web"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md"
+   ],
+   "meta": {
+    "section": "07-web",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/platforms/web/docs/02-architecture/runtime.md#how-the-pieces-work.cdc856",
+   "type": "context",
+   "title": "The runtime: `synapsis-web` — How the pieces work",
+   "summary": "or the JSON body; a cache by key with a ttl; retries on transient failures.",
+   "body": [
+    "or the JSON body; a cache by key with a ttl; retries on transient failures. The adapter is the `Transport` the",
+    "  repository is bound to (`Synapsis.transport(name)`): `Http` (fetch), `WebSocket` (a request frame and its answer)",
+    "  or, mounted with a bridge, the host's `BridgeTransport` for every repository; the connection's interceptors run",
+    "  around it either way. `stream(topic, decode)` gives a `Stream` of what the transport receives on a topic.",
+    "- **Mounted in a host.** `mountApp` calls `Synapsis.embed(host)` (the in-memory router at `host.path`, the bridge),",
+    "  starts the app once, renders it in a shadow root of the element with the stylesheet as a `<style>`.",
     "- **Router.** One route per `@screen(route = \"/path/:id\")`, built by the transpiler; navigation is by screen",
     "  (`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.",
     "- **Session and access.** `SessionManager` keeps who is signed in; `Acl` the roles, permissions and guards;",
@@ -981,9 +1044,7 @@
     "  `Guards.verify` is asynchronous.",
     "- **Logs.** `Log` writes with the place it is called from; the transpiler passes it (component › kind ›",
     "  Class.method · file:line).",
-    "- **Tests.** `SynapsisTest` starts the app with its real config and replaces `fetch` by canned answers; any",
-    "  registered class can be a mock (`when`, `verify`); `renderScreen` renders a screen with Testing Library;",
-    "  `statesOf` collects the states a manager emits."
+    "- **Tests.** `SynapsisTest` starts the app with its real config and replaces `fetch` by canned answers; any"
    ],
    "platforms": [
     "web"

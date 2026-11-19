@@ -43,12 +43,9 @@ yield    = { level = "reserved", via = "base" }
 # --- soft keywords: identifiers except in their statement ---
 match    = { level = "contextual", via = "none", note = "Nuclear match is emitted as if / elif" }
 case     = { level = "contextual", via = "none" }
-type     = { level = "contextual", via = "none", note = "type aliases: a Nuclear name `type` stays valid" }
 _        = { level = "contextual", via = "base", nuclear = "_ -> (the default arm), [_, b] = xs" }
 # --- builtins: valid names, but they shadow a builtin (`list = ...` hides list) ---
 self     = { level = "contextual", via = "base", nuclear = "this (or nothing: members are implicit)" }
-print    = { level = "builtin", via = "builtin" }
-len      = { level = "builtin", via = "builtin" }
 
 # --- modules the library templates import (nuclearlang/docs/07-reference/library.md): a Nuclear name with that word is renamed ---
 math      = { level = "reserved", via = "library", note = "import math (Math.sqrt → math.sqrt)" }
@@ -59,3 +56,35 @@ datetime  = { level = "reserved", via = "library", note = "import datetime (Date
 functools = { level = "reserved", via = "library", note = "import functools (reduce)" }
 random    = { level = "reserved", via = "library", note = "import random (Math.random)" }
 asyncio   = { level = "reserved", via = "library", note = "import asyncio (delay, awaitAll)" }
+
+# --- shadowed: functions of Python the dialect writes (xs.sorted() → sorted(xs), xs.length → len(xs)); a local, a
+# lambda's parameter, a function or a constant of the file with that name would hide it, so it is renamed (sorted_).
+# A field and a function's parameter keep their name (they are the API). Kept in step with the [library] templates.
+abs       = { level = "shadowed", via = "builtin" }
+all       = { level = "shadowed", via = "builtin" }
+any       = { level = "shadowed", via = "builtin" }
+bytes     = { level = "shadowed", via = "builtin" }
+enumerate = { level = "shadowed", via = "builtin" }
+exec      = { level = "shadowed", via = "builtin" }
+filter    = { level = "shadowed", via = "builtin" }
+float     = { level = "shadowed", via = "builtin" }
+getattr   = { level = "shadowed", via = "builtin" }
+hasattr   = { level = "shadowed", via = "builtin" }
+int       = { level = "shadowed", via = "builtin" }
+isinstance= { level = "shadowed", via = "builtin" }
+len       = { level = "shadowed", via = "builtin" }
+list      = { level = "shadowed", via = "builtin" }
+map       = { level = "shadowed", via = "builtin" }
+max       = { level = "shadowed", via = "builtin" }
+min       = { level = "shadowed", via = "builtin" }
+next      = { level = "shadowed", via = "builtin" }
+ord       = { level = "shadowed", via = "builtin" }
+print     = { level = "shadowed", via = "builtin" }
+range     = { level = "shadowed", via = "builtin" }
+set       = { level = "shadowed", via = "builtin" }
+sorted    = { level = "shadowed", via = "builtin" }
+str       = { level = "shadowed", via = "builtin" }
+sum       = { level = "shadowed", via = "builtin" }
+super     = { level = "shadowed", via = "builtin" }
+type      = { level = "shadowed", via = "builtin" }
+vars      = { level = "shadowed", via = "builtin" }

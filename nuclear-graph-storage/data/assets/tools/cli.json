@@ -8,7 +8,7 @@
    "id": "tool:nuclear",
    "type": "cli",
    "title": "`nuclear` — the command line of NuclearLang",
-   "summary": "NuclearLang: a minimal language for AI agents, transpiled to other technologies through declarative dialects (.nuc → .ts / .dart / .py). Commands: add, agent, analyze, ast, build, check, clean, code, contracts, credits, defs, device, dialect, doctor, explain, fix, fmt, gen, help, install, kind, make, migrate, new, packages, repair, run, setup, spec, terminal-device, test, tokens, watch.",
+   "summary": "NuclearLang: a minimal language for AI agents, transpiled to other technologies through declarative dialects (.nuc → .ts / .dart / .py). Commands: add, agent, analyze, ast, build, check, clean, code, contracts, credits, defs, device, dialect, doctor, explain, fix, fmt, gen, help, install, kind, make, migrate, monitor, new, packages, repair, run, setup, spec, terminal-device, test, tokens, watch.",
    "body": [
     "```text",
     "  --platform backend|mobile|web                               instead of --dialect: the platform's default dialect",
@@ -16,59 +16,104 @@
     "  --dialect-path <dir>   extra directory with dialects (repeatable; also $NUCLEAR_DIALECT_PATH, ':'-separated)",
     "  --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/",
     "                         folder next to each dialects/ folder is always searched",
+    "  start                what Nuclear is, the rules never broken, the work cycle, the tools",
+    "  guide                the language guide: index of the chapters",
+    "  syntax               guide 1: files, indentation, comments, names",
+    "  variables            guide 2: variables, const or let, scope",
+    "  types                guide 3: types, lists, maps, nullable",
+    "  functions            guide 4: functions, parameters, return, async, alias",
+    "  lambdas              guide 5: lambdas",
+    "  modules              guide 6: modules and constructors",
+    "  inheritance          guide 7: inheritance, interfaces, override, super",
+    "  generics             guide 8: generics",
+    "  expressions          guide 9: operators, strings, cascades, destructuring",
+    "  control              guide 10: if, match, for, while (if and match are values)",
+    "  use                  guide 11: use (imports)",
+    "  errors               guide 12: try, catch, throw",
+    "  results              guide 13: Result<E, T>, Ok, Err, automatic propagation",
+    "  operations           guide 14: math, bits, text, regex, collections, types, bytes, dates and async in each target",
+    "  reference            the whole base language in one page, for quick lookup",
+    "  base                 spec: every rule of the base language",
+    "  grammar              spec: the grammar (EBNF)",
+    "  keywords             spec: reserved words",
+    "  diagnostics          spec: every error code (N0001...)",
+    "  projects             spec: projects of several files",
+    "  library              spec: the standard library of Nuclear (strings, lists, maps, Math, Json, Regex, DateTime...)",
+    "  context-docs         the context documents of a project: AGENTS.md, docs/ in layers, specs, ADRs, the roadmap",
+    "  generators           Generators: the standard code, written by a command",
+    "  kinds                Kinds: the libraries of Synapsis",
+    "  tutorial             Tutorial: a Flutter app from scratch with Synapsis",
+    "  backend              The backend platform of Synapsis",
+    "  contracts            Contracts: one backend, its apps generated",
+    "  genkit               Genkit in a Flutter app",
+    "  mobile               The mobile platform of Synapsis",
+    "  onboarding-backend   Your first backend: a todos API in four commands",
+    "  onboarding-mobile    Your first mobile app: a todos list in four commands",
+    "  onboarding-web       Your first web app: a todos list in four commands",
+    "  synapsis             synapsis (Dart package)",
+    "  web                  The web platform of Synapsis",
+    "  typescript           dialect typescript",
+    "  nodejs               dialect nodejs",
+    "  dart                 dialect dart",
+    "  python               dialect python (Python 3.12+, typed)",
+    "  fastapi              Dialect fastapi (→ fastapi): the backend platform in Python",
+    "  flutter              Dialect flutter: the mobile platform in Dart",
+    "  nestjs               Dialect nestjs: the backend platform in TypeScript",
+    "  react                Dialect react: the web platform in TypeScript with React",
+    "  cli                  the nuclear command: a quick start, the commands by job, how agents use it",
+    "  commands             every command and option of nuclear",
+    "  mcp                  the MCP server: set-up of each client, how a model works with it, every tool",
+    "  ai-setup             the AI services (Smart Graph, local developer, Chat): set-up, profiles, remote only",
+    "  graph                the Smart Graph: the knowledge base the agents read",
+    "  editors              the editor extensions (VS Code, JetBrains, Zed) and their tools",
+    "  vscode               the VS Code extension: what it does and its settings",
+    "  workspace            the Nuclear workspace of VS Code",
+    "  run-and-debug        running and debugging a project from VS Code",
+    "  devices              the devices: an app in a phone's window or in the terminal",
+    "  builder              Nuclear Builder: the software factory in the editor",
+    "  builder-spec         Nuclear Builder: writing a spec",
+    "  builder-run          Nuclear Builder: following a run",
+    "  builder-commands     Nuclear Builder: its commands",
+    "  ask-the-team         Nuclear Builder: asking the team",
+    "  nuclear-atlas        Nuclear Atlas: the knowledge base in the editor",
+    "  monitor              Nuclear Monitor: each function's time, calls, connections and memory",
+    "  device-manager       the device manager of the editor",
+    "  http-connections     HTTP Connections: the requests of a project in the editor",
+    "  chat                 Nuclear Chat: connecting a host",
+    "  example/rick_api     backend: Characters of the show: a REST API and a guide agent.",
+    "  example/tasks_api    backend: Tasks and an assistant.",
+    "  example/todos_api    backend: A Synapsis backend.",
+    "  example/users        backend: nestjs dialect (Synapsis for NestJS) in one file: a DTO, a service and a controller.",
+    "  example/clean-flutter-project mobile: Synapsis example: characters, episodes, session, forms and translations.",
+    "  example/dart_extension mobile: The dart dialect.",
+    "  example/flutter_app  mobile: flutter dialect: `stateless` and `stateful` are kinds of dialects/mobile/flutter/dialect.toml.",
+    "  example/framework_libs mobile: Framework libraries (bloc, dio, get_it): their names are imported on their own thanks to the type",
+    "  example/genkit-assistant mobile: Synapsis example: Genkit in the app (chat with tools, a flow, a knowledge base, a remote flow).",
+    "  example/tasks_app    mobile: Synapsis example: a client generated from a backend's contract.",
+    "  example/todos_app    mobile: A Synapsis app.",
+    "  example/widgets_tour mobile: A tour of the most common Flutter patterns written in Nuclear.",
+    "  example/characters   web: Synapsis web example: the characters of an API, their state and tests.",
+    "  example/tasks_live   web: Synapsis web example: the tasks of tasks_api over its WebSocket, pushed as they are created; also mounted in a host page.",
+    "  example/todos_web    web: A Synapsis web app.",
+    "  architecture         how the transpiler works: its stages and the rules of its design",
+    "  new-dialect          guide: creating a dialect with a coding agent",
+    "  dialects             spec: the dialect format (TOML + templates)",
+    "  defs                 spec: type definitions packages",
+    "  decisions            every design decision and why",
+    "  dart          dart — Dart 3",
+    "  fastapi       fastapi → python — Synapsis for Python: FastAPI controllers, SQLAlchemy repositories, LangChain/LangGraph agents and graphs",
+    "  flutter       flutter → dart — Flutter: stateless/stateful widgets, material imported automatically",
+    "  nestjs        nestjs → nodejs → typescript — Synapsis for NestJS: controllers, Sequelize repositories, use cases, validated DTOs, modules written for you",
+    "  nodejs        nodejs → typescript — TypeScript for Node.js: node: modules by short name, imported automatically when used",
+    "  python        python — Python 3.12+ typed (PEP 8, PEP 695 generics), checked with pyright --strict",
+    "  react         react → typescript — Synapsis for React: screens, state managers, http repositories, use cases, events and tests written for you",
+    "  typescript    typescript — TypeScript 5 with ES modules",
     "```",
     "",
     "Every command has its own row (`nuclear build`, `nuclear new`, `nuclear gen resource`...). The documentation it prints:",
     "",
     "```text",
-    "documentation: nuclear help <topic>",
-    "  guide         the language guide: index of the chapters",
-    "  syntax        guide 1: files, indentation, comments, names",
-    "  variables     guide 2: variables, const or let, scope",
-    "  types         guide 3: types, lists, maps, nullable",
-    "  functions     guide 4: functions, parameters, return, async, alias",
-    "  lambdas       guide 5: lambdas",
-    "  modules       guide 6: modules and constructors",
-    "  inheritance   guide 7: inheritance, interfaces, override, super",
-    "  generics      guide 8: generics",
-    "  expressions   guide 9: operators, strings, cascades, destructuring",
-    "  control       guide 10: if, match, for, while (if and match are values)",
-    "  use           guide 11: use (imports)",
-    "  errors        guide 12: try, catch, throw",
-    "  results       guide 13: Result<E, T>, Ok, Err, automatic propagation",
-    "  operations    guide 14: math, bits, text, regex, collections, types, bytes, dates and async in each target",
-    "  reference     the whole base language in one page, for quick lookup",
-    "  architecture  how the transpiler works: its stages and the rules of its design",
-    "  new-dialect   guide: creating a dialect with a coding agent",
-    "  base          spec: every rule of the base language",
-    "  library       spec: the standard library of Nuclear (strings, lists, maps, Math, Json, Regex, DateTime...)",
-    "  grammar       spec: the grammar (EBNF)",
-    "  keywords      spec: reserved words",
-    "  diagnostics   spec: every error code (N0001...)",
-    "  projects      spec: projects of several files",
-    "  dialects      spec: the dialect format (TOML + templates)",
-    "  defs          spec: type definitions packages",
-    "  typescript    dialect typescript",
-    "  nodejs        dialect nodejs",
-    "  dart          dialect dart",
-    "  python        dialect python (Python 3.12+, typed)",
-    "  decisions     every design decision and why",
-    "  backend       The backend platform of Synapsis",
-    "  contracts     Contracts: one backend, its apps generated",
-    "  fastapi       Dialect fastapi (→ fastapi): the backend platform in Python",
-    "  flutter       Dialect flutter: the mobile platform in Dart",
-    "  generators    Generators: the standard code, written by a command",
-    "  genkit        Genkit in a Flutter app",
-    "  kinds         Kinds: the libraries of Synapsis",
-    "  mobile        The mobile platform of Synapsis",
-    "  nestjs        Dialect nestjs: the backend platform in TypeScript",
-    "  onboarding-backend Your first backend: a todos API in four commands",
-    "  onboarding-mobile Your first mobile app: a todos list in four commands",
-    "  onboarding-web Your first web app: a todos list in four commands",
-    "  react         Dialect react: the web platform in TypeScript with React",
-    "  synapsis      synapsis (Dart package)",
-    "  tutorial      Tutorial: a Flutter app from scratch with Synapsis",
-    "  web           The web platform of Synapsis",
+    "documentation:",
     "```"
    ],
    "keys": [
@@ -88,29 +133,130 @@
    "id": "tool:nuclear-builder",
    "type": "cli",
    "title": "`nuclear-builder` — the Nuclear Builder without the editor",
-   "summary": "Runs a spec through the pipeline (generate, plan, tests first, code, verification, security, artifacts, deploy), retries a run from any of its steps or from scratch, and exports the CI file.",
+   "summary": "Sets up the AI services, keeps the software factory's teams and the providers' keys, runs a spec through the factory's stations with a team, retries a run, and exports the CI file.",
    "body": [
     "```text",
     "nuclear-builder — the Nuclear Builder without the editor",
+    "nuclear-builder setup [--profile remote|lite|medium|hard] [--yes]",
+    "                                the AI services of this machine, step by step: it reads the hardware, suggests a",
+    "                                profile (which models are downloaded and how far each works), installs what is",
+    "                                missing (Ollama), downloads the models, loads the knowledge base and starts the",
+    "                                services, now and at every login (--yes: no questions, the suggested profile)",
+    "nuclear-builder setup --status [--json]      what is installed and running",
+    "nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,",
+    "                                Codex, Cursor, OpenCode, Gemini CLI): after installing a client",
+    "nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)",
+    "nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements",
+    "nuclear-builder setup --events --profile <id> [--from <step>]",
+    "                                the steps of a profile, one JSON line per event (what the editors draw)",
+    "nuclear-builder setup --restart graph|developer   a service again, through the system's manager",
+    "nuclear-builder setup --set KEY=value ...    writes the machine's choice (ai.env)",
     "",
-    "  nuclear-builder run [spec.md] [--lead local|claude]   spec → generate → plan → tests → code → verify → security →",
-    "                                                     artifacts → deploy",
-    "                                                     (no file: the spec of specs/ changed last)",
-    "  nuclear-builder retry <run> [--from <stage> | --step <id>]",
-    "                                                     a run again from the step that failed (the steps that passed are",
-    "                                                     kept); --from runs that whole stage again; --step runs that step",
-    "                                                     (`code-3`: passed or failed) and every step after it. What the",
-    "                                                     steps left out wrote is undone first. Calls to the local agents",
-    "                                                     already retry by themselves (.nuclear/builder.json \"retry\")",
-    "  nuclear-builder restart <run>                         the whole pipeline again from the specification: every file the",
-    "                                                     run wrote goes back to what it was, then every stage runs",
-    "  nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json (all by default)",
-    "  nuclear-builder export github|gitlab|bitbucket        writes the CI file that runs `nuclear-builder ci`",
-    "  nuclear-builder runs                                  the runs kept in .nuclear/builder/runs",
-    "  nuclear-builder setup ...                            the AI services of this machine (nuclear-builder setup --help)",
+    "nuclear-builder team list|show <id>|save|delete <id>|default <id>|export <id> <file>|import <file>|roster [--lang en|es]|temperaments [--json]",
+    "                                the teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on",
+    "                                stdout, an error as {\"error\": \"...\"} with exit code 1; `save` reads the team on stdin",
+    "nuclear-builder team screen [--lang en|es] [--json]",
+    "                                everything the company screen draws, in one call: {teams (as list), shown (each",
+    "                                team as show, or {error}), roster, temperaments, vault (as vault list, or null),",
+    "                                library and agents (as skills list, each with its markdown)}",
+    "nuclear-builder team create [--json]         a new team from the wizard's draft on stdin: {name, description,",
+    "                                purpose, skills, budgetUsd, techLead, logoFile, members: [{role, employee, kind,",
+    "                                provider, model, name}]} (who works a member not said: the local defaults)",
+    "nuclear-builder team suggest [--purpose <text>] [--skills a,b] [--lang en|es] [--limit <n>] [--json]",
+    "                                the employees of each role that fit the purpose and skills, each with why",
+    "nuclear-builder team name-suggest [--purpose <text>] [--lang en|es] [--json]",
+    "                                five satirical names for a team",
+    "nuclear-builder team runnable <id> [--json]  whether the team has a member of each role the project's stations need",
+    "nuclear-builder team update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>] | duplicate <id> [--name …] [--json]",
+    "nuclear-builder team member add <id> --role <role> [--employee …] [--kind …] [--provider …] [--model …] [--name …] [--count <n>] [--json]",
+    "                                members hired (several: --count, or a JSON list of members on stdin without --role)",
+    "nuclear-builder team member remove <id> <member> | member update <id> <member> [--kind …] [--provider …] [--model …] [--employee …] [--name …] [--skills a,b] [--extra-skills <json>] [--instructions …] [--temperament …] [--gifs …] [--on …] [--note …] [--agent <library agent>] [--json]",
+    "                                a member let go, or changed (by its id in the team); who works a member is one",
+    "                                this machine has (agents --json), else it is refused with why",
+    "nuclear-builder team skills set <id> [--member <m>] --skills a,b [--json]",
+    "                                the library skills of the team (every member inherits them) or of a member",
+    "                                (beside its role skills switched on): skills list gives their ids",
+    "nuclear-builder team logo <id> <image> | logo <id> --clear [--json]",
+    "                                the team's logo: a .png, .svg or .jpg of 1 MB at most, copied beside the team as",
+    "                                <id>.logo.<kind>; --clear takes it away",
     "",
-    "Run it in the project or any folder inside it (the project is the closest folder up with config.nuc). The agent stages need the Nuclear Developer",
-    "(127.0.0.1:7879) and, when Claude leads, Claude Code with the Nuclear MCP server.",
+    "nuclear-builder skills list [--team <id>] [--member <m>] [--lang en|es] [--json]",
+    "                                the library of skills and agents (nuclear-agents/skills, nuclear-agents/agents);",
+    "                                with a team, its skills and its own; with a member, its own, its base agent and",
+    "                                every skill it gets (composed: from library, team or member; what it overrides)",
+    "nuclear-builder skills show <id> [--team <id>] [--member <m>] [--lang en|es] [--json]",
+    "                                a skill's SKILL.md as that place sees it (the member's own, the team's own, the",
+    "                                library's, the role's), where it comes from and whether it can be changed there",
+    "nuclear-builder skills clone <id> --team <id> [--member <m>] [--json]",
+    "                                a copy of the skill as the team's own (every member inherits it) or the member's,",
+    "                                with the same id: it wins over the one it came from",
+    "nuclear-builder skills create|update <id>|delete <id> --team <id> [--member <m>] [--json]",
+    "                                an own skill of the team or the member: create and update read its SKILL.md on",
+    "                                stdin (front matter name, title, description, title_es, description_es, kind,",
+    "                                tags); a library skill is read-only (clone it to change it)",
+    "",
+    "nuclear-builder vault set <provider> | remove <provider> | list [--json]",
+    "                                the API keys of anthropic, openai, google, openrouter in the system's keyring",
+    "                                (service nuclear-factory); `set` reads the key on stdin (asked for, hidden, in a",
+    "                                terminal), never from the command line",
+    "",
+    "nuclear-builder run [spec.md] [--team <id>] [--events] [--confirm-spending] [--force-confirm]",
+    "                                the software factory: the spec through Analysis, Design, Tests first, Code,",
+    "                                Quality and Delivery, each station worked by its role as the team assigned it (no",
+    "                                file: the spec of specs/ changed last); it stops at the gates for you; --events:",
+    "                                JSON lines on stdout, the answers as JSON lines on stdin (what the editors use)",
+    "nuclear-builder run ... --detach             the run in a process of its own (no stdin: it waits at the first",
+    "                                question): {run, detached, log}; with a paid provider, waiting: spending",
+    "nuclear-builder run --resume <id>            a run that waits for you, from where it waits",
+    "nuclear-builder run answer <id> --answer approve|change|stop|yes|no [--text …] [--events] [--detach]",
+    "                                the answer to the question a run waits on (its process gets it, or the run goes",
+    "                                on with it); never the spending: that is confirmed twice where you answer",
+    "nuclear-builder run stop <id> | show <id> | journal <id>",
+    "                                a run's process stopped (a run that asks waits) · its file (JSON) · its journal",
+    "nuclear-builder retry <id> [--from <station>]   a run again from the station that failed (or --from that one)",
+    "nuclear-builder retry <id> --step <step>        a run again from one step (it and every step after it)",
+    "nuclear-builder restart <id>                 the whole run again: every file it wrote goes back first",
+    "nuclear-builder runs [--json]                the runs of this project",
+    "nuclear-builder checks <id> [list|on <check>|off <check>|add --title … --station … [--by user|role] [--prompt …]|mark <check> passed|failed|skipped] [--json]",
+    "                                the run's checks (checks.json in the spec's folder): QA's plan, yours",
+    "nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]",
+    "                                the base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance",
+    "                                criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}",
+    "nuclear-builder spec show <id> | delete <id> [--json]",
+    "                                a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/",
+    "nuclear-builder spec list [--json]           the specs by component and layer, with their runs",
+    "nuclear-builder spec move <id> --component … [--layer …] [--json]",
+    "                                a spec's folder to another component or layer (its run follows)",
+    "nuclear-builder spec migrate [--json]        the specs of the flat specs/<id>/ to their component",
+    "nuclear-builder spec accept <id> | discard <id> [--json]",
+    "                                a spec's draft (spec.draft.md, written by a member in Nuclear Chat) over the spec,",
+    "                                or thrown away",
+    "nuclear-builder member --team <id> --role analyst|architect|developer|qa|devops|chat --events [--root <dir>]",
+    "                                a member of a team answers once in Nuclear Chat (its responder): the conversation as",
+    "                                one JSON line on stdin ({member, channel, thread, messages, said, lang}), the answer",
+    "                                as JSON lines on stdout (typing, text, tool, ask, done); the role's provider with",
+    "                                the factory's tools, the spending confirmed twice; --role chat is the general agent",
+    "                                ([--provider <p>] [--model <m>] [--kind …], the local Nuclear Developer by default)",
+    "nuclear-builder chat-host --json [--root <dir>] [--lang en|es]",
+    "                                the host file of Nuclear Chat for this project: the members of its team (the run's",
+    "                                team), their responders, the general agent `atlas` with its choices (the",
+    "                                agents below), the channels general and the team's",
+    "nuclear-builder agents [--json] [--root <dir>]",
+    "                                the agents that can answer a conversation on this machine: the local Nuclear",
+    "                                Developer (always), each agent whose command is on the PATH, each API provider with",
+    "                                a key in the vault ({id, kind, provider, label, models, defaultModel, available, why})",
+    "nuclear-builder models [--provider <id>] [--fresh] [--json] [--root <dir>]",
+    "                                the models of each provider that can work here (one when asked), from the provider:",
+    "                                Claude Code's aliases and ids, opencode models, an API's list (a key in the vault),",
+    "                                Ollama's installed models with their memory need and fit (fits, tight, too-big)",
+    "                                plus the small ones it can pull; and this machine's memory (lists kept 10 minutes)",
+    "nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json",
+    "nuclear-builder export github|gitlab|bitbucket [--json]   writes the CI file that runs `nuclear-builder ci`",
+    "nuclear-builder line show | set KEY=<json> ...   the project's line (.nuclear/builder.json): read, or keys set",
+    "nuclear-builder connections [--team <id>] [--json]   Check the connections of a team",
+    "nuclear-builder read <path> [--json]         a file of the project as text (a PDF by pdftotext, a .pptx, markdown)",
+    "nuclear-builder mcp [--root <dir>] | mcp tools   the Builder's MCP server on stdio: every action above as a tool",
+    "                                (docs/02-architecture/actions.md) · its instructions and tools as JSON",
     "```"
    ],
    "keys": [
@@ -118,7 +264,7 @@
     "loop cli"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -126,20 +272,102 @@
    }
   },
   {
-   "id": "tool:nuclear-builder.ci",
+   "id": "tool:nuclear-builder.agents",
    "type": "cli",
-   "title": "`nuclear-builder ci` — The commands of .nuclear/builder.json (all by default)",
-   "summary": "The commands of .nuclear/builder.json (all by default)",
+   "title": "`nuclear-builder agents` — The agents that can answer a conversation on this machine: the local Nuclear Developer (always),…",
+   "summary": "The agents that can answer a conversation on this machine: the local Nuclear Developer (always), each agent whose command is on the PATH, each API provider with a key in the vault ({id, kind, provider, label, models, defaultModel, available, why})",
    "body": [
     "```text",
-    "  nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json (all by default)",
+    "nuclear-builder agents [--json] [--root <dir>]",
+    "                                the agents that can answer a conversation on this machine: the local Nuclear",
+    "                                Developer (always), each agent whose command is on the PATH, each API provider with",
+    "                                a key in the vault ({id, kind, provider, label, models, defaultModel, available, why})",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder agents"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "agents"
+   },
+   "data": {
+    "command": "nuclear-builder agents",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.chat",
+   "type": "cli",
+   "title": "`nuclear-builder chat` — The host file of Nuclear Chat for this project: the members of its team (the run's team), their…",
+   "summary": "The host file of Nuclear Chat for this project: the members of its team (the run's team), their responders, the general agent `atlas` with its choices (the agents below), the channels general and the team's",
+   "body": [
+    "```text",
+    "nuclear-builder chat-host --json [--root <dir>] [--lang en|es]",
+    "                                the host file of Nuclear Chat for this project: the members of its team (the run's",
+    "                                team), their responders, the general agent `atlas` with its choices (the",
+    "                                agents below), the channels general and the team's",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder chat"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "chat"
+   },
+   "data": {
+    "command": "nuclear-builder chat",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.checks",
+   "type": "cli",
+   "title": "`nuclear-builder checks` — The run's checks (checks.json in the spec's folder): QA's plan, yours",
+   "summary": "The run's checks (checks.json in the spec's folder): QA's plan, yours",
+   "body": [
+    "```text",
+    "nuclear-builder checks <id> [list|on <check>|off <check>|add --title … --station … [--by user|role] [--prompt …]|mark <check> passed|failed|skipped] [--json]",
+    "                                the run's checks (checks.json in the spec's folder): QA's plan, yours",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder checks"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "checks"
+   },
+   "data": {
+    "command": "nuclear-builder checks",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.ci",
+   "type": "cli",
+   "title": "`nuclear-builder ci` — The commands of .nuclear/builder.json",
+   "summary": "The commands of .nuclear/builder.json",
+   "body": [
+    "```text",
+    "nuclear-builder ci [check|test|security|artifacts|deploy ...]   the commands of .nuclear/builder.json",
     "```"
    ],
    "keys": [
     "nuclear-builder ci"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -147,15 +375,32 @@
    },
    "data": {
     "command": "nuclear-builder ci",
-    "entries": [
-     {
-      "what": "ci",
-      "usage": "nuclear-builder ci [check|test|security|artifacts|deploy ...]",
-      "alias": "",
-      "note": "",
-      "does": "The commands of .nuclear/builder.json (all by default)"
-     }
-    ]
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.connections",
+   "type": "cli",
+   "title": "`nuclear-builder connections` — Check the connections of a team",
+   "summary": "Check the connections of a team",
+   "body": [
+    "```text",
+    "nuclear-builder connections [--team <id>] [--json]   Check the connections of a team",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder connections"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "connections"
+   },
+   "data": {
+    "command": "nuclear-builder connections",
+    "entries": []
    }
   },
   {
@@ -165,14 +410,14 @@
    "summary": "Writes the CI file that runs `nuclear-builder ci`",
    "body": [
     "```text",
-    "  nuclear-builder export github|gitlab|bitbucket        writes the CI file that runs `nuclear-builder ci`",
+    "nuclear-builder export github|gitlab|bitbucket [--json]   writes the CI file that runs `nuclear-builder ci`",
     "```"
    ],
    "keys": [
     "nuclear-builder export"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -180,33 +425,159 @@
    },
    "data": {
     "command": "nuclear-builder export",
-    "entries": [
-     {
-      "what": "export",
-      "usage": "nuclear-builder export github|gitlab|bitbucket",
-      "alias": "",
-      "note": "",
-      "does": "Writes the CI file that runs `nuclear-builder ci`"
-     }
-    ]
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.line",
+   "type": "cli",
+   "title": "`nuclear-builder line` — The project's line (.nuclear/builder.json): read, or keys set",
+   "summary": "The project's line (.nuclear/builder.json): read, or keys set",
+   "body": [
+    "```text",
+    "nuclear-builder line show | set KEY=<json> ...   the project's line (.nuclear/builder.json): read, or keys set",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder line"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "line"
+   },
+   "data": {
+    "command": "nuclear-builder line",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.mcp",
+   "type": "cli",
+   "title": "`nuclear-builder mcp` — The Builder's MCP server on stdio: every action above as a tool (docs/02-architecture/actions.md)…",
+   "summary": "The Builder's MCP server on stdio: every action above as a tool (docs/02-architecture/actions.md) · its instructions and tools as JSON",
+   "body": [
+    "```text",
+    "nuclear-builder mcp [--root <dir>] | mcp tools   the Builder's MCP server on stdio: every action above as a tool",
+    "                                (docs/02-architecture/actions.md) · its instructions and tools as JSON",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder mcp"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "mcp"
+   },
+   "data": {
+    "command": "nuclear-builder mcp",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.member",
+   "type": "cli",
+   "title": "`nuclear-builder member` — A member of a team answers once in Nuclear Chat (its responder): the conversation as one JSON line…",
+   "summary": "A member of a team answers once in Nuclear Chat (its responder): the conversation as one JSON line on stdin ({member, channel, thread, messages, said, lang}), the answer as JSON lines on stdout (typing, text, tool, ask, done); the role's provider with the factory's tools, the spending confirmed twice; --role chat is the general agent ([--provider <p>] [--model <m>] [--kind …], the local Nuclear…",
+   "body": [
+    "```text",
+    "nuclear-builder member --team <id> --role analyst|architect|developer|qa|devops|chat --events [--root <dir>]",
+    "                                a member of a team answers once in Nuclear Chat (its responder): the conversation as",
+    "                                one JSON line on stdin ({member, channel, thread, messages, said, lang}), the answer",
+    "                                as JSON lines on stdout (typing, text, tool, ask, done); the role's provider with",
+    "                                the factory's tools, the spending confirmed twice; --role chat is the general agent",
+    "                                ([--provider <p>] [--model <m>] [--kind …], the local Nuclear Developer by default)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder member"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "member"
+   },
+   "data": {
+    "command": "nuclear-builder member",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.models",
+   "type": "cli",
+   "title": "`nuclear-builder models` — The models of each provider that can work here (one when asked), from the provider: Claude Code's…",
+   "summary": "The models of each provider that can work here (one when asked), from the provider: Claude Code's aliases and ids, opencode models, an API's list (a key in the vault), Ollama's installed models with their memory need and fit (fits, tight, too-big) plus the small ones it can pull; and this machine's memory (lists kept 10 minutes)",
+   "body": [
+    "```text",
+    "nuclear-builder models [--provider <id>] [--fresh] [--json] [--root <dir>]",
+    "                                the models of each provider that can work here (one when asked), from the provider:",
+    "                                Claude Code's aliases and ids, opencode models, an API's list (a key in the vault),",
+    "                                Ollama's installed models with their memory need and fit (fits, tight, too-big)",
+    "                                plus the small ones it can pull; and this machine's memory (lists kept 10 minutes)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder models"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "models"
+   },
+   "data": {
+    "command": "nuclear-builder models",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.read",
+   "type": "cli",
+   "title": "`nuclear-builder read` — A file of the project as text (a PDF by pdftotext, a .pptx, markdown)",
+   "summary": "A file of the project as text (a PDF by pdftotext, a .pptx, markdown)",
+   "body": [
+    "```text",
+    "nuclear-builder read <path> [--json]         a file of the project as text (a PDF by pdftotext, a .pptx, markdown)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder read"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "read"
+   },
+   "data": {
+    "command": "nuclear-builder read",
+    "entries": []
    }
   },
   {
    "id": "tool:nuclear-builder.restart",
    "type": "cli",
-   "title": "`nuclear-builder restart` — The whole pipeline again from the specification: every file the run wrote goes back to what it…",
-   "summary": "The whole pipeline again from the specification: every file the run wrote goes back to what it was, then every stage runs",
+   "title": "`nuclear-builder restart` — The whole run again: every file it wrote goes back first",
+   "summary": "The whole run again: every file it wrote goes back first",
    "body": [
     "```text",
-    "  nuclear-builder restart <run>                         the whole pipeline again from the specification: every file the",
-    "                                                     run wrote goes back to what it was, then every stage runs",
+    "nuclear-builder restart <id>                 the whole run again: every file it wrote goes back first",
     "```"
    ],
    "keys": [
     "nuclear-builder restart"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -214,37 +585,25 @@
    },
    "data": {
     "command": "nuclear-builder restart",
-    "entries": [
-     {
-      "what": "restart",
-      "usage": "nuclear-builder restart <run>",
-      "alias": "",
-      "note": "",
-      "does": "The whole pipeline again from the specification: every file the run wrote goes back to what it was, then every stage runs"
-     }
-    ]
+    "entries": []
    }
   },
   {
    "id": "tool:nuclear-builder.retry",
    "type": "cli",
-   "title": "`nuclear-builder retry` — A run again from the step that failed (the steps that passed are kept); --from runs that whole…",
-   "summary": "A run again from the step that failed (the steps that passed are kept); --from runs that whole stage again; --step runs that step (`code-3`: passed or failed) and every step after it. What the steps left out wrote is undone first. Calls to the local agents already retry by themselves (.nuclear/builder.json \"retry\")",
+   "title": "`nuclear-builder retry` — A run again from the station that failed (or --from that one); A run again from one step (it and…",
+   "summary": "A run again from the station that failed (or --from that one); A run again from one step (it and every step after it)",
    "body": [
     "```text",
-    "  nuclear-builder retry <run> [--from <stage> | --step <id>]",
-    "                                                     a run again from the step that failed (the steps that passed are",
-    "                                                     kept); --from runs that whole stage again; --step runs that step",
-    "                                                     (`code-3`: passed or failed) and every step after it. What the",
-    "                                                     steps left out wrote is undone first. Calls to the local agents",
-    "                                                     already retry by themselves (.nuclear/builder.json \"retry\")",
+    "nuclear-builder retry <id> [--from <station>]   a run again from the station that failed (or --from that one)",
+    "nuclear-builder retry <id> --step <step>        a run again from one step (it and every step after it)",
     "```"
    ],
    "keys": [
     "nuclear-builder retry"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -252,34 +611,36 @@
    },
    "data": {
     "command": "nuclear-builder retry",
-    "entries": [
-     {
-      "what": "retry",
-      "usage": "nuclear-builder retry <run> [--from <stage> | --step <id>]",
-      "alias": "",
-      "note": "",
-      "does": "A run again from the step that failed (the steps that passed are kept); --from runs that whole stage again; --step runs that step (`code-3`: passed or failed) and every step after it. What the steps left out wrote is undone first. Calls to the local agents already retry by themselves (.nuclear/builder.json \"retry\")"
-     }
-    ]
+    "entries": []
    }
   },
   {
    "id": "tool:nuclear-builder.run",
    "type": "cli",
-   "title": "`nuclear-builder run` — Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec…",
-   "summary": "Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec of specs/ changed last)",
+   "title": "`nuclear-builder run` — The software factory: the spec through Analysis, Design, Tests first, Code, Quality and Delivery,…",
+   "summary": "The software factory: the spec through Analysis, Design, Tests first, Code, Quality and Delivery, each station worked by its role as the team assigned it (no file: the spec of specs/ changed last); it stops at the gates for you; --events: JSON lines on stdout, the answers as JSON lines on stdin (what the editors use); The run in a process of its own (no stdin: it waits at the first question):…",
    "body": [
     "```text",
-    "  nuclear-builder run [spec.md] [--lead local|claude]   spec → generate → plan → tests → code → verify → security →",
-    "                                                     artifacts → deploy",
-    "                                                     (no file: the spec of specs/ changed last)",
+    "nuclear-builder run [spec.md] [--team <id>] [--events] [--confirm-spending] [--force-confirm]",
+    "                                the software factory: the spec through Analysis, Design, Tests first, Code,",
+    "                                Quality and Delivery, each station worked by its role as the team assigned it (no",
+    "                                file: the spec of specs/ changed last); it stops at the gates for you; --events:",
+    "                                JSON lines on stdout, the answers as JSON lines on stdin (what the editors use)",
+    "nuclear-builder run ... --detach             the run in a process of its own (no stdin: it waits at the first",
+    "                                question): {run, detached, log}; with a paid provider, waiting: spending",
+    "nuclear-builder run --resume <id>            a run that waits for you, from where it waits",
+    "nuclear-builder run answer <id> --answer approve|change|stop|yes|no [--text …] [--events] [--detach]",
+    "                                the answer to the question a run waits on (its process gets it, or the run goes",
+    "                                on with it); never the spending: that is confirmed twice where you answer",
+    "nuclear-builder run stop <id> | show <id> | journal <id>",
+    "                                a run's process stopped (a run that asks waits) · its file (JSON) · its journal",
     "```"
    ],
    "keys": [
     "nuclear-builder run"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -287,32 +648,24 @@
    },
    "data": {
     "command": "nuclear-builder run",
-    "entries": [
-     {
-      "what": "run",
-      "usage": "nuclear-builder run [spec.md] [--lead local|claude]",
-      "alias": "",
-      "note": "",
-      "does": "Spec → generate → plan → tests → code → verify → security → artifacts → deploy (no file: the spec of specs/ changed last)"
-     }
-    ]
+    "entries": []
    }
   },
   {
    "id": "tool:nuclear-builder.runs",
    "type": "cli",
-   "title": "`nuclear-builder runs` — The runs kept in .nuclear/builder/runs",
-   "summary": "The runs kept in .nuclear/builder/runs",
+   "title": "`nuclear-builder runs` — The runs of this project",
+   "summary": "The runs of this project",
    "body": [
     "```text",
-    "  nuclear-builder runs                                  the runs kept in .nuclear/builder/runs",
+    "nuclear-builder runs [--json]                the runs of this project",
     "```"
    ],
    "keys": [
     "nuclear-builder runs"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -320,32 +673,37 @@
    },
    "data": {
     "command": "nuclear-builder runs",
-    "entries": [
-     {
-      "what": "runs",
-      "usage": "nuclear-builder runs",
-      "alias": "",
-      "note": "",
-      "does": "The runs kept in .nuclear/builder/runs"
-     }
-    ]
+    "entries": []
    }
   },
   {
    "id": "tool:nuclear-builder.setup",
    "type": "cli",
-   "title": "`nuclear-builder setup` — The AI services of this machine (nuclear-builder setup --help)",
-   "summary": "The AI services of this machine (nuclear-builder setup --help)",
+   "title": "`nuclear-builder setup` — The AI services of this machine, step by step: it reads the hardware, suggests a profile (which…",
+   "summary": "The AI services of this machine, step by step: it reads the hardware, suggests a profile (which models are downloaded and how far each works), installs what is missing (Ollama), downloads the models, loads the knowledge base and starts the services, now and at every login (--yes: no questions, the suggested profile); What is installed and running; Adds the MCP server to every AI client of this…",
    "body": [
     "```text",
-    "  nuclear-builder setup ...                            the AI services of this machine (nuclear-builder setup --help)",
+    "nuclear-builder setup [--profile remote|lite|medium|hard] [--yes]",
+    "                                the AI services of this machine, step by step: it reads the hardware, suggests a",
+    "                                profile (which models are downloaded and how far each works), installs what is",
+    "                                missing (Ollama), downloads the models, loads the knowledge base and starts the",
+    "                                services, now and at every login (--yes: no questions, the suggested profile)",
+    "nuclear-builder setup --status [--json]      what is installed and running",
+    "nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,",
+    "                                Codex, Cursor, OpenCode, Gemini CLI): after installing a client",
+    "nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)",
+    "nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements",
+    "nuclear-builder setup --events --profile <id> [--from <step>]",
+    "                                the steps of a profile, one JSON line per event (what the editors draw)",
+    "nuclear-builder setup --restart graph|developer   a service again, through the system's manager",
+    "nuclear-builder setup --set KEY=value ...    writes the machine's choice (ai.env)",
     "```"
    ],
    "keys": [
     "nuclear-builder setup"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/cli.ts"
+    "extensions/tools/nuclear-builder/cli.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
@@ -353,15 +711,160 @@
    },
    "data": {
     "command": "nuclear-builder setup",
-    "entries": [
-     {
-      "what": "setup",
-      "usage": "nuclear-builder setup ...",
-      "alias": "",
-      "note": "",
-      "does": "The AI services of this machine (nuclear-builder setup --help)"
-     }
-    ]
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.skills",
+   "type": "cli",
+   "title": "`nuclear-builder skills` — The library of skills and agents (nuclear-agents/skills, nuclear-agents/agents); with a team, its…",
+   "summary": "The library of skills and agents (nuclear-agents/skills, nuclear-agents/agents); with a team, its skills and its own; with a member, its own, its base agent and every skill it gets (composed: from library, team or member; what it overrides); A skill's SKILL.md as that place sees it (the member's own, the team's own, the library's, the role's), where it comes from and whether it can be changed…",
+   "body": [
+    "```text",
+    "nuclear-builder skills list [--team <id>] [--member <m>] [--lang en|es] [--json]",
+    "                                the library of skills and agents (nuclear-agents/skills, nuclear-agents/agents);",
+    "                                with a team, its skills and its own; with a member, its own, its base agent and",
+    "                                every skill it gets (composed: from library, team or member; what it overrides)",
+    "nuclear-builder skills show <id> [--team <id>] [--member <m>] [--lang en|es] [--json]",
+    "                                a skill's SKILL.md as that place sees it (the member's own, the team's own, the",
+    "                                library's, the role's), where it comes from and whether it can be changed there",
+    "nuclear-builder skills clone <id> --team <id> [--member <m>] [--json]",
+    "                                a copy of the skill as the team's own (every member inherits it) or the member's,",
+    "                                with the same id: it wins over the one it came from",
+    "nuclear-builder skills create|update <id>|delete <id> --team <id> [--member <m>] [--json]",
+    "                                an own skill of the team or the member: create and update read its SKILL.md on",
+    "                                stdin (front matter name, title, description, title_es, description_es, kind,",
+    "                                tags); a library skill is read-only (clone it to change it)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder skills"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "skills"
+   },
+   "data": {
+    "command": "nuclear-builder skills",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.spec",
+   "type": "cli",
+   "title": "`nuclear-builder spec` — The base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance criteria…",
+   "summary": "The base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}; A spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/; The specs by component and layer, with their runs; A spec's folder to another component or layer (its run follows); The specs of the flat…",
+   "body": [
+    "```text",
+    "nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]",
+    "                                the base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance",
+    "                                criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}",
+    "nuclear-builder spec show <id> | delete <id> [--json]",
+    "                                a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/",
+    "nuclear-builder spec list [--json]           the specs by component and layer, with their runs",
+    "nuclear-builder spec move <id> --component … [--layer …] [--json]",
+    "                                a spec's folder to another component or layer (its run follows)",
+    "nuclear-builder spec migrate [--json]        the specs of the flat specs/<id>/ to their component",
+    "nuclear-builder spec accept <id> | discard <id> [--json]",
+    "                                a spec's draft (spec.draft.md, written by a member in Nuclear Chat) over the spec,",
+    "                                or thrown away",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder spec"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "spec"
+   },
+   "data": {
+    "command": "nuclear-builder spec",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.team",
+   "type": "cli",
+   "title": "`nuclear-builder team` — The teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on stdout, an error…",
+   "summary": "The teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on stdout, an error as {\"error\": \"...\"} with exit code 1; `save` reads the team on stdin; Everything the company screen draws, in one call: {teams (as list), shown (each team as show, or {error}), roster, temperaments, vault (as vault list, or null), library and agents (as skills list, each with its markdown)}; A new…",
+   "body": [
+    "```text",
+    "nuclear-builder team list|show <id>|save|delete <id>|default <id>|export <id> <file>|import <file>|roster [--lang en|es]|temperaments [--json]",
+    "                                the teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on",
+    "                                stdout, an error as {\"error\": \"...\"} with exit code 1; `save` reads the team on stdin",
+    "nuclear-builder team screen [--lang en|es] [--json]",
+    "                                everything the company screen draws, in one call: {teams (as list), shown (each",
+    "                                team as show, or {error}), roster, temperaments, vault (as vault list, or null),",
+    "                                library and agents (as skills list, each with its markdown)}",
+    "nuclear-builder team create [--json]         a new team from the wizard's draft on stdin: {name, description,",
+    "                                purpose, skills, budgetUsd, techLead, logoFile, members: [{role, employee, kind,",
+    "                                provider, model, name}]} (who works a member not said: the local defaults)",
+    "nuclear-builder team suggest [--purpose <text>] [--skills a,b] [--lang en|es] [--limit <n>] [--json]",
+    "                                the employees of each role that fit the purpose and skills, each with why",
+    "nuclear-builder team name-suggest [--purpose <text>] [--lang en|es] [--json]",
+    "                                five satirical names for a team",
+    "nuclear-builder team runnable <id> [--json]  whether the team has a member of each role the project's stations need",
+    "nuclear-builder team update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>] | duplicate <id> [--name …] [--json]",
+    "nuclear-builder team member add <id> --role <role> [--employee …] [--kind …] [--provider …] [--model …] [--name …] [--count <n>] [--json]",
+    "                                members hired (several: --count, or a JSON list of members on stdin without --role)",
+    "nuclear-builder team member remove <id> <member> | member update <id> <member> [--kind …] [--provider …] [--model …] [--employee …] [--name …] [--skills a,b] [--extra-skills <json>] [--instructions …] [--temperament …] [--gifs …] [--on …] [--note …] [--agent <library agent>] [--json]",
+    "                                a member let go, or changed (by its id in the team); who works a member is one",
+    "                                this machine has (agents --json), else it is refused with why",
+    "nuclear-builder team skills set <id> [--member <m>] --skills a,b [--json]",
+    "                                the library skills of the team (every member inherits them) or of a member",
+    "                                (beside its role skills switched on): skills list gives their ids",
+    "nuclear-builder team logo <id> <image> | logo <id> --clear [--json]",
+    "                                the team's logo: a .png, .svg or .jpg of 1 MB at most, copied beside the team as",
+    "                                <id>.logo.<kind>; --clear takes it away",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder team"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "team"
+   },
+   "data": {
+    "command": "nuclear-builder team",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-builder.vault",
+   "type": "cli",
+   "title": "`nuclear-builder vault` — The API keys of anthropic, openai, google, openrouter in the system's keyring (service…",
+   "summary": "The API keys of anthropic, openai, google, openrouter in the system's keyring (service nuclear-factory); `set` reads the key on stdin (asked for, hidden, in a terminal), never from the command line",
+   "body": [
+    "```text",
+    "nuclear-builder vault set <provider> | remove <provider> | list [--json]",
+    "                                the API keys of anthropic, openai, google, openrouter in the system's keyring",
+    "                                (service nuclear-factory); `set` reads the key on stdin (asked for, hidden, in a",
+    "                                terminal), never from the command line",
+    "```"
+   ],
+   "keys": [
+    "nuclear-builder vault"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-builder",
+    "name": "vault"
+   },
+   "data": {
+    "command": "nuclear-builder vault",
+    "entries": []
    }
   },
   {
@@ -938,13 +1441,14 @@
    "id": "tool:nuclear.build",
    "type": "cli",
    "title": "`nuclear build` — Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml);…",
-   "summary": "Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml); Transpile, pub get and build_runner (and flutter build <target>); Transpile (nuclear build .)",
+   "summary": "Transpile (prints to stdout without -o); Transpile a project (folder with nuclear.toml); Transpile, pub get and build_runner (and flutter build <target>); Each Nuclear function and method measured: .nuclear/monitor/report.json; Transpile (nuclear build .)",
    "body": [
     "```text",
     "  nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)",
     "  nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)",
     "  build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]",
     "                                             transpile, pub get and build_runner (and flutter build <target>)",
+    "  build --monitor, run --monitor             each Nuclear function and method measured: .nuclear/monitor/report.json",
     "  build                                      transpile (nuclear build .)",
     "```"
    ],
@@ -982,6 +1486,13 @@
       "alias": "",
       "note": "",
       "does": "Transpile, pub get and build_runner (and flutter build <target>)"
+     },
+     {
+      "what": "build",
+      "usage": "nuclear build --monitor, run --monitor",
+      "alias": "",
+      "note": "",
+      "does": "Each Nuclear function and method measured: .nuclear/monitor/report.json"
      },
      {
       "what": "build",
@@ -1648,11 +2159,13 @@
   {
    "id": "tool:nuclear.help",
    "type": "cli",
-   "title": "`nuclear help` — This help, a documentation topic or the usage of a command; A kind, decorator or header word of…",
-   "summary": "This help, a documentation topic or the usage of a command; A kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
+   "title": "`nuclear help` — This help, a documentation topic or the usage of a command; Begin here (an agent with no context…",
+   "summary": "This help, a documentation topic or the usage of a command; Begin here (an agent with no context too): what Nuclear is, the rules, the cycle; Every documentation topic, by group; A kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
    "body": [
     "```text",
     "  nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command",
+    "  nuclear help start                                          begin here (an agent with no context too): what Nuclear is, the rules, the cycle",
+    "  nuclear help atlas [--json]                                 every documentation topic, by group",
     "  nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)",
     "```"
    ],
@@ -1676,6 +2189,20 @@
       "alias": "",
       "note": "",
       "does": "This help, a documentation topic or the usage of a command"
+     },
+     {
+      "what": "help",
+      "usage": "nuclear help start",
+      "alias": "",
+      "note": "",
+      "does": "Begin here (an agent with no context too): what Nuclear is, the rules, the cycle"
+     },
+     {
+      "what": "help",
+      "usage": "nuclear help atlas [--json]",
+      "alias": "",
+      "note": "",
+      "does": "Every documentation topic, by group"
      },
      {
       "what": "help",
@@ -1845,14 +2372,51 @@
    }
   },
   {
+   "id": "tool:nuclear.monitor",
+   "type": "cli",
+   "title": "`nuclear monitor` — The report of the last run with --monitor: its hot spots (slow, async calls in a loop,…",
+   "summary": "The report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time",
+   "body": [
+    "```text",
+    "  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async",
+    "                                             calls in a loop, connections, memory) and each function's time",
+    "```"
+   ],
+   "keys": [
+    "nuclear monitor"
+   ],
+   "sources": [
+    "tools/cli/src/main.rs",
+    "tools/cli/src/framework/mod.rs"
+   ],
+   "meta": {
+    "tool": "nuclear",
+    "name": "monitor"
+   },
+   "data": {
+    "command": "nuclear monitor",
+    "entries": [
+     {
+      "what": "monitor",
+      "usage": "nuclear monitor [--json]",
+      "alias": "",
+      "note": "",
+      "does": "The report of the last run with --monitor: its hot spots (slow, async calls in a loop, connections, memory) and each function's time"
+     }
+    ]
+   }
+  },
+  {
    "id": "tool:nuclear.new",
    "type": "cli",
    "title": "`nuclear new` — New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files…",
-   "summary": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile)",
+   "summary": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile) backend: the app's WebSocket, guards with the token of ENV_VAR; web: a WebSocket connection instead of Http",
    "body": [
     "```text",
     "  new <name> [-p mobile] [-d flutter]   (n)  new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react):",
     "      [--org com.example]                    only .nuc files (+ the Flutter app in build/app for mobile)",
+    "      [--websocket] [--token <ENV_VAR>]      backend: the app's WebSocket, guards with the token of ENV_VAR;",
+    "                                             web: a WebSocket connection instead of Http",
     "```"
    ],
    "keys": [
@@ -1874,7 +2438,7 @@
       "usage": "nuclear new <name> [-p mobile] [-d flutter]",
       "alias": "n",
       "note": "",
-      "does": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile)"
+      "does": "New project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react): only .nuc files (+ the Flutter app in build/app for mobile) backend: the app's WebSocket, guards with the token of ENV_VAR; web: a WebSocket connection instead of Http"
      }
     ]
    }
@@ -2031,12 +2595,13 @@
    "id": "tool:nuclear.spec",
    "type": "cli",
    "title": "`nuclear spec` — Print the base language and dialect format (for agents); with --dialect, also the spec of the…",
-   "summary": "Print the base language and dialect format (for agents); with --dialect, also the spec of the dialect and its parents; --brief: the short sheet (what changes from TS/Dart)",
+   "summary": "Print the base language and dialect format (for agents); with --dialect, also the spec of the dialect and its parents; --brief: the short sheet (what changes from TS/Dart); --platform alone: the platform's sheet and its topics",
    "body": [
     "```text",
     "  nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);",
     "                                                              with --dialect, also the spec of the dialect and its parents;",
-    "                                                              --brief: the short sheet (what changes from TS/Dart)",
+    "                                                              --brief: the short sheet (what changes from TS/Dart);",
+    "                                                              --platform alone: the platform's sheet and its topics",
     "```"
    ],
    "keys": [
@@ -2058,7 +2623,7 @@
       "usage": "nuclear spec [--dialect <name>|--platform <p>] [--brief]",
       "alias": "",
       "note": "",
-      "does": "Print the base language and dialect format (for agents); with --dialect, also the spec of the dialect and its parents; --brief: the short sheet (what changes from TS/Dart)"
+      "does": "Print the base language and dialect format (for agents); with --dialect, also the spec of the dialect and its parents; --brief: the short sheet (what changes from TS/Dart); --platform alone: the platform's sheet and its topics"
      }
     ]
    }

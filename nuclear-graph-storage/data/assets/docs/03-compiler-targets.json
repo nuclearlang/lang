@@ -211,7 +211,8 @@
     "- `keywords.toml`: Dart's reserved words and how each is produced from Nuclear.",
     "- `library.toml`: Nuclear's standard library written in Dart (one template per member).",
     "- `docs.toml`: what the editor shows for each kind and header word.",
-    "- `templates/`: `extension.tpl`, `mixin.tpl`, `data.tpl`, `doc_comment.tpl`.",
+    "- `templates/`: `extension.tpl`, `mixin.tpl`, `data.tpl`, `doc_comment.tpl`, `monitor.tpl` (the monitor's runtime of a",
+    "  project built with `--monitor`; `dart:io`: not for the web yet).",
     "- `frameworks/flutter/`: the framework dialect (`dialect.toml`, `docs.toml`, `templates/`).",
     "- `defs/<package>/<version>/`: type definitions. Generated.",
     "- `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and",
@@ -1606,7 +1607,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/brief/dart.md#dialect-dart-brief.34e79d",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/brief/dart.md#dialect-dart-brief.dc9039",
    "type": "spec",
    "title": "Dialect `dart` brief",
    "summary": "The library is Dart's: `dart:core`, `dart:math`, `dart:convert`, `dart:async`, `dart:io`, `dart:typed_data`... are imported by themselves when a name is used (`sqrt`, `jsonEncode`, `File`).",
@@ -1642,8 +1643,8 @@
     "```",
     "",
     "```dart",
-    "import 'dart:io';",
-    "import 'dart:math';"
+    "import 'dart:io' hide Point;",
+    "import 'dart:math' hide Point;"
    ],
    "agents": false,
    "sources": [
@@ -1797,7 +1798,37 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#2-translation-of-the-base-rules.60adb5",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#2-translation-of-the-base-rules.44571e",
+   "type": "spec",
+   "title": "Dialect `dart` — 2. Translation of the base rules",
+   "summary": "2. Translation of the base rules",
+   "body": [
+    "| `[a, ...rest] = xs` / `{ a, \"k\": b } = m` | `final [a, ...rest] = xs;` / `final {'a': a, 'k': b} = m;` |",
+    "| Existing names in a pattern | `[a, b] = [b, a];` |",
+    "| `Result<E, T>`, `Ok(x)`, `Err(e)` | `Either<E, T>`, `Right(x)`, `Left(e)` of [fpdart](https://pub.dev/packages/fpdart) (imported automatically; no own runtime); `Ok()` → `Right(null)` |",
+    "| `x = call()` returning `Result`, in a `Result` function | `final xResult = call(); if (xResult case Left(:final value)) return Left(value); final x = (xResult as Right<E, T>).value;` |",
+    "| `.ok(cb)` / `.error(cb)` that transform | `.flatMap(cb)` / `.orElse(cb)` (`.map` / `.getOrElse` when the callback returns a plain value) |",
+    "| `.ok(cb)` / `.error(cb)` that observe | a `map` / `mapLeft` that calls `cb` and returns the value unchanged |",
+    "| `match r` with `Ok(x)` / `Err(e)` | `if (r.isRight()) { ... (r as Right<E, T>).value ... } else { ... (r as Left<E, T>).value ... }` |",
+    "| Function with `yield` | `sync*` and return `Iterable<T>`; with `~`, `async*` and `Stream<T>` |",
+    "| `name() = Module.method` (alias) | a method with `method`'s signature that returns `Module().method(...)` (`Module.method(...)` if it is `static`) |",
+    "| `yield ...other()` | `yield* other()` |",
+    "| `<T: Comparable>` | `<T extends Comparable>` |",
+    "| `[a, if cond b]` | `[a, if (cond) b]` |",
+    "| Cascade `..a = 1` | the same: `Paint()..color = Colors.blue` |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/dart.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "dart"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#2-translation-of-the-base-rules.684af3",
    "type": "spec",
    "title": "Dialect `dart` — 2. Translation of the base rules",
    "summary": "2. Translation of the base rules",
@@ -1813,17 +1844,14 @@
     "| `{}` in the signature | named parameters: `{required String name}` |",
     "| Optional parameter `name?: string` | `String? name` |",
     "| Default value `= null` | omitted (`String? data;`) |",
-    "| List or map as a parameter default | `const []`, `const {}` |",
+    "| List or map as a parameter default | the parameter is nullable and the function begins with `xs ??= [];` (a default must be const, and a const list cannot change); a constructor's parameter: `const []` |",
+    "| `a == b` of two lists, maps or sets | `_equals(a, b)` (what they hold; `==` compares the objects) |",
+    "| `m[\"a\"] += 1` on a map | `m.update('a', (v) => v + 1);` (a map's read is nullable) |",
     "| Constructor parameters | declared fields + `User(this.name)` |",
     "| Text | single quotes; `'${name}'` is written `'$name'` when the name is not followed by letters |",
     "| `x is T` / `x as T` / `x!` | the same |",
     "| `and` `or` `not` | `&&` `\\|\\|` `!` |",
-    "| `a in list` | `list.contains(a)`; a map: `map.containsKey(key)` |",
-    "| `a ** b` | `pow(a, b)`, plus `.toInt()` when both operands are known integers, `.toDouble()` when one is a decimal |",
-    "| `a ~/ b`, `& \\| ^ << >> >>>`, `^x` | the same; `^x` → `~x` |",
-    "| `0b1010` | `0xa` (Dart has no binary literals) |",
-    "| `print(a, b)` | `print([a, b].join(' '))` (Dart's `print` takes one value) |",
-    "| top-level statements | inside a generated `main()`; top-level variables stay top-level (`final g = 9.8;`) |"
+    "| `a in list` | `list.contains(a)`; a map: `map.containsKey(key)` |"
    ],
    "agents": false,
    "sources": [
@@ -1836,48 +1864,23 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#2-translation-of-the-base-rules.798edc",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#2-translation-of-the-base-rules.927cfe",
    "type": "spec",
    "title": "Dialect `dart` — 2. Translation of the base rules",
    "summary": "2. Translation of the base rules",
    "body": [
+    "| `a ** b` | `pow(a, b)`, plus `.toInt()` when both operands are known integers, `.toDouble()` when one is a decimal |",
+    "| `a ~/ b`, `& \\| ^ << >> >>>`, `^x` | the same; `^x` → `~x` |",
+    "| `0b1010` | `0xa` (Dart has no binary literals) |",
+    "| `print(a, b)` | `print([a, b].join(' '))` (Dart's `print` takes one value) |",
+    "| top-level statements | inside a generated `main()`; top-level variables stay top-level (`final g = 9.8;`) |",
     "| Range `a..b` as a value | `List.generate(b - a, (i) => a + i)` |",
     "| `for k, v in map` | `for (final MapEntry(key: k, value: v) in map.entries)` (`m ?? {}` is `(m ?? {}).entries`) |",
     "| Top-level statements | inside `void main() { ... }` |",
     "| Inheritance | a single base (`: A`); interfaces go with `>` or are detected, also the SDK's `interface class`es: `Score: Comparable<Score>` → `class Score implements Comparable<Score>` |",
     "| `super(...)` at the start of the constructor | initializer list: `Bird(this.wings) : super('bird')`; if it passes the inherited parameters as they are and in order, super parameters: `Dog(super.name, this.breed)` |",
     "| Method that overrides one of a base or interface (of the file or of the SDK type definitions, including `Object`: `toString`) | `@override` |",
-    "| PascalCase decorator without arguments (`@DateConverter`) | the call to its const constructor: `@DateConverter()`; a camelCase one (`@override`) stays the same |",
-    "| `[a, ...rest] = xs` / `{ a, \"k\": b } = m` | `final [a, ...rest] = xs;` / `final {'a': a, 'k': b} = m;` |",
-    "| Existing names in a pattern | `[a, b] = [b, a];` |",
-    "| `Result<E, T>`, `Ok(x)`, `Err(e)` | `Either<E, T>`, `Right(x)`, `Left(e)` of [fpdart](https://pub.dev/packages/fpdart) (imported automatically; no own runtime); `Ok()` → `Right(null)` |"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/dart.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": "dart"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/dart.md#2-translation-of-the-base-rules.9756fb",
-   "type": "spec",
-   "title": "Dialect `dart` — 2. Translation of the base rules",
-   "summary": "2. Translation of the base rules",
-   "body": [
-    "| `x = call()` returning `Result`, in a `Result` function | `final xResult = call(); if (xResult case Left(:final value)) return Left(value); final x = (xResult as Right<E, T>).value;` |",
-    "| `.ok(cb)` / `.error(cb)` that transform | `.flatMap(cb)` / `.orElse(cb)` (`.map` / `.getOrElse` when the callback returns a plain value) |",
-    "| `.ok(cb)` / `.error(cb)` that observe | a `map` / `mapLeft` that calls `cb` and returns the value unchanged |",
-    "| `match r` with `Ok(x)` / `Err(e)` | `if (r.isRight()) { ... (r as Right<E, T>).value ... } else { ... (r as Left<E, T>).value ... }` |",
-    "| Function with `yield` | `sync*` and return `Iterable<T>`; with `~`, `async*` and `Stream<T>` |",
-    "| `name() = Module.method` (alias) | a method with `method`'s signature that returns `Module().method(...)` (`Module.method(...)` if it is `static`) |",
-    "| `yield ...other()` | `yield* other()` |",
-    "| `<T: Comparable>` | `<T extends Comparable>` |",
-    "| `[a, if cond b]` | `[a, if (cond) b]` |",
-    "| Cascade `..a = 1` | the same: `Paint()..color = Colors.blue` |"
+    "| PascalCase decorator without arguments (`@DateConverter`) | the call to its const constructor: `@DateConverter()`; a camelCase one (`@override`) stays the same |"
    ],
    "agents": false,
    "sources": [
@@ -3617,13 +3620,14 @@
    "id": "doc:nuclearlang/dialects/python/AGENTS.md#folders",
    "type": "readme",
    "title": "The `python` dialect — Folders",
-   "summary": "user texts, checked by tools and embedded in the `nuclear` binary.",
+   "summary": "monitor's runtime of a project built with `--monitor`).",
    "body": [
     "- `dialect.toml`: `[options]`, `[syntax]`, `[types]`, `[operators]`, names, automatic imports, `[project]`.",
     "- `keywords.toml`: Python's reserved words and how each is produced from Nuclear.",
     "- `library.toml`: Nuclear's standard library written in Python (one template per member).",
     "- `docs.toml`: what the editor and `nuclear help <word> --dialect python` show for each header word.",
-    "- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (docstrings).",
+    "- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (docstrings), `monitor.tpl` (the",
+    "  monitor's runtime of a project built with `--monitor`).",
     "- `frameworks/fastapi/`: the framework dialect (`dialect.toml`, `docs.toml`, `templates/`).",
     "- `defs/<package>/<version>/`: type definitions. Generated.",
     "- `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and",
@@ -4865,12 +4869,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#1-rules.63ebe9",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#1-rules.7f2bb0",
    "type": "spec",
    "title": "Dialect `python` — 1. Rules",
    "summary": "(`(x % 0x100000000) >> n`), like TypeScript; `a in b` is Python's `in`.",
    "body": [
-    "- **Operators:** `and` `or` `not`, `~/` `//`, `**`, bitwise as in Python; `>>>` is written on a 32-bit value",
+    "- **Operators:** `and` `or` `not`, `~/` `_idiv(a, b)` (toward zero, as TypeScript and Dart; `//` floors), `**`, bitwise as in Python; `>>>` is written on a 32-bit value",
     "  (`(x % 0x100000000) >> n`), like TypeScript; `a in b` is Python's `in`.",
     "- **Type definitions:** `defs = [\"python@3.14\"]`: builtins (implicit), `typing`, `dataclasses`, `enum`, `abc`,",
     "  `collections`, `functools`, `itertools`, `datetime`, `time`, `json`, `re`, `math`, `random`, `decimal`, `uuid`,",
@@ -5155,7 +5159,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-13-result.fb98ac",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-13-result.a44d9d",
    "type": "spec",
    "title": "Dialect `python` — 3.13 Result",
    "summary": "def and_then(self, f: Callable[[_T], Result[_F, _U]]) -> Result[_E | _F, _U]: return f(self.value) if self.is_ok else Result_E | _F, _U def or_else(self, f: Callable[[_E], Result[_F, _U]]) -> Result[_F, _T | _U]: return Result_F, _T | _U if self.is_ok else f(self.error) def map(self, f:…",
@@ -5188,10 +5192,32 @@
     "def Err(error: _F) -> Result[_F, Never]:",
     "    return Result[_F, Never](False, None, error)",
     "",
+    "def _idiv(a: int | float, b: int | float) -> int:",
+    "    if isinstance(a, int) and isinstance(b, int):",
+    "        q = a // b",
+    "        return q + 1 if q < 0 and q * b != a else q",
+    "    return int(a / b)"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/python.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-13-result.f3a714",
+   "type": "spec",
+   "title": "Dialect `python` — 3.13 Result",
+   "summary": "def divide(a: int, b: int) -> Result[str, int]: if b == 0: return Err(\"division by zero\") return Ok(_idiv(a, b)) def half(n: int) -> Result[str, int]: x_result = divide(n, 2) if x_result.is_err: return Err(x_result.error) x = x_result.value return Ok(x)",
+   "body": [
     "def divide(a: int, b: int) -> Result[str, int]:",
     "    if b == 0:",
     "        return Err(\"division by zero\")",
-    "    return Ok(a // b)",
+    "    return Ok(_idiv(a, b))",
     "",
     "def half(n: int) -> Result[str, int]:",
     "    x_result = divide(n, 2)",
@@ -5288,12 +5314,40 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-2-modules",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-2-modules.b784ef",
+   "type": "spec",
+   "title": "Dialect `python` — 3.2 Modules",
+   "summary": "def is_adult(self) -> bool: return self.age >= 18",
+   "body": [
+    "def is_adult(self) -> bool:",
+    "        return self.age >= 18",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/python.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "python"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-2-modules.c5b897",
    "type": "spec",
    "title": "Dialect `python` — 3.2 Modules",
    "summary": "A module with header parameters gets class annotations and `init`; fields with a default are set in `init` (no shared mutable defaults).",
    "body": [
-    "A module with header parameters gets class annotations and `__init__`; fields with a default are set in `__init__` (no shared mutable defaults). Members are written with `self.`.",
+    "A module with header parameters gets class annotations and `__init__`; fields with a default are set in `__init__` (no shared mutable defaults). A `static` field is the class's (`count: ClassVar[int] = 0`). Members are written with `self.`.",
+    "",
+    "What Python binds otherwise is written so the code means what it says in every target: a parameter whose default is",
+    "a list or a map is `xs: list[int] | None = None` and the function begins with `if xs is None: xs = []` (a default is",
+    "made once); a lambda made in a loop binds the loop's names it reads (`lambda i=i: i`, Python binds a closure late); a",
+    "function that assigns a variable of its file begins with `global counter`; a chain after `?.` is one conditional",
+    "(`(u.name.upper() if u is not None else None)`); a local, a lambda's parameter, a function or a constant named like a",
+    "function the dialect writes (`sorted`, `len`, `max`, `sum`, `list`, `type`...: `keywords.toml`, level `shadowed`) is",
+    "renamed `sorted_`. In an interpolated text a missing value and a boolean go through `_text` (`null`, `true`).",
     "",
     "```nuclear",
     "User(name: string, age: int = 0)",
@@ -5314,11 +5368,7 @@
     "    def __init__(self, name: str, age: int = 0) -> None:",
     "        self.name = name",
     "        self.age = age",
-    "        self.tags = []",
-    "",
-    "    def is_adult(self) -> bool:",
-    "        return self.age >= 18",
-    "```"
+    "        self.tags = []"
    ],
    "agents": false,
    "sources": [
@@ -5544,9 +5594,9 @@
    "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#3-equivalences-3-8-control-flow",
    "type": "spec",
    "title": "Dialect `python` — 3.8 Control flow",
-   "summary": "`if` and `match` are values: as the last line each branch returns; inside an expression with one expression per branch they are a conditional expression (`a if c else b`).",
+   "summary": "`if` and `match` are values: as the last line each branch returns; inside an expression with one expression per branch they are a conditional expression (`a if c else b`); a branch that is itself a conditional keeps its parentheses (`(0.8 if often else 0.5) if kind == \"some\" else 0.0`), since…",
    "body": [
-    "`if` and `match` are values: as the last line each branch returns; inside an expression with one expression per branch they are a conditional expression (`a if c else b`). `match` becomes `if`/`elif`.",
+    "`if` and `match` are values: as the last line each branch returns; inside an expression with one expression per branch they are a conditional expression (`a if c else b`); a branch that is itself a conditional keeps its parentheses (`(0.8 if often else 0.5) if kind == \"some\" else 0.0`), since Python's would join the next branch. `match` becomes `if`/`elif`.",
     "",
     "```nuclear",
     "label(n: int) string",
@@ -5612,12 +5662,12 @@
     "from __future__ import annotations",
     "",
     "def total(m: dict[str, int]) -> int:",
-    "    sum = 0",
+    "    sum_ = 0",
     "    for k, v in m.items():",
-    "        sum += v",
+    "        sum_ += v",
     "    for i in range(0, 3):",
-    "        sum += i",
-    "    return sum",
+    "        sum_ += i",
+    "    return sum_",
     "```"
    ],
    "agents": false,
@@ -5631,11 +5681,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#4-the-standard-library.acc8dc",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#4-the-standard-library.630396",
    "type": "spec",
    "title": "Dialect `python` — 4. The standard library",
-   "summary": "`base64`, `datetime`, `functools`, `random` and `asyncio` are imported when written, and those names are reserved for Nuclear identifiers (`json_`).",
+   "summary": "(compact, models through `model_dump` or `vars`) are helpers written once per file.",
    "body": [
+    "(compact, models through `model_dump` or `vars`) are helpers written once per file. `math`, `json`, `re`,",
     "`base64`, `datetime`, `functools`, `random` and `asyncio` are imported when written, and those names are reserved",
     "for Nuclear identifiers (`json_`). `string.length` counts characters, not UTF-16 code units; `string.split(\"\")` is",
     "not valid (use `chars()`)."
@@ -5651,22 +5702,22 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#4-the-standard-library.c2ce1e",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/python.md#4-the-standard-library.d192c5",
    "type": "spec",
    "title": "Dialect `python` — 4. The standard library",
-   "summary": "library.md as `nuclearlang/dialects/python/library.toml` writes it: lists, dicts and sets are Python's; an expression lambda becomes a comprehension (`xs.map((x) => x * 2)` is `[x * 2 for x in xs]`, `filter`, `find`, `any`, `all`, `count` likewise; a function value goes through `map`/`filter`);…",
+   "summary": "library.md as `nuclearlang/dialects/python/library.toml` writes it: lists, dicts and sets are Python's; an expression lambda becomes a comprehension (`xs.map((x) => x * 2)` is `[x * 2 for x in xs]`, `filter`, `find`, `any`, `all`, `count` likewise, and a condition that is itself a conditional is…",
    "body": [
     "[library.md](../../../../docs/07-reference/library.md) as `nuclearlang/dialects/python/library.toml` writes it: lists, dicts and sets are Python's; an",
     "expression lambda becomes a comprehension (`xs.map((x) => x * 2)` is `[x * 2 for x in xs]`, `filter`, `find`,",
-    "`any`, `all`, `count` likewise; a function value goes through `map`/`filter`); `Bytes` is `bytes`; `DateTime` is",
+    "`any`, `all`, `count` likewise, and a condition that is itself a conditional is put in parentheses: `xs.filter((x) =>",
+    "ok ? x > 0 : x < 0)` is `[x for x in xs if (x > 0 if ok else x < 0)]`; a function value goes through `map`/`filter`); `Bytes` is `bytes`; `DateTime` is",
     "`datetime.datetime` (aware in UTC when built with `DateTime.utc`), `Duration` is `datetime.timedelta`; `Regex` is",
     "`re.compile` through `_regex`, which also writes `(?<name>...)` as `(?P<name>...)`; `Match` is `re.Match`;",
     "`Error(message)` is `Exception(message)` and `e.message` is `str(e)`; a map read `m[k]` is `m.get(k)` (`None`",
     "when the key is absent, as [library.md](../../../../docs/07-reference/library.md) §3 says; `m[k] = v` stays an index). `x!` is `_sure(x)` (an assertion pyright",
     "understands), `print` goes through `_print` (`true`, `false` and `null` as Nuclear prints them; its named arguments are",
     "Python's: `print(line, flush = true)` is `_print(line, flush=True)`), `round` is half",
-    "away from zero; `toInt`, `toDouble`, `indexOf` on lists, `remove`, `groupBy`, `toRadix`, `toIso`, `Json.encode`",
-    "(compact, models through `model_dump` or `vars`) are helpers written once per file. `math`, `json`, `re`,"
+    "away from zero; `toInt`, `toDouble`, `indexOf` on lists, `remove`, `groupBy`, `toRadix`, `toIso`, `Json.encode`"
    ],
    "agents": false,
    "sources": [
@@ -5803,13 +5854,14 @@
    "id": "doc:nuclearlang/dialects/typescript/AGENTS.md#folders",
    "type": "readme",
    "title": "The `typescript` dialect — Folders",
-   "summary": "user texts, checked by tools and embedded in the `nuclear` binary.",
+   "summary": "monitor's runtime of a project built with `--monitor`: Node.js and the browser).",
    "body": [
     "- `dialect.toml`: `[options]`, `[syntax]`, `[types]`, `[operators]`, global names, `[functions]`, `[modifiers]`.",
     "- `keywords.toml`: TypeScript's reserved words and how each is produced from Nuclear.",
     "- `library.toml`: Nuclear's standard library written in TypeScript (one template per member).",
     "- `docs.toml`: what the editor shows for each header word.",
-    "- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (JSDoc).",
+    "- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (JSDoc), `monitor.tpl` (the",
+    "  monitor's runtime of a project built with `--monitor`: Node.js and the browser).",
     "- `frameworks/nestjs/`, `frameworks/react/`: the framework dialects (`dialect.toml`, `docs.toml`, `templates/`).",
     "- `defs/<package>/<version>/`: type definitions. Generated.",
     "- `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and",
@@ -7262,7 +7314,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/brief/typescript.md#dialect-typescript-brief.1ebd97",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/brief/typescript.md#dialect-typescript-brief.ad613b",
    "type": "spec",
    "title": "Dialect `typescript` brief",
    "summary": "export async function loadUser(id: number): Promise<string> { const response = await fetch(`/users/${id}`); const json = await response.json(); return json.name ??",
@@ -7273,6 +7325,10 @@
     "  return json.name ?? 'unknown';",
     "}",
     "```",
+    "",
+    "`==` is `===`, except between lists, maps or sets: Nuclear compares what they hold (`[1, 2] == [1, 2]` is `true`,",
+    "written `_equals(a, b)`), TypeScript whether they are the same object. When porting TypeScript, an `===` between arrays",
+    "or maps that relied on being the same object is a different check in Nuclear; a value typed `any` keeps `===`.",
     "",
     "Bitwise operators work on 32-bit integers (JavaScript); use `BigInt(...)` for 64 bits. `%` keeps the dividend's sign."
    ],
@@ -7358,11 +7414,15 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.0ec032",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.030c10",
    "type": "spec",
    "title": "Dialect `typescript` — 2. Translation of the base rules",
-   "summary": "Global names that are not declared: `console`, `fetch`, `JSON`, `Math`, `Date`, `Promise`, `setTimeout`, `parseInt`... (full list in `[names] globals` of `nuclearlang/dialects/typescript/dialect.toml`).",
+   "summary": "2. Translation of the base rules",
    "body": [
+    "| Method that overrides one of a base class of the file | `override` (not in interface methods) |",
+    "| `[a, ...rest] = xs` / `{ a, \"k\": b } = m` | `const [a, ...rest] = xs;` / `const { a, 'k': b } = m;` (`_` → hole) |",
+    "| Existing names in a pattern | `([a, b] = [b, a]);` |",
+    "| `Result<E, T>`, `Ok(x)`, `Err(e)` | class `Result<E, T>` and functions `Ok(x)` / `Err(e)` of the runtime (`templates/result.tpl`) |",
     "| `x = call()` returning `Result`, in a `Result` function | `const xResult = call(); if (xResult.isErr) return Err(xResult.error); const x = xResult.value;` |",
     "| `.ok(cb)` / `.error(cb)` that transform | `.andThen(cb)` / `.orElse(cb)` (`.map` / `.getOrElse` when the callback returns a plain value) |",
     "| `.ok(cb)` / `.error(cb)` that observe | `.inspect(cb)` / `.inspectErr(cb)` |",
@@ -7374,14 +7434,7 @@
     "| Cascade `x = T()` + `..a = 1` | `const x = new T(); x.a = 1;`; inside an expression, `(($) => { $.a = 1; return $; })(new T())` |",
     "| `print(x)` | `console.log(x)` |",
     "| `now()` | `new Date()` |",
-    "| Types `int`, `double`, `number` | `number` |",
-    "| `<K, V>` | `Record<K, V>` |",
-    "| `T?` | `T \\| null` |",
-    "| `any`, `dynamic` | `any` |",
-    "| Inheritance | a single base with `:`; interfaces go with `>` or are detected |",
-    "",
-    "Global names that are not declared: `console`, `fetch`, `JSON`, `Math`, `Date`, `Promise`, `setTimeout`,",
-    "`parseInt`... (full list in `[names] globals` of `nuclearlang/dialects/typescript/dialect.toml`)."
+    "| Types `int`, `double`, `number` | `number` |"
    ],
    "agents": false,
    "sources": [
@@ -7394,38 +7447,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.acf479",
-   "type": "spec",
-   "title": "Dialect `typescript` — 2. Translation of the base rules",
-   "summary": "2. Translation of the base rules",
-   "body": [
-    "| `a in list` | `list.includes(a)`; a map literal or `<K, V>`: `key in map`; a `Map` object: `map.has(key)` |",
-    "| `for k, v in m` | `Object.entries(m)`; a `Map` object is iterated directly |",
-    "| `a ** b`, `a ~/ b` | `a ** b` (parenthesized under `-`: `-(a ** b)`), `Math.trunc(a / b)` |",
-    "| `& \\| ^ ^x << >> >>>` | `& \\| ^ ~x << >> >>>` (32-bit); a bitwise operand of a comparison gets parentheses |",
-    "| `(5).toString(2)` | the same (`int_member_parens`: `5.` would start a decimal) |",
-    "| Range `a..b` as a value | `Array.from({ length: b - a }, (_, i) => a + i)` |",
-    "| `for k, v in map` | `for (const [k, v] of Object.entries(map))` |",
-    "| `match` | an `if / else if / else` chain (or ternaries when it is the value of an expression) |",
-    "| `throw Error(...)` | `throw new Error(...)` |",
-    "| Constructor of an inheriting module | `super(...)` first; without it, `super();`. A parameter named like a member of the base is a plain parameter (`name: string`), not a new field |",
-    "| Method that overrides one of a base class of the file | `override` (not in interface methods) |",
-    "| `[a, ...rest] = xs` / `{ a, \"k\": b } = m` | `const [a, ...rest] = xs;` / `const { a, 'k': b } = m;` (`_` → hole) |",
-    "| Existing names in a pattern | `([a, b] = [b, a]);` |",
-    "| `Result<E, T>`, `Ok(x)`, `Err(e)` | class `Result<E, T>` and functions `Ok(x)` / `Err(e)` of the runtime (`templates/result.tpl`) |"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/typescript/docs/07-reference/typescript.md"
-   ],
-   "meta": {
-    "section": "03-compiler-targets",
-    "repo": "nuclearlang",
-    "dialect": "typescript"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.ec558d",
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.524373",
    "type": "spec",
    "title": "Dialect `typescript` — 2. Translation of the base rules",
    "summary": "2. Translation of the base rules",
@@ -7434,6 +7456,9 @@
     "|---|---|",
     "| Declaration | `export` before functions, classes, interfaces and enums |",
     "| Variable that is not reassigned / that is reassigned | `const` / `let` |",
+    "| `a == b` of two lists, maps or sets | `_equals(a, b)` (what they hold; `===` compares the objects) |",
+    "| `print(x)`, `\"${x}\"` of a decimal or of a value that may be missing | `_double(x)` (`2.0`, not `2`), `(x ?? null)` (`null`, not `undefined`) |",
+    "| A list of nullable values or of functions (`int?[]`, `(() => int)[]`) | `(number \\| null)[]`, `(() => number)[]` |",
     "| A constant at the top of a file (`PORTS = { ... }`) | `export const PORTS = { ... };` (the other files of a project import it) |",
     "| `x = if ...` with multi-line branches | `let x;` and an `if` that assigns in each branch |",
     "| Members of the module | `this.` |",
@@ -7444,12 +7469,63 @@
     "| Constructor parameters | `public` constructor parameters |",
     "| Attribute without a value nor `?` | `name!: string` |",
     "| `async` (with `~`) | `async` and the return `T` as `Promise<T>` |",
-    "| `name() = Module.method` (alias) | a method with `method`'s signature that returns `new Module().method(...)` (`Module.method(...)` if it is `static`) |",
+    "| `name() = Module.method` (alias) | a method with `method`'s signature that returns `new Module().method(...)` (`Module.method(...)` if it is `static`) |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/typescript.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.74f0fd",
+   "type": "spec",
+   "title": "Dialect `typescript` — 2. Translation of the base rules",
+   "summary": "2. Translation of the base rules",
+   "body": [
     "| Text | single quotes; with interpolation, backticks |",
     "| `==` / `!=` | `===` / `!==` |",
     "| `and` `or` `not` | `&&` `\\|\\|` `!` |",
     "| `x is T` | `x instanceof T`; basic types: `x is string` → `typeof x === 'string'`, `x is int` → `Number.isInteger(x)`, `x is double` → `typeof x === 'number'`, `x is T[]` → `Array.isArray(x)` |",
-    "| `x as T` / `x!` | the same |"
+    "| `x as T` / `x!` | the same |",
+    "| `a in list` | `list.includes(a)`; a map literal or `<K, V>`: `key in map`; a `Map` object: `map.has(key)` |",
+    "| `for k, v in m` | `Object.entries(m)`; a `Map` object is iterated directly |",
+    "| `a ** b`, `a ~/ b` | `a ** b` (parenthesized under `-`: `-(a ** b)`), `Math.trunc(a / b)` |",
+    "| `& \\| ^ ^x << >> >>>` | `& \\| ^ ~x << >> >>>` (32-bit); a bitwise operand of a comparison gets parentheses |",
+    "| `(5).toString(2)` | the same (`int_member_parens`: `5.` would start a decimal) |",
+    "| Range `a..b` as a value | `Array.from({ length: b - a }, (_, i) => a + i)` |",
+    "| `for k, v in map` | `for (const [k, v] of Object.entries(map))` |",
+    "| `match` | an `if / else if / else` chain (or ternaries when it is the value of an expression) |",
+    "| `throw Error(...)` | `throw new Error(...)` |",
+    "| Constructor of an inheriting module | `super(...)` first; without it, `super();`. A parameter named like a member of the base is a plain parameter (`name: string`), not a new field |"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/typescript/docs/07-reference/typescript.md"
+   ],
+   "meta": {
+    "section": "03-compiler-targets",
+    "repo": "nuclearlang",
+    "dialect": "typescript"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/typescript/docs/07-reference/typescript.md#2-translation-of-the-base-rules.a0a73f",
+   "type": "spec",
+   "title": "Dialect `typescript` — 2. Translation of the base rules",
+   "summary": "Global names that are not declared: `console`, `fetch`, `JSON`, `Math`, `Date`, `Promise`, `setTimeout`, `parseInt`... (full list in `[names] globals` of `nuclearlang/dialects/typescript/dialect.toml`).",
+   "body": [
+    "| `<K, V>` | `Record<K, V>` |",
+    "| `T?` | `T \\| null` |",
+    "| `any`, `dynamic` | `any` |",
+    "| Inheritance | a single base with `:`; interfaces go with `>` or are detected |",
+    "",
+    "Global names that are not declared: `console`, `fetch`, `JSON`, `Math`, `Date`, `Promise`, `setTimeout`,",
+    "`parseInt`... (full list in `[names] globals` of `nuclearlang/dialects/typescript/dialect.toml`)."
    ],
    "agents": false,
    "sources": [

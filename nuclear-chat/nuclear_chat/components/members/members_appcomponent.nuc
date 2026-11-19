@@ -1,0 +1,4 @@
+// What the rest of the app sees of the members: a message answered by who it brings in, a question answered.
+appcomponent MembersAppComponent
+  answer() = AnswerMessage.exec
+  reply() = AnswerQuestion.exec

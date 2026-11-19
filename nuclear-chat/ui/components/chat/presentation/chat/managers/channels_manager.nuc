@@ -1,0 +1,35 @@
+// The sidebar's channels with their unread counts: read again when the service says a message or a channel came;
+// the open channel is marked read as its messages arrive; the agent a direct message is answered by, chosen.
+@stateModel(ChannelsState)
+statemanager ChannelsManager
+  (channels: ChannelsComponent, events: EventsComponent)
+  workspace: string = ""
+  open: string = ""
+
+  start(id: string, channel: string)
+    workspace = id
+    open = channel
+    listen(events.watchEvents(workspace), (e) => changed(e))
+    read(channel)
+
+  changed(e: ChatEvent)
+    if e.workspace == workspace and (e.type == "message" or e.type == "channels" or e.type == "agent.changed")
+      if e.channel == open
+        read(open)
+      else
+        load()
+
+  // The user opened a channel: it is read now.
+  read(channel: string)
+    open = channel
+    ~channels.readChannel(workspace, channel)
+    load()
+
+  // Who answers a direct message: one of its member's agents and its model (empty: the host's default).
+  chooseAgent(channel: string, agent: string, model: string)
+    ~channels.chooseAgent(workspace, channel, AgentChoice(agent = agent, model = model))
+    load()
+
+  @state(ChannelsState.ready)
+  load() Result<NuclearChatError, Channel[]>
+    ~channels.listChannels(workspace)

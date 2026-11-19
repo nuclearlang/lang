@@ -4,6 +4,7 @@
     "DeveloperController": {
       "component": "developer",
       "description": "The local developer over HTTP (127.0.0.1:7879): POST /developer/code, /test, /security, /document, /chat, /diagnose, /analyze, /plan and /accept. Each request runs on a thread of its own, so nothing of one request reaches the next.",
+      "guards": [],
       "path": "developer",
       "routes": [
         {
@@ -126,10 +127,15 @@
           "returns": "Analysis",
           "verb": "post"
         }
+      ],
+      "transports": [
+        "http"
       ]
     }
   },
   "dialect": "fastapi",
+  "events": {},
+  "guards": [],
   "models": {
     "Analysis": {
       "description": "The strategy of a request (ADR-developer-0001) and what it asks of the run: the stages that run, the generator calls (the arguments of `nuclear gen`, each accepted by its dry run), the pieces the tools already gave (a piece with `code` is written as it is) and the facts the request lacks.",
@@ -205,6 +211,9 @@
         {
           "default": "backend",
           "name": "platform",
+          "rules": {
+            "pattern": "^(backend|mobile|web)$"
+          },
           "type": "string"
         },
         {
@@ -236,6 +245,9 @@
           "default": "backend",
           "description": "backend, mobile or web",
           "name": "platform",
+          "rules": {
+            "pattern": "^(backend|mobile|web)$"
+          },
           "type": "string"
         },
         {
@@ -299,6 +311,9 @@
           "default": "backend",
           "description": "backend, mobile or web: the agents write Nuclear for a platform, never for a dialect",
           "name": "platform",
+          "rules": {
+            "pattern": "^(backend|mobile|web)$"
+          },
           "type": "string"
         },
         {
@@ -346,6 +361,7 @@
           "type": "string"
         },
         {
+          "default": [],
           "name": "limits",
           "type": "string[]"
         }
@@ -366,6 +382,9 @@
           "default": "backend",
           "description": "backend, mobile or web: the agents write Nuclear for a platform, never for a dialect",
           "name": "platform",
+          "rules": {
+            "pattern": "^(backend|mobile|web)$"
+          },
           "type": "string"
         },
         {
@@ -402,5 +421,6 @@
   },
   "platform": "backend",
   "repositories": {},
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "webSocket": null
 }

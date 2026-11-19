@@ -1,0 +1,70 @@
+{
+  "id": "list-characters",
+  "root": "/home/someone/projects/app",
+  "project": "app",
+  "platform": "mobile",
+  "dialect": "flutter",
+  "spec": {
+    "id": "list-characters",
+    "title": "List the characters",
+    "useCase": "feature",
+    "description": "A screen that lists the characters.\n\nGET https://example.com/api/character",
+    "criteria": ["the list shows each character's name", "an empty answer shows no row"],
+    "context": ["AGENTS.md"],
+    "source": { "kind": "local" },
+    "lead": "claude",
+    "pieces": [{ "path": "components/characters/presentation/characters_screen.nuc", "kind": "screen", "task": "list the characters", "by": "planner" }],
+    "resources": ["characters Character --screen characters"]
+  },
+  "status": "failed",
+  "created": 1760000000000,
+  "ended": 1760000300000,
+  "costUsd": 0.42,
+  "engine": 2,
+  "notes": "The screen was written; its test fails on an empty answer.",
+  "analysis": {
+    "strategy": "strategy:usecase",
+    "title": "Strategy: a use case",
+    "why": "a GET line and a screen",
+    "mode": "write",
+    "stages": ["generate", "plan", "test", "code", "verify", "security", "artifacts", "deploy"],
+    "lead": "claude",
+    "source": "plan",
+    "generate": [["resource", "characters", "Character", "--screen", "characters"]],
+    "pieces": [],
+    "questions": [],
+    "limits": [],
+    "report": "One resource and its screen."
+  },
+  "diagnosis": "kind: test\naction: repair the screen\nthe empty answer is not handled",
+  "stages": [
+    { "id": "spec", "title": "Specification", "about": "The spec you wrote or imported, with its acceptance criteria.", "actors": ["you", "planner"], "status": "passed", "started": 1760000000100, "ended": 1760000010000, "steps": [
+      { "id": "spec-1", "title": "Spec written to specs/list-characters/spec.md", "actor": "you", "status": "passed", "started": 1760000000100, "ended": 1760000000200, "summary": "2 acceptance criteria", "log": "", "trace": [] },
+      { "id": "spec-2", "title": "Analysis of the request", "actor": "planner", "status": "passed", "started": 1760000000300, "ended": 1760000010000, "summary": "strategy: a use case", "log": "One resource and its screen.", "trace": [{ "step": "recall", "detail": "3 cards" }], "decisions": [{ "what": "strategy usecase", "why": "a GET line and a screen" }] }
+    ] },
+    { "id": "generate", "title": "Generate", "about": "What the generators write before any agent.", "actors": ["shell"], "status": "passed", "started": 1760000010100, "ended": 1760000020000, "steps": [
+      { "id": "generate-1", "title": "nuclear gen resource characters Character --screen characters", "actor": "shell", "status": "passed", "started": 1760000010100, "ended": 1760000020000, "summary": "4 files", "log": "wrote 4 files", "trace": [], "files": ["components/characters/data/models/character.nuc", "components/characters/data/character_repository.nuc", "components/characters/domain/list_characters.nuc", "components/characters/presentation/characters_screen.nuc"] }
+    ] },
+    { "id": "plan", "title": "Plan", "about": "The pieces left, each a file and its task.", "actors": ["claude", "planner"], "status": "passed", "started": 1760000020100, "ended": 1760000040000, "steps": [
+      { "id": "plan-1", "title": "Plan by Claude", "actor": "claude", "status": "passed", "started": 1760000020100, "ended": 1760000040000, "summary": "1 piece", "log": "The screen.", "trace": [], "tool": "developer_plan", "input": "{\"spec\": \"list-characters\"}" }
+    ] },
+    { "id": "test", "title": "Tests first", "about": "The tests of the acceptance criteria.", "actors": ["tester"], "status": "passed", "started": 1760000040100, "ended": 1760000060000, "steps": [
+      { "id": "test-1", "title": "test/characters_screen_test.nuc", "actor": "tester", "status": "passed", "started": 1760000040100, "ended": 1760000060000, "summary": "2 tests", "log": "", "trace": [], "file": "test/characters_screen_test.nuc", "code": "testEmpty() void\n" }
+    ] },
+    { "id": "code", "title": "Code", "about": "Each piece written by the local developer.", "actors": ["coder"], "status": "passed", "started": 1760000060100, "ended": 1760000120000, "steps": [
+      { "id": "code-1", "title": "components/characters/presentation/characters_screen.nuc", "actor": "coder", "status": "passed", "started": 1760000060100, "ended": 1760000120000, "summary": "written, nuclear check passed", "log": "", "trace": [{ "step": "write", "detail": "attempt 1" }], "file": "components/characters/presentation/characters_screen.nuc", "code": "CharactersScreen\n" }
+    ] },
+    { "id": "verify", "title": "Verify", "about": "The project's build and tests.", "actors": ["shell", "diagnoser"], "status": "failed", "started": 1760000120100, "ended": 1760000300000, "steps": [
+      { "id": "verify-1", "title": "nuclear test .", "actor": "shell", "status": "failed", "started": 1760000120100, "ended": 1760000290000, "summary": "1 test failed", "log": "FAILED testEmpty", "trace": [], "agent": "The test testEmpty expects no row; the screen shows a row with an empty name." },
+      { "id": "verify-2", "title": "Why it failed", "actor": "diagnoser", "status": "skipped", "started": 1760000290100, "ended": 1760000300000, "summary": "the empty answer is not handled", "log": "", "trace": [] }
+    ] },
+    { "id": "security", "title": "Security", "about": "A review of the new files.", "actors": ["security"], "status": "pending", "steps": [] },
+    { "id": "artifacts", "title": "Artifacts", "about": "The builds the project gives.", "actors": ["shell"], "status": "pending", "steps": [] },
+    { "id": "deploy", "title": "Deploy", "about": "The project's deploy commands.", "actors": ["shell"], "status": "pending", "steps": [] }
+  ],
+  "previous": [{ "at": 1759990000000, "from": "spec", "status": "failed", "stages": [], "why": "from scratch", "undone": [] }],
+  "acceptance": [{ "criterion": "the list shows each character's name", "met": true, "evidence": "testNames passes" }, { "criterion": "an empty answer shows no row", "met": false, "evidence": "testEmpty fails" }],
+  "owner": { "pid": 4242, "host": "old-laptop", "beat": 1760000300000 },
+  "writes": [{ "path": "components/characters/presentation/characters_screen.nuc", "step": "code-1", "before": null, "at": 1760000120000, "after": "0000000000000000000000000000000000000000" }],
+  "interrupted": [{ "at": 1759995000000, "stage": "code", "step": "components/characters/presentation/characters_screen.nuc", "undone": [] }]
+}

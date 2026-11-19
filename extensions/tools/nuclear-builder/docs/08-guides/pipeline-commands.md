@@ -36,3 +36,27 @@ nuclear-builder ci [stage...]     # runs those server stages where you are
 ```
 
 Run it to see what the server will see before you push.
+
+## The software factory's line
+
+`nuclear-builder run` (in a terminal, a CI job or the JetBrains window) runs the software factory: the spec through
+Analysis, Design, Tests first, Code, Quality and Delivery, each station worked by a member of its role in your team (the one `--assign` names, else the role's first)
+(`nuclear-builder team list`). The same `.nuclear/builder.json` holds the rest of the line:
+
+```json
+{
+  "team": "night-shift",
+  "gates": ["analysis", "design", "delivery"],
+  "stations": ["analysis", "design", "tests", "code", "quality", "delivery"],
+  "forceConfirm": false,
+  "prices": { "openai/<model>": [1.25, 10] }
+}
+```
+
+- A gate stops the run for you: approve, ask for a change, or stop; `nuclear-builder run --resume <id>` asks again.
+- Paid providers (an agent's command line, an API model) are confirmed twice before the first call, or in advance
+  with `--confirm-spending`, which `"forceConfirm": true` refuses. The team's budget (5 USD by default) holds for
+  the whole run.
+- QA's plan is the run's checks: `nuclear-builder checks <id>` lists them; `add --title … --station …`, `on`/`off`
+  and `mark <check> passed|failed` change them.
+- DevOps, at the Delivery station, opens the pull request only when you approve it, from the branch `factory/<id>`, with your git identity.

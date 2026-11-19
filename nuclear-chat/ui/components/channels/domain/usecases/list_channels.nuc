@@ -1,0 +1,4 @@
+// What ChannelsRepository.list answers, for the screens of channels.
+usecase ListChannels(repository: ChannelsRepository)
+  exec(workspace: string) Result<NuclearChatError, Channel[]>
+    ~repository.list(workspace)

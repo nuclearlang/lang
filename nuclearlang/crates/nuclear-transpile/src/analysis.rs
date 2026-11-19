@@ -211,6 +211,30 @@ pub fn reassigned_after(stmts: &[Stmt]) -> HashSet<String> {
     out
 }
 
+/// The names the functions and methods of a file assign (`counter = counter + 1` in `bump()`): a variable of the
+/// file among them is mutable.
+pub fn assigned_in_functions(f: &File) -> HashSet<String> {
+    let mut out = HashSet::new();
+    let mut body = |d: &Decl| {
+        if let Body::Block(b) = &d.body {
+            out.extend(assigned_in(&b.stmts));
+        }
+    };
+    for item in &f.items {
+        if let Item::Decl(d) = item {
+            body(d);
+            if let Body::Members(members) = &d.body {
+                for m in members {
+                    if let Member::Method(md) = m {
+                        body(md);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
 fn assigned_in(stmts: &[Stmt]) -> HashSet<String> {
     let mut out = HashSet::new();
     walk_stmts(stmts, &mut |st| {

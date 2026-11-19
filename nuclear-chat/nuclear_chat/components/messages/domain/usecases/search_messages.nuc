@@ -1,0 +1,5 @@
+// The messages of every channel of a workspace that hold every word, newest first.
+usecase SearchMessages(store: MessageStore)
+  exec(workspace: string, words: string) Result<Error, Found[]>
+    ws = store.workspace(workspace)
+    Ok(store.search(ws, words))

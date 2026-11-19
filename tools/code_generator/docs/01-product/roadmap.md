@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [nuclear-synapsis-framework/docs/08-guides/generators.md]
 ---
 # Roadmap of the code generator
@@ -23,6 +23,16 @@ The pending work of `nuclear gen` and `nuclear make`. A done item is deleted.
 - The fixed-segment-first route order of nestjs with a `@Controller` that Nest scans before `configureApp`.
 
 ## Pending
+
+- **Found making Nuclear Chat's service (spec 013, 2026-11-18):**
+  - `nuclear make component <c>` is listed by `nuclear help` but refused in a backend project (its kinds have no
+    `component`): each piece was made with `make appcomponent|usecase|service|model|controller|listener`;
+  - `gen usecase --calls` takes only `<Repository>.<method>`: a use case that only calls a service's method is
+    written by hand;
+  - `gen resource --source rest:<url>` adds its `Http(...)` after a one-line `connections: Connection[] = []`, so
+    the config no longer parses (a list written on two lines works); it guesses the path (`tenor`) and a `name`
+    parameter, and always writes a controller with routes, which would have published a third-party API (Tenor)
+    without the project's consent: Nuclear Chat deleted the routes and rewrote the repositories' methods.
 
 - **Found building the website and the onboardings (2026-11-16):**
   - a generated screen keys its list by `item.id` even when the model has no `id` (a resource from JSON whose

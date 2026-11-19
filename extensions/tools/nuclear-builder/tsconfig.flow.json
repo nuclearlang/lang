@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": { "*": ["../../vscode/node_modules/@types/*", "../../vscode/node_modules/*"] },
+    "typeRoots": ["../../vscode/node_modules/@types"],
+    "types": ["node"]
+  },
+  "files": ["src/flow.tsx"]
+}

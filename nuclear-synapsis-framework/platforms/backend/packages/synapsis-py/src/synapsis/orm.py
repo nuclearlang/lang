@@ -11,10 +11,13 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any, ClassVar
 
+from pydantic.alias_generators import to_camel
 from pydantic import BaseModel, SerializerFunctionWrapHandler, create_model, model_serializer
 from sqlalchemy import Column, DateTime, ForeignKey, ForeignKeyConstraint, String, Table, func, inspect, text
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, RelationshipProperty, mapped_column, relationship
+
+from .models import WIRE
 
 __all__ = [
     "Entity", "Mapped", "primary", "column", "created", "updated", "schema_of",
@@ -172,8 +175,10 @@ def many_to_many(owner: str, field: str, target: str, inverse: str | None = None
 
 
 class EntitySchema(BaseModel):
-    """The pydantic model of an entity: a relation that was not loaded is left out of the answer (not null)."""
+    """The pydantic model of an entity: a relation that was not loaded is left out of the answer (not null); its JSON
+    has Nuclear's names (`projectId`, synapsis.models)."""
 
+    model_config = WIRE
     relations: ClassVar[frozenset[str]] = frozenset()
 
     @model_serializer(mode="wrap")
@@ -181,7 +186,7 @@ class EntitySchema(BaseModel):
         data = handler(self)
         if isinstance(data, dict):
             for r in self.relations - self.model_fields_set:
-                data.pop(r, None)  # type: ignore[union-attr]
+                data.pop(to_camel(r), None)  # type: ignore[union-attr]
         return data
 
 

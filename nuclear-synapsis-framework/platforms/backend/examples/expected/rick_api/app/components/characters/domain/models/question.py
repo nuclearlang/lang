@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from synapsis import Model
 
 
-class Question(BaseModel):
+class Question(Model):
     text: str
 
 
-class Answer(BaseModel):
+class Answer(Model):
     text: str

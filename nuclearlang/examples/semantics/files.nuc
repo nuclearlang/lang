@@ -1,0 +1,13 @@
+// A function changes a variable of its file; a map's value is updated in place.
+counter = 0
+TOTALS: <string, int> = { "a": 1 }
+
+bump() void
+  counter = counter + 1
+  TOTALS["a"] += 10
+
+main() void
+  bump()
+  bump()
+  maybe: int?[] = [1, null]
+  print(counter, TOTALS["a"], maybe.length)

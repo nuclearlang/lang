@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [../../../docs/03-adr/0002-the-nuclear-workspace.md, client.md, ai-services.md]
 ---
 # The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`)
@@ -21,17 +21,32 @@ The container `nuclear` (activity bar) has one view, the webview view `nuclear.w
 
 ## The tools of the strip
 
-| id | Label | Key | State | Project |
-|---|---|---|---|---|
-| `http-connections` | HTTP Connections | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |
-| `devices` | Devices | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
-| `builder` | Nuclear Builder | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |
-| `designer` | UI designer | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |
-| `docs` | AI documenter | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |
-| `atlas` | Nuclear Atlas | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |
-| `settings` | Settings and integrations | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |
+In this order: the AI factory, the tools of a running project, the ones not built yet, the settings last.
 
-A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do.
+| id | Label | Word | Key | State | Project |
+|---|---|---|---|---|---|
+| `builder` | Nuclear Builder | BUILD | `Ctrl+Alt+P` | built | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) |
+| `teams` | Your software company | TEAMS | `Ctrl+Alt+E` | built: `command` `nuclear.builder.teams` | [`nuclear-builder`](../../../tools/nuclear-builder/AGENTS.md) (the company screen) |
+| `atlas` | Nuclear Atlas | ATLAS | `Ctrl+Alt+A` | built | [`nuclear-atlas`](../../../tools/nuclear-atlas/AGENTS.md) |
+| `http-connections` | HTTP Connections | HTTP | `Ctrl+Alt+H` | built | [`nuclear-http-connections`](../../../tools/nuclear-http-connections/AGENTS.md) |
+| `devices` | Devices | DEVICE | `Ctrl+Alt+V` | built | [`nuclear-device-manager`](../../../tools/nuclear-device-manager/AGENTS.md) |
+| `monitor` | Nuclear Monitor | MONITOR | `Ctrl+Alt+F` | built: `command` `nuclear.monitor.open` | [`nuclear-monitor`](../../../tools/nuclear-monitor/AGENTS.md) |
+| `designer` | UI designer | UI | `Ctrl+Alt+D` | a template page | [`nuclear-ui-designer`](../../../tools/nuclear-ui-designer/AGENTS.md) |
+| `docs` | AI documenter | DOCS | `Ctrl+Alt+M` | a template page | [`nuclear-documentor`](../../../tools/nuclear-documentor/AGENTS.md) |
+| `settings` | Settings and integrations | SETUP | `Ctrl+Alt+S` | built | [ai-services.md](ai-services.md) |
+
+A tool with a `planned` list is a template: `ToolPanel` opens its page, which says what the tool will do. A tool
+with a `command` opens its own page with that command when its tab is entered (`switchTabs`).
+
+Each tool is drawn as its icon over its word (`short`, translated). The icons are `TOOL_ICONS` of `workspace.ts`: a
+24 px grid, a 1.6 line with round joins (the HUD's line), one meaning each (a factory for the Builder, three people
+for the company, a chat bubble with a spark for Atlas, a plug with its signal both ways for HTTP Connections, a
+phone for the devices, a gauge for the Monitor, a pen's nib for the designer, a page for the documenter, a gear for
+the settings), in its colour (`--tc`: the theme's `nuclearHttpConnections.*` colours, VS Code's `charts.*` when the
+theme has none). A template's icon is dashed and faint. The open tool has a HUD frame (two corner brackets), a
+glowing bar on its left and its word in its colour. Hovering or focusing a tool shows its card beside the strip
+(`#tip`: its name, its key, *not built yet*, its notices); the tools are buttons of the keyboard (Tab, Enter, Space)
+with an `aria-label` of the name and the key.
 
 ## The pane of each tab
 
@@ -40,13 +55,25 @@ A tool with a `planned` list is a template: `ToolPanel` opens its page, which sa
   (`icon-themes/<slug>-icon-theme.json`, the user's variant), with VS Code's lookup: `fileNames` → the longest
   `fileExtensions` → `file`; `folderNames[Expanded]` → `folder[Expanded]`. The icons are webview uris
   (`localResourceRoots`: icons and icon-themes). `open` → `vscode.open`; a `FileSystemWatcher` on the root posts
-  `refreshDir`.
+  `refreshDirs` (the folders changed, at most every 200 ms: a build writes hundreds of files). It looks and moves
+  like VS Code's explorer: 22 px rows, a twistie that turns, indent guides on hover (`tree.indentGuidesStroke`), the
+  list's hover, selection (active when the tree has the focus, inactive otherwise) and focus outline; the keyboard
+  walks it (↑ ↓ Home End, → opens or goes in, ← closes or goes up, Enter and Space open). The active editor's file is
+  revealed (`reveal`: its folders opened, the file selected). The indent is the explorer's default (8 px), not the
+  user's `workbench.tree.indent`.
 - **`tool:http-connections`**: the environment bar (change / edit / ↻) and `HttpModel.tree()` drawn with chevrons, inline
   `GLYPHS` and the `nuclearHttpConnections.*` colors (the collapsed ids are kept in the webview). An endpoint →
-  `nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`.
+  `nuclear.httpConnections.open`; a node's button → `updateContracts` / `addOpenApi`, the others (`addSocket`, and
+  `open` of a node's protocol badge, `WS`) → `HttpModel.runAction`.
 - **`tool:devices`**: `devices()` of `tools/nuclear-device-manager/src/mobile-device.ts` (title, a status dot) with *▷ run* (`nuclear.runOnDevice(id, root)`)
   and *+ New device* (a quick pick of `PRESETS` → `nuclear.openDevice(preset)`).
-- **The other tools**: a line about the tool and, for `agent`, `builder` and `settings`, the list of their notices.
+- **`tool:builder`**: *+ New spec*, the Builder's specs by component and layer and its runs as an accordion
+  (`builderSidebar()` of `tools/nuclear-builder/src/panel.ts`, drawn with `workbench.ts`'s `specTree` and `runOutline`
+  inlined; `sidebarChanged` sends `builderSidebar` messages, the tree redrawn in place). A click is a
+  `builder` message (`op`: `spec`, `run`, `node`, `new`) → `BuilderPanel.drive`, which opens the page and does it.
+- **The other tools**: a line about the tool.
+
+Under every pane, the list of every tool's notices (below, *Badges and notifications*).
 
 ## The actions of a project
 
@@ -70,7 +97,7 @@ shown by the context key `nuclear.platform` that `refresh()` sets, run by `actio
 
 ## Projects and the switch of tabs
 
-Projects = `findProjects()` (the workspace folders) + the roots saved in `globalState`
+Projects = `findProjects()` (the workspace folders) + the roots opened with *Open a Project* (`Ctrl+Alt+O`) in this folder, saved in `workspaceState` (`savedProjects.ts`): each folder's workspace shows only its own projects, never another folder's (before 0.63.0 they were kept in `globalState` for every folder; a folder keeps the ones inside it)
 `nuclear.workspace.projects` (opened with `openProject`, read by `projectAt`: the card, else `config.nuc` /
 `nuclear.toml` by regex).
 
@@ -91,7 +118,7 @@ Clicking a tab or an action posts a toast with its shortcut.
 
 Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode}`; `project`, `tool` and
 `action` without arguments show a quick pick. Keybindings in `package.json`: `Ctrl+1..9` the project tabs,
-`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+H/V/P/D/M/A/S`; the actions
+`Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/A/H/V/F/D/M/S`; the actions
 `Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web).
 
 `WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation when
@@ -108,7 +135,16 @@ id is in `nuclearMake` or its flag is true.
   allow: a config file gets no "new project", a `usecases` folder gets only "new use case".
 - `build/`, `node_modules/` and the files that make a project are protected: they get nothing.
 
-## Notices on the strip
+## Badges and notifications
 
-The workspace sets `WebviewView.badge` (the Nuclear icon of the activity bar), a count on the tab of `agent`,
-`builder` and `settings`, and the list in the tool's pane: [ai-services.md](ai-services.md).
+Every notice of the one system ([ai-services.md](ai-services.md)) reaches the column three ways:
+
+- `WebviewView.badge`: the unread count on the Nuclear icon of the activity bar.
+- A badge on the tool's icon of the strip: its unread count (`9+` above nine) in a small square framed and lit in
+  the tool's colour (`--tc`, the HUD's line), which pings twice when it appears (not with reduced motion); the
+  tool's `aria-label` and its card add the count (`newCount`). `atlas`: what members said to the user in Nuclear
+  Chat; `builder`: runs that wait for the user (a gate, the QA plan) or ended; `settings`: connections. Opening the
+  tool reads them (the badge clears).
+- The list at the bottom of the column (`#notes`, under every pane, at most 38 % of its height): every tool's
+  notices, newest first, the unread with a bar in their tool's colour; a click, Enter or Space posts `notice` →
+  `openNotice`, the same place as the pop-up's *Open*.

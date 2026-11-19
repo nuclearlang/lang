@@ -1,0 +1,20 @@
+// The last events of each workspace, numbered in the order they happened, for a client that reads them from where
+// it left off (`since`). The one place the chat's events pass through: spec 014's WebSocket transport delivers the
+// same events to subscribed clients.
+service EventLog
+  // the events a workspace keeps (the oldest go first)
+  limit: int = 1000
+  events: <string, ChatEvent[]> = {}
+  last: int = 0
+
+  add(workspace: string, type: string, channel: string, data: <string, any>) ChatEvent
+    last += 1
+    e = ChatEvent(n = last, workspace = workspace, type = type, channel = channel, data = data, at = DateTime.now().millis)
+    kept = events[workspace] ?? ([] as ChatEvent[])
+    kept.add(e)
+    events[workspace] = kept.length > limit ? kept.skip(kept.length - limit) : kept
+    e
+
+  // The events after `n` (0: every event kept).
+  since(workspace: string, n: int) ChatEvent[]
+    (events[workspace] ?? ([] as ChatEvent[])).filter((e) => e.n > n)

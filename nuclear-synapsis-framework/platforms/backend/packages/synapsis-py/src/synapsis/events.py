@@ -7,7 +7,7 @@ from __future__ import annotations
 import inspect
 import json
 import typing
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from pydantic import BaseModel
@@ -18,6 +18,8 @@ from .config import Kafka, Redis
 __all__ = ["consumer", "publish", "consume", "cache_get", "cache_set", "Listener"]
 
 _listeners: list[Listener] = []
+# who else receives every event this process publishes (the app's WebSocket, synapsis.sockets)
+sinks: list[Callable[[str, bytes], Awaitable[None]]] = []
 
 
 class Listener:
@@ -56,14 +58,17 @@ def _encode(value: Any) -> bytes:
 async def publish(topic: str, value: Any, connection_name: str = "default") -> None:
     """Sends `value` (a model, a dict, a text) to the topic: the Kafka connection, or the listeners of this process."""
     kafka = next((c for c in connections() if isinstance(c, Kafka) and c.name == connection_name), None)
+    raw = _encode(value)
+    # shortcut: with Kafka, a socket receives only what this process publishes; consume for sockets with several instances
+    for sink in sinks:
+        await sink(topic, raw)
     if kafka is None:
-        raw = _encode(value)
         for listener in _listeners:
             handler = _handlers(listener).get(topic)
             if handler is not None:
                 await deliver(handler, raw)
         return
-    await kafka.producer.send_and_wait(topic, _encode(value))
+    await kafka.producer.send_and_wait(topic, raw)
 
 
 async def consume(listener: object) -> None:

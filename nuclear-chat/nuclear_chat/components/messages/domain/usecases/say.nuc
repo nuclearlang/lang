@@ -1,0 +1,28 @@
+// What the user says in a channel: kept, told (an event `message`), and answered by who it brings in (the members
+// component listens to the event). `/poc <what>` is an action for the host (a proof of concept), kept as said.
+usecase Say(store: MessageStore, events: EventsAppComponent)
+  exec(workspace: string, channel: string, said: Said) Result<Error, Message>
+    ws = store.workspace(workspace)
+    store.channel(ws, channel)
+    if said.thread != null
+      store.message(ws, channel, said.thread!)
+    text = said.text.trim()
+    entry: <string, any> = { "id": newMessageId(), "at": DateTime.now().millis, "author": "you", "text": text, "links": linksOf(text) }
+    if said.thread != null
+      entry["thread"] = said.thread
+    store.append(ws, channel, entry)
+    // `said`: a new message of the user, which the members component answers
+    ~events.emit(ws.id, "message", channel, { "message": entry, "said": true })
+    poc = Regex(r"^/poc\s+(.+)$").find(text)
+    if poc != null
+      ~events.emit(ws.id, "action", channel, { "action": "poc", "what": poc![1] ?? "", "message": entry["id"], "thread": said.thread ?? entry["id"] })
+    Ok(messageOf(entry))
+
+// The factory's work a text names: the first `spec:<id>` and `run:<id>`.
+linksOf(text: string) <string, any>
+  found: <string, any> = {}
+  for kind in ["spec", "run"]
+    m = Regex("(?<![\\w])${kind}:([\\w.-]*\\w)").find(text)
+    if m != null
+      found[kind] = m![1]
+  found

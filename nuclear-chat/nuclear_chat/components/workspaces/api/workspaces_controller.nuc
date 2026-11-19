@@ -1,0 +1,10 @@
+// The workspaces API: a host registers its project when it starts, and reads it back.
+@controller("workspaces")
+controller WorkspacesController(workspaces: WorkspacesAppComponent)
+  @post()
+  register(input: NewWorkspace) Result<Error, Workspace>
+    workspaces.register(input)
+
+  @get("{id}")
+  one(id: string) Result<Error, Workspace>
+    workspaces.workspace(id)

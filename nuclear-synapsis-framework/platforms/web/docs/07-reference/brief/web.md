@@ -41,6 +41,10 @@ repository CharacterRepository
   @post(retry = 1)
   save(character: Character) Result<CharacterError, Character>
 
+  // what the server pushes (a WebSocket connection): a Stream, passed on by a use case without ~
+  @on("characters.saved")
+  saved() Stream<Character>
+
 // usecase (domain/usecases/): one method exec that returns Result; dependencies in the constructor line
 usecase GetPageUseCase
   (repository: CharacterRepository)
@@ -98,6 +102,9 @@ stateless CharacterListScreen
 - Attributes are the DOM's names: `className`, `onClick`, `onChange = (e) => ...`, `src`, `alt`; `children` is a
   text, an element or a list. A list of views passes `key`. No JSX, no `class =`, no positional text.
 - A view never omits `build() Element`; a `stateful` has fields, `initState()` and `setState(() => ...)`.
+- Real time is configuration: `WebSocket(url = "ws://host/ws")` instead of `Http(baseUrl = ...)` in `connections`;
+  the repositories stay as they are. A manager listens with `listen(characters.saved(), (c) => loadPage(1))`.
+- The same build also mounts in a host's page: `mount(element, { bridge, path })` (`npm run build:embed`).
 - Navigation by screen, never by address: `goTo(Screen, id = 7)`, `goBack()`. Inside a screen,
   `Manager.method()` calls its provider; elsewhere `inject<CharactersComponent>()`.
 - A statemanager has no generics (`statemanager M<S>` is N0218): the state model goes in `@stateModel(S)`.

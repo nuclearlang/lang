@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [testing.md, ../06-runbooks/evaluation.md, ../02-architecture/models.md]
 ---
 # The rounds of the evaluation
@@ -37,9 +37,16 @@ last round is `eval/results/REPORT.md`.
 | 20–21 | measured and discarded: the coder's guide without its general rules and shapes (only the kind's own rules, from the graph): it gained the state model and a graph and lost `replaceAll`, a renamed method and a service's shape | 39 / 39, 1 of 3 features | 14 / 17 |
 | 22 | the general rules stay in the guide and every rule of the kind comes from the graph (the two closest whole, the rest in a line); examples of the same kind only; the answer held also to the signatures the task writes | **43 / 39**: every task of one file passes (42 of 42), 1 of 3 features | **16 / 17** |
 | 23 | the answer held also to the signatures without parameters (`all()`) | **43 / 39**, 2 of 3 features | 16 / 17 |
+| 24 | the prompts moved into the skills of the roles of the software factory (`nuclear-agents/roles/`, spec 011), the same text byte for byte, on the knowledge base of revision 119 | 41 / 39, 2 of 3 features | 15 / 17 (`graph-summary`: the state left out; `web-manager`: `@state(BooksState.full)` for `loaded`) |
 
 ## What the rounds say
 
+- Round 24 changed no text a model reads (the 22 prompts the graph serves are the same, checked byte for byte), and
+  lost two tasks against round 23, each wrong the same way in four more tries: the knowledge base had changed in
+  between (revision 119). `web-manager` copies the state of the web examples that came in with the website
+  (`PageManager`, `ToolsManager`: `@state(...State.full)`) instead of the task's `loaded`; `graph-summary` writes the
+  graph of the example `Assistant` and leaves out the state the task declares. Both are pending in
+  [the roadmap](../01-product/roadmap.md).
 - On single files the local 3B coder passes every task of the bank in round 22 and all but one in round 23 (42 and
   41 of 42; Sonnet 36).
 - On features of several files written by the local agents alone it passes one or two of the three, depending on

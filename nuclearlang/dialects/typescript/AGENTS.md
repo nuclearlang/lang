@@ -51,7 +51,8 @@ What each check needs and proves: [docs/05-standards/testing.md](docs/05-standar
 - `keywords.toml`: TypeScript's reserved words and how each is produced from Nuclear.
 - `library.toml`: Nuclear's standard library written in TypeScript (one template per member).
 - `docs.toml`: what the editor shows for each header word.
-- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (JSDoc).
+- `templates/`: `result.tpl` (the `Result` runtime of a file), `doc_comment.tpl` (JSDoc), `monitor.tpl` (the
+  monitor's runtime of a project built with `--monitor`: Node.js and the browser).
 - `frameworks/nestjs/`, `frameworks/react/`: the framework dialects (`dialect.toml`, `docs.toml`, `templates/`).
 - `defs/<package>/<version>/`: type definitions. Generated.
 - `docs/`: the context documentation (map below). `docs/07-reference/` and `docs/08-guides/` are normative and

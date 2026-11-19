@@ -1,0 +1,156 @@
+use shutil
+use subprocess
+use httpx
+use pathlib{ Path }
+
+// The agents that can answer a conversation on this machine (spec 013 requirement 17): the local Nuclear Developer
+// (always offered: the fallback when nothing else is configured), each agent whose command is on the tools' PATH,
+// each API provider whose key the vault notes (`factory/vault.json`: the keyring is not opened for a list) and that
+// has a model with a price. `nuclear-builder agents --json`, the tool `agents_list`, and the general agent's choices
+// in the chat's host file (`chat-host`).
+
+AGENT_ORDER = ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "anthropic", "openai", "google", "openrouter"]
+
+AGENT_LABELS: <string, string> = { "nuclear-developer": "Nuclear Developer", "claude-code": "Claude Code", "opencode": "OpenCode", "codex": "Codex", "gemini-cli": "Gemini CLI", "anthropic": "Anthropic API", "openai": "OpenAI API", "google": "Google API", "openrouter": "OpenRouter API" }
+
+// Claude Code's aliases of its latest models; its own default when none is given.
+CLAUDE_MODELS = ["haiku", "sonnet", "opus"]
+
+// The model an API provider's chat starts with, when it has a price.
+API_DEFAULTS: <string, string> = { "anthropic": "claude-sonnet-5-5" }
+
+// OpenCode's models (`opencode models`, one `provider/model` a line), or none when it does not answer in 5 s: the
+// model is then written by hand.
+openCodeModels(command: string, env: <string, string>) string[]
+  try
+    r = subprocess.run([command, "models"], captureOutput = true, text = true, timeout = 5, env = env)
+    if r.returncode != 0
+      return []
+    lines: string[] = r.stdout.split("\n")
+    lines.map((l: string) => l.trim()).filter((l: string) => Regex(r"^[\w.-]+/\S+$").test(l))
+  catch e
+    if not isinstance(e, subprocess.TimeoutExpired) and not isinstance(e, OSError)
+      throw e
+    []
+
+// The models of an API provider that have a price (Anthropic's known here, the project's `prices`), by name.
+apiModels(provider: string, prices: <string, any>) string[]
+  names = [...PRICES.keys, ...prices.keys].filter((k: string) => k.startsWith("${provider}/")).map((k: string) => k.substring(provider.length + 1))
+  names.unique()
+
+// The kind of a provider (teams.nuc's PROVIDERS): local, agent or api.
+providerKind(provider: string) string
+  PROVIDERS.keys.find((k) => provider in PROVIDERS[k]!) ?? "api"
+
+// One agent as the list gives it; `why` (English), `whyKey` and `whyArgs` (the screens say it in their language) only
+// when there is something to say.
+agentOf(id: string, models: string[], defaultModel: string, available: boolean, why: <string, any>? = null) <string, any>
+  kind = providerKind(id)
+  found: <string, any> = { "id": id, "kind": kind, "provider": id, "label": AGENT_LABELS[id] ?? id, "models": models, "defaultModel": defaultModel, "available": available, "paid": kind != "local" }
+  if why != null
+    found["why"] = why!["text"]
+    found["whyKey"] = why!["key"]
+    found["whyArgs"] = why!["args"]
+  found
+
+// A reason as `agents --json` gives it: its English text, and its key and arguments for the screens' dictionaries.
+reason(text: string, key: string, args: string[]) <string, any>
+  { "text": text, "key": key, "args": args }
+
+// Why a provider cannot work on this machine, empty when it can (the rules of `agents --json`): an agent whose command
+// is not on the tools' PATH; an API provider whose key the vault does not note, or with no model with a price. The
+// local Nuclear Developer always can (the fallback; whether its service answers is `agents`'s and the run's).
+whyNotHere(provider: string, prices: <string, any> = {}, env: <string, string>? = null) string
+  said = whyNotHereSaid(provider, prices, env)
+  said == null ? "" : "${said!["text"]}"
+
+// `whyNotHere` with its key for the screens (`reason`), null when the provider can work here.
+whyNotHereSaid(provider: string, prices: <string, any> = {}, env: <string, string>? = null) <string, any>?
+  kind = providerKind(provider)
+  if kind == "local"
+    return null
+  if kind == "agent"
+    command = AGENT_COMMANDS[provider] ?? provider
+    return shutil.which(command, path = (env ?? toolEnv())["PATH"]) == null ? reason("`${command}` is not on the PATH", "notOnPath", [command]) : null
+  if not (provider in notedProviders())
+    return reason("no key: nuclear-builder vault set ${provider}", "noKey", [provider])
+  apiModels(provider, prices).isEmpty ? reason("no model with a price: .nuclear/builder.json \"prices\"", "noPrice", [] as string[]) : null
+
+// A member is worked only by an agent this machine has (ADR-platform-0010): one whose provider cannot work here
+// (`whyNotHere`: its command is not installed, an API with no key or no priced model) is refused with why. Checked by
+// the commands and tools where who works a member is chosen (`team create`, `team member add|update`), not on every save: a team made on
+// another machine still opens. The prices are the project's (`.nuclear/builder.json` of the working folder).
+workableHere(m: <string, any>) void
+  allowed: string[] = PROVIDERS["${m["kind"] ?? "local"}"] ?? ["nuclear-developer"]
+  provider = "${m["provider"] ?? allowed[0]}"
+  if provider == "nuclear-developer"
+    return
+  root = projectRoot("${Path.cwd()}")
+  why = whyNotHere(provider, readLine(root, "")["prices"] ?? ({} as <string, any>))
+  if not why.isEmpty
+    throw TeamError("${m["id"] ?? m["role"]}: ${provider} cannot work on this machine (${why})")
+
+// `workableHere` for each member of a list (a draft's, `team member add`'s), and for a member's new who-works.
+workableAll(members: any) void
+  for m in (isinstance(members, list) ? members : ([] as any[])) as any[]
+    if isinstance(m, dict)
+      workableHere(m)
+
+workableChange(member: string, fields: <string, any>) void
+  if fields["kind"] != null or fields["provider"] != null
+    workableHere({ "id": member, "kind": fields["kind"], "provider": fields["provider"] })
+
+// The agents of this machine for the project `root`, in the order the chat offers them.
+agentsHere(root: string, transport: httpx.BaseTransport? = null) <string, any>[]
+  env = toolEnv()
+  line = readLine(root, "")
+  out: <string, any>[] = []
+  dev = developerUrl(line["developerUrl"])
+  client = httpx.Client(transport = transport)
+  answers = false
+  try
+    answers = probe(client, dev + "/docs")["ok"] == true
+  finally
+    client.close()
+  out.add(agentOf("nuclear-developer", [], "", true, answers ? null : reason("${dev} does not answer: nuclear-builder setup --restart developer", "noAnswer", [dev])))
+  for id in AGENT_ORDER.filter((p) => providerKind(p) == "agent")
+    found = shutil.which(AGENT_COMMANDS[id]!, path = env["PATH"])
+    why = whyNotHereSaid(id, {}, env)
+    if found == null or why != null
+      out.add(agentOf(id, [], "", false, why ?? reason("`${AGENT_COMMANDS[id]}` is not on the PATH", "notOnPath", [AGENT_COMMANDS[id]!])))
+    else if id == "claude-code"
+      out.add(agentOf(id, CLAUDE_MODELS, "", true))
+    else if id == "opencode"
+      out.add(agentOf(id, openCodeModels(found!, env), "", true))
+    else
+      out.add(agentOf(id, [], "", true))
+  noted = notedProviders()
+  prices: <string, any> = line["prices"] ?? ({} as <string, any>)
+  for id in AGENT_ORDER.filter((p) => providerKind(p) == "api")
+    models = apiModels(id, prices)
+    first = API_DEFAULTS[id] ?? ""
+    chosen = first in models ? first : (models.isEmpty ? "" : models[0])
+    why = whyNotHereSaid(id, prices, env)
+    out.add(agentOf(id, models, chosen, why == null, why))
+  out
+
+// The general agent's choices for Nuclear Chat: each agent with the command that answers as it.
+chatChoices(agents: <string, any>[]) <string, any>[]
+  agents.map((a) => { ...a, "command": ["nuclear-builder", "member", "--role", "chat", "--kind", a["kind"], "--provider", a["id"]] })
+
+// `nuclear-builder agents --json [--root <dir>]`
+agentsLine(args: string[]) int
+  root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
+  try
+    found = agentsHere(root)
+    if "--json" in args
+      printJson(found)
+    else
+      for a in found
+        print("${a["available"] == true ? "✓" : "✗"} ${a["label"]} (${a["kind"]})${"${a["why"] ?? ""}".isEmpty ? "" : ": ${a["why"]}"}")
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0

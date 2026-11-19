@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-18
 related: [emitter-options.md, result.md, dialects.md, type-definitions.md, ../05-standards/testing.md]
 ---
 # The emitter
@@ -27,6 +27,8 @@ options a dialect sets and what the targets without braces needed are in [emitte
 - async is automatic when there is a `~call()`.
 - `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.
 - Named arguments: `named_args = "native"` uses `named_arg`; otherwise they are reordered by position.
+- Named arguments to a callee declared in Nuclear (a function, `Module.method`, a method called without `this`) are
+  reordered by its positional parameters in every dialect; a name it lacks is N0219.
 - Reserved words escaped from `dialects/<language>/keywords.toml`.
 - In a text enum an item without a value takes its own name.
 
@@ -98,3 +100,14 @@ the type definitions (`Paths.machine()["k"]`), a member.
 - Methods of a base from the type definitions that return a Result come from `ClassDef.results` (`index.json`),
   so `x = ~repo.find(id)` unwraps; an error type that extends the function's (`NotFound` of `AppError`,
   `is_subtype`) propagates without N0109.
+
+## The monitor
+
+A project built with `--monitor` (`Manifest.monitor`, set by the CLI; spec 015 of the platform) measures each
+function and method of its `.nuc`: `Emitter::monitored` renders the dialect's `monitor_body` around the body before
+the `function` or `method` template sees it, so every kind's own method template gets it too. Its `label` is the
+Nuclear name (`ProjectCtx.source_names` undoes the dialect's renaming), `path` and `line` the place in the `.nuc`.
+A file that measures imports `NuclearMonitor` from `nuclear/monitor` (`MONITOR_PATH`), which `project::build`
+writes once from `monitor_runtime`, as it does the `Result` runtime. Generators, empty bodies, files built alone and
+dialects without the two templates are left as they are: without `--monitor` the output does not change (the
+goldens). Test: `the_monitor_measures_each_function_only_when_asked` (`tests/projects.rs`).

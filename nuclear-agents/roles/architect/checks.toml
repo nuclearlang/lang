@@ -1,0 +1,38 @@
+# The checks the Architect proposes (nuclear-agents/roles/README.md). `by = "role"`: the role runs it; `by = "user"`:
+# the user runs it and marks it done or failed. A `command` is a key of the `commands` of `.nuclear/builder.json`.
+
+[[check]]
+id = "architect.criteria-covered"
+title = "Every acceptance criterion is served by a piece of the plan, and every piece by a criterion"
+title_es = "Cada criterio de aceptación lo cubre una pieza del plan, y cada pieza un criterio"
+station = "design"
+on = true
+by = "role"
+prompt = "Read specs/{{id}}/analysis.md and plan.md. List each criterion no piece serves and each piece no criterion needs; change the plan until both lists are empty."
+
+[[check]]
+id = "architect.generators-first"
+title = "What a generator can write is a generator call, not a piece for a model"
+title_es = "Lo que un generador puede escribir es una llamada al generador, no una pieza para un modelo"
+station = "design"
+on = true
+by = "role"
+prompt = "For each piece of specs/{{id}}/plan.md, answer whether `nuclear gen` or `nuclear make` writes it (nuclear gen inspect, the Smart Graph's strategy); move each one that it writes to the generators."
+
+[[check]]
+id = "architect.adrs-followed"
+title = "The design follows the project's ADRs; every new decision is a proposed ADR"
+title_es = "El diseño sigue los ADR del proyecto; cada decisión nueva es un ADR propuesto"
+station = "design"
+on = true
+by = "role"
+prompt = "Read the project's docs/03-adr/ and specs/{{id}}/design.md. List each decision of the design that an ADR contradicts or that no ADR covers and is costly to undo; write a proposed ADR for each."
+
+[[check]]
+id = "architect.user-approves"
+title = "The user approves the design and the plan"
+title_es = "El usuario aprueba el diseño y el plan"
+station = "design"
+on = true
+by = "user"
+prompt = "Read specs/{{id}}/design.md, plan.md and the proposed ADRs; approve them, or say what to change."

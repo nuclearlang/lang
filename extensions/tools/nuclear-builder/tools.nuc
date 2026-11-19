@@ -1,0 +1,677 @@
+use re
+use html
+use json
+use shutil
+use zipfile
+use subprocess
+use pathlib{ Path }
+
+// The Builder's actions as the agents' tools (ADR-platform-0009, docs/02-architecture/actions.md): every action of
+// the Builder's pages is a command of `nuclear-builder`, and every command is a tool here, with the same rules. The
+// MCP server `nuclear-builder mcp` (mcp.nuc) offers them to any agent, and the chat's local member calls them as text
+// blocks (chat.nuc). A tool's comment is what the agent reads of it; its name is the method's without `Tool`.
+// What is the user's stays the user's: a tool that would spend money answers `waiting: spending` (the user confirms
+// it twice where they answer), one that destroys or that acts in the user's name answers `needsUser` (applied by the
+// host only after the user said yes: `applyForUser`); the merge of a pull request is never a tool.
+
+// What a file of the project may hold for `project_read`: the longest text given back.
+READ_MAX_CHARS = 60_000
+
+// The keys of `.nuclear/builder.json` an agent sets by itself; the rest (the gates, the commands the shell runs,
+// forceConfirm, the addresses, the prices) are the user's.
+AGENT_LINE_KEYS = ["team", "stations", "branches"]
+
+// A path of the project, never outside it (`..`, an absolute path or a link that leads out are refused).
+confined(root: string, path: string) Path
+  base = Path(root).resolve()
+  found = Path(root, path).resolve()
+  if found != base and not found.isRelativeTo(base)
+    throw ValueError("`${path}` is outside the project")
+  found
+
+// The text of a slide deck (`.pptx`): each slide's texts, in order, read from its XML (no other program needed).
+pptxText(file: Path) string
+  deck = zipfile.ZipFile(file)
+  try
+    names = (deck.namelist() as string[]).filter((n) => re.match(r"^ppt/slides/slide\d+\.xml$", n) != null)
+    ordered = names.sortedBy((n) => ("${re.search(r"\d+", n.substring(10))!.group(0)}").toInt() ?? 0)
+    slides: string[] = []
+    for i in 0..ordered.length
+      xml: string = deck.read(ordered[i]).decode("utf-8", "replace")
+      texts: string[] = re.findall(r"<a:t>([^<]*)</a:t>", xml)
+      slides.add("## Slide ${i + 1}\n\n${texts.map((t) => html.unescape(t)).join("\n")}")
+    slides.join("\n\n")
+  finally
+    deck.close()
+
+// `nuclear-builder read <path>`: a file of the project as text for an agent: a PDF by `pdftotext` (when the machine
+// has it), a slide deck (`.pptx`) from its XML, markdown and any text as it is; the text cut at READ_MAX_CHARS.
+projectRead(root: string, path: string) <string, any>
+  file = confined(root, path)
+  if not file.isFile()
+    throw ValueError("no file `${path}` in the project")
+  kind = file.suffix.lower()
+  text = ""
+  if kind == ".pdf"
+    tool = shutil.which("pdftotext", path = toolEnv()["PATH"])
+    if tool == null
+      throw ValueError("this machine has no pdftotext to read a PDF (poppler-utils): install it, or give the slides as markdown or text")
+    done = subprocess.run([tool!, "-layout", "${file}", "-"], captureOutput = true, text = true, timeout = 120)
+    if done.returncode != 0
+      throw ValueError("pdftotext could not read ${path}: ${"${done.stderr}".trim()}")
+    text = done.stdout
+  else if kind == ".pptx"
+    text = pptxText(file)
+  else if kind in [".ppt", ".key", ".odp", ".docx", ".doc", ".xlsx"]
+    throw ValueError("`${path}` is a ${kind} file: save it as PDF, .pptx or markdown and read that")
+  else
+    text = file.readText(encoding = "utf-8", errors = "replace")
+    if "\u{0}" in text.substring(0, Math.min(text.length, 8000))
+      throw ValueError("`${path}` is not a text file")
+  cut = text.length > READ_MAX_CHARS
+  { "path": "${file.relativeTo(Path(root).resolve())}", "kind": kind.isEmpty ? "text" : kind.substring(1), "text": cut ? text.substring(0, READ_MAX_CHARS) : text, "cut": cut, "chars": text.length }
+
+// A tool's work, its refusal said as `{"error": …}` (what the agent reads; the MCP library would hide its text).
+attempt(body: () => string) string
+  try
+    body()
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    toolSaid({ "error": "${e}" })
+
+// What a tool answers, as the agent reads it: JSON.
+toolSaid(value: any) string
+  json.dumps(value, indent = 1, ensureAscii = false)
+
+// The first member given whose local model is too big for this machine's memory, as `memoryWarnings` says it; null
+// when none is: choosing one is the user's (it can make the computer restart).
+tooBigOf(members: any) <string, any>?
+  memoryWarningsHere(members).find((w) => w["fit"] == "too-big")
+
+// A tool whose action is the user's: what it would do, asked of the user by the host, applied only after a yes.
+needsUser(tool: string, input: <string, any>, question: string, command: string) string
+  toolSaid({ "needsUser": { "tool": tool, "input": input, "question": question, "command": command }, "note": "this is the user's decision: tell the user, who confirms it in the chat or in the Builder; never ask again by yourself" })
+
+// The spec file of an id, a title (its id is the title's slug) or a path of the project.
+specFileOf(root: string, spec: string) Path
+  found = findSpec(root, spec) ?? findSpec(root, runSlug(spec))
+  if found != null
+    return Path(root, "${found!["path"]}", "spec.md")
+  file = confined(root, spec)
+  file.isDir() ? file.joinpath("spec.md") : file
+
+// A run that would spend with a paid provider without the user's confirmation: `waiting: spending` (the run waits
+// for the user's two confirmations); null when it spends nothing or the user confirmed it.
+spendingOf(root: string, id: string, asked: string = "") <string, any>?
+  run = loadRun(root, id)
+  if run == null or ((run!["spending"] ?? ({} as <string, any>)) as <string, any>)["confirmed"] == true
+    return null
+  own = "${(run!["factory"] ?? ({} as <string, any>))["team"] ?? ""}"
+  team = teamOfRetry(root, asked.isEmpty ? null : asked, own)
+  paid = paidOf(run!, team)
+  (paid["roles"] as string[]).isEmpty ? null : { "waiting": "spending", "run": id, "spending": paid, "how": "the user confirms the spending twice where they answer: the Builder page (Resume) or the chat" }
+
+// Every action of Nuclear Builder for an agent, in the project `root` (the folder the server was started in).
+BuilderTools(root: string)
+
+  // ---------- the specs ----------
+
+  // Write a new spec of the project: its title, its business component (a folder of components/, or _global for the
+  // whole project), its acceptance criteria (each one checkable: a spec without them cannot run, so ask the user for
+  // them when they are not given), and optionally its layer (presentation, domain or data), its use case (feature,
+  // refactor, bug, test, security, docs or diagram) and its description. Answers its id and folder.
+  specNewTool(title: string, component: string, criteria: string[], layer: string = "", useCase: string = "feature", description: string = "") string
+    body = () =>
+      kept = criteria.map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
+      if kept.isEmpty
+        return toolSaid({ "error": "a spec needs its acceptance criteria (each one checkable): ask the user for them" })
+      toolSaid(specNew(root, title, component, layer, useCase, description, kept))
+    attempt(body)
+
+  // The specs of the project by component and layer, with their runs.
+  specListTool() string
+    body = () =>
+      toolSaid(specList(root))
+    attempt(body)
+
+  // One spec: its markdown, what it says (title, criteria, pieces...), its draft when it has one, its run's status.
+  specShowTool(id: string) string
+    body = () =>
+      toolSaid(specShow(root, id))
+    attempt(body)
+
+  // Propose a new text of a spec (its whole markdown, from its `# title`) as its draft beside it (spec.draft.md): the
+  // user sees the difference and accepts it or not; the spec itself is never written by you.
+  specDraftTool(id: string, text: string) string
+    body = () =>
+      toolSaid(specDraft(root, id, text))
+    attempt(body)
+
+  // Ask the user to accept a spec's draft (it becomes the spec): the user's decision.
+  specAcceptTool(id: string) string
+    body = () =>
+      needsUser("spec_accept", { "id": id }, "Accept the draft of the spec ${id} (it replaces the spec)?", "nuclear-builder spec accept ${id}")
+    attempt(body)
+
+  // Ask the user to throw a spec's draft away: the user's decision.
+  specDiscardTool(id: string) string
+    body = () =>
+      needsUser("spec_discard", { "id": id }, "Throw away the draft of the spec ${id}?", "nuclear-builder spec discard ${id}")
+    attempt(body)
+
+  // Move a spec's folder to another business component or layer (its run follows).
+  specMoveTool(id: string, component: string, layer: string = "") string
+    body = () =>
+      toolSaid(specMove(root, id, component, layer))
+    attempt(body)
+
+  // Move the specs of the old flat layout (specs/<id>/) to their component.
+  specMigrateTool() string
+    body = () =>
+      toolSaid(specMigrate(root))
+    attempt(body)
+
+  // Ask the user to delete a spec (its folder goes to .nuclear/builder/deleted/): the user's decision.
+  specDeleteTool(id: string) string
+    body = () =>
+      needsUser("spec_delete", { "id": id }, "Delete the spec ${id} (its folder is kept in .nuclear/builder/deleted/)?", "nuclear-builder spec delete ${id}")
+    attempt(body)
+
+  // ---------- the runs ----------
+
+  // Start a run of a spec (its id, its title, or its file's path) through the factory's stations, worked by a team (its id;
+  // empty: the project's team). It runs in a process of its own and stops at the gates for an answer (run_answer);
+  // with a paid provider it waits for the user's two confirmations of the spending (`waiting: spending`). `assign` is
+  // the tech lead's choice of who works a role (`developer=dev-017,qa=qa-002`); a role not named is worked by its first
+  // member.
+  runStartTool(spec: string, team: string = "", assign: string = "") string
+    body = () =>
+      file = specFileOf(root, spec)
+      if not file.isFile()
+        return toolSaid({ "error": "no spec `${spec}` (spec_list lists them)" })
+      toolSaid(startDetached(root, "${file}", team.isEmpty ? null : team, assign.isEmpty ? null : assign))
+    attempt(body)
+
+  // The runs of the project: id, title, status, cost, each station's status.
+  runsTool() string
+    body = () =>
+      toolSaid(listRuns(root).map((r) => runSummary(r)))
+    attempt(body)
+
+  // A run file: every station and step, who did it, its decisions, the files it wrote and the cost; `waiting` is the
+  // question it waits on.
+  runFileTool(id: string) string
+    body = () =>
+      toolSaid(runShown(root, id))
+    attempt(body)
+
+  // A run's journal (markdown): everything the roles did, station by station.
+  runJournalTool(id: string) string
+    body = () =>
+      run = loadRun(root, id)
+      if run == null
+        return toolSaid({ "error": "no run `${id}` (runs lists them)" })
+      journalMarkdown(run!)
+    attempt(body)
+
+  // Answer the question a run waits on: approve (go on), change (with text: what should change; the station works
+  // again), stop (later: the run waits), or yes/no for QA's plan. The spending and the delivery (a commit and a pull
+  // request in the user's name) are the user's.
+  runAnswerTool(id: string, answer: string, text: string = "") string
+    body = () =>
+      run = loadRun(root, id)
+      q: <string, any>? = run == null ? null : run!["waiting"]
+      if q != null and q!["kind"] == "spending"
+        return toolSaid(spendingOf(root, id) ?? { "waiting": "spending", "run": id })
+      if q != null and q!["id"] == "deliver"
+        return needsUser("run_answer", { "id": id, "answer": answer, "text": text }, "${q!["question"]} (answer: ${answer})", "nuclear-builder run answer ${id} --answer ${answer}")
+      done = answerRun(root, id, answer, text)
+      if done["resume"] != true
+        return toolSaid(done)
+      detached = detachRun(root, id, ["run", "answer", id, "--answer", answer, ...(text.trim().isEmpty ? [] as string[] : ["--text", text])])
+      toolSaid({ "answered": id, "ask": done["ask"], "answer": answer, "detached": detached["detached"], "log": detached["log"] })
+    attempt(body)
+
+  // Go on with a run that stopped (interrupted, or waiting with nothing to answer); a run waiting on a question is
+  // answered with run_answer.
+  runResumeTool(id: string) string
+    body = () =>
+      run = loadRun(root, id)
+      if run == null
+        return toolSaid({ "error": "no run `${id}` (runs lists them)" })
+      q: <string, any>? = run!["waiting"]
+      if q != null and q!["kind"] == "spending"
+        return toolSaid(spendingOf(root, id) ?? { "waiting": "spending", "run": id })
+      if q != null
+        return toolSaid({ "error": "the run ${id} waits on a question: ${q!["question"]} (answer it with run_answer)" })
+      toolSaid(detachRun(root, id, ["run", "--resume", id]))
+    attempt(body)
+
+  // Run a run again from the station that failed (or from `station`, or from one `step` and every step after it),
+  // optionally by another team: what those stations wrote is undone first.
+  runRetryTool(id: string, station: string = "", step: string = "", team: string = "") string
+    body = () =>
+      if loadRun(root, id) == null
+        return toolSaid({ "error": "no run `${id}` (runs lists them)" })
+      args = ["retry", id, ...(station.isEmpty ? [] as string[] : ["--from", station]), ...(step.isEmpty ? [] as string[] : ["--step", step]), ...(team.isEmpty ? [] as string[] : ["--team", team])]
+      started = detachRun(root, id, args)
+      hint = spendingOf(root, id, team)
+      if hint != null
+        for k, v in hint!
+          started[k] = v
+      toolSaid(started)
+    attempt(body)
+
+  // Ask the user to run a run again from scratch (every file it wrote goes back first): the user's decision.
+  runRestartTool(id: string) string
+    body = () =>
+      needsUser("run_restart", { "id": id }, "Run ${id} again from scratch? Every file it wrote goes back to what it was first.", "nuclear-builder restart ${id}")
+    attempt(body)
+
+  // Stop a run's process: a run that asks waits, one that works is interrupted (what its unfinished steps wrote is
+  // undone).
+  runStopTool(id: string) string
+    body = () =>
+      toolSaid(stopRun(root, id))
+    attempt(body)
+
+  // ---------- the checks of a run (QA's plan) ----------
+
+  // The checks of a run: QA's plan and the user's, each with its station, who runs it and its state.
+  checksTool(id: string) string
+    body = () =>
+      toolSaid(loadChecks(root, id))
+    attempt(body)
+
+  // Switch a check of a run on or off.
+  checkSwitchTool(id: string, check: string, on: boolean) string
+    body = () =>
+      toolSaid(switchCheck(root, id, check, on))
+    attempt(body)
+
+  // Add a check to a run's plan: its title, its station, who runs it (user, or role: the station's role with the
+  // prompt).
+  checkAddTool(id: string, title: string, station: string = "quality", by: string = "user", prompt: string = "") string
+    body = () =>
+      toolSaid(addCheck(root, id, title, station, by, prompt.isEmpty ? null : prompt))
+    attempt(body)
+
+  // Mark a check of a run: passed, failed or skipped, with a note.
+  checkMarkTool(id: string, check: string, state: string, note: string = "") string
+    body = () =>
+      toolSaid(markCheck(root, id, check, state, note))
+    attempt(body)
+
+  // ---------- the teams ----------
+
+  // The teams of the factory: id, name, whether it is the default.
+  teamListTool() string
+    body = () =>
+      toolSaid(listTeams())
+    attempt(body)
+
+  // A team: its members (each with its id, role, employee, name, provider, model, skills, instructions, personality),
+  // its tech lead (a member's id), purpose, skills, budget, and the roles it lacks to run (missing).
+  teamShowTool(id: string) string
+    body = () =>
+      toolSaid(teamShown(loadTeam(id)))
+    attempt(body)
+
+  // Make a new team and keep it: its name, description, purpose, skills, budget in USD, and its members (each
+  // { role, employee, name, kind, provider, model, instructions, skills, extraSkills, personality: { temperament,
+  // note } }; who works one not said: the local Nuclear Developer; a provider this machine lacks is refused:
+  // agents_list). A member is its profile, not its model: one agent for all is fine, their instructions and skills
+  // make them different. techLead is a member's id or index. Suggest the members first (team_suggest) and say which
+  // ones cost money.
+  teamCreateTool(name: string, members: <string, any>[] = [], description: string = "", purpose: string = "", skills: string[] = [], budgetUsd: double = 5.0, techLead: string? = null) string
+    body = () =>
+      workableAll(members)
+      draft: <string, any> = { "name": name, "members": members, "description": description, "purpose": purpose, "skills": skills, "budgetUsd": budgetUsd, "techLead": techLead }
+      big = tooBigOf(members)
+      if big != null
+        return needsUser("team_create", { "draft": draft }, "${big!["text"]}. Make the team ${name} with it anyway?", "nuclear-builder team create")
+      toolSaid(withWarnings(teamShown(createTeam(draft)), members))
+    attempt(body)
+
+  // The employees of the roster that best fit a team's purpose and skills: a few of each role, each with why.
+  teamSuggestTool(purpose: string = "", skills: string[] = [], lang: string = "en") string
+    body = () =>
+      toolSaid(suggestMembers(purpose, skills, rosters(lang)))
+    attempt(body)
+
+  // Five satirical names for a team (lang: en or es), from its purpose when given.
+  teamNameSuggestTool(purpose: string = "", lang: string = "en") string
+    body = () =>
+      toolSaid(suggestNames(lang, purpose))
+    attempt(body)
+
+  // Whether a team can run the project's stations (a member of each role they need), and the roles it lacks.
+  teamRunnableTool(id: string) string
+    body = () =>
+      line = readLine(root, "${projectCard(root)["platform"] ?? ""}")
+      toolSaid(runnable(loadTeam(id), line["stations"] ?? STATIONS))
+    attempt(body)
+
+  // Change a team's name, description, purpose, skills, tech lead (a member's id) or budget in USD; what is not given
+  // stays.
+  teamUpdateTool(id: string, name: string? = null, description: string? = null, purpose: string? = null, skills: string[]? = null, techLead: string? = null, budgetUsd: double? = null) string
+    body = () =>
+      toolSaid(teamShown(updateTeam(id, { "name": name, "description": description, "purpose": purpose, "skills": skills, "techLead": techLead, "budgetUsd": budgetUsd })))
+    attempt(body)
+
+  // Add members to a team: `count` employees-to-be of a role (analyst, architect, developer, qa or devops; `delivery`, its id before, is still taken), the
+  // employee of the roster (for one), who works them (kind local, agent or api; provider; model: local by default)
+  // and a name. A paid provider costs money per run: say so to the user.
+  teamMemberAddTool(id: string, role: string, employee: string? = null, kind: string? = null, provider: string? = null, model: string? = null, name: string? = null, count: int = 1) string
+    body = () =>
+      one: <string, any> = { "role": role, "employee": employee, "kind": kind, "provider": provider, "model": model, "name": name }
+      workableHere(one)
+      given = (0..Math.max(1, count)).map((i) => dict(one))
+      big = tooBigOf(given)
+      if big != null
+        return needsUser("team_member_add", { "id": id, "members": given }, "${big!["text"]}. Add the member with it anyway?", "nuclear-builder team member add ${id}")
+      toolSaid(withWarnings(teamShown(addMembers(id, given)), given))
+    attempt(body)
+
+  // Ask the user to remove a member from a team (by the member's id): the user's decision.
+  teamMemberRemoveTool(id: string, member: string) string
+    body = () =>
+      t = loadTeam(id)
+      if not ((t["members"] ?? []) as <string, any>[]).any((m) => m["id"] == member)
+        return toolSaid({ "error": "the team ${id} has no member `${member}`" })
+      needsUser("team_member_remove", { "id": id, "member": member }, "Remove ${member} from the team ${id}?", "nuclear-builder team member remove ${id} ${member}")
+    attempt(body)
+
+  // Change a member of a team (by its id): its kind (local, agent, api), provider (one this machine has: agents_list),
+  // model, employee of the roster, name, skills, extra skills ([{ name, text }]), instructions, temperament, how often
+  // it sends a GIF (gifs: never, sometimes, often), the note of its personality (its characteristics) and its base
+  // agent (an id of the library's agents: skills_list; empty takes it away); what is not given stays. Its skills here
+  // are its role's switched on and library ids; its own skills are skills_create.
+  teamMemberUpdateTool(id: string, member: string, kind: string? = null, provider: string? = null, model: string? = null, employee: string? = null, name: string? = null, skills: string[]? = null, extraSkills: <string, any>[]? = null, instructions: string? = null, temperament: string? = null, gifs: string? = null, note: string? = null, agent: string? = null) string
+    body = () =>
+      workableChange(member, { "kind": kind, "provider": provider })
+      change: <string, any> = { "kind": kind, "provider": provider, "model": model, "employee": employee, "name": name, "skills": skills, "extraSkills": extraSkills, "instructions": instructions, "temperament": temperament, "gifs": gifs, "note": note, "agent": agent }
+      was = ((loadTeam(id)["members"] ?? []) as <string, any>[]).find((m) => m["id"] == member) ?? ({} as <string, any>)
+      big = model == null and kind == null ? null : tooBigOf([{ ...was, "kind": kind ?? was["kind"], "model": model ?? was["model"] }])
+      if big != null
+        return needsUser("team_member_update", { "id": id, "member": member, "change": change }, "${big!["text"]}. Give ${member} that model anyway?", "nuclear-builder team member update ${id} ${member} --model ${model}")
+      toolSaid(teamShown(updateMember(id, member, change)))
+    attempt(body)
+
+  // Copy a team under a new name (its own id).
+  teamDuplicateTool(id: string, name: string = "") string
+    body = () =>
+      toolSaid(teamShown(duplicateTeam(id, name.isEmpty ? null : name)))
+    attempt(body)
+
+  // Ask the user to delete a team (its file goes to <id>.json.bak): the user's decision.
+  teamDeleteTool(id: string) string
+    body = () =>
+      loadTeam(id)
+      needsUser("team_delete", { "id": id }, "Delete the team ${id} (its file goes to ${id}.json.bak)?", "nuclear-builder team delete ${id}")
+    attempt(body)
+
+  // Make a team the default one (the one a run takes when the project names none).
+  teamDefaultTool(id: string) string
+    body = () =>
+      loadTeam(id)
+      setDefaultTeam(id)
+      toolSaid({ "default": id })
+    attempt(body)
+
+  // Export a team to a JSON file of the project.
+  teamExportTool(id: string, file: string) string
+    body = () =>
+      to = confined(root, file)
+      exportTeam(id, "${to}")
+      toolSaid({ "exported": id, "file": file })
+    attempt(body)
+
+  // Import a team from a JSON file of the project (an id in use gets the next free one).
+  teamImportTool(file: string) string
+    body = () =>
+      toolSaid(teamShown(importTeam("${confined(root, file)}")))
+    attempt(body)
+
+  // Give a team a logo (a .png, .svg or .jpg of the project, 1 MB at most), or take it away (clear).
+  teamLogoTool(id: string, image: string = "", clear: boolean = false) string
+    body = () =>
+      toolSaid(teamShown(setLogo(id, clear ? null : "${confined(root, image)}")))
+    attempt(body)
+
+  // The employees a role can hire, each with its stats, bio and temperament (lang: en or es).
+  teamRosterTool(lang: string = "en") string
+    body = () =>
+      toolSaid(rosters(lang))
+    attempt(body)
+
+  // The temperaments a member can have.
+  teamTemperamentsTool() string
+    body = () =>
+      toolSaid(temperaments())
+    attempt(body)
+
+  // ---------- the skills (a team's and a member's: the library's, or their own) ----------
+
+  // The library of skills (payments, authentication, Synapsis backend, TDD…) and of agents a member can take as their
+  // base; with a team, its skills (every member inherits them) and its own; with a member too, its own and every skill
+  // it gets (composed: from library, team or member, and what each overrides). lang: en or es.
+  skillsListTool(team: string = "", member: string = "", lang: string = "en") string
+    body = () =>
+      toolSaid(skillsList(team, member, lang))
+    attempt(body)
+
+  // A skill's SKILL.md as a team or a member sees it (their own first, then the library's, then the role's), where it
+  // comes from and whether it can be changed there (editable).
+  skillsShowTool(id: string, team: string = "", member: string = "", lang: string = "en") string
+    body = () =>
+      toolSaid(skillShow(id, team, member, lang))
+    attempt(body)
+
+  // Copy a skill (the library's, the team's or a role's) into the team (every member inherits it) or a member, with the
+  // same id, so the copy wins; then change it with skills_update. A library skill is never changed: clone it.
+  skillsCloneTool(id: string, team: string, member: string = "") string
+    body = () =>
+      toolSaid(cloneSkill(team, id, member))
+    attempt(body)
+
+  // Write a new skill of the team or a member: its whole SKILL.md (front matter name (the id), title, description,
+  // optionally title_es, description_es, kind (domain, technology or practice), tags; then the steps the agent follows).
+  skillsCreateTool(team: string, markdown: string, member: string = "") string
+    body = () =>
+      toolSaid(createSkill(team, markdown, member))
+    attempt(body)
+
+  // Change an own skill of the team or a member: its whole SKILL.md (its id stays).
+  skillsUpdateTool(id: string, team: string, markdown: string, member: string = "") string
+    body = () =>
+      toolSaid(updateSkill(team, id, markdown, member))
+    attempt(body)
+
+  // Ask the user to delete an own skill of the team or a member: the user's decision.
+  skillsDeleteTool(id: string, team: string, member: string = "") string
+    body = () =>
+      skillShow(id, team, member)
+      where = member.isEmpty ? "the team ${team}" : "${member} of the team ${team}"
+      needsUser("skills_delete", { "id": id, "team": team, "member": member }, "Delete the skill ${id} of ${where}?", "nuclear-builder skills delete ${id} --team ${team}${member.isEmpty ? "" : " --member ${member}"}")
+    attempt(body)
+
+  // Set the library skills of the team (every member inherits them) or of a member (its role skills switched on
+  // stay): the ids of skills_list.
+  teamSkillsSetTool(team: string, skills: string[], member: string = "") string
+    body = () =>
+      toolSaid(setSkills(team, skills, member))
+    attempt(body)
+
+  // ---------- the line (.nuclear/builder.json) ----------
+
+  // The project's line: its stations, gates, commands, team, forceConfirm and the rest, with their defaults, and the
+  // keys the file itself sets.
+  lineShowTool() string
+    body = () =>
+      found = readLine(root, "${projectCard(root)["platform"] ?? ""}")
+      toolSaid({ "line": found, "own": ownLine(root), "keys": LINE_KEYS })
+    attempt(body)
+
+  // Set a key of the project's line (value: its JSON; null takes it away). team, stations and branches are yours to
+  // set; the gates, the commands, forceConfirm and the rest are the user's (asked of the user).
+  lineSetTool(key: string, value: any) string
+    body = () =>
+      validLineValue(key, value)
+      if not (key in AGENT_LINE_KEYS)
+        return needsUser("line_set", { "key": key, "value": value }, "Set ${key} of .nuclear/builder.json to ${json.dumps(value)}?", "nuclear-builder line set ${key}=${json.dumps(value)}")
+      values: <string, any> = {}
+      values[key] = value
+      toolSaid(setLine(root, values))
+    attempt(body)
+
+  // Write the CI file that runs the line's commands: github, gitlab or bitbucket (replacing one is the user's).
+  ciExportTool(provider: string) string
+    body = () =>
+      if provider in CI_PROVIDERS
+        target = Path(root, ciFile(provider, readLine(root, ""), "")["path"]!)
+        if target.exists()
+          return needsUser("ci_export", { "provider": provider }, "Replace ${target.relativeTo(Path(root))}?", "nuclear-builder export ${provider}")
+      toolSaid({ "wrote": writeCiFile(root, provider) })
+    attempt(body)
+
+  // Check the connections a team needs (empty: the project's team): the tools, the services, the keys, the disk.
+  connectionsCheckTool(team: string = "") string
+    body = () =>
+      found = checkConnections(teamOfRun(root, team.isEmpty ? null : team), root, readLine(root, "${projectCard(root)["platform"] ?? ""}"))
+      toolSaid(found)
+    attempt(body)
+
+  // Read a file of the project as text (a PDF, a slide deck .pptx, markdown, any text): path relative to the
+  // project. Long texts are cut (`cut`).
+  projectReadTool(path: string) string
+    body = () =>
+      toolSaid(projectRead(root, path))
+    attempt(body)
+
+  // Which API providers have a key in the vault (never the key; keeping a key is the user's, in the Builder).
+  vaultListTool() string
+    body = () =>
+      toolSaid(vaultList())
+    attempt(body)
+
+  // The agents that can answer a conversation on this machine (the local Nuclear Developer, the agents whose command
+  // is installed, the API providers with a key): their models and whether each is available, with why not.
+  agentsListTool() string
+    body = () =>
+      toolSaid(agentsHere(root))
+    attempt(body)
+
+  // The models of each provider that can work here (or of one: provider), from the provider itself, and this
+  // machine's memory: a local model says its memory need and whether it fits, is tight or is too big (a too-big one
+  // can make the computer restart: choosing it is the user's).
+  modelsListTool(provider: string = "") string
+    body = () =>
+      toolSaid(modelsHere(root, provider.isEmpty ? null : provider))
+    attempt(body)
+
+  // Every tool, in the order an agent lists them.
+  all() any[]
+    [
+      specNewTool, specListTool, specShowTool, specDraftTool, specAcceptTool, specDiscardTool, specMoveTool, specMigrateTool, specDeleteTool,
+      runStartTool, runsTool, runFileTool, runJournalTool, runAnswerTool, runResumeTool, runRetryTool, runRestartTool, runStopTool,
+      checksTool, checkSwitchTool, checkAddTool, checkMarkTool,
+      teamListTool, teamShowTool, teamCreateTool, teamSuggestTool, teamNameSuggestTool, teamRunnableTool, teamUpdateTool, teamMemberAddTool, teamMemberRemoveTool, teamMemberUpdateTool, teamDuplicateTool, teamDeleteTool, teamDefaultTool, teamExportTool, teamImportTool, teamLogoTool, teamRosterTool, teamTemperamentsTool,
+      skillsListTool, skillsShowTool, skillsCloneTool, skillsCreateTool, skillsUpdateTool, skillsDeleteTool, teamSkillsSetTool,
+      lineShowTool, lineSetTool, ciExportTool, connectionsCheckTool, projectReadTool, vaultListTool, agentsListTool, modelsListTool,
+    ]
+
+// What a tool's answer asks of the user, or null: `needsUser` (a yes or no) or `waiting: spending` (two confirmations).
+userDecision(text: string) <string, any>?
+  found = jsonLine(text.trim())
+  if found == null
+    return null
+  if found!["needsUser"] != null or found!["waiting"] == "spending"
+    return found
+  null
+
+// The actions only the user's yes applies.
+USER_ACTIONS = ["skills_delete", "spec_accept", "spec_discard", "spec_delete", "team_delete", "team_member_remove", "team_create", "team_member_add", "team_member_update", "run_restart", "run_answer", "line_set", "ci_export", "run_spending"]
+
+// The user's yes to what a tool asked of them, applied (the host calls it only after the user said yes): the action
+// of a `needsUser`, or `run_spending` (the spending confirmed twice: kept in the run, which goes on).
+applyForUser(root: string, tool: string, input: <string, any>) <string, any>
+  id = "${input["id"] ?? ""}"
+  if not (tool in USER_ACTIONS)
+    throw ValueError("no action `${tool}` for the user")
+  match tool
+    "spec_accept" -> specSettle(root, id, true)
+    "spec_discard" -> specSettle(root, id, false)
+    "spec_delete" -> specDelete(root, id)
+    "team_delete" -> deleteAndSay(id)
+    "team_member_remove" -> teamShown(removeMember(id, "${input["member"] ?? ""}"))
+    "skills_delete" -> deleteSkill("${input["team"] ?? ""}", id, "${input["member"] ?? ""}")
+    "team_create" -> teamShown(createTeam(input["draft"]))
+    "team_member_add" -> teamShown(addMembers(id, input["members"] ?? ([] as any[])))
+    "team_member_update" -> teamShown(updateMember(id, "${input["member"] ?? ""}", input["change"] ?? ({} as <string, any>)))
+    "run_restart" -> detachRun(root, id, ["restart", id])
+    "run_answer" -> answerAndGo(root, id, "${input["answer"] ?? ""}", "${input["text"] ?? ""}")
+    "line_set" -> setLine(root, { "${input["key"]}": validLineValue("${input["key"]}", input["value"]) })
+    "ci_export" -> { "wrote": writeCiFile(root, "${input["provider"] ?? ""}") }
+    _ -> confirmSpendingOf(root, id)
+
+deleteAndSay(id: string) <string, any>
+  deleteTeam(id)
+  { "deleted": id }
+
+answerAndGo(root: string, id: string, answer: string, text: string) <string, any>
+  done = answerRun(root, id, answer, text)
+  if done["resume"] != true
+    return done
+  detachRun(root, id, ["run", "answer", id, "--answer", answer, ...(text.trim().isEmpty ? [] as string[] : ["--text", text])])
+
+// The user confirmed a run's spending twice (in the chat): kept in the run as a resumed run keeps it, and the run goes
+// on in a process of its own.
+confirmSpendingOf(root: string, id: string) <string, any>
+  run = loadRun(root, id)
+  if run == null
+    throw ValueError("no run `${id}`")
+  if run!["status"] == "running" and not orphaned(run!["owner"])
+    throw ValueError("the run ${id} is running: confirm its spending where it asks")
+  hint = spendingOf(root, id)
+  spending: <string, any> = hint == null ? ({} as <string, any>) : hint!["spending"]!
+  run!["spending"] = { "confirmed": true, "by": "you (the chat)", "at": nowMs(), "budgetUsd": spending["budgetUsd"] ?? 5.0, "providers": spending["providers"] ?? [] }
+  q: <string, any>? = run!["waiting"]
+  if q != null and q!["kind"] == "spending"
+    run!["waiting"] = null
+  saveRun(run!)
+  detachRun(root, id, ["run", "--resume", id])
+
+// `nuclear-builder read <path> [--json]`: a file of the project as text (projectRead).
+readLineCommand(args: string[]) int
+  words = args.filter((a) => not a.startsWith("--"))
+  if words.isEmpty
+    printJson({ "error": "usage: nuclear-builder read <path> [--json]" })
+    return 1
+  try
+    found = projectRead(projectRoot("${Path.cwd()}"), words[0])
+    "--json" in args ? printJson(found) : print(found["text"])
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0
+
+// `nuclear-builder connections [--team <id>] [--json]`: *Check the connections* of a team.
+connectionsLine(args: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  try
+    found = checkConnections(teamOfRun(root, option(args, "--team")), root, readLine(root, "${projectCard(root)["platform"] ?? ""}"))
+    if "--json" in args
+      printJson(found)
+    else
+      for c in found
+        print("${c["ok"] == true ? "✓" : "✗"} ${c["name"]}: ${c["detail"]}")
+    found.all((c) => c["ok"] == true) ? 0 : 1
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    1

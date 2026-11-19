@@ -45,7 +45,12 @@ What each group of tools needs running:
 
 ## 2. How a model works with it
 
-The server's instructions tell every client to call `graph_strategy` first, with the user's own words: it answers which
+An agent may know nothing about Nuclear: the server's instructions only tell it to call `nuclear_start` before
+anything about Nuclear. Its answer is the onboarding (what Nuclear and Synapsis are, the rules never broken, the
+work cycle with these tools on this machine) and the atlas of every topic, each read with `nuclear_doc`; with a
+project folder, also the project's pieces and the sheet of its dialect. Nothing it reads points into a source tree.
+
+With the local AI services, the cycle then calls `graph_strategy` with the user's own words: it answers which
 kind of request it is and the plan of that kind
 ([the strategies](../../../../extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#the-strategy-of-a-request)). For a feature the plan is this order:
 
@@ -78,6 +83,8 @@ options, the examples and what each platform gets.
 | Tool | What it does |
 |---|---|
 | `project_inspect(project)` | the project's platform and dialect, its components with their declarations by kind, the generators of its platform |
+| `project_monitor(project)` | where the app is slow (Nuclear Monitor): the hot spots and the time, calls, connections and memory of each Nuclear function and method, from the last run with `nuclear run --monitor` |
+| `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for the local developer and later sessions |
 | `generate_component(project, component)` | a new component with its facade |
 | `generate_resource(project, component, name, from_json \| from_spec \| fields, source, path, actions, screen, plural, dry_run)` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or a screen with its state manager (mobile, web), the tests |
 | `generate_usecase(project, component, name, calls, route, dry_run)` | a use case wired into its component: its alias in the facade and, with `route` (backend), its route. With `calls` the use case is written too, because it only calls that repository method; without it the use case is one the project already has |
@@ -120,6 +127,8 @@ not declare, answers where to write it.
 
 | Tool | What it does |
 |---|---|
+| `nuclear_start(project?)` | **first**: what Nuclear is, the rules, the work cycle on this machine, the atlas of every topic; with a project folder, its pieces and the sheet of its dialect |
+| `nuclear_doc(topic)` | one topic of the atlas, whole: a guide chapter, `base`, `library`, a platform, a dialect, a tool, `context-docs`, `example/<name>`; a word that is not a topic answers the topics that explain it |
 | `nuclear_check(code \| path, dialect)` | `ok`, or one line per error with its fix, for a piece of Nuclear or a whole project |
 | `nuclear_build(code, dialect)` | what a piece of Nuclear becomes in the dialect's language |
 | `nuclear_fmt(code)` | the piece in the canonical layout |

@@ -78,7 +78,7 @@ $ nuclear-graph stats
 }
 ```
 
-`prompts` (the prompt files the models read) and `memory` (what an agent keeps about a project) are not part of
+`prompts` (the prompts the models read: the skills of the roles of the software factory) and `memory` (what an agent keeps about a project) are not part of
 the base.
 
 ## Ask it

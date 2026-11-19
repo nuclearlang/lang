@@ -1,0 +1,99 @@
+// Who answers a direct message, as in Claude's own app: the agent (its mark, its name, *paid* when it spends money)
+// and its model, in a menu of the agents the host found on this machine; one that is not there is shown disabled
+// with why. The default is the conversation's own choice, else the host's, else the local agent.
+stateful AgentPicker(ws: Workspace, channel: Channel, member: Member, texts: Texts)
+  open: boolean = false
+  custom: string = ""
+
+  build() Element
+    choice = chosenAgent(member, channel)
+    model = choice == null ? "" : chosenModel(member, channel, choice!)
+    div(
+      className = "agent-picker ${open ? "open" : ""}",
+      children = [
+        button(
+          className = "agent-current",
+          title = texts.get("agent.choose"),
+          onClick = () => toggle(),
+          children = [
+            AgentMark(kind = choice?.kind ?? "local"),
+            span(className = "agent-label", children = choice?.label ?? texts.get("agent.none")),
+            model != "" ? span(className = "agent-model", children = model) : null,
+            choice != null and choice!.paid ? span(className = "chip paid", children = texts.get("paid")) : null,
+            span(className = "icon icon-chevron"),
+          ],
+        ),
+        open ? div(className = "agent-scrim", onClick = () => toggle()) : null,
+        open ? menu(choice, model) : null,
+      ],
+    )
+
+  menu(choice: Choice?, model: string) Element
+    models = choice == null ? ([] as string[]) : choice!.models
+    div(
+      className = "agent-menu",
+      children = [
+        div(className = "agent-head", children = texts.get("agent.who")),
+        ...member.responder.choices.map((c) => button(
+          key = c.id,
+          className = "agent-item ${choice != null and c.id == choice!.id ? "selected" : ""}",
+          disabled = not c.available,
+          title = c.why,
+          onClick = () => pick(c.id, c.defaultModel),
+          children = [
+            AgentMark(kind = c.kind),
+            div(className = "agent-text", children = [span(className = "agent-name", children = c.label), span(className = "agent-note", children = c.available ? texts.get("agent.kind.${c.kind}") : c.why)]),
+            c.paid ? span(className = "chip paid", children = texts.get("paid")) : null,
+            choice != null and c.id == choice!.id ? span(className = "icon icon-check") : null,
+          ],
+        )),
+        choice != null and models.length > 0 ? div(className = "agent-head", children = texts.get("agent.model")) : null,
+        ...modelsOf(choice).map((m) => button(key = "m-${m}", className = "agent-item model ${m == model ? "selected" : ""}", onClick = () => pick(choice!.id, m), children = [span(className = "agent-name", children = m == "" ? texts.get("agent.defaultModel") : m), m == model ? span(className = "icon icon-check") : null])),
+        choice != null and models.length == 0 and choice!.kind != "local" ? div(className = "agent-custom", children = [div(className = "agent-head", children = texts.get("agent.model")), input(className = "agent-input", value = custom, placeholder = texts.get("agent.modelHint"), onChange = (e) => typed(e.target.value), onKeyDown = (e) => key(e, choice!.id))]) : null,
+      ],
+    )
+
+  toggle()
+    setState(() =>
+      open = not open
+    )
+
+  typed(value: string)
+    setState(() =>
+      custom = value
+    )
+
+  key(e: any, agent: string)
+    if e.key == "Enter"
+      pick(agent, custom.trim())
+    else if e.key == "Escape"
+      toggle()
+
+  pick(agent: string, model: string)
+    setState(() =>
+      open = false
+    )
+    ChannelsManager.chooseAgent(channel.id, agent, model)
+
+// An agent's mark by its kind: the local agent, an agent's command line, an API.
+stateless AgentMark(kind: string)
+  build() Element
+    span(className = "agent-mark ${kind}", children = span(className = "icon icon-${kind == "" ? "agent" : kind}"))
+
+// The agent a direct message is answered by: its own choice, else the host's default, else the local one (each only
+// when it is there).
+chosenAgent(member: Member, channel: Channel) Choice?
+  r = member.responder
+  r.choices.find((c) => c.id == channel.agent and c.available) ?? r.choices.find((c) => c.id == r.choice and c.available) ?? r.choices.find((c) => c.kind == "local")
+
+// Its model: the conversation's, or the host's for its default, or the agent's own default.
+chosenModel(member: Member, channel: Channel, choice: Choice) string
+  r = member.responder
+  own = channel.agent == choice.id ? channel.model : (channel.agent == "" and r.choice == choice.id ? r.model : "")
+  own == "" ? choice.defaultModel : own
+
+// The models the menu offers for an agent: its own default first when it has one of its own (`""`), then each.
+modelsOf(choice: Choice?) string[]
+  if choice == null or choice!.models.isEmpty
+    return []
+  choice!.defaultModel == "" ? ["", ...choice!.models] : choice!.models

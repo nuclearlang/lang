@@ -1,0 +1,343 @@
+// Nuclear Chat's service (spec 013): a workspace registered, its channels, messages folded from their lines, who
+// answers what (members, roles, the team's tech lead), a member's responder run (a stub `sh` script: typing, a
+// question answered, its cost), the GIFs (the pack, the personality, the one question). No network.
+
+// A responder that types, asks when told `ask me` (and says what it was answered), then is done with a cost.
+STUB = """read first
+echo '{"type": "typing"}'
+case "$first" in
+  *"ask me"*)
+    echo '{"type": "ask", "id": "q1", "kind": "spending", "question": "Go on?"}'
+    read answer
+    case "$answer" in *yes*) echo '{"type": "text", "text": "Confirmed."}' ;; *) echo '{"type": "text", "text": "Stopped."}' ;; esac ;;
+  *) echo '{"type": "text", "text": "On it."}' ;;
+esac
+echo '{"type": "done", "costUsd": 0.25}'
+"""
+
+// An agent that writes its answer in two pieces and says the arguments it was run with.
+STREAMER = """read first
+echo '{"type": "text-delta", "text": "via "}'
+echo '{"type": "text-delta", "text": "it"}'
+echo "{\\"type\\": \\"text\\", \\"text\\": \\"via $*\\"}"
+echo '{"type": "done", "costUsd": 0}'
+"""
+
+// A responder that laughs and asks for a GIF of the pack, and says whether it was given the pack's tags.
+GIFFER = """read first
+case "$first" in *gifTags*laugh*) tags=with ;; *) tags=without ;; esac
+echo "{\\"type\\": \\"text\\", \\"text\\": \\"Haha ($tags tags)\\"}"
+echo '{"type": "done", "costUsd": 0, "gif": "laugh"}'
+"""
+
+// A responder that dies without saying it was done.
+BROKEN = """read first
+echo "the provider is down" >&2
+exit 4
+"""
+
+member(id: string, name: string, role: string, team: string, script: string = STUB, gifs: string = "never") Member
+  Member(id = id, name = name, role = role, team = team, responder = Responder(command = ["sh", "-c", script, "stub"]), personality = Personality(gifs = gifs, on = ["failure", "success"]))
+
+// A project in a new folder with two teams: core (Ada the architect leads, Quinn the QA) and web (Lin the QA leads).
+project(files: ChatFiles) NewWorkspace
+  root = files.scratchFolder()
+  members = [member("ada", "Ada Lovelace", "architect", "core"), member("quinn", "Quinn", "qa", "core"), member("lin", "Lin", "qa", "web"), member("bob", "Bob", "developer", "core", BROKEN)]
+  NewWorkspace(root = root, host = "builder", members = members, teams = [Team(id = "core", name = "Core", lead = "ada"), Team(id = "web", name = "Web Team", lead = "lin")], channels = [Channel(id = "core", name = "core", members = ["you", "ada", "quinn", "bob"]), Channel(id = "web", name = "web", members = ["you", "lin"])])
+
+registered(input: NewWorkspace) Workspace
+  made: Result<Error, Workspace> = inject<WorkspacesAppComponent>().register(input)
+  expect(made.isOk)
+  made.value
+
+// The events of a workspace until `member` is done answering (or two seconds pass).
+untilDone(ws: Workspace, member: string, count: int = 1) ChatEvent[]
+  events = inject<EventsAppComponent>()
+  for _ in 0..200
+    told: Result<Error, ChatEvent[]> = events.since(ws.id, 0)
+    // `done` comes once the answer, its GIF and a failure are posted
+    if told.value.count((e) => e.type == "done" and e.data["member"] == member) >= count
+      return told.value
+    ~delay(10)
+  []
+
+history(ws: Workspace, channel: string) Message[]
+  found: Result<Error, Message[]> = inject<MessagesAppComponent>().history(ws.id, channel, null)
+  found.value
+
+tests Chat
+  // The ids of who answers a text in a channel.
+  answerersOf(ws: Workspace, channel: string, text: string) string[]
+    inject<Routing>().answerers(ws, ws.channel(channel)!, text).map((m) => m.id)
+
+  @test("a workspace has general, its host's channels and a direct message with every member; the same folder is the same workspace")
+  registers() void
+    files = inject<ChatFiles>()
+    input = project(files)
+    ws = registered(input)
+    expect(ws.channels.map((c) => c.id) == ["general", "core", "web", "dm-ada", "dm-quinn", "dm-lin", "dm-bob"])
+    expect(ws.channel("dm-ada")!.kind == "dm" and ws.channel("general")!.members.length == 5)
+    ~inject<ChannelsAppComponent>().read(ws.id, "core")
+    again = registered(input)
+    expect(again.id == ws.id and again.channel("core")!.lastRead > 0)
+    bad = inject<WorkspacesAppComponent>().register(NewWorkspace(root = input.root, host = "builder", members = input.members, teams = [Team(id = "x", lead = "nobody")]))
+    expect(bad.isErr and bad.error.status == 400)
+    missing = inject<WorkspacesAppComponent>().workspace("w0")
+    expect(missing.isErr and missing.error.status == 404)
+    // the brain that answers as a member is kept as the host gave it
+    input.members[0].brain = Brain(agent = "Claude Code", kind = "agent", provider = "claude-code", model = "opus", paid = true)
+    read: Result<Error, Workspace> = inject<WorkspacesAppComponent>().workspace(registered(input).id)
+    expect(read.value.members[0].brain.agent == "Claude Code" and read.value.members[0].brain.paid and read.value.members[1].brain.agent == "")
+
+  @test("a message is kept, edited, reacted to and threaded; a cut line is skipped; search and unread counts")
+  messages() void
+    files = inject<ChatFiles>()
+    ws = registered(project(files))
+    chat = inject<MessagesAppComponent>()
+    first = ~chat.say(ws.id, "general", Said(text = "release notes for run:r42 please"))
+    expect(first.isOk and first.value.links["run"] == "r42" and first.value.author == "you")
+    posted = ~chat.post(ws.id, "general", Posted(author = "ada", text = "Which release?", buttons = [Button(id = "v1", label = "v1")]))
+    expect(posted.isOk)
+    reply = ~chat.say(ws.id, "general", Said(text = "v1", thread = first.value.id))
+    expect(reply.isOk and reply.value.thread == first.value.id)
+    // a line cut by a crash, and lines that name a message
+    files.appendLine(ws.chatFile("general.jsonl"), "{\"id\": \"cut")
+    ~chat.update(ws.id, posted.value.id, Changes(text = "Which release? (answered)", buttons = []))
+    ~chat.react(ws.id, first.value.id, Reaction(emoji = "👍"))
+    ~chat.react(ws.id, first.value.id, Reaction(emoji = "🔥", by = "ada"))
+    ~chat.react(ws.id, first.value.id, Reaction(emoji = "👍"))
+    shown = history(ws, "general")
+    expect(shown.length == 3)
+    expect(shown[0].reactions == { "🔥": ["ada"] } and shown[0].replies == 1 and shown[0].lastReply == shown[2].at)
+    expect(shown[1].text == "Which release? (answered)" and shown[1].buttons.isEmpty and shown[1].edited > 0)
+    thread: Result<Error, Message[]> = chat.history(ws.id, "general", first.value.id)
+    expect(thread.value.map((m) => m.text) == ["release notes for run:r42 please", "v1"])
+    found: Result<Error, Found[]> = chat.search(ws.id, "RELEASE answered")
+    expect(found.value.length == 1 and found.value[0].message.author == "ada")
+    // only what others said counts as unread, until the channel is read
+    listed: Result<Error, Channel[]> = inject<ChannelsAppComponent>().list(ws.id)
+    expect(listed.value.find((c) => c.id == "general")!.unread == 1)
+    ~inject<ChannelsAppComponent>().read(ws.id, "general")
+    after: Result<Error, Channel[]> = inject<ChannelsAppComponent>().list(ws.id)
+    expect(after.value.find((c) => c.id == "general")!.unread == 0)
+    nothing = ~chat.say(ws.id, "nowhere", Said(text = "hi"))
+    expect(nothing.isErr and nothing.error.status == 404)
+    stranger = ~chat.post(ws.id, "general", Posted(author = "mallory", text = "hi"))
+    expect(stranger.isErr and stranger.error.status == 400)
+
+  @test("a channel the user makes, and a name taken")
+  channels() void
+    ws = registered(project(inject<ChatFiles>()))
+    made = ~inject<ChannelsAppComponent>().create(ws.id, NewChannel(name = "Release Plan", members = ["ada"]))
+    expect(made.isOk and made.value.id == "release-plan" and made.value.members == ["you", "ada"])
+    again = ~inject<ChannelsAppComponent>().create(ws.id, NewChannel(name = "release plan"))
+    expect(again.isErr and again.error.status == 409)
+    kept = registered(project(inject<ChatFiles>()))
+    expect(kept.channel("release-plan") == null)
+
+  @test("who answers: a direct message's member, a member by name or role, a team's tech lead")
+  routing() void
+    ws = registered(project(inject<ChatFiles>()))
+    expect(answerersOf(ws, "dm-quinn", "hello") == ["quinn"])
+    expect(answerersOf(ws, "general", "anyone?") == [])
+    expect(answerersOf(ws, "general", "@ada and @Quinn, look") == ["ada", "quinn"])
+    expect(answerersOf(ws, "general", "@adalovelace") == ["ada"])
+    // a role: the channel's team first
+    expect(answerersOf(ws, "web", "@qa is it tested?") == ["lin"])
+    expect(answerersOf(ws, "core", "@qa is it tested?") == ["quinn"])
+    // a team: its tech lead; its channel without a member mentioned too
+    expect(answerersOf(ws, "general", "@web what is left?") == ["lin"])
+    expect(answerersOf(ws, "core", "how is the run going?") == ["ada"])
+    expect(answerersOf(ws, "core", "@quinn only you") == ["quinn"])
+    expect(answerersOf(ws, "core", "@core and @quinn") == ["ada", "quinn"])
+
+  @test("a member's responder answers as the member, a question goes to the user and the answer back to it")
+  responder() void
+    ws = registered(project(inject<ChatFiles>()))
+    chat = inject<MessagesAppComponent>()
+    ~chat.say(ws.id, "dm-quinn", Said(text = "@quinn is the plan ready?"))
+    told = ~untilDone(ws, "quinn")
+    expect(told.any((e) => e.type == "typing" and e.data["member"] == "quinn"))
+    answered = history(ws, "dm-quinn")
+    expect(answered.length == 2 and answered[1].author == "quinn" and answered[1].text == "On it." and answered[1].costUsd == 0.25)
+    // a question: told, answered, and the run goes on with the answer
+    asked = ~chat.say(ws.id, "dm-ada", Said(text = "ask me"))
+    expect(asked.isOk)
+    question: ChatEvent? = null
+    for _ in 0..200
+      seen: Result<Error, ChatEvent[]> = inject<EventsAppComponent>().since(ws.id, 0)
+      question = seen.value.find((e) => e.type == "ask")
+      if question != null
+        break
+      ~delay(10)
+    expect(question != null and question!.data["question"] == "Go on?" and question!.data["member"] == "ada")
+    replied = ~inject<MembersAppComponent>().reply(ws.id, Answer(id = "q1", answer = "yes"))
+    expect(replied.isOk)
+    ~untilDone(ws, "ada")
+    expect(history(ws, "dm-ada").last.text == "Confirmed.")
+    late = ~inject<MembersAppComponent>().reply(ws.id, Answer(id = "q1", answer = "yes"))
+    expect(late.isErr and late.error.status == 404)
+
+  @test("a responder that fails is told by system; /poc is the host's action")
+  failures() void
+    ws = registered(project(inject<ChatFiles>()))
+    chat = inject<MessagesAppComponent>()
+    ~chat.say(ws.id, "general", Said(text = "@bob fix it"))
+    ~untilDone(ws, "bob")
+    last = history(ws, "general").last
+    expect(last.author == "system" and "Bob could not answer: it ended (4) without done: the provider is down" == last.text, last.text)
+    ~chat.say(ws.id, "core", Said(text = "/poc a websocket echo"))
+    seen: Result<Error, ChatEvent[]> = inject<EventsAppComponent>().since(ws.id, 0)
+    action = seen.value.find((e) => e.type == "action")
+    expect(action != null and action!.data["action"] == "poc" and action!.data["what"] == "a websocket echo")
+    // the tech lead does not answer a command
+    expect(not seen.value.any((e) => e.type == "typing" and e.data["member"] == "ada"))
+
+  @test("the pack: 30 drawings or more, searched by tag and title")
+  pack() void
+    gifs = inject<GifsAppComponent>()
+    all: Result<Error, PackGif[]> = gifs.pack()
+    expect(all.value.length >= 30 and all.value.all((g) => g.svg.startsWith("<svg") and not g.tags.isEmpty))
+    for moment in ["failure", "success", "question"]
+      expect(all.value.count((g) => moment in g.tags) >= 5)
+    ws = registered(project(inject<ChatFiles>()))
+    found = ~gifs.search(ws.id, "coffee")
+    expect(found.value.results.length == 1 and found.value.results[0].src == "pack/coffee.svg" and found.value.ask.isEmpty)
+
+  @test("a member's GIF by personality: never, or drawn from the message's id (the same every time)")
+  personality() void
+    choice = inject<GifChoice>()
+    quiet = member("q", "Q", "qa", "core")
+    expect(choice.choose(quiet, "failure", "any") == null)
+    loud = member("l", "L", "qa", "core", gifs = "often")
+    expect(choice.choose(loud, "question", "any") == null)
+    sent = 0
+    for i in 0..200
+      g = choice.choose(loud, "failure", "m-${i}")
+      if g != null
+        sent += 1
+        expect(choice.choose(loud, "failure", "m-${i}")!.src == g!.src)
+        expect(choice.all().find((p) => "pack/${p.file}" == g!.src)!.tags.any((t) => t == "failure"))
+    // often is one in two
+    expect(sent > 70 and sent < 130, "${sent}")
+    some = member("s", "S", "qa", "core", gifs = "sometimes")
+    rarely = [...0..200].count((i) => choice.choose(some, "success", "m-${i}") != null)
+    expect(rarely > 15 and rarely < 65, "${rarely}")
+
+  @test("a host's post at a failure brings the member's GIF after it")
+  postedGif() void
+    files = inject<ChatFiles>()
+    input = project(files)
+    input.members = [member("ada", "Ada", "architect", "core", gifs = "often")]
+    input.teams = [Team(id = "core", lead = "ada")]
+    input.channels = []
+    ws = registered(input)
+    chat = inject<MessagesAppComponent>()
+    for i in 0..20
+      ~chat.post(ws.id, "general", Posted(author = "ada", text = "the build broke ${i}", moment = "failure"))
+    shown = history(ws, "general")
+    withGif = shown.filter((m) => m.gif != null)
+    expect(not withGif.isEmpty and withGif.length < 20 and shown.length == 20 + withGif.length)
+    expect(withGif.all((m) => m.author == "ada" and m.gif!.source == "pack"))
+
+  @test("a member's answer asks for a GIF by tag: posted after it by personality, likelier when the user sent one")
+  answerGif() void
+    files = inject<ChatFiles>()
+    input = project(files)
+    input.members = [member("ada", "Ada", "architect", "core", GIFFER, gifs = "often"), member("quinn", "Quinn", "qa", "core", GIFFER)]
+    input.teams = [Team(id = "core", lead = "ada")]
+    input.channels = []
+    ws = registered(input)
+    chat = inject<MessagesAppComponent>()
+    ~chat.sendGif(ws.id, "dm-ada", SentGif(gif = Gif(src = "pack/atom-dance.svg", title = "Atom dance", source = "pack")))
+    ~chat.say(ws.id, "dm-ada", Said(text = "haha that is your new name"))
+    ~untilDone(ws, "ada")
+    shown = history(ws, "dm-ada")
+    // the user's GIF, their message, the answer (given the tags), and the GIF it asked for: always for `often` answering a GIF
+    expect(shown.length == 4 and shown[2].text == "Haha (with tags)" and shown[3].author == "ada" and shown[3].text.isEmpty, "${shown.map((m) => m.text)}")
+    expect(inject<GifChoice>().all().find((g) => "pack/${g.file}" == shown[3].gif!.src)!.tags.any((t) => t == "laugh"))
+    // a member who never sends one is not given the tags, and their ask is dropped
+    ~chat.say(ws.id, "dm-quinn", Said(text = "haha"))
+    ~untilDone(ws, "quinn")
+    quiet = history(ws, "dm-quinn")
+    expect(quiet.length == 2 and quiet[1].text == "Haha (without tags)" and quiet[1].gif == null)
+    // the cap: `sometimes` keeps about one in two asks, a tag outside the pack none, a moment only when the personality names it
+    choice = inject<GifChoice>()
+    some = member("s", "S", "qa", "core", gifs = "sometimes")
+    kept = [...0..200].count((i) => choice.pick(some, "laugh", "m-${i}", false) != null)
+    expect(kept > 70 and kept < 130, "${kept}")
+    expect([...0..50].all((i) => choice.pick(some, "no-such-tag", "m-${i}", true) == null and choice.pick(some, "question", "m-${i}", true) == null))
+    expect(choice.tags().count((t) => t == "laugh") == 1 and choice.tags().count((t) => t == "failure") == 1)
+
+  @test("a GIF service is searched only after the project said yes once, and with a key")
+  online() void
+    files = inject<ChatFiles>()
+    input = project(files)
+    input.gifs = "tenor"
+    ws = registered(input)
+    gifs = inject<GifsAppComponent>()
+    first = ~gifs.search(ws.id, "fire")
+    expect(first.value.ask == "online" and first.value.service == "tenor" and first.value.source == "pack" and first.value.results.length == 1)
+    gifs.keepConsent(ws.id, Consent(online = false))
+    refused = ~gifs.search(ws.id, "fire")
+    expect(refused.value.ask.isEmpty and refused.value.source == "pack")
+    gifs.keepConsent(ws.id, Consent(online = true))
+    // the tests' keyring holds no key of tenor
+    noKey = ~gifs.search(ws.id, "fire")
+    expect(noKey.value.note == "no-key" and noKey.value.results.length == 1)
+
+  @test("Tenor's and Giphy's answers as GIFs")
+  services() void
+    choice = inject<GifChoice>()
+    tenor = TenorPage(results = [Tenor(id = "1", title = "", contentDescription = "a cup", mediaFormats = TenorMediaFormats(gif = TenorGif(url = "https://t/a.gif"), tinygif = TenorTinygif(url = "https://t/a-tiny.gif")))])
+    expect(choice.fromTenor(tenor) == [Gif(src = "https://t/a-tiny.gif", title = "a cup", source = "tenor")])
+    giphy = GiphyPage(data = [Giphy(id = "g", title = "coffee GIF", images = GiphyImages(fixedHeight = GiphyFixedHeight(url = "https://g/200.gif")))])
+    expect(choice.fromGiphy(giphy) == [Gif(src = "https://g/200.gif", title = "coffee GIF", source = "giphy")])
+
+  @test("a direct message chooses its agent and model; the answer streams as it is written; the default stays the host's")
+  agents() void
+    files = inject<ChatFiles>()
+    input = project(files)
+    choices = [Choice(id = "local", label = "Local", kind = "local", command = ["sh", "-c", STREAMER, "local"]), Choice(id = "claude", label = "Claude", kind = "agent", command = ["sh", "-c", STREAMER, "claude"], paid = true, models = ["haiku", "opus"]), Choice(id = "gone", label = "Gone", available = false, why = "not on the PATH")]
+    input.members.add(Member(id = "atlas", name = "Atlas", role = "chat", responder = Responder(command = ["sh", "-c", STUB, "stub"], choice = "local", choices = choices)))
+    ws = registered(input)
+    rooms = inject<ChannelsAppComponent>()
+    for wrong in [["general", "local", ""], ["dm-ada", "local", ""], ["dm-atlas", "nobody", ""], ["dm-atlas", "gone", ""], ["dm-atlas", "claude", "sonnet"]]
+      refused = ~rooms.chooseAgent(ws.id, wrong[0], AgentChoice(agent = wrong[1], model = wrong[2]))
+      expect(refused.isErr and refused.error.status == 400, "${wrong}")
+    chosen = ~rooms.chooseAgent(ws.id, "dm-atlas", AgentChoice(agent = "claude", model = "opus"))
+    expect(chosen.isOk and chosen.value.agent == "claude" and chosen.value.model == "opus")
+    expect("\"agent\":\"claude\"" in files.readText(ws.chatFile("channels.json"))!)
+    again = registered(input)
+    expect(again.channel("dm-atlas")!.agent == "claude")
+    chat = inject<MessagesAppComponent>()
+    ~chat.say(ws.id, "dm-atlas", Said(text = "hello"))
+    told = ~untilDone(ws, "atlas")
+    expect(history(ws, "dm-atlas").last.text == "via --model opus --events", history(ws, "dm-atlas").last.text)
+    deltas = told.filter((e) => e.type == "message.delta").map((e) => "${e.data["text"]}")
+    expect(deltas == ["via ", "it"] and told.any((e) => e.type == "agent.changed" and e.data["agent"] == "claude"))
+    // back to the host's default: its choice, without a model
+    ~rooms.chooseAgent(ws.id, "dm-atlas", AgentChoice())
+    ~chat.say(ws.id, "dm-atlas", Said(text = "and now?"))
+    ~untilDone(ws, "atlas", 2)
+    expect(history(ws, "dm-atlas").last.text == "via --events")
+
+  @test("a project's history of the first service (no agent, model nor team in channels.json; no cost on a message) is read whole")
+  firstHistory() void
+    files = inject<ChatFiles>()
+    root = files.scratchFolder()
+    for name in ["channels.json", "general.jsonl", "dm-night-shift-developer.jsonl"]
+      // the fixtures of the source folder, from wherever the tests run (build/ or the project)
+      text = files.readText("../test/fixtures/compat/${name}") ?? files.readText("test/fixtures/compat/${name}")
+      expect(text != null, name)
+      files.writeText("${root}/.nuclear/chat/${name}", text!)
+    members = [member("night-shift-analyst", "Ana", "analyst", "night-shift"), member("night-shift-developer", "Neo", "developer", "night-shift")]
+    ws = registered(NewWorkspace(root = root, host = "builder", members = members, teams = [Team(id = "night-shift", name = "Night shift", lead = "night-shift-developer")], channels = [Channel(id = "night-shift", name = "night-shift", members = ["night-shift-analyst", "night-shift-developer"])]))
+    // the user's own channel and the last reads are kept; the new fields take their defaults
+    expect(ws.channel("standup") != null and ws.channel("general")!.lastRead == 1763000000500 and ws.channel("dm-night-shift-developer")!.agent.isEmpty)
+    shown = history(ws, "general")
+    expect(shown.map((m) => m.text) == ["who is on call?", "Me, all night long.", "Then I sleep.", "run:count-books passed"])
+    expect(shown[0].reactions == { "👍": ["night-shift-developer"] } and shown[0].replies == 1 and shown[1].edited == 1763000000200 and shown[1].costUsd == null)
+    expect(shown[3].links["run"] == "count-books" and history(ws, "dm-night-shift-developer").map((m) => m.author) == ["you", "night-shift-developer"])
+    listed: Result<Error, Channel[]> = inject<ChannelsAppComponent>().list(ws.id)
+    expect(listed.value.find((c) => c.id == "general")!.unread == 1)

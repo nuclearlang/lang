@@ -1,0 +1,178 @@
+use os
+use sys
+use json
+use time
+use httpx
+use zipfile
+use subprocess
+use pathlib{ Path }
+
+// The Builder's actions as the agents' tools (ADR-platform-0009, docs/02-architecture/actions.md): every tool is
+// documented, the MCP server speaks the protocol in a project, what spends or destroys waits for the user, the slides
+// are read, an answer reaches the process that waits on it, and the chat asks the user before it applies. No paid
+// call: a run's process is a fake command that only says what it was given.
+
+FAKE_DETACH = """#!/bin/sh
+echo "$@" >> "$DETACH_LOG"
+"""
+
+// The folder of this project (`build/nuclear_builder/tests/` is three folders down).
+builderDir() Path
+  Path(__file__).resolve().parents[3]
+
+toolsProject(tmpPath: Path, monkeypatch: any) string
+  root = tmpPath.joinpath("app")
+  root.joinpath("components", "books").mkdir(parents = true)
+  root.joinpath("config.nuc").writeText("")
+  root.joinpath(".nuclear").mkdir()
+  root.joinpath(".nuclear", "project.json").writeText(json.dumps({ "name": "app", "platform": "backend" }))
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("roles")}")
+  fake = tmpPath.joinpath("fake-builder")
+  fake.writeText(FAKE_DETACH)
+  fake.chmod(493)
+  monkeypatch.setenv("NUCLEAR_BUILDER_COMMAND", "${fake}")
+  monkeypatch.setenv("DETACH_LOG", "${tmpPath.joinpath("detached.log")}")
+  monkeypatch.chdir(root)
+  "${root}"
+
+// What the fake run's process was given, once it said it (it runs apart).
+detached(tmpPath: Path, lines: int) string[]
+  log = tmpPath.joinpath("detached.log")
+  for i in 0..40
+    if log.isFile() and log.readText().trim().split("\n").length >= lines
+      break
+    time.sleep(0.05)
+  log.isFile() ? log.readText().trim().split("\n") : ([] as string[])
+
+out(text: string) <string, any>
+  json.loads(text)
+
+testEveryToolIsDocumentedAndEveryPageActionNamesOne() void
+  names = builderToolNames()
+  expect(names.length == 55 and names.length == builderToolList(".").length, "${names.length}")
+  page = builderDir().joinpath("docs", "02-architecture", "actions.md").readText()
+  for name in names
+    expect("`${name}`" in page, "${name} is not in actions.md")
+  // every command a tool names is in the command's help
+  for command in ["spec new", "spec show", "run answer", "run stop", "team member", "line show", "connections", "read <path>", "mcp", "skills list", "skills show", "skills clone", "skills create", "team skills set"]
+    expect("nuclear-builder ${command}" in USAGE, command)
+
+testTheMcpServerSpeaksTheProtocolInAProject(tmpPath: Path, monkeypatch: any) void
+  root = toolsProject(tmpPath, monkeypatch)
+  env: <string, string> = dict(os.environ)
+  env["PYTHONPATH"] = "${Path(__file__).resolve().parents[2]}"
+  p = subprocess.Popen([sys.executable, "-c", "from nuclear_builder.cli import main; main()", "mcp", "--root", root], cwd = root, env = env, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.DEVNULL, text = true)
+  client = McpClient(p)
+  try
+    hello = client.call("initialize", { "protocolVersion": "2025-06-18", "capabilities": {} as <string, any>, "clientInfo": { "name": "test", "version": "0" } })
+    expect((hello["serverInfo"] as <string, any>)["name"] == "nuclear_builder" and "never answer it yourself" in "${hello["instructions"]}")
+    client.send({ "jsonrpc": "2.0", "method": "notifications/initialized" })
+    tools: <string, any>[] = client.call("tools/list", {})["tools"]!
+    expect(tools.map((t) => "${t["name"]}") == builderToolNames())
+    specNew = tools.find((t) => t["name"] == "spec_new")!
+    expect("criteria" in ((specNew["inputSchema"] as <string, any>)["required"] as string[]))
+    refused = mcpCall(client, "spec_new", { "title": "Lend a book", "component": "books", "criteria": [] as string[] })
+    expect("acceptance criteria" in "${refused["text"]}" and not Path(root, "specs").exists())
+    made = mcpCall(client, "spec_new", { "title": "Lend a book", "component": "books", "criteria": ["a lent book is not free"] })
+    expect(out("${made["text"]}")["path"] == "specs/books/lend-a-book")
+    expect("- [ ] a lent book is not free" in Path(root, "specs", "books", "lend-a-book", "spec.md").readText())
+    expect("outside the project" in "${mcpCall(client, "project_read", { "path": "../x" })["text"]}")
+    asked = out("${mcpCall(client, "spec_delete", { "id": "lend-a-book" })["text"]}")
+    expect((asked["needsUser"] as <string, any>)["tool"] == "spec_delete" and Path(root, "specs", "books", "lend-a-book").isDir())
+    expect(out("${mcpCall(client, "line_set", { "key": "forceConfirm", "value": false })["text"]}")["needsUser"] != null)
+    set = out("${mcpCall(client, "line_set", { "key": "stations", "value": ["analysis", "design"] })["text"]}")
+    expect(set["stations"] == ["analysis", "design"] and json.loads(Path(root, ".nuclear", "builder.json").readText())["stations"] == ["analysis", "design"])
+    expect(mcpCall(client, "spec_show", {} as <string, any>)["error"] == true)
+  finally
+    client.close()
+
+testARunStartsApartAndWhatSpendsOrActsInTheUsersNameWaitsForTheUser(tmpPath: Path, monkeypatch: any) void
+  root = toolsProject(tmpPath, monkeypatch)
+  tools = BuilderTools(root)
+  specNew(root, "No criteria", "books")
+  expect("acceptance criteria" in "${out(tools.runStartTool("no-criteria"))["error"]}")
+  specNew(root, "Lend a book", "books", "", "feature", "", ["a lent book is not free"])
+  started = out(tools.runStartTool("lend-a-book"))
+  expect(started["run"] == "lend-a-book" and started["waiting"] == null and loadRun(root, "lend-a-book")!["status"] == "pending", json.dumps(started))
+  expect(detached(tmpPath, 1) == ["run --resume lend-a-book"])
+  // a team with a paid provider: the run waits for the user's two confirmations
+  paid = saveTeam(crew("Paid", ["analyst", "architect"]))
+  waits = out(tools.runStartTool("lend-a-book", "${paid["id"]}"))
+  expect(waits["waiting"] == "spending" and "claude-code" in ((waits["spending"] as <string, any>)["providers"] as string[]))
+  run = loadRun(root, "lend-a-book")!
+  run["status"] = "waiting"
+  run["waiting"] = { "id": "spending-1", "kind": "spending", "question": "Go on?" }
+  saveRun(run)
+  expect(out(tools.runAnswerTool("lend-a-book", "yes"))["waiting"] == "spending")
+  expect(answerAndRefuse(root))
+  // the user's yes in the chat: kept in the run, which goes on
+  applyForUser(root, "run_spending", { "id": "lend-a-book" })
+  confirmed = loadRun(root, "lend-a-book")!
+  expect((confirmed["spending"] as <string, any>)["confirmed"] == true and confirmed["waiting"] == null)
+  expect(detached(tmpPath, 3).last == "run --resume lend-a-book")
+  // a gate: answered by a run that goes on with the answer; the delivery is the user's
+  confirmed["waiting"] = { "id": "gate-design", "kind": "gate", "question": "Approve the Design?" }
+  saveRun(confirmed)
+  answered = out(tools.runAnswerTool("lend-a-book", "change", "two weeks, not one"))
+  expect(answered["answer"] == "change" and detached(tmpPath, 4).last == "run answer lend-a-book --answer change --text two weeks, not one")
+  confirmed["waiting"] = { "id": "deliver", "kind": "gate", "question": "Make the branch?" }
+  saveRun(confirmed)
+  expect((out(tools.runAnswerTool("lend-a-book", "approve"))["needsUser"] as <string, any>)["tool"] == "run_answer")
+  expect(out(tools.teamDeleteTool("${paid["id"]}"))["needsUser"] != null and loadTeam("${paid["id"]}")["id"] == paid["id"])
+  expect(userDecision(tools.runRestartTool("lend-a-book")) != null and userDecision(tools.specListTool()) == null)
+
+// The command refuses to answer the spending too: only the user confirms it, where they answer.
+answerAndRefuse(root: string) boolean
+  try
+    answerRun(root, "lend-a-book", "yes")
+    false
+  catch e
+    "spending" in "${e}"
+
+testAnAnswerReachesTheProcessThatWaitsOnIt(tmpPath: Path, monkeypatch: any) void
+  root = toolsProject(tmpPath, monkeypatch)
+  run: <string, any> = { "id": "r1", "root": root, "status": "running", "owner": owner(), "created": 1, "spec": { "title": "R" }, "stages": [] as any[], "waiting": { "id": "gate-analysis", "kind": "gate", "question": "Approve?" } }
+  saveRun(run)
+  given = answerRun(root, "r1", "approve")
+  expect(given["by"] == "the process that runs it" and takeAnswer(root, "r1", "gate-design") == null)
+  expect(takeAnswer(root, "r1", "gate-analysis") == { "answer": "approve" } and not answerFile(root, "r1").exists())
+  expect(stopRun(root, "r1")["how"] == "it waits" and takeAnswer(root, "r1", "gate-analysis") == { "answer": "stop" })
+  run["status"] = "waiting"
+  run["owner"] = null
+  saveRun(run)
+  expect(answerRun(root, "r1", "approve")["resume"] == true and stopRun(root, "r1")["stopped"] == false)
+
+testAFileOfTheProjectIsReadForTheAgentSlidesToo(tmpPath: Path, monkeypatch: any) void
+  root = toolsProject(tmpPath, monkeypatch)
+  Path(root, "slides.md").writeText("# Library\n\n## Lend a book\n")
+  expect(projectRead(root, "slides.md")["text"] == "# Library\n\n## Lend a book\n")
+  deck = zipfile.ZipFile(Path(root, "deck.pptx"), "w")
+  deck.writestr("ppt/slides/slide2.xml", "<p:sld><a:t>Return a book</a:t><a:t>on time &amp; free</a:t></p:sld>")
+  deck.writestr("ppt/slides/slide1.xml", "<p:sld><a:t>Lend a book</a:t></p:sld>")
+  deck.close()
+  expect(projectRead(root, "deck.pptx")["text"] == "## Slide 1\n\nLend a book\n\n## Slide 2\n\nReturn a book\non time & free")
+  // shortcut: the sum is its own name, the transpiler writes `"x" * a + b` for repeat(a + b) (nuclearlang roadmap)
+  long = READ_MAX_CHARS + 5
+  Path(root, "big.txt").writeText("x".repeat(long))
+  expect(projectRead(root, "big.txt")["cut"] == true)
+  for wrong in ["../outside.md", "/etc/passwd", "nope.md"]
+    refused = false
+    try
+      projectRead(root, wrong)
+    catch e
+      refused = isinstance(e, ValueError)
+    expect(refused, wrong)
+
+testTheChatAsksTheUserBeforeAToolActsAndAppliesTheYes(tmpPath: Path, monkeypatch: any) void
+  root = toolsProject(tmpPath, monkeypatch)
+  team = saveTeam(crew("Old crew"))
+  answers = ["I ask.\n--- tool: team_delete ---\n{\"id\": \"${team["id"]}\"}", "Deleted."]
+  local = (request: httpx.Request) => httpx.Response(200, json = { "report": answers.length > 1 ? answers.removeAt(0) : answers[0] })
+  lines = [json.dumps({ "type": "say", "text": "delete the old crew" }), json.dumps({ "type": "answer", "id": "x", "answer": "yes" })]
+  events: <string, any>[] = []
+  chat = Chat(root, "c1", {}, readLine(root, "backend"), () => lines.isEmpty ? null : lines.removeAt(0), (e: <string, any>) => events.add(e), { "events": true, "transport": httpx.MockTransport(local) })
+  chat.start()
+  ask = events.find((e) => e["type"] == "ask")!
+  expect(ask["kind"] == "confirm" and "Delete the team" in "${ask["question"]}")
+  expect(not teamFile("${team["id"]}").exists() and events.last["status"] == "answered")

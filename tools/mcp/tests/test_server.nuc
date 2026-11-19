@@ -12,7 +12,9 @@ testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents(monk
   names: string[] = []
   for tool in asyncio.run(mcpServer().listTools())
     names.add(tool.name)
-  expect("graph_answer" in names and "generate_resource" in names and "developer_task" in names)
+  expect("graph_answer" in names and "generate_resource" in names and "developer_task" in names and names[0] == "nuclear_start")
+  // an agent with no context is sent to nuclear_start before anything else
+  expect("call nuclear_start" in mcpServer().instructions!)
   // every tool is in the guide of the MCP server
   page: string = Path(treeRoot()).joinpath("tools/mcp/docs/08-guides/mcp.md").readText()
   for name in names
@@ -28,3 +30,10 @@ testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape() void
   expect(spec == "# Loans\n\n- Use case: feature\n- Source: local\n- Lead: local agents only\n\n## Description\n\nA reader borrows a book.\n\n## Acceptance criteria\n\n- [ ] a book out is not lent\n")
   value = { "info": { "count": 3, "next": null }, "results": [{ "id": 1, "name": "x", "tags": [] }] }
   expect(shape(value) == "info: object\n  count: int\n  next: null (optional)\nresults: list of\n  id: int\n  name: string\n  tags: empty list")
+
+testAnAgentWithNoContextLearnsNuclearFromNuclearStart() void
+  tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
+  start: string = asyncio.run(tools.nuclearStart())
+  expect("Start here" in start and "The work cycle with the MCP tools" in start and "example/" in start)
+  doc: string = asyncio.run(tools.nuclearDoc("control"))
+  expect("match" in doc)

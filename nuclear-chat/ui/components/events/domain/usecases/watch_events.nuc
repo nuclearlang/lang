@@ -1,0 +1,4 @@
+// What happens in a workspace as it happens (messages, channels, typing, a member's question), for the screens.
+usecase WatchEvents(repository: LiveRepository)
+  exec(workspace: string) Stream<ChatEvent>
+    repository.events(workspace)

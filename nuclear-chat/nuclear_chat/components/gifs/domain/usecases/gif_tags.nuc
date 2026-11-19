@@ -1,0 +1,4 @@
+// Every tag of the pack, once: what a member may ask for.
+usecase GifTags(choice: GifChoice)
+  exec() Result<Error, string[]>
+    Ok(choice.tags())

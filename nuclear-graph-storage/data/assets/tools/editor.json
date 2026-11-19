@@ -8,80 +8,85 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 72 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
+   "summary": "The 77 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
-    "- Run an Action of the Active Project (run, debug, build, test…) (`nuclear.workspace.action`)",
-    "- Add the Active Project to the VS Code Workspace (`nuclear.workspace.addToVsCode`)",
-    "- Welcome Page — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
-    "- Set Up the AI Services (`nuclear.ai.setup`)",
-    "- Open a Tool — `ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
-    "- Open a Project as a Tab — `ctrl+alt+o` (`nuclear.workspace.openProject`)",
-    "- Go to Project Tab — `ctrl+1 (arg 1), ctrl+2 (arg 2), ctrl+3 (arg 3), ctrl+4 (arg 4), ctrl+5 (arg 5), ctrl+6 (arg 6), ctrl+7 (arg 7), ctrl+8 (arg 8), ctrl+9 (arg 9)` (`nuclear.workspace.project`)",
-    "- Show the Nuclear Workspace — `ctrl+alt+n` (`nuclear.workspace.show`)",
-    "- Refresh (`nuclear.httpConnections.refresh`)",
-    "- Select Environment (`nuclear.httpConnections.selectEnvironment`)",
-    "- Edit Environments (variables, headers, base urls) (`nuclear.httpConnections.editEnvironments`)",
-    "- Add an OpenAPI Document (`nuclear.httpConnections.addOpenApi`)",
-    "- Open Request (`nuclear.httpConnections.open`)",
-    "- Update Contracts (nuclear contracts update) (`nuclear.contracts.update`)",
-    "- Run (`nuclear.run`)",
-    "- Debug (`nuclear.debug`)",
-    "- Show Generated Code (`nuclear.showGeneratedCode`)",
-    "- Select Dialect (`nuclear.selectDialect`)",
-    "- Restart Language Server (`nuclear.restartServer`)",
-    "- Toggle code lenses for arrow functions (`nuclear.toggleCodeMetricsForArrowFunctions`)",
-    "- Toggle code metrics (`nuclear.toggleCodeMetricsDisplayed`)",
-    "- Show code metrics details (`nuclear.showCodeMetricsCodeLensInfo`)",
-    "- Open Synapsis Device (`nuclear.openDevice`)",
-    "- Run on Synapsis Device (`nuclear.runOnDevice`)",
-    "- Step Over (Nuclear Line) — `f10` (`nuclear.debug.stepOver`)",
-    "- Step Into (Nuclear Line) — `f11` (`nuclear.debug.stepInto`)",
-    "- Step Out (Nuclear) — `shift+f11` (`nuclear.debug.stepOut`)",
-    "- Go to the Same Line in Nuclear / Dart (`nuclear.debug.otherSide`)",
-    "- Open Frame (`nuclear.debug.openPlace`)",
-    "- Run — `ctrl+alt+r` (`nuclear.action.run`)",
-    "- Serve — `ctrl+alt+r` (`nuclear.action.serve`)",
-    "- Debug — `ctrl+alt+g` (`nuclear.action.debug`)",
-    "- Hot Reload — `ctrl+alt+l` (`nuclear.action.reload`)",
-    "- Run on a Synapsis Device (`nuclear.action.device`)",
-    "- Build — `ctrl+alt+b` (`nuclear.action.build`)",
-    "- Test — `ctrl+alt+t` (`nuclear.action.test`)",
-    "- Check — `ctrl+alt+c` (`nuclear.action.check`)",
-    "- Routes in HTTP Connections (`nuclear.action.api`)",
-    "- Open the web device (`nuclear.webDevice.open`)",
-    "- Debug on the web device (`nuclear.webDevice.debug`)",
-    "- Reload the web device (`nuclear.webDevice.reload`)",
-    "- New Use case (`nuclear.tree.make.usecase`)",
-    "- New Model (`nuclear.tree.make.model`)",
-    "- New Service (`nuclear.tree.make.service`)",
-    "- New Aggregate (`nuclear.tree.make.aggregate`)",
-    "- New Repository (`nuclear.tree.make.repository`)",
-    "- New Entity (`nuclear.tree.make.entity`)",
-    "- New Controller (`nuclear.tree.make.controller`)",
-    "- New Listener (`nuclear.tree.make.listener`)",
-    "- New Agent (`nuclear.tree.make.agent`)",
-    "- New Graph (`nuclear.tree.make.graph`)",
-    "- New Tools (`nuclear.tree.make.tools`)",
-    "- New State (`nuclear.tree.make.state`)",
-    "- New Stateful widget (`nuclear.tree.make.stateful`)",
-    "- New Stateless widget (`nuclear.tree.make.stateless`)",
-    "- New State model (`nuclear.tree.make.statemodel`)",
-    "- New State manager (`nuclear.tree.make.statemanager`)",
-    "- New Shared widget (`nuclear.tree.make.widget`)",
-    "- New Guard (`nuclear.tree.make.guard`)",
-    "- New Event (`nuclear.tree.make.event`)",
-    "- New Global component (`nuclear.tree.make.global`)",
-    "- New Page (`nuclear.tree.make.page`)",
-    "- New Integration test (`nuclear.tree.make.integration`)",
-    "- New Component (`nuclear.tree.make.component`)",
-    "- New Screen (`nuclear.tree.make.screen`)",
-    "- New Config (`nuclear.tree.make.config`)",
-    "- New Test (`nuclear.tree.make.test`)",
-    "- New Resource (from fields) (`nuclear.tree.make.resource`)",
-    "- New File… (`nuclear.tree.newFile`)",
-    "- New Folder… (`nuclear.tree.newFolder`)",
-    "- Rename… (`nuclear.tree.rename`)",
-    "- Delete (`nuclear.tree.delete`)"
+    "- %command.nuclear.chooseLanguage% (`nuclear.chooseLanguage`)",
+    "- %command.nuclear.monitor.open% (`nuclear.monitor.open`)",
+    "- %command.nuclear.workspace.action% (`nuclear.workspace.action`)",
+    "- %command.nuclear.workspace.addToVsCode% (`nuclear.workspace.addToVsCode`)",
+    "- %command.nuclear.workspace.welcome% — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
+    "- %command.nuclear.ai.setup% (`nuclear.ai.setup`)",
+    "- %command.nuclear.builder.teams% (`nuclear.builder.teams`)",
+    "- %command.nuclear.chat.open% (`nuclear.chat.open`)",
+    "- %command.nuclear.chat.gifKey% (`nuclear.chat.gifKey`)",
+    "- %command.nuclear.workspace.tool% — `ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+e (arg teams), ctrl+alt+f (arg monitor), ctrl+alt+v (arg devices)` (`nuclear.workspace.tool`)",
+    "- %command.nuclear.workspace.openProject% — `ctrl+alt+o` (`nuclear.workspace.openProject`)",
+    "- %command.nuclear.workspace.project% — `ctrl+1 (arg 1), ctrl+2 (arg 2), ctrl+3 (arg 3), ctrl+4 (arg 4), ctrl+5 (arg 5), ctrl+6 (arg 6), ctrl+7 (arg 7), ctrl+8 (arg 8), ctrl+9 (arg 9)` (`nuclear.workspace.project`)",
+    "- %command.nuclear.workspace.show% — `ctrl+alt+n` (`nuclear.workspace.show`)",
+    "- %command.nuclear.httpConnections.refresh% (`nuclear.httpConnections.refresh`)",
+    "- %command.nuclear.httpConnections.selectEnvironment% (`nuclear.httpConnections.selectEnvironment`)",
+    "- %command.nuclear.httpConnections.editEnvironments% (`nuclear.httpConnections.editEnvironments`)",
+    "- %command.nuclear.httpConnections.addOpenApi% (`nuclear.httpConnections.addOpenApi`)",
+    "- %command.nuclear.httpConnections.open% (`nuclear.httpConnections.open`)",
+    "- %command.nuclear.contracts.update% (`nuclear.contracts.update`)",
+    "- %command.nuclear.run% (`nuclear.run`)",
+    "- %command.nuclear.debug% (`nuclear.debug`)",
+    "- %command.nuclear.showGeneratedCode% (`nuclear.showGeneratedCode`)",
+    "- %command.nuclear.selectDialect% (`nuclear.selectDialect`)",
+    "- %command.nuclear.restartServer% (`nuclear.restartServer`)",
+    "- %command.nuclear.toggleCodeMetricsForArrowFunctions% (`nuclear.toggleCodeMetricsForArrowFunctions`)",
+    "- %command.nuclear.toggleCodeMetricsDisplayed% (`nuclear.toggleCodeMetricsDisplayed`)",
+    "- %command.nuclear.showCodeMetricsCodeLensInfo% (`nuclear.showCodeMetricsCodeLensInfo`)",
+    "- %command.nuclear.openDevice% (`nuclear.openDevice`)",
+    "- %command.nuclear.runOnDevice% (`nuclear.runOnDevice`)",
+    "- %command.nuclear.debug.stepOver% — `f10` (`nuclear.debug.stepOver`)",
+    "- %command.nuclear.debug.stepInto% — `f11` (`nuclear.debug.stepInto`)",
+    "- %command.nuclear.debug.stepOut% — `shift+f11` (`nuclear.debug.stepOut`)",
+    "- %command.nuclear.debug.otherSide% (`nuclear.debug.otherSide`)",
+    "- %command.nuclear.debug.openPlace% (`nuclear.debug.openPlace`)",
+    "- %command.nuclear.action.run% — `ctrl+alt+r` (`nuclear.action.run`)",
+    "- %command.nuclear.action.serve% — `ctrl+alt+r` (`nuclear.action.serve`)",
+    "- %command.nuclear.action.debug% — `ctrl+alt+g` (`nuclear.action.debug`)",
+    "- %command.nuclear.action.reload% — `ctrl+alt+l` (`nuclear.action.reload`)",
+    "- %command.nuclear.action.device% (`nuclear.action.device`)",
+    "- %command.nuclear.action.build% — `ctrl+alt+b` (`nuclear.action.build`)",
+    "- %command.nuclear.action.test% — `ctrl+alt+t` (`nuclear.action.test`)",
+    "- %command.nuclear.action.check% — `ctrl+alt+c` (`nuclear.action.check`)",
+    "- %command.nuclear.action.api% (`nuclear.action.api`)",
+    "- %command.nuclear.webDevice.open% (`nuclear.webDevice.open`)",
+    "- %command.nuclear.webDevice.debug% (`nuclear.webDevice.debug`)",
+    "- %command.nuclear.webDevice.reload% (`nuclear.webDevice.reload`)",
+    "- %command.nuclear.tree.make.usecase% (`nuclear.tree.make.usecase`)",
+    "- %command.nuclear.tree.make.model% (`nuclear.tree.make.model`)",
+    "- %command.nuclear.tree.make.service% (`nuclear.tree.make.service`)",
+    "- %command.nuclear.tree.make.aggregate% (`nuclear.tree.make.aggregate`)",
+    "- %command.nuclear.tree.make.repository% (`nuclear.tree.make.repository`)",
+    "- %command.nuclear.tree.make.entity% (`nuclear.tree.make.entity`)",
+    "- %command.nuclear.tree.make.controller% (`nuclear.tree.make.controller`)",
+    "- %command.nuclear.tree.make.listener% (`nuclear.tree.make.listener`)",
+    "- %command.nuclear.tree.make.agent% (`nuclear.tree.make.agent`)",
+    "- %command.nuclear.tree.make.graph% (`nuclear.tree.make.graph`)",
+    "- %command.nuclear.tree.make.tools% (`nuclear.tree.make.tools`)",
+    "- %command.nuclear.tree.make.state% (`nuclear.tree.make.state`)",
+    "- %command.nuclear.tree.make.stateful% (`nuclear.tree.make.stateful`)",
+    "- %command.nuclear.tree.make.stateless% (`nuclear.tree.make.stateless`)",
+    "- %command.nuclear.tree.make.statemodel% (`nuclear.tree.make.statemodel`)",
+    "- %command.nuclear.tree.make.statemanager% (`nuclear.tree.make.statemanager`)",
+    "- %command.nuclear.tree.make.widget% (`nuclear.tree.make.widget`)",
+    "- %command.nuclear.tree.make.guard% (`nuclear.tree.make.guard`)",
+    "- %command.nuclear.tree.make.event% (`nuclear.tree.make.event`)",
+    "- %command.nuclear.tree.make.global% (`nuclear.tree.make.global`)",
+    "- %command.nuclear.tree.make.page% (`nuclear.tree.make.page`)",
+    "- %command.nuclear.tree.make.integration% (`nuclear.tree.make.integration`)",
+    "- %command.nuclear.tree.make.component% (`nuclear.tree.make.component`)",
+    "- %command.nuclear.tree.make.screen% (`nuclear.tree.make.screen`)",
+    "- %command.nuclear.tree.make.config% (`nuclear.tree.make.config`)",
+    "- %command.nuclear.tree.make.test% (`nuclear.tree.make.test`)",
+    "- %command.nuclear.tree.make.resource% (`nuclear.tree.make.resource`)",
+    "- %command.nuclear.tree.newFile% (`nuclear.tree.newFile`)",
+    "- %command.nuclear.tree.newFolder% (`nuclear.tree.newFolder`)",
+    "- %command.nuclear.tree.rename% (`nuclear.tree.rename`)",
+    "- %command.nuclear.tree.delete% (`nuclear.tree.delete`)"
    ],
    "keys": [
     "vscode commands",
@@ -98,362 +103,387 @@
    "data": {
     "commands": [
      {
-      "title": "Run an Action of the Active Project (run, debug, build, test…)",
+      "title": "%command.nuclear.chooseLanguage%",
+      "command": "nuclear.chooseLanguage",
+      "keys": ""
+     },
+     {
+      "title": "%command.nuclear.monitor.open%",
+      "command": "nuclear.monitor.open",
+      "keys": ""
+     },
+     {
+      "title": "%command.nuclear.workspace.action%",
       "command": "nuclear.workspace.action",
       "keys": ""
      },
      {
-      "title": "Add the Active Project to the VS Code Workspace",
+      "title": "%command.nuclear.workspace.addToVsCode%",
       "command": "nuclear.workspace.addToVsCode",
       "keys": ""
      },
      {
-      "title": "Welcome Page",
+      "title": "%command.nuclear.workspace.welcome%",
       "command": "nuclear.workspace.welcome",
       "keys": "ctrl+alt+w"
      },
      {
-      "title": "Set Up the AI Services",
+      "title": "%command.nuclear.ai.setup%",
       "command": "nuclear.ai.setup",
       "keys": ""
      },
      {
-      "title": "Open a Tool",
-      "command": "nuclear.workspace.tool",
-      "keys": "ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+v (arg devices)"
+      "title": "%command.nuclear.builder.teams%",
+      "command": "nuclear.builder.teams",
+      "keys": ""
      },
      {
-      "title": "Open a Project as a Tab",
+      "title": "%command.nuclear.chat.open%",
+      "command": "nuclear.chat.open",
+      "keys": ""
+     },
+     {
+      "title": "%command.nuclear.chat.gifKey%",
+      "command": "nuclear.chat.gifKey",
+      "keys": ""
+     },
+     {
+      "title": "%command.nuclear.workspace.tool%",
+      "command": "nuclear.workspace.tool",
+      "keys": "ctrl+alt+h (arg http-connections), ctrl+alt+p (arg builder), ctrl+alt+d (arg designer), ctrl+alt+m (arg docs), ctrl+alt+a (arg atlas), ctrl+alt+s (arg settings), ctrl+alt+e (arg teams), ctrl+alt+f (arg monitor), ctrl+alt+v (arg devices)"
+     },
+     {
+      "title": "%command.nuclear.workspace.openProject%",
       "command": "nuclear.workspace.openProject",
       "keys": "ctrl+alt+o"
      },
      {
-      "title": "Go to Project Tab",
+      "title": "%command.nuclear.workspace.project%",
       "command": "nuclear.workspace.project",
       "keys": "ctrl+1 (arg 1), ctrl+2 (arg 2), ctrl+3 (arg 3), ctrl+4 (arg 4), ctrl+5 (arg 5), ctrl+6 (arg 6), ctrl+7 (arg 7), ctrl+8 (arg 8), ctrl+9 (arg 9)"
      },
      {
-      "title": "Show the Nuclear Workspace",
+      "title": "%command.nuclear.workspace.show%",
       "command": "nuclear.workspace.show",
       "keys": "ctrl+alt+n"
      },
      {
-      "title": "Refresh",
+      "title": "%command.nuclear.httpConnections.refresh%",
       "command": "nuclear.httpConnections.refresh",
       "keys": ""
      },
      {
-      "title": "Select Environment",
+      "title": "%command.nuclear.httpConnections.selectEnvironment%",
       "command": "nuclear.httpConnections.selectEnvironment",
       "keys": ""
      },
      {
-      "title": "Edit Environments (variables, headers, base urls)",
+      "title": "%command.nuclear.httpConnections.editEnvironments%",
       "command": "nuclear.httpConnections.editEnvironments",
       "keys": ""
      },
      {
-      "title": "Add an OpenAPI Document",
+      "title": "%command.nuclear.httpConnections.addOpenApi%",
       "command": "nuclear.httpConnections.addOpenApi",
       "keys": ""
      },
      {
-      "title": "Open Request",
+      "title": "%command.nuclear.httpConnections.open%",
       "command": "nuclear.httpConnections.open",
       "keys": ""
      },
      {
-      "title": "Update Contracts (nuclear contracts update)",
+      "title": "%command.nuclear.contracts.update%",
       "command": "nuclear.contracts.update",
       "keys": ""
      },
      {
-      "title": "Run",
+      "title": "%command.nuclear.run%",
       "command": "nuclear.run",
       "keys": ""
      },
      {
-      "title": "Debug",
+      "title": "%command.nuclear.debug%",
       "command": "nuclear.debug",
       "keys": ""
      },
      {
-      "title": "Show Generated Code",
+      "title": "%command.nuclear.showGeneratedCode%",
       "command": "nuclear.showGeneratedCode",
       "keys": ""
      },
      {
-      "title": "Select Dialect",
+      "title": "%command.nuclear.selectDialect%",
       "command": "nuclear.selectDialect",
       "keys": ""
      },
      {
-      "title": "Restart Language Server",
+      "title": "%command.nuclear.restartServer%",
       "command": "nuclear.restartServer",
       "keys": ""
      },
      {
-      "title": "Toggle code lenses for arrow functions",
+      "title": "%command.nuclear.toggleCodeMetricsForArrowFunctions%",
       "command": "nuclear.toggleCodeMetricsForArrowFunctions",
       "keys": ""
      },
      {
-      "title": "Toggle code metrics",
+      "title": "%command.nuclear.toggleCodeMetricsDisplayed%",
       "command": "nuclear.toggleCodeMetricsDisplayed",
       "keys": ""
      },
      {
-      "title": "Show code metrics details",
+      "title": "%command.nuclear.showCodeMetricsCodeLensInfo%",
       "command": "nuclear.showCodeMetricsCodeLensInfo",
       "keys": ""
      },
      {
-      "title": "Open Synapsis Device",
+      "title": "%command.nuclear.openDevice%",
       "command": "nuclear.openDevice",
       "keys": ""
      },
      {
-      "title": "Run on Synapsis Device",
+      "title": "%command.nuclear.runOnDevice%",
       "command": "nuclear.runOnDevice",
       "keys": ""
      },
      {
-      "title": "Step Over (Nuclear Line)",
+      "title": "%command.nuclear.debug.stepOver%",
       "command": "nuclear.debug.stepOver",
       "keys": "f10"
      },
      {
-      "title": "Step Into (Nuclear Line)",
+      "title": "%command.nuclear.debug.stepInto%",
       "command": "nuclear.debug.stepInto",
       "keys": "f11"
      },
      {
-      "title": "Step Out (Nuclear)",
+      "title": "%command.nuclear.debug.stepOut%",
       "command": "nuclear.debug.stepOut",
       "keys": "shift+f11"
      },
      {
-      "title": "Go to the Same Line in Nuclear / Dart",
+      "title": "%command.nuclear.debug.otherSide%",
       "command": "nuclear.debug.otherSide",
       "keys": ""
      },
      {
-      "title": "Open Frame",
+      "title": "%command.nuclear.debug.openPlace%",
       "command": "nuclear.debug.openPlace",
       "keys": ""
      },
      {
-      "title": "Run",
+      "title": "%command.nuclear.action.run%",
       "command": "nuclear.action.run",
       "keys": "ctrl+alt+r"
      },
      {
-      "title": "Serve",
+      "title": "%command.nuclear.action.serve%",
       "command": "nuclear.action.serve",
       "keys": "ctrl+alt+r"
      },
      {
-      "title": "Debug",
+      "title": "%command.nuclear.action.debug%",
       "command": "nuclear.action.debug",
       "keys": "ctrl+alt+g"
      },
      {
-      "title": "Hot Reload",
+      "title": "%command.nuclear.action.reload%",
       "command": "nuclear.action.reload",
       "keys": "ctrl+alt+l"
      },
      {
-      "title": "Run on a Synapsis Device",
+      "title": "%command.nuclear.action.device%",
       "command": "nuclear.action.device",
       "keys": ""
      },
      {
-      "title": "Build",
+      "title": "%command.nuclear.action.build%",
       "command": "nuclear.action.build",
       "keys": "ctrl+alt+b"
      },
      {
-      "title": "Test",
+      "title": "%command.nuclear.action.test%",
       "command": "nuclear.action.test",
       "keys": "ctrl+alt+t"
      },
      {
-      "title": "Check",
+      "title": "%command.nuclear.action.check%",
       "command": "nuclear.action.check",
       "keys": "ctrl+alt+c"
      },
      {
-      "title": "Routes in HTTP Connections",
+      "title": "%command.nuclear.action.api%",
       "command": "nuclear.action.api",
       "keys": ""
      },
      {
-      "title": "Open the web device",
+      "title": "%command.nuclear.webDevice.open%",
       "command": "nuclear.webDevice.open",
       "keys": ""
      },
      {
-      "title": "Debug on the web device",
+      "title": "%command.nuclear.webDevice.debug%",
       "command": "nuclear.webDevice.debug",
       "keys": ""
      },
      {
-      "title": "Reload the web device",
+      "title": "%command.nuclear.webDevice.reload%",
       "command": "nuclear.webDevice.reload",
       "keys": ""
      },
      {
-      "title": "New Use case",
+      "title": "%command.nuclear.tree.make.usecase%",
       "command": "nuclear.tree.make.usecase",
       "keys": ""
      },
      {
-      "title": "New Model",
+      "title": "%command.nuclear.tree.make.model%",
       "command": "nuclear.tree.make.model",
       "keys": ""
      },
      {
-      "title": "New Service",
+      "title": "%command.nuclear.tree.make.service%",
       "command": "nuclear.tree.make.service",
       "keys": ""
      },
      {
-      "title": "New Aggregate",
+      "title": "%command.nuclear.tree.make.aggregate%",
       "command": "nuclear.tree.make.aggregate",
       "keys": ""
      },
      {
-      "title": "New Repository",
+      "title": "%command.nuclear.tree.make.repository%",
       "command": "nuclear.tree.make.repository",
       "keys": ""
      },
      {
-      "title": "New Entity",
+      "title": "%command.nuclear.tree.make.entity%",
       "command": "nuclear.tree.make.entity",
       "keys": ""
      },
      {
-      "title": "New Controller",
+      "title": "%command.nuclear.tree.make.controller%",
       "command": "nuclear.tree.make.controller",
       "keys": ""
      },
      {
-      "title": "New Listener",
+      "title": "%command.nuclear.tree.make.listener%",
       "command": "nuclear.tree.make.listener",
       "keys": ""
      },
      {
-      "title": "New Agent",
+      "title": "%command.nuclear.tree.make.agent%",
       "command": "nuclear.tree.make.agent",
       "keys": ""
      },
      {
-      "title": "New Graph",
+      "title": "%command.nuclear.tree.make.graph%",
       "command": "nuclear.tree.make.graph",
       "keys": ""
      },
      {
-      "title": "New Tools",
+      "title": "%command.nuclear.tree.make.tools%",
       "command": "nuclear.tree.make.tools",
       "keys": ""
      },
      {
-      "title": "New State",
+      "title": "%command.nuclear.tree.make.state%",
       "command": "nuclear.tree.make.state",
       "keys": ""
      },
      {
-      "title": "New Stateful widget",
+      "title": "%command.nuclear.tree.make.stateful%",
       "command": "nuclear.tree.make.stateful",
       "keys": ""
      },
      {
-      "title": "New Stateless widget",
+      "title": "%command.nuclear.tree.make.stateless%",
       "command": "nuclear.tree.make.stateless",
       "keys": ""
      },
      {
-      "title": "New State model",
+      "title": "%command.nuclear.tree.make.statemodel%",
       "command": "nuclear.tree.make.statemodel",
       "keys": ""
      },
      {
-      "title": "New State manager",
+      "title": "%command.nuclear.tree.make.statemanager%",
       "command": "nuclear.tree.make.statemanager",
       "keys": ""
      },
      {
-      "title": "New Shared widget",
+      "title": "%command.nuclear.tree.make.widget%",
       "command": "nuclear.tree.make.widget",
       "keys": ""
      },
      {
-      "title": "New Guard",
+      "title": "%command.nuclear.tree.make.guard%",
       "command": "nuclear.tree.make.guard",
       "keys": ""
      },
      {
-      "title": "New Event",
+      "title": "%command.nuclear.tree.make.event%",
       "command": "nuclear.tree.make.event",
       "keys": ""
      },
      {
-      "title": "New Global component",
+      "title": "%command.nuclear.tree.make.global%",
       "command": "nuclear.tree.make.global",
       "keys": ""
      },
      {
-      "title": "New Page",
+      "title": "%command.nuclear.tree.make.page%",
       "command": "nuclear.tree.make.page",
       "keys": ""
      },
      {
-      "title": "New Integration test",
+      "title": "%command.nuclear.tree.make.integration%",
       "command": "nuclear.tree.make.integration",
       "keys": ""
      },
      {
-      "title": "New Component",
+      "title": "%command.nuclear.tree.make.component%",
       "command": "nuclear.tree.make.component",
       "keys": ""
      },
      {
-      "title": "New Screen",
+      "title": "%command.nuclear.tree.make.screen%",
       "command": "nuclear.tree.make.screen",
       "keys": ""
      },
      {
-      "title": "New Config",
+      "title": "%command.nuclear.tree.make.config%",
       "command": "nuclear.tree.make.config",
       "keys": ""
      },
      {
-      "title": "New Test",
+      "title": "%command.nuclear.tree.make.test%",
       "command": "nuclear.tree.make.test",
       "keys": ""
      },
      {
-      "title": "New Resource (from fields)",
+      "title": "%command.nuclear.tree.make.resource%",
       "command": "nuclear.tree.make.resource",
       "keys": ""
      },
      {
-      "title": "New File…",
+      "title": "%command.nuclear.tree.newFile%",
       "command": "nuclear.tree.newFile",
       "keys": ""
      },
      {
-      "title": "New Folder…",
+      "title": "%command.nuclear.tree.newFolder%",
       "command": "nuclear.tree.newFolder",
       "keys": ""
      },
      {
-      "title": "Rename…",
+      "title": "%command.nuclear.tree.rename%",
       "command": "nuclear.tree.rename",
       "keys": ""
      },
      {
-      "title": "Delete",
+      "title": "%command.nuclear.tree.delete%",
       "command": "nuclear.tree.delete",
       "keys": ""
      }
@@ -464,39 +494,33 @@
    "id": "editor:vscode.settings.ai",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the AI loop, the local agents and their integrations",
-   "summary": "The 31 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
+   "summary": "The 25 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
    "body": [
-    "- `nuclear.ai.developerUrl` (default `\"http://127.0.0.1:7879\"`): Where the Nuclear Developer (the local agents) answers.",
-    "- `nuclear.ai.graphUrl` (default `\"http://127.0.0.1:7878\"`): Where the Nuclear Smart Graph answers.",
-    "- `nuclear.ai.ollamaUrl` (default `\"http://localhost:11434\"`): Where Ollama runs the local models.",
-    "- `nuclear.ai.models.coder` (default `\"qwen2.5-coder:3b\"`): The local model that writes and repairs code and tests (at most 3B parameters). Applies when the Developer is started from Settings and integrations.",
-    "- `nuclear.ai.models.assistant` (default `\"gemma4:e2b\"`): The local model that plans, reviews, documents, diagnoses and chats (at most 3B effective parameters).",
-    "- `nuclear.ai.models.embeddings` (default `\"embeddinggemma\"`): The embeddings model of the Smart Graph's search (re-ingest after changing it).",
-    "- `nuclear.ai.claudeModel` (default `\"sonnet\"`): Claude's model when Claude leads a Builder run.",
-    "- `nuclear.ai.mcpCommand` (default `\"nuclear-mcp\"`): The program that serves the Nuclear MCP server (an AI client starts it with no argument).",
-    "- `nuclear.ai.graphCommand` (default `\"nuclear-graph\"`): The Smart Graph's program (serve, connect, requests, revoke).",
-    "- `nuclear.ai.retry.attempts` (default `5`): Tries of a call to the local agents that fails for a passing reason (down, busy, 5xx), the first included.",
-    "- `nuclear.ai.retry.baseMs` (default `1000`): The ceiling of the first wait before a retry, in milliseconds; it doubles at each retry (exponential backoff with full jitter).",
-    "- `nuclear.ai.retry.maxMs` (default `30000`): The longest wait before a retry, in milliseconds.",
-    "- `nuclear.ai.contextTokens` (default `8192`): The context window of the local models, in tokens: what Nuclear Atlas's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx).",
-    "- `nuclear.ai.claude.command` (default `\"claude\"`): Claude Code's command: the Builder's lead when Claude leads, checked before every such run.",
-    "- `nuclear.ai.claude.maxBudgetUsd` (default `2`): The most a Builder run led by Claude may spend, in USD (0: no limit).",
-    "- `nuclear.ai.codex.enabled` (default `false`): Use Codex (its MCP server entry and its regular check).",
-    "- `nuclear.ai.codex.command` (default `\"codex\"`): Codex's command.",
-    "- `nuclear.ai.opencode.enabled` (default `false`): Use OpenCode (its MCP server entry and its regular check).",
-    "- `nuclear.ai.opencode.command` (default `\"opencode\"`): OpenCode's command.",
-    "- `nuclear.ai.opencode.configFile` (default `\"~/.config/opencode/opencode.json\"`): OpenCode's configuration file, where the Nuclear MCP server is added.",
-    "- `nuclear.ai.cursor.mcpFile` (default `\"~/.cursor/mcp.json\"`): Cursor's MCP configuration file, where the Nuclear MCP server is added.",
-    "- `nuclear.ai.github.command` (default `\"gh\"`): GitHub's command line (issues imported as Builder specs), checked with `gh auth status`.",
-    "- `nuclear.ai.jira.site` (default `\"\"`): Your Jira site (https://your-team.atlassian.net): issues imported as Builder specs. The API token is kept in the secret storage.",
-    "- `nuclear.ai.jira.email` (default `\"\"`): The email of your Atlassian account (Jira).",
-    "- `nuclear.ai.jira.criteriaField` (default `\"\"`): Optional: the Jira field that holds the acceptance criteria (customfield_10050); empty: read them from the description.",
-    "- `nuclear.ai.watch.callTimeoutMinutes` (default `15`): A call to the local agents that takes longer is cut and retried.",
-    "- `nuclear.ai.watch.stallSeconds` (default `90`): A call is stalled (cut and retried) when, this long, the Developer does not answer or Ollama holds no model.",
-    "- `nuclear.ai.watch.minFreeMb` (default `500`): Free disk space (the project and the temporary folder) a Builder run needs before it starts.",
-    "- `nuclear.ai.resumeInterrupted` (default `true`): A Builder run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped.",
-    "- `nuclear.ai.checkEveryMinutes` (default `5`): How often every connection (the Developer, the Smart Graph, Ollama and its models, Claude, Codex, OpenCode, GitHub, Jira) is checked; a notification says when one stops answering (0: only before each task).",
-    "- `nuclear.ai.watch.commandTimeoutMinutes` (default `20`): A command of the Builder (a build, the tests) that runs longer is killed with its children and the step fails."
+    "- `nuclear.ai.developerUrl` (default `\"http://127.0.0.1:7879\"`): %nuclear.ai.developerUrl.desc%",
+    "- `nuclear.ai.graphUrl` (default `\"http://127.0.0.1:7878\"`): %nuclear.ai.graphUrl.desc%",
+    "- `nuclear.ai.ollamaUrl` (default `\"http://localhost:11434\"`): %nuclear.ai.ollamaUrl.desc%",
+    "- `nuclear.ai.models.coder` (default `\"qwen2.5-coder:3b\"`): %nuclear.ai.models.coder.desc%",
+    "- `nuclear.ai.models.assistant` (default `\"gemma4:e2b\"`): %nuclear.ai.models.assistant.desc%",
+    "- `nuclear.ai.models.embeddings` (default `\"embeddinggemma\"`): %nuclear.ai.models.embeddings.desc%",
+    "- `nuclear.ai.mcpCommand` (default `\"nuclear-mcp\"`): %nuclear.ai.mcpCommand.desc%",
+    "- `nuclear.ai.graphCommand` (default `\"nuclear-graph\"`): %nuclear.ai.graphCommand.desc%",
+    "- `nuclear.ai.retry.attempts` (default `5`): %nuclear.ai.retry.attempts.desc%",
+    "- `nuclear.ai.retry.baseMs` (default `1000`): %nuclear.ai.retry.baseMs.desc%",
+    "- `nuclear.ai.retry.maxMs` (default `30000`): %nuclear.ai.retry.maxMs.desc%",
+    "- `nuclear.ai.claude.command` (default `\"claude\"`): %nuclear.ai.claude.command.desc%",
+    "- `nuclear.ai.codex.enabled` (default `false`): %nuclear.ai.codex.enabled.desc%",
+    "- `nuclear.ai.codex.command` (default `\"codex\"`): %nuclear.ai.codex.command.desc%",
+    "- `nuclear.ai.opencode.enabled` (default `false`): %nuclear.ai.opencode.enabled.desc%",
+    "- `nuclear.ai.opencode.command` (default `\"opencode\"`): %nuclear.ai.opencode.command.desc%",
+    "- `nuclear.ai.opencode.configFile` (default `\"~/.config/opencode/opencode.json\"`): %nuclear.ai.opencode.configFile.desc%",
+    "- `nuclear.ai.cursor.mcpFile` (default `\"~/.cursor/mcp.json\"`): %nuclear.ai.cursor.mcpFile.desc%",
+    "- `nuclear.ai.github.command` (default `\"gh\"`): %nuclear.ai.github.command.desc%",
+    "- `nuclear.ai.jira.site` (default `\"\"`): %nuclear.ai.jira.site.desc%",
+    "- `nuclear.ai.jira.email` (default `\"\"`): %nuclear.ai.jira.email.desc%",
+    "- `nuclear.ai.jira.criteriaField` (default `\"\"`): %nuclear.ai.jira.criteriaField.desc%",
+    "- `nuclear.ai.watch.callTimeoutMinutes` (default `15`): %nuclear.ai.watch.callTimeoutMinutes.desc%",
+    "- `nuclear.ai.watch.stallSeconds` (default `90`): %nuclear.ai.watch.stallSeconds.desc%",
+    "- `nuclear.ai.checkEveryMinutes` (default `5`): %nuclear.ai.checkEveryMinutes.desc%"
    ],
    "keys": [
     "vscode ai settings"
@@ -513,157 +537,127 @@
      {
       "name": "nuclear.ai.developerUrl",
       "default": "\"http://127.0.0.1:7879\"",
-      "does": "Where the Nuclear Developer (the local agents) answers."
+      "does": "%nuclear.ai.developerUrl.desc%"
      },
      {
       "name": "nuclear.ai.graphUrl",
       "default": "\"http://127.0.0.1:7878\"",
-      "does": "Where the Nuclear Smart Graph answers."
+      "does": "%nuclear.ai.graphUrl.desc%"
      },
      {
       "name": "nuclear.ai.ollamaUrl",
       "default": "\"http://localhost:11434\"",
-      "does": "Where Ollama runs the local models."
+      "does": "%nuclear.ai.ollamaUrl.desc%"
      },
      {
       "name": "nuclear.ai.models.coder",
       "default": "\"qwen2.5-coder:3b\"",
-      "does": "The local model that writes and repairs code and tests (at most 3B parameters). Applies when the Developer is started from Settings and integrations."
+      "does": "%nuclear.ai.models.coder.desc%"
      },
      {
       "name": "nuclear.ai.models.assistant",
       "default": "\"gemma4:e2b\"",
-      "does": "The local model that plans, reviews, documents, diagnoses and chats (at most 3B effective parameters)."
+      "does": "%nuclear.ai.models.assistant.desc%"
      },
      {
       "name": "nuclear.ai.models.embeddings",
       "default": "\"embeddinggemma\"",
-      "does": "The embeddings model of the Smart Graph's search (re-ingest after changing it)."
-     },
-     {
-      "name": "nuclear.ai.claudeModel",
-      "default": "\"sonnet\"",
-      "does": "Claude's model when Claude leads a Builder run."
+      "does": "%nuclear.ai.models.embeddings.desc%"
      },
      {
       "name": "nuclear.ai.mcpCommand",
       "default": "\"nuclear-mcp\"",
-      "does": "The program that serves the Nuclear MCP server (an AI client starts it with no argument)."
+      "does": "%nuclear.ai.mcpCommand.desc%"
      },
      {
       "name": "nuclear.ai.graphCommand",
       "default": "\"nuclear-graph\"",
-      "does": "The Smart Graph's program (serve, connect, requests, revoke)."
+      "does": "%nuclear.ai.graphCommand.desc%"
      },
      {
       "name": "nuclear.ai.retry.attempts",
       "default": "5",
-      "does": "Tries of a call to the local agents that fails for a passing reason (down, busy, 5xx), the first included."
+      "does": "%nuclear.ai.retry.attempts.desc%"
      },
      {
       "name": "nuclear.ai.retry.baseMs",
       "default": "1000",
-      "does": "The ceiling of the first wait before a retry, in milliseconds; it doubles at each retry (exponential backoff with full jitter)."
+      "does": "%nuclear.ai.retry.baseMs.desc%"
      },
      {
       "name": "nuclear.ai.retry.maxMs",
       "default": "30000",
-      "does": "The longest wait before a retry, in milliseconds."
-     },
-     {
-      "name": "nuclear.ai.contextTokens",
-      "default": "8192",
-      "does": "The context window of the local models, in tokens: what Nuclear Atlas's meter measures against. The Nuclear Developer runs its models with 8192 (config/project_config.nuc numCtx)."
+      "does": "%nuclear.ai.retry.maxMs.desc%"
      },
      {
       "name": "nuclear.ai.claude.command",
       "default": "\"claude\"",
-      "does": "Claude Code's command: the Builder's lead when Claude leads, checked before every such run."
-     },
-     {
-      "name": "nuclear.ai.claude.maxBudgetUsd",
-      "default": "2",
-      "does": "The most a Builder run led by Claude may spend, in USD (0: no limit)."
+      "does": "%nuclear.ai.claude.command.desc%"
      },
      {
       "name": "nuclear.ai.codex.enabled",
       "default": "false",
-      "does": "Use Codex (its MCP server entry and its regular check)."
+      "does": "%nuclear.ai.codex.enabled.desc%"
      },
      {
       "name": "nuclear.ai.codex.command",
       "default": "\"codex\"",
-      "does": "Codex's command."
+      "does": "%nuclear.ai.codex.command.desc%"
      },
      {
       "name": "nuclear.ai.opencode.enabled",
       "default": "false",
-      "does": "Use OpenCode (its MCP server entry and its regular check)."
+      "does": "%nuclear.ai.opencode.enabled.desc%"
      },
      {
       "name": "nuclear.ai.opencode.command",
       "default": "\"opencode\"",
-      "does": "OpenCode's command."
+      "does": "%nuclear.ai.opencode.command.desc%"
      },
      {
       "name": "nuclear.ai.opencode.configFile",
       "default": "\"~/.config/opencode/opencode.json\"",
-      "does": "OpenCode's configuration file, where the Nuclear MCP server is added."
+      "does": "%nuclear.ai.opencode.configFile.desc%"
      },
      {
       "name": "nuclear.ai.cursor.mcpFile",
       "default": "\"~/.cursor/mcp.json\"",
-      "does": "Cursor's MCP configuration file, where the Nuclear MCP server is added."
+      "does": "%nuclear.ai.cursor.mcpFile.desc%"
      },
      {
       "name": "nuclear.ai.github.command",
       "default": "\"gh\"",
-      "does": "GitHub's command line (issues imported as Builder specs), checked with `gh auth status`."
+      "does": "%nuclear.ai.github.command.desc%"
      },
      {
       "name": "nuclear.ai.jira.site",
       "default": "\"\"",
-      "does": "Your Jira site (https://your-team.atlassian.net): issues imported as Builder specs. The API token is kept in the secret storage."
+      "does": "%nuclear.ai.jira.site.desc%"
      },
      {
       "name": "nuclear.ai.jira.email",
       "default": "\"\"",
-      "does": "The email of your Atlassian account (Jira)."
+      "does": "%nuclear.ai.jira.email.desc%"
      },
      {
       "name": "nuclear.ai.jira.criteriaField",
       "default": "\"\"",
-      "does": "Optional: the Jira field that holds the acceptance criteria (customfield_10050); empty: read them from the description."
+      "does": "%nuclear.ai.jira.criteriaField.desc%"
      },
      {
       "name": "nuclear.ai.watch.callTimeoutMinutes",
       "default": "15",
-      "does": "A call to the local agents that takes longer is cut and retried."
+      "does": "%nuclear.ai.watch.callTimeoutMinutes.desc%"
      },
      {
       "name": "nuclear.ai.watch.stallSeconds",
       "default": "90",
-      "does": "A call is stalled (cut and retried) when, this long, the Developer does not answer or Ollama holds no model."
-     },
-     {
-      "name": "nuclear.ai.watch.minFreeMb",
-      "default": "500",
-      "does": "Free disk space (the project and the temporary folder) a Builder run needs before it starts."
-     },
-     {
-      "name": "nuclear.ai.resumeInterrupted",
-      "default": "true",
-      "does": "A Builder run the editor left half done (closed or crashed) is recovered and goes on from the step where it stopped."
+      "does": "%nuclear.ai.watch.stallSeconds.desc%"
      },
      {
       "name": "nuclear.ai.checkEveryMinutes",
       "default": "5",
-      "does": "How often every connection (the Developer, the Smart Graph, Ollama and its models, Claude, Codex, OpenCode, GitHub, Jira) is checked; a notification says when one stops answering (0: only before each task)."
-     },
-     {
-      "name": "nuclear.ai.watch.commandTimeoutMinutes",
-      "default": "20",
-      "does": "A command of the Builder (a build, the tests) that runs longer is killed with its children and the step fails."
+      "does": "%nuclear.ai.checkEveryMinutes.desc%"
      }
     ]
    }
@@ -672,121 +666,136 @@
    "id": "editor:vscode.settings.editor",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the language, the dialect, the build and the devices",
-   "summary": "The 113 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
+   "summary": "The 128 settings of the Nuclear extension for the language, the dialect, the build and the devices, with their defaults.",
    "body": [
-    "- `nuclear.dialect` (default `\"flutter\"`): Dialect used to check `.nuc` files outside a project. A project names its platform and dialect in `config.nuc` (or `nuclear.toml`) and the server uses those. `base` checks only the base language.",
-    "- `nuclear.dialectPaths` (default `[]`): Extra directories with dialects (absolute or relative to the workspace). `<workspace>/dialects` is always searched.",
-    "- `nuclear.server.path` (default `\"\"`): Path to the `nuclear-lsp` binary. Empty: the one bundled with the extension, then `nuclear-lsp` on the `PATH`.",
-    "- `nuclear.trace.server` (default `\"off\"`): Traces the communication between VS Code and the Nuclear language server.",
-    "- `nuclear.debug.followInNuclear` (default `true`): When a Synapsis app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code.",
-    "- `nuclear.debug.explainErrors` (default `true`): Show Dart run-time errors of a Synapsis app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error.",
-    "- `nuclear.workspace.welcome` (default `true`): Show the Nuclear workspace welcome page (projects and shortcuts) when VS Code starts with no editor open. Ctrl+Alt+W opens it any time.",
-    "- `nuclear.buildOnSave` (default `true`): Saving a `.nuc` of a backend or web project runs `nuclear build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session.",
-    "- `nuclear.codemetrics.basics.CodeLensEnabled` (default `true`): A flag which indicates whether code metrics are shown as code lens",
-    "- `nuclear.codemetrics.basics.CodeLensHiddenUnder` (default `3`): Threshold to show code lens for code metrics",
-    "- `nuclear.codemetrics.basics.ComplexityColorExtreme` (default `\"#ff0000\"`): Color for the extreme complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityColorHigh` (default `\"#f44034\"`): Color for the high complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityColorLow` (default `\"#4bb14f\"`): Color for the low complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityColorNormal` (default `\"#ffc208\"`): Color for the normal complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelExtreme` (default `25`): Threshold to determine extreme high complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelExtremeDescription` (default `\"Bloody hell...\"`): Code lens message for extreme high complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelHigh` (default `10`): Threshold to determine high complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelHighDescription` (default `\"You must be kidding\"`): Code lens message for high complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelLow` (default `0`): Threshold to determine low complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelLowDescription` (default `\"Everything is cool!\"`): Code lens message for low complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelNormal` (default `5`): Threshold to determine normal complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityLevelNormalDescription` (default `\"It's time to do something...\"`): Code lens message for normal complexity level",
-    "- `nuclear.codemetrics.basics.ComplexityTemplate` (default `\"Complexity is {0} {1}\"`): Code lens message template {0} stands for the actual value {1} is for the complexity level description",
-    "- `nuclear.codemetrics.basics.DecorationModeEnabled` (default `true`): A flag which indicates whether code metrics are shown as inline decoration",
-    "- `nuclear.codemetrics.basics.DecorationTemplate` (default `\"<svg xmlns='http://www.w3.org/2000/svg' width='{{size}}px' height='{{size}}px' viewbox='0 0 {{size}} {{size}}'><rect width='{{size}}' height='{{size}}' style='fill:{{color}};stroke-width:1;stroke:#fff'/></svg>\"`): A flag which indicates whether code metrics are shown as inline decoration",
-    "- `nuclear.codemetrics.basics.DiagnosticsEnabled` (default `false`): A flag which indicates whether code metrics are shown as diagnostics",
-    "- `nuclear.codemetrics.basics.Exclude` (default `[]`): Array of exclusion patterns (in glob format)",
-    "- `nuclear.codemetrics.basics.FileSizeLimitMB` (default `0.5`): File size limit in megabytes, above this codemetrics are not going to be computed, use a negative number to allow any size",
-    "- `nuclear.codemetrics.basics.IgnoredFunctionNames` (default `[]`): A set of function names to ignore from calculations",
-    "- `nuclear.codemetrics.basics.MetricsForArrowFunctionsToggled` (default `true`): A flag which indicates whether code metrics are enabled for arrow functions (can also be toggled via a command)",
-    "- `nuclear.codemetrics.basics.MetricsForClassDeclarationsToggled` (default `true`): A flag which indicates whether code metrics are enabled for class declarations",
-    "- `nuclear.codemetrics.basics.MetricsForConstructorsToggled` (default `true`): A flag which indicates whether code metrics are enabled for constructors",
-    "- `nuclear.codemetrics.basics.MetricsForEnumDeclarationsToggled` (default `true`): A flag which indicates whether code metrics are enabled for enum declarations",
-    "- `nuclear.codemetrics.basics.MetricsForFunctionDeclarationsToggled` (default `true`): A flag which indicates whether code metrics are enabled for function declarations",
-    "- `nuclear.codemetrics.basics.MetricsForFunctionExpressionsToggled` (default `true`): A flag which indicates whether code metrics are enabled for function expressions",
-    "- `nuclear.codemetrics.basics.MetricsForMethodDeclarationsToggled` (default `true`): A flag which indicates whether code metrics are enabled for methods declarations",
-    "- `nuclear.codemetrics.basics.OverviewRulerModeEnabled` (default `true`): A flag which indicates whether code metrics are shown on the overview ruler",
-    "- `nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpression` (default `0`): Complexity increment of list literal `[a, b]`",
-    "- `nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpressionDescription` (default `\"Array literal expression\"`): Text of list literal `[a, b]` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ArrowFunction` (default `1`): Complexity increment of lambda `(x) => ...`",
-    "- `nuclear.codemetrics.nodeconfiguration.ArrowFunctionDescription` (default `\"Arrow function\"`): Text of lambda `(x) => ...` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.BinaryExpression` (default `1`): Complexity increment of `and` / `or`",
-    "- `nuclear.codemetrics.nodeconfiguration.BinaryExpressionDescription` (default `\"Binary expression\"`): Text of `and` / `or` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.BreakStatement` (default `1`): Complexity increment of `break`",
-    "- `nuclear.codemetrics.nodeconfiguration.BreakStatementDescription` (default `\"Break statement\"`): Text of `break` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.CallExpression` (default `0`): Complexity increment of call `f(x)`",
-    "- `nuclear.codemetrics.nodeconfiguration.CallExpressionDescription` (default `\"Call expression\"`): Text of call `f(x)` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.CaseClause` (default `1`): Complexity increment of arm of a `match`",
-    "- `nuclear.codemetrics.nodeconfiguration.CaseClauseDescription` (default `\"Case clause\"`): Text of arm of a `match` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.CatchClause` (default `1`): Complexity increment of `catch`",
-    "- `nuclear.codemetrics.nodeconfiguration.CatchClauseDescription` (default `\"Catch clause\"`): Text of `catch` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ClassDeclaration` (default `0`): Complexity increment of module or dialect kind (`User`, `stateless Home`)",
-    "- `nuclear.codemetrics.nodeconfiguration.ClassDeclarationDescription` (default `\"Class declaration\"`): Text of module or dialect kind (`User`, `stateless Home`) in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ConditionalExpression` (default `1`): Complexity increment of `cond ? a : b`",
-    "- `nuclear.codemetrics.nodeconfiguration.ConditionalExpressionDescription` (default `\"Conditional expression\"`): Text of `cond ? a : b` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.Constructor` (default `1`): Complexity increment of `(params)` line of a module",
-    "- `nuclear.codemetrics.nodeconfiguration.ConstructorDescription` (default `\"Constructor\"`): Text of `(params)` line of a module in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ContinueStatement` (default `1`): Complexity increment of `continue`",
-    "- `nuclear.codemetrics.nodeconfiguration.ContinueStatementDescription` (default `\"Continue statement\"`): Text of `continue` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.DefaultClause` (default `1`): Complexity increment of `_` arm of a `match`",
-    "- `nuclear.codemetrics.nodeconfiguration.DefaultClauseDescription` (default `\"Default case\"`): Text of `_` arm of a `match` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ElementAccessExpression` (default `0`): Complexity increment of `list[i]`",
-    "- `nuclear.codemetrics.nodeconfiguration.ElementAccessExpressionDescription` (default `\"Element access expression\"`): Text of `list[i]` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.EnumDeclaration` (default `1`): Complexity increment of enum",
-    "- `nuclear.codemetrics.nodeconfiguration.EnumDeclarationDescription` (default `\"Enum declaration\"`): Text of enum in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ForStatement` (default `1`): Complexity increment of `for x in xs`",
-    "- `nuclear.codemetrics.nodeconfiguration.ForStatementDescription` (default `\"For statement\"`): Text of `for x in xs` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.FunctionDeclaration` (default `1`): Complexity increment of top-level function",
-    "- `nuclear.codemetrics.nodeconfiguration.FunctionDeclarationDescription` (default `\"Function declaration\"`): Text of top-level function in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.GetAccessor` (default `0`): Complexity increment of `get name`",
-    "- `nuclear.codemetrics.nodeconfiguration.GetAccessorDescription` (default `\"Get accessor\"`): Text of `get name` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.IfStatement` (default `1`): Complexity increment of `if` / `else if` without `else`, `if` inside a list",
-    "- `nuclear.codemetrics.nodeconfiguration.IfStatementDescription` (default `\"If statement\"`): Text of `if` / `else if` without `else`, `if` inside a list in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.IfWithElseStatement` (default `1`): Complexity increment of `if` / `else if` followed by another branch",
-    "- `nuclear.codemetrics.nodeconfiguration.IfWithElseStatementDescription` (default `\"If with else statement\"`): Text of `if` / `else if` followed by another branch in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ImportDeclaration` (default `0`): Complexity increment of `use`",
-    "- `nuclear.codemetrics.nodeconfiguration.ImportDeclarationDescription` (default `\"Import declaration\"`): Text of `use` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.InterfaceDeclaration` (default `0`): Complexity increment of module with signatures only",
-    "- `nuclear.codemetrics.nodeconfiguration.InterfaceDeclarationDescription` (default `\"Interface declaration\"`): Text of module with signatures only in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.MethodDeclaration` (default `1`): Complexity increment of method of a module",
-    "- `nuclear.codemetrics.nodeconfiguration.MethodDeclarationDescription` (default `\"Method declaration\"`): Text of method of a module in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.MethodSignature` (default `0`): Complexity increment of method without body",
-    "- `nuclear.codemetrics.nodeconfiguration.MethodSignatureDescription` (default `\"Method signature\"`): Text of method without body in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.NewExpression` (default `0`): Complexity increment of `User(...)` (PascalCase call)",
-    "- `nuclear.codemetrics.nodeconfiguration.NewExpressionDescription` (default `\"New expression\"`): Text of `User(...)` (PascalCase call) in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpression` (default `0`): Complexity increment of map literal `{ a: 1 }`",
-    "- `nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpressionDescription` (default `\"Object literal expression\"`): Text of map literal `{ a: 1 }` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.Parameter` (default `0`): Complexity increment of parameter",
-    "- `nuclear.codemetrics.nodeconfiguration.ParameterDescription` (default `\"Parameter\"`): Text of parameter in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpression` (default `0`): Complexity increment of `not x`, `-x`, `~call()`",
-    "- `nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpressionDescription` (default `\"Prefix unary expression\"`): Text of `not x`, `-x`, `~call()` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.PropertyAccessExpression` (default `0`): Complexity increment of `a.b`",
-    "- `nuclear.codemetrics.nodeconfiguration.PropertyAccessExpressionDescription` (default `\"Property access expression\"`): Text of `a.b` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.PropertyDeclaration` (default `0`): Complexity increment of field of a module",
-    "- `nuclear.codemetrics.nodeconfiguration.PropertyDeclarationDescription` (default `\"Property declaration\"`): Text of field of a module in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ReturnStatement` (default `1`): Complexity increment of `return`",
-    "- `nuclear.codemetrics.nodeconfiguration.ReturnStatementDescription` (default `\"Return statement\"`): Text of `return` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.SetAccessor` (default `0`): Complexity increment of `set name`",
-    "- `nuclear.codemetrics.nodeconfiguration.SetAccessorDescription` (default `\"Set accessor\"`): Text of `set name` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.StringLiteral` (default `0`): Complexity increment of text without interpolation",
-    "- `nuclear.codemetrics.nodeconfiguration.StringLiteralDescription` (default `\"String literal\"`): Text of text without interpolation in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.SwitchStatement` (default `1`): Complexity increment of `match`",
-    "- `nuclear.codemetrics.nodeconfiguration.SwitchStatementDescription` (default `\"Switch statement\"`): Text of `match` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.TemplateExpression` (default `0`): Complexity increment of text with `${...}`",
-    "- `nuclear.codemetrics.nodeconfiguration.TemplateExpressionDescription` (default `\"Template expression\"`): Text of text with `${...}` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.ThrowStatement` (default `1`): Complexity increment of `throw`",
-    "- `nuclear.codemetrics.nodeconfiguration.ThrowStatementDescription` (default `\"Throw statement\"`): Text of `throw` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.TryStatement` (default `1`): Complexity increment of `try`",
-    "- `nuclear.codemetrics.nodeconfiguration.TryStatementDescription` (default `\"Try statement\"`): Text of `try` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.TypeAssertionExpression` (default `0`): Complexity increment of `x as T`",
-    "- `nuclear.codemetrics.nodeconfiguration.TypeAssertionExpressionDescription` (default `\"Type assertion expression\"`): Text of `x as T` in the details list",
-    "- `nuclear.codemetrics.nodeconfiguration.WhileStatement` (default `1`): Complexity increment of `while`",
-    "- `nuclear.codemetrics.nodeconfiguration.WhileStatementDescription` (default `\"While statement\"`): Text of `while` in the details list"
+    "- `nuclear.language` (default `\"auto\"`): %nuclear.language.desc%",
+    "- `nuclear.notifications` (default `\"all\"`): %nuclear.notifications.desc%",
+    "- `nuclear.dialect` (default `\"flutter\"`): %nuclear.dialect.md%",
+    "- `nuclear.dialectPaths` (default `[]`): %nuclear.dialectPaths.md%",
+    "- `nuclear.server.path` (default `\"\"`): %nuclear.server.path.md%",
+    "- `nuclear.trace.server` (default `\"off\"`): %nuclear.trace.server.desc%",
+    "- `nuclear.debug.followInNuclear` (default `true`): %nuclear.debug.followInNuclear.desc%",
+    "- `nuclear.debug.explainErrors` (default `true`): %nuclear.debug.explainErrors.desc%",
+    "- `nuclear.workspace.welcome` (default `true`): %nuclear.workspace.welcome.desc%",
+    "- `nuclear.buildOnSave` (default `true`): %nuclear.buildOnSave.md%",
+    "- `nuclear.builder.team` (default `\"\"`): %nuclear.builder.team.desc%",
+    "- `nuclear.builder.claudeModel` (default `\"haiku\"`): %nuclear.builder.claudeModel.desc%",
+    "- `nuclear.builder.resumeInterrupted` (default `true`): %nuclear.builder.resumeInterrupted.desc%",
+    "- `nuclear.builder.minFreeMb` (default `500`): %nuclear.builder.minFreeMb.desc%",
+    "- `nuclear.builder.commandTimeoutMinutes` (default `20`): %nuclear.builder.commandTimeoutMinutes.desc%",
+    "- `nuclear.builder.chat` (default `{\"kind\": \"local\", \"provider\": \"nuclear-developer\", \"model\": \"\"}`): %nuclear.builder.chat.desc%",
+    "- `nuclear.spending.budgetUsd` (default `5`): %nuclear.spending.budgetUsd.desc%",
+    "- `nuclear.spending.confirm` (default `true`): %nuclear.spending.confirm.desc%",
+    "- `nuclear.spending.forceConfirm` (default `false`): %nuclear.spending.forceConfirm.desc%",
+    "- `nuclear.atlas.contextTokens` (default `8192`): %nuclear.atlas.contextTokens.desc%",
+    "- `nuclear.chat.gifs` (default `\"pack\"`): %nuclear.chat.gifs.desc%",
+    "- `nuclear.http.timeoutSeconds` (default `30`): %nuclear.http.timeoutSeconds.desc%",
+    "- `nuclear.devices.idleMinutes` (default `30`): %nuclear.devices.idleMinutes.desc%",
+    "- `nuclear.codemetrics.basics.CodeLensEnabled` (default `true`): %codemetrics.basics.CodeLensEnabled%",
+    "- `nuclear.codemetrics.basics.CodeLensHiddenUnder` (default `3`): %codemetrics.basics.CodeLensHiddenUnder%",
+    "- `nuclear.codemetrics.basics.ComplexityColorExtreme` (default `\"#ff0000\"`): %codemetrics.basics.ComplexityColorExtreme%",
+    "- `nuclear.codemetrics.basics.ComplexityColorHigh` (default `\"#f44034\"`): %codemetrics.basics.ComplexityColorHigh%",
+    "- `nuclear.codemetrics.basics.ComplexityColorLow` (default `\"#4bb14f\"`): %codemetrics.basics.ComplexityColorLow%",
+    "- `nuclear.codemetrics.basics.ComplexityColorNormal` (default `\"#ffc208\"`): %codemetrics.basics.ComplexityColorNormal%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelExtreme` (default `25`): %codemetrics.basics.ComplexityLevelExtreme%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelExtremeDescription` (default `\"Bloody hell...\"`): %codemetrics.basics.ComplexityLevelExtremeDescription%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelHigh` (default `10`): %codemetrics.basics.ComplexityLevelHigh%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelHighDescription` (default `\"You must be kidding\"`): %codemetrics.basics.ComplexityLevelHighDescription%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelLow` (default `0`): %codemetrics.basics.ComplexityLevelLow%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelLowDescription` (default `\"Everything is cool!\"`): %codemetrics.basics.ComplexityLevelLowDescription%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelNormal` (default `5`): %codemetrics.basics.ComplexityLevelNormal%",
+    "- `nuclear.codemetrics.basics.ComplexityLevelNormalDescription` (default `\"It's time to do something...\"`): %codemetrics.basics.ComplexityLevelNormalDescription%",
+    "- `nuclear.codemetrics.basics.ComplexityTemplate` (default `\"Complexity is {0} {1}\"`): %codemetrics.basics.ComplexityTemplate%",
+    "- `nuclear.codemetrics.basics.DecorationModeEnabled` (default `true`): %codemetrics.basics.DecorationModeEnabled%",
+    "- `nuclear.codemetrics.basics.DecorationTemplate` (default `\"<svg xmlns='http://www.w3.org/2000/svg' width='{{size}}px' height='{{size}}px' viewbox='0 0 {{size}} {{size}}'><rect width='{{size}}' height='{{size}}' style='fill:{{color}};stroke-width:1;stroke:#fff'/></svg>\"`): %codemetrics.basics.DecorationTemplate%",
+    "- `nuclear.codemetrics.basics.DiagnosticsEnabled` (default `false`): %codemetrics.basics.DiagnosticsEnabled%",
+    "- `nuclear.codemetrics.basics.Exclude` (default `[]`): %codemetrics.basics.Exclude%",
+    "- `nuclear.codemetrics.basics.FileSizeLimitMB` (default `0.5`): %codemetrics.basics.FileSizeLimitMB%",
+    "- `nuclear.codemetrics.basics.IgnoredFunctionNames` (default `[]`): %codemetrics.basics.IgnoredFunctionNames%",
+    "- `nuclear.codemetrics.basics.MetricsForArrowFunctionsToggled` (default `true`): %codemetrics.basics.MetricsForArrowFunctionsToggled%",
+    "- `nuclear.codemetrics.basics.MetricsForClassDeclarationsToggled` (default `true`): %codemetrics.basics.MetricsForClassDeclarationsToggled%",
+    "- `nuclear.codemetrics.basics.MetricsForConstructorsToggled` (default `true`): %codemetrics.basics.MetricsForConstructorsToggled%",
+    "- `nuclear.codemetrics.basics.MetricsForEnumDeclarationsToggled` (default `true`): %codemetrics.basics.MetricsForEnumDeclarationsToggled%",
+    "- `nuclear.codemetrics.basics.MetricsForFunctionDeclarationsToggled` (default `true`): %codemetrics.basics.MetricsForFunctionDeclarationsToggled%",
+    "- `nuclear.codemetrics.basics.MetricsForFunctionExpressionsToggled` (default `true`): %codemetrics.basics.MetricsForFunctionExpressionsToggled%",
+    "- `nuclear.codemetrics.basics.MetricsForMethodDeclarationsToggled` (default `true`): %codemetrics.basics.MetricsForMethodDeclarationsToggled%",
+    "- `nuclear.codemetrics.basics.OverviewRulerModeEnabled` (default `true`): %codemetrics.basics.OverviewRulerModeEnabled%",
+    "- `nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpression` (default `0`): %codemetrics.node.ArrayLiteralExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpressionDescription` (default `\"Array literal expression\"`): %codemetrics.node.ArrayLiteralExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ArrowFunction` (default `1`): %codemetrics.node.ArrowFunction%",
+    "- `nuclear.codemetrics.nodeconfiguration.ArrowFunctionDescription` (default `\"Arrow function\"`): %codemetrics.node.ArrowFunctionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.BinaryExpression` (default `1`): %codemetrics.node.BinaryExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.BinaryExpressionDescription` (default `\"Binary expression\"`): %codemetrics.node.BinaryExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.BreakStatement` (default `1`): %codemetrics.node.BreakStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.BreakStatementDescription` (default `\"Break statement\"`): %codemetrics.node.BreakStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.CallExpression` (default `0`): %codemetrics.node.CallExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.CallExpressionDescription` (default `\"Call expression\"`): %codemetrics.node.CallExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.CaseClause` (default `1`): %codemetrics.node.CaseClause%",
+    "- `nuclear.codemetrics.nodeconfiguration.CaseClauseDescription` (default `\"Case clause\"`): %codemetrics.node.CaseClauseDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.CatchClause` (default `1`): %codemetrics.node.CatchClause%",
+    "- `nuclear.codemetrics.nodeconfiguration.CatchClauseDescription` (default `\"Catch clause\"`): %codemetrics.node.CatchClauseDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ClassDeclaration` (default `0`): %codemetrics.node.ClassDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.ClassDeclarationDescription` (default `\"Class declaration\"`): %codemetrics.node.ClassDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ConditionalExpression` (default `1`): %codemetrics.node.ConditionalExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.ConditionalExpressionDescription` (default `\"Conditional expression\"`): %codemetrics.node.ConditionalExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.Constructor` (default `1`): %codemetrics.node.Constructor%",
+    "- `nuclear.codemetrics.nodeconfiguration.ConstructorDescription` (default `\"Constructor\"`): %codemetrics.node.ConstructorDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ContinueStatement` (default `1`): %codemetrics.node.ContinueStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.ContinueStatementDescription` (default `\"Continue statement\"`): %codemetrics.node.ContinueStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.DefaultClause` (default `1`): %codemetrics.node.DefaultClause%",
+    "- `nuclear.codemetrics.nodeconfiguration.DefaultClauseDescription` (default `\"Default case\"`): %codemetrics.node.DefaultClauseDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ElementAccessExpression` (default `0`): %codemetrics.node.ElementAccessExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.ElementAccessExpressionDescription` (default `\"Element access expression\"`): %codemetrics.node.ElementAccessExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.EnumDeclaration` (default `1`): %codemetrics.node.EnumDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.EnumDeclarationDescription` (default `\"Enum declaration\"`): %codemetrics.node.EnumDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ForStatement` (default `1`): %codemetrics.node.ForStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.ForStatementDescription` (default `\"For statement\"`): %codemetrics.node.ForStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.FunctionDeclaration` (default `1`): %codemetrics.node.FunctionDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.FunctionDeclarationDescription` (default `\"Function declaration\"`): %codemetrics.node.FunctionDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.GetAccessor` (default `0`): %codemetrics.node.GetAccessor%",
+    "- `nuclear.codemetrics.nodeconfiguration.GetAccessorDescription` (default `\"Get accessor\"`): %codemetrics.node.GetAccessorDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.IfStatement` (default `1`): %codemetrics.node.IfStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.IfStatementDescription` (default `\"If statement\"`): %codemetrics.node.IfStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.IfWithElseStatement` (default `1`): %codemetrics.node.IfWithElseStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.IfWithElseStatementDescription` (default `\"If with else statement\"`): %codemetrics.node.IfWithElseStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ImportDeclaration` (default `0`): %codemetrics.node.ImportDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.ImportDeclarationDescription` (default `\"Import declaration\"`): %codemetrics.node.ImportDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.InterfaceDeclaration` (default `0`): %codemetrics.node.InterfaceDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.InterfaceDeclarationDescription` (default `\"Interface declaration\"`): %codemetrics.node.InterfaceDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.MethodDeclaration` (default `1`): %codemetrics.node.MethodDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.MethodDeclarationDescription` (default `\"Method declaration\"`): %codemetrics.node.MethodDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.MethodSignature` (default `0`): %codemetrics.node.MethodSignature%",
+    "- `nuclear.codemetrics.nodeconfiguration.MethodSignatureDescription` (default `\"Method signature\"`): %codemetrics.node.MethodSignatureDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.NewExpression` (default `0`): %codemetrics.node.NewExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.NewExpressionDescription` (default `\"New expression\"`): %codemetrics.node.NewExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpression` (default `0`): %codemetrics.node.ObjectLiteralExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpressionDescription` (default `\"Object literal expression\"`): %codemetrics.node.ObjectLiteralExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.Parameter` (default `0`): %codemetrics.node.Parameter%",
+    "- `nuclear.codemetrics.nodeconfiguration.ParameterDescription` (default `\"Parameter\"`): %codemetrics.node.ParameterDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpression` (default `0`): %codemetrics.node.PrefixUnaryExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpressionDescription` (default `\"Prefix unary expression\"`): %codemetrics.node.PrefixUnaryExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.PropertyAccessExpression` (default `0`): %codemetrics.node.PropertyAccessExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.PropertyAccessExpressionDescription` (default `\"Property access expression\"`): %codemetrics.node.PropertyAccessExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.PropertyDeclaration` (default `0`): %codemetrics.node.PropertyDeclaration%",
+    "- `nuclear.codemetrics.nodeconfiguration.PropertyDeclarationDescription` (default `\"Property declaration\"`): %codemetrics.node.PropertyDeclarationDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ReturnStatement` (default `1`): %codemetrics.node.ReturnStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.ReturnStatementDescription` (default `\"Return statement\"`): %codemetrics.node.ReturnStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.SetAccessor` (default `0`): %codemetrics.node.SetAccessor%",
+    "- `nuclear.codemetrics.nodeconfiguration.SetAccessorDescription` (default `\"Set accessor\"`): %codemetrics.node.SetAccessorDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.StringLiteral` (default `0`): %codemetrics.node.StringLiteral%",
+    "- `nuclear.codemetrics.nodeconfiguration.StringLiteralDescription` (default `\"String literal\"`): %codemetrics.node.StringLiteralDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.SwitchStatement` (default `1`): %codemetrics.node.SwitchStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.SwitchStatementDescription` (default `\"Switch statement\"`): %codemetrics.node.SwitchStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.TemplateExpression` (default `0`): %codemetrics.node.TemplateExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.TemplateExpressionDescription` (default `\"Template expression\"`): %codemetrics.node.TemplateExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.ThrowStatement` (default `1`): %codemetrics.node.ThrowStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.ThrowStatementDescription` (default `\"Throw statement\"`): %codemetrics.node.ThrowStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.TryStatement` (default `1`): %codemetrics.node.TryStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.TryStatementDescription` (default `\"Try statement\"`): %codemetrics.node.TryStatementDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.TypeAssertionExpression` (default `0`): %codemetrics.node.TypeAssertionExpression%",
+    "- `nuclear.codemetrics.nodeconfiguration.TypeAssertionExpressionDescription` (default `\"Type assertion expression\"`): %codemetrics.node.TypeAssertionExpressionDescription%",
+    "- `nuclear.codemetrics.nodeconfiguration.WhileStatement` (default `1`): %codemetrics.node.WhileStatement%",
+    "- `nuclear.codemetrics.nodeconfiguration.WhileStatementDescription` (default `\"While statement\"`): %codemetrics.node.WhileStatementDescription%"
    ],
    "keys": [
     "vscode editor settings"
@@ -801,569 +810,644 @@
    "data": {
     "settings": [
      {
+      "name": "nuclear.language",
+      "default": "\"auto\"",
+      "does": "%nuclear.language.desc%"
+     },
+     {
+      "name": "nuclear.notifications",
+      "default": "\"all\"",
+      "does": "%nuclear.notifications.desc%"
+     },
+     {
       "name": "nuclear.dialect",
       "default": "\"flutter\"",
-      "does": "Dialect used to check `.nuc` files outside a project. A project names its platform and dialect in `config.nuc` (or `nuclear.toml`) and the server uses those. `base` checks only the base language."
+      "does": "%nuclear.dialect.md%"
      },
      {
       "name": "nuclear.dialectPaths",
       "default": "[]",
-      "does": "Extra directories with dialects (absolute or relative to the workspace). `<workspace>/dialects` is always searched."
+      "does": "%nuclear.dialectPaths.md%"
      },
      {
       "name": "nuclear.server.path",
       "default": "\"\"",
-      "does": "Path to the `nuclear-lsp` binary. Empty: the one bundled with the extension, then `nuclear-lsp` on the `PATH`."
+      "does": "%nuclear.server.path.md%"
      },
      {
       "name": "nuclear.trace.server",
       "default": "\"off\"",
-      "does": "Traces the communication between VS Code and the Nuclear language server."
+      "does": "%nuclear.trace.server.desc%"
      },
      {
       "name": "nuclear.debug.followInNuclear",
       "default": "true",
-      "does": "When a Synapsis app pauses (breakpoint, step, exception), show and highlight the .nuc line of the paused code."
+      "does": "%nuclear.debug.followInNuclear.desc%"
      },
      {
       "name": "nuclear.debug.explainErrors",
       "default": "true",
-      "does": "Show Dart run-time errors of a Synapsis app at their .nuc line (Problems panel) with a panel beside that explains the error, the Nuclear call stack and the original Dart error."
+      "does": "%nuclear.debug.explainErrors.desc%"
      },
      {
       "name": "nuclear.workspace.welcome",
       "default": "true",
-      "does": "Show the Nuclear workspace welcome page (projects and shortcuts) when VS Code starts with no editor open. Ctrl+Alt+W opens it any time."
+      "does": "%nuclear.workspace.welcome.desc%"
      },
      {
       "name": "nuclear.buildOnSave",
       "default": "true",
-      "does": "Saving a `.nuc` of a backend or web project runs `nuclear build`: the running server or page reloads by itself (uvicorn `--reload`, `node --watch`, Vite). Mobile projects hot reload on save through the Flutter session."
+      "does": "%nuclear.buildOnSave.md%"
+     },
+     {
+      "name": "nuclear.builder.team",
+      "default": "\"\"",
+      "does": "%nuclear.builder.team.desc%"
+     },
+     {
+      "name": "nuclear.builder.claudeModel",
+      "default": "\"haiku\"",
+      "does": "%nuclear.builder.claudeModel.desc%"
+     },
+     {
+      "name": "nuclear.builder.resumeInterrupted",
+      "default": "true",
+      "does": "%nuclear.builder.resumeInterrupted.desc%"
+     },
+     {
+      "name": "nuclear.builder.minFreeMb",
+      "default": "500",
+      "does": "%nuclear.builder.minFreeMb.desc%"
+     },
+     {
+      "name": "nuclear.builder.commandTimeoutMinutes",
+      "default": "20",
+      "does": "%nuclear.builder.commandTimeoutMinutes.desc%"
+     },
+     {
+      "name": "nuclear.builder.chat",
+      "default": "{\"kind\": \"local\", \"provider\": \"nuclear-developer\", \"model\": \"\"}",
+      "does": "%nuclear.builder.chat.desc%"
+     },
+     {
+      "name": "nuclear.spending.budgetUsd",
+      "default": "5",
+      "does": "%nuclear.spending.budgetUsd.desc%"
+     },
+     {
+      "name": "nuclear.spending.confirm",
+      "default": "true",
+      "does": "%nuclear.spending.confirm.desc%"
+     },
+     {
+      "name": "nuclear.spending.forceConfirm",
+      "default": "false",
+      "does": "%nuclear.spending.forceConfirm.desc%"
+     },
+     {
+      "name": "nuclear.atlas.contextTokens",
+      "default": "8192",
+      "does": "%nuclear.atlas.contextTokens.desc%"
+     },
+     {
+      "name": "nuclear.chat.gifs",
+      "default": "\"pack\"",
+      "does": "%nuclear.chat.gifs.desc%"
+     },
+     {
+      "name": "nuclear.http.timeoutSeconds",
+      "default": "30",
+      "does": "%nuclear.http.timeoutSeconds.desc%"
+     },
+     {
+      "name": "nuclear.devices.idleMinutes",
+      "default": "30",
+      "does": "%nuclear.devices.idleMinutes.desc%"
      },
      {
       "name": "nuclear.codemetrics.basics.CodeLensEnabled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are shown as code lens"
+      "does": "%codemetrics.basics.CodeLensEnabled%"
      },
      {
       "name": "nuclear.codemetrics.basics.CodeLensHiddenUnder",
       "default": "3",
-      "does": "Threshold to show code lens for code metrics"
+      "does": "%codemetrics.basics.CodeLensHiddenUnder%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityColorExtreme",
       "default": "\"#ff0000\"",
-      "does": "Color for the extreme complexity level"
+      "does": "%codemetrics.basics.ComplexityColorExtreme%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityColorHigh",
       "default": "\"#f44034\"",
-      "does": "Color for the high complexity level"
+      "does": "%codemetrics.basics.ComplexityColorHigh%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityColorLow",
       "default": "\"#4bb14f\"",
-      "does": "Color for the low complexity level"
+      "does": "%codemetrics.basics.ComplexityColorLow%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityColorNormal",
       "default": "\"#ffc208\"",
-      "does": "Color for the normal complexity level"
+      "does": "%codemetrics.basics.ComplexityColorNormal%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelExtreme",
       "default": "25",
-      "does": "Threshold to determine extreme high complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelExtreme%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelExtremeDescription",
       "default": "\"Bloody hell...\"",
-      "does": "Code lens message for extreme high complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelExtremeDescription%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelHigh",
       "default": "10",
-      "does": "Threshold to determine high complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelHigh%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelHighDescription",
       "default": "\"You must be kidding\"",
-      "does": "Code lens message for high complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelHighDescription%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelLow",
       "default": "0",
-      "does": "Threshold to determine low complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelLow%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelLowDescription",
       "default": "\"Everything is cool!\"",
-      "does": "Code lens message for low complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelLowDescription%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelNormal",
       "default": "5",
-      "does": "Threshold to determine normal complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelNormal%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityLevelNormalDescription",
       "default": "\"It's time to do something...\"",
-      "does": "Code lens message for normal complexity level"
+      "does": "%codemetrics.basics.ComplexityLevelNormalDescription%"
      },
      {
       "name": "nuclear.codemetrics.basics.ComplexityTemplate",
       "default": "\"Complexity is {0} {1}\"",
-      "does": "Code lens message template {0} stands for the actual value {1} is for the complexity level description"
+      "does": "%codemetrics.basics.ComplexityTemplate%"
      },
      {
       "name": "nuclear.codemetrics.basics.DecorationModeEnabled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are shown as inline decoration"
+      "does": "%codemetrics.basics.DecorationModeEnabled%"
      },
      {
       "name": "nuclear.codemetrics.basics.DecorationTemplate",
       "default": "\"<svg xmlns='http://www.w3.org/2000/svg' width='{{size}}px' height='{{size}}px' viewbox='0 0 {{size}} {{size}}'><rect width='{{size}}' height='{{size}}' style='fill:{{color}};stroke-width:1;stroke:#fff'/></svg>\"",
-      "does": "A flag which indicates whether code metrics are shown as inline decoration"
+      "does": "%codemetrics.basics.DecorationTemplate%"
      },
      {
       "name": "nuclear.codemetrics.basics.DiagnosticsEnabled",
       "default": "false",
-      "does": "A flag which indicates whether code metrics are shown as diagnostics"
+      "does": "%codemetrics.basics.DiagnosticsEnabled%"
      },
      {
       "name": "nuclear.codemetrics.basics.Exclude",
       "default": "[]",
-      "does": "Array of exclusion patterns (in glob format)"
+      "does": "%codemetrics.basics.Exclude%"
      },
      {
       "name": "nuclear.codemetrics.basics.FileSizeLimitMB",
       "default": "0.5",
-      "does": "File size limit in megabytes, above this codemetrics are not going to be computed, use a negative number to allow any size"
+      "does": "%codemetrics.basics.FileSizeLimitMB%"
      },
      {
       "name": "nuclear.codemetrics.basics.IgnoredFunctionNames",
       "default": "[]",
-      "does": "A set of function names to ignore from calculations"
+      "does": "%codemetrics.basics.IgnoredFunctionNames%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForArrowFunctionsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for arrow functions (can also be toggled via a command)"
+      "does": "%codemetrics.basics.MetricsForArrowFunctionsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForClassDeclarationsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for class declarations"
+      "does": "%codemetrics.basics.MetricsForClassDeclarationsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForConstructorsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for constructors"
+      "does": "%codemetrics.basics.MetricsForConstructorsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForEnumDeclarationsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for enum declarations"
+      "does": "%codemetrics.basics.MetricsForEnumDeclarationsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForFunctionDeclarationsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for function declarations"
+      "does": "%codemetrics.basics.MetricsForFunctionDeclarationsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForFunctionExpressionsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for function expressions"
+      "does": "%codemetrics.basics.MetricsForFunctionExpressionsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.MetricsForMethodDeclarationsToggled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are enabled for methods declarations"
+      "does": "%codemetrics.basics.MetricsForMethodDeclarationsToggled%"
      },
      {
       "name": "nuclear.codemetrics.basics.OverviewRulerModeEnabled",
       "default": "true",
-      "does": "A flag which indicates whether code metrics are shown on the overview ruler"
+      "does": "%codemetrics.basics.OverviewRulerModeEnabled%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpression",
       "default": "0",
-      "does": "Complexity increment of list literal `[a, b]`"
+      "does": "%codemetrics.node.ArrayLiteralExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ArrayLiteralExpressionDescription",
       "default": "\"Array literal expression\"",
-      "does": "Text of list literal `[a, b]` in the details list"
+      "does": "%codemetrics.node.ArrayLiteralExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ArrowFunction",
       "default": "1",
-      "does": "Complexity increment of lambda `(x) => ...`"
+      "does": "%codemetrics.node.ArrowFunction%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ArrowFunctionDescription",
       "default": "\"Arrow function\"",
-      "does": "Text of lambda `(x) => ...` in the details list"
+      "does": "%codemetrics.node.ArrowFunctionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.BinaryExpression",
       "default": "1",
-      "does": "Complexity increment of `and` / `or`"
+      "does": "%codemetrics.node.BinaryExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.BinaryExpressionDescription",
       "default": "\"Binary expression\"",
-      "does": "Text of `and` / `or` in the details list"
+      "does": "%codemetrics.node.BinaryExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.BreakStatement",
       "default": "1",
-      "does": "Complexity increment of `break`"
+      "does": "%codemetrics.node.BreakStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.BreakStatementDescription",
       "default": "\"Break statement\"",
-      "does": "Text of `break` in the details list"
+      "does": "%codemetrics.node.BreakStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.CallExpression",
       "default": "0",
-      "does": "Complexity increment of call `f(x)`"
+      "does": "%codemetrics.node.CallExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.CallExpressionDescription",
       "default": "\"Call expression\"",
-      "does": "Text of call `f(x)` in the details list"
+      "does": "%codemetrics.node.CallExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.CaseClause",
       "default": "1",
-      "does": "Complexity increment of arm of a `match`"
+      "does": "%codemetrics.node.CaseClause%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.CaseClauseDescription",
       "default": "\"Case clause\"",
-      "does": "Text of arm of a `match` in the details list"
+      "does": "%codemetrics.node.CaseClauseDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.CatchClause",
       "default": "1",
-      "does": "Complexity increment of `catch`"
+      "does": "%codemetrics.node.CatchClause%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.CatchClauseDescription",
       "default": "\"Catch clause\"",
-      "does": "Text of `catch` in the details list"
+      "does": "%codemetrics.node.CatchClauseDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ClassDeclaration",
       "default": "0",
-      "does": "Complexity increment of module or dialect kind (`User`, `stateless Home`)"
+      "does": "%codemetrics.node.ClassDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ClassDeclarationDescription",
       "default": "\"Class declaration\"",
-      "does": "Text of module or dialect kind (`User`, `stateless Home`) in the details list"
+      "does": "%codemetrics.node.ClassDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ConditionalExpression",
       "default": "1",
-      "does": "Complexity increment of `cond ? a : b`"
+      "does": "%codemetrics.node.ConditionalExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ConditionalExpressionDescription",
       "default": "\"Conditional expression\"",
-      "does": "Text of `cond ? a : b` in the details list"
+      "does": "%codemetrics.node.ConditionalExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.Constructor",
       "default": "1",
-      "does": "Complexity increment of `(params)` line of a module"
+      "does": "%codemetrics.node.Constructor%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ConstructorDescription",
       "default": "\"Constructor\"",
-      "does": "Text of `(params)` line of a module in the details list"
+      "does": "%codemetrics.node.ConstructorDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ContinueStatement",
       "default": "1",
-      "does": "Complexity increment of `continue`"
+      "does": "%codemetrics.node.ContinueStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ContinueStatementDescription",
       "default": "\"Continue statement\"",
-      "does": "Text of `continue` in the details list"
+      "does": "%codemetrics.node.ContinueStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.DefaultClause",
       "default": "1",
-      "does": "Complexity increment of `_` arm of a `match`"
+      "does": "%codemetrics.node.DefaultClause%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.DefaultClauseDescription",
       "default": "\"Default case\"",
-      "does": "Text of `_` arm of a `match` in the details list"
+      "does": "%codemetrics.node.DefaultClauseDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ElementAccessExpression",
       "default": "0",
-      "does": "Complexity increment of `list[i]`"
+      "does": "%codemetrics.node.ElementAccessExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ElementAccessExpressionDescription",
       "default": "\"Element access expression\"",
-      "does": "Text of `list[i]` in the details list"
+      "does": "%codemetrics.node.ElementAccessExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.EnumDeclaration",
       "default": "1",
-      "does": "Complexity increment of enum"
+      "does": "%codemetrics.node.EnumDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.EnumDeclarationDescription",
       "default": "\"Enum declaration\"",
-      "does": "Text of enum in the details list"
+      "does": "%codemetrics.node.EnumDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ForStatement",
       "default": "1",
-      "does": "Complexity increment of `for x in xs`"
+      "does": "%codemetrics.node.ForStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ForStatementDescription",
       "default": "\"For statement\"",
-      "does": "Text of `for x in xs` in the details list"
+      "does": "%codemetrics.node.ForStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.FunctionDeclaration",
       "default": "1",
-      "does": "Complexity increment of top-level function"
+      "does": "%codemetrics.node.FunctionDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.FunctionDeclarationDescription",
       "default": "\"Function declaration\"",
-      "does": "Text of top-level function in the details list"
+      "does": "%codemetrics.node.FunctionDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.GetAccessor",
       "default": "0",
-      "does": "Complexity increment of `get name`"
+      "does": "%codemetrics.node.GetAccessor%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.GetAccessorDescription",
       "default": "\"Get accessor\"",
-      "does": "Text of `get name` in the details list"
+      "does": "%codemetrics.node.GetAccessorDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.IfStatement",
       "default": "1",
-      "does": "Complexity increment of `if` / `else if` without `else`, `if` inside a list"
+      "does": "%codemetrics.node.IfStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.IfStatementDescription",
       "default": "\"If statement\"",
-      "does": "Text of `if` / `else if` without `else`, `if` inside a list in the details list"
+      "does": "%codemetrics.node.IfStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.IfWithElseStatement",
       "default": "1",
-      "does": "Complexity increment of `if` / `else if` followed by another branch"
+      "does": "%codemetrics.node.IfWithElseStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.IfWithElseStatementDescription",
       "default": "\"If with else statement\"",
-      "does": "Text of `if` / `else if` followed by another branch in the details list"
+      "does": "%codemetrics.node.IfWithElseStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ImportDeclaration",
       "default": "0",
-      "does": "Complexity increment of `use`"
+      "does": "%codemetrics.node.ImportDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ImportDeclarationDescription",
       "default": "\"Import declaration\"",
-      "does": "Text of `use` in the details list"
+      "does": "%codemetrics.node.ImportDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.InterfaceDeclaration",
       "default": "0",
-      "does": "Complexity increment of module with signatures only"
+      "does": "%codemetrics.node.InterfaceDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.InterfaceDeclarationDescription",
       "default": "\"Interface declaration\"",
-      "does": "Text of module with signatures only in the details list"
+      "does": "%codemetrics.node.InterfaceDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.MethodDeclaration",
       "default": "1",
-      "does": "Complexity increment of method of a module"
+      "does": "%codemetrics.node.MethodDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.MethodDeclarationDescription",
       "default": "\"Method declaration\"",
-      "does": "Text of method of a module in the details list"
+      "does": "%codemetrics.node.MethodDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.MethodSignature",
       "default": "0",
-      "does": "Complexity increment of method without body"
+      "does": "%codemetrics.node.MethodSignature%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.MethodSignatureDescription",
       "default": "\"Method signature\"",
-      "does": "Text of method without body in the details list"
+      "does": "%codemetrics.node.MethodSignatureDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.NewExpression",
       "default": "0",
-      "does": "Complexity increment of `User(...)` (PascalCase call)"
+      "does": "%codemetrics.node.NewExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.NewExpressionDescription",
       "default": "\"New expression\"",
-      "does": "Text of `User(...)` (PascalCase call) in the details list"
+      "does": "%codemetrics.node.NewExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpression",
       "default": "0",
-      "does": "Complexity increment of map literal `{ a: 1 }`"
+      "does": "%codemetrics.node.ObjectLiteralExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ObjectLiteralExpressionDescription",
       "default": "\"Object literal expression\"",
-      "does": "Text of map literal `{ a: 1 }` in the details list"
+      "does": "%codemetrics.node.ObjectLiteralExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.Parameter",
       "default": "0",
-      "does": "Complexity increment of parameter"
+      "does": "%codemetrics.node.Parameter%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ParameterDescription",
       "default": "\"Parameter\"",
-      "does": "Text of parameter in the details list"
+      "does": "%codemetrics.node.ParameterDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpression",
       "default": "0",
-      "does": "Complexity increment of `not x`, `-x`, `~call()`"
+      "does": "%codemetrics.node.PrefixUnaryExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.PrefixUnaryExpressionDescription",
       "default": "\"Prefix unary expression\"",
-      "does": "Text of `not x`, `-x`, `~call()` in the details list"
+      "does": "%codemetrics.node.PrefixUnaryExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.PropertyAccessExpression",
       "default": "0",
-      "does": "Complexity increment of `a.b`"
+      "does": "%codemetrics.node.PropertyAccessExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.PropertyAccessExpressionDescription",
       "default": "\"Property access expression\"",
-      "does": "Text of `a.b` in the details list"
+      "does": "%codemetrics.node.PropertyAccessExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.PropertyDeclaration",
       "default": "0",
-      "does": "Complexity increment of field of a module"
+      "does": "%codemetrics.node.PropertyDeclaration%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.PropertyDeclarationDescription",
       "default": "\"Property declaration\"",
-      "does": "Text of field of a module in the details list"
+      "does": "%codemetrics.node.PropertyDeclarationDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ReturnStatement",
       "default": "1",
-      "does": "Complexity increment of `return`"
+      "does": "%codemetrics.node.ReturnStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ReturnStatementDescription",
       "default": "\"Return statement\"",
-      "does": "Text of `return` in the details list"
+      "does": "%codemetrics.node.ReturnStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.SetAccessor",
       "default": "0",
-      "does": "Complexity increment of `set name`"
+      "does": "%codemetrics.node.SetAccessor%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.SetAccessorDescription",
       "default": "\"Set accessor\"",
-      "does": "Text of `set name` in the details list"
+      "does": "%codemetrics.node.SetAccessorDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.StringLiteral",
       "default": "0",
-      "does": "Complexity increment of text without interpolation"
+      "does": "%codemetrics.node.StringLiteral%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.StringLiteralDescription",
       "default": "\"String literal\"",
-      "does": "Text of text without interpolation in the details list"
+      "does": "%codemetrics.node.StringLiteralDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.SwitchStatement",
       "default": "1",
-      "does": "Complexity increment of `match`"
+      "does": "%codemetrics.node.SwitchStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.SwitchStatementDescription",
       "default": "\"Switch statement\"",
-      "does": "Text of `match` in the details list"
+      "does": "%codemetrics.node.SwitchStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.TemplateExpression",
       "default": "0",
-      "does": "Complexity increment of text with `${...}`"
+      "does": "%codemetrics.node.TemplateExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.TemplateExpressionDescription",
       "default": "\"Template expression\"",
-      "does": "Text of text with `${...}` in the details list"
+      "does": "%codemetrics.node.TemplateExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ThrowStatement",
       "default": "1",
-      "does": "Complexity increment of `throw`"
+      "does": "%codemetrics.node.ThrowStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.ThrowStatementDescription",
       "default": "\"Throw statement\"",
-      "does": "Text of `throw` in the details list"
+      "does": "%codemetrics.node.ThrowStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.TryStatement",
       "default": "1",
-      "does": "Complexity increment of `try`"
+      "does": "%codemetrics.node.TryStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.TryStatementDescription",
       "default": "\"Try statement\"",
-      "does": "Text of `try` in the details list"
+      "does": "%codemetrics.node.TryStatementDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.TypeAssertionExpression",
       "default": "0",
-      "does": "Complexity increment of `x as T`"
+      "does": "%codemetrics.node.TypeAssertionExpression%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.TypeAssertionExpressionDescription",
       "default": "\"Type assertion expression\"",
-      "does": "Text of `x as T` in the details list"
+      "does": "%codemetrics.node.TypeAssertionExpressionDescription%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.WhileStatement",
       "default": "1",
-      "does": "Complexity increment of `while`"
+      "does": "%codemetrics.node.WhileStatement%"
      },
      {
       "name": "nuclear.codemetrics.nodeconfiguration.WhileStatementDescription",
       "default": "\"While statement\"",
-      "does": "Text of `while` in the details list"
+      "does": "%codemetrics.node.WhileStatementDescription%"
      }
     ]
    }

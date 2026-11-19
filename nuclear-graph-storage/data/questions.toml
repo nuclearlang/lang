@@ -179,6 +179,18 @@ top = 1
 ask = "when should a frontier model lead instead of the local agents"
 expect = ["concept:local-first", "playbook:work-under-a-lead", "limit:agent-reasoning", "playbook:escalate"]
 
+[[question]]
+ask = "what is the software factory"
+expect = ["concept:software-factory"]
+
+[[question]]
+ask = "que roles tiene la fabrica de software"
+expect = ["concept:software-factory"]
+
+[[question]]
+ask = "where are the roles of the factory defined"
+expect = ["concept:software-factory"]
+
 # ---- what can and cannot be done, and the agent's limits ----
 
 [[question]]
@@ -443,8 +455,8 @@ expect = ["http:developer.code"]
 top = 1
 
 [[question]]
-ask = "what does the generate stage of the loop do"
-expect = ["stage:generate"]
+ask = "which station of the software factory runs the generators"
+expect = ["stage:design"]
 
 [[question]]
 ask = "que herramientas tiene el agente"
@@ -541,6 +553,18 @@ ask = "a profile screen with the user's name and a logout button"
 expect = ["strategy:interface"]
 request = true
 platform = "web"
+
+[[question]]
+ask = "Quiero que usando nuclearlang con el dialecto de flutter crees un POC solo visual pero 100% funcional de este PDF, muy bonito y estilizado"
+expect = ["strategy:prototype"]
+request = true
+platform = "mobile"
+
+[[question]]
+ask = "a clickable prototype of the booking app with fake data"
+expect = ["strategy:prototype"]
+request = true
+platform = "mobile"
 
 [[question]]
 ask = "falta el repositorio de reseñas"
@@ -903,3 +927,21 @@ ask = "show me an example of a controller"
 platform = "backend"
 exact = true
 expect = ["query:examples"]
+
+[[question]]
+ask = "who answers a message to a team in the chat"
+expect = ["can:workplace-chat"]
+
+[[question]]
+ask = "can I choose which agent answers in the chat, like claude code"
+expect = ["can:workplace-chat"]
+
+[[question]]
+ask = "the orders endpoint takes three seconds, where is the bottleneck?"
+expect = ["strategy:bug-slow"]
+request = true
+
+[[question]]
+ask = "la app está muy lenta al abrir el chat"
+expect = ["strategy:bug-slow"]
+request = true

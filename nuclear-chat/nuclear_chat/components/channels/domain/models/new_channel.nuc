@@ -1,0 +1,11 @@
+// A channel the user makes: its name (its id is the name in lower case, `Release plan` → `release-plan`), its topic
+// and its members.
+NewChannel
+  @minLength(1)
+  @maxLength(80)
+  name: string
+  @maxLength(500)
+  topic: string = ""
+  members: string[] = []
+  // the team it is of, when it is one's (its tech lead answers a message without a mention)
+  team: string = ""

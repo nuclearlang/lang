@@ -1,0 +1,104 @@
+// The members' answers (spec 013, design.md "The responder"): each answer is one run of the member's command with
+// `--events` (the agent its conversation chose, when its member has choices), the conversation on its stdin as one
+// JSON line; what it prints, JSON lines: `typing` and `tool` are told, `text-delta` is the answer as it is written
+// (the event `message.delta`), `text` is the answer, `ask` is a question told to the user (the answer is written back on its stdin as
+// `{"type": "answer", "id", "answer"}`), `done` ends it (`costUsd`, `error`, `moment`, `gif`: a tag of the pack the
+// member asked for, given in the input's `gifTags` when they send GIFs). The answer is posted as the member, with
+// their GIF by personality; a failure, as `system`. The money is the responder's: a paid one asks twice (an `ask` of kind spending).
+service Responders(processes: Processes, messages: MessagesAppComponent, events: EventsAppComponent, gifs: GifsAppComponent)
+  // the run each question waits in, by workspace and question id
+  waiting: <string, string> = {}
+  // the most messages of the conversation a responder is given
+  context: int = 40
+
+  // Starts a member's answer to a message; null, or why it could not start.
+  start(ws: Workspace, channel: string, member: Member, said: <string, any>, conversation: <string, any>[]) string?
+    // the agent the conversation chose (a direct message's), else the host's default
+    talk = ws.channel(channel)
+    responder = member.responder.run(talk == null ? "" : talk!.agent, talk == null ? "" : talk!.model)
+    command = responder.command.copy()
+    if command.isEmpty
+      return "${member.name} has no responder"
+    if not ("--events" in command)
+      command.add("--events")
+    run = "${ws.id}/${member.id}/${said["id"]}"
+    if processes.isRunning(run)
+      // the same message delivered again: it is being answered
+      return null
+    thread: string? = said["thread"] == null ? null : "${said["thread"]}"
+    texts: string[] = []
+    outcome: <string, any> = {}
+    ask: <string, any> = { "workspace": ws.id, "root": ws.root, "member": member.id, "channel": channel, "thread": thread, "messages": conversation.length > context ? conversation.skip(conversation.length - context) : conversation, "said": said["text"] ?? "", "lang": member.profile.lang.isEmpty ? ws.lang : member.profile.lang }
+    if member.personality.gifs != "never"
+      // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+      tags: Result<Error, string[]> = gifs.tags()
+      if tags.isOk
+        ask["gifTags"] = tags.value
+    input = Json.encode(ask)
+    answersGif = sentGif(conversation)
+    onLine = (line: string) =>
+      e = eventOf(line)
+      kind = "${e["type"] ?? ""}"
+      if kind == "typing"
+        ~events.emit(ws.id, "typing", channel, { "member": member.id, "thread": thread })
+      else if kind == "text"
+        texts.add("${e["text"] ?? ""}")
+      else if kind == "text-delta"
+        ~events.emit(ws.id, "message.delta", channel, { "member": member.id, "thread": thread, "text": "${e["text"] ?? ""}" })
+      else if kind == "tool"
+        ~events.emit(ws.id, "tool", channel, { "member": member.id, "thread": thread, "tool": e })
+      else if kind == "ask" and not "${e["id"] ?? ""}".isEmpty
+        waiting["${ws.id}/${e["id"]}"] = run
+        ~events.emit(ws.id, "ask", channel, { ...e, "member": member.id, "thread": thread })
+      else if kind == "done"
+        outcome["done"] = e
+    onEnd = (code: int, err: string) =>
+      for key in waiting.keys.filter((k) => waiting[k] == run)
+        waiting.remove(key)
+      done: <string, any> = outcome["done"] ?? ({} as <string, any>)
+      text = texts.join("\n\n").trim()
+      moment = "${done["moment"] ?? ""}"
+      asked = "${done["gif"] ?? ""}".lower()
+      failure = failureOf(done, code, err, not ("type" in done))
+      if not text.isEmpty
+        ~messages.post(ws.id, channel, Posted(author = member.id, text = text, thread = thread, costUsd = done["costUsd"], moment = moment in ["failure", "success", "question"] ? moment : null, gif = GIF_TAG.test(asked) ? asked : null, answersGif = answersGif))
+      if not failure.isEmpty
+        ~messages.post(ws.id, channel, Posted(author = "system", text = "${member.name} could not answer: ${failure}", thread = thread))
+      // done once everything it said is posted (its answer, its GIF, a failure): a client reading on `done` sees it all
+      ~events.emit(ws.id, "done", channel, { "member": member.id, "thread": thread, "costUsd": done["costUsd"] ?? 0, "error": failure })
+    processes.start(run, command, ws.root, input, onLine, onEnd)
+
+  // Writes the user's answer to the run that asked; false when no run waits for that question.
+  reply(ws: Workspace, id: string, answer: string) boolean
+    key = "${ws.id}/${id}"
+    run = waiting[key]
+    if run == null
+      return false
+    waiting.remove(key)
+    ~processes.write(run!, Json.encode({ "type": "answer", "id": id, "answer": answer }))
+
+// A GIF's tag a responder may ask for (anything else is left out).
+GIF_TAG = Regex(r"^[a-z][a-z-]{0,39}$")
+
+// Whether the user sent a GIF just before the message answered (the conversation's last messages of the user).
+sentGif(conversation: <string, any>[]) boolean
+  at = conversation.length - 1
+  while at >= 0 and conversation[at]["author"] == "you"
+    if conversation[at]["gif"] != null
+      return true
+    at -= 1
+  false
+
+// One line of a responder as an event (a line that is not one is nothing).
+eventOf(line: string) <string, any>
+  try
+    Json.decode(line) as <string, any>
+  catch e
+    {}
+
+// Why an answer failed, or nothing: the error the responder gave, or how it ended without `done`.
+failureOf(done: <string, any>, code: int, err: string, missing: boolean) string
+  if not missing
+    return "${done["error"] ?? ""}"
+  tail = err.trim()
+  "it ended (${code}) without done${tail.isEmpty ? "" : ": ${tail.substring(Math.max(0, tail.length - 300))}"}"

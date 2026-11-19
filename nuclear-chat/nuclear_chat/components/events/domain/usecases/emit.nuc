@@ -1,0 +1,8 @@
+// Tells an event of a workspace: kept in the log and published on `chat.event` (the members listen to it) and on
+// `chat.<workspace>` (the clients of the app's WebSocket subscribed to that workspace).
+usecase Emit(log: EventLog)
+  exec(workspace: string, type: string, channel: string, data: <string, any>) Result<Error, ChatEvent>
+    e = log.add(workspace, type, channel, data)
+    ~publish("chat.event", e)
+    ~publish("chat.${workspace}", e)
+    Ok(e)

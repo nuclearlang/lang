@@ -46,8 +46,9 @@ definitions come with the dialect: `nuclear defs search <text> --dialect fastapi
 ### Plugins (`config.nuc`)
 
 The optional parts are plugins ([projects.md](../../../../docs/07-reference/projects.md) §3.3): `plugins(sqlite = true, postgres = true, mysql =
-true, redis = true, kafka = true, ai = true, openai = true, ollama = true, chroma = true)`. Only the enabled ones go to
-`pyproject.toml`, and the runtime imports them only then (`synapsis.ai`, `synapsis.events`). A kind or a name of a
+true, redis = true, kafka = true, events = true, websocket = true, ai = true, openai = true, ollama = true, chroma = true,
+telemetry = true)`. Only the enabled ones go to `pyproject.toml`, and the runtime imports them only then (`synapsis.ai`,
+`synapsis.events`, `synapsis.sockets`, `synapsis.telemetry`). A kind or a name of a
 plugin not enabled is N0304: `tools`, `agent`, `state`, `graph` need `ai`; `listener` needs `kafka`; `Redis` needs
 `redis`.
 
@@ -255,7 +256,9 @@ class CharacterRepository(HttpRepository):
 
 ### 2.3 Model
 
-What the API reads and answers: a pydantic model (in `domain/models/` by folder). The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 422.
+What the API reads and answers: a pydantic model (in `domain/models/` by folder) that extends the runtime's `Model`:
+its fields are Python's (`last_read`), its JSON Nuclear's (`lastRead`), the same as every dialect's and the contract's
+(ADR-synapsis-0012); it reads either name. The same rule decorators as the nestjs dialect and Synapsis's forms become pydantic constraints: `@required`, `@minLength(n)`, `@maxLength(n)`, `@min(n)`, `@max(n)`, `@pattern(r"...")`, `@email`, `@url`. An invalid body is a 422.
 
 ```nuclear
 model NewCharacter
@@ -271,12 +274,13 @@ model NewCharacter
 from __future__ import annotations
 
 from annotated_types import MaxLen, MinLen
-from pydantic import AfterValidator, BaseModel
+from pydantic import AfterValidator
+from synapsis import Model
 from synapsis.validators import is_email
 from typing import Annotated
 
 
-class NewCharacter(BaseModel):
+class NewCharacter(Model):
     name: Annotated[str, MinLen(1), MaxLen(100)]
     status: str = "alive"
     contact: Annotated[str | None, AfterValidator(is_email)] = None
@@ -308,11 +312,10 @@ usecase CreateCharacter(characters: CharacterRepository)
 ```python
 from __future__ import annotations
 
-from pydantic import BaseModel
-from synapsis import AppError, Conflict, Entity, Err, Mapped, Ok, Result, column, primary
+from synapsis import AppError, Conflict, Entity, Err, Mapped, Model, Ok, Result, column, primary
 
 
-class NewCharacter(BaseModel):
+class NewCharacter(Model):
     name: str
     status: str = "alive"
 
@@ -453,6 +456,49 @@ class ProjectConfig(AppConfig):
         Kafka(servers=env("KAFKA", "localhost:9092"), group="rick"),
         OpenAI(model="gpt-4o-mini"),
     ]
+```
+
+#### Guards and the app's WebSocket (ADR-synapsis-0007, ADR-synapsis-0008)
+
+`guards` in the `appConfig` become a FastAPI dependency of every router (and of the contract's routes; a guarded app
+serves no `/docs`); `@controller(..., guards = [...])` stays the runtime's decorator, whose router gets them too.
+`Token` and `NoOrigin` are `synapsis.guards`'s, re-exported by `synapsis`. `WebSocketServer` (plugin `websocket`:
+`websockets` for uvicorn) is `synapsis.sockets`'s: it adds a Starlette WebSocket route that checks the app's guards
+on the upgrade and sends every request frame through the app with httpx's ASGI transport.
+
+```nuclear
+// config.nuc: plugins(sqlite = true, events = true, websocket = true)
+
+appConfig ProjectConfig
+  connections: Connection[] = [SQLite(file = "chat.sqlite"), WebSocketServer(path = "ws")]
+  guards: Guard[] = [NoOrigin(), Token(value = env("CHAT_TOKEN"), header = "X-Chat-Token")]
+
+@controller("admin", guards = [Token(value = env("ADMIN_TOKEN"))])
+controller AdminController()
+  @get()
+  info() string
+    "ok"
+```
+
+```python
+from __future__ import annotations
+
+from synapsis import AppConfig, Connection, Guard, NoOrigin, SQLite, Token, controller, env, get
+from synapsis.sockets import WebSocketServer
+
+
+# config.nuc: plugins(sqlite = true, events = true, websocket = true)
+
+class ProjectConfig(AppConfig):
+    connections: list[Connection] = [SQLite(file="chat.sqlite"), WebSocketServer(path="ws")]
+    guards: list[Guard] = [NoOrigin(), Token(value=env("CHAT_TOKEN"), header="X-Chat-Token")]
+
+
+@controller("admin", guards=[Token(value=env("ADMIN_TOKEN"))])
+class AdminController:
+    @get()
+    def info(self) -> str:
+        return "ok"
 ```
 
 ### 2.8 Tools
@@ -605,6 +651,77 @@ class TestCharacters:
         missing = await app.character(99)
         assert missing.is_err
         assert missing.error.status == 404
+```
+
+#### The app over HTTP and its WebSocket (ADR-synapsis-0010)
+
+`appClient()` is `synapsis.testing.app_client()`: it builds the app again from `app/main.py`'s `create()` (the
+test's connections), sends HTTP through httpx's ASGI transport and opens the socket as an ASGI connection in the
+test's event loop. `testEnv(...)` of `config.nuc` is `os.environ.update({...})` at the top of `tests/conftest.py`.
+
+```nuclear
+tests Api
+  @test("the guards and the socket")
+  guarded() void
+    app = appClient()
+    expect((~app.get("/tasks", headers = { "X-Tasks-Token": "t" })).status == 200)
+    ws = (~app.socket("/ws", headers = { "X-Tasks-Token": "t" })).value
+    made = ~ws.request("POST", "/tasks", body = { "title": "call mom" })
+    expect(made.status == 201)
+```
+
+```python
+from __future__ import annotations
+
+from synapsis.testing import app_client
+
+
+class TestApi:
+    async def test_guarded(self) -> None:
+        "the guards and the socket"
+        app = app_client()
+        assert (await app.get("/tasks", headers={"X-Tasks-Token": "t"})).status == 200
+        ws = (await app.socket("/ws", headers={"X-Tasks-Token": "t"})).value
+        made = await ws.request("POST", "/tasks", body={"title": "call mom"})
+        assert made.status == 201
+```
+
+### 2.13 Telemetry
+
+`plugins(telemetry = true)` adds the OpenTelemetry SDK, its OTLP/HTTP exporter and its FastAPI instrumentation to
+`pyproject.toml`. The connections (`Datadog`, `NewRelic`, `Grafana`, `Otlp`) and `Metric` come from
+`synapsis.telemetry`; their named arguments are snake_case (`api_key`). Every use case's `exec` gets
+`@traced("<component> › usecase › <Class>.exec")`, the name written as a constant (`app` for a file outside a
+component, as below); `@untraced` is
+`synapsis.untraced`, a marker: on a use case it removes `@traced`, on a route or a controller the request starts no
+trace.
+
+```nuclear
+// config.nuc: plugins(telemetry = true)
+
+usecase FindOrder(orders: OrderRepository)
+  exec(id: int) Result<Error, Order>
+    Metric.count("orders.read", region = "eu")
+    ~orders.find(id)
+```
+
+```python
+from __future__ import annotations
+
+from synapsis import AppError, Result
+from synapsis.telemetry import Metric, traced
+
+
+# config.nuc: plugins(telemetry = true)
+
+class FindOrder:
+    def __init__(self, orders: OrderRepository) -> None:
+        self.orders = orders
+
+    @traced("app › usecase › FindOrder.exec")
+    async def exec(self, id: int) -> Result[AppError, Order]:
+        Metric.count("orders.read", region="eu")
+        return await self.orders.find(id)
 ```
 
 ### Migrations

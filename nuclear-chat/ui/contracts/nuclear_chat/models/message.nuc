@@ -1,0 +1,21 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// A message of a channel, as the chat shows it: its edits and reactions folded in, and, when it opened a thread, how many replies it has and when the last one came.
+Message
+  id: string
+  at: int
+  // a member's id, you or system
+  author: string
+  text: string = ""
+  // the message whose thread this one is in
+  thread?: string
+  gif?: Gif
+  // who reacted with each emoji
+  reactions: <string, string[]> = {}
+  buttons: Button[] = []
+  // the factory's work it names: spec, run
+  links: <string, string> = {}
+  costUsd?: double
+  // the time of its last edit, 0 when never edited
+  edited: int = 0
+  replies: int = 0
+  lastReply: int = 0

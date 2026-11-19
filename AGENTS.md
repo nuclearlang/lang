@@ -22,6 +22,7 @@ of the one project the task touches, then only the document whose line there mat
 | `tools/code_generator/` | What `nuclear new`, `make` and `gen` write: the crate `nuclear-codegen` | [AGENTS.md](tools/code_generator/AGENTS.md) |
 | `tools/mcp/` | The MCP server, `nuclear-mcp` (a Nuclear project, `python` dialect) | [AGENTS.md](tools/mcp/AGENTS.md) |
 | `extensions/` | The editors: `vscode/`, `jetbrains/`, `zed/`, and their tools in `tools/<tool>/` | [AGENTS.md](extensions/AGENTS.md) |
+| `nuclear-chat/` | Nuclear Chat, the factory's workplace: a Synapsis service, its system library, the GIF pack, the UI library | [AGENTS.md](nuclear-chat/AGENTS.md) |
 | `device-emulators/` | The devices (`nuclear device`, `nuclear terminal-device`): the crate `nuclear-devices` | [AGENTS.md](device-emulators/AGENTS.md) |
 | `nuclear-graph-storage/` | The Smart Graph: the knowledge base every agent reads | [AGENTS.md](nuclear-graph-storage/AGENTS.md) |
 | `nuclear-agents/` | The agents (`nuclear_developer/`) | [AGENTS.md](nuclear-agents/AGENTS.md) |
@@ -72,6 +73,12 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
     server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a
     native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when
     strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it.
+
+14. **Built for a fresh machine and a fresh agent.** Every feature is designed for a user who just ran the
+    installer and an agent with no context at all. The installer and the MCP server are the only sources of
+    Nuclear an agent has: never the source tree, this repository's `.md` files or a path of the developer's
+    machine. Nothing installed or generated names a path of this tree or of one machine; the installer leaves
+    services that run on their own on every system.
 
 ## Commands of the whole tree
 

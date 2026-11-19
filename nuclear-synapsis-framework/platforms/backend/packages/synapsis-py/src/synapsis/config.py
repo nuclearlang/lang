@@ -7,7 +7,10 @@ opened when the app starts and closed when it stops. Values usually come from th
 from __future__ import annotations
 
 import os
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
+
+if TYPE_CHECKING:
+    from .guards import Guard
 
 
 def env(name: str, default: str = "") -> str:
@@ -25,6 +28,9 @@ class Connection:
 
     async def close(self) -> None:
         pass
+
+    def instrument(self, app: Any) -> None:
+        """Called by create_app with the web app once its routes are mounted (telemetry hooks in here)."""
 
 
 _DRIVERS = {"postgres": "postgresql+asyncpg", "postgresql": "postgresql+asyncpg", "mysql": "mysql+aiomysql", "mariadb": "mariadb+aiomysql", "sqlite": "sqlite+aiosqlite"}
@@ -206,9 +212,11 @@ class Chroma(Connection):
 
 
 class AppConfig:
-    """The project configuration (config/project_config.nuc): its connections."""
+    """The project configuration (config/project_config.nuc): its connections, and the guards every route passes
+    (ADR-synapsis-0007)."""
 
     connections: list[Connection] = []
+    guards: list[Guard] = []
 
 
 class ComponentConfig:

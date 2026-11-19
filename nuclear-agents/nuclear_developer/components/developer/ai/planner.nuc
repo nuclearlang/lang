@@ -1,7 +1,7 @@
 // The planner: splits a spec into pieces of one file each, in the order they can be written (the local plan when no
 // frontier model leads the work). The model names each piece's kind, declaration, component and screen; its path
 // comes from the platform's layout (`nuclear help layout`), so a small model never guesses a folder. Prompts:
-// agents/plan.md, agents/plan-again.md.
+// `agent.plan`, `agent.plan-again`.
 @state(PieceState)
 graph Planner(bench: Workbench, toolchain: Toolchain)
   @start

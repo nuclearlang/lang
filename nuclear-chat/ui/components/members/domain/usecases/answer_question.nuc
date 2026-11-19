@@ -1,0 +1,4 @@
+// What MembersRepository.answer answers, for the screens of members.
+usecase AnswerQuestion(repository: MembersRepository)
+  exec(workspace: string, answer: Answer) Result<NuclearChatError, Answer>
+    ~repository.answer(workspace, answer)

@@ -1,0 +1,36 @@
+use sys
+use json
+
+// What every command of `nuclear-builder` shares in a terminal: its options, a question, a JSON answer.
+
+// `--name value` of the arguments, or null.
+option(args: string[], name: string) string?
+  at = args.indexOf(name)
+  at >= 0 and at + 1 < args.length ? args[at + 1] : null
+
+// Every `--name value` of the arguments (a repeatable option), in order.
+options(args: string[], name: string) string[]
+  found: string[] = []
+  for i in 0..args.length - 1
+    if args[i] == name
+      found.add(args[i + 1])
+  found
+
+// A question in the terminal; without one (or with no answer) the fallback.
+ask(question: string, fallback: string) string
+  if not sys.stdin.isatty()
+    return fallback
+  try
+    answer = input(question).trim()
+    answer.length > 0 ? answer : fallback
+  catch e
+    if not isinstance(e, EOFError)
+      throw e
+    fallback
+
+yes(answer: string) boolean
+  answer.lower().startsWith("y")
+
+// Prints a value as the editors read it.
+printJson(value: any) void
+  print(json.dumps(value, indent = 1, ensureAscii = false))

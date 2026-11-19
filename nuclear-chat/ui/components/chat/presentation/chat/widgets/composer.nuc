@@ -1,0 +1,151 @@
+// Where the user writes: Enter sends, Shift+Enter breaks the line; `@` completes a member, a role or a team, `#` a
+// channel and `/` a command (Tab or Enter takes the one marked, the arrows move, Escape closes); the GIF button opens
+// the picker.
+stateful Composer(ws: Workspace, channels: Channel[], texts: Texts, placeholder: string, thread: string = "", onGif: (q: string) => void)
+  text: string = ""
+  marked: int = 0
+  dismissed: string = ""
+  failed: string = ""
+
+  build() Element
+    options = completions()
+    div(
+      className = "composer",
+      children = [
+        options.length > 0 ? div(
+          className = "complete",
+          children = options.map((o) =>
+            i = options.indexOf(o)
+            button(
+              key = o.insert,
+              className = "option ${i == marked ? "marked" : ""}",
+              onMouseDown = (e) => pick(e, o),
+              children = [span(className = "option-label", children = o.label), span(className = "option-hint", children = o.hint)],
+            )
+          ),
+        ) : null,
+        failed != "" ? div(className = "failed", children = texts.format("notSent", { "error": failed })) : null,
+        div(
+          className = "box",
+          children = [
+            textarea(
+              className = "input",
+              rows = 1,
+              value = text,
+              placeholder = placeholder,
+              onChange = (e) => typed(e.target.value),
+              onKeyDown = (e) => key(e),
+            ),
+            div(
+              className = "box-tools",
+              children = [
+                button(className = "tool gif-button", title = texts.get("gif"), onClick = () => onGif(""), children = texts.get("gif")),
+                button(className = "send ${text.trim() != "" ? "ready" : ""}", title = texts.get("send"), disabled = text.trim() == "", onClick = () => send(), children = span(className = "icon icon-send")),
+              ],
+            ),
+          ],
+        ),
+      ],
+    )
+
+  typed(value: string)
+    setState(() =>
+      text = value
+      marked = 0
+    )
+
+  // The word being written (the end of the text) when it starts with @, # or /.
+  word() string
+    parts = text.split(Regex(r"\s"))
+    last = parts.length > 0 ? parts.last : ""
+    if last.length > 0 and (last.startsWith("@") or last.startsWith("#") or (last.startsWith("/") and last == text))
+      last
+    else
+      ""
+
+  // What the word can be completed with.
+  completions() Completion[]
+    w = word()
+    if w == "" or w == dismissed
+      return []
+    rest = w.substring(1).lower()
+    found = if w.startsWith("@")
+      people(rest)
+    else if w.startsWith("#")
+      channels.filter((c) => c.kind != "dm" and (c.name.lower().startsWith(rest) or c.id.startsWith(rest))).map((c) => option("#${c.name != "" ? c.name : c.id}", "#${c.id}", c.topic))
+    else
+      commands().filter((c) => c.insert.startsWith(w.lower()))
+    found.take(6)
+
+  // The members (by name, first name or role) and the teams a mention can name.
+  people(rest: string) Completion[]
+    members = ws.members.filter((m) => m.name.lower().startsWith(rest) or m.id.lower().startsWith(rest) or m.role.lower().startsWith(rest) or m.name.lower().split(" ").any((w) => w.startsWith(rest)))
+    teams = ws.teams.filter((t) => t.id.startsWith(rest) or t.name.lower().startsWith(rest))
+    [
+      ...members.map((m) => option(m.name, "@${m.id}", m.role)),
+      ...teams.map((t) => option("@${t.id}", "@${t.id}", "${texts.get("team")} ${t.name}")),
+    ]
+
+  commands() Completion[]
+    [option("/poc", "/poc", texts.get("cmd.poc")), option("/gif", "/gif", texts.get("cmd.gif"))]
+
+  // Replaces the word being written with the option.
+  accept(o: Completion)
+    w = word()
+    setState(() =>
+      text = text.substring(0, text.length - w.length) + o.insert + " "
+      marked = 0
+    )
+
+  pick(e: MouseEvent, o: Completion)
+    e.preventDefault()
+    accept(o)
+
+  key(e: KeyboardEvent)
+    options = completions()
+    if options.length > 0 and (e.key == "ArrowDown" or e.key == "ArrowUp")
+      e.preventDefault()
+      step = e.key == "ArrowDown" ? 1 : options.length - 1
+      setState(() =>
+        marked = (marked + step) % options.length
+      )
+    else if options.length > 0 and (e.key == "Tab" or (e.key == "Enter" and not e.shiftKey))
+      e.preventDefault()
+      accept(options[Math.min(marked, options.length - 1)])
+    else if options.length > 0 and e.key == "Escape"
+      w = word()
+      setState(() =>
+        dismissed = w
+      )
+    else if e.key == "Enter" and not e.shiftKey and not e.nativeEvent.isComposing
+      e.preventDefault()
+      send()
+
+  // Sends what was written: `/gif <words>` opens the picker with them; anything else is said.
+  send()
+    said = text.trim()
+    if said == ""
+      return
+    setState(() =>
+      text = ""
+      dismissed = ""
+      failed = ""
+    )
+    if said == "/gif" or said.startsWith("/gif ")
+      onGif(said.substring(4).trim())
+      return
+    result: Result<NuclearChatError, Message> = ~MessagesManager.say(said, thread == "" ? null : thread)
+    match result
+      Ok(m) -> {}
+      Err(e) -> keep(said, e.message)
+
+  // A text that was not sent stays in the composer, with why.
+  keep(said: string, why: string)
+    setState(() =>
+      text = said
+      failed = why
+    )
+
+// A completion of the composer: what it shows, what it inserts, and its hint.
+option(label: string, insert: string, hint: string) Completion
+  Completion(label = label, insert = insert, hint = hint)

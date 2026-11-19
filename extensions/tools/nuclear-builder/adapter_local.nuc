@@ -1,0 +1,157 @@
+use os
+use json
+use time
+use threading
+use httpx
+
+// The `local` adapter: the Nuclear Developer over HTTP (`/developer/*`, LangGraph with the local models of Ollama).
+// Each station has its route; a station may name another (`inputs.route`) and add to the body (`inputs.body`), as
+// the engine's steps do (one piece to write, one file to repair); `inputs.transport` is an httpx transport (a
+// test's). A failure that may pass (the Developer not up yet, busy, a 5xx, a call cut by its watch) is retried with
+// `backoff`; each retry is an event.
+
+LOCAL_ROUTES: <string, string> = { "analysis": "/developer/analyze", "design": "/developer/plan", "tests": "/developer/test", "code": "/developer/code", "quality": "/developer/security", "delivery": "/developer/document" }
+
+// Where the Developer answers: the run's, the environment's, else the port the set-up chose (ai.env).
+developerUrl(given: string? = null) string
+  if given != null and given!.length > 0
+    return given!
+  env: string = os.environ.get("NUCLEAR_DEVELOPER_URL") ?? ""
+  env.length > 0 ? env : "http://127.0.0.1:${readMachine()["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}"
+
+// The body of a station's call: the project, the role, the task, the documents before it as the context.
+localBody(role: Role, station: string, work: Work) <string, any>
+  context = work.documents.keys.map((name) => "## ${name}\n\n${work.documents[name]!.trim()}").join("\n\n")
+  // the team's and the member's skills come first and whole; the documents fill what is left of the context
+  shared = role.sharedText()
+  room = Math.max(0, 12000 - shared.length)
+  told = context.substring(Math.max(0, context.length - room))
+  body: <string, any> = { "root": work.root, "role": role.id, "platform": work.inputs["platform"] ?? "", "task": work.task, "spec": work.task, "context": shared.isEmpty ? told : "${shared}\n\n${told}" }
+  if work.model.length > 0
+    body["model"] = work.model
+  extra: <string, any> = work.inputs["body"] ?? ({} as <string, any>)
+  for k, v in extra
+    body[k] = v
+  body
+
+// A call cut by its watch: it took longer than its limit, or nothing was working on it.
+StallError(message: string) : RuntimeError(message)
+
+// POSTs to the Developer with the run's retries: the answer's JSON, or an error. `watch` holds `stallSeconds` (90)
+// and `ollamaUrl`.
+developerCall(url: string, route: string, body: <string, any>, timeoutMs: int, emit: (e: <string, any>) => void, retry: <string, any> = {}, transport: httpx.BaseTransport? = null, watch: <string, any> = {}) <string, any>
+  attempts: int = retry["attempts"] ?? 5
+  baseMs: int = retry["baseMs"] ?? 1000
+  maxMs: int = retry["maxMs"] ?? 30000
+  client = httpx.Client(transport = transport)
+  try
+    developerTries(client, url, route, body, timeoutMs, emit, attempts, baseMs, maxMs, transport, watch)
+  finally
+    client.close()
+
+developerTries(client: httpx.Client, url: string, route: string, body: <string, any>, timeoutMs: int, emit: (e: <string, any>) => void, attempts: int, baseMs: int, maxMs: int, transport: httpx.BaseTransport? = null, watch: <string, any> = {}) <string, any>
+  error = ""
+  for n in 1..(attempts + 1)
+    wait: int? = null
+    try
+      r = watchedPost(client, url, route, body, timeoutMs, emit, transport, watch)
+      if r.statusCode < 300
+        return { "ok": true, "data": r.json() }
+      said: string = r.text
+      error = "${route}: ${r.statusCode} ${said.substring(0, Math.min(300, said.length))}"
+      if not transientStatus(r.statusCode)
+        return { "ok": false, "error": error }
+      wait = retryAfter(r.headers.get("retry-after"))
+    catch e
+      if isinstance(e, StallError)
+        error = "${e}"
+      else if isinstance(e, httpx.HTTPError)
+        error = "the local developer is not running at ${url} (${e}): start it with nuclear-developer"
+      else
+        throw e
+    if n >= attempts
+      return { "ok": false, "error": n > 1 ? "${error} (after ${n} tries)" : error }
+    ms = backoff(n, attempts, baseMs, maxMs, wait)
+    emit({ "type": "retry", "detail": "try ${n + 1} of ${attempts} in ${(ms / 1000).toFixed(1)} s: ${error.substring(0, Math.min(160, error.length))}" })
+    time.sleep(ms / 1000)
+  { "ok": false, "error": error }
+
+// A call watched while it waits: cut after `timeoutMs`, or when for `stallSeconds` the Developer stops answering or
+// Ollama holds no model (nothing is working on it), so a stuck call is retried instead of waited for. The call runs
+// in a thread of its own; the watch probes the Developer's `/docs` and Ollama's `/api/ps` every third of the stall
+// (100 ms to 15 s).
+watchedPost(client: httpx.Client, url: string, route: string, body: <string, any>, timeoutMs: int, emit: (e: <string, any>) => void, transport: httpx.BaseTransport? = null, watch: <string, any> = {}) httpx.Response
+  got: any[] = []
+  done = threading.Event()
+  send = () =>
+    try
+      got.add(client.post(url + route, json = body, timeout = timeoutMs / 1000))
+    catch e
+      got.add(e)
+    finally
+      done.set()
+  threading.Thread(target = send, daemon = true).start()
+  stall: double = watch["stallSeconds"] ?? 90.0
+  every = Math.min(15.0, Math.max(0.1, stall / 3))
+  ollama = "${watch["ollamaUrl"] ?? "http://localhost:11434"}"
+  started = time.monotonic()
+  idle = 0.0
+  down = 0.0
+  probes = httpx.Client(transport = transport)
+  try
+    while not done.wait(every)
+      if (time.monotonic() - started) * 1000 >= timeoutMs
+        throw StallError("no answer in ${timeoutMs >= 60000 ? "${(timeoutMs / 60000).round()} min" : "${(timeoutMs / 1000).round()} s"}")
+      up = answers(probes, url + "/docs")
+      down = up ? 0.0 : down + every
+      busy = ollamaBusy(probes, ollama)
+      idle = busy == false ? idle + every : 0.0
+      if down >= stall
+        throw StallError("stalled: the Developer at ${url} stopped answering")
+      if idle >= stall
+        throw StallError("stalled: Ollama at ${ollama} holds no model while the call waits (nothing is working on it)")
+      if busy == false or not up
+        emit({ "type": "trace", "step": "watch", "detail": up ? "Ollama holds no model yet" : "the Developer does not answer" })
+  finally
+    probes.close()
+  if isinstance(got[0], BaseException)
+    throw got[0]
+  got[0]
+
+answers(client: httpx.Client, url: string) boolean
+  try
+    client.get(url, timeout = 3.0).statusCode < 500
+  catch e
+    if not isinstance(e, httpx.HTTPError)
+      throw e
+    false
+
+// Whether Ollama holds a model now (`/api/ps`), or null when it does not answer.
+ollamaBusy(client: httpx.Client, ollamaUrl: string) boolean?
+  try
+    r = client.get(ollamaUrl + "/api/ps", timeout = 2.5)
+    if r.statusCode >= 300
+      return null
+    found: <string, any> = r.json()
+    models: any[] = found["models"] ?? []
+    not models.isEmpty
+  catch e
+    if not isinstance(e, httpx.HTTPError) and not isinstance(e, ValueError)
+      throw e
+    null
+
+// The adapter: one call to the Developer; its trace becomes the events, its report the documents.
+localAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  route: string = work.inputs["route"] ?? LOCAL_ROUTES[station] ?? "/developer/code"
+  events: <string, any>[] = []
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  answer = developerCall(developerUrl(work.inputs["developerUrl"]), route, localBody(role, station, work), work.timeoutMs, say, work.inputs["retry"] ?? ({} as <string, any>), work.inputs["transport"], work.inputs["watch"] ?? ({} as <string, any>))
+  if answer["ok"] != true
+    return Outcome(false, "", {}, [], 0, events, "${answer["error"]}")
+  data: <string, any> = answer["data"]!
+  for t in (data["trace"] ?? []) as <string, any>[]
+    say({ "type": "trace", "step": "${t["step"] ?? ""}", "detail": "${t["detail"] ?? ""}" })
+  text = "${data["report"] ?? data["code"] ?? json.dumps(data)}"
+  Outcome(true, text, collectDocuments(work, text), [], 0, events, "", data)

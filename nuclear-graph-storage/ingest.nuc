@@ -4,30 +4,33 @@ use pathlib{ Path }
 BATCH = 64
 
 // Fills the shelves of the graph from the knowledge base folder (`nuclear-graph knowledge build` wrote it; ADR-graph-0001),
-// its table of exact facts, and the `prompts` collection from this package's prompt files. Only what changed is
+// its table of exact facts, and the `prompts` collection from the skills of the roles. Only what changed is
 // embedded again; a row the base no longer has is removed, and what an agent wrote at run time (`origin: runtime`)
 // is kept.
 Ingest
-  // The validated prompt of each use case (`prompts/<use_case>.md`) and of each agent step (`agents/<step>.md`:
-  // `agent.<step>`).
+  // The validated prompt of each use case (`feature`, `piece`...) and of each agent step (`agent.repair`...): every
+  // skill of the roles (`nuclear-agents/roles/<role>/skills/*.md`, ADR-developer-0002) that names one in its front
+  // matter (`prompt: agent.repair`). The prompt is the text after the front matter; a name given twice is refused.
   static prompts() <string, any>[]
     out: <string, any>[] = []
-    folder = Paths.prompts()
-    cases: Path[] = list(folder.glob("*.md"))
-    steps: Path[] = list(folder.joinpath("agents").glob("*.md"))
-    names: string[] = []
-    files: Path[] = []
-    for path in cases.sorted()
-      names.add("${path.stem}")
-      files.add(path)
-    for path in steps.sorted()
-      if path.name != "README.md"
-        names.add("agent.${path.stem}")
-        files.add(path)
-    for at in 0..files.length
-      text: string = files[at].readText()
-      name = names[at]
-      out.add({ "id": "prompt-${name}", "document": text, "meta": { "source": "prompt:${name}", "kind": "prompt", "use_case": name, "title": name, "hash": hashlib.sha1(text.toBytes()).hexdigest() } })
+    seen: <string, string> = {}
+    files: Path[] = list(Paths.roles().glob("*/skills/*.md"))
+    for path in files.sorted()
+      text: string = path.readText()
+      end = text.indexOf("\n---\n")
+      if not text.startsWith("---\n") or end < 0
+        continue
+      name = ""
+      for line in text.substring(4, end).split("\n")
+        if line.startsWith("prompt:")
+          name = line.substring(7).trim()
+      if name.length == 0
+        continue
+      if name in seen
+        throw ValueError("the prompt '${name}' is named by two skills: ${seen[name] ?? ""} and ${path}")
+      seen[name] = "${path}"
+      body = text.substring(end + 5)
+      out.add({ "id": "prompt-${name}", "document": body, "meta": { "source": "prompt:${name}", "kind": "prompt", "use_case": name, "title": name, "hash": hashlib.sha1(body.toBytes()).hexdigest() } })
     out
 
   // The rows of the base as the store holds them (each shelf's cards, read back from their sealed documents and

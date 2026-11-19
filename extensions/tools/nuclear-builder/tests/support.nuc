@@ -2,3 +2,16 @@
 expect(held: boolean, why: string = "it does not hold") void
   if not held
     throw AssertionError(why)
+
+// A team of one member per role (each member's id its role, the first employee of `known`'s roster), worked by the
+// local Nuclear Developer with the default models, but the roles of `paid`: Claude Code `haiku`.
+crew(name: string, paid: string[] = [], known: <string, any>? = null) <string, any>
+  team = localTeam({}, known)
+  team["name"] = name
+  team["id"] = teamSlug(name)
+  for m in team["members"] as <string, any>[]
+    if m["role"] in paid
+      m["kind"] = "agent"
+      m["provider"] = "claude-code"
+      m["model"] = "haiku"
+  team

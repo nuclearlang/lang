@@ -1,0 +1,16 @@
+// What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.
+NewWorkspace
+  // the project's folder (absolute): its chat is kept in `.nuclear/chat/`
+  @minLength(1)
+  root: string
+  // builder or atlas
+  @minLength(1)
+  host: string
+  members: Member[] = []
+  teams: Team[] = []
+  channels: Channel[] = []
+  @pattern(r"^(en|es)$")
+  lang: string = "en"
+  // where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)
+  @pattern(r"^(pack|tenor|giphy)$")
+  gifs: string = "pack"

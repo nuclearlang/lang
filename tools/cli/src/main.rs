@@ -1,6 +1,7 @@
 //! `nuclear`: the transpiler's command line.
 
 mod agent;
+mod atlas;
 mod framework;
 
 use nuclear_diag::{Diagnostic, SourceFile, json_items, render_text};
@@ -10,6 +11,8 @@ use std::process::ExitCode;
 
 const USAGE: &str = "usage:
   nuclear help [<topic>|<command>]                            this help, a documentation topic or the usage of a command
+  nuclear help start                                          begin here (an agent with no context too): what Nuclear is, the rules, the cycle
+  nuclear help atlas [--json]                                 every documentation topic, by group
   nuclear help <word>|words|layout --dialect <name>           a kind, decorator or header word of the dialect (words: all; layout: where each kind's file goes)
   nuclear build <file.nuc> --dialect <name|path> [-o <out>]   transpile (prints to stdout without -o)
   nuclear build <folder> [-o <out>]                           transpile a project (folder with nuclear.toml)
@@ -29,7 +32,8 @@ const USAGE: &str = "usage:
   nuclear kind new <name> -p <platform> -d <dialect>          a kind package skeleton in kinds/<name>/ (ADR-synapsis-0004)
   nuclear spec [--dialect <name>|--platform <p>] [--brief]    print the base language and dialect format (for agents);
                                                               with --dialect, also the spec of the dialect and its parents;
-                                                              --brief: the short sheet (what changes from TS/Dart)
+                                                              --brief: the short sheet (what changes from TS/Dart);
+                                                              --platform alone: the platform's sheet and its topics
   nuclear agent init [--dialect <name>]                       AGENTS.md, CLAUDE.md, a Cursor rule and a Claude Code hook for AI agents
   nuclear agent hook                                          (the hook: checks the .nuc an agent edited; reads the tool call on stdin)
   nuclear contracts list                                      the contracts the project (current folder) declares and their state
@@ -45,109 +49,12 @@ options:
   --defs-path <dir>      extra type definitions repository (repeatable; also $NUCLEAR_DEFS_PATH); the defs/
                          folder next to each dialects/ folder is always searched";
 
-/// The documentation, embedded in the binary: (topic, what it is, text). The guide chapters first.
-const TOPICS: &[(&str, &str, &str)] = &[
-    ("guide", "the language guide: index of the chapters", include_str!("../../../nuclearlang/docs/08-guides/README.md")),
-    ("syntax", "guide 1: files, indentation, comments, names", include_str!("../../../nuclearlang/docs/08-guides/01-syntax.md")),
-    ("variables", "guide 2: variables, const or let, scope", include_str!("../../../nuclearlang/docs/08-guides/02-variables.md")),
-    ("types", "guide 3: types, lists, maps, nullable", include_str!("../../../nuclearlang/docs/08-guides/03-types.md")),
-    (
-        "functions",
-        "guide 4: functions, parameters, return, async, alias",
-        include_str!("../../../nuclearlang/docs/08-guides/04-functions.md"),
-    ),
-    ("lambdas", "guide 5: lambdas", include_str!("../../../nuclearlang/docs/08-guides/05-lambdas.md")),
-    ("modules", "guide 6: modules and constructors", include_str!("../../../nuclearlang/docs/08-guides/06-modules.md")),
-    (
-        "inheritance",
-        "guide 7: inheritance, interfaces, override, super",
-        include_str!("../../../nuclearlang/docs/08-guides/07-inheritance.md"),
-    ),
-    ("generics", "guide 8: generics", include_str!("../../../nuclearlang/docs/08-guides/08-generics.md")),
-    (
-        "expressions",
-        "guide 9: operators, strings, cascades, destructuring",
-        include_str!("../../../nuclearlang/docs/08-guides/09-expressions.md"),
-    ),
-    (
-        "control",
-        "guide 10: if, match, for, while (if and match are values)",
-        include_str!("../../../nuclearlang/docs/08-guides/10-control.md"),
-    ),
-    ("use", "guide 11: use (imports)", include_str!("../../../nuclearlang/docs/08-guides/11-use.md")),
-    ("errors", "guide 12: try, catch, throw", include_str!("../../../nuclearlang/docs/08-guides/12-errors.md")),
-    (
-        "results",
-        "guide 13: Result<E, T>, Ok, Err, automatic propagation",
-        include_str!("../../../nuclearlang/docs/08-guides/13-results.md"),
-    ),
-    (
-        "operations",
-        "guide 14: math, bits, text, regex, collections, types, bytes, dates and async in each target",
-        include_str!("../../../nuclearlang/docs/08-guides/14-operations.md"),
-    ),
-    (
-        "reference",
-        "the whole base language in one page, for quick lookup",
-        include_str!("../../../nuclearlang/docs/08-guides/reference.md"),
-    ),
-    (
-        "architecture",
-        "how the transpiler works: its stages and the rules of its design",
-        include_str!("../../../nuclearlang/docs/08-guides/architecture.md"),
-    ),
-    (
-        "new-dialect",
-        "guide: creating a dialect with a coding agent",
-        include_str!("../../../nuclearlang/docs/08-guides/create-a-dialect-with-an-agent.md"),
-    ),
-    ("base", "spec: every rule of the base language", include_str!("../../../nuclearlang/docs/07-reference/nuclear-base.md")),
-    ("library", "spec: the standard library of Nuclear (strings, lists, maps, Math, Json, Regex, DateTime...)", include_str!("../../../nuclearlang/docs/07-reference/library.md")),
-    ("grammar", "spec: the grammar (EBNF)", include_str!("../../../nuclearlang/docs/07-reference/grammar.ebnf")),
-    ("keywords", "spec: reserved words", include_str!("../../../nuclearlang/docs/07-reference/reserved-words.md")),
-    ("diagnostics", "spec: every error code (N0001...)", include_str!("../../../nuclearlang/docs/07-reference/diagnostics.md")),
-    ("projects", "spec: projects of several files", include_str!("../../../nuclearlang/docs/07-reference/projects.md")),
-    ("dialects", "spec: the dialect format (TOML + templates)", include_str!("../../../nuclearlang/docs/07-reference/dialects.md")),
-    ("defs", "spec: type definitions packages", include_str!("../../../nuclearlang/docs/07-reference/definitions.md")),
-    ("typescript", "dialect typescript", include_str!("../../../nuclearlang/dialects/typescript/docs/07-reference/typescript.md")),
-    ("nodejs", "dialect nodejs", include_str!("../../../nuclearlang/dialects/nodejs/docs/07-reference/nodejs.md")),
-    ("dart", "dialect dart", include_str!("../../../nuclearlang/dialects/dart/docs/07-reference/dart.md")),
-    ("python", "dialect python (Python 3.12+, typed)", include_str!("../../../nuclearlang/dialects/python/docs/07-reference/python.md")),
-    ("decisions", "every design decision and why", include_str!("../../../nuclearlang/docs/07-reference/decisions.md")),
-];
-
 /// Where a project keeps its normative text (a language's rules, a dialect's equivalences, a platform's kinds) and
 /// what its users read.
 const REFERENCE: &str = "docs/07-reference";
 const GUIDES: &str = "docs/08-guides";
 
-/// The documents of the framework, its platforms and the dialects, found when asked: every reference
-/// `<name>.md` of the working tree or the installation that is not embedded (the language's), and every guide
-/// whose name is free. (topic, its title, its path)
-fn platform_topics() -> Vec<(String, String, PathBuf)> {
-    let mut found: Vec<(String, String, PathBuf)> = Vec::new();
-    for dir in [REFERENCE, GUIDES] {
-        for root in doc_roots() {
-            for entry in std::fs::read_dir(root.join(dir)).into_iter().flatten().flatten() {
-                let path = entry.path();
-                let Some(name) = path.file_stem().map(|s| s.to_string_lossy().to_string()) else { continue };
-                if path.extension().is_none_or(|e| e != "md") || name == "README" {
-                    continue;
-                }
-                if TOPICS.iter().any(|(t, _, _)| *t == name) || found.iter().any(|(t, _, _)| *t == name) {
-                    continue;
-                }
-                let text = std::fs::read_to_string(&path).unwrap_or_default();
-                let title = text.lines().find_map(|l| l.strip_prefix("# ")).unwrap_or(&name).replace('`', "");
-                found.push((name, title, path));
-            }
-        }
-    }
-    found.sort();
-    found
-}
-
-/// Where the documents of `platform_topics`, the dialects' specs and briefs are: the folders of the installation and
+/// Where the documents of the atlas, the dialects' specs and briefs are: the folders of the installation and
 /// of this working tree that have a `docs/` (the framework's, each language's, each platform's).
 fn doc_roots() -> Vec<PathBuf> {
     nuclear_dialect::homes().iter().flat_map(|h| h.roots()).collect()
@@ -164,13 +71,8 @@ fn help(l: &Loader) -> String {
          dialects (.nuc → .ts / .dart / .py).\n\n",
     );
     out.push_str(USAGE);
-    out.push_str("\n\ndocumentation: nuclear help <topic>\n");
-    for (name, what, _) in TOPICS {
-        out.push_str(&format!("  {name:<13} {what}\n"));
-    }
-    for (name, what, _) in platform_topics() {
-        out.push_str(&format!("  {name:<13} {what}\n"));
-    }
+    out.push_str("\n\nNew here (an agent with no context too): nuclear help start\n\n");
+    out.push_str(&atlas::atlas());
     out.push_str("\ndialects: nuclear help <dialect> · nuclear spec --dialect <name> (everything, for agents)\n");
     for name in l.available() {
         if let (Some(d), _) = l.load(&name) {
@@ -224,20 +126,24 @@ fn dialect_word(l: &Loader, dialect: &str, word: &str) -> Result<String, String>
     }
     for section in DOC_SECTIONS {
         if let Some(doc) = d.doc(section, word) {
-            return Ok(format!("{doc}\n"));
+            return Ok(format!("{}\n", atlas::resolve(&doc, &atlas::found())));
         }
     }
     if let Some(text) = help_topic(word) {
         return Ok(text);
     }
-    Err(format!("'{word}' is not a documented word of dialect '{dialect}'; nuclear help words --dialect {dialect}"))
+    let elsewhere = match atlas::mentions(word).as_slice() {
+        [] => String::new(),
+        found => format!("; it is explained in: {} (nuclear help <topic>)", found.join(", ")),
+    };
+    Err(format!("'{word}' is not a documented word of dialect '{dialect}' (all: nuclear help words --dialect {dialect}){elsewhere}"))
 }
 
 fn help_topic(topic: &str) -> Option<String> {
-    if let Some((_, _, text)) = TOPICS.iter().find(|(name, _, _)| *name == topic) {
-        return Some(text.to_string());
+    if topic == "atlas" {
+        return Some(atlas::atlas());
     }
-    if let Some(text) = platform_topics().into_iter().find(|(name, _, _)| name == topic).and_then(|(_, _, p)| std::fs::read_to_string(p).ok()) {
+    if let Some(text) = atlas::text(topic) {
         return Some(text);
     }
     let prefix = format!("  nuclear {topic} ");
@@ -271,7 +177,7 @@ fn parse_args() -> Result<Args, String> {
         brief: false,
         check: false,
     };
-    let mut it = std::env::args().skip(1);
+    let mut it = std::env::args().skip(1).filter(|a| a != "--monitor");
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "--json" => a.json = true,
@@ -308,9 +214,33 @@ fn loader(args: &Args) -> Loader {
     l
 }
 
+/// The monitor's report of a project built with `--monitor` (spec 015).
+pub(crate) const MONITOR_REPORT: &str = ".nuclear/monitor/report.json";
+
+/// `manifest` built with the monitor when `--monitor` was given (here or to the `nuclear` that runs this one): the
+/// app it builds writes its report to the project's `MONITOR_REPORT`, through `NUCLEAR_MONITOR_FILE`, which the
+/// commands this one starts inherit.
+pub(crate) fn monitored(root: &std::path::Path, mut manifest: nuclear_transpile::project::Manifest) -> nuclear_transpile::project::Manifest {
+    if std::env::var_os("NUCLEAR_MONITOR").is_some() {
+        manifest.monitor = true;
+        if std::env::var_os("NUCLEAR_MONITOR_FILE").is_none() {
+            let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+            // SAFETY: set before this process starts any thread or command
+            unsafe { std::env::set_var("NUCLEAR_MONITOR_FILE", root.join(MONITOR_REPORT)) };
+        }
+    }
+    manifest
+}
+
 fn main() -> ExitCode {
     // the framework's commands (`new`, `make`, `gen`, `run`, `test`...) and `build` / `check` inside a project
-    let raw: Vec<String> = std::env::args().skip(1).collect();
+    let mut raw: Vec<String> = std::env::args().skip(1).collect();
+    // `--monitor` (build, run): every function and method of the project measured (spec 015)
+    if let Some(i) = raw.iter().position(|a| a == "--monitor") {
+        raw.remove(i);
+        // SAFETY: the first thing the process does, before any thread
+        unsafe { std::env::set_var("NUCLEAR_MONITOR", "1") };
+    }
     if framework::claims(&raw) {
         return framework::main(raw);
     }
@@ -356,6 +286,10 @@ fn main() -> ExitCode {
                     ExitCode::from(2)
                 }
             },
+            Some(&"atlas") if args.json => {
+                println!("{}", atlas::atlas_json());
+                ExitCode::SUCCESS
+            }
             Some(topic) => match help_topic(topic) {
                 Some(text) => {
                     print!("{text}");
@@ -367,13 +301,23 @@ fn main() -> ExitCode {
                     ExitCode::SUCCESS
                 }
                 None => {
-                    eprintln!("unknown topic or command '{topic}'\n");
-                    eprint!("{}", help(&loader(&args)));
+                    eprintln!("{}", atlas::not_a_topic(topic));
                     ExitCode::from(2)
                 }
             },
         },
         ["spec"] if args.brief => match brief(&loader(&args), args.dialect.as_deref(), args.platform.is_some()) {
+            Ok(text) => {
+                print!("{}", atlas::resolve(&text, &atlas::found()));
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("{e}");
+                ExitCode::FAILURE
+            }
+        },
+        // `--platform` alone: what an agent writing for the platform reads, never every document joined
+        ["spec"] if args.platform.is_some() => match platform_spec(&loader(&args), args.platform.as_deref().unwrap_or(""), args.dialect.as_deref()) {
             Ok(text) => {
                 print!("{text}");
                 ExitCode::SUCCESS
@@ -385,7 +329,7 @@ fn main() -> ExitCode {
         },
         ["spec"] => match spec(&loader(&args), args.dialect.as_deref()) {
             Ok(text) => {
-                print!("{text}");
+                print!("{}", atlas::resolve(&text, &atlas::found()));
                 ExitCode::SUCCESS
             }
             Err(e) => {
@@ -800,6 +744,7 @@ fn project_command(args: &Args, cmd: &str, path: &str) -> ExitCode {
         eprintln!("{path}: {applied} fix(es) applied");
         return project_command(args, "check", path);
     }
+    let manifest = monitored(&root, manifest);
     let out = project::build(&root, &manifest, &dialect);
     if let Err(e) = project::write_metadata(&root, &manifest, &dialect) {
         eprintln!("warning: cannot write {}: {e}", project::METADATA_FILE);
@@ -914,6 +859,22 @@ fn spec(l: &Loader, dialect: Option<&str>) -> Result<String, String> {
             out.push_str(&format!("- `{name}` ({}): {}\n", d.chain.join(" → "), d.description));
         }
     }
+    Ok(out)
+}
+
+/// `nuclear spec --platform <p>`: the platform's sheet (base + platform) and the topics of the platform and its
+/// dialects, each read with `nuclear help <topic>`.
+fn platform_spec(l: &Loader, platform: &str, dialect: Option<&str>) -> Result<String, String> {
+    let mut out = atlas::resolve(&brief(l, dialect, true)?, &atlas::found());
+    let dialects: Vec<String> = l
+        .available()
+        .into_iter()
+        .filter(|n| l.load(n).0.is_some_and(|d| d.platform.as_deref() == Some(platform)))
+        .collect();
+    out.push_str(&format!(
+        "\n---\n\n## The topics of the {platform} platform (nuclear help <topic>; everything: nuclear help atlas)\n\n"
+    ));
+    out.push_str(&atlas::platform_lines(platform, &dialects));
     Ok(out)
 }
 
@@ -1154,15 +1115,15 @@ mod tests {
                     continue;
                 }
                 let text = std::fs::read_to_string(&path).unwrap();
-                assert!(TOPICS.iter().any(|(_, _, t)| *t == text), "{} is not in TOPICS", path.display());
+                assert!(atlas::TOPICS.iter().any(|t| t.text == text), "{} is not in TOPICS", path.display());
             }
         }
-        let topics = platform_topics();
+        let topics = atlas::found();
         for src in nuclear_dialect::Home::tree().roots() {
             for entry in std::fs::read_dir(src.join(REFERENCE)).into_iter().flatten().flatten() {
                 let name = entry.path().file_stem().unwrap().to_string_lossy().to_string();
                 if entry.path().is_file() {
-                    let found = TOPICS.iter().any(|(t, _, _)| *t == name) || topics.iter().any(|(t, _, _)| *t == name);
+                    let found = atlas::TOPICS.iter().any(|t| t.name == name) || topics.iter().any(|t| t.name == name);
                     assert!(found, "{name} is not a topic");
                 }
             }
@@ -1187,6 +1148,59 @@ mod tests {
         // an agent that writes only Nuclear gets the platform's sheet and nothing of the language underneath
         let backend = brief(&l, Some("fastapi"), true).unwrap();
         assert!(backend.contains("Platform `backend` brief") && !backend.contains("Dialect `python`") && !backend.contains("Dialect `fastapi`"), "{backend}");
+    }
+
+    /// What an agent reads (every topic, every brief, the platform sheets) names no file of a source tree it does
+    /// not have: no relative link is left outside code (spec 016).
+    #[test]
+    fn no_topic_links_into_the_source_tree() {
+        let found = atlas::found();
+        let l = Loader::of(Vec::new(), &[nuclear_dialect::Home::tree()]);
+        let mut texts: Vec<(String, String)> = atlas::all().into_iter().map(|(n, _, _)| (n.clone(), atlas::text(&n).unwrap())).collect();
+        for d in ["flutter", "fastapi", "nestjs", "react", "typescript", "dart", "python"] {
+            texts.push((format!("brief {d}"), atlas::resolve(&brief(&l, Some(d), false).unwrap(), &found)));
+        }
+        for p in ["mobile", "backend", "web"] {
+            texts.push((format!("spec --platform {p}"), platform_spec(&l, p, l.default_dialect(p).as_deref()).unwrap()));
+        }
+        for (name, text) in texts {
+            let mut fenced = false;
+            for line in text.lines() {
+                if line.trim_start().starts_with("```") {
+                    fenced = !fenced;
+                }
+                let prose: String = line.split('`').step_by(2).collect();
+                let relative = prose.match_indices("](").any(|(i, _)| {
+                    let target = &prose[i + 2..];
+                    !(target.starts_with("http") || target.starts_with('#') || target.starts_with("mailto:"))
+                });
+                assert!(fenced || !relative, "topic {name} links into the tree: {line}");
+            }
+        }
+    }
+
+    #[test]
+    fn links_name_topics_and_keep_web_links() {
+        let found = atlas::found();
+        let text = "See [the base](../../docs/07-reference/nuclear-base.md#2), [an ADR](../03-adr/0001-x.md), \
+                    [the site](https://nuclearlang.github.io) and `[a](b)`.\n```\n[x](y.md)\n```\n";
+        let out = atlas::resolve(text, &found);
+        assert!(out.contains("the base (`nuclear help base`)"), "{out}");
+        assert!(out.contains("an ADR,"), "{out}");
+        assert!(out.contains("[the site](https://nuclearlang.github.io)") && out.contains("`[a](b)`") && out.contains("[x](y.md)"), "{out}");
+    }
+
+    #[test]
+    fn the_atlas_groups_every_topic() {
+        let atlas = atlas::atlas();
+        for (group, _) in atlas::GROUPS {
+            assert!(atlas.contains(&format!("\n{group}: ")), "{group}");
+        }
+        for t in ["start", "base", "library", "mobile", "flutter", "generators"] {
+            assert!(atlas.contains(&format!("  {t} ")), "{t} is not in the atlas");
+        }
+        assert!(atlas::all().iter().all(|(_, g, _)| atlas::GROUPS.iter().any(|(n, _)| n == g)));
+        assert!(help_topic("start").unwrap().contains("nuclear help atlas"));
     }
 
     #[test]

@@ -1,6 +1,6 @@
 // The diagnoser: tells why a step of the pipeline failed and what to do next. The kind of failure comes from fixed
 // rules (a small model guesses it badly), the evidence from the tools (the compiler for code, `nuclear doctor` for
-// the environment), and the local model explains it in plain words. It changes nothing. Prompt: agents/diagnose.md.
+// the environment), and the local model explains it in plain words. It changes nothing. Prompt: `agent.diagnose`.
 @state(PieceState)
 graph Diagnoser(bench: Workbench, toolchain: Toolchain)
   @start

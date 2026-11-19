@@ -1,0 +1,5 @@
+// Writes a workspace's channels after one changed (a new channel, a channel read).
+usecase KeepChannels(registry: WorkspaceRegistry)
+  exec(ws: Workspace) Result<Error, Workspace>
+    registry.keep(ws)
+    Ok(ws)

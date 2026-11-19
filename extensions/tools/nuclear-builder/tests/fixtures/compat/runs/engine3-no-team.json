@@ -1,0 +1,425 @@
+{
+  "id": "count-books",
+  "root": "/home/someone/projects/app",
+  "project": "app",
+  "platform": "backend",
+  "dialect": "fastapi",
+  "spec": {
+    "id": "count-books",
+    "title": "Count the books",
+    "useCase": "feature",
+    "description": "Count the books of the shelf.",
+    "criteria": [
+      "the count of an empty shelf is 0"
+    ],
+    "context": [],
+    "source": {
+      "kind": "local"
+    },
+    "lead": "local",
+    "pieces": [
+      {
+        "path": "lib/count.nuc",
+        "kind": "function",
+        "task": "count the books",
+        "by": "planner"
+      }
+    ],
+    "resources": []
+  },
+  "status": "failed",
+  "created": 1763400000000,
+  "stages": [
+    {
+      "id": "analysis",
+      "title": "Analysis",
+      "about": "The spec read by the Analyst: what the client needs, the acceptance criteria, the questions to answer before anything is built (analysis.md).",
+      "actors": [
+        "analyst"
+      ],
+      "role": "analyst",
+      "provider": "nuclear-developer",
+      "model": "gemma4:e2b",
+      "status": "passed",
+      "steps": [
+        {
+          "id": "analysis-1",
+          "title": "Analyst: Analysis",
+          "actor": "analyst",
+          "status": "passed",
+          "started": 1763400000003,
+          "summary": "the graph has no strategies: every station runs",
+          "log": "The client needs a count.",
+          "trace": [
+            {
+              "step": "recall",
+              "detail": "2 cards"
+            }
+          ],
+          "decisions": [
+            {
+              "what": "nuclear-developer (gemma4:e2b) works the Analyst",
+              "why": "the team Local team assigned it"
+            }
+          ],
+          "role": "analyst",
+          "employee": "",
+          "kind": "local",
+          "provider": "nuclear-developer",
+          "model": "gemma4:e2b",
+          "files": [
+            "specs/count-books/analysis.md"
+          ],
+          "costUsd": 0.0,
+          "ended": 1763400000005
+        }
+      ],
+      "started": 1763400000002,
+      "ended": 1763400000006
+    },
+    {
+      "id": "design",
+      "title": "Design",
+      "about": "The generators write first what follows from the data (nuclear gen resource); then the Architect designs what is left, with Mermaid diagrams and the ADRs it follows, and splits it into a plan (design.md, plan.md).",
+      "actors": [
+        "architect"
+      ],
+      "role": "architect",
+      "provider": "nuclear-developer",
+      "model": "gemma4:e2b",
+      "status": "passed",
+      "steps": [
+        {
+          "id": "design-1",
+          "title": "Nothing to generate",
+          "actor": "shell",
+          "status": "skipped",
+          "started": 1763400000006,
+          "summary": "the spec names no resource (a GET <url> line, a Resources section, or a thing with its fields in plain words)",
+          "log": "",
+          "trace": [],
+          "decisions": [],
+          "ended": 1763400000006
+        },
+        {
+          "id": "design-2",
+          "title": "Architect: Design",
+          "actor": "architect",
+          "status": "passed",
+          "started": 1763400000006,
+          "summary": "plan.md, design.md \u00b7 1 pieces",
+          "log": "{\"pieces\": [{\"path\": \"lib/count.nuc\", \"kind\": \"function\", \"task\": \"count the books\"}], \"raw\": \"One function.\", \"trace\": []}",
+          "trace": [],
+          "decisions": [
+            {
+              "what": "nuclear-developer (gemma4:e2b) works the Architect",
+              "why": "the team Local team assigned it"
+            },
+            {
+              "what": "ask the local planner",
+              "why": "the spec brings no pieces and the analysis gave none"
+            },
+            {
+              "what": "plan function in lib/count.nuc",
+              "why": "count the books"
+            }
+          ],
+          "role": "architect",
+          "employee": "",
+          "kind": "local",
+          "provider": "nuclear-developer",
+          "model": "gemma4:e2b",
+          "files": [
+            "specs/count-books/plan.md",
+            "specs/count-books/design.md"
+          ],
+          "costUsd": 0.0,
+          "ended": 1763400000009
+        }
+      ],
+      "started": 1763400000006,
+      "ended": 1763400000010
+    },
+    {
+      "id": "tests",
+      "title": "Tests first",
+      "about": "Before any code, the tests from the acceptance criteria and the plan (test-plan.md and the tests in the project).",
+      "actors": [
+        "developer"
+      ],
+      "role": "developer",
+      "provider": "nuclear-developer",
+      "model": "qwen2.5-coder:3b",
+      "status": "passed",
+      "steps": [
+        {
+          "id": "tests-1",
+          "title": "Developer: Tests first",
+          "actor": "developer",
+          "status": "passed",
+          "started": 1763400000010,
+          "summary": "test/count_the_books_test.nuc: checked again with the whole project once the code exists",
+          "log": "testCount() void\n",
+          "trace": [],
+          "decisions": [
+            {
+              "what": "nuclear-developer (qwen2.5-coder:3b) works the Developer",
+              "why": "the team Local team assigned it"
+            }
+          ],
+          "role": "developer",
+          "employee": "",
+          "kind": "local",
+          "provider": "nuclear-developer",
+          "model": "qwen2.5-coder:3b",
+          "input": "Tests Count the books: one @test per acceptance criterion, before the code exists.\n- the count of an empty shelf is 0\n\nThe pieces that will exist (use exactly these names and signatures, and no other declaration):\n- function in lib/count.nuc: count the books\nThere is nothing to inject: build the models above and check their fields. Do not use inject.",
+          "files": [
+            "test/count_the_books_test.nuc",
+            "specs/count-books/test-plan.md"
+          ],
+          "costUsd": 0.0,
+          "file": "test/count_the_books_test.nuc",
+          "code": "testCount() void\n",
+          "ended": 1763400000013
+        }
+      ],
+      "started": 1763400000010,
+      "ended": 1763400000014
+    },
+    {
+      "id": "code",
+      "title": "Code",
+      "about": "The Developer writes what the generators did not, with the Nuclear MCP server; then the project's check (nuclear check).",
+      "actors": [
+        "developer"
+      ],
+      "role": "developer",
+      "provider": "nuclear-developer",
+      "model": "qwen2.5-coder:3b",
+      "status": "failed",
+      "steps": [
+        {
+          "id": "code-1",
+          "title": "Developer: Code",
+          "actor": "developer",
+          "status": "passed",
+          "started": 1763400000015,
+          "summary": "1 pieces",
+          "log": "",
+          "trace": [],
+          "decisions": [
+            {
+              "what": "nuclear-developer (qwen2.5-coder:3b) works the Developer",
+              "why": "the team Local team assigned it"
+            }
+          ],
+          "role": "developer",
+          "employee": "",
+          "kind": "local",
+          "provider": "nuclear-developer",
+          "model": "qwen2.5-coder:3b",
+          "ended": 1763400000016
+        },
+        {
+          "id": "code-2",
+          "title": "lib/count.nuc",
+          "actor": "developer",
+          "status": "passed",
+          "started": 1763400000016,
+          "summary": "ok in 1 attempt(s)",
+          "log": "count() int = 0\n",
+          "trace": [],
+          "decisions": [
+            {
+              "what": "write a new file",
+              "why": "the plan asks for function here (piece by planner)"
+            }
+          ],
+          "role": "developer",
+          "employee": "",
+          "kind": "local",
+          "provider": "nuclear-developer",
+          "model": "qwen2.5-coder:3b",
+          "file": "lib/count.nuc",
+          "input": "count the books",
+          "files": [
+            "lib/count.nuc"
+          ],
+          "costUsd": 0.0,
+          "code": "count() int = 0\n",
+          "ended": 1763400000018
+        },
+        {
+          "id": "code-3",
+          "title": "test -f lib/never.nuc",
+          "actor": "shell",
+          "status": "skipped",
+          "started": 1763400000019,
+          "summary": "exit 1: errors to repair",
+          "log": "",
+          "trace": [],
+          "decisions": [],
+          "input": "test -f lib/never.nuc",
+          "files": [],
+          "ended": 1763400000021
+        },
+        {
+          "id": "code-4",
+          "title": "nuclear fix .",
+          "actor": "shell",
+          "status": "skipped",
+          "started": 1763400000021,
+          "summary": "exit 1: errors to repair",
+          "log": "error[N0303]: ./config.nuc: missing synapsis(platform = \"mobile\", dialect = \"flutter\") (the platform and the dialect of the project)\n",
+          "trace": [],
+          "decisions": [],
+          "input": "nuclear fix .",
+          "files": [],
+          "ended": 1763400000024
+        },
+        {
+          "id": "code-5",
+          "title": "test -f lib/never.nuc",
+          "actor": "shell",
+          "status": "skipped",
+          "started": 1763400000025,
+          "summary": "exit 1: errors to repair",
+          "log": "",
+          "trace": [],
+          "decisions": [],
+          "input": "test -f lib/never.nuc",
+          "files": [],
+          "ended": 1763400000027
+        },
+        {
+          "id": "code-6",
+          "title": "test -f lib/never.nuc",
+          "actor": "shell",
+          "status": "skipped",
+          "started": 1763400000029,
+          "summary": "exit 1: errors to repair",
+          "log": "",
+          "trace": [],
+          "decisions": [],
+          "input": "test -f lib/never.nuc",
+          "files": [],
+          "ended": 1763400000031
+        },
+        {
+          "id": "code-7",
+          "title": "test -f lib/never.nuc",
+          "actor": "shell",
+          "status": "failed",
+          "started": 1763400000031,
+          "summary": "exit 1: ",
+          "log": "",
+          "trace": [],
+          "decisions": [],
+          "input": "test -f lib/never.nuc",
+          "files": [],
+          "ended": 1763400000033
+        },
+        {
+          "id": "code-8",
+          "title": "Why it failed",
+          "actor": "diagnoser",
+          "status": "skipped",
+          "started": 1763400000034,
+          "summary": "kind: command \u00b7 the check of the project failed",
+          "log": "kind: command\nthe check of the project failed",
+          "trace": [],
+          "decisions": [
+            {
+              "what": "diagnose \"test -f lib/never.nuc\"",
+              "why": "it is the last step of the station that failed"
+            }
+          ],
+          "ended": 1763400000034
+        }
+      ],
+      "started": 1763400000015,
+      "ended": 1763400000033
+    },
+    {
+      "id": "quality",
+      "title": "Quality",
+      "about": "QA writes its plan into the run's checks and stops for you: switch checks, add your own, run yours; then the project is built and tested and QA runs the rest (qa-report.md).",
+      "actors": [
+        "qa"
+      ],
+      "role": "qa",
+      "provider": "nuclear-developer",
+      "model": "gemma4:e2b",
+      "status": "pending",
+      "steps": []
+    },
+    {
+      "id": "delivery",
+      "title": "Delivery",
+      "about": "The definition of done, the user stories and the pull request's text; once you approve, the branch, the commit in your name and the pull request with gh (never merged).",
+      "actors": [
+        "delivery"
+      ],
+      "role": "delivery",
+      "provider": "nuclear-developer",
+      "model": "gemma4:e2b",
+      "status": "pending",
+      "steps": []
+    }
+  ],
+  "costUsd": 0.0,
+  "engine": 3,
+  "factory": {
+    "team": "local-team",
+    "teamName": "Local team",
+    "budgetUsd": 5.0
+  },
+  "writes": [
+    {
+      "path": "specs/count-books/analysis.md",
+      "step": "analysis-1",
+      "before": null,
+      "at": 1763400000005,
+      "after": "7b763f91c1c373198382a20ad969b69cc375f0c9"
+    },
+    {
+      "path": "specs/count-books/plan.md",
+      "step": "design-2",
+      "before": null,
+      "at": 1763400000008,
+      "after": "95c82debd312f28d56e97f69ddc3ef473c1a46c2"
+    },
+    {
+      "path": "specs/count-books/design.md",
+      "step": "design-2",
+      "before": null,
+      "at": 1763400000009,
+      "after": "8e433446f7b061da57f425aee2b483a69fd4922a"
+    },
+    {
+      "path": "test/count_the_books_test.nuc",
+      "step": "tests-1",
+      "before": null,
+      "at": 1763400000012,
+      "after": "b12417b76e0ba8b3edeb00f174d987d5c16affa0"
+    },
+    {
+      "path": "specs/count-books/test-plan.md",
+      "step": "tests-1",
+      "before": null,
+      "at": 1763400000013,
+      "after": "62dd7bc49fc1a409f57b26fff9746ab2c411dc5d"
+    },
+    {
+      "path": "lib/count.nuc",
+      "step": "code-2",
+      "before": null,
+      "at": 1763400000018,
+      "after": "c902972d5e59b3b9f630185171a5670395996f00"
+    }
+  ],
+  "owner": null,
+  "ended": 1763400000035,
+  "analysis": null,
+  "diagnosis": "kind: command\nthe check of the project failed"
+}

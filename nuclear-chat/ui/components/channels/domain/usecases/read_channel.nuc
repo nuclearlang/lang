@@ -1,0 +1,4 @@
+// What ChannelsRepository.read answers, for the screens of channels.
+usecase ReadChannel(repository: ChannelsRepository)
+  exec(workspace: string, channel: string) Result<NuclearChatError, Channel>
+    ~repository.read(workspace, channel)

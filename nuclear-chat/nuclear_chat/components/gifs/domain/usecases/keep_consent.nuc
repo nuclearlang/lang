@@ -1,0 +1,9 @@
+// Keeps the project's answer to the one question about searching a GIF service.
+usecase KeepConsent(choice: GifChoice, workspaces: WorkspacesAppComponent)
+  exec(workspace: string, consent: Consent) Result<Error, Consent>
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(workspace)
+    if found.isErr
+      return Err(found.error)
+    choice.keepConsent(found.value, consent.online)
+    Ok(consent)

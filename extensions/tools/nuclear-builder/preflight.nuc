@@ -1,0 +1,96 @@
+use os
+use json
+use shutil
+use tempfile
+use subprocess
+use httpx
+
+// *Check the connections*: before the first station runs, everything the run's team will use is checked: the
+// Nuclear Developer, the Smart Graph, Ollama and the models of the local roles; the command line of each agent; a key
+// in the vault for each API provider; the MCP server; free disk in the project and the temporary folder.
+
+AGENT_COMMANDS: <string, string> = { "claude-code": "claude", "opencode": "opencode", "codex": "codex", "gemini-cli": "gemini" }
+
+check(name: string, ok: boolean, detail: string) <string, any>
+  { "name": name, "ok": ok, "detail": detail }
+
+probe(client: httpx.Client, url: string) <string, any>
+  try
+    r = client.get(url, timeout = 3.0)
+    { "ok": r.statusCode < 300, "status": r.statusCode, "body": r.text }
+  catch e
+    if not isinstance(e, httpx.HTTPError)
+      throw e
+    { "ok": false, "status": 0, "body": "", "error": "${e}" }
+
+freeMb(folder: string) int
+  (shutil.diskUsage(folder).free / 1024 / 1024).floor()
+
+// The checks of a team for a project; `config` holds the services' addresses and the free space needed.
+checkConnections(team: <string, any>, root: string, config: <string, any>, transport: httpx.BaseTransport? = null) <string, any>[]
+  out: <string, any>[] = []
+  roles: <string, any>[] = team["members"] ?? []
+  env = toolEnv()
+  client = httpx.Client(transport = transport)
+  try
+    local = roles.filter((r) => r["kind"] == "local")
+    if not local.isEmpty
+      dev = "${config["developerUrl"] ?? developerUrl()}"
+      graph = "${config["graphUrl"] ?? "http://127.0.0.1:7878"}"
+      ollama = "${config["ollamaUrl"] ?? "http://localhost:11434"}"
+      d = probe(client, dev + "/docs")
+      out.add(check("Nuclear Developer", d["ok"] == true, d["ok"] == true ? dev : "${dev} does not answer (${d["error"] ?? d["status"]}): nuclear-builder setup --restart developer"))
+      g = probe(client, graph + "/v1/health")
+      out.add(check("Smart Graph", g["ok"] == true, g["ok"] == true ? graph : "${graph} does not answer (${g["error"] ?? g["status"]}): nuclear-builder setup --restart graph"))
+      tags = probe(client, ollama + "/api/tags")
+      out.add(check("Ollama", tags["ok"] == true, tags["ok"] == true ? ollama : "${ollama} does not answer (${tags["error"] ?? tags["status"]}): start Ollama"))
+      if tags["ok"] == true
+        installed: string[] = []
+        try
+          answer: <string, any> = json.loads("${tags["body"]}")
+          models: <string, any>[] = answer["models"] ?? []
+          installed = models.map((m) => "${m["name"]}")
+        catch e
+          if not isinstance(e, ValueError)
+            throw e
+        for m in local.map((r) => "${r["model"] ?? ""}").filter((m: string) => m.length > 0).unique()
+          has = m in installed or "${m}:latest" in installed
+          out.add(check("model ${m}", has, has ? "installed" : "not installed: ollama pull ${m}"))
+  finally
+    client.close()
+  for provider in roles.filter((r) => r["kind"] == "agent").map((r) => "${r["provider"]}").unique()
+    command = AGENT_COMMANDS[provider]!
+    out.add(versionCheck(command, env))
+  for provider in roles.filter((r) => r["kind"] == "api").map((r) => "${r["provider"]}").unique()
+    try
+      kept = vaultKey(provider, 0) != null
+      out.add(check("key of ${provider}", kept, kept ? "in the vault" : "no key: nuclear-builder vault set ${provider}"))
+    catch e
+      if not isinstance(e, RuntimeError)
+        throw e
+      out.add(check("key of ${provider}", false, "${e}"))
+  if roles.any((r) => r["kind"] != "local")
+    mcp = "${config["mcpCommand"] ?? "nuclear-mcp"}"
+    found = shutil.which(mcp, path = env["PATH"]) != null
+    out.add(check("MCP server", found, found ? mcp : "${mcp} is not on the PATH: nuclear-builder setup"))
+  need: int = config["minFreeMb"] ?? 500
+  for folder in [root, tempfile.gettempdir()]
+    if os.path.isdir(folder)
+      mb = freeMb(folder)
+      out.add(check("disk ${folder}", mb >= need, "${mb} MB free in ${folder}${mb >= need ? "" : " (at least ${need} MB are needed: free some space there)"}"))
+  out
+
+// Whether a command line answers `--version`.
+versionCheck(command: string, env: <string, string>) <string, any>
+  found = shutil.which(command, path = env["PATH"])
+  if found == null
+    return check(command, false, "${command} is not installed or not on the PATH")
+  try
+    r = subprocess.run([found!, "--version"], captureOutput = true, text = true, timeout = 15, env = env)
+    said: string = r.stdout.trim().isEmpty ? r.stderr : r.stdout
+    line = said.trim().split("\n")[0]
+    check(command, r.returncode == 0, r.returncode == 0 ? line : "${command} does not answer (${line})")
+  catch e
+    if not isinstance(e, subprocess.TimeoutExpired)
+      throw e
+    check(command, false, "${command} does not answer in 15 s")

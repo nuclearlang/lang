@@ -10,7 +10,7 @@ What is common to the three editors: [the editors' roadmap](../../../docs/01-pro
 
 ## Untested
 
-- **0.52.0 to 0.53.0 in a running IDE** (0.52.1 to 0.53.0 change only the version and the bundled dialects): the
+- **0.52.0 to 0.53.1 in a running IDE** (0.52.1 to 0.53.1 change only the version and the bundled dialects): the
   *HTTP Connections* tool window (a new id since 0.52.0, so the IDE places it again) was only compiled
   (`build.sh`), never opened.
 - The plugin (0.52.2) in a running IDE: it is only compiled, against Android Studio 2026.2. Its two tool windows
@@ -20,5 +20,14 @@ What is common to the three editors: [the editors' roadmap](../../../docs/01-pro
 ## Pending
 
 - Mixed debugging in Android Studio (stepping by Nuclear line; VS Code has it).
-- Nuclear Atlas, the settings page, the notifications and the Retry buttons are in VS Code only:
-  Android Studio has the Nuclear Builder tool window without them.
+- **The language button** (spec 011, req. 18, T5.13): VS Code has `nuclear.language` (automatic, English, Español)
+  and a globe in every page and the status bar; the plugin is in English only, with no setting and no button. It
+  needs the same setting (a project-independent application setting), a status bar widget and the menu in its tool
+  windows, the Spanish of its texts, and `--lang` on its engine calls.
+- Nuclear Atlas, the settings page and the notifications are in VS Code only; Nuclear Builder's tool window has no
+  diagram, avatars nor checks' console, and no settings of its own for the money (it always asks twice): VS Code's
+  page has them (spec 011 T4.7).
+- **The Builder's workbench is VS Code's only for now** (spec 011 T4.9, T4.10): the tool window has no specs' tree by
+  component and layer (it lists the flat `specs/*/spec.md` and its *New Spec* writes `specs/<id>/`: it should write
+  through `nuclear-builder spec new` and list with `spec list --json`), no runs' accordion and no chat (`nuclear-builder
+  chat --events`).

@@ -1,0 +1,4 @@
+// What MessagesRepository.click answers, for the screens of messages.
+usecase ClickButton(repository: MessagesRepository)
+  exec(workspace: string, id: string, click: Click) Result<NuclearChatError, ChatEvent>
+    ~repository.click(workspace, id, click)

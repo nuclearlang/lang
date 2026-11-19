@@ -1,0 +1,214 @@
+use sys
+use pathlib{ Path }
+
+// `nuclear-builder skills …` and `team skills set` (spec 011 requirement 34, ADR-platform-0009): the library's skills
+// and agents (library.nuc), a team's and a member's skills — attached from the library, or their own, cloned or
+// written by the user — seen, cloned, created, changed and deleted. A library skill is read-only: it is cloned to be
+// changed. Every change is a team's write (teams.nuc: atomic, its last version kept).
+
+// The team and, with `member`, its member (the place a skill is kept); throws when the member is not in the team.
+skillHolder(t: <string, any>, member: string?) <string, any>
+  if member == null or member!.isEmpty
+    return t
+  found = ((t["members"] ?? []) as <string, any>[]).find((m) => m["id"] == member)
+  if found == null
+    throw TeamError("the team ${t["id"]} has no member `${member}`")
+  found!
+
+// A list of the library without its markdown (what a list shows; `skills show` gives the file).
+withoutMarkdown(entries: <string, any>[]) <string, any>[]
+  entries.map((e) => { "id": e["id"], "title": e["title"], "description": e["description"], "kind": e["kind"], "tags": e["tags"], "from": e["from"], "role": e["role"], "skills": e["skills"] }).map((e) => dictWithout(e))
+
+// A dict without its null values.
+dictWithout(e: <string, any>) <string, any>
+  out: <string, any> = {}
+  for k, v in e
+    if v != null
+      out[k] = v
+  out
+
+// The skills a member gets beside its role's, as the lists show them: id, title and description (the file's
+// English), where it comes from and what it overrides.
+composedEntries(t: <string, any>, holder: <string, any>) <string, any>[]
+  sharedSkills(t, holder).map((s) => dictWithout({ "id": s["id"], "title": "${frontMatter("${s["markdown"]}")["title"] ?? s["id"]}", "description": "${frontMatter("${s["markdown"]}")["description"] ?? ""}", "from": s["from"], "overrides": s["overrides"] }))
+
+// `skills list`: the library (skills and agents) in `lang`; with a team, its attached and own skills and what every
+// member inherits; with a member, its own, its base agent and what it gets in all (`composed`, beside its role's).
+skillsList(team: string? = null, member: string? = null, lang: string = "en") <string, any>
+  out: <string, any> = { "library": withoutMarkdown(librarySkills(lang)), "agents": withoutMarkdown(libraryAgents(lang)) }
+  if team == null or team!.isEmpty
+    return out
+  t = loadTeam(team!)
+  out["team"] = { "id": t["id"], "skills": t["skills"] ?? ([] as string[]), "own": ((t["ownSkills"] ?? []) as <string, any>[]).map((s) => ownEntry(s, "team", lang)).map((e) => dictWithout({ "id": e["id"], "title": e["title"], "description": e["description"], "from": "team", "clonedFrom": e["clonedFrom"] })) }
+  if member == null or member!.isEmpty
+    out["composed"] = composedEntries(t, {})
+    return out
+  m = skillHolder(t, member)
+  roleNames = roleSkills("${m["role"]}")
+  out["member"] = dictWithout({ "id": m["id"], "role": m["role"], "agent": m["agent"], "roleSkills": ((m["skills"] ?? []) as string[]).filter((s) => s in roleNames), "skills": ((m["skills"] ?? []) as string[]).filter((s) => not (s in roleNames)), "own": ((m["ownSkills"] ?? []) as <string, any>[]).map((s) => ownEntry(s, "member", lang)).map((e) => dictWithout({ "id": e["id"], "title": e["title"], "description": e["description"], "from": "member", "clonedFrom": e["clonedFrom"] })) })
+  out["composed"] = composedEntries(t, m)
+  out
+
+// A role's skill file (`<role>/skills/<id>.md`), or null.
+roleSkillFile(role: string, id: string) Path?
+  at = rolesDir()
+  file = at == null or not validSkillId(id) ? null : at!.joinpath(role, "skills", "${id}.md")
+  file == null or not file!.isFile() ? null : file
+
+// An entry with where it comes from and whether it may be changed where it was asked.
+marked(entry: <string, any>, source: string, editable: boolean) <string, any>
+  out: <string, any> = dict(entry)
+  out["from"] = source
+  out["editable"] = editable
+  out
+
+// `skills show`: a skill's file as the place asked sees it — the member's own, the team's own, the library's, the
+// member's role's — with where it comes from and whether it may be changed there (`editable`: an own skill of that
+// place; any other is cloned first).
+skillShow(id: string, team: string? = null, member: string? = null, lang: string = "en") <string, any>
+  t: <string, any>? = team == null or team!.isEmpty ? null : loadTeam(team!)
+  m: <string, any>? = t == null or member == null or member!.isEmpty ? null : skillHolder(t!, member)
+  if m != null
+    mine = ownById(m!["ownSkills"], id)
+    if mine != null
+      return marked(ownEntry(mine!, "member", lang), "member", true)
+  if t != null
+    teams = ownById(t!["ownSkills"], id)
+    if teams != null
+      return marked(ownEntry(teams!, "team", lang), "team", m == null)
+  lib = librarySkill(id, lang)
+  if lib != null
+    return marked(lib!, "library", false)
+  agent = libraryAgent(id, lang)
+  if agent != null
+    return marked(agent!, "agent", false)
+  if m != null
+    file = roleSkillFile("${m!["role"]}", id)
+    if file != null
+      entry = libraryEntry(id, file!.readText(encoding = "utf-8"), lang)
+      entry["from"] = "role"
+      entry["editable"] = false
+      return entry
+  throw TeamError("no skill `${id}`${m != null ? " for the member ${member}" : t != null ? " in the team ${team}" : " in the library"}")
+
+// The markdown a clone starts from and where it comes from: for a member, the team's own, then the library's, then
+// its role's; for the team, the library's.
+cloneSource(t: <string, any>, m: <string, any>?, id: string) <string, any>
+  if m != null
+    teams = ownById(t["ownSkills"], id)
+    if teams != null
+      return { "markdown": ownSkillMarkdown(teams!), "from": "team:${id}" }
+  lib = librarySkill(id)
+  if lib != null
+    return { "markdown": "${lib!["markdown"]}", "from": "library:${id}" }
+  if m != null
+    file = roleSkillFile("${m!["role"]}", id)
+    if file != null
+      return { "markdown": file!.readText(encoding = "utf-8"), "from": "role:${id}" }
+  throw TeamError("no skill `${id}` to clone: skills list gives the library's, the team's and the member's")
+
+// Writes a team after a change of one of its places' own skills; the team as the screens read it.
+keepSkills(t: <string, any>) <string, any>
+  teamShown(saveTeam(t))
+
+// `skills clone`: a copy of a skill (the library's, the team's, a role's) as the team's own or the member's, with the
+// same id, so it wins over the one it came from; then it can be changed (`skills update`).
+cloneSkill(team: string, id: string, member: string? = null) <string, any>
+  t = loadTeam(team)
+  holder = skillHolder(t, member)
+  m = member == null or member!.isEmpty ? null : holder
+  if ownById(holder["ownSkills"], id) != null
+    throw TeamError("`${id}` is already ${m == null ? "the team's" : "the member's"} own skill: change it with skills update")
+  source = cloneSource(t, m, id)
+  own: <string, any>[] = list(holder["ownSkills"] ?? [])
+  own.add(ownSkillOf("${source["markdown"]}", id, "${source["from"]}"))
+  holder["ownSkills"] = own
+  keepSkills(t)
+
+// `skills create`: a new skill of the team or the member from its SKILL.md (front matter `name` its id, `title`,
+// `description`, optionally `title_es`, `description_es`, `kind`, `tags`; the body is what the agent follows).
+createSkill(team: string, markdown: string, member: string? = null) <string, any>
+  t = loadTeam(team)
+  holder = skillHolder(t, member)
+  skill = ownSkillOf(markdown)
+  if ownById(holder["ownSkills"], "${skill["id"]}") != null
+    throw TeamError("there is a skill `${skill["id"]}` already: change it with skills update, or give the new one another name")
+  own: <string, any>[] = list(holder["ownSkills"] ?? [])
+  own.add(skill)
+  holder["ownSkills"] = own
+  keepSkills(t)
+
+// `skills update`: an own skill of the team or the member changed (its whole SKILL.md; its id and origin stay).
+updateSkill(team: string, id: string, markdown: string, member: string? = null) <string, any>
+  t = loadTeam(team)
+  holder = skillHolder(t, member)
+  own: <string, any>[] = list(holder["ownSkills"] ?? [])
+  at = -1
+  for i in 0..own.length
+    if own[i]["id"] == id
+      at = i
+  if at < 0
+    throw TeamError("`${id}` is not ${member == null or member!.isEmpty ? "the team's" : "the member's"} own skill: a library skill is cloned first (skills clone)")
+  kept = own[at]["from"]
+  own[at] = ownSkillOf(markdown, id, kept == null ? null : "${kept}")
+  holder["ownSkills"] = own
+  keepSkills(t)
+
+// `skills delete`: an own skill of the team or the member taken away (the user's decision; the team's last version
+// stays as `<id>.json.bak`).
+deleteSkill(team: string, id: string, member: string? = null) <string, any>
+  t = loadTeam(team)
+  holder = skillHolder(t, member)
+  own: <string, any>[] = (holder["ownSkills"] ?? []) as <string, any>[]
+  if not own.any((s) => s["id"] == id)
+    throw TeamError("`${id}` is not ${member == null or member!.isEmpty ? "the team's" : "the member's"} own skill")
+  holder["ownSkills"] = own.filter((s) => s["id"] != id)
+  keepSkills(t)
+
+// `team skills set`: the library skills the team (every member inherits them) or a member has; a member's role
+// skills that are on stay as they are.
+setSkills(team: string, ids: string[], member: string? = null) <string, any>
+  t = loadTeam(team)
+  holder = skillHolder(t, member)
+  if libraryDir() != null
+    for id in ids
+      if librarySkill(id) == null and ownById(holder["ownSkills"], id) == null
+        throw TeamError("no skill `${id}` in the library (nuclear-builder skills list)")
+  if member == null or member!.isEmpty
+    t["skills"] = ids.unique()
+  else
+    roleNames = roleSkills("${holder["role"]}")
+    holder["skills"] = [...((holder["skills"] ?? []) as string[]).filter((s) => s in roleNames), ...ids.filter((s) => not (s in roleNames))].unique()
+  keepSkills(t)
+
+// The `skills` command: JSON on stdout, an error as `{"error": …}` with exit code 1; `create` and `update` read the
+// SKILL.md on stdin.
+skillsLine(args: string[]) int
+  what = args.isEmpty ? "list" : args[0]
+  valued = ["--team", "--member", "--lang"]
+  rest = args.skip(1).filter((a) => not a.startsWith("--")).filter((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in valued))
+  team = option(args, "--team")
+  member = option(args, "--member")
+  lang = option(args, "--lang") ?? "en"
+  try
+    if what == "list"
+      printJson(skillsList(team, member, lang))
+    else if what == "show" and rest.length >= 1
+      printJson(skillShow(rest[0], team, member, lang))
+    else if what == "clone" and rest.length >= 1 and team != null
+      printJson(cloneSkill(team!, rest[0], member))
+    else if what == "create" and team != null
+      printJson(createSkill(team!, sys.stdin.read(), member))
+    else if what == "update" and rest.length >= 1 and team != null
+      printJson(updateSkill(team!, rest[0], sys.stdin.read(), member))
+    else if what == "delete" and rest.length >= 1 and team != null
+      printJson(deleteSkill(team!, rest[0], member))
+    else
+      printJson({ "error": "usage: nuclear-builder skills list [--team <t>] [--member <m>] [--lang en|es] | show <id> [--team <t>] [--member <m>] | clone <id> --team <t> [--member <m>] | create --team <t> [--member <m>] (SKILL.md on stdin) | update <id> --team <t> [--member <m>] (stdin) | delete <id> --team <t> [--member <m>]" })
+      return 1
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    printJson({ "error": "${e}" })
+    return 1
+  0

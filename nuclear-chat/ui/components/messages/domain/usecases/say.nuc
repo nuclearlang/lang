@@ -1,0 +1,4 @@
+// What MessagesRepository.say answers, for the screens of messages.
+usecase Say(repository: MessagesRepository)
+  exec(workspace: string, channel: string, said: Said) Result<NuclearChatError, Message>
+    ~repository.say(workspace, channel, said)

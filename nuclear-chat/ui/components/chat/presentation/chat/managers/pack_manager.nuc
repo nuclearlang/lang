@@ -1,0 +1,9 @@
+// The GIF pack's drawings, read once: a pack GIF of a message (`pack/<file>`) is drawn from its SVG.
+@stateModel(PackState)
+statemanager PackManager
+  (gifs: GifsComponent)
+    load()
+
+  @state(PackState.ready)
+  load() Result<NuclearChatError, PackGif[]>
+    ~gifs.packGifs()

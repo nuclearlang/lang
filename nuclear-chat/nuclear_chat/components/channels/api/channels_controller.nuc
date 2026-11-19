@@ -1,0 +1,20 @@
+// The channels API: the channels and direct messages of a workspace with their unread counts, a new channel, a
+// channel opened (read), the agent a direct message is answered by.
+@controller("channels")
+controller ChannelsController(channels: ChannelsAppComponent)
+  @get("{workspace}")
+  list(workspace: string) Result<Error, Channel[]>
+    channels.list(workspace)
+
+  @post("{workspace}")
+  @status(201)
+  create(workspace: string, input: NewChannel) Result<Error, Channel>
+    ~channels.create(workspace, input)
+
+  @post("{workspace}/{channel}/read")
+  read(workspace: string, channel: string) Result<Error, Channel>
+    ~channels.read(workspace, channel)
+
+  @put("{workspace}/{channel}/agent")
+  chooseAgent(workspace: string, channel: string, input: AgentChoice) Result<Error, Channel>
+    ~channels.chooseAgent(workspace, channel, input)

@@ -1,0 +1,45 @@
+// The open channel's messages, read again when the service says one of them came or changed; what the user says,
+// sends, reacts or clicks goes to the service, which tells it back as an event.
+@stateModel(MessagesState)
+statemanager MessagesManager
+  (messages: MessagesComponent, events: EventsComponent)
+  workspace: string = ""
+  channel: string = ""
+
+  start(id: string)
+    workspace = id
+    listen(events.watchEvents(workspace), (e) => changed(e))
+
+  changed(e: ChatEvent)
+    if e.workspace == workspace and e.type == "message" and e.channel == channel
+      load()
+
+  @state(MessagesState.loading)
+  loading()
+
+  // The user opened a channel.
+  open(id: string)
+    channel = id
+    loading()
+    load()
+
+  @state(MessagesState.ready)
+  load() Result<NuclearChatError, Message[]>
+    // shortcut: an appcomponent's alias does not propagate a Result yet (the compiler's roadmap): kept and matched
+    all: Result<NuclearChatError, Message[]> = ~messages.history(workspace, channel)
+    match all
+      Ok(list) -> Ok(list.filter((m) => m.thread == null))
+      Err(e) -> Err(e)
+
+  // What the user says: the composer keeps the text when it fails.
+  say(text: string, thread: string? = null) Result<NuclearChatError, Message>
+    ~messages.say(workspace, channel, Said(text = text, thread = thread))
+
+  sendGif(gif: Gif, thread: string? = null) Result<NuclearChatError, Message>
+    ~messages.sendGif(workspace, channel, SentGif(gif = gif, thread = thread))
+
+  react(message: string, emoji: string)
+    ~messages.react(workspace, message, Reaction(emoji = emoji, by = "you"))
+
+  click(message: string, button: string)
+    ~messages.clickButton(workspace, message, Click(button = button))

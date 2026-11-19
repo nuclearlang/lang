@@ -1,0 +1,168 @@
+/* The run's work diagram (flow.tsx). Colours come from the editor's theme (the page's --ok, --bad, --run, --skip, --accent). */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-background-pattern-color: color-mix(in srgb, var(--fg) 14%, transparent);
+  --xy-minimap-background-color: var(--card);
+  --xy-minimap-mask-background-color: color-mix(in srgb, var(--bg) 70%, transparent);
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--vscode-list-hoverBackground);
+  --xy-controls-button-color: var(--fg);
+  --xy-controls-button-border-color: var(--line);
+  --xy-edge-stroke: var(--line);
+  --xy-node-boxshadow-selected: none;
+  --xy-handle-background-color: var(--line);
+  --xy-handle-border-color: transparent;
+  font-family: var(--vscode-font-family);
+}
+.react-flow__controls { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px #0004; }
+.react-flow__minimap { border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.react-flow__handle { width: 7px; height: 7px; min-width: 0; min-height: 0; opacity: .7; }
+.react-flow__node { transition: opacity .25s; }
+/* React Flow places a node with its transform: a node that appears grows from its card, never from the node box */
+.fx-card, .fx-trace, .fx-ghost { animation: fx-in .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+
+/* the cards */
+.fx-card { position: relative; border-radius: 14px; background: linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, var(--fg) 8%), var(--card)); border: 1px solid var(--line); box-shadow: 0 6px 22px #0003, inset 0 1px 0 #ffffff0d; color: var(--fg); cursor: pointer; transition: transform .2s, box-shadow .25s, border-color .25s; }
+.fx-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px #0004, inset 0 1px 0 #ffffff12; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.fx-card.picked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 10px 28px #0004; }
+.fx-station { width: 270px; padding: 12px 14px 10px; }
+.fx-step { width: 260px; padding: 11px 12px 9px; }
+.fx-card.is-passed { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.fx-card.is-failed { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad), 0 8px 26px color-mix(in srgb, var(--bad) 25%, transparent); }
+.fx-card.is-pending { opacity: .62; }
+.fx-card.is-skipped { opacity: .45; border-style: dashed; }
+/* the one working: a light runs around its border */
+.fx-ring { display: none; position: absolute; inset: -2px; border-radius: 15px; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--fx-a), transparent 0 60%, var(--run) 78%, #fff8 82%, var(--run) 86%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: fx-spin 2.2s linear infinite; }
+.fx-card.is-running { border-color: color-mix(in srgb, var(--run) 50%, var(--line)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--run) 35%, transparent), 0 10px 34px color-mix(in srgb, var(--run) 28%, transparent); }
+.fx-card.is-running .fx-ring { display: block; }
+@property --fx-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+.fx-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.fx-idx { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); }
+.fx-time { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fx-pill { font-size: 10.5px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.fx-pill.is-running { color: var(--run); border-color: var(--run); background: color-mix(in srgb, var(--run) 12%, transparent); }
+.fx-pill.is-passed { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 60%, transparent); }
+.fx-pill.is-failed { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.fx-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 650; letter-spacing: -.01em; margin-bottom: 8px; }
+.fx-title.fx-sm { font-size: 13px; margin: 8px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.fx-ico { width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.fx-crew { display: flex; align-items: center; gap: 4px; min-height: 32px; margin-bottom: 6px; }
+.fx-member { opacity: .38; transition: opacity .3s, transform .3s; display: inline-flex; }
+.fx-member.did { opacity: .85; }
+.fx-member.on { opacity: 1; transform: translateY(-1px); }
+.fx-face { display: inline-flex; border-radius: 50%; flex-shrink: 0; position: relative; }
+.fx-face .av { width: 100% !important; height: 100% !important; }
+.fx-face.live { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--run); animation: fx-bob 1.6s ease-in-out infinite; }
+.fx-face.live::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--run); animation: fx-ripple 1.6s ease-out infinite; }
+.fx-now { font-size: 12px; color: var(--muted); min-height: 34px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 17px; }
+.fx-card.is-running .fx-now { color: var(--fg); }
+.fx-now b { color: var(--fg); font-weight: 600; }
+.fx-bar { height: 4px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 8%, transparent); overflow: hidden; margin: 8px 0 7px; }
+.fx-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--ok)); transition: width .6s cubic-bezier(.2, .8, .2, 1); }
+.fx-card.is-running .fx-bar i { background: linear-gradient(90deg, var(--run), color-mix(in srgb, var(--run) 40%, #fff), var(--run)); background-size: 200% 100%; animation: fx-shine 1.4s linear infinite; }
+.fx-card.is-failed .fx-bar i { background: var(--bad); }
+.fx-foot { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); }
+.fx-dec { color: var(--accent); }
+.fx-open { margin-left: auto; padding: 2px 9px; font-size: 11px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--fg); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.fx-open:hover { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.fx-who { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; align-items: center; }
+.fx-who b { display: block; font-size: 12.5px; } .fx-who small { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-muted { color: var(--muted); }
+
+/* inside a stage: its boundary (C4), the steps the agent followed, the stages around it */
+.fx-boundary { border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 18px; background: color-mix(in srgb, var(--accent) 4%, transparent); position: relative; }
+.fx-boundary.is-running { border-color: color-mix(in srgb, var(--run) 60%, var(--line)); background: color-mix(in srgb, var(--run) 4%, transparent); }
+.fx-blabel { position: absolute; left: 18px; top: 14px; right: 18px; font-size: 12px; }
+.fx-blabel b { font-size: 14px; } .fx-blabel span { color: var(--muted); }
+.fx-blabel .fx-muted { margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-trace { width: 220px; height: 34px; display: grid; grid-template-columns: 20px auto 1fr; gap: 7px; align-items: center; padding: 0 10px 0 6px; border-radius: 9px; border: 1px solid var(--line); background: var(--card); font-size: 11.5px; cursor: pointer; transition: border-color .2s, transform .2s; }
+.fx-trace:hover { border-color: var(--accent); transform: translateX(2px); }
+.fx-trace.picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.fx-trace.live { border-color: var(--run); box-shadow: 0 0 14px color-mix(in srgb, var(--run) 30%, transparent); }
+.fx-trace b { text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
+.fx-detail { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-k { width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border: 1.5px solid var(--accent); color: var(--accent); }
+.fx-ghost { width: 190px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--line); background: color-mix(in srgb, var(--card) 60%, transparent); display: grid; gap: 5px; font-size: 12px; cursor: pointer; opacity: .8; transition: opacity .2s, border-color .2s; }
+.fx-ghost:hover { opacity: 1; border-color: var(--accent); }
+.fx-ghost .fx-pill { justify-self: start; }
+
+/* the context (C4 level 1): the project in the middle, who talks to it around */
+.fx-project { width: 300px; padding: 14px 16px 11px; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, var(--card)), var(--card) 70%); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.fx-project .fx-title { font-size: 18px; margin: 2px 0 2px; }
+.fx-spec { margin: 8px 0 4px; font-size: 12.5px; font-style: italic; }
+.fx-kind { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.fx-actor { width: 230px; display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ac); box-shadow: 0 6px 20px #0003; cursor: default; transition: transform .2s, box-shadow .25s, opacity .25s; animation: fx-in .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+.fx-actor:hover { transform: translateY(-2px); box-shadow: 0 10px 26px #0004; }
+.fx-actor b { display: block; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-actor small { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-aico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; background: color-mix(in srgb, var(--ac) 22%, transparent); color: var(--ac); }
+.fx-actor.k-role { width: 252px; grid-template-columns: 54px 1fr; }
+.fx-actor.k-role small { white-space: normal; line-height: 1.3; }
+.fx-actor.k-role .fx-face:not(.live) { box-shadow: 0 0 0 2px var(--ac), 0 0 14px color-mix(in srgb, var(--ac) 70%, transparent); }
+.fx-actor.k-role .fx-aico { border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--ac) 70%, #fff), var(--ac)); color: transparent; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac) 25%, transparent); }
+.fx-actor.k-provider { border-radius: 14px 14px 22px 22px; }
+.fx-actor.k-system { border-style: dashed; border-left-style: solid; }
+.fx-actor.unused { opacity: .55; }
+.fx-actor.live { border-color: var(--run); border-left-color: var(--run); box-shadow: 0 0 0 1px color-mix(in srgb, var(--run) 40%, transparent), 0 10px 30px color-mix(in srgb, var(--run) 30%, transparent); }
+.fx-actor.live .fx-aico { animation: fx-bob 1.6s ease-in-out infinite; }
+.fx-actor .react-flow__handle, .fx-project .react-flow__handle { opacity: 0; }
+/* inside a step (C4 level 4): the trace, the decisions, the files, the tool call */
+.fx-bit { width: 270px; min-height: 54px; display: grid; grid-template-columns: 26px 1fr; gap: 9px; align-items: center; padding: 8px 11px; border-radius: 11px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 4px 14px #0003; cursor: pointer; transition: border-color .2s, transform .2s; animation: fx-in .35s cubic-bezier(.2, .9, .3, 1.2) backwards; }
+.fx-bit:hover { border-color: var(--accent); transform: translateY(-1px); }
+.fx-bit.picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.fx-bit.live { border-color: var(--run); box-shadow: 0 0 16px color-mix(in srgb, var(--run) 32%, transparent); }
+.fx-bit b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-bit small { display: block; font-size: 11px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fx-bico { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; border: 1.5px solid var(--accent); color: var(--accent); }
+.fx-bit.k-decision .fx-bico { border-radius: 6px; transform: rotate(45deg); border-color: #d29922; color: #d29922; } .fx-bit.k-decision .fx-bico { font-size: 0; }
+.fx-bit.k-decision { border-left: 3px solid #d29922; }
+.fx-bit.k-file .fx-bico { border-radius: 6px; border-color: var(--ok); color: var(--ok); } .fx-bit.k-file { border-left: 3px solid var(--ok); }
+.fx-bit.k-tool .fx-bico { border-radius: 6px; border-color: #c96442; color: #c96442; } .fx-bit.k-tool { border-left: 3px solid #c96442; }
+.fx-level { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 85%, transparent); }
+
+/* edges */
+.react-flow__edge-path.fx-edge { stroke-width: 2; transition: stroke .3s; }
+.fx-edge.idle { stroke: var(--line); stroke-dasharray: 5 6; }
+.fx-edge.done { stroke: color-mix(in srgb, var(--ok) 55%, var(--line)); }
+.fx-edge.failed { stroke: var(--bad); }
+.fx-edge.live { stroke: var(--run); stroke-width: 2.5; stroke-dasharray: 8 7; animation: fx-dash .7s linear infinite; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--run) 60%, transparent)); }
+.fx-pulse { fill: var(--run); filter: drop-shadow(0 0 6px var(--run)); }
+
+/* the breadcrumb */
+.fx-crumbs { display: flex; align-items: center; gap: 6px; padding: 5px; border-radius: 10px; background: color-mix(in srgb, var(--card) 85%, transparent); border: 1px solid var(--line); backdrop-filter: blur(6px); box-shadow: 0 4px 16px #0003; }
+.fx-crumbs button { padding: 4px 10px; border-radius: 7px; background: transparent; color: var(--muted); font-size: 12px; }
+.fx-crumbs button.here { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); font-weight: 600; }
+.fx-crumbs > span { color: var(--muted); }
+.fx-follow { color: var(--run) !important; border: 1px solid color-mix(in srgb, var(--run) 50%, transparent) !important; }
+.fx-typing { display: inline-flex; gap: 2px; margin-right: 6px; vertical-align: middle; }
+.fx-typing i { width: 4px; height: 4px; border-radius: 50%; background: var(--run); animation: fx-type 1s infinite; }
+.fx-typing i:nth-child(2) { animation-delay: .15s; } .fx-typing i:nth-child(3) { animation-delay: .3s; }
+
+/* the minimap's nodes by state */
+.react-flow__minimap-node { fill: var(--skip); }
+.mm-running { fill: var(--run); } .react-flow__minimap-node.mm-boundary { fill: transparent; stroke: var(--line); stroke-width: 4; stroke-dasharray: 12 10; } .mm-passed { fill: var(--ok); } .mm-failed { fill: var(--bad); }
+
+/* a station that waits for you: a slow amber breath and a question mark; who works it and with what */
+.fx-card.is-waiting { border-color: var(--run); animation: fx-in .35s cubic-bezier(.2, .9, .3, 1.2) backwards, fx-breathe 2.4s ease-in-out infinite; }
+.fx-pill.is-waiting { color: #111; border-color: var(--run); background: var(--run); }
+.fx-boundary.is-waiting { border-color: var(--run); }
+.fx-ask { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; align-items: center; justify-content: center; background: var(--run); color: #111; font-weight: 700; font-size: 11px; }
+.fx-assign { margin: -2px 0 6px; font-size: 11.5px; min-width: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-paid { color: var(--run) !important; }
+.mm-waiting { fill: var(--run); }
+@keyframes fx-breathe { 50% { box-shadow: 0 0 0 1px var(--run), 0 0 26px color-mix(in srgb, var(--run) 38%, transparent); } }
+
+@keyframes fx-spin { to { --fx-a: 360deg; } }
+@keyframes fx-in { from { opacity: 0; transform: scale(.92) translateY(6px); } }
+@keyframes fx-bob { 50% { transform: translateY(-2px); } }
+@keyframes fx-ripple { from { transform: scale(.85); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes fx-shine { to { background-position: -200% 0; } }
+@keyframes fx-dash { to { stroke-dashoffset: -15; } }
+@keyframes fx-type { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-3px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx-ring, .fx-face.live, .fx-face.live::after, .fx-card.is-running .fx-bar i, .fx-card.is-waiting, .fx-edge.live, .fx-typing i, .fx-card, .fx-trace, .fx-ghost, .fx-actor, .fx-actor .fx-aico, .fx-bit { animation: none !important; }
+  .fx-pulse { display: none; }
+}

@@ -457,8 +457,16 @@ pub fn usecase_context(u: &UseCase) -> Value {
     if let Some((repository, method, result)) = &u.calls {
         m.insert("Repository".into(), s(repository));
         m.insert("method".into(), s(method));
-        // which use case is written: the method's own Result, or its plain answer inside an Ok
-        m.insert(if *result { "result" } else { "plain" }.into(), Value::Bool(true));
+        // which use case is written: the method's own Result, a Stream passed on (ADR-synapsis-0008), or its plain
+        // answer inside an Ok
+        let which = if *result {
+            "result"
+        } else if u.value.starts_with("Stream<") {
+            "stream"
+        } else {
+            "plain"
+        };
+        m.insert(which.into(), Value::Bool(true));
     }
     if let Some(r) = &u.route {
         m.insert("route".into(), Value::Bool(true));

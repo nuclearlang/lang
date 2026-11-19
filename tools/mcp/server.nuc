@@ -11,13 +11,17 @@ DEVELOPER_PORT = Paths.machine()["NUCLEAR_DEVELOPER_PORT"] ?? "7879"
 DEVELOPER_URL = os.environ.get("NUCLEAR_DEVELOPER_URL") ?? "http://127.0.0.1:${DEVELOPER_PORT}"
 PROJECT_COMMANDS = ["new", "n", "build", "install", "test", "check", "analyze", "make", "g", "gen", "migrate", "add", "remove", "explain"]
 
-// What the server tells every client. The generators' part is the same with or without the local agents.
-LEAD = "NuclearLang and Synapsis. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate it into Nuclear by hand; when a tool cannot do something, say so. The generators write the standard code, the local Nuclear Developer writes what is left; you lead, validate and correct. For any request, first call graph_strategy with the user's own words: it answers which kind of request it is (a whole system, one screen, a rename, a failing test...) and the plan of that kind; follow that plan. "
+// What the server tells every client: only where to begin. The rules and the work cycle are nuclear_start's answer
+// (spec 016: an agent with no context learns Nuclear from this server alone).
+FIRST = "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so."
+LOCAL_FIRST = " Then, for a request, call graph_strategy with the user's own words and follow its plan."
+// The work cycle of each mode, part of nuclear_start's answer. The generators' part is the same with or without the
+// local agents.
 GENERATORS = "For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. "
 LOCAL = "Then give developer_task only what the generators did not write (a use case with its own rules, a view's details), and wire each use case it wrote with generate_usecase (its alias in the facade, its route). For any task that writes or changes .nuc (a feature, a bug, a refactor, tests): 1) call developer_task first with the project folder, a title, the description and the acceptance criteria: the local agents plan, write the tests first, write the code, run the tests and the security review, and document everything they did in a journal it returns; 2) read the journal, then validate: nuclear_check of the project must say ok and nuclear test must pass; 3) correct only what failed or is wrong, never rewrite what passed; before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph instead of guessing; If the run failed, read its 'Why it failed' (the local diagnoser): when the cause was passing or you fixed it, call developer_retry instead of starting again. 4) call developer_review with the run, what you corrected and why, and the corrected files, so the journal keeps your review and the local developer learns from it. Write the code yourself only when developer_task cannot run (the local developer is not running) and say so."
 // A machine set up for remote agents only (ADR-installer-0002) has no Smart Graph and no local developer: the model writes
 // what the generators do not, and the tools that need those services are left out.
-REMOTE_LEAD = "NuclearLang and Synapsis. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate it into Nuclear by hand; when a tool cannot do something, say so. The generators write the standard code; you write what is left, then validate and correct. This machine has no local agents and no Smart Graph (its user chose remote agents only; `nuclear-builder setup` installs them). "
+REMOTE_NOTE = "This machine has no local agents and no Smart Graph (its user chose remote agents only; `nuclear-builder setup` installs them): the generators write the standard code, you write what is left, then validate and correct. "
 REMOTE = "Then write only what the generators did not write (a use case with its own rules, a view's details): before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and look up a kind, a decorator or a command with nuclear_help instead of guessing; wire each use case you wrote with generate_usecase (its alias in the facade, its route). Then validate: nuclear_check of the project must say ok and nuclear test must pass; correct only what failed, never rewrite what passed."
 
 // Whether this machine was set up for remote agents only (`NUCLEAR_AI_MODE`, else the machine's `ai.env`).
@@ -115,7 +119,8 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       return "the graph has no strategy: `nuclear-graph ingest` the knowledge base"
     why = found["why"] ?? ""
     second = found["second"] ?? ""
-    "${found["id"]} (${why.length > 0 ? why : "by meaning"}; the next closest: ${second.length > 0 ? second : "none"})\n\n${found["plan"]}"
+    learn = "Before writing: nuclear_start if not called yet, nuclear_brief(<platform>), and nuclear_doc for each topic the plan names (the atlas of nuclear_start lists them)."
+    "${found["id"]} (${why.length > 0 ? why : "by meaning"}; the next closest: ${second.length > 0 ? second : "none"})\n\n${found["plan"]}\n\n${learn}"
 
   // One row of the graph by its id, with what it links to: error:N0114 (a diagnostic), kind:backend.usecase,
   // decorator:backend.get, tool:nuclear.gen.resource, mcp:generate_resource, lib:string, platform:mobile,
@@ -144,6 +149,34 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   nuclearBuild(code: string, dialect: string = "backend") string
     ~tools.build(code, dialect)
 
+  // CALL FIRST, before anything about Nuclear: what NuclearLang and Synapsis are, the rules never broken, the work
+  // cycle with these tools on this machine, and the atlas of every topic (the language, the library, each platform
+  // and dialect, the tools, how a project documents itself, validated examples), each read with nuclear_doc. With
+  // project (a folder inside a Synapsis project), also its platform, its pieces and the syntax sheet of its dialect.
+  nuclearStart(project: string = "") string
+    start = ~runTool(["nuclear", "help", "start"])
+    if start.code != 0
+      return start.out
+    atlas = ~runTool(["nuclear", "help", "atlas"])
+    cycle = remoteOnly() ? "${REMOTE_NOTE}${GENERATORS}${REMOTE}" : "Call graph_strategy with the user's own words: it answers which kind of request it is and the plan of that kind; follow it. ${GENERATORS}${LOCAL}"
+    parts = [start.out.trim(), "## The work cycle with the MCP tools on this machine\n\n${cycle}", atlas.out.trim()]
+    root = project.length > 0 ? projectOf(project) : null
+    if root != null
+      inspected: string = ~tools.project("${root}", ["gen", "inspect"])
+      parts.add("## This project (${root})\n\n${inspected.trim()}")
+      found = Regex(r'dialect\s*=\s*"([a-z]+)"').find(root!.joinpath("config.nuc").readText())
+      if found != null
+        sheet = ~runTool(["nuclear", "spec", "--brief", "--dialect", found![1] ?? ""])
+        parts.add(sheet.out.trim())
+    parts.join("\n\n---\n\n")
+
+  // One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base,
+  // library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp,
+  // vscode, builder...), context-docs, example/<name>. A word that is not a topic answers the topics that explain it.
+  nuclearDoc(topic: string) string
+    ran = ~runTool(["nuclear", "help", topic])
+    ran.out
+
   // Documentation of a kind, decorator, header word (with dialect), a topic or a command.
   nuclearHelp(word: string, dialect: string = "") string
     ~tools.help(word, dialect)
@@ -170,6 +203,20 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       return "'${command}' is not allowed here (allowed: ${PROJECT_COMMANDS.sorted().join(", ")})"
     given: string[] = args ?? []
     ~tools.project(project, [command, ...given])
+
+  // Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much
+  // memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.
+  projectMonitor(project: string) string
+    ~tools.project(project, ["monitor"])
+
+  // project_monitor, and the hot spots kept in the graph (`monitor:<project>`) so the local developer and later
+  // sessions know where the app was slow. Call it after a run with `nuclear run --monitor`.
+  graphMonitor(project: string) string
+    found = ~tools.project(project, ["monitor"])
+    if found.contains("hot spots (")
+      name = Path(project).resolve().name
+      ~graph.remember("monitor:${name}", found, "memory", name)
+    found
 
   // What a Synapsis project has: its platform and dialect, its components with their declarations by kind, and
   // the generators of its platform. Call it before generating or writing, so nothing is declared twice.
@@ -253,6 +300,17 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   webRead(url: string) string
     ~web.read(url)
 
+  // Why the local developer cannot take a task, or null when it answers: what to do instead.
+  developerDown() string?
+    http = httpx.AsyncClient(baseUrl = DEVELOPER_URL, timeout = 3)
+    try
+      ~http.get("/")
+      null
+    catch e
+      "the local developer is not running at ${DEVELOPER_URL} (${e}). Start it (`nuclear-builder setup --status` says what is installed and running; Linux: `systemctl --user start nuclear-developer`), or go on without it: write the .nuc yourself with the work cycle of nuclear_start (the generators first, then nuclear_brief, nuclear_doc and nuclear_check), and say that the local developer did not run."
+    finally
+      ~http.aclose()
+
   // One file asked of the local developer over HTTP: its check, its attempts and its code.
   developer(path: string, body: <string, any>) string
     http = httpx.AsyncClient(baseUrl = DEVELOPER_URL, timeout = 900)
@@ -275,6 +333,9 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
     root = projectOf(project)
     if root == null
       return "${project} is not inside a Synapsis project (no config.nuc): create it with nuclear_project(command='new')"
+    down = ~developerDown()
+    if down != null
+      return down!
     run = taskSlug(title)
     spec: Path = root!.joinpath("specs", run, "spec.md")
     spec.parent.mkdir(parents = true, existOk = true)
@@ -361,8 +422,8 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   // Every tool, in the order a client lists them.
   all() any[]
     [
-      graphSearch, graphAnswer, graphStrategy, graphCard, graphPrompt, graphRemember, nuclearCheck, nuclearBuild, nuclearHelp, nuclearBrief, nuclearFmt, nuclearDefs,
-      nuclearProject, projectInspect, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
+      nuclearStart, nuclearDoc, graphSearch, graphAnswer, graphStrategy, graphCard, graphPrompt, graphRemember, nuclearCheck, nuclearBuild, nuclearHelp, nuclearBrief, nuclearFmt, nuclearDefs,
+      nuclearProject, projectInspect, projectMonitor, graphMonitor, generateComponent, generateResource, generateUsecase, generateScreen, apiInspect, webSearch, webRead,
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 
@@ -370,7 +431,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
 // developer's.
 mcpServer() MCPServer
   remote = remoteOnly()
-  server = MCPServer("nuclear", instructions = remote ? "${REMOTE_LEAD}${GENERATORS}${REMOTE}" : "${LEAD}${GENERATORS}${LOCAL}")
+  server = MCPServer("nuclear", instructions = remote ? FIRST : "${FIRST}${LOCAL_FIRST}")
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   for tool in tools.all()
     name: string = tool.__name__

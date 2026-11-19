@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [overview.md, ../03-adr/0006-shared-contracts.md, ../04-specs/003-shared-contracts/plan.md, ../01-product/roadmap.md]
 ---
 # Shared contracts
@@ -24,7 +24,7 @@ backend project (tasks_api)                       client project (tasks_app: mob
 
 | File | Written by | Holds |
 |---|---|---|
-| `.nuclear/contract.json` | every build and check of any project (`project::write_metadata`) | the models (fields, Nuclear types, optionality, defaults, JSON names, rules, the key, doc comments); a backend's controllers and routes; an app's repositories and calls |
+| `.nuclear/contract.json` | every build and check of any project (`project::write_metadata`) | the models (fields, Nuclear types, optionality, defaults, JSON names, rules, the key, doc comments); a backend's controllers and routes, with the transports that serve them, its guards, its WebSocket's path and the events it publishes (`transports`, `guards`, `webSocket`, `events`: ADR-synapsis-0007, ADR-synapsis-0008); an app's repositories and calls |
 | `.nuclear/openapi.json` | a backend's build | OpenAPI 3.1 made from the contract, for clients that are not Nuclear |
 | `contracts/<name>/` in the client | the client's build, before it reads the sources | a model per model the routes carry, `<Name>Error`, a repository per controller with a method per route |
 | `contracts/<name>/contract.json` in the client | the same step (`contract::install`); for a url contract, `nuclear contracts update` | the local copy of the contract. For a url contract it is what a build reads: it is committed, so a build never needs the network |

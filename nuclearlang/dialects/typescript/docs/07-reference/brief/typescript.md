@@ -41,4 +41,8 @@ export async function loadUser(id: number): Promise<string> {
 }
 ```
 
+`==` is `===`, except between lists, maps or sets: Nuclear compares what they hold (`[1, 2] == [1, 2]` is `true`,
+written `_equals(a, b)`), TypeScript whether they are the same object. When porting TypeScript, an `===` between arrays
+or maps that relied on being the same object is a different check in Nuclear; a value typed `any` keeps `===`.
+
 Bitwise operators work on 32-bit integers (JavaScript); use `BigInt(...)` for 64 bits. `%` keeps the dividend's sign.

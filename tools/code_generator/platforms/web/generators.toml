@@ -6,7 +6,8 @@
 # What `nuclear make <kind> <component> <Name>` writes at the kind's [layout] path: the smallest file of the kind that
 # compiles, with a doc comment to replace by the declaration's business description (the project map shows it).
 # {{Name}}: the name as given (PascalCase), {{name}}: camelCase, {{component}} / {{Component}}, {{table}}: the name in
-# snake_case plural.
+# snake_case plural, {{Base}}: the name without its kind's word (`ThreadManager` → `Thread`), {{base}}: it in
+# kebab-case. A `statemanager` also gets its state model (`<Base>State`) when it has none.
 [skeletons]
 repository = """
 // The requests of {{Name}}.
@@ -47,6 +48,39 @@ stateful = """
 stateful {{Name}}
   build() Element
     div(children = "{{Name}}")
+"""
+statemanager = """
+// The state of a screen: each @state method emits one of the states of {{Base}}State.
+@stateModel({{Base}}State)
+statemanager {{Name}}
+  @state({{Base}}State.loading)
+  loading()
+"""
+# a screen and a widget are views: their files go where a `stateless` does
+screen = { place = "stateless", template = """
+// A screen of {{component}}: its address and what it shows.
+@screen(route = "/{{base}}")
+stateless {{Name}}
+  build() Element
+    main(children = [h1(children = "{{Base}}")])
+""" }
+widget = { place = "stateless", template = """
+// A piece of a screen: what {{Name}} shows.
+stateless {{Name}}
+  build() Element
+    div(children = "{{Name}}")
+""" }
+component = """
+// What the app does with an event wherever the user is: each method with @on(Event) runs with every one.
+component {{Name}}
+  start() void
+    Log.d("{{Name}} is ready")
+"""
+guard = """
+// A check of access for @acl(guards = [...]): canActivate answers whether the user may go on.
+guard {{Name}}
+  canActivate() boolean
+    true
 """
 event = """
 // What happened: {{Name}}.
@@ -281,6 +315,16 @@ template = """
 usecase {{UseCase}}(repository: {{Repository}})
   exec({{params}}) Result<{{error}}, {{value}}>
     ~repository.{{method}}({{args}})
+"""
+[[generators.usecase]]
+kind = "usecase"
+when = "stream"
+name = "{{UseCase}}"
+template = """
+// What {{Repository}}.{{method}} receives from the API, for the screens of {{component}}.
+usecase {{UseCase}}(repository: {{Repository}})
+  exec({{params}}) {{value}}
+    repository.{{method}}({{args}})
 """
 [[generators.usecase]]
 kind = "appcomponent"

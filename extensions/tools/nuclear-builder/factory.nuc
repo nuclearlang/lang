@@ -1,0 +1,1250 @@
+use os
+use re
+use json
+use time
+use shutil
+use threading
+use subprocess
+use pathlib{ Path }
+
+// The software factory's engine (spec 011): a spec goes through the stations (Analysis, Design, Tests first, Code,
+// Quality, Delivery), each worked by its role as the run's team assigned it (a local agent, an agent's command line
+// or an API model, `adapter*.nuc`). Each station writes its documents in the spec's folder (`specPath`: `specs/<component>/[<layer>/]<id>/`) from its role's templates;
+// the gates stop the run for the user; the checks are one list per run; the money has one budget per run and two
+// confirmations before the first paid call; what a failed step wrote is undone and a crashed run resumes. The
+// editors draw the run file and talk to this engine as a process (docs/02-architecture/engine.md).
+
+// The documents each station writes in the spec's folder (`specPath`: `specs/<component>/[<layer>/]<id>/`).
+STATION_DOCS: <string, string[]> = { "analysis": ["analysis.md", "questions.md"], "design": ["design.md", "plan.md"], "tests": ["test-plan.md"], "code": ["work-log.md"], "quality": ["qa-report.md"], "delivery": ["definition-of-done.md", "user-story.md", "pr.md"] }
+
+// What each station asks of its role.
+STATION_TASK: <string, string> = { "analysis": "Read the spec as the client's request: what the client needs, the acceptance criteria (each one checkable), and the questions that must be answered before anything is built.", "design": "Design what the generators did not write (they wrote first what follows from the data: read the files they changed): the parts and how they talk, with Mermaid diagrams, the ADRs it follows, and a plan of pieces of one file each, in the order they can be written.", "tests": "Write the tests first, from the acceptance criteria and the plan, in Nuclear, with the platform's generators (nuclear make test) where they fit, and a test plan that says which test holds which criterion.", "code": "Write the code of the plan that the generators did not write, in Nuclear, with the Nuclear MCP server's tools (generate first, then write what is left), until nuclear check says ok and the tests pass.", "quality": "Run the checks of the run that are yours, read the results of the project's build and tests, and write the QA report: each check with its result, what failed and why.", "delivery": "Write the definition of done (each criterion met and where it shows), the user stories of what was built, and the text of the pull request." }
+
+// The stations a strategy's stages (today's stage ids, ADR-developer-0001) ask for; Analysis and Delivery always run.
+STRATEGY_STATIONS: <string, string> = { "generate": "design", "plan": "design", "test": "tests", "code": "code", "verify": "quality", "security": "quality" }
+
+// The adapter of each provider.
+ADAPTERS: <string, (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome> = { "nuclear-developer": localAdapter, "claude-code": claudeCodeAdapter, "opencode": openCodeAdapter, "codex": codexAdapter, "gemini-cli": geminiCliAdapter, "anthropic": anthropicAdapter, "openai": openAIAdapter, "google": googleAdapter, "openrouter": openRouterAdapter }
+
+// A run that cannot go on now: it waits for an answer of the user (a gate, the spending), or for a command.
+RunStop(message: string) : RuntimeError(message)
+
+Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (question: <string, any>) => <string, any>?, emit: (e: <string, any>) => void, options: <string, any> = {})
+  lock: threading.Lock = threading.Lock()
+  phaseNow: string = ""
+  beating: threading.Event = threading.Event()
+
+  root() string
+    "${run["root"]}"
+
+  specDir() string
+    "${Path(root(), specPathOf(run))}"
+
+  save() void
+    lock.acquire()
+    try
+      saveRun(run)
+    finally
+      lock.release()
+    emit({ "type": "change", "status": run["status"] })
+
+  stages() <string, any>[]
+    run["stages"]!
+
+  stage(id: string) <string, any>
+    found = stages().find((s) => s["id"] == id)
+    if found == null
+      throw RuntimeError("the run has no station `${id}`")
+    found!
+
+  // Who works a station of `role`: the member the tech lead assigned for the run, else the role's first member
+  // (teams.nuc's `memberFor`); a role with no member is the local Nuclear Developer's.
+  assigned(role: string) <string, any>
+    found = memberFor(team, role, run["assign"])
+    // with the team's and the member's skills, and a base agent's text (library.nuc)
+    found == null ? ({ "kind": "local", "provider": "nuclear-developer" } as <string, any>) : withSkills(team, found!)
+
+  // A new step of a station, saved and told. `key` and `args`: the step's kind for the screens, which say its title in
+  // their language (`step.<key>` of their dictionaries, each argument at its place); the English `title` stays the
+  // journal's and an older screen's. A step named by a path or a command has no key.
+  step(st: <string, any>, title: string, actor: string, role: string = "", key: string = "", args: string[] = []) <string, any>
+    steps: <string, any>[] = st["steps"]!
+    // the next number of the station: a step kept from an earlier attempt and a new one never share an id
+    last = steps.map((x) => "${x["id"]}".split("-").last.toInt() ?? 0).reduce(0, (a: int, b: int) => Math.max(a, b))
+    s: <string, any> = { "id": "${st["id"]}-${last + 1}", "title": title, "actor": actor, "status": "running", "started": nowMs(), "summary": "", "log": "", "trace": [] as <string, any>[], "decisions": [] as <string, any>[], "phase": phaseNow }
+    if key.length > 0
+      s["key"] = key
+      s["args"] = args
+    if role.length > 0
+      a = assigned(role)
+      s["role"] = role
+      s["member"] = a["id"] ?? ""
+      s["employee"] = a["employee"] ?? ""
+      s["kind"] = a["kind"] ?? "local"
+      s["provider"] = a["provider"] ?? "nuclear-developer"
+      s["model"] = a["model"] ?? ""
+    steps.add(s)
+    traceEvent(run, "step", title, s["id"]!)
+    save()
+    s
+
+  end(s: <string, any>, status: string, summary: string) void
+    s["status"] = status
+    s["summary"] = summary
+    s["ended"] = nowMs()
+    traceEvent(run, status, summary, s["id"]!)
+    save()
+
+  decide(s: <string, any>, what: string, why: string) void
+    decisions: <string, any>[] = s["decisions"]!
+    decisions.add({ "what": what, "why": why })
+
+  // ---------- a run ----------
+
+  // Runs the stations from `fromStation` (a station; null: the first that did not pass), and every one after it; or
+  // from `fromStep` (a step's id): that step and every step after it, the steps before it in its station kept. What
+  // the steps left out wrote is undone first (a file changed since is kept). A run whose process stopped goes on
+  // from the step it was in.
+  start(fromStation: string? = null, fromStep: string? = null) <string, any>
+    if run["status"] == "running" and not orphaned(run["owner"])
+      throw RuntimeError("the run ${run["id"]} is running in another process (pid ${(run["owner"] as <string, any>)["pid"]})")
+    recovered = recoverRun(run)
+    stepAt: string? = fromStep
+    if stepAt == null and recovered and fromStation == null
+      stepAt = ((run["interrupted"] as <string, any>[]).last)["stepId"]
+    owning = stepAt == null ? null : stages().find((st) => (st["steps"] as <string, any>[]).any((x) => x["id"] == stepAt))
+    if fromStep != null and owning == null
+      throw RuntimeError("the run ${run["id"]} has no step `${fromStep}`")
+    if owning == null
+      stepAt = null
+    first = owning != null ? owning!["id"] : fromStation ?? (stages().find((s) => s["status"] != "passed" and s["status"] != "skipped") ?? ({ "id": "" } as <string, any>))["id"]
+    at = stages().findIndex((s) => s["id"] == first)
+    if at < 0
+      run["status"] = "passed"
+      save()
+      return run
+    // a run that waits for an answer goes on in its station: only the stations after it start again
+    resumed = run["status"] == "waiting" and fromStation == null and stepAt == null
+    named = stepAt == null ? "" : "${(owning!["steps"] as <string, any>[]).find((x) => x["id"] == stepAt)!["title"]}"
+    why = stepAt != null ? "from the step \"${named}\" (it and every step after it run again)" : fromStation == null ? "from the station that did not pass" : "from ${fromStation}"
+    forget(resumed ? at + 1 : at, why, stepAt)
+    run["status"] = "running"
+    run["owner"] = owner()
+    run["ended"] = null
+    // the team that works it now (a retry may name another); the page shows its logo after the team changes
+    run["team"] = { "id": team["id"], "name": team["name"] }
+    save()
+    heartbeat()
+    try
+      if options["preflight"] != false and not preflight(stages()[at])
+        return finish("failed")
+      confirmSpending(at)
+      seedChecks(root(), "${run["id"]}", ROLES.map((r) => composeRole(r, assigned(r))), team)
+      for i in at..stages().length
+        st = stages()[i]
+        if not wanted(st)
+          skipStation(st)
+          continue
+        st["status"] = "running"
+        st["started"] = st["started"] ?? nowMs()
+        save()
+        ok = station(st)
+        st["status"] = ok ? "passed" : "failed"
+        st["ended"] = nowMs()
+        save()
+        if not ok
+          diagnose(st)
+          undoFailed()
+          return finish("failed")
+      finish("passed")
+    catch e
+      if isinstance(e, RunStop)
+        for st in stages()
+          if st["status"] == "running"
+            st["status"] = "waiting"
+        run["status"] = "waiting"
+        run["owner"] = null
+        traceEvent(run, "waiting", "${e}")
+        save()
+        return run
+      if isinstance(e, KeyboardInterrupt)
+        for st in stages()
+          for s in st["steps"] as <string, any>[]
+            if s["status"] == "running"
+              end(s, "failed", "stopped by you")
+          if st["status"] == "running"
+            st["status"] = "failed"
+        undoFailed()
+        return finish("failed")
+      throw e
+    finally
+      beating.set()
+
+  finish(status: string) <string, any>
+    run["status"] = status
+    run["ended"] = nowMs()
+    run["owner"] = null
+    run["waiting"] = null
+    traceEvent(run, status)
+    save()
+    emit({ "type": "done", "status": status, "costUsd": run["costUsd"] })
+    run
+
+  // The process that runs a run beats every BEAT_SECONDS: a run whose beat is older than STALE_SECONDS is orphaned.
+  heartbeat() void
+    beating.clear()
+    beat = () =>
+      while not beating.wait(BEAT_SECONDS)
+        o: <string, any>? = run["owner"]
+        if o != null
+          o!["beat"] = nowMs()
+          save()
+    threading.Thread(target = beat, daemon = true).start()
+
+  // The stations from `at` on are run again: their steps go to `run.previous`, what they wrote is undone. With
+  // `fromStep`, the steps of the first station before that one are kept, and the parts of it that ended before it.
+  forget(at: int, why: string, fromStep: string? = null) void
+    left = stages().slice(at)
+    if left.all((st) => (st["steps"] as <string, any>[]).isEmpty)
+      return
+    keep: <string, any>[] = []
+    phases: string[] = []
+    if fromStep != null
+      first: <string, any>[] = left[0]["steps"]!
+      cut = first.findIndex((x) => x["id"] == fromStep)
+      // a check of the connections is made again by every attempt; a step that failed before it is not built on
+      keep = first.take(Math.max(0, cut)).filter((x) => (x["status"] == "passed" or x["status"] == "skipped") and x["title"] != "Check the connections")
+      cutPhase = "${first[cut]["phase"] ?? ""}"
+      for p in (left[0]["phases"] ?? []) as string[]
+        if p == cutPhase
+          break
+        phases.add(p)
+    keptIds = keep.map((x) => "${x["id"]}")
+    ids: string[] = []
+    for st in left
+      for s in st["steps"] as <string, any>[]
+        if not (s["id"] in keptIds)
+          ids.add(s["id"]!)
+    changed: string[] = []
+    undone = rollback(root(), run["writes"] ?? [], (id) => not (id in ids), changed)
+    run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => not (w["step"] in ids))
+    previous: <string, any>[] = run["previous"] ?? []
+    previous.add({ "at": nowMs(), "from": left[0]["id"], "step": fromStep, "status": run["status"], "stages": json.loads(json.dumps(left)), "why": why, "undone": undone, "kept": changed })
+    run["previous"] = previous
+    for st in left
+      isFirst = st["id"] == left[0]["id"]
+      st["status"] = "pending"
+      st["steps"] = isFirst ? keep : [] as <string, any>[]
+      st["phases"] = isFirst ? phases : [] as string[]
+      st["started"] = isFirst and not keep.isEmpty ? st["started"] : null
+      st["ended"] = null
+    // what the stations made again decide is decided again: the analysis, a plan the planner made, the verdicts
+    redone = left.map((st) => "${st["id"]}")
+    if "analysis" in redone and not ("work" in ((stage("analysis")["phases"] ?? []) as string[]))
+      run["analysis"] = null
+    if "design" in redone and not ("work" in ((stage("design")["phases"] ?? []) as string[]))
+      spec: <string, any> = run["spec"]!
+      spec["pieces"] = ((spec["pieces"] ?? []) as <string, any>[]).filter((p) => p["by"] == "you")
+    run["acceptance"] = null
+    run["diagnosis"] = null
+
+  // What the steps that did not pass wrote is undone (a file changed since by someone else is kept).
+  undoFailed() void
+    kept = passedSteps(run)
+    undone = rollback(root(), run["writes"] ?? [], (id) => id in kept)
+    run["writes"] = ((run["writes"] ?? []) as <string, any>[]).filter((w) => w["step"] in kept)
+    if not undone.isEmpty
+      traceEvent(run, "undone", undone.join(", "))
+
+  // *Check the connections*: everything the team will use, before the first station runs.
+  preflight(st: <string, any>) boolean
+    s = step(st, "Check the connections", "shell", "", "preflight")
+    checks = checkConnections(team, root(), line, options["transport"])
+    s["trace"] = checks.map((c) => { "step": c["name"], "detail": c["detail"] })
+    bad = checks.filter((c) => c["ok"] != true)
+    end(s, bad.isEmpty ? "passed" : "failed", bad.isEmpty ? "${checks.length} checks" : bad.map((c) => "${c["detail"]}").join("; "))
+    bad.isEmpty
+
+  // ---------- the money ----------
+
+  // The roles of the stations left that a paid provider works: an agent's command line or an API.
+  paidRoles(at: int) string[]
+    left = stages().slice(at)
+    roles = left.map((st) => "${st["role"]}").unique()
+    leader = lead()
+    if leader != null and left.any((st) => st["id"] == "code" or st["id"] == "quality") and not (leader! in roles)
+      roles.add(leader!)
+    roles.filter((r) => assigned(r)["kind"] != "local")
+
+  // The two confirmations before the first paid call, as events of the run (or `--confirm-spending`, refused when
+  // the project or the editor forces the confirmation). Kept in the run: a resumed run does not ask again.
+  confirmSpending(at: int) void
+    paid = paidRoles(at)
+    spending: <string, any> = run["spending"] ?? ({} as <string, any>)
+    if paid.isEmpty or spending["confirmed"] == true
+      return
+    budget: double = (run["factory"] as <string, any>)["budgetUsd"] ?? 5.0
+    providers = paid.map((r) => "${assigned(r)["provider"]}").unique()
+    forced = line["forceConfirm"] == true or options["forceConfirm"] == true
+    if options["confirmSpending"] == true
+      if forced
+        throw RuntimeError("this project forces the confirmation of spending (.nuclear/builder.json \"forceConfirm\"): --confirm-spending is refused; run it where you can answer")
+      run["spending"] = { "confirmed": true, "by": "--confirm-spending", "at": nowMs(), "budgetUsd": budget, "providers": providers }
+      save()
+      return
+    who = paid.map((r) => "${r} (${assigned(r)["provider"]})").join(", ")
+    first = askUser({ "id": "spending-1", "kind": "spending", "question": "This run uses paid providers: ${who}. Go on?", "providers": providers })
+    if first["answer"] != "yes"
+      throw RunStop("the spending was not confirmed")
+    second = askUser({ "id": "spending-2", "kind": "spending", "question": "It may spend up to ${budget.toFixed(2)} USD with ${providers.join(", ")}. Confirm the spending?", "budgetUsd": budget, "providers": providers })
+    if second["answer"] != "yes"
+      throw RunStop("the spending was not confirmed")
+    run["spending"] = { "confirmed": true, "by": "you", "at": nowMs(), "budgetUsd": budget, "providers": providers }
+    save()
+
+  budgetLeft() double
+    budget: double = (run["factory"] as <string, any>)["budgetUsd"] ?? 5.0
+    spent: double = run["costUsd"] ?? 0
+    budget - spent
+
+  // A question for the user as an event; no answer (no stdin, the editor closed) stops the run: it waits.
+  askUser(question: <string, any>) <string, any>
+    run["waiting"] = question
+    save()
+    emit({ "type": "ask", ...question })
+    answer = ask(question)
+    if answer == null
+      throw RunStop("waiting for your answer: ${question["question"]}")
+    given: <string, any> = answer!
+    run["waiting"] = null
+    traceEvent(run, "answer", "${question["id"]}: ${given["answer"]}")
+    given
+
+  // ---------- a station ----------
+
+  station(st: <string, any>) boolean
+    id = "${st["id"]}"
+    role = composeRole("${st["role"]}", assigned("${st["role"]}"))
+    if id == "quality"
+      return quality(st, role)
+    made = phase(st, "generate", () => id != "design" or generate(st))
+    worked = made and phase(st, "work", () => work(st, role, ""))
+    wired = worked and phase(st, "wire", () => id != "code" or wire(st))
+    checked = wired and phase(st, "check", () => id != "code" or checkAndRepair(st))
+    checked and phase(st, "checks", () => runChecks(st, role)) and phase(st, "end", () => id == "delivery" ? deliver(st) : gate(st, role))
+
+  // A part of a station, run once: a resumed run goes on after the parts that ended (`st.phases`).
+  phase(st: <string, any>, name: string, body: () => boolean) boolean
+    done: string[] = st["phases"] ?? []
+    if name in done
+      return true
+    phaseNow = name
+    ok = body()
+    if ok
+      st["phases"] = [...done, name]
+      save()
+    ok
+
+  // The role's step: its provider does the station's task and writes its documents.
+  work(st: <string, any>, role: Role, more: string) boolean
+    id = "${st["id"]}"
+    a = assigned(role.id)
+    s = step(st, "${role.title}: ${STATION_INFO[id]!["title"]}", role.id, role.id, "work", [role.id, id])
+    decide(s, "${a["provider"]}${"${a["model"] ?? ""}".isEmpty ? "" : " (${a["model"]})"} works the ${role.title}", "the team ${team["name"]} assigned it")
+    if a["kind"] != "local" and budgetLeft() <= 0
+      end(s, "failed", "the run's budget is spent (${run["costUsd"]} USD)")
+      return false
+    if a["kind"] == "local"
+      return localStation(st, s, role, more)
+    out: Outcome = provider(withTemplates(role, STATION_DOCS[id]!), id, s, taskOf(id, more), STATION_DOCS[id]!, budgetLeft())
+    if budgetLeft() < 0
+      // a provider that does not hold the budget it was given (one that reports its cost only at the end)
+      end(s, "failed", "over the run's budget: ${(run["costUsd"] as double).toFixed(2)} of ${((run["factory"] as <string, any>)["budgetUsd"] as double).toFixed(2)} USD")
+      return false
+    keepDocuments(out, s)
+    end(s, out.ok ? "passed" : "failed", out.ok ? "${out.documents.keys.join(", ")}${out.files.isEmpty ? "" : " · ${out.files.length} files"}${out.costUsd > 0 ? " · ${out.costUsd.toFixed(4)} USD" : ""}" : out.error)
+    out.ok
+
+  // The role with the template of every document its station writes (a template may be another role's: QA's
+  // test plan is written at the Developer's Tests first), the run's own values filled in (`{{id}}`, `{{title}}`…).
+  withTemplates(role: Role, docs: string[]) Role
+    a = assigned(role.id)
+    values: <string, string> = { "id": "${run["id"]}", "title": "${(run["spec"] as <string, any>)["title"]}", "date": "${time.strftime("%Y-%m-%d")}", "platform": "${run["platform"]}", "project": "${run["project"]}", "assignee": "${a["employee"] ?? ""} (${a["provider"]}${"${a["model"] ?? ""}".isEmpty ? "" : " ${a["model"]}"})" }
+    templates: <string, string> = {}
+    for doc in docs
+      stem = Path(doc).stem
+      found = role.templates[stem] ?? ROLES.map((r) => composeRole(r, {}).templates[stem]).find((t) => t != null)
+      if found != null
+        text = found!
+        for k, v in values
+          text = text.replaceAll("{{${k}}}", v)
+        templates[stem] = text
+    Role(role.id, role.title, role.mission, role.skills, templates, role.checks, role.stations, role.instructions, role.employee, role.sources)
+
+  taskOf(id: string, more: string) string
+    spec = "${Path(specDir(), "spec.md").isFile() ? Path(specDir(), "spec.md").readText(encoding = "utf-8") : json.dumps(run["spec"])}"
+    parts = [STATION_TASK[id]!, "## The spec (${specPathOf(run)}/spec.md)\n\n${spec.trim()}"]
+    if more.trim().length > 0
+      parts.add("## What the client said\n\n${more.trim()}")
+    parts.join("\n\n")
+
+  // The documents of the stations before this one (and this one's, when it runs again).
+  documentsBefore() <string, string>
+    found: <string, string> = {}
+    for name in STATION_DOCS.values.flatten()
+      file = Path(specDir(), name)
+      if file.isFile()
+        found[name] = file.readText(encoding = "utf-8")
+    found
+
+  // A provider's call as a step: the files it changed go to the ledger, its events to the step's trace, its cost to
+  // the run's.
+  provider(role: Role, station: string, s: <string, any>, task: string, writes: string[], budget: double, inputs: <string, any> = {}) Outcome
+    a = assigned(role.id)
+    adapter = ADAPTERS["${a["provider"]}"]
+    if adapter == null
+      return Outcome(false, "", {}, [], 0, [], "no adapter for the provider ${a["provider"]}")
+    given: <string, any> = { "platform": run["platform"], "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": watchOf() }
+    for k, v in inputs
+      given[k] = v
+    Path(specDir()).mkdir(parents = true, existOk = true)
+    w = Work(root(), specDir(), task, documentsBefore(), writes, "${a["model"] ?? ""}", budget, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, given)
+    before = contents(root())
+    out = runAdapter(adapter!, role, station, w, (e) => onEvent(s, e))
+    s["files"] = ledger(run, "${s["id"]}", before)
+    s["costUsd"] = (s["costUsd"] ?? 0.0) + out.costUsd
+    run["costUsd"] = (run["costUsd"] ?? 0.0) + out.costUsd
+    s["log"] = out.text.substring(Math.max(0, out.text.length - 60000))
+    save()
+    out
+
+  // What watches a call of the local Developer while it waits (`adapter_local.nuc`).
+  watchOf() <string, any>
+    { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }
+
+  onEvent(s: <string, any>, e: <string, any>) void
+    trace: <string, any>[] = s["trace"]!
+    kind = "${e["type"]}"
+    if kind == "tool"
+      trace.add({ "step": "${e["tool"]}", "detail": "${e["input"] ?? ""}".substring(0, 300), "kind": "tool" })
+    else if kind == "retry" or kind == "trace"
+      trace.add({ "step": "${e["step"] ?? kind}", "detail": "${e["detail"] ?? ""}" })
+    emit({ "type": "event", "step": s["id"], "event": e })
+
+  // The documents a provider answered are written into `specs/<id>/` (an agent wrote its own already).
+  keepDocuments(out: Outcome, s: <string, any>) void
+    for name, text in out.documents
+      file = Path(specDir(), name)
+      if not file.isFile() or file.readText(encoding = "utf-8") != text
+        before = contents(root())
+        writeAtomic(file, text)
+        files: string[] = s["files"] ?? []
+        s["files"] = [...files, ...ledger(run, "${s["id"]}", before)]
+
+  // ---------- the local agents ----------
+
+  // A station worked by the Nuclear Developer: its routes as today's engine calls them (the analysis, the plan,
+  // the tests of the plan, a piece at a time, the security review, the documenter); the documents are written from
+  // what it answers. `more` is what the client said at a gate.
+  localStation(st: <string, any>, s: <string, any>, role: Role, more: string) boolean
+    id = "${st["id"]}"
+    spec: <string, any> = run["spec"]!
+    criteria: string[] = spec["criteria"] ?? []
+    if id == "code"
+      return localCode(st, s, role)
+    if id == "design"
+      return localDesign(st, s, role, more)
+    if id == "tests"
+      return localTests(st, s, role)
+    task = taskOf(id, more)
+    out: Outcome = provider(role, id, s, task, STATION_DOCS[id]!, 0, { "body": { "spec": task, "strategy": spec["strategy"] ?? "" } })
+    if not out.ok
+      if id == "analysis" and ": 404" in out.error
+        // an older Developer has no analyst: the run goes on with every station, as before
+        run["analysis"] = null
+        keepDocuments(Outcome(true, "", { "analysis.md": "# Analysis: ${spec["title"]}\n\nThe Nuclear Developer has no analyst: every station runs.\n" }, [], 0, []), s)
+        end(s, "skipped", "no analysis, every station runs (${out.error.split("\n")[0]})")
+        return true
+      end(s, "failed", out.error)
+      return false
+    if id == "analysis"
+      return localAnalysis(s, out)
+    docs: <string, string> = {}
+    if id == "quality"
+      docs["qa-report.md"] = "# QA report: ${spec["title"]}\n\n${out.text.trim()}\n"
+    else
+      docs["definition-of-done.md"] = "# Definition of done: ${spec["title"]}\n\n${criteria.map((c) => "- [ ] ${c}").join("\n")}\n\n${out.text.trim()}\n"
+      docs["user-story.md"] = "# User stories: ${spec["title"]}\n\n${criteria.map((c) => "- As a user, ${c}").join("\n")}\n"
+      docs["pr.md"] = "# ${spec["title"]}\n\n${"${spec["description"] ?? ""}".trim()}\n\nMade by NuclearLang's software factory: the documents are in ${specPathOf(run)}/.\n"
+    keepDocuments(Outcome(true, out.text, docs, [], 0, []), s)
+    end(s, "passed", docs.keys.join(", "))
+    true
+
+  // Which kind of request the spec is and what the strategy of that kind asks of the run (ADR-developer-0001): the
+  // stations it needs (the others are skipped), the generator calls, the pieces the tools already gave, the facts the
+  // request lacks (the gate after the Analysis asks them). A request that is not a run (a question, a command)
+  // stops here.
+  localAnalysis(s: <string, any>, out: Outcome) boolean
+    spec: <string, any> = run["spec"]!
+    data = out.data
+    questions: string[] = data["questions"] ?? []
+    asked = questions.map((q) => "- " + q).join("\n")
+    docs: <string, string> = { "analysis.md": "# Analysis: ${spec["title"]}\n\n${out.text.trim()}\n" + (questions.isEmpty ? "" : "\n## Questions\n\n" + asked + "\n") }
+    if not questions.isEmpty
+      docs["questions.md"] = "# Questions: ${spec["title"]}\n\n" + asked + "\n"
+    keepDocuments(Outcome(true, out.text, docs, [], 0, []), s)
+    strategy = "${data["strategy"] ?? ""}"
+    if strategy.isEmpty
+      run["analysis"] = null
+      end(s, "passed", "the graph has no strategies: every station runs")
+      return true
+    a: <string, any> = { "strategy": strategy, "title": "${data["title"] ?? ""}", "why": "${data["why"] ?? ""}", "mode": "${data["mode"] ?? "write"}", "stages": data["stages"] ?? ([] as string[]), "lead": "${data["lead"] ?? "local"}", "source": "${data["source"] ?? "plan"}", "generate": data["generate"] ?? ([] as any[]), "pieces": data["pieces"] ?? ([] as any[]), "questions": questions, "limits": data["limits"] ?? ([] as string[]) }
+    run["analysis"] = a
+    name = strategy.replace("strategy:", "")
+    wants: string[] = a["stages"]!
+    limits: string[] = a["limits"]!
+    why = "${a["why"]}"
+    decide(s, "follow the strategy ${name}: ${"${a["title"]}".replace("Strategy: ", "")}", "${spec["strategy"] ?? ""}".isEmpty ? (why.isEmpty ? "it is the closest in meaning to the request" : why) : "the spec names it itself")
+    if not wants.isEmpty
+      decide(s, "run ${wants.join(" → ")}", "it is what a request of this kind needs (mode: ${a["mode"]}; pieces from: ${a["source"]})")
+    for l in limits
+      decide(s, "tell the user a limit", l)
+    if wants.isEmpty
+      mode = "${a["mode"]}"
+      how = mode == "answer" ? "ask it in Nuclear Atlas" : mode == "commands" ? "it is done with commands" : "it needs a lead or your own hands"
+      s["log"] = "${out.text}\n\nThe plan of ${strategy}: nuclear-graph card ${strategy}"
+      end(s, "failed", "${name}: this kind of request is not a run of the Builder (${how}); its plan is in this step")
+      return false
+    if not questions.isEmpty
+      end(s, "passed", "${name}: the request does not say: ${questions[0]}${questions.length > 1 ? " (and ${questions.length - 1} more: read this step)" : ""}")
+      return true
+    end(s, "passed", "${name}${why.isEmpty ? "" : " (${why})"}${limits.isEmpty ? "" : " · ${limits.length} thing(s) beyond the platform or the local agents: read this step"}")
+    true
+
+  // The questions of the analysis the client has not answered yet.
+  openQuestions() string[]
+    a: <string, any>? = run["analysis"]
+    a == null ? [] : (a!["questions"] ?? ([] as string[]))
+
+  // Design by the local planner: the pieces of the spec, else the ones the analysis's tools gave (a rename's files,
+  // each with its code), else nothing for a strategy that plans no new file, else the planner's, without the files
+  // the generators wrote.
+  localDesign(st: <string, any>, s: <string, any>, role: Role, more: string) boolean
+    spec: <string, any> = run["spec"]!
+    own: <string, any>[] = spec["pieces"] ?? []
+    a: <string, any>? = run["analysis"]
+    tooled: <string, any>[] = a == null ? [] : (a!["pieces"] ?? ([] as <string, any>[]))
+    name = a == null ? "" : "${a!["strategy"]}".replace("strategy:", "")
+    if own.isEmpty and not tooled.isEmpty
+      spec["pieces"] = tooled.map((p) => { ...p, "by": "analysis" })
+      decide(s, "take the pieces from the analysis, ask no planner", "the strategy ${name} works on files the project already has (pieces from: ${a!["source"]})")
+      return designDocs(s, "The pieces come from the analysis (${name}): ${tooled.length} files${tooled.all((p) => p["code"] != null) ? ", each already written by a tool" : ""}.")
+    if own.isEmpty and a != null and a!["source"] != "plan"
+      decide(s, "plan nothing", "the strategy ${name} takes its files from the project (${a!["source"]}) and the request named none")
+      return designDocs(s, "${name} plans no new file.")
+    if not own.isEmpty
+      decide(s, "use the pieces of the spec, ask no planner", "the spec brings its own pieces (written in the form or under Pieces)")
+      return designDocs(s, "The pieces are the spec's own.")
+    decide(s, "ask the local planner", "the spec brings no pieces and the analysis gave none")
+    task = taskOf("design", more) + generatedNote()
+    out: Outcome = provider(role, "design", s, task, STATION_DOCS["design"]!, 0, { "body": { "spec": task, "strategy": spec["strategy"] ?? "" } })
+    if not out.ok
+      end(s, "failed", out.error)
+      return false
+    given: <string, any>[] = out.data["pieces"] ?? []
+    pieces = withoutGenerated(given.map((p) => { "path": p["path"], "kind": p["kind"], "task": p["task"], "by": "planner" }), s)
+    spec["pieces"] = pieces
+    for p in pieces
+      decide(s, "plan ${p["kind"]} in ${p["path"]}", "${p["task"]}".split("\n")[0].substring(0, 200))
+    gen = generated()
+    if pieces.isEmpty and not gen.isEmpty
+      decide(s, "plan no piece", "the generators already wrote ${gen.length} files and the planner named nothing else to build")
+    if pieces.isEmpty and gen.isEmpty
+      end(s, "failed", "no pieces in the plan, and the generators wrote nothing")
+      return false
+    designDocs(s, "${out.data["raw"] ?? out.text}")
+
+  designDocs(s: <string, any>, about: string) boolean
+    spec: <string, any> = run["spec"]!
+    plan: <string, any>[] = spec["pieces"] ?? []
+    docs: <string, string> = { "plan.md": "# Plan: ${spec["title"]}\n\n" + plan.map((p) => planLine(p)).join("\n") + "\n", "design.md": "# Design: ${spec["title"]}\n\n" + about.trim() + "\n" }
+    keepDocuments(Outcome(true, about, docs, [], 0, []), s)
+    end(s, "passed", "${docs.keys.join(", ")} · ${plan.length} pieces")
+    true
+
+  // The files the generators wrote in this run (the Design's `nuclear gen` steps): the planner leaves them out.
+  generated() string[]
+    design = stages().find((st) => st["id"] == "design")
+    found: string[] = []
+    if design != null
+      for x in design!["steps"] as <string, any>[]
+        if x["phase"] == "generate" and x["status"] == "passed"
+          found.addAll(x["files"] ?? ([] as string[]))
+    found.unique()
+
+  generatedNote() string
+    files = generated()
+    files.isEmpty ? "" : "\n\n## Already generated (done and compiling: do not plan them again)\n\n${files.map((f) => "- ${f}").join("\n")}\n\nPlan only what these do not do (a use case with its own rules, a view's details); plan nothing when they do everything."
+
+  // A planned piece the generators already wrote (the same file, or the same declaration elsewhere) is dropped.
+  withoutGenerated(pieces: <string, any>[], s: <string, any>) <string, any>[]
+    files = generated()
+    stems = files.map((f) => Path(f).stem)
+    kept: <string, any>[] = []
+    for p in pieces
+      if "${p["path"]}" in files or Path("${p["path"]}").stem in stems
+        decide(s, "drop the planned piece ${p["path"]}", "a generator already wrote that file in this run")
+      else
+        kept.add(p)
+    kept
+
+  // The declarations of the plan (`usecase ListCharacters. The spec says...` → `ListCharacters`).
+  planned() string[]
+    pieces: <string, any>[] = (run["spec"] as <string, any>)["pieces"] ?? []
+    pieces.map((p) => declared("${p["task"]}")).filter((n: string) => n.length > 0)
+
+  planSummary() string
+    pieces: <string, any>[] = (run["spec"] as <string, any>)["pieces"] ?? []
+    if pieces.isEmpty
+      return "the plan is empty"
+    named = pieces.map((p) => "${p["kind"]} ${declared("${p["task"]}").isEmpty ? p["path"] : declared("${p["task"]}")}")
+    "the plan has ${pieces.length} piece${pieces.length == 1 ? "" : "s"}: ${named.join(", ")}"
+
+  projectMap() string
+    file = Path(root(), ".nuclear", "map.md")
+    file.isFile() ? file.readText(encoding = "utf-8") : ""
+
+  // The classes a test injects that neither the plan nor the project declares.
+  unplanned(code: string) string[]
+    known = [...planned(), ...re.findall(r"(?m)^\s+- \w+ `([A-Z]\w*)", projectMap())]
+    injected: string[] = re.findall(r"inject<([A-Z]\w*)>", code)
+    injected.unique().filter((n) => not (n in known))
+
+  // What a test may use: the planned pieces with their names, and how to reach them (they do not exist yet).
+  testNames() string
+    pieces: <string, any>[] = (run["spec"] as <string, any>)["pieces"] ?? []
+    listed = pieces.map((p) => "- ${p["kind"]} in ${p["path"]}: ${p["task"]}").join("\n")
+    injectable = pieces.filter((p) => p["kind"] in ["repository", "usecase", "appcomponent", "service", "tools"]).map((p) => declared("${p["task"]}")).filter((n: string) => n.length > 0)
+    how = injectable.isEmpty ? "There is nothing to inject: build the models above and check their fields. Do not use inject." : "Get each instance with inject: ${injectable.map((n) => "${n.substring(0, 1).lower()}${n.substring(1)} = inject<${n}>()").join(", ")}; call its methods with ~. Inject nothing else."
+    "The pieces that will exist (use exactly these names and signatures, and no other declaration):\n${listed}\n${how}"
+
+  // Tests first by the local tester: none when the generators wrote every file (they write their own tests); a test
+  // that injects a class the plan does not have stops the run here (no code could make it pass).
+  localTests(st: <string, any>, s: <string, any>, role: Role) boolean
+    spec: <string, any> = run["spec"]!
+    criteria: string[] = spec["criteria"] ?? []
+    pieces: <string, any>[] = spec["pieces"] ?? []
+    gen = generated()
+    if pieces.isEmpty and not gen.isEmpty
+      tests = gen.filter((f) => re.search(r"(^|/)tests?/", f) != null)
+      decide(s, "write no test first", tests.isEmpty ? "every file of this run was generated, and the generators wrote no test: they write none for what cannot run alone (a resource that reads another API)" : "every file of this run was generated, its tests too (${tests.join(", ")})")
+      said = tests.isEmpty ? "every file was generated and none is a test: only the acceptance step holds the criteria against the result" : "the generators wrote ${tests.length} test file(s): Quality runs them"
+      keepDocuments(Outcome(true, "", { "test-plan.md": "# Test plan: ${spec["title"]}\n\nNo test first: ${said}.\n" }, [], 0, []), s)
+      end(s, "skipped", said)
+      return true
+    path = "test/${runSlug("${spec["title"]}").replaceAll("-", "_")}_test.nuc"
+    task = "Tests ${spec["title"]}: one @test per acceptance criterion, before the code exists.\n${criteria.map((c) => "- ${c}").join("\n")}\n\n${testNames()}"
+    s["input"] = task
+    map = projectMap()
+    out: Outcome = provider(role, "tests", s, taskOf("tests", ""), STATION_DOCS["tests"]!, 0, { "body": { "path": path, "kind": "tests", "task": task, "context": map.substring(Math.max(0, map.length - 8000)) } })
+    if not out.ok
+      end(s, "failed", out.error)
+      return false
+    code = "${out.data["code"] ?? ""}"
+    if out.data["check"] != "ok" or code.trim().isEmpty
+      end(s, "failed", "no test file that compiles after ${out.data["attempts"] ?? 3} attempts: the acceptance criteria would go untested")
+      return false
+    writeTracked(s, path, code)
+    s["file"] = path
+    s["code"] = code
+    missing = unplanned(code)
+    if not missing.isEmpty
+      decide(s, "stop the run here", "the tests inject ${missing.join(", ")} and no piece of the plan declares it: no code could make them pass")
+      end(s, "failed", "the tests need ${missing.join(", ")}, which is not in the plan (${planSummary()}): the plan does not cover the spec")
+      return false
+    keepDocuments(Outcome(true, "", { "test-plan.md": "# Test plan: ${spec["title"]}\n\n`${path}` holds the acceptance criteria:\n\n${criteria.map((c) => "- ${c}").join("\n")}\n" }, [], 0, []), s)
+    end(s, "passed", "${path}: checked again with the whole project once the code exists")
+    true
+
+  // Code by the local coder: each piece of the plan, written when it compiles; a piece the tools already wrote (a
+  // rename's) is written as it is, by no model; a piece the coder leaves with errors goes to the lead, when the team
+  // has one. A piece written by an earlier attempt that was kept is not written again.
+  localCode(st: <string, any>, s: <string, any>, role: Role) boolean
+    pieces: <string, any>[] = (run["spec"] as <string, any>)["pieces"] ?? []
+    if pieces.isEmpty
+      end(s, "skipped", "the plan has no piece: the generators wrote everything")
+      return true
+    end(s, "passed", "${pieces.length} pieces")
+    for piece in pieces
+      path = "${piece["path"]}"
+      target = Path(root(), path)
+      done = (st["steps"] as <string, any>[]).any((x) => x["file"] == path and x["status"] == "passed" and x["code"] != null)
+      if done and target.isFile()
+        continue
+      if piece["code"] != null
+        t = step(st, path, "shell")
+        t["file"] = path
+        t["input"] = piece["task"]
+        decide(t, "write the file as the tool gave it, ask no model", "the analysis already has its whole text (a rename is done by a tool)")
+        writeTracked(t, path, "${piece["code"]}")
+        t["code"] = piece["code"]
+        end(t, "passed", "written by a tool")
+        continue
+      p = step(st, path, role.id, role.id)
+      p["file"] = path
+      p["input"] = piece["task"]
+      existing: string = target.isFile() ? target.readText(encoding = "utf-8") : ""
+      decide(p, existing.isEmpty ? "write a new file" : "change the file that exists", "the plan asks for ${"${piece["kind"] ?? ""}".isEmpty ? "this file" : piece["kind"]} here (piece by ${piece["by"] ?? "the plan"})")
+      before = writtenCode(path)
+      context = [existing.isEmpty ? "" : "The file exists; change it as the task says and answer the whole file:\n```nuclear\n${existing}```", before].filter((x) => x.length > 0).join("\n\n")
+      out: Outcome = provider(role, "code", p, "${piece["task"]}", [], 0, { "route": "/developer/code", "body": { "path": path, "kind": piece["kind"] ?? "", "task": piece["task"], "context": context.substring(Math.max(0, context.length - 12000)) } })
+      if not out.ok
+        end(p, "failed", out.error)
+        return false
+      code = "${out.data["code"] ?? ""}"
+      p["code"] = code
+      if out.data["check"] == "ok" and not code.trim().isEmpty
+        writeTracked(p, path, code)
+        end(p, "passed", "ok in ${out.data["attempts"] ?? 1} attempt(s)")
+        continue
+      leader = lead()
+      if leader == null
+        decide(p, "stop the station", "the file still has compiler errors after ${out.data["attempts"] ?? 3} attempts and no paid provider leads this run")
+        end(p, "failed", "${out.data["check"] ?? "no code"}".split("\n")[0])
+        return false
+      title = roleTitle(leader!)
+      decide(p, "hand the file to the ${title}", "the local coder left compiler errors after ${out.data["attempts"] ?? 3} attempts and the ${title} leads this run")
+      end(p, "failed", "the local coder left errors after ${out.data["attempts"] ?? 3} attempts: the ${title} takes it")
+      fix = leadFix(st, "The ${title} fixes ${path}", "The local developer wrote `${path}` for this task and could not fix the compiler's errors.\n\nTask: ${piece["task"]}\n\nIts answer:\n```nuclear\n${code}```\n\nErrors:\n${out.data["check"] ?? ""}\n\nWrite the corrected file to ${path} (create its folders), check it with nuclear_check until it says ok, and keep the corrected version as an example with graph_remember (collection \"examples\", the task then the code) so the local developer learns it. Answer the final code in one ```nuclear block.", "leadFixFile", [leader!, path])
+      fixed = target.isFile() ? target.readText(encoding = "utf-8") : fenced("${fix["log"] ?? ""}")
+      if fix["status"] != "passed" or fixed.trim().isEmpty
+        return false
+      if not target.isFile()
+        writeTracked(fix, path, fixed)
+      fix["file"] = path
+      fix["code"] = fixed
+      save()
+    true
+
+  // The files the run's coder and tester wrote before `path`, for the coder to read.
+  writtenCode(path: string) string
+    shown: string[] = []
+    for f in runWritten()
+      if f["path"] != path
+        shown.add("```nuclear\n// ${f["path"]}\n${Path(root(), "${f["path"]}").readText(encoding = "utf-8")}```")
+    shown.join("\n\n")
+
+  // The `.nuc` files the run's Tests first and Code wrote, still there: `{ path, kind }` (kind `tests` for a test).
+  runWritten() <string, any>[]
+    seen: string[] = []
+    for w in (run["writes"] ?? []) as <string, any>[]
+      f = "${w["path"]}"
+      at = "${w["step"]}"
+      if f.endsWith(".nuc") and (at.startsWith("tests-") or at.startsWith("code-")) and not (f in seen) and Path(root(), f).isFile()
+        seen.add(f)
+    seen.map((f) => { "path": f, "kind": f.startsWith("test/") ? "tests" : "" })
+
+  // ---------- the lead ----------
+
+  // Who takes what the local Developer leaves (a piece with compiler errors, a project or tests still failing): the
+  // team's Architect when a paid provider works it and the local Developer writes (the `claude` preset: the frontier
+  // model plans and reviews, the local agents write).
+  lead() string?
+    assigned("developer")["kind"] == "local" and assigned("architect")["kind"] != "local" ? "architect" : null
+
+  roleTitle(id: string) string
+    composeRole(id, assigned(id)).title
+
+  // The lead's step: its provider does `task` in the project. Its step (passed or failed), or a failed step when the
+  // budget is spent.
+  leadFix(st: <string, any>, title: string, task: string, key: string = "", args: string[] = []) <string, any>
+    leader = lead() ?? "architect"
+    role = composeRole(leader, assigned(leader))
+    s = step(st, title, leader, leader, key, args)
+    a = assigned(leader)
+    decide(s, "hand it to the ${role.title} (${a["provider"]})", "the local Developer left it, and the team's ${role.title} is not a local agent: it leads this run")
+    if budgetLeft() <= 0
+      end(s, "failed", "the run's budget is spent (${run["costUsd"]} USD)")
+      return s
+    out = provider(role, "${st["id"]}", s, task, [], budgetLeft())
+    end(s, out.ok ? "passed" : "failed", out.ok ? "done${out.costUsd > 0 ? " · ${out.costUsd.toFixed(4)} USD" : ""}" : out.error)
+    s
+
+  // ---------- the repairs ----------
+
+  // Code's check: the project as a whole. When it fails, the compiler's exact fixes (`nuclear fix .`), then each file
+  // with its errors to the Developer once, then the lead; the check has the last word.
+  checkAndRepair(st: <string, any>) boolean
+    check = commandsOf(line, "check")
+    if check.isEmpty or commands(st, check, true)
+      return true
+    // a tool does what needs no thinking: the agents get only what is left
+    commands(st, ["nuclear fix ."], true)
+    if commands(st, check, true)
+      return true
+    for file, list in projectErrors()
+      repairWith(st, file, "Fix exactly these errors of the project in this file:\n${list.join("\n")}")
+    if commands(st, check, true)
+      return true
+    if lead() != null
+      left = projectErrors()
+      listed = left.keys.map((f) => "${f}:\n${left[f]!.join("\n")}").join("\n\n")
+      leadFix(st, "The ${roleTitle(lead()!)} fixes the project", "The project in the current folder has these compiler errors after the local developer wrote its pieces:\n\n${listed}\n\nFix them in the .nuc files (never in build/), then call nuclear_check with path \"${root()}\" until it answers ok. For each fix that a junior could have learned, keep it as an example with graph_remember (collection \"examples\").", "leadFixProject", [lead()!])
+    commands(st, check)
+
+  // `nuclear check . --json` of the project, by file: `line:col code message` of each error.
+  projectErrors() <string, string[]>
+    found: <string, string[]> = {}
+    text = ""
+    try
+      text = subprocess.run(["nuclear", "check", ".", "--json"], cwd = root(), captureOutput = true, text = true, env = toolEnv(), timeout = 300).stdout
+    catch e
+      if not isinstance(e, OSError) and not isinstance(e, subprocess.TimeoutExpired)
+        throw e
+      return found
+    // its JSON arrays may follow each other
+    decoder = json.JSONDecoder()
+    at = text.indexOf("[")
+    while at >= 0
+      try
+        got = decoder.rawDecode(text, at)
+        for d in got[0] as <string, any>[]
+          if d["severity"] == "error" and d["file"] != null
+            file = "${d["file"]}"
+            found[file] = [...(found[file] ?? []), "${d["line"]}:${d["col"]} ${d["code"]} ${d["message"]}"]
+        at = text.indexOf("[", got[1] as int)
+      catch e
+        if not isinstance(e, ValueError) and not isinstance(e, TypeError)
+          throw e
+        at = text.indexOf("[", at + 1)
+    found
+
+  // One repair of a file of the run by the Developer: the tester for a test file (against the plan's names), the
+  // coder for the rest; an agent or an API model changes the file itself.
+  repairWith(st: <string, any>, file: string, problem: string) void
+    target = Path(root(), file)
+    if not target.isFile()
+      return
+    code = target.readText(encoding = "utf-8")
+    isTest = file.startsWith("test/")
+    task = "${problem}\n\n${isTest ? "${testNames()}\n\n" : ""}Answer the whole file."
+    dev = composeRole("developer", assigned("developer"))
+    s = step(st, "Repair ${file}", "developer", "developer", "repair", [file])
+    s["file"] = file
+    s["input"] = task
+    decide(s, "give ${file} to the ${isTest ? "tester" : "coder"}", "${isTest ? "it is a test file: it is repaired against the names of the plan" : "it is a file of the code"}; ${problem.split("\n")[0].substring(0, 160)}")
+    if assigned("developer")["kind"] != "local"
+      out: Outcome = provider(dev, "code", s, "${task}\n\nThe file is ${file}: change it in place.", [], budgetLeft())
+      end(s, out.ok ? "passed" : "failed", out.ok ? "${out.files.length} files changed" : out.error)
+      return
+    others = writtenCode(file)
+    context = "The file now:\n```nuclear\n${code}```\n\nThe files it uses:\n${others}"
+    out: Outcome = provider(dev, "code", s, task, [], 0, { "route": isTest ? "/developer/test" : "/developer/code", "body": { "path": file, "kind": isTest ? "tests" : "", "task": task, "context": context.substring(Math.max(0, context.length - 12000)) } })
+    again = "${out.data["code"] ?? ""}"
+    if out.ok and out.data["check"] == "ok" and not again.trim().isEmpty
+      writeTracked(s, file, again)
+      s["code"] = again
+      end(s, "passed", "rewritten in ${out.data["attempts"] ?? 1} attempt(s)")
+    else
+      end(s, "failed", out.ok ? "${out.data["check"] ?? "no code"}".split("\n")[0] : out.error)
+
+  // A failing output told in Nuclear (`nuclear explain --json`: the message, a hint and the .nuc lines with their
+  // code), never in the target language's log: `{ text, files }`.
+  explain(log: string) <string, any>
+    plain: <string, any> = { "text": "The tests fail:\n${tail(log, 15)}", "files": [] as string[] }
+    got: <string, any> = {}
+    try
+      said = subprocess.run(["nuclear", "explain", "--json"], cwd = root(), input = log, captureOutput = true, text = true, env = toolEnv(), timeout = 60).stdout
+      lines = said.trim().split("\n")
+      found = jsonLine(lines.last.trim())
+      if found == null
+        return plain
+      got = found!
+    catch e
+      if not isinstance(e, OSError) and not isinstance(e, subprocess.TimeoutExpired)
+        throw e
+      return plain
+    files: string[] = []
+    rows: string[] = []
+    for f in (got["frames"] ?? []) as <string, any>[]
+      source = "${f["source"]}"
+      rel = os.path.relpath(source, root()).replaceAll("\\", "/")
+      files.add(rel)
+      at: int = f["line"] ?? 0
+      text = ""
+      try
+        all = Path(source).readText(encoding = "utf-8").split("\n")
+        text = at >= 1 and at <= all.length ? all[at - 1].trim() : ""
+      catch e
+        if not isinstance(e, OSError)
+          throw e
+      shown = text.isEmpty ? "" : "  `" + text + "`"
+      rows.add("- ${rel}:${at}${shown}")
+    parts = ["The tests fail: ${got["title"] ?? "error"}", "${got["hint"] ?? ""}", ...(rows.isEmpty ? ([] as string[]) : ["Where, in Nuclear:", ...rows])]
+    { "text": parts.filter((x) => x.length > 0).join("\n"), "files": files.unique() }
+
+  // ---------- the strategy, the wiring, the verification, the acceptance, the diagnosis ----------
+
+  // A station the strategy of the request has use for (ADR-developer-0001): every one when there is no strategy.
+  wanted(st: <string, any>) boolean
+    a: <string, any>? = run["analysis"]
+    wants: string[] = a == null ? [] : (a!["stages"] ?? ([] as string[]))
+    id = "${st["id"]}"
+    id == "analysis" or id == "delivery" or wants.isEmpty or wants.any((x) => STRATEGY_STATIONS[x] == id)
+
+  skipStation(st: <string, any>) void
+    a: <string, any> = run["analysis"]!
+    name = "${a["strategy"]}".replace("strategy:", "")
+    wants: string[] = a["stages"]!
+    s = step(st, "Not part of this kind of request", "shell", "", "notThisKind")
+    decide(s, "leave the ${st["title"]} out", "the strategy ${name} runs only ${wants.join(", ")}")
+    end(s, "skipped", "${name} runs ${wants.join(", ")}")
+    st["status"] = "skipped"
+    save()
+
+  // Each use case the run's Code wrote is wired by the generator, never by a model: its alias in the facade and, on
+  // the backend, its route when the spec gives one (`POST orders/{id}/cancel`: in the task of its piece, or the
+  // spec's only route for the run's only use case). Left alone: a use case the facade already has, and a route when
+  // the plan has a controller of that component. A refusal shows in its step and does not fail the run: the
+  // project's check decides.
+  wire(st: <string, any>) boolean
+    spec: <string, any> = run["spec"]!
+    pieces: <string, any>[] = spec["pieces"] ?? []
+    pattern = r"\b(GET|POST|PUT|PATCH|DELETE)\s+/?([A-Za-z][\w/{}:-]*)"
+    routes: re.Match[] = list(re.finditer(pattern, "${spec["description"] ?? ""}"))
+    usecases: string[] = []
+    for x in st["steps"] as <string, any>[]
+      for f in (x["files"] ?? []) as string[]
+        if re.fullmatch(r"components/[^/]+/domain/usecases/[^/]+\.nuc", f) != null and Path(root(), f).isFile() and not (f in usecases)
+          usecases.add(f)
+    single = usecases.length == 1 and routes.length == 1 ? routes[0] : null
+    for f in usecases
+      name = re.search(r"(?m)^usecase\s+([A-Z]\w*)", Path(root(), f).readText(encoding = "utf-8"))
+      if name == null
+        continue
+      uc = "${name!.group(1)}"
+      component = f.split("/")[1]
+      facades = list(Path(root(), "components", component).rglob("*component.nuc"))
+      if facades.any((p) => "${uc}.exec" in p.readText(encoding = "utf-8"))
+        continue
+      call = ["nuclear", "gen", "usecase", component, uc]
+      task = "${(pieces.find((p) => p["path"] == f) ?? ({} as <string, any>))["task"] ?? ""}"
+      route = re.search(pattern, task) ?? single
+      controlled = pieces.any((p) => p["kind"] == "controller" and "${p["path"]}".startsWith("components/${component}/"))
+      if run["platform"] == "backend" and route != null and not controlled
+        call.addAll(["--route", "${route!.group(1)} ${route!.group(2)}"])
+      commands(st, [call.map((w) => shellWord(w)).join(" ")], true)
+      decide((st["steps"] as <string, any>[]).last, "wire the use case ${uc} with the generator, not with a model", "the run wrote it and the facade of ${component} has no alias for it${"--route" in call ? "; the spec gives its route ${call.last}" : ""}")
+    true
+
+  // Quality's build and tests: up to three rounds of repair of what fails, told in Nuclear (`nuclear explain`); then
+  // the lead; the commands have the last word. Then the line's security commands.
+  verify(st: <string, any>) boolean
+    list = [...commandsOf(line, "build"), ...commandsOf(line, "test")]
+    passed = commands(st, list, true)
+    round = 1
+    while not passed and round <= 3 and repairRound(st, round)
+      passed = commands(st, list, true)
+      round = round + 1
+    if not passed and lead() != null
+      left = (st["steps"] as <string, any>[]).reversed().find((x) => x["actor"] == "shell" and x["status"] == "skipped")
+      said = left == null ? "" : "${left!["agent"] ?? left!["log"]}"
+      leadFix(st, "The ${roleTitle(lead()!)} fixes the failing tests", "The project's tests still fail after the local developer's repairs:\n\n${said}\n\nFix the .nuc files (never build/), then run nuclear_check with path \"${root()}\", and keep each fix a junior could learn with graph_remember (collection \"examples\").", "leadFixTests", [lead()!])
+    if not passed
+      passed = commands(st, list)
+    passed and commands(st, commandsOf(line, "security"))
+
+  // One round of repair: the files the failure names that the run wrote (a bug's: any file but a test, which is never
+  // rewritten to pass), else the run's files it names, else every one. False when there is nothing to repair.
+  repairRound(st: <string, any>, round: int) boolean
+    failed = (st["steps"] as <string, any>[]).reversed().find((x) => x["actor"] == "shell" and x["status"] == "skipped")
+    told = explain(failed == null ? "" : "${failed!["log"] ?? ""}")
+    text = "${told["text"]}"
+    if failed != null
+      failed!["agent"] = text
+    a: <string, any>? = run["analysis"]
+    fixing = a != null and a!["mode"] == "fix"
+    written = runWritten()
+    paths = written.map((w) => "${w["path"]}")
+    named = (told["files"] as string[]).filter((f) => fixing ? not f.startsWith("test/") : f in paths)
+    if fixing and named.isEmpty and not written.any((w) => w["kind"] != "tests")
+      end(step(st, "Where is the cause?", "shell", "", "whereCause"), "failed", "the failure names no file of the code, only the test: a test is not rewritten to pass. Name the declaration in the spec, or let a lead find the cause")
+      return false
+    mine = written.filter((w) => not fixing or w["kind"] != "tests").map((w) => "${w["path"]}")
+    targets = named.isEmpty ? mine.filter((f) => Path(f).stem in text) : named
+    chosen = targets.isEmpty ? mine : targets
+    if failed != null
+      decide(failed!, "repair ${chosen.isEmpty ? "nothing" : chosen.join(", ")} (round ${round} of 3)", not named.isEmpty ? "the failure names these files of the run" : not targets.isEmpty ? "the failure names no line of the run, but it names these files" : "the failure names no file of the run: every piece is tried")
+    if chosen.isEmpty
+      return false
+    for f in chosen
+      repairWith(st, f, "The project's tests fail (round ${round}). Fix this file so they pass; the tests say what the code must do (change a test only if it contradicts the spec).\n\n${text}")
+    true
+
+  // Each acceptance criterion held against what the run left (ADR-platform-0003): the facts come from tools (the
+  // files of the run, how many tests they declare, the commands that passed) and QA says, per criterion, whether they
+  // show it met and where (`/developer/accept` for the local agents). It never fails the run: a criterion not shown
+  // met is left for the reviewer (`run.acceptance`, the journal).
+  accept(st: <string, any>) boolean
+    criteria: string[] = (run["spec"] as <string, any>)["criteria"] ?? []
+    if criteria.isEmpty
+      return true
+    paths = [...generated(), ...runWritten().map((w) => "${w["path"]}")].unique().filter((f) => Path(root(), f).isFile())
+    texts = paths.map((f) => { "path": f, "code": Path(root(), f).readText(encoding = "utf-8") })
+    tests = texts.filter((t) => "${t["path"]}".startsWith("test/")).map((t) => "${t["code"]}".split("@test(").length - 1).reduce(0, (n: int, c: int) => n + c)
+    ran = (st["steps"] as <string, any>[]).filter((x) => x["actor"] == "shell" and x["status"] == "passed" and x["input"] != null).map((x) => "${x["input"]}")
+    facts = "The run wrote ${texts.length} file(s): ${paths.isEmpty ? "none" : paths.join(", ")}.\nThey declare ${tests} test(s).\nThese commands passed: ${ran.isEmpty ? "none" : ran.join("; ")}."
+    numbered: string[] = []
+    for i in 0..criteria.length
+      numbered.add("${i + 1}. ${criteria[i]}")
+    role = composeRole("qa", assigned("qa"))
+    local = assigned("qa")["kind"] == "local"
+    s = step(st, "Acceptance criteria", "qa", "qa", "acceptance")
+    s["input"] = "${numbered.join("\n")}\n\n${facts}"
+    files = texts.map((t) => "```nuclear\n// ${t["path"]}\n${t["code"]}```").join("\n\n")
+    context = "${facts}\n\n${files}"
+    task = local ? numbered.join("\n") : "Hold each acceptance criterion against what the run left. Answer one line per criterion: `<n> | met | <where it shows>` or `<n> | not met | <why>`.\n\n${numbered.join("\n")}\n\n${facts}"
+    out: Outcome = provider(role, "quality", s, task, [], local ? 0 : budgetLeft(), { "route": "/developer/accept", "body": { "task": numbered.join("\n"), "context": context.substring(0, Math.min(16000, context.length)) } })
+    if not out.ok
+      run["acceptance"] = null
+      end(s, "skipped", "not checked: the reviewer did not answer (${out.error.split("\n")[0]})")
+      return true
+    said: <int, <string, any>> = {}
+    for m in re.finditer(r"(?im)^\s*(\d+)\s*\|\s*(not met|met)\s*\|\s*(.+)$", out.text)
+      said["${m.group(1)}".toInt() ?? 0] = { "met": "${m.group(2)}".lower() == "met", "evidence": "${m.group(3)}".trim() }
+    verdicts: <string, any>[] = []
+    for i in 0..criteria.length
+      v: <string, any> = said[i + 1] ?? ({ "met": false, "evidence": "the reviewer said nothing about it" } as <string, any>)
+      verdicts.add({ "criterion": criteria[i], "met": v["met"], "evidence": v["evidence"] })
+      decide(s, "${v["met"] == true ? "met" : "not shown met"}: ${criteria[i]}", "${v["evidence"]}")
+    run["acceptance"] = verdicts
+    open = verdicts.filter((v) => v["met"] != true)
+    told = open.map((v) => "${v["criterion"]}").join("; ")
+    end(s, open.isEmpty ? "passed" : "skipped", open.isEmpty ? "${criteria.length} of ${criteria.length} shown met" : "${open.length} of ${criteria.length} not shown met (left for the reviewer): ${told.substring(0, Math.min(300, told.length))}")
+    true
+
+  // The local diagnoser says why a station failed and what to do (the kind and the action by rules, the explanation
+  // by the model); the user retries from there. Only when the team has a local role (the Developer is part of the
+  // run); the station stays failed: this step only explains it.
+  diagnose(st: <string, any>) void
+    if not ((team["members"] ?? []) as <string, any>[]).any((r) => r["kind"] == "local")
+      return
+    steps: <string, any>[] = st["steps"]!
+    if steps.isEmpty
+      return
+    bad = steps.reversed().find((x) => x["status"] == "failed") ?? steps.last
+    if bad["agent"] == null and bad["actor"] == "shell" and not "${bad["log"] ?? ""}".isEmpty
+      bad["agent"] = explain("${bad["log"]}")["text"]
+    failure = ["${bad["summary"] ?? ""}", "${bad["agent"] ?? bad["log"] ?? ""}"].filter((x) => not x.trim().isEmpty).join("\n\n")
+    // a class the compiler does not know (N0220) that the plan never had: the plan, not the code, is what is missing
+    unknown: string[] = re.findall(r"N0220 '([A-Z]\w*)'", failure)
+    absent = unknown.unique().filter((n) => not (n in planned()))
+    if not absent.isEmpty
+      failure = "${absent.join(", ")} is not in the plan (${planSummary()}): the plan does not cover the spec.\n\n${failure}"
+    s = step(st, "Why it failed", "diagnoser", "", "whyFailed")
+    decide(s, "diagnose \"${bad["title"]}\"", "it is the last step of the station that failed")
+    if not absent.isEmpty
+      decide(s, "blame the plan, not the code", "the compiler does not know ${absent.join(", ")} and no piece of the plan declares it")
+    context = failure.isEmpty ? "no output" : failure.substring(Math.max(0, failure.length - 8000))
+    answer = developerCall(developerUrl(line["developerUrl"]), "/developer/diagnose", { "root": root(), "task": "${st["title"]} · ${bad["title"]}", "platform": run["platform"], "path": root(), "context": context }, line["callTimeoutMs"] ?? 900_000, (e) => onEvent(s, e), { "attempts": 2, "baseMs": 500, "maxMs": 2000 }, options["transport"], watchOf())
+    if answer["ok"] != true
+      s["log"] = "${answer["error"]}"
+      end(s, "skipped", "the diagnoser did not answer")
+      return
+    data: <string, any> = answer["data"]!
+    trace: <string, any>[] = s["trace"]!
+    for t in (data["trace"] ?? []) as <string, any>[]
+      trace.add({ "step": "${t["step"] ?? ""}", "detail": "${t["detail"] ?? ""}" })
+    s["log"] = "${data["report"] ?? ""}"
+    run["diagnosis"] = s["log"]
+    end(s, "skipped", "${s["log"]}".split("\n").take(2).join(" · "))
+
+  // A file the engine writes for a step, in the ledger with what was there before.
+  writeTracked(s: <string, any>, path: string, text: string) void
+    before = contents(root())
+    writeAtomic(Path(root(), path), text)
+    files: string[] = s["files"] ?? []
+    s["files"] = [...files, ...ledger(run, "${s["id"]}", before)]
+
+  // ---------- the stations' own steps ----------
+
+  // Design: the generators write first what follows from the data (ADR-codegen-0001).
+  // What the spec says itself (its Resources, its GET <url> lines), then what the analysis read in its plain words
+  // (each call accepted by the generator's dry run).
+  generate(st: <string, any>) boolean
+    resources = specResources(run["spec"]!, "${run["platform"]}")
+    spec = "${specPathOf(run)}/spec.md"
+    calls: string[][] = []
+    for r in resources
+      words = re.findall(r'"[^"]*"|\S+', r).map((w: string) => w.length > 1 and w.startsWith('"') and w.endsWith('"') ? w.substring(1, w.length - 1) : w)
+      given = words.any((w) => w == "--from-json" or w == "--from-spec" or w == "--fields")
+      calls.add(["resource", ...words, ...(given ? ([] as string[]) : ["--from-spec", spec])])
+    a: <string, any>? = run["analysis"]
+    told = calls.length
+    for call in (a == null ? [] : (a!["generate"] ?? [])) as string[][]
+      if not calls.any((c) => c.take(3) == call.take(3))
+        calls.add(call)
+    if calls.isEmpty
+      end(step(st, "Nothing to generate", "shell", "", "nothingToGenerate"), "skipped", "the spec names no resource (a GET <url> line, a Resources section, or a thing with its fields in plain words)")
+      return true
+    for i in 0..calls.length
+      if not commands(st, [["nuclear", "gen", ...calls[i]].map((w) => shellWord(w)).join(" ")])
+        return false
+      decide((st["steps"] as <string, any>[]).last, "write ${calls[i].take(3).join(" ")} with the generator, not with a model", i >= told ? "the analysis read this resource in the plain words of the request, and the dry run accepted it" : "the spec names it (its Resources or a GET <url> line)")
+    true
+
+  // Runs commands of the line in the project, each a step; what they write goes to the ledger. `quiet`: a failure is
+  // not drawn as a failed step (a check that a repair follows): it is skipped, "errors to repair".
+  commands(st: <string, any>, list: string[], quiet: boolean = false) boolean
+    for command in list
+      s = step(st, command, "shell")
+      s["input"] = command
+      before = contents(root())
+      out = runShell(command, root(), (text) => onLog(s, text), line["commandTimeoutMs"] ?? 1_200_000)
+      s["files"] = ledger(run, "${s["id"]}", before)
+      code: int = out["code"]!
+      if code == -9
+        end(s, "failed", "timed out: no end after ${((line["commandTimeoutMs"] ?? 1_200_000) / 60000).round()} min (killed)")
+        return false
+      if code != 0 and quiet
+        end(s, "skipped", "exit ${code}: errors to repair")
+        return false
+      end(s, code == 0 ? "passed" : "failed", code == 0 ? "exit 0" : "exit ${code}: ${lastLine("${s["log"]}")}")
+      if code != 0
+        return false
+    true
+
+  onLog(s: <string, any>, text: string) void
+    log = "${s["log"]}${text}\n"
+    s["log"] = log.substring(Math.max(0, log.length - 60000))
+
+  // The checks of a station that its role runs: a command of the line by its name, or a prompt for the role's
+  // provider. They run each time the station runs (a station run again judges its work again: a result of an earlier
+  // attempt never stays); the user's own checks keep what the user marked.
+  runChecks(st: <string, any>, role: Role) boolean
+    checks = loadChecks(root(), "${run["id"]}")
+    mine = checks.filter((c) => c["station"] == st["id"] and c["on"] == true and c["by"] == "role")
+    ok = true
+    for c in mine
+      s = step(st, "Check: ${c["title"]}", role.id, role.id, "check", ["${c["id"]}", "${c["title"]}", "${c["title_es"] ?? c["title"]}"])
+      if c["command"] == null and assigned(role.id)["kind"] == "local"
+        // the local agents answer their own routes, not a check's prompt
+        c["state"] = "skipped"
+        c["note"] = "a check by prompt needs an agent or an API model for the ${role.title}"
+        end(s, "skipped", "${c["note"]}")
+        continue
+      passed = if c["command"] != null
+        commands(st, commandsOf(line, "${c["command"]}"))
+      else
+        out: Outcome = provider(role, "${st["id"]}", s, "Run this check and answer PASSED or FAILED on the first line, then why:\n\n${c["prompt"] ?? c["title"]}", [], budgetLeft())
+        out.ok and not out.text.trim().upper().startsWith("FAILED")
+      c["state"] = passed ? "passed" : "failed"
+      c["note"] = "${s["id"]}"
+      end(s, passed ? "passed" : "failed", passed ? "passed" : "failed: see the step")
+      ok = ok and passed
+    saveChecks(root(), "${run["id"]}", checks)
+    ok
+
+  // A gate after a station: the user approves, asks for a change (the station's role works again with it), or the
+  // run waits.
+  gate(st: <string, any>, role: Role) boolean
+    gates: string[] = line["gates"] ?? []
+    docs = (STATION_DOCS["${st["id"]}"] ?? []).map((d) => "${specPathOf(run)}/${d}")
+    while true
+      // the facts the analysis found missing stop the run here, gate or not: the client answers them (a change)
+      questions = st["id"] == "analysis" ? openQuestions() : ([] as string[])
+      if not (st["id"] in gates) and questions.isEmpty
+        return true
+      asked: <string, any> = { "id": "gate-${st["id"]}", "kind": "gate", "station": st["id"], "question": questions.isEmpty ? "Approve the ${STATION_INFO["${st["id"]}"]!["title"]}? Read ${docs.join(", ")}." : "The request does not say: ${questions.join(" ")} Answer them (change: your answers), or approve to go on without them. Read ${docs.join(", ")}.", "key": questions.isEmpty ? "gate" : "gateQuestions", "args": ["${st["id"]}"], "documents": docs }
+      if not questions.isEmpty
+        asked["questions"] = questions
+      answer = askUser(asked)
+      if answer["answer"] == "approve" or answer["answer"] == "yes"
+        end(step(st, "You approved it", "you", "", "youApproved"), "passed", "${answer["text"] ?? ""}")
+        return true
+      if answer["answer"] != "change"
+        throw RunStop("you stopped the run at the ${STATION_INFO["${st["id"]}"]!["title"]}")
+      end(step(st, "You asked for a change", "you", "", "youAskedChange"), "passed", "${answer["text"] ?? ""}")
+      if not work(st, role, "${answer["text"] ?? ""}")
+        return false
+      if st["id"] == "analysis" and not questions.isEmpty and openQuestions().isEmpty and not (st["id"] in gates)
+        return true
+
+  // Quality: QA's plan is the run's checks, and it stops for the user; then the project is built and tested and QA
+  // runs its checks and writes its report.
+  quality(st: <string, any>, role: Role) boolean
+    approved = phase(st, "plan", () => qaPlan(st, role)) and phase(st, "approve", () => qaApproved(st))
+    built = approved and phase(st, "commands", () => verify(st)) and phase(st, "accept", () => accept(st))
+    built and phase(st, "checks", () => runChecks(st, role)) and phase(st, "work", () => qaReport(st, role)) and phase(st, "gate", () => gate(st, role))
+
+  qaPlan(st: <string, any>, role: Role) boolean
+    checks = loadChecks(root(), "${run["id"]}")
+    plan = step(st, "QA's plan: the checks of the run", role.id, role.id, "qaPlan")
+    plan["log"] = checks.map((c) => "- [${c["on"] == true ? "on" : "off"}] ${c["id"]} · ${c["station"]} · by ${c["by"]}: ${c["title"]}").join("\n")
+    end(plan, "passed", "${checks.count((c) => c["on"] == true)} checks on, ${checks.count((c) => c["by"] == "user" and c["on"] == true)} of them yours")
+    true
+
+  // The user goes on once every check of theirs that is on is marked.
+  qaApproved(st: <string, any>) boolean
+    while true
+      answer = askUser({ "id": "qa-plan", "kind": "checks", "station": "quality", "question": "QA's plan is in ${specPathOf(run)}/checks.json: switch checks, add yours, run yours and mark them (nuclear-builder checks ${run["id"]} ...). Go on?", "key": "qaPlan", "args": [] as string[], "checks": "${specPathOf(run)}/checks.json" })
+      if answer["answer"] != "yes" and answer["answer"] != "approve"
+        throw RunStop("waiting for the checks of QA's plan")
+      left = loadChecks(root(), "${run["id"]}").filter((c) => c["on"] == true and c["by"] == "user" and c["state"] == "pending")
+      if left.isEmpty
+        end(step(st, "You went on with QA's plan", "you", "", "youWentOn"), "passed", "")
+        return true
+      end(step(st, "Your checks are not marked yet", "you", "", "checksUnmarked"), "skipped", left.map((c) => "${c["id"]}").join(", "))
+
+  // QA's report, with the checks that failed; a failed check fails the station.
+  qaReport(st: <string, any>, role: Role) boolean
+    failed = loadChecks(root(), "${run["id"]}").filter((c) => c["on"] == true and c["state"] == "failed")
+    told = failed.map((c) => "${c["title"]}").join("; ")
+    work(st, role, failed.isEmpty ? "" : "These checks failed: ${told}") and failed.isEmpty
+
+  // Delivery: once the user approves, the branch, the commit in the user's name (git's own identity, no other
+  // author) and the pull request with gh, its body pr.md. Never merged.
+  deliver(st: <string, any>) boolean
+    answer = askUser({ "id": "deliver", "kind": "gate", "station": "delivery", "question": "Make the branch factory/${run["id"]}, commit in your name and open the pull request?", "key": "deliver", "args": ["${run["id"]}"], "documents": STATION_DOCS["delivery"]!.map((d) => "${specPathOf(run)}/${d}") })
+    if answer["answer"] != "approve" and answer["answer"] != "yes"
+      end(step(st, "No pull request", "you", "", "noPullRequest"), "skipped", "you did not approve the delivery")
+      return true
+    end(step(st, "You approved the delivery", "you", "", "youApprovedDelivery"), "passed", "")
+    branch = "factory/${run["id"]}"
+    files = [...((run["writes"] ?? []) as <string, any>[]).map((w) => "${w["path"]}"), "${specPathOf(run)}"].unique().filter((f) => Path(root(), f).exists())
+    title = "${(run["spec"] as <string, any>)["title"]}"
+    body = Path(specDir(), "pr.md").isFile() ? "${specPathOf(run)}/pr.md" : "${specPathOf(run)}/spec.md"
+    git = ["git switch -c ${shellWord(branch)} || git switch ${shellWord(branch)}", "git add -- ${files.map((f) => shellWord(f)).join(" ")}", "git commit -m ${shellWord(title)} -m ${shellWord("Made by NuclearLang's software factory (run ${run["id"]}).")}", "git push -u origin ${shellWord(branch)}", "gh pr create --title ${shellWord(title)} --body-file ${shellWord(body)} --head ${shellWord(branch)}"]
+    commands(st, git)
+
+// The last `n` lines of a text.
+tail(text: string, n: int) string
+  lines = text.trim().split("\n")
+  lines.slice(Math.max(0, lines.length - n)).join("\n")
+
+// The code of the first ```nuclear block of an answer, or "".
+fenced(text: string) string
+  m = re.search(r"```(?:nuclear)?\n([\s\S]*?)```", text)
+  m == null ? "" : "${m!.group(1)}"
+
+// The name a piece's task declares (`usecase ListCharacters. The spec says...` → `ListCharacters`), or "".
+declared(task: string) string
+  m = re.match(r"^\w+\s+([A-Z]\w*)", task)
+  m == null ? "" : "${m!.group(1)}"
+
+planLine(p: <string, any>) string
+  "1. `" + "${p["path"]}" + "` (${p["kind"]}): ${p["task"]}"
+
+// A word for the shell, quoted when it needs it.
+shellWord(word: string) string
+  Regex(r"^[\w./:,=@%+-]+$").test(word) ? word : "'${word.replaceAll("'", "'\\''")}'"
+
+lastLine(text: string) string
+  lines = text.trim().split("\n").filter((l) => l.trim().length > 0)
+  lines.isEmpty ? "" : lines.last.substring(0, Math.min(200, lines.last.length))
+
+// Runs a command line of the line in the project (sh -c; cmd /C on Windows), each line it prints to `onLine`; its
+// process group is killed after `limitMs` (exit -9).
+runShell(command: string, cwd: string, onLine: (line: string) => void, limitMs: int) <string, any>
+  shell = os.name == "nt" ? ["cmd", "/C", command] : ["sh", "-c", "${command} 2>&1"]
+  streamCommand(shell, cwd, toolEnv(), onLine, limitMs)

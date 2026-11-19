@@ -1,0 +1,7 @@
+// The unread messages of each channel of a workspace (the user's own are never unread).
+usecase UnreadCounts(store: MessageStore)
+  exec(ws: Workspace) Result<Error, <string, int>>
+    counts: <string, int> = {}
+    for c in ws.channels
+      counts[c.id] = store.unread(ws, c)
+    Ok(counts)

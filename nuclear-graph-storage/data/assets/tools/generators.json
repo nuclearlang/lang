@@ -605,6 +605,7 @@
     "Each piece is a file at its kind's place (`nuclear help layout --platform web`); nothing is overwritten.",
     "",
     "- usecase `{{UseCase}}` (when `result`)",
+    "- usecase `{{UseCase}}` (when `stream`)",
     "- appcomponent `{{Component}}Component`, added to the file when it exists",
     "",
     "The names: `{{Name}}` the resource, `{{Names}}` its plural, `{{Component}}` the component, `{{UseCase}}` one per action."
@@ -637,6 +638,13 @@
       "kind": "usecase",
       "name": "{{UseCase}}",
       "when": "result",
+      "each": "",
+      "merge": false
+     },
+     {
+      "kind": "usecase",
+      "name": "{{UseCase}}",
+      "when": "stream",
       "each": "",
       "merge": false
      },

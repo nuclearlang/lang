@@ -22,7 +22,10 @@ files or the `config.nuc` checks. Rules: `docs/07-reference/projects.md`. Code:
 ## The build
 
 - `build()`: pass 1 = declarations of every file (`Emitter::declarations`, `ProjectCtx`); pass 2 = emit each
-  file with that table. A name of another file is used without `use`: the import is written.
+  file with that table. A name of another file is used without `use`: the import is written. It comes from the
+  free words of the generated code (`code_words`, `free_code_words` in `emit.rs`): a local, a parameter, a field of
+  a module (`self.note = note`), a member, a word of a comment, a string or a docstring, and the members a
+  library helper calls never import another file.
 - Result runtime in `nuclear/result`; `[project.files]` templates (`project_context`: `decls`, `kinds.<k>`,
   `decorated.<d>`, `files`, `has.<kind>`, `has.@<decorator>`, `components`, `uses`); a project file whose template
   renders empty is not written; it imports the files whose names its code writes.

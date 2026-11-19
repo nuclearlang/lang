@@ -22,7 +22,7 @@
     "",
     "Stop and say it when: the spec names nothing to build, a fact is missing and cannot be found, a step failed three times, or the task is beyond the local agents (`playbook:escalate`).",
     "",
-    "Run it whole: the Builder (`nuclear-builder run specs/<id>/spec.md`), or `developer_task` over MCP."
+    "Run it whole: the Builder (`nuclear-builder run specs/<component>/<id>/spec.md`), or `developer_task` over MCP."
    ],
    "keys": [
     "feature",
@@ -80,7 +80,7 @@
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md",
-    "nuclear-graph-storage/prompts/feature.md"
+    "nuclear-agents/roles/developer/skills/build-a-feature.md"
    ],
    "meta": {
     "use_case": "feature",
@@ -159,7 +159,7 @@
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/components/developer/ai/planner.nuc",
-    "nuclear-graph-storage/prompts/plan.md"
+    "nuclear-agents/roles/architect/skills/plan-for-a-local-developer.md"
    ],
    "meta": {
     "use_case": "plan",

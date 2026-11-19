@@ -48,7 +48,7 @@ gen langchain_ollama "$(v langchain-ollama)" "$platform" langchain_ollama --depe
 gen langchain_chroma "$(v langchain-chroma)" "$platform" langchain_chroma --depends "$LC,chromadb@$(v chromadb)" \
   --description "LangChain integration of Chroma"
 # the runtime of the fastapi dialect (packages/synapsis-py, installed in the venv with pip install -e)
-gen synapsis "$("$py" -c "import importlib.metadata as m; print(m.version('synapsis-py'))")" "$platform" synapsis synapsis.ai synapsis.events synapsis.testing synapsis.validators \
+gen synapsis "$("$py" -c "import importlib.metadata as m; print(m.version('synapsis-py'))")" "$platform" synapsis synapsis.ai synapsis.events synapsis.testing synapsis.validators synapsis.telemetry synapsis.sockets \
   --depends "$P,fastapi@$(v fastapi),sqlalchemy@$(v sqlalchemy),pydantic@$(v pydantic),langchain_core@$(v langchain-core),langgraph@$(v langgraph)" \
   --description "Synapsis for Python: the runtime of the fastapi dialect"
 cp -R "$out/python/." "$root/dialects/python/defs/"

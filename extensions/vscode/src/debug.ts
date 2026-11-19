@@ -11,6 +11,7 @@ import { execFile } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { l10n } from './i18n';
 import { isDeviceGroup } from '../../tools/nuclear-device-manager/src/mobile-device';
 
 export interface Project {
@@ -371,7 +372,7 @@ class CallStack implements vscode.TreeDataProvider<vscode.TreeItem> {
           if (place) {
             item.description = `${nuc ? rel(p.root, place.path) : path.basename(place.path)}:${place.line}`;
             item.tooltip = file && `${file}:${f.line}`;
-            item.command = { command: 'nuclear.debug.openPlace', title: 'Open', arguments: [place] };
+            item.command = { command: 'nuclear.debug.openPlace', title: l10n.t('Open'), arguments: [place] };
           }
           item.iconPath = new vscode.ThemeIcon(i === 0 ? 'debug-stackframe' : nuc ? 'circle-filled' : 'circle-outline');
           return item;
@@ -428,7 +429,7 @@ async function showError(p: Project, e: RuntimeError): Promise<void> {
   const top = e.frames[0];
   if (!top) return;
   const uri = vscode.Uri.file(top.path);
-  const d = new vscode.Diagnostic(new vscode.Range(top.line - 1, 0, top.line - 1, 1000), `Runtime error: ${e.title}`, vscode.DiagnosticSeverity.Error);
+  const d = new vscode.Diagnostic(new vscode.Range(top.line - 1, 0, top.line - 1, 1000), l10n.t('Runtime error: {0}', e.title), vscode.DiagnosticSeverity.Error);
   d.source = 'synapsis';
   runtime.set(uri, [d]);
   await showPlace(top, vscode.ViewColumn.One, false);
@@ -451,7 +452,7 @@ async function showError(p: Project, e: RuntimeError): Promise<void> {
     .map((f, i) => `<li><a href="#" data-i="${i}">${escape(rel(p.root, f.path))}:${f.line}</a> <span class="dim">${escape(f.name)}</span></li>`)
     .join('');
   panel ??= (() => {
-    const created = vscode.window.createWebviewPanel('nuclearRuntimeError', 'Nuclear: runtime error', {
+    const created = vscode.window.createWebviewPanel('nuclearRuntimeError', l10n.t('Nuclear: runtime error'), {
       viewColumn: vscode.ViewColumn.Beside,
       preserveFocus: true,
     }, { enableScripts: true });
@@ -475,10 +476,10 @@ pre { font-family: var(--vscode-editor-font-family); background: var(--vscode-te
 </style></head><body>
 <h2>${escape(e.title)}</h2>
 <p>${escape(e.hint)}</p>
-<h3>Where in Nuclear</h3>
+<h3>${escape(l10n.t('Where in Nuclear'))}</h3>
 <pre>${excerpt}</pre>
-<h3>Nuclear call stack</h3><ol>${stack}</ol>
-<details><summary>Dart error</summary><pre>${escape(e.text)}</pre></details>
+<h3>${escape(l10n.t('Nuclear call stack'))}</h3><ol>${stack}</ol>
+<details><summary>${escape(l10n.t('Dart error'))}</summary><pre>${escape(e.text)}</pre></details>
 <script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
 for (const a of document.querySelectorAll('a[data-i]')) a.addEventListener('click', (ev) => { ev.preventDefault(); vscode.postMessage({ i: Number(a.dataset.i) }); });
@@ -547,7 +548,7 @@ export function activateDebug(context: vscode.ExtensionContext, find: (dir?: str
       const line = editor.selection.active.line + 1;
       const other = file.endsWith('.nuc') ? toDart(p, file, line) : toNuc(p, file, line);
       if (other) void showPlace(other, vscode.ViewColumn.Beside, false);
-      else void vscode.window.showInformationMessage('This line has no counterpart in the generated code (run nuclear build first).');
+      else void vscode.window.showInformationMessage(l10n.t('This line has no counterpart in the generated code (run nuclear build first).'));
     }),
     // every debugger a Synapsis app runs under: dart (mobile), node (nestjs), chrome (react, also the web device),
     // debugpy (fastapi); the paused frame of a generated file is shown at its .nuc line

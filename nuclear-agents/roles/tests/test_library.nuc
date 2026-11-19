@@ -1,0 +1,102 @@
+use re
+use shutil
+use subprocess
+use pathlib{ Path }
+
+// The library of skills and agents (spec 011 requirement 34, `nuclear-agents/skills/<id>/SKILL.md` and
+// `nuclear-agents/agents/<id>/agent.md`): each file's front matter is Claude Code's and the screens' (its name the
+// folder, a description, the Spanish beside the English, a kind and tags; an agent's role and skills), its sections
+// are there, and every `nuclear <command>` and `nuclear-builder <command>` it names exists. That each one reaches
+// every provider whole is Nuclear Builder's test (`tests/test_skills.nuc`).
+
+KINDS = ["domain", "technology", "practice"]
+SKILL_FIELDS = ["name", "description", "title", "title_es", "description_es", "kind", "tags"]
+AGENT_FIELDS = ["name", "description", "title", "title_es", "description_es", "role", "skills"]
+SECTIONS = ["## When to use", "## Steps", "## The platform's tools", "## Pitfalls", "## Checklist"]
+LIBRARY_ROLES = ["analyst", "architect", "developer", "qa", "devops"]
+
+// The commands of `nuclear` (`nuclear help commands`): the compiler's and the framework's, and the alias `g` of
+// `make`; checked against the help itself when `nuclear` is on this machine.
+NUCLEAR_COMMANDS = ["help", "build", "check", "fix", "fmt", "tokens", "ast", "dialect", "kind", "spec", "agent", "contracts", "defs", "new", "code", "watch", "run", "device", "terminal-device", "test", "analyze", "install", "migrate", "add", "remove", "clean", "repair", "explain", "monitor", "gen", "make", "g", "setup", "doctor"]
+BUILDER_COMMANDS = ["setup", "team", "vault", "skills", "run", "retry", "restart", "runs", "checks", "spec", "member", "chat-host", "agents", "models", "ci", "export", "line", "connections", "read", "mcp"]
+
+// `nuclear-agents/`, from wherever the tests run.
+agentsFolder() Path
+  for folder in Path(__file__).resolve().parents
+    if folder.joinpath("skills").isDir() and folder.joinpath("roles").isDir()
+      return folder
+  Path(".")
+
+// A file's front matter (one `key: value` per line between `---`; `[a, b]` a list) and its body.
+headOf(text: string) <string, any>
+  found: <string, any> = { "body": text }
+  if not text.startsWith("---\n")
+    return found
+  end = text.indexOf("\n---\n", 4)
+  if end < 0
+    return found
+  for line in text.substring(4, end).split("\n")
+    at = line.indexOf(": ")
+    if at > 0
+      value = line.substring(at + 2).trim()
+      found[line.substring(0, at)] = value.startsWith("[") and value.endsWith("]") ? value.substring(1, value.length - 1).split(",").map((v: string) => v.trim()).filter((v: string) => v.length > 0) : value
+  found["body"] = text.substring(end + 5)
+  found
+
+// The library's files of one folder, by id.
+filesOf(folder: string, file: string) <string, string>
+  found: <string, string> = {}
+  for one in agentsFolder().joinpath(folder).iterdir().sorted()
+    if one.isDir()
+      found["${one.name}"] = one.joinpath(file).isFile() ? one.joinpath(file).readText(encoding = "utf-8") : ""
+  found
+
+// The known commands; with `nuclear` on this machine, each one must still be in its help (no list drifts away).
+nuclearCommands() string[]
+  tool = shutil.which("nuclear")
+  if tool != null
+    said: string = subprocess.run([tool!, "help", "commands"], captureOutput = true, text = true, timeout = 60).stdout
+    for word in NUCLEAR_COMMANDS
+      expect(word == "g" or re.search("(?<![\\w-])${word}(?![\\w-])", said) != null, "`nuclear ${word}` is no longer in nuclear help commands")
+  NUCLEAR_COMMANDS
+
+testEverySkillHasItsFrontMatterItsSpanishAndItsSections() void
+  skills = filesOf("skills", "SKILL.md")
+  expect(skills.length >= 25, "${skills.length} skills: the library has some 30")
+  for id, text in skills
+    expect(not text.isEmpty, "${id}: no SKILL.md")
+    head = headOf(text)
+    for field in SKILL_FIELDS
+      expect(head[field] != null, "${id}: no ${field} in its front matter")
+    expect(head["name"] == id and re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", id) != null, "${id}: its name is its folder, lowercase with dashes")
+    expect("${head["description"]}".length >= 40 and "${head["description"]}".length <= 1024, "${id}: a description an agent triggers on (Claude Code: at most 1024)")
+    expect("${head["title_es"]}".length > 2 and "${head["description_es"]}".length >= 40, "${id}: the Spanish title and description")
+    expect(head["kind"] in KINDS, "${id}: kind is one of ${KINDS.join(", ")}")
+    expect(isinstance(head["tags"], list) and (head["tags"] as string[]).length >= 3, "${id}: tags, a list of three or more")
+    for section in SECTIONS
+      expect(section in "${head["body"]}", "${id}: no section ${section}")
+    expect("- [ ]" in "${head["body"]}", "${id}: a checklist of items to tick")
+
+testEveryAgentHasItsFrontMatterARoleAndSkillsOfTheLibrary() void
+  skills = filesOf("skills", "SKILL.md").keys
+  agents = filesOf("agents", "agent.md")
+  expect(agents.length >= 4, "${agents.length} agents")
+  for id, text in agents
+    head = headOf(text)
+    for field in AGENT_FIELDS
+      expect(head[field] != null, "${id}: no ${field} in its front matter")
+    expect(head["name"] == id, "${id}: its name is its folder")
+    expect(head["role"] in LIBRARY_ROLES, "${id}: role is one of the factory's")
+    for s in head["skills"] as string[]
+      expect(s in skills, "${id}: no skill ${s} in the library")
+    expect("${head["body"]}".trim().length > 300, "${id}: the agent's text")
+
+// Never an invented command: every `nuclear <word>` and `nuclear-builder <word>` of a file is a command of its help.
+testEveryCommandTheLibraryNamesExists() void
+  nuclear = nuclearCommands()
+  for folder in [["skills", "SKILL.md"], ["agents", "agent.md"]]
+    for id, text in filesOf(folder[0], folder[1])
+      for word in re.findall(r"(?<![\w-])nuclear ([a-z][a-z-]*)", text) as string[]
+        expect(word in nuclear, "${id}: `nuclear ${word}` is not a command of nuclear (nuclear help commands)")
+      for word in re.findall(r"nuclear-builder ([a-z][a-z-]*)", text) as string[]
+        expect(word in BUILDER_COMMANDS, "${id}: `nuclear-builder ${word}` is not a command of nuclear-builder")

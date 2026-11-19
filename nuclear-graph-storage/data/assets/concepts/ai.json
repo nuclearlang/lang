@@ -15,6 +15,7 @@
     "| The MCP server (`nuclear-mcp`) | gives any agent the graph, the compiler, a project's commands, the generators and the local developer | started by the AI client, over stdio |",
     "| Nuclear Developer | the local agents: coder, tester, security reviewer, planner, analyst, documenter, diagnoser, acceptor, assistant | `127.0.0.1:7879` |",
     "| The Builder | the pipeline from a spec to deployed code: specification, generate, plan, tests first, code, verification, security, artifacts, deploy | the editor, or `nuclear-builder` |",
+    "| Nuclear Chat | the factory's workplace: channels, direct messages and threads with the members of your teams, who answer through their providers (a team's tech lead for the team) | `127.0.0.1:7880`, a token from the keyring |",
     "",
     "The idea: a small model cannot hold much in its head, so what it needs comes from the graph, and what it writes is checked by the compiler before it answers. Standard code is written by generators, not by a model. A frontier model (Claude, or any other over MCP) is the lead: it plans, validates and corrects only what is wrong, and what it corrects becomes an example the local agents learn from.",
     "",
@@ -63,8 +64,9 @@
    "sources": [
     "docs/03-adr/0003-the-ai-loop.md#Decision",
     "extensions/tools/nuclear-builder/docs/00-context/vision.md",
-    "nuclear-graph-storage/docs/02-architecture/overview.md#Context",
-    "installer/docs/08-guides/ai-setup.md"
+    "installer/docs/08-guides/ai-setup.md",
+    "nuclear-chat/docs/00-context/vision.md",
+    "nuclear-graph-storage/docs/02-architecture/overview.md#Context"
    ],
    "meta": {
     "topic": "ai"
@@ -145,7 +147,7 @@
    "title": "The MCP of NuclearLang: what it is and how it works",
    "summary": "MCP is the Model Context Protocol: the open protocol through which an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls its tools. `nuclear-mcp` is that program for NuclearLang: it gives the client the generators, the local developer, the Smart Graph, the compiler, the `nuclear` commands and the internet as tools.",
    "body": [
-    "**How it works.** The AI client starts `nuclear-mcp` and talks to it over stdio. The server offers tools and a set of instructions; the model calls a tool, the server runs it on your machine (a search in the graph, `nuclear check`, `nuclear gen`, a request to the local agents) and answers text the model reads.",
+    "**How it works.** The AI client starts `nuclear-mcp` and talks to it over stdio. The server offers tools and a set of instructions; the instructions send a model that knows nothing about Nuclear to `nuclear_start` first (what Nuclear is, the rules, the work cycle on this machine, the atlas of every topic, each read with `nuclear_doc`). The model calls a tool, the server runs it on your machine (a search in the graph, `nuclear check`, `nuclear gen`, a request to the local agents) and answers text the model reads.",
     "",
     "**Connect it.**",
     "",
@@ -159,10 +161,11 @@
     "",
     "**Its tools, by group.**",
     "",
+    "- Learning Nuclear: `nuclear_start` (the first call), `nuclear_doc` (one topic of the atlas).",
     "- The generators: `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`.",
     "- The local developer: `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`.",
-    "- The graph: `graph_strategy` (which kind of request it is and the plan of that kind: the first call), `graph_answer`, `graph_search`, `graph_card`, `graph_prompt`, `graph_remember`.",
-    "- The compiler and the command line: `nuclear_check`, `nuclear_build`, `nuclear_fmt`, `nuclear_help`, `nuclear_brief`, `nuclear_defs`, `nuclear_project` (new, build, install, test, check, analyze, make, gen, migrate, add, remove, explain).",
+    "- The graph: `graph_strategy` (which kind of request it is and the plan of that kind: the first call after `nuclear_start`), `graph_answer`, `graph_search`, `graph_card`, `graph_prompt`, `graph_remember`, `graph_monitor` (the hot spots of the last run with `--monitor`, kept for later).",
+    "- The compiler and the command line: `project_monitor` (where the app is slow: the report of `nuclear run --monitor`), `nuclear_check`, `nuclear_build`, `nuclear_fmt`, `nuclear_help`, `nuclear_brief`, `nuclear_defs`, `nuclear_project` (new, build, install, test, check, analyze, make, gen, migrate, add, remove, explain).",
     "- The internet: `web_search`, `web_read`.",
     "",
     "**The way of working it asks for.** The generators write the standard code; the local developer does the rest first (`developer_task`); the frontier model validates (`nuclear_check`, `nuclear test`), corrects only what is wrong and records its review (`developer_review`), so the local agents learn from the correction.",
@@ -343,7 +346,7 @@
    "id": "concept:ai-setup",
    "type": "concept",
    "title": "The set-up of the AI services: a profile of models for the machine",
-   "summary": "One set-up installs the Smart Graph, the Nuclear Developer and the models: `nuclear-builder setup` in a terminal, a wizard in VS Code, the last step of the installer. It reads the machine, suggests a profile (`lite`, `medium`, `hard`, or `remote`: remote agents only), says how far each works, and starts both services at every login. The user chooses what is downloaded.",
+   "summary": "One set-up installs the Smart Graph, the Nuclear Developer and the models: `nuclear-builder setup` in a terminal, a wizard in VS Code, the last step of the installer. It reads the machine, suggests a profile (`lite`, `medium`, `hard`, or `remote`: remote agents only), says how far each works, and starts the graph, the Developer and Nuclear Chat at every login. The user chooses what is downloaded.",
    "body": [
     "**The profiles.** The suggested one is the heaviest that runs well with the machine's memory and disk; a tight one and one that does not fit are marked with the reason, and may still be chosen.",
     "",
@@ -360,9 +363,11 @@
     "",
     "**Where things are.** The choice: `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`): the mode, the profile, its models; the services start with it, and the Builder and the editor take their default models from it. The code of the services: `~/.local/share/nuclearlang/ai/`. The graph's data: `~/.local/share/nuclear-graph/`. The models: Ollama's own folder.",
     "",
-    "**The services at login.** Linux: the systemd user units `nuclear-graph` and `nuclear-developer` (`systemctl --user status|restart ...`, `journalctl --user -u nuclear-graph`). macOS: two launch agents (`io.github.nuclearlang.graph`, `.developer`). Windows: a script of the Startup folder. In idle both take about 150 MB of memory; Ollama loads a model when an agent asks and frees it a few minutes later.",
+    "**The services at login.** Linux: the systemd user units `nuclear-graph`, `nuclear-developer` and `nuclear-chat` (`systemctl --user status|restart ...`, `journalctl --user -u nuclear-graph`). macOS: three launch agents (`io.github.nuclearlang.graph`, `.developer`, `.chat`). Windows: a script of the Startup folder. In idle both take about 150 MB of memory; Ollama loads a model when an agent asks and frees it a few minutes later.",
     "",
-    "**Update and remove.** Running the installer again sets the services up again with the same profile, without questions. `nuclear-builder setup --remove` takes the services away; Ollama, its models and the graph's data stay."
+    "**Update and remove.** Running the installer again sets the services up again with the same profile, without questions. `nuclear-builder setup --remove` takes the services away; Ollama, its models and the graph's data stay.",
+    "",
+    "**The ports.** `127.0.0.1:7878` the graph, `7879` the Developer, `7880` Nuclear Chat; a port another program holds is replaced by the next free one, written to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`). Nuclear Chat's token is made the first time and kept only in the keyring; a host reads it with `nuclear-chat connect --json`."
    ],
    "keys": [
     "nuclear-builder setup",
@@ -418,29 +423,22 @@
   {
    "id": "concept:loop",
    "type": "concept",
-   "title": "The Nuclear Builder: the pipeline from a spec to deployed code",
-   "summary": "The Builder takes a spec through nine stages on your machine: specification, generate, plan, tests first, code, verification, security, artifacts and deploy. A run is drawn as a graph: each step shows who did it, what it decided and why. Every run is documented in a journal, and any step, any stage or the whole run can run again.",
+   "title": "The Nuclear Builder: the software factory from a spec to a pull request",
+   "summary": "The Builder takes a spec through six stations on your machine (Analysis, Design, Tests first, Code, Quality, Delivery), each worked by a role of the run's team: the local agents, a provider's agent or a provider's model. It stops at its gates for you, documents every station in the spec's folder (`specs/<component>[/<layer>]/<id>/`), and any station or step can run again.",
    "body": [
-    "1. **Specification**: what you want, with at least one acceptance criterion. Written to `specs/<id>/spec.md`. It ends with the **analysis**: which kind of request the spec is (its strategy, `concept:strategies`), which decides the stages that run, what the generators write and what is asked of you first.",
-    "2. **Generate**: `nuclear gen` writes every resource the spec names, also in plain words, finished and compiling.",
-    "3. **Plan**: what is left is split into pieces of one file, in the order they can be written.",
-    "4. **Tests first**: one test per acceptance criterion, before any code.",
-    "5. **Code**: each piece is written at its place and repaired with the compiler; each use case is wired by `nuclear gen usecase`; then the whole project is checked.",
-    "6. **Verification**: the project is built and every test runs; a failing test goes back to the coder explained in Nuclear, up to three rounds.",
-    "7. **Security**: each new file is reviewed against the platform's security rules.",
-    "8. **Artifacts**: the build's output is kept with the run.",
-    "9. **Deploy**: the seed, integration and deploy commands of `.nuclear/builder.json`.",
+    "1. **Analysis** (Analyst): the spec read as the client's request, the acceptance criteria made checkable, the questions to answer first; the analysis decides the strategy and the stations that run (`concept:strategies`). `analysis.md`, `questions.md`.",
+    "2. **Design** (Architect): the generators write first what follows from the data (`nuclear gen resource`); then the design, its Mermaid diagrams and ADRs, and a plan of one-file pieces. `design.md`, `plan.md`.",
+    "3. **Tests first** (Developer): the tests from the acceptance criteria and the plan, before any code. `test-plan.md`.",
+    "4. **Code** (Developer): what the generators did not write; each use case wired by `nuclear gen usecase`; repaired with the compiler (`nuclear fix`, then `nuclear check` errors to the agent); the lead takes what is left.",
+    "5. **Quality** (QA): its plan goes into the run's checks and stops for you (switch checks, add your own, run yours); then the build and the tests, up to three repair rounds told by `nuclear explain`, the acceptance criteria held against the result. `qa-report.md`.",
+    "6. **Delivery** (DevOps): the definition of done, the user stories and the pull request's text, and the infrastructure the change needs (the CI exported from the line, the deployments and environments, the containers, the monitoring, the secrets); once you approve, the branch, the commit in your name and the pull request with `gh`, never merged.",
     "",
-    "- **Who leads**: the local agents only (`--lead local`), or Claude leading while the local developer writes (`--lead claude`).",
-    "- **Where**: VS Code (`Ctrl+Alt+P`), Android Studio (`Alt+Shift+P`), a terminal (`nuclear-builder run specs/<id>/spec.md`), or over MCP (`developer_task`).",
-    "- **The journal**: `.nuclear/builder/runs/<id>.md` says what was built, how it was checked and what is left.",
-    "- **The run's page**: a graph with a column per stage and a node per step, the steps its agent followed under it; a click on a node shows what it did, the decisions it took and why, its input, output and code.",
-    "- **When it fails**: the diagnoser says why; `nuclear-builder retry <run>` goes on from the failed step. A run interrupted by a crash is recovered.",
-    "- **Anything runs again**: one step, passed or failed, with every step after it (`nuclear-builder retry <run> --step <id>`, *Run again from this step*); a whole stage (`--from <stage>`); the whole pipeline from scratch (`nuclear-builder restart <run>`, *Run again from scratch*). What the steps left out wrote is undone first; a file changed since is kept.",
-    "- **Acceptance**: after a passing verification each acceptance criterion is held against what the run left; the ones not shown met are listed for the reviewer. It informs, it does not fail the run.",
-    "- **On a server**: `nuclear-builder export github|gitlab|bitbucket` writes the CI file that runs the same commands.",
-    "",
-    "Each stage has its row: `stage:spec`, `stage:generate`, `stage:plan`, `stage:test`, `stage:code`, `stage:verify`, `stage:security`, `stage:artifacts`, `stage:deploy`."
+    "- **The team** is the members the user hires, any number per role, each worked by the local agents, a provider's agent or an API model (`nuclear-builder team …`, the new-team wizard in VS Code; no presets, ADR-platform-0010); a station is worked by the member the tech lead assigned, else the role's first. One budget per run (5 USD by default); anything paid is confirmed twice unless the user turned that off, and `forceConfirm` brings the questions back.",
+    "- **Where**: VS Code (`Ctrl+Alt+P`), Android Studio (`Alt+Shift+P`), a terminal (`nuclear-builder run specs/<component>/<id>/spec.md`), or over MCP (`developer_task`).",
+    "- **The gates**: after Analysis, Design and before Delivery by default (`.nuclear/builder.json` `gates`); `nuclear-builder run --resume <id>` goes on.",
+    "- **The journal**: `.nuclear/builder/runs/<id>.md`, next to the run file `<id>.json` the editors draw.",
+    "- **When it fails**: the diagnoser says why; `nuclear-builder retry <id>` goes on from the station that failed, `--from <station>` from another, `--step <step>` from one step with every step after it; `nuclear-builder restart <id>` runs it all again. What the steps left out wrote is undone first; a file changed since is kept.",
+    "- **On a server**: `nuclear-builder ci` runs the commands of `.nuclear/builder.json` and `nuclear-builder export github|gitlab|bitbucket` writes the CI file."
    ],
    "keys": [
     "loop",
@@ -465,30 +463,6 @@
    ],
    "links": [
     {
-     "rel": "first-stage",
-     "to": "stage:spec"
-    },
-    {
-     "rel": "stage",
-     "to": "stage:generate"
-    },
-    {
-     "rel": "stage",
-     "to": "stage:plan"
-    },
-    {
-     "rel": "stage",
-     "to": "stage:test"
-    },
-    {
-     "rel": "stage",
-     "to": "stage:code"
-    },
-    {
-     "rel": "stage",
-     "to": "stage:verify"
-    },
-    {
      "rel": "command",
      "to": "tool:nuclear-builder.run"
     },
@@ -503,11 +477,36 @@
     {
      "rel": "concept",
      "to": "concept:strategies"
+    },
+    {
+     "rel": "first-stage",
+     "to": "stage:analysis"
+    },
+    {
+     "rel": "stage",
+     "to": "stage:design"
+    },
+    {
+     "rel": "stage",
+     "to": "stage:tests"
+    },
+    {
+     "rel": "stage",
+     "to": "stage:code"
+    },
+    {
+     "rel": "stage",
+     "to": "stage:quality"
+    },
+    {
+     "rel": "stage",
+     "to": "stage:delivery"
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md",
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/factory.nuc",
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
    ],
    "meta": {
     "topic": "ai"
@@ -569,7 +568,7 @@
    ],
    "sources": [
     "tools/mcp/server.nuc",
-    "nuclear-graph-storage/prompts/plan.md",
+    "nuclear-agents/roles/architect/skills/plan-for-a-local-developer.md",
     "nuclear-graph-storage/docs/02-architecture/overview.md#Context"
    ],
    "meta": {
@@ -720,6 +719,75 @@
    "meta": {
     "topic": "ai"
    }
+  },
+  {
+   "id": "concept:software-factory",
+   "type": "concept",
+   "title": "The software factory: stations, roles as files, providers as assignments, teams",
+   "summary": "Every spec goes through six stations, each owned by a role: Analysis (Analyst), Design (Architect), Tests first and Code (Developer), Quality (QA), Delivery (DevOps: the infrastructure and the delivery; its id `delivery` of before is read as `devops`). A role is a folder of files, nuclear-agents/roles/<role>/, that the local agents and every provider read; who does a role is the user's choice.",
+   "body": [
+    "Spec 011 and ADR-platform-0005 make Nuclear Builder a **software factory**: the same stations, in the same order, for every spec.",
+    "",
+    "| Station | Role | What it delivers (in `specs/<id>/`) |",
+    "|---|---|---|",
+    "| Analysis | Analyst | `analysis.md` (the acceptance criteria made checkable), `questions.md` |",
+    "| Design | Architect | `design.md` (components, diagrams, the ADRs it follows), proposed ADRs, `plan.md` |",
+    "| Tests first, Code | Developer | the tests (TDD), then the code; `work-log.md` |",
+    "| Quality | QA | `test-plan.md` first, for the user to approve; then `qa-report.md` (functional and non-functional checks, edge cases, security, good practices, load and performance) |",
+    "| Delivery | DevOps | `definition-of-done.md`, `user-stories.md`, the project's documents, `pr.md`, `deployment.md` when the change touches the CI, the deployments, the containers, the monitoring or the secrets; pushes only when the user approves and never merges |",
+    "",
+    "**A role is a folder** (`nuclear-agents/roles/<role>/`, ADR-developer-0002): `role.md` (mission, inputs, outputs, definition of done, what it never does), `skills/*.md`, `templates/*.md`, `checks.toml` (each check on or off, at a station, run by the role or by the user), and `roster/{en,es}.json` (the 40 satirical employees the user hires for it, each with a temperament of `roles/temperaments.json`: extrovert, shy, nerd…) with their painted cyberpunk portraits in `roster/faces/<id>.webp`, made by a local image model (FLUX.1-schnell through stable-diffusion.cpp) that `roles/faces.nuc` drives from each employee's profile, temperament and gender (ADR-developer-0003).",
+    "",
+    "**The prompts of the local agents are the roles' skills**: a skill whose front matter names a prompt (`prompt: agent.repair`) is ingested into the graph's `prompts` collection, so `graph_prompt` and the Nuclear Developer read the same text. A change to one is a new evaluation round.",
+    "",
+    "**Who does a role** is an assignment: the local agents (models of at most 3B), a provider's agent (Claude Code, Codex, Gemini CLI, OpenCode) or a provider's model through an API, chosen per member of a **team**. A team (ADR-platform-0010) is the members the user hires from the rosters, any number per role (twenty developers if so), one of them the tech lead; it is made with a five-step wizard (identity with a suggested name, purpose and skills, members suggested from them, the roster with filters, who works each member with every paid one marked), never from a preset. A station is worked by the member the tech lead assigned for the run (`run --assign`), else the role's first member; one budget per run, confirmed twice before any money is spent.",
+    "",
+    "**Skills are real files** (spec 011 requirement 34): the library `nuclear-agents/skills/<id>/SKILL.md` (Claude Code's format; domains such as payments, bank accounts, authentication, offline sync; technologies such as the Synapsis backend, mobile and web, WebSockets, SQL, Ollama, CI; practices such as TDD, an OWASP review, clean architecture) and `nuclear-agents/agents/<id>/agent.md` (backend, mobile and web engineers, a QA security tester, a tech writer). A team attaches library skills (`skills`) every member inherits and keeps its own (`ownSkills`, cloned or written in the skills editor); a member has the same and a base `agent`. A member's own skill wins over the team's, the team's over the library's. Commands and MCP tools: `nuclear-builder skills list|show|clone|create|update|delete`, `team skills set` (deleting one of the user's asks the user). Every provider gets them whole: Claude Code as plugin skills, OpenCode, Codex and Gemini CLI in their agent files, an API model in its prompt, the local Developer in its context."
+   ],
+   "keys": [
+    "software factory",
+    "stations",
+    "roles",
+    "nuclear-agents/roles",
+    "role.md",
+    "checks.toml",
+    "roster",
+    "team",
+    "skills",
+    "skill.md",
+    "agent file",
+    "nuclear-agents/skills",
+    "own skills"
+   ],
+   "asks": [
+    "what is the software factory",
+    "which roles does the factory have",
+    "where are the roles defined",
+    "que es la fabrica de software",
+    "que roles tiene la fabrica",
+    "what does the qa role do",
+    "who merges the pull request",
+    "where are the skills of a team",
+    "how do I add a skill to a team",
+    "que skills trae la biblioteca",
+    "como clono una skill para un miembro"
+   ],
+   "links": [
+    {
+     "rel": "loop",
+     "to": "concept:ai-loop"
+    },
+    {
+     "rel": "agent",
+     "to": "concept:nuclear-developer"
+    }
+   ],
+   "sources": [
+    "nuclear-agents/roles/README.md",
+    "docs/03-adr/0005-the-software-factory.md",
+    "nuclear-agents/skills/README.md",
+    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
+   ]
   }
  ]
 }

@@ -43,7 +43,8 @@ for arg in "$@"; do
       # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
       [ -x "$BIN_DIR/nuclear-builder" ] && NUCLEAR_INSTALL="$HOME_DIR" NUCLEAR_BIN="$BIN_DIR" "$BIN_DIR/nuclear-builder" setup --remove >/dev/null 2>&1 || true
       command -v uv >/dev/null 2>&1 && uv tool uninstall nuclear-builder >/dev/null 2>&1 || true
-      rm -f "$BIN_DIR/nuclear" "$BIN_DIR/nuclear-lsp" "$BIN_DIR/nuclear-builder" "$BIN_DIR/nuclear-developer"
+      command -v uv >/dev/null 2>&1 && uv tool uninstall nuclear-chat-system >/dev/null 2>&1 || true
+      rm -f "$BIN_DIR/nuclear" "$BIN_DIR/nuclear-lsp" "$BIN_DIR/nuclear-builder" "$BIN_DIR/nuclear-developer" "$BIN_DIR/nuclear-chat"
       command -v uv >/dev/null 2>&1 && { uv tool uninstall nuclear-graph; uv tool uninstall nuclear-mcp; } >/dev/null 2>&1 || true
       rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/zed/extensions/installed/nuclearlang"
       rm -rf "$HOME_DIR"
@@ -62,13 +63,6 @@ command -v cargo >/dev/null 2>&1 || { echo "cargo is required: https://rustup.rs
 echo "building nuclear (release)..."
 cargo build --release --quiet --manifest-path "$REPO/Cargo.toml" -p nuclear-cli -p nuclear-lsp
 
-# nuclear-builder is the Builder engine of the VS Code extension bundled for node (stage.sh copies out/nuclear-builder.js)
-if [ -x "$REPO/extensions/vscode/node_modules/.bin/esbuild" ]; then
-  (cd "$REPO/extensions/vscode" && npm run --silent builder >/dev/null)
-else
-  echo "note: extensions/vscode has no node_modules (npm install there); nuclear-builder not rebuilt"
-fi
-
 echo "installing into $HOME_DIR"
 mkdir -p "$BIN_DIR"
 EXE=""
@@ -76,11 +70,10 @@ case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) EXE=".exe" ;; esac
 "$REPO/installer/release/stage.sh" "$HOME_DIR" "$REPO/target/release/nuclear$EXE" "$REPO/target/release/nuclear-lsp$EXE"
 ln -sf "$HOME_DIR/bin/nuclear" "$BIN_DIR/nuclear"
 ln -sf "$HOME_DIR/bin/nuclear-lsp" "$BIN_DIR/nuclear-lsp"
-if [ -f "$HOME_DIR/bin/nuclear-builder" ]; then ln -sf "$HOME_DIR/bin/nuclear-builder" "$BIN_DIR/nuclear-builder"; fi
 
 # from source the AI services are the working tree's own folders (stage.sh copied them): their set-up installs the
 # graph editable and builds the Developer in place; the set-up itself (Nuclear, the python dialect) is this tree's
-# extensions/tools/nuclear-builder, installed editable with uv in place of the node link
+# extensions/tools/nuclear-builder, installed editable with uv (its line runs the software factory, in Nuclear too)
 BUILDER="$BIN_DIR/nuclear-builder"
 if [ "$RUNTIME" = 1 ]; then
   echo "building the AI runtime (installer/release/ai-runtime.sh)..."
@@ -95,6 +88,10 @@ else
   if command -v uv >/dev/null 2>&1; then
     "$HOME_DIR/bin/nuclear$EXE" build "$REPO/extensions/tools/nuclear-builder" >/dev/null
     UV_TOOL_BIN_DIR="$BIN_DIR" uv tool install --quiet --force --editable "$REPO/extensions/tools/nuclear-builder"
+    # `nuclear-chat`: Nuclear Chat's command (the GIF services' keys in the keyring, the pack); its service is not
+    # installed until Synapsis guards its routes (spec 014, nuclear-chat/docs/01-product/roadmap.md)
+    "$HOME_DIR/bin/nuclear$EXE" build "$REPO/nuclear-chat/system" >/dev/null
+    UV_TOOL_BIN_DIR="$BIN_DIR" uv tool install --quiet --force --editable "$REPO/nuclear-chat/system"
   else
     echo "note: without uv the set-up of the AI services (nuclear-builder setup) is not installed: https://docs.astral.sh/uv/"
   fi

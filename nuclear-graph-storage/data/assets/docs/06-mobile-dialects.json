@@ -2114,17 +2114,25 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.39de5d",
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.3603c0",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear flutter <any other flutter command> # runs flutter inside the app Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` (mobile.md §2, Generators; ADR-codegen-0001).",
+   "summary": "nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks] # (td) inside the terminal nuclear test…",
    "body": [
-    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
-    "```",
-    "",
-    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
-    "",
-    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
+    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
+    "nuclear device list                        # the open devices and the devices it can be",
+    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
+    "nuclear test [--integration] [-- <flutter test arguments>]",
+    "nuclear analyze | check [--json] | clean",
+    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
+    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
+    "nuclear run --monitor                      # each Nuclear function and method measured (the app writes the report)",
+    "nuclear monitor [--json]                   # the report: hot spots, then each function's time, calls, connections, memory",
+    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
+    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
+    "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
+    "nuclear flutter remove <package>...",
+    "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove"
    ],
    "platforms": [
     "mobile"
@@ -2261,41 +2269,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.929498",
-   "type": "spec",
-   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
-   "summary": "nuclear device [<device>] [--landscape] [-- <flutter run arguments>] # (dv) its own window, like an emulator nuclear device list # the open devices and the devices it can be nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks] # (td) inside the terminal nuclear test…",
-   "body": [
-    "nuclear device [<device>] [--landscape] [-- <flutter run arguments>]   # (dv) its own window, like an emulator",
-    "nuclear device list                        # the open devices and the devices it can be",
-    "nuclear terminal-device [<device>] [--landscape] [--render kitty|sixel|text|blocks]   # (td) inside the terminal",
-    "nuclear test [--integration] [-- <flutter test arguments>]",
-    "nuclear analyze | check [--json] | clean",
-    "nuclear repair                             # when the build or the app fails: repairs in steps (see below)",
-    "nuclear explain [--json] < error.txt       # a Dart/Flutter error on its .nuc lines, explained",
-    "nuclear add <package>[@version]...                   # into config.nuc and the app, and generates its definitions",
-    "nuclear remove <package>...                          # out of config.nuc and the app (the definitions stay in the cache)",
-    "nuclear flutter add <package>[:version]... [--dev]   # the same, as Flutter writes it (--dev: devDependencies)",
-    "nuclear flutter remove <package>...",
-    "nuclear pub get|upgrade|outdated                     # pub add|remove = flutter add|remove",
-    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, Flutter, VS Code)",
-    "nuclear setup [--dir ~/develop]            # installs Flutter step by step (system packages, SDK, PATH)",
-    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n"
-   ],
-   "platforms": [
-    "mobile"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
-   ],
-   "meta": {
-    "section": "06-mobile-dialects",
-    "repo": "nuclearlang",
-    "dialect": "flutter"
-   }
-  },
-  {
    "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.a2b52e",
    "type": "spec",
    "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
@@ -2404,6 +2377,35 @@
     "- **Synapsis devices** (`device` and `terminal-device`): the app as Flutter web in a Chromium browser (Chrome,",
     "  Chromium, Edge, Brave or Vivaldi; `CHROME_EXECUTABLE` chooses one) with the device's screen, density, touch",
     "  and identity (Android, iOS). Devices: `pixel7` (the default), `iphone14pro`, `iphonese`, `iphone15promax`,"
+   ],
+   "platforms": [
+    "mobile"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/dart/docs/07-reference/flutter.md"
+   ],
+   "meta": {
+    "section": "06-mobile-dialects",
+    "repo": "nuclearlang",
+    "dialect": "flutter"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/dart/docs/07-reference/flutter.md#11-the-nuclear-cli.f1c777",
+   "type": "spec",
+   "title": "Dialect `flutter`: the `mobile` platform in Dart — 11. The `nuclear` CLI",
+   "summary": "nuclear doctor # what NuclearLang and Synapsis need (CLIs, dialect, package, Flutter, VS Code) nuclear setup [--dir ~/develop] # installs Flutter step by step (system packages, SDK, PATH) nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n nuclear flutter <any other…",
+   "body": [
+    "nuclear doctor                             # what NuclearLang and Synapsis need (CLIs, dialect, package, Flutter, VS Code)",
+    "nuclear setup [--dir ~/develop]            # installs Flutter step by step (system packages, SDK, PATH)",
+    "nuclear devices | emulators | logs | install | screenshot | attach | gen-l10n",
+    "nuclear flutter <any other flutter command>   # runs flutter inside the app",
+    "```",
+    "",
+    "Whole resources (models, repository, use cases, facade, screen, tests; every platform): `nuclear gen` ([mobile.md](../../../../../nuclear-synapsis-framework/platforms/mobile/docs/07-reference/mobile.md) §2, Generators; ADR-codegen-0001).",
+    "",
+    "Generators: `nuclear make <what> ...` or with an alias `nuclear g <alias> ...`. They never overwrite a file."
    ],
    "platforms": [
     "mobile"

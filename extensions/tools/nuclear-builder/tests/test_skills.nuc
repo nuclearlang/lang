@@ -1,0 +1,172 @@
+use io
+use sys
+use json
+use pathlib{ Path }
+
+// The skills of a team and its members (spec 011 requirement 34): the library (a temporary one here, the real one in
+// `testEveryLibrarySkillRendersForEveryProviderWithoutLoss`), an old team's free words turned into library ids, what a
+// member gets (the team's, the base agent's, its own: the member's own wins over the team's, the team's over the
+// library's), the commands and their tools, the suggestions by the skills' tags, the rendering for each provider.
+
+SKILL_A = "---\nname: payments\ndescription: Take payments safely.\ntitle: Payments\ntitle_es: Pagos\ndescription_es: Cobrar con seguridad.\nkind: domain\ntags: [payments, checkout, refunds]\n---\n# Payments\n\nAmounts in minor units.\n"
+SKILL_B = "---\nname: testing-in-nuclear\ndescription: Tests written in Nuclear.\ntitle: Testing in Nuclear\ntitle_es: Pruebas en Nuclear\ndescription_es: Pruebas escritas en Nuclear.\nkind: technology\ntags: [testing, tests, pytest]\n---\n# Testing\n\nRun nuclear test.\n"
+AGENT = "---\nname: backend-engineer\ndescription: A backend engineer.\ntitle: Backend engineer\ntitle_es: Ingeniera de backend\ndescription_es: Una ingeniera de backend.\nrole: developer\nskills: [testing-in-nuclear]\n---\n# Backend engineer\n\nYou build the backend with the generators first.\n"
+
+// The factory and a library of two skills and one agent in `tmpPath`; no roles' folder.
+skillsHome(tmpPath: Path, monkeypatch: any) Path
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("no-roles")}")
+  lib = tmpPath.joinpath("library")
+  for pair in [["skills/payments/SKILL.md", SKILL_A], ["skills/testing-in-nuclear/SKILL.md", SKILL_B], ["agents/backend-engineer/agent.md", AGENT]]
+    file = lib.joinpath(pair[0])
+    file.parent.mkdir(parents = true)
+    file.writeText(pair[1])
+  monkeypatch.setenv("NUCLEAR_LIBRARY", "${lib}")
+  lib
+
+// Runs `nuclear-builder skills|team <args>` with `stdin`: its exit code and its JSON.
+skillsCall(args: string[], monkeypatch: any, capsys: any, stdin: string = "") <string, any>
+  monkeypatch.setattr(sys, "stdin", io.StringIO(stdin))
+  code = args[0] == "skills" ? skillsLine(args.skip(1)) : team(args.skip(1))
+  out: string = capsys.readouterr().out
+  { "code": code, "out": out.trim().isEmpty ? null : json.loads(out) }
+
+testTheLibraryIsReadInEachLanguage(tmpPath: Path, monkeypatch: any) void
+  skillsHome(tmpPath, monkeypatch)
+  en = librarySkills()
+  expect(en.map((s) => s["id"]) == ["payments", "testing-in-nuclear"] and en[0]["title"] == "Payments" and en[0]["kind"] == "domain" and en[0]["tags"] == ["payments", "checkout", "refunds"])
+  es = librarySkills("es")
+  expect(es[0]["title"] == "Pagos" and es[0]["description"] == "Cobrar con seguridad." and "Amounts in minor units." in "${es[0]["markdown"]}")
+  agents = libraryAgents("es")
+  expect(agents[0]["id"] == "backend-engineer" and agents[0]["role"] == "developer" and agents[0]["skills"] == ["testing-in-nuclear"] and agents[0]["title"] == "Ingeniera de backend")
+
+testAnOldTeamsFreeWordsBecomeLibraryIdsAndTheRestStaysInItsPurpose(tmpPath: Path, monkeypatch: any) void
+  skillsHome(tmpPath, monkeypatch)
+  file = tmpPath.joinpath("factory", "teams", "old.json")
+  file.parent.mkdir(parents = true)
+  file.writeText(json.dumps({ "id": "old", "name": "Old", "purpose": "A shop", "skills": ["Testing", "Pagos", "Puns", "payments"], "members": [] }))
+  t = loadTeam("old")
+  expect(t["skills"] == ["testing-in-nuclear", "payments"], json.dumps(t))
+  expect(t["purpose"] == "A shop\n\nSkills: Puns")
+  // written once, the old file kept
+  expect(json.loads(file.readText())["skills"] == ["testing-in-nuclear", "payments"] and file.withName("old.json.bak").isFile())
+  // without a library nothing changes
+  monkeypatch.setenv("NUCLEAR_LIBRARY", "${tmpPath.joinpath("none")}")
+  expect(upgradeTeamSkills({ "skills": ["Puns"] }) == { "skills": ["Puns"] })
+
+testAMemberGetsTheTeamsTheAgentsAndItsOwnSkillsItsOwnFirst(tmpPath: Path, monkeypatch: any) void
+  skillsHome(tmpPath, monkeypatch)
+  teamOwn = { "id": "house-style", "name": "House style", "description": "How we write.", "text": "Short lines." }
+  teamClone = { "id": "payments", "name": "Payments (ours)", "description": "Our payments.", "text": "Stripe only.", "from": "library:payments" }
+  t: <string, any> = { "skills": ["payments"], "ownSkills": [teamOwn, teamClone] }
+  m: <string, any> = { "role": "developer", "agent": "backend-engineer", "skills": ["tdd-in-nuclear"], "ownSkills": [{ "id": "house-style", "name": "Mine", "description": "", "text": "Even shorter." }], "instructions": "Be brief." }
+  shared = sharedSkills(t, m)
+  expect(shared.map((s) => s["id"]) == ["payments", "house-style", "testing-in-nuclear"], json.dumps(shared))
+  expect(shared[0]["from"] == "team" and "Stripe only." in "${shared[0]["markdown"]}" and shared[0]["overrides"] == ["library"])
+  expect(shared[1]["from"] == "member" and "Even shorter." in "${shared[1]["markdown"]}" and shared[1]["overrides"] == ["team"])
+  expect(shared[2]["from"] == "library")
+  // a role skill name (tdd-in-nuclear) is the role's, not a shared one; the base agent's text comes before the member's
+  who = withSkills(t, m)
+  expect("${who["instructions"]}".startsWith("# Backend engineer") and "${who["instructions"]}".endsWith("Be brief."))
+  role = composeRole("developer", who, tmpPath.joinpath("no-roles"))
+  expect(role.sources == { "payments": "team", "house-style": "member", "testing-in-nuclear": "library" } and "Even shorter." in role.text() and "Stripe only." in role.sharedText())
+
+testTheSkillsCommandsListShowCloneCreateUpdateDeleteAndSet(tmpPath: Path, monkeypatch: any, capsys: any) void
+  skillsHome(tmpPath, monkeypatch)
+  made = skillsCall(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Bank", "skills": ["payments"], "members": [{ "role": "developer", "id": "dev" }] }))
+  expect(made["code"] == 0, json.dumps(made))
+  listed = skillsCall(["skills", "list", "--team", "bank", "--member", "dev", "--lang", "es", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect((listed["library"] as <string, any>[])[0]["title"] == "Pagos" and (listed["library"] as <string, any>[])[0]["markdown"] == null)
+  expect((listed["composed"] as <string, any>[]).map((s) => [s["id"], s["from"]]) == [["payments", "library"]], json.dumps(listed))
+  shown = skillsCall(["skills", "show", "payments", "--team", "bank"], monkeypatch, capsys)["out"] as <string, any>
+  expect(shown["from"] == "library" and shown["editable"] == false and "minor units" in "${shown["markdown"]}")
+  // a library skill is cloned to be changed: the team's copy wins, its origin kept
+  skillsCall(["skills", "clone", "payments", "--team", "bank"], monkeypatch, capsys)
+  again = skillsCall(["skills", "clone", "payments", "--team", "bank"], monkeypatch, capsys)
+  expect(again["code"] == 1 and "already" in "${(again["out"] as <string, any>)["error"]}")
+  changed = skillsCall(["skills", "update", "payments", "--team", "bank"], monkeypatch, capsys, "---\nname: payments\ntitle: Payments\ndescription: Ours.\n---\n# Payments\n\nStripe only.\n")
+  own = ((changed["out"] as <string, any>)["ownSkills"] as <string, any>[])[0]
+  expect(own["id"] == "payments" and own["from"] == "library:payments" and own["text"] == "# Payments\n\nStripe only.\n", json.dumps(own))
+  // the member inherits it; its own clone of the team's wins over it
+  skillsCall(["skills", "clone", "payments", "--team", "bank", "--member", "dev"], monkeypatch, capsys)
+  mine = skillsCall(["skills", "show", "payments", "--team", "bank", "--member", "dev"], monkeypatch, capsys)["out"] as <string, any>
+  expect(mine["from"] == "member" and mine["editable"] == true and mine["clonedFrom"] == "team:payments")
+  created = skillsCall(["skills", "create", "--team", "bank", "--member", "dev"], monkeypatch, capsys, "---\nname: ledger\ntitle: Ledger\ndescription: Double entry.\n---\nEvery move has two entries.\n")
+  expect(created["code"] == 0)
+  expect(skillsCall(["skills", "create", "--team", "bank", "--member", "dev"], monkeypatch, capsys, "---\nname: ledger\ntitle: Ledger\n---\nx\n")["code"] == 1)
+  expect(skillsCall(["skills", "update", "testing-in-nuclear", "--team", "bank"], monkeypatch, capsys, "---\nname: x\ntitle: X\n---\nx\n")["code"] == 1)
+  // library skills attached to the member; its role skills on stay
+  set = skillsCall(["team", "skills", "set", "bank", "--member", "dev", "--skills", "testing-in-nuclear", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect((set["members"] as <string, any>[])[0]["skills"] == ["testing-in-nuclear"], json.dumps(set))
+  expect(skillsCall(["team", "skills", "set", "bank", "--skills", "nope"], monkeypatch, capsys)["code"] == 1)
+  composed = (skillsCall(["skills", "list", "--team", "bank", "--member", "dev"], monkeypatch, capsys)["out"] as <string, any>)["composed"] as <string, any>[]
+  expect(composed.map((s) => "${s["id"]}:${s["from"]}") == ["payments:member", "testing-in-nuclear:library", "ledger:member"], json.dumps(composed))
+  gone = skillsCall(["skills", "delete", "ledger", "--team", "bank", "--member", "dev"], monkeypatch, capsys)["out"] as <string, any>
+  expect(((gone["members"] as <string, any>[])[0]["ownSkills"] as <string, any>[]).map((s) => s["id"]) == ["payments"])
+  // the base agent
+  based = skillsCall(["team", "member", "update", "bank", "dev", "--agent", "backend-engineer", "--json"], monkeypatch, capsys)
+  expect(based["code"] == 0 and ((based["out"] as <string, any>)["members"] as <string, any>[])[0]["agent"] == "backend-engineer")
+  expect(skillsCall(["team", "member", "update", "bank", "dev", "--agent", "nobody"], monkeypatch, capsys)["code"] == 1)
+
+testTheSkillsToolsAskTheUserBeforeADelete(tmpPath: Path, monkeypatch: any) void
+  skillsHome(tmpPath, monkeypatch)
+  createTeam({ "name": "Bank", "ownSkills": [{ "id": "ledger", "name": "Ledger", "description": "", "text": "Two entries." }], "members": [] })
+  tools = BuilderTools("${tmpPath}")
+  asked: <string, any> = json.loads(tools.skillsDeleteTool("ledger", "bank"))
+  expect((asked["needsUser"] as <string, any>)["tool"] == "skills_delete" and loadTeam("bank")["ownSkills"] != [])
+  applyForUser("${tmpPath}", "skills_delete", (asked["needsUser"] as <string, any>)["input"] as <string, any>)
+  expect(loadTeam("bank")["ownSkills"] == [])
+  made: <string, any> = json.loads(tools.skillsCreateTool("bank", "---\nname: kyc\ntitle: KYC\ndescription: Know your customer.\n---\nCheck the ID.\n"))
+  expect((made["ownSkills"] as <string, any>[])[0]["id"] == "kyc")
+  expect("error" in json.loads(tools.skillsUpdateTool("payments", "bank", "x")))
+
+testTheSuggestionsReadTheSkillsTags(tmpPath: Path, monkeypatch: any) void
+  skillsHome(tmpPath, monkeypatch)
+  known: <string, any> = { "analyst": [], "architect": [], "developer": [{ "id": "dev-001", "name": "A", "skills": ["Refunds"] }, { "id": "dev-002", "name": "B", "skills": ["Puns"] }], "qa": [], "devops": [] }
+  found = suggestMembers("", ["payments"], known)
+  dev = ((found["roles"] as <string, any>[])[2]["candidates"] as <string, any>[])
+  expect(dev[0]["employee"] == "dev-001" and (dev[0]["score"] as int) > 0, json.dumps(found))
+
+// The repository's library (`nuclear-agents/`), from wherever the tests run.
+repoLibrary() Path?
+  for folder in Path(__file__).resolve().parents
+    if folder.joinpath("nuclear-agents", "skills").isDir()
+      return folder.joinpath("nuclear-agents")
+  null
+
+// "Tested and working" (requirement 34): every skill of the library, as a team's skill, reaches each provider whole —
+// Claude Code's plugin skill (its name, description and body), OpenCode's agent file, Codex's AGENTS.md, Gemini
+// CLI's GEMINI.md, an API model's system prompt and the local Developer's context — and every agent of the library
+// names skills that exist and a role.
+testEveryLibrarySkillRendersForEveryProviderWithoutLoss(tmpPath: Path) void
+  lib = repoLibrary()
+  expect(lib != null, "the repository's nuclear-agents/skills")
+  skills = librarySkills("en", lib)
+  expect(skills.length >= 25, "${skills.length} skills in the library")
+  root = tmpPath.joinpath("app")
+  root.joinpath("specs", "s1").mkdir(parents = true)
+  work = Work("${root}", "${root.joinpath("specs", "s1")}", "Build it", { "spec.md": "# Build it" }, [], "", 1.0)
+  for s in skills
+    id = "${s["id"]}"
+    head = frontMatter("${s["markdown"]}")
+    body = "${head["body"]}".trim()
+    expect(body.length > 400 and body.length < 11000, "${id}: a body of some substance that fits the local context (${body.length})")
+    role = composeRole("developer", withSkills({ "skills": [id] }, { "role": "developer", "skills": [] as string[] }, lib), tmpPath.joinpath("no-roles"))
+    expect(role.sources.keys == [id] and role.sources[id] == "library", id)
+    at = tmpPath.joinpath("render", id)
+    at.mkdir(parents = true)
+    plugin = renderClaudePlugin(role, at)
+    rendered = frontMatter(plugin.joinpath("skills", id, "SKILL.md").readText())
+    expect(rendered["name"] == id and rendered["description"] == head["description"] and "${rendered["body"]}".trim() == body, "${id}: Claude Code's skill")
+    renderOpenCode(role, work, at)
+    expect(body in at.joinpath(".opencode", "agent", "developer.md").readText(), "${id}: OpenCode's agent")
+    expect(body in renderCodex(role, at), "${id}: Codex's AGENTS.md")
+    renderGemini(role, work, at)
+    expect(body in at.joinpath("GEMINI.md").readText(), "${id}: Gemini CLI's GEMINI.md")
+    expect(body in role.text(), "${id}: an API model's system prompt")
+    expect(body in "${localBody(role, "code", work)["context"]}", "${id}: the local Developer's context")
+  ids = skills.map((s) => "${s["id"]}")
+  for a in libraryAgents("en", lib)
+    expect(a["role"] in ROLES, "${a["id"]}: a role")
+    for id in a["skills"] as string[]
+      expect(id in ids, "${a["id"]}: no skill ${id} in the library")

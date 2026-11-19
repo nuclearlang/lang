@@ -1,0 +1,93 @@
+use json
+use pathlib{ Path }
+
+// The Claude Code adapter (`claude -p`, checked against Claude Code 2.1.327's `--help`). The role is rendered as a
+// plugin of the run's temporary folder (`--plugin-dir`): its skills as `skills/<name>/SKILL.md` and the role as the
+// sub-agent `agents/<role>.md`; the role is also the session's own (`--append-system-prompt`). The Nuclear MCP
+// server and the Builder's (`nuclear_builder`) are the only ones (`--mcp-config`, `--strict-mcp-config`); the built-in tools are the file tools, no shell
+// (commands are data: `.nuclear/builder.json`). Claude Code brings its own login and says what a call cost
+// (`total_cost_usd`); the run's budget is its `--max-budget-usd`. A chat's turn (`inputs.stream`) adds
+// `--include-partial-messages`: its text as it is written, `text-delta` events.
+
+CLAUDE_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep"]
+
+// The first line of a text without its markdown marks: a skill's or an agent's description.
+summaryOf(text: string) string
+  body = "${frontMatter(text)["body"]}"
+  line = body.split("\n").find((l) => l.trim().length > 0) ?? ""
+  line.replaceAll("#", "").trim()
+
+// Writes the role as a Claude Code plugin: the folder given to `--plugin-dir`.
+renderClaudePlugin(role: Role, at: Path) Path
+  plugin = at.joinpath("plugin")
+  plugin.joinpath(".claude-plugin").mkdir(parents = true)
+  plugin.joinpath(".claude-plugin", "plugin.json").writeText(json.dumps({ "name": "nuclear-factory", "version": "1.0.0", "description": "The ${role.title} of NuclearLang's software factory, for one run." }))
+  for name, body in role.skills
+    dir = plugin.joinpath("skills", name)
+    dir.mkdir(parents = true)
+    head = frontMatter(body)
+    told = "${head["description"] ?? summaryOf(body)}"
+    dir.joinpath("SKILL.md").writeText("---\nname: ${name}\ndescription: ${told}\n---\n\n${"${head["body"]}".trim()}\n")
+  plugin.joinpath("agents").mkdir()
+  plugin.joinpath("agents", "${role.id}.md").writeText("---\nname: ${role.id}\ndescription: The ${role.title} of the software factory\ntools: ${CLAUDE_TOOLS.join(", ")}, mcp__nuclear, mcp__nuclear_builder\n---\n\n${role.text()}\n")
+  plugin
+
+claudeArgs(role: Role, prompt: string, work: Work, at: Path) string[]
+  mcp = at.joinpath("mcp.json")
+  mcp.writeText(json.dumps({ "mcpServers": mcpServers(work.mcpCommand, work.root) }))
+  args = ["claude", "-p", prompt, "--output-format", "stream-json", "--verbose", "--mcp-config", "${mcp}", "--strict-mcp-config", "--plugin-dir", "${renderClaudePlugin(role, at)}", "--append-system-prompt", role.text(), "--tools", CLAUDE_TOOLS.join(","), "--allowedTools", ...CLAUDE_TOOLS, "mcp__nuclear", "mcp__nuclear_builder", "--no-session-persistence"]
+  if work.inputs["stream"] == true
+    args.add("--include-partial-messages")
+  if work.model.length > 0
+    args.addAll(["--model", work.model])
+  if work.budgetUsd > 0
+    args.addAll(["--max-budget-usd", work.budgetUsd.toFixed(2)])
+  args
+
+// One line of `--output-format stream-json` as the run's events; the result line gives the text and the cost.
+claudeLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, any>) void
+  kind = ev["type"]
+  message: <string, any> = ev["message"] ?? ({} as <string, any>)
+  parts: <string, any>[] = message["content"] ?? []
+  if kind == "assistant"
+    for c in parts
+      if c["type"] == "text"
+        found["text"] = c["text"]
+        emit({ "type": "text", "text": c["text"] })
+      else if c["type"] == "tool_use"
+        emit({ "type": "tool", "id": c["id"], "tool": "${c["name"]}".replace("mcp__nuclear_builder__", "").replace("mcp__nuclear__", ""), "input": json.dumps(c["input"]).substring(0, 4000) })
+  else if kind == "user"
+    for c in parts
+      if c["type"] == "tool_result"
+        content = c["content"]
+        text = isinstance(content, list) ? (content as <string, any>[]).map((x) => "${x["text"] ?? ""}").join("\n") : "${content ?? ""}"
+        emit({ "type": "tool-result", "id": c["tool_use_id"], "ok": c["is_error"] != true, "text": text.substring(0, 20000) })
+  else if kind == "stream_event"
+    // `--include-partial-messages` (a chat's answer as it is written): each piece of text as a `text-delta`
+    streamed: <string, any> = ev["event"] ?? ({} as <string, any>)
+    delta: <string, any> = streamed["delta"] ?? ({} as <string, any>)
+    if streamed["type"] == "content_block_delta" and delta["type"] == "text_delta"
+      emit({ "type": "text-delta", "text": delta["text"] ?? "" })
+  else if kind == "result"
+    found["cost"] = ev["total_cost_usd"] ?? 0
+    found["text"] = ev["result"] ?? found["text"]
+    found["failed"] = ev["is_error"] == true
+    emit({ "type": "cost", "usd": found["cost"] })
+
+claudeCodeAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  at = renderDir("claude-code")
+  events: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  try
+    ran = streamCommand(claudeArgs(role, stationPrompt(role, station, work, false), work, at), work.root, toolEnv(), (line) => onClaudeLine(line, say, found), work.timeoutMs)
+    agentOutcome("Claude Code", ran, found, events, work)
+  finally
+    dropRenderDir(at)
+
+onClaudeLine(line: string, emit: (e: <string, any>) => void, found: <string, any>) void
+  ev = jsonLine(line)
+  if ev != null
+    claudeLine(ev!, emit, found)

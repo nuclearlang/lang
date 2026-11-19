@@ -1,0 +1,9 @@
+// A GIF of a message: a drawing of the pack (`pack/<file>`) or a service's image (its URL).
+Gif
+  @minLength(1)
+  @maxLength(2000)
+  src: string
+  title: string = ""
+  // pack, tenor or giphy
+  @pattern(r"^(pack|tenor|giphy)$")
+  source: string = "pack"

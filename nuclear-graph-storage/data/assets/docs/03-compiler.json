@@ -20,6 +20,7 @@
     "# from nuclearlang/",
     "tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language> [--fix]",
     "tools/stdlib-check.sh [area...]    # examples/stdlib/ in TypeScript, Dart and Python: the same output",
+    "DIR=examples/semantics tools/stdlib-check.sh   # the rules a target could break, the same way",
     "FLUTTER_ROOT=~/develop/flutter tools/defs/generate.sh    # dialects/dart/defs/ (about 45 s)",
     "tools/defs/python/generate.sh      # dialects/python/defs/",
     "tools/defs/typescript/generate.sh  # dialects/typescript/defs/",
@@ -1012,7 +1013,8 @@
     "Framework fields: `async_methods`, `methods`, `returns`, `file_header`, `alias_via`, `declares`, `provide`,",
     "`results`, `void_methods`. Template variables: `name`, `members`, `body`, `methods_code`, `fields`,",
     "`params_list`, `ctor`, `decorators`, `decor`, `deco_args`, `param_groups`, `ret_info`, `owner_decor`,",
-    "`call_args`, `generic_list`, `tinfo` (the full table: `docs/07-reference/projects.md` §5).",
+    "`call_args`, `generic_list`, `tinfo`, `plugins`, and on methods `site` and `is` (the full table:",
+    "`docs/07-reference/projects.md` §5).",
     "",
     "- `fields` carry `decor` (decorators of the field), `decorators` (text of the non-consumed ones) and",
     "  `class_decorator` (first `@PascalCase` without parentheses); `methods` carry `is.<name>`.",
@@ -1277,7 +1279,8 @@
     "- Kinds get `field_decor`; `field` gets `tinfo`; `methods` entries get `doc_text`/`doc_literal`.",
     "- Project templates get `components` and `uses`.",
     "- `type_args_as_args` takes a list of functions.",
-    "- N0219 only with native named arguments."
+    "- N0219 of a constructor of the type definitions only with native named arguments; of a function or method",
+    "  declared in Nuclear, always."
    ],
    "agents": false,
    "sources": [
@@ -1440,6 +1443,31 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#the-monitor",
+   "type": "context",
+   "title": "The emitter — The monitor",
+   "summary": "A project built with `--monitor` (`Manifest.monitor`, set by the CLI; spec 015 of the platform) measures each function and method of its `.nuc`: `Emitter::monitored` renders the dialect's `monitor_body` around the body before the `function` or `method` template sees it, so every kind's own method…",
+   "body": [
+    "A project built with `--monitor` (`Manifest.monitor`, set by the CLI; spec 015 of the platform) measures each",
+    "function and method of its `.nuc`: `Emitter::monitored` renders the dialect's `monitor_body` around the body before",
+    "the `function` or `method` template sees it, so every kind's own method template gets it too. Its `label` is the",
+    "Nuclear name (`ProjectCtx.source_names` undoes the dialect's renaming), `path` and `line` the place in the `.nuc`.",
+    "A file that measures imports `NuclearMonitor` from `nuclear/monitor` (`MONITOR_PATH`), which `project::build`",
+    "writes once from `monitor_runtime`, as it does the `Result` runtime. Generators, empty bodies, files built alone and",
+    "dialects without the two templates are left as they are: without `--monitor` the output does not change (the",
+    "goldens). Test: `the_monitor_measures_each_function_only_when_asked` (`tests/projects.rs`)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/emitter.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/02-architecture/emitter.md#the-standard-library",
    "type": "context",
    "title": "The emitter — The standard library",
@@ -1453,27 +1481,6 @@
     "absent key, in a dialect whose index throws) when `map_kind` knows the object is a map: a typed local or field, or",
     "what `static_type` says any other expression gives: a function, a static method of a class of the project or of",
     "the type definitions (`Paths.machine()[\"k\"]`), a member."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/02-architecture/emitter.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#values-and-declarations.216573",
-   "type": "context",
-   "title": "The emitter — Values and declarations",
-   "summary": "Values and declarations",
-   "body": [
-    "- `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.",
-    "- Named arguments: `named_args = \"native\"` uses `named_arg`; otherwise they are reordered by position.",
-    "- Reserved words escaped from `dialects/<language>/keywords.toml`.",
-    "- In a text enum an item without a value takes its own name."
    ],
    "agents": false,
    "sources": [
@@ -1517,6 +1524,29 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#values-and-declarations.f65fe9",
+   "type": "context",
+   "title": "The emitter — Values and declarations",
+   "summary": "reordered by its positional parameters in every dialect; a name it lacks is N0219.",
+   "body": [
+    "- `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.",
+    "- Named arguments: `named_args = \"native\"` uses `named_arg`; otherwise they are reordered by position.",
+    "- Named arguments to a callee declared in Nuclear (a function, `Module.method`, a method called without `this`) are",
+    "  reordered by its positional parameters in every dialect; a name it lacks is N0219.",
+    "- Reserved words escaped from `dialects/<language>/keywords.toml`.",
+    "- In a text enum an item without a value takes its own name."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/emitter.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/02-architecture/integrations.md#boundaries",
    "type": "context",
    "title": "Integrations and contracts — Boundaries",
@@ -1539,10 +1569,30 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/integrations.md#files-a-build-writes-for-other-tools",
+   "id": "doc:nuclearlang/docs/02-architecture/integrations.md#files-a-build-writes-for-other-tools.153544",
    "type": "context",
    "title": "Integrations and contracts — Files a build writes for other tools",
    "summary": "The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).",
+   "body": [
+    "The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).",
+    "The commands that write them (`nuclear build`, `nuclear contracts list|update`) are documented in `../tools/cli/`.",
+    "A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` (the `nuclear` command)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/integrations.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/02-architecture/integrations.md#files-a-build-writes-for-other-tools.c16c31",
+   "type": "context",
+   "title": "Integrations and contracts — Files a build writes for other tools",
+   "summary": "Files a build writes for other tools",
    "body": [
     "| File | Written by | Read by |",
     "|---|---|---|",
@@ -1552,10 +1602,7 @@
     "| `.nuclear/openapi.json` | `contract::write`, only for a `backend` project | any OpenAPI tool |",
     "| `contracts/<name>/` | `contract::sync`, at the start of `project::build` | the client project's own build |",
     "| `<output>/.nuclear/lines.json` (the line map) | the command line tools, from `project::line_map` (`LINE_MAP_FILE`) | the editors' debuggers |",
-    "",
-    "The formats are normative: `docs/07-reference/projects.md` §1.1 (the card and the map) and §1.2 (the contract).",
-    "The commands that write them (`nuclear build`, `nuclear contracts list|update`) are documented in `../tools/cli/`.",
-    "A mobile build writes its line map to `build/app/.dart_tool/nuclear_lines.json` (the `nuclear` command)."
+    "| `<output>/<sources>/nuclear/monitor.<ext>` (`Manifest.monitor`, `--monitor`) | `project::build`, from the dialect's `monitor_runtime` | the generated files that measure; it writes `<project>/.nuclear/monitor/report.json` (`nuclear monitor`, the editors, the MCP server) |"
    ],
    "agents": false,
    "sources": [
@@ -1598,7 +1645,7 @@
     "| Commands | `nuclear.toggleCodeMetricsDisplayed`, `nuclear.toggleCodeMetricsForArrowFunctions`, `nuclear.codeMetrics`, `nuclear.showCodeMetricsCodeLensInfo` |",
     "| `nuclear-lsp --version` | the version |",
     "| `nuclear-lsp --codemetrics-defaults` | every code metrics setting with its default, as JSON: the editors generate their settings pages from it |",
-    "| `nuclear-lsp --check-bundle` | loads every dialect next to the binary; exit code 1 on any diagnostic: the last step of an editor package |",
+    "| `nuclear-lsp --check-bundle` | loads every dialect next to the binary; exit code 1 on any error (warnings are printed): the last step of an editor package |",
     "",
     "The extensions talk to the server only through LSP and these requests."
    ],
@@ -1672,7 +1719,8 @@
     "The VS Code `.vsix` and the JetBrains zip include `nuclear-lsp`, every dialect of the tree in `server/dialects/`",
     "(each language with its frameworks and type definitions) and each platform's `platform.toml` in",
     "`server/platforms/`. Both packaging scripts end with `nuclear-lsp --check-bundle`, which loads each bundled dialect",
-    "and fails on any diagnostic (for example N0213). Zed runs the installed `~/.local/bin/nuclear-lsp`, which finds its",
+    "and fails on any error (for example N0213); a warning is printed and does not fail (a platform plugin a dialect",
+    "does not bring yet, N0305). Zed runs the installed `~/.local/bin/nuclear-lsp`, which finds its",
     "dialects through `nuclear_dialect::install_dir()`. Packaging and releasing belong to `../extensions/`: a change to",
     "the server is released with them."
    ],
@@ -3251,7 +3299,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#4-templates-4-2-variables.206137",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#4-templates-4-2-variables.5390bb",
    "type": "spec",
    "title": "NuclearLang dialects — 4.2 Variables",
    "summary": "The templates of `Result<E, T>` (nuclear-base.md §3.2) are optional: `result_runtime` (the `Result` type with `Ok` and `Err`, written once after the imports of the file that uses it), `result_ok`, `result_err`, `result_is_ok`, `result_is_err`, `result_value`, `result_error`, `result_propagate`…",
@@ -3263,7 +3311,13 @@
     "`.error()` that transform or observe). A dialect without them cannot transpile code that uses `Result`",
     "(`N0203`). `result_runtime` is optional: a target that uses a library does not define it (Dart: fpdart's",
     "`Either`, with `[types] Result = \"Either\"` and `[names] written`). Example of an own runtime:",
-    "`nuclearlang/dialects/typescript/templates/result.tpl`."
+    "`nuclearlang/dialects/typescript/templates/result.tpl`.",
+    "",
+    "The templates of the monitor (`--monitor`) are optional too: `monitor_body` (the body of a function or method",
+    "measured: `body`, `label` the Nuclear name, `Owner.name` for a method, `path` its `.nuc` file, `line`, `async`)",
+    "and `monitor_runtime` (the class `NuclearMonitor`, written once to `nuclear/monitor` of a project built with",
+    "`--monitor`; `app` the project's name). A dialect without them builds without measuring. A generator gets no",
+    "`monitor_body`. Example: `nuclearlang/dialects/typescript/templates/monitor.tpl`."
    ],
    "agents": false,
    "sources": [
@@ -3492,7 +3546,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-3-functions-function-shortcuts",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-3-functions-function-shortcuts.2e8546",
    "type": "spec",
    "title": "NuclearLang dialects — 5.3 `[functions]`: function shortcuts",
    "summary": "[functions] print = \"console.log\" # renames the function now = { template = \"new Date()\" } # replaces the whole call sleep = { template = \"await new Promise((r) => setTimeout(r, {{arg0}}))\" } The template receives `args` (the positional arguments), `arg0`, `arg1`... and `call_args` (every…",
@@ -3505,7 +3559,9 @@
     "```",
     "",
     "The template receives `args` (the positional arguments), `arg0`, `arg1`... and `call_args` (every argument, a named",
-    "one as the dialect's `named_arg` writes it: Python's `print(line, flush=True)`).",
+    "one as the dialect's `named_arg` writes it: Python's `print(line, flush=True)`), and `shown` (the positional arguments",
+    "as Nuclear prints them, through `[syntax] show_double`, `show_nullable` and `show_bool` when the dialect has them:",
+    "TypeScript's `print` is `console.log({{shown}})`).",
     "",
     "#### 5.3.1 `[call_site]`: where a call was written",
     "",
@@ -3519,8 +3575,24 @@
     "where the call is. Variables: `path` (the file in the project, without extension; empty outside a project),",
     "`line` (its line in the `.nuc`), `component` (the folder under `[architecture] scope`), `kind`, `module` (the",
     "declaration) and `method` (the function or method; a lambda takes its method's). It is not added if the call",
-    "already writes it or if `Log` is a name of the file. It is a literal: it costs nothing at run time.",
-    "",
+    "already writes it or if `Log` is a name of the file. It is a literal: it costs nothing at run time."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-3-functions-function-shortcuts.73fa66",
+   "type": "spec",
+   "title": "NuclearLang dialects — 5.3 `[functions]`: function shortcuts",
+   "summary": "usecase GetPageUseCase exec(page: int) Log.d(\"page loaded\") Log.d('page loaded', at: 'characters › usecase › GetPageUseCase.exec · components/characters/domain/usecases/get_page_usecase.nuc:3');",
+   "body": [
     "```nuclear",
     "usecase GetPageUseCase",
     "  exec(page: int)",
@@ -3810,29 +3882,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-8-library-base-the-standard-library.132f9c",
-   "type": "spec",
-   "title": "NuclearLang dialects — 5.8 `[library.<base>]`: the standard library",
-   "summary": "5.8 `[library.<base>]`: the standard library",
-   "body": [
-    "| Key | Use |",
-    "|---|---|",
-    "| bases | `string`, `list`, `map`, `set`, `int`, `double`, `number` (what `int` and `double` share), `boolean`, `bytes`, `datetime`, `duration`, `regex`, `match`, `error`, `any` (`toString`); objects `Math`, `Json`, `String`, `DateTime`, `Duration`, `Regex`, `Set`, `Bytes`, `Error` (`new` is the constructor) |",
-    "| variables | `recv` (the value before the dot), `args`, `arg0`..., `has_args`, `n`, `named.<name>` (a named argument; a literal `true`/`false` is a flag), `call_args` (every argument as the target writes a call), `argN_is.<base>` (the static type of an argument: `split` takes a string or a Regex), `elem` (the element type), `type_args`, and for the first expression lambda among the arguments `fn.param`, `fn.params`, `fn.p0`, `fn.p1`, `fn.body` |",
-    "| `helper` | A function the template calls, written once per file after the imports. `[functions]`, `[syntax]` and `[operators]` entries take `helper` too (`print` in Python, `non_null`, `coalesce_once`) |",
-    "| extensions | A member Nuclear does not define (`[library.string] tr` in the mobile platform) is the dialect's own: rendered the same way, its result type unknown |"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/07-reference/dialects.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-8-library-base-the-standard-library.295a89",
    "type": "spec",
    "title": "NuclearLang dialects — 5.8 `[library.<base>]`: the standard library",
@@ -3877,6 +3926,29 @@
     "without a type whose templates differ between bases is N0115; a property of a value without a type is the value's",
     "own and is written as it is. The platform contract does not list library members: every language dialect renders",
     "the whole vocabulary (`nuclear spec` prints it)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-8-library-base-the-standard-library.fd4a1b",
+   "type": "spec",
+   "title": "NuclearLang dialects — 5.8 `[library.<base>]`: the standard library",
+   "summary": "5.8 `[library.<base>]`: the standard library",
+   "body": [
+    "| Key | Use |",
+    "|---|---|",
+    "| bases | `string`, `list`, `map`, `set`, `int`, `double`, `number` (what `int` and `double` share), `boolean`, `bytes`, `datetime`, `duration`, `regex`, `match`, `error`, `any` (`toString`); objects `Math`, `Json`, `String`, `DateTime`, `Duration`, `Regex`, `Set`, `Bytes`, `Error` (`new` is the constructor) |",
+    "| variables | `recv` (the value before the dot), `args`, `arg0`..., `has_args`, `n`, `named.<name>` (a named argument; a literal `true`/`false` is a flag), `call_args` (every argument as the target writes a call), `argN_is.<base>` (the static type of an argument: `split` takes a string or a Regex), `elem` (the element type), `type_args`, and for the first expression lambda among the arguments `fn.param`, `fn.params`, `fn.p0`, `fn.p1`, `fn.body`, `fn.cond` (the body where a condition goes: a conditional expression keeps its parentheses) |",
+    "| `helper` | A function the template calls, written once per file after the imports. `[functions]`, `[syntax]` and `[operators]` entries take `helper` too (`print` in Python, `non_null`, `coalesce_once`) |",
+    "| extensions | A member Nuclear does not define (`[library.string] tr` in the mobile platform) is the dialect's own: rendered the same way, its result type unknown |"
    ],
    "agents": false,
    "sources": [

@@ -1,0 +1,39 @@
+// The service as its hosts call it: over HTTP and over its WebSocket, through its guards (the token of testEnv in
+// config.nuc, never the keyring's).
+TOKEN = { "X-Chat-Token": "test-chat-token" }
+
+tests Api
+  @test("the guards: no token or another is 401, a web page is 403, the token is 200")
+  guards() void
+    ws = registered(project(inject<ChatFiles>()))
+    app = appClient()
+    path = "/channels/${ws.id}"
+    expect((~app.get(path)).status == 401)
+    expect((~app.get(path, headers = { "X-Chat-Token": "not-the-token" })).status == 401)
+    expect((~app.get(path, headers = { "X-Chat-Token": "test-chat-token", "Origin": "https://example.com" })).status == 403)
+    listed = ~app.get(path, headers = TOKEN)
+    expect(listed.status == 200)
+
+  @test("the socket: refused without the token; with it, a said message is answered 201 and pushed to the workspace's topic")
+  overTheSocket() void
+    ws = registered(project(inject<ChatFiles>()))
+    app = appClient()
+    refused = ~app.socket("/ws")
+    expect(refused.isErr and refused.error.status == 401)
+    origin = ~app.socket("/ws", headers = { "X-Chat-Token": "test-chat-token", "Origin": "https://example.com" })
+    expect(origin.isErr and origin.error.status == 403)
+    socket = (~app.socket("/ws", headers = TOKEN)).value
+    ~socket.subscribe("chat.${ws.id}")
+    said = ~socket.request("POST", "/messages/${ws.id}/general", body = { "text": "hello, team" })
+    expect(said.status == 201)
+    expect(said.body["text"] == "hello, team")
+    pushed: SocketEvent? = null
+    for _ in 0..5
+      event = ~socket.next()
+      if event != null and event.data["type"] == "message"
+        pushed = event
+        break
+    expect(pushed != null)
+    expect(pushed!.topic == "chat.${ws.id}")
+    expect(pushed!.data["data"]["message"]["text"] == "hello, team")
+    ~socket.close()

@@ -1,0 +1,25 @@
+// The times of the chat: a message's hour, its day's divider, and whether two messages fall in the same minute.
+
+// The hour of a time (ms), `14:05`.
+clock(ms: int) string
+  t = DateTime.fromMillis(ms).toLocal()
+  "${t.hour}".padStart(2, "0") + ":" + "${t.minute}".padStart(2, "0")
+
+// The day of a time (ms), to tell two days apart: `2026-11-18`.
+dayOf(ms: int) string
+  t = DateTime.fromMillis(ms).toLocal()
+  "${t.year}-${t.month}-${t.day}"
+
+// A day's divider: Today, Yesterday, or `18 Nov`.
+dayLabel(ms: int, texts: Texts) string
+  now = DateTime.now().millis
+  if dayOf(ms) == dayOf(now)
+    return texts.get("today")
+  if dayOf(ms) == dayOf(now - 86_400_000)
+    return texts.get("yesterday")
+  t = DateTime.fromMillis(ms).toLocal()
+  "${t.day} ${texts.get("months").split(" ")[t.month - 1]}"
+
+// Whether two messages are shown as one group: the same author in the same minute.
+sameGroup(a: Message, b: Message) boolean
+  a.author == b.author and a.at ~/ 60_000 == b.at ~/ 60_000

@@ -22,17 +22,19 @@ folder above the binary's `bin/`).
 
 | Folder | Holds | From |
 |---|---|---|
-| `bin/` | `nuclear`, `nuclear-lsp`; `nuclear-builder.js` with its launchers `nuclear-builder` and `nuclear-builder.cmd` (when `extensions/vscode/out/nuclear-builder.js` is built) | the binaries given; the VS Code extension |
+| `bin/` | `nuclear`, `nuclear-lsp` | the binaries given |
 | `dialects/<language>/` | each language with its frameworks, type definitions and docs | `nuclearlang/dialects/` |
-| `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/` | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |
+| `platforms/<platform>/` | `platform.toml`, `docs/07-reference/`, `docs/08-guides/`, `examples/` (only their `.nuc` and `nuclear.toml`, without `build/` nor `expected/`: `nuclear help example/<name>`) | `nuclear-synapsis-framework/platforms/` (each folder with a `platform.toml`; `platforms/docs/` is not one) |
 | `generators/<platform>/` | `generators.toml`: what the code generator writes | `tools/code_generator/platforms/` |
 | `docs/08-guides/` | the framework's guides | `nuclear-synapsis-framework/docs/08-guides/` |
 | `kinds/` | the kind packages of the platforms | `platforms/<platform>/kinds/` |
 | `packages/` | every runtime package as it is: `synapsis`, `synapsis_genkit`, `synapsis-py`, `synapsis-nest`, `synapsis-web` | `platforms/<platform>/packages/` |
 | `tools/defs/` | the definitions generator `nuclear flutter add` runs (`bin`, `pubspec.yaml`, `pubspec.lock`, `python`, `typescript`) | `nuclearlang/tools/defs/` |
 | `agents/skills/` | the `nuclear` skill | `tools/cli/agent-files/skills/` |
-| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer`, `ai/tools/mcp` (the folders of the tree, so a relative path between them holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `prompts`, `data` (the knowledge base); the Developer's `config.nuc`, `components`, `config`, `defs`; the MCP server's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `defs`, `tests` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/`, `tools/mcp/` |
+| `ai/nuclear-graph-storage`, `ai/nuclear-agents/nuclear_developer`, `ai/tools/mcp` (the folders of the tree, so a relative path between them holds) | the code of the AI services: the graph's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `data` (the knowledge base); the roles of the software factory (`ai/nuclear-agents/roles`, whose skills are the graph's prompts); the Developer's `config.nuc`, `components`, `config`, `defs`; the MCP server's `.nuc` sources, `pyproject.toml`, `nuclear.toml`, `defs`, `tests` | `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/`, `tools/mcp/` |
 
+- A staged file (the binaries left out) that names the working tree or the staging machine's home stops the
+  staging (root rule 14): what an agent reads on the user's machine never points to this one.
 - A JavaScript package whose `main` is in `dist/` and is not built stops the staging (`npm run build` there, or
   `build-runtimes.sh`).
 - What a build or a test leaves inside a package is removed (`build`, `.dart_tool`, `node_modules`, `__pycache__`,
@@ -43,22 +45,22 @@ folder above the binary's `bin/`).
 ## From source (`install.sh`)
 
 1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.
-2. The pipeline's engine: `npm run builder` in `extensions/vscode` when its `node_modules` are there; else a note.
-3. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear`, `nuclear-lsp` and
-   `nuclear-builder` in `$PREFIX/bin`.
-4. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the
+2. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear` and `nuclear-lsp` in
+   `$PREFIX/bin`.
+3. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the
    set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself
-   (`extensions/tools/nuclear-builder`, Nuclear) is built and installed editable with uv as `nuclear-builder`, in
-   place of the node link. With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as
+   (`extensions/tools/nuclear-builder`, Nuclear: the set-up and the software factory's line) is built and installed
+   editable with uv as `nuclear-builder`; Nuclear Chat's command (`nuclear-chat/system`, Nuclear) the same way as
+   `nuclear-chat` (its service is built and started by the set-up's last step, `chat-service`). With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as
    `ai/` and its own `nuclear-builder setup`.
-5. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).
-6. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the
+4. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).
+5. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the
    PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the
    installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target
    `wasm32-wasip2` is there (`--no-zed`).
-7. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.
+6. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.
 
-`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph` and `nuclear-mcp`, the Zed extension, the installation, the skill,
+`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph`, `nuclear-mcp` and `nuclear-chat-system`, the Zed extension, the installation, the skill,
 the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
 
 ## The release
@@ -72,9 +74,10 @@ the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
 - `release/ai-runtime.sh`: the AI archive of this machine (ADR-installer-0003),
   `dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows) and its `.sha256`, unpacked as the
   installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer
-  installed from what `nuclear build` writes, pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the
+  installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the
   MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,
-  `nuclear-mcp`, `nuclear-developer`, and the knowledge base. Before packing it fails if a `.pth` points into the
+  `nuclear-mcp`, `nuclear-developer`, `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to
+  `ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base. Before packing it fails if a `.pth` points into the
   checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it
   (`installer/install.sh --ai`).
 - `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets
@@ -117,8 +120,8 @@ ADR-installer-0002.
 - With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without
   one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.
 - Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),
-  so `nuclear-builder setup` works before the set-up ran; its pipeline commands run the installation's
-  `bin/nuclear-builder.js` with node.
+  so `nuclear-builder setup` works before the set-up ran; its line's commands (`run`, `retry`, `ci`…) are the software
+  factory's, in Nuclear too: no node is needed.
 - The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.
 - On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`
   (`systemctl --user restart nuclear-developer` after a change to its code;

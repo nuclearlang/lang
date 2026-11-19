@@ -1,0 +1,5 @@
+// Giphy's search (v1): the key is the user's, from the keyring; the words leave the machine.
+@repository(path = "gifs/search", connection = "giphy")
+repository GiphyRepository
+  @get
+  search(q: string, apiKey: string, limit: int = 12, rating: string = "pg-13") Result<Error, GiphyPage>

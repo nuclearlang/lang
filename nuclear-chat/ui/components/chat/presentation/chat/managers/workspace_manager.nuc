@@ -1,0 +1,12 @@
+// The workspace the page shows, read once when the screen opens.
+@stateModel(WorkspaceState)
+statemanager WorkspaceManager
+  (members: MembersComponent)
+
+  @state(WorkspaceState.loading)
+  loading()
+
+  @before(loading)
+  @state(WorkspaceState.ready)
+  load(workspace: string) Result<NuclearChatError, Workspace>
+    ~members.getWorkspace(workspace)

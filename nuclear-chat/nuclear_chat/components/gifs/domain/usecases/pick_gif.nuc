@@ -1,0 +1,4 @@
+// The GIF a member asked for at the end of an answer (a tag of the pack), by their personality (null: none this time).
+usecase PickGif(choice: GifChoice)
+  exec(member: Member, tag: string, seed: string, answersGif: boolean) Result<Error, Gif?>
+    Ok(choice.pick(member, tag, seed, answersGif))

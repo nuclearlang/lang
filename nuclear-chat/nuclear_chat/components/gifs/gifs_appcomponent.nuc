@@ -1,0 +1,9 @@
+// What the rest of the app sees of the GIFs: the pack, its tags, the picker's search, a member's GIF by their
+// personality (at a moment, or the tag they asked for), the project's one answer about a service.
+appcomponent GifsAppComponent
+  pack() = PackGifs.exec
+  search() = SearchGifs.exec
+  choose() = ChooseGif.exec
+  pick() = PickGif.exec
+  tags() = GifTags.exec
+  keepConsent() = KeepConsent.exec

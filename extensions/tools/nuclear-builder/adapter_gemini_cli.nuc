@@ -1,0 +1,61 @@
+use json
+use pathlib{ Path }
+
+// The Gemini CLI adapter (`gemini -p`). UNTESTED against a real Gemini CLI: it is not installed on the machine this
+// was written on; the flags are those of its documented headless mode (`-p`, `--output-format stream-json`,
+// `--model`, `--approval-mode auto_edit`, `--allowed-mcp-server-names`). The role is rendered as a `GEMINI.md` in
+// the run's temporary folder and given at the head of the prompt; the Nuclear MCP server and the Builder's are in a settings file there
+// (`GEMINI_CLI_SYSTEM_SETTINGS_PATH`). Gemini CLI brings its own login and does not report a cost: its tokens are
+// events, its cost 0.
+
+renderGemini(role: Role, work: Work, at: Path) <string, string>
+  at.joinpath("GEMINI.md").writeText("# The ${role.title} of the software factory\n\n${role.text()}\n")
+  settings = at.joinpath("settings.json")
+  settings.writeText(json.dumps({ "mcpServers": mcpServers(work.mcpCommand, work.root), "tools": { "exclude": ["run_shell_command"] } }, indent = 2))
+  env = toolEnv()
+  env["GEMINI_CLI_SYSTEM_SETTINGS_PATH"] = "${settings}"
+  env
+
+geminiArgs(prompt: string, work: Work) string[]
+  args = ["gemini", "-p", prompt, "--output-format", "stream-json", "--approval-mode", "auto_edit", "--allowed-mcp-server-names", "nuclear", "nuclear_builder"]
+  if work.model.length > 0
+    args.addAll(["--model", work.model])
+  args
+
+// One line of `--output-format stream-json`: a message, a tool call and its result, the end with its stats.
+geminiLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, any>) void
+  kind = "${ev["type"] ?? ""}"
+  if kind == "message" and ev["role"] == "assistant"
+    text = "${ev["content"] ?? ""}"
+    found["text"] = ev["delta"] == true ? "${found["text"] ?? ""}${text}" : text
+    emit({ "type": "text", "text": text })
+  else if kind == "tool_use"
+    emit({ "type": "tool", "id": ev["tool_id"], "tool": "${ev["tool_name"] ?? ""}", "input": json.dumps(ev["parameters"] ?? {}).substring(0, 4000) })
+  else if kind == "tool_result"
+    emit({ "type": "tool-result", "id": ev["tool_id"], "ok": ev["status"] == "success", "text": "${ev["output"] ?? ""}".substring(0, 20000) })
+  else if kind == "result"
+    found["failed"] = ev["status"] == "error"
+    emit({ "type": "tokens", "usage": ev["stats"] ?? {} })
+  else if kind == "error"
+    found["failed"] = true
+    found["text"] = "${ev["message"] ?? json.dumps(ev)}"
+
+geminiCliAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  at = renderDir("gemini-cli")
+  events: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  try
+    env = renderGemini(role, work, at)
+    prompt = "${at.joinpath("GEMINI.md").readText()}\n${stationPrompt(role, station, work, false)}"
+    ran = streamCommand(geminiArgs(prompt, work), work.root, env, (line) => onGeminiLine(line, say, found), work.timeoutMs)
+    agentOutcome("Gemini CLI", ran, found, events, work)
+  finally
+    dropRenderDir(at)
+
+onGeminiLine(line: string, emit: (e: <string, any>) => void, found: <string, any>) void
+  ev = jsonLine(line)
+  if ev != null
+    geminiLine(ev!, emit, found)

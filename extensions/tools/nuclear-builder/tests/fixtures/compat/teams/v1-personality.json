@@ -1,0 +1,116 @@
+{
+  "id": "day-shift",
+  "name": "Day shift",
+  "description": "",
+  "logo": null,
+  "techLead": "architect",
+  "updated": 1763000000000,
+  "budgetUsd": 5,
+  "roles": {
+    "analyst": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "ana-001",
+      "skills": [
+        "answer-a-question",
+        "write-acceptance-criteria"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "name": "Askia Q",
+      "personality": {
+        "gifs": "sometimes",
+        "on": [
+          "failure"
+        ],
+        "note": ""
+      }
+    },
+    "architect": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "arc-001",
+      "skills": [
+        "draw-a-diagram"
+      ],
+      "extraSkills": [],
+      "instructions": "Prefer small components.",
+      "behaviour": {},
+      "tasks": []
+    },
+    "developer": {
+      "kind": "local",
+      "provider": "nuclear-developer",
+      "model": "qwen2.5-coder:3b",
+      "employee": "dev-001",
+      "skills": [
+        "tdd-in-nuclear",
+        "write-tests"
+      ],
+      "extraSkills": [
+        {
+          "name": "Our naming",
+          "text": "Name a test after what it proves."
+        }
+      ],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "name": "Neo",
+      "personality": {
+        "gifs": "often",
+        "on": [
+          "failure",
+          "success"
+        ],
+        "note": "Dry humour.",
+        "temperament": "grumpy"
+      }
+    },
+    "qa": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "qa-001",
+      "skills": [
+        "review-security"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [
+        {
+          "id": "review",
+          "title": "Review the security of the new files",
+          "station": "quality",
+          "on": true
+        }
+      ],
+      "personality": {
+        "gifs": "never",
+        "on": [
+          "question"
+        ],
+        "note": "",
+        "temperament": "shy"
+      }
+    },
+    "delivery": {
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "employee": "del-001",
+      "skills": [
+        "write-the-pull-request"
+      ],
+      "extraSkills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": []
+    }
+  }
+}

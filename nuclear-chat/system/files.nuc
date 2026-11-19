@@ -1,0 +1,46 @@
+use os
+use tempfile
+use pathlib{ Path }
+
+// The files of a project's chat (spec 013, design.md "On disk"): lines appended to a file, a file read as its
+// lines, a file replaced whole (a temporary file beside it, then renamed, so a crash never leaves half of it). What
+// the lines say is the chat's; this only reads and writes them, in UTF-8.
+ChatFiles()
+  // Appends one line (it must hold no line break).
+  appendLine(file: string, line: string) void
+    if "\n" in line
+      throw ValueError("a line of the chat holds no line break")
+    Path(file).parent.mkdir(parents = true, existOk = true)
+    f = Path(file).open("a", encoding = "utf-8")
+    f.write(line + "\n")
+    f.close()
+
+  // The lines of a file, empty ones left out; none when it does not exist.
+  readLines(file: string) string[]
+    if not Path(file).isFile()
+      return []
+    text: string = Path(file).readText(encoding = "utf-8")
+    text.split("\n").map((l) => l.trim()).filter((l: string) => not l.isEmpty)
+
+  // The text of a file, or null when it does not exist.
+  readText(file: string) string?
+    Path(file).isFile() ? Path(file).readText(encoding = "utf-8") : null
+
+  // Replaces a file whole.
+  writeText(file: string, text: string) void
+    Path(file).parent.mkdir(parents = true, existOk = true)
+    part = Path("${file}.part")
+    part.writeText(text, encoding = "utf-8")
+    os.replace(part, file)
+
+  // Whether a folder exists (a project's root).
+  isFolder(path: string) boolean
+    Path(path).isDir()
+
+  // A new empty folder in the system's temporary place (a test's project, a scratch).
+  scratchFolder(prefix: string = "nuclear-chat-") string
+    tempfile.mkdtemp(prefix = prefix)
+
+  // A path made absolute and without `..` (a project's root as the chat keeps it).
+  absolute(path: string) string
+    "${Path(path).expanduser().resolve()}"

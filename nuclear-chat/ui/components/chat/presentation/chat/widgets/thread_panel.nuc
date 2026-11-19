@@ -1,0 +1,38 @@
+// The thread beside the channel: the message that opened it, its replies, who is typing in it, its questions and a
+// composer that replies in it (with the GIF picker when it was opened from here).
+stateless ThreadPanel(ws: Workspace, channels: Channel[], texts: Texts, picker: Element?, onClose: () => void, onGif: (q: string) => void, onChannel: (id: string) => void)
+  build() Element
+    ThreadStateBuilder(
+      ready = (t: Thread) =>
+        channel = channels.find((c) => c.id == t.channel)
+        aside(
+          className = "thread",
+          children = [
+            header(
+              className = "thread-header",
+              children = [
+                strong(children = texts.get("thread")),
+                span(className = "thread-channel", children = "#${channel?.name ?? t.channel}"),
+                button(className = "close", title = texts.get("close"), onClick = () => onClose(), children = span(className = "icon icon-close")),
+              ],
+            ),
+            div(
+              className = "scroll",
+              children = div(
+                className = "rows",
+                children = [
+                  MessageRow(key = t.root.id, message = t.root, ws = ws, texts = texts, first = true, inThread = true, onThread = (m) => {}, onChannel = onChannel),
+                  div(className = "thread-count", children = span(children = t.replies.isEmpty ? texts.get("threadEmpty") : (t.replies.length == 1 ? texts.get("replies.one") : texts.format("replies.many", { "count": "${t.replies.length}" })))),
+                  MessageList(messages = t.replies, ws = ws, texts = texts, inThread = true, onThread = (m) => {}, onChannel = onChannel, after = t.root.at),
+                  Streaming(ws = ws, channel = t.channel, thread = t.root.id, texts = texts),
+                ],
+              ),
+            ),
+            Questions(ws = ws, channel = t.channel, thread = t.root.id, texts = texts),
+            Typing(ws = ws, channel = t.channel, thread = t.root.id, texts = texts),
+            div(className = "composer-area", children = [picker, Composer(key = "thread-${t.root.id}", ws = ws, channels = channels, texts = texts, placeholder = texts.get("placeholder.thread"), thread = t.root.id, onGif = onGif)]),
+          ],
+        )
+      ,
+      orElse = () => null,
+    )

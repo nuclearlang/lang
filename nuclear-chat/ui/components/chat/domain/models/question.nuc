@@ -1,0 +1,9 @@
+// A member's question waiting for the user (a responder's `ask`: a gate, the spending, QA's plan), answered yes or
+// no from the chat.
+Question
+  id: string
+  member: string
+  channel: string
+  thread: string = ""
+  kind: string = ""
+  question: string

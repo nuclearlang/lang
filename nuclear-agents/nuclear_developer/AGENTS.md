@@ -15,7 +15,8 @@ The platform's rules are the root [`AGENTS.md`](../../AGENTS.md); the agents' in
 - **Models:** two, on Ollama: `qwen2.5-coder:3b` (the coder) and `gemma4:e2b` (the default); `CODER_MODEL`,
   `ASSISTANT_MODEL`, `OLLAMA_URL`, `CONTEXT_TOKENS`.
 - **Knowledge:** the [Smart Graph](../../nuclear-graph-storage/AGENTS.md) on `127.0.0.1:7878`, through its client
-  package (`nuclear_graph`, typed by `defs/`). The prompts are the graph's files (`prompts/agents/<step>.md`).
+  package (`nuclear_graph`, typed by `defs/`). The prompts are the skills of the roles
+  ([`../roles/`](../roles/README.md), `skills/step-<step>.md`), served by the graph.
 - **Server:** `127.0.0.1:7879`, `POST /developer/<agent>`.
 - **Evaluation:** `eval/run.py` (Python), over `eval/tasks.toml`.
 
@@ -41,7 +42,8 @@ In this folder:
 - `components/developer/domain/models/`, `components/developer/api/developer_controller.nuc`: the requests and
   answers; the routes.
 - `defs/`: the type definitions of the graph's package.
-- `test/`: the project's tests, in Nuclear. `eval/`: the evaluation (`run.py`, `tasks.toml`, `results/`).
+- `test/`: the project's tests, in Nuclear (`roles_test.nuc`: the roles' folders). `eval/`: the evaluation
+  (`run.py`, `tasks.toml`, `results/`).
 - `build/`, `.nuclear/`: generated. `docs/`: the context documents (the table below).
 
 <!-- nuclearlang -->
@@ -64,7 +66,8 @@ This project is written in NuclearLang (`.nuc`), dialect `fastapi`. Its syntax i
 - **What an agent knows is a row of the knowledge base** (`nuclear-graph-storage/data/assets/`), never a text
   inside the code or a prompt: a new rule, pitfall, limit or procedure is a row there
   (`nuclear-graph knowledge build`, `check`, `ingest`).
-- **The prompts are files** of the graph (`nuclear-graph-storage/prompts/`), never strings in the code.
+- **The prompts are files**: the skills of the roles (`nuclear-agents/roles/<role>/skills/`, ADR-developer-0002),
+  never strings in the code. `test/roles_test.nuc` keeps every role folder complete.
 - **The agents write only Nuclear**: they name a platform (`backend`, `mobile`, `web`), never a dialect, and read
   only the graph's rows for agents.
 - **A failure of the evaluation is fixed with a general rule or more knowledge**, never with the answer of its
@@ -87,7 +90,7 @@ This project is written in NuclearLang (`.nuc`), dialect `fastapi`. Its syntax i
 | choose a model or a profile, or need how another model measured | [docs/02-architecture/models.md](docs/02-architecture/models.md) |
 | ask why something was decided | [docs/03-adr/README.md](docs/03-adr/README.md) |
 | work on the LoRA of the coder | [docs/04-specs/README.md](docs/04-specs/README.md) |
-| test a change, or need how the agents are evaluated and where they stand | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
+| test a change, or need how the agents are evaluated and where they stand; change a role's files (`../roles/`) | [docs/05-standards/testing.md](docs/05-standards/testing.md) |
 | need what a past round changed and measured, or record a new one | [docs/05-standards/evaluation-rounds.md](docs/05-standards/evaluation-rounds.md) |
 | install, start or configure the Developer, or see it fail | [docs/06-runbooks/run.md](docs/06-runbooks/run.md) |
 | need what a user reads: what a task goes through, how to call it, what it needs, its limits | [docs/08-guides/README.md](docs/08-guides/README.md) |

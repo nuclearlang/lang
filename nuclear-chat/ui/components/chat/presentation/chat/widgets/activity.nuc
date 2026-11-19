@@ -1,0 +1,60 @@
+// Who is at work on an answer in this channel (or this thread): `Ada is typing`, `Ada is using read_run`.
+stateless Typing(ws: Workspace, channel: string, thread: string, texts: Texts)
+  build() Element
+    ActivityStateBuilder(
+      ready = (all: Activity[]) =>
+        here = all.filter((a) => a.channel == channel and (thread == "" or a.thread == thread))
+        div(className = "typing", children = here.length > 0 ? [span(className = "dots", children = [span(), span(), span()]), span(children = typingText(ws, here, texts))] : [])
+      ,
+      orElse = () => div(className = "typing"),
+    )
+
+typingText(ws: Workspace, here: Activity[], texts: Texts) string
+  names = here.map((a) => authorName(ws, a.member, texts).split(" ").first)
+  if here.length == 1 and here.first.tool != ""
+    texts.format("tool", { "name": names.first, "tool": here.first.tool })
+  else if here.length == 1 and memberOf(ws, here.first.member)?.brain.kind == "local"
+    // a local model answers slower, the first time slower still while it loads
+    texts.format("typing.local", { "name": names.first, "model": memberOf(ws, here.first.member)!.brain.model })
+  else if here.length == 1
+    texts.format("typing.one", { "name": names.first })
+  else if here.length == 2
+    texts.format("typing.two", { "a": names.first, "b": names.last })
+  else
+    texts.get("typing.many")
+
+// The members' questions waiting in this channel (or this thread), each with its answers as buttons.
+stateless Questions(ws: Workspace, channel: string, thread: string, texts: Texts)
+  build() Element
+    QuestionsStateBuilder(
+      ready = (all: Question[]) =>
+        here = all.filter((q) => q.channel == channel and (thread == "" or q.thread == thread))
+        div(className = "questions", children = here.map((q) => QuestionCard(key = q.id, question = q, ws = ws, texts = texts)))
+      ,
+      orElse = () => div(className = "questions"),
+    )
+
+// One member's question: who asks, what, and yes or no.
+stateless QuestionCard(question: Question, ws: Workspace, texts: Texts)
+  build() Element
+    q = question
+    div(
+      className = "question ${q.kind}",
+      children = [
+        Avatar(member = memberOf(ws, q.member), author = q.member, size = "small"),
+        div(
+          className = "question-body",
+          children = [
+            div(className = "question-head", children = [strong(children = authorName(ws, q.member, texts)), span(className = "chip ${q.kind == "spending" ? "paid" : "role"}", children = texts.get(q.kind == "spending" ? "question.spending" : "question.gate"))]),
+            Markdown(text = q.question, onChannel = (id) => {}),
+            div(
+              className = "actions",
+              children = [
+                button(className = "action primary", onClick = () => QuestionsManager.answer(q, "yes"), children = texts.get("question.yes")),
+                button(className = "action", onClick = () => QuestionsManager.answer(q, "no"), children = texts.get("question.no")),
+              ],
+            ),
+          ],
+        ),
+      ],
+    )

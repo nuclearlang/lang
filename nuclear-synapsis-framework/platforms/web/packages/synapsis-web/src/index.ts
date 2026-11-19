@@ -1,7 +1,11 @@
 export { Result, Ok, Err } from './result.js';
 export { AppError, HttpError, NotFound } from './errors.js';
 export { inject, register, replace, isRegistered, resetInjector } from './inject.js';
-export { AppConfig, ComponentConfig, Connection, Global, Http, HttpInterceptor } from './config.js';
+export { AppConfig, ComponentConfig, Connection, Global, Http, HttpInterceptor, Transport } from './config.js';
+export { WebSocket, Stream, Frames, BridgeTransport } from './sockets.js';
+export type { Bridge, Frame, WebSocketOptions } from './sockets.js';
+export { mountApp } from './embed.js';
+export type { Host } from './embed.js';
 export type { HttpOptions, HttpRequest, HttpResponse } from './config.js';
 export { Synapsis } from './app.js';
 export { Repository, Decode, Cache, MemoryCache, HttpMethod } from './http.js';

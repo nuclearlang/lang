@@ -2,6 +2,7 @@
 // navigation by screen (`goTo(CharacterDetailScreen, { id })`) from anywhere in a view.
 import { createElement, ReactElement } from 'react';
 import { createBrowserRouter, createMemoryRouter, RouteObject, RouterProvider, useLocation, useNavigate, useParams } from 'react-router';
+import { Synapsis } from './app.js';
 import { inject } from './inject.js';
 import { Guard, Guards, SessionManager } from './session.js';
 
@@ -25,8 +26,9 @@ export interface AppRoute<P> {
 const paths = new Map<Screen<any>, string>(); // eslint-disable-line @typescript-eslint/no-explicit-any
 let navigateTo: ((to: string | number) => void) | null = null;
 
-/** A router with every screen of the app; `initial` is the first path (tests: a memory router). */
+/** A router with every screen of the app; `initial` is the first path (tests, and a mounted app: a memory router). */
 export function buildRouter(routes: AnyRoute[], options: { initial?: string; memory?: boolean } = {}) {
+  options = { memory: Synapsis.embedded, initial: Synapsis.path, ...options };
   paths.clear();
   const objects: RouteObject[] = routes.map((r) => {
     paths.set(r.screen, r.path);
@@ -49,7 +51,9 @@ function RouteElement(props: { route: AnyRoute }): ReactElement | null {
   if (r.loggedIn !== undefined && Guards.check({ session: true }) !== null) {
     return createElement(Redirect, { to: r.loggedIn });
   }
-  const screenProps = r.build ? r.build(params) : {};
+  // the path's parameters, and the query's for the screen's other parameters (`/docs/a?section=x`)
+  const query = Object.fromEntries(new URLSearchParams(location.search));
+  const screenProps = r.build ? r.build({ ...query, ...params }) : {};
   if (r.acl) {
     return createElement(AclGate, { key, rule: r.acl, denied: r.denied ?? '/', screen: r.screen, props: screenProps });
   }

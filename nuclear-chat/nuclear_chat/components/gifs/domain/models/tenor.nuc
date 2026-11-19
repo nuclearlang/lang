@@ -1,0 +1,8 @@
+// Tenor, as the API answers it.
+Tenor
+  id: string
+  @key("content_description")
+  contentDescription: string = ""
+  @key("media_formats")
+  mediaFormats: TenorMediaFormats
+  title: string = ""

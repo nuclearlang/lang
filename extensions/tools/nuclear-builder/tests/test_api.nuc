@@ -1,0 +1,138 @@
+use os
+use json
+use httpx
+use pathlib{ Path }
+
+// The API adapters through the factory's loop, with the HTTP of each provider stubbed (no paid call) and a fake
+// Nuclear MCP server on stdio: the tools reach the model, its calls reach the server, the cost is counted and the
+// budget holds, the key goes only in its header.
+
+FAKE_MCP = """#!/bin/sh
+# a fake MCP server: each request (not a notification) gets the next line of $MCP_OUT
+n=0
+while IFS= read -r line; do
+  echo "$line" >> "$MCP_LOG"
+  case "$line" in *notifications/*) continue ;; esac
+  n=$((n + 1))
+  sed -n "$n"p "$MCP_OUT"
+done
+"""
+
+// the Builder's MCP server beside it: hello, and no tools
+FAKE_BUILDER = """#!/bin/sh
+while IFS= read -r line; do
+  case "$line" in *notifications/*) continue ;; esac
+  id=\$(echo "$line" | sed -nE 's/.*"id": *([0-9]+).*/\\1/p')
+  case "$line" in *tools/list*) echo '{"jsonrpc": "2.0", "id": '"\$id"', "result": {"tools": []}}' ;; *) echo '{"jsonrpc": "2.0", "id": '"\$id"', "result": {}}' ;; esac
+done
+"""
+
+fakeMcp(tmpPath: Path, monkeypatch: any) Path
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  builder = bin.joinpath("fake-builder")
+  builder.writeText(FAKE_BUILDER)
+  builder.chmod(493)
+  monkeypatch.setenv("NUCLEAR_BUILDER_COMMAND", "fake-builder")
+  tool = bin.joinpath("fake-mcp")
+  tool.writeText(FAKE_MCP)
+  tool.chmod(493)
+  answers = [{ "jsonrpc": "2.0", "id": 1, "result": { "protocolVersion": "2025-06-18", "capabilities": {} as <string, any> } }, { "jsonrpc": "2.0", "id": 2, "result": { "tools": [{ "name": "nuclear_check", "description": "Checks a project", "inputSchema": { "type": "object", "properties": { "path": { "type": "string" } }, "additionalProperties": false, "$schema": "x" } }] } }, { "jsonrpc": "2.0", "id": 3, "result": { "content": [{ "type": "text", "text": "ok: 0 problems" }] } }]
+  out = tmpPath.joinpath("mcp.jsonl")
+  out.writeText(answers.map((a) => json.dumps(a)).join("\n") + "\n")
+  log = tmpPath.joinpath("mcp.log")
+  monkeypatch.setenv("MCP_OUT", "${out}")
+  monkeypatch.setenv("MCP_LOG", "${log}")
+  monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
+  log
+
+// A provider that first calls `nuclear_check`, then answers with the document: `first` and `then` are its bodies.
+provider(first: <string, any>, then: <string, any>, seen: <string, any>[]) httpx.MockTransport
+  answer = (request: httpx.Request) =>
+    seen.add({ "url": "${request.url}", "headers": dict(request.headers), "body": json.loads(request.content) })
+    httpx.Response(200, json = seen.length == 1 ? first : then)
+  httpx.MockTransport(answer)
+
+apiWork(tmpPath: Path, model: string, transport: httpx.MockTransport, budget: double = 1.0) Work
+  root = tmpPath.joinpath("app")
+  root.joinpath("specs", "s1").mkdir(parents = true, existOk = true)
+  Work("${root}", "${root.joinpath("specs", "s1")}", "Count the books", {}, ["analysis.md"], model, budget, "fake-mcp", inputs = { "transport": transport, "key": "sk-test-key", "prices": { "openai/gpt-test": [1.0, 2.0], "google/gemini-test": [1.0, 2.0] } })
+
+theRole() Role
+  Role("analyst", "Analyst", "You find what the client needs.", {}, {}, [], ["analysis"])
+
+testAnthropicCallsTheMcpToolsAndIsPricedFromItsTokens(tmpPath: Path, monkeypatch: any) void
+  log = fakeMcp(tmpPath, monkeypatch)
+  seen: <string, any>[] = []
+  first = { "content": [{ "type": "tool_use", "id": "tu1", "name": "nuclear_check", "input": { "path": "." } }], "stop_reason": "tool_use", "usage": { "input_tokens": 1000, "output_tokens": 100 } }
+  then = { "content": [{ "type": "text", "text": "--- document: analysis.md ---\n# Analysis\nthe needs" }], "stop_reason": "end_turn", "usage": { "input_tokens": 2000, "output_tokens": 200 } }
+  events: <string, any>[] = []
+  out = runAdapter(anthropicAdapter, theRole(), "analysis", apiWork(tmpPath, "claude-haiku-5-5", provider(first, then, seen)), (e) => events.add(e))
+  expect(out.ok, out.error)
+  expect(out.documents == { "analysis.md": "# Analysis\nthe needs\n" })
+  // 3000 tokens in at 0.10 USD and 300 out at 0.50 USD per million
+  expect((out.costUsd - 0.00045).abs() < 0.0000001)
+  headers: <string, string> = seen[0]["headers"]!
+  expect(headers["x-api-key"] == "sk-test-key" and headers["anthropic-version"] == "2026-10-21")
+  body: <string, any> = seen[1]["body"]!
+  expect(body["system"] == theRole().text() and (body["tools"] as <string, any>[])[0]["name"] == "nuclear_check")
+  messages: <string, any>[] = body["messages"]!
+  expect(messages[2]["content"]![0] == { "type": "tool_result", "tool_use_id": "tu1", "content": "ok: 0 problems", "is_error": false })
+  said = log.readText()
+  expect("\"initialize\"" in said and "notifications/initialized" in said and "\"tools/call\"" in said and "\"path\": \".\"" in said)
+  expect(events.map((e) => e["type"]) == ["cost", "tool", "tool-result", "cost", "text"])
+
+testOpenAIAndOpenRouterSpeakChatCompletionsAndOpenRouterSaysItsCost(tmpPath: Path, monkeypatch: any) void
+  fakeMcp(tmpPath, monkeypatch)
+  seen: <string, any>[] = []
+  first = { "choices": [{ "message": { "content": null, "tool_calls": [{ "id": "c1", "type": "function", "function": { "name": "nuclear_check", "arguments": "{\"path\": \".\"}" } }] } }], "usage": { "prompt_tokens": 10, "completion_tokens": 5, "cost": 0.01 } }
+  then = { "choices": [{ "message": { "content": "# Analysis" } }], "usage": { "prompt_tokens": 20, "completion_tokens": 5, "cost": 0.02 } }
+  out = runAdapter(openRouterAdapter, theRole(), "analysis", apiWork(tmpPath, "some/model", provider(first, then, seen)), (e) => null)
+  expect(out.ok, out.error)
+  expect((out.costUsd - 0.03).abs() < 0.0000001 and out.documents == { "analysis.md": "# Analysis\n" })
+  expect("${seen[0]["url"]}" == OPENROUTER_URL and (seen[0]["body"] as <string, any>)["usage"] == { "include": true })
+  headers: <string, string> = seen[0]["headers"]!
+  expect(headers["authorization"] == "Bearer sk-test-key")
+  messages: <string, any>[] = (seen[1]["body"] as <string, any>)["messages"]!
+  expect(messages[0]["role"] == "system" and messages[3] == { "role": "tool", "tool_call_id": "c1", "content": "ok: 0 problems" })
+  fakeMcpAgain(tmpPath, monkeypatch)
+  seen.clear()
+  openai = runAdapter(openAIAdapter, theRole(), "analysis", apiWork(tmpPath, "gpt-test", provider(first, then, seen)), (e) => null)
+  // OpenAI's cost is its tokens at the project's price (30 in at 1 USD, 10 out at 2 USD per million), never a cost it says
+  expect(openai.ok and "${seen[0]["url"]}" == OPENAI_URL and (openai.costUsd - 0.00005).abs() < 0.0000001)
+
+fakeMcpAgain(tmpPath: Path, monkeypatch: any) void
+  tmpPath.joinpath("bin", "fake-mcp").unlink()
+  tmpPath.joinpath("bin", "fake-builder").unlink()
+  tmpPath.joinpath("bin").rmdir()
+  fakeMcp(tmpPath, monkeypatch)
+
+testGoogleSpeaksGenerateContentWithCleanSchemas(tmpPath: Path, monkeypatch: any) void
+  fakeMcp(tmpPath, monkeypatch)
+  seen: <string, any>[] = []
+  first = { "candidates": [{ "content": { "role": "model", "parts": [{ "functionCall": { "name": "nuclear_check", "args": { "path": "." } } }] } }], "usageMetadata": { "promptTokenCount": 10, "candidatesTokenCount": 5 } }
+  then = { "candidates": [{ "content": { "role": "model", "parts": [{ "text": "# Analysis" }] } }], "usageMetadata": { "promptTokenCount": 10, "candidatesTokenCount": 5 } }
+  out = runAdapter(googleAdapter, theRole(), "analysis", apiWork(tmpPath, "gemini-test", provider(first, then, seen)), (e) => null)
+  expect(out.ok, out.error)
+  expect("${seen[0]["url"]}" == "${GOOGLE_URL}/gemini-test:generateContent")
+  headers: <string, string> = seen[0]["headers"]!
+  expect(headers["x-goog-api-key"] == "sk-test-key")
+  tools: <string, any>[] = (seen[0]["body"] as <string, any>)["tools"]!
+  expect(tools[0]["functionDeclarations"]![0]["parameters"] == { "type": "object", "properties": { "path": { "type": "string" } } })
+  contents: <string, any>[] = (seen[1]["body"] as <string, any>)["contents"]!
+  expect(contents[2]["parts"]![0] == { "functionResponse": { "name": "nuclear_check", "response": { "result": "ok: 0 problems" } } })
+
+testTheBudgetStopsTheLoopAndAModelWithoutAPriceIsRefused(tmpPath: Path, monkeypatch: any) void
+  fakeMcp(tmpPath, monkeypatch)
+  seen: <string, any>[] = []
+  costly = { "content": [{ "type": "tool_use", "id": "tu1", "name": "nuclear_check", "input": {} as <string, any> }], "usage": { "input_tokens": 1_000_000, "output_tokens": 0 } }
+  out = runAdapter(anthropicAdapter, theRole(), "analysis", apiWork(tmpPath, "claude-haiku-5-5", provider(costly, costly, seen), 0.05), (e) => null)
+  expect(not out.ok and "spent its budget" in out.error and seen.length == 1)
+  unknown = runAdapter(openAIAdapter, theRole(), "analysis", apiWork(tmpPath, "gpt-unknown", provider(costly, costly, seen)), (e) => null)
+  expect(not unknown.ok and "no price for openai/gpt-unknown" in unknown.error and seen.length == 1)
+
+testAProviderErrorNeverCarriesTheKey(tmpPath: Path, monkeypatch: any) void
+  fakeMcp(tmpPath, monkeypatch)
+  refuse = (request: httpx.Request) => httpx.Response(401, text = "invalid x-api-key sk-test-key")
+  out = runAdapter(anthropicAdapter, theRole(), "analysis", apiWork(tmpPath, "claude-haiku-5-5", httpx.MockTransport(refuse)), (e) => null)
+  expect(not out.ok and "anthropic answered 401" in out.error and not ("sk-test-key" in out.error))

@@ -16,9 +16,14 @@ import { execFile, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { lang, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
+import { MOBILE_DEVICE } from './l10n';
+import { deviceSettings } from './settings';
 
 export const DEVICE_ID = 'synapsis';
-const DEVICE_LABEL = 'Synapsis device';
+const DEVICE_LABEL = 'Synapsis device'; // Flutter's custom device: its label stays English
+/** The name of the device's panel `n`. */
+const deviceTitle = (n: number) => l10n.t('Synapsis device {0}', n);
 const STATE_KEY = 'nuclear.device.view';
 const WIDTHS_KEY = 'nuclear.device.widths'; // panel width the user left, per screen width
 // first width of the panel: a share of the screen, between a laptop's and about a real phone on a 4K screen
@@ -26,7 +31,6 @@ const MIN_WIDTH = 340;
 const MAX_WIDTH = 540;
 const defaultWidth = (screen: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(screen * 0.2)));
 const HOST = '127.0.0.1';
-const IDLE_LIMIT = 30 * 60_000; // a device nobody looks at (hidden or not visible) this long is stopped
 const WATCH_MS = 60_000; // the watchdog: idle devices and orphan processes
 
 /** In the launch URL, so Flutter's `run` and its browser carry it in their command line (see `reap`). */
@@ -125,7 +129,7 @@ async function ensureDevice(p: Project): Promise<void> {
   if (!list.out.includes(DEVICE_LABEL)) {
     const add = await run(p.command, ['flutter', 'custom-devices', 'add', `--json=${JSON.stringify(customDevice())}`], p.root, flutterEnv);
     if (!add.ok) {
-      void vscode.window.showWarningMessage(`Synapsis: could not add "Synapsis device": ${add.out.trim().split('\n').pop()}`);
+      void vscode.window.showWarningMessage(l10n.t('Synapsis: could not add "Synapsis device": {0}', add.out.trim().split('\n').pop() ?? ''));
       return;
     }
     changed = true;
@@ -137,8 +141,8 @@ async function ensureDevice(p: Project): Promise<void> {
     await vscode.commands.executeCommand('_dart.reloadExtension', 'synapsis-device');
   } catch {
     const choice = await vscode.window.showInformationMessage(
-      'Synapsis: "Synapsis device" is ready. Reload the window to see it in the device picker.',
-      'Reload Window',
+      l10n.t('Synapsis: "Synapsis device" is ready. Reload the window to see it in the device picker.'),
+      l10n.t('Reload Window'),
     );
     if (choice) void vscode.commands.executeCommand('workbench.action.reloadWindow');
   }
@@ -245,7 +249,7 @@ const alive = (): Running[] => [...panels].flatMap((p) => (p.running ? [p.runnin
 function freeNumber(): number {
   const used = new Set([...panels].map((p) => p.view.title).concat(parked.map((r) => r.title)));
   let n = 1;
-  while (used.has(`${DEVICE_LABEL} ${n}`)) n++;
+  while (used.has(deviceTitle(n))) n++;
   return n;
 } // the device of the last panel, the default for the next one
 let nextId = 1;
@@ -516,7 +520,7 @@ function watchSessions(): vscode.Disposable[] {
   ];
 }
 
-/** The watchdog (every minute): stops a device nobody looked at for `IDLE_LIMIT` (hidden, or its panel not
+/** The watchdog (every minute): stops a device nobody looked at for `nuclear.devices.idleMinutes` (hidden, or its panel not
  * visible) and ends the Flutter and browser processes of this window that no device owns any more. */
 function watchdog(): vscode.Disposable {
   const prefix = marker('').slice(0, -2);
@@ -524,7 +528,7 @@ function watchdog(): vscode.Disposable {
     const now = Date.now();
     for (const r of alive()) {
       if (r.panel?.view.visible) r.lastUsed = now;
-      else if (now - r.lastUsed > IDLE_LIMIT) {
+      else if (now - r.lastUsed > deviceSettings().idleMs) {
         const panel = r.panel;
         endRunning(r);
         panel?.view.dispose();
@@ -697,7 +701,7 @@ class DevicePanel {
     // created with focus so its group is the active one when it gets locked
     const view = vscode.window.createWebviewPanel(
       'synapsisDevice',
-      title ?? `${DEVICE_LABEL} ${freeNumber()}`,
+      title ?? deviceTitle(freeNumber()),
       { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
       { enableScripts: true, retainContextWhenHidden: true },
     );
@@ -764,7 +768,8 @@ class DevicePanel {
     const nonce = Math.random().toString(36).slice(2);
     const state = JSON.stringify(this.context.globalState.get(STATE_KEY) ?? {});
     const presets = JSON.stringify(PRESETS);
-    return /* html */ `<!doctype html><html><head><meta charset="utf-8">
+    const L = texts(MOBILE_DEVICE);
+    return /* html */ `<!doctype html><html lang="${lang()}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src data:;">
 <style>
 :root { --bar: var(--vscode-editorWidget-background); --line: var(--vscode-panel-border, #4446); }
@@ -810,30 +815,30 @@ button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke
 #device:not(.responsive) .handle { display: none; }
 </style></head><body>
 <div id="bar">
-  <span class="label">Dimensions:</span>
-  <select id="preset" title="Device"></select>
-  <input id="w" type="number" min="100" max="4000" title="Width">
+  <span class="label">${L.dimensions}</span>
+  <select id="preset" title="${L.device}"></select>
+  <input id="w" type="number" min="100" max="4000" title="${L.width}">
   <span class="label">×</span>
-  <input id="h" type="number" min="100" max="4000" title="Height">
-  <select id="zoom" title="Zoom">
-    <option value="fit">Fit to window</option><option value="0.5">50%</option><option value="0.75">75%</option>
+  <input id="h" type="number" min="100" max="4000" title="${L.height}">
+  <select id="zoom" title="${L.zoom}">
+    <option value="fit">${L.fit}</option><option value="0.5">50%</option><option value="0.75">75%</option>
     <option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option>
   </select>
-  <button id="rotate" title="Rotate"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="13" rx="1.5"/><path d="M14.5 6.5a6 6 0 0 0-3-4M1.5 9.5a6 6 0 0 0 3 4"/></svg></button>
+  <button id="rotate" title="${L.rotate}"><svg viewBox="0 0 16 16"><rect x="4" y="1.5" width="8" height="13" rx="1.5"/><path d="M14.5 6.5a6 6 0 0 0-3-4M1.5 9.5a6 6 0 0 0 3 4"/></svg></button>
   <span id="os"></span>
   <span class="grow"></span>
   <button id="reload" title="Hot Reload"><svg viewBox="0 0 16 16"><path d="M9 1.5 4 9h4l-1 5.5L12 7H8z"/></svg></button>
   <button id="restart" title="Hot Restart"><svg viewBox="0 0 16 16"><path d="M13.5 8A5.5 5.5 0 1 1 11 3.4"/><path d="M11.5 1v3h-3"/></svg></button>
-  <button id="stop" title="Stop"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></button>
+  <button id="stop" title="${L.stop}"><svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1"/></svg></button>
   <span class="sep"></span>
-  <button id="browser" title="Open in the browser"><svg viewBox="0 0 16 16"><path d="M9 2.5h4.5V7M13.5 2.5 7.5 8.5M11.5 9.5v4h-9v-9h4"/></svg></button>
+  <button id="browser" title="${L.browser}"><svg viewBox="0 0 16 16"><path d="M9 2.5h4.5V7M13.5 2.5 7.5 8.5M11.5 9.5v4h-9v-9h4"/></svg></button>
 </div>
 <div id="stage" tabindex="0"><div id="scaler"><div id="device">
   <div id="screen"><img id="app" alt=""><div id="cover"></div></div>
   <div class="handle r"></div><div class="handle b"></div><div class="handle rb"></div>
 </div></div></div>
 <script nonce="${nonce}">
-const vscode = acquireVsCodeApi();
+${pageI18n(MOBILE_DEVICE)}
 const PRESETS = ${presets};
 const st = Object.assign({ preset: 'iPhone 14 Pro', w: 400, h: 800, zoom: 'fit', landscape: false }, ${state});
 const $ = (id) => document.getElementById(id);
@@ -946,12 +951,12 @@ window.addEventListener('message', (e) => {
     controls(true); sentView = ''; layout();
   } else if (m.type === 'starting') {
     live = false; controls(false); img.removeAttribute('src'); sentView = ''; layout();
-    setCover('<div class="spin"></div><div>Starting the app on the Synapsis device…<br><small>first build of Flutter web: it takes a while</small></div>');
+    setCover('<div class="spin"></div><div>' + t('starting') + '<br><small>' + t('firstBuild') + '</small></div>');
   } else if (m.type === 'failed') {
-    setCover('<div>The Synapsis device could not show the app:<br><small>' + String(m.message).replace(/</g, '&lt;') + '</small></div>');
+    setCover('<div>' + t('failed') + '<br><small>' + String(m.message).replace(/</g, '&lt;') + '</small></div>');
   } else if (m.type === 'stopped') {
     live = false; controls(false); img.removeAttribute('src');
-    setCover('<div>The app is not running on the Synapsis device.</div><button class="run" id="run">▷ Run</button>');
+    setCover('<div>' + t('notRunning') + '</div><button class="run" id="run">' + t('run') + '</button>');
     $('run').onclick = () => vscode.postMessage({ type: 'run' });
   }
 });
@@ -981,7 +986,7 @@ export function activateDevice(
     vscode.commands.registerCommand('nuclear.runOnDevice', async (panelId?: unknown, root?: string, noDebug?: boolean) => {
       const p = find(root);
       if (!p) {
-        void vscode.window.showWarningMessage('Not a Synapsis project: run `nuclear build` in the project first.');
+        void vscode.window.showWarningMessage(l10n.t('Not a Synapsis project: run `nuclear build` in the project first.'));
         return;
       }
       const hidden = typeof panelId === 'string' ? parked.find((r) => `hidden:${r.key}` === panelId) : undefined;

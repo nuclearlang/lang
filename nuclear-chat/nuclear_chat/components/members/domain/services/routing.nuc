@@ -1,0 +1,50 @@
+// Who answers a message of the user (spec 013, requirements 4 and 4b): in a direct message, its member; a member
+// mentioned (`@<id>`, `@<name>`, `@<first name>`, `@<role>`) answers; a message to a team (`@<team>`, or its
+// channel or a thread of it without a member mentioned) is answered by the team's tech lead.
+service Routing
+  answerers(ws: Workspace, channel: Channel, text: string) Member[]
+    found: Member[] = []
+    if channel.kind == "dm"
+      for m in ws.members
+        if m.id in channel.members
+          found.add(m)
+      return found
+    teamOfChannel = ws.teams.find((t) => t.id == channel.team or channel.team.isEmpty and t.id == channel.id)
+    mentionedMember = false
+    for word in mentionsOf(text)
+      member = byName(ws, word) ?? byRole(ws, channel, teamOfChannel, word)
+      if member != null
+        mentionedMember = true
+      else
+        team = ws.teams.find((t) => t.id.lower() == word or handleOf(t.name) == word)
+        member = team == null ? null : leadOf(ws, team!)
+      if member != null and not found.any((f) => f.id == member!.id)
+        found.add(member!)
+    if not mentionedMember and teamOfChannel != null
+      lead = leadOf(ws, teamOfChannel!)
+      if lead != null and not found.any((f) => f.id == lead!.id)
+        found.add(lead!)
+    found
+
+  // A member by id, name (whole, without spaces) or first name.
+  byName(ws: Workspace, word: string) Member?
+    ws.members.find((m) => m.id.lower() == word or handleOf(m.name) == word or m.name.lower().split(Regex(r"\s+"))[0] == word)
+
+  // A member by role: of the channel's team first, then of the channel, then any.
+  byRole(ws: Workspace, channel: Channel, team: Team?, word: string) Member?
+    withRole = ws.members.filter((m) => m.role.lower() == word)
+    if withRole.isEmpty
+      return null
+    withRole.find((m) => team != null and m.team == team!.id) ?? withRole.find((m) => m.id in channel.members) ?? withRole[0]
+
+  // A team's tech lead: the member it names, else its first member as the host listed them.
+  leadOf(ws: Workspace, team: Team) Member?
+    ws.member(team.lead) ?? ws.members.find((m) => m.team == team.id)
+
+// The words after `@` in a text, in order, lower-case, once each.
+mentionsOf(text: string) string[]
+  Regex(r"(?<![\w@])@([\w.-]*\w)").findAll(text).map((m) => "${m[1]}".lower()).unique()
+
+// A name as one word: lower case without spaces (`Ada Lovelace` → `adalovelace`).
+handleOf(name: string) string
+  name.lower().replaceAll(Regex(r"\s+"), "")

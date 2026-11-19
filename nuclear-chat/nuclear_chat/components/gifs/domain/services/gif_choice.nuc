@@ -1,0 +1,106 @@
+// The GIFs: the pack made for the project (searched by tag and title), the GIF a member sends by their
+// personality, and the project's one answer about searching a service (`.nuclear/chat/gifs.json`).
+service GifChoice(pack: ChatPack, files: ChatFiles)
+  drawings: PackGif[] = []
+
+  // The pack, read once.
+  all() PackGif[]
+    if drawings.isEmpty
+      decoded: any = Json.decode(pack.index())
+      for g in decoded as <string, any>[]
+        file = "${g["file"] ?? ""}"
+        drawings.add(PackGif(id = "${g["id"]}", file = file, title = "${g["title"] ?? ""}", tags = (g["tags"] ?? []) as string[], svg = pack.drawing(file) ?? ""))
+    drawings
+
+  // The pack's GIFs whose tags or title hold every word (no words: all of them).
+  search(q: string) Gif[]
+    words = q.lower().split(Regex(r"\s+")).filter((w: string) => not w.isEmpty)
+    all().filter((g) => words.all((w) => g.tags.any((t) => t.startsWith(w)) or w in g.title.lower())).map((g) => gifOf(g))
+
+  // The GIF a member sends after a message of theirs at a moment (failure, success, question), or null: never, one
+  // in five (sometimes) or one in two (often) of the moments their personality names, drawn from the message's id
+  // (a history read again shows the same).
+  choose(member: Member, moment: string, seed: string) Gif?
+    rate = match member.personality.gifs
+      "sometimes" -> 0.2
+      "often" -> 0.5
+      _ -> 0.0
+    if rate == 0.0 or not (moment in member.personality.on)
+      return null
+    [send, which] = draws(seed)
+    if send >= rate
+      return null
+    fitting = all().filter((g) => moment in g.tags)
+    if fitting.isEmpty
+      return null
+    gifOf(fitting[(which * fitting.length).floor()])
+
+  // Every tag of the pack, once, in the pack's order.
+  tags() string[]
+    seen: string[] = []
+    for g in all()
+      for t in g.tags
+        if not (t in seen)
+          seen.add(t)
+    seen
+
+  // The GIF a member asked for with the last line of an answer (`gif: <tag>`), or null: the personality caps how
+  // often (never; sometimes one in two of the asks, often nine in ten; when the member answers a GIF of the user,
+  // four in five and always), a moment (failure, success, question) only when the personality names it, a GIF of
+  // the tag (else of a tag that starts with it) drawn from the message's id.
+  pick(member: Member, tag: string, seed: string, answersGif: boolean) Gif?
+    rate = match member.personality.gifs
+      "sometimes" -> answersGif ? 0.8 : 0.5
+      "often" -> answersGif ? 1.0 : 0.9
+      _ -> 0.0
+    asked = tag.lower().trim()
+    if rate == 0.0 or asked.isEmpty or (asked in ["failure", "success", "question"] and not (asked in member.personality.on))
+      return null
+    [send, which] = draws(seed)
+    if send >= rate
+      return null
+    exact = all().filter((g) => asked in g.tags)
+    fitting = exact.isEmpty ? all().filter((g) => g.tags.any((t) => t.startsWith(asked))) : exact
+    if fitting.isEmpty
+      return null
+    gifOf(fitting[(which * fitting.length).floor()])
+
+  // Tenor's answer as GIFs (the small ones: a chat shows them small).
+  fromTenor(page: TenorPage) Gif[]
+    page.results.map((t) => Gif(src = t.mediaFormats.tinygif.url, title = t.contentDescription.isEmpty ? t.title : t.contentDescription, source = "tenor"))
+
+  // Giphy's answer as GIFs.
+  fromGiphy(page: GiphyPage) Gif[]
+    page.data.map((g) => Gif(src = g.images.fixedHeight.url, title = g.title, source = "giphy"))
+
+  // The project's answer: true, false, or null when it was never asked.
+  consent(ws: Workspace) boolean?
+    text = files.readText(ws.chatFile("gifs.json"))
+    if text == null
+      return null
+    try
+      kept = Json.decode(text!) as <string, any>
+      kept["online"] == true
+    catch e
+      null
+
+  keepConsent(ws: Workspace, online: boolean) void
+    files.writeText(ws.chatFile("gifs.json"), Json.encode({ "online": online }) + "\n")
+
+gifOf(g: PackGif) Gif
+  Gif(src = "pack/${g.file}", title = g.title, source = "pack")
+
+// Two numbers in [0, 1) drawn from a seed, the same in every dialect: the seed's rolling sum, then steps of Park and
+// Miller's generator (every product stays under 2^53, exact in every target); the first steps are left out, since
+// seeds that differ in their last character still give numbers close together there.
+draws(seed: string) double[]
+  m = 2_147_483_647
+  h = 7
+  for i in 0..seed.length
+    h = (h * 31 + seed.codeAt(i)) % m
+  x = Math.max(h, 1)
+  for i in 0..3
+    x = (x * 48_271) % m
+  first = x
+  second = (first * 48_271) % m
+  [first / m, second / m]

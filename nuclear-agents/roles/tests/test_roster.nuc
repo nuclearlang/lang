@@ -1,0 +1,143 @@
+use json
+use pathlib{ Path }
+
+// The roster's people as the editors and Nuclear Chat show them (spec 011 requirements 27, 28, 29 and 31): every
+// employee has a gender, a temperament of the compendium (the same in English and Spanish), a LinkedIn-like profile
+// and a painted face with its thumbnail, with the prompt and seed it was made with.
+
+// The temperaments the compendium must have (it may have more).
+REQUIRED = ["extrovert", "introvert", "shy", "nerd", "sarcastic", "optimistic", "grumpy", "perfectionist", "chaotic", "formal", "joker", "arrogant", "paranoid", "passive-aggressive", "burnt-out"]
+GENDERS = ["female", "male", "nonbinary"]
+PROFILE = ["headline", "connections", "experience", "education", "skills", "endorsements", "recommendations", "openTo"]
+
+// `nuclear-agents/roles`, from wherever the tests run (the project's folder or its build).
+rolesFolder() Path
+  for folder in Path(__file__).resolve().parents
+    if folder.joinpath("temperaments.json").isFile()
+      return folder
+  Path(".")
+
+people(role: string, lang: string) <string, any>[]
+  found: <string, any> = json.loads(rolesFolder().joinpath(role, "roster", "${lang}.json").readText(encoding = "utf-8"))
+  found["employees"] ?? []
+
+temperamentIds() string[]
+  found: <string, any> = json.loads(rolesFolder().joinpath("temperaments.json").readText(encoding = "utf-8"))
+  ((found["temperaments"] ?? []) as <string, any>[]).map((t) => "${t["id"]}")
+
+testTheCompendiumHasTheTemperamentsWithNamesDescriptionVoiceAndLook() void
+  found: <string, any> = json.loads(rolesFolder().joinpath("temperaments.json").readText(encoding = "utf-8"))
+  list: <string, any>[] = found["temperaments"] ?? []
+  ids = list.map((t) => "${t["id"]}")
+  expect(ids.length >= 25 and ids.unique().length == ids.length, "about twenty-five temperaments, each once")
+  for id in REQUIRED
+    expect(id in ids, "the compendium has ${id}")
+  for t in list
+    names: <string, any> = t["name"] ?? {}
+    expect("${names["en"] ?? ""}".length > 0 and "${names["es"] ?? ""}".length > 0, "${t["id"]}: a name in English and Spanish")
+    said: <string, any> = t["description"] ?? {}
+    expect("${said["en"] ?? ""}".length > 20 and "${said["es"] ?? ""}".length > 20, "${t["id"]}: a short description for people in English and Spanish")
+    expect("${t["voice"] ?? ""}".length > 80, "${t["id"]}: a voice that says how the member writes")
+    expect("${t["look"] ?? ""}".length > 40, "${t["id"]}: a look that says how the portrait shows it")
+
+testEveryEmployeeHasAGenderAndATemperamentTheSameInBothLanguages() void
+  moods = temperamentIds()
+  for role in ROLES
+    en = people(role, "en")
+    es = people(role, "es")
+    expect(en.length == 40 and es.length == 40, "${role}: 40 employees")
+    for at in 0..40
+      id = "${en[at]["id"]}"
+      expect(es[at]["id"] == id, "${role}: the same ids in both languages")
+      expect(en[at]["temperament"] in moods, "${role}: ${id} has no valid temperament")
+      expect(es[at]["temperament"] == en[at]["temperament"], "${role}: ${id}'s temperament differs in Spanish")
+      expect(en[at]["gender"] in GENDERS and es[at]["gender"] == en[at]["gender"], "${role}: ${id} has no gender, or another in Spanish")
+
+// Requirement 29: QA and DevOps mostly women, the Developer mostly men, every roster both.
+testTheGendersOfEachRoster() void
+  for role in ROLES
+    genders = people(role, "en").map((e) => "${e["gender"]}")
+    women = genders.filter((g) => g == "female").length
+    men = genders.filter((g) => g == "male").length
+    expect(women >= 5 and men >= 5, "${role}: both women and men")
+    if role == "qa" or role == "devops"
+      expect(women >= 24, "${role}: mostly women (${women} of 40)")
+    if role == "developer"
+      expect(men >= 24, "${role}: mostly men (${men} of 40)")
+
+// Requirement 31: a profile as LinkedIn sums one up, in both languages, recommended by people who exist.
+testEveryEmployeeHasALinkedInProfile() void
+  ids: string[] = []
+  for role in ROLES
+    ids.addAll(people(role, "en").map((e) => "${e["id"]}"))
+  for role in ROLES
+    for lang in ["en", "es"]
+      for card in people(role, lang)
+        id = "${card["id"]}"
+        for field in PROFILE
+          expect(card[field] != null, "${role}/${lang}: ${id} has no ${field}")
+        expect("${card["headline"]}".length > 0 and "${card["connections"]}".length > 0 and "${card["openTo"]}".length > 0, "${id}: a headline, connections and openTo")
+        jobs: <string, any>[] = card["experience"] ?? []
+        expect(jobs.length >= 2 and jobs.length <= 4, "${id}: two to four jobs")
+        for job in jobs
+          expect(["company", "title", "years", "line"].all((k) => "${job[k] ?? ""}".length > 0), "${id}: a job with company, title, years and line")
+        schools: <string, any>[] = card["education"] ?? []
+        expect(schools.length >= 1 and schools.length <= 2 and schools.all((s) => "${s["school"] ?? ""}".length > 0 and "${s["degree"] ?? ""}".length > 0), "${id}: one or two schools")
+        skills: string[] = card["skills"] ?? []
+        expect(skills.length >= 5 and skills.length <= 8, "${id}: five to eight skills")
+        endorsed: <string, any> = card["endorsements"] ?? {}
+        expect(endorsed.keys.all((k) => k in skills), "${id}: endorsements are of the skills")
+        notes: <string, any>[] = card["recommendations"] ?? []
+        expect(notes.length >= 1 and notes.length <= 2, "${id}: one or two recommendations")
+        for note in notes
+          expect(note["from"] in ids and note["from"] != id and "${note["text"] ?? ""}".length > 0, "${id}: a recommendation from another employee of the roster")
+
+testEveryEmployeeHasAPaintedFaceAndHowItWasMade() void
+  roles = rolesFolder()
+  for role in ROLES
+    record: <string, any> = json.loads(roles.joinpath(role, "roster", "faces", "faces.json").readText(encoding = "utf-8"))
+    faces: <string, any> = record["faces"] ?? {}
+    for card in people(role, "en")
+      id = "${card["id"]}"
+      file = faceFile(roles, role, id)
+      expect(file.isFile(), "${role}: no face for ${id} (README.md, \"The faces\")")
+      head = file.readText(encoding = "latin-1").substring(0, 12)
+      expect(head.startsWith("RIFF") and head.endsWith("WEBP"), "${id}: a WebP image")
+      expect(file.stat().stSize < 100000, "${id}: at most 100 KB")
+      thumb = thumbFile(roles, role, id)
+      expect(thumb.isFile(), "${role}: no thumbnail for ${id} (README.md, \"The faces\": --thumbs)")
+      expect(thumb.readText(encoding = "latin-1").substring(8, 12) == "WEBP" and thumb.stat().stSize < 10000, "${id}: a thumbnail is a WebP of at most 10 KB")
+      made: <string, any> = faces[id] ?? {}
+      expect(made["seed"] != null and "${made["prompt"] ?? ""}".length > 100, "${id}: faces.json keeps its seed and prompt")
+    drawn: Path[] = roles.joinpath(role, "roster", "faces").glob("*.svg").toList()
+    expect(drawn.isEmpty, "${role}: no drawn face is left")
+
+testAPromptIsTheSameEachTimeAndSaysWhoTheyAre() void
+  card: <string, any> = { "name": "Neo", "age": "3,643 years", "gender": "male", "profile": "Senior developer architect", "bio": "I drink coffee 24 hours a day", "temperament": "arrogant" }
+  looks: <string, string> = { "arrogant": "a condescending smug smile" }
+  one = promptOf("dev-001", "developer", card, looks)
+  expect(one == promptOf("dev-001", "developer", card, looks), "the same employee, the same prompt")
+  expect(one != promptOf("dev-002", "developer", card, looks), "another employee, another prompt")
+  expect(" man with " in one and "a condescending smug smile" in one and "amber neon" in one and "coffee" in one, one)
+
+testTheAgeOfTheRosterReadsAsYears() void
+  expect(yearsOf("3,643 years") == 3643)
+  expect(yearsOf("41 (counted since the last reboot)") == 41)
+  expect(yearsOf("Eternal") == 9999 and yearsOf("13.8 billion years, under review") == 9999)
+  expect(yearsOf("Forgot") == -1)
+
+// What the screens read of a role's files has its Spanish beside its English (README, "Localization"): each skill a
+// member can switch on (`title_es`, `description_es` in its front matter; a prompt of a local agent's step is not
+// shown) and each check (`title_es` in checks.toml).
+testEverySkillAndCheckTheScreensShowHasItsSpanish() void
+  for role in ["analyst", "architect", "developer", "qa", "devops"]
+    for file in rolesFolder().joinpath(role, "skills").glob("*.md")
+      head = "${file.readText(encoding = "utf-8").split("\n---\n")[0]}"
+      if "\nprompt: agent." in head
+        continue
+      expect("\ntitle_es: " in head and "\ndescription_es: " in head, "${role}/skills/${file.name}: title_es and description_es in its front matter")
+    checks = textOf(rolesFolder().joinpath(role, "checks.toml"))
+    expect(checks.split("[[check]]").length - 1 == checks.split("\ntitle_es = ").length - 1, "${role}/checks.toml: a title_es for every check")
+
+textOf(path: Path) string
+  path.readText(encoding = "utf-8")

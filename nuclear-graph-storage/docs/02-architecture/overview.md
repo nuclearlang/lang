@@ -27,8 +27,9 @@ One process (`nuclear-graph serve`) opens the store. Everything else reaches it 
 The graph is a Nuclear project of the `python` dialect. The `.nuc` files at the root of this folder are the source.
 `nuclear build .` writes the Python package `build/nuclear_graph`; `[project] package` of `nuclear.toml` names the
 package the files are emitted into (imports between a project's files are relative to it). `pyproject.toml` only
-packages that folder: the prompt files travel inside the package (`prompts` → `nuclear_graph/prompts`; a checkout
-reads them from `prompts/`), and so does `py.typed` (a project that uses the package is type-checked against it).
+packages that folder: the roles of the software factory, whose skills are the prompts, travel inside the package
+(`../nuclear-agents/roles` → `nuclear_graph/roles`; a checkout reads them from `../nuclear-agents/roles/`:
+`Paths.roles`), and so does `py.typed` (a project that uses the package is type-checked against it).
 `build/` is never edited and never committed. The set-up of the AI services builds before it installs.
 
 ## Parts
@@ -52,7 +53,6 @@ reads them from `prompts/`), and so does `py.typed` (a project that uses the pac
 | `web.nuc` | the internet tools (search, read a page) |
 | `paths.nuc` | the port, the URL, the data folder, the machine's `ai.env` |
 | `cli.nuc` | the `nuclear-graph` command (the MCP server is `nuclear-mcp`, of [`tools/mcp`](../../../tools/mcp/AGENTS.md)) |
-| `prompts/` | the prompt files: `prompts/<use case>.md` and `prompts/agents/<step>.md`, ingested into `prompts` |
 | `tests/` | the tests, in Nuclear |
 | `data/` | the knowledge base: [knowledge-base.md](knowledge-base.md), [`data/README.md`](../../data/README.md) |
 

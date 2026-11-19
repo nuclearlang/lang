@@ -1,0 +1,702 @@
+use os
+use re
+use sys
+use json
+use time
+use shutil
+use ntpath
+use posixpath
+use pathlib{ Path }
+
+// The teams of the software factory (spec 011, design.md "Teams", ADR-platform-0010): the members the user hired,
+// any number per role, each an employee of its role's roster with who works them (a provider and model), its skills,
+// instructions, behaviours, tasks and personality; the tech lead (a member), the purpose and skills of the team, and
+// the run's budget. A team is the user's:
+// `~/.config/nuclearlang/factory/teams/<id>.json`, never inside an editor's storage. A write is atomic (a temporary
+// file, then a rename) and the previous version stays as `<id>.json.bak`. The default team is named in
+// `factory/settings.json` (`{ "defaultTeam": "<id>" }`).
+
+// The providers of each kind (design.md "Who does a role").
+PROVIDERS: <string, string[]> = { "local": ["nuclear-developer"], "agent": ["claude-code", "codex", "gemini-cli", "opencode"], "api": ["anthropic", "openai", "google", "openrouter"] }
+
+DEFAULT_BUDGET = 5.0
+
+// A member's personality (design.md "The workbench, second version"): how often they send a GIF and at which
+// moments; its note is part of their character.
+GIF_RATES = ["never", "sometimes", "often"]
+MOMENTS = ["failure", "success", "question"]
+
+// A team's logo: `<id>.logo.<kind>` beside the team, of one of these kinds, at most 1 MB.
+LOGO_KINDS = ["png", "svg", "jpg"]
+LOGO_MAX_BYTES = 1_048_576
+
+// The role whose first member leads the team when the team names no tech lead.
+DEFAULT_LEAD = "architect"
+
+// The id of the team a run takes when there is none at all (`localTeam`, never saved).
+LOCAL_TEAM = "local-team"
+
+// A team that is not valid: what is wrong, said to the user.
+TeamError(message: string) : ValueError(message)
+
+// `~/.config/nuclearlang/factory` (`%APPDATA%\nuclearlang\factory` on Windows), or `NUCLEAR_FACTORY_HOME`.
+factoryDir(env: <string, string>? = null, system: string = sys.platform) string
+  e = env ?? dict(os.environ)
+  given = e["NUCLEAR_FACTORY_HOME"] ?? ""
+  if given.length > 0
+    return given
+  if system == "win32"
+    return ntpath.join(e["APPDATA"] ?? home(), "nuclearlang", "factory")
+  config = e["XDG_CONFIG_HOME"] ?? ""
+  posixpath.join(config.length > 0 ? config : posixpath.join(home(), ".config"), "nuclearlang", "factory")
+
+teamsDir() Path
+  Path(factoryDir(), "teams")
+
+teamFile(id: string) Path
+  teamsDir().joinpath("${id}.json")
+
+validId(id: string) boolean
+  re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", id) != null
+
+teamSlug(text: string) string
+  whole = text.lower().replaceAll(Regex(r"[^a-z0-9]+"), "-")
+  at = 0
+  while at < whole.length and whole[at] == "-"
+    at += 1
+  cut = whole.substring(at, Math.min(at + 40, whole.length))
+  while cut.endsWith("-")
+    cut = cut.substring(0, cut.length - 1)
+  cut.isEmpty ? "team" : cut
+
+// Writes a file atomically: a temporary file beside it, then a rename; what was there stays as `<file>.bak` when
+// `keep` (a team's file).
+writeAtomic(file: Path, text: string, keep: boolean = false) void
+  file.parent.mkdir(parents = true, existOk = true)
+  temp = file.withName(".${file.name}.${os.getpid()}.tmp")
+  temp.writeText(text, encoding = "utf-8")
+  if keep and file.exists()
+    shutil.copy2(file, file.withName("${file.name}.bak"))
+  os.replace(temp, file)
+
+// ---------- validation ----------
+
+isText(v: any) boolean
+  isinstance(v, str)
+
+isNumber(v: any) boolean
+  (isinstance(v, int) or isinstance(v, float)) and not isinstance(v, bool)
+
+textList(v: any, what: string) string[]
+  if v == null
+    return []
+  if not isinstance(v, list) or not (v as any[]).all((x) => isText(x))
+    throw TeamError("${what} must be a list of texts")
+  v
+
+// The team as it is kept (the second shape, ADR-platform-0010): the known fields checked, its members each with an
+// id unique in the team, `updated` given by the caller. A file of the first shape (`roles`) is read as its members
+// (`upgradeTeam`). Throws `TeamError` with what is wrong.
+validTeam(raw: any, known: <string, any>? = null) <string, any>
+  if not isinstance(raw, dict)
+    throw TeamError("a team is a JSON object")
+  t = upgradeTeamSkills(upgradeTeam(raw))
+  name = t["name"]
+  if not isText(name) or (name as string).trim().isEmpty
+    throw TeamError("the team has no name")
+  id = t["id"] ?? teamSlug(name as string)
+  if not isText(id) or not validId(id)
+    throw TeamError("the team's id `${id}` is not valid: lowercase letters, digits and dashes")
+  budget = t["budgetUsd"] ?? DEFAULT_BUDGET
+  if not isNumber(budget) or (budget as double) < 0
+    throw TeamError("budgetUsd must be a number of 0 or more")
+  for field in ["description", "purpose"]
+    if t[field] != null and not isText(t[field])
+      throw TeamError("the ${field} must be a text")
+  logo = t["logo"]
+  if logo != null and (not isText(logo) or not (logo in LOGO_KINDS.map((k) => "${id}.logo.${k}")))
+    throw TeamError("logo is the file ${id}.logo.png, .svg or .jpg beside the team (nuclear-builder team logo ${id} <image>)")
+  membersIn = t["members"] ?? ([] as any[])
+  if not isinstance(membersIn, list)
+    throw TeamError("members must be a list of { id, role, employee, kind, provider, model, … }")
+  people = known ?? rosters()
+  moods = temperaments().map((m) => "${m["id"]}")
+  members: <string, any>[] = []
+  for one in membersIn as any[]
+    m = validMember(one, people, moods)
+    if not isText(m["id"])
+      m["id"] = freeMemberId("${m["employee"] ?? m["role"]}", members)
+    if not validId("${m["id"]}")
+      throw TeamError("the member id `${m["id"]}` is not valid: lowercase letters, digits and dashes")
+    if members.any((x) => x["id"] == m["id"])
+      throw TeamError("two members have the id `${m["id"]}`: a member's id is unique in the team")
+    if m["employee"] != null and members.any((x) => x["employee"] == m["employee"])
+      throw TeamError("the employee `${m["employee"]}` is in the team already")
+    members.add(m)
+  lead = t["techLead"] ?? defaultLead(members)
+  if lead != null and (not isText(lead) or not members.any((x) => x["id"] == lead))
+    throw TeamError("techLead is the id of one of the team's members: ${members.map((x) => "${x["id"]}").join(", ")}")
+  kept: <string, any> = { "id": id, "name": (name as string).trim(), "description": "${t["description"] ?? ""}".trim(), "purpose": "${t["purpose"] ?? ""}".trim(), "skills": textList(t["skills"], "the team's skills"), "ownSkills": validOwnSkills(t["ownSkills"], "the team"), "logo": logo, "techLead": lead, "updated": t["updated"] ?? 0, "budgetUsd": budget, "members": members }
+  // what a read had to leave out of an earlier file (`healTeam`), told until the user saves the team
+  warnings = textList(t["warnings"], "warnings")
+  if not warnings.isEmpty
+    kept["warnings"] = warnings
+  kept
+
+// A team an earlier version wrote, with what is gone today left out, each with a warning: a temperament no longer in
+// the list (the employee's own then), a base agent no longer in the library, an employee no longer in the roster, a
+// provider no longer known (its kind's default), a tech lead no longer a member (the default lead). A team is never
+// refused for a value that disappeared; the old value stays in its `.bak`.
+healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
+  t = upgradeTeam(raw)
+  if not isinstance(t["members"], list)
+    return t
+  people = known ?? rosters()
+  moods = temperaments().map((m) => "${m["id"]}")
+  warnings: string[] = isinstance(t["warnings"], list) ? list(t["warnings"] as string[]) : ([] as string[])
+  members: any[] = []
+  for one in t["members"] as any[]
+    if not isinstance(one, dict)
+      members.add(one)
+      continue
+    m: <string, any> = dict(one)
+    // a role of an old id (`delivery`) is today's (`devops`: roles.nuc's OLD_ROLES); the member keeps its id
+    if isText(m["role"])
+      m["role"] = roleId("${m["role"]}")
+    who = "${m["id"] ?? m["role"]}"
+    kind = m["kind"] ?? "local"
+    if isText(kind) and not (kind in PROVIDERS)
+      warnings.add("${who}: the kind ${kind} is no longer known; the local Nuclear Developer works it now")
+      for k in ["kind", "provider", "model"]
+        m.remove(k)
+    else if isText(kind) and isText(m["provider"]) and not (m["provider"] in PROVIDERS[kind]!)
+      warnings.add("${who}: the provider ${m["provider"]} is no longer known; ${PROVIDERS[kind]![0]} works it now")
+      m.remove("provider")
+      m.remove("model")
+    roster: <string, any>[] = people["${m["role"]}"] ?? []
+    if isText(m["employee"]) and not roster.isEmpty and not roster.any((p) => p["id"] == m["employee"])
+      warnings.add("${who}: the employee ${m["employee"]} is no longer in the roster of the ${m["role"]}")
+      m.remove("employee")
+    if isText(m["agent"]) and libraryDir() != null and libraryAgent("${m["agent"]}") == null
+      warnings.add("${who}: the base agent ${m["agent"]} is no longer in the library")
+      m.remove("agent")
+    if isinstance(m["personality"], dict)
+      p: <string, any> = dict(m["personality"] as <string, any>)
+      if isText(p["temperament"]) and not moods.isEmpty and not (p["temperament"] in moods)
+        warnings.add("${who}: the temperament ${p["temperament"]} is no longer one; the employee's own is shown")
+        p.remove("temperament")
+        m["personality"] = p
+    members.add(m)
+  t["members"] = members
+  lead = t["techLead"]
+  if isText(lead) and not members.any((m) => isinstance(m, dict) and ((m as <string, any>)["id"] ?? (m as <string, any>)["role"]) == lead)
+    warnings.add("the tech lead ${lead} is no longer a member; the default lead leads")
+    t.remove("techLead")
+  if not warnings.isEmpty
+    t["warnings"] = warnings
+  t
+
+// A team of the first shape (`roles: { <role>: {…} }`, one member per role, `techLead` a role) as the second: each
+// role's member with the role as its id (so a chat's member `<team>-<role>` keeps its id), the tech lead that member.
+upgradeTeam(raw: <string, any>) <string, any>
+  t: <string, any> = dict(raw)
+  if t["members"] != null or t["roles"] == null
+    return t
+  old = t.remove("roles")
+  if not isinstance(old, dict)
+    throw TeamError("roles must be an object of the roles: ${ROLES.join(", ")}")
+  members: <string, any>[] = []
+  for role, value in old as <string, any>
+    if not isinstance(value, dict)
+      throw TeamError("the role ${role} must be an object")
+    m: <string, any> = dict(value)
+    m["id"] = role
+    m["role"] = roleId(role)
+    members.add(m)
+  lead = t["techLead"]
+  t["techLead"] = lead != null and members.any((x) => x["id"] == lead) ? lead : null
+  t["members"] = members
+  t
+
+// The tech lead when the team names none: its Architect (the first), else its first member; none in an empty team.
+defaultLead(members: <string, any>[]) string?
+  found = members.find((m) => m["role"] == DEFAULT_LEAD) ?? (members.isEmpty ? null : members[0])
+  found == null ? null : "${found!["id"]}"
+
+// A member id free in the team: `base`, else `base-2`, `base-3`…
+freeMemberId(base: string, members: <string, any>[]) string
+  root = teamSlug(base)
+  if not members.any((m) => m["id"] == root)
+    return root
+  n = 2
+  while members.any((m) => m["id"] == "${root}-${n}")
+    n += 1
+  "${root}-${n}"
+
+defaultPersonality() <string, any>
+  { "gifs": "sometimes", "on": ["failure"], "note": "" }
+
+// A member's personality as it is kept: none is the default (a GIF sometimes, on a failure). Its `temperament` is
+// one of `moods` (the list of temperaments.json, not checked when there is none) and is kept only when it is not the
+// hired employee's own (`own`): the roster gives that one (`teamShown`).
+validPersonality(who: string, raw: any, moods: string[] = [], own: string = "") <string, any>
+  if raw == null
+    return defaultPersonality()
+  if not isinstance(raw, dict)
+    throw TeamError("${who}: personality is { gifs, on, note }")
+  p: <string, any> = raw
+  gifs = p["gifs"] ?? "sometimes"
+  if not (gifs in GIF_RATES)
+    throw TeamError("${who}: personality.gifs must be one of ${GIF_RATES.join(", ")}")
+  on = textList(p["on"] ?? ["failure"], "${who}: personality.on")
+  if not on.all((m) => m in MOMENTS)
+    throw TeamError("${who}: personality.on holds only ${MOMENTS.join(", ")}")
+  note = p["note"] ?? ""
+  if not isText(note)
+    throw TeamError("${who}: personality.note must be a text")
+  kept: <string, any> = { "gifs": gifs, "on": on, "note": note }
+  temperament = p["temperament"]
+  if temperament != null and (not isText(temperament) or (not moods.isEmpty and not (temperament in moods)))
+    throw TeamError("${who}: personality.temperament must be one of ${moods.join(", ")}")
+  if temperament != null and temperament != own
+    kept["temperament"] = temperament
+  kept
+
+// A member as it is kept: its role (one of ROLES), who works it (kind, provider, model), its employee of the role's
+// roster (checked only against a roster that is there), its settings and personality. Its id is checked by the team.
+validMember(raw: any, people: <string, any>, moods: string[] = []) <string, any>
+  if not isinstance(raw, dict)
+    throw TeamError("a member is an object { id, role, employee, kind, provider, model, … }")
+  r: <string, any> = dict(raw)
+  role = isText(r["role"]) ? roleId("${r["role"]}") : r["role"]
+  r["role"] = role
+  if not isText(role) or not (role in ROLES)
+    throw TeamError("no such role `${role}`: ${ROLES.join(", ")}")
+  who = "${r["id"] ?? role}"
+  kind = r["kind"] ?? "local"
+  if not isText(kind) or not (kind in PROVIDERS)
+    throw TeamError("${who}: kind must be one of ${PROVIDERS.keys.join(", ")}")
+  allowed: string[] = PROVIDERS[kind]!
+  provider = r["provider"] ?? allowed[0]
+  if not isText(provider) or not (provider in allowed)
+    throw TeamError("${who}: the provider of kind ${kind} must be one of ${allowed.join(", ")}")
+  r["kind"] = kind
+  r["provider"] = provider
+  for field in ["id", "model", "employee", "instructions", "name"]
+    if r[field] != null and not isText(r[field])
+      throw TeamError("${who}: ${field} must be a text")
+  roster: <string, any>[] = people[role] ?? []
+  employee = r["employee"]
+  // an employee is checked only against a roster that is there
+  if employee != null and not roster.isEmpty and not roster.any((p) => p["id"] == employee)
+    throw TeamError("${who}: no employee `${employee}` in the roster of the ${role}")
+  r["skills"] = textList(r["skills"], "${who}: skills")
+  extra = r.remove("extraSkills") ?? ([] as any[])
+  if not isinstance(extra, list) or not (extra as any[]).all((s) => isinstance(s, dict) and isText((s as <string, any>)["name"]) and isText((s as <string, any>)["text"]))
+    throw TeamError("${who}: extraSkills must be a list of { name, text }")
+  // the skills of their own before the library (`extraSkills: [{ name, text }]`) are own skills now
+  own: any[] = isinstance(r["ownSkills"], list) ? list(r["ownSkills"] as any[]) : ([] as any[])
+  for x in extra as <string, any>[]
+    slug = skillSlug("${x["name"]}")
+    if not slug.isEmpty and not "${x["text"]}".trim().isEmpty and not own.any((o) => isinstance(o, dict) and (o as <string, any>)["id"] == slug)
+      own.add({ "id": slug, "name": x["name"], "description": "", "text": x["text"] })
+  r["ownSkills"] = validOwnSkills(own, who)
+  agent = r["agent"]
+  if agent != null and (not isText(agent) or (libraryDir() != null and libraryAgent(agent as string) == null))
+    throw TeamError("${who}: agent is the id of an agent of the library (nuclear-builder skills list)")
+  behaviour = r["behaviour"] ?? ({} as <string, any>)
+  if not isinstance(behaviour, dict) or not (behaviour as <string, any>).values.all((b) => isinstance(b, bool))
+    throw TeamError("${who}: behaviour must be an object of true or false")
+  r["behaviour"] = behaviour
+  tasks = r["tasks"] ?? ([] as any[])
+  if not isinstance(tasks, list)
+    throw TeamError("${who}: tasks must be a list")
+  for one in tasks as any[]
+    task: <string, any> = isinstance(one, dict) ? one : ({} as <string, any>)
+    if not isinstance(one, dict) or not isText(task["id"]) or not isText(task["title"]) or not (task["station"] in STATIONS) or not isinstance(task["on"] ?? true, bool)
+      throw TeamError("${who}: a task is { id, title, station (${STATIONS.join(", ")}), on }")
+  r["tasks"] = tasks
+  r["instructions"] = r["instructions"] ?? ""
+  hired = roster.find((p) => p["id"] == employee)
+  r["personality"] = validPersonality(who, r["personality"], moods, hired == null ? "" : "${hired!["temperament"] ?? ""}")
+  r
+
+// ---------- who works a role ----------
+
+// The members of a role, in the team's order.
+membersOf(team: <string, any>, role: string) <string, any>[]
+  ((team["members"] ?? []) as <string, any>[]).filter((m) => m["role"] == roleId(role))
+
+// Who works a station of `role` (ADR-platform-0010): the member the tech lead assigned for the run (`assign`:
+// `{ <role>: <member id> }`) when it is one of the role's, else the role's first member; null when the role has none.
+memberFor(team: <string, any>, role: string, assign: <string, any>? = null) <string, any>?
+  staff = membersOf(team, role)
+  chosen = assign == null ? null : assign![roleId(role)] ?? assign![role]
+  staff.find((m) => m["id"] == chosen) ?? (staff.isEmpty ? null : staff[0])
+
+// The roles the stations need that no member of the team has.
+missingRoles(team: <string, any>, stations: string[] = STATIONS) string[]
+  stations.map((s) => STATION_ROLE[s] ?? s).unique().filter((r) => membersOf(team, r).isEmpty)
+
+// `team runnable`: whether the team can run the line's stations (at least one member of each role they need), and
+// the roles it lacks.
+runnable(team: <string, any>, stations: string[] = STATIONS) <string, any>
+  missing = missingRoles(team, stations)
+  { "team": team["id"], "runnable": missing.isEmpty, "missing": missing, "stations": stations }
+
+// A team as the editors and the chat read it: each member's name and temperament (the hired employee's in the
+// roster when none is given) and the roles it lacks to run every station (`missing`).
+teamShown(t: <string, any>, known: <string, any>? = null) <string, any>
+  people = known ?? rosters()
+  shown: <string, any> = dict(t)
+  members: <string, any>[] = []
+  for value in (t["members"] ?? []) as <string, any>[]
+    r: <string, any> = dict(value)
+    staff: <string, any>[] = people["${r["role"]}"] ?? []
+    hired = staff.find((p) => p["id"] == r["employee"])
+    if not isText(r["name"]) or "${r["name"]}".trim().isEmpty
+      r["name"] = hired == null ? "" : "${hired!["name"] ?? ""}"
+    personality: <string, any> = dict(r["personality"] ?? defaultPersonality())
+    if personality["temperament"] == null and hired != null and isText(hired!["temperament"])
+      personality["temperament"] = hired!["temperament"]
+    r["personality"] = personality
+    members.add(r)
+  shown["members"] = members
+  shown["missing"] = missingRoles(t)
+  shown
+
+// ---------- the files ----------
+
+readJson(file: Path) any
+  json.loads(file.readText(encoding = "utf-8"))
+
+settingsFile() Path
+  Path(factoryDir(), "settings.json")
+
+factorySettings() <string, any>
+  file = settingsFile()
+  if not file.isFile()
+    return {}
+  try
+    found = readJson(file)
+    isinstance(found, dict) ? found : ({} as <string, any>)
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    {}
+
+defaultTeamId() string?
+  id = factorySettings()["defaultTeam"]
+  isText(id) and teamFile(id as string).isFile() ? id : null
+
+setDefaultTeam(id: string?) void
+  settings = factorySettings()
+  settings["defaultTeam"] = id
+  writeAtomic(settingsFile(), "${json.dumps(settings, indent = 2)}\n")
+
+teamIds() string[]
+  dir = teamsDir()
+  if not dir.isDir()
+    return []
+  dir.glob("*.json").map((f) => "${f.stem}").filter((id) => validId(id)).sorted()
+
+listTeams() <string, any>[]
+  chosen = defaultTeamId()
+  found: <string, any>[] = []
+  for id in teamIds()
+    try
+      t = loadTeam(id)
+      found.add({ "id": id, "name": t["name"], "description": t["description"] ?? "", "logo": logoPath(t), "techLead": t["techLead"], "members": ((t["members"] ?? []) as any[]).length, "updated": t["updated"], "default": id == chosen })
+    catch e
+      if not isinstance(e, ValueError)
+        throw e
+      // never left out: listed with what is wrong, for the user to fix or restore its `.bak`
+      found.add({ "id": id, "name": id, "description": "", "logo": null, "techLead": null, "members": 0, "updated": 0, "default": id == chosen, "error": "${e}" })
+  found.sortedBy((t) => "${t["name"]}".lower())
+
+// A team's file; one of the first shape (`roles`) is written in the second on its first read (its old version kept
+// as `<id>.json.bak`).
+loadTeam(id: string) <string, any>
+  if not validId(id) or not teamFile(id).isFile()
+    throw TeamError("no team `${id}`")
+  found: any = null
+  try
+    found = readJson(teamFile(id))
+  catch e
+    if not isinstance(e, ValueError)
+      throw e
+    throw TeamError("the team `${id}` is not valid JSON: ${teamFile(id)} (its last version is ${id}.json.bak)")
+  if not isinstance(found, dict)
+    return found
+  // an earlier file is written once in today's shape: the first shape (`roles`) as members, what is gone left out
+  // with a warning (`healTeam`), the free words of its skills as library ids (the rest kept in its purpose), a
+  // member's skills of its own before the library (`extraSkills`) as its own skills
+  healed = healTeam(found)
+  if healed != found or upgradeTeamSkills(healed) != healed or ((healed["members"] ?? []) as any[]).any((m) => isinstance(m, dict) and "extraSkills" in (m as <string, any>))
+    return writeTeam(validTeam(healed))
+  found
+
+// Writes a valid team, stamped (atomic, its last version kept as `<id>.json.bak`).
+writeTeam(t: <string, any>) <string, any>
+  t["updated"] = (time.time() * 1000).round()
+  writeAtomic(teamFile(t["id"]!), "${json.dumps(t, indent = 2, ensureAscii = false)}\n", true)
+  t
+
+// Validates a team, stamps it and writes it; the first team becomes the default.
+saveTeam(raw: any) <string, any>
+  given = raw
+  // the user's save is the answer to what a read had to leave out
+  if isinstance(raw, dict)
+    given = dict(raw)
+    (given as <string, any>).remove("warnings")
+  t = writeTeam(validTeam(given))
+  if defaultTeamId() == null
+    setDefaultTeam(t["id"])
+  t
+
+// A team's file goes to `<id>.json.bak` (the last delete can be undone by hand); the default falls when it was it.
+deleteTeam(id: string) void
+  loadTeam(id)
+  file = teamFile(id)
+  os.replace(file, file.withName("${file.name}.bak"))
+  if factorySettings()["defaultTeam"] == id
+    setDefaultTeam(null)
+
+exportTeam(id: string, to: string) void
+  t = loadTeam(id)
+  Path(to).writeText("${json.dumps(t, indent = 2, ensureAscii = false)}\n", encoding = "utf-8")
+
+// A team from a file; an id already taken gets the next free one (`<id>-2`): an import never replaces a team. Its
+// logo is not in the file: it starts without one.
+importTeam(file: string) <string, any>
+  t = validTeam(readTeamFile(file))
+  t["id"] = freeId(t["id"]!)
+  t["logo"] = null
+  saveTeam(t)
+
+// ---------- the logo ----------
+
+// The logo's file of a team, when it has one that is there; null otherwise.
+logoPath(t: <string, any>) string?
+  logo = t["logo"]
+  if not isText(logo) or not teamsDir().joinpath(logo as string).isFile()
+    return null
+  "${teamsDir().joinpath(logo as string)}"
+
+// The kind of an image by its first bytes and its extension (`jpeg` is `jpg`); throws when it is none of the logos'.
+logoKind(image: Path) string
+  ext = image.suffix.lower().replace(".", "").replace("jpeg", "jpg")
+  if not (ext in LOGO_KINDS)
+    throw TeamError("a logo is a .png, .svg or .jpg image: ${image.name}")
+  size: int = image.stat().stSize
+  if size > LOGO_MAX_BYTES
+    throw TeamError("the logo is ${size ~/ 1024} KB: at most 1 MB")
+  f = image.open("rb")
+  head: string = f.read(512).hex()
+  f.close()
+  fits = match ext
+    "png" -> head.startsWith("89504e470d0a1a0a")
+    "jpg" -> head.startsWith("ffd8ff")
+    _ -> "<svg" in image.readText(encoding = "utf-8", errors = "replace").lower()
+  if not fits
+    throw TeamError("${image.name} is not a ${ext} image")
+  ext
+
+// Copies `image` beside the team as `<id>.logo.<kind>` (atomic) and names it in the team; null takes the logo away
+// (`--clear`). A logo of another kind that was there is removed.
+setLogo(id: string, image: string?) <string, any>
+  t: <string, any> = loadTeam(id)
+  name: string? = null
+  if image != null
+    source = Path(image!)
+    if not source.isFile()
+      throw TeamError("no image ${image}")
+    name = "${id}.logo.${logoKind(source)}"
+    target = teamsDir().joinpath(name!)
+    temp = target.withName(".${target.name}.${os.getpid()}.tmp")
+    shutil.copyfile(source, temp)
+    os.replace(temp, target)
+  t["logo"] = name
+  saved = saveTeam(t)
+  for kind in LOGO_KINDS
+    other = teamsDir().joinpath("${id}.logo.${kind}")
+    if "${id}.logo.${kind}" != name
+      other.unlink(missingOk = true)
+  saved
+
+readTeamFile(file: string) any
+  try
+    readJson(Path(file))
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    throw TeamError("cannot read a team from ${file}: ${e}")
+
+freeId(id: string) string
+  if not teamFile(id).exists()
+    return id
+  n = 2
+  while teamFile("${id}-${n}").exists()
+    n += 1
+  "${id}-${n}"
+
+// ---------- who works a member, by default ----------
+
+// A member worked on this machine (the local defaults): the local Nuclear Developer with the profile's model for the
+// role (the coder model for the Developer, the assistant's for the rest).
+localWorker(role: string, machine: <string, string>? = null) <string, any>
+  m = machine ?? readMachine()
+  model = role == "developer" ? (m["CODER_MODEL"] ?? "qwen2.5-coder:3b") : (m["ASSISTANT_MODEL"] ?? "gemma4:e2b")
+  { "kind": "local", "provider": "nuclear-developer", "model": model }
+
+// A new member from what is given (`team create`, `team member add`): the local defaults where who works it is not
+// said, every skill of its role switched on where its skills are not, a free id in the team.
+newMember(fields: <string, any>, members: <string, any>[], machine: <string, string>? = null) <string, any>
+  role = roleId("${fields["role"] ?? ""}")
+  if not (role in ROLES)
+    throw TeamError("no such role `${role}`: ${ROLES.join(", ")}")
+  m: <string, any> = {}
+  for key, value in fields
+    if value != null
+      m[key] = value
+  m["role"] = role
+  if m["kind"] == null and m["provider"] == null
+    for key, value in localWorker(role, machine)
+      m[key] = m[key] ?? value
+  if m["skills"] == null
+    m["skills"] = roleSkills(role)
+  if m["id"] == null
+    m["id"] = freeMemberId("${m["employee"] ?? role}", members)
+  m
+
+// The team a run takes when there is none at all (not saved): one member of each role, the first employee of its
+// roster, worked on this machine.
+localTeam(machine: <string, string>? = null, known: <string, any>? = null) <string, any>
+  people = known ?? rosters()
+  members: <string, any>[] = []
+  for role in ROLES
+    staff: <string, any>[] = people[role] ?? []
+    members.add(newMember({ "role": role, "employee": staff.isEmpty ? null : staff[0]["id"], "id": role }, members, machine))
+  validTeam({ "id": LOCAL_TEAM, "name": "Local team", "updated": 0, "budgetUsd": DEFAULT_BUDGET, "members": members }, people)
+
+// Several saved teams, none the project's nor the default: the user chooses one (the editor asks once and saves it as
+// the project's, `line set team=<id>`); never the local team silently.
+TeamChoice(message: string) : TeamError(message)
+
+// The team of a run and of the chat (one rule, docs/02-architecture/engine.md "The team"): the one asked for, else the
+// project's `.nuclear/builder.json` "team", else the default team, else the only saved team. Null when there is no
+// saved team (the run takes `localTeam`); a `TeamChoice` when there are several and none of them is chosen.
+runTeam(root: string, asked: string? = null) <string, any>?
+  id = asked
+  if id == null
+    config = Path(root, ".nuclear", "builder.json")
+    if config.isFile()
+      found = readJson(config)
+      own: <string, any> = isinstance(found, dict) ? found : ({} as <string, any>)
+      if isText(own["team"])
+        id = own["team"]
+  if id == null
+    id = defaultTeamId()
+  if id == null
+    saved = teamIds()
+    if saved.length > 1
+      throw TeamChoice("several teams and none is this project's nor the default (${saved.join(", ")}): choose one with `nuclear-builder line set team=<id>` in the project, or `nuclear-builder team default <id>`")
+    id = saved.isEmpty ? null : saved[0]
+  id == null ? null : loadTeam(id!)
+
+// ---------- a team made or changed by one command (the page's and the agents') ----------
+
+// `team create`: a new team from the wizard's draft (`{ name, description, purpose, skills, budgetUsd, techLead,
+// logoFile, members: [{ role, employee, name, kind, provider, model, … }] }`), its own free id; `techLead` is a
+// member's id or its index in `members`. The logo's image is copied beside it (`team logo`).
+createTeam(draft: any, machine: <string, string>? = null) <string, any>
+  if not isinstance(draft, dict)
+    throw TeamError("a team's draft is a JSON object")
+  d: <string, any> = draft
+  name = d["name"]
+  if not isText(name) or (name as string).trim().isEmpty
+    throw TeamError("the team has no name")
+  given = d["members"] ?? ([] as any[])
+  if not isinstance(given, list)
+    throw TeamError("members must be a list")
+  members: <string, any>[] = []
+  for one in given as any[]
+    if not isinstance(one, dict)
+      throw TeamError("a member is an object { role, employee, kind, provider, model, … }")
+    members.add(newMember(one, members, machine))
+  lead = d["techLead"]
+  if isNumber(lead) and (lead as int) >= 0 and (lead as int) < members.length
+    lead = members[lead as int]["id"]
+  team: <string, any> = { "id": freeId(teamSlug(name as string)), "name": name, "description": d["description"] ?? "", "purpose": d["purpose"] ?? "", "skills": d["skills"] ?? ([] as string[]), "ownSkills": d["ownSkills"] ?? ([] as any[]), "budgetUsd": d["budgetUsd"] ?? DEFAULT_BUDGET, "techLead": lead, "members": members }
+  saved = saveTeam(team)
+  logo = d["logoFile"]
+  isText(logo) and not (logo as string).isEmpty ? setLogo("${saved["id"]}", logo as string) : saved
+
+// `team update`: the team's name, description, purpose, skills, tech lead (a member's id) and budget; what is not
+// given stays.
+updateTeam(id: string, fields: <string, any>) <string, any>
+  t = loadTeam(id)
+  for key in ["name", "description", "purpose", "skills", "ownSkills", "techLead", "budgetUsd"]
+    if fields[key] != null
+      t[key] = fields[key]
+  saveTeam(t)
+
+// `team member add`: new members of the team (several at once: `count` of the same who-works, each a free id);
+// each is `newMember`'s.
+addMembers(id: string, fields: <string, any>[], machine: <string, string>? = null) <string, any>
+  t = loadTeam(id)
+  members: <string, any>[] = t["members"] ?? []
+  for one in fields
+    members.add(newMember(one, members, machine))
+  t["members"] = members
+  saveTeam(t)
+
+// `team member remove`: a member leaves the team; the tech lead's place goes to the default one when it was them.
+removeMember(id: string, member: string) <string, any>
+  t = loadTeam(id)
+  members: <string, any>[] = t["members"] ?? []
+  if not members.any((m) => m["id"] == member)
+    throw TeamError("the team ${id} has no member `${member}`")
+  t["members"] = members.filter((m) => m["id"] != member)
+  if t["techLead"] == member
+    t["techLead"] = null
+  saveTeam(t)
+
+// `team member update`: a member's who-works (kind, provider, model; one this machine has), employee, name, skills,
+// extra skills, instructions and personality; what is not given stays. A kind changed without its provider takes that
+// kind's first provider.
+updateMember(id: string, member: string, fields: <string, any>) <string, any>
+  t = loadTeam(id)
+  members: <string, any>[] = t["members"] ?? []
+  at = -1
+  for i in 0..members.length
+    if members[i]["id"] == member
+      at = i
+  if at < 0
+    throw TeamError("the team ${id} has no member `${member}`")
+  r: <string, any> = dict(members[at])
+  if fields["kind"] != null and fields["provider"] == null and fields["kind"] != r["kind"]
+    r.remove("provider")
+  for key in ["kind", "provider", "model", "employee", "name", "skills", "extraSkills", "ownSkills", "instructions", "agent"]
+    if fields[key] != null
+      r[key] = fields[key]
+  // an empty agent takes the base agent away
+  if r["agent"] == ""
+    r.remove("agent")
+  personality: <string, any> = dict(r["personality"] ?? defaultPersonality())
+  for key in ["temperament", "gifs", "on", "note"]
+    if fields[key] != null
+      personality[key] = fields[key]
+  r["personality"] = personality
+  members[at] = r
+  t["members"] = members
+  saveTeam(t)
+
+// `team duplicate`: a copy of a team under a new name and its own id.
+duplicateTeam(id: string, name: string? = null) <string, any>
+  t = dict(loadTeam(id))
+  title = name ?? "${t["name"]} (copy)"
+  t["name"] = title
+  t["id"] = freeId(teamSlug(title))
+  t["logo"] = null
+  saveTeam(t)

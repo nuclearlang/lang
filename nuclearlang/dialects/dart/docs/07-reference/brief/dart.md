@@ -31,8 +31,8 @@ lineCount(path: string) int
 ```
 
 ```dart
-import 'dart:io';
-import 'dart:math';
+import 'dart:io' hide Point;
+import 'dart:math' hide Point;
 
 class Point {
   double x;

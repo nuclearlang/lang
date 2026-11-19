@@ -1,0 +1,69 @@
+// The left of the chat: the project, its channels and its direct messages, each with its unread count; the open one
+// marked. A team's channel shows its tech lead.
+stateless Sidebar(ws: Workspace, channels: Channel[], open: string, texts: Texts, onOpen: (id: string) => void)
+  build() Element
+    rooms = channels.filter((c) => c.kind != "dm")
+    dms = channels.filter((c) => c.kind == "dm")
+    nav(
+      className = "sidebar",
+      children = [
+        div(className = "ws", children = [span(className = "ws-mark", children = projectName(ws).substring(0, 1).upper()), strong(className = "ws-name", children = projectName(ws))]),
+        div(
+          className = "rooms",
+          children = [
+            div(className = "section", children = texts.get("channels")),
+            ...rooms.map((c) => ChannelItem(key = c.id, channel = c, ws = ws, open = c.id == open, onOpen = onOpen)),
+            div(className = "section", children = texts.get("dms")),
+            ...dms.map((c) => DmItem(key = c.id, channel = c, ws = ws, open = c.id == open, onOpen = onOpen)),
+          ],
+        ),
+      ],
+    )
+
+// The project's name: the last folder of its root.
+projectName(ws: Workspace) string
+  parts = ws.root.split("/").filter((p) => p != "")
+  parts.length > 0 ? parts.last : ws.id
+
+// The tech lead of a channel's team, or null.
+leadOf(ws: Workspace, channel: Channel) Member?
+  team = ws.teams.find((t) => t.id == channel.team or t.id == channel.id)
+  if team == null
+    return null
+  ws.members.find((m) => m.id == team!.lead)
+
+// The member of a direct message (`dm-<member>`), or null.
+dmMember(ws: Workspace, channel: Channel) Member?
+  id = channel.id.startsWith("dm-") ? channel.id.substring(3) : (channel.members.length > 0 ? channel.members.first : "")
+  ws.members.find((m) => m.id == id)
+
+// A channel's line: `# name`, its tech lead when it is a team's, its unread count.
+stateless ChannelItem(channel: Channel, ws: Workspace, open: boolean, onOpen: (id: string) => void)
+  build() Element
+    lead = leadOf(ws, channel)
+    button(
+      className = "room ${open ? "open" : ""} ${channel.unread > 0 ? "unread" : ""}",
+      onClick = () => onOpen(channel.id),
+      children = [
+        span(className = "hash", children = "#"),
+        span(className = "room-name", children = channel.name != "" ? channel.name : channel.id),
+        lead != null ? span(className = "room-lead", title = lead!.name, children = lead!.name.split(" ").first) : null,
+        channel.unread > 0 ? span(className = "badge", children = "${channel.unread}") : null,
+      ],
+    )
+
+// A direct message's line: the member's picture, name and role, its unread count.
+stateless DmItem(channel: Channel, ws: Workspace, open: boolean, onOpen: (id: string) => void)
+  build() Element
+    member = dmMember(ws, channel)
+    name = member?.name ?? (channel.name != "" ? channel.name : channel.id)
+    button(
+      className = "room dm ${open ? "open" : ""} ${channel.unread > 0 ? "unread" : ""}",
+      onClick = () => onOpen(channel.id),
+      children = [
+        Avatar(member = member, author = member?.id ?? channel.id, size = "small"),
+        span(className = "room-name", children = name),
+        member != null and member!.role != "" ? span(className = "room-role", children = member!.role) : null,
+        channel.unread > 0 ? span(className = "badge", children = "${channel.unread}") : null,
+      ],
+    )

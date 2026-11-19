@@ -1,0 +1,32 @@
+// A new message of the user, answered by who it brings in (Routing): each one's responder runs with the
+// conversation (the thread's, or the channel's messages outside threads). The ids of the members brought in.
+usecase AnswerMessage(routing: Routing, responders: Responders, workspaces: WorkspacesAppComponent, messages: MessagesAppComponent)
+  exec(event: ChatEvent) Result<Error, string[]>
+    said = (event.data["message"] ?? ({} as <string, any>)) as <string, any>
+    if event.type != "message" or event.data["said"] != true or said["author"] != "you"
+      return Ok([])
+    text = "${said["text"] ?? ""}"
+    if text.startsWith("/")
+      return Ok([])
+    // shortcut: an appcomponent alias's Result does not propagate yet (nuclearlang roadmap), so it is checked here
+    found: Result<Error, Workspace> = workspaces.workspace(event.workspace)
+    if found.isErr
+      return Err(found.error)
+    ws = found.value
+    channel = ws.channel(event.channel)
+    if channel == null
+      return Ok([])
+    who = routing.answerers(ws, channel!, text)
+    if who.isEmpty
+      return Ok([])
+    thread: string? = said["thread"] == null ? null : "${said["thread"]}"
+    history: Result<Error, Message[]> = messages.history(ws.id, channel!.id, thread)
+    if history.isErr
+      return Err(history.error)
+    shown = thread == null ? history.value.filter((m) => m.thread == null) : history.value
+    conversation: <string, any>[] = shown.map((m) => { "id": m.id, "at": m.at, "author": m.author, "text": m.text, "thread": m.thread, "gif": m.gif == null ? null : m.gif!.title })
+    for member in who
+      why = responders.start(ws, channel!.id, member, said, conversation)
+      if why != null
+        ~messages.post(ws.id, channel!.id, Posted(author = "system", text = "${member.name} cannot answer: ${why}", thread = thread))
+    Ok(who.map((m) => m.id))

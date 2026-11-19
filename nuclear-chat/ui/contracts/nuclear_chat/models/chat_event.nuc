@@ -1,0 +1,10 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// What happened in a workspace, for whoever shows it: a message (new or changed), the channels, a member typing or using a tool, a member's question, a button clicked or a command for the host (`action`). `n` orders them.
+ChatEvent
+  n: int
+  workspace: string
+  // message, channels, typing, tool, ask, action, error
+  type: string
+  channel: string = ""
+  data: <string, any> = {}
+  at: int = 0

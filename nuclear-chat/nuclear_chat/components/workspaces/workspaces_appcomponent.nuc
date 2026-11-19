@@ -1,0 +1,5 @@
+// What the rest of the app sees of workspaces: a project registered by its host, its members, teams and channels.
+appcomponent WorkspacesAppComponent
+  register() = RegisterWorkspace.exec
+  workspace() = GetWorkspace.exec
+  keepChannels() = KeepChannels.exec

@@ -156,7 +156,10 @@
    "summary": "file with that table.",
    "body": [
     "- `build()`: pass 1 = declarations of every file (`Emitter::declarations`, `ProjectCtx`); pass 2 = emit each",
-    "  file with that table. A name of another file is used without `use`: the import is written.",
+    "  file with that table. A name of another file is used without `use`: the import is written. It comes from the",
+    "  free words of the generated code (`code_words`, `free_code_words` in `emit.rs`): a local, a parameter, a field of",
+    "  a module (`self.note = note`), a member, a word of a comment, a string or a docstring, and the members a",
+    "  library helper calls never import another file.",
     "- Result runtime in `nuclear/result`; `[project.files]` templates (`project_context`: `decls`, `kinds.<k>`,",
     "  `decorated.<d>`, `files`, `has.<kind>`, `has.@<decorator>`, `components`, `uses`); a project file whose template",
     "  renders empty is not written; it imports the files whose names its code writes.",
@@ -472,28 +475,7 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.73fb1a",
-   "type": "context",
-   "title": "Testing — Checking against the real target",
-   "summary": "ask first.",
-   "body": [
-    "ask first.",
-    "",
-    "The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and",
-    "`base/docs.toml`; the lexer test and the loader test name those files in their messages. A test that cannot find a",
-    "folder of the tree fails; none skips itself."
-   ],
-   "sources": [
-    "nuclearlang/docs/05-standards/testing.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.b6a33e",
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.197df1",
    "type": "context",
    "title": "Testing — Checking against the real target",
    "summary": "`tools/spec-check/check.py dialects/<language>/docs/07-reference/<dialect>.md <dialect> <language>` must give 0 problems; the briefs the same way (`.../07-reference/brief/<dialect>.md`).",
@@ -506,13 +488,39 @@
     "  `examples/stdlib/`, checks it (`tsc --strict`, pyright), runs it (node, `dart run`, python) and compares what it",
     "  prints with `<area>.out`. `UPDATE=1` makes the TypeScript output the expected one. It needs node, dart,",
     "  TypeScript and `tools/python/.venv`; the cargo test only checks that the programs transpile.",
+    "- **The rules a target could break:** `DIR=examples/semantics tools/stdlib-check.sh` the same way, over the programs",
+    "  of `examples/semantics/`: a name that a target's function has, a lambda made in a loop, a default list, a static",
+    "  field, `~/` with negatives, a chain after `?.`, a variable of the file a function changes, `==` of two lists or",
+    "  maps, a decimal and a missing value printed, named arguments, a function type of types only. Each passed",
+    "  `nuclear check` and was wrong in a target once; a fix of that kind adds its case here."
+   ],
+   "sources": [
+    "nuclearlang/docs/05-standards/testing.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/05-standards/testing.md#checking-against-the-real-target.31a951",
+   "type": "context",
+   "title": "Testing — Checking against the real target",
+   "summary": "`../nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]` (its host project is `tools/defs/flutter_project`; `flutter_lints`, 0 warnings).",
+   "body": [
     "- **TypeScript by hand:** `tools/node/node_modules/.bin/tsc --strict --noEmit --target es2022 --lib es2022,dom x.ts`.",
     "- **Dart and Flutter:** the mobile platform's",
     "  `../nuclear-synapsis-framework/platforms/mobile/checks/analyze-flutter.sh [file.nuc...]` (its host project is",
     "  `tools/defs/flutter_project`; `flutter_lints`, 0 warnings).",
     "- **A platform with a dialect** (the example built, the analyzer in strict mode, its tests, a live run):",
     "  `../nuclear-synapsis-framework/platforms/<platform>/checks/`.",
-    "- **Agents:** `../nuclear-synapsis-framework/eval/agent-eval/run.py --mode agent` spends the user's Claude quota:"
+    "- **Agents:** `../nuclear-synapsis-framework/eval/agent-eval/run.py --mode agent` spends the user's Claude quota:",
+    "  ask first.",
+    "",
+    "The base words live in `base/nuclear.toml` (its `source` is `docs/07-reference/nuclear-base.md`) and",
+    "`base/docs.toml`; the lexer test and the loader test name those files in their messages. A test that cannot find a",
+    "folder of the tree fails; none skips itself."
    ],
    "sources": [
     "nuclearlang/docs/05-standards/testing.md"
@@ -677,38 +685,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.1dc30d",
-   "type": "spec",
-   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
-   "summary": "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's notation, the same whatever the dialect.",
-   "body": [
-    "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's",
-    "notation, the same whatever the dialect. A backend lists its `controllers` (path, routes with verb, path, parameters",
-    "and where each goes: `path`, `query` or `body`, the answer and error types, the status) and a mobile or web app its",
-    "`repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,",
-    "`json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets",
-    "`.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the",
-    "runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`.",
-    "",
-    "A client declares the backends it talks to in its manifest, with the name of the connection its calls use:",
-    "",
-    "```nuclear",
-    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
-    "app(name = \"tasks_app\", version = \"1.0.0+1\")",
-    "contracts(tasks_api = \"../tasks_api\")              // a backend built next to this project (its .nuclear/contract.json)",
-    "contracts(tasks_api = \"https://api.example.com\")   // or the running API: nuclear contracts update fetches it",
-    "```"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/projects.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.8f2f57",
    "type": "spec",
    "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
@@ -730,6 +706,62 @@
     "```",
     "",
     "Example: `examples/examples-flutter-dialect/tasks_app` over `examples/examples-backend/tasks_api`."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.a30a39",
+   "type": "spec",
+   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
+   "summary": "A client declares the backends it talks to in its manifest, with the name of the connection its calls use: synapsis(platform = \"mobile\", dialect = \"flutter\") app(name = \"tasks_app\", version = \"1.0.0+1\") contracts(tasks_api = \"../tasks_api\") // a backend built next to this project (its…",
+   "body": [
+    "| Field | Holds |",
+    "|---|---|",
+    "| `webSocket` | the path of the app's WebSocket (`\"/ws\"`), or `null` when its config has no `WebSocketServer` |",
+    "| `controllers.<C>.transports` | `[\"http\"]`, or `[\"http\", \"websocket\"]` when the app has a WebSocket |",
+    "| `guards`, `controllers.<C>.guards` | the app's guards and each controller's own, in order: `{\"guard\": \"token\", \"header\": \"X-Token\"}`, `{\"guard\": \"noOrigin\"}`; a token's value is never written |",
+    "| `events.<topic>` | each topic the app publishes (`~publish(\"topic\", value)`): the `component` that publishes it and its `payload`: the model built in place, a typed parameter's type, or `<string, any>` with the map's `fields`; `any` when the source does not say |",
+    "",
+    "A client declares the backends it talks to in its manifest, with the name of the connection its calls use:",
+    "",
+    "```nuclear",
+    "synapsis(platform = \"mobile\", dialect = \"flutter\")",
+    "app(name = \"tasks_app\", version = \"1.0.0+1\")",
+    "contracts(tasks_api = \"../tasks_api\")              // a backend built next to this project (its .nuclear/contract.json)",
+    "contracts(tasks_api = \"https://api.example.com\")   // or the running API: nuclear contracts update fetches it",
+    "```"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#1-manifest-1-2-the-contract-nuclear-contract-json-and-contracts.d69732",
+   "type": "spec",
+   "title": "Multi-file projects — 1.2 The contract: `.nuclear/contract.json` and `contracts(...)`",
+   "summary": "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's notation, the same whatever the dialect.",
+   "body": [
+    "The same call also writes `.nuclear/contract.json` (ADR-synapsis-0006): what the project exposes or calls, in Nuclear's",
+    "notation, the same whatever the dialect. A backend lists its `controllers` (path, routes with verb, path, parameters",
+    "and where each goes: `path`, `query` or `body`, the answer and error types, the status) and a mobile or web app its",
+    "`repositories` (the calls it makes); both list the `models` those carry (fields with type, `optional`, `default`,",
+    "`json` name, `rules` such as `minLength`, the `key` field, doc comments as `description`). A backend also gets",
+    "`.nuclear/openapi.json` (OpenAPI 3.1 from the contract); both files are copied into the output folder and the",
+    "runtimes serve them at `GET /.nuclear/contract.json` and `GET /.nuclear/openapi.json`.",
+    "",
+    "A backend's contract also says how it is reached (ADR-synapsis-0007, ADR-synapsis-0008):"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"
@@ -874,31 +906,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#3-what-the-dialect-adds-project-3-1-manifest-in-nuclear-project-manifest.6ba87c",
-   "type": "spec",
-   "title": "Multi-file projects — 3.1 Manifest in Nuclear: `[project.manifest]`",
-   "summary": "A `packages` section only lists third-party packages the framework does not use: a package of the dialect (its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line (`project::check_config`, `project::reserved_package`).",
-   "body": [
-    "A `packages` section only lists third-party packages the framework does not use: a package of the dialect",
-    "(its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line",
-    "(`project::check_config`, `project::reserved_package`). A package of `advice` is never refused: the CLI says the",
-    "advice when the package is added (`nuclear add express`), and adds it.",
-    "",
-    "A backend dialect has the `dependencies` section too (`dependencies(nuclear_graph = \">=0.1\")`): each package goes to",
-    "the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,",
-    "`version`, `path`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root",
-    "(`nuclear_graph @ file:///...`, `\"file:/...\"`)."
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/projects.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/docs/07-reference/projects.md#3-what-the-dialect-adds-project-3-1-manifest-in-nuclear-project-manifest.e4b36d",
    "type": "spec",
    "title": "Multi-file projects — 3.1 Manifest in Nuclear: `[project.manifest]`",
@@ -911,6 +918,35 @@
     "that is not a literal is `N0303`) and it is not transpiled: it has no output",
     "(empty `out_path`). The framework's CLI reads it with `project::read_config` (section → arguments as text)",
     "to write the target's manifest (the `pubspec.yaml` in Flutter)."
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#3-what-the-dialect-adds-project-3-1-manifest-in-nuclear-project-manifest.fb0774",
+   "type": "spec",
+   "title": "Multi-file projects — 3.1 Manifest in Nuclear: `[project.manifest]`",
+   "summary": "A `packages` section only lists third-party packages the framework does not use: a package of the dialect (its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line (`project::check_config`, `project::reserved_package`).",
+   "body": [
+    "A `packages` section only lists third-party packages the framework does not use: a package of the dialect",
+    "(its `defs`, not the ones the project added) or of `reserved` is `N0303` on its line",
+    "(`project::check_config`, `project::reserved_package`). A package of `advice` is never refused: the CLI says the",
+    "advice when the package is added (`nuclear add express`), and adds it.",
+    "",
+    "A backend dialect has the `dependencies` section too (`dependencies(nuclear_graph = \">=0.1\")`): each package goes to",
+    "the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,",
+    "`version`, `path`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root",
+    "(`nuclear_graph @ file:///...`, `\"file:/...\"`).",
+    "",
+    "`testEnv(NAME = \"value\")` (a section the dialect lists in `sections`) is the environment the project's tests run",
+    "with (ADR-synapsis-0010): the template variable `test_env` (`name`, `value`) of the project files, which set it",
+    "before the app is loaded (`tests/conftest.py`, `src/test_env.ts`). Only the tests see it."
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"
@@ -1091,29 +1127,6 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/projects.md#5-data-for-kind-templates.0b0365",
-   "type": "spec",
-   "title": "Multi-file projects — 5. Data for kind templates",
-   "summary": "Kind fields for frameworks:",
-   "body": [
-    "| `ret_info`, `tinfo` | methods, functions, parameters | of the type: `type`, `list`, `item`, `name` (name in Nuclear, without type arguments), `args` (the type arguments, each with this same data: `Page<Character>`), `generic` (a type parameter of the declaration: `T`), `model` (a class of the program, or of the type definitions that reads itself from JSON: the runtime's `PageOf`), `runtime` (a `model` of the type definitions, not of the program), `fields_decor.<decorator>` and `decor` of a model (its first field with that decorator: `primary` → `id`; its own decorators: `decor.entity.arg`, the table), `primitive`, `void`, `nullable`, `is.<name>`; of a `Result<T, E>`: `result`, `full`, `err`, `err_is.<name>` and the rest describes `T` |",
-    "| `override` | `field` | the field replaces a member of a base |",
-    "| `file`, `project`, `component`, `kind` | kind | name of the file, the project, the component and the kind |",
-    "| `app.name`, `app.title`, `app.description`, `app.version` | project files | `app(...)` of `config.nuc` (`title`: the name when absent) |",
-    "| `asset.<path>` | project files | a file of the `[project] assets` folders exists, its path with `/`, `.` and `-` as `_` (`asset.public_styles_css`: index.html links the stylesheet only when the project has one) |",
-    "",
-    "Kind fields for frameworks:"
-   ],
-   "sources": [
-    "nuclearlang/docs/07-reference/projects.md"
-   ],
-   "meta": {
-    "section": "03-projects",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclearlang/docs/07-reference/projects.md#5-data-for-kind-templates.63d342",
    "type": "spec",
    "title": "Multi-file projects — 5. Data for kind templates",
@@ -1150,6 +1163,48 @@
     "| `[decorators.provide]` | decorator (or `decorator.argument`) → template: with `\"screen.providers\" = \"context.read<{{name}}>()\"`, in a declaration with `@screen(providers = [Manager])`, `Manager.x()` is `context.read<Manager>().x()` |",
     "| `[decorators.args]` | decorator → its named arguments: `[\"route\", \"loggedIn\", \"loggedIn.forward!\"]` (`a.b` = field of object `a`; `!` = required). One that is not listed, or a required one that is missing, is `N0217` |",
     "| `void` | a method with that decorator returns nothing to its caller |"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#5-data-for-kind-templates.843d0d",
+   "type": "spec",
+   "title": "Multi-file projects — 5. Data for kind templates",
+   "summary": "5. Data for kind templates",
+   "body": [
+    "| `ret_info`, `tinfo` | methods, functions, parameters | of the type: `type`, `list`, `item`, `name` (name in Nuclear, without type arguments), `args` (the type arguments, each with this same data: `Page<Character>`), `generic` (a type parameter of the declaration: `T`), `model` (a class of the program, or of the type definitions that reads itself from JSON: the runtime's `PageOf`), `runtime` (a `model` of the type definitions, not of the program), `fields_decor.<decorator>` and `decor` of a model (its first field with that decorator: `primary` → `id`; its own decorators: `decor.entity.arg`, the table), `primitive`, `void`, `nullable`, `is.<name>`; of a `Result<T, E>`: `result`, `full`, `err`, `err_is.<name>` and the rest describes `T` |",
+    "| `override` | `field` | the field replaces a member of a base |",
+    "| `file`, `project`, `component`, `kind` | kind | name of the file, the project, the component and the kind |",
+    "| `plugins.<name>` | kind, `method` | the plugins `config.nuc` enables (with the ones they require): a dialect writes a plugin's part only when it is on (`{{#plugins.telemetry}}`) |",
+    "| `site.component`, `site.kind`, `site.path`, `site.line` | `method` | where the method is written, the parts of `[call_site]`'s breadcrumb as constants (a span's name: `orders › usecase › FindOrder.exec`) |"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md"
+   ],
+   "meta": {
+    "section": "03-projects",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/07-reference/projects.md#5-data-for-kind-templates.962c71",
+   "type": "spec",
+   "title": "Multi-file projects — 5. Data for kind templates",
+   "summary": "Kind fields for frameworks:",
+   "body": [
+    "| `is.<name>` | `method` | the method's own name, to write something for one method of a kind (`{{#is.exec}}`) |",
+    "| `app.name`, `app.title`, `app.description`, `app.version` | project files | `app(...)` of `config.nuc` (`title`: the name when absent) |",
+    "| `asset.<path>` | project files | a file of the `[project] assets` folders exists, its path with `/`, `.` and `-` as `_` (`asset.public_styles_css`: index.html links the stylesheet only when the project has one) |",
+    "",
+    "Kind fields for frameworks:"
    ],
    "sources": [
     "nuclearlang/docs/07-reference/projects.md"

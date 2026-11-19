@@ -1,13 +1,13 @@
 {
   "model-new-book": {
-    "round": 23,
+    "round": 24,
     "code": "model NewBook\n  @minLength(1) title: string\n  author: string\n  year: int\n",
     "attempts": 1,
-    "seconds": 6.0,
+    "seconds": 5.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "4727 characters of knowledge, 1290 of examples"
+        "detail": "the cards \u2014 kind: `model` \u2014 a kind of the backend platform; pitfall: Pitfall: only the first of several declarations written; pitfall: Pitfall: a name, path or value changed from what the task says; kind: `model` \u2014 a kind of the backend platform; decorator: `@key` \u2014 a decorator of the backend platform; rule: The standard library of Nuclear \u2014 3. Maps: `<K, V>` \u2014 and the examples \u2014 solved: Solved \u2014 a model: A model NewBook: title (string, at least 1 character), author (string) and year (int).; solved: Solved \u2014 a model: A model NewReader: name (string, 2 to 80 characters) and email (string, a valid email).; file: `model` NewCharacter \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -19,14 +19,14 @@
     "pass": true
   },
   "model-reader": {
-    "round": 23,
-    "code": "// What the API receives to create a reader.\nmodel NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n",
+    "round": 24,
+    "code": "model NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n",
     "attempts": 1,
-    "seconds": 2.6,
+    "seconds": 2.4,
     "trace": [
       {
         "step": "recall",
-        "detail": "3680 characters of knowledge, 1290 of examples"
+        "detail": "the cards \u2014 kind: `model` \u2014 a kind of the backend platform; pitfall: Pitfall: a name, path or value changed from what the task says; pitfall: Pitfall: only the first of several declarations written; kind: `model` \u2014 a kind of the backend platform; decorator: `@email` \u2014 a decorator of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.3 Model \u2014 and the examples \u2014 solved: Solved \u2014 a model: A model NewReader: name (string, 2 to 80 characters) and email (string, a valid email).; solved: Solved \u2014 a model: A model NewBook: title (string, at least 1 character), author (string) and year (int).; file: `model` NewCharacter \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -38,14 +38,14 @@
     "pass": true
   },
   "model-book-changes": {
-    "round": 23,
+    "round": 24,
     "code": "model BookChanges\n  title?: string\n  year?: int\n  available?: boolean\n",
     "attempts": 1,
-    "seconds": 2.0,
+    "seconds": 1.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "3813 characters of knowledge, 1649 of examples"
+        "detail": "the cards \u2014 kind: `model` \u2014 a kind of the backend platform; pitfall: Pitfall: a name, path or value changed from what the task says; pitfall: Pitfall: only the first of several declarations written; decorator: `@required` \u2014 a decorator of the backend platform; guide: Language reference \u2014 Types; decorator: `@key` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a model: A model NewBook: title (string, at least 1 character), author (string) and year (int).; solved: Solved \u2014 a model: A model NewReader: name (string, 2 to 80 characters) and email (string, a valid email).; file: `model` NewTodo \u2014 the example project todos_api (backend)"
       },
       {
         "step": "write",
@@ -57,14 +57,14 @@
     "pass": true
   },
   "entity-book": {
-    "round": 23,
-    "code": "@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n\n  @column(length = 200)\n  title: string\n\n  author: string\n  year: int\n  available: boolean = true\n",
+    "round": 24,
+    "code": "// A book of the catalog.\n@entity(\"books\")\nentity Book\n  @primary(generated = true)\n  id: int\n\n  @column(length = 200)\n  title: string\n\n  author: string\n  year: int\n  available: boolean = true\n",
     "attempts": 1,
-    "seconds": 3.8,
+    "seconds": 4.0,
     "trace": [
       {
         "step": "recall",
-        "detail": "5613 characters of knowledge, 1438 of examples"
+        "detail": "the cards \u2014 kind: `entity` \u2014 a kind of the backend platform; pitfall: Pitfall: a decorator written after or beside its field; pitfall: Pitfall: a name, path or value changed from what the task says; kind: `entity` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.1 Entity; decorator: `@entity` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a entity: An entity Book: id (int, a generated primary key), title (string, at most 200 characters), author (string), year (int)\u2026; solved: Solved \u2014 a entity: An entity Book (id: a generated primary key, title: string, author: string). A repository BookRepository with\u2026"
       },
       {
         "step": "write",
@@ -76,14 +76,14 @@
     "pass": true
   },
   "entity-loan": {
-    "round": 23,
+    "round": 24,
     "code": "@entity(\"loans\")\nentity Loan\n  @primary(generated = true)\n  id: int\n  bookId: int\n  reader: string\n  returned: boolean = false\n",
     "attempts": 1,
     "seconds": 2.6,
     "trace": [
       {
         "step": "recall",
-        "detail": "7497 characters of knowledge, 1379 of examples"
+        "detail": "the cards \u2014 kind: `entity` \u2014 a kind of the backend platform; pitfall: Pitfall: a decorator written after or beside its field; pitfall: Pitfall: a name, path or value changed from what the task says; kind: `entity` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.1 Entity; kind: `repository` \u2014 a kind of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a entity: An entity Loan stored in the table \"loans\": id (generated primary key), bookId (int), reader (string) and returned\u2026; solved: Solved \u2014 a entity: An entity Book: id (int, a generated primary key), title (string, at most 200 characters), author (string), year (int)\u2026"
       },
       {
         "step": "write",
@@ -95,14 +95,14 @@
     "pass": true
   },
   "entity-reader": {
-    "round": 23,
-    "code": "@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n\n  @column(length = 120, unique = true)\n  email: string\n",
+    "round": 24,
+    "code": "// A reader of the catalog.\n@entity(\"readers\")\nentity Reader\n  @primary(generated = true)\n  id: int\n\n  name: string\n\n  @column(length = 120, unique = true)\n  email: string\n",
     "attempts": 1,
-    "seconds": 3.0,
+    "seconds": 3.6,
     "trace": [
       {
         "step": "recall",
-        "detail": "5613 characters of knowledge, 1379 of examples"
+        "detail": "the cards \u2014 kind: `entity` \u2014 a kind of the backend platform; pitfall: Pitfall: a decorator written after or beside its field; pitfall: Pitfall: a name, path or value changed from what the task says; spec: The `backend` platform of Synapsis \u2014 2.1 Entity; kind: `entity` \u2014 a kind of the backend platform; kind: `repository` \u2014 a kind of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a entity: An entity Book: id (int, a generated primary key), title (string, at most 200 characters), author (string), year (int)\u2026; solved: Solved \u2014 a entity: An entity Loan stored in the table \"loans\": id (generated primary key), bookId (int), reader (string) and returned\u2026"
       },
       {
         "step": "write",
@@ -114,14 +114,14 @@
     "pass": true
   },
   "repo-by-author": {
-    "round": 23,
+    "round": 24,
     "code": "repository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"year\")\n    getMany()\n",
     "attempts": 1,
-    "seconds": 4.1,
+    "seconds": 4.0,
     "trace": [
       {
         "step": "recall",
-        "detail": "8562 characters of knowledge, 1379 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the backend platform; pitfall: Pitfall: a repository query that compares with a map of operators; pitfall: Pitfall: an HTTP repository method with a body; kind: `repository` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.2 Repository; layout: Where each kind's file goes in a backend project \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) that returns the books of that author ordered by year.; solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) Book[] that filters by author and orders by title. A use\u2026"
       },
       {
         "step": "write",
@@ -133,14 +133,14 @@
     "pass": true
   },
   "repo-available-since": {
-    "round": 23,
+    "round": 24,
     "code": "repository BookRepository\n  availableSince(year: int, max: int = 20) Book[]\n    where({ \"available\": true, \"year\": gte(year) })\n    orderBy(\"title\")\n    limit(max)\n    getMany()\n",
     "attempts": 1,
-    "seconds": 1.9,
+    "seconds": 3.4,
     "trace": [
       {
         "step": "recall",
-        "detail": "8562 characters of knowledge, 1379 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the backend platform; pitfall: Pitfall: a repository query that compares with a map of operators; pitfall: Pitfall: an HTTP repository method with a body; spec: The `backend` platform of Synapsis \u2014 2.2 Repository; kind: `repository` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.2 Repository \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) that returns the books of that author ordered by year.; solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) Book[] that filters by author and orders by title. A use\u2026"
       },
       {
         "step": "write",
@@ -152,14 +152,14 @@
     "pass": true
   },
   "repo-by-title": {
-    "round": 23,
+    "round": 24,
     "code": "repository BookRepository\n  byTitle(title: string) Result<Error, Book>\n    where({ \"title\": title })\n    getOne()\n",
     "attempts": 1,
-    "seconds": 3.4,
+    "seconds": 3.3,
     "trace": [
       {
         "step": "recall",
-        "detail": "8220 characters of knowledge, 1379 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the backend platform; pitfall: Pitfall: an HTTP repository method with a body; pitfall: Pitfall: a repository query that compares with a map of operators; spec: The `backend` platform of Synapsis \u2014 2.2 Repository; kind: `repository` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.2 Repository \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) Book[] that filters by author and orders by title. A use\u2026; solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) that returns the books of that author ordered by year."
       },
       {
         "step": "write",
@@ -171,14 +171,14 @@
     "pass": true
   },
   "repo-count-open-loans": {
-    "round": 23,
+    "round": 24,
     "code": "repository LoanRepository\n  openFor(reader: string) int\n    where({ \"reader\": reader, \"returned\": false })\n    count()\n",
     "attempts": 1,
-    "seconds": 1.7,
+    "seconds": 2.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "7436 characters of knowledge, 1198 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the backend platform; pitfall: Pitfall: a repository query that compares with a map of operators; pitfall: Pitfall: an HTTP repository method with a body; kind: `repository` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.2 Repository; spec: The `backend` platform of Synapsis \u2014 2.2 Repository \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository LoanRepository with openFor(reader: string) that counts the loans of that reader that are not returned.; solved: Solved \u2014 a repository: A repository BookRepository with byAuthor(author: string) that returns the books of that author ordered by year."
       },
       {
         "step": "write",
@@ -190,14 +190,14 @@
     "pass": true
   },
   "usecase-create-book": {
-    "round": 23,
+    "round": 24,
     "code": "usecase CreateBook(books: BookRepository)\n  exec(input: NewBook) Result<Error, Book>\n    taken = ~books.where({ \"title\": input.title }).exists()\n    if taken\n      return Err(Conflict(\"${input.title} already exists\"))\n    book = ~books.save(Book(title = input.title, author = input.author, year = input.year))\n    Ok(book)\n",
     "attempts": 1,
-    "seconds": 5.1,
+    "seconds": 5.0,
     "trace": [
       {
         "step": "recall",
-        "detail": "6972 characters of knowledge, 2111 of examples"
+        "detail": "the cards \u2014 kind: `usecase` \u2014 a kind of the backend platform; pitfall: Pitfall: a use case with several methods, or whose `exec` returns a plain value; pitfall: Pitfall: writing again the declarations the task only uses; kind: `usecase` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.4 Use case; decorator: `@transactional` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a usecase: A use case GetBook(books: BookRepository): exec(id: int) returns the book with that id (the repository's find gives\u2026; solved: Solved \u2014 a usecase: A use case BooksOfAuthor(books: BookRepository) whose exec(author: string) returns those books. An application\u2026; file: `usecase` CreateTask \u2014 the example project tasks_api (backend)"
       },
       {
         "step": "write",
@@ -209,14 +209,14 @@
     "pass": true
   },
   "usecase-get-book": {
-    "round": 23,
+    "round": 24,
     "code": "usecase GetBook(books: BookRepository)\n  exec(id: int) Result<Error, Book>\n    ~books.find(id)\n",
     "attempts": 1,
-    "seconds": 3.5,
+    "seconds": 3.4,
     "trace": [
       {
         "step": "recall",
-        "detail": "7764 characters of knowledge, 1642 of examples"
+        "detail": "the cards \u2014 kind: `usecase` \u2014 a kind of the backend platform; pitfall: Pitfall: a use case with several methods, or whose `exec` returns a plain value; pitfall: Pitfall: an asynchronous call used without `~`; kind: `usecase` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.4 Use case; spec: The `backend` platform of Synapsis \u2014 2.2 Repository \u2014 and the examples \u2014 solved: Solved \u2014 a usecase: A use case GetBook(books: BookRepository): exec(id: int) returns the book with that id (the repository's find gives\u2026; solved: Solved \u2014 a usecase: A use case BooksOfAuthor(books: BookRepository) whose exec(author: string) returns those books. An application\u2026; file: `usecase` GetTodo \u2014 the example project todos_api (backend)"
       },
       {
         "step": "write",
@@ -228,14 +228,14 @@
     "pass": true
   },
   "usecase-lend-book": {
-    "round": 23,
-    "code": "usecase LendBook(books: BookRepository, loans: LoanRepository)\n  exec(bookId: int, reader: string) Result<Error, Loan>\n    book = ~books.find(bookId)\n    if not book\n      return Err(NotFound(\"book ${bookId} not found\"))\n    if not book.available\n      return Err(Conflict(\"book ${bookId} is not available\"))\n    book.available = false\n    ~books.save(book)\n    loan = Loan(bookId = bookId, reader = reader, returned = false)\n    ~loans.save(loan)\n    Ok(loan)\n",
+    "round": 24,
+    "code": "usecase LendBook(books: BookRepository, loans: LoanRepository)\n  exec(bookId: int, reader: string) Result<Error, Loan>\n    book = ~books.find(bookId)\n    if book.available\n      book.available = false\n      ~books.save(book)\n      loan = Loan(bookId = bookId, reader = reader)\n      ~loans.save(loan)\n      Ok(loan)\n    else\n      Err(Conflict(\"book is not available\"))\n",
     "attempts": 1,
-    "seconds": 5.6,
+    "seconds": 5.0,
     "trace": [
       {
         "step": "recall",
-        "detail": "7021 characters of knowledge, 1761 of examples"
+        "detail": "the cards \u2014 kind: `usecase` \u2014 a kind of the backend platform; pitfall: Pitfall: a use case with several methods, or whose `exec` returns a plain value; pitfall: Pitfall: an asynchronous call used without `~`; kind: `usecase` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.4 Use case; decorator: `@transactional` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a usecase: A use case GetBook(books: BookRepository): exec(id: int) returns the book with that id (the repository's find gives\u2026; solved: Solved \u2014 a usecase: A use case BooksOfAuthor(books: BookRepository) whose exec(author: string) returns those books. An application\u2026; file: `usecase` DeleteTodo \u2014 the example project todos_api (backend)"
       },
       {
         "step": "write",
@@ -247,14 +247,14 @@
     "pass": true
   },
   "usecase-books-of-author": {
-    "round": 23,
+    "round": 24,
     "code": "usecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n",
     "attempts": 1,
-    "seconds": 2.6,
+    "seconds": 2.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "7021 characters of knowledge, 1920 of examples"
+        "detail": "the cards \u2014 kind: `usecase` \u2014 a kind of the backend platform; pitfall: Pitfall: a use case with several methods, or whose `exec` returns a plain value; pitfall: Pitfall: an asynchronous call used without `~`; kind: `usecase` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.4 Use case; decorator: `@transactional` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a usecase: A use case BooksOfAuthor(books: BookRepository): exec(author: string) answers Invalid when author is empty, otherwise\u2026; solved: Solved \u2014 a usecase: A use case BooksOfAuthor(books: BookRepository) whose exec(author: string) returns those books. An application\u2026; file: `usecase` DeleteTask \u2014 the example project tasks_api (backend)"
       },
       {
         "step": "write",
@@ -266,14 +266,14 @@
     "pass": true
   },
   "appcomponent-books": {
-    "round": 23,
+    "round": 24,
     "code": "appcomponent BooksAppComponent\n  book() = GetBook.exec\n  create() = CreateBook.exec\n  byAuthor() = BooksOfAuthor.exec\n",
     "attempts": 1,
-    "seconds": 2.8,
+    "seconds": 2.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "4326 characters of knowledge, 1937 of examples"
+        "detail": "the cards \u2014 kind: `appcomponent` \u2014 a kind of the backend platform; pitfall: Pitfall: an application component with signatures or bodies; pitfall: Pitfall: writing again the declarations the task only uses; kind: `appcomponent` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.5 Appcomponent; guide: 4. Functions \u2014 Aliases: a function that is another one \u2014 and the examples \u2014 solved: Solved \u2014 a appcomponent: The appcomponent BooksAppComponent with the aliases book() for GetBook.exec, create() for CreateBook.exec and\u2026; solved: Solved \u2014 a appcomponent: An application component BooksAppComponent with booksOf() = BooksOfAuthor.exec. A controller\u2026; file: `appcomponent` TodosAppComponent \u2014 the example project todos_api (backend)"
       },
       {
         "step": "write",
@@ -285,14 +285,14 @@
     "pass": true
   },
   "appcomponent-loans": {
-    "round": 23,
+    "round": 24,
     "code": "appcomponent LoansAppComponent\n  lend() = LendBook.exec\n  giveBack() = ReturnBook.exec\n",
     "attempts": 1,
-    "seconds": 1.1,
+    "seconds": 1.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "4326 characters of knowledge, 1937 of examples"
+        "detail": "the cards \u2014 kind: `appcomponent` \u2014 a kind of the backend platform; pitfall: Pitfall: an application component with signatures or bodies; pitfall: Pitfall: writing again the declarations the task only uses; kind: `appcomponent` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.5 Appcomponent; guide: 4. Functions \u2014 Aliases: a function that is another one \u2014 and the examples \u2014 solved: Solved \u2014 a appcomponent: The appcomponent BooksAppComponent with the aliases book() for GetBook.exec, create() for CreateBook.exec and\u2026; solved: Solved \u2014 a appcomponent: An application component BooksAppComponent with booksOf() = BooksOfAuthor.exec. A controller\u2026; file: `appcomponent` TodosAppComponent \u2014 the example project todos_api (backend)"
       },
       {
         "step": "write",
@@ -304,14 +304,14 @@
     "pass": true
   },
   "controller-books": {
-    "round": 23,
+    "round": 24,
     "code": "@controller(\"books\")\ncontroller BooksController(books: BooksAppComponent)\n  @get(\"{id}\")\n  one(id: int) Result<Error, Book>\n    ~books.book(id)\n\n  @post()\n  create(input: NewBook) Result<Error, Book>\n    ~books.create(input)\n",
     "attempts": 1,
-    "seconds": 4.4,
+    "seconds": 4.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "6377 characters of knowledge, 2065 of examples"
+        "detail": "the cards \u2014 kind: `controller` \u2014 a kind of the backend platform; pitfall: Pitfall: the status of a route written inside its method; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; kind: `controller` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.7 Controller; spec: Platform `backend` brief: Synapsis backends \u2014 Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`) \u2014 and the examples \u2014 solved: Solved \u2014 a controller: A controller BooksController(books: BooksAppComponent) on the path \"books\": GET \"{id}\" one(id: int) calls\u2026; solved: Solved \u2014 a controller: A controller BooksController(books: BooksAppComponent) on \"books\" with GET \"author/{author}\" that answers\u2026; file: `controller` CharactersController \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -323,14 +323,14 @@
     "pass": true
   },
   "controller-author": {
-    "round": 23,
+    "round": 24,
     "code": "@controller(\"authors\")\ncontroller AuthorsController(books: BooksAppComponent)\n  @get(\"{name}/books\")\n  books(name: string) Result<Error, Book[]>\n    ~books.byAuthor(name)\n",
     "attempts": 2,
-    "seconds": 4.6,
+    "seconds": 5.1,
     "trace": [
       {
         "step": "recall",
-        "detail": "5522 characters of knowledge, 2065 of examples"
+        "detail": "the cards \u2014 kind: `controller` \u2014 a kind of the backend platform; pitfall: Pitfall: the status of a route written inside its method; pitfall: Pitfall: a name, path or value changed from what the task says; spec: Platform `backend` brief: Synapsis backends \u2014 Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`); kind: `controller` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.7 Controller \u2014 and the examples \u2014 solved: Solved \u2014 a controller: A controller BooksController(books: BooksAppComponent) on \"books\" with GET \"author/{author}\" that answers\u2026; solved: Solved \u2014 a controller: A controller BooksController(books: BooksAppComponent) on the path \"books\": GET \"{id}\" one(id: int) calls\u2026; file: `controller` CharactersController \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -346,14 +346,14 @@
     "pass": true
   },
   "controller-loans": {
-    "round": 23,
+    "round": 24,
     "code": "@controller(\"loans\")\ncontroller LoansController(loans: LoansAppComponent)\n  @post(\"{bookId}\")\n  lend(bookId: int, reader: string) Result<Error, Loan>\n    ~loans.lend(bookId, reader)\n    status = 201\n",
     "attempts": 1,
-    "seconds": 3.6,
+    "seconds": 3.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "5647 characters of knowledge, 2065 of examples"
+        "detail": "the cards \u2014 kind: `controller` \u2014 a kind of the backend platform; pitfall: Pitfall: the status of a route written inside its method; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; spec: The `backend` platform of Synapsis \u2014 2.7 Controller; kind: `controller` \u2014 a kind of the backend platform; decorator: `@post` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a controller: A controller BooksController(books: BooksAppComponent) on the path \"books\": GET \"{id}\" one(id: int) calls\u2026; solved: Solved \u2014 a controller: A controller BooksController(books: BooksAppComponent) on \"books\" with GET \"author/{author}\" that answers\u2026; file: `controller` CharactersController \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -365,14 +365,14 @@
     "pass": true
   },
   "tools-books": {
-    "round": 23,
+    "round": 24,
     "code": "tools BookTools(books: BooksAppComponent)\n  // Gives the title of the book with that id.\n  bookTitle(id: int) string\n    match ~books.book(id)\n      Ok(b) -> b.title\n      Err(e) -> e.message\n",
     "attempts": 1,
-    "seconds": 3.7,
+    "seconds": 3.6,
     "trace": [
       {
         "step": "recall",
-        "detail": "5155 characters of knowledge, 1349 of examples"
+        "detail": "the cards \u2014 kind: `tools` \u2014 a kind of the backend platform; pitfall: Pitfall: the kind word left out of the header; pitfall: Pitfall: the library names of TypeScript, Dart or Python; kind: `tools` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.10 Tools; guide: 13. Results: `Result`, `Ok` and `Err` \u2014 The error type must match \u2014 and the examples \u2014 solved: Solved \u2014 a tools: A tools BookTools(books: BooksAppComponent) with one tool: bookTitle(id: int) string, documented \"Gives the title of the\u2026; file: `tools` CharacterTools \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -384,14 +384,14 @@
     "pass": true
   },
   "tools-loans": {
-    "round": 23,
+    "round": 24,
     "code": "tools LoanTools(loans: LoansAppComponent)\n  // Lends a book to a reader.\n  lend(bookId: int, reader: string) string\n    match ~loans.lend(bookId, reader)\n      Ok(l) -> \"loan ${l.id}\"\n      Err(e) -> e.message\n",
     "attempts": 1,
     "seconds": 3.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "5155 characters of knowledge, 2131 of examples"
+        "detail": "the cards \u2014 kind: `tools` \u2014 a kind of the backend platform; pitfall: Pitfall: the library names of TypeScript, Dart or Python; pitfall: Pitfall: the kind word left out of the header; kind: `tools` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.10 Tools; guide: 13. Results: `Result`, `Ok` and `Err` \u2014 The error type must match \u2014 and the examples \u2014 solved: Solved \u2014 a tools: A tools BookTools(books: BooksAppComponent) with one tool: bookTitle(id: int) string, documented \"Gives the title of the\u2026; file: `tools` TaskTools \u2014 the example project tasks_api (backend)"
       },
       {
         "step": "write",
@@ -403,14 +403,14 @@
     "pass": true
   },
   "agent-librarian": {
-    "round": 23,
-    "code": "agent Librarian(tools: BookTools)\n  prompt: string = \"You help readers find books. Use the tools; never invent ids.\"\n",
+    "round": 24,
+    "code": "// Helps readers find books.\nagent Librarian(tools: BookTools)\n  prompt: string = \"You help readers find books. Use the tools; never invent ids.\"\n",
     "attempts": 1,
-    "seconds": 2.6,
+    "seconds": 2.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "4193 characters of knowledge, 1107 of examples"
+        "detail": "the cards \u2014 kind: `agent` \u2014 a kind of the backend platform; pitfall: Pitfall: the kind word left out of the header; kind: `agent` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.11 Agent; kind: `tools` \u2014 a kind of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a agent: An agent Librarian(tools: BookTools) whose prompt is \"You help readers find books. Use the tools; never invent ids.\"; file: `agent` AssistantAgent \u2014 the example project tasks_api (backend)"
       },
       {
         "step": "write",
@@ -422,14 +422,14 @@
     "pass": true
   },
   "agent-loans": {
-    "round": 23,
-    "code": "agent LoanDesk(tools: LoanTools)\n  model: string = \"coder\"\n  prompt: string = \"You lend books. Confirm every loan.\"\n",
+    "round": 24,
+    "code": "// An agent that lends books.\nagent LoanDesk(tools: LoanTools)\n  model: string = \"coder\"\n  prompt: string = \"You lend books. Confirm every loan.\"\n",
     "attempts": 1,
     "seconds": 2.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "4193 characters of knowledge, 1107 of examples"
+        "detail": "the cards \u2014 kind: `agent` \u2014 a kind of the backend platform; pitfall: Pitfall: the kind word left out of the header; spec: The `backend` platform of Synapsis \u2014 2.11 Agent; kind: `agent` \u2014 a kind of the backend platform; plugin: `ai` \u2014 a plugin of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a agent: An agent Librarian(tools: BookTools) whose prompt is \"You help readers find books. Use the tools; never invent ids.\"; file: `agent` AssistantAgent \u2014 the example project tasks_api (backend)"
       },
       {
         "step": "write",
@@ -441,14 +441,14 @@
     "pass": true
   },
   "graph-summary": {
-    "round": 23,
-    "code": "// A state SummaryState (question: string, answer: string) and a graph Summary(librarian: Librarian) over it with one node ask, the first and the last, that returns { \"answer\": ~librarian.ask(state.question) }.\n\nstate SummaryState\n  question: string\n  answer: string\n\n@state(SummaryState)\ngraph Summary(librarian: Librarian)\n  @start\n  @next(\"end\")\n  ask(state: SummaryState) <string, string>\n    { \"answer\": ~librarian.ask(state.question) }\n",
+    "round": 24,
+    "code": "// A summary of the assistant's answer.\n@state(SummaryState)\ngraph Summary(librarian: Librarian)\n  @start\n  @next(\"end\")\n  ask(state: SummaryState) <string, string>\n    { \"answer\": ~librarian.ask(state.question) }\n",
     "attempts": 1,
-    "seconds": 6.3,
+    "seconds": 5.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "7100 characters of knowledge, 2559 of examples"
+        "detail": "the cards \u2014 kind: `graph` \u2014 a kind of the backend platform; pitfall: Pitfall: a graph node that does not end with its changes; pitfall: Pitfall: an asynchronous call used without `~`; spec: The `backend` platform of Synapsis \u2014 2.12 State and graph; kind: `graph` \u2014 a kind of the backend platform; kind: `state` \u2014 a kind of the backend platform \u2014 and the examples \u2014 file: `graph` Review \u2014 the example project rick_api (backend); file: `graph` Assistant \u2014 the example project nuclear_developer (backend)"
       },
       {
         "step": "write",
@@ -456,18 +456,20 @@
       }
     ],
     "check": "ok",
-    "missing": [],
-    "pass": true
+    "missing": [
+      "question: string"
+    ],
+    "pass": false
   },
   "graph-two-steps": {
-    "round": 23,
+    "round": 24,
     "code": "// A state ReviewState (text: string, draft: string, final: string) and a graph Review(librarian: Librarian): node draft (the first) sets draft to ~librarian.ask(state.text) and goes to polish; node polish sets final to ~librarian.ask(\"Shorten: ${state.draft}\") and ends.\n@state(ReviewState)\ngraph Review(librarian: Librarian)\n  @start\n  @next(\"polish\")\n  draft(state: ReviewState) <string, string>\n    { \"draft\": ~librarian.ask(state.text) }\n\n  @next(\"end\")\n  polish(state: ReviewState) <string, string>\n    { \"final\": ~librarian.ask(\"Shorten: ${state.draft}\") }\n",
     "attempts": 1,
-    "seconds": 6.6,
+    "seconds": 6.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "7045 characters of knowledge, 1937 of examples"
+        "detail": "the cards \u2014 kind: `graph` \u2014 a kind of the backend platform; pitfall: Pitfall: a graph node that does not end with its changes; pitfall: Pitfall: only the first of several declarations written; kind: `graph` \u2014 a kind of the backend platform; kind: `state` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.12 State and graph \u2014 and the examples \u2014 file: `graph` Review \u2014 the example project rick_api (backend); file: `graph` Security \u2014 the example project nuclear_developer (backend)"
       },
       {
         "step": "write",
@@ -479,14 +481,14 @@
     "pass": true
   },
   "tests-create-book": {
-    "round": 23,
+    "round": 24,
     "code": "tests Books\n  books: BooksAppComponent = inject<BooksAppComponent>()\n\n  @test(\"creates a book and refuses the same title\")\n  checkDuplicate() void\n    book = NewBook(title = \"Dune\", author = \"Herbert\", year = 1965)\n    first = ~books.create(book)\n    expect(first.isOk)\n    second = ~books.create(book)\n    expect(second.error.status == 409)\n",
     "attempts": 1,
-    "seconds": 5.1,
+    "seconds": 4.9,
     "trace": [
       {
         "step": "recall",
-        "detail": "6262 characters of knowledge, 1767 of examples"
+        "detail": "the cards \u2014 kind: `tests` \u2014 a kind of the backend platform; pitfall: Pitfall: a kept `Result` read as if it were its value; pitfall: Pitfall: a test that injects a class the task does not name; spec: The `backend` platform of Synapsis \u2014 2.14 Tests; kind: `tests` \u2014 a kind of the backend platform; guide: 13. Results: `Result`, `Ok` and `Err` \u2014 The error type must match \u2014 and the examples \u2014 solved: Solved \u2014 a tests: Tests Books with one test \"creates a book and refuses the same title\": inject BooksAppComponent, create NewBook(title =\u2026; file: `tests` Characters \u2014 the example project rick_api (backend)"
       },
       {
         "step": "write",
@@ -498,14 +500,14 @@
     "pass": true
   },
   "tests-missing-book": {
-    "round": 23,
+    "round": 24,
     "code": "tests Missing\n  books: BooksAppComponent = inject<BooksAppComponent>()\n\n  @test(\"a missing book is 404\")\n  missingBook() void\n    missing = ~books.book(999)\n    expect(missing.isErr)\n    expect(missing.error.status == 404)\n",
     "attempts": 1,
-    "seconds": 3.7,
+    "seconds": 3.6,
     "trace": [
       {
         "step": "recall",
-        "detail": "6207 characters of knowledge, 1767 of examples"
+        "detail": "the cards \u2014 kind: `tests` \u2014 a kind of the backend platform; pitfall: Pitfall: a kept `Result` read as if it were its value; pitfall: Pitfall: a test that injects a class the task does not name; spec: The `backend` platform of Synapsis \u2014 2.14 Tests; kind: `tests` \u2014 a kind of the backend platform; decorator: `@test` \u2014 a decorator of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a tests: Tests Books with one test \"creates a book and refuses the same title\": inject BooksAppComponent, create NewBook(title =\u2026; file: `tests` TodosTest \u2014 the example project todos_api (backend)"
       },
       {
         "step": "write",
@@ -517,14 +519,14 @@
     "pass": true
   },
   "listener-loans": {
-    "round": 23,
+    "round": 24,
     "code": "listener BookEvents(books: BooksAppComponent)\n  @consumer(\"books.created\")\n  created(input: NewBook)\n    ~books.create(input)\n",
     "attempts": 1,
-    "seconds": 2.6,
+    "seconds": 2.5,
     "trace": [
       {
         "step": "recall",
-        "detail": "4335 characters of knowledge, 1124 of examples"
+        "detail": "the cards \u2014 kind: `listener` \u2014 a kind of the backend platform; pitfall: Pitfall: an asynchronous call used without `~`; pitfall: Pitfall: the kind word left out of the header; kind: `listener` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.9 Listener, events and cache; plugin: `events` \u2014 a plugin of the backend platform \u2014 and the examples \u2014 solved: Solved \u2014 a listener: A listener BookEvents(books: BooksAppComponent) with a consumer of the topic \"books.created\": created(input: NewBook)\u2026; file: `listener` TaskEvents \u2014 the example project tasks_api (backend)"
       },
       {
         "step": "write",
@@ -536,14 +538,14 @@
     "pass": true
   },
   "flutter-model": {
-    "round": 23,
-    "code": "model Book\n  id: int\n  title: string\n  author: string\n",
+    "round": 24,
+    "code": "Book\n  id: int\n  title: string\n  author: string\n",
     "attempts": 1,
-    "seconds": 2.7,
+    "seconds": 2.6,
     "trace": [
       {
         "step": "recall",
-        "detail": "5779 characters of knowledge, 803 of examples"
+        "detail": "the cards \u2014 kind: `model` \u2014 a kind of the mobile platform; pitfall: Pitfall: a name, path or value changed from what the task says; pitfall: Pitfall: only the first of several declarations written; kind: `model` \u2014 a kind of the mobile platform; spec: Platform `mobile` brief: Synapsis apps \u2014 Pieces; decorator: `@entity` \u2014 a decorator of the mobile platform \u2014 and the examples \u2014 solved: Solved \u2014 a model: A model Book of the mobile app: id (int), title (string) and author (string).; file: `model` Todo \u2014 the example project todos_app (mobile)"
       },
       {
         "step": "write",
@@ -555,14 +557,14 @@
     "pass": true
   },
   "flutter-repository": {
-    "round": 23,
+    "round": 24,
     "code": "@repository(path = \"books\")\nrepository BookRepository\n  @get(path = \":id\")\n  book(id: int) Result<BookError, Book>\n",
     "attempts": 1,
-    "seconds": 4.1,
+    "seconds": 4.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "8364 characters of knowledge, 1660 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the mobile platform; pitfall: Pitfall: an HTTP repository method with a body; pitfall: Pitfall: the kind word left out of the header; kind: `repository` \u2014 a kind of the mobile platform; decorator: `@repository` \u2014 a decorator of the mobile platform; decorator: `@get` \u2014 a decorator of the mobile platform \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository BookRepository of the mobile app over the API's \"books\" path with a POST request save(book: Book) that\u2026; file: `repository` ProjectsRepository \u2014 the example project tasks_app (mobile)"
       },
       {
         "step": "write",
@@ -574,14 +576,14 @@
     "pass": true
   },
   "service-isbn": {
-    "round": 23,
-    "code": "service Isbn()\n  valid(code: string) boolean\n    code.replaceAll(\"-\", \"\").length == 13\n",
+    "round": 24,
+    "code": "service Isbn\n  valid(code: string) boolean\n    code.replaceAll(\"-\", \"\").length == 13\n",
     "attempts": 1,
-    "seconds": 2.6,
+    "seconds": 3.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "5160 characters of knowledge, 0 of examples"
+        "detail": "the cards \u2014 kind: `service` \u2014 a kind of the backend platform; pitfall: Pitfall: the library names of TypeScript, Dart or Python; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; guide: 14. Operations and the standard library \u2014 The library, per area; rule: The standard library of Nuclear \u2014 1. `string`; library: `string` \u2014 Nuclear's standard library \u2014 and the examples \u2014 nothing"
       },
       {
         "step": "write",
@@ -593,14 +595,14 @@
     "pass": true
   },
   "function-label": {
-    "round": 23,
+    "round": 24,
     "code": "service Labels(year: int, now: int) string\n  label = if now - year < 2\n    \"new\"\n  else if now - year < 10\n    \"recent\"\n  else\n    \"classic\"\n  label\n",
     "attempts": 3,
-    "seconds": 6.3,
+    "seconds": 6.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "3859 characters of knowledge, 0 of examples"
+        "detail": "the cards \u2014 kind: `service` \u2014 a kind of the backend platform; pitfall: Pitfall: braces, semicolons, `return` on the last line, `const`; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; kind: `service` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 2.6 Service and aggregate; guide: 2. Variables and assignments \u2014 `if` and `match` are values \u2014 and the examples \u2014 nothing"
       },
       {
         "step": "write",
@@ -622,14 +624,14 @@
     "pass": false
   },
   "flutter-usecase": {
-    "round": 23,
+    "round": 24,
     "code": "usecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n",
     "attempts": 1,
-    "seconds": 4.2,
+    "seconds": 4.0,
     "trace": [
       {
         "step": "recall",
-        "detail": "9084 characters of knowledge, 1127 of examples"
+        "detail": "the cards \u2014 kind: `usecase` \u2014 a kind of the mobile platform; pitfall: Pitfall: a use case with several methods, or whose `exec` returns a plain value; pitfall: Pitfall: an asynchronous call used without `~`; kind: `usecase` \u2014 a kind of the mobile platform; spec: Platform `mobile` brief: Synapsis apps \u2014 Pieces; kind: `repository` \u2014 a kind of the mobile platform \u2014 and the examples \u2014 solved: Solved \u2014 a usecase: A use case AllBooksUseCase of the mobile app that receives books: BookRepository and whose exec() returns the Result\u2026; file: `usecase` ListTodos \u2014 the example project todos_app (mobile)"
       },
       {
         "step": "write",
@@ -641,14 +643,14 @@
     "pass": true
   },
   "flutter-state-model": {
-    "round": 23,
+    "round": 24,
     "code": "BooksState\n  (loaded: Book[], error: BookError, loading: boolean)\n",
     "attempts": 1,
     "seconds": 2.4,
     "trace": [
       {
         "step": "recall",
-        "detail": "4398 characters of knowledge, 980 of examples"
+        "detail": "the cards \u2014 kind: `statemodel` \u2014 a kind of the mobile platform; pitfall: Pitfall: a state model written as fields, or with its manager in the same file; kind: `statemodel` \u2014 a kind of the mobile platform; decorator: `@state` \u2014 a decorator of the mobile platform; kind: `statemanager` \u2014 a kind of the mobile platform \u2014 and the examples \u2014 solved: Solved \u2014 a statemodel: The state model BooksState of the books list screen with three states: loaded (Book[]), error (BookError) and\u2026; file: `statemodel` HomeState \u2014 the example project todos_app (mobile)"
       },
       {
         "step": "write",
@@ -660,14 +662,14 @@
     "pass": true
   },
   "flutter-manager": {
-    "round": 23,
+    "round": 24,
     "code": "@stateModel(BooksState)\nstatemanager BooksManager\n  (books: BooksComponent)\n    load()\n\n  @state(BooksState.loading)\n  loading()\n\n  @before(loading)\n  @state(BooksState.loaded)\n  load() Result<BookError, Book[]>\n    ~books.all()\n",
     "attempts": 1,
-    "seconds": 3.8,
+    "seconds": 3.9,
     "trace": [
       {
         "step": "recall",
-        "detail": "5142 characters of knowledge, 1099 of examples"
+        "detail": "the cards \u2014 kind: `statemanager` \u2014 a kind of the mobile platform; pitfall: Pitfall: a state manager without its state model, or with a method per state twice; pitfall: Pitfall: an asynchronous call used without `~`; kind: `statemanager` \u2014 a kind of the mobile platform; decorator: `@stateModel` \u2014 a decorator of the mobile platform; decorator: `@states` \u2014 a decorator of the mobile platform \u2014 and the examples \u2014 file: `statemanager` TodosManager \u2014 the example project todos_app (mobile); file: `statemanager` CharactersManager \u2014 the example project clean-flutter-project (mobile)"
       },
       {
         "step": "write",
@@ -679,14 +681,14 @@
     "pass": true
   },
   "flutter-screen": {
-    "round": 23,
+    "round": 24,
     "code": "@screen(route = \"/books\", providers = [BooksManager])\nstateless BooksScreen\n  build(context: BuildContext) Widget\n    Scaffold(\n      appBar = AppBar(title = Text(\"Books\")),\n      body = BooksStateBuilder<BooksManager>(\n        loading = () => Center(child = CircularProgressIndicator()),\n        loaded = (books) => ListView.builder(\n          itemCount = books.length,\n          itemBuilder = (context, index) => ListTile(title = Text(books[index].title)),\n        ),\n        error = (e) => Center(child = Text(e.message)),\n      ),\n    )\n",
     "attempts": 1,
-    "seconds": 6.1,
+    "seconds": 5.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "6656 characters of knowledge, 2529 of examples"
+        "detail": "the cards \u2014 kind: `stateless` \u2014 a kind of the mobile platform; pitfall: Pitfall: writing again the declarations the task only uses; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; spec: Platform `mobile` brief: Synapsis apps \u2014 Pieces; kind: `statemanager` \u2014 a kind of the mobile platform; decorator: `@screen` \u2014 a decorator of the mobile platform \u2014 and the examples \u2014 file: `stateless` TasksScreen \u2014 the example project tasks_app (mobile); file: `stateless` TodosScreen \u2014 the example project todos_app (mobile)"
       },
       {
         "step": "write",
@@ -698,14 +700,14 @@
     "pass": true
   },
   "flutter-repository-post": {
-    "round": 23,
+    "round": 24,
     "code": "@repository(path = \"books\")\nrepository BookRepository\n  @post(retry = 1)\n  save(book: Book) Result<BookError, Book>\n",
     "attempts": 1,
     "seconds": 3.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "7791 characters of knowledge, 1660 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the mobile platform; pitfall: Pitfall: an HTTP repository method with a body; pitfall: Pitfall: a name, path or value changed from what the task says; decorator: `@post` \u2014 a decorator of the mobile platform; kind: `repository` \u2014 a kind of the mobile platform; decorator: `@repository` \u2014 a decorator of the mobile platform \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository BookRepository of the mobile app over the API's \"books\" path with a POST request save(book: Book) that\u2026; file: `repository` ProjectsRepository \u2014 the example project tasks_app (mobile)"
       },
       {
         "step": "write",
@@ -717,14 +719,14 @@
     "pass": true
   },
   "web-repository": {
-    "round": 23,
+    "round": 24,
     "code": "@repository(path = \"books\")\nrepository BookRepository\n  @get(path = \":id\")\n  getOne(id: int) Result<BookError, Book>\n\n  @get(cache = true, ttl = 60000)\n  all() Result<BookError, Book[]>\n",
     "attempts": 1,
-    "seconds": 4.1,
+    "seconds": 4.2,
     "trace": [
       {
         "step": "recall",
-        "detail": "6664 characters of knowledge, 804 of examples"
+        "detail": "the cards \u2014 kind: `repository` \u2014 a kind of the web platform; pitfall: Pitfall: an HTTP repository method with a body; pitfall: Pitfall: the kind word left out of the header; kind: `repository` \u2014 a kind of the web platform; decorator: `@get` \u2014 a decorator of the web platform; spec: Platform `web` brief: Synapsis web apps \u2014 Pieces \u2014 and the examples \u2014 solved: Solved \u2014 a repository: A repository BookRepository of the web app over the API's \"books\" path: getOne(id: int) is a GET on the path \":id\",\u2026"
       },
       {
         "step": "write",
@@ -736,14 +738,14 @@
     "pass": true
   },
   "web-tile": {
-    "round": 23,
+    "round": 24,
     "code": "// A view BookTile(book: Book) of the web app: an li with class \"tile\" whose children are a span with class \"title\" showing the book's title and a small with its author.\nstateless BookTile(book: Book)\n  build() Element\n    li(className = \"tile\", children = [\n      span(className = \"title\", children = book.title),\n      small(children = book.author),\n    ])\n",
     "attempts": 1,
-    "seconds": 4.6,
+    "seconds": 4.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "5765 characters of knowledge, 1696 of examples"
+        "detail": "the cards \u2014 kind: `stateless` \u2014 a kind of the web platform; pitfall: Pitfall: writing again the declarations the task only uses; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; kind: `stateless` \u2014 a kind of the web platform; spec: Platform `web` brief: Synapsis web apps \u2014 Pieces; spec: The `web` platform of Synapsis \u2014 3.1 Views \u2014 and the examples \u2014 file: `stateless` CharacterTile \u2014 the example project characters (web); file: `stateless` CharacterListScreen \u2014 the example project characters (web)"
       },
       {
         "step": "write",
@@ -755,14 +757,14 @@
     "pass": true
   },
   "web-service": {
-    "round": 23,
+    "round": 24,
     "code": "service BookFilters()\n  available(books: Book[]) Book[]\n    books.filter(book => book.available)\n",
     "attempts": 1,
-    "seconds": 3.4,
+    "seconds": 2.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "6104 characters of knowledge, 960 of examples"
+        "detail": "the cards \u2014 kind: `service` \u2014 a kind of the web platform; pitfall: Pitfall: named arguments written with a colon, or a constructor with `new`; pitfall: Pitfall: the kind word left out of the header; kind: `service` \u2014 a kind of the web platform; spec: Platform `web` brief: Synapsis web apps \u2014 Pieces; spec: Platform `web` brief: Synapsis web apps \u2014 Pieces \u2014 and the examples \u2014 solved: Solved \u2014 a service: A domain service BookFilters of the web app with available(books: Book[]) Book[]: the books whose available is true.; file: `service` CharacterNames \u2014 the example project characters (web)"
       },
       {
         "step": "write",
@@ -774,14 +776,14 @@
     "pass": true
   },
   "web-manager": {
-    "round": 23,
-    "code": "@stateModel(BooksState)\nstatemanager BooksManager\n  (books: BooksComponent)\n    load()\n\n  @state(BooksState.loading)\n  loading()\n\n  @before(loading)\n  @state(BooksState.loaded)\n  load() Result<BookError, Book[]>\n    ~books.all()\n",
+    "round": 24,
+    "code": "@stateModel(BooksState)\nstatemanager BooksManager\n  (books: BooksComponent)\n    load()\n\n  @state(BooksState.loading)\n  loading()\n\n  @before(loading)\n  @state(BooksState.full)\n  load() Result<BookError, Book[]>\n    ~books.all()\n",
     "attempts": 1,
-    "seconds": 3.3,
+    "seconds": 3.5,
     "trace": [
       {
         "step": "recall",
-        "detail": "4047 characters of knowledge, 563 of examples"
+        "detail": "the cards \u2014 kind: `statemanager` \u2014 a kind of the web platform; pitfall: Pitfall: a state manager without its state model, or with a method per state twice; pitfall: Pitfall: an asynchronous call used without `~`; kind: `statemanager` \u2014 a kind of the web platform; decorator: `@stateModel` \u2014 a decorator of the web platform; spec: The `web` platform of Synapsis \u2014 3.5 State \u2014 and the examples \u2014 file: `statemanager` ToolsManager \u2014 the example project website (web); file: `statemanager` PageManager \u2014 the example project website (web)"
       },
       {
         "step": "write",
@@ -789,18 +791,20 @@
       }
     ],
     "check": "ok",
-    "missing": [],
-    "pass": true
+    "missing": [
+      "@state(BooksState.loaded)"
+    ],
+    "pass": false
   },
   "web-appcomponent": {
-    "round": 23,
+    "round": 24,
     "code": "appcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n  one() = GetBookUseCase.exec\n",
     "attempts": 1,
-    "seconds": 3.0,
+    "seconds": 2.7,
     "trace": [
       {
         "step": "recall",
-        "detail": "5923 characters of knowledge, 1177 of examples"
+        "detail": "the cards \u2014 kind: `appcomponent` \u2014 a kind of the web platform; pitfall: Pitfall: an application component with signatures or bodies; pitfall: Pitfall: the kind word left out of the header; kind: `appcomponent` \u2014 a kind of the web platform; spec: Platform `web` brief: Synapsis web apps \u2014 Pieces; kind: `usecase` \u2014 a kind of the web platform \u2014 and the examples \u2014 solved: Solved \u2014 a appcomponent: The application component BooksComponent of the web app: all() is AllBooksUseCase.exec and one() is\u2026; file: `appcomponent` CharactersComponent \u2014 the example project characters (web)"
       },
       {
         "step": "write",
@@ -812,10 +816,10 @@
     "pass": true
   },
   "feature-books-by-author": {
-    "round": 23,
-    "code": "// file: components/books/data/entities/book.nuc\n@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n  title: string\n  author: string\n\n// file: components/books/data/repositories/book_repository.nuc\nrepository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"title\")\n    getMany()\n\n// file: components/books/domain/usecases/books_of_author.nuc\nusecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n\n// file: components/books/books_appcomponent.nuc\nappcomponent BooksAppComponent\n  booksOf() = BooksOfAuthor.exec\n\n// file: components/books/api/books_controller.nuc\n@controller(\"books\")\ncontroller BooksController(books: BooksAppComponent)\n  @get(\"author/{author}\")\n  byAuthor(author: string) Result<Error, Book[]>\n    ~books.booksOf(author)\n",
+    "round": 24,
+    "code": "// file: components/books/data/entities/book.nuc\n// A book of the catalog.\n@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n\n  @column(length = 200)\n  title: string\n\n  author: string\n\n// file: components/books/data/repositories/book_repository.nuc\nrepository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"title\")\n    getMany()\n\n// file: components/books/domain/usecases/books_of_author.nuc\nusecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n\n// file: components/books/books_appcomponent.nuc\nappcomponent BooksAppComponent\n  booksOf() = BooksOfAuthor.exec\n\n// file: components/books/api/books_controller.nuc\n@controller(\"books\")\ncontroller BooksController(books: BooksAppComponent)\n  @get(\"author/{author}\")\n  byAuthor(author: string) Result<Error, Book[]>\n    ~books.booksOf(author)\n",
     "files": {
-      "components/books/data/entities/book.nuc": "@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n  title: string\n  author: string\n",
+      "components/books/data/entities/book.nuc": "// A book of the catalog.\n@entity(\"books\")\nentity Book()\n  @primary(generated = true)\n  id: int\n\n  @column(length = 200)\n  title: string\n\n  author: string\n",
       "components/books/data/repositories/book_repository.nuc": "repository BookRepository\n  byAuthor(author: string) Book[]\n    where({ \"author\": author })\n    orderBy(\"title\")\n    getMany()\n",
       "components/books/domain/usecases/books_of_author.nuc": "usecase BooksOfAuthor(books: BookRepository)\n  exec(author: string) Result<Error, Book[]>\n    if author.length == 0\n      Err(Invalid(\"author is empty\"))\n    else\n      Ok(~books.byAuthor(author))\n",
       "components/books/books_appcomponent.nuc": "appcomponent BooksAppComponent\n  booksOf() = BooksOfAuthor.exec\n",
@@ -849,11 +853,11 @@
       }
     ],
     "attempts": 5,
-    "seconds": 59.6,
+    "seconds": 44.8,
     "trace": [
       {
         "step": "recall",
-        "detail": "plan guide, the platform's layout and structure"
+        "detail": "the plan guide, the platform's layout (nuclear help layout) and the cards \u2014 spec: The `backend` platform of Synapsis \u2014 1. Project; spec: Platform `backend` brief: Synapsis backends \u2014 Kinds (`components/<c>/`; the folder gives the kind of `entity`, `model` and `state`); spec: The `backend` platform of Synapsis \u2014 2.2 Repository"
       },
       {
         "step": "split",
@@ -865,107 +869,109 @@
     "pass": true
   },
   "feature-new-reader": {
-    "round": 23,
-    "code": "// file: components/readers/data/entities/reader.nuc\n@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n  email: string\n  @column(unique = true)\n  email: string\n\n// file: components/readers/domain/models/new_reader.nuc\nmodel NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n\n// file: components/readers/domain/usecases/create_reader.nuc\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n\n// file: components/readers/data/repositories/reader_repository.nuc\nrepository ReaderRepository\n  byName(name: string) Result<Error, Reader>\n    where({ \"name\": name })\n    getOne()\n\n  aliveSince(year: int, max: int = 20) Reader[]\n    where({ \"status\": \"alive\", \"year\": gte(year) })\n    orderBy(\"name\")\n    limit(max)\n    getMany()\n\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n\n// file: components/readers/readers_appcomponent.nuc\nappcomponent ReadersAppComponent\n  create() = CreateReader.exec\n\n// file: components/readers/api/readers_controller.nuc\n@controller(\"readers\")\ncontroller ReadersController(readers: ReadersAppComponent)\n  @post()\n  create(input: NewReader) Result<Error, Reader>\n    ~readers.create(input)\n    status = 201\n",
+    "round": 24,
+    "code": "// file: components/reader/data/entities/reader.nuc\n@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n  email: string\n\n// file: components/reader/domain/models/new_reader.nuc\nmodel NewReader\n  @minLength(2) name: string\n  @email email: string\n\n// file: components/reader/domain/usecases/create_reader.nuc\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n\n// file: components/reader/data/repositories/reader_repository.nuc\nrepository ReaderRepository\n  save(reader: Reader) Result<Error, Reader>\n    saved = ~reader.save(reader)\n    Ok(saved)\n\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    saved = ~reader.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n\n// file: components/reader/reader_appcomponent.nuc\nappcomponent ReadersAppComponent\n  create() = CreateReader.exec\n\n// file: components/reader/api/readers_controller.nuc\n@controller(\"readers\")\ncontroller ReadersController(readers: ReadersAppComponent)\n  @post()\n  create(input: NewReader) Result<Error, Reader>\n    ~readers.create(input)\n    status = 201\n",
     "files": {
-      "components/readers/data/entities/reader.nuc": "@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n  email: string\n  @column(unique = true)\n  email: string\n",
-      "components/readers/domain/models/new_reader.nuc": "model NewReader\n  @minLength(2) @maxLength(80) name: string\n  @email email: string\n",
-      "components/readers/domain/usecases/create_reader.nuc": "usecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n",
-      "components/readers/data/repositories/reader_repository.nuc": "repository ReaderRepository\n  byName(name: string) Result<Error, Reader>\n    where({ \"name\": name })\n    getOne()\n\n  aliveSince(year: int, max: int = 20) Reader[]\n    where({ \"status\": \"alive\", \"year\": gte(year) })\n    orderBy(\"name\")\n    limit(max)\n    getMany()\n\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n",
-      "components/readers/readers_appcomponent.nuc": "appcomponent ReadersAppComponent\n  create() = CreateReader.exec\n",
-      "components/readers/api/readers_controller.nuc": "@controller(\"readers\")\ncontroller ReadersController(readers: ReadersAppComponent)\n  @post()\n  create(input: NewReader) Result<Error, Reader>\n    ~readers.create(input)\n    status = 201\n"
+      "components/reader/data/entities/reader.nuc": "@entity(\"readers\")\nentity Reader()\n  @primary(generated = true)\n  id: int\n\n  name: string\n  email: string\n",
+      "components/reader/domain/models/new_reader.nuc": "model NewReader\n  @minLength(2) name: string\n  @email email: string\n",
+      "components/reader/domain/usecases/create_reader.nuc": "usecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    taken = ~readers.where({ \"email\": input.email }).exists()\n    if taken\n      return Err(Conflict(\"${input.email} is taken\"))\n    saved = ~readers.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n",
+      "components/reader/data/repositories/reader_repository.nuc": "repository ReaderRepository\n  save(reader: Reader) Result<Error, Reader>\n    saved = ~reader.save(reader)\n    Ok(saved)\n\nusecase CreateReader(readers: ReaderRepository)\n  exec(input: NewReader) Result<Error, Reader>\n    saved = ~reader.save(Reader(name = input.name, email = input.email))\n    Ok(saved)\n",
+      "components/reader/reader_appcomponent.nuc": "appcomponent ReadersAppComponent\n  create() = CreateReader.exec\n",
+      "components/reader/api/readers_controller.nuc": "@controller(\"readers\")\ncontroller ReadersController(readers: ReadersAppComponent)\n  @post()\n  create(input: NewReader) Result<Error, Reader>\n    ~readers.create(input)\n    status = 201\n"
     },
     "plan": [
       {
-        "path": "components/readers/data/entities/reader.nuc",
+        "path": "components/reader/data/entities/reader.nuc",
         "kind": "entity",
         "task": "entity Reader. The spec says: An entity Reader (id: a generated primary key, name: string, email: string unique)"
       },
       {
-        "path": "components/readers/domain/models/new_reader.nuc",
+        "path": "components/reader/domain/models/new_reader.nuc",
         "kind": "model",
         "task": "model NewReader. The spec says: A model NewReader (name: at least 2 characters, email: a valid email)"
       },
       {
-        "path": "components/readers/domain/usecases/create_reader.nuc",
+        "path": "components/reader/domain/usecases/create_reader.nuc",
         "kind": "usecase",
         "task": "usecase CreateReader. The spec says: A use case CreateReader(readers: ReaderRepository) whose exec(input: NewReader) saves a Reader with the input's name and email and returns it in a Result"
       },
       {
-        "path": "components/readers/data/repositories/reader_repository.nuc",
+        "path": "components/reader/data/repositories/reader_repository.nuc",
         "kind": "repository",
         "task": "repository ReaderRepository. The spec says: A use case CreateReader(readers: ReaderRepository) whose exec(input: NewReader) saves a Reader with the input's name and email and returns it in a Result"
       },
       {
-        "path": "components/readers/readers_appcomponent.nuc",
+        "path": "components/reader/reader_appcomponent.nuc",
         "kind": "appcomponent",
         "task": "appcomponent ReadersAppComponent. The spec says: An application component ReadersAppComponent with create() = CreateReader.exec"
       },
       {
-        "path": "components/readers/api/readers_controller.nuc",
+        "path": "components/reader/api/readers_controller.nuc",
         "kind": "controller",
         "task": "controller ReadersController. The spec says: A controller ReadersController(readers: ReadersAppComponent) on \"readers\" with a POST that answers ~readers.create(input) with status 201."
       }
     ],
-    "attempts": 13,
-    "seconds": 77.3,
+    "attempts": 17,
+    "seconds": 63.5,
     "trace": [
       {
         "step": "recall",
-        "detail": "plan guide, the platform's layout and structure"
+        "detail": "the plan guide, the platform's layout (nuclear help layout) and the cards \u2014 kind: `repository` \u2014 a kind of the backend platform; spec: The `backend` platform of Synapsis \u2014 1. Project; spec: The `backend` platform of Synapsis \u2014 2.2 Repository"
       },
       {
         "step": "split",
         "detail": "6 pieces"
       }
     ],
-    "check": "components/readers/data/entities/reader.nuc:9:3 N0102 'email' is declared twice in 'Reader'; each member is declared once\ncomponents/readers/domain/usecases/create_reader.nuc:1:9 N0303 'CreateReader' is also declared in components/readers/data/repositories/reader_repository.nuc; each name is declared once in a project",
-    "missing": [],
+    "check": "components/reader/data/repositories/reader_repository.nuc:8:14 N0106 'reader' is not defined; did you mean 'readers'?\ncomponents/reader/domain/usecases/create_reader.nuc:1:9 N0303 'CreateReader' is also declared in components/reader/data/repositories/reader_repository.nuc; each name is declared once in a project",
+    "missing": [
+      "unique = true"
+    ],
     "pass": false
   },
   "feature-books-list-app": {
-    "round": 23,
-    "code": "// file: components/book/domain/models/book.nuc\nmodel Book\n  id: int\n  title: string\n\n// file: components/book/domain/models/book_error.nuc\nmodel BookError\n  message: string\n\n// file: components/book/data/book_repository.nuc\n@repository(path = \"books\")\nrepository BookRepository\n  @get(local = true)\n  all() Result<BookError, Book[]>\n\n// file: components/book/domain/usecases/all_books_use_case.nuc\nusecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n\n// file: components/book/book_component.nuc\nappcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n",
+    "round": 24,
+    "code": "// file: components/books/domain/models/book.nuc\nmodel Book\n  id: int\n  title: string\n\n// file: components/books/domain/models/book_error.nuc\nmodel BookError\n  message: string\n\n// file: components/books/data/book_repository.nuc\n@repository(path = \"books\")\nrepository BookRepository\n  @get(local = true)\n  all() Result<BookError, Book[]>\n\n// file: components/books/domain/usecases/all_books_use_case.nuc\nusecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n\n// file: components/books/books_component.nuc\nappcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n",
     "files": {
-      "components/book/domain/models/book.nuc": "model Book\n  id: int\n  title: string\n",
-      "components/book/domain/models/book_error.nuc": "model BookError\n  message: string\n",
-      "components/book/data/book_repository.nuc": "@repository(path = \"books\")\nrepository BookRepository\n  @get(local = true)\n  all() Result<BookError, Book[]>\n",
-      "components/book/domain/usecases/all_books_use_case.nuc": "usecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n",
-      "components/book/book_component.nuc": "appcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n"
+      "components/books/domain/models/book.nuc": "model Book\n  id: int\n  title: string\n",
+      "components/books/domain/models/book_error.nuc": "model BookError\n  message: string\n",
+      "components/books/data/book_repository.nuc": "@repository(path = \"books\")\nrepository BookRepository\n  @get(local = true)\n  all() Result<BookError, Book[]>\n",
+      "components/books/domain/usecases/all_books_use_case.nuc": "usecase AllBooksUseCase\n  (books: BookRepository)\n\n  exec() Result<BookError, Book[]>\n    ~books.all()\n",
+      "components/books/books_component.nuc": "appcomponent BooksComponent\n  all() = AllBooksUseCase.exec\n"
     },
     "plan": [
       {
-        "path": "components/book/domain/models/book.nuc",
+        "path": "components/books/domain/models/book.nuc",
         "kind": "model",
         "task": "model Book. The spec says: A model Book (id: int, title: string)"
       },
       {
-        "path": "components/book/domain/models/book_error.nuc",
+        "path": "components/books/domain/models/book_error.nuc",
         "kind": "model",
         "task": "model BookError. The spec says: A model BookError (message: string)"
       },
       {
-        "path": "components/book/data/book_repository.nuc",
+        "path": "components/books/data/book_repository.nuc",
         "kind": "repository",
         "task": "repository BookRepository. The spec says: A repository BookRepository over the API's \"books\" path with a GET all() that returns Result<BookError, Book[]>"
       },
       {
-        "path": "components/book/domain/usecases/all_books_use_case.nuc",
+        "path": "components/books/domain/usecases/all_books_use_case.nuc",
         "kind": "usecase",
         "task": "usecase AllBooksUseCase. The spec says: A use case AllBooksUseCase(books: BookRepository) whose exec() returns ~books.all()"
       },
       {
-        "path": "components/book/book_component.nuc",
+        "path": "components/books/books_component.nuc",
         "kind": "appcomponent",
         "task": "appcomponent BooksComponent. The spec says: An application component BooksComponent with all() = AllBooksUseCase.exec."
       }
     ],
     "attempts": 6,
-    "seconds": 57.1,
+    "seconds": 40.5,
     "trace": [
       {
         "step": "recall",
-        "detail": "plan guide, the platform's layout and structure"
+        "detail": "the plan guide, the platform's layout (nuclear help layout) and the cards \u2014 spec: Platform `mobile` brief: Synapsis apps \u2014 Pieces; kind: `repository` \u2014 a kind of the mobile platform; kind: `usecase` \u2014 a kind of the mobile platform"
       },
       {
         "step": "split",

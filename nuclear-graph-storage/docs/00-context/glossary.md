@@ -36,4 +36,4 @@ Use these words in the code, the documents and the conversations.
 | Client | A program that was given access, with its scopes | a user | `access.nuc` |
 | Scope | `read`, `write` or `admin` | | `access.nuc` |
 | Owner token | The token of the machine's user: the only one with `admin` | a client's token | `secrets_store.nuc` |
-| `prompts`, `memory` | Two collections that are not part of the base: the prompt files of this package, and what an agent keeps about a project | shelves | `RUNTIME` in `shelves.nuc` |
+| `prompts`, `memory` | Two collections that are not part of the base: the prompts (the skills of the roles that name one, `nuclear-agents/roles/`), and what an agent keeps about a project | shelves | `RUNTIME` in `shelves.nuc` |

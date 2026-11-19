@@ -1,0 +1,444 @@
+use io
+use os
+use sys
+use json
+use pathlib{ Path }
+
+// The teams of the software factory (ADR-platform-0010): the file of members, its atomic write and `.bak`, an old
+// file converted, the validation, who works a station, the wizard's commands (create, suggest, name-suggest, member
+// add/remove/update, runnable), the roster, and the commands' JSON contract (design.md "Teams").
+
+ROSTER: <string, any> = { "analyst": [{ "id": "ana-001", "name": "Ana" }, { "id": "ana-002", "name": "Bea" }], "architect": [], "developer": [{ "id": "dev-017", "name": "Dev" }], "qa": [], "devops": [] }
+
+// The factory, the roles and this machine in `tmpPath`: of the agents, only `claude` is installed; no API key.
+useTempHome(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("no-roles")}")
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir(existOk = true)
+  bin.joinpath("claude").writeText("#!/bin/sh\n")
+  bin.joinpath("claude").chmod(493)
+  monkeypatch.setenv("HOME", "${tmpPath}")
+  monkeypatch.setenv("PATH", "${bin}")
+
+// Runs `nuclear-builder <args>` with `stdin`, and gives its exit code and what it printed as JSON.
+call(args: string[], monkeypatch: any, capsys: any, stdin: string = "") <string, any>
+  monkeypatch.setattr(sys, "stdin", io.StringIO(stdin))
+  code = args[0] == "team" ? team(args.skip(1)) : 2
+  out: string = capsys.readouterr().out
+  { "code": code, "out": out.trim().isEmpty ? null : json.loads(out) }
+
+testATeamIsSavedReadListedAndItsLastVersionKept(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  draft = { "name": "Night shift", "purpose": "A shop", "skills": ["testing"], "members": [{ "role": "analyst", "kind": "agent", "provider": "claude-code", "model": "haiku" }, { "role": "architect" }] }
+  made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps(draft))
+  expect(made["code"] == 0, json.dumps(made))
+  team: <string, any> = made["out"]!
+  expect(team["id"] == "night-shift" and team["budgetUsd"] == 5 and team["techLead"] == "architect" and team["purpose"] == "A shop" and team["skills"] == ["testing"])
+  expect(team["missing"] == ["developer", "qa", "devops"])
+  team.remove("missing")
+  saved = call(["team", "save", "--json"], monkeypatch, capsys, json.dumps(team))
+  expect(saved["code"] == 0 and (saved["out"] as <string, any>)["updated"]! > 0)
+  expect(call(["team", "list", "--json"], monkeypatch, capsys)["out"] == [{ "id": "night-shift", "name": "Night shift", "description": "", "logo": null, "techLead": "architect", "members": 2, "updated": (saved["out"] as <string, any>)["updated"], "default": true }])
+  team["name"] = "Night shift 2"
+  call(["team", "save", "--json"], monkeypatch, capsys, json.dumps(team))
+  file = tmpPath.joinpath("factory", "teams", "night-shift.json")
+  expect(json.loads(file.readText())["name"] == "Night shift 2")
+  expect(json.loads(file.withName("night-shift.json.bak").readText())["name"] == "Night shift")
+  // no temporary file is left beside it
+  left: Path[] = list(file.parent.glob("*.tmp"))
+  expect(left.isEmpty)
+  shown = call(["team", "show", "night-shift", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(shown["name"] == "Night shift 2")
+
+testAnInvalidTeamIsRefusedWithItsReasonAndExitCodeOne(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  members = (list: any[]) => json.dumps({ "name": "x", "members": list })
+  cases = [["not json", "Expecting value"], ["[1]", "a team is a JSON object"], ["{}", "no name"], ["{\"name\": \"x\", \"id\": \"Bad Id\"}", "id"], ["{\"name\": \"x\", \"budgetUsd\": -1}", "budgetUsd"], ["{\"name\": \"x\", \"roles\": {\"boss\": {}}}", "no such role"], [members([{ "role": "boss" }]), "no such role"], [members([{ "role": "qa", "kind": "api", "provider": "codex" }]), "anthropic"], [members([{ "role": "qa", "tasks": [{ "id": "t", "title": "t", "station": "moon" }] }]), "a task is"], [members([{ "role": "qa", "behaviour": { "askBeforeWriting": 1 } }]), "behaviour"], [members([{ "id": "a", "role": "qa" }, { "id": "a", "role": "developer" }]), "two members have the id `a`"], [members([{ "id": "Bad Id", "role": "qa" }]), "member id"], [json.dumps({ "name": "x", "techLead": "qa", "members": [{ "id": "dev", "role": "developer" }] }), "techLead is the id of one of the team's members"], [members([{ "role": "qa", "employee": "qa-001" }, { "role": "qa", "employee": "qa-001" }]), "in the team already"]]
+  for c in cases
+    answer = call(["team", "save", "--json"], monkeypatch, capsys, c[0])
+    expect(answer["code"] == 1, c[0])
+    error: string = (answer["out"] as <string, any>)["error"]!
+    expect(c[1] in error, "${c[0]}: ${error}")
+  expect(call(["team", "show", "nope", "--json"], monkeypatch, capsys)["out"] == { "error": "no team `nope`" })
+  expect(call(["team", "fly"], monkeypatch, capsys)["code"] == 1)
+
+testAnEmployeeIsCheckedAgainstTheRosterWhenThereIsOne() void
+  ok = validTeam({ "name": "x", "members": [{ "role": "developer", "employee": "dev-017" }] }, ROSTER)
+  dev = (ok["members"] as <string, any>[])[0]
+  expect(dev["provider"] == "nuclear-developer" and dev["id"] == "dev-017")
+  failed = ""
+  try
+    validTeam({ "name": "x", "members": [{ "role": "developer", "employee": "dev-999" }] }, ROSTER)
+  catch e
+    failed = "${e}"
+  expect("no employee `dev-999`" in failed)
+  // no roster yet: any employee is kept
+  expect(validTeam({ "name": "x", "members": [{ "role": "qa", "employee": "qa-001" }] }, ROSTER)["name"] == "x")
+
+// A member whose who-works is not said gets the local defaults (the profile's models); the team a run takes when
+// there is none at all is one local member per role, the first employee of each roster.
+testANewMemberGetsTheLocalDefaults() void
+  machine = { "CODER_MODEL": "qwen2.5-coder:1.5b", "ASSISTANT_MODEL": "gemma4:e4b" }
+  dev = newMember({ "role": "developer" }, [], machine)
+  expect(dev["kind"] == "local" and dev["provider"] == "nuclear-developer" and dev["model"] == "qwen2.5-coder:1.5b" and dev["id"] == "developer")
+  expect(newMember({ "role": "qa" }, [dev], machine)["model"] == "gemma4:e4b")
+  paid = newMember({ "role": "qa", "kind": "agent", "provider": "codex" }, [], machine)
+  expect(paid["model"] == null and paid["provider"] == "codex")
+  team = localTeam({}, ROSTER)
+  ms = team["members"] as <string, any>[]
+  expect(team["id"] == LOCAL_TEAM and ms.map((m) => m["id"]) == ROLES and ms.all((m) => m["kind"] == "local"))
+  expect(ms[0]["employee"] == "ana-001" and ms[2]["employee"] == "dev-017" and ms[2]["model"] == "qwen2.5-coder:3b" and ms[1]["model"] == "gemma4:e2b" and ms[3]["employee"] == null)
+  expect(team["techLead"] == "architect" and missingRoles(team) == [])
+
+testDefaultDeleteExportAndImport(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  a = saveTeam(crew("A", [], ROSTER))
+  b = saveTeam(crew("B", ["analyst", "architect"], ROSTER))
+  // the first team saved is the default
+  expect(defaultTeamId() == "a")
+  expect(call(["team", "default", "b"], monkeypatch, capsys)["out"] == { "default": "b" })
+  expect(listTeams().map((t) => t["default"]) == [false, true])
+  file = "${tmpPath.joinpath("b.json")}"
+  expect(call(["team", "export", "b", file], monkeypatch, capsys)["code"] == 0)
+  // an import never replaces a team: the id taken gets the next one
+  copy = call(["team", "import", file, "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(copy["id"] == "b-2" and copy["name"] == "B")
+  expect(call(["team", "delete", "b"], monkeypatch, capsys)["out"] == { "deleted": "b" })
+  expect(defaultTeamId() == null and teamIds() == ["a", "b-2"])
+  expect(tmpPath.joinpath("factory", "teams", "b.json.bak").exists())
+  expect(call(["team", "delete", "b"], monkeypatch, capsys)["code"] == 1)
+  expect(a["id"] == "a" and b["id"] == "b")
+
+testTheRunsTeamIsTheProjectsElseTheDefaultElseTheOnlyOne(tmpPath: Path, monkeypatch: any) void
+  useTempHome(tmpPath, monkeypatch)
+  saveTeam(crew("Mine", [], ROSTER))
+  saveTeam(crew("Project", ["analyst", "architect"], ROSTER))
+  project = tmpPath.joinpath("app")
+  expect(runTeam("${project}")!["id"] == "mine")
+  project.joinpath(".nuclear").mkdir(parents = true)
+  project.joinpath(".nuclear", "builder.json").writeText("{\"team\": \"project\"}")
+  expect(runTeam("${project}")!["id"] == "project")
+  expect(runTeam("${project}", "mine")!["id"] == "mine")
+  // no default: the only saved team; several and none chosen: the user chooses, never the local team
+  project.joinpath(".nuclear", "builder.json").writeText("{}")
+  setDefaultTeam(null)
+  failed = false
+  try
+    runTeam("${project}")
+  catch e
+    failed = isinstance(e, TeamChoice)
+  expect(failed)
+  deleteTeam("project")
+  expect(runTeam("${project}")!["id"] == "mine" and teamOfRun("${project}", null)["id"] == "mine")
+  deleteTeam("mine")
+  expect(runTeam("${project}") == null and teamOfRun("${project}", null)["id"] == LOCAL_TEAM)
+
+testTheRosterOfEveryRoleInEachLanguage(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  roles = tmpPath.joinpath("roles")
+  roles.joinpath("qa", "roster").mkdir(parents = true)
+  roles.joinpath("qa", "roster", "en.json").writeText("[{\"id\": \"qa-001\", \"name\": \"Quinn\"}]")
+  roles.joinpath("qa", "roster", "es.json").writeText("[{\"id\": \"qa-001\", \"name\": \"Quino\"}]")
+  // a skill's Spanish beside its English (the front matter's title_es, description_es); one without them says its name
+  roles.joinpath("qa", "skills").mkdir()
+  roles.joinpath("qa", "skills", "find-the-edge-cases.md").writeText("---\nname: find-the-edge-cases\ndescription: List what breaks code.\ntitle_es: Encontrar los casos límite\ndescription_es: Listar lo que rompe el código.\n---\nBody\n")
+  roles.joinpath("qa", "skills", "review-security.md").writeText("---\nname: review-security\ndescription: Review a change.\n---\nBody\n")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${roles}")
+  es = call(["team", "roster", "--lang", "es", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(es.keys == ROLES and es["qa"]!["employees"][0]["name"] == "Quino" and es["developer"] == { "employees": [], "skills": [], "skillTexts": {} })
+  expect(es["qa"]!["skillTexts"]["find-the-edge-cases"] == { "title": "Encontrar los casos límite", "description": "Listar lo que rompe el código." })
+  expect(es["qa"]!["skillTexts"]["review-security"] == { "title": "Review security", "description": "Review a change." })
+  en = call(["team", "roster", "--lang", "en", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(en["qa"]!["skillTexts"]["find-the-edge-cases"] == { "title": "Find the edge cases", "description": "List what breaks code." })
+  // a language that is missing falls back to English
+  fr = call(["team", "roster", "--lang", "fr", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(fr["qa"]!["employees"][0]["name"] == "Quinn")
+  // no roles at all: every role is empty, never an error
+  monkeypatch.setenv("NUCLEAR_ROLES", "${tmpPath.joinpath("none")}")
+  expect(rosters().values.all((r) => r == []))
+
+// The company screen in one call (`team screen`): the teams as `list` gives them, each one as `show` gives it, a file
+// that cannot be read as its error, the roster as `roster`, the temperaments and the vault's providers.
+testTheScreenGivesEverythingTheCompanyScreenDrawsInOneCall(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  roles = tmpPath.joinpath("roles")
+  roles.joinpath("qa", "roster").mkdir(parents = true)
+  roles.joinpath("qa", "roster", "en.json").writeText("[{\"id\": \"qa-001\", \"name\": \"Quinn\"}]")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${roles}")
+  made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Night shift", "members": [{ "role": "qa", "employee": "qa-001" }] }))["out"] as <string, any>
+  tmpPath.joinpath("factory", "teams", "broken.json").writeText("{")
+  screen = call(["team", "screen", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  listed = call(["team", "list", "--json"], monkeypatch, capsys)["out"] as <string, any>[]
+  expect(screen["teams"] == listed and screen.keys == ["teams", "shown", "roster", "temperaments", "vault", "library", "agents"])
+  shown = screen["shown"] as <string, any>
+  id = "${made["id"]}"
+  expect(shown[id] == call(["team", "show", id, "--json"], monkeypatch, capsys)["out"])
+  expect(screen["roster"] == call(["team", "roster", "--json"], monkeypatch, capsys)["out"] and screen["temperaments"] == [])
+  expect(listed.all((t) => "${t["id"]}" in shown))
+  expect(listed.any((t) => t["id"] == "broken") ? "error" in (shown["broken"] as <string, any>) : true)
+
+// A run of the local team that was never saved (there was no team) keeps its id (`local-team`): retried or resumed,
+// it gets it again; any other id that is not there is an error.
+testARunOfTheUnsavedLocalTeamIsRetriedWithIt(tmpPath: Path, monkeypatch: any) void
+  useTempHome(tmpPath, monkeypatch)
+  project = "${tmpPath.joinpath("app")}"
+  expect(teamOfRun(project, null)["id"] == LOCAL_TEAM)
+  expect(teamOfRetry(project, null, LOCAL_TEAM)["id"] == LOCAL_TEAM)
+  failed = false
+  try
+    teamOfRetry(project, null, "nobody")
+  catch e
+    failed = isinstance(e, TeamError)
+  expect(failed)
+
+// Requirement 26: a team's description and logo, each member's name and personality; an older file keeps loading
+// with their defaults.
+testATeamHasADescriptionALogoAndItsMembersNamesAndPersonalities(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  teams = tmpPath.joinpath("factory", "teams")
+  teams.mkdir(parents = true)
+  // a file of before: no description, no logo, no name, no personality, the first shape (roles)
+  teams.joinpath("old.json").writeText(json.dumps({ "id": "old", "name": "Old", "updated": 1, "budgetUsd": 5, "roles": { "developer": { "employee": "dev-017", "kind": "local", "provider": "nuclear-developer" } } }))
+  roles = tmpPath.joinpath("roles")
+  roles.joinpath("developer", "roster").mkdir(parents = true)
+  roles.joinpath("developer", "roster", "en.json").writeText("[{\"id\": \"dev-017\", \"name\": \"Neo\"}]")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${roles}")
+  shown = call(["team", "show", "old", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(shown["description"] == "" and shown["logo"] == null and shown["techLead"] == "developer")
+  dev: <string, any> = (shown["members"] as <string, any>[])[0]
+  expect(dev["name"] == "Neo" and dev["personality"] == { "gifs": "sometimes", "on": ["failure"], "note": "" })
+  // what is given is kept; a name given wins over the roster's
+  team = validTeam({ "name": "x", "description": " Night work. ", "members": [{ "role": "qa", "name": "Quinn", "personality": { "gifs": "often", "on": ["success", "question"], "note": "Cheerful." } }] }, ROSTER)
+  qa: <string, any> = (team["members"] as <string, any>[])[0]
+  expect(team["description"] == "Night work." and qa["name"] == "Quinn" and qa["personality"] == { "gifs": "often", "on": ["success", "question"], "note": "Cheerful." })
+  bad = [[{ "gifs": "always" }, "gifs"], [{ "on": ["lunch"] }, "personality.on"], [{ "note": 3 }, "note"], ["funny", "personality is"]]
+  for b in bad
+    failed = ""
+    try
+      validTeam({ "name": "x", "members": [{ "role": "qa", "personality": b[0] }] }, ROSTER)
+    catch e
+      failed = "${e}"
+    expect(b[1] in failed, failed)
+  two = [{ "id": "qa", "role": "qa" }, { "id": "arch", "role": "architect" }]
+  expect(validTeam({ "name": "x", "techLead": "qa", "members": two }, ROSTER)["techLead"] == "qa" and validTeam({ "name": "x", "members": two }, ROSTER)["techLead"] == "arch" and validTeam({ "name": "x" }, ROSTER)["techLead"] == null)
+  for raw in [{ "name": "x", "techLead": "boss" }, { "name": "x", "description": 1 }, { "name": "x", "logo": "other.logo.png" }, { "name": "x", "logo": "x.logo.gif" }]
+    failed = false
+    try
+      validTeam(raw, ROSTER)
+    catch e
+      failed = isinstance(e, TeamError)
+    expect(failed, json.dumps(raw))
+
+testATeamsLogoIsCopiedBesideItCheckedAndCleared(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  saveTeam(crew("Night shift", [], ROSTER))
+  png = tmpPath.joinpath("logo.png")
+  png.writeBytes(bytes.fromhex("89504e470d0a1a0a0000000d49484452"))
+  placed = call(["team", "logo", "night-shift", "${png}", "--json"], monkeypatch, capsys)
+  expect(placed["code"] == 0 and (placed["out"] as <string, any>)["logo"] == "night-shift.logo.png", json.dumps(placed))
+  teams = tmpPath.joinpath("factory", "teams")
+  expect(teams.joinpath("night-shift.logo.png").readBytes() == png.readBytes())
+  listed = call(["team", "list", "--json"], monkeypatch, capsys)["out"] as <string, any>[]
+  expect(listed[0]["logo"] == "${teams.joinpath("night-shift.logo.png")}" and listed[0]["description"] == "")
+  // an svg replaces the png; a file that is not what its name says, another kind or over 1 MB is refused
+  svg = tmpPath.joinpath("logo.svg")
+  svg.writeText("<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\"/>")
+  expect(call(["team", "logo", "night-shift", "${svg}"], monkeypatch, capsys)["code"] == 0)
+  expect(teams.joinpath("night-shift.logo.svg").isFile() and not teams.joinpath("night-shift.logo.png").exists())
+  fake = tmpPath.joinpath("fake.jpg")
+  fake.writeText("not an image")
+  gif = tmpPath.joinpath("a.gif")
+  gif.writeText("GIF89a")
+  big = tmpPath.joinpath("big.png")
+  big.writeBytes(bytes.fromhex("89504e470d0a1a0a") + bytes(LOGO_MAX_BYTES))
+  for c in [[fake, "not a jpg"], [gif, ".png, .svg or .jpg"], [big, "at most 1 MB"], [tmpPath.joinpath("none.png"), "no image"]]
+    refused = call(["team", "logo", "night-shift", "${c[0]}"], monkeypatch, capsys)
+    expect(refused["code"] == 1 and "${c[1]}" in "${(refused["out"] as <string, any>)["error"]}", json.dumps(refused))
+  expect(call(["team", "logo", "nobody", "${svg}"], monkeypatch, capsys)["code"] == 1)
+  cleared = call(["team", "logo", "night-shift", "--clear", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(cleared["logo"] == null and list(teams.glob("night-shift.logo.*")) == [])
+  // an exported team comes back without its logo, which is not in the file
+  call(["team", "logo", "night-shift", "${svg}"], monkeypatch, capsys)
+  file = "${tmpPath.joinpath("out.json")}"
+  exportTeam("night-shift", file)
+  expect(importTeam(file)["logo"] == null)
+
+testARunNamesItsTeam(tmpPath: Path, monkeypatch: any) void
+  useTempHome(tmpPath, monkeypatch)
+  team = crew("Night shift", [], ROSTER)
+  run = newRun("${tmpPath}", {}, { "id": "s1", "title": "S" }, team, ["analysis"], "specs/s1")
+  expect(run["team"] == { "id": "night-shift", "name": "Night shift" } and (run["stages"] as <string, any>[])[0]["member"] == "analyst")
+
+// Requirements 27 and 28: the roster gives each employee's face and temperament; a team's member may change the
+// temperament (one of temperaments.json), kept only when it is not the employee's own.
+testTheRosterGivesFacesAndAMemberMayChangeTheirTemperament(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  roles = tmpPath.joinpath("roles")
+  roles.joinpath("developer", "roster", "faces").mkdir(parents = true)
+  roles.joinpath("developer", "roster", "en.json").writeText("[{\"id\": \"dev-017\", \"name\": \"Neo\", \"temperament\": \"shy\"}, {\"id\": \"dev-018\", \"name\": \"Null\", \"temperament\": \"nerd\"}]")
+  roles.joinpath("developer", "roster", "faces", "dev-017.webp").writeText("RIFF----WEBP")
+  roles.joinpath("developer", "roster", "faces", "thumb").mkdir()
+  roles.joinpath("developer", "roster", "faces", "thumb", "dev-017.webp").writeText("RIFF----WEBP")
+  roles.joinpath("temperaments.json").writeText(json.dumps({ "temperaments": [{ "id": "shy", "name": { "en": "Shy", "es": "Tímido" }, "voice": "Quiet." }, { "id": "nerd", "name": { "en": "Nerd", "es": "Friki" }, "voice": "Precise." }, { "id": "joker", "name": { "en": "Joker", "es": "Bromista" }, "voice": "Puns." }] }))
+  monkeypatch.setenv("NUCLEAR_ROLES", "${roles}")
+  staff = ((call(["team", "roster", "--json"], monkeypatch, capsys)["out"] as <string, any>)["developer"] as <string, any>)["employees"] as <string, any>[]
+  expect(staff[0]["face"] == "${roles.joinpath("developer", "roster", "faces", "dev-017.webp")}" and not ("face" in staff[1]))
+  expect(staff[0]["thumb"] == "${roles.joinpath("developer", "roster", "faces", "thumb", "dev-017.webp")}" and not ("thumb" in staff[1]))
+  // the face is the employee's, whatever the language
+  roles.joinpath("developer", "roster", "es.json").writeText("[{\"id\": \"dev-017\", \"name\": \"Neo\", \"temperament\": \"shy\"}]")
+  plantilla = ((call(["team", "roster", "--lang", "es", "--json"], monkeypatch, capsys)["out"] as <string, any>)["developer"] as <string, any>)["employees"] as <string, any>[]
+  expect(plantilla[0]["face"] == staff[0]["face"])
+  moods = call(["team", "temperaments", "--json"], monkeypatch, capsys)["out"] as <string, any>[]
+  expect(moods.map((m) => m["id"]) == ["shy", "nerd", "joker"])
+  // the employee's own is not kept (the roster gives it); another one is; one not in the list is refused
+  saved = saveTeam({ "id": "t", "name": "T", "members": [{ "role": "developer", "employee": "dev-017", "personality": { "temperament": "shy" } }] })
+  kept: <string, any> = (saved["members"] as <string, any>[])[0]["personality"]!
+  expect(not ("temperament" in kept))
+  shown = teamShown(loadTeam("t"))
+  expect(((shown["members"] as <string, any>[])[0]["personality"] as <string, any>)["temperament"] == "shy")
+  saveTeam({ "id": "t", "name": "T", "members": [{ "role": "developer", "employee": "dev-017", "personality": { "temperament": "joker" } }] })
+  shown = teamShown(loadTeam("t"))
+  expect(((shown["members"] as <string, any>[])[0]["personality"] as <string, any>)["temperament"] == "joker")
+  refused = call(["team", "save", "--json"], monkeypatch, capsys, json.dumps({ "id": "t", "name": "T", "members": [{ "role": "developer", "personality": { "temperament": "moody" } }] }))
+  expect(refused["code"] == 1 and "one of shy, nerd, joker" in "${(refused["out"] as <string, any>)["error"]}")
+
+// ADR-platform-0010: a file of the first shape (one member per role, the tech lead a role) is written in the second
+// on its first read, through the normal write: the old one kept as `.bak`, each member's id its role.
+testAnOldTeamFileIsConvertedOnItsFirstRead(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  teams = tmpPath.joinpath("factory", "teams")
+  teams.mkdir(parents = true)
+  old = { "id": "crew", "name": "Crew", "updated": 1, "budgetUsd": 3, "techLead": "developer", "roles": { "analyst": { "kind": "agent", "provider": "claude-code", "model": "haiku" }, "developer": { "employee": "dev-017", "instructions": "Tests first." } } }
+  teams.joinpath("crew.json").writeText(json.dumps(old))
+  listed = call(["team", "list", "--json"], monkeypatch, capsys)["out"] as <string, any>[]
+  expect(listed[0]["techLead"] == "developer" and listed[0]["members"] == 2, json.dumps(listed))
+  now = json.loads(teams.joinpath("crew.json").readText())
+  expect(not ("roles" in now) and now["techLead"] == "developer" and now["budgetUsd"] == 3)
+  expect((now["members"] as <string, any>[]).map((m) => [m["id"], m["role"], m["provider"]]) == [["analyst", "analyst", "claude-code"], ["developer", "developer", "nuclear-developer"]])
+  expect((now["members"] as <string, any>[])[1]["instructions"] == "Tests first.")
+  expect(json.loads(teams.joinpath("crew.json.bak").readText()) == old)
+  // read again: nothing more to convert, the .bak stays the old file
+  loadTeam("crew")
+  expect(json.loads(teams.joinpath("crew.json.bak").readText()) == old)
+
+// Who works a station: the member the tech lead assigned for the run, else the role's first member; a run names it.
+testAStationIsWorkedByTheAssignedMemberElseTheFirstOfItsRole(tmpPath: Path, monkeypatch: any) void
+  useTempHome(tmpPath, monkeypatch)
+  team = validTeam({ "name": "Many", "members": [{ "id": "d1", "role": "developer" }, { "id": "d2", "role": "developer", "kind": "agent", "provider": "codex" }, { "id": "a1", "role": "analyst" }] }, ROSTER)
+  expect(memberFor(team, "developer")!["id"] == "d1" and memberFor(team, "developer", { "developer": "d2" })!["id"] == "d2")
+  expect(memberFor(team, "developer", { "developer": "a1" })!["id"] == "d1" and memberFor(team, "qa") == null)
+  expect(assignOf("developer=d2", team) == { "developer": "d2" })
+  failed = false
+  try
+    assignOf("developer=a1", team)
+  catch e
+    failed = isinstance(e, TeamError)
+  expect(failed)
+  run = newRun("${tmpPath}", {}, { "id": "s1", "title": "S" }, team, ["analysis", "code"], "specs/s1", { "developer": "d2" })
+  stages = run["stages"] as <string, any>[]
+  expect(stages[0]["member"] == "a1" and stages[1]["member"] == "d2" and stages[1]["provider"] == "codex" and run["assign"] == { "developer": "d2" })
+  // the spending asks for the member who works the station, not every member of its role
+  expect(paidOf(run, team)["members"] == ["d2"] and paidOf(newRun("${tmpPath}", {}, { "id": "s2", "title": "S" }, team, ["code"], "specs/s2"), team)["members"] == [])
+  expect(runnable(team)["missing"] == ["architect", "qa", "devops"] and runnable(team, ["analysis", "code"])["runnable"] == true)
+
+// The wizard's commands: members added (twenty at once), updated and removed by their id; the tech lead's place
+// falls to the default when they leave; whether the team can run.
+testMembersAreAddedUpdatedAndRemovedByTheirId(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Big", "techLead": 1, "members": [{ "role": "analyst" }, { "role": "architect", "employee": "x-1" }] }))["out"] as <string, any>
+  expect(made["techLead"] == "x-1", json.dumps(made))
+  many = call(["team", "member", "add", "big", "--role", "developer", "--count", "20", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  devs = (many["members"] as <string, any>[]).filter((m) => m["role"] == "developer")
+  expect(devs.length == 20 and devs[0]["id"] == "developer" and devs[19]["id"] == "developer-20" and devs.all((m) => m["kind"] == "local"))
+  listed = call(["team", "member", "add", "big", "--json"], monkeypatch, capsys, json.dumps([{ "role": "qa", "kind": "agent", "provider": "claude-code", "model": "haiku" }, { "role": "devops" }]))["out"] as <string, any>
+  expect((listed["members"] as any[]).length == 24 and listed["missing"] == [])
+  expect(call(["team", "runnable", "big", "--json"], monkeypatch, capsys)["out"] == { "team": "big", "runnable": true, "missing": [], "stations": STATIONS })
+  changed = call(["team", "member", "update", "big", "developer-3", "--kind", "agent", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  three = (changed["members"] as <string, any>[]).find((m) => m["id"] == "developer-3")!
+  expect(three["kind"] == "agent" and three["provider"] == "claude-code")
+  gone = call(["team", "member", "remove", "big", "x-1", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(gone["techLead"] == "analyst" and gone["missing"] == ["architect"])
+  expect(call(["team", "runnable", "big", "--json"], monkeypatch, capsys)["out"] == { "team": "big", "runnable": false, "missing": ["architect"], "stations": STATIONS })
+  expect(call(["team", "member", "remove", "big", "nobody"], monkeypatch, capsys)["code"] == 1)
+  expect(call(["team", "update", "big", "--lead", "qa", "--purpose", "Ship it", "--skills", "a, b", "--json"], monkeypatch, capsys)["out"]!["purpose"] == "Ship it")
+  expect(loadTeam("big")["skills"] == ["a", "b"] and loadTeam("big")["techLead"] == "qa")
+  expect(call(["team", "update", "big", "--lead", "nobody"], monkeypatch, capsys)["code"] == 1)
+
+// `team suggest`: the employees whose profile meets the purpose and skills first, with why; every role gets some.
+testSuggestionsRankTheRosterByThePurposeAndSkills(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  roles = tmpPath.joinpath("roles")
+  roles.joinpath("developer", "roster").mkdir(parents = true)
+  staff = [{ "id": "dev-001", "name": "Neo", "skills": ["Saying yes"], "headline": "Yes-man", "stats": { "speed": 90 } }, { "id": "dev-002", "name": "Trin", "skills": ["Testing", "Payments"], "headline": "Mobile developer", "experience": [{ "title": "Dev", "line": "Built a banking app" }], "stats": { "speed": 10 } }]
+  roles.joinpath("developer", "roster", "en.json").writeText(json.dumps({ "role": "developer", "employees": staff }))
+  monkeypatch.setenv("NUCLEAR_ROLES", "${roles}")
+  out = call(["team", "suggest", "--purpose", "A mobile banking app", "--skills", "tests,payments", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  dev = (out["roles"] as <string, any>[]).find((r) => r["role"] == "developer")!
+  best: <string, any> = (dev["candidates"] as <string, any>[])[0]
+  expect(best["employee"] == "dev-002" and (best["score"] as int) > 0, json.dumps(dev))
+  why = (best["why"] as <string, any>[]).map((w) => [w["term"], w["in"]])
+  expect(["test", "skill"] in why and ["payment", "skill"] in why and ["mobile", "headline"] in why and ["bank", "experience"] in why, json.dumps(why))
+  // no word met: the best all-rounder still comes, with no why
+  plain = suggestMembers("", [], rosters())
+  first = ((plain["roles"] as <string, any>[]).find((r) => r["role"] == "developer")!["candidates"] as <string, any>[])[0]
+  expect(first["employee"] == "dev-001" and first["why"] == [])
+  expect((plain["roles"] as <string, any>[]).map((r) => r["role"]) == ROLES)
+
+// `team name-suggest`: five different names from the word lists, in the language asked; the same seed, the same names.
+testNameSuggestionsRollTheWordLists(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  roles = tmpPath.joinpath("roles")
+  roles.mkdir()
+  roles.joinpath("team-names.json").writeText(json.dumps({ "en": { "patterns": ["The {adj} {noun}", "Operation {topic}"], "adj": ["Unpaid", "Feral", "Haunted"], "noun": ["Interns", "Daemons", "Ghosts"] }, "es": { "patterns": ["Los {noun} {adj}"], "adj": ["Quemados", "Insomnes"], "noun": ["Becarios", "Zombis", "Fantasmas"] } }))
+  monkeypatch.setenv("NUCLEAR_ROLES", "${roles}")
+  names = call(["team", "name-suggest", "--seed", "7", "--json"], monkeypatch, capsys)["out"] as string[]
+  expect(names.length == 5 and names.unique().length == 5 and names.all((n) => n.startsWith("The ")), json.dumps(names))
+  expect(call(["team", "name-suggest", "--seed", "7", "--json"], monkeypatch, capsys)["out"] == names)
+  es = suggestNames("es", "", 5, 1)
+  expect(es.length == 5 and es.all((n) => n.startsWith("Los ")), json.dumps(es))
+  // a purpose gives the {topic} patterns a word of it
+  topical = suggestNames("en", "payments for bakeries", 5, 3)
+  expect(topical.any((n) => n.startsWith("Operation ")) or topical.length == 5)
+  // the real lists: both languages fill every pattern
+  real = suggestNames("es", "pagos", 5, 11, Path(__file__).resolve().parents[3].joinpath("..", "..", "..", "nuclear-agents", "roles"))
+  expect(real.length == 5 and real.all((n) => not ("{" in n)), json.dumps(real))
+
+// ADR-platform-0010: who works a member is an agent this machine has; one it lacks (a command not installed, an API
+// with no key) is refused with why where it is chosen, and a member carries what makes it different.
+testAMemberIsWorkedOnlyByAnAgentThisMachineHas(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  for bad in [[{ "role": "qa", "kind": "agent", "provider": "codex" }, "`codex` is not on the PATH"], [{ "role": "qa", "kind": "api", "provider": "anthropic" }, "no key"]]
+    refused = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "No", "members": [bad[0]] }))
+    expect(refused["code"] == 1 and "${bad[1]}" in "${(refused["out"] as <string, any>)["error"]}", json.dumps(refused))
+  expect(teamIds() == [])
+  one = { "role": "qa", "kind": "agent", "provider": "claude-code", "model": "haiku", "instructions": "Break it.", "skills": [], "extraSkills": [{ "name": "fuzz", "text": "Fuzz the inputs." }], "personality": { "temperament": "grumpy", "note": "Never trusts a green build." } }
+  made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Yes", "members": [one] }))["out"] as <string, any>
+  qa = (made["members"] as <string, any>[])[0]
+  expect(qa["instructions"] == "Break it." and qa["skills"] == [] and (qa["ownSkills"] as <string, any>[]).map((x) => x["id"]) == ["fuzz"] and qa["extraSkills"] == null and (qa["personality"] as <string, any>)["note"] == "Never trusts a green build.", json.dumps(qa))
+  expect(call(["team", "member", "update", "yes", "qa", "--kind", "api", "--provider", "openai"], monkeypatch, capsys)["code"] == 1)
+  expect(call(["team", "member", "add", "yes", "--role", "developer", "--kind", "agent", "--provider", "gemini-cli"], monkeypatch, capsys)["code"] == 1)
+  changed = call(["team", "member", "update", "yes", "qa", "--instructions", "Break it twice.", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect((changed["members"] as <string, any>[])[0]["instructions"] == "Break it twice.")
+  // a skill of their own (an old extraSkills) is an own skill now: deleted as one
+  expect((deleteSkill("yes", "fuzz", "qa")["members"] as <string, any>[])[0]["ownSkills"] == [])
+
+// Spec 011's amendment: the role of the Delivery station is DevOps. A team file that names the role `delivery` is
+// read as `devops` and written once (the old file kept as `.bak`), the member keeping its id; `--role delivery` is
+// still taken (one release) and answers `devops`; an old run's stations read so; the station keeps its name.
+testTheOldDeliveryRoleIsReadAsDevops(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  dir = tmpPath.joinpath("factory", "teams")
+  dir.mkdir(parents = true)
+  old = { "id": "crew", "name": "Crew", "updated": 1, "budgetUsd": 5, "techLead": "delivery", "members": [{ "id": "delivery", "role": "delivery", "kind": "local", "provider": "nuclear-developer" }] }
+  dir.joinpath("crew.json").writeText(json.dumps(old))
+  read = loadTeam("crew")
+  member = (read["members"] as <string, any>[])[0]
+  expect(member["role"] == "devops" and member["id"] == "delivery" and read["techLead"] == "delivery", json.dumps(read))
+  expect(json.loads(dir.joinpath("crew.json.bak").readText()) == old and "\"devops\"" in dir.joinpath("crew.json").readText())
+  expect(memberFor(read, "delivery")!["id"] == "delivery" and memberFor(read, "devops", { "delivery": "delivery" })!["id"] == "delivery")
+  added = call(["team", "member", "add", "crew", "--role", "delivery", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect((added["members"] as <string, any>[]).filter((m) => m["role"] == "devops").length == 2 and STATION_ROLE["delivery"] == "devops", json.dumps(added))
+  run = upgradeRun({ "stages": [{ "id": "delivery", "role": "delivery", "actors": ["delivery", "shell"], "steps": [{ "role": "delivery" }] }], "assign": { "delivery": "x" } })
+  st = (run["stages"] as <string, any>[])[0]
+  expect(st["id"] == "delivery" and st["role"] == "devops" and st["actors"] == ["devops", "shell"] and (st["steps"] as <string, any>[])[0]["role"] == "devops" and run["assign"] == { "devops": "x" }, json.dumps(run))

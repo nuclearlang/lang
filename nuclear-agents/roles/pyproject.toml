@@ -1,0 +1,9 @@
+# The faces' generator and the roster's checks are written in Nuclear (`faces.nuc`, `tests/`, `nuclear.toml`): this
+# file only tells pytest and pyright where `nuclear build .` writes them. Build before testing.
+[tool.pytest.ini_options]
+pythonpath = ["build"]
+testpaths = ["build/nuclear_roles/tests"]
+
+[tool.pyright]
+typeCheckingMode = "standard"
+extraPaths = ["build"]

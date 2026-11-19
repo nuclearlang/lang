@@ -378,9 +378,9 @@ fn docs_urls_come_from_the_dialect_chain() {
 #[test]
 fn synapsis_dialects_implement_their_platform() {
     // ADR-synapsis-0002: a framework dialect names its platform and matches its platform.toml; a platform plugin a
-    // dialect does not bring is a warning (none today: every backend dialect brings the whole list)
+    // dialect does not bring is a warning (nestjs does not bring telemetry yet: spec 012, phase 1)
     let loader = tree_loader(vec![]);
-    for (name, platform, missing) in [("flutter", "mobile", ""), ("fastapi", "backend", ""), ("nestjs", "backend", "")] {
+    for (name, platform, missing) in [("flutter", "mobile", ""), ("fastapi", "backend", ""), ("nestjs", "backend", "telemetry")] {
         let (d, report) = loader.load(name);
         let d = d.unwrap_or_else(|| panic!("{name}: {:?}", report.diags.iter().map(|(_, x)| &x.message).collect::<Vec<_>>()));
         assert_eq!(d.platform.as_deref(), Some(platform), "{name}");

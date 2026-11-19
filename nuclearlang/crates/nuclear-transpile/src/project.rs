@@ -8,7 +8,7 @@
 //! (`[project.files]`) and the rules between declarations (`[architecture]`).
 
 use crate::alias;
-use crate::emit::{DeclKind, DeclSummary, Emitter, ExtDecl, ProjectCtx, RESULT_PATH};
+use crate::emit::{DeclKind, DeclSummary, Emitter, ExtDecl, MONITOR_PATH, ProjectCtx, RESULT_PATH};
 use nuclear_diag::{Diagnostic, Span, codes};
 use nuclear_dialect::{Dialect, Loader, model::KindSource};
 use nuclear_dialect::template::{Ctx, Value};
@@ -37,9 +37,15 @@ pub struct Manifest {
     pub out: String,
     /// Packages of the target's package manager the app needs (name → version).
     pub dependencies: BTreeMap<String, String>,
+    /// `testEnv(NAME = "value")` of `config.nuc`: the environment the project's tests run with (a test token instead
+    /// of the user's), set before the app is loaded (ADR-synapsis-0010).
+    pub test_env: BTreeMap<String, String>,
     /// `[project] package` of `nuclear.toml`: the folder the files go to and the name they import each other by,
     /// instead of the dialect's `[project] sources` (`app`). A library is imported by its own name.
     pub package: Option<String>,
+    /// Built with `--monitor` (spec 015): each function and method measured. Set by the tool that builds, never by
+    /// the manifest's file.
+    pub monitor: bool,
 }
 
 impl Manifest {
@@ -79,7 +85,9 @@ impl Manifest {
             title: String::new(),
             out: out.into(),
             dependencies: BTreeMap::new(),
+            test_env: BTreeMap::new(),
             package: None,
+            monitor: false,
         }
     }
 
@@ -93,7 +101,8 @@ impl Manifest {
     pub fn read_synapsis(root: &Path) -> Result<Manifest, String> {
         let path = root.join(CONFIG_FILE);
         let text = std::fs::read_to_string(&path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
-        let sections = [SYNAPSIS_SECTION.to_string(), APP_SECTION.to_string(), DEPENDENCIES_SECTION.to_string()];
+        let sections =
+            [SYNAPSIS_SECTION.to_string(), APP_SECTION.to_string(), DEPENDENCIES_SECTION.to_string(), TEST_ENV_SECTION.to_string()];
         let (config, _) = read_config(&text, &sections);
         let shown = path.display();
         let Some(section) = config.get(SYNAPSIS_SECTION) else {
@@ -123,6 +132,7 @@ impl Manifest {
             m.title = title;
         }
         m.dependencies = config.get(DEPENDENCIES_SECTION).into_iter().flatten().cloned().collect();
+        m.test_env = config.get(TEST_ENV_SECTION).into_iter().flatten().cloned().collect();
         Ok(m)
     }
 
@@ -192,7 +202,9 @@ impl Manifest {
             title: get("title").unwrap_or_default(),
             out: get("out").unwrap_or_else(|| "build".into()),
             dependencies,
+            test_env: BTreeMap::new(),
             package,
+            monitor: false,
         })
     }
 }
@@ -311,6 +323,8 @@ pub const APP_SECTION: &str = "app";
 /// `dependencies(name = "version")`: packages of the target's package manager the project adds. A version that
 /// starts with `.` or `/` is a folder on disk (resolved from the project root).
 pub const DEPENDENCIES_SECTION: &str = "dependencies";
+/// `testEnv(NAME = "value")`: the environment variables the tests run with (ADR-synapsis-0010).
+pub const TEST_ENV_SECTION: &str = "testEnv";
 
 /// The output folder of a project: the manifest's `out`, else the dialect's `[project] output`, else `build`.
 pub fn output_dir(manifest: &Manifest, dialect: &Dialect) -> String {
@@ -670,10 +684,13 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
                 (name.clone(), version.clone(), path)
             })
             .collect(),
+        test_env: manifest.test_env.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
         isolated: dialect.project.outputs.iter().map(|(from, _)| from.clone()).collect(),
         sources: manifest.sources(dialect),
         outputs: dialect.project.outputs.clone(),
         plugins: (!dialect.project.plugins.is_empty()).then(|| enabled_plugins(root, dialect).into_iter().collect()),
+        monitor: manifest.monitor,
+        source_names: names.clone(),
         ..Default::default()
     };
     let mut kinds: HashMap<String, Option<String>> = HashMap::new();
@@ -736,6 +753,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
     let mut files = Vec::new();
     let mut summaries: Vec<(String, DeclSummary)> = Vec::new();
     let mut uses_result = false;
+    let mut uses_monitor = false;
     for p in parsed {
         let mut diagnostics = p.diagnostics;
         let mut code = String::new();
@@ -755,6 +773,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
             code = e.file(&file);
             lines = crate::line_map(&p.source, &e.marks);
             uses_result |= e.uses_result();
+            uses_monitor |= e.uses_monitor();
             diagnostics.append(&mut e.diags);
             summaries.extend(e.summaries.into_iter().map(|s| (p.path.clone(), s)));
         }
@@ -775,6 +794,11 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
         let prelude = dialect.syntax("file_prelude").map(|p| format!("{}\n\n", p.render(&Ctx::new().into_value()).trim_end()));
         let runtime = t.render(&Ctx::new().into_value());
         generated.push((out_path(RESULT_PATH), format!("{}{}\n", prelude.unwrap_or_default(), runtime.trim_end())));
+    }
+    if uses_monitor && let Some(t) = dialect.syntax("monitor_runtime") {
+        let prelude = dialect.syntax("file_prelude").map(|p| format!("{}\n\n", p.render(&Ctx::new().into_value()).trim_end()));
+        let runtime = t.render(&Ctx::new().set("app", &manifest.name).into_value());
+        generated.push((out_path(MONITOR_PATH), format!("{}{}\n", prelude.unwrap_or_default(), runtime.trim_end())));
     }
     // uses.<Name>: the generated code of the project writes that name (a template asks only for what is used)
     let uses: BTreeMap<String, Value> =
@@ -1083,6 +1107,10 @@ fn project_context(
         .value("uses", Value::Map(uses.clone()))
         .value("plugins", plugin_context(d, ctx))
         .value("dependencies", Value::List(dependencies))
+        .value(
+            "test_env",
+            Value::List(ctx.test_env.iter().map(|(k, v)| Ctx::new().set("name", k).set("value", v).into_value()).collect()),
+        )
         .into_value()
 }
 

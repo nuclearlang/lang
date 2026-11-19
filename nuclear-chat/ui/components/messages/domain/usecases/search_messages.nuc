@@ -1,0 +1,4 @@
+// What MessagesRepository.search answers, for the screens of messages.
+usecase SearchMessages(repository: MessagesRepository)
+  exec(workspace: string, words: string) Result<NuclearChatError, Found[]>
+    ~repository.search(workspace, words)

@@ -1,6 +1,7 @@
 # How Python writes Nuclear's standard library (nuclearlang/docs/07-reference/library.md, ADR-lang-0009; nuclearlang/dialects/python/docs/07-reference/python.md §9).
-# Variables: recv, args, argN, has_args, named.<name>, fn.param/fn.params/fn.body (an expression lambda argument:
-# a comprehension), argN_is.<base> (the static type of an argument), elem, type_args. A `helper` is written once
+# Variables: recv, args, argN, has_args, named.<name>, fn.param/fn.params/fn.body/fn.cond (an expression lambda
+# argument: a comprehension; fn.cond is the body where a condition goes), argN_is.<base> (the static type of an
+# argument), elem, type_args. A `helper` is written once
 # per file. Lists are list, maps dict, sets set, Bytes is bytes, DateTime is datetime.datetime (aware when UTC),
 # Duration is datetime.timedelta, Regex is re.Pattern and Match is re.Match; `string.length` counts code points.
 
@@ -69,12 +70,12 @@ def _last_index_of[T](xs: list[T], x: T) -> int:
             return i
     return -1""" }
 map = '{{#fn}}[{{fn.body}} for {{fn.param}} in {{recv}}]{{/fn}}{{^fn}}list(map({{arg0}}, {{recv}})){{/fn}}'
-filter = '{{#fn}}[{{fn.param}} for {{fn.param}} in {{recv}} if {{fn.body}}]{{/fn}}{{^fn}}list(filter({{arg0}}, {{recv}})){{/fn}}'
-find = '{{#fn}}next(({{fn.param}} for {{fn.param}} in {{recv}} if {{fn.body}}), None){{/fn}}{{^fn}}next((x for x in {{recv}} if {{arg0}}(x)), None){{/fn}}'
-findIndex = '{{#fn}}next((i for i, {{fn.param}} in enumerate({{recv}}) if {{fn.body}}), -1){{/fn}}{{^fn}}next((i for i, x in enumerate({{recv}}) if {{arg0}}(x)), -1){{/fn}}'
+filter = '{{#fn}}[{{fn.param}} for {{fn.param}} in {{recv}} if {{fn.cond}}]{{/fn}}{{^fn}}list(filter({{arg0}}, {{recv}})){{/fn}}'
+find = '{{#fn}}next(({{fn.param}} for {{fn.param}} in {{recv}} if {{fn.cond}}), None){{/fn}}{{^fn}}next((x for x in {{recv}} if {{arg0}}(x)), None){{/fn}}'
+findIndex = '{{#fn}}next((i for i, {{fn.param}} in enumerate({{recv}}) if {{fn.cond}}), -1){{/fn}}{{^fn}}next((i for i, x in enumerate({{recv}}) if {{arg0}}(x)), -1){{/fn}}'
 any = '{{#fn}}any({{fn.body}} for {{fn.param}} in {{recv}}){{/fn}}{{^fn}}any({{arg0}}(x) for x in {{recv}}){{/fn}}'
 all = '{{#fn}}all({{fn.body}} for {{fn.param}} in {{recv}}){{/fn}}{{^fn}}all({{arg0}}(x) for x in {{recv}}){{/fn}}'
-count = '{{#fn}}sum(1 for {{fn.param}} in {{recv}} if {{fn.body}}){{/fn}}{{^fn}}sum(1 for x in {{recv}} if {{arg0}}(x)){{/fn}}'
+count = '{{#fn}}sum(1 for {{fn.param}} in {{recv}} if {{fn.cond}}){{/fn}}{{^fn}}sum(1 for x in {{recv}} if {{arg0}}(x)){{/fn}}'
 reduce = 'functools.reduce({{arg1}}, {{recv}}, {{arg0}})'
 sum = 'sum({{recv}})'
 min = { template = '_min({{recv}})', helper = """
@@ -238,9 +239,22 @@ clamp = 'min(max({{arg0}}, {{arg1}}), {{arg2}})'
 random = 'random.random()'
 
 [library.Json]
+# a model is written with Nuclear's names (camelCase), the same JSON as every other dialect
 encode = { template = '_json({{arg0}})', helper = """
 def _json(value: object) -> str:
-    return json.dumps(value, separators=(",", ":"), default=lambda o: o.model_dump() if hasattr(o, "model_dump") else vars(o))""" }
+    return json.dumps(value, separators=(",", ":"), default=_json_value)
+
+
+def _json_value(o: object) -> object:
+    dump = getattr(o, "model_dump", None)
+    if callable(dump):
+        return dump(mode="json", by_alias=True)
+    return {_json_name(k): v for k, v in vars(o).items()}
+
+
+def _json_name(name: str) -> str:
+    head, *rest = name.split("_")
+    return head + "".join(p[:1].upper() + p[1:] for p in rest)""" }
 decode = 'json.loads({{arg0}})'
 
 [library.String]

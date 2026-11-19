@@ -1,0 +1,139 @@
+// The tests of the chat's page: the service's repositories are mocks; everything else is the real code.
+sampleMessage(id: string, author: string, at: int, thread: string? = null) Message
+  Message(id = id, at = at, author = author, text = "hi", thread = thread, reactions = {}, buttons = [], links = {})
+
+sampleMember(id: string, name: string, role: string, brain: Brain = Brain(agent = "Nuclear Developer", kind = "local", provider = "nuclear-developer", model = "gemma4:e2b", paid = false)) Member
+  Member(id = id, name = name, role = role, team = "backend", avatar = "", profile = Profile(), personality = Personality(on = []), responder = Responder(command = [], paid = false), brain = brain)
+
+// The general agent with three agents to choose: the local one (the host's default), Claude Code (paid, its models)
+// and one that is not on this machine.
+sampleAgent() Member
+  choices = [Choice(id = "nuclear-developer", label = "Nuclear Developer", kind = "local", command = [], paid = false, models = [], defaultModel = "", available = true, why = ""), Choice(id = "claude-code", label = "Claude Code", kind = "agent", command = [], paid = true, models = ["haiku", "opus"], defaultModel = "", available = true, why = ""), Choice(id = "codex", label = "Codex", kind = "agent", command = [], paid = true, models = [], defaultModel = "", available = false, why = "`codex` is not on the PATH")]
+  Member(id = "atlas", name = "Atlas", role = "chat", team = "", avatar = "", profile = Profile(), personality = Personality(on = []), responder = Responder(command = [], paid = false, choice = "nuclear-developer", model = "", choices = choices), brain = Brain(agent = "", kind = "", provider = "", model = "", paid = false))
+
+sampleWorkspace() Workspace
+  Workspace(
+    id = "w1",
+    root = "/home/me/acme-shop",
+    host = "builder",
+    members = [sampleMember("ada", "Ada Lovelace", "Architect"), sampleMember("grace", "Grace Hopper", "QA", Brain(agent = "Claude Code", kind = "agent", provider = "claude-code", model = "opus", paid = true)), sampleAgent()],
+    teams = [Team(id = "backend", name = "Backend", lead = "ada")],
+    channels = [],
+    lang = "es",
+    gifs = "pack",
+  )
+
+sampleRoom(id: string, kind: string, unread: int) Channel
+  Channel(id = id, name = id, topic = "", kind = kind, members = [], team = id == "backend" ? "backend" : "", unread = unread)
+
+// What the service pushes: nothing in these tests. (The helpers have names no source file uses: a test helper named
+// like a word of the app is imported by the app, the compiler's roadmap.)
+noEvents() Stream<ChatEvent>
+  Stream((on) => () => null)
+
+@mock([WorkspacesRepository, ChannelsRepository, MessagesRepository, GifsRepository, LiveRepository])
+ChatTest
+  beforeEach()
+    when(WorkspacesRepository.one).thenReturn(Ok(sampleWorkspace()))
+    when(ChannelsRepository.list).thenReturn(Ok([sampleRoom("general", "channel", 0), sampleRoom("backend", "channel", 2), sampleRoom("dm-ada", "dm", 1)]))
+    when(ChannelsRepository.read).thenReturn(Ok(sampleRoom("backend", "channel", 0)))
+    when(MessagesRepository.history).thenReturn(Ok([sampleMessage("m1", "ada", 60_000), sampleMessage("r1", "grace", 61_000, "m1")]))
+    when(GifsRepository.pack).thenReturn(Ok([]))
+    when(LiveRepository.events).thenReturn(noEvents())
+  @test("the inline marks of a text are each their element")
+  marks()
+    expect(inline("a `b` **c** @ada #backend run:r-1", (id) => null).length).toBe(10)
+
+  @test("a fence is a code block, without the line that names its language")
+  fences()
+    expect(blocks("look\n```ts\nlet a = 1\n```\nok", (id) => null).length).toBe(3)
+    expect(fenced("ts\nlet a = 1\n")).toBe("let a = 1")
+    expect(fenced("a b\nc")).toBe("a b\nc")
+
+  @test("a group is one author in one minute")
+  groups()
+    expect(sameGroup(sampleMessage("a", "ada", 60_000), sampleMessage("b", "ada", 119_000))).toBe(true)
+    expect(sameGroup(sampleMessage("a", "ada", 60_000), sampleMessage("b", "ada", 120_000))).toBe(false)
+    expect(sameGroup(sampleMessage("a", "ada", 60_000), sampleMessage("b", "grace", 60_500))).toBe(false)
+
+  @test("the texts are English and Spanish, filled by name")
+  texts()
+    expect(Texts(lang = "es").format("typing.one", { "name": "Ada" })).toBe("Ada está escribiendo")
+    expect(Texts(lang = "en").format("typing.one", { "name": "Ada" })).toBe("Ada is typing")
+    expect(Texts(lang = "fr").get("channels")).toBe("Channels")
+
+  @test("a team's channel knows its tech lead; a direct message, its member")
+  people()
+    expect(leadOf(sampleWorkspace(), sampleRoom("backend", "channel", 0))?.name).toBe("Ada Lovelace")
+    expect(leadOf(sampleWorkspace(), sampleRoom("general", "channel", 0))).toBeNull()
+    expect(dmMember(sampleWorkspace(), sampleRoom("dm-ada", "dm", 0))?.role).toBe("Architect")
+
+  @test("a local member's typing says it is the local model; a paid one's is plain")
+  localTyping()
+    ws = sampleWorkspace()
+    expect(typingText(ws, [Activity(member = "ada", channel = "dm-ada")], Texts(lang = "en"))).toBe("Ada is typing on the local model gemma4:e2b (the first answer takes longer while it loads)")
+    expect(typingText(ws, [Activity(member = "grace", channel = "dm-grace")], Texts(lang = "es"))).toBe("Grace está escribiendo")
+
+  @states("a channel shows its messages outside threads", expect = [MessagesState.loading(), MessagesState.ready([sampleMessage("m1", "ada", 60_000)])])
+  channelMessages(manager: MessagesManager)
+    ~manager.open("backend")
+
+  @states("a thread shows the message that opened it and its replies", expect = [ThreadState.ready(Thread(channel = "backend", root = sampleMessage("m1", "ada", 60_000), replies = [sampleMessage("r1", "grace", 61_000, "m1")]))])
+  threadMessages(manager: ThreadManager)
+    ~manager.open("backend", "m1")
+
+  @widget("the page shows the channels, the tech lead and the messages, in the workspace's language")
+  page()
+    renderScreen(ChatScreen(workspace = "w1", channel = "backend"))
+    ~screen.findByText("Mensajes directos")
+    ~screen.findByText("Líder técnico: Ada Lovelace")
+    expect(screen.getAllByText("hi").length).toBe(1)
+
+  @widget("the composer completes a mention and Enter says it")
+  composer()
+    when(MessagesRepository.say).thenReturn(Ok(sampleMessage("m2", "you", 62_000)))
+    renderScreen(ChatScreen(workspace = "w1", channel = "backend"))
+    box = ~screen.findByPlaceholderText("Mensaje a #backend")
+    fireEvent.change(box, { "target": { "value": "@gr" } })
+    ~screen.findByText("Grace Hopper")
+    fireEvent.keyDown(box, { "key": "Enter" })
+    expect((box as HTMLTextAreaElement).value).toBe("@grace ")
+    fireEvent.keyDown(box, { "key": "Enter" })
+    verify(MessagesRepository.say).called(1)
+
+  @test("a direct message is answered by its own agent, else the host's default, else the local one; its model too")
+  agents()
+    agent = sampleAgent()
+    expect(chosenAgent(agent, sampleRoom("dm-atlas", "dm", 0))?.id).toBe("nuclear-developer")
+    room = Channel(id = "dm-atlas", name = "Atlas", topic = "", kind = "dm", members = [], team = "", unread = 0, agent = "claude-code", model = "opus")
+    expect(chosenAgent(agent, room)?.id).toBe("claude-code")
+    expect(chosenModel(agent, room, chosenAgent(agent, room)!)).toBe("opus")
+    gone = Channel(id = "dm-atlas", name = "Atlas", topic = "", kind = "dm", members = [], team = "", unread = 0, agent = "codex", model = "")
+    expect(chosenAgent(agent, gone)?.id).toBe("nuclear-developer")
+    expect(modelsOf(agent.responder.choices[1])).toEqual(["", "haiku", "opus"])
+
+  @test("an answer as it is written: its text grows, a tool is a chip marked when it answers, an open fence is code")
+  streaming()
+    parts = withText(withText([], "Let me "), "look.")
+    expect(parts.length).toBe(1)
+    expect(parts[0].text).toBe("Let me look.")
+    parts = withTool(parts, { "type": "tool", "id": "t1", "tool": "spec_list" })
+    parts = withTool(parts, { "type": "tool", "id": "t1", "tool": "spec_list", "ok": true })
+    parts = withText(parts, "Done")
+    expect(parts.map((p) => p.kind)).toEqual(["text", "tool", "text"])
+    expect(parts[1].state).toBe("done")
+    expect(openFence("see\n```ts\nlet a")).toBe("see\n```ts\nlet a\n```")
+    expect(openFence("`a`")).toBe("`a`")
+
+  @widget("a direct message with the general agent chooses who answers it; one not on the machine is disabled")
+  picker()
+    when(ChannelsRepository.list).thenReturn(Ok([sampleRoom("general", "channel", 0), sampleRoom("dm-atlas", "dm", 0)]))
+    when(ChannelsRepository.read).thenReturn(Ok(sampleRoom("dm-atlas", "dm", 0)))
+    when(ChannelsRepository.chooseAgent).thenReturn(Ok(sampleRoom("dm-atlas", "dm", 0)))
+    renderScreen(ChatScreen(workspace = "w1", channel = "dm-atlas"))
+    current = ~screen.findByTitle("Quién responde esta conversación")
+    fireEvent.click(current)
+    ~screen.findByText("Quién responde")
+    expect((screen.getByText("Codex").closest("button") as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(screen.getByText("Claude Code"))
+    verify(ChannelsRepository.chooseAgent).called(1)

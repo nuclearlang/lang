@@ -14,6 +14,7 @@ mod dependencies;
 mod doctor;
 mod explain;
 mod landing;
+mod monitor;
 mod packages;
 mod setup;
 mod vscode;
@@ -30,11 +31,14 @@ const USAGE: &str = "usage: nuclear <command> [arguments]          (names in any
 project
   new <name> [-p mobile] [-d flutter]   (n)  new project of a platform (mobile: flutter; backend: fastapi, nestjs; web: react):
       [--org com.example]                    only .nuc files (+ the Flutter app in build/app for mobile)
+      [--websocket] [--token <ENV_VAR>]      backend: the app's WebSocket, guards with the token of ENV_VAR;
+                                             web: a WebSocket connection instead of Http
   code                                       open the project in VS Code (Flutter run, debug, devices, hot reload)
   watch                                      transpile every time a .nuc changes (VS Code starts it by itself)
   build [apk|appbundle|ios|ipa|web|macos|linux|windows] [-- <flutter build args>]
                                              transpile, pub get and build_runner (and flutter build <target>)
   run [-- <flutter run args>]                build and run on a device (flutter run, -d <device>)
+  build --monitor, run --monitor             each Nuclear function and method measured: .nuclear/monitor/report.json
   device [<device>] [--landscape] [-- <args>] (dv) a test device in its own window, like an emulator (pixel7,
                                              iphone14pro, ipadair...; several at once: device 1, 2, 3)
   device list                                the running devices and the devices it can be
@@ -58,6 +62,8 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
                                              from scratch, then flutter clean + everything again, until
                                              flutter analyze finds no errors (exit 2: the .nuc have errors)
   explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained
+  monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
+                                             calls in a loop, connections, memory) and each function's time
 
 code generation: nuclear make <what> ...   (alias: nuclear g <alias> ...)
   component <component>                 (c)  facade + an example use case
@@ -114,7 +120,7 @@ setup
 
 options
   --project <dir>   project folder (default: the folder with main.nuc, here or above)
-  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, fvm, ~/development/flutter...)
+  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)
 
 docs: nuclear help flutter";
 
@@ -122,7 +128,7 @@ docs: nuclear help flutter";
 const OWN: &[&str] = &[
     "new", "n", "make", "g", "gen", "run", "test", "install", "migrate", "add", "remove", "device", "dv", "devices",
     "terminal-device", "td", "watch", "code", "analyze", "clean", "repair", "explain", "pub", "flutter", "emulators",
-    "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author",
+    "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "monitor",
 ];
 /// What `build` takes in a project of the framework instead of a path: a target of the platform's own tool.
 const TARGETS: &[&str] = &["apk", "appbundle", "ios", "ipa", "web", "macos", "linux", "windows"];
@@ -273,6 +279,10 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
         "pub" => with_root(project_dir, |root| pub_command(root, &rest)),
         "repair" => with_root(project_dir, repair),
         "explain" => with_root(project_dir, |root| explain_command(root, rest.iter().any(|a| a == "--json"))),
+        "monitor" => {
+            let start = project_dir.map(PathBuf::from).unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+            monitor::command(&start, rest.iter().any(|a| a == "--json"))
+        }
         "add" => match rest.first() {
             // a folder is a kind package (ADR-synapsis-0004); a name is a package of the target (ADR-lang-0008)
             Some(source) if Path::new(source).is_dir() => add_package(source),
@@ -578,7 +588,8 @@ fn find_flutter() -> Option<PathBuf> {
     }
     dirs.extend(std::env::var_os("PATH").map(|p| std::env::split_paths(&p).collect::<Vec<_>>()).unwrap_or_default());
     dirs.extend(
-        ["fvm/default/bin", "development/flutter/bin", "flutter/bin", "snap/flutter/common/flutter/bin"]
+        // develop/flutter: where `nuclear setup` installs it (Flutter's manual install), found without the shell's PATH
+        ["develop/flutter/bin", "fvm/default/bin", "development/flutter/bin", "flutter/bin", "snap/flutter/common/flutter/bin"]
             .map(|d| home.join(d)),
     );
     dirs.extend(["/opt/flutter/bin", "/usr/lib/flutter/bin", "/usr/local/flutter/bin"].map(PathBuf::from));
@@ -591,7 +602,7 @@ synapsis needs the Flutter SDK to create, build and run the app (your .nuc files
 `nuclear check` works without Flutter).
 
 Where synapsis looked: $FLUTTER, $FLUTTER_ROOT/bin, .fvm/flutter_sdk (fvm, in the project or above),
-the PATH, ~/fvm/default, ~/development/flutter, ~/flutter, ~/snap/flutter, /opt/flutter, /usr/lib/flutter.
+the PATH, ~/develop/flutter (nuclear setup), ~/fvm/default, ~/development/flutter, ~/flutter, ~/snap/flutter, /opt/flutter, /usr/lib/flutter.
 
 Possible causes:
   - Flutter is not installed.
@@ -600,7 +611,8 @@ Possible causes:
   - Only another shell has it in the PATH: add export PATH=\"$HOME/development/flutter/bin:$PATH\"
     to the config of the shell you use.
 
-Install it: https://docs.flutter.dev/get-started/install
+Install it step by step: nuclear setup
+  or by hand: https://docs.flutter.dev/get-started/install
   or with fvm: dart pub global activate fvm && fvm install stable && fvm global stable
 Then check it with: flutter doctor";
 
@@ -828,10 +840,15 @@ fn hint_for(word: &str) -> String {
 fn new_project(rest: Vec<String>) -> Result<(), String> {
     let mut rest = rest;
     let org = take_option(&mut rest, "--org").unwrap_or_else(|| "com.example".into());
+    // real time and guards (ADR-synapsis-0007, ADR-synapsis-0008)
+    let websocket = rest.iter().any(|a| a == "--websocket");
+    rest.retain(|a| a != "--websocket");
+    let token = take_option(&mut rest, "--token");
+    let options = scaffold::NewOptions { websocket, token };
     let platform = take_option(&mut rest, "--platform").or_else(|| take_option(&mut rest, "-p"));
     let dialect = take_option(&mut rest, "--dialect").or_else(|| take_option(&mut rest, "-d"));
     let (platform, dialect) = platform_and_dialect(platform, dialect)?;
-    let usage = "usage: nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example]";
+    let usage = "usage: nuclear new <name> [-p mobile|backend|web] [-d flutter|fastapi|nestjs|react] [--org com.example] [--websocket] [--token <ENV_VAR>]";
     let name = new_name(rest.first().ok_or(usage)?)?;
     if let Some(extra) = rest.get(1) {
         return Err(format!("unexpected argument '{extra}' ({})\n{usage}", hint_for(extra)));
@@ -848,28 +865,31 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
             d.platform.as_deref().unwrap_or("no")
         ));
     }
+    if platform == MOBILE && (options.websocket || options.token.is_some()) {
+        return Err("--websocket and --token are for a backend or a web project".into());
+    }
+    if platform == "web" && options.token.is_some() {
+        return Err("--token is a backend's guard: a web app sends its token through its connection's headers or the host".into());
+    }
     if platform == "web" {
         // where a new backend answers: the url of the backend platform's default dialect
         let l = loader();
         let backend = l.default_dialect("backend").and_then(|b| l.load(&b).0).and_then(|b| b.tool("url").map(str::to_string));
         let backend = backend.unwrap_or_else(|| "http://localhost".into());
-        let report = scaffold::write(&root, &scaffold::web_project(&name, &dialect, &backend)).map_err(|e| e.to_string())?;
+        let report = scaffold::write(&root, &scaffold::web_project(&name, &dialect, &backend, &options)).map_err(|e| e.to_string())?;
         eprintln!("{}", written(&report));
-        if let Err(e) = agent_init(&root, &dialect) {
-            eprintln!("{} {e}", landing::dim("agent files not written:"));
-        }
+        new_agent_files(&root, &name, &platform, &d);
         eprintln!("\n{} web project {} created. Next:", landing::ok("✓"), landing::name(&name));
         eprintln!("  {}", landing::cmd(&format!("cd {name} && nuclear build")));
         eprintln!("  {}   {}", landing::cmd("nuclear install && nuclear run"), landing::dim("(npm install, then vite dev)"));
         eprintln!("  {}", landing::dim("add a resource and its screen with: nuclear gen resource <component> <Name> --screen <screen>"));
+        eprintln!("  {}", landing::dim("mounted in a host page: npm run build:embed in build/app → dist-embed/embed.js (mount(element, host))"));
         return Ok(());
     }
     if platform != MOBILE {
-        let report = scaffold::write(&root, &scaffold::backend_project(&name, &dialect)).map_err(|e| e.to_string())?;
+        let report = scaffold::write(&root, &scaffold::backend_project(&name, &dialect, &options)).map_err(|e| e.to_string())?;
         eprintln!("{}", written(&report));
-        if let Err(e) = agent_init(&root, &dialect) {
-            eprintln!("{} {e}", landing::dim("agent files not written:"));
-        }
+        new_agent_files(&root, &name, &platform, &d);
         eprintln!("\n{} {platform} project {} created. Next:", landing::ok("✓"), landing::name(&name));
         eprintln!("  {}", landing::cmd(&format!("cd {name} && nuclear build && nuclear install")));
         eprintln!("  {}   {}", landing::cmd("nuclear run"), landing::dim("(nuclear test runs the tests)"));
@@ -879,9 +899,7 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
     let report = scaffold::write(&root, &scaffold::project(&name)).map_err(|e| e.to_string())?;
     eprintln!("{}", written(&report));
     // AI agents: AGENTS.md, CLAUDE.md, the Cursor rule and the check hook (not fatal: nuclear may be missing)
-    if let Err(e) = agent_init(&root, &dialect) {
-        eprintln!("{} {e}", landing::dim("agent files not written:"));
-    }
+    new_agent_files(&root, &name, &platform, &d);
     let next = format!("\n\nThe project's .nuc files are in {name}/. Once Flutter works: cd {name} && nuclear build");
     create_app(&root, &name, &org).map_err(|e| format!("{e}{next}"))?;
     build(&root)?;
@@ -894,6 +912,22 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
     );
     eprintln!("  {}      {}", landing::cmd("nuclear run"), landing::dim("(from the terminal)"));
     Ok(())
+}
+
+/// What a new project gets for the people and the agents who work on it (spec 016): its context documents
+/// (`AGENTS.md`, `CLAUDE.md`, `docs/`: the user's from then on), then the marked NuclearLang section of `AGENTS.md`,
+/// the Cursor rule and the check hook. Not fatal: the project's code is already written.
+fn new_agent_files(root: &Path, name: &str, platform: &str, d: &nuclear_dialect::Dialect) {
+    let date = nuclear_codegen::context::today();
+    let stack = d.chain.join(" → ");
+    let project = nuclear_codegen::context::Project { name, platform, dialect: &d.name, stack: &stack, layout: &d.layout, date: &date };
+    match scaffold::write(root, &nuclear_codegen::context::documents(&project)) {
+        Ok(report) => eprintln!("{}", written(&report)),
+        Err(e) => eprintln!("{} {e}", landing::dim("context documents not written:")),
+    }
+    if let Err(e) = agent_init(root, &d.name) {
+        eprintln!("{} {e}", landing::dim("agent files not written:"));
+    }
 }
 
 /// `nuclear agent init` in a project: the files AI agents read (AGENTS.md...), written by the compiler's
@@ -943,6 +977,7 @@ fn build(root: &Path) -> Result<PathBuf, String> {
         }
         packages::load_defs(root, &app, &c, &loader, &mut d, true)?;
     }
+    let m = crate::monitored(root, m);
     let out = project::build(root, &m, &d);
     let _ = project::write_metadata(root, &m, &d);
     print_diagnostics(&out, false);
@@ -1368,7 +1403,9 @@ fn make(root: &Path, rest: Vec<String>) -> Result<(), String> {
 /// the kind (`[skeletons]` of platform.toml) at its place (`[layout]`), the same for every dialect of the platform.
 fn make_from_layout(root: &Path, m: &Manifest, rest: Vec<String>) -> Result<(), String> {
     let mut rest = rest;
-    let screen = take_option(&mut rest, "--screen").map(|s| scaffold::snake(&s)).unwrap_or_else(|| "widgets".into());
+    let given = take_option(&mut rest, "--screen").map(|s| scaffold::snake(&s));
+    let explicit_screen = given.is_some();
+    let screen = given.unwrap_or_else(|| "widgets".into());
     let (dialect, _) = loader().load(&m.dialect);
     let d = dialect.ok_or_else(|| format!("dialect '{}' could not be loaded", m.dialect))?;
     let platform = m.platform.clone().unwrap_or_default();
@@ -1381,19 +1418,36 @@ fn make_from_layout(root: &Path, m: &Manifest, rest: Vec<String>) -> Result<(), 
     };
     let [kind, component, name] = rest.as_slice() else { return Err(usage()) };
     let kind = generator(kind).filter(|k| d.skeletons.contains_key(*k)).map(str::to_string).unwrap_or_else(|| kind.clone());
-    let (Some(skeleton), Some(place)) = (d.skeletons.get(&kind), d.layout.get(&kind)) else { return Err(usage()) };
+    // a skeleton may go where another kind does (`[skeletons] screen = { place = "stateless", ... }`)
+    let placed = d.skeleton_places.get(&kind).unwrap_or(&kind);
+    let (Some(skeleton), Some(place)) = (d.skeletons.get(&kind), d.layout.get(placed)) else { return Err(usage()) };
     let name = scaffold::pascal(&scaffold::snake(name));
     let component = scaffold::snake(component);
-    let file = scaffold::snake(&name);
-    let camel = format!("{}{}", name[..1].to_lowercase(), &name[1..]);
-    let rel = place.replace("{component}", &component).replace("{screen}", &screen).replace("{file}", &file);
-    let text = skeleton
-        .replace("{{Name}}", &name)
-        .replace("{{name}}", &camel)
-        .replace("{{Component}}", &scaffold::pascal(&component))
-        .replace("{{component}}", &component)
-        .replace("{{table}}", &format!("{file}s"));
-    let report = scaffold::write(root, &vec![(PathBuf::from(&rel), text)]).map_err(|e| e.to_string())?;
+    let base = ["Manager", "Screen", "Guard", "Component"].iter().find_map(|s| name.strip_suffix(s).filter(|b| !b.is_empty())).unwrap_or(&name).to_string();
+    // a screen's folder is its own name, unless given
+    let screen = if (kind == "screen" || kind == "statemanager") && !explicit_screen { scaffold::snake(&base) } else { screen };
+    let fill = |skeleton: &str, name: &str| {
+        let file = scaffold::snake(name);
+        let camel = format!("{}{}", name[..1].to_lowercase(), &name[1..]);
+        skeleton
+            .replace("{{Name}}", name)
+            .replace("{{name}}", &camel)
+            .replace("{{Base}}", &base)
+            .replace("{{base}}", &scaffold::snake(&base).replace('_', "-"))
+            .replace("{{Component}}", &scaffold::pascal(&component))
+            .replace("{{component}}", &component)
+            .replace("{{table}}", &format!("{file}s"))
+    };
+    let at = |place: &str, name: &str| place.replace("{component}", &component).replace("{screen}", &screen).replace("{file}", &scaffold::snake(name));
+    let mut files = vec![(PathBuf::from(at(place, &name)), fill(skeleton, &name))];
+    // a state manager points at its state model: written too when the project has none of that name
+    if kind == "statemanager"
+        && let (Some(model), Some(model_place)) = (d.skeletons.get("statemodel"), d.layout.get("statemodel"))
+    {
+        let state = format!("{base}State");
+        files.push((PathBuf::from(at(model_place, &state)), fill(model, &state)));
+    }
+    let report = scaffold::write(root, &files).map_err(|e| e.to_string())?;
     eprintln!("{}", written(&report));
     Ok(())
 }
@@ -1650,13 +1704,22 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
             let answers = sig.ret.clone().unwrap_or_else(|| "nothing".into());
             let (error, value, calls) = match (generate::result_parts(&answers), calls) {
                 (Some((e, v)), None) => (e, v, None),
-                (None, None) => return Err(format!("{name}.exec answers {answers}: a use case answers Result<E, T>")),
+                // a use case that passes on a Stream (web, ADR-synapsis-0008) is wired as it is
+                (None, None) if answers.starts_with("Stream<") => ("Error".into(), answers.clone(), None),
+                (None, None) => return Err(format!("{name}.exec answers {answers}: a use case answers Result<E, T> (or, on the web, a Stream<T>)")),
                 (parts, Some((repository, method))) => {
                     if sig.ret.is_none() {
                         return Err(format!("{repository}.{method} answers nothing: a use case over it is written by hand"));
                     }
                     let result = parts.is_some();
-                    if !has(if result { "result" } else { "plain" }) {
+                    let which = if result {
+                        "result"
+                    } else if answers.starts_with("Stream<") {
+                        "stream"
+                    } else {
+                        "plain"
+                    };
+                    if !has(which) {
                         return Err(format!("the {platform} platform writes no use case over a method that answers {answers}: write it by hand, then run this again to wire it"));
                     }
                     let (e, v) = parts.unwrap_or_else(|| ("Error".into(), answers.clone()));
@@ -1676,7 +1739,8 @@ fn gen_command(root: &Path, rest: Vec<String>) -> Result<(), String> {
                 None => None,
             };
             // the use case `gen` writes awaits its repository; one of the project says so itself
-            let awaits = calls.is_some() || sig.awaits;
+            // a Stream is passed on as it is: nothing to await (ADR-synapsis-0008)
+            let awaits = (calls.is_some() || sig.awaits) && !value.starts_with("Stream<");
             generate::usecase_context(&generate::UseCase { name, component, params: sig.params, args: sig.args, error, value, awaits, calls, route })
         }
         _ => return Err(GEN_USAGE.into()),
@@ -1720,9 +1784,9 @@ mod tests {
         let l = loader();
         for (dialect, files, db) in [
             ("flutter", scaffold::project("demo_app"), false),
-            ("fastapi", scaffold::backend_project("demo_api", "fastapi"), true),
-            ("nestjs", scaffold::backend_project("demo_api", "nestjs"), true),
-            ("react", scaffold::web_project("demo_web", "react", "http://localhost:8000"), false),
+            ("fastapi", scaffold::backend_project("demo_api", "fastapi", &Default::default()), true),
+            ("nestjs", scaffold::backend_project("demo_api", "nestjs", &Default::default()), true),
+            ("react", scaffold::web_project("demo_web", "react", "http://localhost:8000", &Default::default()), false),
         ] {
             let Some(d) = l.load(dialect).0 else {
                 eprintln!("skipped {dialect}: its platform repository is not in this working tree");
@@ -1822,7 +1886,7 @@ mod tests {
             let Some(d) = loader().load(dialect).0 else { continue };
             let root = std::env::temp_dir().join(format!("synapsis-make-{dialect}-{}", std::process::id()));
             let _ = std::fs::remove_dir_all(&root);
-            let files = if platform == "web" { scaffold::web_project("demo", dialect, "http://localhost:8000") } else { scaffold::backend_project("demo", dialect) };
+            let files = if platform == "web" { scaffold::web_project("demo", dialect, "http://localhost:8000", &Default::default()) } else { scaffold::backend_project("demo", dialect, &Default::default()) };
             scaffold::write(&root, &files).unwrap();
             let m = Manifest::read(&root).unwrap();
             for kind in d.skeletons.keys() {

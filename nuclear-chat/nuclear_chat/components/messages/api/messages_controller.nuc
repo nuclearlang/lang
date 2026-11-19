@@ -1,0 +1,38 @@
+// The messages API: a channel's history (or one thread), what the user says and sends, what a host posts and
+// changes, reactions, buttons and the search.
+@controller("messages")
+controller MessagesController(messages: MessagesAppComponent)
+  @get("{workspace}/search")
+  search(workspace: string, words: string) Result<Error, Found[]>
+    messages.search(workspace, words)
+
+  @get("{workspace}/{channel}")
+  history(workspace: string, channel: string, thread?: string) Result<Error, Message[]>
+    messages.history(workspace, channel, thread)
+
+  @post("{workspace}/{channel}")
+  @status(201)
+  say(workspace: string, channel: string, said: Said) Result<Error, Message>
+    ~messages.say(workspace, channel, said)
+
+  @post("{workspace}/{channel}/gif")
+  @status(201)
+  gif(workspace: string, channel: string, sent: SentGif) Result<Error, Message>
+    ~messages.sendGif(workspace, channel, sent)
+
+  @post("{workspace}/{channel}/post")
+  @status(201)
+  hostPost(workspace: string, channel: string, posted: Posted) Result<Error, Message>
+    ~messages.post(workspace, channel, posted)
+
+  @patch("{workspace}/message/{id}")
+  update(workspace: string, id: string, changes: Changes) Result<Error, Message>
+    ~messages.update(workspace, id, changes)
+
+  @post("{workspace}/message/{id}/reactions")
+  react(workspace: string, id: string, reaction: Reaction) Result<Error, Message>
+    ~messages.react(workspace, id, reaction)
+
+  @post("{workspace}/message/{id}/click")
+  click(workspace: string, id: string, click: Click) Result<Error, ChatEvent>
+    ~messages.click(workspace, id, click)

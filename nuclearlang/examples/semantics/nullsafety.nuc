@@ -1,0 +1,8 @@
+// After a `?.`, the rest of the chain waits for it.
+User(name: string, friend: User? = null)
+
+main() void
+  u = User("ana")
+  print(u.friend?.name.length ?? 0, u.friend?.friend?.name ?? "none", u.friend?.name.upper() ?? "-")
+  v = User("ana", User("luis"))
+  print(v.friend?.name.length ?? 0, v.friend?.name.upper() ?? "-")

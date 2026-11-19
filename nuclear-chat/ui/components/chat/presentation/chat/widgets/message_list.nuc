@@ -1,0 +1,42 @@
+// The messages of a channel or a thread, oldest first: a divider for each day, grouped by author and minute. `after`
+// is the time of what is shown above them (a thread's first message), 0 when nothing is.
+stateless MessageList(messages: Message[], ws: Workspace, texts: Texts, inThread: boolean, onThread: (m: Message) => void, onChannel: (id: string) => void, after: int = 0)
+  build() Element
+    rows: Element[] = []
+    for i in 0..messages.length
+      m = messages[i]
+      before = i == 0 ? after : messages[i - 1].at
+      newDay = before == 0 or dayOf(before) != dayOf(m.at)
+      if newDay
+        rows.add(div(key = "day-${m.id}", className = "day", children = span(children = dayLabel(m.at, texts))))
+      first = newDay or i == 0 or not sameGroup(messages[i - 1], m)
+      rows.add(MessageRow(key = m.id, message = m, ws = ws, texts = texts, first = first, inThread = inThread, onThread = onThread, onChannel = onChannel))
+    div(className = "rows", children = rows)
+
+// What an empty channel says: its beginning, who answers in it and how to bring a member in.
+stateless EmptyChannel(ws: Workspace, channel: Channel?, open: string, texts: Texts)
+  build() Element
+    member = channel != null and channel!.kind == "dm" ? dmMember(ws, channel!) : null
+    lead = channel != null ? leadOf(ws, channel!) : null
+    title = if member != null
+      texts.format("begin.dm", { "name": member!.name })
+    else
+      texts.format("begin.channel", { "name": channel?.name ?? open })
+    hint = if member != null
+      texts.format("begin.dmHint", { "name": member!.name.split(" ").first, "role": member!.role })
+    else if lead != null
+      texts.format("begin.team", { "lead": lead!.name })
+    else
+      texts.get("begin.general")
+    div(
+      className = "scroll",
+      children = div(
+        className = "empty",
+        children = [
+          member != null ? Avatar(member = member, author = member!.id, size = "large") : span(className = "empty-mark", children = "#"),
+          h3(children = title),
+          channel != null and channel!.topic != "" ? p(className = "empty-topic", children = channel!.topic) : null,
+          p(children = hint),
+        ],
+      ),
+    )

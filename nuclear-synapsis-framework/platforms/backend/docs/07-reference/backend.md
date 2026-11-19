@@ -33,7 +33,7 @@ tasks_api/
 ```
 
 `config.nuc` is the only manifest ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §1): the platform and dialect, the app and the
-plugins it uses, and `dependencies(name = "version")` for a package the framework does not bring: any package of the
+plugins it uses, `testEnv(NAME = "value")` for the environment of its tests (§2.14), and `dependencies(name = "version")` for a package the framework does not bring: any package of the
 dialect's technology. `nuclear add <package>[@version]` installs it with the dialect's package manager, writes it
 there (`"name@version"` when the name is not an identifier) and generates its type definitions into the project's
 `defs/`, so its names are known to the compiler and the editor and imported where they are used; `nuclear remove
@@ -60,10 +60,12 @@ or an aggregate; an `aggregate` from a use case; a `repository` from a use case,
 ### Plugins
 
 The optional parts of the platform ([projects.md](../../../../../nuclearlang/docs/07-reference/projects.md) §3.3), the same list in every dialect:
-`sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `ai`, `openai`, `ollama`, `chroma`. Only the
+`sqlite`, `postgres`, `mysql`, `mariadb`, `redis`, `kafka`, `events`, `websocket`, `ai`, `openai`, `ollama`, `chroma`,
+`telemetry`. Only the
 enabled ones reach the generated project's dependencies. A kind or a name of a plugin not enabled is N0304, with
 the line to add: `tools`, `agent`, `state`, `graph` need `ai`; `listener`, `publish` need `events` (or `kafka`
-for a broker); `cacheGet`, `cacheSet` need `redis`; a database connection needs its plugin.
+for a broker); `WebSocketServer` needs `websocket` (which needs `events`); `cacheGet`, `cacheSet` need `redis`; `Datadog`, `NewRelic`, `Grafana`, `Otlp`, `Metric` need `telemetry`; a
+database connection needs its plugin.
 
 ## 2. Kinds
 
@@ -251,6 +253,7 @@ adds a segment. Paths are segments: no leading slash. A parameter that is a mode
 in the path is a path parameter; any other parameter is a query parameter (optional when `T?` or defaulted).
 `@status(201)` changes the success status. A `Result` answer becomes the value or its error's status. The order of
 the routes does not matter: a fixed segment wins over a parameter (`page` is never taken by `{id}`).
+`@controller("x", guards = [...])` checks every route of the controller with its guards, after the app's (§2.8).
 
 ```nuclear
 @controller("tasks")
@@ -287,6 +290,7 @@ The connections of the app (`appConfig`, `config/project_config.nuc`) and of a c
 | `Ollama(model, baseUrl)` `OpenAI(model, apiKey)` | `ollama` `openai` (both `ai`) | the chat model; `Embeddings(model)` for vectors (`"ollama:nomic-embed-text"`, `"openai:text-embedding-3-small"`) |
 | `Http(baseUrl, headers, timeout)` | — | another API, for the HTTP repositories (§2.2): `baseUrl` (`"https://rickandmortyapi.com/api"`), `headers` (an API key), `timeout` (seconds) |
 | `Chroma(collection, embeddings, url)` | `chroma` | a vector store on a Chroma server (`url`, default `http://localhost:8000`); `embeddings` names the `Embeddings` connection |
+| `WebSocketServer(path)` | `websocket` | the app also answers over a WebSocket at `/<path>` (§2.9): the same controllers, and the events it publishes |
 
 ```nuclear
 appConfig ProjectConfig
@@ -294,6 +298,33 @@ appConfig ProjectConfig
     SQLite(file = env("DATABASE", "tasks.sqlite"), createTables = true),
     Ollama(model = env("CHAT_MODEL", "qwen3.5:4b"), baseUrl = env("OLLAMA_URL", "http://localhost:11434")),
   ]
+```
+
+#### Guards (ADR-synapsis-0007)
+
+`guards: Guard[]` in the `appConfig` checks every route, the contract's routes and the upgrade of the app's
+WebSocket; `@controller("x", guards = [...])` adds a controller's own, checked after them. They run in order and the
+first that refuses answers:
+
+| Guard | Refuses |
+|---|---|
+| `Token(value, header = "Authorization")` | **401** when `header` does not carry `value` (`Authorization: Bearer <value>`; another header: the value alone). An empty `value` refuses every request |
+| `NoOrigin()` | **403** when the request has an `Origin` header (a web page): a local service is not reachable from a browser |
+
+A guard reads only headers, never the query: a token in a URL would reach the access logs. A guarded app serves no
+documentation pages. Over the WebSocket, each request carries the upgrade's headers and its own, so a controller's
+guards answer as over HTTP.
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [SQLite(file = env("DATABASE", "tasks.sqlite")), WebSocketServer(path = "ws")]
+  guards: Guard[] = [NoOrigin(), Token(value = env("TASKS_TOKEN"), header = "X-Tasks-Token")]
+
+@controller("projects", guards = [Token(value = env("OWNER_TOKEN"))])
+controller ProjectsController(tasks: TasksAppComponent)
+  @get("{id}")
+  one(id: int) Result<Error, Project>
+    ~tasks.project(id)
 ```
 
 #### Migrations of the database (ADR-backend-0001)
@@ -318,7 +349,7 @@ nuclear migrate down                    # reverts the last one applied
 ### 2.9 Listener, events and cache
 
 `~publish("topic", value)` sends an event: in the process (plugin `events`) or to Kafka when a `Kafka`
-connection exists (plugin `kafka`). A `listener` receives them: each `@consumer("topic")` method gets the
+connection exists (plugin `kafka`), and to the clients of the app's WebSocket subscribed to the topic. A `listener` receives them: each `@consumer("topic")` method gets the
 messages of the topic, parsed as the type of its parameter (a model or a map). The Redis cache: `~cacheGet(key)`,
 `~cacheSet(key, value, seconds = 60)`.
 
@@ -330,6 +361,23 @@ listener TaskEvents
   onCreated(event: <string, any>) void
     created.add(event["title"])
 ```
+
+#### The app's WebSocket (ADR-synapsis-0008)
+
+With `WebSocketServer(path = "ws")` in its connections, the app answers its same controllers over one socket at
+`/ws`, and pushes what it publishes; nothing else changes in the project. The frames are JSON text:
+
+| Direction | Frame |
+|---|---|
+| client → app | `{"id": 1, "method": "GET", "path": "/tasks/1", "headers": {...}, "body": ...}`: a request |
+| app → client | `{"id": 1, "status": 200, "body": ...}`: its answer, the same as over HTTP |
+| client → app | `{"subscribe": "tasks.created"}`, `{"unsubscribe": "tasks.created"}` |
+| app → client | `{"event": "tasks.created", "data": ...}`: an event published by the app |
+
+The upgrade passes the app's guards; a request that does not parse closes the socket. A `web` client gets this
+with a `WebSocket(url)` connection and its repositories as they are (web.md §3.2). With Kafka, a socket receives what
+its own process publishes. The contract says which transports serve each controller (`transports`), the path
+(`webSocket`) and the events published (`events`: topic, component, payload; projects.md §1.2).
 
 ### 2.10 Tools
 
@@ -427,6 +475,71 @@ tests Tasks
     ~tasks.create(NewTask(title = "call mom"))
     again = ~tasks.create(NewTask(title = "call mom"))
     expect(again.error.status == 409)
+```
+
+#### The app as its clients call it (ADR-synapsis-0010)
+
+`appClient()` gives the app over HTTP and over its WebSocket, with the test's connections: `~app.get(path,
+headers)`, `~app.post(path, body, headers)`, `put`, `patch`, `delete` and `~app.request(method, path, body,
+headers)` answer an `HttpAnswer` (`status`, `body`); `~app.socket(path = "/ws", headers)` is `Ok` of an `AppSocket`,
+or `Err` with the status of the guard that refused it. A socket's `~ws.request(...)` is a request frame and its
+answer, `~ws.subscribe(topic)` / `unsubscribe(topic)` follow a topic, `~ws.next(seconds = 2)` is the next pushed
+`SocketEvent` (`topic`, `data`) or `null`, `~ws.close()` ends it. `body` and `headers` are always named.
+
+`testEnv(NAME = "value")` in `config.nuc` is the environment the tests run with, set before the app is loaded: the
+test's own token for a guard, never the user's.
+
+```nuclear
+// config.nuc: testEnv(TASKS_TOKEN = "test-tasks-token")
+TOKEN = { "X-Tasks-Token": "test-tasks-token" }
+
+tests Api
+  @test("the guards and the socket")
+  guarded() void
+    app = appClient()
+    expect((~app.get("/tasks")).status == 401)
+    expect((~app.get("/tasks", headers = TOKEN)).status == 200)
+    expect((~app.socket("/ws")).error.status == 401)
+    ws = (~app.socket("/ws", headers = TOKEN)).value
+    ~ws.subscribe("tasks.created")
+    made = ~ws.request("POST", "/tasks", body = { "title": "call mom" })
+    expect(made.status == 201)
+    expect((~ws.next())!.data["title"] == "call mom")
+    ~ws.close()
+```
+
+### 2.15 Telemetry
+
+With `plugins(telemetry = true)` the app sends its traces and metrics over OTLP (the OpenTelemetry protocol) to the
+connection of `config/` that says where: `Datadog(apiKey, url)` (the local Agent on `http://localhost:4318` by
+default), `NewRelic(licenseKey, region)` (`us` or `eu`), `Grafana(url, instanceId, token)` (a local Alloy by
+default, or the stack's OTLP gateway) or `Otlp(url)` (any collector). Every one takes `service` (the name the
+vendor shows; default `OTEL_SERVICE_NAME`) and `sample` (the share of the traces kept, `1` = all, decided once at the
+root of each trace). Keys come from `env(...)`.
+
+```nuclear
+appConfig ProjectConfig
+  connections: Connection[] = [
+    SQLite(file = env("DATABASE", "orders.sqlite")),
+    Datadog(apiKey = env("DD_API_KEY"), sample = 0.5),
+  ]
+```
+
+Measured without code: every HTTP request, and every use case's `exec` as a span named with its place
+(`orders › usecase › FindOrder.exec`), a child of the request that called it. An `Err` marks the span as an error
+with the error's name. Two words write metrics: `Metric.count(name, value = 1, attributes...)` and
+`Metric.record(name, value, attributes...)`; the attributes are named arguments.
+
+`@untraced` leaves something out: on a use case, its span; on a route, the whole request (nothing it calls is
+traced); on a controller, every route of it. Without the plugin `@untraced` does nothing, and no use case carries a
+span.
+
+```nuclear
+controller HealthController
+  @get("health")
+  @untraced
+  health() Result<Error, Health>
+    Ok(Health(ok = true))
 ```
 
 ## 3. What the dialect decides

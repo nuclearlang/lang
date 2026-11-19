@@ -140,15 +140,21 @@ ExtractTools
     // nuclear-builder
     text = ctx.run(["nuclear-builder", "help"]) ?? ""
     if text.length > 0
-      src = ["extensions/tools/nuclear-builder/src/cli.ts"]
+      src = ["extensions/tools/nuclear-builder/cli.nuc"]
       command = Regex(r"^\s*nuclear-builder (\w+)")
-      for entry in ExtractTools.entries(text)
+      // its help (cli.nuc) prints each command at the first column, its description below it, indented
+      // a command with several forms (setup --status, run --resume) is one row with every form
+      forms: <string, string[][]> = {}
+      for entry in ExtractTools.entries(text, 0)
         m = command.find(entry.lines[0])
         if m != null
-          rows.add(ExtractTools.toolRow("nuclear-builder", m![1] ?? "", [entry.lines], src))
+          name = m![1] ?? ""
+          forms[name] = [...(forms[name] ?? []), entry.lines]
+      for name, groups in forms
+        rows.add(ExtractTools.toolRow("nuclear-builder", name, groups, src))
       rows.add({
         "id": "tool:nuclear-builder", "type": "cli", "title": "`nuclear-builder` — the Nuclear Builder without the editor",
-        "summary": "Runs a spec through the pipeline (generate, plan, tests first, code, verification, security, artifacts, deploy), retries a run from any of its steps or from scratch, and exports the CI file.",
+        "summary": "Sets up the AI services, keeps the software factory's teams and the providers' keys, runs a spec through the factory's stations with a team, retries a run, and exports the CI file.",
         "body": "```text\n${text}\n```", "keys": ["nuclear-builder", "loop cli"], "sources": src, "meta": { "tool": "nuclear-builder", "name": "" },
       })
     // nuclear-graph: argparse prints its commands at 4 spaces
@@ -257,23 +263,32 @@ ExtractTools
       })
     rows
 
+  // The stations of the software factory, from its engine (nuclear-builder's run.nuc and roles.nuc): their order,
+  // title, what each does and the role that works it.
   static stages(ctx: Context) <string, any>[]
-    found = Regex(r"\{ id: '(\w+)', title: '([^']*)', about: '((?:[^'\\]|\\.)*)', actors: \[([^\]]*)\] \}").findAll(ctx.read("extensions/tools/nuclear-builder/src/engine.ts"))
+    roles = ctx.read("extensions/tools/nuclear-builder/roles.nuc")
+    ids: string[] = captured(r'^STATIONS = \[([^\]]*)\]', roles, multiline = true).split(",").map((a) => stripChars(a, " \"")).filter((a: string) => a.length > 0)
+    owner: <string, string> = {}
+    for m in Regex(r'"(\w+)": "(\w+)"').findAll(captured(r'^STATION_ROLE[^{]*\{([^}]*)\}', roles, multiline = true))
+      owner[m[1] ?? ""] = m[2] ?? ""
+    info: <string, string[]> = {}
+    for m in Regex(r'"(\w+)": \{ "title": "([^"]*)", "about": "((?:[^"\\]|\\.)*)" \}').findAll(ctx.read("extensions/tools/nuclear-builder/run.nuc"))
+      info[m[1] ?? ""] = [m[2] ?? "", m[3] ?? ""]
     rows: <string, any>[] = []
-    for at in 0..found.length
-      m = found[at]
-      sid = m[1] ?? ""
-      title = m[2] ?? ""
-      about = (m[3] ?? "").replaceAll("\\'", "'")
-      who = (m[4] ?? "").split(",").map((a) => stripChars(a, " '")).join(", ")
-      next = at + 1 < found.length ? found[at + 1][1] ?? "" : ""
-      then = " The stage after it: `${next}`."
+    for at in 0..ids.length
+      sid = ids[at]
+      known: string[] = info[sid] ?? [sid, ""]
+      title = known[0]
+      about = known[1]
+      who: string = owner[sid] ?? ""
+      next: string = at + 1 < ids.length ? ids[at + 1] : ""
+      then = " The station after it: `${next}`."
       rows.add({
-        "id": "stage:${sid}", "type": "stage", "title": "Stage ${at + 1} of the Builder: ${title}", "summary": firstSentence(about, 400),
-        "body": "${about}\n\nWho takes part: ${who}.${next.length > 0 ? then : " It is the last stage."}",
-        "keys": ["${title.lower()} stage", "stage ${sid}"], "links": next.length > 0 ? [{ "rel": "next", "to": "stage:${next}" }] : [],
-        "sources": ["extensions/tools/nuclear-builder/src/engine.ts"], "meta": { "tool": "nuclear-builder", "name": sid },
-        "data": { "order": at + 1, "stage": sid, "title": title, "actors": (m[4] ?? "").split(",").map((a) => stripChars(a, " '")), "next": next },
+        "id": "stage:${sid}", "type": "stage", "title": "Station ${at + 1} of the software factory: ${title}", "summary": firstSentence(about, 400),
+        "body": "${about}\n\nThe role that works it: ${who}.${next.length > 0 ? then : " It is the last station."}",
+        "keys": ["${title.lower()} station", "station ${sid}", "stage ${sid}"], "links": next.length > 0 ? [{ "rel": "next", "to": "stage:${next}" }] : [],
+        "sources": ["extensions/tools/nuclear-builder/run.nuc", "extensions/tools/nuclear-builder/roles.nuc"], "meta": { "tool": "nuclear-builder", "name": sid },
+        "data": { "order": at + 1, "stage": sid, "title": title, "actors": [who], "next": next },
       })
     rows
 

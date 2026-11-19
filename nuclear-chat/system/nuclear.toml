@@ -1,0 +1,11 @@
+# What Nuclear Chat needs of the machine, written in Nuclear and built with the `python` dialect: the chat's files,
+# the members' responder commands, the keyring and the GIF pack's folder. The chat's logic is the Synapsis service
+# (../nuclear_chat/), which depends on this package. `nuclear build .` writes `build/nuclear_chat_system`. Never edit
+# `build/`: change the `.nuc` files.
+[project]
+name = "nuclear_chat_system"
+dialect = "python"
+package = "nuclear_chat_system"
+version = "0.1.0"
+description = "Nuclear Chat's system: the chat's files, the members' responder commands, the keyring and the GIF pack, and the nuclear-chat command."
+out = "build"

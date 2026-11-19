@@ -11,6 +11,13 @@ query planner is in [the Smart Graph's roadmap](../../../../nuclear-graph-storag
 
 ## Half done
 
+**Two tasks lost in round 24** (spec 011, T1.4: the prompts moved into the roles with the same text): the knowledge
+base had changed since round 23. `web-manager` copies `@state(...State.full)` from the website's state managers
+(examples of the same kind) instead of the state the task writes (`loaded`); `graph-summary` copies the graph of the
+example `Assistant` and leaves out the `state` the task declares. Left: a general fix (the coder held to the state
+names and the declarations the task writes, or examples ranked by how close their names are to the task's), never
+the answer; then a new round with nothing lost against round 23 (43 / 39).
+
 **The agent as a tool executor** (the strategies, `ADR-developer-0001`). Left:
 
 - **What the strategies still do by a model or by hand, each a missing tool:**

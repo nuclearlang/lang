@@ -15,7 +15,7 @@ related: [tools/cli/src/framework/mod.rs, tools/cli/docs/03-adr/0003-one-command
 
 `main` asks `framework::claims(args)` first: a command only the framework has (`OWN`: `new`, `make`/`g`, `gen`,
 `run`, `test`, `install`, `migrate`, `add`, `remove`, `device`, `terminal-device`, `watch`, `code`, `analyze`,
-`clean`, `repair`, `explain`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing
+`clean`, `repair`, `explain`, `monitor`, `pub`, `flutter`, `doctor`, `setup`, `credits`...), no command at all (the landing
 page), `build` / `check` without a path or with a target (`TARGETS`: `apk`, `web`, ...), and `agent init` inside a
 project of the framework go to `framework::main`; everything else is the compiler's. `nuclear help` prints both
 usages, the framework's under "projects of the framework".
@@ -30,6 +30,7 @@ installed command, as a program). Both sets use the language crates as a library
 | File | What it does | More |
 |---|---|---|
 | `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |
+| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |
 | `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |
 | `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |
 | `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |
@@ -55,7 +56,10 @@ only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GE
   `SQLite(file = env("DATABASE", "app.sqlite"), createTables = true)`, `plugins(sqlite = true)` and a first test in
   `test/app_test.nuc`. A web project gets `scaffold::web_project`: `config.nuc`, `main.nuc` (the App with
   `createElement(RouterProvider, router = appRouter())`), an `Http` connection and `config/project_config.nuc`;
-  screens are added with `nuclear make screen`. Every `new` also runs `nuclear agent init`.
+  screens are added with `nuclear make screen`. `--websocket` gives a backend `plugins(events, websocket)` and
+  `WebSocketServer(path = "ws")`, a web app a `WebSocket` connection instead of `Http`; `--token <ENV_VAR>` gives a
+  backend `guards = [NoOrigin(), Token(value = env(ENV_VAR))]` (`scaffold::NewOptions`). Every `new` also runs
+  `nuclear agent init`.
 - `manifest()` reads `config.nuc` through `Manifest::read` (`synapsis(platform, dialect)`, `app(name)`). An app
   without that line is an app of the mobile platform's default dialect (`any_manifest`); its `nuclear check`
   reports N0303 with the line to add. `packages::template` writes the `synapsis(...)` line first.

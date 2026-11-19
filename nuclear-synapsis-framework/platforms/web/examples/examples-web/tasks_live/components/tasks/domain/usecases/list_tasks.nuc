@@ -1,0 +1,4 @@
+// One page of tasks.
+usecase ListTasks(repository: TaskRepository)
+  exec() Result<TaskError, Task[]>
+    ~repository.all()

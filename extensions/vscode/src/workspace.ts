@@ -7,88 +7,118 @@
 // touched: a project opened here is a tab, not a window nor a workspace folder (unless the user adds it).
 
 import * as fs from 'node:fs';
+import { savedInside } from './savedProjects';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { isInstalled } from './card';
 import { devices, devicesChanged, PRESETS, revealDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
 import { AtlasPanel } from '../../tools/nuclear-atlas/src/panel';
-import { Notice, notices } from './notifications';
+import { chatGifKey, disposeChat, openChatTab } from './chatView';
+import { followChatNotices, Notice, notices } from './notifications';
 import { SettingsPanel } from './settingsPanel';
 import { watchConnections } from './connections';
-import { BuilderPanel, resumeOrphans } from '../../tools/nuclear-builder/src/panel';
+import { BuilderPanel, builderSidebar, resumeOrphans, sidebarChanged } from '../../tools/nuclear-builder/src/panel';
+import { inline, runOutline, specOfPath, specTree } from '../../tools/nuclear-builder/src/workbench';
 import { findProjects, HttpModel, NodeAction, Project, readProject } from '../../tools/nuclear-http-connections/src/httpConnections';
 import { ComponentPanel } from '../../tools/nuclear-http-connections/src/panel';
 import { contextFor, registerTreeCommands } from './treeMenu';
+import { lang, langButton, localize, onDidChangeLang, pageI18n, texts, l10n } from './i18n';
+import { STRIP } from './workspaceL10n';
+import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
 
 interface Tool {
   id: string;
   label: string;
-  /** The two or three letters on the strip. */
+  /** The word under its icon on the strip (four to six letters). */
   short: string;
   key: string;
   about: string;
   /** What the template page lists as planned; empty for a tool that exists. */
   planned: string[];
+  /** The command that opens its own page, for a tool whose page lives outside the workspace. */
+  command?: string;
 }
 
-export const TOOLS: Tool[] = [
-  {
-    id: 'http-connections',
-    label: 'HTTP Connections',
-    short: 'HTTP',
-    key: 'Ctrl+Alt+H',
-    about: 'Every endpoint of every project as a tree by platform, project and component; a component is a tab, each endpoint a tab inside it; environments (ADR-synapsis-0006).',
-    planned: [],
-  },
-  {
-    id: 'devices',
-    label: 'Devices',
-    short: 'DEV',
-    key: 'Ctrl+Alt+V',
-    about: 'The Synapsis devices: as many as you want at once, like emulators, each with its own size and identity; they stay beside the code in every workspace.',
-    planned: [],
-  },
-  {
-    id: 'builder',
-    label: 'Nuclear Builder',
-    short: 'BUILD',
-    key: 'Ctrl+Alt+P',
-    about: 'Spec-driven work as a pipeline (ADR-platform-0003): a spec written here or imported from Jira or GitHub goes through plan, code, tests, security, artifacts and deploy; Claude plans, the local developer writes, every step shows who did what.',
-    planned: [],
-  },
-  {
-    id: 'designer',
-    label: 'UI designer',
-    short: 'UI',
-    key: 'Ctrl+Alt+D',
-    about: 'Screens and widgets of a mobile or web project drawn and edited visually, written back as Nuclear.',
-    planned: ['a canvas of the active screen built from its `.nuc`', 'drag of widgets from the platform kinds', 'two-way: the code changes, the canvas follows'],
-  },
-  {
-    id: 'docs',
-    label: 'AI documenter',
-    short: 'DOC',
-    key: 'Ctrl+Alt+M',
-    about: 'Documentation of the active project generated from its declarations, contracts and doc comments.',
-    planned: ['a page per component with its use cases, repositories and screens', 'the API reference from `.nuclear/openapi.json`', 'a model explaining each declaration on demand'],
-  },
-  {
-    id: 'atlas',
-    label: 'Nuclear Atlas',
-    short: 'ATLAS',
-    key: 'Ctrl+Alt+A',
-    about: 'The local agent integrated with the RAG: a chat with the local agents (Nuclear Developer) over the active project, answered from its map and the Nuclear Smart Graph, the 100% local knowledge base the agents also read through the MCP; orders with /task run by the local agents, templates from the project, sessions kept in .nuclear/chat.',
-    planned: [],
-  },
-  {
-    id: 'settings',
-    label: 'Settings and integrations',
-    short: '⚙',
-    key: 'Ctrl+Alt+S',
-    about: 'Every setting of the AI loop in one page: the services and their state, the local models (3B rule), the MCP server in Claude Code, Codex and Cursor, the connections (graph clients, Jira, GitHub), retries.',
-    planned: [],
-  },
-];
+/** The tools of the strip, in the chosen language (a function: read when drawn): the AI factory first (the Builder, its
+ * company, the chat), then the tools of a running project, then the ones not built yet, the settings last. */
+export function tools(): Tool[] {
+  return [
+    {
+      id: 'builder',
+      label: 'Nuclear Builder',
+      short: 'BUILD',
+      key: 'Ctrl+Alt+P',
+      about: l10n.t('Spec-driven work as a pipeline (ADR-platform-0003): a spec written here or imported from Jira or GitHub goes through plan, code, tests, security, artifacts and deploy; Claude plans, the local developer writes, every step shows who did what.'),
+      planned: [],
+    },
+    {
+      id: 'teams',
+      label: l10n.t('Your software company'),
+      short: l10n.t('TEAMS'),
+      key: 'Ctrl+Alt+E',
+      about: l10n.t('The teams of the software factory: each one a crew of employees by role (analyst, architect, developer, QA, DevOps), who works each one (a local agent or a provider) and its budget; a new team in five steps.'),
+      planned: [],
+      command: 'nuclear.builder.teams',
+    },
+    {
+      id: 'atlas',
+      label: 'Nuclear Atlas',
+      short: 'ATLAS',
+      key: 'Ctrl+Alt+A',
+      about: l10n.t('The local agent integrated with the RAG: a chat with the local agents (Nuclear Developer) over the active project, answered from its map and the Nuclear Smart Graph, the 100% local knowledge base the agents also read through the MCP; orders with /task run by the local agents, templates from the project, sessions kept in .nuclear/chat.'),
+      planned: [],
+    },
+    {
+      id: 'http-connections',
+      label: 'HTTP Connections',
+      short: 'HTTP',
+      key: 'Ctrl+Alt+H',
+      about: l10n.t('Every endpoint of every project as a tree by platform, project and component; a component is a tab, each endpoint a tab inside it; environments (ADR-synapsis-0006).'),
+      planned: [],
+    },
+    {
+      id: 'devices',
+      label: l10n.t('Devices'),
+      short: l10n.t('DEVICE'),
+      key: 'Ctrl+Alt+V',
+      about: l10n.t('The Synapsis devices: as many as you want at once, like emulators, each with its own size and identity; they stay beside the code in every workspace.'),
+      planned: [],
+    },
+    {
+      id: 'monitor',
+      label: 'Nuclear Monitor',
+      short: 'MONITOR',
+      key: 'Ctrl+Alt+F',
+      about: l10n.t("Each Nuclear function's time, calls, connections and memory while the app runs, as an accordion of bars (.nuclear/monitor/report.json)."),
+      planned: [],
+      command: 'nuclear.monitor.open',
+    },
+    {
+      id: 'designer',
+      label: l10n.t('UI designer'),
+      short: 'UI',
+      key: 'Ctrl+Alt+D',
+      about: l10n.t('Screens and widgets of a mobile or web project drawn and edited visually, written back as Nuclear.'),
+      planned: [l10n.t('a canvas of the active screen built from its `.nuc`'), l10n.t('drag of widgets from the platform kinds'), l10n.t('two-way: the code changes, the canvas follows')],
+    },
+    {
+      id: 'docs',
+      label: l10n.t('AI documenter'),
+      short: 'DOCS',
+      key: 'Ctrl+Alt+M',
+      about: l10n.t('Documentation of the active project generated from its declarations, contracts and doc comments.'),
+      planned: [l10n.t('a page per component with its use cases, repositories and screens'), l10n.t('the API reference from `.nuclear/openapi.json`'), l10n.t('a model explaining each declaration on demand')],
+    },
+    {
+      id: 'settings',
+      label: l10n.t('Settings and integrations'),
+      short: l10n.t('SETUP'),
+      key: 'Ctrl+Alt+S',
+      about: l10n.t('Every setting of the AI loop in one page: the services and their state, the local models (3B rule), the MCP server in Claude Code, Codex and Cursor, the connections (graph clients, Jira, GitHub), retries.'),
+      planned: [],
+    },
+  ];
+}
 
 /** The actions of a project, by platform: each platform has its own (mobile runs on a device and hot reloads,
  * a backend serves and exposes an API, a web app serves in the browser). */
@@ -100,34 +130,34 @@ interface Action {
 }
 const ACTION_KEYS: Record<string, string> = { run: 'Ctrl+Alt+R', debug: 'Ctrl+Alt+G', reload: 'Ctrl+Alt+L', device: 'Ctrl+Alt+V', build: 'Ctrl+Alt+B', test: 'Ctrl+Alt+T', check: 'Ctrl+Alt+C', api: 'Ctrl+Alt+H' };
 const action = (id: string, label: string, title: string): Action => ({ id, label, key: ACTION_KEYS[id], title });
-const PLATFORM_ACTIONS: Record<string, Action[]> = {
+const platformActions = (): Record<string, Action[]> => ({
   mobile: [
-    action('run', '▷ Run', 'nuclear build, then the app on the selected Flutter device (no debugger)'),
-    action('debug', '◉ Debug', 'the app with the debugger: breakpoints and steps in the .nuc'),
-    action('reload', '↻ Reload', 'hot reload of the running app (saving a .nuc does it too)'),
-    action('device', '▭ Device', 'run on a Synapsis device inside the editor (the newest one, or a new one)'),
-    action('build', '⚒ Build', 'nuclear build: transpile and prepare the Flutter app'),
-    action('test', '✓ Test', 'nuclear test'),
-    action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
+    action('run', l10n.t('▷ Run'), l10n.t('nuclear build, then the app on the selected Flutter device (no debugger)')),
+    action('debug', l10n.t('◉ Debug'), l10n.t('the app with the debugger: breakpoints and steps in the .nuc')),
+    action('reload', l10n.t('↻ Reload'), l10n.t('hot reload of the running app (saving a .nuc does it too)')),
+    action('device', l10n.t('▭ Device'), l10n.t('run on a Synapsis device inside the editor (the newest one, or a new one)')),
+    action('build', l10n.t('⚒ Build'), l10n.t('nuclear build: transpile and prepare the Flutter app')),
+    action('test', l10n.t('✓ Test'), 'nuclear test'),
+    action('check', l10n.t('☑ Check'), l10n.t('nuclear check: the .nuc files and the architecture rules')),
   ],
   backend: [
-    action('run', '▷ Serve', 'nuclear run: build, then the server (it restarts on every build: saving a .nuc does it)'),
-    action('debug', '◉ Debug', "the server under the dialect's debugger (debugpy, node): breakpoints and steps in the .nuc"),
-    action('test', '✓ Test', 'nuclear test'),
-    action('build', '⚒ Build', 'nuclear build: transpile into build/ (and compile a TypeScript server)'),
-    action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
-    action('api', '⇄ API', 'the routes of this backend in the HTTP Connections tool'),
+    action('run', l10n.t('▷ Serve'), l10n.t('nuclear run: build, then the server (it restarts on every build: saving a .nuc does it)')),
+    action('debug', l10n.t('◉ Debug'), l10n.t("the server under the dialect's debugger (debugpy, node): breakpoints and steps in the .nuc")),
+    action('test', l10n.t('✓ Test'), 'nuclear test'),
+    action('build', l10n.t('⚒ Build'), l10n.t('nuclear build: transpile into build/ (and compile a TypeScript server)')),
+    action('check', l10n.t('☑ Check'), l10n.t('nuclear check: the .nuc files and the architecture rules')),
+    action('api', '⇄ API', l10n.t('the routes of this backend in the HTTP Connections tool')),
   ],
   web: [
-    action('run', '▷ Serve', 'nuclear run: build, then the dev server (Vite); saving a .nuc updates the page'),
-    action('device', '▭ Device', 'the app in the web device beside the code: desktop, tablet and phone sizes, console, network'),
-    action('debug', '◉ Debug', 'the web device with the debugger attached: breakpoints and steps in the .nuc'),
-    action('reload', '↻ Reload', 'reload the page of the web device'),
-    action('build', '⚒ Build', 'nuclear build'),
-    action('test', '✓ Test', 'nuclear test: the tests of the app (vitest)'),
-    action('check', '☑ Check', 'nuclear check: the .nuc files and the architecture rules'),
+    action('run', l10n.t('▷ Serve'), l10n.t('nuclear run: build, then the dev server (Vite); saving a .nuc updates the page')),
+    action('device', l10n.t('▭ Device'), l10n.t('the app in the web device beside the code: desktop, tablet and phone sizes, console, network')),
+    action('debug', l10n.t('◉ Debug'), l10n.t('the web device with the debugger attached: breakpoints and steps in the .nuc')),
+    action('reload', l10n.t('↻ Reload'), l10n.t('reload the page of the web device')),
+    action('build', l10n.t('⚒ Build'), 'nuclear build'),
+    action('test', l10n.t('✓ Test'), l10n.t('nuclear test: the tests of the app (vitest)')),
+    action('check', l10n.t('☑ Check'), l10n.t('nuclear check: the .nuc files and the architecture rules')),
   ],
-};
+});
 // what an action runs in the project's terminal; `install` first when the generated app has no packages yet
 const TERMINAL_COMMANDS: Record<string, Record<string, string>> = {
   mobile: { build: 'nuclear build', test: 'nuclear test', check: 'nuclear check' },
@@ -160,8 +190,21 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   // the notifications of the local agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
   notices.open = (n) => ws.openNotice(n);
   context.subscriptions.push(notices.onDidChange.event(() => ws.refresh()));
+  followChatNotices();
+  // the Builder's specs and runs, in the column while the Builder is the open tool (spec 011 requirement 25)
+  context.subscriptions.push(sidebarChanged.event(() => ws.builderChanged()));
   // runs a closed or crashed editor left half done: recovered and resumed where they stopped
   setTimeout(() => resumeOrphans(ws.projects().map((p) => p.root)), 3000);
+  // Nuclear Chat (spec 013): the chat as a full tab on the last project, a GIF service's key, its one connection
+  context.subscriptions.push(
+    vscode.commands.registerCommand('nuclear.chat.open', () => {
+      const root = context.workspaceState.get<string>(LAST_PROJECT) ?? ws.projects()[0]?.root;
+      if (root) openChatTab(context, root);
+      else void vscode.window.showWarningMessage(l10n.t('Open a Nuclear project to talk to its team.'));
+    }),
+    vscode.commands.registerCommand('nuclear.chat.gifKey', () => chatGifKey()),
+    { dispose: disposeChat },
+  );
   // every external connection, checked now and regularly: a notification when one stops answering
   watchConnections(context);
   registerTreeCommands(context);
@@ -252,7 +295,7 @@ class Workspace implements vscode.WebviewViewProvider {
   /** The active tab: a project's root, or `tool:<id>`. */
   activeKey(): string {
     const key = this.context.workspaceState.get<string>(ACTIVE);
-    if (key?.startsWith(TOOL_PREFIX)) return TOOLS.some((t) => TOOL_PREFIX + t.id === key) ? key : TOOL_PREFIX + 'http-connections';
+    if (key?.startsWith(TOOL_PREFIX)) return tools().some((t) => TOOL_PREFIX + t.id === key) ? key : TOOL_PREFIX + 'http-connections';
     const all = this.projects();
     return all.find((p) => p.root === key)?.root ?? all[0]?.root ?? '';
   }
@@ -265,8 +308,14 @@ class Workspace implements vscode.WebviewViewProvider {
     return all.find((p) => p.root === root) ?? all[0];
   }
 
+  /** The projects opened in this folder's workspace (Ctrl+Alt+O), kept per folder: another folder never shows them. */
   saved(): string[] {
-    return this.context.globalState.get<string[]>(SAVED, []);
+    const here = this.context.workspaceState.get<string[]>(SAVED);
+    if (here) return here;
+    // before 0.63.0 they were kept for every folder: this folder keeps those inside it
+    const inside = savedInside(this.context.globalState.get<string[]>(SAVED, []), (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath));
+    void this.context.workspaceState.update(SAVED, inside);
+    return inside;
   }
 
   // ---------- switching ----------
@@ -300,13 +349,14 @@ class Workspace implements vscode.WebviewViewProvider {
     // column and the reopened code would merge into its group; unpark (below) gives it a fresh group beside the code.
     const mobile = to === TOOL_PREFIX + 'devices' || this.projects().find((p) => p.root === to)?.platform === 'mobile';
     await vscode.commands.executeCommand('nuclear.parkDevices');
-    const tool = TOOLS.find((t) => TOOL_PREFIX + t.id === to);
+    const tool = tools().find((t) => TOOL_PREFIX + t.id === to);
     if (tool) {
       if (tool.id === 'http-connections') ComponentPanel.restore(this.context, this.http, this.http.reopen);
       else if (tool.id === 'devices') await vscode.commands.executeCommand('nuclear.unparkDevices');
       else if (tool.id === 'builder') BuilderPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
       else if (tool.id === 'settings') SettingsPanel.show(this.context);
       else if (tool.id === 'atlas') AtlasPanel.show(this.context, () => this.projects(), this.context.workspaceState.get<string>(LAST_PROJECT));
+      else if (tool.command) await vscode.commands.executeCommand(tool.command);
       else if (tool.planned.length) ToolPanel.show(this.context, tool);
       return true;
     }
@@ -327,50 +377,52 @@ class Workspace implements vscode.WebviewViewProvider {
     if (index === undefined) {
       const pick = await vscode.window.showQuickPick(
         all.map((x, i) => ({ label: `${i < 9 ? `Ctrl+${i + 1}  ` : ''}${x.name}`, description: `${x.platform ?? ''} · ${x.dialect}`, detail: x.root, x })),
-        { placeHolder: 'Project to show' },
+        { placeHolder: l10n.t('Project to show') },
       );
       p = pick?.x;
     }
     if (!p) {
-      if (index !== undefined) void vscode.window.showInformationMessage(`No project ${index} in the Nuclear workspace (Ctrl+Alt+O opens one).`);
+      if (index !== undefined) void vscode.window.showInformationMessage(l10n.t('No project {0} in the Nuclear workspace (Ctrl+Alt+O opens one).', index));
       return;
     }
     await this.go(p.root);
   }
 
   async openProject(): Promise<void> {
-    const picked = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, openLabel: 'Open as a Nuclear project' });
+    const picked = await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, openLabel: l10n.t('Open as a Nuclear project') });
     const root = picked?.[0]?.fsPath;
     if (!root) return;
     if (!projectAt(root)) {
-      void vscode.window.showWarningMessage(`${path.basename(root)} is not a Nuclear project (no config.nuc, nuclear.toml or .nuclear/project.json).`);
+      void vscode.window.showWarningMessage(l10n.t('{0} is not a Nuclear project (no config.nuc, nuclear.toml or .nuclear/project.json).', path.basename(root)));
       return;
     }
     const saved = this.saved();
-    if (!saved.includes(root)) await this.context.globalState.update(SAVED, [...saved, root]);
+    if (!saved.includes(root)) await this.context.workspaceState.update(SAVED, [...saved, root]);
     this.http.refresh();
     await this.go(root);
   }
 
   async removeProject(root: string): Promise<void> {
-    await this.context.globalState.update(SAVED, this.saved().filter((r) => r !== root));
+    await this.context.workspaceState.update(SAVED, this.saved().filter((r) => r !== root));
     if (this.activeKey() === root) await this.context.workspaceState.update(ACTIVE, undefined);
     this.http.refresh();
     this.refresh();
   }
 
-  /** *Open* on a notification: its tool, on the run or the chat session it is about. */
+  /** *Open* on a notification: its tool, on the run's node or the chat's channel it is about. */
   async openNotice(n: Notice): Promise<void> {
     await this.go(TOOL_PREFIX + n.tool);
-    if (n.tool === 'builder') BuilderPanel.show(this.context, () => this.projects(), n.root, n.ref);
-    else if (n.tool === 'settings') SettingsPanel.show(this.context);
-    else AtlasPanel.show(this.context, () => this.projects(), n.root, n.ref);
+    if (n.tool === 'builder') {
+      BuilderPanel.show(this.context, () => this.projects(), n.root, n.ref);
+      if (n.ref && n.stage) BuilderPanel.drive(this.context, () => this.projects(), { op: 'node', id: n.ref, stage: n.stage, step: n.step });
+    } else if (n.tool === 'settings') SettingsPanel.show(this.context);
+    else AtlasPanel.show(this.context, () => this.projects(), n.root, n.channel);
   }
 
   async openTool(id?: string): Promise<void> {
-    let tool = TOOLS.find((t) => t.id === id);
+    let tool = tools().find((t) => t.id === id);
     if (!id) {
-      const pick = await vscode.window.showQuickPick(TOOLS.map((t) => ({ label: `${t.key}  ${t.label}`, description: t.about, t })), { placeHolder: 'Tool to open' });
+      const pick = await vscode.window.showQuickPick(tools().map((t) => ({ label: `${t.key}  ${t.label}`, description: t.about, t })), { placeHolder: l10n.t('Tool to open') });
       tool = pick?.t;
     }
     if (!tool) return;
@@ -383,17 +435,17 @@ class Workspace implements vscode.WebviewViewProvider {
   async action(id?: string): Promise<void> {
     const p = this.active();
     if (!p) {
-      void vscode.window.showInformationMessage('No project in the Nuclear workspace (Ctrl+Alt+O opens one).');
+      void vscode.window.showInformationMessage(l10n.t('No project in the Nuclear workspace (Ctrl+Alt+O opens one).'));
       return;
     }
-    const actions = PLATFORM_ACTIONS[p.platform ?? ''] ?? [];
+    const actions = platformActions()[p.platform ?? ''] ?? [];
     let a = actions.find((x) => x.id === id);
     if (!id) {
       const pick = await vscode.window.showQuickPick(actions.map((x) => ({ label: `${x.key}  ${x.label}`, description: x.title, x })), { placeHolder: `${p.name} (${p.platform})` });
       a = pick?.x;
     }
     if (!a) {
-      if (id) void vscode.window.showInformationMessage(`${p.name} is a ${p.platform ?? 'plain'} project: it has no "${id}" action.`);
+      if (id) void vscode.window.showInformationMessage(p.platform ? l10n.t('{0} is a {1} project: it has no "{2}" action.', p.name, p.platform, id) : l10n.t('{0} is a plain project: it has no "{1}" action.', p.name, id));
       return;
     }
     if (p.platform === 'mobile' && ['run', 'debug', 'device'].includes(a.id) && !(await this.inWorkspace(p, a.id))) return;
@@ -419,7 +471,7 @@ class Workspace implements vscode.WebviewViewProvider {
   private async inWorkspace(p: Project, id: string): Promise<boolean> {
     if (inFolders(p.root)) return true;
     await this.context.globalState.update(PENDING, { root: p.root, id, at: Date.now() });
-    void vscode.window.showInformationMessage(`${p.name} joins the VS Code workspace folders (the Dart extension runs Flutter only there); the window reloads and the ${id} continues.`);
+    void vscode.window.showInformationMessage(l10n.t('{0} joins the VS Code workspace folders (the Dart extension runs Flutter only there); the window reloads and the {1} continues.', p.name, id));
     await this.addToVsCode();
     return false;
   }
@@ -430,14 +482,13 @@ class Workspace implements vscode.WebviewViewProvider {
   private async pickDevice(p: Project, mode: 'run' | 'debug' | 'device'): Promise<void> {
     type Item = vscode.QuickPickItem & { id: string };
     const items: Item[] = [
-      ...devices().map((d) => ({ label: `$(device-mobile) ${d.title}`, description: d.status === 'idle' ? 'free' : d.status === 'hidden' ? 'running, hidden' : `${d.status} · runs again`, id: d.id })),
-      { label: '$(add) New Synapsis device…', description: 'one more, beside the others', id: 'new' },
+      ...devices().map((d) => ({ label: `$(device-mobile) ${d.title}`, description: d.status === 'idle' ? l10n.t('free') : d.status === 'hidden' ? l10n.t('running, hidden') : d.status === 'live' ? l10n.t('live · runs again') : l10n.t('starting · runs again'), id: d.id })),
+      { label: `$(add) ${l10n.t('New Synapsis device…')}`, description: l10n.t('one more, beside the others'), id: 'new' },
       ...(mode === 'device'
-        ? [{ label: '$(layout) Devices workspace', description: TOOLS.find((t) => t.id === 'devices')?.key, id: 'tool' }]
-        : [{ label: '$(vm) Other Flutter device…', description: 'emulators, phones, Chrome, desktop', id: 'flutter' }]),
+        ? [{ label: `$(layout) ${l10n.t('Devices workspace')}`, description: tools().find((t) => t.id === 'devices')?.key, id: 'tool' }]
+        : [{ label: `$(vm) ${l10n.t('Other Flutter device…')}`, description: l10n.t('emulators, phones, Chrome, desktop'), id: 'flutter' }]),
     ];
-    const verb = mode === 'debug' ? 'Debug' : 'Run';
-    const pick = await vscode.window.showQuickPick(items, { placeHolder: `${verb} ${p.name} on` });
+    const pick = await vscode.window.showQuickPick(items, { placeHolder: mode === 'debug' ? l10n.t('Debug {0} on', p.name) : l10n.t('Run {0} on', p.name) });
     if (!pick) return;
     if (pick.id === 'tool') return this.openTool('devices');
     if (pick.id === 'flutter') {
@@ -455,11 +506,11 @@ class Workspace implements vscode.WebviewViewProvider {
     if (active?.platform === 'mobile') return active.root;
     const mobile = this.projects().filter((p) => p.platform === 'mobile');
     if (!mobile.length) {
-      void vscode.window.showInformationMessage('No mobile project in the Nuclear workspace: the devices run mobile apps.');
+      void vscode.window.showInformationMessage(l10n.t('No mobile project in the Nuclear workspace: the devices run mobile apps.'));
       return undefined;
     }
     if (mobile.length === 1) return mobile[0].root;
-    const pick = await vscode.window.showQuickPick(mobile.map((p) => ({ label: p.name, detail: p.root, root: p.root })), { placeHolder: 'Mobile project to run on the device' });
+    const pick = await vscode.window.showQuickPick(mobile.map((p) => ({ label: p.name, detail: p.root, root: p.root })), { placeHolder: l10n.t('Mobile project to run on the device') });
     return pick?.root;
   }
 
@@ -481,10 +532,10 @@ class Workspace implements vscode.WebviewViewProvider {
     void vscode.commands.executeCommand('setContext', 'nuclear.platform', active?.platform ?? '');
     if (!this.view) return;
     const unread = notices.unread();
-    this.view.badge = unread ? { value: unread, tooltip: `${unread} notification${unread === 1 ? '' : 's'} of the local agents` } : undefined;
+    this.view.badge = unread ? { value: unread, tooltip: unread === 1 ? l10n.t('1 notification of the local agents') : l10n.t('{0} notifications of the local agents', unread) } : undefined;
     const webview = this.view.webview;
     this.watchFiles(active?.root);
-    const tool = TOOLS.find((t) => TOOL_PREFIX + t.id === key);
+    const tool = tools().find((t) => TOOL_PREFIX + t.id === key);
     const envs = this.http.environments();
     const pane = !tool
       ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect } }
@@ -492,7 +543,9 @@ class Workspace implements vscode.WebviewViewProvider {
         ? { kind: 'tree', nodes: this.http.tree(), environment: envs.active }
         : tool.id === 'devices'
           ? { kind: 'devices', devices: devices(), project: this.active()?.name }
-          : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key }, notices: tool.id === 'atlas' || tool.id === 'builder' || tool.id === 'settings' ? notices.all().filter((n) => n.tool === tool.id).map((n) => ({ id: n.id, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })) : [] };
+          : tool.id === 'builder'
+            ? { kind: 'builder', sidebar: builderSidebar() }
+            : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key, soon: tool.planned.length > 0 } };
     void webview.postMessage({
       type: 'state',
       projects: this.projects().map((p) => ({
@@ -505,9 +558,16 @@ class Workspace implements vscode.WebviewViewProvider {
         dialectIcon: DIALECT_ICONS[p.dialect] ? this.icons.uri(webview, 'icon-themes', 'atom', 'files', `${DIALECT_ICONS[p.dialect]}.svg`) : undefined,
       })),
       active: key,
-      tools: TOOLS.map((t) => ({ id: t.id, label: t.label, short: t.short, key: t.key, unread: t.id === 'atlas' || t.id === 'builder' || t.id === 'settings' ? notices.unread(t.id) : 0 })),
+      tools: tools().map((t) => ({ id: t.id, label: t.label, short: t.short, key: t.key, soon: t.planned.length > 0, unread: t.id === 'atlas' || t.id === 'builder' || t.id === 'settings' ? notices.unread(t.id) : 0 })),
       pane,
+      // every tool's notices, newest first: the list at the bottom of the column
+      notices: notices.all().map((n) => ({ id: n.id, tool: n.tool, title: n.title, text: n.text, level: n.level, at: n.at, read: n.read })),
     });
+  }
+
+  /** The Builder's specs or runs changed: the column draws them again while the Builder is the open tool. */
+  builderChanged(): void {
+    if (this.activeKey() === TOOL_PREFIX + 'builder') void this.view?.webview.postMessage({ type: 'builderSidebar', sidebar: builderSidebar() });
   }
 
   /** New or deleted files of the active project reach the tree. */
@@ -516,19 +576,40 @@ class Workspace implements vscode.WebviewViewProvider {
     this.filesWatcher = undefined;
     if (!root) return;
     const w = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '**'), false, true, false);
-    const changed = (uri: vscode.Uri) => void this.view?.webview.postMessage({ type: 'refreshDir', dir: path.dirname(uri.fsPath) });
-    this.filesWatcher = vscode.Disposable.from(w, w.onDidCreate(changed), w.onDidDelete(changed));
+    // a build writes hundreds of files: the folders that changed reach the tree at most every 200 ms
+    const dirs = new Set<string>();
+    let timer: NodeJS.Timeout | undefined;
+    const changed = (uri: vscode.Uri) => {
+      dirs.add(path.dirname(uri.fsPath));
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        void this.view?.webview.postMessage({ type: 'refreshDirs', dirs: [...dirs] });
+        dirs.clear();
+      }, 200);
+    };
+    this.filesWatcher = vscode.Disposable.from(w, w.onDidCreate(changed), w.onDidDelete(changed), { dispose: () => clearTimeout(timer) });
+  }
+
+  /** The active editor's file is selected in the tree, its folders opened, as the explorer does. */
+  private reveal(uri: vscode.Uri | undefined): void {
+    const root = this.active()?.root;
+    if (!root || !uri || uri.scheme !== 'file') return;
+    const rel = path.relative(root, uri.fsPath);
+    if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return;
+    void this.view?.webview.postMessage({ type: 'reveal', parts: rel.split(path.sep) });
   }
 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
     view.webview.options = { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'icons'), vscode.Uri.joinPath(this.context.extensionUri, 'icon-themes')] };
-    view.webview.html = stripHtml(view.webview);
+    const localized = localize(view.webview, () => stripHtml(view.webview), () => this.refresh());
     view.onDidDispose(() => {
       this.view = undefined;
+      localized.dispose();
       this.watchFiles(undefined);
     });
-    view.webview.onDidReceiveMessage((m: { type: string; dir?: string; path?: string; root?: string; id?: string; endpoint?: unknown; action?: NodeAction; preset?: string; notice?: number }) => {
+    this.context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((e) => this.reveal(e?.document.uri)));
+    view.webview.onDidReceiveMessage((m: { type: string; op?: string; stage?: string; step?: string; dir?: string; path?: string; root?: string; id?: string; endpoint?: unknown; action?: NodeAction; preset?: string; notice?: number }) => {
       switch (m.type) {
         case 'list':
           if (m.dir) {
@@ -552,6 +633,10 @@ class Workspace implements vscode.WebviewViewProvider {
         case 'tool':
           if (m.id) void this.openTool(m.id);
           break;
+        case 'builder':
+          // a click in the Builder's column drives its page
+          if (m.op) BuilderPanel.drive(this.context, () => this.projects(), { op: m.op, id: m.id, stage: m.stage, step: m.step });
+          break;
         case 'notice': {
           const n = notices.all().find((x) => x.id === m.notice);
           if (n) void this.openNotice(n);
@@ -566,6 +651,7 @@ class Workspace implements vscode.WebviewViewProvider {
         case 'nodeAction':
           if (m.action?.type === 'updateContracts') void this.http.updateContracts(m.action.root, m.action.name);
           if (m.action?.type === 'addOpenApi') void this.http.addOpenApi();
+          if (m.action?.type === 'open' || m.action?.type === 'addSocket') this.http.runAction(m.action);
           break;
         case 'environment':
           void this.http.selectEnvironment();
@@ -599,7 +685,7 @@ class Workspace implements vscode.WebviewViewProvider {
   private async newDevice(): Promise<{ id: string } | undefined> {
     const pick = await vscode.window.showQuickPick(
       PRESETS.map((p) => ({ label: p.name, description: `${p.width}×${p.height} · ${p.os}`, name: p.name })),
-      { placeHolder: 'Device to open (one more panel beside the others)' },
+      { placeHolder: l10n.t('Device to open (one more panel beside the others)') },
     );
     return pick ? vscode.commands.executeCommand<{ id: string }>('nuclear.openDevice', pick.name) : undefined;
   }
@@ -727,27 +813,42 @@ const GLYPHS: Record<string, string> = {
   book: '<path d="M3 3h4a2 2 0 012 2v9a1 1 0 00-1-1H3zM13 3H9a2 2 0 00-2 2v9a1 1 0 011-1h5z"/>',
   cloud: '<path d="M5 13a3 3 0 010-6 4 4 0 017.7 1A2.5 2.5 0 0112 13z"/>',
   tag: '<path d="M2 2h6l6 6-6 6-6-6zM5 5h.5"/>',
-  // the tools of the strip
-  http: '<path d="M2 5h9M8 2l3 3-3 3M14 11H5M8 8l-3 3 3 3"/>',
-  devices: '<rect x="1.5" y="3" width="8" height="11" rx="1.5"/><path d="M4.5 12h2M9.5 5h3a2 2 0 012 2v5a2 2 0 01-2 2h-3"/>',
-  designer: '<rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M2 6h12M6 6v8"/>',
-  docs: '<path d="M4 2h6l3 3v9H4zM10 2v3h3M6 8h5M6 11h5"/>',
-  agent: '<path d="M8 1.5l1.4 3.6L13 6.5l-3.6 1.4L8 11.5 6.6 7.9 3 6.5l3.6-1.4zM12.5 10.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z"/>',
-  loop: '<path d="M8 2.5a5.5 5.5 0 1 0 5.3 7"/><path d="M13.5 5v3.5H10"/><circle cx="8" cy="8" r="1.4"/>',
-  settings: '<circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/>',
   info: '<circle cx="8" cy="8" r="6.5"/><path d="M8 7v4M8 5v.5"/>',
   device: '<rect x="4" y="1.5" width="8" height="13" rx="1.5"/><path d="M7 12.5h2"/>',
 };
 
-function stripHtml(webview: vscode.Webview): string {
+/** The tools' icons on the strip (24 px grid, a 1.6 line, round joins: the HUD's line), one meaning each. */
+const TOOL_ICONS: Record<string, string> = {
+  // a factory whose line carries the pieces from station to station
+  builder: '<path d="M3 20.5V11l5 3v-3l5 3v-3l5 3V3.5h3v17z"/><path d="M6.5 17.5h1.5M11.25 17.5h1.5M16 17.5h1.5"/>',
+  // three people: the company's crews
+  teams: '<circle cx="12" cy="8" r="3.2"/><path d="M6.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="5.5" cy="10" r="2.2"/><path d="M1.8 18a3.8 3.8 0 0 1 5-3.5"/><circle cx="18.5" cy="10" r="2.2"/><path d="M22.2 18a3.8 3.8 0 0 0-5-3.5"/>',
+  // a chat bubble with the agent's spark
+  atlas: '<path d="M4.5 4h15A1.5 1.5 0 0 1 21 5.5v10a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h-1A1.5 1.5 0 0 1 3 15.5v-10A1.5 1.5 0 0 1 4.5 4z"/><path d="M12 6.8l1.1 2.8 2.8 1.1-2.8 1.1-1.1 2.8-1.1-2.8-2.8-1.1 2.8-1.1z"/>',
+  // a plug, its signal both ways (REST and WebSockets)
+  'http-connections': '<path d="M9.5 3v4M14.5 3v4M7 7h10v3.5a5 5 0 0 1-10 0zM12 15.5V21"/><path d="M19.6 4.2a5 5 0 0 1 0 6.6M4.4 4.2a5 5 0 0 0 0 6.6"/>',
+  // a phone
+  devices: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M10.5 18.5h3M11 5.5h2"/>',
+  // a gauge with its needle
+  monitor: '<path d="M3.5 17.5a8.5 8.5 0 1 1 17 0"/><path d="M12 9.5V11M6.6 11.6l1 1M17.4 11.6l-1 1M12 17.5l3.5-4.5"/><circle cx="12" cy="17.5" r="1.4"/><path d="M3.5 21h17"/>',
+  // a pen's nib
+  designer: '<path d="M12 2.5l5.5 7-2.8 8H9.3l-2.8-8z"/><path d="M12 2.5v8"/><circle cx="12" cy="11.8" r="1.4"/><path d="M8.5 21h7"/>',
+  // a page with its lines
+  docs: '<path d="M14 2.5H6.5A1.5 1.5 0 0 0 5 4v16a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 20V7.5z"/><path d="M14 2.5v5h5M8.5 12.5h7M8.5 16.5h4.5"/>',
+  // a gear
+  settings: '<path d="M18.8 9.34L21.32 10.15L21.32 13.85L18.8 14.66L18.69 14.93L19.9 17.28L17.28 19.9L14.93 18.69L14.66 18.8L13.85 21.32L10.15 21.32L9.34 18.8L9.07 18.69L6.72 19.9L4.1 17.28L5.31 14.93L5.2 14.66L2.68 13.85L2.68 10.15L5.2 9.34L5.31 9.07L4.1 6.72L6.72 4.1L9.07 5.31L9.34 5.2L10.15 2.68L13.85 2.68L14.66 5.2L14.93 5.31L17.28 4.1L19.9 6.72L18.69 9.07Z"/><circle cx="12" cy="12" r="3.2"/>',
+};
+
+export function stripHtml(webview: vscode.Webview): string {
   const nonce = Math.random().toString(36).slice(2);
   return /* html */ `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang()}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 <style>
   html, body { height: 100%; margin: 0; }
+  .strip .nuc-lang { margin: 0 auto 6px; padding: 3px 0; width: 32px; flex-direction: column; gap: 1px; font-size: 9px; border: none; opacity: .7; } .strip .nuc-lang:hover { opacity: 1; }
   body { display: flex; height: 100vh; font-family: var(--vscode-font-family); font-size: 13px; color: var(--vscode-foreground); overflow: hidden; }
   .strip { width: 42px; flex: none; display: flex; flex-direction: column; background: var(--vscode-sideBarSectionHeader-background); border-right: 1px solid var(--vscode-sideBarSectionHeader-border, transparent); overflow: hidden auto; }
   .tools { margin-top: auto; padding-bottom: 6px; flex: none; }
@@ -763,11 +864,37 @@ function stripHtml(webview: vscode.Webview): string {
   .tab img.pi { width: 20px; height: 20px; }
   .tab img.di { position: absolute; right: -3px; bottom: -3px; width: 14px; height: 14px; border-radius: 3px; background: var(--vscode-sideBar-background); padding: 1px; }
   .tab svg.g { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-  .tab.t-http-connections { color: var(--vscode-nuclearHttpConnections-get); } .tab.t-devices { color: var(--vscode-nuclearHttpConnections-platform); }
-  .tab.t-designer { color: var(--vscode-nuclearHttpConnections-put); } .tab.t-docs { color: var(--vscode-nuclearHttpConnections-component); } .tab.t-atlas { color: var(--vscode-nuclearHttpConnections-post); }
+  /* the tools: an icon in its colour over a word, a HUD frame when open */
+  .tool { --tc: var(--vscode-foreground); position: relative; width: 38px; height: 40px; margin: 3px auto 0; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; user-select: none; color: var(--tc); outline: none; }
+  .tool svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .8; transition: opacity .12s, filter .12s; }
+  .tool .w { font: 600 7.5px/1 var(--vscode-editor-font-family, monospace); letter-spacing: .06em; color: var(--vscode-foreground); opacity: .55; max-width: 38px; overflow: hidden; text-overflow: clip; white-space: nowrap; }
+  .tool:hover { background: color-mix(in srgb, var(--tc) 10%, transparent); } .tool:hover svg { opacity: 1; } .tool:hover .w { opacity: .85; }
+  .tool:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
+  .tool.on { background: color-mix(in srgb, var(--tc) 16%, transparent); } .tool.on svg { opacity: 1; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--tc) 70%, transparent)); } .tool.on .w { opacity: 1; color: var(--tc); }
+  .tool.on::before, .tool.on::after { content: ''; position: absolute; width: 6px; height: 6px; border: 1.5px solid var(--tc); pointer-events: none; }
+  .tool.on::before { left: 0; top: 0; border-right: none; border-bottom: none; } .tool.on::after { right: 0; bottom: 0; border-left: none; border-top: none; }
+  .tool .bar { position: absolute; left: -2px; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: var(--tc); box-shadow: 0 0 6px var(--tc); opacity: 0; } .tool.on .bar { opacity: 1; }
+  .tool.soon svg { opacity: .45; stroke-dasharray: 2.2 1.8; } .tool.soon .w { opacity: .4; }
+  .tool .badge { position: absolute; top: 0; right: 0; min-width: 13px; height: 13px; padding: 0 3px; box-sizing: border-box; border-radius: 2px; font: 700 8.5px/11px var(--vscode-editor-font-family, monospace); text-align: center; color: var(--tc); background: var(--vscode-sideBar-background, #000); border: 1px solid var(--tc); box-shadow: 0 0 5px color-mix(in srgb, var(--tc) 75%, transparent); animation: ping 1.6s ease-out 2; }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tc) 80%, transparent); } 100% { box-shadow: 0 0 0 6px transparent; } }
+  @media (prefers-reduced-motion: reduce) { .tool .badge { animation: none; } }
+  .t-builder { --tc: var(--vscode-nuclearHttpConnections-put, var(--vscode-charts-yellow, #cca700)); }
+  .t-teams { --tc: var(--vscode-nuclearHttpConnections-component, var(--vscode-charts-purple, #b180d7)); }
+  .t-atlas { --tc: var(--vscode-nuclearHttpConnections-post, var(--vscode-charts-green, #89d185)); }
+  .t-http-connections { --tc: var(--vscode-nuclearHttpConnections-get, var(--vscode-charts-blue, #75beff)); }
+  .t-devices { --tc: var(--vscode-nuclearHttpConnections-platform, var(--vscode-charts-green, #89d185)); }
+  .t-monitor { --tc: var(--vscode-nuclearHttpConnections-delete, var(--vscode-charts-red, #f14c4c)); }
+  .t-designer { --tc: var(--vscode-nuclearHttpConnections-patch, var(--vscode-charts-orange, #d18616)); }
+  .t-docs { --tc: var(--vscode-nuclearHttpConnections-project, var(--vscode-charts-yellow, #cca700)); }
+  .t-settings { --tc: var(--vscode-foreground); }
+  .tip { position: fixed; z-index: 3; left: 46px; padding: 6px 9px; border-radius: 4px; font-size: 12px; line-height: 1.35; max-width: 220px; background: var(--vscode-editorHoverWidget-background, var(--vscode-notifications-background)); color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground)); border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-widget-border, #8886)); border-left: 2px solid var(--tc); box-shadow: 0 2px 8px rgba(0,0,0,.35); pointer-events: none; opacity: 0; transition: opacity .1s; }
+  .tip.on { opacity: 1; } .tip b { display: block; } .tip kbd { font-family: var(--vscode-editor-font-family); font-size: 11px; opacity: .8; } .tip small { display: block; opacity: .7; margin-top: 2px; }
   .tab.add { opacity: .5; font-size: 16px; font-weight: 300; border: 1px dashed currentColor; }
   .tab.add:hover { opacity: 1; }
-  .pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .pane { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+  .notes { flex: none; max-height: 38%; overflow: auto; border-top: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, #8884)); padding-bottom: 4px; } .notes .section { margin-top: 8px; }
+  .notice.unread { border-left-color: var(--tc, var(--vscode-activityBarBadge-background)); }
   .head { padding: 6px 10px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
   .head b { font-weight: 600; }
   .actions { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 8px 6px; flex: none; }
@@ -790,26 +917,57 @@ function stripHtml(webview: vscode.Webview): string {
   .row:hover .btn { opacity: 1; }
   .row.dir .name { font-weight: 500; }
   .row.nuc .name { color: var(--vscode-nuclearHttpConnections-project); }
+  /* the files of a project: VS Code's explorer (twistie, indent guides on hover, selection and focus of a list) */
+  .tree.files { outline: none; }
+  .tree.files .row { position: relative; gap: 0; padding-right: 8px; }
+  .tree.files .row .c { width: 16px; height: 22px; display: flex; align-items: center; justify-content: center; opacity: 1; transition: transform .1s ease; }
+  .tree.files .row .c svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
+  .tree.files .row.open .c { transform: rotate(90deg); }
+  .tree.files .row img.i { margin: 0 6px 0 0; }
+  .tree.files .guide { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--vscode-tree-indentGuidesStroke, #585858); opacity: 0; transition: opacity .1s; pointer-events: none; }
+  .tree.files:hover .guide, .tree.files:focus .guide { opacity: .7; }
+  .tree.files .row.sel { background: var(--vscode-list-inactiveSelectionBackground); color: var(--vscode-list-inactiveSelectionForeground, var(--vscode-foreground)); }
+  .tree.files:focus .row.sel { background: var(--vscode-list-activeSelectionBackground); color: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground)); }
+  .tree.files:focus .row.focus { outline: 1px solid var(--vscode-list-focusOutline, var(--vscode-focusBorder)); outline-offset: -1px; }
   .c-platform { color: var(--vscode-nuclearHttpConnections-platform); } .c-project { color: var(--vscode-nuclearHttpConnections-project); } .c-component { color: var(--vscode-nuclearHttpConnections-component); }
   .c-get { color: var(--vscode-nuclearHttpConnections-get); } .c-post { color: var(--vscode-nuclearHttpConnections-post); } .c-put { color: var(--vscode-nuclearHttpConnections-put); } .c-patch { color: var(--vscode-nuclearHttpConnections-patch); } .c-delete { color: var(--vscode-nuclearHttpConnections-delete); }
   .row.ep .name { font-family: var(--vscode-editor-font-family); font-size: 12px; }
   .row.ep .verb { font-weight: 700; font-size: 11px; width: 44px; flex: none; }
+  .c-ws, .c-event { color: var(--vscode-nuclearHttpConnections-component); } .row .pbadge { flex: none; margin-left: 6px; padding: 0 4px; border-radius: 3px; font-size: 9px; font-weight: 700; line-height: 14px; letter-spacing: .03em; color: var(--vscode-nuclearHttpConnections-component); border: 1px solid currentColor; opacity: .85; } .row .pbadge.act { cursor: pointer; } .row .pbadge.act:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
   .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin: 0 6px 0 4px; background: var(--vscode-disabledForeground); }
   .dot.live { background: var(--vscode-testing-iconPassed); } .dot.starting { background: var(--vscode-nuclearHttpConnections-put); } .dot.hidden { background: var(--vscode-nuclearHttpConnections-platform); opacity: .6; }
   .empty { padding: 12px 10px; opacity: .7; line-height: 1.5; }
   .empty a { color: var(--vscode-textLink-foreground); cursor: pointer; }
+  /* the Builder's column: the specs' tree and the runs' accordion */
+  .tree.builder { padding-bottom: 8px; }
+  .tree.builder .section { display: flex; align-items: center; gap: 6px; }
+  .tree.builder .count { font-size: 10px; padding: 0 5px; border-radius: 8px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); letter-spacing: 0; }
+  .tree.builder .row { outline: none; } .tree.builder .row:focus { outline: 1px solid var(--vscode-list-focusOutline, var(--vscode-focusBorder)); outline-offset: -1px; }
+  .tree.builder .row .desc { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .tree.builder .row.grp .name { font-weight: 600; }
+  .tree.builder .row.run .name { font-weight: 500; }
+  .tree.builder .sub { font-size: 11px; opacity: .6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: -3px 6px 3px 0; }
+  .tree.builder .sub.live { opacity: .85; color: var(--vscode-charts-yellow, #d29922); }
+  .bd { width: 7px; height: 7px; border-radius: 50%; flex: none; margin: 0 7px 0 2px; background: var(--vscode-disabledForeground, #8b949e); opacity: .5; }
+  .bd.st-passed { background: var(--vscode-testing-iconPassed, #3fb950); opacity: 1; } .bd.st-failed { background: var(--vscode-testing-iconFailed, #f85149); opacity: 1; }
+  .bd.st-running, .bd.st-waiting { background: var(--vscode-charts-yellow, #d29922); opacity: 1; animation: bpulse 1.2s infinite; } .bd.st-skipped { background: transparent; border: 1px solid var(--vscode-disabledForeground, #8b949e); box-sizing: border-box; }
+  @keyframes bpulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .bd { animation: none !important; } }
   .toast { position: fixed; left: 48px; bottom: 10px; max-width: calc(100% - 60px); padding: 6px 10px; border-radius: 4px; font-size: 12px; background: var(--vscode-notifications-background); color: var(--vscode-notifications-foreground); border: 1px solid var(--vscode-notifications-border, var(--vscode-widget-border, transparent)); box-shadow: 0 2px 8px rgba(0,0,0,.3); opacity: 0; transition: opacity .15s; pointer-events: none; z-index: 2; }
   .toast.on { opacity: 1; }
   .toast kbd { font-family: var(--vscode-editor-font-family); font-weight: 600; }
 </style>
 </head>
 <body>
-  <div class="strip"><div id="projects"></div><div class="tools" id="tools"></div></div>
-  <div class="pane" id="pane"></div>
+  <div class="strip"><div id="projects"></div><div class="tools" id="tools"></div>${langButton()}</div>
+  <div class="col"><div class="pane" id="pane"></div><div class="notes" id="notes" role="log" hidden></div></div>
   <div class="toast" id="toast"></div>
+  <div class="tip" id="tip" role="tooltip"></div>
 <script nonce="${nonce}">
-  const vscode = acquireVsCodeApi();
+  ${pageI18n(STRIP)}
+  ${inline({ specTree, specOfPath, runOutline })}
   const GLYPHS = ${JSON.stringify(GLYPHS)};
+  const TOOL_ICONS = ${JSON.stringify(TOOL_ICONS)};
   const $ = (id) => document.getElementById(id);
   let state = { projects: [], active: '', tools: [], pane: { kind: 'files' } };
   const loaded = {};          // dir -> entries
@@ -820,13 +978,13 @@ function stripHtml(webview: vscode.Webview): string {
   const el = (tag, cls, text) => { const d = document.createElement(tag); if (cls) d.className = cls; if (text !== undefined) d.textContent = text; return d; };
 
   function toast(key, what) {
-    const t = $('toast');
-    t.innerHTML = '<kbd></kbd> ';
-    t.firstChild.textContent = key;
-    t.appendChild(document.createTextNode(what + ' without the mouse'));
-    t.classList.add('on');
+    const box = $('toast');
+    box.innerHTML = '<kbd></kbd> ';
+    box.firstChild.textContent = key;
+    box.appendChild(document.createTextNode(t('withoutMouse', what)));
+    box.classList.add('on');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+    toastTimer = setTimeout(() => box.classList.remove('on'), 2600);
   }
   function initials(name) {
     const parts = name.replace(/[_-]+/g, ' ').trim().split(/\\s+/);
@@ -850,29 +1008,54 @@ function stripHtml(webview: vscode.Webview): string {
     ps.innerHTML = '';
     state.projects.forEach((p, i) => {
       const key = i < 9 ? 'Ctrl+' + (i + 1) : '';
-      const t = tab(p.platformIcon ? '' : initials(p.name), p.name + ' · ' + (p.platform || '') + ' ' + p.dialect + (key ? '  (' + key + ')' : '') + (p.saved ? '\\nright click: remove from the workspace' : ''), p.root === state.active);
-      if (p.platformIcon) { const pi = el('img', 'pi'); pi.src = p.platformIcon; t.appendChild(pi); }
-      if (p.dialectIcon) { const di = el('img', 'di'); di.src = p.dialectIcon; t.appendChild(di); }
-      if (key) t.appendChild(el('span', 'n', String(i + 1)));
-      t.addEventListener('click', () => { vscode.postMessage({ type: 'project', root: p.root }); if (key) toast(key, 'opens ' + p.name); });
-      if (p.saved) t.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'remove', root: p.root }); });
-      ps.appendChild(t);
+      const tb = tab(p.platformIcon ? '' : initials(p.name), p.name + ' · ' + (p.platform || '') + ' ' + p.dialect + (key ? '  (' + key + ')' : '') + (p.saved ? '\\n' + t('removeHint') : ''), p.root === state.active);
+      if (p.platformIcon) { const pi = el('img', 'pi'); pi.src = p.platformIcon; tb.appendChild(pi); }
+      if (p.dialectIcon) { const di = el('img', 'di'); di.src = p.dialectIcon; tb.appendChild(di); }
+      if (key) tb.appendChild(el('span', 'n', String(i + 1)));
+      tb.addEventListener('click', () => { vscode.postMessage({ type: 'project', root: p.root }); if (key) toast(key, t('opens', p.name)); });
+      if (p.saved) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'remove', root: p.root }); });
+      ps.appendChild(tb);
     });
-    const add = tab('+', 'Open a project as a tab  (Ctrl+Alt+O)', false);
+    const add = tab('+', t('openTab'), false);
     add.classList.add('add');
-    add.addEventListener('click', () => { vscode.postMessage({ type: 'add' }); toast('Ctrl+Alt+O', 'opens a project'); });
+    add.addEventListener('click', () => { vscode.postMessage({ type: 'add' }); toast('Ctrl+Alt+O', t('opensAProject')); });
     ps.appendChild(add);
     const ts = $('tools');
     ts.innerHTML = '';
     for (const tool of state.tools) {
-      const t = tab('', tool.label + '  (' + tool.key + ')', state.active === 'tool:' + tool.id);
-      t.classList.add('t-' + tool.id);
-      t.appendChild(glyph(tool.id));
-      if (tool.unread) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = tool.unread > 9 ? '9+' : String(tool.unread); t.appendChild(b); t.title += '  · ' + tool.unread + ' new'; }
-      t.addEventListener('click', () => { vscode.postMessage({ type: 'tool', id: tool.id }); toast(tool.key, 'opens the ' + tool.label.toLowerCase()); });
-      ts.appendChild(t);
+      const on = state.active === 'tool:' + tool.id;
+      const tb = el('div', 'tool t-' + tool.id + (on ? ' on' : '') + (tool.soon ? ' soon' : ''));
+      tb.tabIndex = 0; tb.setAttribute('role', 'button'); tb.setAttribute('aria-pressed', String(on));
+      tb.setAttribute('aria-label', tool.label + ' (' + tool.key + ')' + (tool.unread ? ', ' + t('newCount', tool.unread) : ''));
+      tb.appendChild(el('span', 'bar'));
+      const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = TOOL_ICONS[tool.id] || '';
+      tb.appendChild(s);
+      tb.appendChild(el('span', 'w', tool.short));
+      if (tool.unread) tb.appendChild(el('span', 'badge', tool.unread > 9 ? '9+' : String(tool.unread)));
+      const open = () => { vscode.postMessage({ type: 'tool', id: tool.id }); toast(tool.key, t('opens', tool.label)); };
+      tb.addEventListener('click', open);
+      tb.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      const show = () => tip(tb, tool);
+      tb.addEventListener('mouseenter', show); tb.addEventListener('focus', show);
+      tb.addEventListener('mouseleave', hideTip); tb.addEventListener('blur', hideTip);
+      ts.appendChild(tb);
     }
   }
+  // the tool's name, its key and its state beside the strip (the strip shows only a word)
+  function tip(tb, tool) {
+    const box = $('tip');
+    box.innerHTML = '';
+    box.className = 'tip t-' + tool.id;
+    box.appendChild(el('b', '', tool.label));
+    box.appendChild(el('kbd', '', tool.key));
+    if (tool.soon) box.appendChild(el('small', '', t('notBuilt')));
+    if (tool.unread) box.appendChild(el('small', '', t('newCount', tool.unread)));
+    const r = tb.getBoundingClientRect();
+    box.classList.add('on');
+    box.style.top = Math.max(4, Math.min(r.top + r.height / 2 - box.offsetHeight / 2, innerHeight - box.offsetHeight - 4)) + 'px';
+  }
+  function hideTip() { $('tip').classList.remove('on'); }
 
   // ---------- the pane ----------
   function renderPane() {
@@ -882,7 +1065,9 @@ function stripHtml(webview: vscode.Webview): string {
     if (p.kind === 'files') renderFiles(pane, p);
     else if (p.kind === 'tree') renderHttp(pane, p);
     else if (p.kind === 'devices') renderDevices(pane, p);
+    else if (p.kind === 'builder') renderBuilder(pane, p);
     else renderTemplate(pane, p);
+    noticesOf($('notes'), state.notices);
   }
   function head(pane, name, rest) {
     const h = el('div', 'head');
@@ -894,18 +1079,24 @@ function stripHtml(webview: vscode.Webview): string {
   // the files of the active project (its actions are in the editor title bar)
   function renderFiles(pane, p) {
     if (!p.project) {
-      head(pane, 'Nuclear workspace');
+      head(pane, t('workspace'));
       const e = el('div', 'empty');
-      e.innerHTML = 'No Nuclear project here yet. <a id="addLink">Open one</a> as a tab (Ctrl+Alt+O), or open a folder with a <code>config.nuc</code>.';
+      e.innerHTML = t('noProject');
       pane.appendChild(e);
       $('addLink').addEventListener('click', () => vscode.postMessage({ type: 'add' }));
       return;
     }
     head(pane, p.project.name, (p.project.platform || '') + ' ' + p.project.dialect);
-    const tree = el('div', 'tree'); tree.id = 'tree'; tree.dataset.vscodeContext = p.project.ctx;
+    const tree = el('div', 'tree files'); tree.id = 'tree'; tree.tabIndex = 0; tree.dataset.vscodeContext = p.project.ctx;
+    tree.addEventListener('keydown', treeKey);
     pane.appendChild(tree);
     renderTree();
   }
+  // shortcut: the explorer's default indent (8 px) and guides on hover, not the user's workbench.tree.* settings
+  const INDENT = 8;
+  const CHEVRON = '<svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></svg>';
+  let shown = [];   // the rows on screen, in order: what the keyboard walks
+  let focused = ''; // the row the keyboard is on
   function need(dir) { if (!(dir in loaded)) { loaded[dir] = null; vscode.postMessage({ type: 'list', dir }); } }
   function rows(dir, depth, out) {
     const entries = loaded[dir];
@@ -916,44 +1107,80 @@ function stripHtml(webview: vscode.Webview): string {
       if (e.dir && expanded.has(full)) rows(full, depth + 1, out);
     }
   }
-  function renderTree() {
+  function renderTree(scroll) {
     const tree = $('tree');
     if (!tree || state.pane.kind !== 'files' || !state.pane.project) return;
     const list = [];
     rows(state.pane.project.root, 0, list);
-    tree.innerHTML = '';
+    shown = list;
+    // the row the keyboard is on, never rewritten while folders load (a reveal waits for them)
+    const on = here(focused) ? focused : here(selected) ? selected : (list[0] ? list[0].full : '');
+    const frag = document.createDocumentFragment();
     for (const r of list) {
-      const d = el('div', 'row' + (r.dir ? ' dir' : '') + (expanded.has(r.full) ? ' open' : '') + (r.full === selected ? ' sel' : '') + (r.name.endsWith('.nuc') ? ' nuc' : ''));
-      d.style.paddingLeft = (6 + r.depth * 12) + 'px';
-      d.appendChild(el('span', 'c', r.dir ? '▶' : ''));
+      const d = el('div', 'row' + (r.dir ? ' dir' : '') + (expanded.has(r.full) ? ' open' : '') + (r.full === selected ? ' sel' : '') + (r.full === on ? ' focus' : '') + (r.name.endsWith('.nuc') ? ' nuc' : ''));
+      d.style.paddingLeft = (8 + r.depth * INDENT) + 'px';
+      for (let k = 0; k < r.depth; k++) { const g = el('span', 'guide'); g.style.left = (16 + k * INDENT) + 'px'; d.appendChild(g); }
+      const c = el('span', 'c'); if (r.dir) c.innerHTML = CHEVRON; d.appendChild(c);
       if (r.icon) { const i = el('img', 'i'); i.src = r.icon; d.appendChild(i); }
       d.appendChild(el('span', 'name', r.name));
       d.title = r.full;
       if (r.ctx) d.dataset.vscodeContext = r.ctx;
-      d.addEventListener('click', () => {
-        selected = r.full;
-        if (r.dir) { expanded.has(r.full) ? expanded.delete(r.full) : expanded.add(r.full); }
-        else vscode.postMessage({ type: 'open', path: r.full });
-        renderTree();
-      });
-      tree.appendChild(d);
+      d.addEventListener('click', () => { focused = r.full; activate(r); });
+      frag.appendChild(d);
     }
+    tree.replaceChildren(frag);
+    if (scroll) { const f = tree.querySelector('.row.focus'); if (f) f.scrollIntoView({ block: 'nearest' }); }
+  }
+  /** A click, Enter or Space: a folder opens or closes, a file opens in the editor. */
+  function activate(r) {
+    selected = r.full;
+    if (r.dir) { expanded.has(r.full) ? expanded.delete(r.full) : expanded.add(r.full); }
+    else vscode.postMessage({ type: 'open', path: r.full });
+    renderTree();
+  }
+  const here = (full) => shown.some((r) => r.full === full);
+  function treeKey(e) {
+    const at = here(focused) ? focused : here(selected) ? selected : (shown[0] ? shown[0].full : '');
+    const i = shown.findIndex((r) => r.full === at), r = shown[i];
+    const go = (j) => { const t = shown[Math.max(0, Math.min(shown.length - 1, j))]; if (t) { focused = t.full; renderTree(true); } };
+    switch (e.key) {
+      case 'ArrowDown': go(i + 1); break;
+      case 'ArrowUp': go(i - 1); break;
+      case 'Home': go(0); break;
+      case 'End': go(shown.length - 1); break;
+      case 'ArrowRight': if (r && r.dir) { if (!expanded.has(r.full)) { expanded.add(r.full); renderTree(true); } else go(i + 1); } break;
+      case 'ArrowLeft':
+        if (r && r.dir && expanded.has(r.full)) { expanded.delete(r.full); renderTree(true); }
+        else if (r) { const up = shown.slice(0, i).reverse().find((x) => x.depth < r.depth); if (up) { focused = up.full; renderTree(true); } }
+        break;
+      case 'Enter': case ' ': if (r) activate(r); break;
+      default: return;
+    }
+    e.preventDefault();
+  }
+  /** The active editor's file: its folders open, the file selected, as the explorer does. */
+  function reveal(parts) {
+    if (!state.pane.project) return;
+    let dir = state.pane.project.root.replace(/[\\\\/]$/, '');
+    for (const part of parts.slice(0, -1)) { dir += '/' + part; expanded.add(dir); }
+    selected = focused = dir + '/' + parts[parts.length - 1];
+    renderTree(true);
   }
 
   // the endpoints tree of the HTTP Connections tool
   function renderHttp(pane, p) {
-    head(pane, 'HTTP', 'every project');
+    head(pane, 'HTTP', t('everyProject'));
     const bar = el('div', 'envbar');
-    bar.appendChild(document.createTextNode('env '));
+    bar.appendChild(document.createTextNode(t('env') + ' '));
     bar.appendChild(el('b', '', p.environment));
-    for (const [label, type, title] of [['change', 'environment', 'Select or create an environment'], ['edit', 'editEnvironments', 'Variables, headers, base urls (.nuclear/http.json)'], ['↻', 'httpRefresh', 'Refresh']]) {
+    for (const [label, type, title] of [[t('change'), 'environment', t('changeTitle')], [t('edit'), 'editEnvironments', t('editTitle')], ['↻', 'httpRefresh', t('refresh')]]) {
       bar.appendChild(document.createTextNode(' · '));
       const a = el('a', '', label); a.title = title; a.addEventListener('click', () => vscode.postMessage({ type })); bar.appendChild(a);
     }
     pane.appendChild(bar);
     const tree = el('div', 'tree');
     pane.appendChild(tree);
-    if (!p.nodes.length) tree.appendChild(el('div', 'empty', 'No Nuclear project found: build one (nuclear build / nuclear build) or add an OpenAPI document.'));
+    if (!p.nodes.length) tree.appendChild(el('div', 'empty', t('noHttp')));
     const walk = (nodes, depth) => {
       for (const n of nodes) {
         const kids = n.children && n.children.length ? n.children : null;
@@ -968,6 +1195,7 @@ function stripHtml(webview: vscode.Webview): string {
           d.appendChild(glyph(n.icon, n.color ? 'c-' + n.color : ''));
           d.appendChild(el('span', 'name', n.label));
         }
+        if (n.badge) { const b = el('span', 'pbadge' + (n.badge.action ? ' act' : ''), n.badge.label); b.title = n.badge.title; if (n.badge.action) b.addEventListener('click', (ev) => { ev.stopPropagation(); vscode.postMessage({ type: 'nodeAction', action: n.badge.action }); }); d.appendChild(b); }
         if (n.desc) d.appendChild(el('span', 'desc', n.desc));
         if (n.button) { const b = el('span', 'btn', n.button.label); b.title = n.button.title; b.addEventListener('click', (ev) => { ev.stopPropagation(); vscode.postMessage({ type: 'nodeAction', action: n.button.action }); }); d.appendChild(b); }
         d.title = n.tooltip || n.label;
@@ -986,59 +1214,147 @@ function stripHtml(webview: vscode.Webview): string {
 
   // the devices
   function renderDevices(pane, p) {
-    head(pane, 'Devices', p.project ? 'runs ' + p.project : '');
+    head(pane, t('devices'), p.project ? t('runs', p.project) : '');
     const bar = el('div', 'actions');
-    const add = el('button', 'primary', '+ New device');
-    add.title = 'One more Synapsis device beside the code (pick its size and identity)';
+    const add = el('button', 'primary', t('newDevice'));
+    add.title = t('newDeviceTitle');
     add.addEventListener('click', () => vscode.postMessage({ type: 'newDevice' }));
     bar.appendChild(add);
     pane.appendChild(bar);
     const tree = el('div', 'tree');
     pane.appendChild(tree);
-    if (!p.devices.length) tree.appendChild(el('div', 'empty', 'No device. Open several to try different clients at the same time, like emulators; each keeps its own app and session. Closing a device tab only hides it; ✕ here ends it. A device nobody looks at for 30 minutes ends by itself.'));
+    if (!p.devices.length) tree.appendChild(el('div', 'empty', t('noDevices')));
     for (const d of p.devices) {
       const r = el('div', 'row');
       r.style.paddingLeft = '6px';
       r.appendChild(glyph('device', 'c-platform'));
       r.appendChild(el('span', 'name', d.title));
       r.appendChild(el('span', 'dot ' + d.status));
-      r.appendChild(el('span', 'desc', d.status));
-      const run = el('span', 'btn', '▷ run'); run.title = 'Run the project on this device' + (p.project ? ' (' + p.project + ')' : '');
+      r.appendChild(el('span', 'desc', ({ idle: t('stIdle'), starting: t('stStarting'), live: t('stLive'), hidden: t('stHidden') })[d.status] || d.status));
+      const run = el('span', 'btn', t('run')); run.title = t('runTitle') + (p.project ? ' (' + p.project + ')' : '');
       run.addEventListener('click', (ev) => { ev.stopPropagation(); vscode.postMessage({ type: 'runOnDevice', id: d.id }); });
       r.appendChild(run);
-      const close = el('span', 'btn', '✕'); close.title = 'Close this device: its app and processes end now (closing its tab only hides it)';
+      const close = el('span', 'btn', '✕'); close.title = t('closeTitle');
       close.addEventListener('click', (ev) => { ev.stopPropagation(); vscode.postMessage({ type: 'closeDevice', id: d.id }); });
       r.appendChild(close);
-      r.title = d.status === 'hidden' ? 'Show this device again' : 'Show this device';
+      r.title = d.status === 'hidden' ? t('showAgain') : t('show');
       r.addEventListener('click', () => vscode.postMessage({ type: 'device', id: d.id }));
       tree.appendChild(r);
     }
   }
 
+  // the Builder's specs by component and layer and its runs as an accordion (its page is the diagram, the chat, the node)
+  const bClosed = new Set();  // tree groups the user closed (they start open)
+  const bRuns = {};           // run id -> open (a run going on, or the one picked, starts open)
+  function renderBuilder(pane, p) {
+    const sb = p.sidebar;
+    head(pane, 'Nuclear Builder', sb.project);
+    const bar = el('div', 'actions');
+    const add = el('button', 'primary', t('bNew')); add.title = t('bNewTitle');
+    add.addEventListener('click', () => vscode.postMessage({ type: 'builder', op: 'new' }));
+    bar.appendChild(add);
+    pane.appendChild(bar);
+    const tree = el('div', 'tree builder'); tree.id = 'btree';
+    pane.appendChild(tree);
+    drawBuilder(sb);
+  }
+  function brow(depth, cls, twisty, parts, title, onClick) {
+    const d = el('div', 'row ' + cls);
+    d.style.paddingLeft = (6 + depth * 12) + 'px';
+    d.tabIndex = 0;
+    d.appendChild(el('span', 'c', twisty));
+    for (const x of parts) d.appendChild(x);
+    if (title) d.title = title;
+    d.addEventListener('click', onClick);
+    return d;
+  }
+  const bdot = (s) => el('span', 'bd st-' + (s || 'none'));
+  function drawBuilder(sb) {
+    const tree = $('btree'); if (!tree) return;
+    const top = tree.scrollTop;
+    tree.innerHTML = '';
+    if (!sb.root) { tree.appendChild(el('div', 'empty', t('bOpening'))); return; }
+    const pk = sb.picked || {};
+    const section = (text, n) => { const s = el('div', 'section', text); if (n) s.appendChild(el('span', 'count', String(n))); tree.appendChild(s); };
+    // the specs
+    const groups = W.specTree(sb.specs, sb.runs);
+    section(t('bSpecs'));
+    if (!groups.length) tree.appendChild(el('div', 'empty', t('bNoSpecs')));
+    const group = (key, label, n, depth, kids) => {
+      const open = !bClosed.has(key);
+      tree.appendChild(brow(depth, 'grp' + (open ? ' open' : ''), '▶', [el('span', 'name', label), el('span', 'desc', String(n))], '', () => { bClosed.has(key) ? bClosed.delete(key) : bClosed.add(key); drawBuilder(sb); }));
+      if (open) kids();
+    };
+    const spec = (x, depth) => tree.appendChild(brow(depth, 'spec' + (pk.spec === x.id ? ' sel' : ''), '', [bdot(x.run), el('span', 'name', x.title)], x.path + '/spec.md', () => vscode.postMessage({ type: 'builder', op: 'spec', id: x.id })));
+    for (const g of groups) {
+      const label = g.component === '_global' ? t('bWhole') : g.component || t('bUnsorted');
+      group('c:' + g.component, label, g.specs.length + g.layers.reduce((n, l) => n + l.specs.length, 0), 0, () => {
+        for (const x of g.specs) spec(x, 1);
+        for (const l of g.layers) group('c:' + g.component + '/' + l.layer, t('bLayer.' + l.layer), l.specs.length, 1, () => l.specs.forEach((x) => spec(x, 2)));
+      });
+    }
+    // the runs
+    const runs = [...sb.runs].sort((a, b) => (sb.running.includes(b.id) ? 1 : 0) - (sb.running.includes(a.id) ? 1 : 0) || b.created - a.created);
+    section(t('bRuns'), runs.length);
+    if (!runs.length) tree.appendChild(el('div', 'empty', t('bNoRuns')));
+    for (const r of runs) {
+      const o = W.runOutline(r), live = sb.running.includes(r.id), picked = pk.run === r.id;
+      if (!(r.id in bRuns) && (live || picked)) bRuns[r.id] = true;
+      const open = !!bRuns[r.id];
+      const sub = o.now ? o.now.title : (t('bStatus.' + r.status) || r.status) + ' · ' + new Date(r.created).toLocaleDateString(LANG);
+      const name = el('span', 'name', r.spec.title);
+      const row = brow(0, 'run' + (open ? ' open' : '') + (picked && !pk.stage ? ' sel' : '') + (live ? ' live' : ''), '▶', [bdot(r.status), name, el('span', 'desc', o.done + '/' + o.total)], sub, () => { bRuns[r.id] = !open || !picked; vscode.postMessage({ type: 'builder', op: 'run', id: r.id }); drawBuilder(sb); });
+      tree.appendChild(row);
+      tree.appendChild(el('div', 'sub' + (live ? ' live' : ''), sub)).style.paddingLeft = '38px';
+      if (!open) continue;
+      for (const st of o.stations) {
+        const ended = st.steps.filter((x) => x.status === 'passed' || x.status === 'skipped').length;
+        const here = picked && pk.stage === st.id;
+        tree.appendChild(brow(1, 'stn' + (here && !pk.step ? ' sel' : ''), '', [bdot(st.status), el('span', 'name', st.title), el('span', 'desc', st.steps.length ? ended + '/' + st.steps.length : '')], '', () => vscode.postMessage({ type: 'builder', op: 'node', id: r.id, stage: st.id })));
+        if (st.status === 'running' || st.status === 'waiting' || st.status === 'failed' || here)
+          for (const x of st.steps) tree.appendChild(brow(2, 'stp' + (here && pk.step === x.id ? ' sel' : ''), '', [bdot(x.status), el('span', 'name', x.title)], x.title, () => vscode.postMessage({ type: 'builder', op: 'node', id: r.id, stage: st.id, step: x.id })));
+      }
+    }
+    tree.scrollTop = top;
+  }
+  function noticesOf(box, list) {
+    box.innerHTML = '';
+    box.hidden = !list || !list.length;
+    if (box.hidden) return;
+    // what the local agents did while you were elsewhere, from every tool: newest first, a click goes there
+    box.appendChild(el('div', 'section', t('notifications')));
+    for (const n of list) {
+      const row = el('div', 'notice t-' + n.tool + (n.read ? '' : ' unread') + ' ' + n.level);
+      row.tabIndex = 0; row.setAttribute('role', 'button');
+      row.appendChild(el('b', '', n.title));
+      row.appendChild(el('small', '', (n.text ? n.text + ' · ' : '') + new Date(n.at).toLocaleTimeString()));
+      const go = () => vscode.postMessage({ type: 'notice', notice: n.id });
+      row.addEventListener('click', go);
+      row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      box.appendChild(row);
+    }
+  }
+
   function renderTemplate(pane, p) {
-    head(pane, p.tool.label, 'template');
+    head(pane, p.tool.label, p.tool.soon ? t('template') : '');
     const e = el('div', 'empty');
     e.appendChild(document.createTextNode(p.tool.about + ' '));
-    const a = el('a', '', 'Open it'); a.addEventListener('click', () => vscode.postMessage({ type: 'tool', id: p.tool.id }));
+    const a = el('a', '', t('openIt')); a.addEventListener('click', () => vscode.postMessage({ type: 'tool', id: p.tool.id }));
     e.appendChild(a); e.appendChild(document.createTextNode(' (' + p.tool.key + ').'));
     pane.appendChild(e);
-    if (!p.notices || !p.notices.length) return;
-    // what the local agents did while you were elsewhere: newest first, a click opens it
-    pane.appendChild(el('div', 'section', 'Notifications'));
-    for (const n of p.notices) {
-      const row = el('div', 'notice' + (n.read ? '' : ' unread') + ' ' + n.level);
-      row.appendChild(el('b', '', n.title));
-      row.appendChild(el('small', '', n.text + ' · ' + new Date(n.at).toLocaleTimeString()));
-      row.addEventListener('click', () => vscode.postMessage({ type: 'notice', notice: n.id }));
-      pane.appendChild(row);
-    }
   }
 
   window.addEventListener('message', (ev) => {
     const m = ev.data;
     if (m.type === 'state') { state = m; renderStrip(); renderPane(); }
     if (m.type === 'entries') { loaded[m.dir] = m.entries; renderTree(); }
-    if (m.type === 'refreshDir') { if (m.dir in loaded) { delete loaded[m.dir]; renderTree(); } }
+    if (m.type === 'refreshDirs') { let any = false; for (const d of m.dirs) if (d in loaded) { delete loaded[d]; any = true; } if (any) renderTree(); }
+    if (m.type === 'reveal') reveal(m.parts);
+    if (m.type === 'builderSidebar' && state.pane.kind === 'builder') { state.pane.sidebar = m.sidebar; drawBuilder(m.sidebar); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('#btree .row')) { e.preventDefault(); e.target.click(); }
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target.closest?.('#btree .row')) { e.preventDefault(); const all = [...document.querySelectorAll('#btree .row')], i = all.indexOf(e.target); all[i + (e.key === 'ArrowDown' ? 1 : -1)]?.focus(); }
   });
 </script>
 </body>
@@ -1047,19 +1363,19 @@ function stripHtml(webview: vscode.Webview): string {
 
 // ---------------------------------------------------------------- welcome and tool pages
 
-const SHORTCUTS: [string, string][] = [
-  ['Ctrl+Alt+N', 'show the Nuclear workspace (the strip and the pane)'],
-  ['Ctrl+1 … Ctrl+9', 'the first to the ninth project tab'],
-  ['Ctrl+Alt+O', 'open a project as a new tab'],
-  ...TOOLS.map((t): [string, string] => [t.key, t.label.toLowerCase()]),
-  ['Ctrl+Alt+R / G / L', 'run, debug, hot reload the active project (what its platform has)'],
-  ['Ctrl+Alt+B / T / C', 'build, test, check the active project'],
-  ['Ctrl+Alt+W', 'this page'],
+const shortcuts = (w: Record<keyof typeof WELCOME_TEXTS.en, string>): [string, string][] => [
+  ['Ctrl+Alt+N', w.scWorkspace],
+  ['Ctrl+1 … Ctrl+9', w.scTabs],
+  ['Ctrl+Alt+O', w.scOpen],
+  ...tools().map((t): [string, string] => [t.key, t.label]),
+  ['Ctrl+Alt+R / G / L', w.scRun],
+  ['Ctrl+Alt+B / T / C', w.scBuild],
+  ['Ctrl+Alt+W', w.scPage],
 ];
 
 function page(webview: vscode.Webview, title: string, body: string, nonce: string): string {
   return /* html */ `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang()}">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
@@ -1096,15 +1412,17 @@ class WelcomePanel {
   private readonly listener: vscode.Disposable;
 
   private constructor(private readonly context: vscode.ExtensionContext, private readonly ws: Workspace) {
-    this.panel = vscode.window.createWebviewPanel('nuclear.welcome', 'Nuclear workspace', vscode.ViewColumn.One, {
+    this.panel = vscode.window.createWebviewPanel('nuclear.welcome', l10n.t('Nuclear workspace'), vscode.ViewColumn.One, {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'icons')],
     });
     this.panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
     this.listener = ws.onDidChange.event(() => this.render());
+    const relang = onDidChangeLang(() => this.render());
     this.panel.onDidDispose(() => {
       WelcomePanel.current = undefined;
       this.listener.dispose();
+      relang.dispose();
     });
     this.panel.webview.onDidReceiveMessage((m: { type: string; root?: string; on?: boolean }) => {
       if (m.type === 'project' && m.root) void ws.go(m.root);
@@ -1121,6 +1439,7 @@ class WelcomePanel {
 
   private render(): void {
     const nonce = Math.random().toString(36).slice(2);
+    const w = texts(WELCOME_TEXTS);
     const logo = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'icons', 'icon.svg'));
     const active = this.ws.activeKey();
     const projects = this.ws.projects();
@@ -1133,32 +1452,28 @@ class WelcomePanel {
 </div>`,
           )
           .join('')
-      : '<p class="muted">No Nuclear project in this window yet: open one below, or a folder with a <code>config.nuc</code>.</p>';
+      : `<p class="muted">${w.noProjects}</p>`;
     const body = `
-<h1><img src="${logo}" alt=""> Nuclear workspace</h1>
-<p class="lead">Everything of Nuclear meets in one place: the <b>Nuclear</b> container of the activity bar (<kbd>Ctrl+Alt+N</kbd>).</p>
-<p>Every tab of its strip is a workspace of its own: a <b>project</b> (its files, and the actions of its platform: run,
-debug, hot reload, device, build, test, check) or a <b>tool</b> (the HTTP client with its endpoints tree, the devices, …).
-Switching tabs swaps the editor area; only the devices stay beside the code, like emulators. Opening a project adds a
-tab, not a window. VS Code's explorer, search and git stay as they are; <i>Nuclear: Add the Active Project to the VS Code
-Workspace</i> adds a tab's folder when you want them.</p>
-<h2>Projects</h2>
+<h1><img src="${logo}" alt=""> ${w.title}</h1>
+<p class="lead">${w.lead}</p>
+<p>${w.intro}</p>
+<h2>${w.projects}</h2>
 ${list}
-<p><button id="open">Open a project as a tab…</button> <span class="muted">Ctrl+Alt+O</span></p>
-<h2>Keyboard first</h2>
-<table>${SHORTCUTS.map(([k, w]) => `<tr><td><kbd>${k}</kbd></td><td>${w}</td></tr>`).join('')}</table>
-<p class="muted">Clicking a tab or an action shows the shortcut that does the same; the bindings can be changed in <i>Keyboard Shortcuts</i> (search "nuclear").</p>
-<h2>Tools</h2>
-<table>${TOOLS.map((t) => `<tr><td><kbd>${t.key}</kbd></td><td><b>${esc(t.label)}</b>${t.planned.length ? ' <span class="muted">(template)</span>' : ''}<br><span class="muted">${esc(t.about)}</span></td></tr>`).join('')}</table>
-<h2>Startup</h2>
-<label><input type="checkbox" id="startup" ${vscode.workspace.getConfiguration().get<boolean>(WELCOME, true) ? 'checked' : ''}> Show this page when VS Code starts with no editor open (<code>nuclear.workspace.welcome</code>)</label>
+<p><button id="open">${w.openTab}</button> <span class="muted">Ctrl+Alt+O</span></p>
+<h2>${w.keyboard}</h2>
+<table>${shortcuts(w).map(([k, d]) => `<tr><td><kbd>${k}</kbd></td><td>${esc(d)}</td></tr>`).join('')}</table>
+<p class="muted">${w.keyboardNote}</p>
+<h2>${w.tools}</h2>
+<table>${tools().map((t) => `<tr><td><kbd>${t.key}</kbd></td><td><b>${esc(t.label)}</b>${t.planned.length ? ` <span class="muted">${w.templateTag}</span>` : ''}<br><span class="muted">${esc(t.about)}</span></td></tr>`).join('')}</table>
+<h2>${w.startup}</h2>
+<label><input type="checkbox" id="startup" ${vscode.workspace.getConfiguration().get<boolean>(WELCOME, true) ? 'checked' : ''}> ${w.startupLabel}</label>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   document.querySelectorAll('.project').forEach((p) => p.addEventListener('click', () => vscode.postMessage({ type: 'project', root: p.dataset.root })));
   document.getElementById('open').addEventListener('click', () => vscode.postMessage({ type: 'open' }));
   document.getElementById('startup').addEventListener('change', (ev) => vscode.postMessage({ type: 'startup', on: ev.target.checked }));
 </script>`;
-    this.panel.webview.html = page(this.panel.webview, 'Nuclear workspace', body, nonce);
+    this.panel.webview.html = page(this.panel.webview, w.title, body, nonce);
   }
 }
 
@@ -1175,28 +1490,34 @@ class ToolPanel {
     const panel = vscode.window.createWebviewPanel(`nuclear.tool.${tool.id}`, tool.label, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
     panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
     ToolPanel.open.set(tool.id, panel);
-    panel.onDidDispose(() => ToolPanel.open.delete(tool.id));
     panel.webview.onDidReceiveMessage((m: { type: string }) => {
       if (m.type === 'settings') void vscode.commands.executeCommand('workbench.action.openSettings', '@ext:nuclearlang.nuclearlang');
     });
+    const localized = localize(panel.webview, () => ToolPanel.html(panel.webview, tools().find((t) => t.id === tool.id) ?? tool));
+    panel.onDidDispose(() => (ToolPanel.open.delete(tool.id), localized.dispose()));
+  }
+
+  private static html(webview: vscode.Webview, tool: Tool): string {
     const nonce = Math.random().toString(36).slice(2);
+    const w = texts(WELCOME_TEXTS);
     const body = `
 <h1>${esc(tool.label)}</h1>
 <p class="lead">${esc(tool.about)}</p>
-<p class="muted">Shortcut <kbd>${tool.key}</kbd> · the strip of the Nuclear workspace (<kbd>Ctrl+Alt+N</kbd>), at the bottom.</p>
+<p class="muted">${w.toolShortcut.replace('{0}', tool.key)}</p>
 <div class="template">
-  <p><b>This tool is a template.</b> The window layout is in place; what it will do:</p>
+  <p>${w.toolTemplate}</p>
   <ul>${tool.planned.map((p) => `<li>${esc(p).replace(/`([^`]+)`/g, '<code>$1</code>')}</li>`).join('')}</ul>
-  ${tool.id === 'settings' ? '<p><button id="settings">Open the extension settings for now</button></p>' : ''}
+  ${tool.id === 'settings' ? `<p><button id="settings">${w.openSettings}</button></p>` : ''}
 </div>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   document.getElementById('settings')?.addEventListener('click', () => vscode.postMessage({ type: 'settings' }));
 </script>`;
-    panel.webview.html = page(panel.webview, tool.label, body, nonce);
+    return page(webview, tool.label, body, nonce);
   }
 }
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+

@@ -23,6 +23,11 @@ commands, its devices) is in that platform's roadmap.
 
 ## Pending
 
+- **Flutter 3.50 deprecates `package:flutter/material.dart`** for `package:material_ui/material_ui.dart` (seen on a new
+  machine where `nuclear setup` downloaded 3.50, 2026-11-18): the generated app still builds, `flutter analyze` says
+  `info • deprecated_member_use`. The type definitions are of Flutter 3.47; the `flutter` dialect's imports and
+  definitions move when the new package is stable.
+
 - **`hide Page` is written on the wrong import.** It is written on `package:flutter/foundation.dart`: 5
   `flutter analyze` warnings in the example `clean-flutter-project`
   (`nuclear-synapsis-framework/platforms/mobile/examples/examples-flutter-dialect/`); the output did not change

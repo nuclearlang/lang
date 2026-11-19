@@ -3,7 +3,7 @@
 // request the project has; the graph's strategy rows say which kind of request it is, by its exact signs first; the
 // strategy says which stages run, where the pieces come from and which facts it cannot start without. A model is
 // asked for one thing only, the resources a request in plain words describes, and the generator's dry run accepts or
-// refuses each. Prompt: agents/analyze.md.
+// refuses each. Prompt: `agent.analyze`.
 @state(PieceState)
 graph Analyst(bench: Workbench, toolchain: Toolchain)
   @start

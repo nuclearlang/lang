@@ -1,12 +1,12 @@
 # Nuclear Developer — evaluation
 
-Local model: qwen2.5-coder:3b (coder) + the Nuclear Smart Graph. Reference: Claude sonnet. References cost USD 0.89; the local run took 348.8 s on CPU.
+Local model: qwen2.5-coder:3b (coder) + the Nuclear Smart Graph. Reference: Claude sonnet. References cost USD 0.89; the local run took 305.1 s on CPU.
 
 | split | tasks | Sonnet passes | local passes | equivalent (both pass) |
 |---|---|---|---|---|
-| train | 27 | 22 | 27 | 22 |
-| test | 18 | 17 | 16 | 15 |
-| all | 45 | 39 | 43 | 37 |
+| train | 27 | 22 | 26 | 22 |
+| test | 18 | 17 | 15 | 14 |
+| all | 45 | 39 | 41 | 36 |
 
 ## Rounds (test split: local passes / Sonnet passes)
 
@@ -31,6 +31,7 @@ Local model: qwen2.5-coder:3b (coder) + the Nuclear Smart Graph. Reference: Clau
 - round 21: 14 / 17 (all: 39 / 39)
 - round 22: 16 / 17 (all: 43 / 39)
 - round 23: 16 / 17 (all: 43 / 39)
+- round 24: 15 / 17 (all: 41 / 39)
 
 ## Tasks
 
@@ -59,7 +60,7 @@ Local model: qwen2.5-coder:3b (coder) + the Nuclear Smart Graph. Reference: Clau
 | tools-loans | test | ✓ | ✓ | 1 |  |
 | agent-librarian | train | ✓ | ✓ | 1 |  |
 | agent-loans | test | ✓ | ✓ | 1 |  |
-| graph-summary | train | ✗ | ✓ | 1 |  |
+| graph-summary | train | ✗ | ✗ | 1 | question: string |
 | graph-two-steps | test | ✗ | ✓ | 1 |  |
 | tests-create-book | train | ✓ | ✓ | 1 |  |
 | tests-missing-book | test | ✓ | ✓ | 1 |  |
@@ -76,8 +77,8 @@ Local model: qwen2.5-coder:3b (coder) + the Nuclear Smart Graph. Reference: Clau
 | web-repository | train | ✓ | ✓ | 1 |  |
 | web-tile | test | ✓ | ✓ | 1 |  |
 | web-service | train | ✓ | ✓ | 1 |  |
-| web-manager | test | ✓ | ✓ | 1 |  |
+| web-manager | test | ✓ | ✗ | 1 | @state(BooksState.loaded) |
 | web-appcomponent | train | ✓ | ✓ | 1 |  |
 | feature-books-by-author | train | ✓ | ✓ | 5 |  |
-| feature-new-reader | test | ✓ | ✗ | 13 | components/readers/data/entities/reader.nuc:9:3 N0102 'email' is declared twice in 'Reader'; each member is declared onc |
+| feature-new-reader | test | ✓ | ✗ | 17 | unique = true |
 | feature-books-list-app | test | ✓ | ✓ | 6 |  |

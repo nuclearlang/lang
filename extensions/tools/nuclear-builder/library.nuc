@@ -1,0 +1,275 @@
+use os
+use re
+use pathlib{ Path }
+
+// The library of skills and agents (spec 011 requirement 34): `nuclear-agents/skills/<id>/SKILL.md` (a skill an
+// agent follows, Claude Code's format: front matter `name`, `description`, `title`, `title_es`, `description_es`,
+// `kind`, `tags`) and `nuclear-agents/agents/<id>/agent.md` (an agent a member takes as their base: `role`, `skills`).
+// Only read here. A team and a member attach library skills by id (`skills`) and keep their own (`ownSkills`, cloned or
+// written by the user); a member's own skill wins over the team's, the team's over the library's (`sharedSkills`).
+
+SKILL_KINDS = ["domain", "technology", "practice"]
+
+// The longest markdown an own skill may hold.
+SKILL_MAX_CHARS = 40_000
+
+// The folder that holds `skills/` and `agents/`: `NUCLEAR_LIBRARY`, else the one beside the roles' folder
+// (`nuclear-agents/`). Null when there is none.
+libraryDir(env: <string, string>? = null) Path?
+  e = env ?? dict(os.environ)
+  given = e["NUCLEAR_LIBRARY"] ?? ""
+  if given.length > 0
+    return Path(given).isDir() ? Path(given) : null
+  roles = rolesDir(e)
+  if roles == null or not roles!.parent.joinpath("skills").isDir()
+    return null
+  roles!.parent
+
+// A skill's id from a name: lowercase letters, digits and dashes.
+skillSlug(text: string) string
+  whole = text.lower().replaceAll(Regex(r"[^a-z0-9]+"), "-")
+  cut = whole.substring(0, Math.min(64, whole.length))
+  while cut.startsWith("-")
+    cut = cut.substring(1)
+  while cut.endsWith("-")
+    cut = cut.substring(0, cut.length - 1)
+  cut
+
+validSkillId(id: string) boolean
+  re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", id) != null
+
+// A front matter's field in `lang`: `<key>_<lang>` when there is one, else the English `<key>`.
+localizedField(head: <string, any>, key: string, lang: string) string
+  own = lang == "en" ? "" : "${head["${key}_${lang}"] ?? ""}"
+  own.isEmpty ? "${head[key] ?? ""}" : own
+
+// A markdown file of the library as an entry: its id, title and description in `lang`, its front matter's other
+// fields, and the whole file (`markdown`).
+libraryEntry(id: string, text: string, lang: string) <string, any>
+  head = frontMatter(text)
+  words = id.replaceAll("-", " ")
+  title = localizedField(head, "title", lang)
+  tags: any = head["tags"] ?? ([] as string[])
+  entry: <string, any> = { "id": id, "title": title.isEmpty ? words.substring(0, 1).upper() + words.substring(1) : title, "description": localizedField(head, "description", lang), "kind": "${head["kind"] ?? ""}", "tags": isinstance(tags, list) ? tags : ([] as string[]), "from": "library", "markdown": text }
+  if head["role"] != null
+    entry["role"] = "${head["role"]}"
+    skills: any = head["skills"] ?? ([] as string[])
+    entry["skills"] = isinstance(skills, list) ? skills : ([] as string[])
+  entry
+
+// The entries of one folder of the library (`skills` with `SKILL.md`, `agents` with `agent.md`), by id.
+libraryFolder(folder: string, file: string, lang: string, dir: Path?) <string, any>[]
+  at = dir ?? libraryDir()
+  if at == null or not at!.joinpath(folder).isDir()
+    return []
+  found: <string, any>[] = []
+  for one in at!.joinpath(folder).iterdir().sorted()
+    md = one.joinpath(file)
+    if one.isDir() and validSkillId(one.name) and md.isFile()
+      found.add(libraryEntry(one.name, md.readText(encoding = "utf-8"), lang))
+  found
+
+// Every skill of the library in `lang` (with its markdown).
+librarySkills(lang: string = "en", dir: Path? = null) <string, any>[]
+  libraryFolder("skills", "SKILL.md", lang, dir)
+
+// Every agent of the library in `lang` (with its markdown, its role and its skills).
+libraryAgents(lang: string = "en", dir: Path? = null) <string, any>[]
+  libraryFolder("agents", "agent.md", lang, dir)
+
+librarySkill(id: string, lang: string = "en", dir: Path? = null) <string, any>?
+  at = dir ?? libraryDir()
+  file = at == null or not validSkillId(id) ? null : at!.joinpath("skills", id, "SKILL.md")
+  file == null or not file!.isFile() ? null : libraryEntry(id, file!.readText(encoding = "utf-8"), lang)
+
+libraryAgent(id: string, lang: string = "en", dir: Path? = null) <string, any>?
+  at = dir ?? libraryDir()
+  file = at == null or not validSkillId(id) ? null : at!.joinpath("agents", id, "agent.md")
+  file == null or not file!.isFile() ? null : libraryEntry(id, file!.readText(encoding = "utf-8"), lang)
+
+// ---------- a team's and a member's own skills ----------
+
+// An own skill as it is kept: `{ id, name, description, text, from?, title_es?, description_es?, kind?, tags? }`
+// (`name` is its title in words, `text` its markdown body, `from` where it was cloned from: `library:<id>`,
+// `team:<id>`, `role:<id>`). Throws ValueError with what is wrong.
+validOwnSkill(raw: any, who: string) <string, any>
+  if not isinstance(raw, dict)
+    throw ValueError("${who}: an own skill is { id, name, description, text }")
+  s: <string, any> = raw
+  for field in ["name", "text"]
+    if not isinstance(s[field], str) or "${s[field]}".trim().isEmpty
+      throw ValueError("${who}: an own skill needs its ${field}")
+  id = s["id"] ?? skillSlug("${s["name"]}")
+  if not isinstance(id, str) or not validSkillId(id)
+    throw ValueError("${who}: the skill id `${id}` is not valid: lowercase letters, digits and dashes")
+  if "${s["text"]}".length > SKILL_MAX_CHARS
+    throw ValueError("${who}: the skill ${id} is longer than ${SKILL_MAX_CHARS} characters")
+  kept: <string, any> = { "id": id, "name": "${s["name"]}".trim(), "description": "${s["description"] ?? ""}".trim(), "text": "${s["text"]}".trim() + "\n" }
+  for field in ["from", "title_es", "description_es", "kind"]
+    if s[field] != null and not isinstance(s[field], str)
+      throw ValueError("${who}: the skill ${id}'s ${field} must be a text")
+    if s[field] != null and not "${s[field]}".isEmpty
+      kept[field] = s[field]
+  tags = s["tags"]
+  if tags != null and (not isinstance(tags, list) or not (tags as any[]).all((x) => isinstance(x, str)))
+    throw ValueError("${who}: the skill ${id}'s tags must be a list of texts")
+  if tags != null and not (tags as any[]).isEmpty
+    kept["tags"] = tags
+  kept
+
+// A list of own skills, each id once.
+validOwnSkills(raw: any, who: string) <string, any>[]
+  if raw == null
+    return []
+  if not isinstance(raw, list)
+    throw ValueError("${who}: ownSkills must be a list of { id, name, description, text }")
+  found: <string, any>[] = []
+  for one in raw as any[]
+    s = validOwnSkill(one, who)
+    if found.any((x) => x["id"] == s["id"])
+      throw ValueError("${who}: two own skills have the id `${s["id"]}`")
+    found.add(s)
+  found
+
+// An own skill as a `SKILL.md` (Claude Code's format, the library's fields).
+ownSkillMarkdown(s: <string, any>) string
+  lines = ["---", "name: ${s["id"]}", "description: ${"${s["description"] ?? ""}".replaceAll("\n", " ")}", "title: ${s["name"]}"]
+  for field in ["title_es", "description_es", "kind"]
+    if s[field] != null
+      lines.add("${field}: ${"${s[field]}".replaceAll("\n", " ")}")
+  if s["tags"] != null
+    lines.add("tags: [${(s["tags"] as string[]).join(", ")}]")
+  if s["from"] != null
+    lines.add("from: ${s["from"]}")
+  "${lines.join("\n")}\n---\n\n${"${s["text"]}".trim()}\n"
+
+// An own skill from a `SKILL.md` (its front matter: `name` the id, `title`, `description`, the Spanish fields, `kind`,
+// `tags`); `id` is the one it must keep (an update), else the front matter's `name`, else the title's slug.
+ownSkillOf(markdown: string, id: string? = null, source: string? = null) <string, any>
+  head = frontMatter(markdown.replace("\r\n", "\n"))
+  named = "${head["name"] ?? ""}".trim()
+  title = "${head["title"] ?? ""}".trim()
+  raw: <string, any> = { "id": id ?? (named.isEmpty ? skillSlug(title) : named), "name": title.isEmpty ? named.replaceAll("-", " ") : title, "description": head["description"] ?? "", "text": head["body"] }
+  for field in ["title_es", "description_es", "kind", "tags"]
+    if head[field] != null
+      raw[field] = head[field]
+  if source != null or head["from"] != null
+    raw["from"] = source ?? head["from"]
+  validOwnSkill(raw, "the skill")
+
+// An own skill as the lists show it: its id, title and description in `lang`, where it lives, its markdown.
+ownEntry(s: <string, any>, scope: string, lang: string) <string, any>
+  es = lang == "es"
+  title = es and s["title_es"] != null ? "${s["title_es"]}" : "${s["name"]}"
+  said = es and s["description_es"] != null ? "${s["description_es"]}" : "${s["description"] ?? ""}"
+  { "id": s["id"], "title": title, "description": said, "kind": s["kind"] ?? "", "tags": s["tags"] ?? ([] as string[]), "from": scope, "clonedFrom": s["from"], "markdown": ownSkillMarkdown(s) }
+
+// ---------- an old team's free words ----------
+
+// The library skill a word of an old team means (its id, title in either language or a tag), or null.
+skillForWord(word: string, library: <string, any>[]) string?
+  w = word.trim().lower()
+  slug = skillSlug(word)
+  for s in library
+    head = frontMatter("${s["markdown"]}")
+    tags: string[] = isinstance(head["tags"], list) ? head["tags"] as string[] : ([] as string[])
+    if s["id"] == slug or "${head["title"] ?? ""}".lower() == w or "${head["title_es"] ?? ""}".lower() == w or tags.any((t) => t.lower() == w)
+      return "${s["id"]}"
+  null
+
+// An old team's `skills` (free words, before the library) as library ids: a word that names a skill becomes its id,
+// the rest is kept in the purpose (`Skills: …`) so nothing is lost. Nothing changes without a library, or when every
+// skill is already an id of the library or of the team's own skills.
+upgradeTeamSkills(t: <string, any>, dir: Path? = null) <string, any>
+  words: string[] = isinstance(t["skills"], list) ? t["skills"] as string[] : ([] as string[])
+  library = librarySkills("en", dir)
+  if library.isEmpty or words.isEmpty
+    return t
+  own: string[] = isinstance(t["ownSkills"], list) ? (t["ownSkills"] as <string, any>[]).map((s) => "${isinstance(s, dict) ? s["id"] ?? "" : ""}") : ([] as string[])
+  ids: string[] = library.map((s) => "${s["id"]}")
+  if words.all((w) => w in ids or w in own)
+    return t
+  kept: string[] = []
+  left: string[] = []
+  for w in words
+    found = w in ids or w in own ? w : skillForWord(w, library)
+    if found == null
+      left.add(w)
+    else if not (found! in kept)
+      kept.add(found!)
+  out: <string, any> = dict(t)
+  out["skills"] = kept
+  if not left.isEmpty
+    purpose = "${t["purpose"] ?? ""}".trim()
+    out["purpose"] = "${purpose}${purpose.isEmpty ? "" : "\n\n"}Skills: ${left.join(", ")}"
+  out
+
+// The words a team's skills stand for, for the suggestions: each library skill's title and tags, a word that is no
+// skill as it is.
+skillWords(skills: string[], dir: Path? = null) string[]
+  out: string[] = []
+  for id in skills
+    found = librarySkill(id, "en", dir)
+    if found == null
+      out.add(id)
+    else
+      out.add("${found!["title"]}")
+      out.addAll(found!["tags"] as string[])
+  out
+
+// ---------- what an agent gets ----------
+
+ownById(given: any, id: string) <string, any>?
+  isinstance(given, list) ? (given as <string, any>[]).find((s) => s["id"] == id) : null
+
+// The skills a member gets beside its role's (spec 011 requirement 34): the team's (its library skills, its own), the
+// base agent's, the member's (its library skills, its own), each id once, in that order. Each `{ id, markdown, from,
+// overrides }`: a member's own skill wins over the team's, the team's over the library's (`overrides` says which it
+// replaced). A member's `skills` that are its role's are the role's (composeRole), not these.
+sharedSkills(team: <string, any>, member: <string, any>, dir: Path? = null) <string, any>[]
+  at = dir ?? libraryDir()
+  ids: string[] = []
+  add = (given: any) =>
+    if isinstance(given, list)
+      for x in given as any[]
+        id = isinstance(x, dict) ? "${(x as <string, any>)["id"] ?? ""}" : "${x}"
+        if not id.isEmpty and not (id in ids)
+          ids.add(id)
+  add(team["skills"])
+  add(team["ownSkills"])
+  agent = isinstance(member["agent"], str) ? libraryAgent("${member["agent"]}", "en", at) : null
+  if agent != null
+    add(agent!["skills"])
+  add(member["skills"])
+  add(member["ownSkills"])
+  out: <string, any>[] = []
+  for id in ids
+    mine = ownById(member["ownSkills"], id)
+    teams = ownById(team["ownSkills"], id)
+    lib = librarySkill(id, "en", at)
+    overrides: string[] = []
+    if mine != null
+      if teams != null
+        overrides.add("team")
+      if lib != null
+        overrides.add("library")
+      out.add({ "id": id, "markdown": ownSkillMarkdown(mine!), "from": "member", "overrides": overrides })
+    else if teams != null
+      if lib != null
+        overrides.add("library")
+      out.add({ "id": id, "markdown": ownSkillMarkdown(teams!), "from": "team", "overrides": overrides })
+    else if lib != null
+      out.add({ "id": id, "markdown": "${lib!["markdown"]}", "from": "library", "overrides": overrides })
+  out
+
+// A member as a run gives it to its provider: its shared skills (`sharedSkills`) and, with a base agent, the agent's
+// text before the member's own instructions.
+withSkills(team: <string, any>, member: <string, any>, dir: Path? = null) <string, any>
+  out: <string, any> = dict(member)
+  out["sharedSkills"] = sharedSkills(team, member, dir)
+  agent = isinstance(member["agent"], str) ? libraryAgent("${member["agent"]}", "en", dir) : null
+  if agent != null
+    own = "${member["instructions"] ?? ""}".trim()
+    base = "${frontMatter("${agent!["markdown"]}")["body"]}".trim()
+    out["instructions"] = own.isEmpty ? base : "${base}\n\n${own}"
+  out

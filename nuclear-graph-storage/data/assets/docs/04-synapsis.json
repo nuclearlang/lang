@@ -1048,7 +1048,7 @@
    "body": [
     "| File | Written by | Holds |",
     "|---|---|---|",
-    "| `.nuclear/contract.json` | every build and check of any project (`project::write_metadata`) | the models (fields, Nuclear types, optionality, defaults, JSON names, rules, the key, doc comments); a backend's controllers and routes; an app's repositories and calls |",
+    "| `.nuclear/contract.json` | every build and check of any project (`project::write_metadata`) | the models (fields, Nuclear types, optionality, defaults, JSON names, rules, the key, doc comments); a backend's controllers and routes, with the transports that serve them, its guards, its WebSocket's path and the events it publishes (`transports`, `guards`, `webSocket`, `events`: ADR-synapsis-0007, ADR-synapsis-0008); an app's repositories and calls |",
     "| `.nuclear/openapi.json` | a backend's build | OpenAPI 3.1 made from the contract, for clients that are not Nuclear |",
     "| `contracts/<name>/` in the client | the client's build, before it reads the sources | a model per model the routes carry, `<Name>Error`, a repository per controller with a method per route |",
     "| `contracts/<name>/contract.json` in the client | the same step (`contract::install`); for a url contract, `nuclear contracts update` | the local copy of the contract. For a url contract it is what a build reads: it is committed, so a build never needs the network |",
@@ -1225,6 +1225,37 @@
     "How a dialect declares its plugins: [projects.md §3.3](../../../nuclearlang/docs/07-reference/projects.md). Why: ADR-synapsis-0004.",
     "",
     "The native kinds of each platform, and how to write your own kind without touching the compiler: [Kinds](kinds.md)."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#real-time-guards-and-a-host-page-configuration",
+   "type": "readme",
+   "title": "Synapsis: three platforms, one code per platform — Real time, guards and a host page: configuration",
+   "summary": "Real time is configured, not written (ADR-synapsis-0008).",
+   "body": [
+    "Real time is configured, not written (ADR-synapsis-0008). A backend with `WebSocketServer(path = \"ws\")` in its",
+    "connections (plugin `websocket`) serves its same controllers over a WebSocket, and `~publish(\"topic\", value)` reaches",
+    "the clients subscribed to the topic. A web app with `WebSocket(url = \"ws://localhost:8000/ws\")` instead of `Http(...)`",
+    "sends its repositories' calls over it, unchanged; a repository method `@on(\"topic\")` that returns `Stream<T>` is what",
+    "the server pushes, and a state manager follows it with `listen(stream, (value) => ...)`.",
+    "",
+    "A backend's `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]` checks the headers of every request, over",
+    "both transports; `@controller(\"x\", guards = [...])` adds a controller's own (ADR-synapsis-0007). A web app also builds",
+    "as a bundle that mounts in another page, `mount(element, { bridge, path })`, in a shadow root with the host's CSS",
+    "variables, and sends its calls through the host's bridge (ADR-synapsis-0009).",
+    "",
+    "```sh",
+    "nuclear new chat_api -p backend --websocket --token CHAT_TOKEN   # the WebSocket and the guards in its config",
+    "nuclear new chat_ui -p web --websocket                           # a WebSocket connection instead of Http",
+    "```"
    ],
    "sources": [
     "nuclear-synapsis-framework/docs/08-guides/README.md"
@@ -1444,6 +1475,28 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#2-a-use-case.88357c",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command — 2. A use case",
+   "summary": "returns `Stream<T>` writes a use case that passes the stream on (`exec() Stream<T>`, no `~`), and its alias: nuclear gen usecase tasks WatchCreatedTasks --calls TaskRepository.created",
+   "body": [
+    "**A use case over a stream** (web, ADR-synapsis-0008): `--calls` over a repository method with `@on(\"topic\")` that",
+    "returns `Stream<T>` writes a use case that passes the stream on (`exec() Stream<T>`, no `~`), and its alias:",
+    "",
+    "```sh",
+    "nuclear gen usecase tasks WatchCreatedTasks --calls TaskRepository.created",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#2-a-use-case.b81e3d",
    "type": "guide",
    "title": "Generators: the standard code, written by a command — 2. A use case",
@@ -1590,7 +1643,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#generators-the-standard-code-written-by-a-command",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#generators-the-standard-code-written-by-a-command.12c528",
    "type": "guide",
    "title": "Generators: the standard code, written by a command",
    "summary": "Most of a feature is the same every time: a model, a repository, a use case per action, the facade's aliases, the routes or the screen, the tests.",
@@ -1600,7 +1653,10 @@
     "A person or an agent writes only what is particular to the app: a use case with rules of its own, the details of a",
     "view.",
     "",
-    "`nuclear make` is the other command that creates files: one nearly empty declaration of a kind, to fill in.",
+    "`nuclear make` is the other command that creates files: one nearly empty declaration of a kind, to fill in. On the",
+    "web: `nuclear make screen|statemanager|widget|component|guard|stateless|stateful|statemodel|repository|usecase|... <component>",
+    "<Name>` (a `statemanager` also writes its state model, `<Name without Manager>State`, when there is none; a screen",
+    "goes to its own folder, `--screen` picks another).",
     "`nuclear gen` writes code that is already done.",
     "",
     "| Command | What it writes |",
@@ -1608,10 +1664,23 @@
     "| `nuclear gen inspect` | nothing: what the project has (platform, dialect, components, every declaration by kind), as JSON |",
     "| `nuclear gen component <component>` | a component: its facade and its config |",
     "| `nuclear gen resource <component> <Name>` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or the screen (mobile, web), the tests |",
-    "| `nuclear gen usecase <component> <Name>` | a use case wired into its component: its alias in the facade and, on the backend, its route |",
-    "",
-    "Every command runs inside a project and takes `--dry-run`, which shows the files and writes nothing."
+    "| `nuclear gen usecase <component> <Name>` | a use case wired into its component: its alias in the facade and, on the backend, its route |"
    ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/generators.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/generators.md#generators-the-standard-code-written-by-a-command.2b4186",
+   "type": "guide",
+   "title": "Generators: the standard code, written by a command",
+   "summary": "Every command runs inside a project and takes `--dry-run`, which shows the files and writes nothing.",
+   "body": "Every command runs inside a project and takes `--dry-run`, which shows the files and writes nothing.",
    "sources": [
     "nuclear-synapsis-framework/docs/08-guides/generators.md"
    ],
@@ -2406,6 +2475,27 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.48cdac",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — 5. Check, test and run",
+   "summary": "inside the terminal, with mouse and keyboard (`?` shows the keys).",
+   "body": [
+    "inside the terminal, with mouse and keyboard (`?` shows the keys). See nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.",
+    "- **Synapsis device (VS Code):** choose \"Synapsis device\" in the device picker (it comes with the extension;",
+    "  the first time it asks for *Reload Window*) and the app runs inside VS Code, on an emulated iPhone, Pixel, iPad",
+    "  or desktop, with hot reload on save. It is Flutter web: native features (camera, files) are tested on a real",
+    "  device."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.8fd108",
    "type": "guide",
    "title": "Tutorial: a Flutter app from scratch with Synapsis — 5. Check, test and run",
@@ -2440,7 +2530,7 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.f421b0",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#5-check-test-and-run.aab6da",
    "type": "guide",
    "title": "Tutorial: a Flutter app from scratch with Synapsis — 5. Check, test and run",
    "summary": "highlights the `.nuc` line, and a Dart run-time error is marked on its `.nuc` line with a window beside it that explains it.",
@@ -2450,16 +2540,15 @@
     "  explains it. From the terminal: `nuclear explain < error.txt`. In VS Code, after a `.nuc` breakpoint, F10",
     "  advances one Nuclear line (not a Dart one), the mouse over a name shows its value and the *Nuclear Call Stack*",
     "  view gives the stack in Nuclear.",
+    "- **Where it is slow:** `nuclear run --monitor` runs the app with each Nuclear function and method measured; then",
+    "  `nuclear monitor` prints the hot spots (a slow call, async calls one after another in a loop, many connections,",
+    "  much memory) and the time of each function as a tree. In VS Code, *Nuclear: Open Monitor* draws that tree as an",
+    "  accordion of bars; a click on a name opens its `.nuc` at the line. Without `--monitor` nothing is measured.",
     "- **If something fails without errors in the `.nuc` files** (packages, stale generated code, a broken build),",
     "  the extensions run `nuclear repair` by themselves and relaunch the app; you can also run it by hand:",
     "  `nuclear repair`.",
     "- **Synapsis devices from the terminal:** `nuclear device` opens the app in a phone-shaped window, like an",
-    "  emulator (with another device name, another one: device 2, 3...), and `nuclear terminal-device` shows it",
-    "  inside the terminal, with mouse and keyboard (`?` shows the keys). See nuclearlang/dialects/dart/docs/07-reference/flutter.md §11.",
-    "- **Synapsis device (VS Code):** choose \"Synapsis device\" in the device picker (it comes with the extension;",
-    "  the first time it asks for *Reload Window*) and the app runs inside VS Code, on an emulated iPhone, Pixel, iPad",
-    "  or desktop, with hot reload on save. It is Flutter web: native features (camera, files) are tested on a real",
-    "  device."
+    "  emulator (with another device name, another one: device 2, 3...), and `nuclear terminal-device` shows it"
    ],
    "sources": [
     "nuclear-synapsis-framework/docs/08-guides/tutorial.md"

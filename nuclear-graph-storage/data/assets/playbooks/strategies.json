@@ -722,6 +722,108 @@
    }
   },
   {
+   "id": "strategy:prototype",
+   "type": "strategy",
+   "title": "Strategy: a visual prototype (a proof of concept, a mock-up, a demo with fixed data)",
+   "summary": "Screens that work and look finished, with fixed data and no backend: a component per area, a screen per view, the data from use cases that return fixed values. The architecture stays the real one, so a repository replaces the fixed data later without touching a screen.",
+   "body": [
+    "**The plan.**",
+    "",
+    "1. Learn first: `nuclear_start` (`nuclear help start`), the platform's topic (`nuclear_doc(\"mobile\")` or `\"web\"`), the dialect's sheet (`nuclear_brief`), `nuclear help layout --dialect <d>` and a validated example of the same platform (`nuclear_doc(\"example/widgets_tour\")`, `\"example/clean-flutter-project\"`, `\"example/characters\"`): copy their style.",
+    "2. The project: no `config.nuc` yet, `nuclear new <name> -p mobile|web` (`strategy:project`). It also writes the project's context documents: fill `docs/00-context/vision.md` and `docs/01-product/prd.md` with what the request says.",
+    "3. The areas: one component per area of the app (`nuclear make component <area>`); each view a screen with its route (`nuclear make screen <area> <screen> --route /<path>`); tabs or a bottom bar: the `shell` of `@screen` (`nuclear_doc(\"flutter\")`, the routing section).",
+    "4. The fixed data: a `model` per thing shown and a use case per list or detail that returns fixed values (`nuclear make usecase`), reached through the facade. No repository, no connection, no backend.",
+    "5. Each screen: state model, state manager, view, as `strategy:interface` says; a shared widget for what repeats (`nuclear make widget`); the look (colors, typography, spacing) in one place the screens share.",
+    "6. `nuclear check --json` after each file; `nuclear analyze`; open it on a device (`nuclear device`, `nuclear run`).",
+    "",
+    "**A model writes:** the models, the fixed use cases, the three pieces of each screen, the shared widgets.",
+    "",
+    "**Done when:** every screen opens and navigates, `nuclear check` is clean and `nuclear analyze` finds no error.",
+    "",
+    "**Stop and say it when:** the request needs real data or a backend (`strategy:system`, `strategy:resource-api`); the project is a backend (it has no screens); assets the request names (fonts, images) are not given (ask, or use the platform's defaults and say so)."
+   ],
+   "keys": [
+    "prototype"
+   ],
+   "asks": [
+    "a visual proof of concept of this app",
+    "un POC solo visual pero funcional",
+    "make a clickable prototype",
+    "un prototipo de la app con datos de ejemplo",
+    "a mock-up of the screens",
+    "una maqueta de la aplicacion",
+    "a demo with fake data"
+   ],
+   "platforms": [
+    "mobile",
+    "web"
+   ],
+   "links": [
+    {
+     "rel": "needs",
+     "to": "strategy:project"
+    },
+    {
+     "rel": "playbook",
+     "to": "playbook:add-a-screen"
+    },
+    {
+     "rel": "tool",
+     "to": "tool:nuclear.make"
+    },
+    {
+     "rel": "pitfall",
+     "to": "pitfall:state-model-shape"
+    },
+    {
+     "rel": "pitfall",
+     "to": "pitfall:state-manager-shape"
+    }
+   ],
+   "meta": {
+    "use_case": "feature",
+    "role": "developer",
+    "family": "create",
+    "scope": "system",
+    "triggers": [
+     "poc",
+     "prototype",
+     "prototipo",
+     "proof of concept",
+     "mock-up",
+     "mockup",
+     "maqueta",
+     "demo",
+     "visual",
+     "fake data",
+     "datos de ejemplo"
+    ]
+   },
+   "data": {
+    "signals": [
+     "\\b(poc|proof of concept|prueba de concepto|prototype|prototipo|mock-?up|maqueta|wireframe)\\b",
+     "\\b(solo|s[oó]lo|only|just)\\s+(visual|la parte visual|the ui|ui)\\b",
+     "\\b(fake|mock|dummy|sample|fixed)\\s+data\\b|\\bdatos\\s+(de ejemplo|falsos|quemados|fijos)\\b"
+    ],
+    "mode": "write",
+    "stages": [
+     "spec",
+     "generate",
+     "plan",
+     "test",
+     "code",
+     "verify",
+     "security",
+     "artifacts",
+     "deploy"
+    ],
+    "pieces": "plan",
+    "generators": [],
+    "needs": {},
+    "lead": "local"
+   }
+  },
+  {
    "id": "strategy:repository",
    "type": "strategy",
    "title": "Strategy: only a repository, or a query in one",
@@ -2410,6 +2512,107 @@
     "pieces": "declaring",
     "generators": [],
     "needs": {},
+    "lead": "local"
+   }
+  },
+  {
+   "id": "strategy:bug-slow",
+   "type": "strategy",
+   "title": "Strategy: it is slow, or it makes too many connections or uses too much memory",
+   "summary": "Measure before changing anything: `nuclear run --monitor` measures each Nuclear function and method, `nuclear monitor` names the hot spots on their `.nuc` lines. One repair per hot spot, then measure again.",
+   "body": [
+    "**The plan.**",
+    "",
+    "1. Measure: the app built and run with `nuclear run --monitor` (a program: `nuclear build --monitor`), the slow screen or route used a few times. Never guess the slow part.",
+    "2. `nuclear monitor --json` (MCP `project_monitor`, or `graph_monitor` to keep the hot spots in the graph): the hot spots first, each with its `.nuc` file and line and the callers it was reached from.",
+    "3. Read the flag: `slow` (its own time is a fifth or more of the call: the work inside it), `loop` (an async call repeated one after another in one call of its parent: start them together with `~awaitAll([...])`), `connections` (new connections per call: a client or a pool made per call), `memory` (memory grown per call: a list kept or copied).",
+    "4. One repair: the file and line of the worst hot spot. Never edit `build/`.",
+    "5. `nuclear test`; then measure again with the same use of the app: the hot spot is gone or smaller.",
+    "",
+    "**A model writes:** the one repair of the worst hot spot.",
+    "",
+    "**Done when:** the tests pass and the new report shows the hot spot gone or smaller.",
+    "",
+    "**Stop and say it when:** no report can be made (an app on a phone or in a browser tab cannot write it yet); the time is spent outside the Nuclear code (a slow database or service: `strategy:bug-environment`); the fix changes what the app does (ask)."
+   ],
+   "keys": [
+    "bug slow"
+   ],
+   "asks": [
+    "the app is slow",
+    "la app está lenta",
+    "this endpoint takes 3 seconds",
+    "este endpoint tarda mucho",
+    "where is the bottleneck",
+    "dónde está el cuello de botella",
+    "too many connections to the database",
+    "usa demasiada memoria"
+   ],
+   "links": [
+    {
+     "rel": "tool",
+     "to": "tool:nuclear.monitor"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:project_monitor"
+    },
+    {
+     "rel": "tool",
+     "to": "mcp:graph_monitor"
+    },
+    {
+     "rel": "playbook",
+     "to": "playbook:fix-a-bug"
+    },
+    {
+     "rel": "or",
+     "to": "strategy:bug-environment"
+    }
+   ],
+   "meta": {
+    "use_case": "bug",
+    "role": "developer",
+    "family": "fix",
+    "scope": "declaration",
+    "triggers": [
+     "slow",
+     "lento",
+     "lenta",
+     "tarda",
+     "bottleneck",
+     "cuello de botella",
+     "performance",
+     "rendimiento",
+     "latency",
+     "latencia",
+     "too many connections",
+     "memory leak",
+     "demasiada memoria"
+    ]
+   },
+   "data": {
+    "signals": [
+     "\\b(slow|slower|lento|lenta|tarda|latency|latencia)\\b",
+     "\\b(bottleneck|cuello de botella|performance|rendimiento)\\b",
+     "\\b(too many connections|demasiadas conexiones|memory leak|demasiada memoria|uses too much memory)\\b"
+    ],
+    "mode": "fix",
+    "stages": [
+     "spec",
+     "test",
+     "plan",
+     "code",
+     "verify",
+     "security",
+     "artifacts",
+     "deploy"
+    ],
+    "pieces": "declaring",
+    "needs": {
+     "where": "What is slow? The screen, the route or the command, and how it is used."
+    },
+    "generators": [],
     "lead": "local"
    }
   },

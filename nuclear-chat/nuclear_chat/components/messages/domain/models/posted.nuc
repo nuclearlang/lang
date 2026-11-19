@@ -1,0 +1,18 @@
+// What a host posts as a member (or as `system`): a run's station, a member's question with its buttons; with a
+// moment (failure, success, question) or a GIF's tag the member may send a GIF after it, by their personality.
+Posted
+  @minLength(1)
+  author: string
+  @maxLength(20000)
+  text: string = ""
+  thread?: string
+  buttons: Button[] = []
+  links: <string, string> = {}
+  @pattern(r"^(failure|success|question)$")
+  moment?: string
+  // a tag of the GIF pack the member asked for after this message (a responder's `done`), by their personality
+  @pattern(r"^[a-z][a-z-]{0,39}$")
+  gif?: string
+  // the member answers a GIF the user sent: the GIF is likelier
+  answersGif: boolean = false
+  costUsd?: double

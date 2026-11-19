@@ -1,0 +1,12 @@
+use httpx
+
+// The OpenRouter adapter: OpenAI's Chat Completions format at OpenRouter, which reports what each call cost
+// (`usage: { include: true }` → `usage.cost`): no price table is needed. Through the factory's loop.
+
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+askOpenRouter(key: string, model: string, system: string, turns: <string, any>[], tools: <string, any>[], client: httpx.Client) ModelTurn
+  askChat(OPENROUTER_URL, "openrouter", key, model, system, turns, tools, client, { "usage": { "include": true } })
+
+openRouterAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  apiLoop("openrouter", askOpenRouter, role, station, work, emit)

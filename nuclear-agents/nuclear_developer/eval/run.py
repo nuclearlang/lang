@@ -35,6 +35,7 @@ from nuclear_graph.toolchain import Toolchain, strip_fences
 
 HERE = Path(__file__).parent
 RESULTS = HERE / "results"
+ROLES = HERE.parents[1] / "roles"
 DEVELOPER = os.environ.get("NUCLEAR_DEVELOPER_URL", "http://127.0.0.1:7879")
 BUDGET_USD = 18.0  # the user approved up to USD 20 for the references
 REFERENCE_MODEL = "sonnet"
@@ -56,6 +57,11 @@ def features() -> list[dict]:
 
 def every_task() -> list[dict]:
     return tasks()[0] + features()
+
+
+def skill(path: str) -> str:
+    """A skill of the roles (`<role>/skills/<name>.md`) as the graph serves it: the text after its front matter."""
+    return (ROLES / path).read_text().split("\n---\n", 1)[1]
 
 
 FILE_HEADER = re.compile(r"^//\s*file:\s*(\S+\.nuc)\s*$", re.MULTILINE)
@@ -130,7 +136,7 @@ async def reference() -> None:
     all_tasks, snippets = tasks()
     refs = load("reference")
     spent = sum(r.get("cost", 0) for r in refs.values())
-    guide = (Path(__file__).parents[3] / "nuclear-graph-storage/prompts/piece.md").read_text()
+    guide = skill("developer/skills/write-a-piece.md")
     for t in all_tasks:
         if t["id"] in refs:
             continue
@@ -160,8 +166,7 @@ async def reference_features() -> None:
     """Sonnet writes every file of a feature in one answer, with one repair given the project's errors."""
     refs = load("reference")
     spent = sum(r.get("cost", 0) for r in refs.values())
-    root = Path(__file__).parents[3] / "nuclear-graph-storage/prompts"
-    guide = (root / "plan.md").read_text() + "\n\n" + (root / "piece.md").read_text()
+    guide = skill("architect/skills/plan-for-a-local-developer.md") + "\n\n" + skill("developer/skills/write-a-piece.md")
     for f in features():
         if f["id"] in refs or spent >= BUDGET_USD:
             continue

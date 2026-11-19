@@ -68,8 +68,9 @@ pub struct Kind {
     pub type_imports: bool,
     /// The only method names allowed (empty: any). Another method is error N0215.
     pub methods: Vec<String>,
-    /// Name of the type every method must return (`Result`). Another return type is error N0216.
-    pub returns: Option<String>,
+    /// The types every method must return one of (`returns = "Result"` or `["Result", "Stream"]`). Another return
+    /// type is error N0216.
+    pub returns: Vec<String>,
     /// Written once per file after the imports when the file declares this kind (`part '{{file}}.g.dart';`).
     pub file_header: Option<Template>,
     /// Function that gives the instance an alias calls (`inject` → `inject<Module>().method(...)`).
@@ -91,6 +92,8 @@ pub struct Kind {
     /// Every method has a body or is an alias (`find() = GetOne.exec`): a method without one is N0221 (an appcomponent
     /// is a facade; an empty method would do nothing).
     pub needs_body: bool,
+    /// Members of the class the kind extends that a declaration may not declare (`close` of a state manager): N0223.
+    pub sealed: Vec<String>,
 }
 
 /// One member of the standard library as a dialect writes it (`[library.list] add = "{{recv}}.push({{args}})"`).
@@ -332,6 +335,8 @@ pub struct Options {
     /// How a path parameter of a route is written in `decor.<decorator>.path` (`name` stands for the
     /// parameter): `"{name}"` (FastAPI, the platform's form) or `":name"` (NestJS, Express).
     pub route_param: String,
+    /// Named arguments whose list keeps each item's place: `if c x` in it is `list_if_slot` (React's `children`).
+    pub slot_lists: Vec<String>,
 }
 
 impl Default for Options {
@@ -372,6 +377,7 @@ impl Default for Options {
             doc_inside: false,
             snake_case_names: false,
             route_param: "{name}".into(),
+            slot_lists: Vec::new(),
         }
     }
 }
@@ -529,6 +535,9 @@ pub struct Dialect {
     /// `[skeletons]` of the platform: kind → the smallest file of the kind (`nuclear make`), with `{{Name}}`, `{{name}}`,
     /// `{{component}}`, `{{Component}}`, `{{table}}`.
     pub skeletons: BTreeMap<String, String>,
+    /// `[skeletons] screen = { place = "stateless", template = "..." }`: a skeleton whose file goes where another
+    /// kind's does (a screen is a view).
+    pub skeleton_places: BTreeMap<String, String>,
     /// `[[generators.<what>]]` of the platform (ADR-codegen-0001): the files `nuclear gen <what>` writes, in order, each a
     /// template over the resource (its names, fields, models, actions, source). The same for every dialect.
     pub generators: BTreeMap<String, Vec<GenPiece>>,
@@ -629,9 +638,16 @@ impl Dialect {
         self.keywords.get(word).is_some_and(|k| k.level == "reserved" || k.level == "strict")
     }
 
+    /// Is `word` a function of the target the dialect writes (Python's `sorted`, `len`), so a name of the program's
+    /// own scope with it would hide it?
+    pub fn is_shadowed(&self, word: &str) -> bool {
+        self.keywords.get(word).is_some_and(|k| k.level == "shadowed")
+    }
+
     /// Required `[syntax]` templates that are missing (empty for a complete target).
     pub fn missing_syntax(&self) -> Vec<&'static str> {
         const OPTIONAL: &[&str] = &[
+            "list_if_slot",
             "params_optional_group",
             "params_named_group",
             "main",
@@ -646,7 +662,18 @@ impl Dialect {
             "local_function",
             "doc_comment",
             "toplevel_const_decl",
+            "optional_chain",
+            "bound_param",
+            "default_init",
+            "map_compound",
+            "global_decl",
+            "show_double",
+            "show_nullable",
+            "show_bool",
+            "optional_cond",
             "project_import",
+            "monitor_body",
+            "monitor_runtime",
             "result_runtime",
             "result_ok",
             "result_err",
@@ -1303,11 +1330,21 @@ fn load_generators(d: &mut Dialect, file: Option<&Path>, report: &mut Report) {
             });
         }
     }
-    for (kind, text) in table.get("skeletons").and_then(|v| v.as_table()).into_iter().flatten() {
-        if !d.layout.contains_key(kind) {
+    for (kind, value) in table.get("skeletons").and_then(|v| v.as_table()).into_iter().flatten() {
+        let (text, place) = match value {
+            toml::Value::Table(t) => (
+                t.get("template").and_then(|v| v.as_str()).unwrap_or_default(),
+                t.get("place").and_then(|v| v.as_str()).unwrap_or(kind),
+            ),
+            other => (other.as_str().unwrap_or_default(), kind.as_str()),
+        };
+        if !d.layout.contains_key(place) {
             err(report, format!("{shown}: [skeletons] names '{kind}', which has no place in [layout]"));
         }
-        d.skeletons.insert(kind.clone(), text.as_str().unwrap_or_default().trim_start().to_string());
+        if place != kind {
+            d.skeleton_places.insert(kind.clone(), place.to_string());
+        }
+        d.skeletons.insert(kind.clone(), text.trim_start().to_string());
     }
 }
 
@@ -1903,6 +1940,7 @@ impl Layer<'_> {
             "results",
             "void_methods",
             "needs_body",
+            "sealed",
         ];
         for (k, v) in t {
             let Some(tb) = v.as_table() else { continue };
@@ -1966,7 +2004,11 @@ impl Layer<'_> {
                 async_methods: tb.get("async_methods").and_then(|x| x.as_bool()).unwrap_or(false),
                 type_imports: tb.get("type_imports").and_then(|x| x.as_bool()).unwrap_or(false),
                 methods: Self::string_list(tb.get("methods")),
-                returns: tb.get("returns").and_then(|x| x.as_str()).map(str::to_string),
+                returns: match tb.get("returns") {
+                    Some(toml::Value::String(s)) => vec![s.clone()],
+                    Some(toml::Value::Array(a)) => a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect(),
+                    _ => Vec::new(),
+                },
                 file_header: match tb.get("file_header") {
                     Some(fv) => self.template(file, &["kinds", k], "file_header", fv),
                     None => None,
@@ -1992,6 +2034,11 @@ impl Layer<'_> {
                 keep_results: tb.get("results").and_then(|x| x.as_str()) == Some("keep"),
                 void_methods: tb.get("void_methods").and_then(|x| x.as_bool()).unwrap_or(false),
                 needs_body: tb.get("needs_body").and_then(|x| x.as_bool()).unwrap_or(false),
+                sealed: tb
+                    .get("sealed")
+                    .and_then(|x| x.as_array())
+                    .map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect())
+                    .unwrap_or_default(),
             };
             if self.may_define(&self.d.kinds.clone(), "kinds", k, file) {
                 let origin = self.origin(file, &["kinds"], k);
@@ -2296,6 +2343,9 @@ fn parse_options(t: &toml::Table) -> Options {
     o.doc_inside = b("doc_inside", o.doc_inside);
     o.snake_case_names = b("snake_case_names", o.snake_case_names);
     o.route_param = s("route_param", &o.route_param);
+    if let Some(toml::Value::Array(a)) = t.get("slot_lists") {
+        o.slot_lists = a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect();
+    }
     o
 }
 

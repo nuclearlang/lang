@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-18
 related: [tools/cli/src/agent.rs, tools/cli/agent-files/, tools/cli/docs/03-adr/0002-agents-learn-nuclear-from-a-brief-a-skill-and-the-compiler.md]
 ---
 # What a project and a machine get for AI agents
@@ -14,6 +14,8 @@ Why it is built this way: [ADR-cli-0002](../03-adr/0002-agents-learn-nuclear-fro
 |---|---|---|
 | The brief: the short sheet of what changes from TypeScript / Dart / Python | `docs/07-reference/brief/` of the language, of each language dialect and of each platform | Written by hand; printed by `nuclear spec --brief` ([nuclear-command.md](nuclear-command.md)) |
 | The `nuclear` skill | `tools/cli/agent-files/skills/nuclear/SKILL.md` → `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` | [The installers](../../../../installer/AGENTS.md) (`--no-agent` skips it); the installation keeps it in `agents/skills/` |
+| The onboarding (`start`) and the atlas of every topic | `agent-files/start.md` and the topics of [nuclear-command.md](nuclear-command.md) | `nuclear help start`, `nuclear help atlas`; the MCP server's `nuclear_start` and `nuclear_doc` |
+| The project's context documents (`AGENTS.md`, `CLAUDE.md`, `docs/`) | the code generator's `context/` templates | `nuclear new` (`new_agent_files`), once: the user's from then on |
 | The project's `AGENTS.md` section and the Cursor rule | `tools/cli/agent-files/project/AGENTS.md`, `nuclear.mdc`, embedded in the binary | `nuclear agent init` |
 | The check hook | `.claude/settings.json` of the project | `nuclear agent init`; it runs `nuclear agent hook` |
 
@@ -22,6 +24,15 @@ The skill does not copy the brief: it asks the installed binary for it, so it is
 The skill, the project section and the Cursor rule all say that a product is made with the tools (`gen`, `make`,
 the MCP server, `add`), never by writing target code or translating native code by hand
 ([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md)).
+
+## What `nuclear new` writes for agents (`framework::new_agent_files`)
+
+First the context documents of the project (spec 016; [the code generator](../../../code_generator/docs/08-guides/context-docs.md)):
+`AGENTS.md`, `CLAUDE.md` and `docs/` in layers, filled with its name, platform, dialect, commands, folders and
+layout; a file that exists is kept. Then `agent::init` below, which appends the marked NuclearLang section to that
+`AGENTS.md`. The section tells an agent that nothing about Nuclear is in its training, to call the MCP server's
+`nuclear_start` first (`nuclear help start` without it), and that the project's own `docs/README.md` wins over the
+default way of documenting.
 
 ## `nuclear agent init [--dialect <d>]` (`agent::init`)
 

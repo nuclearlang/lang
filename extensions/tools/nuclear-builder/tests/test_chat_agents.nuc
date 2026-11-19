@@ -1,0 +1,94 @@
+use os
+use json
+use httpx
+use pathlib{ Path }
+
+// The agents a conversation can choose (spec 013 requirement 17): the local Nuclear Developer always, an agent when
+// its command is on the PATH, an API provider when the vault notes its key and it has a priced model; a chat's turn
+// with Claude Code streams its text. The commands are fakes and the Developer an httpx stub: no paid call.
+
+FAKE_OPENCODE = "#!/bin/sh\nif [ \"$1\" = models ]; then echo 'anthropic/claude-x'; echo 'ollama/qwen2.5-coder:3b'; echo 'not a model'; fi\n"
+
+// A project, a vault that notes anthropic's and openai's keys, a price of the project for openai, and on the PATH
+// only a fake `claude` and `opencode`.
+agentsProject(tmpPath: Path, monkeypatch: any) string
+  root = chatProject(tmpPath, monkeypatch)
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+  monkeypatch.setenv("HOME", "${tmpPath}")
+  tmpPath.joinpath("factory").mkdir()
+  tmpPath.joinpath("factory", "vault.json").writeText(json.dumps(["anthropic", "openai"]))
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "prices": { "openai/gpt-x": [1.0, 2.0] } }))
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  for name, body in { "claude": "#!/bin/sh\necho claude\n", "opencode": FAKE_OPENCODE }
+    bin.joinpath(name).writeText(body)
+    bin.joinpath(name).chmod(493)
+  monkeypatch.setenv("PATH", "${bin}")
+  root
+
+down() httpx.MockTransport
+  httpx.MockTransport((request: httpx.Request) => httpx.Response(503))
+
+testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) void
+  root = agentsProject(tmpPath, monkeypatch)
+  found = agentsHere(root, down())
+  ids = found.map((a) => "${a["id"]}")
+  expect(ids == ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "anthropic", "openai", "google", "openrouter"], json.dumps(ids))
+  byId: <string, any> = {}
+  for a in found
+    byId["${a["id"]}"] = a
+  local: <string, any> = byId["nuclear-developer"]!
+  // the local agent is always there, told when its service does not answer
+  expect(local["available"] == true and local["kind"] == "local" and local["paid"] == false and "does not answer" in "${local["why"]}" and local["whyKey"] == "noAnswer", json.dumps(local))
+  expect(byId["claude-code"] == { "id": "claude-code", "kind": "agent", "provider": "claude-code", "label": "Claude Code", "models": ["haiku", "sonnet", "opus"], "defaultModel": "", "available": true, "paid": true }, json.dumps(byId["claude-code"]))
+  expect((byId["opencode"] as <string, any>)["models"] == ["anthropic/claude-x", "ollama/qwen2.5-coder:3b"])
+  codex: <string, any> = byId["codex"]!
+  expect(codex["available"] == true or "not on the PATH" in "${codex["why"]}")
+  anthropic: <string, any> = byId["anthropic"]!
+  expect(anthropic["available"] == true and anthropic["defaultModel"] == "claude-sonnet-5-5" and "claude-haiku-5-5" in (anthropic["models"] as string[]))
+  expect((byId["openai"] as <string, any>)["available"] == true and (byId["openai"] as <string, any>)["models"] == ["gpt-x"])
+  expect((byId["google"] as <string, any>)["available"] == false and "vault set google" in "${(byId["google"] as <string, any>)["why"]}")
+  // the screens say why in their language: its kind and arguments beside the English
+  expect((byId["google"] as <string, any>)["whyKey"] == "noKey" and (byId["google"] as <string, any>)["whyArgs"] == ["google"])
+  // the general agent's choices: each with the command that answers as it
+  choice = chatChoices(found)[1]
+  expect(choice["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "agent", "--provider", "claude-code"])
+
+testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) void
+  root = agentsProject(tmpPath, monkeypatch)
+  host = chatHost(root, "es", down())
+  members: <string, any>[] = host["members"]!
+  atlas = members.last
+  responder: <string, any> = atlas["responder"]!
+  expect(atlas["id"] == "atlas" and atlas["role"] == "chat" and "agente general" in "${(atlas["profile"] as <string, any>)["bio"]}")
+  expect(responder["choice"] == "nuclear-developer" and responder["paid"] == false and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "local", "--provider", "nuclear-developer"])
+  expect((responder["choices"] as <string, any>[]).length == 9)
+
+testAChatTurnWithClaudeCodeStreamsItsText(tmpPath: Path) void
+  told: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  claudeLine({ "type": "stream_event", "event": { "type": "content_block_delta", "delta": { "type": "text_delta", "text": "Hel" } } }, (e: <string, any>) => told.add(e), found)
+  claudeLine({ "type": "stream_event", "event": { "type": "message_start" } }, (e: <string, any>) => told.add(e), found)
+  expect(told == [{ "type": "text-delta", "text": "Hel" }], json.dumps(told))
+  work = Work("${tmpPath}", "${tmpPath}", "hi", {}, [], "", 0, "nuclear-mcp", 1000, { "stream": true })
+  role = Role("chat", "general agent", "You are the general agent.", {}, {}, [], [])
+  for name in ["a", "b"]
+    tmpPath.joinpath(name).mkdir()
+  expect("--include-partial-messages" in claudeArgs(role, "hi", work, tmpPath.joinpath("a")))
+  work.inputs = {}
+  expect(not ("--include-partial-messages" in claudeArgs(role, "hi", work, tmpPath.joinpath("b"))))
+  // the member's protocol carries them
+  out: <string, any>[] = []
+  MemberLines((e: <string, any>) => out.add(e)).on({ "type": "event", "event": { "type": "text-delta", "text": "lo" } })
+  expect(out == [{ "type": "text-delta", "text": "lo" }])
+
+testASpendingConfirmedHoldsOnlyForTheAgentItNamed(tmpPath: Path, monkeypatch: any) void
+  root = agentsProject(tmpPath, monkeypatch)
+  file = Path(root, CHAT_DIR, "member-x-chat-dm-atlas.jsonl")
+  file.parent.mkdir(parents = true, existOk = true)
+  file.writeText(json.dumps({ "role": "spending", "confirmed": true, "by": "you", "budgetUsd": 5.0, "providers": ["claude-code"] }) + "\n")
+  same = Chat(root, "member-x-chat-dm-atlas", { "provider": "claude-code", "kind": "agent" }, {}, () => null, (e: <string, any>) => print(e))
+  same.load()
+  other = Chat(root, "member-x-chat-dm-atlas", { "provider": "opencode", "kind": "agent" }, {}, () => null, (e: <string, any>) => print(e))
+  other.load()
+  expect(same.confirmed and not other.confirmed)

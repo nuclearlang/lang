@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-17
 related: [../02-architecture/overview.md, ../../../../vscode/docs/01-product/roadmap.md]
 ---
 # Roadmap of the devices in the editor
@@ -11,6 +11,8 @@ The CLI's devices (`nuclear device`, a real phone, macOS and Windows) are the pe
 
 ## Untested
 
+- **Its texts in Spanish** (spec 011, T4.2) and its settings section: written and compiled, never seen in a
+  running VS Code in Spanish.
 Never tried in a running VS Code:
 
 - Hot reload of each device, the 30-minute idle auto-stop, two devices with two signed-in users, park / unpark when

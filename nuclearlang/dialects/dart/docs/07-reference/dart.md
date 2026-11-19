@@ -52,7 +52,9 @@ data Point
 | `{}` in the signature | named parameters: `{required String name}` |
 | Optional parameter `name?: string` | `String? name` |
 | Default value `= null` | omitted (`String? data;`) |
-| List or map as a parameter default | `const []`, `const {}` |
+| List or map as a parameter default | the parameter is nullable and the function begins with `xs ??= [];` (a default must be const, and a const list cannot change); a constructor's parameter: `const []` |
+| `a == b` of two lists, maps or sets | `_equals(a, b)` (what they hold; `==` compares the objects) |
+| `m["a"] += 1` on a map | `m.update('a', (v) => v + 1);` (a map's read is nullable) |
 | Constructor parameters | declared fields + `User(this.name)` |
 | Text | single quotes; `'${name}'` is written `'$name'` when the name is not followed by letters |
 | `x is T` / `x as T` / `x!` | the same |

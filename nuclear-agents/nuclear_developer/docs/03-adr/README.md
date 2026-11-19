@@ -8,6 +8,8 @@ retrieval and distillation) is the platform's (ADR-platform-0003).
 | ADR | Decision | Status |
 |---|---|---|
 | [ADR-developer-0001](0001-a-strategy-for-each-kind-of-request.md) | A strategy for each kind of request: the agent recognises what it is asked and follows the plan of that kind | accepted |
+| [ADR-developer-0002](0002-a-role-is-a-folder.md) | A role is a folder (`nuclear-agents/roles/<role>/`), read by the local agents and every provider | accepted |
+| [ADR-developer-0003](0003-painted-faces-by-a-local-model.md) | The roster's faces are painted by a local image model (FLUX.1-schnell, stable-diffusion.cpp), not drawn as SVG | accepted |
 
 Decisions of the Smart Graph the agents depend on (the library of cards, the exact facts):
 [`nuclear-graph-storage/docs/03-adr/`](../../../../nuclear-graph-storage/docs/03-adr/README.md).

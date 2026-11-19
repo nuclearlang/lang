@@ -76,7 +76,8 @@ transpiler feature is built there, never copied into the server.
 The VS Code `.vsix` and the JetBrains zip include `nuclear-lsp`, every dialect of the tree in `server/dialects/`
 (each language with its frameworks and type definitions) and each platform's `platform.toml` in
 `server/platforms/`. Both packaging scripts end with `nuclear-lsp --check-bundle`, which loads each bundled dialect
-and fails on any diagnostic (for example N0213). Zed runs the installed `~/.local/bin/nuclear-lsp`, which finds its
+and fails on any error (for example N0213); a warning is printed and does not fail (a platform plugin a dialect
+does not bring yet, N0305). Zed runs the installed `~/.local/bin/nuclear-lsp`, which finds its
 dialects through `nuclear_dialect::install_dir()`. Packaging and releasing belong to `../extensions/`: a change to
 the server is released with them.
 

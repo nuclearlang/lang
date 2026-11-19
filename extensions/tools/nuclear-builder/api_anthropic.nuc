@@ -1,0 +1,38 @@
+use json
+use httpx
+
+// The Anthropic adapter: the Messages API (`POST /v1/messages`, `anthropic-version: 2026-10-21`) with the MCP
+// server's tools as client tools; through the factory's loop (adapter_api.nuc).
+
+ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+
+anthropicMessages(turns: <string, any>[]) <string, any>[]
+  out: <string, any>[] = []
+  for t in turns
+    if t["role"] == "user"
+      out.add({ "role": "user", "content": t["text"] })
+    else if t["role"] == "assistant"
+      blocks: <string, any>[] = []
+      if "${t["text"] ?? ""}".length > 0
+        blocks.add({ "type": "text", "text": t["text"] })
+      for c in (t["calls"] ?? []) as <string, any>[]
+        blocks.add({ "type": "tool_use", "id": c["id"], "name": c["name"], "input": c["input"] })
+      out.add({ "role": "assistant", "content": blocks })
+    else
+      results = ((t["results"] ?? []) as <string, any>[]).map((r) => { "type": "tool_result", "tool_use_id": r["id"], "content": r["text"], "is_error": r["error"] == true })
+      out.add({ "role": "user", "content": results })
+  out
+
+askAnthropic(key: string, model: string, system: string, turns: <string, any>[], tools: <string, any>[], client: httpx.Client) ModelTurn
+  body = { "model": model, "max_tokens": 16000, "system": system, "messages": anthropicMessages(turns), "tools": tools.map((t) => { "name": t["name"], "description": t["description"], "input_schema": t["schema"] }) }
+  data = answerOf(client.post(ANTHROPIC_URL, json = body, headers = { "x-api-key": key, "anthropic-version": "2026-10-21", "content-type": "application/json" }), "anthropic")
+  if data["stop_reason"] == "refusal"
+    throw RuntimeError("the model declined the request (refusal)")
+  parts: <string, any>[] = data["content"] ?? []
+  text = parts.filter((p) => p["type"] == "text").map((p) => "${p["text"]}").join("\n")
+  calls = parts.filter((p) => p["type"] == "tool_use").map((p) => { "id": p["id"], "name": p["name"], "input": p["input"] ?? {} })
+  usage: <string, any> = data["usage"] ?? ({} as <string, any>)
+  ModelTurn(text, calls, (usage["input_tokens"] ?? 0) + (usage["cache_creation_input_tokens"] ?? 0) + (usage["cache_read_input_tokens"] ?? 0), usage["output_tokens"] ?? 0)
+
+anthropicAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  apiLoop("anthropic", askAnthropic, role, station, work, emit)

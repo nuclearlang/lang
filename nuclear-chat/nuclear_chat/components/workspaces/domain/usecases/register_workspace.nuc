@@ -1,0 +1,4 @@
+// Registers a project for its host: its members, teams and channels (the same folder is the same workspace).
+usecase RegisterWorkspace(registry: WorkspaceRegistry)
+  exec(input: NewWorkspace) Result<Error, Workspace>
+    registry.register(input)

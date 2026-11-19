@@ -40,6 +40,7 @@ fn projects_match_expected_output() {
         "examples-fastapi/rick_api",
         "examples-backend/tasks_api",
         "examples-web/characters",
+        "examples-web/tasks_live",
         // the apps of the onboardings: made only by the tools (the website runs their commands again)
         "onboarding/todos_app",
         "onboarding/todos_api",
@@ -191,6 +192,15 @@ fn a_client_builds_from_the_backend_contract_and_sees_drift() {
     let routes = contract["controllers"]["TasksController"]["routes"].as_array().unwrap();
     let one = routes.iter().find(|r| r["name"] == "one").unwrap();
     assert_eq!(one["params"][0]["in"], "path");
+    // ADR-synapsis-0007/0008: the transports, the guards (never a token's value) and the events it publishes
+    assert_eq!(contract["webSocket"], "/ws");
+    assert_eq!(contract["controllers"]["TasksController"]["transports"], serde_json::json!(["http", "websocket"]));
+    assert_eq!(contract["guards"], serde_json::json!([{ "guard": "noOrigin" }, { "guard": "token", "header": "X-Tasks-Token" }]));
+    assert_eq!(contract["controllers"]["ProjectsController"]["guards"], serde_json::json!([{ "guard": "token", "header": "Authorization" }]));
+    assert_eq!(
+        contract["events"]["tasks.created"],
+        serde_json::json!({ "component": "tasks", "payload": "<string, any>", "fields": ["id", "title"] })
+    );
     let openapi: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(api.join(".nuclear/openapi.json")).unwrap()).unwrap();
     assert!(openapi["paths"]["/tasks/{id}"]["get"].is_object(), "{openapi}");
@@ -211,6 +221,9 @@ fn a_client_builds_from_the_backend_contract_and_sees_drift() {
     assert!(errors.is_empty(), "{errors:#?}");
     assert!(app.join("contracts/tasks_api/models/task.nuc").is_file());
     assert!(app.join("contracts/tasks_api/tasks_repository.nuc").is_file());
+    // a route's model parameter is the request's body itself, never a field named like the parameter
+    let repo = std::fs::read_to_string(app.join("contracts/tasks_api/tasks_repository.nuc")).unwrap();
+    assert!(repo.contains("create(@body input: NewTask)"), "{repo}");
     // drift: the backend renames a field, the client's use of it fails at build time
     let entity = api.join("components/tasks/data/entities/task.nuc");
     std::fs::write(&entity, std::fs::read_to_string(&entity).unwrap().replace("  done: boolean = false", "  completed: boolean = false")).unwrap();
@@ -876,4 +889,97 @@ fn a_project_names_its_package() {
     std::fs::write(root.join("nuclear.toml"), "[project]\nname = \"graph_lib\"\ndialect = \"python\"\npackage = \"Graph-Lib\"\n").unwrap();
     assert!(Manifest::read(&root).unwrap_err().contains("must be snake_case"));
     let _ = std::fs::remove_dir_all(&root);
+}
+
+/// In Python, a field of a module (`self.note = note`), a method or a member a method reads, a word of a docstring or of a
+/// library helper (`xs.remove(x)`) never imports the function of another file named the same: two files would
+/// import each other in a cycle Python refuses.
+#[test]
+fn python_fields_docstrings_and_helpers_do_not_import_another_file() {
+    let root = std::env::temp_dir().join(format!("nuclear-project-python-free-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let a = "// The \"note\" of a fit, and its \"remove\".\nFit(fit: string, note: string)\n  said() string = note\n\n  ask() string = said()\n\ndrop(xs: string[]) void\n  xs.remove(\"a\")\n";
+    let files = [
+        ("nuclear.toml", "[project]\nname = \"free\"\ndialect = \"python\"\npackage = \"free\"\n"),
+        ("a.nuc", a),
+        ("b.nuc", "note() string = \"b\"\n\nask() string = \"b\"\n\nremove() void\n  print(\"b\")\n"),
+        ("c.nuc", "uses() string = note()\n"),
+    ];
+    for (rel, text) in files {
+        std::fs::create_dir_all(root.join(rel).parent().unwrap()).unwrap();
+        std::fs::write(root.join(rel), text).unwrap();
+    }
+    let manifest = Manifest::read(&root).unwrap();
+    let d = loader(None).load("python").0.unwrap();
+    let out = project::build(&root, &manifest, &d);
+    let code = |name: &str| out.files.iter().find(|f| f.source_path.ends_with(name)).map(|f| f.code.clone()).unwrap();
+    assert!(!code("a.nuc").contains("free.b"), "{}", code("a.nuc"));
+    assert!(code("c.nuc").contains("from free.b import note"), "{}", code("c.nuc"));
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+/// Spec 012: with `plugins(telemetry = true)` each use case's `exec` gets `@traced("<component> › usecase ›
+/// <Class>.exec")`, a constant written at build time; `@untraced` on the use case leaves it out, and without the plugin
+/// no use case gets a span nor imports the telemetry module.
+#[test]
+fn telemetry_writes_a_span_on_each_use_case_but_the_untraced() {
+    let root = std::env::temp_dir().join(format!("nuclear-telemetry-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let files = [
+        ("config/project_config.nuc", "appConfig ProjectConfig\n  connections: Connection[] = [\n    Otlp(url = \"http://localhost:4318\"),\n  ]\n"),
+        ("components/orders/domain/usecases/find_order.nuc", "usecase FindOrder\n  exec(id: int) Result<Error, int>\n    Ok(id)\n"),
+        ("components/orders/domain/usecases/ping.nuc", "@untraced\nusecase Ping\n  exec() Result<Error, int>\n    Ok(1)\n"),
+    ];
+    for (rel, text) in files {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    }
+    let d = loader(None).load("fastapi").0.unwrap();
+    for on in [true, false] {
+        let plugins = if on { "plugins(telemetry = true)\n" } else { "" };
+        std::fs::write(root.join("config.nuc"), format!("synapsis(platform = \"backend\", dialect = \"fastapi\")\napp(name = \"demo\")\n{plugins}")).unwrap();
+        let out = project::build(&root, &Manifest::read(&root).unwrap(), &d);
+        let code = |name: &str| out.files.iter().find(|f| f.source_path.ends_with(name)).unwrap();
+        let find = code("find_order.nuc");
+        let ping = code("ping.nuc");
+        if on {
+            let errors: Vec<String> = out.files.iter().flat_map(|f| f.diagnostics.iter().filter(|x| x.is_error()).map(|x| x.message.clone())).collect();
+            assert!(errors.is_empty(), "{errors:?}");
+            assert!(find.code.contains("from synapsis.telemetry import traced"), "{}", find.code);
+            assert!(find.code.contains("    @traced(\"orders › usecase › FindOrder.exec\")\n    async def exec(") || find.code.contains("    @traced(\"orders › usecase › FindOrder.exec\")\n    def exec("), "{}", find.code);
+            assert!(!ping.code.contains("traced("), "{}", ping.code);
+            assert!(ping.code.contains("@untraced\nclass Ping:"), "{}", ping.code);
+        } else {
+            // without the plugin its connection is N0304, and no use case writes a span
+            assert!(code("project_config.nuc").diagnostics.iter().any(|x| x.code.id == "N0304"));
+            assert!(!find.code.contains("traced"), "{}", find.code);
+        }
+    }
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+/// `--monitor` (spec 015): each function and method of a project measured with its Nuclear name and its line, the
+/// runtime written once; without it nothing of the monitor is in the output (the goldens prove the rest).
+#[test]
+fn the_monitor_measures_each_function_only_when_asked() {
+    let root = tree("examples/projects/greetings");
+    for dialect in ["dart", "typescript", "python"] {
+        let (d, _) = loader(None).load(dialect);
+        let d = d.unwrap();
+        let mut manifest = Manifest::read(&root).unwrap();
+        let off = project::build(&root, &manifest, &d);
+        assert!(off.files.iter().all(|f| !f.code.contains("NuclearMonitor")), "{dialect}: measured without --monitor");
+        assert!(off.generated.iter().all(|(p, _)| !p.contains("nuclear/monitor")), "{dialect}: a runtime without --monitor");
+        manifest.monitor = true;
+        let on = project::build(&root, &manifest, &d);
+        let runtime: Vec<_> = on.generated.iter().filter(|(p, _)| p.contains("nuclear/monitor")).collect();
+        assert_eq!(runtime.len(), 1, "{dialect}: {:?}", on.generated.iter().map(|(p, _)| p).collect::<Vec<_>>());
+        assert!(runtime[0].1.contains("class NuclearMonitor"), "{dialect}: {}", runtime[0].1);
+        let store = on.files.iter().find(|f| f.source_path.ends_with("users/user_store.nuc")).unwrap();
+        let site = ["'UserStore.find', 'users/user_store.nuc', 7", "\"UserStore.find\", \"users/user_store.nuc\", 7"];
+        assert!(site.iter().any(|s| store.code.contains(s)), "{dialect}:\n{}", store.code);
+        assert!(store.code.contains("NuclearMonitor.exit"), "{dialect}:\n{}", store.code);
+        assert!(on.files.iter().all(|f| f.diagnostics.iter().all(|x| !x.is_error())), "{dialect}: errors with --monitor");
+    }
 }

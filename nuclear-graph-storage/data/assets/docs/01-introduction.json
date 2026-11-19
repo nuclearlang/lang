@@ -29,7 +29,7 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.7ab6d5",
+   "id": "doc:AGENTS.md#hard-rules.034841",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
    "summary": "12. Node.js/Express is postponed by the user: do not touch it until asked.",
@@ -40,7 +40,13 @@
     "    its target code comes from the transpiler, its standard parts from `nuclear new`/`gen`/`make` and the MCP",
     "    server, its libraries from `nuclear add`. No agent writes target code for a feature or migrates code of a",
     "    native dialect (React, Node.js, Python/FastAPI, Dart) into Nuclear by hand. By hand outside Nuclear only when",
-    "    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it."
+    "    strictly necessary: say so, and record the missing capability in the roadmap of the tool that should do it.",
+    "",
+    "14. **Built for a fresh machine and a fresh agent.** Every feature is designed for a user who just ran the",
+    "    installer and an agent with no context at all. The installer and the MCP server are the only sources of",
+    "    Nuclear an agent has: never the source tree, this repository's `.md` files or a path of the developer's",
+    "    machine. Nothing installed or generated names a path of this tree or of one machine; the installer leaves",
+    "    services that run on their own on every system."
    ],
    "sources": [
     "AGENTS.md"
@@ -173,6 +179,31 @@
    }
   },
   {
+   "id": "doc:AGENTS.md#the-projects.306a53",
+   "type": "readme",
+   "title": "NuclearLang — The projects",
+   "summary": "`github-profile/` is the organization's profile: a repository of its own inside the tree.",
+   "body": [
+    "| `nuclear-chat/` | Nuclear Chat, the factory's workplace: a Synapsis service, its system library, the GIF pack, the UI library | [AGENTS.md](nuclear-chat/AGENTS.md) |",
+    "| `device-emulators/` | The devices (`nuclear device`, `nuclear terminal-device`): the crate `nuclear-devices` | [AGENTS.md](device-emulators/AGENTS.md) |",
+    "| `nuclear-graph-storage/` | The Smart Graph: the knowledge base every agent reads | [AGENTS.md](nuclear-graph-storage/AGENTS.md) |",
+    "| `nuclear-agents/` | The agents (`nuclear_developer/`) | [AGENTS.md](nuclear-agents/AGENTS.md) |",
+    "| `installer/` | The installers and the release | [AGENTS.md](installer/AGENTS.md) |",
+    "| `website/` | The documentation site, written in Nuclear (web platform, `react`) | [AGENTS.md](website/AGENTS.md) |",
+    "| `docs/` | Only what is about the whole platform | [README.md](docs/README.md) |",
+    "",
+    "`github-profile/` is the organization's profile: a repository of its own inside the tree."
+   ],
+   "sources": [
+    "AGENTS.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:AGENTS.md#the-projects.33ac96",
    "type": "readme",
    "title": "NuclearLang — The projects",
@@ -188,30 +219,6 @@
     "| `tools/code_generator/` | What `nuclear new`, `make` and `gen` write: the crate `nuclear-codegen` | [AGENTS.md](tools/code_generator/AGENTS.md) |",
     "| `tools/mcp/` | The MCP server, `nuclear-mcp` (a Nuclear project, `python` dialect) | [AGENTS.md](tools/mcp/AGENTS.md) |",
     "| `extensions/` | The editors: `vscode/`, `jetbrains/`, `zed/`, and their tools in `tools/<tool>/` | [AGENTS.md](extensions/AGENTS.md) |"
-   ],
-   "sources": [
-    "AGENTS.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:AGENTS.md#the-projects.ab6848",
-   "type": "readme",
-   "title": "NuclearLang — The projects",
-   "summary": "`github-profile/` is the organization's profile: a repository of its own inside the tree.",
-   "body": [
-    "| `device-emulators/` | The devices (`nuclear device`, `nuclear terminal-device`): the crate `nuclear-devices` | [AGENTS.md](device-emulators/AGENTS.md) |",
-    "| `nuclear-graph-storage/` | The Smart Graph: the knowledge base every agent reads | [AGENTS.md](nuclear-graph-storage/AGENTS.md) |",
-    "| `nuclear-agents/` | The agents (`nuclear_developer/`) | [AGENTS.md](nuclear-agents/AGENTS.md) |",
-    "| `installer/` | The installers and the release | [AGENTS.md](installer/AGENTS.md) |",
-    "| `website/` | The documentation site, written in Nuclear (web platform, `react`) | [AGENTS.md](website/AGENTS.md) |",
-    "| `docs/` | Only what is about the whole platform | [README.md](docs/README.md) |",
-    "",
-    "`github-profile/` is the organization's profile: a repository of its own inside the tree."
    ],
    "sources": [
     "AGENTS.md"
@@ -1152,7 +1159,7 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when",
+   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.d44268",
    "type": "context",
    "title": "How code is written here — A change is done when",
    "summary": "1. `cargo test` and `cargo clippy --all-targets` are green.",
@@ -1169,10 +1176,26 @@
     "   structured source, `nuclear-graph knowledge check` clean, `nuclear-graph ingest`",
     "   (`nuclear-graph-storage/docs/06-runbooks/`).",
     "6. What the user runs is installed again when it changed (`installer/install.sh`; an extension: its version raised",
-    "   and installed).",
-    "",
-    "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn (a file git",
-    "ignores, such as a build's output, is not code for them)."
+    "   and installed)."
+   ],
+   "sources": [
+    "docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/05-standards/coding.md#a-change-is-done-when.fa62fd",
+   "type": "context",
+   "title": "How code is written here — A change is done when",
+   "summary": "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn.",
+   "body": [
+    "The hooks of `.claude/settings.json` (`.claude/hooks/README.md`) hold points 4 and 5 at the end of a turn. They compare",
+    "contents through git, never file dates: a project is behind when its code differs from the last commit (or changed",
+    "in this session) and none of its documents does; a file git ignores, such as a build's output, is not code for them."
    ],
    "sources": [
     "docs/05-standards/coding.md"
@@ -1493,6 +1516,7 @@
     "| The code generator (the crate `nuclear-codegen`) | `tools/code_generator/` | `codegen` |",
     "| The MCP server (`nuclear-mcp`) | `tools/mcp/` | `mcp` |",
     "| The installers and the release | `installer/` | `installer` |",
+    "| Nuclear Chat, the factory's workplace | `nuclear-chat/` | `chat` |",
     "| The devices (the crate `nuclear-devices`) | `device-emulators/` | `devices` |",
     "| The editor extensions | `extensions/`, `extensions/{vscode,jetbrains,zed}/` | `extensions` |",
     "| A tool of the editors | `extensions/tools/<tool>/` | — |",

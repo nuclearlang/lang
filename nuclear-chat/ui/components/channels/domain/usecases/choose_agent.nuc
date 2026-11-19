@@ -1,0 +1,4 @@
+// What ChannelsRepository.chooseAgent answers, for the screens of channels.
+usecase ChooseAgent(repository: ChannelsRepository)
+  exec(workspace: string, channel: string, input: AgentChoice) Result<NuclearChatError, Channel>
+    ~repository.chooseAgent(workspace, channel, input)

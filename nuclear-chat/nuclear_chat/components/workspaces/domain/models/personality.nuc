@@ -1,0 +1,7 @@
+// How often a member sends a GIF, and at which moments.
+Personality
+  // never, sometimes (one in five of its moments) or often (one in two)
+  @pattern(r"^(never|sometimes|often)$")
+  gifs: string = "never"
+  // the moments: failure, success, question
+  on: string[] = []

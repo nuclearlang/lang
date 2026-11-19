@@ -1,0 +1,5 @@
+// Tenor's search (v2): the key is the user's, from the keyring; the words leave the machine.
+@repository(path = "search", connection = "tenor")
+repository TenorRepository
+  @get
+  search(q: string, key: string, clientKey: string = "nuclear-chat", limit: int = 12, mediaFilter: string = "gif,tinygif", contentfilter: string = "medium") Result<Error, TenorPage>

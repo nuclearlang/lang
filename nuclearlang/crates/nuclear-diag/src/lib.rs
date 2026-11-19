@@ -314,8 +314,8 @@ pub mod codes {
     };
     pub const UNKNOWN_NAMED_ARG: Code = Code {
         id: "N0219",
-        title: "named argument the constructor does not have",
-        explanation: "The type definitions list the parameters of the constructor; the message names the closest one and all of them. `nuclear defs show <Class> --dialect <d>` prints the constructor.",
+        title: "named argument the callee does not have",
+        explanation: "A function or method declared in Nuclear, or a constructor of the type definitions, has no parameter of that name; the message names the closest one and all of them. `nuclear defs show <Class> --dialect <d>` prints the constructor.",
     };
     pub const UNKNOWN_CONSTRUCTOR: Code = Code {
         id: "N0220",
@@ -331,6 +331,11 @@ pub mod codes {
         id: "N0222",
         title: "an asynchronous call used without `~`",
         explanation: "A member or an index of what an asynchronous call returns (`books.exec(a).length`) reads a value that is not there yet: await the call, `(~books.exec(a)).length`.",
+    };
+    pub const KIND_SEALED_MEMBER: Code = Code {
+        id: "N0223",
+        title: "a method named like a member the kind's runtime owns",
+        explanation: "The class the kind extends keeps that member for itself ([kinds.<k>] sealed): a method of that name would replace it silently (a state manager's `close`, which stops its listeners when the screen leaves). Give the method another name.",
     };
     pub const ARCH_CALLER: Code = Code {
         id: "N0301",
@@ -422,6 +427,7 @@ pub mod codes {
         KIND_RETURN_TYPE,
         KIND_METHOD_BODY,
         NOT_AWAITED,
+        KIND_SEALED_MEMBER,
         DECORATOR_ARGS,
         KIND_IGNORES,
         UNKNOWN_NAMED_ARG,

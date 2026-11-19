@@ -1,0 +1,5 @@
+// The events the members answer: a new message of the user brings in who it names (or the team's tech lead).
+listener MemberAnswers(members: MembersAppComponent)
+  @consumer("chat.event")
+  onEvent(event: ChatEvent) void
+    ~members.answer(event)

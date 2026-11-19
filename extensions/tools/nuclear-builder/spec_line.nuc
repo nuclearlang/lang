@@ -1,0 +1,242 @@
+use sys
+use pathlib{ Path }
+
+// The commands of the specs (`nuclear-builder spec new | list | show | delete | move | migrate | accept | discard [--json]`), for a terminal and the
+// editors (JSON on stdout, an error as {"error": "…"} with exit code 1); the layout is specs.nuc's.
+
+// `spec new`: the spec's base in its component's folder, with its acceptance criteria; its id from the title, never
+// one in use. `text` is the whole spec's markdown written there instead of the base (the editor's form).
+specNew(root: string, title: string, component: string, layer: string = "", useCase: string = "feature", description: string = "", criteria: string[] = [], text: string? = null) <string, any>
+  if title.trim().isEmpty
+    throw ValueError("a spec needs a --title")
+  if component.trim().isEmpty
+    throw ValueError("a spec belongs to a business component: --component <name> (${GLOBAL_SPECS}: the whole project)")
+  kind = useCase.trim().isEmpty ? "feature" : useCase.trim()
+  if not (kind in USE_CASES)
+    throw ValueError("`${kind}` is not a use case: ${USE_CASES.join(", ")}")
+  base = runSlug(title)
+  id = base
+  n = 2
+  while findSpec(root, id) != null or runFile(root, id).exists()
+    id = "${base.substring(0, Math.min(base.length, 37))}-${n}"
+    n += 1
+  path = layoutPath(component, layer, id)
+  lines = ["# ${title.trim()}", "", "- Use case: ${kind}", "- Source: local", "- Component: ${component.trim()}"]
+  if not layer.trim().isEmpty
+    lines.add("- Layer: ${layer.trim()}")
+  items = criteria.map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
+  lines.addAll(["", "## Description", "", description.trim(), "", "## Acceptance criteria", "", ...(items.isEmpty ? ["- (none yet)"] : items.map((c) => "- [ ] ${c}")), ""])
+  if text != null and not text!.trim().startsWith("# ")
+    throw ValueError("a spec's markdown starts with its `# title`")
+  written = text == null ? lines.join("\n") : text!.trim() + "\n"
+  writeAtomic(Path(root, path, "spec.md"), written)
+  { "id": id, "path": path, "spec": parseSpec(written, id) }
+
+// `spec show`: a spec's markdown, what it says (its criteria among it), its draft when it has one, its run's status.
+specShow(root: string, id: string) <string, any>
+  found = findSpec(root, id)
+  if found == null
+    throw ValueError("no spec `${id}` (nuclear-builder spec list)")
+  dir = Path(root, "${found!["path"]}")
+  text = dir.joinpath("spec.md").readText(encoding = "utf-8")
+  draft = dir.joinpath(SPEC_DRAFT)
+  run = loadRun(root, id)
+  { "id": id, "path": found!["path"], "text": text, "spec": parseSpec(text, id), "draft": draft.isFile() ? draft.readText(encoding = "utf-8") : null, "run": run == null ? null : run!["status"] }
+
+// `spec delete`: the spec's folder (its documents and checks among it) goes to `.nuclear/builder/deleted/`, never
+// destroyed; a spec whose run is running stays.
+specDelete(root: string, id: string) <string, any>
+  found = findSpec(root, id)
+  if found == null
+    throw ValueError("no spec `${id}` (nuclear-builder spec list)")
+  run = loadRun(root, id)
+  if run != null and run!["status"] == "running" and not orphaned(run!["owner"])
+    throw ValueError("the run ${id} is running: stop it first")
+  was = "${found!["path"]}"
+  to = Path(root, ".nuclear", "builder", "deleted", "${id}-${nowMs()}")
+  to.parent.mkdir(parents = true, existOk = true)
+  Path(root, was).rename(to)
+  dropEmpty(Path(root, was).parent, Path(root, SPECS_DIR))
+  { "deleted": id, "from": was, "kept": "${to.relativeTo(Path(root))}" }
+
+// `spec list`: every spec with where it is, its title, when it changed and its runs, by component and layer.
+specList(root: string) <string, any>[]
+  runs = listRuns(root)
+  found: <string, any>[] = []
+  for s in specFolders(root)
+    file = Path(root, "${s["path"]}", "spec.md")
+    shown: <string, any> = dict(s)
+    shown["title"] = parseSpec(file.readText(encoding = "utf-8"), "${s["id"]}")["title"]
+    shown["updated"] = (file.stat().stMtime * 1000).round()
+    shown["runs"] = runs.filter((r) => r["id"] == s["id"] or (r["spec"] as <string, any>? ?? ({} as <string, any>))["id"] == s["id"]).map((r) => "${r["id"]}")
+    found.add(shown)
+  found.sortedBy((s) => "${s["component"]}/${s["layer"]}/${s["title"]}")
+
+// `spec move`: the spec's folder, whole, to another component or layer (a rename: nothing is copied or lost); its
+// `- Component:` and `- Layer:` lines and its run follow.
+specMove(root: string, id: string, component: string, layer: string = "") <string, any>
+  found = findSpec(root, id)
+  if found == null
+    throw ValueError("no spec `${id}` (nuclear-builder spec list)")
+  was = "${found!["path"]}"
+  to = layoutPath(component, layer, id)
+  run = loadRun(root, id)
+  if run != null and run!["status"] == "running" and not orphaned(run!["owner"])
+    throw ValueError("the run ${id} is running: move its spec when it ends")
+  source = Path(root, was)
+  target = Path(root, to)
+  if to != was
+    inside = specFolders(root).filter((s) => "${s["path"]}".startsWith("${was}/"))
+    if not inside.isEmpty
+      throw ValueError("${was} holds other specs (${inside.map((s) => "${s["path"]}").join(", ")}): move them first")
+    if target.exists()
+      throw ValueError("${to} is there already")
+    if to.startsWith("${was}/")
+      // the spec moves into a folder of its own name (`specs/booking/` → `specs/booking/booking/`)
+      moving = source.parent.joinpath(".moving-${id}")
+      source.rename(moving)
+      source = moving
+    target.parent.mkdir(parents = true, existOk = true)
+    source.rename(target)
+    dropEmpty(Path(root, was).parent, Path(root, SPECS_DIR))
+  file = target.joinpath("spec.md")
+  text = withField(withField(file.readText(encoding = "utf-8"), "Component", component.trim().isEmpty ? GLOBAL_SPECS : component.trim()), "Layer", layer.trim())
+  writeAtomic(file, text)
+  if run != null
+    followSpec(run!, was, to)
+  { "id": id, "from": was, "path": to, "spec": parseSpec(text, id) }
+
+// The run of a moved spec names its new folder; the files its ledger and its steps name there follow too.
+followSpec(run: <string, any>, was: string, to: string) void
+  moved = (p: string) => p == was or p.startsWith("${was}/") ? to + p.substring(was.length) : p
+  run["specPath"] = to
+  for w in (run["writes"] ?? []) as <string, any>[]
+    w["path"] = moved("${w["path"]}")
+  for st in (run["stages"] ?? []) as <string, any>[]
+    for s in st["steps"] as <string, any>[]
+      if s["files"] != null
+        s["files"] = (s["files"] as string[]).map((f) => moved(f))
+  saveRun(run)
+
+// The empty folders a move left, up to `specs/`.
+dropEmpty(dir: Path, stop: Path) void
+  at = dir
+  while at != stop and at.isDir() and (list(at.iterdir()) as Path[]).isEmpty
+    at.rmdir()
+    at = at.parent
+
+// The component a spec's files touch (the most of them, `components/<c>/…`) and its layer when all of them are in
+// one; "" when they touch none.
+touched(root: string, id: string, spec: <string, any>) <string, string>
+  run = loadRun(root, id)
+  paths = [...((run == null ? [] : run!["writes"] ?? []) as <string, any>[]).map((w) => "${w["path"]}"), ...((spec["pieces"] ?? []) as <string, any>[]).map((p) => "${p["path"]}")]
+  parts: string[][] = paths.map((p) => p.replaceAll("\\", "/").split("/")).filter((p: string[]) => p.length > 2 and p[0] == "components")
+  if parts.isEmpty
+    return { "component": "", "layer": "" }
+  counts: <string, int> = {}
+  for p in parts
+    counts[p[1]] = (counts[p[1]] ?? 0) + 1
+  component = counts.keys.sortedBy((c) => -counts[c]!)[0]
+  layers = parts.filter((p) => p[1] == component).map((p) => p[2]).unique()
+  { "component": component, "layer": layers.length == 1 and layers[0] in LAYERS ? layers[0] : "" }
+
+// `spec migrate`: each spec of the flat layout to its component: its `- Component:` line, else the component its
+// files touch, else `_global`. A spec that cannot move is told and left where it is.
+specMigrate(root: string) <string, any>[]
+  done: <string, any>[] = []
+  for s in specFolders(root).filter((x) => "${x["component"]}".isEmpty)
+    id = "${s["id"]}"
+    text = Path(root, "${s["path"]}", "spec.md").readText(encoding = "utf-8")
+    spec = parseSpec(text, id)
+    own = "${spec["component"] ?? ""}"
+    files = touched(root, id, spec)
+    component = own.isEmpty ? files["component"]! : own
+    layer = own.isEmpty ? files["layer"]! : "${spec["layer"] ?? ""}"
+    try
+      moved = specMove(root, id, component.isEmpty ? GLOBAL_SPECS : component, layer)
+      done.add({ "id": id, "from": s["path"], "path": moved["path"], "by": own.isEmpty ? (component.isEmpty ? "nothing" : "files") : "spec" })
+    catch e
+      if not isinstance(e, ValueError) and not isinstance(e, OSError)
+        throw e
+      done.add({ "id": id, "from": s["path"], "error": "${e}" })
+  done
+
+// A spec's draft (`spec_draft`, a member's change in Nuclear Chat): the whole new text beside the spec
+// (`spec.draft.md`), never over it; the user accepts it (`spec accept`) or throws it away (`spec discard`).
+SPEC_DRAFT = "spec.draft.md"
+
+specDraft(root: string, id: string, text: string) <string, any>
+  found = findSpec(root, id)
+  if found == null
+    throw ValueError("no spec `${id}` (spec_list lists them)")
+  if not text.trim().startsWith("# ")
+    throw ValueError("a draft is the spec's whole markdown, from its `# title`")
+  writeAtomic(Path(root, "${found!["path"]}", SPEC_DRAFT), text.trim() + "\n")
+  { "id": id, "path": found!["path"], "draft": "${found!["path"]}/${SPEC_DRAFT}" }
+
+// `spec accept`: the draft becomes the spec (the spec's file replaced at once); `spec discard`: the draft goes.
+specSettle(root: string, id: string, accept: bool) <string, any>
+  found = findSpec(root, id)
+  if found == null
+    throw ValueError("no spec `${id}` (nuclear-builder spec list)")
+  draft = Path(root, "${found!["path"]}", SPEC_DRAFT)
+  if not draft.exists()
+    throw ValueError("the spec `${id}` has no draft")
+  if not accept
+    draft.unlink()
+    return { "id": id, "path": found!["path"], "accepted": false }
+  text = draft.readText()
+  writeAtomic(Path(root, "${found!["path"]}", "spec.md"), text)
+  draft.unlink()
+  { "id": id, "path": found!["path"], "accepted": true, "spec": parseSpec(text, id) }
+
+// `nuclear-builder spec new|list|show|delete|move|migrate|accept|discard [--json]`
+specLine(args: string[]) int
+  root = projectRoot("${Path.cwd()}")
+  what = args.isEmpty ? "list" : args[0]
+  words = args.skip(1).filter((a) => not a.startsWith("--")).filter((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1].startsWith("--") and args[args.indexOf(a) - 1] != "--json"))
+  asJson = "--json" in args
+  try
+    if what == "new"
+      made = specNew(root, option(args, "--title") ?? "", option(args, "--component") ?? "", option(args, "--layer") ?? "", option(args, "--use-case") ?? "feature", option(args, "--description") ?? "", options(args, "--criteria"), "--stdin" in args ? sys.stdin.read() : null)
+      asJson ? printJson(made) : print("wrote ${made["path"]}/spec.md")
+    else if what == "list"
+      found = specList(root)
+      if asJson
+        printJson(found)
+      else
+        for s in found
+          print("${"${s["path"]}".padEnd(48)} ${s["title"]}")
+    else if what == "show" and not words.isEmpty
+      shown = specShow(root, words[0])
+      asJson ? printJson(shown) : print(shown["text"])
+    else if what == "delete" and not words.isEmpty
+      gone = specDelete(root, words[0])
+      asJson ? printJson(gone) : print("${gone["from"]} → ${gone["kept"]}")
+    else if what == "move" and not words.isEmpty
+      moved = specMove(root, words[0], option(args, "--component") ?? "", option(args, "--layer") ?? "")
+      asJson ? printJson(moved) : print("${moved["from"]} → ${moved["path"]}")
+    else if (what == "accept" or what == "discard") and not words.isEmpty
+      settled = specSettle(root, words[0], what == "accept")
+      asJson ? printJson(settled) : print("${settled["path"]}/spec.md: ${what == "accept" ? "the draft accepted" : "the draft discarded"}")
+    else if what == "migrate"
+      done = specMigrate(root)
+      if asJson
+        printJson(done)
+      else
+        for d in done
+          print(d["error"] != null ? "✗ ${d["from"]}: ${d["error"]}" : "${d["from"]} → ${d["path"]}")
+      if done.any((d) => d["error"] != null)
+        return 1
+    else
+      printJson({ "error": "usage: nuclear-builder spec new --title … --component … [--layer …] [--use-case …] [--description …] [--criteria …]... [--stdin] | list | show <id> | delete <id> | move <id> --component … [--layer …] | migrate | accept <id> | discard <id> [--json]" })
+      return 1
+  catch e
+    if not isinstance(e, ValueError) and not isinstance(e, OSError)
+      throw e
+    if asJson
+      printJson({ "error": "${e}" })
+    else
+      print("nuclear-builder: ${e}", file = sys.stderr)
+    return 1
+  0

@@ -1,0 +1,65 @@
+# The checks DevOps proposes (nuclear-agents/roles/README.md). `by = "role"`: the role runs it; `by = "user"`: the
+# user runs it and marks it done or failed. A `command` is a key of the `commands` of `.nuclear/builder.json`.
+
+[[check]]
+id = "devops.definition-of-done"
+title = "Every item of the definition of done is met, with its evidence"
+title_es = "Cada punto de la definición de terminado se cumple, con su evidencia"
+station = "delivery"
+on = true
+by = "role"
+prompt = "Check specs/{{id}} with the skill check-the-definition-of-done and write definition-of-done.md."
+
+[[check]]
+id = "devops.check-again"
+title = "The compiler and the tests pass on the change as it will be delivered"
+title_es = "El compilador y los tests pasan sobre el cambio tal como se entregará"
+station = "delivery"
+on = true
+by = "role"
+command = "check"
+
+[[check]]
+id = "devops.documents"
+title = "The documents of the project say what changed, in the same change"
+title_es = "Los documentos del proyecto dicen qué cambió, en el mismo cambio"
+station = "delivery"
+on = true
+by = "role"
+prompt = "List the documents of the project the change touches (AGENTS.md, docs/, CHANGELOG.md, the roadmap) and whether each says what changed; update the ones that do not."
+
+[[check]]
+id = "devops.approve-push"
+title = "The user approves the pull request before anything is pushed"
+title_es = "El usuario aprueba el pull request antes de subir nada"
+station = "delivery"
+on = true
+by = "user"
+prompt = "Read specs/{{id}}/pr.md and the change; approve the push and the pull request, or say what to change. The merge stays yours."
+
+[[check]]
+id = "devops.pipeline"
+title = "The CI file is the one the line exports, and every stage passes"
+title_es = "El fichero de CI es el que exporta la línea, y pasa cada etapa"
+station = "delivery"
+on = true
+by = "role"
+prompt = "Compare the project's CI file with nuclear-builder export for its CI (github, gitlab or bitbucket); run nuclear-builder ci check and ci test; say each stage's result, and fix the line, not the file, when they differ."
+
+[[check]]
+id = "devops.secrets"
+title = "No secret is written in the change; every one it needs is named where it is set"
+title_es = "No hay ningún secreto escrito en el cambio; cada uno que necesita se nombra donde se define"
+station = "delivery"
+on = true
+by = "role"
+prompt = "Search the change for keys, tokens and passwords (config.nuc, the connections, the tests, the documents, the CI file); list every env(...) name the change reads and where each is set (the CI's secret store, the environment, testEnv for the tests). A value in the repository fails the check."
+
+[[check]]
+id = "devops.deployment"
+title = "The deployment checklist is followed: environments, monitoring, rollback"
+title_es = "Se sigue la lista de despliegue: entornos, monitorización, vuelta atrás"
+station = "delivery"
+on = false
+by = "user"
+prompt = "Read specs/{{id}}/deployment.md: the environments, the variables, the monitoring and how to roll back. Mark it done once you deployed it, or failed with what went wrong."

@@ -1,0 +1,10 @@
+# The faces of the roster, written in Nuclear and built with the `python` dialect: `nuclear build .` writes the
+# Python package `build/nuclear_roles`. Never edit `build/`: change the `.nuc` files. `faces.nuc` draws
+# `<role>/roster/faces/<id>.svg` (README.md, "The faces").
+[project]
+name = "nuclear_roles"
+dialect = "python"
+package = "nuclear_roles"
+version = "0.1.0"
+description = "The roles of the software factory: the faces of the roster."
+out = "build"

@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-18
 related: [../02-architecture/engine.md, ../../../../vscode/docs/01-product/roadmap.md, ../../../../jetbrains/docs/01-product/roadmap.md]
 ---
 # Roadmap of Nuclear Builder
@@ -11,40 +11,147 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Half done
 
-- **Nuclear Builder in Nuclear** ([spec 009](../../../../../docs/04-specs/009-self-contained-ai-services/tasks.md),
-  phase 3). Done: the set-up and the `nuclear-builder` command (`setup.nuc`, `cli.nuc`, `python` dialect), in the
-  AI archive; the VS Code pages run it as a process. Left: the engine (`src/engine.ts`, `src/safety.ts`, the
-  pipeline commands of `src/cli.ts`, about 2,400 lines) with its tests; until then `cli.nuc` runs it with node, so
-  the pipeline still needs Node.js outside the editor.
+- **Skills in JetBrains** (spec 011 req. 34): the library, the team's and the members' skills, the preview and the skills editor are VS Code's company screen; the JetBrains tool window has none yet (the commands and MCP tools serve both).
+- **Every action a command and a tool** (ADR-platform-0009, [actions.md](../02-architecture/actions.md)). Done:
+  `nuclear-builder mcp` (55 tools), every agent given it, the chat's local member through the same tools, the user's
+  decisions asked in the chat, the Builder's and the company screen's messages on commands. Left: the form's helpers
+  (Jira and GitHub issues, the context suggested, the pieces the local Developer proposes) as commands; the JetBrains
+  tool window answering a waiting run with `run answer` (it resumes and answers on stdin); a run answered through the
+  answer file on Windows is stopped by `os.kill` without the undo of an interrupt (the next retry's recovery undoes
+  it); the real Claude Code and OpenCode run of a member with both servers (prepared, not made: it costs money).
+
+- **The software factory in Nuclear** ([spec 011](../../../../../docs/04-specs/011-software-factory/tasks.md),
+  phases 2 and 3). Done: the teams, the vault, the adapters of every provider, the stations, the gates, the checks,
+  the money, the delivery, today's safety (with the watch of a stalled call and a retry from one step), today's agent
+  steps (the strategy, wiring, the repairs, the lead, the acceptance, the diagnosis, the journal), and
+  `nuclear-builder run | retry | restart | runs | checks | ci | export` on it ([engine.md](../02-architecture/engine.md)),
+  the specs by component and layer (`spec new | list | move | migrate | accept | discard`) and Nuclear Chat's members
+  (`nuclear-builder member`, [chat.md](../02-architecture/chat.md)).
+  Left in the engine: the copy of the artifacts after a run (the TypeScript engine's *Keep the output with the run*:
+  `nuclear-builder ci artifacts` runs the command, nothing copies the output into `.nuclear/builder/artifacts/<id>`),
+  the documenter's notes at the top of the journal (`run.notes`: only the Delivery's `/developer/document` today), and
+  the lead's fixes kept as graph examples are only asked of the lead in its prompt (nothing checks them). The editors
+  run it as a process and the TypeScript engine is gone; of its `test/engine.test.ts`, every case is in
+  `tests/test_factory.nuc` and `tests/test_adapters.nuc`, or in `test/editors.test.ts` for the editors' own (the
+  retries' arithmetic, the tools' `PATH`, the connections, Nuclear Atlas's templates and history, the 3B rule), but
+  one: a run of the earlier engine restarted from scratch is tested only up to its refusal by `retry` (the restart
+  itself runs *Check the connections* against the machine).
+
+- **Nuclear Chat's host** (spec 013 T3.2, [chat.md](../02-architecture/chat.md)): the dock and the tab mount the
+  chat, a run is told as a thread with its buttons, a spec's draft is accepted or not. Left:
+  - **`/poc <what>`**: the factory runs only on a project's own code; a proof of concept needs `nuclear-builder run`
+    on a scratch project made in `.nuclear/poc/<id>/` (`nuclear new` there, the run's writes kept inside it). Today
+    the chat says it is not available.
+  - The host file gives one team, the run's: a run of another team is told in `general` as `system`.
+  - A run's thread is found again by the chat's search (`run:<id>`); the buttons' answers say what was chosen only for
+    the questions this window posted (a restarted editor takes the buttons away and leaves the text).
+
+- **JetBrains and the money's settings**: the tool window always asks the two questions (as `nuclear.spending.confirm`
+  on); it has no settings of its own for them yet (spec 011 T4.7), only the project's `"forceConfirm"`, which the
+  engine reads.
+
+- **The workbench** (spec 011 T4.9, T4.10) is VS Code's; the JetBrains window still lists only the flat
+  `specs/<id>/` and writes its new specs there, and has no chat (its roadmap). The
+  diagram is fitted when its level changes, not when a column is resized (its fit button does it).
+
+- **Teams of any size** (ADR-platform-0010): one member works a whole station. Left: split the Developer's pieces
+  among several developers of the team (today the role's first member, or the one `--assign` names, works the whole
+  station); the tech lead assigns who works a station from the chat (a tool that sets the run's `assign`; today only
+  `run --assign` and `run_start`'s `assign` set it, when the run starts).
 
 - Nuclear Builder's form in the editor has no field for the strategy (the spec file's `- Strategy:` line and
   `nuclear-builder run` read it).
 
 ## Untested
 
+- **The workbench in a running VS Code** (0.59.0): its page was checked rendered standalone in a headless browser
+  (English and Spanish, an empty project, two runs at once, the form, folded columns) and its clicks
+  there (the accordion picks the node, the tree opens a spec, the form saves with its component). Never opened in VS
+  Code itself. Nuclear Chat in the dock (2026-11-18) was rendered in headless Brave with a fake bridge answering from
+  what the real service said for a throwaway workspace (a run's thread, a gate with its buttons, the members' faces),
+  English and Spanish; the connection itself ran end to end from Node against the installed service (registered, a
+  message said, its events received, `dm-atlas` answered by the local agent). A button clicked in the chat answering
+  a real run, a spec's draft accepted from the chat, and the tab were never tried in VS Code. Its second
+  version (spec 011 T5.2-T5.4: the node as a tree, the log with the team's logo, the specs and runs in the
+  Workspace's column, the company screen) was rendered standalone in Firefox headless with a sample failed run (Claude
+  Code haiku and local roles), English and Spanish; the column's clicks driving the page (`BuilderPanel.drive`), the
+  tree's keyboard and `team logo` from the editor were never tried in VS Code.
+
+- **A member with a real provider**: `nuclear-builder member` ran only with its providers stubbed (the local
+  assistant as an httpx stub, Claude Code as a fake command); `chat-host` and `team logo` ran installed against a
+  scratch `XDG_CONFIG_HOME`.
+
+- **The chat with a paid provider**: Claude Code tested with its command stubbed only, no real paid call; with the
+  real local assistant (gemma4:e2b) a spec's base was written through `spec_new` (2026-11-18).
+
+- **The company screen** (`src/teams/`, the HUD of spec 011 req. 30-31, 2026-11-18): rendered standalone in headless
+  Brave with the real roster and temperaments (English and Spanish, a dark and a light theme: the company, a team,
+  a candidate's profile, the *Who works* tab); its `nuclear-builder team` calls run against the real command (a
+  scratch `NUCLEAR_FACTORY_HOME`). Never opened in a running VS Code: the hover inspector, a drag onto a slot and the
+  keyboard were not tried there. The profile's LinkedIn fields (`headline`, `experience`, `recommendations`…) were
+  rendered from a fixture until the roster carries them; its *Activity* shows the run's steps only (a member's chat
+  messages are not given to the page yet). The member panel (header, Brain, Overview … Profile, 2026-11-18) was
+  rendered the same way in Spanish, dark and light, with the real `agents --json`; never in a running VS Code. Its load (2026-11-18, one
+  `team screen`, thumbnails, the skeleton) was timed in headless Brave against the real command, not in a webview,
+  whose files come slower than from a local server.
+- **The temperaments in a real chat**: each member's prompt carries its temperament's voice (`member.nuc`, tested with
+  the provider stubbed); how well a small local model keeps a voice (and never bends a fact) is not measured yet, (the
+  chat's page draws each member's face since 2026-11-18).
+- **The agent adapters with a real call**: Claude Code and OpenCode were checked against their `--help` (2.1.327,
+  2.2.7) and tested with their commands stubbed; no paid call was made. OpenCode's `--format json` lines and Codex's
+  and Gemini CLI's whole adapters (`adapter_codex.nuc`, `adapter_gemini_cli.nuc`: not installed on the machine they
+  were written on) follow their documentation only.
+- **The API adapters with a real call** (Anthropic, OpenAI, Google, OpenRouter): HTTP stubbed only. OpenAI's and
+  Google's prices are the project's (`.nuclear/builder.json` `"prices"`); a model without one is refused.
+- **The vault on macOS and Windows** (`security`, the password vault through PowerShell): written, never ran.
+- **The models' lists and the memory guard** (`models.nuc`, spec 011 req. 35): the API providers' list endpoints were
+  tested with HTTP stubbed only (no key on the machine it was written on); macOS's and Windows's memory reads
+  (`sysctl`/`vm_stat`, `Win32_OperatingSystem`) are written, never ran; the guard counts the machine's memory, not a
+  GPU's own (a model that fits in a GPU may be marked too big); Codex and Gemini CLI list no models (their default,
+  or one typed); the MCP tools' `needsUser` for a too-big model is tested through `memoryWarnings`, not through a
+  real server call.
+- **A whole run of the factory with the local agents**: five stations ran through `nuclear-builder run --events`
+  against the real Nuclear Developer (from the editor's process code: Quality failed on the fault above); Delivery and
+  the six together only with the Developer stubbed.
+
 - **The set-up in Nuclear on macOS and Windows** (launch agents, the Startup script, `Get-CimInstance` for the memory
   and the processor, the `.cmd` launchers): written, never ran. On Linux it ran from a working tree and on the clean
   machine.
 
-- **The message that sends a question to Nuclear Atlas** (renamed from the chat) and its tests pass (`npm test`);
-  never seen in a running VS Code.
-- **The Nuclear Builder panel was never opened in a running VS Code** (only headless renders, node checks, HTTP
-  calls and `nuclear-builder`): the form, the pipeline, the *Generate* stage, the *Analysis* step, a stage skipped by a
-  strategy, the questions that stop a run, the Plan step's tree and limits, the *For the agent* tab, the run's graph
-  with a node's drawer and *Run again from this step* / *Run <stage> again* / *Run again from scratch*; an
-  interrupted run resumed after a real restart.
-- The JetBrains *Nuclear Builder* tool window in a running IDE (only compiled).
+- **The Nuclear Builder page was never opened in a running VS Code**: its process logic (`LineRun`, the gate left
+  waiting and resumed with its answer, QA's checks listed, added and marked through `nuclear-builder checks`) drove a
+  real `nuclear-builder run --events` with a team of local roles through five stations; the page itself was seen only
+  in a headless browser (the form with the team, the four levels of the diagram, a gate, QA's plan and its console, a
+  station working; English and Spanish) with that run's file, and its clicks checked there. Not seen: the two modal
+  questions of the spending against a real paid team, an interrupted run resumed after a real restart of VS Code,
+  *Stop* (SIGINT) on a real run.
+- The JetBrains *Nuclear Builder* tool window in a running IDE (only compiled): its dialogs for a gate, QA's plan and
+  the spending, *Go On* and *Run a Station Again…*. It draws a run as a tree: no diagram, no avatars.
 - A Jira import against a real site, a GitHub issue import (`gh`), an exported CI file run on GitHub / GitLab /
   Bitbucket, the deploy stage with real `seed` / `integration` / `deploy` commands, the keyring on macOS and
   Windows (ADR-platform-0003).
 
 ## Pending
+- **The `delivery` role alias goes** (spec 011's amendment, DevOps since 2026-11-18): `--role delivery`,
+  `--assign delivery=…` and a tool's `role: "delivery"` are still read as `devops` for one release; in the release
+  after it, only the files' conversion on read (`roles.nuc`'s `OLD_ROLES`: teams, runs) stays, and the commands
+  refuse the old id with its new one.
 
-- **A spec outside `specs/<id>/spec.md`**: `nuclear-builder run specs/count-books.md` takes the parent folder as the
-  run's id (`specs`) and writes `specs/specs/spec.md`; its help says only `[spec.md]`. Either the id comes from the
-  file's name, or the help says the layout. Found by the functional tests of 2026-11-16, where a run with the local
-  agents went through every stage up to *Tests first* and stopped there: the local tester wrote no test that
-  compiled in 3 attempts (it called `exec` on a use case the planner had named otherwise), and the diagnoser said so.
+- **The other agents' answers as they are written** (spec 013 requirement 17): only Claude Code streams a chat's
+  text (`--include-partial-messages`); OpenCode's `--format json`, Codex's and Gemini CLI's JSON lines, the API
+  loop (the providers' streaming endpoints) and the local Nuclear Developer (`/developer/chat` answers whole) give
+  their text at the end. Claude Code's streamed lines are tested against a fake command only (no paid call).
+
+- **The factory's tools as tools**: a member gets `spec_new`, `spec_list`, `runs`, `run_file`, `checks` and `spec_draft` from every
+  provider as text (`--- tool: <name> ---` blocks), because the agents' command lines take only MCP servers and the
+  local assistant has no tools. Wanted: a factory MCP server (`nuclear-builder mcp`) beside `nuclear-mcp` for the
+  agents and the API loop. Until then a chat's agent also keeps its file tools: a change of the project's files is
+  said (a `files` trace), not refused; only the roles' folder is put back.
+- **The local chat's own guide**: the chat reaches the local assistant by `POST /developer/chat`, whose prompt is the
+  analyst's `answer-a-question` skill (Nuclear Atlas's): it tells the model to answer orders with `/task …`, so a 3B
+  model wrote `/task spec_new {…}` instead of a tool block (taken now by `toolCalls`). Wanted: a skill of the chat
+  (the general agent's own `prompt`), sent by the Builder, measured by an evaluation round.
+
 - **The old ledgers** (runs of Nuclear Builder before `ENGINE = 2`): a from-scratch restart removes a file the ledger says
   "was" what an earlier attempt wrote, only when that text is a step's `code` of the run; an older run whose steps
   kept no code still gets such a file back.
@@ -52,7 +159,18 @@ What the agents, the strategies and the generators still lack is in their own pr
   of other sessions' scratch and of `flutter_tools.*` folders, every run stopped at *Check the connections*. The
   message names the folder and the diagnoser has the kind `disk`; nothing cleans the temporary folders the tools
   leave (`nuclear-lsp-backend-*`, `nuclear-web-device-*`).
-- **Not written in Nuclear** (rule 9 of the root `AGENTS.md`): `nuclear-builder` is TypeScript, inside
-  `extensions/vscode`. Decided by the user to stay as it is for now.
+- **A project without a platform and the local Developer**: the Developer refuses a request without `backend`,
+  `mobile` or `web` with 400 (no longer a 500); a project without a project card's platform (a `nuclear.toml`
+  project) fails its first local station with that answer, and *Check the connections* does not say it first.
+- **A team's behaviours and tasks** (the squad screen writes them, `teams.nuc` validates and keeps them): the engine
+  does not act on them yet (`askBeforeWriting`, `explainDecisions`, `stopAtFirstFailure`, a task added to a station).
+- **What the Spanish interface still reads in English** (2026-11-18): what the engine and the agents write as free
+  text, not as a kind with arguments: a step's `summary`, its decisions, its trace (the agents' own steps, `plan`,
+  `classify`…), its log and a command's output; the analysis's open questions inside a gate's question; the
+  documents the stations write (`analysis.md`, `qa-report.md`…); a member's prompt and the temperaments' `voice` (the
+  agents', English by rule; the screens show the temperament's `description`). They need the engine to say each
+  sentence as a kind with arguments, or the agents to write in the run's language.
+- **The keys of the API providers in CI**: the vault is the system's keyring; a CI job has none, so a run with an
+  `api` role cannot run there (an agent's own login neither).
 
 What Android Studio's tool window lacks: [the plugin's roadmap](../../../../jetbrains/docs/01-product/roadmap.md).

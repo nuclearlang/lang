@@ -3,6 +3,7 @@ PieceRequest
   @minLength(3)
   task: string
   // backend, mobile or web: the agents write Nuclear for a platform, never for a dialect
+  @pattern(r"^(backend|mobile|web)$")
   platform: string = "backend"
   path: string = ""
   kind: string = ""
@@ -23,6 +24,7 @@ PlanRequest
   @minLength(3)
   spec: string
   // backend, mobile or web: the agents write Nuclear for a platform, never for a dialect
+  @pattern(r"^(backend|mobile|web)$")
   platform: string = "backend"
   // the project's folder: what it already declares is not planned again, and new pieces go to its components
   root: string = ""
@@ -40,6 +42,7 @@ PlanReply
 AnalyzeRequest
   @minLength(3)
   spec: string
+  @pattern(r"^(backend|mobile|web)$")
   platform: string = "backend"
   // the project's folder: with it the analyst knows which names of the request the project has
   root: string = ""
@@ -79,6 +82,7 @@ ChatRequest
   @minLength(1)
   message: string
   // backend, mobile or web
+  @pattern(r"^(backend|mobile|web)$")
   platform: string = "backend"
   // the project's map (.nuclear/map.md): every declaration with its kind, description and members
   map: string = ""

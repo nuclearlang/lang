@@ -1,0 +1,253 @@
+use io
+use sys
+use json
+use shutil
+use httpx
+use pathlib{ Path }
+
+// Backward compatibility (extensions/docs/06-runbooks/release.md "Backward compatibility"): the files an earlier
+// version wrote, kept as they were under `tests/fixtures/compat/`, load through today's code without an error,
+// convert on read where their format changed (the original kept as `.bak`) and say the same things: the teams of each
+// earlier shape, the run files of earlier engines, the flat specs, the line of earlier versions, an older chat history.
+
+// The fixtures of the source folder (the tests run from `build/nuclear_builder/tests`).
+compatFixture(parts: string[]) Path
+  Path(__file__).resolve().parents[3].joinpath("tests", "fixtures", "compat", ...parts)
+
+// The repository's roles and library (rosters, temperaments, skills), the factory's home in `tmpPath`.
+compatHome(tmpPath: Path, monkeypatch: any) void
+  agents = Path(__file__).resolve().parents[6].joinpath("nuclear-agents")
+  monkeypatch.setenv("NUCLEAR_ROLES", "${agents.joinpath("roles")}")
+  monkeypatch.setenv("NUCLEAR_LIBRARY", "${agents}")
+  monkeypatch.setenv("NUCLEAR_FACTORY_HOME", "${tmpPath.joinpath("factory")}")
+
+// A team fixture copied in as the factory's `<id>.json`; gives its original text.
+compatTeam(tmpPath: Path, fixture: string, id: string) string
+  dir = tmpPath.joinpath("factory", "teams")
+  dir.mkdir(parents = true, existOk = true)
+  text = compatFixture(["teams", "${fixture}.json"]).readText()
+  dir.joinpath("${id}.json").writeText(text)
+  text
+
+// A project of the backend platform with the flat specs of before, in `tmpPath/app`, the current folder.
+compatProject(tmpPath: Path, monkeypatch: any) string
+  root = tmpPath.joinpath("app")
+  root.mkdir(parents = true)
+  root.joinpath("config.nuc").writeText("")
+  root.joinpath(".nuclear").mkdir()
+  root.joinpath(".nuclear", "project.json").writeText(json.dumps({ "name": "app", "platform": "backend" }))
+  shutil.copytree(compatFixture(["specs"]), root.joinpath("specs"))
+  monkeypatch.chdir(root)
+  "${root}"
+
+// A run fixture copied in as `.nuclear/builder/runs/<its id>.json`; gives the run as the file holds it.
+compatRun(root: string, fixture: string) <string, any>
+  text = compatFixture(["runs", "${fixture}.json"]).readText()
+  run: <string, any> = json.loads(text)
+  Path(root, RUNS_DIR).mkdir(parents = true, existOk = true)
+  Path(root, RUNS_DIR, "${run["id"]}.json").writeText(text)
+  run
+
+// The fifth role as today's engine names it: the old files say `delivery`, read as `devops` once the role is renamed
+// (spec 011 amendment); a member whose id was its role may keep either id.
+fifthRole() string
+  "devops" in ROLES ? "devops" : "delivery"
+
+// What a command printed, as JSON.
+printed(capsys: any) any
+  json.loads(capsys.readouterr().out)
+
+testAFirstShapeTeamFromAPresetLoadsAsItsMembersWithItsOldFileKept(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  before = compatTeam(tmpPath, "v1-roles", "night-shift")
+  expect(team(["list", "--json"]) == 0)
+  listed: <string, any>[] = printed(capsys)
+  expect(listed.length == 1 and listed[0]["id"] == "night-shift" and listed[0]["members"] == 5 and listed[0]["techLead"] == "architect", json.dumps(listed))
+  file = tmpPath.joinpath("factory", "teams", "night-shift.json")
+  // converted once, the file of before beside it, whole
+  expect(file.withName("night-shift.json.bak").readText() == before)
+  kept: <string, any> = json.loads(file.readText())
+  expect(kept["roles"] == null and (kept["members"] as any[]).length == 5)
+  expect(team(["show", "night-shift", "--json"]) == 0)
+  shown: <string, any> = printed(capsys)
+  members: <string, any>[] = shown["members"]!
+  expect(members.map((m) => m["id"]).take(4) == ["analyst", "architect", "developer", "qa"] and "${members[4]["id"]}" in ["delivery", fifthRole()], json.dumps(members.map((m) => m["id"])))
+  expect(members.map((m) => m["role"]) == ["analyst", "architect", "developer", "qa", fifthRole()] and members[4]["employee"] == "del-001")
+  expect(shown["name"] == "Night shift" and shown["description"] == "Made from a preset" and shown["budgetUsd"] == 5 and shown["missing"] == [])
+  // nothing the old file said is lost: who works each one, its skills, instructions and tasks; the roster's names
+  dev = members[2]
+  expect(dev["employee"] == "dev-001" and dev["provider"] == "nuclear-developer" and dev["model"] == "qwen2.5-coder:3b" and dev["skills"] == ["tdd-in-nuclear", "write-tests"])
+  expect(dev["extraSkills"] == null and (dev["ownSkills"] as <string, any>[]).map((s) => [s["id"], "${s["text"]}".trim()]) == [["our-naming", "Name a test after what it proves."]], json.dumps(dev))
+  expect(members[1]["instructions"] == "Prefer small components." and (members[3]["tasks"] as any[]).length == 1)
+  expect(dev["name"] == "Neo" and (dev["personality"] as <string, any>)["temperament"] == "people-pleaser")
+  // read again: nothing more is written
+  stamp = kept["updated"]
+  expect(loadTeam("night-shift")["updated"] == stamp)
+
+testAFirstShapeTeamWithPersonalitiesKeepsTheirNamesAndTemperaments(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  compatTeam(tmpPath, "v1-personality", "day-shift")
+  expect(team(["show", "day-shift", "--json"]) == 0)
+  shown: <string, any> = printed(capsys)
+  byId: <string, <string, any>> = {}
+  for m in shown["members"] as <string, any>[]
+    byId["${m["id"]}"] = m
+  expect(byId["analyst"]!["name"] == "Askia Q" and byId["developer"]!["name"] == "Neo" and byId["qa"]!["name"] == "Edgar Edgecase")
+  expect(byId["developer"]!["personality"] == { "gifs": "often", "on": ["failure", "success"], "note": "Dry humour.", "temperament": "grumpy" }, json.dumps(byId["developer"]))
+  expect((byId["qa"]!["personality"] as <string, any>)["temperament"] == "shy" and (byId["qa"]!["personality"] as <string, any>)["on"] == ["question"])
+  // one without a temperament of its own shows its employee's
+  expect((byId["analyst"]!["personality"] as <string, any>)["temperament"] == "nerd")
+  expect(tmpPath.joinpath("factory", "teams", "day-shift.json.bak").isFile())
+
+testASecondShapeTeamBeforeTheLibraryMovesItsWordsAndItsExtraSkillsWithoutLosingOne(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  before = compatTeam(tmpPath, "v2-members", "payments")
+  expect(team(["show", "payments", "--json"]) == 0)
+  shown: <string, any> = printed(capsys)
+  skills: string[] = shown["skills"]!
+  purpose: string = shown["purpose"]!
+  // each free word is a skill of the library now, or is said in the purpose
+  expect("payments" in skills and purpose.startsWith("A shop that takes payments") and "Flutter apps" in purpose, json.dumps(shown))
+  expect(skills.length == 2 and not ("testing" in purpose), json.dumps(skills))
+  members: <string, any>[] = shown["members"]!
+  expect(members.map((m) => m["id"]) == ["analyst", "lead-arc", "developer", "dev-2", "qa"] and shown["techLead"] == "lead-arc")
+  own = (m: <string, any>) => (m["ownSkills"] as <string, any>[]).map((s) => "${s["id"]}:${"${s["text"]}".trim()}")
+  expect(own(members[1]) == ["pci-rules:Never log a card number."] and own(members[3]) == ["money:Amounts are integers of cents."], json.dumps(members[1]))
+  expect(members.all((m) => m["extraSkills"] == null) and members[3]["name"] == "Segfault Jones")
+  expect(tmpPath.joinpath("factory", "teams", "payments.json.bak").readText() == before)
+
+testASecondShapeTeamWhoseSkillsAreIdsAlreadyStillMovesItsExtraSkills(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  old: <string, any> = json.loads(compatFixture(["teams", "v2-members.json"]).readText())
+  old["skills"] = ["payments"]
+  tmpPath.joinpath("factory", "teams").mkdir(parents = true)
+  tmpPath.joinpath("factory", "teams", "payments.json").writeText(json.dumps(old))
+  expect(team(["show", "payments", "--json"]) == 0)
+  members: <string, any>[] = (printed(capsys) as <string, any>)["members"]!
+  expect(members[1]["extraSkills"] == null and (members[1]["ownSkills"] as <string, any>[]).map((s) => s["id"]) == ["pci-rules"], json.dumps(members[1]))
+  expect(tmpPath.joinpath("factory", "teams", "payments.json.bak").isFile())
+
+testTheChatHostReadsAProjectWhoseTeamIsOfTheFirstShape(tmpPath: Path, monkeypatch: any) void
+  compatHome(tmpPath, monkeypatch)
+  compatTeam(tmpPath, "v1-personality", "day-shift")
+  root = compatProject(tmpPath, monkeypatch)
+  Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "team": "day-shift" }))
+  host = chatHost(root, "en", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
+  members: <string, any>[] = host["members"]!
+  expect(members.map((m) => m["id"]).take(4) == ["day-shift-analyst", "day-shift-architect", "day-shift-developer", "day-shift-qa"] and "${members[4]["id"]}" in ["day-shift-delivery", "day-shift-${fifthRole()}"] and members[5]["id"] == "atlas", json.dumps(members.map((m) => m["id"])))
+  expect(members[4]["role"] == fifthRole())
+  expect(members[2]["name"] == "Neo" and members[2]["temperament"] == "grumpy" and host["teams"] == [{ "id": "day-shift", "name": "Day shift", "lead": "day-shift-architect" }])
+
+testTheRunsOfEarlierEnginesAreListedShownAndToldInTheJournal(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  for fixture in ["engine2", "engine3-no-team", "engine3-no-keys"]
+    root = compatProject(tmpPath.joinpath(fixture), monkeypatch)
+    old = compatRun(root, fixture)
+    expect(runsLine(["--json"]) == 0)
+    listed: <string, any>[] = printed(capsys)
+    expect(listed.length == 1 and listed[0]["id"] == old["id"] and listed[0]["title"] == (old["spec"] as <string, any>)["title"] and listed[0]["status"] == old["status"], fixture)
+    // the delivery station of an old run reads as today's name of it
+    station = (id: string) => id == "delivery" and not ("delivery" in STATIONS) ? STATIONS.last : id
+    expect((listed[0]["stations"] as <string, any>[]).map((s) => s["id"]) == (old["stages"] as <string, any>[]).map((s) => station("${s["id"]}")), fixture)
+    expect(listed[0]["specPath"] == "specs/${old["id"]}", fixture)
+    expect(runSubcommand(root, ["show", "${old["id"]}"]) == 0)
+    shown: <string, any> = printed(capsys)
+    expect(shown["writes"] == null and (shown["stages"] as any[]).length == (old["stages"] as any[]).length, fixture)
+    // the run is the project's where it is now, whatever folder it was made in
+    expect(loadRun(root, "${old["id"]}")!["root"] == root and listRuns(root)[0]["root"] == root, fixture)
+    expect(runSubcommand(root, ["journal", "${old["id"]}"]) == 0)
+    journal: string = capsys.readouterr().out
+    first: <string, any> = (old["stages"] as <string, any>[])[0]
+    expect("# Journal: ${(old["spec"] as <string, any>)["title"]}" in journal and "## ${first["title"]} — ${first["status"]}" in journal, journal)
+  // a run of the TypeScript engine is only started again: a retry from its middle says so
+  monkeypatch.chdir(tmpPath.joinpath("engine2", "app"))
+  monkeypatch.setattr(sys, "stderr", io.StringIO())
+  expect(retryLine(["list-characters"], false) == 2)
+
+testAnEngineThreeRunWithoutTeamMemberOrKeysIsRetriedFromItsStation(tmpPath: Path, monkeypatch: any) void
+  for fixture in ["engine3-no-team", "engine3-no-keys"]
+    root = lineProject(tmpPath.joinpath(fixture), monkeypatch, [])
+    compatRun(root, fixture)
+    calls: string[] = []
+    given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
+    done = Factory(loadRun(root, "count-books")!, localCrew(), readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => null, { "preflight": false, "transport": developer(calls) }).start("code")
+    expect(done["status"] == "passed" and not ("/developer/analyze" in calls), "${fixture}: ${done["status"]}")
+    expect((done["team"] as <string, any>)["id"] == "local-team" and done["root"] == root, fixture)
+    code: <string, any> = (done["stages"] as <string, any>[]).find((st) => st["id"] == "code")!
+    expect((code["steps"] as <string, any>[])[0]["member"] == "developer" and (code["steps"] as <string, any>[])[0]["key"] == "work", fixture)
+    // the stations before it are the file's, untouched
+    analysis: <string, any> = (done["stages"] as <string, any>[])[0]
+    expect((analysis["steps"] as <string, any>[])[0]["key"] == null and analysis["status"] == "passed", fixture)
+
+testTheFlatSpecsAreListedAndMovedToTheirComponentWithTheirFiles(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  root = compatProject(tmpPath, monkeypatch)
+  compatRun(root, "engine3-no-keys")
+  expect(specLine(["list", "--json"]) == 0)
+  listed: <string, any>[] = printed(capsys)
+  expect(listed.map((s) => "${s["id"]}:${s["component"]}:${s["path"]}").sorted() == ["count-books::specs/count-books", "pay-a-booking::specs/pay-a-booking"], json.dumps(listed))
+  expect(listed.find((s) => s["id"] == "count-books")!["runs"] == ["count-books"])
+  expect(specLine(["migrate", "--json"]) == 0)
+  moved: <string, string> = {}
+  for d in printed(capsys) as <string, any>[]
+    moved["${d["id"]}"] = "${d["path"]}"
+  expect(moved == { "count-books": "specs/_global/count-books", "pay-a-booking": "specs/booking/data/pay-a-booking" }, json.dumps(moved))
+  // its spec says its component now; the rest of it and its other files are as they were
+  spec = Path(root, "specs", "_global", "count-books", "spec.md").readText()
+  expect("- Component: _global" in spec and "- [ ] the count of an empty shelf is 0" in spec and "Count the books of the shelf." in spec, spec)
+  for name in ["checks.json", "analysis.md"]
+    expect(Path(root, "specs", "_global", "count-books", name).readText() == compatFixture(["specs", "count-books", name]).readText(), name)
+  expect(loadRun(root, "count-books")!["specPath"] == "specs/_global/count-books")
+
+testTheLineOfEarlierVersionsIsReadAndKeptWhenAKeyIsSet(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  compatTeam(tmpPath, "v1-roles", "night-shift")
+  root = compatProject(tmpPath, monkeypatch)
+  for fixture in ["engine2", "presets"]
+    text = compatFixture(["builder-json", "${fixture}.json"]).readText()
+    Path(root, ".nuclear", "builder.json").writeText(text)
+    expect(lineLine(["show", "--json"]) == 0)
+    line: <string, any> = (printed(capsys) as <string, any>)["line"]!
+    expect((line["commands"] as <string, any>)["check"] == ["echo checked"] and line["developerUrl"] == "http://127.0.0.1:9", fixture)
+    expect(runTeam(root)!["id"] == "night-shift", fixture)
+    // a key set keeps every key the file had
+    setLine(root, { "branches": ["main", "release"] })
+    after: <string, any> = json.loads(Path(root, ".nuclear", "builder.json").readText())
+    for k, v in json.loads(text) as <string, any>
+      expect(after[k] == v or k == "branches", "${fixture}: ${k}")
+
+testAnOlderChatHistoryIsReadWithItsSpendingConfirmed(tmpPath: Path, monkeypatch: any) void
+  root = compatProject(tmpPath, monkeypatch)
+  Path(root, ".nuclear", "builder", "chat").mkdir(parents = true)
+  shutil.copy(compatFixture(["builder-chat", "chat-1.jsonl"]), Path(root, ".nuclear", "builder", "chat", "chat-1.jsonl"))
+  events: <string, any>[] = []
+  chat = chatOf(root, "chat-1", { "kind": "agent", "provider": "claude-code", "model": "haiku" }, [], events)
+  expect(chat.start() == 0)
+  history: <string, any> = events[0]
+  expect(history["type"] == "history" and (history["messages"] as <string, any>[]).map((m) => m["role"]) == ["you", "agent", "tool", "you"], json.dumps(history))
+  expect(history["costUsd"] == 0.002 and chat.confirmed)
+
+// Values an earlier version kept that are gone today (a temperament, a base agent, a provider, a kind, an employee,
+// the tech lead): the team loads, each gone value left out with a warning that `team show` gives until the user saves.
+testATeamWhoseValuesDisappearedLoadsWithAWarningForEachNeverDropped(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  before = compatTeam(tmpPath, "v2-gone-values", "gone")
+  // a file that is not JSON is listed with its error, never left out
+  tmpPath.joinpath("factory", "teams", "broken.json").writeText("{ not json")
+  expect(team(["list", "--json"]) == 0)
+  listed: <string, any>[] = printed(capsys)
+  expect(listed.map((t) => t["id"]).sorted() == ["broken", "gone"] and listed.find((t) => t["id"] == "broken")!["error"] != null, json.dumps(listed))
+  expect(listed.find((t) => t["id"] == "gone")!["members"] == 5)
+  expect(team(["show", "gone", "--json"]) == 0)
+  shown: <string, any> = printed(capsys)
+  warnings: string[] = shown["warnings"]!
+  for gone in ["melancholic", "android-wizard", "copilot", "cloud", "dev-999", "boss"]
+    expect(warnings.any((w) => gone in w), "${gone}: ${json.dumps(warnings)}")
+  members: <string, any>[] = shown["members"]!
+  // the employee's own temperament, the kind's default provider, the default lead; the member's own name kept
+  expect((members[0]["personality"] as <string, any>)["temperament"] == "nerd" and members[1]["agent"] == null and members[2]["provider"] == "claude-code" and members[2]["model"] == null)
+  expect(members[3]["employee"] == null and members[3]["name"] == "Segfault Two" and members[4]["kind"] == "local" and members[4]["provider"] == "nuclear-developer" and shown["techLead"] == "lead-arc")
+  expect(tmpPath.joinpath("factory", "teams", "gone.json.bak").readText() == before)
+  // the user's save answers them
+  saved = saveTeam(loadTeam("gone"))
+  expect(saved["warnings"] == null and loadTeam("gone")["warnings"] == null)

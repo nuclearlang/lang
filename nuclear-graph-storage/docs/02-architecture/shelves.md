@@ -26,8 +26,9 @@ A **shelf** is a Chroma collection that answers one kind of question. A **row** 
 
 A search of every shelf reads all but `queries`: that one is read by the planner of an answer.
 
-Two more collections are not part of the base: `prompts` (the prompt files of this package: `prompts/<use case>.md`
-and `prompts/agents/<step>.md`) and `memory` (what an agent keeps about a project while it works).
+Two more collections are not part of the base: `prompts` (the skills of the roles that name a prompt,
+`nuclear-agents/roles/<role>/skills/*.md` with `prompt: <use case>` or `prompt: agent.<step>`: the text after the
+front matter) and `memory` (what an agent keeps about a project while it works).
 
 ## A card
 

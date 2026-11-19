@@ -1,0 +1,6 @@
+// The user's answer to a member's question (a responder's `ask`), by the question's id.
+Answer
+  @minLength(1)
+  id: string
+  @maxLength(20000)
+  answer: string

@@ -1,0 +1,13 @@
+// Generated from the contract nuclear_chat 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
+// What a host registers: the project, its members and teams, the channels it opens, the language and the GIFs.
+NewWorkspace
+  // the project's folder (absolute): its chat is kept in `.nuclear/chat/`
+  root: string
+  // builder or atlas
+  host: string
+  members: Member[] = []
+  teams: Team[] = []
+  channels: Channel[] = []
+  lang: string = "en"
+  // where the GIF picker searches: pack, tenor or giphy (the editor's setting nuclear.chat.gifs)
+  gifs: string = "pack"

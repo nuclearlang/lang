@@ -25,6 +25,12 @@ pub struct Output {
 
 /// Parses and emits `src` with `dialect`.
 pub fn transpile(src: &str, dialect: &Dialect) -> Output {
+    transpile_with_plugins(src, dialect, &[])
+}
+
+/// `transpile` of a file built alone as if `config.nuc` enabled `plugins` (a dialect's reference shows a plugin's
+/// output this way; a project's plugins come from its own `config.nuc`).
+pub fn transpile_with_plugins(src: &str, dialect: &Dialect, plugins: &[String]) -> Output {
     let parsed = nuclear_syntax::parse(src);
     let mut diagnostics = parsed.diagnostics;
     if diagnostics.iter().any(Diagnostic::is_error) {
@@ -33,7 +39,7 @@ pub fn transpile(src: &str, dialect: &Dialect) -> Output {
     let mut file = parsed.file;
     let names = naming::apply(&mut file, dialect);
     diagnostics.extend(alias::expand(&mut file, &Default::default(), &|d| alias_via(dialect, d)));
-    let mut emitter = emit::Emitter::new(dialect, file.comments.clone()).with_source(src);
+    let mut emitter = emit::Emitter::new(dialect, file.comments.clone()).with_source(src).with_plugins(plugins);
     let code = emitter.file(&file);
     diagnostics.append(&mut emitter.diags);
     naming::restore(&mut diagnostics, &names);

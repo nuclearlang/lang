@@ -1,0 +1,11 @@
+// A lambda made in a loop keeps the values of its own turn.
+main() void
+  fns: (() => int)[] = []
+  for i in 0..3
+    doubled = i * 2
+    fns.add(() => i + doubled)
+  print(fns.map((f) => f()).join(","))
+  // a lambda whose body calls another lambda keeps its own parameter
+  prefixed = (xs: string[]) => xs.map((x) => "a${x}")
+  plusOne = (xs: int[]) => xs.map((x) => x + 1)
+  print(prefixed(["b", "c"]).join(","), plusOne([1, 2]).join(","))

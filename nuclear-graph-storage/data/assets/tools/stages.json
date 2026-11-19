@@ -5,279 +5,208 @@
  "about": "The stages of the Nuclear Builder (extensions/tools/nuclear-builder/src/engine.ts).",
  "rows": [
   {
-   "id": "stage:artifacts",
+   "id": "stage:analysis",
    "type": "stage",
-   "title": "Stage 8 of the Builder: Artifacts",
-   "summary": "The project is built and its output kept with the run (generated code, contract, OpenAPI).",
+   "title": "Station 1 of the software factory: Analysis",
+   "summary": "The spec read by the Analyst: what the client needs, the acceptance criteria, the questions to answer before anything is built (analysis.md).",
    "body": [
-    "The project is built and its output kept with the run (generated code, contract, OpenAPI).",
+    "The spec read by the Analyst: what the client needs, the acceptance criteria, the questions to answer before anything is built (analysis.md).",
     "",
-    "Who takes part: shell. The stage after it: `deploy`."
+    "The role that works it: analyst. The station after it: `design`."
    ],
    "keys": [
-    "artifacts stage",
-    "stage artifacts"
+    "analysis station",
+    "station analysis",
+    "stage analysis"
    ],
    "links": [
     {
      "rel": "next",
-     "to": "stage:deploy"
+     "to": "stage:design"
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/roles.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
-    "name": "artifacts"
+    "name": "analysis"
    },
    "data": {
-    "order": 8,
-    "stage": "artifacts",
-    "title": "Artifacts",
+    "order": 1,
+    "stage": "analysis",
+    "title": "Analysis",
     "actors": [
-     "shell"
+     "analyst"
     ],
-    "next": "deploy"
+    "next": "design"
    }
   },
   {
    "id": "stage:code",
    "type": "stage",
-   "title": "Stage 5 of the Builder: Code",
-   "summary": "The local coder (qwen2.5-coder:3b) writes each piece with the Smart Graph and repairs it with the compiler; Claude only fixes what it could not.",
+   "title": "Station 4 of the software factory: Code",
+   "summary": "The Developer writes what the generators did not, with the Nuclear MCP server; then the project's check (nuclear check).",
    "body": [
-    "The local coder (qwen2.5-coder:3b) writes each piece with the Smart Graph and repairs it with the compiler; Claude only fixes what it could not. Ends with nuclear check of the whole project, the tests included.",
+    "The Developer writes what the generators did not, with the Nuclear MCP server; then the project's check (nuclear check).",
     "",
-    "Who takes part: coder, tester, graph, claude, shell. The stage after it: `verify`."
+    "The role that works it: developer. The station after it: `quality`."
    ],
    "keys": [
-    "code stage",
+    "code station",
+    "station code",
     "stage code"
    ],
    "links": [
     {
      "rel": "next",
-     "to": "stage:verify"
+     "to": "stage:quality"
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/roles.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
     "name": "code"
    },
    "data": {
-    "order": 5,
+    "order": 4,
     "stage": "code",
     "title": "Code",
     "actors": [
-     "coder",
-     "tester",
-     "graph",
-     "claude",
-     "shell"
+     "developer"
     ],
-    "next": "verify"
+    "next": "quality"
    }
   },
   {
-   "id": "stage:deploy",
+   "id": "stage:delivery",
    "type": "stage",
-   "title": "Stage 9 of the Builder: Deploy",
-   "summary": "Seeds, integration tests and the local deploy of .nuclear/builder.json; the same commands the exported CI runs on a server.",
+   "title": "Station 6 of the software factory: Delivery",
+   "summary": "DevOps writes the definition of done, the user stories and the pull request's text (and the deployment, when the change touches it); once you approve, the branch, the commit in your name and the pull request with gh (never merged).",
    "body": [
-    "Seeds, integration tests and the local deploy of .nuclear/builder.json; the same commands the exported CI runs on a server.",
+    "DevOps writes the definition of done, the user stories and the pull request's text (and the deployment, when the change touches it); once you approve, the branch, the commit in your name and the pull request with gh (never merged).",
     "",
-    "Who takes part: shell. It is the last stage."
+    "The role that works it: devops. It is the last station."
    ],
    "keys": [
-    "deploy stage",
-    "stage deploy"
+    "delivery station",
+    "station delivery",
+    "stage delivery"
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/roles.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
-    "name": "deploy"
+    "name": "delivery"
    },
    "data": {
-    "order": 9,
-    "stage": "deploy",
-    "title": "Deploy",
+    "order": 6,
+    "stage": "delivery",
+    "title": "Delivery",
     "actors": [
-     "shell"
+     "devops"
     ],
     "next": ""
    }
   },
   {
-   "id": "stage:generate",
+   "id": "stage:design",
    "type": "stage",
-   "title": "Stage 2 of the Builder: Generate",
-   "summary": "nuclear gen writes what follows from the data, already compiling: for each resource of the spec (its GET <url> lines, or its Resources) the models, the repository, a use case per action, the facade, the controller or the screen, the tests.",
+   "title": "Station 2 of the software factory: Design",
+   "summary": "The generators write first what follows from the data (nuclear gen resource); then the Architect designs what is left, with Mermaid diagrams and the ADRs it follows, and splits it into a plan (design.md, plan.md).",
    "body": [
-    "nuclear gen writes what follows from the data, already compiling: for each resource of the spec (its GET <url> lines, or its Resources) the models, the repository, a use case per action, the facade, the controller or the screen, the tests. The agents write only what is left.",
+    "The generators write first what follows from the data (nuclear gen resource); then the Architect designs what is left, with Mermaid diagrams and the ADRs it follows, and splits it into a plan (design.md, plan.md).",
     "",
-    "Who takes part: shell. The stage after it: `plan`."
+    "The role that works it: architect. The station after it: `tests`."
    ],
    "keys": [
-    "generate stage",
-    "stage generate"
+    "design station",
+    "station design",
+    "stage design"
    ],
    "links": [
     {
      "rel": "next",
-     "to": "stage:plan"
+     "to": "stage:tests"
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/roles.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
-    "name": "generate"
+    "name": "design"
    },
    "data": {
     "order": 2,
-    "stage": "generate",
-    "title": "Generate",
+    "stage": "design",
+    "title": "Design",
     "actors": [
-     "shell"
+     "architect"
     ],
-    "next": "plan"
+    "next": "tests"
    }
   },
   {
-   "id": "stage:plan",
+   "id": "stage:quality",
    "type": "stage",
-   "title": "Stage 3 of the Builder: Plan",
-   "summary": "The work split into pieces of one file each, in the order they can be written.",
+   "title": "Station 5 of the software factory: Quality",
+   "summary": "QA writes its plan into the run's checks and stops for you: switch checks, add your own, run yours; then the project is built and tested and QA runs the rest (qa-report.md).",
    "body": [
-    "The work split into pieces of one file each, in the order they can be written. Claude plans when it leads; otherwise the local planner (gemma4:e2b) does.",
+    "QA writes its plan into the run's checks and stops for you: switch checks, add your own, run yours; then the project is built and tested and QA runs the rest (qa-report.md).",
     "",
-    "Who takes part: claude, planner, graph. The stage after it: `test`."
+    "The role that works it: qa. The station after it: `delivery`."
    ],
    "keys": [
-    "plan stage",
-    "stage plan"
+    "quality station",
+    "station quality",
+    "stage quality"
    ],
    "links": [
     {
      "rel": "next",
-     "to": "stage:test"
+     "to": "stage:delivery"
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/roles.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
-    "name": "plan"
+    "name": "quality"
    },
    "data": {
-    "order": 3,
-    "stage": "plan",
-    "title": "Plan",
+    "order": 5,
+    "stage": "quality",
+    "title": "Quality",
     "actors": [
-     "claude",
-     "planner",
-     "graph"
+     "qa"
     ],
-    "next": "test"
+    "next": "delivery"
    }
   },
   {
-   "id": "stage:security",
+   "id": "stage:tests",
    "type": "stage",
-   "title": "Stage 7 of the Builder: Security",
-   "summary": "The local reviewer reads each new file against the platform's security rules; the project's security commands run.",
+   "title": "Station 3 of the software factory: Tests first",
+   "summary": "Before any code, the tests from the acceptance criteria and the plan (test-plan.md and the tests in the project).",
    "body": [
-    "The local reviewer reads each new file against the platform's security rules; the project's security commands run.",
+    "Before any code, the tests from the acceptance criteria and the plan (test-plan.md and the tests in the project).",
     "",
-    "Who takes part: security, shell. The stage after it: `artifacts`."
+    "The role that works it: developer. The station after it: `code`."
    ],
    "keys": [
-    "security stage",
-    "stage security"
-   ],
-   "links": [
-    {
-     "rel": "next",
-     "to": "stage:artifacts"
-    }
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-builder",
-    "name": "security"
-   },
-   "data": {
-    "order": 7,
-    "stage": "security",
-    "title": "Security",
-    "actors": [
-     "security",
-     "shell"
-    ],
-    "next": "artifacts"
-   }
-  },
-  {
-   "id": "stage:spec",
-   "type": "stage",
-   "title": "Stage 1 of the Builder: Specification",
-   "summary": "The spec you wrote or imported, with its acceptance criteria and the context the agents get, written to specs/<id>/spec.md.",
-   "body": [
-    "The spec you wrote or imported, with its acceptance criteria and the context the agents get, written to specs/<id>/spec.md. Then its analysis: which kind of request it is (a whole system, one screen, a rename, a failing test...) and the strategy the run follows: the stages that run, what the generators write, the facts it lacks.",
-    "",
-    "Who takes part: you, planner. The stage after it: `generate`."
-   ],
-   "keys": [
-    "specification stage",
-    "stage spec"
-   ],
-   "links": [
-    {
-     "rel": "next",
-     "to": "stage:generate"
-    }
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-builder",
-    "name": "spec"
-   },
-   "data": {
-    "order": 1,
-    "stage": "spec",
-    "title": "Specification",
-    "actors": [
-     "you",
-     "planner"
-    ],
-    "next": "generate"
-   }
-  },
-  {
-   "id": "stage:test",
-   "type": "stage",
-   "title": "Stage 4 of the Builder: Tests first",
-   "summary": "Before any code, the local tester writes the tests from the acceptance criteria, the planned pieces and the project map (.nuclear/map.md): what the code must do, in Nuclear.",
-   "body": [
-    "Before any code, the local tester writes the tests from the acceptance criteria, the planned pieces and the project map (.nuclear/map.md): what the code must do, in Nuclear.",
-    "",
-    "Who takes part: tester, graph. The stage after it: `code`."
-   ],
-   "keys": [
-    "tests first stage",
-    "stage test"
+    "tests first station",
+    "station tests",
+    "stage tests"
    ],
    "links": [
     {
@@ -286,61 +215,21 @@
     }
    ],
    "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
+    "extensions/tools/nuclear-builder/run.nuc",
+    "extensions/tools/nuclear-builder/roles.nuc"
    ],
    "meta": {
     "tool": "nuclear-builder",
-    "name": "test"
+    "name": "tests"
    },
    "data": {
-    "order": 4,
-    "stage": "test",
+    "order": 3,
+    "stage": "tests",
     "title": "Tests first",
     "actors": [
-     "tester",
-     "graph"
+     "developer"
     ],
     "next": "code"
-   }
-  },
-  {
-   "id": "stage:verify",
-   "type": "stage",
-   "title": "Stage 6 of the Builder: Verification",
-   "summary": "The project is built and every test runs.",
-   "body": [
-    "The project is built and every test runs. A failing test goes back to the coder told in Nuclear (nuclear explain: the message, a hint and the .nuc lines), then the tests run again (at most 3 rounds); Claude takes what is left when it leads.",
-    "",
-    "Who takes part: shell, coder, tester, claude. The stage after it: `security`."
-   ],
-   "keys": [
-    "verification stage",
-    "stage verify"
-   ],
-   "links": [
-    {
-     "rel": "next",
-     "to": "stage:security"
-    }
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/src/engine.ts"
-   ],
-   "meta": {
-    "tool": "nuclear-builder",
-    "name": "verify"
-   },
-   "data": {
-    "order": 6,
-    "stage": "verify",
-    "title": "Verification",
-    "actors": [
-     "shell",
-     "coder",
-     "tester",
-     "claude"
-    ],
-    "next": "security"
    }
   }
  ]

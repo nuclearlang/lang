@@ -904,6 +904,52 @@
    }
   },
   {
+   "id": "mcp:graph_monitor",
+   "type": "mcp",
+   "title": "`graph_monitor` — a tool of the Nuclear MCP server",
+   "summary": "project_monitor, and the hot spots kept in the graph (`monitor:<project>`) so the local developer and later sessions know where the app was slow.",
+   "body": [
+    "project_monitor, and the hot spots kept in the graph (`monitor:<project>`) so the local developer and later sessions know where the app was slow. Call it after a run with `nuclear run --monitor`.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string"
+   ],
+   "keys": [
+    "graph_monitor",
+    "graph monitor"
+   ],
+   "asks": [
+    "what does graph_monitor do",
+    "que hace graph_monitor"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "graph_monitor"
+   },
+   "data": {
+    "group": "graph",
+    "runs": "nuclear",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:graph_prompt",
    "type": "mcp",
    "title": "`graph_prompt` — a tool of the Nuclear MCP server",
@@ -1370,6 +1416,52 @@
    }
   },
   {
+   "id": "mcp:nuclear_doc",
+   "type": "mcp",
+   "title": "`nuclear_doc` — a tool of the Nuclear MCP server",
+   "summary": "One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base, library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp, vscode, builder...), context-docs, example/<name>.",
+   "body": [
+    "One topic of the atlas, whole (nuclear_start lists them): a guide chapter (syntax, functions, control...), base, library, a platform (mobile, backend, web), a dialect (flutter, fastapi, nestjs, react), a tool (cli, mcp, vscode, builder...), context-docs, example/<name>. A word that is not a topic answers the topics that explain it.",
+    "",
+    "Parameters:",
+    "",
+    "- `topic`: string"
+   ],
+   "keys": [
+    "nuclear_doc",
+    "nuclear doc"
+   ],
+   "asks": [
+    "what does nuclear_doc do",
+    "que hace nuclear_doc"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "nuclear_doc"
+   },
+   "data": {
+    "group": "nuclear",
+    "runs": "",
+    "params": [
+     {
+      "name": "topic",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:nuclear_fmt",
    "type": "mcp",
    "title": "`nuclear_fmt` — a tool of the Nuclear MCP server",
@@ -1529,6 +1621,52 @@
    }
   },
   {
+   "id": "mcp:nuclear_start",
+   "type": "mcp",
+   "title": "`nuclear_start` — a tool of the Nuclear MCP server",
+   "summary": "CALL FIRST, before anything about Nuclear: what NuclearLang and Synapsis are, the rules never broken, the work cycle with these tools on this machine, and the atlas of every topic (the language, the library, each platform and dialect, the tools, how a project documents itself, validated examples), each read with nuclear_doc.",
+   "body": [
+    "CALL FIRST, before anything about Nuclear: what NuclearLang and Synapsis are, the rules never broken, the work cycle with these tools on this machine, and the atlas of every topic (the language, the library, each platform and dialect, the tools, how a project documents itself, validated examples), each read with nuclear_doc. With project (a folder inside a Synapsis project), also its platform, its pieces and the syntax sheet of its dialect.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string = `\"\"`"
+   ],
+   "keys": [
+    "nuclear_start",
+    "nuclear start"
+   ],
+   "asks": [
+    "what does nuclear_start do",
+    "que hace nuclear_start"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "nuclear_start"
+   },
+   "data": {
+    "group": "nuclear",
+    "runs": "nuclear gen inspect",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:project_inspect",
    "type": "mcp",
    "title": "`project_inspect` — a tool of the Nuclear MCP server",
@@ -1575,16 +1713,62 @@
    }
   },
   {
+   "id": "mcp:project_monitor",
+   "type": "mcp",
+   "title": "`project_monitor` — a tool of the Nuclear MCP server",
+   "summary": "Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.",
+   "body": [
+    "Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much memory) and the time of each Nuclear function and method, from the last run with `nuclear run --monitor`.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string"
+   ],
+   "keys": [
+    "project_monitor",
+    "project monitor"
+   ],
+   "asks": [
+    "what does project_monitor do",
+    "que hace project_monitor"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "project_monitor"
+   },
+   "data": {
+    "group": "project",
+    "runs": "nuclear",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 27 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 31 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
-    "NuclearLang and Synapsis. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate it into Nuclear by hand; when a tool cannot do something, say so. The generators write the standard code, the local Nuclear Developer writes what is left; you lead, validate and correct. For any request, first call graph_strategy with the user's own words: it answers which kind of request it is (a whole system, one screen, a rename, a failing test...) and the plan of that kind; follow that plan. For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. Then give developer_task only what the generators did not write (a use case with its own rules, a view's details), and wire each use case it wrote with generate_usecase (its alias in the facade, its route). For any task that writes or changes .nuc (a feature, a bug, a refactor, tests): 1) call developer_task first with the project folder, a title, the description and the acceptance criteria: the local agents plan, write the tests first, write the code, run the tests and the security review, and document everything they did in a journal it returns; 2) read the journal, then validate: nuclear_check of the project must say ok and nuclear test must pass; 3) correct only what failed or is wrong, never rewrite what passed; before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph instead of guessing; If the run failed, read its 'Why it failed' (the local diagnoser): when the cause was passing or you fixed it, call developer_retry instead of starting again. 4) call developer_review with the run, what you corrected and why, and the corrected files, so the journal keeps your review and the local developer learns from it. Write the code yourself only when developer_task cannot run (the local developer is not running) and say so.",
+    "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
     "",
-    "Its tools: `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `project_inspect`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`."
+    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `project_inspect`, `project_monitor`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`."
    ],
    "keys": [
     "mcp",

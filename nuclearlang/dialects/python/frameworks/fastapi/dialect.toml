@@ -40,7 +40,7 @@ builtin_result = false
 Error = "AppError"
 
 [names]
-written = ["Result", "Ok", "Err", "AppError", "Awaitable", "Annotated", "MinLen", "MaxLen", "Ge", "Le",
+written = ["Result", "Ok", "Err", "AppError", "Model", "Awaitable", "Annotated", "MinLen", "MaxLen", "Ge", "Le",
   "AfterValidator", "Field", "AliasChoices", "is_email", "is_url", "Repository", "Mapped", "BaseModel", "TypedDict", "AppConfig", "ComponentConfig"]
 
 [auto_imports]
@@ -51,12 +51,15 @@ written = ["Result", "Ok", "Err", "AppError", "Awaitable", "Annotated", "MinLen"
   "Entity", "Mapped", "primary", "column", "created", "updated", "Http", "HttpRepository",
   "many_to_one", "one_to_many", "many_to_many", "one_to_one", "transactional", "Page",
   "Repository", "gt", "gte", "lt", "lte", "ne", "like", "ilike", "one_of", "is_null", "between",
-  "controller", "get", "post", "put", "patch", "delete", "status",
+  "controller", "get", "post", "put", "patch", "delete", "status", "untraced",
+  "Guard", "Token", "NoOrigin", "Model",
 ]
 # the optional parts of the runtime: only a project that enables their plugin imports them
 "synapsis.ai" = ["Tools", "Agent", "Graph", "Messages", "start", "next", "chat_model", "vector_store", "text_of"]
 "synapsis.events" = ["Listener", "consumer", "publish", "cache_get", "cache_set"]
-"synapsis.testing" = ["FakeModel", "memory_database"]
+"synapsis.sockets" = ["WebSocketServer"]
+"synapsis.telemetry" = ["Telemetry", "Otlp", "Datadog", "NewRelic", "Grafana", "Metric", "traced"]
+"synapsis.testing" = ["FakeModel", "memory_database", "app_client", "AppClient", "AppSocket", "HttpAnswer", "SocketEvent"]
 "synapsis.validators" = ["is_email", "is_url"]
 # in a model, Field is pydantic's (not the dataclasses class)
 "pydantic" = ["Field", "AfterValidator", "AliasChoices"]
@@ -113,8 +116,8 @@ self_member = "q.{{name}}"
 
 # --- domain ---
 [kinds.model]
-description = "Name + fields in domain/models → a pydantic model (validated; what the API reads and answers)"
-imports = ["BaseModel"]
+description = "Name + fields in domain/models → a pydantic model (validated; what the API reads and answers), its JSON with Nuclear's names (camelCase)"
+imports = ["Model"]
 template = { file = "templates/model.tpl" }
 [kinds.model.syntax]
 # Synapsis's rule decorators (the same as the nestjs dialect and Flutter's forms) become pydantic constraints
@@ -126,6 +129,10 @@ description = "usecase Name(deps) + exec(...) Result<E, T> → one business oper
 methods = ["exec"]
 returns = "Result"
 template = { file = "templates/injectable.tpl" }
+imports = ["traced"]
+[kinds.usecase.syntax]
+# with plugins(telemetry = true), exec gets its span, named with the breadcrumb (a constant); @untraced removes it
+method = { file = "templates/usecase_method.tpl" }
 
 [kinds.appcomponent]
 needs_body = true
@@ -255,7 +262,7 @@ assets = []
 # carries (pyproject.toml) only what it enables
 [project.manifest]
 file = "config.nuc"
-sections = ["synapsis", "app", "plugins", "contracts", "dependencies"]
+sections = ["synapsis", "app", "plugins", "contracts", "dependencies", "testEnv"]
 # dependencies(name = "version") adds a package of the target's package manager; a version that starts with . or / is a folder
 packages = ["dependencies"]
 
@@ -294,10 +301,21 @@ description = "Kafka topics (aiokafka): Kafka(servers = ..., group = ...); publi
 packages = { aiokafka = ">=0.12" }
 names = ["Kafka"]
 
+[project.plugins.telemetry]
+description = "Traces and metrics over OpenTelemetry (OTLP/HTTP): Datadog(...), NewRelic(...), Grafana(...), Otlp(...) in connections; Metric.count, Metric.record; @untraced"
+packages = { opentelemetry-sdk = ">=1.27", opentelemetry-exporter-otlp-proto-http = ">=1.27", opentelemetry-instrumentation-fastapi = ">=0.48b0" }
+names = ["Telemetry", "Otlp", "Datadog", "NewRelic", "Grafana", "Metric"]
+
 [project.plugins.events]
 description = "publish and the listener kind with @consumer in the same process (Kafka optional: plugins(kafka = true))"
 kinds = ["listener"]
 names = ["publish", "Listener", "consumer"]
+
+[project.plugins.websocket]
+description = "The app's WebSocket (uvicorn's websockets): WebSocketServer(path = \"ws\") in connections serves the same controllers and pushes what publish sends to the subscribed clients"
+packages = { websockets = ">=13" }
+requires = ["events"]
+names = ["WebSocketServer"]
 
 [project.plugins.ai]
 description = "LangChain and LangGraph: the tools, agent, state and graph kinds, chat models and embeddings"

@@ -1,6 +1,6 @@
 import 'dart:math' hide Point;
 
-// Dialecto dart.
+// The dart dialect.
 // `extension`, `mixin` and `data` are kinds, `with` is a clause, `abstract` a modifier:
 // they all come from dialects/dart/dialect.toml, not from the base language.
 

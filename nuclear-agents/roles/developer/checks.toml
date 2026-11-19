@@ -1,0 +1,47 @@
+# The checks the Developer proposes (nuclear-agents/roles/README.md). `by = "role"`: the role runs it; `by = "user"`:
+# the user runs it and marks it done or failed. A `command` is a key of the `commands` of `.nuclear/builder.json`.
+
+[[check]]
+id = "developer.tests-fail-first"
+title = "Each new test fails before the code, for the right reason"
+title_es = "Cada test nuevo falla antes del código, por la razón correcta"
+station = "tests"
+on = true
+by = "role"
+command = "test"
+
+[[check]]
+id = "developer.compiles"
+title = "The compiler reports no error"
+title_es = "El compilador no informa ningún error"
+station = "code"
+on = true
+by = "role"
+command = "check"
+
+[[check]]
+id = "developer.builds"
+title = "The project builds"
+title_es = "El proyecto compila"
+station = "code"
+on = true
+by = "role"
+command = "build"
+
+[[check]]
+id = "developer.tests-pass"
+title = "Every test passes, old and new, and none was deleted or weakened"
+title_es = "Todos los tests pasan, viejos y nuevos, y ninguno se borró ni se debilitó"
+station = "code"
+on = true
+by = "role"
+command = "test"
+
+[[check]]
+id = "developer.faithful"
+title = "Every name, path and value of the plan and the criteria is in the code as written"
+title_es = "Cada nombre, ruta y valor del plan y de los criterios está en el código tal como se escribió"
+station = "code"
+on = true
+by = "role"
+prompt = "Read specs/{{id}}/plan.md and the acceptance criteria; list every name, path, status or value they write that the code does not have exactly as written, and fix each one."
