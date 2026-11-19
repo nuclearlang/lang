@@ -77,7 +77,8 @@ the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
   installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the
   MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,
   `nuclear-mcp`, `nuclear-developer`, `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to
-  `ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base. Before packing it fails if a `.pth` points into the
+  `ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the
+  services print reaches a pipe whole on Windows and under a C locale), and the knowledge base. Before packing it fails if a `.pth` points into the
   checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it
   (`installer/install.sh --ai`).
 - `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets

@@ -78,11 +78,13 @@ mkdir -p "$AI/nuclear-chat"
 cp -R "$CHAT_SERVICE/build/app" "$AI/nuclear-chat/"
 
 # 4. the launchers: the console scripts of pip name the Python by an absolute path, these by their own place
+# `-X utf8`: the services print ✓ ◆ and box lines; without it a Windows Python writes a pipe (CI, a redirected output)
+# in cp1252 and fails on them (UnicodeEncodeError), as a Linux one does under the C locale
 launch() { # <name> <python code that runs it>
   if [ "$os" = windows ]; then
-    printf '@"%%~dp0..\\python\\python.exe" -c "%s" %%*\r\n' "$2" > "$AI/bin/$1.cmd"
+    printf '@"%%~dp0..\\python\\python.exe" -X utf8 -c "%s" %%*\r\n' "$2" > "$AI/bin/$1.cmd"
   else
-    printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/../python/bin/python3" -c "%s" "$@"\n' "$2" > "$AI/bin/$1"
+    printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/../python/bin/python3" -X utf8 -c "%s" "$@"\n' "$2" > "$AI/bin/$1"
     chmod +x "$AI/bin/$1"
   fi
 }

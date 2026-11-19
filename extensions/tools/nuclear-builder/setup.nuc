@@ -179,7 +179,7 @@ capture(args: string[], cwd: string? = null) Ran
   try
     // no input: a command run from the installer would read its terminal, which Bun (Claude Code's CLI) cannot watch
     // on macOS (`EINVAL: kqueue`)
-    done = subprocess.run(args, cwd = cwd, stdin = subprocess.DEVNULL, captureOutput = true, text = true, timeout = 20, env = toolEnv(), shell = sys.platform == "win32")
+    done = subprocess.run(args, cwd = cwd, stdin = subprocess.DEVNULL, captureOutput = true, text = true, encoding = "utf-8", errors = "replace", timeout = 20, env = toolEnv(), shell = sys.platform == "win32")
     Ran(done.returncode, "${done.stdout}${done.stderr}")
   catch e
     if not isinstance(e, OSError) and not isinstance(e, subprocess.TimeoutExpired)
@@ -193,7 +193,9 @@ runCommand(args: string[], say: (line: string) => void, cwd: string? = null, env
   all["PYTHONUNBUFFERED"] = "1"
   for k, v in env ?? {}
     all[k] = v
-  p = subprocess.Popen(args, cwd = cwd, env = all, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = true, errors = "replace", shell = sys.platform == "win32")
+  // the services write UTF-8 (`-X utf8`, PYTHONUTF8): read as such, not in the system's code page
+  all["PYTHONUTF8"] = "1"
+  p = subprocess.Popen(args, cwd = cwd, env = all, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text = true, encoding = "utf-8", errors = "replace", shell = sys.platform == "win32")
   last = ""
   for raw in p.stdout!
     line = raw.trim()
