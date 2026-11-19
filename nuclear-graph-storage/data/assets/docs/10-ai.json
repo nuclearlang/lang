@@ -6668,7 +6668,7 @@
    }
   },
   {
-   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/models.md#the-chat-s-model.cb82d6",
+   "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/models.md#the-chat-s-model.e10c10",
    "type": "context",
    "title": "The models — The chat's model",
    "summary": "`CHAT_MODEL` (`qwen3.5:2b`), with a context of `CHAT_CONTEXT_TOKENS` (4096), no thinking (`reasoning = false`), an answer of 1024 tokens at most (without it `qwen2.5:1.5b` wrote 35 000 tokens, Ollama shifting its context, until its caller was killed) and `CHAT_KEEP_ALIVE` (3m): Ollama frees it…",
@@ -6676,9 +6676,9 @@
     "`CHAT_MODEL` (`qwen3.5:2b`), with a context of `CHAT_CONTEXT_TOKENS` (4096), no thinking (`reasoning = false`), an",
     "answer of 1024 tokens at most (without it `qwen2.5:1.5b` wrote 35 000 tokens, Ollama shifting its context, until its",
     "caller was killed) and `CHAT_KEEP_ALIVE` (3m): Ollama frees it three minutes after the last message. The set-up",
-    "writes it with the profile (`lite`: its one model). The graph's `embeddinggemma` still embeds the question: the",
-    "cards are what make a knowledge answer right (the exact `nuclear gen resource` command), so retrieval stays; Ollama",
-    "frees it five minutes after.",
+    "writes it with the profile (`lite`: its one model). The graph's own model (EmbeddingGemma in ONNX, inside the graph's",
+    "process) still embeds the question: the cards are what make a knowledge answer right (the exact `nuclear gen",
+    "resource` command), so retrieval stays.",
     "",
     "Measured on 2026-11-18 (Ryzen AI 9 HX 370, 28 GB, Radeon 890M; the GPU's memory is the system's), each model alone",
     "(`free -m` before and after loading it):",
@@ -6688,8 +6688,7 @@
     "| `gemma4:e2b` (the chat's model before) | 1.8 GB | 7.9 GB (5.1B parameters with its audio and image parts; 8192 or 4096 of context the same) |",
     "| `qwen3.5:2b` (in use) | 2.4 GB | 4.1 GB |",
     "| `qwen3.5:2b-q4_K_M` | 1.6 GB | 3.2 GB |",
-    "| `qwen2.5:1.5b` | 1.2 GB | 1.7 GB |",
-    "| `embeddinggemma` | 0.7 GB | 1.7 GB |"
+    "| `qwen2.5:1.5b` | 1.2 GB | 1.7 GB |"
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/docs/02-architecture/models.md"
@@ -6726,16 +6725,16 @@
    "id": "doc:nuclear-agents/nuclear_developer/docs/02-architecture/models.md#the-models-a-profile-for-the-machine",
    "type": "context",
    "title": "The models — The models: a profile for the machine",
-   "summary": "Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors.",
+   "summary": "Every profile also downloads the Smart Graph's model (EmbeddingGemma in ONNX, 0.3 GB, counted above), which the graph runs itself: it is not an Ollama model.",
    "body": [
     "| Profile | Models | Downloads | Memory | Measured with the Developer's evaluation |",
     "|---|---|---|---|---|",
-    "| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |",
-    "| `medium` | `qwen2.5-coder:3b` | 2.5 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
-    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.7 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
-    "| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine |",
+    "| `lite` | `qwen2.5-coder:1.5b` | 1.3 GB | 8 GB (4 GB at least) | not measured yet |",
+    "| `medium` | `qwen2.5-coder:3b` | 2.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
+    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
+    "| `remote` | none | the Smart Graph's model (0.3 GB) | 2 GB | only the Smart Graph runs on the machine |",
     "",
-    "Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors.",
+    "Every profile also downloads the Smart Graph's model (EmbeddingGemma in ONNX, 0.3 GB, counted above), which the graph runs itself: it is not an Ollama model.",
     "",
     "The set-up of the AI services suggests the heaviest profile that runs well with the machine's memory; the choice is",
     "the user's, and a profile's models are the defaults of `CODER_MODEL` and `ASSISTANT_MODEL` on that machine",
@@ -8017,7 +8016,7 @@
     "  | `medium` | `qwen2.5-coder:3b` | 12 GB (8 GB at least) |",
     "  | `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 24 GB (16 GB at least) |",
     "",
-    "  Every profile also downloads `embeddinggemma` for the graph. Details: [the models](../02-architecture/models.md).",
+    "  Every profile also downloads the Smart Graph's own model (EmbeddingGemma in ONNX, 0.3 GB; not an Ollama model). Details: [the models](../02-architecture/models.md).",
     "- **The Smart Graph** running on `127.0.0.1:7878`, with access for the Developer",
     "  (`nuclear-graph connect nuclear-developer --scopes read,write`).",
     "- **The `nuclear` command** on the `PATH`.",
@@ -11548,8 +11547,8 @@
     "1. `nuclear-builder setup --plan --json`: the machine, the profiles and how each sits on it.",
     "2. `nuclear-builder setup` asks step by step; without questions: `nuclear-builder setup --profile medium --yes`.",
     "   Profiles: `lite` (`qwen2.5-coder:1.5b`), `medium` (`qwen2.5-coder:3b`), `hard` (`qwen2.5-coder:3b` +",
-    "   `gemma4:e2b`), `remote` (no local model, only the MCP server). Every local profile adds `embeddinggemma` for the",
-    "   graph's vectors. Ollama is installed for you when missing.",
+    "   `gemma4:e2b`), `remote` (no local model: the Smart Graph and the MCP server). The Smart Graph runs its own model",
+    "   (EmbeddingGemma in ONNX), not an Ollama one. Ollama is installed for you when a local profile needs it.",
     "3. `nuclear-builder setup --status` says what is installed and running; `nuclear-builder setup --restart developer`",
     "   restarts a service; `nuclear-builder setup --clients` adds the MCP server to a client installed later.",
     "4. Agents then reach the graph and the local developer through the MCP server (`graph_strategy`, `graph_search`,",
@@ -16030,8 +16029,8 @@
    "body": [
     "- **Source:** Nuclear, the `python` dialect (`*.nuc` at the root of this folder, `nuclear.toml`). `nuclear build .`",
     "  writes the Python package `build/nuclear_graph`, which `pyproject.toml` packages (Python 3.12+, uv, hatchling).",
-    "- **Store:** Chroma, one collection per shelf, documents encrypted (AES-256-GCM); vectors by `embeddinggemma` on",
-    "  Ollama; the exact facts in SQLite, in memory only.",
+    "- **Store:** Chroma, one collection per shelf, documents encrypted (AES-256-GCM); vectors by EmbeddingGemma in ONNX,",
+    "  run inside the server's process by ONNX Runtime (no Ollama; ADR-graph-0003); the exact facts in SQLite, in memory only.",
     "- **Server:** FastAPI + uvicorn on `127.0.0.1:7878`, a token on every route. The client (`nuclear_graph.client`)",
     "  needs only `httpx`.",
     "- **The MCP server** is not here: it is the project [`tools/mcp`](../tools/mcp/AGENTS.md) (command `nuclear-mcp`),",
@@ -16090,24 +16089,24 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.245e2f",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.4b6b37",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
+   "summary": "work\" (27).",
    "body": [
-    "the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
-    "- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was",
-    "  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in",
-    "  `paths.nuc`; `Paths.machine()` gives the same).",
-    "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
-    "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
-    "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
-    "  project added (ADR-lang-0008).",
-    "- The planner runs a query of the exact facts only when its exact question is closer to what was asked than the",
-    "  closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`,",
-    "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp",
-    "  work\" (27). `knowledge ask` holds the open questions marked `exact = false` in `questions.toml` to no query.",
-    "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every"
+    "work\" (27). `knowledge ask` holds the open questions marked `exact = false` in `questions.toml` to no query.",
+    "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every",
+    "  item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
+    "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
+    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server.",
+    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
+    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
+    "  was the same as the one asked.",
+    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no",
+    "  owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
+    "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
+    "  keyring is waited for, then refused, and never made again.",
+    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16148,11 +16147,14 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.619b7e",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.6742f0",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with every form; `team`, `vault` and `checks` have their rows.",
+   "summary": "(ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before.",
    "body": [
+    "- The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process",
+    "  (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come",
+    "  from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.",
     "- The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each",
     "  command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with",
     "  every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six",
@@ -16162,10 +16164,7 @@
     "- The prompts moved into the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,",
     "  ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps",
     "  the text after the front matter (`Paths.roles`, was `Paths.prompts`); the package carries `nuclear_graph/roles`; a",
-    "  prompt named by two skills is refused. The folder `prompts/` is gone. The software factory is a row",
-    "  (`concept:software-factory`).",
-    "- The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them",
-    "  now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of"
+    "  prompt named by two skills is refused. The folder `prompts/` is gone. The software factory is a row"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16201,41 +16200,14 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.b9d6e4",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.9bbf93",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "item a filter matches; Chroma's approximate index is not asked.",
+   "summary": "agents wrote at run time.",
    "body": [
-    "item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
-    "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
-    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server.",
-    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
-    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
-    "  was the same as the one asked.",
-    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no",
-    "  owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
-    "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
-    "  keyring is waited for, then refused, and never made again.",
-    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that",
-    "  question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
-    "  is a question of `concept:mcp`, no longer of `query:mcp.tools`."
-   ],
-   "sources": [
-    "nuclear-graph-storage/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.f8aef1",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "`GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`, `declarations`, `context`).",
-   "body": [
-    "`GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
+    "agents wrote at run time. A client writes only `memory` and `examples`.",
+    "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),",
+    "  `GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
     "  `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`,",
     "  `declarations`, `context`). MCP `developer_code` takes `project` and the local coder reads the project by itself."
    ],
@@ -16249,11 +16221,13 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.fd30b7",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.c55271",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "`capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources, instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest).",
+   "summary": "question the 15 rows of `query:mcp.commands`.",
    "body": [
+    "question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
+    "  is a question of `concept:mcp`, no longer of `query:mcp.tools`.",
     "- The package is typed (`py.typed`): a project that uses it is checked against it.",
     "- The graph is a library (ADR-graph-0001): nine shelves (`concepts`, `language`, `platforms`, `tools`, `errors`,",
     "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,",
@@ -16264,9 +16238,37 @@
     "  diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
     "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
     "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
-    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what",
-    "  agents wrote at run time. A client writes only `memory` and `examples`.",
-    "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),"
+    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what"
+   ],
+   "sources": [
+    "nuclear-graph-storage/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.ccd2bf",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "(`concept:software-factory`).",
+   "body": [
+    "(`concept:software-factory`).",
+    "- The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them",
+    "  now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of",
+    "  the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
+    "- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was",
+    "  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in",
+    "  `paths.nuc`; `Paths.machine()` gives the same).",
+    "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
+    "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
+    "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
+    "  project added (ADR-lang-0008).",
+    "- The planner runs a query of the exact facts only when its exact question is closer to what was asked than the",
+    "  closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`,",
+    "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16877,7 +16879,7 @@
    "body": [
     "| Service | Use | Setting |",
     "|---|---|---|",
-    "| Ollama | the embeddings (`embeddinggemma`) | `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED` |",
+    "| Hugging Face | EmbeddingGemma's ONNX files, downloaded once (`nuclear-graph model`, else the first search) into the data folder's `models/` | `NUCLEAR_GRAPH_EMBED_FILE` (another export of the same model, `onnx/<file>.onnx`) |",
     "| The desktop keyring | the documents' key, the tokens | — |",
     "| `nuclear`, `nuclear-builder`, `nuclear-mcp` | their help and `nuclear-mcp tools` (rows); `Toolchain` runs `nuclear` (`Toolchain.project(root, args)` runs `nuclear <args>` in a project) | on the `PATH` |",
     "| The internet (`web.nuc`) | `web_search`, `web_read` for the agents: your own SearXNG, Brave, else Wikipedia; the User-Agent names `github.com/nuclearlang/lang` | `NUCLEAR_SEARXNG_URL`, `nuclear-graph web-key brave` |",
@@ -17181,7 +17183,7 @@
     "| `chromadb`, `numpy`, `ollama`, `fastapi`, `uvicorn`, `cryptography` | extra `server` | the store, the exact search over the stored vectors, the embeddings, the HTTP API, the encryption |",
     "| `pytest` | extra `test` | the tests |",
     "| SQLite | the server | the exact facts; it is in the standard library of the target |",
-    "| Ollama with `embeddinggemma` | the server | the vectors of the rows and of each query |",
+    "| ONNX Runtime and `tokenizers` with EmbeddingGemma (`onnx-community/embeddinggemma-300m-ONNX`, downloaded once into the data folder's `models/`) | the server, `nuclear-graph model` | the vectors of the rows and of each query, inside the server's process (ADR-graph-0003) |",
     "| The `nuclear`, `nuclear-builder` and `nuclear-mcp` commands on the `PATH` | `knowledge build`, `Toolchain` | their help (and `nuclear-mcp tools`) is read into rows; the agents' checks run `nuclear` |",
     "| The desktop keyring (`secret-tool`, libsecret) | the server, `connect` | the documents' key, the owner token, each client's token |"
    ],
@@ -17981,40 +17983,15 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#install.a04719",
+   "id": "doc:nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#install.039f20",
    "type": "context",
    "title": "Install, serve and ask — Install",
-   "summary": "The set-up of the AI services installs the graph, loads the knowledge base and starts it at every login (`nuclear-builder setup`, the installer's last step, or the wizard of VS Code: Set up the AI services).",
-   "body": [
-    "The set-up of the AI services installs the graph, loads the knowledge base and starts it at every login",
-    "(`nuclear-builder setup`, the installer's last step, or the wizard of VS Code:",
-    "[Set up the AI services](../../../installer/docs/08-guides/ai-setup.md)).",
-    "",
-    "From the working tree, `installer/install.sh --ai` installs the platform and then runs the same set-up: the graph",
-    "is then this folder, installed editable.",
-    "",
-    "By hand: it needs Python 3.12+, [uv](https://docs.astral.sh/uv/), [Ollama](https://ollama.com) with an embeddings",
-    "model, and the NuclearLang commands on the `PATH`. From the root of the tree:"
-   ],
-   "sources": [
-    "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#install.a993ca",
-   "type": "context",
-   "title": "Install, serve and ask — Install",
-   "summary": "ollama pull embeddinggemma nuclear build nuclear-graph-storage # the graph is written in Nuclear: its Python package uv tool install --editable './nuclear-graph-storage[server]' # nuclear-graph on the PATH nuclear-graph serve & # the graph, on 127.0.0.1:7878 nuclear-graph knowledge build # the…",
+   "summary": "nuclear build nuclear-graph-storage # the graph is written in Nuclear: its Python package uv tool install --editable './nuclear-graph-storage[server]' # nuclear-graph on the PATH nuclear-graph model # EmbeddingGemma in ONNX, once, into the data folder nuclear-graph serve & # the graph, on…",
    "body": [
     "```sh",
-    "ollama pull embeddinggemma",
     "nuclear build nuclear-graph-storage                               # the graph is written in Nuclear: its Python package",
     "uv tool install --editable './nuclear-graph-storage[server]'     # nuclear-graph on the PATH",
+    "nuclear-graph model                                               # EmbeddingGemma in ONNX, once, into the data folder",
     "nuclear-graph serve &                                             # the graph, on 127.0.0.1:7878",
     "nuclear-graph knowledge build                                     # the knowledge base: nuclear-graph-storage/data/assets",
     "nuclear-graph ingest                                              # the graph learns it (≈2 min the first time)",
@@ -18036,6 +18013,31 @@
    }
   },
   {
+   "id": "doc:nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#install.4d0a00",
+   "type": "context",
+   "title": "Install, serve and ask — Install",
+   "summary": "The set-up of the AI services installs the graph, loads the knowledge base and starts it at every login (`nuclear-builder setup`, the installer's last step, or the wizard of VS Code: Set up the AI services).",
+   "body": [
+    "The set-up of the AI services installs the graph, loads the knowledge base and starts it at every login",
+    "(`nuclear-builder setup`, the installer's last step, or the wizard of VS Code:",
+    "[Set up the AI services](../../../installer/docs/08-guides/ai-setup.md)).",
+    "",
+    "From the working tree, `installer/install.sh --ai` installs the platform and then runs the same set-up: the graph",
+    "is then this folder, installed editable.",
+    "",
+    "By hand: it needs Python 3.12+, [uv](https://docs.astral.sh/uv/) and the NuclearLang commands on the `PATH` (no",
+    "Ollama: the graph runs its embeddings model itself). From the root of the tree:"
+   ],
+   "sources": [
+    "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#settings",
    "type": "context",
    "title": "Install, serve and ask — Settings",
@@ -18045,9 +18047,8 @@
     "|---|---|",
     "| `NUCLEAR_GRAPH_PORT` / `NUCLEAR_GRAPH_URL` | the environment's, else `NUCLEAR_GRAPH_PORT` of `ai.env` (the port the set-up chose when 7878 was held), else `7878` / `http://127.0.0.1:<port>` |",
     "| `NUCLEAR_GRAPH_HOME` | `$XDG_DATA_HOME/nuclear-graph` |",
-    "| `NUCLEAR_GRAPH_EMBED` | `embeddinggemma` |",
+    "| `NUCLEAR_GRAPH_EMBED_FILE` | `model_quantized` (int8; another export of the same model: `model`, `model_fp16`, `model_q4`) |",
     "| `NUCLEAR_GRAPH_TOKEN` (a client) | the token `nuclear-graph connect <client>` stored |",
-    "| `OLLAMA_URL` | `http://localhost:11434` |",
     "| `NUCLEAR_SEARXNG_URL` (the internet tools) | none: Brave when its key is kept, else Wikipedia |",
     "| `NUCLEAR_DEVELOPER_URL` (MCP) | `http://127.0.0.1:7879` |",
     "| `NUCLEAR_AI_MODE` (MCP) | the mode of `~/.config/nuclearlang/ai.env`, else `local`; `remote`: no `graph_*` nor `developer_*` tools |",
@@ -19181,10 +19182,10 @@
    "id": "doc:tools/mcp/docs/02-architecture/overview.md#installed-alone",
    "type": "context",
    "title": "The MCP server: overview — Installed alone",
-   "summary": "A machine set up for remote agents only installs the server (`uv tool install tools/mcp`) and not the graph's server extra (ADR-installer-0002); the graph's package still comes with it, for `GraphClient`, `Toolchain` and `Web`.",
+   "summary": "A machine set up for remote agents only runs the server and the Smart Graph (ADR-installer-0004), but no local developer; the graph's package comes with the server, for `GraphClient`, `Toolchain` and `Web`.",
    "body": [
-    "A machine set up for remote agents only installs the server (`uv tool install tools/mcp`) and not the graph's",
-    "server extra (ADR-installer-0002); the graph's package still comes with it, for `GraphClient`, `Toolchain` and `Web`."
+    "A machine set up for remote agents only runs the server and the Smart Graph (ADR-installer-0004), but no local",
+    "developer; the graph's package comes with the server, for `GraphClient`, `Toolchain` and `Web`."
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
@@ -19221,11 +19222,11 @@
    "id": "doc:tools/mcp/docs/02-architecture/overview.md#tests-tests-test-server-nuc-nuclear-build-venv-bin-python-m-pytest-q",
    "type": "context",
    "title": "The MCP server: overview — Tests (`tests/test_server.nuc`; `nuclear build . && .venv/bin/python -m pytest -q`)",
-   "summary": "every tool is named in the guide of the server (`docs/08-guides/mcp.md`); the remote mode offers more than ten tools and none of `graph_*` / `developer_*`.",
+   "summary": "every tool is named in the guide of the server (`docs/08-guides/mcp.md`); the remote mode offers more than ten tools, `graph_strategy` among them, and none of `developer_*`.",
    "body": [
     "- `testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents`: the local mode offers the tools;",
     "  every tool is named in the guide of the server (`docs/08-guides/mcp.md`); the remote mode",
-    "  offers more than ten tools and none of `graph_*` / `developer_*`.",
+    "  offers more than ten tools, `graph_strategy` among them, and none of `developer_*`.",
     "- `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`."
    ],
    "sources": [
@@ -19314,21 +19315,18 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes.c1d324",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes.246df6",
    "type": "context",
    "title": "The MCP server: overview — Two modes",
-   "summary": "The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).",
+   "summary": "`remoteOnly()` reads `NUCLEAR_AI_MODE`, else the mode of the machine's `ai.env` (`~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`), else `local`.",
    "body": [
-    "The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).",
-    "The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `GENERATORS` + `LOCAL` (generate; give",
-    "`developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed;",
-    "`developer_review`); remote, `REMOTE_NOTE` + `GENERATORS` + `REMOTE` (generate; the model writes what is left after",
-    "reading `nuclear_brief` and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that",
-    "cycle and `nuclear help atlas`; with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear",
-    "help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does",
-    "not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a",
-    "product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand",
-    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
+    "`remoteOnly()` reads `NUCLEAR_AI_MODE`, else the mode of the machine's `ai.env` (`~/.config/nuclearlang/ai.env`,",
+    "`%APPDATA%\\nuclearlang\\ai.env`), else `local`.",
+    "",
+    "| Mode | Tools | Instructions |",
+    "|---|---|---|",
+    "| `local` | all | `FIRST` + `LOCAL_FIRST`: call `nuclear_start` before anything about Nuclear, then `graph_strategy` |",
+    "| `remote` (remote agents only) | every tool whose name does not start with `developer_` (the Smart Graph runs in every profile, ADR-installer-0004) | `FIRST` + `LOCAL_FIRST`, as local |"
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
@@ -19340,18 +19338,21 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes.d904e3",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes.e9d580",
    "type": "context",
    "title": "The MCP server: overview — Two modes",
-   "summary": "`remoteOnly()` reads `NUCLEAR_AI_MODE`, else the mode of the machine's `ai.env` (`~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`), else `local`.",
+   "summary": "The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).",
    "body": [
-    "`remoteOnly()` reads `NUCLEAR_AI_MODE`, else the mode of the machine's `ai.env` (`~/.config/nuclearlang/ai.env`,",
-    "`%APPDATA%\\nuclearlang\\ai.env`), else `local`.",
-    "",
-    "| Mode | Tools | Instructions |",
-    "|---|---|---|",
-    "| `local` | all | `FIRST` + `LOCAL_FIRST`: call `nuclear_start` before anything about Nuclear, then `graph_strategy` |",
-    "| `remote` (remote agents only) | every tool whose name does not start with `graph_` or `developer_` | `FIRST`: call `nuclear_start` before anything about Nuclear |"
+    "The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).",
+    "The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `GENERATORS` + `LOCAL` (generate; give",
+    "`developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed;",
+    "`developer_review`); remote, `REMOTE_NOTE` + `graph_strategy` + `GENERATORS` + `REMOTE` (generate; the model writes what is left",
+    "after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that",
+    "cycle and `nuclear help atlas`; with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear",
+    "help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does",
+    "not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a",
+    "product is made with these tools: no target code for a feature, no native code translated into Nuclear by hand",
+    "([ADR-platform-0004](../../../../docs/03-adr/0004-products-are-made-with-the-tools.md))."
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
@@ -19418,7 +19419,7 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#1-set-up.58f437",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#1-set-up.948a13",
    "type": "guide",
    "title": "The MCP server of NuclearLang — 1. Set up",
    "summary": "The server comes with the AI services: set them up first (the set-up also allows MCP clients to read the graph).",
@@ -19443,9 +19444,9 @@
     "",
     "In VS Code, *Settings and integrations* (`Ctrl+Alt+S`) adds it to each client with a button.",
     "",
-    "A machine set up for **remote agents only** has no Smart Graph and no local developer: the server then offers the",
-    "generators, the compiler, the command line and the internet tools, without the `graph_*` and `developer_*` tools, and",
-    "tells the model to write what the generators do not.",
+    "A machine set up for **remote agents only** has the Smart Graph but no local developer: the server then offers the",
+    "generators, the compiler, the command line, the internet tools and the `graph_*` tools, without the `developer_*`",
+    "tools, and tells the model to write what the generators do not.",
     "",
     "What each group of tools needs running:"
    ],

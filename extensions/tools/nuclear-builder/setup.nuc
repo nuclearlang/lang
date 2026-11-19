@@ -34,7 +34,9 @@ profileFrom(d: <string, any>) Profile
 DATA = setupData()
 PROFILES: Profile[] = (DATA["profiles"] as <string, any>[]).map((d) => profileFrom(d))
 REQUIREMENTS: <string, any>[] = DATA["requirements"]!
+// the Smart Graph's model (the graph runs it itself) and what it downloads
 EMBEDDINGS: string = DATA["embeddings"]!
+GRAPH_MODEL_GB: double = DATA["embeddingsGb"]!
 // the small model the local chat answers with (the Developer's CHAT_MODEL), unless a profile names its own
 CHAT_MODEL: string = DATA["chat"]!
 
@@ -148,10 +150,9 @@ writeMachine(values: <string, string>, file: string? = null) void
 
 // What a profile writes in the machine's file.
 machineOf(p: Profile) <string, string>
-  // the Smart Graph runs in every profile (the MCP server reads it), with its embeddings model
   if p.coder == null
-    return { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": p.id, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
-  { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": p.id, "CODER_MODEL": p.coder!, "ASSISTANT_MODEL": p.assistant ?? p.coder!, "CHAT_MODEL": chatModelOf(p), "NUCLEAR_GRAPH_EMBED": EMBEDDINGS }
+    return { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": p.id }
+  { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": p.id, "CODER_MODEL": p.coder!, "ASSISTANT_MODEL": p.assistant ?? p.coder!, "CHAT_MODEL": chatModelOf(p) }
 
 // The environment of the tools: the caller's, with the folders where NuclearLang, cargo and Homebrew put their
 // commands (an editor started from the desktop may not have them on its PATH).
@@ -435,7 +436,7 @@ status(u: <string, string>? = null) <string, any>
   at = u ?? urls()
   machine = readMachine()
   models = installedModels(at["ollama"]!)
-  wanted = [machine["NUCLEAR_GRAPH_EMBED"] ?? "", machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? "", machine["CHAT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
+  wanted = [machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? "", machine["CHAT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
   files = serviceFiles(services = machine["NUCLEAR_AI_MODE"] == "remote" ? SERVICES.filter((s) => s.name == "graph") : SERVICES)
   {
     "machine": machine,
@@ -781,20 +782,21 @@ disconnectClients(say: (line: string) => void) void
 // A step of the set-up: what it is called and what it says it does.
 Step(id: string, title: string)
 
-// The models of a profile: the Smart Graph's always; the agents' and the chat's with the local agents.
+// The Ollama models of a profile: the local agents' and the chat's; none without the local agents. The Smart Graph's
+// model is not Ollama's: the graph runs it itself (`nuclear-graph model`).
 modelsOf(p: Profile) string[]
   if p.coder == null
-    return [EMBEDDINGS]
-  [EMBEDDINGS, p.coder ?? "", p.assistant ?? p.coder ?? "", chatModelOf(p)].filter((m) => m.length > 0).unique()
+    return []
+  [p.coder ?? "", p.assistant ?? p.coder ?? "", chatModelOf(p)].filter((m) => m.length > 0).unique()
 
 // The steps that leave a profile installed and running, in order. Each can be run again: what is there is kept.
 steps(p: Profile) Step[]
-  // the Smart Graph in every profile: the MCP server reads it
+  // the Smart Graph in every profile (the MCP server reads it), with its own model: no Ollama for it
+  graph = [Step("graph", "Install the Smart Graph and the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("graph-model", "Download the Smart Graph's model (${EMBEDDINGS}, ${GRAPH_MODEL_GB} GB)")]
   if p.coder == null
-    return [Step("graph", "Install the Smart Graph and the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("models", "Download the Smart Graph's model (${EMBEDDINGS})"), Step("graph-service", "Start the Smart Graph, now and at every login"), Step("knowledge", "Load the knowledge base into the graph")]
+    return [...graph, Step("graph-service", "Start the Smart Graph, now and at every login"), Step("knowledge", "Load the knowledge base into the graph")]
   [
-    Step("graph", "Install the Smart Graph and the MCP server"),
-    Step("clients", "Add the MCP server to the AI clients of this machine"),
+    ...graph,
     Step("developer", "Build and install the Nuclear Developer"),
     Step("models", "Download the models (${modelsOf(p).join(", ")})"),
     Step("graph-service", "Start the Smart Graph, now and at every login"),
@@ -811,6 +813,7 @@ runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
     "machine" -> keepRemote(p, say)
     "developer" -> installDeveloper(root, say)
     "models" -> downloadModels(p, say)
+    "graph-model" -> runCommand([joinOn(sys.platform, [binDir(), "nuclear-graph"]), "model"], say)
     "graph-service" -> startGraph(p, say)
     "knowledge" -> loadKnowledge(root, say)
     "developer-service" -> startService("developer", "${urls()["developer"]}/docs", say)
@@ -876,6 +879,9 @@ downloadModels(p: Profile, say: (line: string) => void) void
       say("${m}: already here")
     else
       pull(ollama, m, say)
+      // what the set-up downloaded is taken away by `--remove`; what was here stays
+      pulled = (readMachine()["NUCLEAR_PULLED_MODELS"] ?? "").split(",").filter((x) => x.length > 0)
+      writeMachine({ "NUCLEAR_PULLED_MODELS": [...pulled, m].unique().join(",") })
 
 startGraph(p: Profile, say: (line: string) => void) void
   choice = machineOf(p)
@@ -900,7 +906,10 @@ loadKnowledge(root: string, say: (line: string) => void) void
 
 // Takes the services away: what starts them, the graph's tool, the links to the AI archive, the Developer's launcher
 // and the machine's file. The models and Ollama stay (they are the user's), and so does the graph's data.
-remove(say: (line: string) => void) void
+// `all`: also everything else the set-up made (`purge`): what an uninstall of NuclearLang asks for.
+remove(say: (line: string) => void, all: boolean = false) void
+  // read before the machine's file goes: what the set-up itself installed
+  machine = readMachine()
   removeServices(say)
   disconnectClients(say)
   if which("uv") != null
@@ -922,3 +931,74 @@ remove(say: (line: string) => void) void
     if file.exists()
       say("removed ${file}")
     file.unlink(missingOk = true)
+  if all
+    purge(machine, say)
+
+// ---------- everything else the set-up left ----------
+
+// The folder of a service's data: `$XDG_DATA_HOME/<name>`, else `~/.local/share/<name>` (as the graph and the chat
+// name theirs).
+dataFolder(name: string, env: <string, string>? = null) Path
+  e = env ?? dict(os.environ)
+  given = e["XDG_DATA_HOME"] ?? ""
+  Path(given.length > 0 ? given : "${Path(home(), ".local", "share")}", name)
+
+// The secrets a service kept in the system's keyring under `service` (Linux: libsecret, macOS: the Keychain,
+// Windows: the Credential Manager), all of them.
+forgetSecrets(service: string) void
+  if sys.platform == "linux" and which("secret-tool") != null
+    capture(["secret-tool", "clear", "service", service])
+  else if sys.platform == "darwin"
+    for i in 0..50
+      if capture(["security", "delete-generic-password", "-s", service]).code != 0
+        break
+  else if sys.platform == "win32"
+    capture(["powershell", "-NoProfile", "-Command", "[void][Windows.Security.Credentials.PasswordVault,Windows.Security.Credentials,ContentType=WindowsRuntime]; $v = New-Object Windows.Security.Credentials.PasswordVault; try { $v.FindAllByResource('${service}') | ForEach-Object { $v.Remove($_) } } catch { }"])
+
+// How Ollama is taken away on this system, when the set-up installed it (Linux's needs the administrator: its own
+// installer put it in the system).
+ollamaRemoval(system: string = sys.platform) string[]
+  match system
+    "darwin" -> ["brew services stop ollama", "brew uninstall ollama"]
+    "win32" -> ["winget uninstall --id Ollama.Ollama -e"]
+    _ -> ["sudo systemctl disable --now ollama", "sudo rm -f /etc/systemd/system/ollama.service $(command -v ollama)", "sudo rm -rf /usr/share/ollama /usr/local/lib/ollama", "sudo userdel ollama", "sudo groupdel ollama"]
+
+// Everything else the set-up made, taken away with the services (ADR-installer-0005): the models it downloaded
+// (`NUCLEAR_PULLED_MODELS`), Ollama when it installed it (`NUCLEAR_INSTALLED_OLLAMA`), the data and the secrets of
+// the graph and the chat, and the folder of the machine's choices (Nuclear Builder's teams, keys and runs with it).
+// What was on the machine before the set-up stays.
+// `secrets` false leaves the keyring alone (the tests: the developer's machine has its own).
+purge(machine: <string, string>, say: (line: string) => void, secrets: boolean = true) void
+  ollama = urls()["ollama"]!
+  pulled = (machine["NUCLEAR_PULLED_MODELS"] ?? "").split(",").filter((m) => m.length > 0)
+  if not pulled.isEmpty and (up("${ollama}/api/tags") or startOllama())
+    for m in pulled
+      try
+        httpx.request("DELETE", "${ollama}/api/delete", json = { "model": m }, timeout = 30)
+        say("removed the model ${m}")
+      catch e
+        if not isinstance(e, httpx.HTTPError)
+          throw e
+        say("${m}: not removed (${e})")
+  if machine["NUCLEAR_INSTALLED_OLLAMA"] != null
+    left = installedModels(ollama)
+    steps = ollamaRemoval()
+    if sys.platform == "linux" and not sys.stdin.isatty()
+      say("Ollama was installed by the set-up; to take it away (it asks for your password): ${steps.join(" && ")}")
+    else
+      for step in steps
+        subprocess.run(step, shell = true, env = toolEnv())
+      say("removed Ollama")
+      if left.isEmpty
+        shutil.rmtree(Path(home(), ".ollama"), ignoreErrors = true)
+  for name in ["nuclear-graph", "nuclear-chat"]
+    if secrets
+      forgetSecrets(name)
+    folder = name == "nuclear-graph" and (os.environ.get("NUCLEAR_GRAPH_HOME") ?? "").length > 0 ? Path(os.environ.get("NUCLEAR_GRAPH_HOME")!) : dataFolder(name)
+    if folder.exists()
+      shutil.rmtree(folder, ignoreErrors = true)
+      say("removed ${folder}")
+  config = Path(machineFile()).parent
+  if config.exists()
+    shutil.rmtree(config, ignoreErrors = true)
+    say("removed ${config}")

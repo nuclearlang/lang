@@ -121,6 +121,7 @@ graphParser() any
   p = argparse.ArgumentParser(prog = "nuclear-graph", description = "`nuclear-graph`: run, fill and guard the Nuclear Smart Graph.")
   sub = p.addSubparsers(dest = "cmd", required = true)
   sub.addParser("serve", help = "run the graph on 127.0.0.1 (NUCLEAR_GRAPH_PORT, default 7878)")
+  sub.addParser("model", help = "download the embeddings model into the data folder now (the first search does it otherwise)")
   k = sub.addParser("knowledge", help = "the knowledge base folder (nuclear-graph-storage/data): build its assets from the working tree, check that they are what the tree gives now, record the review of a hand-written row, ask the running graph the questions of questions.toml and see that each finds its row, or compile every Nuclear example of the hand-written rows")
   k.addArgument("action", choices = ["build", "check", "review", "ask", "examples"])
   k.addArgument("ids", nargs = "*", help = "review: the rows that still hold (default: every row whose source changed); ask: only the questions that contain one of these words")
@@ -229,6 +230,10 @@ connectCommand(client: string, scopes: string, show: boolean) void
 main(argv: string[]? = null) void
   args = graphParser().parseArgs(argv)
   cmd = "${args.cmd}"
+  if cmd == "model"
+    // the store's libraries are the server's: loaded only for this command
+    print("the embeddings model is in ${graphPart("store").modelFolder()}")
+    return
   if cmd == "serve"
     // the web server is a library of its own, loaded only to serve
     importlib.importModule("uvicorn").run(graphPart("server").graphApp(), host = "127.0.0.1", port = graphPort(), logLevel = "warning")

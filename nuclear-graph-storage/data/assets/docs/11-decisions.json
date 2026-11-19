@@ -7618,7 +7618,198 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release",
+   "id": "doc:installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#consequences",
+   "type": "adr",
+   "title": "ADR-installer-0004: The Smart Graph runs in every profile; what is on the machine is used, a model is asked for — Consequences",
+   "summary": "downloaded again.",
+   "body": [
+    "- Positive: an agent on any profile gets the whole MCP server, strategy and search included; nothing the user has is",
+    "  downloaded again.",
+    "- Negative: `remote` now downloads 0.3 GB and runs one service at login."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-installer-0004: The Smart Graph runs in every profile; what is on the machine is used, a model is asked for — Context and problem",
+   "summary": "The profile `remote` installed only the MCP server: nothing ran on the machine.",
+   "body": [
+    "The profile `remote` installed only the MCP server: nothing ran on the machine. But the MCP server's strategy and",
+    "search tools read the Smart Graph, so with `remote` an agent got an MCP server whose graph tools had no graph. The",
+    "first install on macOS (2026-11-19) also showed that the set-up stopped when Ollama was installed but not running,",
+    "and downloaded every model without asking, even when the user had them."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#decision",
+   "type": "adr",
+   "title": "ADR-installer-0004: The Smart Graph runs in every profile; what is on the machine is used, a model is asked for — Decision",
+   "summary": "The graph runs its model itself, inside its own process (EmbeddingGemma in ONNX, 0.3 GB; ADR-graph-0003), so Ollama stays a requirement of the local profiles only.",
+   "body": [
+    "- The Smart Graph, its model and its knowledge base are installed and started in every profile, `remote` included.",
+    "  The graph runs its model itself, inside its own process (EmbeddingGemma in ONNX, 0.3 GB; ADR-graph-0003), so",
+    "  Ollama stays a requirement of the local profiles only. `remote` runs the graph alone; the local profiles add the",
+    "  Nuclear Developer and the chat.",
+    "- A requirement already on the machine is used with no question. An Ollama that is installed but stopped is started",
+    "  by the set-up (its app on macOS, else `ollama serve`).",
+    "- The models Ollama already has are used as they are. The Smart Graph's model is downloaded without a question (the",
+    "  MCP server needs it); the local agents' Ollama models that are missing are listed with the size and downloaded",
+    "  only when the user says yes (`--yes`: without asking)."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#references",
+   "type": "adr",
+   "title": "ADR-installer-0004: The Smart Graph runs in every profile; what is on the machine is used, a model is asked for — References",
+   "summary": "`modelsOf`), `cli.nuc` (`haveRequirements`, `haveModels`); the guide.",
+   "body": [
+    "- ADR-installer-0002, ADR-installer-0003; `extensions/tools/nuclear-builder/setup.nuc` (`steps`, `servicesOf`,",
+    "  `modelsOf`), `cli.nuc` (`haveRequirements`, `haveModels`); [the guide](../08-guides/ai-setup.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md#consequences",
+   "type": "adr",
+   "title": "ADR-installer-0005: An uninstall leaves nothing of NuclearLang; what was on the machine before stays — Consequences",
+   "summary": "Consequences",
+   "body": [
+    "- Positive: one command leaves the machine as it was before the install.",
+    "- Negative: an uninstall deletes Nuclear Builder's teams, keys and chat history with it; there is no undo."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-installer-0005: An uninstall leaves nothing of NuclearLang; what was on the machine before stays — Context and problem",
+   "summary": "The public installers' `--uninstall` took away the installation and the services but left the definitions cache, the graph's and the chat's data, the folder of the machine's choices, the models the set-up downloaded and the Ollama it installed.",
+   "body": [
+    "The public installers' `--uninstall` took away the installation and the services but left the definitions cache,",
+    "the graph's and the chat's data, the folder of the machine's choices, the models the set-up downloaded and the",
+    "Ollama it installed. On the first install on macOS (2026-11-19) the user had to clean by hand, file by file."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md#decision",
+   "type": "adr",
+   "title": "ADR-installer-0005: An uninstall leaves nothing of NuclearLang; what was on the machine before stays — Decision",
+   "summary": "of the machine's choices and the extension of every editor it finds.",
+   "body": [
+    "- The public installers' `--uninstall` leaves nothing NuclearLang made: it runs `nuclear-builder setup --remove",
+    "  --all`, then takes away the installation, the links, the skill, the PATH lines, the compiler's cache, the folder",
+    "  of the machine's choices and the extension of every editor it finds.",
+    "- `--remove --all` takes away what the set-up made: the services, the MCP server in each AI client, the models it",
+    "  downloaded, Ollama when it installed it, the graph's and the chat's data and their secrets in the keyring, and",
+    "  its folder (Nuclear Builder's teams, keys and runs with it).",
+    "- What was on the machine before stays: the set-up writes in the machine's file what it installed",
+    "  (`NUCLEAR_INSTALLED_OLLAMA`) and what it downloaded (`NUCLEAR_PULLED_MODELS`), and only that is removed.",
+    "- Ollama on Linux was installed into the system by its own installer: removing it needs the administrator, so",
+    "  without a terminal the set-up says the commands instead of running them.",
+    "- `nuclear-builder setup --remove` alone (the editors' button) still keeps Ollama, the models and the data."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md#references",
+   "type": "adr",
+   "title": "ADR-installer-0005: An uninstall leaves nothing of NuclearLang; what was on the machine before stays — References",
+   "summary": "`installer/release/install.sh`, `install.ps1`; the guide.",
+   "body": [
+    "- ADR-installer-0002, ADR-installer-0004; `extensions/tools/nuclear-builder/setup.nuc` (`remove`, `purge`),",
+    "  `installer/release/install.sh`, `install.ps1`; [the guide](../08-guides/ai-setup.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/0005-an-uninstall-leaves-nothing.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.5118b3",
+   "type": "adr",
+   "title": "Decisions of the installers and the release",
+   "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
+   "body": [
+    "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
+    "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.f78d1b",
    "type": "adr",
    "title": "Decisions of the installers and the release",
    "summary": "Cited as `ADR-installer-NNNN`.",
@@ -7631,9 +7822,8 @@
     "| [ADR-installer-0001](0001-release-archives-and-one-line-installers.md) | A release is one archive per system, installed by a one-line installer into the user's folders | accepted |",
     "| [ADR-installer-0002](0002-the-ai-services-come-with-the-installer.md) | The AI services come with the installer: a set-up in steps, a profile for the machine, the services at every login | accepted; §1, §2, §5, §6 superseded by 0003 |",
     "| [ADR-installer-0003](0003-the-ai-services-bring-their-own-python.md) | The AI services bring their own Python; nothing is assumed on the user's machine; Ollama is the user's; the ports are chosen | accepted |",
-    "",
-    "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
-    "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
+    "| [ADR-installer-0004](0004-the-smart-graph-runs-in-every-profile.md) | The Smart Graph runs in every profile; what is on the machine is used; a missing model is asked for | accepted |",
+    "| [ADR-installer-0005](0005-an-uninstall-leaves-nothing.md) | An uninstall leaves nothing of NuclearLang: what the install and the set-up made goes, what was there stays | accepted |"
    ],
    "agents": false,
    "sources": [
@@ -8835,6 +9025,119 @@
    }
   },
   {
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#consequences",
+   "type": "adr",
+   "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Consequences",
+   "summary": "ingests embed only what changed), and up to about 2.3 GB of memory while it runs (1.1 GB after it).",
+   "body": [
+    "- Positive: the graph needs nothing on the machine; `remote` installs no Ollama; the model is half Ollama's size.",
+    "- Negative: the first ingest takes about 9 minutes on a processor instead of under 3 with Ollama on a GPU (later",
+    "  ingests embed only what changed), and up to about 2.3 GB of memory while it runs (1.1 GB after it). One question",
+    "  of the 188 is missed: \"how do I delete or close a conversation and search old messages in nuclear chat\" finds",
+    "  `can:workplace-chat` fourth instead of in the first three."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Context and problem",
+   "summary": "The graph's vectors came from `embeddinggemma` on Ollama.",
+   "body": [
+    "The graph's vectors came from `embeddinggemma` on Ollama. The MCP server reads the graph in every profile",
+    "(ADR-installer-0004), so even a user with remote agents only had to install Ollama, often through Homebrew or an",
+    "installer that asks for a password, just for the graph. The user asked for the graph to need nothing else, on every",
+    "system, with the same quality."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#decision",
+   "type": "adr",
+   "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Decision",
+   "summary": "licence), run inside the server's process by ONNX Runtime and `tokenizers`.",
+   "body": [
+    "- The graph embeds with EmbeddingGemma exported to ONNX (`onnx-community/embeddinggemma-300m-ONNX`, not gated, Gemma",
+    "  licence), run inside the server's process by ONNX Runtime and `tokenizers`. Both were already in the graph's",
+    "  environment (Chroma depends on them), so the AI archive gains no library and no system is lost.",
+    "- The int8 export (`model_quantized`, 309 MB) is the default; `NUCLEAR_GRAPH_EMBED_FILE` chooses another.",
+    "- Its files are downloaded once from Hugging Face into the data folder's `models/` as real files (`nuclear-graph",
+    "  model`, a step of the set-up; else the first search). Hugging Face's cache keeps links to its blobs, which ONNX",
+    "  Runtime refuses for a model's data file.",
+    "- Texts are embedded in batches of at most 4096 tokens, the shortest first, without ONNX Runtime's memory arena: the",
+    "  memory of a batch grows with the square of its longest text."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#options-considered-measured-on-2026-11-19-with-the-188-questions-of-data-questio",
+   "type": "adr",
+   "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Options considered (measured on…",
+   "summary": "The ONNX exports and Ollama give the same vector for a short text (cosine 1.0000) and drift apart as a text grows (0.94 at 1700 tokens): the two run Gemma's attention differently on long inputs.",
+   "body": [
+    "| Embeddings | Found | First | Download | Ingest of the base |",
+    "|---|---|---|---|---|",
+    "| `embeddinggemma` on Ollama (BF16, the GPU) | 188 | 177 | 621 MB + Ollama | 160 s |",
+    "| ONNX fp32 | 186 | 176 | 1.2 GB | 521 s |",
+    "| ONNX fp16 | 186 | 176 | 617 MB | 887 s |",
+    "| **ONNX int8 (chosen)** | **187** | **178** | **309 MB** | 566 s |",
+    "| ONNX q4 | 185 | 179 | 197 MB | 616 s |",
+    "",
+    "The ONNX exports and Ollama give the same vector for a short text (cosine 1.0000) and drift apart as a text grows",
+    "(0.94 at 1700 tokens): the two run Gemma's attention differently on long inputs. The questions missed are near ties",
+    "(the expected row third instead of first, fourth instead of third)."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#references",
+   "type": "adr",
+   "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — References",
+   "summary": "References",
+   "body": "- ADR-installer-0004 (the graph in every profile); `store.nuc` (`LocalModel`, `modelFolder`); `cli.nuc` (`model`).",
+   "agents": false,
+   "sources": [
+    "nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-graph-storage/docs/03-adr/README.md#decisions-of-the-smart-graph",
    "type": "adr",
    "title": "Decisions of the Smart Graph",
@@ -8848,6 +9151,7 @@
     "|---|---|---|",
     "| [ADR-graph-0001](0001-a-library-of-typed-linked-versioned-rows.md) | The Smart Graph is a library of typed, linked, versioned rows | accepted |",
     "| [ADR-graph-0002](0002-exact-facts-a-query-planner-and-the-graph-in-nuclear.md) | Questions with one right answer are answered from exact facts by a query planner; the Smart Graph is written in Nuclear | accepted |",
+    "| [ADR-graph-0003](0003-the-graph-runs-its-own-embeddings-model.md) | The graph runs its own embeddings model (EmbeddingGemma in ONNX, int8), with no Ollama | accepted |",
     "",
     "The strategies, whose rows live on the `playbooks` shelf and whose selection is here, are a decision of the Nuclear",
     "Developer: [ADR-developer-0001](../../../nuclear-agents/nuclear_developer/docs/03-adr/0001-a-strategy-for-each-kind-of-request.md).",

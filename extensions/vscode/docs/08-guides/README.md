@@ -109,7 +109,7 @@ The other settings are one section per tool, edited in VS Code's settings or in 
 | Setting | Default |
 |---|---|
 | `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |
-| `nuclear.ai.models.coder` · `.assistant` · `.embeddings` | `qwen2.5-coder:3b` · `gemma4:e2b` · `embeddinggemma` |
+| `nuclear.ai.models.coder` · `.assistant` | `qwen2.5-coder:3b` · `gemma4:e2b` |
 | `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |
 | `nuclear.ai.checkEveryMinutes` | `5` |
 | `nuclear.builder.team` | `""` (the default team) |

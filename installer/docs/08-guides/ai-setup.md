@@ -30,26 +30,26 @@ The same steps run in the three. Run it again whenever you want another choice: 
    | [uv](https://docs.astral.sh/uv/) | the Python environments of the services (it brings its own Python) | its installer, in your user folder |
    | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |
 
-   Without Ollama there is no Smart Graph and no local agent: it is needed in every profile. A program
+   Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it). A program
    already on the machine is used as it is, with no question; an Ollama that is installed but stopped is started.
    The models Ollama already has are used as they are; the ones missing are listed with the size, and downloaded
    only when you say yes (`--yes`: without asking).
 4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine
    (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of
    yours), the Nuclear Developer, the models, the knowledge base loaded
-   into the graph (about two minutes the first time), and both services started. A step that fails says why and is
+   into the graph (about ten minutes the first time on a processor; later only what changed), and the services started. A step that fails says why and is
    tried again from there.
 
 ## 3. The profiles
 
 | Profile | Models | Downloads | Memory | Measured with the Developer's evaluation |
 |---|---|---|---|---|
-| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |
-| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 5.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
-| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
-| `remote` | `embeddinggemma` (the Smart Graph's) | 0.6 GB | 1 GB | only the Smart Graph runs on the machine |
+| `lite` | `qwen2.5-coder:1.5b` | 1.3 GB | 8 GB (4 GB at least) | not measured yet |
+| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 4.9 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
+| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.1 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
+| `remote` | none (the Smart Graph's own) | 0.3 GB | 2 GB | only the Smart Graph runs on the machine |
 
-Every profile downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors: the Smart Graph runs in every profile, because the MCP server reads it, so Ollama is needed in every profile too. The chat answers with one small model of its own (`CHAT_MODEL` in the machine's file; `lite` uses its one model), loaded only while you chat. No model is larger than 3B parameters of effective size.
+Every profile downloads the Smart Graph's model, EmbeddingGemma in ONNX (0.3 GB, counted above), which makes the graph's vectors: the graph runs it itself, inside its own process, so it needs no Ollama. The Smart Graph runs in every profile, because the MCP server reads it; Ollama is needed only by the local agents.
 
 **`lite`: One 1.5B model does everything: for a machine with little memory.**
 
@@ -85,7 +85,7 @@ In a terminal, without questions: `nuclear-builder setup --profile medium --yes`
 
 ## 4. Remote agents and the Smart Graph
 
-Only the Smart Graph runs on your machine, with its model (`embeddinggemma`, 0.6 GB, on Ollama), and the MCP server,
+Only the Smart Graph runs on your machine, with its own model (EmbeddingGemma in ONNX, 0.3 GB; no Ollama), and the MCP server,
 which the set-up adds to every AI client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
 ([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). Your agent also gets the Smart Graph: the strategy of each request and the search of the knowledge base. What you
 give up: the Builder panel of the editor and the local agents themselves, so your remote
@@ -129,8 +129,11 @@ To give your agent the MCP server: the buttons of *Settings and integrations*, o
 - **A client installed later** (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`
   adds the MCP server to it.
 - **Remove:** `nuclear-builder setup --remove` takes the services away, and the MCP server out of each AI client;
-  the installer's `--uninstall` does it too.
-  Ollama, its models and the graph's data stay: they are yours.
+  Ollama, its models and the graph's data stay. `--remove --all` also takes away everything the set-up installed
+  and made: the models it downloaded, Ollama when it installed it (on Linux it says the commands: they need your
+  password), the graph's and the chat's data and secrets, and its folder (Nuclear Builder's teams, keys and runs).
+  What was on your machine before the set-up stays. The installer's `--uninstall` runs `--remove --all`, and also
+  takes away the compiler's cache and the editors' extension: nothing of NuclearLang is left.
 - **In a script or CI:** `--no-ai` skips the set-up, `--profile <id>` takes that profile without questions, and
   without a terminal nothing is asked or downloaded.
 

@@ -259,7 +259,7 @@ export class SettingsPanel {
     const [cmd, args, url] = service === 'graph' ? [s.graphCommand, ['serve'], s.graphUrl + '/v1/health'] : ['nuclear-developer', [], s.developerUrl + '/docs'];
     // the services the set-up left in this system (ADR-installer-0002) start with the machine's file: the models chosen here go
     // there, and the system's manager starts the service again
-    if (readMachine().NUCLEAR_AI_MODE === 'local') await builder(['setup', '--set', `CODER_MODEL=${s.coderModel}`, `ASSISTANT_MODEL=${s.assistantModel}`, `NUCLEAR_GRAPH_EMBED=${s.embeddingsModel}`]);
+    if (readMachine().NUCLEAR_AI_MODE === 'local') await builder(['setup', '--set', `CODER_MODEL=${s.coderModel}`, `ASSISTANT_MODEL=${s.assistantModel}`]);
     if (!own.has(service) && (await builder(['setup', '--restart', service])).code === 0) {
       for (let i = 0; i < 40 && !(await up(url)); i++) await new Promise((r) => setTimeout(r, 500));
       return this.state();
@@ -417,7 +417,6 @@ function drawAi() {
     + '<h2>' + esc(t('localModels')) + '</h2><div class="muted">' + esc(t('localModelsHint')) + '</div><div class="grid" style="margin-top:8px">'
     + modelSelect('models.coder', t('coder'), s.coderModel, t('coderHint'))
     + modelSelect('models.assistant', t('assistant'), s.assistantModel, t('assistantHint'))
-    + modelSelect('models.embeddings', t('embeddings'), s.embeddingsModel, t('embeddingsHint'))
     + '</div>' + (typeof S.models === 'string' ? '<p class="over">' + esc(S.models) + '</p>' : '<details style="margin-top:8px"><summary>' + esc(t('installedModels', models.length)) + '</summary><table><tr><th>' + esc(t('model')) + '</th><th>' + esc(t('parameters')) + '</th><th>' + esc(t('size')) + '</th><th></th></tr>' + models.map((m) => '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.parameters) + '</td><td>' + gb(m.size) + '</td><td>' + (m.billions > S.max ? '<span class="over">' + esc(t('over3b')) + '</span>' : '<span class="badge">' + esc(t('allowed')) + '</span>') + '</td></tr>').join('') + '</table></details>')
     + '<h2>' + esc(t('mcp')) + '</h2><div class="muted">' + esc(t('mcpHint', s.mcpCommand)) + '</div>'
     + Object.keys(mcpName).map((c) => '<div class="card"><span class="dot ' + (S.mcp[c] === 'added' ? 'on' : 'off') + '"></span><div class="grow"><b>' + mcpName[c] + '</b> <span class="muted">' + esc(t('mcp.' + S.mcp[c])) + '</span></div>' + (S.mcp[c] === 'not added' ? '<button class="primary" data-mcp="' + c + '">' + esc(t('add')) + '</button>' : '') + '</div>').join('')

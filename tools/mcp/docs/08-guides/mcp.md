@@ -30,9 +30,9 @@ Cursor reads `~/.cursor/mcp.json`, OpenCode `~/.config/opencode/opencode.json`:
 
 In VS Code, *Settings and integrations* (`Ctrl+Alt+S`) adds it to each client with a button.
 
-A machine set up for **remote agents only** has no Smart Graph and no local developer: the server then offers the
-generators, the compiler, the command line and the internet tools, without the `graph_*` and `developer_*` tools, and
-tells the model to write what the generators do not.
+A machine set up for **remote agents only** has the Smart Graph but no local developer: the server then offers the
+generators, the compiler, the command line, the internet tools and the `graph_*` tools, without the `developer_*`
+tools, and tells the model to write what the generators do not.
 
 What each group of tools needs running:
 

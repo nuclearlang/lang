@@ -15,13 +15,13 @@ The set-up of the AI services installs the graph, loads the knowledge base and s
 From the working tree, `installer/install.sh --ai` installs the platform and then runs the same set-up: the graph
 is then this folder, installed editable.
 
-By hand: it needs Python 3.12+, [uv](https://docs.astral.sh/uv/), [Ollama](https://ollama.com) with an embeddings
-model, and the NuclearLang commands on the `PATH`. From the root of the tree:
+By hand: it needs Python 3.12+, [uv](https://docs.astral.sh/uv/) and the NuclearLang commands on the `PATH` (no
+Ollama: the graph runs its embeddings model itself). From the root of the tree:
 
 ```sh
-ollama pull embeddinggemma
 nuclear build nuclear-graph-storage                               # the graph is written in Nuclear: its Python package
 uv tool install --editable './nuclear-graph-storage[server]'     # nuclear-graph on the PATH
+nuclear-graph model                                               # EmbeddingGemma in ONNX, once, into the data folder
 nuclear-graph serve &                                             # the graph, on 127.0.0.1:7878
 nuclear-graph knowledge build                                     # the knowledge base: nuclear-graph-storage/data/assets
 nuclear-graph ingest                                              # the graph learns it (≈2 min the first time)
@@ -60,9 +60,8 @@ Every access command: [security](../05-standards/security.md#who-may-read-it). A
 |---|---|
 | `NUCLEAR_GRAPH_PORT` / `NUCLEAR_GRAPH_URL` | the environment's, else `NUCLEAR_GRAPH_PORT` of `ai.env` (the port the set-up chose when 7878 was held), else `7878` / `http://127.0.0.1:<port>` |
 | `NUCLEAR_GRAPH_HOME` | `$XDG_DATA_HOME/nuclear-graph` |
-| `NUCLEAR_GRAPH_EMBED` | `embeddinggemma` |
+| `NUCLEAR_GRAPH_EMBED_FILE` | `model_quantized` (int8; another export of the same model: `model`, `model_fp16`, `model_q4`) |
 | `NUCLEAR_GRAPH_TOKEN` (a client) | the token `nuclear-graph connect <client>` stored |
-| `OLLAMA_URL` | `http://localhost:11434` |
 | `NUCLEAR_SEARXNG_URL` (the internet tools) | none: Brave when its key is kept, else Wikipedia |
 | `NUCLEAR_DEVELOPER_URL` (MCP) | `http://127.0.0.1:7879` |
 | `NUCLEAR_AI_MODE` (MCP) | the mode of `~/.config/nuclearlang/ai.env`, else `local`; `remote`: no `graph_*` nor `developer_*` tools |

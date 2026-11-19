@@ -3,10 +3,19 @@ use chromadb
 use numpy
 use chromadb/config{ Settings }
 use chromadb/api/models/Collection{ Collection }
-use ollama
+use onnxruntime
+use tokenizers{ Tokenizer }
+use huggingface_hub{ hfHubDownload }
 
-EMBED_MODEL = os.environ.get("NUCLEAR_GRAPH_EMBED") ?? "embeddinggemma"
-OLLAMA_URL = os.environ.get("OLLAMA_URL") ?? "http://localhost:11434"
+// The embeddings model (ADR-graph-0003): EmbeddingGemma exported to ONNX, run inside the graph's own process by ONNX
+// Runtime, so no other program is needed (no Ollama). Its files come from Hugging Face the first time, into the
+// graph's data folder. `NUCLEAR_GRAPH_EMBED_FILE` chooses another export of the same model (`onnx/<file>.onnx`).
+EMBED_REPO = "onnx-community/embeddinggemma-300m-ONNX"
+// int8 by default: 187 of the 188 questions of questions.toml (Ollama's BF16: 188), 309 MB (ADR-graph-0003)
+EMBED_FILE = os.environ.get("NUCLEAR_GRAPH_EMBED_FILE") ?? "model_quantized"
+// the longest text the model reads, in tokens (EmbeddingGemma's context), and the most tokens of one batch
+EMBED_TOKENS = 2048
+BATCH_TOKENS = 4096
 
 // EmbeddingGemma's prompt of a document: its title, then its text.
 asDocument(title: string, text: string) string
@@ -16,17 +25,60 @@ asDocument(title: string, text: string) string
 asQuery(text: string) string
   "task: search result | query: ${text}"
 
-// The vectors of texts already shaped for the model (`asDocument`, `asQuery`), by the local embeddings model.
-ollamaEmbed(shaped: string[]) double[][]
-  client = ollama.Client(host = OLLAMA_URL)
-  out: double[][] = []
-  at = 0
-  while at < shaped.length
-    got: any = client.embed(model = EMBED_MODEL, input = shaped.slice(at, at + 32))
-    for vector in got.embeddings
-      out.add(list(vector))
-    at += 32
-  out
+// The folder of the model's files, downloaded the first time (`nuclear-graph model` does it ahead, with the set-up).
+modelFolder() Path
+  // real files in a folder of their own: Hugging Face's cache keeps links to its blobs, and ONNX Runtime refuses a
+  // model whose data file resolves outside the model's folder
+  folder = Paths.home().joinpath("models", "embeddinggemma-300m-onnx")
+  for f in ["tokenizer.json", "onnx/${EMBED_FILE}.onnx", "onnx/${EMBED_FILE}.onnx_data"]
+    hfHubDownload(repoId = EMBED_REPO, filename = f, localDir = "${folder}")
+  folder
+
+// EmbeddingGemma in ONNX Runtime, loaded once per process.
+LocalModel
+  tokenizer: any
+  session: any
+
+  (folder: Path)
+    tokenizer = Tokenizer.fromFile("${folder.joinpath("tokenizer.json")}")
+    tokenizer.enableTruncation(EMBED_TOKENS)
+    options = onnxruntime.SessionOptions()
+    options.logSeverityLevel = 3
+    // no arena: it keeps the memory of the largest batch for the life of the process
+    options.enableCpuMemArena = false
+    session = onnxruntime.InferenceSession("${folder.joinpath("onnx", "${EMBED_FILE}.onnx")}", options, providers = ["CPUExecutionProvider"])
+
+  // The vectors of `shaped`, in its order. The texts go by length, so a batch pads little, and a batch holds at most
+  // `BATCH_TOKENS` tokens: the memory of a batch grows with the square of its longest text, so long texts go alone.
+  embed(shaped: string[]) double[][]
+    encoded: any[] = tokenizer.encodeBatch(shaped)
+    sizes: int[] = encoded.map((e) => (e.ids as int[]).length)
+    order: int[] = (0..shaped.length).sortedBy((i) => sizes[i])
+    out: double[][] = shaped.map((t) => [] as double[])
+    at = 0
+    while at < order.length
+      end = at + 1
+      while end < order.length and sizes[order[end]] * (end - at + 1) <= BATCH_TOKENS
+        end += 1
+      batch = order.slice(at, end)
+      longest = sizes[batch.last]
+      ids = batch.map((i) => [...(encoded[i].ids as int[]), ...(0..(longest - sizes[i])).map((x) => 0)])
+      mask = batch.map((i) => [...(0..sizes[i]).map((x) => 1), ...(0..(longest - sizes[i])).map((x) => 0)])
+      got: any = session.run(["sentence_embedding"], { "input_ids": numpy.array(ids, dtype = numpy.int64), "attention_mask": numpy.array(mask, dtype = numpy.int64) })[0]
+      rows: double[][] = got.tolist()
+      for j in 0..batch.length
+        out[batch[j]] = rows[j]
+      at = end
+    out
+
+// The model of this process, once it was first needed.
+LOADED: LocalModel[] = []
+
+// The vectors of texts already shaped for the model (`asDocument`, `asQuery`), by the embeddings model.
+localEmbed(shaped: string[]) double[][]
+  if LOADED.isEmpty
+    LOADED.add(LocalModel(modelFolder()))
+  LOADED[0].embed(shaped)
 
 // What a read of a collection with its vectors becomes for a search: each item (id, metadata) with how far its vector
 // is from `vector` by direction (cosine: 0 is the same one), the closest first.
@@ -60,7 +112,7 @@ storable(meta: <string, any>) <string, any>
   out
 
 // The graph's store: one Chroma collection per shelf (ADR-graph-0001), whose documents are encrypted and whose vectors
-// come from a local embeddings model (Ollama). Only the server process opens it.
+// come from the embeddings model run in this process (`localEmbed`). Only the server process opens it.
 //
 // A row's metadata is in clear (ids, names, keys, filters: what Chroma searches by); its text is sealed. The shelves
 // of the knowledge base are made by `ingest`; `prompts` holds the prompts (the skills of the roles) and `memory` what an
@@ -76,7 +128,7 @@ Store
   (path: string = "", key: Bytes? = null, embed: ((shaped: string[]) => double[][])? = null)
     client = chromadb.PersistentClient(path = path.length > 0 ? path : "${Paths.db()}", settings = Settings(anonymizedTelemetry = false, allowReset = false))
     box = Box(key ?? Secrets.key())
-    embedder = embed ?? ollamaEmbed
+    embedder = embed ?? localEmbed
     for name in COLLECTIONS
       cols[name] = client.getOrCreateCollection(name, metadata = { "hnsw:space": "cosine" }, embeddingFunction = null)
 

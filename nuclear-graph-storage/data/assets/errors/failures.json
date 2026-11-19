@@ -94,7 +94,7 @@
    "body": [
     "**Looks like.** `the graph is not running at http://127.0.0.1:7878: start it with nuclear-graph serve`, `ECONNREFUSED 127.0.0.1:7878`, `connection refused`.",
     "",
-    "**Cause.** `nuclear-graph serve` is not running, or it listens on another port (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_GRAPH_URL`). Its embeddings also need Ollama with the model `embeddinggemma`.",
+    "**Cause.** `nuclear-graph serve` is not running, or it listens on another port (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_GRAPH_URL`). Its embeddings model is its own (EmbeddingGemma in ONNX, `nuclear-graph model` downloads it): no Ollama.",
     "",
     "**Next step.** `nuclear-builder setup --status`; then restart the service: `systemctl --user restart nuclear-graph` on Linux, `launchctl kickstart -k gui/$UID/io.github.nuclearlang.graph` on macOS, or the button of VS Code's *Settings and integrations* (`Ctrl+Alt+S`). A machine set up by the installer starts it at every login; one never set up: `nuclear-builder setup`. By hand: `nuclear-graph serve &`. Then `nuclear-graph stats` (the rows of each shelf and the revision)."
    ],

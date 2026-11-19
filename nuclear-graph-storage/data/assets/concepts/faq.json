@@ -117,10 +117,10 @@
    "id": "faq:local-models",
    "type": "faq",
    "title": "Which models do the local agents use, and can I change them?",
-   "summary": "On Ollama, by the profile the set-up installed. `hard`: `qwen2.5-coder:3b` writes code and `gemma4:e2b` plans and reviews; `medium`: `qwen2.5-coder:3b`; `lite`: `qwen2.5-coder:1.5b`. The chat answers with one small model of its own, `qwen3.5:2b` (`lite`: its one model), loaded only while you chat. `embeddinggemma` makes the graph's vectors in all three. None is over 3B parameters of effective size; no GPU is needed.",
+   "summary": "On Ollama, by the profile the set-up installed. `hard`: `qwen2.5-coder:3b` writes code and `gemma4:e2b` plans and reviews; `medium`: `qwen2.5-coder:3b`; `lite`: `qwen2.5-coder:1.5b`. The chat answers with one small model of its own, `qwen3.5:2b` (`lite`: its one model). The graph runs its own model, not an Ollama one. None is over 3B parameters of effective size; no GPU is needed.",
    "body": [
     "- Which set a machine gets: `nuclear-builder setup` suggests one for its memory and disk (`concept:ai-setup` has what each downloads and how far it works); `nuclear-builder setup --status` says which one is installed.",
-    "- Another profile: run the set-up again. One model by hand: `CODER_MODEL`, `ASSISTANT_MODEL`, `CHAT_MODEL` and `NUCLEAR_GRAPH_EMBED` in `~/.config/nuclearlang/ai.env`, then restart the services.",
+    "- Another profile: run the set-up again. One model by hand: `CODER_MODEL`, `ASSISTANT_MODEL`, and `CHAT_MODEL` in `~/.config/nuclearlang/ai.env`, then restart the services.",
     "- In VS Code: the *Settings and integrations* page (`Ctrl+Alt+S`) lists the Ollama models under the 3B rule, pulls one and restarts the services with it.",
     "- A model over 3B parameters is not accepted: the agents are built for small models (fixed steps, the graph as memory, the compiler as judge).",
     "- Without a GPU an answer takes from seconds to a few minutes; Ollama uses a GPU when the machine has one."
@@ -169,7 +169,7 @@
    "id": "faq:privacy",
    "type": "faq",
    "title": "Is my code sent anywhere?",
-   "summary": "The local pieces keep it on your machine: the models run on Ollama, and the Smart Graph and the Nuclear Developer listen on `127.0.0.1` only. Something leaves the machine when you choose it: a frontier model that leads, a spec imported from Jira or GitHub, an API read for its fields, a web search, a deploy.",
+   "summary": "The local pieces keep it on your machine: the local agents' models run on Ollama, the graph's model inside the graph, and the Smart Graph and the Nuclear Developer listen on `127.0.0.1` only. Something leaves the machine when you choose it: a frontier model that leads, a spec imported from Jira or GitHub, an API read for its fields, a web search, a deploy.",
    "body": [
     "- The graph refuses web pages (any request with an `Origin` header), gives nothing without a token you allowed (`nuclear-graph connect`, `allow`), and stores its texts encrypted (AES-256-GCM, the key in your keyring).",
     "- The internet tools (`web_read`) refuse local addresses.",

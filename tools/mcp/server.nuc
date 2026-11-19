@@ -19,10 +19,10 @@ LOCAL_FIRST = " Then, for a request, call graph_strategy with the user's own wor
 // local agents.
 GENERATORS = "For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. "
 LOCAL = "Then give developer_task only what the generators did not write (a use case with its own rules, a view's details), and wire each use case it wrote with generate_usecase (its alias in the facade, its route). For any task that writes or changes .nuc (a feature, a bug, a refactor, tests): 1) call developer_task first with the project folder, a title, the description and the acceptance criteria: the local agents plan, write the tests first, write the code, run the tests and the security review, and document everything they did in a journal it returns; 2) read the journal, then validate: nuclear_check of the project must say ok and nuclear test must pass; 3) correct only what failed or is wrong, never rewrite what passed; before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph instead of guessing; If the run failed, read its 'Why it failed' (the local diagnoser): when the cause was passing or you fixed it, call developer_retry instead of starting again. 4) call developer_review with the run, what you corrected and why, and the corrected files, so the journal keeps your review and the local developer learns from it. Write the code yourself only when developer_task cannot run (the local developer is not running) and say so."
-// A machine set up for remote agents only (ADR-installer-0002) has no Smart Graph and no local developer: the model writes
-// what the generators do not, and the tools that need those services are left out.
-REMOTE_NOTE = "This machine has no local agents and no Smart Graph (its user chose remote agents only; `nuclear-builder setup` installs them): the generators write the standard code, you write what is left, then validate and correct. "
-REMOTE = "Then write only what the generators did not write (a use case with its own rules, a view's details): before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and look up a kind, a decorator or a command with nuclear_help instead of guessing; wire each use case you wrote with generate_usecase (its alias in the facade, its route). Then validate: nuclear_check of the project must say ok and nuclear test must pass; correct only what failed, never rewrite what passed."
+// A machine set up for remote agents only (ADR-installer-0002) has the Smart Graph (ADR-installer-0004) but no local
+// developer: the model writes what the generators do not, and the developer's tools are left out.
+REMOTE_NOTE = "This machine has no local agents (its user chose remote agents only; `nuclear-builder setup` installs them): the generators write the standard code, you write what is left, then validate and correct. "
+REMOTE = "Then write only what the generators did not write (a use case with its own rules, a view's details): before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph or look up a kind, a decorator or a command with nuclear_help instead of guessing; wire each use case you wrote with generate_usecase (its alias in the facade, its route). Then validate: nuclear_check of the project must say ok and nuclear test must pass; correct only what failed, never rewrite what passed."
 
 // Whether this machine was set up for remote agents only (`NUCLEAR_AI_MODE`, else the machine's `ai.env`).
 remoteOnly() boolean
@@ -172,7 +172,8 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
     if start.code != 0
       return start.out
     atlas = ~runTool(["nuclear", "help", "atlas"])
-    cycle = remoteOnly() ? "${REMOTE_NOTE}${GENERATORS}${REMOTE}" : "Call graph_strategy with the user's own words: it answers which kind of request it is and the plan of that kind; follow it. ${GENERATORS}${LOCAL}"
+    strategy = "Call graph_strategy with the user's own words: it answers which kind of request it is and the plan of that kind; follow it. "
+    cycle = remoteOnly() ? "${REMOTE_NOTE}${strategy}${GENERATORS}${REMOTE}" : "${strategy}${GENERATORS}${LOCAL}"
     parts = [start.out.trim(), "## The work cycle with the MCP tools on this machine\n\n${cycle}", atlas.out.trim()]
     root = project.length > 0 ? projectOf(project) : null
     if root != null
@@ -447,15 +448,14 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 
-// The MCP server with its tools. A machine set up for remote agents only gets neither the graph's nor the local
-// developer's.
+// The MCP server with its tools. A machine set up for remote agents only gets the graph's but not the local developer's.
 mcpServer() MCPServer
   remote = remoteOnly()
-  server = MCPServer("nuclear", instructions = remote ? FIRST : "${FIRST}${LOCAL_FIRST}")
+  server = MCPServer("nuclear", instructions = "${FIRST}${LOCAL_FIRST}")
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   for tool in tools.all()
     name: string = tool.__name__
-    if remote and (name.startsWith("graph_") or name.startsWith("developer_"))
+    if remote and name.startsWith("developer_")
       continue
     server.addTool(tool)
   server

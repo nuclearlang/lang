@@ -23,7 +23,8 @@ testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents(monk
   remote: string[] = []
   for tool in asyncio.run(mcpServer().listTools())
     remote.add(tool.name)
-  expect(remote.length > 10 and not remote.any((name) => name.startsWith("graph_") or name.startsWith("developer_")))
+  // remote agents only: the Smart Graph runs in every profile (ADR-installer-0004); only the local developer is absent
+  expect(remote.length > 10 and "graph_strategy" in remote and not remote.any((name) => name.startsWith("developer_")))
 
 testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape() void
   spec = specMarkdown("Loans", " A reader borrows a book. ", ["a book out is not lent"], "feature")

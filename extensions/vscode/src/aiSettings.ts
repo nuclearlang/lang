@@ -16,7 +16,6 @@ export interface AiSettings {
   ollamaUrl: string;
   coderModel: string;
   assistantModel: string;
-  embeddingsModel: string;
   /** The Smart Graph's command (serve, connect, requests, revoke). */
   graphCommand: string;
   /** The MCP server's command, started with no argument by an AI client. */
@@ -39,7 +38,6 @@ export function aiSettings(): AiSettings {
     ollamaUrl: c.get('ollamaUrl', 'http://localhost:11434'),
     coderModel: model('models.coder', machine.CODER_MODEL),
     assistantModel: model('models.assistant', machine.ASSISTANT_MODEL),
-    embeddingsModel: model('models.embeddings', machine.NUCLEAR_GRAPH_EMBED),
     graphCommand: c.get('graphCommand', 'nuclear-graph'),
     mcpCommand: c.get('mcpCommand', 'nuclear-mcp'),
     retry: { attempts: c.get('retry.attempts', 5), baseMs: c.get('retry.baseMs', 1000), maxMs: c.get('retry.maxMs', 30000) },
@@ -61,7 +59,6 @@ export function serviceEnv(): NodeJS.ProcessEnv {
     CODER_MODEL: s.coderModel,
     ASSISTANT_MODEL: s.assistantModel,
     OLLAMA_URL: s.ollamaUrl,
-    NUCLEAR_GRAPH_EMBED: s.embeddingsModel,
     NUCLEAR_GRAPH_URL: s.graphUrl,
     NUCLEAR_GRAPH_PORT: port(s.graphUrl, '7878'),
     NUCLEAR_DEVELOPER_PORT: port(s.developerUrl, '7879'),

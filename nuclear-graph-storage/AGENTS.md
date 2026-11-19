@@ -11,8 +11,8 @@ The platform's rules are the root [`AGENTS.md`](../AGENTS.md).
 
 - **Source:** Nuclear, the `python` dialect (`*.nuc` at the root of this folder, `nuclear.toml`). `nuclear build .`
   writes the Python package `build/nuclear_graph`, which `pyproject.toml` packages (Python 3.12+, uv, hatchling).
-- **Store:** Chroma, one collection per shelf, documents encrypted (AES-256-GCM); vectors by `embeddinggemma` on
-  Ollama; the exact facts in SQLite, in memory only.
+- **Store:** Chroma, one collection per shelf, documents encrypted (AES-256-GCM); vectors by EmbeddingGemma in ONNX,
+  run inside the server's process by ONNX Runtime (no Ollama; ADR-graph-0003); the exact facts in SQLite, in memory only.
 - **Server:** FastAPI + uvicorn on `127.0.0.1:7878`, a token on every route. The client (`nuclear_graph.client`)
   needs only `httpx`.
 - **The MCP server** is not here: it is the project [`tools/mcp`](../tools/mcp/AGENTS.md) (command `nuclear-mcp`),

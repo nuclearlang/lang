@@ -146,6 +146,8 @@
     "nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,",
     "                                Codex, Cursor, OpenCode, Gemini CLI): after installing a client",
     "nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)",
+    "nuclear-builder setup --remove --all         also what the set-up installed and made: its models, Ollama when it",
+    "                                             installed it, the graph's and the chat's data and secrets, its folder",
     "nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements",
     "nuclear-builder setup --events --profile <id> [--from <step>]",
     "                                the steps of a profile, one JSON line per event (what the editors draw)",
@@ -726,6 +728,8 @@
     "nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,",
     "                                Codex, Cursor, OpenCode, Gemini CLI): after installing a client",
     "nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)",
+    "nuclear-builder setup --remove --all         also what the set-up installed and made: its models, Ollama when it",
+    "                                             installed it, the graph's and the chat's data and secrets, its folder",
     "nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements",
     "nuclear-builder setup --events --profile <id> [--from <step>]",
     "                                the steps of a profile, one JSON line per event (what the editors draw)",
@@ -905,17 +909,19 @@
    "id": "tool:nuclear-graph",
    "type": "cli",
    "title": "`nuclear-graph` — run, fill and guard the Nuclear Smart Graph",
-   "summary": "Runs the graph's server and its MCP server, builds and checks the knowledge base, ingests it, searches it, answers the exact questions and decides which programs may read it. Commands: serve, knowledge, ingest, search, answer, strategy, card, stats, connect, allow, deny, web-key, requests, revoke.",
+   "summary": "Runs the graph's server and its MCP server, builds and checks the knowledge base, ingests it, searches it, answers the exact questions and decides which programs may read it. Commands: serve, model, knowledge, ingest, search, answer, strategy, card, stats, connect, allow, deny, web-key, requests, revoke.",
    "body": [
     "```text",
     "usage: nuclear-graph [-h]",
-    "                     {serve,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke} ...",
+    "                     {serve,model,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke} ...",
     "",
     "`nuclear-graph`: run, fill and guard the Nuclear Smart Graph.",
     "",
     "positional arguments:",
-    "  {serve,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke}",
+    "  {serve,model,knowledge,ingest,search,answer,strategy,card,stats,connect,allow,deny,web-key,requests,revoke}",
     "    serve               run the graph on 127.0.0.1 (NUCLEAR_GRAPH_PORT, default 7878)",
+    "    model               download the embeddings model into the data folder now (the first search",
+    "                        does it otherwise)",
     "    knowledge           the knowledge base folder (nuclear-graph-storage/data): build its assets",
     "                        from the working tree, check that they are what the tree gives now, record",
     "                        the review of a hand-written row, ask the running graph the questions of",
@@ -1138,6 +1144,32 @@
    },
    "data": {
     "command": "nuclear-graph knowledge",
+    "entries": []
+   }
+  },
+  {
+   "id": "tool:nuclear-graph.model",
+   "type": "cli",
+   "title": "`nuclear-graph model` — Download the embeddings model into the data folder now (the first search does it otherwise)",
+   "summary": "Download the embeddings model into the data folder now (the first search does it otherwise)",
+   "body": [
+    "```text",
+    "nuclear-graph model               download the embeddings model into the data folder now (the first search",
+    "                        does it otherwise)",
+    "```"
+   ],
+   "keys": [
+    "nuclear-graph model"
+   ],
+   "sources": [
+    "nuclear-graph-storage/cli.nuc"
+   ],
+   "meta": {
+    "tool": "nuclear-graph",
+    "name": "model"
+   },
+   "data": {
+    "command": "nuclear-graph model",
     "entries": []
    }
   },

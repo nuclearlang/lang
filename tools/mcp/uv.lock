@@ -385,9 +385,11 @@ requires-dist = [
     { name = "cryptography", marker = "extra == 'server'", specifier = ">=44" },
     { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.28" },
+    { name = "huggingface-hub", marker = "extra == 'server'", specifier = ">=0.25" },
     { name = "numpy", marker = "extra == 'server'", specifier = ">=2" },
-    { name = "ollama", marker = "extra == 'server'", specifier = ">=0.6" },
+    { name = "onnxruntime", marker = "extra == 'server'", specifier = ">=1.20" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
+    { name = "tokenizers", marker = "extra == 'server'", specifier = ">=0.20" },
     { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.30" },
 ]
 provides-extras = ["server", "test"]

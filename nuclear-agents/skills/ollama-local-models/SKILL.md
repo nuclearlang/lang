@@ -24,8 +24,8 @@ Read `nuclear help ai-setup` for the first and `nuclear help backend` §2.8, §2
 1. `nuclear-builder setup --plan --json`: the machine, the profiles and how each sits on it.
 2. `nuclear-builder setup` asks step by step; without questions: `nuclear-builder setup --profile medium --yes`.
    Profiles: `lite` (`qwen2.5-coder:1.5b`), `medium` (`qwen2.5-coder:3b`), `hard` (`qwen2.5-coder:3b` +
-   `gemma4:e2b`), `remote` (no local model, only the MCP server). Every local profile adds `embeddinggemma` for the
-   graph's vectors. Ollama is installed for you when missing.
+   `gemma4:e2b`), `remote` (no local model: the Smart Graph and the MCP server). The Smart Graph runs its own model
+   (EmbeddingGemma in ONNX), not an Ollama one. Ollama is installed for you when a local profile needs it.
 3. `nuclear-builder setup --status` says what is installed and running; `nuclear-builder setup --restart developer`
    restarts a service; `nuclear-builder setup --clients` adds the MCP server to a client installed later.
 4. Agents then reach the graph and the local developer through the MCP server (`graph_strategy`, `graph_search`,

@@ -5321,39 +5321,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.162492",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
-   "summary": "to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is shared with CI.",
-   "body": [
-    "- `aiSettings()` reads `nuclear.ai.*` (`contributes.configuration` of `package.json`). `machineConfig()` is passed",
-    "  to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is",
-    "  shared with CI. `serviceEnv()` is the environment the graph and the Developer are started with (`CODER_MODEL`,",
-    "  `ASSISTANT_MODEL`, `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED`, the ports).",
-    "- The page:",
-    "  - **services**: their health urls; *Start* / *Restart* go through the system's services first, else spawn",
-    "    `<graphCommand> serve` / `nuclear-developer` (owned processes, stopped on deactivate);",
-    "  - **models**: Ollama's `/api/tags`; `billionsOf` (`localModels.ts`) counts a model's size from what Ollama",
-    "    reports, with the effective size of an `eNb` tag, against `MAX_BILLIONS` = 3.5 (the rule of the local models:",
-    "    at most the 3B class); *Pull* runs as a task;",
-    "  - **MCP**: registers `nuclear.ai.mcpCommand` (default `nuclear-mcp`, the server of",
-    "    [`tools/mcp/`](../../../../tools/mcp/AGENTS.md), started with no argument) in Claude Code",
-    "    (`claude mcp get|add --scope user`), Codex (`codex mcp list|add`), Cursor (`~/.cursor/mcp.json` merged) and",
-    "    OpenCode;",
-    "  - **connections**: `nuclear.ai.graphCommand` (default `nuclear-graph`)",
-    "    `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage",
-    "    (`jiraAuth`), `gh auth status`;"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.9648c3",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
@@ -5369,12 +5336,13 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.e7f697",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.aeff21",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
-   "summary": "with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español; devices): `settingSections` reads `contributes.configuration` with the texts of `package.nls*.json` in the editor's language and the values now; the page draws each as a form (`FORM_JS`) and…",
+   "summary": "(`jiraAuth`), `gh auth status`; with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español; devices): `settingSections` reads `contributes.configuration` with the texts of `package.nls*.json` in the editor's language and the values now; the page draws each as a…",
    "body": [
-    "- **the toolchains** follow it: the cards above and the paths' form;",
+    "(`jiraAuth`), `gh auth status`;",
+    "  - **the toolchains** follow it: the cards above and the paths' form;",
     "  - **the language** is the first section (as it is the onboarding's first step): `nuclear.language`, *Automatic*",
     "    with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español;",
     "  - **the other sections** (Nuclear Builder, the spending, Nuclear Chat, Nuclear Atlas, HTTP Connections, the",
@@ -5386,6 +5354,38 @@
     "    *Keep a GIF service's key* (`chatGifKey`: the key asked in a password box and given to `nuclear-chat gif-key",
     "    <service>` on its stdin, never a setting or a file); the welcome's *tools* step shows the same section; *Run the",
     "    welcome again* opens the welcome."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.f01406",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
+   "summary": "to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is shared with CI.",
+   "body": [
+    "- `aiSettings()` reads `nuclear.ai.*` (`contributes.configuration` of `package.json`). `machineConfig()` is passed",
+    "  to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is",
+    "  shared with CI. `serviceEnv()` is the environment the graph and the Developer are started with (`CODER_MODEL`,",
+    "  `ASSISTANT_MODEL`, `OLLAMA_URL`, the ports). The graph's embeddings model is its own (no setting).",
+    "- The page:",
+    "  - **services**: their health urls; *Start* / *Restart* go through the system's services first, else spawn",
+    "    `<graphCommand> serve` / `nuclear-developer` (owned processes, stopped on deactivate);",
+    "  - **models**: Ollama's `/api/tags`; `billionsOf` (`localModels.ts`) counts a model's size from what Ollama",
+    "    reports, with the effective size of an `eNb` tag, against `MAX_BILLIONS` = 3.5 (the rule of the local models:",
+    "    at most the 3B class); *Pull* runs as a task;",
+    "  - **MCP**: registers `nuclear.ai.mcpCommand` (default `nuclear-mcp`, the server of",
+    "    [`tools/mcp/`](../../../../tools/mcp/AGENTS.md), started with no argument) in Claude Code",
+    "    (`claude mcp get|add --scope user`), Codex (`codex mcp list|add`), Cursor (`~/.cursor/mcp.json` merged) and",
+    "    OpenCode;",
+    "  - **connections**: `nuclear.ai.graphCommand` (default `nuclear-graph`)",
+    "    `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -5435,6 +5435,33 @@
     "What Nuclear Builder and Nuclear Atlas need around them. The services themselves (the Smart Graph, the Nuclear Developer) and",
     "their models are other projects; what a user does is in",
     "[Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.1c9f77",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
+   "summary": "The set-up is `nuclear-builder setup`, written in Nuclear (`../../../tools/nuclear-builder/setup.nuc`, its data `setup.json`).",
+   "body": [
+    "The set-up is `nuclear-builder setup`, written in Nuclear",
+    "([`../../../tools/nuclear-builder/setup.nuc`](../../../tools/nuclear-builder/AGENTS.md), its data `setup.json`). The",
+    "extension runs it as a process, one call per action, and keeps no process of it alive:",
+    "",
+    "| The extension asks | `nuclear-builder setup ...` | It gives |",
+    "|---|---|---|",
+    "| the page's state | `--plan --json --lang <en\\|es>` | this machine, the profiles with `fit` and `note` (and `noteKey`, `noteArgs`: the page says the note in its language), the suggested one, the machine's choice, the AI root, the requirements of both modes (a `detail` with its `detailKey`); the profiles' and requirements' texts in the language asked (setup.json's `<field>_es` beside each English field). `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |",
+    "| the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |",
+    "| whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |",
+    "| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=...` | written to `ai.env` |",
+    "| a service again | `--restart graph\\|developer` | exit 0 when the system's manager restarted it |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -5510,33 +5537,6 @@
     "*Keep the defaults of the rest* jumps to the summary. `SetupPanel.offer` asks once while the welcome was never",
     "  finished (`nuclear.onboarding.done`); *Settings and integrations* runs it again. Without the AI archive the",
     "  machine steps say to run the installer again and the other steps still work."
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.fca515",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
-   "summary": "The set-up is `nuclear-builder setup`, written in Nuclear (`../../../tools/nuclear-builder/setup.nuc`, its data `setup.json`).",
-   "body": [
-    "The set-up is `nuclear-builder setup`, written in Nuclear",
-    "([`../../../tools/nuclear-builder/setup.nuc`](../../../tools/nuclear-builder/AGENTS.md), its data `setup.json`). The",
-    "extension runs it as a process, one call per action, and keeps no process of it alive:",
-    "",
-    "| The extension asks | `nuclear-builder setup ...` | It gives |",
-    "|---|---|---|",
-    "| the page's state | `--plan --json --lang <en\\|es>` | this machine, the profiles with `fit` and `note` (and `noteKey`, `noteArgs`: the page says the note in its language), the suggested one, the machine's choice, the AI root, the requirements of both modes (a `detail` with its `detailKey`); the profiles' and requirements' texts in the language asked (setup.json's `<field>_es` beside each English field). `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |",
-    "| the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |",
-    "| whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |",
-    "| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=... NUCLEAR_GRAPH_EMBED=...` | written to `ai.env` |",
-    "| a service again | `--restart graph\\|developer` | exit 0 when the system's manager restarted it |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6766,6 +6766,40 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.1fd613",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Settings",
+   "summary": "The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool (`Ctrl+Alt+S`), where each one has its default.",
+   "body": [
+    "The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool",
+    "(`Ctrl+Alt+S`), where each one has its default. The most used:",
+    "",
+    "| Setting | Default |",
+    "|---|---|",
+    "| `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |",
+    "| `nuclear.ai.models.coder` · `.assistant` | `qwen2.5-coder:3b` · `gemma4:e2b` |",
+    "| `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |",
+    "| `nuclear.ai.checkEveryMinutes` | `5` |",
+    "| `nuclear.builder.team` | `\"\"` (the default team) |",
+    "| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |",
+    "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |",
+    "| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |",
+    "| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |",
+    "",
+    "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`,",
+    "`nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its",
+    "new one by itself."
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.332a7b",
    "type": "readme",
    "title": "NuclearLang for VS Code — Settings",
@@ -6782,40 +6816,6 @@
     "| `nuclear.buildOnSave` | `true` | saving a `.nuc` of a backend or web project runs `nuclear build` |",
     "| `nuclear.workspace.welcome` | `true` | the welcome page at startup when no editor is open |",
     "| `nuclear.debug.followInNuclear` | `true` | on a pause, show and highlight the `.nuc` line |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.41425f",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Settings",
-   "summary": "The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool (`Ctrl+Alt+S`), where each one has its default.",
-   "body": [
-    "The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool",
-    "(`Ctrl+Alt+S`), where each one has its default. The most used:",
-    "",
-    "| Setting | Default |",
-    "|---|---|",
-    "| `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |",
-    "| `nuclear.ai.models.coder` · `.assistant` · `.embeddings` | `qwen2.5-coder:3b` · `gemma4:e2b` · `embeddinggemma` |",
-    "| `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |",
-    "| `nuclear.ai.checkEveryMinutes` | `5` |",
-    "| `nuclear.builder.team` | `\"\"` (the default team) |",
-    "| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |",
-    "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |",
-    "| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |",
-    "| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |",
-    "",
-    "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`,",
-    "`nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its",
-    "new one by itself."
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/README.md"

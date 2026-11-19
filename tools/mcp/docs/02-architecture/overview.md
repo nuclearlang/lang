@@ -50,13 +50,13 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 | Mode | Tools | Instructions |
 |---|---|---|
 | `local` | all | `FIRST` + `LOCAL_FIRST`: call `nuclear_start` before anything about Nuclear, then `graph_strategy` |
-| `remote` (remote agents only) | every tool whose name does not start with `graph_` or `developer_` | `FIRST`: call `nuclear_start` before anything about Nuclear |
+| `remote` (remote agents only) | every tool whose name does not start with `developer_` (the Smart Graph runs in every profile, ADR-installer-0004) | `FIRST` + `LOCAL_FIRST`, as local |
 
 The instructions only say where to begin (spec 016: an agent with no context learns Nuclear from this server).
 The work cycle is part of `nuclear_start`'s answer: local, `graph_strategy` + `GENERATORS` + `LOCAL` (generate; give
 `developer_task` only what is left; wire with `generate_usecase`; validate; correct only what failed;
-`developer_review`); remote, `REMOTE_NOTE` + `GENERATORS` + `REMOTE` (generate; the model writes what is left after
-reading `nuclear_brief` and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that
+`developer_review`); remote, `REMOTE_NOTE` + `graph_strategy` + `GENERATORS` + `REMOTE` (generate; the model writes what is left
+after reading `nuclear_brief`, the graph and `nuclear_help`; validate and correct). `nuclear_start` itself is `nuclear help start`, that
 cycle and `nuclear help atlas`; with a project, `gen inspect` and the brief of its dialect. `nuclear_doc` is `nuclear
 help <topic>`. `developer_task` first asks the local developer whether it answers (`developerDown`): when it does
 not, it says how to start it and that the model writes the code itself meanwhile. `FIRST` also holds the rule that a
@@ -103,12 +103,12 @@ product is made with these tools: no target code for a feature, no native code t
 
 ## Installed alone
 
-A machine set up for remote agents only installs the server (`uv tool install tools/mcp`) and not the graph's
-server extra (ADR-installer-0002); the graph's package still comes with it, for `GraphClient`, `Toolchain` and `Web`.
+A machine set up for remote agents only runs the server and the Smart Graph (ADR-installer-0004), but no local
+developer; the graph's package comes with the server, for `GraphClient`, `Toolchain` and `Web`.
 
 ## Tests (`tests/test_server.nuc`; `nuclear build . && .venv/bin/python -m pytest -q`)
 
 - `testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents`: the local mode offers the tools;
   every tool is named in the guide of the server (`docs/08-guides/mcp.md`); the remote mode
-  offers more than ten tools and none of `graph_*` / `developer_*`.
+  offers more than ten tools, `graph_strategy` among them, and none of `developer_*`.
 - `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.

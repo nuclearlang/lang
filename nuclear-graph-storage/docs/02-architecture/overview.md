@@ -75,7 +75,7 @@ process.
 | `chromadb`, `numpy`, `ollama`, `fastapi`, `uvicorn`, `cryptography` | extra `server` | the store, the exact search over the stored vectors, the embeddings, the HTTP API, the encryption |
 | `pytest` | extra `test` | the tests |
 | SQLite | the server | the exact facts; it is in the standard library of the target |
-| Ollama with `embeddinggemma` | the server | the vectors of the rows and of each query |
+| ONNX Runtime and `tokenizers` with EmbeddingGemma (`onnx-community/embeddinggemma-300m-ONNX`, downloaded once into the data folder's `models/`) | the server, `nuclear-graph model` | the vectors of the rows and of each query, inside the server's process (ADR-graph-0003) |
 | The `nuclear`, `nuclear-builder` and `nuclear-mcp` commands on the `PATH` | `knowledge build`, `Toolchain` | their help (and `nuclear-mcp tools`) is read into rows; the agents' checks run `nuclear` |
 | The desktop keyring (`secret-tool`, libsecret) | the server, `connect` | the documents' key, the owner token, each client's token |
 

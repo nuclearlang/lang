@@ -22,7 +22,7 @@ export async function checkAll(context: vscode.ExtensionContext): Promise<Check[
   const tools = [c.get('claude.command', 'claude')];
   if (c.get('codex.enabled', false)) tools.push(c.get('codex.command', 'codex'));
   if (c.get('opencode.enabled', false)) tools.push(c.get('opencode.command', 'opencode'));
-  const base = await checkConnections({ developerUrl: s.developerUrl, graphUrl: s.graphUrl, ollamaUrl: s.ollamaUrl, models: [s.coderModel, s.assistantModel, s.embeddingsModel], tools, folders: [os.tmpdir()], minFreeMb: c.get('watch.minFreeMb', 500) }, toolEnv());
+  const base = await checkConnections({ developerUrl: s.developerUrl, graphUrl: s.graphUrl, ollamaUrl: s.ollamaUrl, models: [s.coderModel, s.assistantModel], tools, folders: [os.tmpdir()], minFreeMb: c.get('watch.minFreeMb', 500) }, toolEnv());
   const gh = c.get('github.command', 'gh');
   const auth = await run(gh, ['auth', 'status']);
   base.push({ name: 'GitHub', ok: auth.ok, detail: auth.ok ? l10n.t('signed in') : l10n.t('{0} auth status: {1} (run gh auth login)', gh, auth.out.split('\n')[0] || l10n.t('not signed in')) });

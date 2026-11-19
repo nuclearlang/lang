@@ -200,6 +200,7 @@ Weather(city: string, celsius: double)
 
 WeatherApi()
   current(city: string) Weather
+    ~delay(100)
     Weather(city = city, celsius = 21.5)
 
 report(api: WeatherApi, cities: string[]) string[]

@@ -755,12 +755,12 @@
    "id": "limit:remote-agents-only",
    "type": "limit",
    "title": "Limit: a machine set up for remote agents only",
-   "summary": "With the profile `remote` nothing runs on the machine: no Smart Graph, no local agents, no models. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line and the internet tools; the `graph_*` and `developer_*` tools are absent, and the Builder panel and Nuclear Atlas of the editor do not work.",
+   "summary": "With the profile `remote` only the Smart Graph runs on the machine, with its own small model (0.3 GB, no Ollama): no local agents. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line, the internet tools and the `graph_*` tools; the `developer_*` tools are absent, and the Builder panel of the editor does not work.",
    "body": [
     "- The remote agent writes every line the generators do not write, and all of it is paid tokens. With a local profile the local agents write it and the remote agent only leads, validates and corrects.",
-    "- No strategy for a request (`graph_strategy`) and no search of the knowledge base: the agent reads `nuclear_brief` and `nuclear_help` instead.",
+    "- The strategy of a request (`graph_strategy`) and the search of the knowledge base work: the Smart Graph runs in every profile (ADR-installer-0004, ADR-graph-0003).",
     "- `nuclear-builder run` needs the Nuclear Developer: it fails its first check on such a machine.",
-    "- It is the choice for a machine too small for the lightest local profile, or for a user who does not want Ollama.",
+    "- It is the choice for a machine too small for the lightest local profile, or for a user who does not want Ollama: it needs no Ollama.",
     "- To get the local agents later: `nuclear-builder setup` again, with a local profile."
    ],
    "keys": [
@@ -790,8 +790,8 @@
     }
    ],
    "sources": [
-    "installer/docs/08-guides/ai-setup.md#4. Remote agents only",
-    "installer/docs/03-adr/0002-the-ai-services-come-with-the-installer.md#Decision"
+    "installer/docs/08-guides/ai-setup.md#4. Remote agents and the Smart Graph",
+    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#Decision"
    ],
    "platforms": [],
    "meta": {

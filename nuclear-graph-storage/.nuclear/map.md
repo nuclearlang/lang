@@ -323,11 +323,16 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
 - `store.nuc`
   - `asDocument(title: string, text: string) string` — EmbeddingGemma's prompt of a document: its title, then its text.
   - `asQuery(text: string) string` — EmbeddingGemma's prompt of a search.
-  - `ollamaEmbed(shaped: string[]) double[][]` — The vectors of texts already shaped for the model (`asDocument`, `asQuery`), by the local embeddings model.
+  - `modelFolder() Path` — The folder of the model's files, downloaded the first time (`nuclear-graph model` does it ahead, with the set-up).
+  - `LocalModel(folder: Path)` — EmbeddingGemma in ONNX Runtime, loaded once per process.
+    - `tokenizer: any`
+    - `session: any`
+    - `embed(shaped: string[]) double[][]` — The vectors of `shaped`, in its order. The texts go by length, so a batch pads little, and a batch holds at most `BATCH_TOKENS` tokens: the memory of a batch grows with the square of its longest text, so long texts go alone.
+  - `localEmbed(shaped: string[]) double[][]` — The vectors of texts already shaped for the model (`asDocument`, `asQuery`), by the embeddings model.
   - `closest(got: any, vector: double[]) <string, any>[]` — What a read of a collection with its vectors becomes for a search: each item (id, metadata) with how far its vector is from `vector` by direction (cosine: 0 is the same one), the closest first.
   - `textOr(first: any, second: any) string` — The first of two values that is a text with something in it.
   - `storable(meta: <string, any>) <string, any>` — What Chroma keeps as metadata: texts, numbers, booleans and lists of texts that are not empty.
-  - `Store(path: string, key: Bytes?, embed: (shaped: string[]) => double[][]?)` — The graph's store: one Chroma collection per shelf (ADR-graph-0001), whose documents are encrypted and whose vectors come from a local embeddings model (Ollama). Only the server process opens it.  A row's metadata is in clear (ids, names, keys, filters: what Chroma searches by); its text is sealed. The shelves of the knowledge base are made by `ingest`; `prompts` holds the prompts (the skills of the roles) and `memory` what an agent decided to keep about a project while working on it.
+  - `Store(path: string, key: Bytes?, embed: (shaped: string[]) => double[][]?)` — The graph's store: one Chroma collection per shelf (ADR-graph-0001), whose documents are encrypted and whose vectors come from the embeddings model run in this process (`localEmbed`). Only the server process opens it.  A row's metadata is in clear (ids, names, keys, filters: what Chroma searches by); its text is sealed. The shelves of the knowledge base are made by `ingest`; `prompts` holds the prompts (the skills of the roles) and `memory` what an agent decided to keep about a project while working on it.
     - `client: any`
     - `box: Box`
     - `embedder: (shaped: string[]) => double[][]`

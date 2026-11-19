@@ -17,12 +17,12 @@ Neither may be larger than 3B parameters of effective size (the user's rule). Ea
 
 | Profile | Models | Downloads | Memory | Measured with the Developer's evaluation |
 |---|---|---|---|---|
-| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |
-| `medium` | `qwen2.5-coder:3b` | 2.5 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
-| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.7 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
-| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine |
+| `lite` | `qwen2.5-coder:1.5b` | 1.3 GB | 8 GB (4 GB at least) | not measured yet |
+| `medium` | `qwen2.5-coder:3b` | 2.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |
+| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 9.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |
+| `remote` | none | the Smart Graph's model (0.3 GB) | 2 GB | only the Smart Graph runs on the machine |
 
-Every local profile also downloads `embeddinggemma` (0.6 GB, counted above), which makes the graph's vectors.
+Every profile also downloads the Smart Graph's model (EmbeddingGemma in ONNX, 0.3 GB, counted above), which the graph runs itself: it is not an Ollama model.
 
 The set-up of the AI services suggests the heaviest profile that runs well with the machine's memory; the choice is
 the user's, and a profile's models are the defaults of `CODER_MODEL` and `ASSISTANT_MODEL` on that machine
@@ -91,9 +91,9 @@ Which profiles the set-up offers after these measures is a decision of the insta
 `CHAT_MODEL` (`qwen3.5:2b`), with a context of `CHAT_CONTEXT_TOKENS` (4096), no thinking (`reasoning = false`), an
 answer of 1024 tokens at most (without it `qwen2.5:1.5b` wrote 35 000 tokens, Ollama shifting its context, until its
 caller was killed) and `CHAT_KEEP_ALIVE` (3m): Ollama frees it three minutes after the last message. The set-up
-writes it with the profile (`lite`: its one model). The graph's `embeddinggemma` still embeds the question: the
-cards are what make a knowledge answer right (the exact `nuclear gen resource` command), so retrieval stays; Ollama
-frees it five minutes after.
+writes it with the profile (`lite`: its one model). The graph's own model (EmbeddingGemma in ONNX, inside the graph's
+process) still embeds the question: the cards are what make a knowledge answer right (the exact `nuclear gen
+resource` command), so retrieval stays.
 
 Measured on 2026-11-18 (Ryzen AI 9 HX 370, 28 GB, Radeon 890M; the GPU's memory is the system's), each model alone
 (`free -m` before and after loading it):
@@ -104,7 +104,6 @@ Measured on 2026-11-18 (Ryzen AI 9 HX 370, 28 GB, Radeon 890M; the GPU's memory 
 | `qwen3.5:2b` (in use) | 2.4 GB | 4.1 GB |
 | `qwen3.5:2b-q4_K_M` | 1.6 GB | 3.2 GB |
 | `qwen2.5:1.5b` | 1.2 GB | 1.7 GB |
-| `embeddinggemma` | 0.7 GB | 1.7 GB |
 
 A chat message through Nuclear Builder's member took 9–10 GB with `gemma4:e2b` (the first answer 37 s, cold) and
 5.7 GB with `qwen3.5:2b` (13 s cold, 10 s the next). The member's prompt was 20 900 characters (the factory's 55

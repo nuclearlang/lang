@@ -57,7 +57,7 @@ It needs:
   | `medium` | `qwen2.5-coder:3b` | 12 GB (8 GB at least) |
   | `hard` | `qwen2.5-coder:3b` + `gemma4:e2b` | 24 GB (16 GB at least) |
 
-  Every profile also downloads `embeddinggemma` for the graph. Details: [the models](../02-architecture/models.md).
+  Every profile also downloads the Smart Graph's own model (EmbeddingGemma in ONNX, 0.3 GB; not an Ollama model). Details: [the models](../02-architecture/models.md).
 - **The Smart Graph** running on `127.0.0.1:7878`, with access for the Developer
   (`nuclear-graph connect nuclear-developer --scopes read,write`).
 - **The `nuclear` command** on the `PATH`.

@@ -172,7 +172,7 @@
     "",
     "Each tool has its row: `mcp:generate_resource`, `mcp:developer_task`... and the whole server is `mcp:server`.",
     "",
-    "A machine set up for remote agents only (`limit:remote-agents-only`) has no Smart Graph and no local developer: the server then offers no `graph_*` nor `developer_*` tool and tells the model to write what the generators do not."
+    "A machine set up for remote agents only (`limit:remote-agents-only`) has the Smart Graph but no local developer: the server then offers the `graph_*` tools but no `developer_*` tool, and tells the model to write what the generators do not."
    ],
    "keys": [
     "mcp",
@@ -355,17 +355,17 @@
     "| `lite` | `qwen2.5-coder:1.5b` | 1.6 GB | 8 GB (4 GB at least) | not measured yet |",
     "| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 5.2 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
     "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.4 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
-    "| `remote` | none | nothing but the MCP server (33 MB) | any | nothing runs on the machine: the MCP server alone |",
+    "| `remote` | none | the Smart Graph's model (0.3 GB) | 2 GB | only the Smart Graph runs on the machine, with the MCP server |",
     "",
-    "Every local profile also downloads `embeddinggemma` (0.6 GB, in the figures above), which makes the graph's vectors. The chat answers with one small model of its own (`CHAT_MODEL`; `lite` uses its one model), loaded only while you chat and freed 3 minutes after.",
+    "Every profile also downloads the Smart Graph's own model (EmbeddingGemma in ONNX, 0.3 GB, in the figures above), which the graph runs itself: not Ollama's. The chat answers with one small model of its own (`CHAT_MODEL`; `lite` uses its one model), loaded only while you chat and freed 3 minutes after.",
     "",
     "**What the set-up needs**, found by itself once installed or installed in a terminal the user sees: NuclearLang with its AI archive (a Python of its own with the services and the set-up, written in Nuclear: no Python, uv or Node.js on the machine) and Ollama (it runs the models; only the local profiles need it). From the source tree it also needs `uv`.",
     "",
-    "**Where things are.** The choice: `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`): the mode, the profile, its models; the services start with it, and the Builder and the editor take their default models from it. The code of the services: `~/.local/share/nuclearlang/ai/`. The graph's data: `~/.local/share/nuclear-graph/`. The models: Ollama's own folder.",
+    "**Where things are.** The choice: `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`): the mode, the profile, its models; the services start with it, and the Builder and the editor take their default models from it. The code of the services: `~/.local/share/nuclearlang/ai/`. The graph's data: `~/.local/share/nuclear-graph/`. The models: Ollama's own folder; the graph's, `~/.local/share/nuclear-graph/models/`.",
     "",
     "**The services at login.** Linux: the systemd user units `nuclear-graph`, `nuclear-developer` and `nuclear-chat` (`systemctl --user status|restart ...`, `journalctl --user -u nuclear-graph`). macOS: three launch agents (`io.github.nuclearlang.graph`, `.developer`, `.chat`). Windows: a script of the Startup folder. In idle both take about 150 MB of memory; Ollama loads a model when an agent asks and frees it a few minutes later.",
     "",
-    "**Update and remove.** Running the installer again sets the services up again with the same profile, without questions. `nuclear-builder setup --remove` takes the services away; Ollama, its models and the graph's data stay.",
+    "**Update and remove.** Running the installer again sets the services up again with the same profile, without questions. `nuclear-builder setup --remove` takes the services away; Ollama, its models and the graph's data stay (`--remove --all`, and the installer's `--uninstall`: everything it made).",
     "",
     "**The ports.** `127.0.0.1:7878` the graph, `7879` the Developer, `7880` Nuclear Chat; a port another program holds is replaced by the next free one, written to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`). Nuclear Chat's token is made the first time and kept only in the keyring; a host reads it with `nuclear-chat connect --json`."
    ],

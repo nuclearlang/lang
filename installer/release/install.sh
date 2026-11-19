@@ -17,7 +17,8 @@
 #
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
 # (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai, --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
-# that profile, no questions), --uninstall. NUCLEAR_INSTALL and NUCLEAR_BIN change the folders; NUCLEAR_REPO the
+# that profile, no questions), --uninstall (everything the install made: the AI services' models, Ollama when it
+# installed it, their data and secrets, the caches, the editors' extension). NUCLEAR_INSTALL and NUCLEAR_BIN change the folders; NUCLEAR_REPO the
 # repository (owner/name) and NUCLEAR_DOWNLOAD the base url of the files (a mirror).
 set -eu
 
@@ -58,12 +59,15 @@ while [ $# -gt 0 ]; do
     --no-ai) AI=0 ;;
     --profile) PROFILE=${2:?--profile needs a value}; shift ;;
     --uninstall)
-      # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
-      [ -x "$INSTALL/ai/bin/nuclear-builder" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$INSTALL/ai/bin/nuclear-builder" setup --remove >/dev/null 2>&1 || true
+      # the AI services first, with everything their set-up installed and made (the models it downloaded, Ollama when
+      # it installed it, the graph's and the chat's data and secrets, the MCP server in each AI client)
+      [ -x "$INSTALL/ai/bin/nuclear-builder" ] && NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$INSTALL/ai/bin/nuclear-builder" setup --remove --all >&2 || true
       rm -f "$BIN/nuclear-developer"
       rm -f "$BIN/nuclear" "$BIN/nuclear-lsp" "$BIN/nuclear-builder"
       rm -rf "$INSTALL"
       for d in $SKILL_DIRS; do rm -rf "$d/nuclear"; done
+      # the compiler's cache of type definitions and the folder of the machine's choices
+      rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/nuclearlang" "${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang"
       for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
         [ -f "$rc" ] && grep -q "$MARK" "$rc" && { grep -v "$MARK" "$rc" > "$rc.nuclear" && mv "$rc.nuclear" "$rc"; }
       done

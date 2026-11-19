@@ -4,6 +4,9 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process
+  (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come
+  from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.
 - The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each
   command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with
   every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six

@@ -43,8 +43,10 @@ $env:NUCLEAR_INSTALL = $Install
 
 if ($Uninstall) {
   # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
-  if (Test-Path $Builder) { & $Builder setup --remove *> $null }
+  if (Test-Path $Builder) { & $Builder setup --remove --all }
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force (Join-Path $env:APPDATA 'nuclearlang') -ErrorAction SilentlyContinue
+  Remove-Item -Recurse -Force (Join-Path $env:USERPROFILE '.cache\nuclearlang') -ErrorAction SilentlyContinue
   foreach ($d in $SkillDirs) { Remove-Item -Recurse -Force (Join-Path $d 'nuclear') -ErrorAction SilentlyContinue }
   Set-UserPath ($UserPath | Where-Object { $_ -ne $Bin })
   foreach ($e in @('code', 'code-insiders', 'cursor', 'codium', 'windsurf')) {

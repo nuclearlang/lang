@@ -21,7 +21,7 @@ extension runs it as a process, one call per action, and keeps no process of it 
 | the page's state | `--plan --json --lang <en\|es>` | this machine, the profiles with `fit` and `note` (and `noteKey`, `noteArgs`: the page says the note in its language), the suggested one, the machine's choice, the AI root, the requirements of both modes (a `detail` with its `detailKey`); the profiles' and requirements' texts in the language asked (setup.json's `<field>_es` beside each English field). `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |
 | the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |
 | whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |
-| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=... NUCLEAR_GRAPH_EMBED=...` | written to `ai.env` |
+| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=...` | written to `ai.env` |
 | a service again | `--restart graph\|developer` | exit 0 when the system's manager restarted it |
 
 - `aiMachine.ts` is what the extension reads itself, with no process: `machineFile()` / `readMachine()`
@@ -85,7 +85,7 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
 - `aiSettings()` reads `nuclear.ai.*` (`contributes.configuration` of `package.json`). `machineConfig()` is passed
   to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is
   shared with CI. `serviceEnv()` is the environment the graph and the Developer are started with (`CODER_MODEL`,
-  `ASSISTANT_MODEL`, `OLLAMA_URL`, `NUCLEAR_GRAPH_EMBED`, the ports).
+  `ASSISTANT_MODEL`, `OLLAMA_URL`, the ports). The graph's embeddings model is its own (no setting).
 - The page:
   - **services**: their health urls; *Start* / *Restart* go through the system's services first, else spawn
     `<graphCommand> serve` / `nuclear-developer` (owned processes, stopped on deactivate);

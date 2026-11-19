@@ -45,19 +45,20 @@
       "note_es": {
         "linux": "El instalador propio de Ollama: pide tu contraseña, porque instala Ollama como un servicio del sistema.",
         "darwin": "Con Homebrew; sin él, descarga la app desde la página de Ollama y ábrela una vez."
-      }
+      },
+      "local": true
     }
   ],
-  "embeddings": "embeddinggemma",
+  "embeddings": "EmbeddingGemma",
   "chat": "qwen3.5:2b",
   "profiles": [
     {
       "id": "remote",
       "title": "Remote agents and the Smart Graph",
-      "summary": "Only the Smart Graph runs on this machine, with its small model. Claude Code, Codex, Cursor or OpenCode get the Nuclear MCP server: the generators, the compiler, the command line and the knowledge base.",
-      "gb": 0.6,
-      "ram": 1,
-      "minRam": 1,
+      "summary": "Only the Smart Graph runs on this machine, with its small model (no Ollama). Claude Code, Codex, Cursor or OpenCode get the Nuclear MCP server: the generators, the compiler, the command line and the knowledge base.",
+      "gb": 0.3,
+      "ram": 2,
+      "minRam": 2,
       "works": [
         "the generators (a resource, a use case, a screen) from your agent",
         "the compiler's checks and fixes, the documentation of every kind and decorator",
@@ -70,7 +71,7 @@
       ],
       "measured": "only the Smart Graph runs on this machine",
       "title_es": "Agentes remotos y el Smart Graph",
-      "summary_es": "En esta máquina solo corre el Smart Graph, con su modelo pequeño. Claude Code, Codex, Cursor u OpenCode reciben el servidor MCP de Nuclear: los generadores, el compilador, la línea de comandos y la base de conocimiento.",
+      "summary_es": "En esta máquina solo corre el Smart Graph, con su modelo pequeño (sin Ollama). Claude Code, Codex, Cursor u OpenCode reciben el servidor MCP de Nuclear: los generadores, el compilador, la línea de comandos y la base de conocimiento.",
       "works_es": [
         "los generadores (un recurso, un caso de uso, una pantalla) desde tu agente",
         "las comprobaciones y arreglos del compilador, la documentación de cada kind y decorador",
@@ -90,7 +91,7 @@
       "coder": "qwen2.5-coder:1.5b",
       "assistant": "qwen2.5-coder:1.5b",
       "chat": "qwen2.5-coder:1.5b",
-      "gb": 1.6,
+      "gb": 1.3,
       "ram": 8,
       "minRam": 4,
       "works": [
@@ -120,7 +121,7 @@
       "summary": "The coder the project measures does everything, also the plans and the reviews: one 3B model in memory.",
       "coder": "qwen2.5-coder:3b",
       "assistant": "qwen2.5-coder:3b",
-      "gb": 5.2,
+      "gb": 4.9,
       "ram": 12,
       "minRam": 8,
       "works": [
@@ -156,7 +157,7 @@
       "summary": "The set every measurement of the project was made with: a coder and a separate model to plan, review and answer.",
       "coder": "qwen2.5-coder:3b",
       "assistant": "gemma4:e2b",
-      "gb": 12.4,
+      "gb": 12.1,
       "ram": 24,
       "minRam": 16,
       "works": [
@@ -186,5 +187,6 @@
       ],
       "measured_es": "43 de 45 tareas de un archivo (Claude Sonnet: 39), 16 de 18 nunca vistas, 2 de 3 funcionalidades enteras, 10 de 10 preguntas del chat, 10 de 11 análisis"
     }
-  ]
+  ],
+  "embeddingsGb": 0.3
 }

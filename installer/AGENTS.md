@@ -48,8 +48,10 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 
 1. **One layout, one script.** An installation is what `release/stage.sh` assembles, from source or from an
    archive; a new file an installed binary needs is added there, never in one installer only.
-2. **No sudo, no administrator**: everything goes into the user's folders, and `--uninstall` removes exactly what
-   an install created (the definitions cache, Ollama, its models and the graph's data stay: they are the user's).
+2. **No sudo, no administrator**: everything goes into the user's folders, and the public installers' `--uninstall`
+   removes everything an install created, the AI set-up's models, Ollama when it installed it, the data and the
+   caches included; what was on the machine before stays (ADR-installer-0005). The source installer's `--uninstall`
+   (a developer's machine) keeps the data.
 3. **Nothing is downloaded before the user chooses**: the AI set-up asks, and without a terminal (CI) nothing is
    asked or downloaded (ADR-installer-0002).
 4. **Never run `--uninstall` or a public installer against the real `HOME` while testing**: use a fake `HOME` and a

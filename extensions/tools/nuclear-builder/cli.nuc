@@ -20,6 +20,8 @@ USAGE = """
   nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,
                                   Codex, Cursor, OpenCode, Gemini CLI): after installing a client
   nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)
+  nuclear-builder setup --remove --all         also what the set-up installed and made: its models, Ollama when it
+                                               installed it, the graph's and the chat's data and secrets, its folder
   nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements
   nuclear-builder setup --events --profile <id> [--from <step>]
                                   the steps of a profile, one JSON line per event (what the editors draw)
@@ -260,6 +262,9 @@ haveRequirements(p: Profile, always: boolean) boolean
       return false
     // in the terminal the user sees: an installer may ask for a password
     subprocess.run(command, shell = true, env = toolEnv())
+    // `--remove --all` takes away what the set-up installed, and only that
+    if missing["id"] == "ollama"
+      writeMachine({ "NUCLEAR_INSTALLED_OLLAMA": "1" })
     found = false
     for i in 0..20
       found = requirements(local).any((r) => r["id"] == missing["id"] and r["found"] == true)
@@ -275,14 +280,12 @@ haveRequirements(p: Profile, always: boolean) boolean
 // the user says so (`always`: yes). False when they stay missing.
 haveModels(p: Profile, always: boolean) boolean
   wanted = modelsOf(p)
+  if wanted.isEmpty
+    return true
   missing = missingOf(wanted, installedModels(urls()["ollama"]!))
   here = wanted.filter((m) => not (m in missing))
   if not here.isEmpty
     print("\nAlready in Ollama, used as they are: ${here.join(", ")}.")
-  // the Smart Graph's model is not a choice: the MCP server reads the graph
-  if EMBEDDINGS in missing
-    print("\n${EMBEDDINGS} (the Smart Graph's model, which the MCP server needs) is downloaded.")
-  missing = missing.filter((m) => m != EMBEDDINGS)
   if missing.isEmpty
     return true
   if yes(always ? "y" : ask("\nDownload ${missing.join(", ")} (up to ${p.gb} GB)? [Y/n]: ", "y"))
@@ -296,8 +299,9 @@ setup(args: string[]) int
     print(USAGE)
     return 0
   if "--remove" in args
-    remove((line) => print(line))
-    print("The AI services are removed. Ollama, its models and the graph's data stay.")
+    everything = "--all" in args
+    remove((line) => print(line), everything)
+    print(everything ? "The AI services are removed, with everything their set-up installed and made. What was on this machine before stays." : "The AI services are removed. Ollama, its models and the graph's data stay (--all takes them away too).")
     return 0
   if "--clients" in args
     connectClients((line) => print(line))

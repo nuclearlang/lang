@@ -500,14 +500,13 @@
    "id": "editor:vscode.settings.ai",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the AI loop, the local agents and their integrations",
-   "summary": "The 25 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
+   "summary": "The 24 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
    "body": [
     "- `nuclear.ai.developerUrl` (default `\"http://127.0.0.1:7879\"`): %nuclear.ai.developerUrl.desc%",
     "- `nuclear.ai.graphUrl` (default `\"http://127.0.0.1:7878\"`): %nuclear.ai.graphUrl.desc%",
     "- `nuclear.ai.ollamaUrl` (default `\"http://localhost:11434\"`): %nuclear.ai.ollamaUrl.desc%",
     "- `nuclear.ai.models.coder` (default `\"qwen2.5-coder:3b\"`): %nuclear.ai.models.coder.desc%",
     "- `nuclear.ai.models.assistant` (default `\"gemma4:e2b\"`): %nuclear.ai.models.assistant.desc%",
-    "- `nuclear.ai.models.embeddings` (default `\"embeddinggemma\"`): %nuclear.ai.models.embeddings.desc%",
     "- `nuclear.ai.mcpCommand` (default `\"nuclear-mcp\"`): %nuclear.ai.mcpCommand.desc%",
     "- `nuclear.ai.graphCommand` (default `\"nuclear-graph\"`): %nuclear.ai.graphCommand.desc%",
     "- `nuclear.ai.retry.attempts` (default `5`): %nuclear.ai.retry.attempts.desc%",
@@ -564,11 +563,6 @@
       "name": "nuclear.ai.models.assistant",
       "default": "\"gemma4:e2b\"",
       "does": "%nuclear.ai.models.assistant.desc%"
-     },
-     {
-      "name": "nuclear.ai.models.embeddings",
-      "default": "\"embeddinggemma\"",
-      "does": "%nuclear.ai.models.embeddings.desc%"
      },
      {
       "name": "nuclear.ai.mcpCommand",

@@ -72,16 +72,16 @@ testTheChoiceIsKeptInTheMachineFileAndReadBack(tmpPath: Path) void
   file = "${tmpPath.joinpath("nuclearlang", "ai.env")}"
   medium = profileOf("medium")!
   writeMachine(machineOf(medium), file)
-  expect(readMachine(file) == { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": "medium", "CODER_MODEL": medium.coder!, "ASSISTANT_MODEL": medium.assistant!, "CHAT_MODEL": CHAT_MODEL, "NUCLEAR_GRAPH_EMBED": EMBEDDINGS })
+  expect(readMachine(file) == { "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": "medium", "CODER_MODEL": medium.coder!, "ASSISTANT_MODEL": medium.assistant!, "CHAT_MODEL": CHAT_MODEL })
   // the chat's small model is downloaded with every local profile
   expect(CHAT_MODEL in modelsOf(medium))
   // lite has one model for everything, the chat too
   lite = profileOf("lite")!
-  expect(machineOf(lite)["CHAT_MODEL"] == lite.coder and modelsOf(lite).length == 2)
+  expect(machineOf(lite)["CHAT_MODEL"] == lite.coder and modelsOf(lite) == [lite.coder!])
   // a later write keeps what it does not name
   writeMachine({ "CODER_MODEL": "other:1b" }, file)
   expect(readMachine(file)["CODER_MODEL"] == "other:1b" and readMachine(file)["NUCLEAR_AI_PROFILE"] == "medium")
-  expect(machineOf(profileOf("remote")!) == { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote", "NUCLEAR_GRAPH_EMBED": EMBEDDINGS })
+  expect(machineOf(profileOf("remote")!) == { "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote" })
   expect(readMachine("${tmpPath.joinpath("no-such-file")}").isEmpty)
 
 testEachSystemGetsTheFilesThatStartTheServicesAtLogin() void
@@ -118,12 +118,12 @@ testTheLauncherTakesTheMachineModelsUnlessTheCallerGivesItsOwn(tmpPath: Path) vo
   expect(launcher("C:\\ai", "C:\\m\\ai.env", "win32").path == "nuclear-developer.cmd")
 
 testAProfileIsInstalledInItsStepsAndRemoteAgentsAloneTakeTwo() void
-  // the Smart Graph in every profile: the MCP server reads it
-  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "models", "graph-service", "knowledge"])
+  // the Smart Graph in every profile (the MCP server reads it), with its own model: Ollama only for the local agents
+  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "graph-model", "graph-service", "knowledge"])
   expect(servicesOf(profileOf("remote")!).map((s) => s.name) == ["graph"] and servicesOf(profileOf("medium")!).length == 3)
-  expect(modelsOf(profileOf("remote")!) == [EMBEDDINGS])
-  expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "clients", "developer", "models", "graph-service", "knowledge", "developer-service", "chat-service"])
-  expect(EMBEDDINGS in steps(profileOf("hard")!)[3].title)
+  expect(modelsOf(profileOf("remote")!).isEmpty and not (EMBEDDINGS in modelsOf(profileOf("hard")!)))
+  expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "clients", "graph-model", "developer", "models", "graph-service", "knowledge", "developer-service", "chat-service"])
+  expect(EMBEDDINGS in steps(profileOf("hard")!)[2].title)
 
 testEveryRequirementCanBeInstalledOnTheThreeSystemsOrByHand() void
   expect(REQUIREMENTS.map((r) => "${r["id"]}") == ["nuclearlang", "uv", "ollama"])
@@ -132,12 +132,35 @@ testEveryRequirementCanBeInstalledOnTheThreeSystemsOrByHand() void
     expect("${r["url"]}".startsWith("https://"))
     for system in ["linux", "darwin", "win32"]
       expect(install[system] != null, "${r["id"]} on ${system}")
-  // Ollama in every profile: the Smart Graph's model runs on it
-  expect(REQUIREMENTS.find((r) => r["id"] == "ollama")!["local"] == null)
+  // Ollama only for the local agents: the Smart Graph runs its model itself
+  expect(REQUIREMENTS.find((r) => r["id"] == "ollama")!["local"] == true)
   expect(hasModel(["embeddinggemma:latest"], "embeddinggemma") and hasModel(["a:3b"], "a:3b") and not hasModel(["a:3b"], "a"))
   // what Ollama already has is used; only the rest would be downloaded
   expect(missingOf(["embeddinggemma", "a:3b", "b:2b"], ["embeddinggemma:latest", "a:3b"]) == ["b:2b"])
   expect(missingOf(["a:3b"], ["a:3b"]).isEmpty)
+
+// `--remove --all` takes away what the set-up made (its folders) and leaves the rest of the machine as it was.
+testAnUninstallTakesAwayWhatTheSetUpMadeAndOnlyThat(tmpPath: Path) void
+  saved = dict(os.environ)
+  try
+    os.environ["XDG_DATA_HOME"] = "${tmpPath.joinpath("data")}"
+    os.environ["XDG_CONFIG_HOME"] = "${tmpPath.joinpath("config")}"
+    os.environ.pop("NUCLEAR_GRAPH_HOME", null)
+    for name in ["nuclear-graph", "nuclear-chat", "someone-else"]
+      tmpPath.joinpath("data", name).mkdir(parents = true)
+    writeMachine({ "NUCLEAR_AI_PROFILE": "remote" })
+    said: string[] = []
+    purge({}, (line) => said.add(line), secrets = false)
+    expect(not dataFolder("nuclear-graph").exists() and not dataFolder("nuclear-chat").exists())
+    expect(not Path(machineFile()).parent.exists())
+    expect(tmpPath.joinpath("data", "someone-else").exists(), "what the set-up did not make stays")
+    expect(said.length == 3, "${said}")
+  finally
+    os.environ.clear()
+    os.environ.update(saved)
+  // Ollama is taken away the way it came; on Linux its installer put it in the system
+  expect(ollamaRemoval("darwin") == ["brew services stop ollama", "brew uninstall ollama"])
+  expect(ollamaRemoval("linux").all((s) => s.startsWith("sudo ")))
 
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
