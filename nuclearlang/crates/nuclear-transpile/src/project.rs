@@ -679,7 +679,7 @@ pub fn build(root: &Path, manifest: &Manifest, dialect: &Dialect) -> ProjectOutp
             .map(|(name, version)| {
                 let path = (version.starts_with('.') || version.starts_with('/')).then(|| {
                     let p = root.join(version);
-                    p.canonicalize().unwrap_or(p).to_string_lossy().replace('\\', "/")
+                    dependency_path(&p.canonicalize().unwrap_or(p))
                 });
                 (name.clone(), version.clone(), path)
             })
@@ -1076,14 +1076,15 @@ fn project_context(
             Ctx::new().set("name", name).value("kinds", kinds).into_value()
         })
         .collect();
-    // dependencies(...) of the manifest: `name`, `version`, `path` (a folder on disk, absolute) for the target's manifest
+    // dependencies(...) of the manifest: `name`, `version`, `path` (a folder on disk, absolute) and `url` (its `file:` URL,
+    // `file:///home/a/x`, `file:///D:/a/x`) for the target's manifest
     let dependencies = ctx
         .dependencies
         .iter()
         .map(|(name, version, path)| {
             let c = Ctx::new().set("name", name).set("version", version);
             match path {
-                Some(p) => c.set("path", p),
+                Some(p) => c.set("path", p).set("url", format!("file://{}{p}", if p.starts_with('/') { "" } else { "/" })),
                 None => c,
             }
             .into_value()
@@ -1152,4 +1153,27 @@ fn field_decor(fields: &Value) -> Value {
         }
     }
     Value::Map(out)
+}
+
+/// A folder dependency's path as a package manager reads it: `/` separators, and on Windows without the `\\?\` prefix
+/// `canonicalize` adds (uv rejects `file:////?/D:/...`): `\\?\D:\a\x` → `D:/a/x`, `\\?\UNC\host\x` → `//host/x`.
+fn dependency_path(p: &Path) -> String {
+    let s = p.to_string_lossy();
+    let s = match s.strip_prefix(r"\\?\UNC\") {
+        Some(rest) => format!(r"\\{rest}"),
+        None => s.strip_prefix(r"\\?\").unwrap_or(&s).to_string(),
+    };
+    s.replace('\\', "/")
+}
+
+#[cfg(test)]
+mod dependency_path_tests {
+    use super::*;
+
+    #[test]
+    fn a_dependency_path_has_no_verbatim_prefix() {
+        assert_eq!(dependency_path(Path::new(r"\\?\D:\a\lang\x")), "D:/a/lang/x");
+        assert_eq!(dependency_path(Path::new(r"\\?\UNC\host\share\x")), "//host/share/x");
+        assert_eq!(dependency_path(Path::new("/home/a/x")), "/home/a/x");
+    }
 }

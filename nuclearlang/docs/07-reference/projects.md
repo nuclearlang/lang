@@ -210,8 +210,9 @@ advice when the package is added (`nuclear add express`), and adds it.
 
 A backend dialect has the `dependencies` section too (`dependencies(nuclear_graph = ">=0.1")`): each package goes to
 the generated manifest (`pyproject.toml`, `package.json`) as the template variable `dependencies` (`name`,
-`version`, `path`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root
-(`nuclear_graph @ file:///...`, `"file:/..."`).
+`version`, `path`, `url`); a version that starts with `.` or `/` is a folder on disk, resolved from the project root:
+`path` is absolute with `/` separators (`D:/a/x` on Windows), `url` its `file:` URL (`nuclear_graph @ file:///...`,
+`"file:/..."`).
 
 `testEnv(NAME = "value")` (a section the dialect lists in `sections`) is the environment the project's tests run
 with (ADR-synapsis-0010): the template variable `test_env` (`name`, `value`) of the project files, which set it

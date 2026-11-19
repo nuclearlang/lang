@@ -14,7 +14,7 @@ dependencies = [
     "{{name}}{{version}}",
 {{/plugins.packages}}
 {{#dependencies}}
-    "{{name}}{{#path}} @ file://{{path}}{{/path}}{{^path}}{{version}}{{/path}}",
+    "{{name}}{{#path}} @ {{url}}{{/path}}{{^path}}{{version}}{{/path}}",
 {{/dependencies}}
 ]
 
