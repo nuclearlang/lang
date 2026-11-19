@@ -36,6 +36,9 @@ Behaviour worth knowing:
 - The controller decorators add the leading slash to the platform's segments; an invalid body answers 400.
 - The order of a controller's routes does not matter: a fixed segment wins over a parameter (`router_of`;
   reference §2.7).
+- A parameter the dialect wrote with a trailing `_` (its name is a Python word or builtin: `type_`, `from_`) keeps
+  its own name for the client: `router_of` writes the route's `{type}` as `{type_}` (the same URL) and `_endpoint`
+  reads a query parameter by its alias (`?type=`). Test: `test_a_renamed_parameter_keeps_its_public_name`.
 - `create_app` keeps the mounted routes in `app.state.synapsis_routes` and then calls `instrument(app)` of every
   connection (a no-op but in `Telemetry`).
 - `publish` works in process when the app has no Kafka connection; the tests' `conftest` creates the listeners.

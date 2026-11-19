@@ -66,9 +66,10 @@ What Python binds otherwise is written so the code means what it says in every t
 a list or a map is `xs: list[int] | None = None` and the function begins with `if xs is None: xs = []` (a default is
 made once); a lambda made in a loop binds the loop's names it reads (`lambda i=i: i`, Python binds a closure late); a
 function that assigns a variable of its file begins with `global counter`; a chain after `?.` is one conditional
-(`(u.name.upper() if u is not None else None)`); a local, a lambda's parameter, a function or a constant named like a
+(`(u.name.upper() if u is not None else None)`); a local, a parameter, a function or a constant named like a
 function the dialect writes (`sorted`, `len`, `max`, `sum`, `list`, `type`...: `keywords.toml`, level `shadowed`) is
-renamed `sorted_`. In an interpolated text a missing value and a boolean go through `_text` (`null`, `true`).
+renamed `sorted_`, and a named argument that passes such a parameter too (`pick(xs, max = 2)` → `pick(xs, max_=2)`);
+a field keeps its name. Outside, the function keeps its own names: `@_public_names(max_="max")` shows `max` to whoever reads its signature or passes it by name (a route, an MCP or LangChain tool, `pick(xs, max=2)`). In an interpolated text a missing value and a boolean go through `_text` (`null`, `true`).
 
 ```nuclear
 User(name: string, age: int = 0)

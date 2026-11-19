@@ -70,6 +70,25 @@ async def test_crud_query_and_controller() -> None:
         assert await repo.where({"name": one_of(["Rick", "Morty"])}).count() == 2
 
 
+@controller("/items")
+class ItemController:
+    """Nuclear writes `type`, `list` and `from` as `type_`, `list_` and `from_` (they are Python's words)."""
+
+    @get("/{type}")
+    async def by_type(self, type_: str, list_: int = 0, from_: str = "") -> str:
+        return f"{type_}:{list_}:{from_}"
+
+
+async def test_a_renamed_parameter_keeps_its_public_name() -> None:
+    app = create_app(Config(), controllers=[ItemController])
+    async with client(app, Config(), memory_database()) as http:
+        answer = await http.get("/items/book", params={"list": 3, "from": "shelf"})
+        assert answer.status_code == 200, answer.text
+        assert answer.json() == "book:3:shelf"
+        names = {p["name"] for p in app.openapi()["paths"]["/items/{type_}"]["get"]["parameters"]}
+        assert {"list", "from"} <= names
+
+
 class WeatherTools(Tools):
     def weather(self, city: str) -> str:
         """The weather of a city."""

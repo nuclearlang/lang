@@ -58,8 +58,9 @@ random    = { level = "reserved", via = "library", note = "import random (Math.r
 asyncio   = { level = "reserved", via = "library", note = "import asyncio (delay, awaitAll)" }
 
 # --- shadowed: functions of Python the dialect writes (xs.sorted() → sorted(xs), xs.length → len(xs)); a local, a
-# lambda's parameter, a function or a constant of the file with that name would hide it, so it is renamed (sorted_).
-# A field and a function's parameter keep their name (they are the API). Kept in step with the [library] templates.
+# parameter, a function or a constant of the file with that name would hide it, so it is renamed (sorted_), and so is
+# a named argument that passes such a parameter. A field keeps its name (it is the API); a renamed parameter keeps its
+# own name outside through `[syntax] renamed_params` (`@_public_names`). Kept in step with the [library] templates.
 abs       = { level = "shadowed", via = "builtin" }
 all       = { level = "shadowed", via = "builtin" }
 any       = { level = "shadowed", via = "builtin" }

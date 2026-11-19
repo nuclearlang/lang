@@ -993,9 +993,20 @@ impl<'a> Emitter<'a> {
         if self.d.is_shadowed(name) { format!("{name}_") } else { self.escape(name) }
     }
 
-    /// A parameter of a function: renamed only when it is a word of the target, as a field is (it is the API).
+    /// A parameter of a function: renamed like a local (`list` → `list_` where it would hide a function the dialect
+    /// writes), since in its body it is one; a named argument that passes it is renamed the same way (`args`).
     fn declare_param(&mut self, name: &str) -> String {
+        let out = self.escape_value(name);
+        self.declare_as(name, out)
+    }
+
+    /// A constructor's parameter: a field, so renamed only when it is a word of the target (it is the API).
+    fn declare_ctor_param(&mut self, name: &str) -> String {
         let out = self.escape(name);
+        self.declare_as(name, out)
+    }
+
+    fn declare_as(&mut self, name: &str, out: String) -> String {
         match self.lazy.open.first() {
             Some(&root) => _ = self.lazy.locals.entry(root).or_default().insert(out.clone()),
             None if self.lazy.on => self.lazy.params.push(out.clone()),
@@ -1006,6 +1017,27 @@ impl<'a> Emitter<'a> {
         }
         self.local_names.insert(out.clone());
         out
+    }
+
+    /// `[syntax] renamed_params` rendered for the parameters `declare_param` renamed (`list` → `list_`), so the
+    /// target can show them by their own names to whoever reads the signature (Python: a decorator); empty when none
+    /// is renamed or the dialect has no such template.
+    fn public_names(&mut self, key: &str, params: &[Param], span: Span) -> String {
+        // only where the template that writes the function places it (a kind's own method template may not)
+        let placed =
+            self.find_template(key).is_some_and(|t| t.used_vars().into_iter().any(|v| v.name == "public_names"));
+        if !placed || !self.has("renamed_params") {
+            return String::new();
+        }
+        let renamed: Vec<Value> = params
+            .iter()
+            .filter(|p| self.d.is_shadowed(&p.name.name))
+            .map(|p| Ctx::new().set("name", &p.name.name).set("local", self.escape_value(&p.name.name)).into_value())
+            .collect();
+        if renamed.is_empty() {
+            return String::new();
+        }
+        self.tpl("renamed_params", Ctx::new().value("renamed", Value::List(renamed)), span)
     }
 
     fn declare_local(&mut self, name: &str) -> String {
@@ -2332,10 +2364,13 @@ impl<'a> Emitter<'a> {
         }
     }
 
-    /// Parameters as data for templates: name, type, tinfo, optional, named, decor, decorated.
-    fn params_data(&mut self, params: &[Param]) -> Value {
+    /// Parameters as data for templates: name, local, type, tinfo, optional, named, decor, decorated. `name` is the
+    /// parameter's public name (a named argument, a key of a request); `local` is the variable the body reads, renamed
+    /// where it would hide a function the dialect writes (`list` → `list_`; a constructor's never is: a field).
+    fn params_data(&mut self, params: &[Param], ctor: bool) -> Value {
         let mut out = Vec::new();
         for p in params {
+            let local = if ctor { self.escape(&p.name.name) } else { self.escape_value(&p.name.name) };
             let ty = p.ty.as_ref().map(|t| self.ty(t)).unwrap_or_default();
             let tinfo = self.type_info(p.ty.as_ref());
             let (decor, _) = self.decor(&p.decorators);
@@ -2343,6 +2378,7 @@ impl<'a> Emitter<'a> {
             out.push(
                 Ctx::new()
                     .set("name", &p.name.name)
+                    .set("local", local)
                     .set("type", ty)
                     .set("default", default)
                     .value("tinfo", tinfo)
@@ -2423,7 +2459,7 @@ impl<'a> Emitter<'a> {
         .or_else(|| d.params.as_ref().map(|p| p.list.clone()))
         .unwrap_or_default();
         let params =
-            if matches!(kind, DeclKind::Function) { Value::List(Vec::new()) } else { self.params_data(&ctor_params) };
+            if matches!(kind, DeclKind::Function) { Value::List(Vec::new()) } else { self.params_data(&ctor_params, true) };
         let kind_name = if let DeclKind::Kind(k) = &kind { Some(k.clone()) } else { None };
         if let Some(k) = &kind_name {
             self.kinds_used.insert(k.clone());
@@ -2464,13 +2500,15 @@ impl<'a> Emitter<'a> {
         let export = self.export();
         let name = self.decl_names.get(&d.name.name).cloned().unwrap_or_else(|| d.name.name.clone());
         let (decor, deco_args) = self.decor(&d.decorators);
-        let params_list = self.params_data(&d.params.as_ref().map(|p| p.list.clone()).unwrap_or_default());
+        let params_list = self.params_data(&d.params.as_ref().map(|p| p.list.clone()).unwrap_or_default(), false);
         let ret_info = self.type_info(d.ret.as_ref());
         let (params, ret, is_async, generator, body) = self.callable(d);
         let body = self.monitored(body, &d.name.name, d.span, is_async, generator);
+        let public_names = self.public_names("function", d.params.as_ref().map(|p| p.list.as_slice()).unwrap_or_default(), d.span);
         self.tpl(
             "function",
             Ctx::new()
+                .set("public_names", public_names)
                 .value("decor", decor)
                 .value("deco_args", deco_args)
                 .value("params_list", params_list)
@@ -3465,7 +3503,7 @@ impl<'a> Emitter<'a> {
             // inside super(...) the parameters are the arguments themselves (`this` is not ready yet)
             self.frames.push(Frame::default());
             for p in params {
-                self.declare_param(&p.name.name);
+                self.declare_ctor_param(&p.name.name);
             }
             if use_super_params {
                 // the arguments are already the super parameters
@@ -3546,7 +3584,7 @@ impl<'a> Emitter<'a> {
         }
         let (decor, deco_args) = self.decor(&md.decorators);
         self.frames.pop();
-        let mut params_list = self.params_data(&md.params.as_ref().map(|p| p.list.clone()).unwrap_or_default());
+        let mut params_list = self.params_data(&md.params.as_ref().map(|p| p.list.clone()).unwrap_or_default(), false);
         // `route`: the parameter is named in the route of a decorator (`@get(":id")`, `@get("/{id}")`)
         let in_route = route_params(&md.decorators);
         if let Value::List(items) = &mut params_list {
@@ -3628,9 +3666,11 @@ impl<'a> Emitter<'a> {
         }
         let label = if owner.is_empty() { md.name.name.clone() } else { format!("{owner}.{}", md.name.name) };
         let body = self.monitored(body, &label, md.span, is_async, generator);
+        let public_names = self.public_names("method", &method_params, md.span);
         let text = self.tpl(
             "method",
             Ctx::new()
+                .set("public_names", public_names)
                 .set("owner", &owner)
                 .value("owner_decor", owner_decor)
                 .value("plugins", self.plugin_flags())
@@ -6895,7 +6935,9 @@ impl<'a> Emitter<'a> {
                     starts.push(a.span.start);
                 }
                 Some(n) if self.d.options.named_args_native => {
-                    rendered.push(self.tpl("named_arg", Ctx::new().set("name", &n.name).set("value", v), a.span));
+                    // a parameter of a Nuclear callee is renamed in its signature as a local is (`declare_param`)
+                    let name = if param.is_some() { self.escape_value(&n.name) } else { n.name.clone() };
+                    rendered.push(self.tpl("named_arg", Ctx::new().set("name", &name).set("value", v), a.span));
                     starts.push(a.span.start);
                 }
                 Some(n) => {
@@ -6935,7 +6977,7 @@ impl<'a> Emitter<'a> {
                 f.types.insert(p.name.name.clone(), h.clone());
             }
         }
-        self.lambda_names = l.params.iter().map(|p| self.escape(&p.name.name)).collect::<Vec<_>>().join(", ");
+        self.lambda_names = l.params.iter().map(|p| self.escape_value(&p.name.name)).collect::<Vec<_>>().join(", ");
         // `fns.add(() => i)` in a loop: each lambda keeps the value of its own turn (`lambda i=i: i`)
         for (out, ty) in &bound {
             let typed = self.tpl("bound_param", Ctx::new().set("name", out).opt("type", ty.clone()), l.span);

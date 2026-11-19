@@ -4,6 +4,9 @@ All notable changes to synapsis-backend are written here; versions follow [Seman
 
 ## Unreleased
 
+- fastapi: a parameter named like a function of Python (`type`, `list`, `max`...) is written `type_` so it no
+  longer hides that function in the body; outside it keeps its own name (`@_public_names`: a route's `?max=`, an MCP
+  tool's `type`, a keyword call), and synapsis-py reads a renamed reserved word (`from_`) by its own name too. `rick_api`'s `alive(max)` is written `alive(max_)`.
 - The example `tasks_api`: the planner reports each step that could not become a task (`PlanReply.failed`, the
   reason with it) instead of leaving it out; an appcomponent's alias propagates its `Result` like the use case it
   names.

@@ -13,9 +13,9 @@ class CharacterRepository(Repository[Character]):
         q.where({"name": name})
         return q.get_one()
 
-    def alive(self, max: int = 20) -> Awaitable[list[Character]]:
+    def alive(self, max_: int = 20) -> Awaitable[list[Character]]:
         q = self.query()
         q.where({"status": "alive"})
         q.order_by("name")
-        q.limit(max)
+        q.limit(max_)
         return q.get_many()

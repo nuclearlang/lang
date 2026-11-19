@@ -674,6 +674,7 @@ impl Dialect {
             "show_double",
             "show_nullable",
             "show_bool",
+            "renamed_params",
             "optional_cond",
             "project_import",
             "monitor_body",

@@ -6,13 +6,16 @@ An entity in the body or the answer is read and written through its pydantic sch
 
 from __future__ import annotations
 
+import builtins
 import functools
 import inspect
+import keyword
+import re
 import typing
 from collections.abc import Callable
-from typing import Any, overload, get_args, get_origin
+from typing import Annotated, Any, overload, get_args, get_origin
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, create_model
 
 from .errors import AppError
@@ -170,10 +173,32 @@ def _out(value: Any) -> Any:
     return value
 
 
-def _endpoint(fn: Callable[..., Any]) -> Callable[..., Any]:
-    """The bound method as FastAPI sees it: real types (not strings), entities as schemas, Result unwrapped."""
+def _public(name: str) -> str | None:
+    """The name a client uses for a parameter Nuclear wrote with a trailing `_` because its own name is a Python word
+    or builtin (`type_` → `type`, `from_` → `from`); None for any other parameter."""
+    base = name[:-1]
+    if name.endswith("_") and base and (keyword.iskeyword(base) or hasattr(builtins, base)):
+        return base
+    return None
+
+
+def _route_path(path: str, fn: Callable[..., Any]) -> str:
+    """The route's path with each `{x}` a renamed parameter takes written `{x_}`: the URL it matches is the same."""
+    names = inspect.signature(fn).parameters
+
+    def segment(m: re.Match[str]) -> str:
+        name = m.group(1)
+        return f"{{{name}_}}" if name not in names and f"{name}_" in names else m.group(0)
+
+    return re.sub(r"\{(\w+)\}", segment, path)
+
+
+def _endpoint(fn: Callable[..., Any], path: str = "") -> Callable[..., Any]:
+    """The bound method as FastAPI sees it: real types (not strings), entities as schemas, Result unwrapped, and a
+    renamed query parameter read by its public name (`type_` from `?type=`)."""
     hints = typing.get_type_hints(fn)
     sig = inspect.signature(fn)
+    in_path = set(re.findall(r"\{(\w+)\}", path))
     entities: dict[str, type[Entity]] = {}
     params = []
     for p in sig.parameters.values():
@@ -181,6 +206,10 @@ def _endpoint(fn: Callable[..., Any]) -> Callable[..., Any]:
         if _is_entity(t):
             entities[p.name] = t
             t = schema_of(t, create=True)
+        public = _public(p.name)
+        body = (isinstance(t, type) and issubclass(t, BaseModel)) or get_origin(t) in (list, dict)
+        if public is not None and p.name not in in_path and not body:
+            t = Annotated[t, Query(alias=public)]
         params.append(p.replace(annotation=t))
 
     @functools.wraps(fn)
@@ -218,7 +247,9 @@ def router_of(instance: object) -> APIRouter:
     routes.sort(key=lambda found: [segment.startswith("{") for segment in found[1][1].split("/")])
     for name, (method, path, route_status) in routes:
         status = getattr(getattr(cls, name, None), "__synapsis_status__", None) or route_status
-        endpoint = _endpoint(getattr(instance, name))
+        method_fn = getattr(instance, name)
+        path = _route_path(path, method_fn)
+        endpoint = _endpoint(method_fn, path)
         if getattr(cls, "__synapsis_untraced__", False):
             setattr(endpoint, "__synapsis_untraced__", True)
         kw: dict[str, Any] = {"status_code": status} if status else {}

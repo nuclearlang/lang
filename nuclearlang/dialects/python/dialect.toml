@@ -72,7 +72,7 @@ class {{name}}(Enum):
     {{/items_list}}"""
 enum_item = "{{name}} = {{#value}}{{value}}{{/value}}{{^value}}auto(){{/value}}"
 function = """
-{{decorators}}{{#async}}async {{/async}}def {{name}}{{generics}}({{params}}){{#ret}} -> {{ret}}{{/ret}}:
+{{decorators}}{{public_names}}{{#async}}async {{/async}}def {{name}}{{generics}}({{params}}){{#ret}} -> {{ret}}{{/ret}}:
     {{#doc}}{{doc}}
     {{/doc}}{{body}}"""
 method = """
@@ -80,7 +80,7 @@ method = """
 {{/mods.static}}{{#mods.get}}@property
 {{/mods.get}}{{#mods.set}}@{{name}}.setter
 {{/mods.set}}{{#override}}@override
-{{/override}}{{#async}}async {{/async}}def {{name}}{{generics}}({{^mods.static}}self{{#params}}, {{/params}}{{/mods.static}}{{params}}){{#ret}} -> {{ret}}{{/ret}}{{^ret}}{{#mods.set}} -> None{{/mods.set}}{{/ret}}:
+{{/override}}{{public_names}}{{#async}}async {{/async}}def {{name}}{{generics}}({{^mods.static}}self{{#params}}, {{/params}}{{/mods.static}}{{params}}){{#ret}} -> {{ret}}{{/ret}}{{^ret}}{{#mods.set}} -> None{{/mods.set}}{{/ret}}:
     {{#doc}}{{doc}}
     {{/doc}}{{body}}"""
 method_signature = """
@@ -181,6 +181,9 @@ cascade_self = ""
 pattern_ignore = "_"
 pattern_assign = "{{target}} = {{value}}"
 member = "{{object}}.{{name}}"
+# a parameter renamed because it would hide a function of Python (`list` → `list_`) keeps its own name for whoever reads
+# the signature or passes it by name: FastAPI, an MCP or LangChain tool, a keyword call
+renamed_params = { template = "@_public_names({{#renamed}}{{local}}=\"{{name}}\"{{^@last}}, {{/@last}}{{/renamed}})\n", helper = "def _public_names[_F: Callable[..., Any]](**_names: str) -> Callable[[_F], _F]:\n    \"\"\"Shows the parameters renamed for Python (`list_`) by their own names (`list`) to whoever reads the signature\n    or passes them by name (a route, an MCP or LangChain tool, a keyword call).\"\"\"\n    import inspect as _inspect\n\n    def _wrap(_fn: _F) -> _F:\n        _back = {_public: _local for _local, _public in _names.items()}\n\n        def _locals(_kwargs: dict[str, Any]) -> dict[str, Any]:\n            return {_back.get(_k, _k): _v for _k, _v in _kwargs.items()}\n\n        @functools.wraps(_fn)\n        async def _call_async(*_args: Any, **_kwargs: Any) -> Any:\n            return await _fn(*_args, **_locals(_kwargs))\n\n        @functools.wraps(_fn)\n        def _call(*_args: Any, **_kwargs: Any) -> Any:\n            return _fn(*_args, **_locals(_kwargs))\n\n        _out = _call_async if _inspect.iscoroutinefunction(_fn) else _call\n        _sig = _inspect.signature(_fn)\n        _params = [_p.replace(name=_names.get(_p.name, _p.name)) for _p in _sig.parameters.values()]\n        setattr(_out, \"__signature__\", _sig.replace(parameters=_params))\n        _out.__annotations__ = {_names.get(_k, _k): _v for _k, _v in _fn.__annotations__.items()}\n        return cast(_F, _out)\n\n    return _wrap" }
 # in an interpolated text a missing value is `null` and a boolean `true` / `false`, as Nuclear writes them (print
 # does it through `_print`)
 show_nullable = { template = "_text({{expr}})", helper = "def _text(v: object) -> str:\n    if v is True:\n        return \"true\"\n    if v is False:\n        return \"false\"\n    if v is None:\n        return \"null\"\n    return str(v)" }

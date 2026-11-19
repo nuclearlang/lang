@@ -394,6 +394,35 @@ fn a_typed_value_of_a_file_is_not_a_header() {
 }
 
 #[test]
+fn a_parameter_that_would_hide_a_function_of_the_target_is_renamed() {
+    // `list` and `len` are functions the python dialect writes: a parameter with that name would hide them
+    let py = build("words(style: <string, any>, list: string) string[]\n  ((style[list] ?? []) as any[]).map((w) => \"${w}\")\n\ncount(xs: int[], len: int) int\n  xs.length + len\n", "python");
+    has(&py, "def words(style: dict[str, Any], list_: str) -> list[str]:");
+    has(&py, "cast(list[Any], _coalesce(style.get(list_)");
+    has(&py, "return len(xs) + len_");
+    // outside, the function still shows and takes its own names (`[syntax] renamed_params`)
+    has(&py, "@_public_names(len_=\"len\")\ndef count(xs: list[int], len_: int) -> int:");
+    has(&py, "@_public_names(list_=\"list\")\ndef words(");
+    assert_eq!(py.matches("def _public_names").count(), 1, "the helper is written once: {py}");
+    // every name the helper defines starts with `_`, so a project's import of its own names never matches one
+    let helper = &py[py.find("def _public_names").unwrap()..py.find("return _wrap").unwrap()];
+    for word in helper.split(|c: char| !c.is_alphanumeric() && c != '_') {
+        let defined = helper.contains(&format!("def {word}(")) || helper.contains(&format!(" {word} = "));
+        assert!(!defined || word.starts_with('_'), "the helper defines `{word}`");
+    }
+    assert!(!build("f(a: int) int\n  a\n", "python").contains("_public_names"), "no helper without a renamed parameter");
+    // a lambda's parameter is written as its body reads it
+    has(&build("f(xs: int[]) int\n  xs.reduce((sum, b) => sum + b, 0)\n", "python"), "lambda sum_, b: sum_ + b");
+    // a named argument to it is renamed the same way; a constructor's parameter is a field and keeps its name
+    let named = build("pick(xs: int[], { max: int = 3 }) int\n  xs.length + max\n\nuseIt() int\n  pick([1], max = 2)\n\nBox(max: int)\n", "python");
+    has(&named, "*, max_: int = 3");
+    has(&named, "pick([1], max_=2)");
+    has(&named, "self.max = max");
+    // the target without that function keeps the name
+    has(&ts("count(xs: int[], len: int) int\n  xs.length + len\n"), "len: number");
+}
+
+#[test]
 fn a_list_with_spreads_has_the_type_of_their_elements() {
     let py = build("f(a: string, more: string[]) string[]\n  [...a.split(':'), ...more].filter((d) => d.length > 0)\n", "python");
     has(&py, "if len(d) > 0]");
