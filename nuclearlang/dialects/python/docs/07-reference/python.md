@@ -565,6 +565,24 @@ def now() -> str:
     return json.dumps({"at": 1})
 ```
 
+A `use` inside a function is a local import: the module loads when the line runs (a command that does not run it
+does not pay for it). In a project, `use './mcp'{ mcpLine }` imports that file's names there.
+
+```nuclear
+heavy(text: string) string
+  use textwrap{ dedent }
+  dedent(text)
+```
+
+```python
+from __future__ import annotations
+
+
+def heavy(text: str) -> str:
+    from textwrap import dedent
+    return dedent(text)
+```
+
 ## 4. The standard library
 
 [library.md](../../../../docs/07-reference/library.md) as `nuclearlang/dialects/python/library.toml` writes it: lists, dicts and sets are Python's; an

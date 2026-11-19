@@ -4,6 +4,7 @@
     "AssistantController": {
       "component": "assistant",
       "description": "The assistant over HTTP: POST /assistant/chat and POST /assistant/plan.",
+      "guards": [],
       "path": "assistant",
       "routes": [
         {
@@ -34,11 +35,21 @@
           "status": 200,
           "verb": "post"
         }
+      ],
+      "transports": [
+        "http",
+        "websocket"
       ]
     },
     "ProjectsController": {
       "component": "tasks",
-      "description": "Projects: POST /projects, GET /projects/:id (with its tasks and their tags), POST /projects/:id/close/:into.",
+      "description": "Projects: POST /projects, GET /projects/:id (with its tasks and their tags), POST /projects/:id/close/:into. Besides the app's guards, the owner's token (OWNER_TOKEN, as `Authorization: Bearer <token>`).",
+      "guards": [
+        {
+          "guard": "token",
+          "header": "Authorization"
+        }
+      ],
       "path": "projects",
       "routes": [
         {
@@ -89,11 +100,16 @@
           "status": 200,
           "verb": "post"
         }
+      ],
+      "transports": [
+        "http",
+        "websocket"
       ]
     },
     "TasksController": {
       "component": "tasks",
       "description": "The CRUD of tasks: GET /tasks?done=false, GET /tasks/page?page=1&size=20, GET /tasks/:id, POST /tasks, PATCH /tasks/:id, DELETE /tasks/:id.",
+      "guards": [],
       "path": "tasks",
       "routes": [
         {
@@ -193,10 +209,33 @@
           "returns": "Removed",
           "verb": "delete"
         }
+      ],
+      "transports": [
+        "http",
+        "websocket"
       ]
     }
   },
   "dialect": "nestjs",
+  "events": {
+    "tasks.created": {
+      "component": "tasks",
+      "fields": [
+        "id",
+        "title"
+      ],
+      "payload": "<string, any>"
+    }
+  },
+  "guards": [
+    {
+      "guard": "noOrigin"
+    },
+    {
+      "guard": "token",
+      "header": "X-Tasks-Token"
+    }
+  ],
   "models": {
     "ChatReply": {
       "fields": [
@@ -220,6 +259,20 @@
         {
           "default": "default",
           "name": "thread",
+          "type": "string"
+        }
+      ],
+      "key": null
+    },
+    "Holiday": {
+      "description": "A public holiday, as the holidays API answers it.",
+      "fields": [
+        {
+          "name": "date",
+          "type": "string"
+        },
+        {
+          "name": "name",
           "type": "string"
         }
       ],
@@ -431,5 +484,6 @@
   },
   "platform": "backend",
   "repositories": {},
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "webSocket": "/ws"
 }

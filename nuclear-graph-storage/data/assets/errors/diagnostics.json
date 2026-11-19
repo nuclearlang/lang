@@ -1804,6 +1804,41 @@
    ]
   },
   {
+   "id": "error:N0117",
+   "type": "diagnostic",
+   "title": "N0117 — a value of another type",
+   "summary": "A value of another basic type: the name is declared `int`, `double`, `string` or `boolean` (also nullable) and its value is known to be another one; an `int` is a `double`",
+   "body": [
+    "`N0117` · resolver · error",
+    "",
+    "**What it is.** A value of another basic type: the name is declared `int`, `double`, `string` or `boolean` (also nullable) and its value is known to be another one; an `int` is a `double`",
+    "",
+    "**Why.** The value given to a name declared with a basic type (`int`, `double`, `string`, `boolean`) is known to be another basic type: `x: int = \"s\"`. An `int` is a `double` (`h: double = 3`); every other pair is an error, because each target would keep or reject the value differently. Change the value, or the type.",
+    "",
+    "**Example.** `x: int = \"s\"`, `on: boolean = 1.5` as a field's default (fix: change the value or the type; `h: double = 3` is valid)"
+   ],
+   "keys": [
+    "n0117",
+    "a value of another type"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0117",
+    "family": "resolver",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "resolver",
+    "title": "a value of another type",
+    "what": "A value of another basic type: the name is declared `int`, `double`, `string` or `boolean` (also nullable) and its value is known to be another one; an `int` is a `double`",
+    "fix": "",
+    "example": "`x: int = \"s\"`, `on: boolean = 1.5` as a field's default (fix: change the value or the type; `h: double = 3` is valid)"
+   }
+  },
+  {
    "id": "error:N0201",
    "type": "diagnostic",
    "title": "N0201 — unknown header word for the dialect",
@@ -2624,15 +2659,15 @@
    "id": "error:N0220",
    "type": "diagnostic",
    "title": "N0220 — unknown class",
-   "summary": "PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`), not a generic parameter",
+   "summary": "PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`) and a type written in the file (`owner: Ownr`, `tags: Tagg[]`), not a generic parameter",
    "body": [
     "`N0220` · dialects · error",
     "",
-    "**What it is.** PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`), not a generic parameter",
+    "**What it is.** PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`) and a type written in the file (`owner: Ownr`, `tags: Tagg[]`), not a generic parameter",
     "",
     "**Why.** A PascalCase call that is not declared in the project, imported, nor in the dialect's type definitions. `nuclear defs search <text> --dialect <d>` finds the real name.",
     "",
-    "**Example.** `Collumn(children = [])`; `inject<BooksAppComponent>()` with no such class",
+    "**Example.** `Collumn(children = [])`; `inject<BooksAppComponent>()` with no such class; a field `owner: Ownr`",
     "",
     "**Fix.** the closest known name (`Column`); `nuclear defs search`",
     "",
@@ -2654,9 +2689,9 @@
    "data": {
     "stage": "dialects",
     "title": "unknown class",
-    "what": "PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`), not a generic parameter",
+    "what": "PascalCase call that nothing defines (files of a project, dialects with type definitions); also a call's type argument (`inject<Missing>()`) and a type written in the file (`owner: Ownr`, `tags: Tagg[]`), not a generic parameter",
     "fix": "the closest known name (`Column`); `nuclear defs search`",
-    "example": "`Collumn(children = [])`; `inject<BooksAppComponent>()` with no such class"
+    "example": "`Collumn(children = [])`; `inject<BooksAppComponent>()` with no such class; a field `owner: Ownr`"
    },
    "links": [
     {
@@ -2855,6 +2890,43 @@
     "what": "A method named like a member the kind's runtime owns (`[kinds.<k>] sealed`)",
     "fix": "another name: `closeThread()`",
     "example": "`close()` in a `statemanager` (it would replace the runtime's, so the screen's listeners are never stopped)"
+   }
+  },
+  {
+   "id": "error:N0224",
+   "type": "diagnostic",
+   "title": "N0224 — `~` on a call that is not asynchronous",
+   "summary": "`~` on a call that is not asynchronous: the callee is a function, a method or an alias written in Nuclear whose body awaits nothing",
+   "body": [
+    "`N0224` · dialects · error",
+    "",
+    "**What it is.** `~` on a call that is not asynchronous: the callee is a function, a method or an alias written in Nuclear whose body awaits nothing",
+    "",
+    "**Why.** The callee is written in Nuclear and is not asynchronous (nothing in it waits with `~`), so the target cannot wait for its value: Python raises `TypeError: object can't be awaited`. Remove the `~`; if the callee should wait, give its body a `~` call (or `~` before its name).",
+    "",
+    "**Example.** `~workspaces.register(input)` where the use case `register` has no `~` (Python: `TypeError: object can't be awaited`)",
+    "",
+    "**Fix.** remove the `~`: `workspaces.register(input)`"
+   ],
+   "keys": [
+    "n0224",
+    "`~` on a call that is not asynchronous"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0224",
+    "family": "dialect",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "dialects",
+    "title": "`~` on a call that is not asynchronous",
+    "what": "`~` on a call that is not asynchronous: the callee is a function, a method or an alias written in Nuclear whose body awaits nothing",
+    "fix": "remove the `~`: `workspaces.register(input)`",
+    "example": "`~workspaces.register(input)` where the use case `register` has no `~` (Python: `TypeError: object can't be awaited`)"
    }
   },
   {

@@ -202,12 +202,10 @@ Member: Chat
       now += "\n\nThe user just sent a GIF (\"${sent}\"): answer it with a GIF of your own, ending your answer with one line `gif: <tag>` (for example `gif: laugh`)."
     parts.add(now)
     // this turn's tool results: what the history kept after the message said
-    // shortcut: typed again here, the transpiler does not know an inherited attribute's type yet (nuclearlang roadmap)
-    kept: <string, any>[] = history
-    at = kept.length
-    while at > 0 and kept[at - 1]["role"] != "you"
+    at = history.length
+    while at > 0 and history[at - 1]["role"] != "you"
       at -= 1
-    results = kept.skip(at).filter((h) => h["role"] == "tool")
+    results = history.skip(at).filter((h) => h["role"] == "tool")
     if not results.isEmpty
       parts.add("## The tools answered (for you only)\n\n${results.map((h) => "${h["tool"]}${h["error"] == true ? " (failed)" : ""}:\n${h["text"]}").join("\n\n")}\n\nTell the user in a few sentences what was done and where (never the results whole), or call another tool.")
     parts.join("\n\n")

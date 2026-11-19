@@ -97,7 +97,7 @@ Future<List<User>> loadUsers(List<String> ids) async {
   return users;
 }
 
-User fetchUser(String id) {
+Future<User> fetchUser(String id) async {
   return User(id, '$id@example.com');
 }
 

@@ -614,6 +614,28 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.0d5c8f",
+   "type": "readme",
+   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
+   "summary": "Where the code is",
+   "body": [
+    "| File | What it is |",
+    "|---|---|",
+    "| `setup.nuc` | the set-up: this machine, the profiles and how each sits on it, the ports, the services at login, the steps (the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |",
+    "| `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (a `use` inside the command's branch: the `mcp` library is 300 ms), so every other command starts in under 100 ms |",
+    "| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal` |",
+    "| `factory.nuc` | the software factory's engine: the stations, the roles' steps, the strategy, the wiring, the repairs, the lead, the acceptance, the diagnosis, the gates, the checks, the money, the delivery |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.21b500",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
@@ -634,18 +656,17 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.4554c4",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.53c057",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
    "summary": "Where the code is",
    "body": [
-    "| File | What it is |",
-    "|---|---|",
-    "| `setup.nuc` | the set-up: this machine, the profiles and how each sits on it, the ports, the services at login, the steps (the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |",
-    "| `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (`lazy`: the `mcp` library is 300 ms), so every other command starts in under 100 ms |",
-    "| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal` |",
-    "| `factory.nuc` | the software factory's engine: the stations, the roles' steps, the strategy, the wiring, the repairs, the lead, the acceptance, the diagnosis, the gates, the checks, the money, the delivery |",
-    "| `run.nuc` | the run file and its journal (`<id>.md`), the spec, the trace log, the owner's heartbeat, the ledger, the rollback, the recovery |"
+    "| `run.nuc` | the run file and its journal (`<id>.md`), the spec, the trace log, the owner's heartbeat, the ledger, the rollback, the recovery |",
+    "| `specs.nuc`, `spec_line.nuc` | the specs by component and layer (`specs/<component>/[<layer>/]<id>/`, `_global`): their folders, a run's `specPath`; `spec new`, `list`, `move`, `migrate`, a draft's `accept` and `discard` |",
+    "| `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |",
+    "| `tools.nuc`, `mcp.nuc` | every action of the Builder as an agent's tool (`BuilderTools`, `applyForUser`, `projectRead`: a PDF, a `.pptx`, text) and `nuclear-builder mcp`, the Builder's MCP server (docs/02-architecture/actions.md) |",
+    "| `member.nuc` | Nuclear Chat's host (spec 013): `member --team --member <id> --events` (`--role`: the role's first member), a member's one answer (the chat's turn with the member's own prompt), and `chat-host --json`, every member (`<team>-<member id>`) and the channels of the project's team and the general agent `atlas` with its choices |",
+    "| `chat_agents.nuc` | `agents --json` (the tool `agents_list`): the agents a conversation can choose on this machine, the general agent's choices for the chat (spec 013 requirement 17) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -755,27 +776,6 @@
     "| `adapter.nuc` | the providers' interface (`Role`, `Work`, `Outcome`, `runAdapter`), the role composed from its folder, the documents, the files changed, a command's lines, the retries |",
     "| `adapter_local.nuc`, `adapter_claude_code.nuc`, `adapter_opencode.nuc`, `adapter_codex.nuc`, `adapter_gemini_cli.nuc` | the `local` and `agent` adapters, one per provider |",
     "| `adapter_api.nuc`, `api_anthropic.nuc`, `api_openai.nuc`, `api_google.nuc`, `api_openrouter.nuc` | the factory's loop for the `api` providers (the MCP server as a client, the prices, the budget) and each one's wire format |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/AGENTS.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.fa56b3",
-   "type": "readme",
-   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "Where the code is",
-   "body": [
-    "| `specs.nuc`, `spec_line.nuc` | the specs by component and layer (`specs/<component>/[<layer>/]<id>/`, `_global`): their folders, a run's `specPath`; `spec new`, `list`, `move`, `migrate`, a draft's `accept` and `discard` |",
-    "| `chat.nuc` | the factory's agent in a conversation, the base of `member.nuc`: its turn, its factory tools (the Builder's MCP tools; text blocks for the local member), what a tool asks of the user asked and applied, the role files' guard, its spending |",
-    "| `tools.nuc`, `mcp.nuc` | every action of the Builder as an agent's tool (`BuilderTools`, `applyForUser`, `projectRead`: a PDF, a `.pptx`, text) and `nuclear-builder mcp`, the Builder's MCP server (docs/02-architecture/actions.md) |",
-    "| `member.nuc` | Nuclear Chat's host (spec 013): `member --team --member <id> --events` (`--role`: the role's first member), a member's one answer (the chat's turn with the member's own prompt), and `chat-host --json`, every member (`<team>-<member id>`) and the channels of the project's team and the general agent `atlas` with its choices |",
-    "| `chat_agents.nuc` | `agents --json` (the tool `agents_list`): the agents a conversation can choose on this machine, the general agent's choices for the chat (spec 013 requirement 17) |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"

@@ -278,6 +278,10 @@ use fs/promises{ readFile }     // import { readFile } from 'node:fs/promises';
 
 A path that is not a shortcut goes through the `[syntax] module_path` template (Dart: `package:{{path}}.dart`).
 
+A `use` inside a function (ADR-lang-0012) is written where it stands through the optional `[syntax] use_local`
+template, whose `import` is the line the templates above give (Python: `use_local = "{{import}}"`, a local import).
+A dialect without it writes that import with the file's others; the program means the same.
+
 ### 5.2 `[auto_imports]`: automatic imports
 
 ```toml
@@ -398,7 +402,7 @@ class {{name}} extends StatelessWidget {
 | `named_params` | Calls to the constructor pass the arguments by name; in a dialect whose named arguments are one object (`named_args = "object"`) they stay that object instead of being reordered by position |
 | `syntax` | `[syntax]` templates that change only inside this kind: `[kinds.controller.syntax] ctor_param = "private readonly {{name}}: {{type}}"`; `construct` is how a call to a declaration of this kind is written (`"{{callee}}({{args}})"` when the kind is a function, not a class) |
 | `type_imports` | The declarations of this kind refer to each other only in types (two related entities): their imports of each other go in the dialect's `[syntax] type_imports` block (Python: `if TYPE_CHECKING:`), never a circular import |
-| `async_methods`, `methods`, `returns`, `file_header`, `alias_via`, `declares`, `method_members`, `provide`, `results`, `void_methods` | For frameworks: asynchronous methods, allowed methods (N0215), required return type (N0216), text once per file, where an alias's instance comes from, extra classes the template writes, members the method template writes beside each method (`purge{{name\|pascal}}`, so N0116 knows them), how program declarations are read, `Result` without propagation and methods without a return ([projects.md](projects.md) §5) |
+| `async_methods`, `awaitable_methods`, `methods`, `returns`, `file_header`, `alias_via`, `declares`, `method_members`, `provide`, `results`, `void_methods` | For frameworks: asynchronous methods, methods that give a value to wait for though they await nothing (a repository's query: `~` on them is not N0224), allowed methods (N0215), required return type (N0216), text once per file, where an alias's instance comes from, extra classes the template writes, members the method template writes beside each method (`purge{{name\|pascal}}`, so N0116 knows them), how program declarations are read, `Result` without propagation and methods without a return ([projects.md](projects.md) §5) |
 
 A kind also serves to **generate repetitive code**. `data` (dart dialect) walks the fields and generates the
 constructor, `copyWith` and `toJson`:

@@ -107,6 +107,7 @@ constructor = ""
 description = "repository NameRepository + methods whose lines build a query (where, order_by, limit, get_one, get_many...) → Repository[Entity] with CRUD"
 inherits = ["Repository", "Query"]
 imports = ["Repository", "HttpRepository", "Awaitable"]
+awaitable_methods = true
 template = { file = "templates/repository.tpl" }
 [kinds.repository.syntax]
 method = { file = "templates/repository_method.tpl" }

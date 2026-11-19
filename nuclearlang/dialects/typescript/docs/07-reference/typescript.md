@@ -638,7 +638,7 @@ greet(name: string) string
   "Hello ${name}"
 
 welcome() string
-  text = ~greet("world")
+  text = ~greetAsync("world")
   text
 
 ~greetAsync(name: string) string
@@ -651,7 +651,7 @@ export function greet(name: string): string {
 }
 
 export async function welcome(): Promise<string> {
-  const text = await greet('world');
+  const text = await greetAsync('world');
   return text;
 }
 

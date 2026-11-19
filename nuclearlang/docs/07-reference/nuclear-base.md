@@ -457,8 +457,11 @@ add(a: number, b: number) void
 - **Automatic async:** `async` is not written. A function that uses `~` is async; the dialect emits its
   return type as the target's asynchronous type.
 
+- For a function to be async even if it does not use `~` in its body, write `~` before the name in the
+  declaration (`greet` below); `welcome` is async because it uses `~`:
+
 ```nuclear
-greet(name: string) string
+~greet(name: string) string
   "Hello ${name}"
 
 welcome() string
@@ -466,13 +469,9 @@ welcome() string
   text
 ```
 
-- For a function to be async even if it does not use `~` in its body, write `~` before the name in the
-  declaration:
-
-```nuclear
-~greet(name: string) string
-  "Hello ${name}"
-```
+- `~` waits only for what is asynchronous: before a call of a function, method or alias written in Nuclear that is
+  not async (nothing in it uses `~`, no `~` before its name) it is error `N0224`; remove the `~`. A kind can make
+  its methods give a value to wait for (a repository's query): those take `~`.
 
 - `@` is used only for decorators (§4.4).
 - **Generators:** a function that uses `yield` is a generator; if it also uses `~`, it is an asynchronous
@@ -1006,6 +1005,20 @@ use express as "express"
 use fs/promises{ readFile, writeFile }
 use * as path from path
 use './setup'
+```
+
+A `use` can also stand inside a function or method: its names exist from its line to the end of its block, and
+the module is loaded when that line runs where the target can do it (elsewhere, at start: the program means the
+same). In a project, a path in quotes that names a file of the project, relative to this file, brings that file's
+declarations there instead of at the top of the file:
+
+```nuclear
+main(args: string[]) int
+  match args[0]
+    "mcp" ->
+      use './mcp'{ mcpLine }
+      mcpLine(args.skip(1))
+    _ -> 2
 ```
 
 Dialects can **auto-import**: a name of a native library of the technology is imported when the code uses

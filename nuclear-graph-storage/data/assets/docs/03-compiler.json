@@ -1324,12 +1324,12 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#constructs.952864",
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#constructs.1d1c67",
    "type": "context",
    "title": "The emitter — Constructs",
-   "summary": "operand of a spread is wrapped the same way (`*([b] if c else [])`).",
+   "summary": "operand of a spread is wrapped the same way, in a list, a map and a call (`*([b] if c else [])`, `(x if c else y)`).",
    "body": [
-    "operand of a spread is wrapped the same way (`*([b] if c else [])`). Constructed `Map/Set/List<...>()` locals",
+    "operand of a spread is wrapped the same way, in a list, a map and a call (`*([b] if c else [])`, `**(x if c else y)`). Constructed `Map/Set/List<...>()` locals",
     "  record their type.",
     "- `try` as the last line returns the last line of `try` and `catch` (`try_stmt` with the tail).",
     "- The `try` template gets `catch_used` when the `catch` block names the caught value (`contains_word` over the",
@@ -1358,7 +1358,12 @@
     "`use` shortcuts, auto-imports by free name and a kind's `imports`. Decided after emitting from the words of",
     "the code (`emit::code_words`: no comments, no string text). A module is not imported if another needed",
     "module re-exports it (`[reexports]`). A file imports an auto-import name only if its generated code writes it",
-    "(`written_words`)."
+    "(`written_words`).",
+    "",
+    "A `use` inside a function (`Stmt::Use`, ADR-lang-0012) goes through `local_use`: with `use_local` its line is",
+    "written in place (rendered by `imports` with the file's auto-imports set aside) and its names are locals, so a",
+    "project file's names are not imported at the top unless the file also writes them free; without it the `use` joins",
+    "the file's imports (`local_uses`) and its names are only the block's (N0105 after it)."
    ],
    "agents": false,
    "sources": [
@@ -1475,7 +1480,9 @@
    "body": [
     "A member of a base type is rewritten when the receiver's type is known: `static_type` (the receiver's type),",
     "`library_access`, `library_render`, with the dialect's `[library.<base>]` templates; N0114 and N0115 are its",
-    "diagnostics. Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`.",
+    "diagnostics. A library or `[functions]` template renders each `argN` as a marker first (`fill_args`): an argument that",
+    "is not atomic gets parentheses wherever the template puts it next to an operator, a member or a call",
+    "(`{{recv}} * {{arg0}}` of `\"x\".repeat(a + b)` → `\"x\" * (a + b)`), and stays bare between delimiters (`f({{arg0}})`). Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`.",
     "",
     "A map read `m[k]` uses the dialect's `index` template with the `map` flag (a lookup that gives `null` for an",
     "absent key, in a dialect whose index throws) when `map_kind` knows the object is a map: a typed local or field, or",
@@ -1493,7 +1500,33 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#values-and-declarations.369a57",
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#values-and-declarations.3a6c87",
+   "type": "context",
+   "title": "The emitter — Values and declarations",
+   "summary": "`async_methods` / `awaitable_methods`; `~` on a call of it is N0224 (`check_not_async`, the mirror of N0222's `check_awaited`), unless it returns a `Future`/`Stream`.",
+   "body": [
+    "- async is automatic when there is a `~call()`. `Sig.sync`: a body that awaits and yields nothing, in a kind without",
+    "  `async_methods` / `awaitable_methods`; `~` on a call of it is N0224 (`check_not_async`, the mirror of N0222's",
+    "  `check_awaited`), unless it returns a `Future`/`Stream`.",
+    "- `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.",
+    "- Named arguments: `named_args = \"native\"` uses `named_arg`; otherwise they are reordered by position.",
+    "- Named arguments to a callee declared in Nuclear (a function, `Module.method`, a method called without `this`) are",
+    "  reordered by its positional parameters in every dialect; a name it lacks is N0219.",
+    "- Reserved words escaped from `dialects/<language>/keywords.toml`.",
+    "- In a text enum an item without a value takes its own name."
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/02-architecture/emitter.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#values-and-declarations.fb6e9e",
    "type": "context",
    "title": "The emitter — Values and declarations",
    "summary": "later is N0105. A camelCase name nothing defines is N0106 (`check_defined`), unless there is a whole-module `use` or the module inherits from something declared outside (`ModCtx.open`).",
@@ -1510,31 +1543,7 @@
     "- Implicit return of the last line in functions, methods and block lambdas, except with return type `void`",
     "  and in setters. An assignment as last line returns the created variable. A modifier with `void = true`",
     "  (`set`) never returns.",
-    "- Implicit `this` (`implicit_self`); in kinds, `param_access` (e.g. `widget.{{name}}`; it gets the parameter's `default`, written in the target, from `ModCtx.ctor_defaults`).",
-    "- async is automatic when there is a `~call()`."
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/docs/02-architecture/emitter.md"
-   ],
-   "meta": {
-    "section": "03-compiler",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclearlang/docs/02-architecture/emitter.md#values-and-declarations.f65fe9",
-   "type": "context",
-   "title": "The emitter — Values and declarations",
-   "summary": "reordered by its positional parameters in every dialect; a name it lacks is N0219.",
-   "body": [
-    "- `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.",
-    "- Named arguments: `named_args = \"native\"` uses `named_arg`; otherwise they are reordered by position.",
-    "- Named arguments to a callee declared in Nuclear (a function, `Module.method`, a method called without `this`) are",
-    "  reordered by its positional parameters in every dialect; a name it lacks is N0219.",
-    "- Reserved words escaped from `dialects/<language>/keywords.toml`.",
-    "- In a text enum an item without a value takes its own name."
+    "- Implicit `this` (`implicit_self`); in kinds, `param_access` (e.g. `widget.{{name}}`; it gets the parameter's `default`, written in the target, from `ModCtx.ctor_defaults`)."
    ],
    "agents": false,
    "sources": [
@@ -3465,7 +3474,11 @@
     "use fs/promises{ readFile }     // import { readFile } from 'node:fs/promises';",
     "```",
     "",
-    "A path that is not a shortcut goes through the `[syntax] module_path` template (Dart: `package:{{path}}.dart`)."
+    "A path that is not a shortcut goes through the `[syntax] module_path` template (Dart: `package:{{path}}.dart`).",
+    "",
+    "A `use` inside a function (ADR-lang-0012) is written where it stands through the optional `[syntax] use_local`",
+    "template, whose `import` is the line the templates above give (Python: `use_local = \"{{import}}\"`, a local import).",
+    "A dialect without it writes that import with the file's others; the program means the same."
    ],
    "agents": false,
    "sources": [
@@ -3660,6 +3673,33 @@
    }
   },
   {
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-4-kinds-word-generated-declarations.51a62f",
+   "type": "spec",
+   "title": "NuclearLang dialects — 5.4 `[kinds.<word>]`: generated declarations",
+   "summary": "// templates/data.tpl (shortened) class {{name}} { const {{class_name}}({{{#fields}}required this.{{name}}{{^@last}}, {{/@last}}{{/fields}}}); {{#fields}} final {{type}} {{name}}; {{/fields}} Map<String, dynamic> toJson() => {{{#fields}}'{{name}}': {{name}}{{^@last}}, {{/@last}}{{/fields}}}; }",
+   "body": [
+    "```",
+    "// templates/data.tpl (shortened)",
+    "class {{name}} {",
+    "  const {{class_name}}({{{#fields}}required this.{{name}}{{^@last}}, {{/@last}}{{/fields}}});",
+    "{{#fields}}",
+    "  final {{type}} {{name}};",
+    "{{/fields}}",
+    "  Map<String, dynamic> toJson() => {{{#fields}}'{{name}}': {{name}}{{^@last}}, {{/@last}}{{/fields}}};",
+    "}",
+    "```"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/docs/07-reference/dialects.md"
+   ],
+   "meta": {
+    "section": "03-compiler",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-4-kinds-word-generated-declarations.7eb886",
    "type": "spec",
    "title": "NuclearLang dialects — 5.4 `[kinds.<word>]`: generated declarations",
@@ -3705,13 +3745,13 @@
    }
   },
   {
-   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-4-kinds-word-generated-declarations.e65b1a",
+   "id": "doc:nuclearlang/docs/07-reference/dialects.md#5-shortcuts-code-compression-5-4-kinds-word-generated-declarations.8a4105",
    "type": "spec",
    "title": "NuclearLang dialects — 5.4 `[kinds.<word>]`: generated declarations",
    "summary": "A kind also serves to generate repetitive code.",
    "body": [
     "| `type_imports` | The declarations of this kind refer to each other only in types (two related entities): their imports of each other go in the dialect's `[syntax] type_imports` block (Python: `if TYPE_CHECKING:`), never a circular import |",
-    "| `async_methods`, `methods`, `returns`, `file_header`, `alias_via`, `declares`, `method_members`, `provide`, `results`, `void_methods` | For frameworks: asynchronous methods, allowed methods (N0215), required return type (N0216), text once per file, where an alias's instance comes from, extra classes the template writes, members the method template writes beside each method (`purge{{name\\|pascal}}`, so N0116 knows them), how program declarations are read, `Result` without propagation and methods without a return ([projects.md](projects.md) §5) |",
+    "| `async_methods`, `awaitable_methods`, `methods`, `returns`, `file_header`, `alias_via`, `declares`, `method_members`, `provide`, `results`, `void_methods` | For frameworks: asynchronous methods, methods that give a value to wait for though they await nothing (a repository's query: `~` on them is not N0224), allowed methods (N0215), required return type (N0216), text once per file, where an alias's instance comes from, extra classes the template writes, members the method template writes beside each method (`purge{{name\\|pascal}}`, so N0116 knows them), how program declarations are read, `Result` without propagation and methods without a return ([projects.md](projects.md) §5) |",
     "",
     "A kind also serves to **generate repetitive code**. `data` (dart dialect) walks the fields and generates the",
     "constructor, `copyWith` and `toJson`:",
@@ -3719,17 +3759,6 @@
     "```toml",
     "[kinds.data]",
     "template = { file = \"templates/data.tpl\" }",
-    "```",
-    "",
-    "```",
-    "// templates/data.tpl (shortened)",
-    "class {{name}} {",
-    "  const {{class_name}}({{{#fields}}required this.{{name}}{{^@last}}, {{/@last}}{{/fields}}});",
-    "{{#fields}}",
-    "  final {{type}} {{name}};",
-    "{{/fields}}",
-    "  Map<String, dynamic> toJson() => {{{#fields}}'{{name}}': {{name}}{{^@last}}, {{/@last}}{{/fields}}};",
-    "}",
     "```"
    ],
    "agents": false,

@@ -152,9 +152,7 @@ testAFileOfTheProjectIsReadForTheAgentSlidesToo(tmpPath: Path, monkeypatch: any)
   deck.writestr("ppt/slides/slide1.xml", "<p:sld><a:t>Lend a book</a:t></p:sld>")
   deck.close()
   expect(projectRead(root, "deck.pptx")["text"] == "## Slide 1\n\nLend a book\n\n## Slide 2\n\nReturn a book\non time & free")
-  // shortcut: the sum is its own name, the transpiler writes `"x" * a + b` for repeat(a + b) (nuclearlang roadmap)
-  long = READ_MAX_CHARS + 5
-  Path(root, "big.txt").writeText("x".repeat(long))
+  Path(root, "big.txt").writeText("x".repeat(READ_MAX_CHARS + 5))
   expect(projectRead(root, "big.txt")["cut"] == true)
   for wrong in ["../outside.md", "/etc/passwd", "nope.md"]
     refused = false

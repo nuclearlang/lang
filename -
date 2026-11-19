@@ -1,0 +1,15 @@
+void f(
+  int a,
+  int b,
+  bool c,
+  Map<String, int> x,
+  Map<String, int> y,
+  List<int> xs,
+  List<int> ys,
+) {
+  final s = 'x' * a + b;
+  final t = 'ab' * c ? a : b;
+  final m = {...x, ...c ? x : y};
+  final l = [...xs, ...(c ? xs : ys)];
+  print([s, t, m, l].join(' '));
+}

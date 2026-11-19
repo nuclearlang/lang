@@ -338,7 +338,9 @@
     "    Ok(found.filter((b) => b.available))",
     "```",
     "",
-    "A member right after the call needs parentheses: `(~books.byAuthor(author)).length`."
+    "A member right after the call needs parentheses: `(~books.byAuthor(author)).length`.",
+    "",
+    "The other way round: `~` before a function or method written in Nuclear that awaits nothing is `N0224` (Python cannot await what it returns): remove the `~`."
    ],
    "keys": [
     "missing await",

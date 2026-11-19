@@ -3,7 +3,7 @@
 @repository(path = "assistant", connection = "tasks_api")
 repository AssistantRepository
   @post(path = "chat")
-  chat(input: ChatRequest) Result<TasksApiError, ChatReply>
+  chat(@body input: ChatRequest) Result<TasksApiError, ChatReply>
 
   @post(path = "plan")
-  plan(input: PlanRequest) Result<TasksApiError, PlanReply>
+  plan(@body input: PlanRequest) Result<TasksApiError, PlanReply>

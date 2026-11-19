@@ -1046,3 +1046,72 @@ fn a_conditional_value_of_a_match_arm_keeps_its_parentheses() {
     let chosen = build("pick(a: boolean, b: boolean) int\n  n = if a\n    b ? 1 : 2\n  else\n    3\n  n\n", "python");
     has(&chosen, "(1 if b else 2) if a else 3");
 }
+
+#[test]
+fn an_argument_a_template_puts_next_to_an_operator_keeps_its_parentheses() {
+    // `"x".repeat(a + b)` is `"x" * a + b` in Python and Dart without them; a call's argument stays bare
+    let src = "f(a: int, b: int, on: boolean) string\n  \"x\".repeat(a + b) + \"y\".repeat(on ? a : b)\n";
+    has(&build(src, "python"), "(\"x\" * (a + b)) + (\"y\" * (a if on else b))");
+    has(&dart(src), "('x' * (a + b)) + ('y' * (on ? a : b))");
+    has(&ts(src), "'x'.repeat(a + b) + 'y'.repeat(on ? a : b)");
+    // a function of the dialect: `asyncio.sleep({{arg0}} / 1000)`
+    has(&build("f(a: int, b: int) void\n  ~delay(a + b)\n", "python"), "asyncio.sleep((a + b) / 1000)");
+    has(&dart("f(a: int, b: int) void\n  ~delay(a + b)\n"), "Duration(milliseconds: a + b)");
+}
+
+#[test]
+fn a_spread_of_a_conditional_keeps_its_parentheses_in_maps_and_calls() {
+    let src = "f(a: <string, int>, b: <string, int>, on: boolean) <string, int>\n  { ...a, ...(on ? a : b) }\n";
+    has(&build(src, "python"), "{**a, **(a if on else b)}");
+    has(&ts(src), "{ ...a, ...(on ? a : b) }");
+    has(&dart(src), "{...a, ...(on ? a : b)}");
+    let call = "g(n: int) int\n  n\nf(on: boolean) int\n  g(...(on ? [1] : [2]))\n";
+    has(&build(call, "python"), "g(*([1] if on else [2]))");
+}
+
+#[test]
+fn a_value_of_another_basic_type_is_reported() {
+    // N0117: each target would keep or reject it differently; an int is a double
+    for src in ["f() void\n  x: int = \"s\"\n  print(x)\n", "f() void\n  s: string? = 4\n  print(s)\n", "Box\n  on: boolean = 1.5\n"] {
+        assert!(codes(src, "python").contains(&"N0117"), "{src}");
+    }
+    build("f(n: int) void\n  h: double = 3\n  m: double = n\n  s: string? = null\n  print(h, m, s)\n", "python");
+}
+
+#[test]
+fn tilde_on_a_call_that_awaits_nothing_is_reported() {
+    // N0224, the mirror of N0222: Python cannot await what a function that is not async returns
+    let sync = "twice(n: int) int\n  n * 2\nTools\n  add(n: int) int\n    n + 1\n";
+    for call in ["~twice(2)", "~Tools().add(1)"] {
+        let src = format!("{sync}run() int\n  t = Tools()\n  {}\n", call.replace("Tools()", "t"));
+        assert!(codes(&src, "python").contains(&"N0224"), "{src}");
+    }
+    // through an appcomponent's alias of a use case that returns what a sync method gives
+    let alias = "Registry\n  register(name: string) Result<Error, string>\n    Ok(name)\n\nusecase Register(registry: Registry)\n  exec(name: string) Result<Error, string>\n    registry.register(name)\n\nappcomponent Workspaces\n  register() = Register.exec\n\nCaller\n  (workspaces: Workspaces)\n  go(name: string) Result<Error, string>\n    ~workspaces.register(name)\n";
+    assert!(codes(alias, "fastapi").contains(&"N0224"));
+    // async, declared async, giving a Future, or returning the call of an async one: awaited
+    build("Box\n  ~load() int\n    1\n  open() int\n    load()\nrun() int\n  b = Box()\n  ~b.open()\n", "python");
+    build("~later(n: int) int\n  n\nfetch(n: int) int\n  ~later(n)\nrun() int\n  a = ~later(1)\n  ~fetch(a)\n", "python");
+}
+
+#[test]
+fn an_inherited_attribute_keeps_its_type() {
+    // `history` of `Member: Chat` is Chat's `<string, any>[]`: its library members are rewritten
+    let src = "Chat\n  history: <string, any>[] = []\n\nMember: Chat\n  count() int\n    history.isEmpty ? 0 : history.length\n";
+    has(&build(src, "python"), "0 if len(self.history) == 0 else len(self.history)");
+}
+
+#[test]
+fn a_use_inside_a_function_is_written_where_it_stands_or_at_the_top() {
+    // ADR-lang-0012: Python imports when the line runs; TypeScript and Dart import at the top, the names are the block's
+    let src = "heavy(x: string) string\n  use textwrap{ dedent }\n  dedent(x)\n";
+    has(&build(src, "python"), "def heavy(x: str) -> str:\n    from textwrap import dedent\n    return dedent(x)");
+    let code = ts(src);
+    has(&code, "import { dedent } from 'textwrap';");
+    has(&code, "export function heavy(x: string): string {\n  return dedent(x);\n}");
+    // its names end with its block, in every dialect
+    let outside = "f(on: boolean) string\n  if on\n    use textwrap{ dedent }\n    print(dedent(\"a\"))\n  dedent(\"b\")\n";
+    for d in ["python", "typescript", "dart"] {
+        assert!(codes(outside, d).contains(&"N0105"), "{d}");
+    }
+}

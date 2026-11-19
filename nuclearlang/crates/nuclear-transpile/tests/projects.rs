@@ -510,6 +510,16 @@ fn a_type_argument_must_name_a_class() {
     assert_eq!(codes.iter().filter(|(_, c)| *c == "N0220").count(), 1, "{codes:?}");
 }
 
+/// A type written in the file names a class too: a field's `owner: Ownr` and `tags: Tagg[]` are N0220; a declared
+/// class, a generic parameter and a basic type are not reported.
+#[test]
+fn a_declared_type_must_name_a_class() {
+    let src = "Finder\n  (n: int)\n\nSkill\n  name: string\n  finder: Finder\n  owner: Ownr\n  tags: Tagg[]\n\npick<T>(xs: T[]) T?\n  found: T? = null\n  found\n";
+    let (root, dialects) = tmp_project("declaredtype", ARCH, &[("a.nuc", src)]);
+    let codes = build_codes(&root, &dialects);
+    assert_eq!(codes.iter().filter(|(_, c)| *c == "N0220").count(), 2, "{codes:?}");
+}
+
 /// A folder that is a repository of its own (a knowledge base kept inside the project, with copies of other projects'
 /// files) is not part of the project: its `.nuc` files are not compiled.
 #[test]
@@ -578,6 +588,9 @@ public = ["@screen"]
 
 [architecture.names]
 Context = ["screen"]
+
+[types]
+Context = "BuildContext"
 "#;
 
 #[test]
@@ -982,4 +995,37 @@ fn the_monitor_measures_each_function_only_when_asked() {
         assert!(store.code.contains("NuclearMonitor.exit"), "{dialect}:\n{}", store.code);
         assert!(on.files.iter().all(|f| f.diagnostics.iter().all(|x| !x.is_error())), "{dialect}: errors with --monitor");
     }
+}
+
+/// A `use` of a file of the project inside a function (ADR-lang-0012): Python imports its names there, not at the top
+/// of the file; TypeScript imports them at the top as any project name; a path that is not a file is N0106.
+#[test]
+fn a_use_of_a_project_file_inside_a_function() {
+    let root = std::env::temp_dir().join(format!("nuclear-project-local-use-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let files = [
+        ("nuclear.toml", "[project]\nname = \"cli\"\ndialect = \"python\"\npackage = \"cli\"\n"),
+        ("tools/heavy.nuc", "heavyLine(n: int) int\n  n + 1\n"),
+        ("main.nuc", "run(n: int) int\n  use './tools/heavy'{ heavyLine }\n  heavyLine(n)\n"),
+        ("wrong.nuc", "other(n: int) int\n  use './nope'{ heavyLine }\n  n\n"),
+    ];
+    for (rel, text) in files {
+        let path = root.join(rel);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, text).unwrap();
+    }
+    let manifest = Manifest::read(&root).unwrap();
+    for (dialect, want) in [("python", "def run(n: int) -> int:\n    from cli.tools.heavy import heavy_line\n    return heavy_line(n)"), ("typescript", "import { heavyLine } from './tools/heavy';")] {
+        let d = loader(None).load(dialect).0.unwrap();
+        let out = project::build(&root, &manifest, &d);
+        let main = out.files.iter().find(|f| f.source_path.ends_with("main.nuc")).unwrap();
+        assert!(main.diagnostics.is_empty(), "{dialect}: {:?}", main.diagnostics);
+        assert!(main.code.contains(want), "{dialect}: {}", main.code);
+        if dialect == "python" {
+            assert!(!main.code.starts_with("from cli.tools.heavy") && main.code.matches("import heavy_line").count() == 1, "{}", main.code);
+        }
+        let wrong = out.files.iter().find(|f| f.source_path.ends_with("wrong.nuc")).unwrap();
+        assert!(wrong.diagnostics.iter().any(|x| x.code.id == "N0106"), "{dialect}: {:?}", wrong.diagnostics);
+    }
+    let _ = std::fs::remove_dir_all(&root);
 }

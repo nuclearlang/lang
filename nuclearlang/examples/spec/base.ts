@@ -156,7 +156,7 @@ export async function loadUsers(ids: string[]): Promise<User[]> {
   return users;
 }
 
-export function fetchUser(id: string): User {
+export async function fetchUser(id: string): Promise<User> {
   return new User(id, `${id}@example.com`);
 }
 

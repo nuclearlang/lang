@@ -30,6 +30,13 @@ export async function read(file: string): Promise<string> {
 The shape of paths and the words that can go after a path (`show`, `hide`...) are defined by each dialect in its
 spec.
 
+## A `use` inside a function
+
+A `use` can stand in a function: its names exist to the end of that block, and where the target can (Python) the
+module loads only when that line runs, so a command that never runs it starts faster. In a project,
+`use './mcp'{ mcpLine }` brings the declarations of that file of the project the same way. TypeScript and Dart load
+it at start: the program means the same.
+
 ## Auto-imports
 
 Dialects know the libraries of their technology. When the code uses a name of those libraries without importing

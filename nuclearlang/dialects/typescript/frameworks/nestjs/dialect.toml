@@ -90,6 +90,7 @@ field = { file = "templates/entity_field.tpl" }
 description = "repository NameRepository + methods whose lines build a query (where, orderBy, limit, getOne, getMany...) → Repository<Entity> with CRUD"
 inherits = ["Repository", "Query"]
 imports = ["HttpRepository"]
+awaitable_methods = true
 template = { file = "templates/repository.tpl" }
 [kinds.repository.syntax]
 method = { file = "templates/repository_method.tpl" }

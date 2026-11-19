@@ -29,6 +29,7 @@ answers your question.
 | [0009](0009-standard-library.md) | Nuclear has its own standard library for its base types, translated by every language dialect | accepted | 2026-11-04 |
 | [0010](0010-compiler-helps-editors-and-agents.md) | Every word is documented for the editor, and the compiler corrects what an agent writes by reflex or invents | accepted | 2026-11-03 |
 | [0011](0011-debugging-nuc.md) | A `.nuc` is debugged through the target's debugger with a line map, not with aligned output nor a debugger of its own | accepted | 2026-11-03 |
+| [0012](0012-a-use-inside-a-function.md) | A `use` inside a function imports where it stands when the target can, and at the top when it cannot | proposed | 2026-11-18 |
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../docs/03-adr/old-numbers.md).

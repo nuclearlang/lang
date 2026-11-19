@@ -4,7 +4,6 @@ use json
 use time
 use shutil
 use getpass
-use importlib
 use subprocess
 use pathlib{ Path }
 
@@ -475,12 +474,6 @@ vault(args: string[]) int
     return 1
   0
 
-// A module of the command imported when its command runs: `member` and `mcp` load the `mcp` library (some 300 ms), so
-// every other command starts without it. shortcut: Nuclear has no lazy `use` yet (nuclearlang's roadmap); its form
-// replaces this when it comes.
-lazy(module: string) any
-  importlib.importModule(".${module}", __package__)
-
 usageError(command: string) int
   print("nuclear-builder: no command `${command}`\n${USAGE}", file = sys.stderr)
   2
@@ -503,8 +496,14 @@ main(argv: string[]? = null) void
       "runs" -> runsLine(rest)
       "checks" -> checksLine(rest)
       "spec" -> specLine(rest)
-      "member" -> lazy("member").memberLine(rest)
-      "chat-host" -> lazy("member").chatHostLine(rest)
+      // `member` and `mcp` load the `mcp` library (some 300 ms): imported when their command runs, so every other
+      // command starts without it
+      "member" ->
+        use './member'{ memberLine }
+        memberLine(rest)
+      "chat-host" ->
+        use './member'{ chatHostLine }
+        chatHostLine(rest)
       "agents" -> agentsLine(rest)
       "models" -> modelsLine(rest)
       "ci" -> ciLine(rest)
@@ -512,7 +511,9 @@ main(argv: string[]? = null) void
       "line" -> lineLine(rest)
       "read" -> readLineCommand(rest)
       "connections" -> connectionsLine(rest)
-      "mcp" -> lazy("mcp").mcpLine(rest)
+      "mcp" ->
+        use './mcp'{ mcpLine }
+        mcpLine(rest)
       _ -> usageError(args[0])
     sys.exit(code)
   catch e

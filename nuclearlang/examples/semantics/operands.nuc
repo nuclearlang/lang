@@ -1,0 +1,12 @@
+// An argument the target writes next to an operator keeps its parentheses (`"x".repeat(a + b)` is `"x" * (a + b)`),
+// and so does a spread of a conditional, in a list and in a map.
+main() void
+  a = 1
+  b = 2
+  on = true
+  print("x".repeat(a + b), "y".repeat(on ? a : b))
+  base: <string, int> = { "k": 1 }
+  more: <string, int> = { "m": 2 }
+  none: <string, int> = {}
+  m = { ...base, ...(on ? more : none) }
+  print(m.length, [...[1], ...(on ? [2] : [])].length)

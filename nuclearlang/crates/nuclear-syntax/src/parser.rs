@@ -891,6 +891,7 @@ impl<'s> Parser<'s> {
             return None;
         }
         match self.peek() {
+            TokenKind::Keyword(Keyword::Use) => return self.use_decl().map(Stmt::Use),
             TokenKind::Keyword(Keyword::If) => return self.if_chain().map(Stmt::If),
             TokenKind::Keyword(Keyword::For) => return self.for_stmt(),
             TokenKind::Keyword(Keyword::While) => {

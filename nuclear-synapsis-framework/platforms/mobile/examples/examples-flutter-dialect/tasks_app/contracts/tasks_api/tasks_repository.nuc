@@ -12,10 +12,10 @@ repository TasksRepository
   one(id: int) Result<TasksApiError, Task>
 
   @post
-  create(input: NewTask) Result<TasksApiError, Task>
+  create(@body input: NewTask) Result<TasksApiError, Task>
 
   @patch(path = ":id")
-  change(id: int, changes: TaskChanges) Result<TasksApiError, Task>
+  change(id: int, @body changes: TaskChanges) Result<TasksApiError, Task>
 
   @delete(path = ":id")
   remove(id: int) Result<TasksApiError, Removed>

@@ -490,7 +490,7 @@ greet(name: string) string
   "Hello ${name}"
 
 welcome() string
-  text = ~greet("world")
+  text = ~greetAsync("world")
   text
 
 ~greetAsync(name: string) string
@@ -503,7 +503,7 @@ String greet(String name) {
 }
 
 Future<String> welcome() async {
-  final text = await greet('world');
+  final text = await greetAsync('world');
   return text;
 }
 

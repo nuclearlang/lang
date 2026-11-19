@@ -1838,11 +1838,12 @@
   {
    "id": "tool:nuclear.doctor",
    "type": "cli",
-   "title": "`nuclear doctor` — What NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
-   "summary": "What NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
+   "title": "`nuclear doctor` — What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the…",
+   "summary": "What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor)",
    "body": [
     "```text",
-    "  doctor                                     what NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code",
+    "  doctor [--json]                            what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code",
+    "                                             (--json: the toolchains, for the editor)",
     "```"
    ],
    "keys": [
@@ -1861,10 +1862,10 @@
     "entries": [
      {
       "what": "doctor",
-      "usage": "nuclear doctor",
+      "usage": "nuclear doctor [--json]",
       "alias": "",
       "note": "",
-      "does": "What NuclearLang and Synapsis need: CLIs, dialect, package, Flutter, VS Code"
+      "does": "What NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor)"
      }
     ]
    }
@@ -2560,11 +2561,13 @@
   {
    "id": "tool:nuclear.setup",
    "type": "cli",
-   "title": "`nuclear setup` — Install Flutter step by step (system packages, SDK, PATH)",
-   "summary": "Install Flutter step by step (system packages, SDK, PATH)",
+   "title": "`nuclear setup` — Install Flutter step by step (system packages, SDK, PATH); Nuclear's own Node.js (nestjs, react)…",
+   "summary": "Install Flutter step by step (system packages, SDK, PATH); Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)",
    "body": [
     "```text",
-    "  setup [--dir ~/develop]                    install Flutter step by step (system packages, SDK, PATH)",
+    "  setup [flutter] [--dir ~/develop]          install Flutter step by step (system packages, SDK, PATH)",
+    "  setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear",
+    "                                             (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)",
     "```"
    ],
    "keys": [
@@ -2583,10 +2586,17 @@
     "entries": [
      {
       "what": "setup",
-      "usage": "nuclear setup [--dir ~/develop]",
+      "usage": "nuclear setup [flutter] [--dir ~/develop]",
       "alias": "",
       "note": "",
       "does": "Install Flutter step by step (system packages, SDK, PATH)"
+     },
+     {
+      "what": "setup",
+      "usage": "nuclear setup node | python",
+      "alias": "",
+      "note": "",
+      "does": "Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)"
      }
     ]
    }

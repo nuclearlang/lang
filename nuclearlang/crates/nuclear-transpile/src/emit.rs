@@ -87,7 +87,7 @@ impl DeclInfo {
             methods: HashMap::new(),
             members: HashSet::new(),
             bases: Vec::new(),
-            sig: Sig { ret: ty, is_async: false },
+            sig: Sig { ret: ty, ..Sig::default() },
             method_sigs: HashMap::new(),
             field_types: HashMap::new(),
             field_decor: HashMap::new(),
@@ -136,6 +136,48 @@ fn file_names(stmts: &[Stmt]) -> HashSet<String> {
 pub(crate) struct Sig {
     ret: Option<Type>,
     is_async: bool,
+    /// A body written in Nuclear that awaits nothing and yields nothing, with no decorator (one can make the target's
+    /// method async): `~` on it is N0224 when its returned value (`tail`) is not a call that may give a Future either.
+    sync: bool,
+    /// The call its last line returns, if any: `Unknown` when it cannot be followed.
+    tail: Option<TailCall>,
+}
+
+/// The call a body returns as its last line, to know whether what it returns can be awaited.
+#[derive(Debug, Clone)]
+pub(crate) enum TailCall {
+    /// `helper(x)`: a function, or a method of the same module.
+    Name(String),
+    /// `registry.register(x)`: a method of a field or a constructor parameter.
+    Member(String, String),
+    /// `Users().find(id)`, `Users.find(id)`, `inject<Users>().find(id)`: a method of a module (an alias, expanded).
+    Of(String, String),
+    Unknown,
+}
+
+/// What a body's last line returns, when it is a call that could give a Future.
+fn tail_call(e: &Expr) -> Option<TailCall> {
+    match &e.kind {
+        ExprKind::Call { callee, .. } => Some(match &callee.kind {
+            ExprKind::Name(n) if is_pascal(n) => return None,
+            ExprKind::Name(n) => TailCall::Name(n.clone()),
+            ExprKind::Member { object, name, .. } => match &object.kind {
+                ExprKind::Name(o) if is_pascal(o) => TailCall::Of(o.clone(), name.name.clone()),
+                ExprKind::Name(o) => TailCall::Member(o.clone(), name.name.clone()),
+                ExprKind::This => TailCall::Name(name.name.clone()),
+                ExprKind::Call { callee, type_args, .. } => match (&callee.kind, type_args.as_slice()) {
+                    (ExprKind::Name(m), []) if is_pascal(m) => TailCall::Of(m.clone(), name.name.clone()),
+                    (ExprKind::Name(_), [Type { kind: TypeKind::Named { name: m, .. }, .. }]) => TailCall::Of(m.clone(), name.name.clone()),
+                    _ => TailCall::Unknown,
+                },
+                _ => TailCall::Unknown,
+            },
+            _ => TailCall::Unknown,
+        }),
+        ExprKind::Str(_) | ExprKind::Number(_) | ExprKind::Bool(_) | ExprKind::Null | ExprKind::Name(_) => None,
+        ExprKind::Binary { .. } | ExprKind::List(_) | ExprKind::Object(_) | ExprKind::Lambda(_) => None,
+        _ => Some(TailCall::Unknown),
+    }
 }
 
 /// A value of type Result<E, T>: what is known about the error E and the value T.
@@ -409,6 +451,10 @@ pub struct Emitter<'a> {
     source: String,
     /// The next Member rendered is the callee of a call that is not a library call: no property rewrite.
     callee_member: bool,
+    /// The `use` lines inside functions of a dialect without `use_local`: imported with the file's others.
+    local_uses: Vec<Use>,
+    /// The type being written is a cast's (`x as T`): not checked against the known classes (N0220).
+    in_cast: bool,
     /// The list being written is a `[options] slot_lists` argument's (`children`); `slot_item`: the item is its `if`.
     slot_list: bool,
     slot_item: bool,
@@ -459,12 +505,20 @@ pub struct Emitter<'a> {
 
 /// Declared return type of a function or method, and whether it is async (`~name` or a `~call` inside).
 fn sig_of(d: &Decl) -> Sig {
-    let awaits = match &d.body {
-        Body::Block(b) => analysis::awaits_block(&b.stmts),
-        Body::Expr(e) => analysis::awaits_expr(e),
-        _ => false,
+    let (awaits, body, last) = match &d.body {
+        Body::Block(b) => (analysis::awaits_block(&b.stmts), !analysis::yields_block(&b.stmts), b.stmts.last()),
+        Body::Expr(e) => (analysis::awaits_expr(e), true, None),
+        _ => (false, false, None),
     };
-    Sig { ret: d.ret.clone(), is_async: d.is_async || awaits }
+    let tail = match (&d.body, last) {
+        (_, _) if d.ret.as_ref().is_some_and(is_void) => None,
+        (Body::Expr(e), _) | (_, Some(Stmt::Expr(e))) => tail_call(e),
+        (_, Some(Stmt::Return { value: Some(e), .. })) => tail_call(e),
+        (_, Some(Stmt::If(_) | Stmt::Match(_) | Stmt::Try(_))) => Some(TailCall::Unknown),
+        _ => None,
+    };
+    let is_async = d.is_async || awaits;
+    Sig { ret: d.ret.clone(), is_async, sync: body && !is_async && d.decorators.is_empty(), tail }
 }
 
 fn is_void(t: &Type) -> bool {
@@ -489,6 +543,52 @@ fn default_name(path: &str) -> String {
         }
     }
     out
+}
+
+/// `./member` from `tools/cli` → `tools/member`; `../x` goes up a folder. Paths of the project, without extension.
+fn join_relative(file: &str, rel: &str) -> String {
+    let mut parts: Vec<&str> = file.split('/').collect();
+    parts.pop();
+    for piece in rel.split('/') {
+        match piece {
+            "." | "" => {}
+            ".." => {
+                parts.pop();
+            }
+            p => parts.push(p),
+        }
+    }
+    let joined = parts.join("/");
+    joined.strip_suffix(".nuc").map(str::to_string).unwrap_or(joined)
+}
+
+/// The placeholder of a library template's argument `i` while the template is rendered (private-use characters).
+fn arg_marker(i: usize) -> String {
+    format!("\u{E010}{i}\u{E011}")
+}
+
+/// Puts each argument where the template rendered its marker, parenthesized when it is not atomic and the template
+/// puts it next to an operator (`{{recv}} * {{arg0}}`, `{{arg0}} / 1000`).
+fn fill_args(mut text: String, args: &[String], precs: &[u8]) -> String {
+    for (i, (arg, prec)) in args.iter().zip(precs).enumerate() {
+        let marker = arg_marker(i);
+        if !text.contains(&marker) {
+            continue;
+        }
+        let operand = if *prec < P_POSTFIX && !between_delimiters(&text, &marker) { format!("({arg})") } else { arg.clone() };
+        text = text.replace(&marker, &operand);
+    }
+    text
+}
+
+/// Every occurrence of `marker` in `text` stands alone between delimiters (a call's argument, an index, an item, the
+/// whole text): an operand of an operator, a receiver or a callee needs its parentheses.
+fn between_delimiters(text: &str, marker: &str) -> bool {
+    text.match_indices(marker).all(|(at, _)| {
+        let before = text[..at].trim_end().chars().last();
+        let after = text[at + marker.len()..].trim_start().chars().next();
+        matches!(before, None | Some('(' | '[' | ',' | '{' | ':')) && matches!(after, None | Some(')' | ']' | ',' | '}' | ':'))
+    })
 }
 
 /// Text with no spaces outside brackets and quotes behaves like a primary expression.
@@ -587,6 +687,8 @@ impl<'a> Emitter<'a> {
             uses_result: false,
             uses_monitor: false,
             source: String::new(),
+            in_cast: false,
+            local_uses: Vec::new(),
             callee_member: false,
             slot_list: false,
             slot_item: false,
@@ -1058,6 +1160,8 @@ impl<'a> Emitter<'a> {
             self.used_names.extend(written.iter().cloned());
         }
         self.written_words = Some(written.clone());
+        let local_uses = std::mem::take(&mut self.local_uses);
+        let uses: Vec<&Use> = uses.into_iter().chain(&local_uses).collect();
         let imports = self.imports(&uses);
 
         let mut out = String::new();
@@ -1161,9 +1265,10 @@ impl<'a> Emitter<'a> {
                                     );
                                     let mut sig = sig_of(md);
                                     if let DeclKind::Kind(k) = &kind
-                                        && self.d.kinds.get(k).is_some_and(|e| e.value.async_methods)
+                                        && let Some(e) = self.d.kinds.get(k)
                                     {
-                                        sig.is_async = true;
+                                        sig.is_async |= e.value.async_methods;
+                                        sig.sync &= !e.value.async_methods && !e.value.awaitable_methods;
                                     }
                                     if md.decorators.iter().any(|x| self.d.void_decorators.contains(&x.name)) {
                                         sig.ret = None;
@@ -1502,18 +1607,7 @@ impl<'a> Emitter<'a> {
                 names_by_path.entry(MONITOR_PATH.to_string()).or_default().push("NuclearMonitor".into());
             }
             for path in paths {
-                let relative = p.relative(&p.out_stem(&self.file_path), &path);
-                // a file of an output folder of its own (`test/` → `tests/`) is imported from there, not from `sources`
-                let (package, inner) = match p.outputs.iter().find_map(|(from, to)| path.strip_prefix(&format!("{from}/")).map(|r| (to.clone(), r.to_string()))) {
-                    Some((to, rest)) => (to, rest),
-                    None => (p.sources.clone(), path.clone()),
-                };
-                let ctx = Ctx::new()
-                    .set("project", &p.name)
-                    .set("package", self.sep(&package))
-                    .set("path", self.sep(&inner))
-                    .set("relative", relative);
-                let module = self.tpl("project_import", ctx, Span::default());
+                let module = self.project_module(p, &path);
                 let mut names = names_by_path.remove(&path).unwrap_or_default();
                 names.sort();
                 if type_paths.contains(&path) {
@@ -2811,6 +2905,9 @@ impl<'a> Emitter<'a> {
                     let ty = f.ty.as_ref().map(|t| self.ty(t));
                     let type_nullable =
                         ty.clone().and_then(|t| self.type_tpl("nullable", Ctx::new().set("type", t), f.span));
+                    if let (Some(t), Some(v)) = (&f.ty, &f.default) {
+                        self.check_value_type(t, v);
+                    }
                     let default = f.default.as_ref().filter(|e| !self.omitted_default(e)).map(|e| self.expr(e).0);
                     // a subclass without its own constructor keeps its defaults in the class: a generated
                     // constructor would hide the inherited one
@@ -3441,7 +3538,7 @@ impl<'a> Emitter<'a> {
                 // a class of the type definitions: its methods that return a Result (index.json `results`)
                 if let Some(c) = self.d.defs.get(&m) {
                     if let Some(ret) = c.results.get(method) {
-                        return Some(Sig { ret: nuclear_syntax::parse_type(ret), is_async: false });
+                        return Some(Sig { ret: nuclear_syntax::parse_type(ret), ..Sig::default() });
                     }
                     pending.extend(c.supers.iter().cloned());
                 }
@@ -3485,7 +3582,25 @@ impl<'a> Emitter<'a> {
             return i.sig.ret.clone();
         }
         let m = self.module.as_ref().filter(|m| m.members.contains(n))?;
-        self.decl_info(&m.name).and_then(|i| i.field_types.get(n).cloned())
+        self.field_type(&m.name, n)
+    }
+
+    /// The type of a field or constructor parameter of a module of the project, or of the bases it extends
+    /// (`history` of `Member: Chat` is Chat's).
+    fn field_type(&self, module: &str, n: &str) -> Option<Type> {
+        let mut pending = vec![module.to_string()];
+        let mut seen = HashSet::new();
+        while let Some(m) = pending.pop() {
+            if !seen.insert(m.clone()) {
+                continue;
+            }
+            let Some(info) = self.decl_info(&m) else { continue };
+            if let Some(t) = info.field_types.get(n) {
+                return Some(t.clone());
+            }
+            pending.extend(info.bases.iter().cloned());
+        }
+        None
     }
 
     /// The module (of this file) an expression is an instance of, when it is known.
@@ -4122,6 +4237,10 @@ impl<'a> Emitter<'a> {
         for (i, s) in stmts.iter().enumerate() {
             let pre = self.comments_before(s.span().start);
             let code = self.with_pending(|e| if i + 1 == n { e.stmt_tail(s, tail) } else { e.stmt(s) });
+            // a `use` whose import went to the top of the file writes nothing here
+            if code.is_empty() && pre.is_empty() && matches!(s, Stmt::Use(_)) {
+                continue;
+            }
             lines.push(attach(pre, mark(s.span().start, code)));
         }
         lines.join("\n")
@@ -4217,6 +4336,7 @@ impl<'a> Emitter<'a> {
 
     fn stmt(&mut self, s: &Stmt) -> String {
         match s {
+            Stmt::Use(u) => self.local_use(u),
             Stmt::Expr(e) => {
                 if let Some(info) = self.result_info(e, false) {
                     let in_result_fn = self.fn_ctx.last().is_some_and(|c| c.result.is_some());
@@ -4281,6 +4401,99 @@ impl<'a> Emitter<'a> {
         }
     }
 
+    /// A `use` inside a function (ADR-lang-0012): its names are locals of the block; with `use_local` the import is
+    /// written here, without it the import goes with the file's others (a project file's names are imported there
+    /// as any project name is).
+    fn local_use(&mut self, u: &Use) -> String {
+        let project_module = match &u.path {
+            UsePath::File(rel) => {
+                let target = join_relative(&self.file_path, rel);
+                let found = self.project.filter(|p| p.decls.values().any(|e| e.path == target));
+                let Some(p) = found else {
+                    self.error(codes::UNDEFINED_NAME, u.span, format!("'{rel}' is not a file of this project (a path relative to this file, without `.nuc`)"));
+                    return String::new();
+                };
+                for n in &u.names {
+                    if p.decls.get(&n.name).is_none_or(|e| e.path != target) {
+                        self.error(codes::UNDEFINED_NAME, n.span, format!("'{}' is not declared in '{rel}'", self.src_name(n)));
+                    }
+                }
+                Some(self.project_module(p, &target))
+            }
+            UsePath::Module(_) => None,
+        };
+        if !self.has("use_local") {
+            // the names are still the block's, as in a dialect that writes the `use` in place (N0105 after it); not
+            // local names of the file, so the top of the file imports them
+            for n in u.names.iter().chain(&u.alias) {
+                let out = self.escape_value(&n.name);
+                if let Some(f) = self.frames.last_mut() {
+                    f.vars.insert(n.name.clone(), out);
+                }
+            }
+            match project_module {
+                // the names stay the project's: imported at the top of the file
+                Some(_) => {}
+                None => self.local_uses.push(u.clone()),
+            }
+            return String::new();
+        }
+        let names: Vec<String> = u.names.iter().map(|n| self.declare_local(&n.name)).collect();
+        let alias = u.alias.as_ref().map(|a| self.declare_local(&a.name));
+        let line = match project_module {
+            Some(module) => {
+                let ctx = Ctx::new().set("module", module).set("names", names.join(", ")).value("clauses", Value::Map(BTreeMap::new()));
+                self.tpl("import_names", ctx, u.span)
+            }
+            None => {
+                let mut one = u.clone();
+                if let Some(a) = alias {
+                    one.alias = Some(Ident { name: a, span: u.span });
+                }
+                // the import lines of a top-level `use`, without the file's auto-imports
+                let saved = (std::mem::take(&mut self.refs), self.project.take(), self.written_words.take());
+                let lines = self.imports(&[&one]);
+                (self.refs, self.project, self.written_words) = saved;
+                lines.join("\n")
+            }
+        };
+        self.tpl("use_local", Ctx::new().set("import", line), u.span)
+    }
+
+    /// The target's module of a file of the project (`project_import`): `nuclear_builder.member`.
+    fn project_module(&mut self, p: &ProjectCtx, path: &str) -> String {
+        let relative = p.relative(&p.out_stem(&self.file_path), path);
+        // a file of an output folder of its own (`test/` → `tests/`) is imported from there, not from `sources`
+        let (package, inner) = match p.outputs.iter().find_map(|(from, to)| path.strip_prefix(&format!("{from}/")).map(|r| (to.clone(), r.to_string()))) {
+            Some((to, rest)) => (to, rest),
+            None => (p.sources.clone(), path.to_string()),
+        };
+        let ctx = Ctx::new().set("project", &p.name).set("package", self.sep(&package)).set("path", self.sep(&inner)).set("relative", relative);
+        self.tpl("project_import", ctx, Span::default())
+    }
+
+    /// N0117: `x: int = "s"`, a value known to be another basic type than the one declared (an `int` is a `double`).
+    fn check_value_type(&mut self, declared: &Type, value: &Expr) {
+        const BASIC: [&str; 4] = ["int", "double", "string", "boolean"];
+        let basic = |t: &Type| match &t.kind {
+            TypeKind::Named { name, args } if args.is_empty() && BASIC.contains(&name.as_str()) => Some(name.clone()),
+            _ => None,
+        };
+        let want = match &declared.kind {
+            TypeKind::Nullable(inner) => basic(inner),
+            _ => basic(declared),
+        };
+        let (Some(want), Some(got)) = (want, self.static_type(value).as_ref().and_then(basic)) else { return };
+        if want == got || (want == "double" && got == "int") {
+            return;
+        }
+        self.error(
+            codes::WRONG_TYPE,
+            value.span,
+            format!("this value is {} {got}, and the name is declared {want}: change the value or the type", if got == "int" { "an" } else { "a" }),
+        );
+    }
+
     fn assign(&mut self, a: &Assign) -> String {
         // `pieces = ~pieces(raw)` inside the module that has a method `pieces`: a method is not a variable
         if let ExprKind::Name(n) = &a.target.kind
@@ -4299,6 +4512,11 @@ impl<'a> Emitter<'a> {
                 self.assign_branching(a).or_else(|| self.destructure(a)).or_else(|| self.cascade_statements(a))
         {
             return code;
+        }
+        if let Some(t) = &a.ty
+            && a.op == AssignOp::Set
+        {
+            self.check_value_type(t, &a.value);
         }
         // `r: Result<E, T> = call()` keeps the Result; `x = call()` unwraps it (x is the Ok value)
         let value_result = self.result_info(&a.value, false);
@@ -4828,6 +5046,9 @@ impl<'a> Emitter<'a> {
             }
             ExprKind::Object(entries) => (self.object(entries, e.span), P_PRIMARY),
             ExprKind::Unary { op, expr } => {
+                if *op == UnaryOp::Await {
+                    self.check_not_async(expr, e.span);
+                }
                 // `~call()` kept as a Result keeps the call too
                 self.keep_next = keep && *op == UnaryOp::Await;
                 let operand = self.expr(expr);
@@ -4927,7 +5148,10 @@ impl<'a> Emitter<'a> {
             ExprKind::Cast { expr, ty } => {
                 let x = self.expr(expr);
                 let x = self.wrap(x, P_POSTFIX);
+                // `x as HTMLButtonElement`: a cast is where a target's own type is named, known to the definitions or not
+                self.in_cast = true;
                 let t = self.ty(ty);
+                self.in_cast = false;
                 (self.tpl("cast", Ctx::new().set("expr", x).set("type", t), e.span), 6)
             }
             ExprKind::Spread(x) => {
@@ -5323,6 +5547,7 @@ impl<'a> Emitter<'a> {
         let mut named_texts = Vec::new();
         let mut fn_parts: Option<Value> = None;
         let mut arg_bases = Vec::new();
+        let mut positional_prec = Vec::new();
         for a in args {
             let lambda = match &a.value.kind {
                 ExprKind::Lambda(l) if fn_parts.is_none() => Some(l),
@@ -5331,7 +5556,7 @@ impl<'a> Emitter<'a> {
             if lambda.is_some() {
                 self.lambda_hints = hints.clone();
             }
-            let text = self.expr(&a.value).0;
+            let (text, prec) = self.expr(&a.value);
             self.lambda_hints.clear();
             if let Some(l) = lambda
                 && let LambdaBody::Expr(body) = &l.body
@@ -5361,15 +5586,18 @@ impl<'a> Emitter<'a> {
                     };
                     arg_bases.push(base);
                     positional.push(text);
+                    positional_prec.push(prec);
                 }
             }
         }
         ctx = ctx.set("args", positional.join(", ")).flag("has_args", !positional.is_empty()).set("n", positional.len().to_string());
-        for (i, t) in positional.iter().enumerate() {
-            ctx = ctx.set(&format!("arg{i}"), t.clone());
+        for (i, base) in arg_bases.iter().enumerate() {
+            // a marker, replaced after rendering by the argument, parenthesized where the template puts it next to
+            // an operator (`{{recv}} * {{arg0}}` of `"x".repeat(a + b)`)
+            ctx = ctx.set(&format!("arg{i}"), arg_marker(i));
             // `arg0_is.regex`: what the argument is, for a member that takes a string or a Regex
             let mut is = BTreeMap::new();
-            if let Some(b) = arg_bases[i] {
+            if let Some(b) = base {
                 is.insert(b.to_string(), Value::Bool(true));
             }
             ctx = ctx.value(&format!("arg{i}_is"), Value::Map(is));
@@ -5393,7 +5621,7 @@ impl<'a> Emitter<'a> {
             let text = h.render(&Value::Map(BTreeMap::new()));
             self.helpers.insert(key.to_string(), text);
         }
-        entry.template.render(&ctx.into_value())
+        fill_args(entry.template.render(&ctx.into_value()), &positional, &positional_prec)
     }
 
     /// The parts of an expression lambda for a library template (Python writes a comprehension with them):
@@ -5468,7 +5696,7 @@ impl<'a> Emitter<'a> {
             }
             ExprKind::SelfField(n) => {
                 let m = self.module.as_ref()?;
-                self.decl_info(&m.name).and_then(|i| i.field_types.get(n).cloned())
+                self.field_type(&m.name, n)
             }
             ExprKind::Member { object, name, .. } => {
                 if let ExprKind::Name(obj) = &object.kind
@@ -5495,7 +5723,7 @@ impl<'a> Emitter<'a> {
                 if let Some(cls) = class_name(&t)
                     && let Some(info) = self.decl_info(&cls)
                 {
-                    return info.field_types.get(&name.name).cloned();
+                    return info.field_types.get(&name.name).cloned().or_else(|| self.field_type(&cls, &name.name));
                 }
                 let Recv::Base(base) = receiver_base(&t) else { return None };
                 let m = library::member(base, &self.src_name(name)).filter(|m| m.property)?;
@@ -5665,17 +5893,7 @@ impl<'a> Emitter<'a> {
             ));
             return;
         }
-        let ExprKind::Call { callee, .. } = &object.kind else { return };
-        let (sig, shown) = match &callee.kind {
-            ExprKind::Member { object: recv, name, .. } => {
-                let Some(t) = self.static_type(recv) else { return };
-                let TypeKind::Named { name: tn, .. } = &strip_nullable(t).kind else { return };
-                let Some(info) = self.decl_info(tn) else { return };
-                (self.sig_of_method(info, &name.name), name.name.clone())
-            }
-            ExprKind::Name(f) => (self.decl_info(f).map(|i| i.sig.clone()), f.clone()),
-            _ => return,
-        };
+        let Some((sig, shown, _)) = self.callee_sig(object) else { return };
         if sig.is_some_and(|s| s.is_async) {
             let call = self.src_text_any(object.span);
             self.diags.push(
@@ -5687,6 +5905,78 @@ impl<'a> Emitter<'a> {
                 .with_fix(object.span, format!("(~{call})")),
             );
         }
+    }
+
+    /// The signature of what a call calls, when it is declared in Nuclear (a function, a method of a typed value),
+    /// with the callee's name.
+    /// with the callee's name and the module it belongs to.
+    fn callee_sig(&self, call: &Expr) -> Option<(Option<Sig>, String, Option<String>)> {
+        let ExprKind::Call { callee, .. } = &call.kind else { return None };
+        match &callee.kind {
+            ExprKind::Member { object: recv, name, .. } => {
+                let t = self.static_type(recv)?;
+                let TypeKind::Named { name: tn, .. } = &strip_nullable(t).kind else { return None };
+                let info = self.decl_info(tn)?;
+                let owner = match info.aliases.get(&name.name) {
+                    Some((module, _)) => module.clone(),
+                    None => tn.clone(),
+                };
+                Some((self.sig_of_method(info, &name.name), name.name.clone(), Some(owner)))
+            }
+            ExprKind::Name(f) if self.lookup_local(f).is_none() => Some((self.decl_info(f).map(|i| i.sig.clone()), f.clone(), None)),
+            _ => None,
+        }
+    }
+
+    /// What a call of `sig` gives can never be awaited: its body awaits nothing, it does not return a `Future`, and
+    /// the call its last line returns (followed through the functions and methods of the project) is known sync too.
+    fn known_sync(&self, sig: &Sig, owner: Option<&str>, depth: usize) -> bool {
+        let gives_future = sig.ret.as_ref().is_some_and(|t| matches!(&t.kind, TypeKind::Named { name, .. } if name == "Future" || name == "Stream"));
+        if !sig.sync || gives_future || depth > 8 {
+            return false;
+        }
+        let owner_info = owner.and_then(|o| self.decl_info(o));
+        let (next, next_owner) = match &sig.tail {
+            None => return true,
+            Some(TailCall::Unknown) => return false,
+            Some(TailCall::Name(n)) => match owner_info.and_then(|i| self.sig_of_method(i, n)) {
+                Some(s) => (s, owner.map(str::to_string)),
+                None => match self.decl_info(n).filter(|i| matches!(i.kind, DeclKind::Function)) {
+                    Some(i) => (i.sig.clone(), None),
+                    None => return false,
+                },
+            },
+            Some(TailCall::Of(module, method)) => match self.decl_info(module).and_then(|i| self.sig_of_method(i, method)) {
+                Some(s) => (s, Some(module.clone())),
+                None => return false,
+            },
+            Some(TailCall::Member(field, method)) => {
+                let Some(TypeKind::Named { name: tn, .. }) = owner_info.and_then(|i| i.field_types.get(field)).map(|t| strip_nullable(t.clone()).kind) else {
+                    return false;
+                };
+                let Some(s) = self.decl_info(&tn).and_then(|i| self.sig_of_method(i, method)) else { return false };
+                (s, Some(tn))
+            }
+        };
+        self.known_sync(&next, next_owner.as_deref(), depth + 1)
+    }
+
+    /// N0224: `~` before a call of a function or method written in Nuclear that awaits nothing (the mirror of N0222):
+    /// Python cannot await what it returns.
+    fn check_not_async(&mut self, awaited: &Expr, whole: Span) {
+        let Some((Some(sig), shown, owner)) = self.callee_sig(awaited) else { return };
+        if !self.known_sync(&sig, owner.as_deref(), 0) {
+            return;
+        }
+        let call = self.src_text_any(awaited.span);
+        self.diags.push(
+            Diagnostic::error(
+                codes::NOT_ASYNC,
+                whole,
+                format!("'{shown}' is not asynchronous (it awaits nothing): its value is there already; write `{call}` without `~`"),
+            )
+            .with_fix(whole, call),
+        );
     }
 
     /// N0114: a `Result` has `value`, `error`, `isOk` and `isErr` only (`found.length` of a `Result<E, T[]>`).
@@ -5739,7 +6029,8 @@ impl<'a> Emitter<'a> {
             own => {
                 let Some((module, method)) = info.aliases.get(name) else { return own.cloned() };
                 let target = self.decl_info(module)?.method_sigs.get(method)?.clone();
-                Some(Sig { ret: target.ret, is_async: target.is_async || own.is_some_and(|s| s.is_async) })
+                let is_async = target.is_async || own.is_some_and(|s| s.is_async);
+                Some(Sig { ret: target.ret, is_async, sync: target.sync && !is_async, tail: target.tail })
             }
         }
     }
@@ -5804,7 +6095,7 @@ impl<'a> Emitter<'a> {
             ExprKind::Call { callee, .. } if matches!(&callee.kind, ExprKind::Name(c) if c == "Map") => return (true, false),
             ExprKind::Name(n) => self.frames.iter().rev().find_map(|f| f.types.get(n)).cloned().or_else(|| {
                 let m = self.module.as_ref()?;
-                self.decl_info(&m.name)?.field_types.get(n).cloned()
+                self.field_type(&m.name, n)
             }),
             // a call, a member, a static method: what it returns (`Conf.all()["k"]`)
             _ => self.static_type(e),
@@ -5830,7 +6121,7 @@ impl<'a> Emitter<'a> {
                 let local = self.frames.iter().rev().find_map(|f| f.types.get(n)).cloned();
                 let ty = local.or_else(|| {
                     let m = self.module.as_ref()?;
-                    self.decl_info(&m.name)?.field_types.get(n).cloned()
+                    self.field_type(&m.name, n)
                 })?;
                 num_kind_of(&ty)
             }
@@ -6114,7 +6405,9 @@ impl<'a> Emitter<'a> {
                     }
                 }
                 ObjEntry::Spread(e) => {
-                    let v = self.expr(e).0;
+                    // `...(c ? x : y)`: Python's `**` binds tighter than its conditional
+                    let v = self.expr(e);
+                    let v = self.wrap(v, P_POSTFIX);
                     self.tpl("object_spread", Ctx::new().set("expr", v), span)
                 }
             };
@@ -6201,12 +6494,13 @@ impl<'a> Emitter<'a> {
                     // (`print(line, flush = true)` → Python's `flush=True`); `shown`: the positional ones as Nuclear
                     // prints them (`shown`)
                     let mut rendered: Vec<String> = Vec::new();
+                    let mut precs: Vec<u8> = Vec::new();
                     let mut all: Vec<String> = Vec::new();
                     let mut shown: Vec<String> = Vec::new();
                     let wants_shown = t.used_vars().iter().any(|v| v.name == "shown");
                     for a in args {
                         let full = self.expr(&a.value);
-                        let text = full.0.clone();
+                        let (text, prec) = (full.0.clone(), full.1);
                         if a.name.is_none() && wants_shown {
                             shown.push(self.shown(&a.value, full));
                         }
@@ -6218,6 +6512,7 @@ impl<'a> Emitter<'a> {
                             None => {
                                 all.push(text.clone());
                                 rendered.push(text);
+                                precs.push(prec);
                             }
                         }
                     }
@@ -6225,13 +6520,13 @@ impl<'a> Emitter<'a> {
                         .set("args", rendered.join(", "))
                         .set("call_args", all.join(", "))
                         .set("shown", shown.join(", "));
-                    for (i, r) in rendered.iter().enumerate() {
-                        ctx = ctx.set(&format!("arg{i}"), r.clone());
+                    for i in 0..rendered.len() {
+                        ctx = ctx.set(&format!("arg{i}"), arg_marker(i));
                     }
                     if let Some(h) = self.d.function_helpers.get(&shortcut).cloned() {
                         self.helpers.entry(format!("fn.{shortcut}")).or_insert_with(|| h.render(&Value::Map(BTreeMap::new())));
                     }
-                    return t.render(&ctx.into_value());
+                    return fill_args(t.render(&ctx.into_value()), &rendered, &precs);
                 }
             }
         }
@@ -6432,7 +6727,8 @@ impl<'a> Emitter<'a> {
                 self.keep_next = true;
             }
             if a.spread {
-                let v = self.expr(&a.value).0;
+                let v = self.expr(&a.value);
+                let v = self.wrap(v, P_POSTFIX);
                 rendered.push(self.tpl("spread_arg", Ctx::new().set("expr", v), a.span));
                 starts.push(a.span.start);
                 continue;
@@ -6676,6 +6972,18 @@ impl<'a> Emitter<'a> {
                     self.uses_result = true;
                 }
                 let root = name.split('.').next().unwrap_or(name);
+                // `owner: Ownr`: a type written in the file names a class as a construction does (N0220); a type
+                // the type definitions give (`Result<AppError, T>` of a runtime's method) is not the file's
+                if is_pascal(name)
+                    && !self.in_cast
+                    && self.source.get(t.span.start..t.span.start + name.len()) == Some(name.as_str())
+                    && !name.contains('.')
+                    && !self.type_params.contains(name)
+                    && !self.generic_names.contains(name)
+                    && !self.diags.iter().any(|d| d.span == t.span && d.code.id == codes::UNKNOWN_CONSTRUCTOR.id)
+                {
+                    self.check_construct(name, &[], t.span);
+                }
                 if !self.decl_names.contains_key(root) && !self.imported.contains(root) {
                     self.check_plugin_name(root, t.span);
                     // a type the dialect writes with another class name (`Page` → `PageOf`) is imported by that name

@@ -66,7 +66,7 @@ describe(user: User?) string
       print(error)
   users
 
-fetchUser(id: string) User
+~fetchUser(id: string) User
   User(name = id, email = "${id}@example.com")
 
 run()

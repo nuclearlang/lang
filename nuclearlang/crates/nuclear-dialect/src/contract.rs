@@ -38,6 +38,11 @@ pub const SYNTAX: &[TemplateSpec] = &[
         &["project", "package", "path", "relative"],
         "optional: import of another file of the project (path without extension, relative to the project root; `package`: the folder the project's files go to, as a module)",
     ),
+    t(
+        "use_local",
+        &["import"],
+        "optional: a `use` inside a function, written where it stands (`import`: the line the top-level templates give); without it the import goes with the file's others (ADR-lang-0012)",
+    ),
     t("module_path", &["path"], "turns a `use` path that is not a shortcut into the target's module string"),
     t("file_path", &["path"], "turns a `use \"./file\"` path into the target's path"),
     // declarations

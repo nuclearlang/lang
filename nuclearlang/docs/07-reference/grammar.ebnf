@@ -70,6 +70,7 @@ stmt          = if_stmt | for_stmt | while_stmt | match | try_stmt
               | "return" [ expr_block ] NEWLINE | "throw" expr NEWLINE
               | "break" NEWLINE | "continue" NEWLINE
               | "yield" [ "..." ] expr_block NEWLINE           (* the function is a generator *)
+              | use                                     (* inside a function: its names are the block's *)
               | assign | expr_block NEWLINE ;
 assign        = target [ ":" type ] assign_op expr_block NEWLINE ;  (* declares or reassigns (§3) *)
 target        = NAME | "$" NAME | postfix "." NAME | postfix "[" expr "]" | destructure ;  (* destructure only with "=" *)

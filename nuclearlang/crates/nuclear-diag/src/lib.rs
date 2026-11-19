@@ -227,6 +227,16 @@ pub mod codes {
         title: "unknown member of a declaration of the project",
         explanation: "The value's type is a declaration of this project whose members are all known (its fields, methods and constructor parameters, its project bases, and the runtime classes it or its kind inherits when the type definitions list their members), and it has no member with that name. A model generated from a contract changes when the backend changes: rebuild and read the generated file.",
     };
+    pub const WRONG_TYPE: Code = Code {
+        id: "N0117",
+        title: "a value of another type",
+        explanation: "The value given to a name declared with a basic type (`int`, `double`, `string`, `boolean`) is known to be another basic type: `x: int = \"s\"`. An `int` is a `double` (`h: double = 3`); every other pair is an error, because each target would keep or reject the value differently. Change the value, or the type.",
+    };
+    pub const NOT_ASYNC: Code = Code {
+        id: "N0224",
+        title: "`~` on a call that is not asynchronous",
+        explanation: "The callee is written in Nuclear and is not asynchronous (nothing in it waits with `~`), so the target cannot wait for its value: Python raises `TypeError: object can't be awaited`. Remove the `~`; if the callee should wait, give its body a `~` call (or `~` before its name).",
+    };
     pub const KIND_PACKAGE: Code = Code {
         id: "N0306",
         title: "kind package without an implementation for the dialect",
@@ -418,6 +428,8 @@ pub mod codes {
         FIELD_RULE,
         PLATFORM_DECORATOR,
         UNKNOWN_MEMBER,
+        WRONG_TYPE,
+        NOT_ASYNC,
         SINGLE_BASE,
         KIND_REQUIRES_MEMBER,
         UNKNOWN_TEMPLATE_VAR,

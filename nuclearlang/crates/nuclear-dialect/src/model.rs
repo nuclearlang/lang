@@ -63,6 +63,9 @@ pub struct Kind {
     /// Every method is asynchronous (its return type is the target's async type): a repository whose
     /// methods call the network.
     pub async_methods: bool,
+    /// Every method gives a value to await though it awaits nothing (a query a repository's method builds): `~` on
+    /// it is never N0224.
+    pub awaitable_methods: bool,
     /// The declarations of this kind refer to each other only in types (two entities related both ways): their
     /// imports of each other are for the type checker only (`[syntax] type_imports`), never a circular import.
     pub type_imports: bool,
@@ -654,6 +657,7 @@ impl Dialect {
             "import_alias",
             "import_names",
             "type_imports",
+            "use_local",
             "super_call",
             "super_param",
             "field_init",
@@ -1929,6 +1933,7 @@ impl Layer<'_> {
             "named_params",
             "inherits",
             "async_methods",
+            "awaitable_methods",
             "type_imports",
             "methods",
             "returns",
@@ -2002,6 +2007,7 @@ impl Layer<'_> {
                 named_params: tb.get("named_params").and_then(|x| x.as_bool()).unwrap_or(false),
                 inherits: Self::string_list(tb.get("inherits")),
                 async_methods: tb.get("async_methods").and_then(|x| x.as_bool()).unwrap_or(false),
+                awaitable_methods: tb.get("awaitable_methods").and_then(|x| x.as_bool()).unwrap_or(false),
                 type_imports: tb.get("type_imports").and_then(|x| x.as_bool()).unwrap_or(false),
                 methods: Self::string_list(tb.get("methods")),
                 returns: match tb.get("returns") {

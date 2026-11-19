@@ -24,7 +24,9 @@ options a dialect sets and what the targets without braces needed are in [emitte
   and in setters. An assignment as last line returns the created variable. A modifier with `void = true`
   (`set`) never returns.
 - Implicit `this` (`implicit_self`); in kinds, `param_access` (e.g. `widget.{{name}}`; it gets the parameter's `default`, written in the target, from `ModCtx.ctor_defaults`).
-- async is automatic when there is a `~call()`.
+- async is automatic when there is a `~call()`. `Sig.sync`: a body that awaits and yields nothing, in a kind without
+  `async_methods` / `awaitable_methods`; `~` on a call of it is N0224 (`check_not_async`, the mirror of N0222's
+  `check_awaited`), unless it returns a `Future`/`Stream`.
 - `PascalCase(...)` constructs with the `construct` template; `not_constructors` excludes names.
 - Named arguments: `named_args = "native"` uses `named_arg`; otherwise they are reordered by position.
 - Named arguments to a callee declared in Nuclear (a function, `Module.method`, a method called without `this`) are
@@ -38,6 +40,11 @@ options a dialect sets and what the targets without braces needed are in [emitte
 the code (`emit::code_words`: no comments, no string text). A module is not imported if another needed
 module re-exports it (`[reexports]`). A file imports an auto-import name only if its generated code writes it
 (`written_words`).
+
+A `use` inside a function (`Stmt::Use`, ADR-lang-0012) goes through `local_use`: with `use_local` its line is
+written in place (rendered by `imports` with the file's auto-imports set aside) and its names are locals, so a
+project file's names are not imported at the top unless the file also writes them free; without it the `use` joins
+the file's imports (`local_uses`) and its names are only the block's (N0105 after it).
 
 ## Layout and comments
 
@@ -64,7 +71,7 @@ module re-exports it (`[reexports]`). A file imports an auto-import name only if
   `null`: Python `is None`). A bitwise operand of a comparison gets parentheses (TS binds `==` tighter);
   `-(a ** b)` under unary minus. `is` gets `t` (the type's `tinfo`: TS writes
   `typeof`/`Number.isInteger`/`Array.isArray`). `for_entries` gets `map` and `iter_member` (the map wrapped for a member after it: `(env ?? {}).items()`). The
-  operand of a spread is wrapped the same way (`*([b] if c else [])`). Constructed `Map/Set/List<...>()` locals
+  operand of a spread is wrapped the same way, in a list, a map and a call (`*([b] if c else [])`, `**(x if c else y)`). Constructed `Map/Set/List<...>()` locals
   record their type.
 - `try` as the last line returns the last line of `try` and `catch` (`try_stmt` with the tail).
 - The `try` template gets `catch_used` when the `catch` block names the caught value (`contains_word` over the
@@ -78,7 +85,9 @@ module re-exports it (`[reexports]`). A file imports an auto-import name only if
 
 A member of a base type is rewritten when the receiver's type is known: `static_type` (the receiver's type),
 `library_access`, `library_render`, with the dialect's `[library.<base>]` templates; N0114 and N0115 are its
-diagnostics. Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`.
+diagnostics. A library or `[functions]` template renders each `argN` as a marker first (`fill_args`): an argument that
+is not atomic gets parentheses wherever the template puts it next to an operator, a member or a call
+(`{{recv}} * {{arg0}}` of `"x".repeat(a + b)` → `"x" * (a + b)`), and stays bare between delimiters (`f({{arg0}})`). Decision and vocabulary: ADR-lang-0009, `docs/07-reference/library.md`.
 
 A map read `m[k]` uses the dialect's `index` template with the `map` flag (a lookup that gives `null` for an
 absent key, in a dialect whose index throws) when `map_kind` knows the object is a map: a typed local or field, or

@@ -56,7 +56,8 @@ From `nuclearlang/`:
 - **The rules a target could break:** `DIR=examples/semantics tools/stdlib-check.sh` the same way, over the programs
   of `examples/semantics/`: a name that a target's function has, a lambda made in a loop, a default list, a static
   field, `~/` with negatives, a chain after `?.`, a variable of the file a function changes, `==` of two lists or
-  maps, a decimal and a missing value printed, named arguments, a function type of types only. Each passed
+  maps, a decimal and a missing value printed, named arguments, a function type of types only, an argument or a
+  spread next to an operator (`operands`). Each passed
   `nuclear check` and was wrong in a target once; a fix of that kind adds its case here.
 - **TypeScript by hand:** `tools/node/node_modules/.bin/tsc --strict --noEmit --target es2022 --lib es2022,dom x.ts`.
 - **Dart and Flutter:** the mobile platform's

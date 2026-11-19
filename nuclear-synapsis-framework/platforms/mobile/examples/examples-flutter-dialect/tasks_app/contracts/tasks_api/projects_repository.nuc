@@ -1,9 +1,9 @@
 // Generated from the contract tasks_api 0.1.0 (nuclear contracts). Do not edit: `nuclear contracts update` rewrites it.
-// Projects: POST /projects, GET /projects/:id (with its tasks and their tags), POST /projects/:id/close/:into.
+// Projects: POST /projects, GET /projects/:id (with its tasks and their tags), POST /projects/:id/close/:into. Besides the app's guards, the owner's token (OWNER_TOKEN, as `Authorization: Bearer <token>`).
 @repository(path = "projects", connection = "tasks_api")
 repository ProjectsRepository
   @post
-  create(input: NewProject) Result<TasksApiError, Project>
+  create(@body input: NewProject) Result<TasksApiError, Project>
 
   @get(path = ":id", local = true)
   one(id: int) Result<TasksApiError, Project>

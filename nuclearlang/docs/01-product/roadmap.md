@@ -30,20 +30,6 @@ The pending work of the language, the compiler and the language server. A done i
 
 ## Pending
 
-- **`nuclear check` lets wrong types through** (found writing the skills library, 2026-11-18): an undeclared type of a field, and `x: int = "s"`, report no diagnostic.
-- **A spread of a conditional is invalid Python** (found by Nuclear Builder's chat choices, 2026-11-18):
-  `{ ...a, ...(c ? x : y) }` is written `{**a, **x if c else y}`, a syntax error the build does not report. Wanted:
-  the operand of `**` (and `*`) parenthesized when it is not atomic. Worked around in
-  `extensions/tools/nuclear-builder/chat_agents.nuc` (`chatChoices`).
-- **A method's argument loses its parentheses** (found by Nuclear Builder's MCP tools, 2026-11-18): `"x".repeat(a + b)`
-  is written `"x" * a + b` in Python, a wrong value with no diagnostic. Wanted: the operand of an emitted operator
-  parenthesized when it is not atomic. Worked around in `extensions/tools/nuclear-builder/tests/test_tools.nuc`.
-- **No lazy import** (found by Nuclear Builder's start-up, 2026-11-18): `use` is only at the top of a file and a
-  project's names are imported at the top too, so a command line program loads every library of every command (the
-  `mcp` library alone is 300 ms of `nuclear-builder`'s 530 ms). Wanted: a `use` inside a function (Python: a local
-  `import`; TypeScript: `await import`; Dart: `deferred as`), or a project name the dialect imports where it is used.
-  Worked around in `extensions/tools/nuclear-builder/cli.nuc` (`lazy`: `importlib.importModule` of the module).
-
 ### Found in the restructure (spec 008)
 
 - `docs/07-reference/projects.md` §1.2 says only a url contract keeps `contracts/<name>/contract.json`; the code
@@ -143,12 +129,11 @@ and Dart's `operator ==` compare fields, Nuclear's `==` of two modules compares 
   `null` when absent. Also a typed map whose values are not nullable, indexed by a plain name or a call
   (`ADAPTERS[provider] == null` in Nuclear Builder's `chat.nuc`, where `ADAPTERS["${p}"]` is `.get`): Python's
   subscript, `KeyError`. Workaround: `key in map` first.
-- **An inherited attribute has no type in the subclass** (2026-11-18): in `Member: Chat`, `history.length` of Chat's
-  `history: <string, any>[]` is written `self.history.length` in Python (and `isEmpty` as `is_empty`). Workaround: a
-  typed name first (`kept: <string, any>[] = history`, in Nuclear Builder's `member.nuc`). Wanted: a module's
-  attributes known in the modules that extend it. Worse, a local name in a method of the subclass that is an
-  inherited attribute's name (`given = …` in `Member`, Chat's `given`) is written `self.given = …`: it overwrites
-  the attribute (pyright caught it as an error). Wanted: a local is a local, or N-code for the clash.
+- **A local named like an inherited attribute writes the attribute** (2026-11-18): in a method of `Member: Chat`,
+  `given = …` (Chat's `given`) is written `self.given = …`. It follows the rule that a member's name assigned in a
+  method is the member (nuclear-base §4.2, also for a module's own fields), but the subclass may not know the base
+  has it. To decide with the user: keep the rule, or require `$given` for an inherited one (a new N-code for the
+  plain name), or a warning.
 - **`try` is not a value in the middle of a block** (`raw = try ... catch e ...`): only as the last line of a
   function. Workaround: a helper function whose last line is the `try`.
 
@@ -159,9 +144,11 @@ and Dart's `operator ==` compare fields, Nuclear's `==` of two modules compares 
   `ws.value.id`), where a method written in Nuclear with that return type unwraps it. Workaround: a typed
   `Result` and `if found.isErr` + `return Err(found.error)`, marked `shortcut:` in `nuclear-chat/nuclear_chat/`.
   Wanted: aliases propagate like the method they name.
-- **`~` on a call that is not async is written `await`** (fastapi): `~workspaces.register(input)`, whose use case
-  awaits nothing, is `await self.workspaces.register(input)`, a `TypeError` when it runs; `nuclear check` says
-  nothing (pyright does). Wanted: a diagnostic, or no `await`.
+  The fix is one line (`method_sig` follows `DeclInfo.aliases` as `sig_of_method` does), tried 2026-11-18: it makes
+  17 places invalid that discard an alias's Result (a `~` statement in a `void` method or a lambda: N0108; a typed
+  `Result` from a ternary: N0110) in `nuclear-chat/` and the backend example `tasks_api` (`made.isOk` in
+  `planner.nuc`). To decide with the user: how a statement discards a Result on purpose (`~f().error(...)` does not
+  chain on an async call; an unused typed variable trips pyright strict), then the fix and those places.
 - **A block lambda given where `(…) => Future<void>` is expected**: it is async only when it holds a `~`, and its
   last line is returned (`told = ~emit(…)` then `told.isOk` makes it return a `bool`). Workaround: a `~` inside and
   an `if` as the last statement. Wanted: the expected type decides both.
@@ -202,7 +189,6 @@ Found while writing `nuclear-graph` in Nuclear with the `python` dialect; each c
   `sum(matrix)`, its named argument dropped); an untyped map is indexed as it is instead of with `.get`.
 - **Silent — a constructor parameter is an attribute**, so a local of the same name writes the instance's state.
 - **Silent —** `xs.findIndex((i) => ...)` writes `for i, i in enumerate`.
-- **Silent —** a spread of a parenthesised expression loses its parentheses (`[a, ...(c ? x : y)]`).
 - **Silent —** a local named like a function of another file imports that function (a cycle).
 - **Silent —** a typed top-level value (`PORT: int = 1`) is written as a class.
 - **Silent —** a module with only typed attributes that extends a library class (`X: BaseModel` +
@@ -215,14 +201,6 @@ Found while writing `nuclear-graph` in Nuclear with the `python` dialect; each c
 
 Other findings:
 
-- **`~` before a call that is not asynchronous compiles and fails in Python** (found with `gen usecase`). A use
-  case whose `exec` has no `~` is synchronous, so is its facade alias, and a controller that writes
-  `~app.tidyTitle(title)` is emitted `await self.app.tidy_title(title)`: pyright says `"Result[AppError, str]" is
-  not awaitable` and at run time it is `TypeError: 'Result' object can't be awaited` (TypeScript and Dart only await
-  a plain value). The compiler knows the callee is synchronous (`Sig.is_async`): the mirror of N0222 is missing, a
-  diagnostic with the fix "remove `~`" (a new code, `docs/07-reference/diagnostics.md`,
-  `crates/nuclear-transpile/tests/rules.rs`). `gen usecase` already writes `~` only when the use case awaits;
-  hand-written and agent-written code is not guarded.
 - **`Name<T>.member(...)` does not parse** (`Set<int>.of`, `List<int>.filled`): a generic type before a member;
   today `s: Set<int> = Set.of(...)`. Clean support needs an additive AST node for a generic receiver (for example
   `ExprKind::GenericName { name, type_args }`, since `Call`'s `type_args` go after the method for `obj.m<T>()`),

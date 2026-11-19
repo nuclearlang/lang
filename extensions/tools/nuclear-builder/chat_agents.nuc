@@ -138,13 +138,12 @@ agentsHere(root: string, transport: httpx.BaseTransport? = null) <string, any>[]
 // answers with the machine's chat model (CHAT_MODEL), the only model it offers.
 chatChoices(agents: <string, any>[]) <string, any>[]
   chat = readMachine()["CHAT_MODEL"] ?? CHAT_MODEL
+  local: <string, any> = { "models": [chat], "defaultModel": chat }
+  other: <string, any> = {}
   out: <string, any>[] = []
   for a in agents
-    choice: <string, any> = { ...a, "command": ["nuclear-builder", "member", "--role", "chat", "--kind", a["kind"], "--provider", a["id"]] }
-    if a["id"] == "nuclear-developer"
-      choice["models"] = [chat]
-      choice["defaultModel"] = chat
-    out.add(choice)
+    command = ["nuclear-builder", "member", "--role", "chat", "--kind", a["kind"], "--provider", a["id"]]
+    out.add({ ...a, "command": command, ...(a["id"] == "nuclear-developer" ? local : other) })
   out
 
 // `nuclear-builder agents --json [--root <dir>]`
