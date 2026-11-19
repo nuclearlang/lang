@@ -52,10 +52,20 @@ const FAINT: u8 = 2;
 /// `nuclear` without arguments: the animation the first time (then the page alone); `credits`: always the
 /// animation, ending on the author and the repository.
 pub fn show(credits: bool) {
+    play(credits, credits);
+}
+
+/// `nuclear intro`: always the animation, then the page (the installers play it once everything is installed).
+pub fn intro() {
+    play(false, true);
+}
+
+/// The animation when `always` or the first time, else the page alone; `credits` ends it on the author.
+fn play(credits: bool, always: bool) {
     let color = std::io::stdout().is_terminal() && std::env::var_os("NO_COLOR").is_none();
     let seen = seen_marker();
     let first = !seen.as_ref().is_some_and(|p| p.exists());
-    match term_size().filter(|&(cols, rows)| color && cols >= PAGE_W && rows > H && (credits || first)) {
+    match term_size().filter(|&(cols, rows)| color && cols >= PAGE_W && rows > H && (always || first)) {
         Some((cols, _)) => {
             animate(cols.min(100), credits);
             if let Some(p) = seen {

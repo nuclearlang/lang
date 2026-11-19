@@ -1,6 +1,11 @@
 use os
 use sys
 use json
+use time
+use shutil
+use textwrap
+use threading
+use threading{ Thread, Event, Lock }
 
 // What every command of `nuclear-builder` shares in a terminal: its options, a question, a JSON answer.
 
@@ -29,22 +34,144 @@ ask(question: string, fallback: string) string
       throw e
     fallback
 
+// Whether the terminal takes colors and moves: stdout is one, no NO_COLOR, not a dumb terminal (Windows has no TERM:
+// its console takes the escapes once asked, `os.system("")`).
+colorful() boolean
+  if not sys.stdout.isatty() or (os.environ.get("NO_COLOR") ?? "").length > 0
+    return false
+  if sys.platform == "win32"
+    os.system("")
+    return true
+  (os.environ.get("TERM") ?? "dumb") != "dumb"
+
 // Text in one of `nuclear`'s colors (its header, tools/cli/src/framework/landing.rs): `yellow`, `purple`, `green`,
-// `red`, `bold` or `dim`. Only on a terminal and without NO_COLOR; 24-bit where the terminal says so (COLORTERM),
-// else the closest of the 256 (macOS Terminal).
+// `red`, `slate`, `bold` or `dim`. Only on a terminal that takes them (`colorful`); 24-bit where the terminal says so
+// (COLORTERM, or Windows Terminal), else the closest of the 256 (macOS Terminal).
 paint(text: string, color: string) string
-  if not sys.stdout.isatty() or (os.environ.get("NO_COLOR") ?? "").length > 0 or (os.environ.get("TERM") ?? "dumb") == "dumb"
+  if not colorful()
     return text
-  deep = (os.environ.get("COLORTERM") ?? "") in ["truecolor", "24bit"]
+  deep = (os.environ.get("COLORTERM") ?? "") in ["truecolor", "24bit"] or (os.environ.get("WT_SESSION") ?? "").length > 0
   code = match color
     "yellow" -> deep ? "38;2;253;216;63" : "38;5;220"
     "purple" -> deep ? "38;2;176;84;255" : "38;5;135"
     "green" -> deep ? "38;2;120;230;150" : "38;5;114"
     "red" -> deep ? "38;2;255;95;95" : "38;5;203"
+    "slate" -> deep ? "38;2;96;125;139" : "38;5;66"
     "bold" -> "1"
     "dim" -> "2"
     _ -> "0"
   "\u{1b}[${code}m${text}\u{1b}[0m"
+
+// The width of a box: the terminal's, at most 76.
+boxWidth() int
+  Math.max(40, Math.min(76, shutil.getTerminalSize().columns - 4))
+
+// A box: a title, its lines (each wrapped to the box) and a color for its border. On a terminal the right border is
+// placed by column, so colored text keeps it straight; without one it is left open.
+box(title: string, lines: string[], color: string = "dim") void
+  w = boxWidth()
+  edge = (t: string) => paint(t, color)
+  print("  ${edge("╭─")} ${paint(title, "bold")} ${edge("─".repeat(Math.max(2, w - title.length - 5)) + "╮")}")
+  for line in lines
+    parts = line.length == 0 ? [""] : wrapped(line, w - 4)
+    for part in parts
+      print("  ${edge("│")} ${part}${colorful() ? "\u{1b}[${w + 2}G${edge("│")}" : ""}")
+  print("  ${edge("╰" + "─".repeat(w - 2) + "╯")}")
+
+// The lines of a box for a text after a mark (`✓`, `✗`): wrapped first, then painted, so the border stays straight.
+bullet(mark: string, markColor: string, text: string, textColor: string = "") string[]
+  parts: string[] = textwrap.wrap(text, boxWidth() - 6)
+  out: string[] = []
+  for i in 0..parts.length
+    body = textColor.length > 0 ? paint(parts[i], textColor) : parts[i]
+    out.add(i == 0 ? "${paint(mark, markColor)} ${body}" : "  ${body}")
+  out
+
+// Plain lines of a text wrapped to a box, painted.
+painted(text: string, color: string) string[]
+  textwrap.wrap(text, boxWidth() - 4).map((l: string) => paint(l, color))
+
+// A text cut in lines of `width` characters at most; one with colors (escapes) is left whole.
+wrapped(text: string, width: int) string[]
+  "\u{1b}" in text ? [text] : textwrap.wrap(text, width)
+
+// The loading icon: the NuclearLang sign turning, drawn in braille (14 × 12 dots, 12 frames of 10°: the trefoil
+// repeats every 120°), as the installer draws it.
+SPIN: string[][] = [
+  ["⠀⠀⠻⣿⠟⠀⠀", "⢠⣤⣄⠶⣠⣤⡄", "⠈⠻⠋⠀⠙⠟⠁"], ["⠀⠀⠘⣿⡿⠂⠀", "⢰⣶⣄⠶⣠⣀⡀", "⠈⠛⠁⠀⢻⠟⠁"], ["⠀⠀⠀⢿⣿⠆⠀", "⢸⣷⡆⠶⣁⡀⠀", "⠈⠋⠀⠈⣿⠟⠁"],
+  ["⢀⡀⠀⢸⣿⡦⠀", "⢸⣿⠆⠶⣉⠀⠀", "⠈⠁⠀⢸⣿⠗⠀"], ["⢀⣄⠀⢀⣿⣦⡀", "⢸⡿⠇⠶⡉⠁⠀", "⠀⠀⠀⣾⣿⠆⠀"], ["⢀⣤⡀⠀⣼⣦⡀", "⠸⠿⠋⠶⠙⠉⠁", "⠀⠀⢠⣿⣷⠄⠀"],
+  ["⢀⣴⣄⠀⣠⣦⡀", "⠘⠛⠋⠶⠙⠛⠃", "⠀⠀⣴⣿⣦⠀⠀"], ["⢀⣴⣧⠀⢀⣤⡀", "⠈⠉⠋⠶⠙⠿⠇", "⠀⠠⣾⣿⡄⠀⠀"], ["⢀⣴⣿⡀⠀⣠⡀", "⠀⠈⢉⠶⠸⢿⡇", "⠀⠰⣿⣷⠀⠀⠀"],
+  ["⠀⢴⣿⡇⠀⢀⡀", "⠀⠀⣉⠶⠰⣿⡇", "⠀⠺⣿⡇⠀⠈⠁"], ["⠀⠰⣿⡿⠀⠀⠀", "⠀⢀⣈⠶⢰⣾⡇", "⠈⠻⣿⠁⠀⠙⠁"], ["⠀⠐⢿⣿⠃⠀⠀", "⢀⣀⣄⠶⣠⣶⡆", "⠈⠻⡟⠀⠈⠛⠁"]
+]
+
+// A piece of work in a terminal: the sign turns beside its title and what it does; the last thing it said, with a bar
+// when that says a percent, and the seconds it has taken. `finish` leaves one line: done or failed. Without a terminal,
+// the title and then each new thing it says (a percent only every tenth).
+Spinner(title: string, about: string)
+  detail: string = ""
+  percent: int = -1
+  shown: int = -10
+  started: double = 0.0
+  stop: Event? = null
+  worker: Thread? = null
+  lock: Lock? = null
+
+  start() void
+    started = time.time()
+    lock = Lock()
+    if not colorful()
+      print("  ... ${title}", flush = true)
+      return
+    stop = Event()
+    print("\u{1b}[?25l\n\n", flush = true)
+    worker = Thread(target = () => this.spin(), daemon = true)
+    worker!.start()
+
+  spin() void
+    frame = 0
+    while not stop!.isSet()
+      draw(frame)
+      frame += 1
+      stop!.wait(0.1)
+
+  draw(frame: int) void
+    f = SPIN[frame % 12]
+    secs = (time.time() - started).floor()
+    w = boxWidth() - 14
+    text = detail.length > w ? "${detail.substring(0, w - 1)}…" : detail
+    third = percent >= 0 ? "${bar(percent)}  ${paint("${percent}%", "bold")}  ${paint("${secs} s", "dim")}" : paint("${text}${text.length > 0 ? " · " : ""}${secs} s", "dim")
+    lock!.acquire()
+    try
+      sys.stdout.write("\u{1b}[3A\r\u{1b}[2K  ${paint(f[0], "yellow")}   ${paint(title, "bold")}\n\u{1b}[2K  ${paint(f[1], "yellow")}   ${paint(about, "dim")}\n\u{1b}[2K  ${paint(f[2], "yellow")}   ${third}\n")
+      sys.stdout.flush()
+    finally
+      lock!.release()
+
+  // What the work says now: a line of its output; `NN%` in it fills the bar.
+  update(line: string) void
+    detail = line.trim()
+    m = Regex(r"(\d{1,3})%").find(detail)
+    percent = m == null ? -1 : Math.min(100, (m![1] ?? "0").toInt() ?? 0)
+    if not colorful() and detail.length > 0 and (percent < 0 or percent >= shown + 10 or percent == 100)
+      if percent >= 0
+        shown = percent
+      print("      ${detail}", flush = true)
+
+  // The work ended: `ok`, else failed; the three lines become one.
+  finish(ok: boolean, text: string = "") void
+    secs = (time.time() - started).round()
+    said = text.length > 0 ? text : title
+    if stop != null
+      stop!.set()
+      worker!.join()
+      sys.stdout.write("\u{1b}[3A\r\u{1b}[2K\u{1b}[1B\u{1b}[2K\u{1b}[1B\u{1b}[2K\u{1b}[2A\r\u{1b}[?25h")
+    took = secs >= 2 ? paint(" · ${secs} s", "dim") : ""
+    print(ok ? "  ${paint("✓", "green")} ${said}${took}" : "  ${paint("✗", "red")} ${said}", flush = true)
+
+// A bar of 24 cells, `percent` full.
+bar(percent: int) string
+  full = (percent * 24 / 100).floor()
+  "${paint("█".repeat(full), "yellow")}${paint("░".repeat(24 - full), "dim")}"
 
 yes(answer: string) boolean
   answer.lower().startsWith("y")

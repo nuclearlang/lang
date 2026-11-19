@@ -654,6 +654,9 @@
     "nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services",
     "```",
     "",
+    "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it",
+    "(`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).",
+    "",
     "The public one-liners (they need a published release):",
     "",
     "```sh",
@@ -1096,6 +1099,27 @@
    }
   },
   {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.358914",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "and the bar moves as bytes come.",
+   "body": [
+    "and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,",
+    "`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does",
+    "(`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to",
+    "`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\\nuclearlang\\setup.log`), and a failed step is a red box with",
+    "its last lines, the error and what to do, never a traceback."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5f9bb8",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
@@ -1133,6 +1157,34 @@
     "Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/name, default `nuclearlang/lang`),",
     "`NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also",
     "`NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.ed59bb",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in yellow, Synapsis in purple, the version and the system.",
+   "body": [
+    "**The look.** Both open with a box of the header `nuclear` prints (`tools/cli/src/framework/landing.rs`): the",
+    "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in",
+    "yellow, Synapsis in purple, the version and the system. Each long task runs while the loading icon turns: the sign in",
+    "braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) beside its title, a line of what it does,",
+    "and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`",
+    "(yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the",
+    "file is not published, not that the connection failed). The AI services' question is a box of what they are. At the",
+    "end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns), then a",
+    "green box: the command, the editors that got the extension, the AI services, what to run first. `install.sh` colors",
+    "only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);",
+    "piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows",
+    "PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1253,6 +1305,10 @@
     "   publishes them, with `install.sh` and `install.ps1`, in the GitHub release of that tag. It can also be started",
     "   by hand (`workflow_dispatch`).",
     "3. The public one-liners download from that release: without a release they fail with a clear error.",
+    "4. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
+    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
+    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
+    "   nuclearlang/lang -f version=<version>`.",
     "",
     "The workflow has never run ([roadmap](../01-product/roadmap.md))."
    ],
@@ -1590,7 +1646,28 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails.044991",
+   "type": "guide",
+   "title": "Set up the AI services — 7. When a step fails",
+   "summary": "A step that fails is a red box: what it was doing, the last lines it said, the error and what to do.",
+   "body": [
+    "A step that fails is a red box: what it was doing, the last lines it said, the error and what to do. Everything the",
+    "steps said is in `~/.local/state/nuclearlang/setup.log` (Windows: `%LOCALAPPDATA%\\nuclearlang\\setup.log`). Run",
+    "`nuclear-builder setup` again: what is done stays, and it goes on from the step that failed. While a step runs, the",
+    "NuclearLang sign turns beside it with what it does; the first load of the knowledge base takes about ten minutes and",
+    "shows the time it has taken."
+   ],
+   "sources": [
+    "installer/docs/08-guides/ai-setup.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails.e2dc96",
    "type": "guide",
    "title": "Set up the AI services — 7. When a step fails",
    "summary": "7. When a step fails",
@@ -2494,7 +2571,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.67a747",
+   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.9b5958",
    "type": "context",
    "title": "Landing, header, help and colors of the framework's commands (`framework/landing.rs`)",
    "summary": "`$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
@@ -2502,16 +2579,15 @@
     "- `nuclear` without arguments: the animation ONLY the first time (the marker",
     "  `$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.",
     "  `nuclear credits` (alias `author`): always the full animation and the page with the credits (Julian Molina,",
-    "  github.com/nodelorien, github.com/nuclearlang).",
+    "  github.com/nodelorien, github.com/nuclearlang). `nuclear intro`: always the full animation, then the page; the",
+    "  installers play it once everything is installed (with stdin not a terminal it ends by itself).",
     "- The animation takes ~7 s and is a CONCEPT, not realistic: a radioactive mushroom in ASCII, a wave of characters",
     "  that fills the screen and dissolves into `█▓▒░`; \"WELCOME\" (5-row letters) appears in negative, turns green with",
     "  \"to NuclearLang · Synapsis\" and dissolves; then the page: the NuclearLang sign, large (`sign` radius 12), on the",
     "  left, and the names and how to start on the right. The only logo is Nuclear's (the user, 2026-11-17).",
     "- Only characters over the terminal's background: no background colors (a test checks it), the theme's text color in",
     "  normal / bold / dim and few accents; fades are dissolves. Synapsis is a name in purple; the NuclearLang symbol is drawn `ASPECT` (1.35) times wider to look round.",
-    "- The page stays alive until Enter (a thread reads stdin; Enter during the animation jumps to the page, except in",
-    "  `credits`; EOF only closes a complete page); a shine crosses the sign every `SHINE_EVERY` (5 s); without a",
-    "  terminal on stdin it ends by itself."
+    "- The page stays alive until Enter (a thread reads stdin; Enter during the animation jumps to the page, except in"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/landing.md"
@@ -2523,11 +2599,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.d2ad65",
+   "id": "doc:tools/cli/docs/02-architecture/landing.md#landing-header-help-and-colors-of-the-framework-s-commands-framework-landing-rs.b55d2b",
    "type": "context",
    "title": "Landing, header, help and colors of the framework's commands (`framework/landing.rs`)",
-   "summary": "and `nuclear help` print none), a 6-row header with the small sign (`sign` radius 6), NuclearLang and Synapsis, on stderr and only in a terminal.",
+   "summary": "`credits`; EOF only closes a complete page); a shine crosses the sign every `SHINE_EVERY` (5 s); without a terminal on stdin it ends by itself.",
    "body": [
+    "`credits`; EOF only closes a complete page); a shine crosses the sign every `SHINE_EVERY` (5 s); without a",
+    "  terminal on stdin it ends by itself.",
     "- `header()`: before any command of the framework's (not on the bare page nor `credits`; the compiler's commands",
     "  and `nuclear help` print none), a 6-row header with the",
     "  small sign (`sign` radius 6), NuclearLang and Synapsis, on stderr and only in a terminal.",
@@ -2822,26 +2900,6 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.0e921d",
-   "type": "context",
-   "title": "The command line tool: overview — Code map of `src/framework/`",
-   "summary": "Code map of `src/framework/`",
-   "body": [
-    "| File | What it does | More |",
-    "|---|---|---|",
-    "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
-    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |"
-   ],
-   "sources": [
-    "tools/cli/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.36c474",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
@@ -2856,6 +2914,26 @@
     "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
     "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
     "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.6dc0df",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "Code map of `src/framework/`",
+   "body": [
+    "| File | What it does | More |",
+    "|---|---|---|",
+    "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, `intro`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
+    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"

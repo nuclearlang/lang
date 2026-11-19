@@ -8,6 +8,7 @@ use ntpath
 use platform
 use posixpath
 use subprocess
+use threading
 use httpx
 use pathlib{ Path }
 
@@ -782,6 +783,19 @@ disconnectClients(say: (line: string) => void) void
 // A step of the set-up: what it is called and what it says it does.
 Step(id: string, title: string)
 
+// What a step does, in one line a user reads while it runs (the installer's and the set-up's terminal).
+STEP_ABOUT: <string, string> = {
+  "graph": "The commands of the Smart Graph and the MCP server, linked from the AI archive",
+  "clients": "Claude Code, Codex, Cursor, OpenCode and Gemini CLI get Nuclear's MCP server",
+  "graph-model": "EmbeddingGemma for ONNX Runtime, from Hugging Face: how the graph finds by meaning (once)",
+  "developer": "The service of the local agents, which plan, write and review code",
+  "models": "The local agents' models, downloaded by Ollama",
+  "graph-service": "Started now and at every login, on 127.0.0.1 only",
+  "knowledge": "Every card of NuclearLang read into the graph: about ten minutes the first time",
+  "developer-service": "Started now and at every login, on 127.0.0.1 only",
+  "chat-service": "The chat of the editor and of the local agents, now and at every login"
+}
+
 // The Ollama models of a profile: the local agents' and the chat's; none without the local agents. The Smart Graph's
 // model is not Ollama's: the graph runs it itself (`nuclear-graph model`).
 modelsOf(p: Profile) string[]
@@ -813,7 +827,8 @@ runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
     "machine" -> keepRemote(p, say)
     "developer" -> installDeveloper(root, say)
     "models" -> downloadModels(p, say)
-    "graph-model" -> runCommand([joinOn(sys.platform, [binDir(), "nuclear-graph"]), "model"], say)
+    // quiet: Hugging Face warns of unauthenticated downloads, which a public model is
+    "graph-model" -> runCommand([joinOn(sys.platform, [binDir(), "nuclear-graph"]), "model"], say, env = { "HF_HUB_VERBOSITY": "error", "HF_HUB_DISABLE_PROGRESS_BARS": "1" })
     "graph-service" -> startGraph(p, say)
     "knowledge" -> loadKnowledge(root, say)
     "developer-service" -> startService("developer", "${urls()["developer"]}/docs", say)
@@ -901,8 +916,19 @@ loadKnowledge(root: string, say: (line: string) => void) void
     runCommand([tool, "connect", client, "--scopes", "read,write"], say)
   // the ingest prints its report as JSON at the end: only its progress lines are said
   progress = (line: string) => line[0] in "{}\"]" ? null : say(line)
-  runCommand([tool, "ingest", "${Path(root, GRAPH, "data")}"], progress)
-  say("the graph holds the knowledge base")
+  // the graph answers only when every row is read: the user sees it is still at work, every minute
+  say("the first time the graph reads every row: about ten minutes on a processor (later only what changed)")
+  done = threading.Event()
+  started = time.time()
+  beat = () =>
+    while not done.wait(60)
+      say("still reading the knowledge base: ${((time.time() - started) / 60).round()} min")
+  threading.Thread(target = beat, daemon = true).start()
+  try
+    runCommand([tool, "ingest", "${Path(root, GRAPH, "data")}"], progress)
+  finally
+    done.set()
+  say("the graph holds the knowledge base (${((time.time() - started) / 60).round()} min)")
 
 // Takes the services away: what starts them, the graph's tool, the links to the AI archive, the Developer's launcher
 // and the machine's file. The models and Ollama stay (they are the user's), and so does the graph's data.

@@ -166,6 +166,17 @@ testAnUninstallTakesAwayWhatTheSetUpMadeAndOnlyThat(tmpPath: Path) void
 testThePaintIsPlainTextWithoutATerminal() void
   expect(paint("Hard", "yellow") == "Hard" and paint("✓", "green") == "✓")
 
+// Without a terminal a step is its title and what it says, a percent only every tenth: CI logs stay short.
+testASpinnerWithoutATerminalSaysItsWorkInFewLines(capsys: any) void
+  work = Spinner("Download the models", "the local agents' models")
+  work.start()
+  for p in 0..101
+    work.update("qwen2.5-coder:1.5b: ${p}% of 1.0 GB")
+  work.finish(true)
+  out: string = capsys.readouterr().out
+  expect("... Download the models" in out and "✓ Download the models" in out, out)
+  expect(out.split("\n").filter((l) => "% of" in l).length == 11, out)
+
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   held.bind(socket.getaddrinfo("127.0.0.1", 0, socket.AF_INET, socket.SOCK_STREAM)[0][4])

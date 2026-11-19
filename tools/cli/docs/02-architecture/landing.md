@@ -9,7 +9,8 @@ related: [tools/cli/src/framework/landing.rs]
 - `nuclear` without arguments: the animation ONLY the first time (the marker
   `$XDG_STATE_HOME/synapsis/intro_seen`, removed by `installer/install.sh --uninstall`), then the page alone.
   `nuclear credits` (alias `author`): always the full animation and the page with the credits (Julian Molina,
-  github.com/nodelorien, github.com/nuclearlang).
+  github.com/nodelorien, github.com/nuclearlang). `nuclear intro`: always the full animation, then the page; the
+  installers play it once everything is installed (with stdin not a terminal it ends by itself).
 - The animation takes ~7 s and is a CONCEPT, not realistic: a radioactive mushroom in ASCII, a wave of characters
   that fills the screen and dissolves into `█▓▒░`; "WELCOME" (5-row letters) appears in negative, turns green with
   "to NuclearLang · Synapsis" and dissolves; then the page: the NuclearLang sign, large (`sign` radius 12), on the

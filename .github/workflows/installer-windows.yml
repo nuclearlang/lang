@@ -33,32 +33,34 @@ jobs:
     timeout-minutes: 60
     env:
       WANTED: ${{ inputs.version || github.event.workflow_run.head_branch }}
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v4
+      # the installer itself runs in the PowerShell of the case: Windows PowerShell 5.1 (`powershell`) or 7 (`pwsh`)
       - name: Install
-        shell: ${{ matrix.shell }}
         run: |
           $v = "$env:WANTED".TrimStart('v'); if (-not $v) { $v = 'latest' }
-          $options = @{ Version = $v; NoVSCode = $true }
-          if ('${{ matrix.ai }}') { $options.AiProfile = '${{ matrix.ai }}' } else { $options.NoAi = $true }
-          & ./installer/release/install.ps1 @options
+          $options = @('-Version', $v, '-NoVSCode')
+          if ('${{ matrix.ai }}') { $options += @('-AiProfile', '${{ matrix.ai }}') } else { $options += '-NoAi' }
+          & ${{ matrix.shell }} -NoProfile -ExecutionPolicy Bypass -File ./installer/release/install.ps1 @options
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: "nuclear runs"
-        shell: ${{ matrix.shell }}
         run: |
           $nuclear = Join-Path $env:LOCALAPPDATA 'nuclearlang\bin\nuclear.exe'
           & $nuclear dialect list
           if ($LASTEXITCODE -ne 0) { exit 1 }
       - name: "The AI services: the Smart Graph runs"
         if: matrix.ai != ''
-        shell: ${{ matrix.shell }}
         run: |
           $builder = Join-Path $env:LOCALAPPDATA 'nuclearlang\ai\bin\nuclear-builder.cmd'
           $status = & $builder setup --status --json | Out-String | ConvertFrom-Json
           $status | ConvertTo-Json -Depth 4
           if (-not $status.graph) { Write-Error 'the Smart Graph does not answer'; exit 1 }
       - name: Uninstall
-        shell: ${{ matrix.shell }}
         run: |
-          & ./installer/release/install.ps1 -Uninstall
+          & ${{ matrix.shell }} -NoProfile -ExecutionPolicy Bypass -File ./installer/release/install.ps1 -Uninstall
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $left = @((Join-Path $env:LOCALAPPDATA 'nuclearlang'), (Join-Path $env:APPDATA 'nuclearlang')) | Where-Object { Test-Path $_ }
           if ($left) { Write-Error "left behind: $($left -join ', ')"; exit 1 }

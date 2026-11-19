@@ -109,14 +109,23 @@ Variables of both: `NUCLEAR_VERSION`, `NUCLEAR_INSTALL`, `NUCLEAR_REPO` (owner/n
 `NUCLEAR_DOWNLOAD` (the base url of the files: a mirror), `NUCLEAR_AI_PROFILE`; on Linux and macOS also
 `NUCLEAR_BIN` and `NUCLEAR_NO_MODIFY_PATH`.
 
-**The look.** Both open with the header `nuclear` prints (`tools/cli/src/framework/landing.rs`): the radiation sign
-(the same 16 × 12 pixels, `▀`/`▄`), NuclearLang in yellow, Synapsis in purple. Then sections with a faint rule, a step
-`◆` (yellow), done `✓` (green), a warning `!` (yellow), an error `✗` (red), a progress bar on the large downloads, and
-a summary (the command, the editors that got the extension, the AI services, what to run first). `install.sh` colors
+**The look.** Both open with a box of the header `nuclear` prints (`tools/cli/src/framework/landing.rs`): the
+radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in
+yellow, Synapsis in purple, the version and the system. Each long task runs while the loading icon turns: the sign in
+braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) beside its title, a line of what it does,
+and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`
+(yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the
+file is not published, not that the connection failed). The AI services' question is a box of what they are. At the
+end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns), then a
+green box: the command, the editors that got the extension, the AI services, what to run first. `install.sh` colors
 only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);
 piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows
-PowerShell 5.1 may read the file in another encoding). The AI set-up (`nuclear-builder setup`) paints the same way
-(`paint` of `extensions/tools/nuclear-builder/terminal.nuc`).
+PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns
+and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,
+`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does
+(`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to
+`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\nuclearlang\setup.log`), and a failed step is a red box with
+its last lines, the error and what to do, never a traceback.
 
 ## The AI services at the end of an install
 

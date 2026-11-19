@@ -139,6 +139,12 @@ To give your agent the MCP server: the buttons of *Settings and integrations*, o
 
 ## 7. When a step fails
 
+A step that fails is a red box: what it was doing, the last lines it said, the error and what to do. Everything the
+steps said is in `~/.local/state/nuclearlang/setup.log` (Windows: `%LOCALAPPDATA%\nuclearlang\setup.log`). Run
+`nuclear-builder setup` again: what is done stays, and it goes on from the step that failed. While a step runs, the
+NuclearLang sign turns beside it with what it does; the first load of the knowledge base takes about ten minutes and
+shows the time it has taken.
+
 | It says | What to do |
 |---|---|
 | the graph, the Developer or Nuclear Chat on a port other than 7878 / 7879 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. Nothing to do |

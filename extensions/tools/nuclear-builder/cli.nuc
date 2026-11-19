@@ -216,23 +216,24 @@ setupEvents(args: string[]) int
   0
 
 describeProfiles(hw: Hardware, suggested: string) void
-  print("  ${paint("This machine", "bold")}  ${hw.cpu}, ${hw.cores} threads, ${hw.ram} GB of memory, ${hw.gpu.isEmpty ? "no GPU with memory of its own" : hw.gpu}, ${hw.disk} GB of disk free.\n")
+  box("This machine", ["${hw.cpu} · ${hw.cores} threads · ${hw.ram} GB of memory", "${hw.gpu.isEmpty ? "no GPU with memory of its own" : hw.gpu} · ${hw.disk} GB of disk free"], "slate")
+  print("")
+  print("  ${paint("◆", "yellow")} ${paint("Where the agents run", "bold")}: on this machine (local models, fewer paid tokens) or remote only.")
+  print("")
   for p in PROFILES
     f = fit(p, hw)
     chosen = p.id == suggested
-    mark = chosen ? paint("→", "yellow") : " "
-    best = chosen ? "   ${paint("suggested for this machine", "yellow")}" : ""
-    print("  ${mark} ${paint(p.id.padEnd(7), chosen ? "yellow" : "bold")} ${paint(p.title, "bold")} ${paint("· downloads ${p.data["gb"]} GB", "dim")}${best}")
-    print("            ${p.data["summary"]}")
+    lines: string[] = painted(p.data["summary"], "dim")
     if p.coder != null
-      sits = f.fit == "no" ? paint("✗ not for this machine", "red") : f.fit == "tight" ? paint("! tight on this machine", "yellow") : paint("on this machine", "dim")
-      print("            ${sits}: ${f.note}")
-      print("            ${paint("measured: ${p.data["measured"]}", "dim")}")
+      lines.addAll(f.fit == "no" ? bullet("✗", "red", "not for this machine: ${f.note}") : f.fit == "tight" ? bullet("!", "yellow", "tight on this machine: ${f.note}") : bullet("✓", "green", "fits this machine: ${f.note}"))
     for w in p.data["works"] as string[]
-      print("            ${paint("✓", "green")} ${w}")
+      lines.addAll(bullet("✓", "green", w))
     for l in p.data["limits"] as string[]
-      print("            ${paint("✗", "red")} ${paint(l, "dim")}")
-    print("")
+      lines.addAll(bullet("✗", "red", l, "dim"))
+    if p.coder != null
+      lines.addAll(painted("measured: ${p.data["measured"]}", "dim"))
+    box("${p.id} · ${p.title} · ${p.data["gb"]} GB${chosen ? " · suggested" : ""}", lines, chosen ? "yellow" : "dim")
+  print("")
 
 // What a profile needs, found or installed by its own installer, one at a time; false when it is still missing.
 haveRequirements(p: Profile, always: boolean) boolean
@@ -346,16 +347,44 @@ setup(args: string[]) int
     print("NuclearLang is installed without the AI services: run its installer again (without --no-ai).", file = sys.stderr)
     return 1
   all = steps(p)
+  log = setupLog()
+  log.parent.mkdir(parents = true, existOk = true)
+  log.writeText("# nuclear-builder setup, profile ${p.id}\n", encoding = "utf-8")
+  print("")
   for i in 0..all.length
-    print("\n  ${paint("[${i + 1}/${all.length}]", "yellow")} ${paint(all[i].title, "bold")}", flush = true)
-    runStep(all[i].id, p, root, (line) => print("    ${line}", flush = true))
+    step = all[i]
+    work = Spinner("${step.title}", "${paint("${i + 1} of ${all.length}", "yellow")}  ${STEP_ABOUT[step.id] ?? ""}")
+    work.start()
+    said: string[] = []
+    // every line a step says goes to the log; the spinner shows the last one
+    note = (line: string) =>
+      said.add(line)
+      log.open("a", encoding = "utf-8").write("${step.id}: ${line}\n")
+      work.update(line)
+    try
+      runStep(step.id, p, root, note)
+      work.finish(true, step.title)
+    catch e
+      work.finish(false, step.title)
+      print("")
+      box("Could not finish: ${step.title}", [...said.slice(Math.max(0, said.length - 5)), "", "${e}", "", "Run nuclear-builder setup again: what is done stays, it goes on from this step. Everything it said is in ${log}."], "red")
+      return 1
   m = readMachine()
+  graph = "127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}"
+  print("")
   if p.coder != null
-    print("\n  ${paint("✓ Done:", "green")} the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) and the Nuclear Developer (127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}) run with the profile ${p.id}, now and at every login.")
-    print("${clientsLine()} State: nuclear-builder setup --status")
+    box("The AI services are running", ["${paint("Profile", "dim")}        ${p.id} · ${modelsOf(p).join(", ")}", "${paint("Smart Graph", "dim")}    ${graph}", "${paint("Developer", "dim")}      127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}", "", clientsLine(), "", "${paint("nuclear-builder setup --status", "yellow")}  what runs · ${paint("--remove", "yellow")}  takes them away"], "green")
   else
-    print("\n  ${paint("✓ Done:", "green")} the Smart Graph (127.0.0.1:${m["NUCLEAR_GRAPH_PORT"] ?? "7878"}) runs, now and at every login. ${clientsLine()} The local agents: nuclear-builder setup again, another profile.")
+    box("The Smart Graph is running", ["${paint("Profile", "dim")}        remote · no local model, no Ollama", "${paint("Smart Graph", "dim")}    ${graph}", "", clientsLine(), "", "The local agents later: nuclear-builder setup again, with a local profile."], "green")
   0
+
+// Where the set-up writes everything its steps say: `~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%` on
+// Windows), so a failure can be read whole.
+setupLog() Path
+  if sys.platform == "win32"
+    return Path(os.environ.get("LOCALAPPDATA") ?? "${Path.home()}", "nuclearlang", "setup.log")
+  state: string = os.environ.get("XDG_STATE_HOME") ?? ""
+  (state.length > 0 ? Path(state) : Path.home().joinpath(".local", "state")).joinpath("nuclearlang", "setup.log")
 
 // A list option (`--skills a,b`): its items trimmed, none empty; null when it is not given.
 listOption(args: string[], name: string) string[]?

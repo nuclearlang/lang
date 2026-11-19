@@ -122,6 +122,7 @@ setup
   setup node | python                        Nuclear's own Node.js (nestjs, react) or Python (fastapi), only for Nuclear
                                              (Python comes with the AI services; NUCLEAR_PYTHON / NUCLEAR_NODE name yours)
   credits | author                           the intro animation, the author and the repository
+  intro                                      the intro animation, then the page (the installers end with it)
 
 options
   --project <dir>   project folder (default: the folder with main.nuc, here or above)
@@ -133,7 +134,7 @@ docs: nuclear help flutter";
 const OWN: &[&str] = &[
     "new", "n", "make", "g", "gen", "run", "test", "install", "migrate", "add", "remove", "device", "dv", "devices",
     "terminal-device", "td", "watch", "code", "analyze", "clean", "repair", "explain", "pub", "flutter", "emulators",
-    "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "monitor",
+    "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "intro", "monitor",
 ];
 /// What `build` takes in a project of the framework instead of a path: a target of the platform's own tool.
 const TARGETS: &[&str] = &["apk", "appbundle", "ios", "ipa", "web", "macos", "linux", "windows"];
@@ -200,6 +201,10 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
     };
     if matches!(cmd.as_str(), "credits" | "author") {
         landing::show(true);
+        return ExitCode::SUCCESS;
+    }
+    if cmd == "intro" {
+        landing::intro();
         return ExitCode::SUCCESS;
     }
     landing::header();

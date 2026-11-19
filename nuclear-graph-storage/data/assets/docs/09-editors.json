@@ -4504,11 +4504,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.2947b7",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.12dfa2",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- 0.60.0: Nuclear Builder's second workbench (spec 011, requirements 22 to 26). The node reads like a debugger: its steps by title only, each opening to its trace, tool calls (input and output), decisions, files and log, level by level, by mouse or keyboard. Who did a step is one label everywhere, `<employee> · <role> · <provider> · <model>` (*Quinn Tester · QA · Claude Code · haiku*); the Smart Graph and the shell show only where they took part. Under the node only the run's log, a line per step, with the team's logo, name and tech lead at its foot; the team grid is gone. The specs' tree and the runs' accordion moved to the Nuclear Workspace's column while the Builder is the open tool; *New spec* is in the page's header. The squad screen is *Your software company*: teams as cards with their logo (an image, else initials), description, tech lead (♛) and what they work on; a team opens to its five, each with a *Person* tab (name, tech lead, how often they send a GIF, a note). HTTP Connections speaks WebSockets: what a backend's contract serves over WebSockets has a **WS** badge, the events a component pushes show under it, and both open the new WebSocket panel (connect with the guard's token header, send JSON or text with a history, a log of both directions with times, sizes, pretty JSON, filter and clear); **WebSockets** in the tree keeps ws:// urls of servers that are not Nucl",
+   "summary": "ear-builder metrics`, which agents read too.",
+   "body": [
+    "ear-builder metrics`, which agents read too.",
+    "- *Reports*: what the factory spent and made, in the HUD of the company screen, in English and Spanish, light and dark. On top the bill: the tokens in and out, the money, local against paid, the budget the runs used, and tokens and money by day or week. Under it the reports of a sprint: *Throughput* (specs delivered, velocity by team), *Cycle time* (each spec and the time per station), *Burndown*, *Flow* (where the specs were each day), *Waiting for you* (the gates open now and how long), *Quality* (failures, retries, first-try pass rate per station), *People* (each member ranked by cost or by result) and *Indicators* (cost per delivered spec, tokens per useful line, the local share). A member's panel on *Your software company* shows their numbers in its Summary, and its *Reports* opens the page filtered to them. Every step of a run and every chat answer is a line of your factory's ledger (`~/.config/nuclearlang/factory/ledger/`), across projects; the runs of before are copied once with what they had."
+   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -4519,11 +4522,11 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.2be121",
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.2947b7",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
-   "body": "- *Reports*: what the factory spent and made, in the HUD of the company screen, in English and Spanish, light and dark. On top the bill: the tokens in and out, the money, local against paid, the budget the runs used, and tokens and money by day or week. Under it the reports of a sprint: *Throughput* (specs delivered, velocity by team), *Cycle time* (each spec and the time per station), *Burndown*, *Flow* (where the specs were each day), *Waiting for you* (the gates open now and how long), *Quality* (failures, retries, first-try pass rate per station), *People* (each member ranked by cost or by result) and *Indicators* (cost per delivered spec, tokens per useful line, the local share). A member's panel on *Your software company* shows their numbers in its Summary, and its *Reports* opens the page filtered to them. Every step of a run and every chat answer is a line of your factory's ledger (`~/.config/nuclearlang/factory/ledger/`), across projects; the runs of before are copied once with what they had.",
+   "body": "- 0.60.0: Nuclear Builder's second workbench (spec 011, requirements 22 to 26). The node reads like a debugger: its steps by title only, each opening to its trace, tool calls (input and output), decisions, files and log, level by level, by mouse or keyboard. Who did a step is one label everywhere, `<employee> · <role> · <provider> · <model>` (*Quinn Tester · QA · Claude Code · haiku*); the Smart Graph and the shell show only where they took part. Under the node only the run's log, a line per step, with the team's logo, name and tech lead at its foot; the team grid is gone. The specs' tree and the runs' accordion moved to the Nuclear Workspace's column while the Builder is the open tool; *New spec* is in the page's header. The squad screen is *Your software company*: teams as cards with their logo (an image, else initials), description, tech lead (♛) and what they work on; a team opens to its five, each with a *Person* tab (name, tech lead, how often they send a GIF, a note). HTTP Connections speaks WebSockets: what a backend's contract serves over WebSockets has a **WS** badge, the events a component pushes show under it, and both open the new WebSocket panel (connect with the guard's token header, send JSON or text with a history, a log of both directions with times, sizes, pretty JSON, filter and clear); **WebSockets** in the tree keeps ws:// urls of servers that are not Nucl",
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -4597,25 +4600,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.4d3573",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.74.0: every launch says where it is and why it failed. The web device shows its steps (build, install when needed, dev server, browser), a step stuck past its limit or a failure shows its error lines with *Try again* and *Show the log*. ▷ Serve of a backend or web project is followed by a notification (building, installing, starting the server, ready at its address) that reads the lines `nuclear run` now writes to the project's `.nuclear/logs/run.log`, and shows why it did not start. The MCP tool `project_run_log` gives an agent the tail of that log.",
-    "- 0.73.2 (fix): the Synapsis device's page drew nothing (a line break inside its script); a test now parses the page's script. The welcome page no longer opens by itself at startup (`nuclear.workspace.welcome` is off by default; `Ctrl+Alt+W` opens it).",
-    "- 0.73.2: a launch on the Synapsis device never fails in silence: the device shows each step (build, Flutter, compile, open), a step stuck past its limit or Flutter ending before the first frame is a failure that shows its error lines with *Try again* and *Show the log*; every launch is written to the project's `.nuclear/logs/run.log`."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.4dab3c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4624,24 +4608,6 @@
     "eeze or restart. Every line says what it is, *Claude Code (agent) · opus 5.5*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*, each group how it is paid, and a model's version is chosen like its latest (Claude Code's `opus — latest`, then opus 5.5, opus 5…).",
     "- Nuclear Chat's members answer in your language and with GIFs: in the language you chose (`nuclear.language`), or in the one your message is written in, even with the local 3B model; a member whose personality sends GIFs may answer with one of the pack's (more likely when you sent one), never showing the words behind it. The language is the first section of *Settings and integrations*, and *Automatic* says what it resolves to there and in the onboarding.",
     "- 0.69.0: a member's panel is for working (its *Brain*: one list of agent · model, the unavailable ones disabled; tabs Summary, Person, Skills, Instructions, Behaviour, Tasks and, last, the fun Profile); the company screen loads in about 0.2 s (one `team screen` process, 128 px thumbnails, lazy imports); the workspace strip has one meaningful icon per tool with its label, *Your software company* among them, and the Builder a *Build a team* button; skills, checks, step titles, questions, agents' reasons and the set-up's texts in Spanish."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.5f2b53",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.73.1: a mobile app always starts or says why: the Flutter extension is activated before the launch (it starts by itself only when a pubspec.yaml is at most two folders deep, and a Synapsis app is in `build/app`); a launch refused or a missing Flutter extension shows on the device and in the Synapsis output instead of the device loading forever.",
-    "- 0.73.0: *Reports*, what the factory spent and made (spec 017): a new tool of the strip (a bar chart with a coin, `Ctrl+Alt+K`) with the bill on top (tokens in and out, the money, local against paid, the budget used, by day or week) and Jira's reports of the factory's work as tabs (throughput and velocity, cycle time, burndown, cumulative flow, the gates waiting for you, quality, each member's work, the indicators), filtered by project, team, member and dates; each member's numbers in their panel's Summary. Every provider's tokens are measured at the source (never estimated: one that reports none says *not reported*) and kept in the factory's ledger with the lines each step wrote; the page reads `nuclear-builder metrics`, which agents read too."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -4724,6 +4690,25 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- 0.49.0: the Builder shows a run as a graph and lets any of it run again. A column per stage, a node per step in the order it ran and, under each step, the steps its agent followed; a click on a node opens it beside the graph: what it did, the decisions it took and why (each step now keeps them: which strategy and by which signs, why a stage is left out, why a file goes to the tester, why a planned piece is dropped), its input, its output and its code. *Run again from this step* on every step, passed or failed (it and every step after it; the steps before it are kept), *Run <stage> again* on every stage, *Run again from scratch* on the run; what the steps left out wrote is undone first, and a file changed since the run wrote it is kept (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`). A run made by an older version (no analysis, no Generate stage) gets today's stages and starts from scratch at any retry. A plan made again drops the pieces a planner gave and keeps the ones written in the form. When the verification passes, each acceptance criterion is held against what the run left (`/developer/accept`): the ones not shown met are listed as left for the reviewer, in the page and in the journal. The local planner is given the spec alone (the context files' words are not the request's). The set-up builds the Smart Graph, now written in Nuclear, before",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.958e6f",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.73.2: a launch on the Synapsis device never fails in silence: the device shows each step (build, Flutter, compile, open), a step stuck past its limit or Flutter ending before the first frame is a failure that shows its error lines with *Try again* and *Show the log*; every launch is written to the project's `.nuclear/logs/run.log`.",
+    "- 0.73.1: a mobile app always starts or says why: the Flutter extension is activated before the launch (it starts by itself only when a pubspec.yaml is at most two folders deep, and a Synapsis app is in `build/app`); a launch refused or a missing Flutter extension shows on the device and in the Synapsis output instead of the device loading forever.",
+    "- 0.73.0: *Reports*, what the factory spent and made (spec 017): a new tool of the strip (a bar chart with a coin, `Ctrl+Alt+K`) with the bill on top (tokens in and out, the money, local against paid, the budget used, by day or week) and Jira's reports of the factory's work as tabs (throughput and velocity, cycle time, burndown, cumulative flow, the gates waiting for you, quality, each member's work, the indicators), filtered by project, team, member and dates; each member's numbers in their panel's Summary. Every provider's tokens are measured at the source (never estimated: one that reports none says *not reported*) and kept in the factory's ledger with the lines each step wrote; the page reads `nucl"
+   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -4886,6 +4871,25 @@
    "body": [
     "- Nuclear Chat talks to the team you set up: the project's team, else the default team, else your only team; the unsaved local team only when you have no team at all, and with several and none chosen the editor asks once which one the project uses (saved in `.nuclear/builder.json`). A change of a team (its members, who works them, the default) registers the chat again. A direct message shows under the member's name who answers as them (`Claude Code · opus · paid`, `Nuclear Developer · gemma4:e2b · local`), a team's channel is titled with the team's name, and while a local member answers the typing line says it is the local model, slower the first time while it loads.",
     "- *Your software company* chooses a member's model from the provider's real list, every time: every model Ollama has installed (and a few small ones to download), Claude Code's aliases and ids, `opencode models`, an API's own list when its key is in the vault, with *Other model…* where the provider takes any (`nuclear-builder models --json`, the MCP tool `models_list`). The pickers are lists of every model, no longer a field that filtered itself down to the last choice, and draw in the theme (no white field). Each local model says the memory it needs: tight for what is free now in amber, too big for this computer in red, asked before it is chosen and said in a red line while it is, since it can make the computer fr"
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.cf3b49",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.75.0: the Smart Graph needs no Ollama (it runs its own embeddings model), so the setting `nuclear.ai.models.embeddings` is gone (an old value is ignored) and the set-up page shows the graph's model as a step of its own; the installer puts this extension in every editor of the VS Code family it finds (VS Code, Insiders, Cursor, VSCodium, Windsurf; on macOS inside their apps).",
+    "- 0.74.0: every launch says where it is and why it failed. The web device shows its steps (build, install when needed, dev server, browser), a step stuck past its limit or a failure shows its error lines with *Try again* and *Show the log*. ▷ Serve of a backend or web project is followed by a notification (building, installing, starting the server, ready at its address) that reads the lines `nuclear run` now writes to the project's `.nuclear/logs/run.log`, and shows why it did not start. The MCP tool `project_run_log` gives an agent the tail of that log.",
+    "- 0.73.2 (fix): the Synapsis device's page drew nothing (a line break inside its script); a test now parses the page's script. The welcome page no longer opens by itself at startup (`nuclear.workspace.welcome` is off by default; `Ctrl+Alt+W` opens it)."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
