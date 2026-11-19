@@ -153,6 +153,13 @@ function Save-Url([string]$Url, [string]$Out, [string]$Title, [string]$About) {
     }
   }
 }
+# The SHA-256 a release publishes beside a file, as text: GitHub serves `.sha256` as bytes, which
+# Invoke-WebRequest's Content would give as `System.Byte[]`.
+function Get-Sum([string]$Url) {
+  $client = New-Object Net.WebClient
+  $client.Headers['User-Agent'] = 'nuclearlang-installer'
+  (($client.DownloadString($Url)).Trim() -split '\s+')[0].ToLower()
+}
 # What failed, in a red box with what to do; then the installer stops.
 function Fail([string]$Title, [string]$Why, [string]$Todo) {
   Write-Host ''
@@ -215,7 +222,7 @@ try {
   try { Save-Url "$Base/$Name" $Zip "Downloading NuclearLang $Version" "The compiler, the language server and the standard library, for Windows $Dot $Arch" }
   catch { Fail "Downloading NuclearLang $Version" "$($_.Exception.Message)" 'Check your connection and run the installer again. The releases: https://github.com/nuclearlang/lang/releases' }
   Ok "Downloaded NuclearLang $Version"
-  $Want = ((Invoke-WebRequest "$Base/$Name.sha256" -UseBasicParsing).Content.ToString() -split '\s+')[0].ToLower()
+  $Want = (Get-Sum "$Base/$Name.sha256")
   $Got = (Get-FileHash $Zip -Algorithm SHA256).Hash.ToLower()
   if ($Want -ne $Got) { Fail 'Verifying the download' 'The file does not match the release''s checksum (SHA-256): it was damaged on the way.' 'Run the installer again: the file is downloaded anew.' }
   Ok 'Verified (SHA-256)'
@@ -297,7 +304,7 @@ if (-not $NoAi) {
     try {
       Save-Url "$Base/$AiName" $AiZip 'Downloading the AI services' 'A Python of their own with the Smart Graph, the MCP server and the local agents'
       Ok 'Downloaded the AI services'
-      $Want = ((Invoke-WebRequest "$Base/$AiName.sha256" -UseBasicParsing).Content.ToString() -split '\s+')[0].ToLower()
+      $Want = (Get-Sum "$Base/$AiName.sha256")
     } catch {
       $NoAi = $true
       $AiNote = "The AI services of $Version are not published for Windows $Arch."
