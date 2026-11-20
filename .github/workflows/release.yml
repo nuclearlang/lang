@@ -126,6 +126,14 @@ jobs:
           version: '0.13.8'
       - name: nuclear, to build the graph from its .nuc
         run: cargo build --release --quiet -p nuclear-cli
+      # the latest published release is the previous one (this one publishes at the end): its vectors serve every text
+      # that did not change, so a release of code or UI computes none and takes seconds
+      - name: The previous release's vectors
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --repo "$GITHUB_REPOSITORY" --pattern 'nuclearlang-embeddings-*.npz' --dir "$RUNNER_TEMP/previous" \
+            || echo "no previous vectors: every one is computed"
       - name: The vectors of the knowledge base
         working-directory: nuclear-graph-storage
         run: |
@@ -134,7 +142,8 @@ jobs:
           uv sync --quiet --extra server
           mkdir -p ../installer/dist
           NUCLEAR_GRAPH_HOME="$RUNNER_TEMP/graph" NUCLEAR_GRAPH_NO_KEYRING=1 NUCLEAR_ROOT="$GITHUB_WORKSPACE" HF_HUB_VERBOSITY=error \
-            .venv/bin/python -c 'import sys; from nuclear_graph.cli import main; main(sys.argv[1:])' embeddings "../installer/dist/nuclearlang-embeddings-$v.npz"
+            .venv/bin/python -c 'import sys; from nuclear_graph.cli import main; main(sys.argv[1:])' embeddings "../installer/dist/nuclearlang-embeddings-$v.npz" \
+            --reuse "$(ls "$RUNNER_TEMP"/previous/*.npz 2>/dev/null | head -n 1)"
           cd ../installer/dist && sha256sum "nuclearlang-embeddings-$v.npz" > "nuclearlang-embeddings-$v.npz.sha256"
       - uses: actions/upload-artifact@v4
         with:

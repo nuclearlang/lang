@@ -75,13 +75,20 @@ Ingest
 
   // The knowledge base folder `root` becomes what the graph knows: its shelves, and with `facts` its exact facts,
   // made again whole. An invalid base is refused whole: the graph never holds half of a revision.
-  // The vectors of every text the knowledge base `folder` embeds, computed by the model and written by key to `out`
-  // (`nuclear-graph embeddings`): what a release publishes, so an install ingests without running the model over
-  // every row. The ingest runs into a throwaway store with a key of its own; gives how many vectors it wrote.
-  static exportVectors(folder: Path, out: Path, log: (line: string) => void) int
+  // The vectors of every text the knowledge base `folder` embeds, written by key to `out` (`nuclear-graph
+  // embeddings`): what a release publishes, so an install ingests without running the model over every row. `reuse`
+  // (the previous release's file) gives the vectors of the texts that did not change: only the others go to the model,
+  // which is not even loaded when nothing changed. The ingest runs into a throwaway store with a key of its own; gives
+  // how many vectors it wrote and how many of them it computed.
+  static exportVectors(folder: Path, out: Path, log: (line: string) => void, reuse: Path? = null) int[]
+    known = reuse == null ? ({} as <string, double[]>) : readPrecomputed(reuse!)
     made: <string, double[]> = {}
+    computed = [0]
+    model = (texts: string[]) =>
+      computed[0] += texts.length
+      modelEmbed(texts)
     record = (shaped: string[]) =>
-      vectors = modelEmbed(shaped)
+      vectors = withPrecomputed(shaped, known, model)
       for i in 0..shaped.length
         made[vectorKey(shaped[i])] = vectors[i]
       vectors
@@ -91,7 +98,7 @@ Ingest
     finally
       shutil.rmtree(scratch, ignoreErrors = true)
     writePrecomputed(out, made)
-    made.length
+    [made.length, computed[0]]
 
   static ingest(store: Store, folder: Path, log: (line: string) => void, facts: Facts? = null) <string, any>
     root: Path = folder.resolve()

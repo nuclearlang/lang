@@ -27,6 +27,9 @@ system, with the same quality.
   (`models/embeddings.npz`); an ingest takes each vector it holds (keyed by the export and the exact text) and gives
   only the rest to the model, which is then loaded only if something is missing. The store itself cannot be shipped:
   its documents are sealed with a key of each machine.
+- The release starts from the previous release's file (`nuclear-graph embeddings --reuse`): the texts that did not
+  change keep their vectors and only the changed ones are computed, so a release of code or UI computes none (7 s
+  instead of 10 minutes).
 
 ## Options considered (measured on 2026-11-19 with the 188 questions of `data/questions.toml`)
 
