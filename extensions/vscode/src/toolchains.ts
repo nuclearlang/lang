@@ -6,6 +6,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { installDir } from './aiMachine';
+import { toolEnv } from '../../tools/nuclear-builder/src/support';
 
 export type ToolchainId = 'python' | 'node' | 'flutter';
 export type Platform = 'mobile' | 'backend' | 'web';
@@ -114,4 +115,23 @@ export function parseDoctor(text: string, paths: Paths): Status[] | null {
     const setting = paths[id]?.trim();
     return { id, where: where === 'env' && setting && p && (p === setting || p.startsWith(setting)) ? 'setting' : where, ...(p ? { path: p } : {}), ...(x?.version ? { version: String(x.version) } : {}) };
   });
+}
+
+/**
+ * Where the language server may be, in order: the installer's (this system's own build) → the PATH → the one bundled in
+ * the extension → a build of the repository (development). The bundled one is a Linux x86_64 build: anywhere else it
+ * cannot run (spawn ENOEXEC on a Mac), so it is not a candidate there.
+ */
+export function serverCandidates(extensionDir: string, env: NodeJS.ProcessEnv = process.env, platform = process.platform, arch = process.arch): string[] {
+  const exe = platform === 'win32' ? 'nuclear-lsp.exe' : 'nuclear-lsp';
+  const key = Object.keys(env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH';
+  const sep = platform === 'win32' ? ';' : ':';
+  const onPath = (toolEnv(env, undefined, platform)[key] ?? '').split(sep).filter(Boolean).map((d) => path.join(d, exe));
+  return [
+    path.join(installDir(env), 'bin', exe),
+    ...onPath,
+    ...(platform === 'linux' && arch === 'x64' ? [path.join(extensionDir, 'server', exe)] : []),
+    path.join(extensionDir, '..', 'target', 'release', exe),
+    path.join(extensionDir, '..', 'target', 'debug', exe),
+  ];
 }

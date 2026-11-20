@@ -82,7 +82,7 @@ yyssssssssssssyy yysssssyysssssyy .yysssyyyysssyy. ..yysyyyyyysyyy. ...yyyyyyyyy
 # The title in pixel letters (4 × 5, two per cell): the header's banner.
 glyph() {
   case $1 in
-    A) echo ".##. #..# #### #..# #..#" ;; E) echo "#### #... ###. #... ####" ;; I) echo "#### .##. .##. .##. ####" ;;
+    A) echo ".##. #..# #### #..# #..#" ;; D) echo "###. #..# #..# #..# ###." ;; Y) echo "#..# #..# .##. .##. .##." ;; E) echo "#### #... ###. #... ####" ;; I) echo "#### .##. .##. .##. ####" ;;
     L) echo "#... #... #... #... ####" ;; N) echo "#..# ##.# #.## #..# #..#" ;; R) echo "###. #..# ###. #.#. #..#" ;;
     S) echo ".### #... .##. ...# ###." ;; T) echo "#### .##. .##. .##. .##." ;; U) echo "#..# #..# #..# #..# .##." ;;
   esac
@@ -203,6 +203,13 @@ must() {
 
 # The command line of every editor of the VS Code family on this machine, one per line: on the PATH, or inside its app
 # on macOS (where `code` is on the PATH only after "Shell Command: Install 'code' command in PATH").
+# The name a person knows an editor by, from its command.
+editor_name() {
+  case $1 in
+    code) echo "VS Code" ;; code-insiders) echo "VS Code Insiders" ;; cursor) echo "Cursor" ;;
+    codium) echo "VSCodium" ;; windsurf) echo "Windsurf" ;; *) echo "$1" ;;
+  esac
+}
 # One per editor (the same command found twice, on the PATH and in its app, counts once); a path may hold spaces
 # ("Visual Studio Code.app"), so it is read a line at a time (`each_editor`), never split as words.
 editors() {
@@ -220,7 +227,10 @@ editors() {
 
 tmp=$(mktemp -d)
 # Ctrl+C: the running task stops, the cursor comes back
-trap '[ -n "$TASK_PID" ] && kill "$TASK_PID" 2>/dev/null; [ -n "$esc" ] && printf "%s" "$esc[?25h" >&2; rm -rf "$tmp"' EXIT
+# a step runs in the background (its spinner meanwhile) and ignores Ctrl+C there: on any exit it is stopped with every
+# process under it (curl, tar), or an interrupted download would go on writing the file a new run continues
+kill_tree() { for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c"; done; kill "$1" 2>/dev/null || true; }
+trap '[ -n "$TASK_PID" ] && kill_tree "$TASK_PID"; [ -n "$esc" ] && printf "%s" "$esc[?25h" >&2; rm -rf "$tmp"' EXIT
 trap 'say ""; say "  Stopped."; exit 130' INT TERM
 
 UNINSTALL=0
@@ -255,7 +265,8 @@ if [ "$UNINSTALL" = 1 ]; then
     rm -rf "$INSTALL"
     for d in $SKILL_DIRS; do rm -rf "$d/nuclear"; done
     # the compiler's cache of type definitions and the folder of the machine's choices
-    rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/nuclearlang" "${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang"
+    rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/nuclearlang" "${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang" \
+      "${XDG_STATE_HOME:-$HOME/.local/state}/nuclearlang"
     for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
       if [ -f "$rc" ] && grep -q "$MARK" "$rc"; then grep -v "$MARK" "$rc" > "$rc.nuclear" && mv "$rc.nuclear" "$rc"; fi
     done
@@ -300,11 +311,14 @@ esac
 
 if command -v curl >/dev/null 2>&1; then
   get() { curl -fsSL --retry 3 "$1" -o "$2"; }
+  # a download that goes on from what an interrupted run left (`-C -`); a file already whole is fetched again
+  resume_get() { curl -fsSL --retry 3 -C - "$1" -o "$2" || { rm -f "$2"; get "$1" "$2"; }; }
   read_url() { curl -fsSL --retry 3 "$1"; }
   # the size of a file to download, for its bar (0 when the server does not say)
   size_of() { curl -fsSLI "$1" 2>/dev/null | tr -d '\r' | awk 'tolower($1) == "content-length:" { n = $2 } END { print n + 0 }'; }
 elif command -v wget >/dev/null 2>&1; then
   get() { wget -q "$1" -O "$2"; }
+  resume_get() { wget -q -c "$1" -O "$2" || { rm -f "$2"; get "$1" "$2"; }; }
   read_url() { wget -qO- "$1"; }
   size_of() { wget -q --spider -S "$1" 2>&1 | awk 'tolower($1) == "content-length:" { n = $2 } END { print n + 0 }'; }
 else
@@ -336,6 +350,37 @@ base=${NUCLEAR_DOWNLOAD:-https://github.com/$REPO/releases/download/v$VERSION}
 
 banner "INSTALLER" "Version $VERSION for $where"
 
+# --- an interrupted install goes on (the step log) ---
+# Each finished step is written to the state file, the downloads are kept in the cache: a run cut short (Ctrl+C, a
+# closed terminal, a lost connection) is resumed by running the installer again, from the step it reached. A run of
+# another version starts anew. A finished install removes both.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/nuclearlang"
+STATE="$STATE_DIR/install.state"
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/nuclearlang/downloads"
+state_get() { sed -n "s/^$1=//p" "$STATE" 2>/dev/null | tail -n 1; }
+done_step() { grep -qx "step=$1" "$STATE" 2>/dev/null; }
+mark() { printf 'step=%s\n' "$1" >> "$STATE"; }
+remember() { printf '%s=%s\n' "$1" "$2" >> "$STATE"; }
+mkdir -p "$STATE_DIR"
+if [ -f "$STATE" ] && [ "$(state_get version)" = "$VERSION" ]; then
+  # the same version: what it finished and what it downloaded stay
+  if ! grep -q '^step=' "$STATE"; then
+    ok "Going on with the install started $(state_get started) ${DIM}(its download continues where it stopped)${OFF}"
+  else
+  box_top "Resuming the install started $(state_get started)" "$YELLOW"
+  box_line "${DIM}An earlier run of this installer stopped before the end. What it finished stays:${OFF}" "$YELLOW"
+  for st in $(sed -n 's/^step=//p' "$STATE" | tr ' ' '_'); do box_line "${GREEN}✓${OFF} $(printf '%s' "$st" | tr '_-' '  ')" "$YELLOW"; done
+  box_line "${DIM}It goes on from there. A download continues where it stopped.${OFF}" "$YELLOW"
+  box_end "$YELLOW"
+  fi
+else
+  rm -rf "$CACHE"
+  printf 'version=%s\nstarted=%s\n' "$VERSION" "$(date '+%Y-%m-%d %H:%M')" > "$STATE"
+fi
+mkdir -p "$CACHE"
+# done before (a resumed run): said, not done again
+again() { ok "$1 ${DIM}(done before)${OFF}"; }
+
 # --- NuclearLang ---
 section "NuclearLang $VERSION"
 verify() {
@@ -345,8 +390,11 @@ verify() {
   else got=$(shasum -a 256 "$1" | cut -d ' ' -f 1); fi
   [ "$want" = "$got" ] || { echo "the file does not match the release's checksum (SHA-256): it was damaged on the way"; exit 1; }
 }
+verify_or_drop() {
+  if ! verify "$1" "$2"; then rm -f "$1" "$1.sha256"; sed -i.bak '/^step=downloaded$/d' "$STATE" 2>/dev/null; rm -f "$STATE.bak"; exit 1; fi
+}
 install_core() {
-  tar -xzf "$tmp/$name" -C "$tmp"
+  tar -xzf "$CACHE/$name" -C "$tmp"
   # an install without the AI services keeps the ones already there (their running services use them)
   if [ "$AI" = 0 ] && [ -d "$INSTALL/ai" ]; then mv "$INSTALL/ai" "$tmp/nuclearlang/ai"; fi
   rm -rf "$INSTALL"
@@ -355,13 +403,23 @@ install_core() {
   for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
   "$BIN/nuclear" dialect list > /dev/null || { echo "the installed nuclear does not run on this system"; exit 1; }
 }
-must "Downloading NuclearLang $VERSION" "Downloaded NuclearLang $VERSION" "Check your connection and run the installer again; it starts from the beginning." \
-  "The compiler, the language server and the standard library, for $where" \
-  --file "$tmp/$name" "$(size_of "$base/$name")" get "$base/$name" "$tmp/$name"
-must "Verifying the download" "Verified ${DIM}(SHA-256)${OFF}" "Run the installer again: the file is downloaded anew." \
-  "The file is compared with the release's SHA-256, so nothing was changed on the way" verify "$tmp/$name" "$base/$name.sha256"
-must "Installing" "Installed in $(short "$INSTALL")" "Check that $(short "$(dirname "$INSTALL")") can be written, then run the installer again." \
-  "Unpacked, with the commands nuclear and nuclear-lsp linked in $(short "$BIN")" install_core
+if done_step downloaded && [ -s "$CACHE/$name" ]; then again "Downloaded NuclearLang $VERSION"; else
+  must "Downloading NuclearLang $VERSION" "Downloaded NuclearLang $VERSION" "Check your connection and run the installer again: the download goes on from where it stopped." \
+    "The compiler, the language server and the standard library, for $where" \
+    --file "$CACHE/$name" "$(size_of "$base/$name")" resume_get "$base/$name" "$CACHE/$name"
+  mark downloaded
+fi
+if done_step verified; then again "Verified"; else
+  # a damaged file is not kept: the next run downloads it anew
+  must "Verifying the download" "Verified ${DIM}(SHA-256)${OFF}" "Run the installer again: the file is downloaded anew." \
+    "The file is compared with the release's SHA-256, so nothing was changed on the way" verify_or_drop "$CACHE/$name" "$base/$name.sha256"
+  mark verified
+fi
+if done_step installed && "$BIN/nuclear" dialect list > /dev/null 2>&1; then again "Installed in $(short "$INSTALL")"; else
+  must "Installing" "Installed in $(short "$INSTALL")" "Check that $(short "$(dirname "$INSTALL")") can be written, then run the installer again." \
+    "Unpacked, with the commands nuclear and nuclear-lsp linked in $(short "$BIN")" install_core
+  mark installed
+fi
 
 if [ "$AGENT" = 1 ]; then
   for d in $SKILL_DIRS; do
@@ -393,13 +451,14 @@ fi
 if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
   section "Editors"
   vsix="nuclearlang-$VERSION.vsix"
-  if task "Downloading the editor extension" "Syntax, diagnostics, the device, the AI panels: one extension for every editor" \
-    get "$base/$vsix" "$tmp/$vsix"; then
+  if [ -s "$CACHE/$vsix" ] || task "Downloading the editor extension" "Syntax, diagnostics, the device, the AI panels: one extension for every editor" \
+    resume_get "$base/$vsix" "$CACHE/$vsix"; then
     editors > "$tmp/editor-list"
     while IFS= read -r cli <&3; do
       ename=$(basename "$cli")
-      if task "Adding the extension to $ename" "Installed with the editor's own command" "$cli" --install-extension "$tmp/$vsix" --force; then
-        ok "The extension in ${BOLD}$ename${OFF}"; printf '%s ' "$ename" >> "$tmp/editors"
+      if done_step "editor-$ename"; then again "The extension in ${BOLD}$(editor_name "$ename")${OFF}"; editor_name "$ename" >> "$tmp/editors"; continue; fi
+      if task "Adding the extension to $ename" "Installed with the editor's own command" "$cli" --install-extension "$CACHE/$vsix" --force; then
+        ok "The extension in ${BOLD}$(editor_name "$ename")${OFF}"; editor_name "$ename" >> "$tmp/editors"; mark "editor-$ename"
       else warn "The extension did not install in $ename: ${DIM}$cli --install-extension $base/$vsix${OFF}"; fi
     done 3< "$tmp/editor-list"
   else
@@ -415,8 +474,10 @@ MACHINE="${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang/ai.env"
 ai_note=""
 tty=0
 [ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null && tty=1
+# a resumed run keeps the answer of the first one
+case $(state_get ai) in no) AI=0; ai_note="The AI services are not installed: run this installer again when you want them." ;; esac
 if [ "$AI" = 1 ]; then section "The AI services"; fi
-if [ "$AI" = 1 ] && [ -z "$PROFILE" ]; then
+if [ "$AI" = 1 ] && [ -z "$PROFILE" ] && [ "$(state_get ai)" != yes ]; then
   if [ "$tty" = 1 ]; then
     box_top "What they are"
     box_line "${BOLD}The Smart Graph${OFF}  what agents know of NuclearLang, searched by meaning"
@@ -428,6 +489,7 @@ if [ "$AI" = 1 ] && [ -z "$PROFILE" ]; then
     printf '\n  %sDownload them?%s %s[Y/n]%s ' "$BOLD" "$OFF" "$YELLOW" "$OFF" >&2
     read -r answer < /dev/tty || answer=n
     case $answer in [nN]*) AI=0; ai_note="The AI services are not installed: run this installer again when you want them." ;; esac
+    if [ "$AI" = 1 ]; then remember ai yes; else remember ai no; fi
   else
     AI=0
     ai_note="The AI services are not installed (no terminal here): run this installer in a terminal, or with --profile."
@@ -438,19 +500,30 @@ if [ "$AI" = 1 ]; then
   ai_name="nuclearlang-ai-$VERSION-$os-$arch.tar.gz"
   unpack_ai() {
     rm -rf "$INSTALL/ai"
-    tar -xzf "$tmp/$ai_name" -C "$INSTALL"
+    tar -xzf "$CACHE/$ai_name" -C "$INSTALL"
     # a Linux without glibc (Alpine, musl) runs nuclear but not the services' Python
     "$INSTALL/ai/bin/nuclear-graph" --help > /dev/null 2>&1 || { rm -rf "$INSTALL/ai"; echo "nolibc"; exit 3; }
   }
-  if task "Downloading the AI services" "A Python of their own with the Smart Graph, the MCP server and the local agents" \
-    --file "$tmp/$ai_name" "$(size_of "$base/$ai_name")" get "$base/$ai_name" "$tmp/$ai_name"; then
-    ok "Downloaded the AI services"
-    must "Verifying the AI services" "Verified ${DIM}(SHA-256)${OFF}" "Run the installer again: the file is downloaded anew." \
-      "The file is compared with the release's SHA-256" verify "$tmp/$ai_name" "$base/$ai_name.sha256"
-    if task "Unpacking the AI services" "Into the installation: nothing else is needed on this machine" unpack_ai; then
+  if done_step ai-downloaded && [ -s "$CACHE/$ai_name" ]; then again "Downloaded the AI services"; got_ai=0
+  else
+    got_ai=0
+    task "Downloading the AI services" "A Python of their own with the Smart Graph, the MCP server and the local agents" \
+      --file "$CACHE/$ai_name" "$(size_of "$base/$ai_name")" resume_get "$base/$ai_name" "$CACHE/$ai_name" || got_ai=$?
+    if [ "$got_ai" = 0 ]; then ok "Downloaded the AI services"; mark ai-downloaded; fi
+  fi
+  if [ "$got_ai" = 0 ]; then
+    if done_step ai-verified; then again "Verified the AI services"; else
+      must "Verifying the AI services" "Verified ${DIM}(SHA-256)${OFF}" "Run the installer again: the file is downloaded anew." \
+        "The file is compared with the release's SHA-256" verify_or_drop "$CACHE/$ai_name" "$base/$ai_name.sha256"
+      mark ai-verified
+    fi
+    if done_step ai-unpacked && "$INSTALL/ai/bin/nuclear-graph" --help > /dev/null 2>&1; then
+      again "The AI services, unpacked"; ln -sf "$INSTALL/ai/bin/nuclear-builder" "$BIN/nuclear-builder"
+    elif task "Unpacking the AI services" "Into the installation: nothing else is needed on this machine" unpack_ai; then
       # nuclear-builder is the archive's from now on: `nuclear-builder setup` works before the set-up ran
       ln -sf "$INSTALL/ai/bin/nuclear-builder" "$BIN/nuclear-builder"
       ok "The AI services, unpacked ${DIM}(their own Python)${OFF}"
+      mark ai-unpacked
     else
       AI=0
       ai_note="The AI services do not run on this system (a Linux needs glibc); NuclearLang itself is installed."
@@ -478,6 +551,9 @@ if [ "$AI" = 1 ]; then
   fi
 fi
 
+# --- finished: the step log and the downloads go (a set-up that did not end keeps them, so a new run resumes it) ---
+case $ai_note in *"not fully set up"*) ;; *) rm -f "$STATE"; rm -rf "$CACHE" ;; esac
+
 # --- the end: nuclear's own intro (the mushroom cloud), then the summary ---
 # (a release before 0.1.6 has no `intro`)
 if [ -n "$esc" ] && [ "$cols" -ge 80 ] && "$BIN/nuclear" help 2>&1 | grep -q '^  intro '; then
@@ -485,9 +561,26 @@ if [ -n "$esc" ] && [ "$cols" -ge 80 ] && "$BIN/nuclear" help 2>&1 | grep -q '^ 
   "$BIN/nuclear" intro < /dev/null || true
 fi
 say ""
+# the editors that got the extension: said big, with how to start in them
+if [ -s "$tmp/editors" ]; then
+  names=$(awk 'NR > 1 { printf " · " } { printf "%s", $0 }' "$tmp/editors")
+  if [ "$os" = macos ]; then key=Cmd; quit="Cmd+Q"; else key=Ctrl; quit="close every window"; fi
+  banner "READY" "The extension is in ${BOLD}$names${OFF}"
+  box_top "Your editor" "$YELLOW"
+  box_line "${BOLD}1${OFF}  Open ${BOLD}$names${OFF} ${DIM}(already open: $quit, then open it again)${OFF}" "$YELLOW"
+  box_line "${BOLD}2${OFF}  The trefoil in the left bar opens ${BOLD}Nuclear: Workspace${OFF}: projects, devices, AI" "$YELLOW"
+  box_line "${BOLD}3${OFF}  A new project: ${YELLOW}nuclear new my_app${OFF}, then open its folder ${DIM}(File › Open Folder)${OFF}" "$YELLOW"
+  box_line "${BOLD}4${OFF}  A ${BOLD}.nuc${OFF} file gets colours, errors as you type, completion and ${BOLD}Run${OFF}" "$YELLOW"
+  box_line "${BOLD}5${OFF}  The theme: ${YELLOW}$key+K $key+T${OFF} › ${BOLD}Chernobyl Soft${OFF} ${DIM}(or Chernobyl, brighter)${OFF}" "$YELLOW"
+  if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then
+    box_line "${BOLD}6${OFF}  Your agent (Claude Code, Cursor, Codex) has the ${BOLD}nuclear${OFF} MCP server: ask it for an app" "$YELLOW"
+  fi
+  box_end "$YELLOW"
+  say ""
+fi
 box_top "NuclearLang $VERSION is installed" "$GREEN"
 box_line "${DIM}Command${OFF}       $(short "$BIN")/nuclear" "$GREEN"
-[ -s "$tmp/editors" ] && box_line "${DIM}Editors${OFF}       $(cat "$tmp/editors")" "$GREEN"
+[ -s "$tmp/editors" ] && box_line "${DIM}Editors${OFF}       $names" "$GREEN"
 if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then box_line "${DIM}AI services${OFF}   running ${DIM}· nuclear-builder setup --status${OFF}" "$GREEN"; fi
 box_line "" "$GREEN"
 box_line "${BOLD}Start with${OFF}    ${YELLOW}nuclear new my_app${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear doctor${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear help${OFF}" "$GREEN"

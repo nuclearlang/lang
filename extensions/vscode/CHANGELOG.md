@@ -4,6 +4,8 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons).
+
 - 0.75.0: the Smart Graph needs no Ollama (it runs its own embeddings model), so the setting `nuclear.ai.models.embeddings` is gone (an old value is ignored) and the set-up page shows the graph's model as a step of its own; the installer puts this extension in every editor of the VS Code family it finds (VS Code, Insiders, Cursor, VSCodium, Windsurf; on macOS inside their apps).
 - 0.74.0: every launch says where it is and why it failed. The web device shows its steps (build, install when needed, dev server, browser), a step stuck past its limit or a failure shows its error lines with *Try again* and *Show the log*. ▷ Serve of a backend or web project is followed by a notification (building, installing, starting the server, ready at its address) that reads the lines `nuclear run` now writes to the project's `.nuclear/logs/run.log`, and shows why it did not start. The MCP tool `project_run_log` gives an agent the tail of that log.
 - 0.73.2 (fix): the Synapsis device's page drew nothing (a line break inside its script); a test now parses the page's script. The welcome page no longer opens by itself at startup (`nuclear.workspace.welcome` is off by default; `Ctrl+Alt+W` opens it).

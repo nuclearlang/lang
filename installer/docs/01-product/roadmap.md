@@ -10,6 +10,10 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Half done
 
+- **An interrupted install goes on** (the step log, overview § The public installers). Done in `install.sh`, tried
+  with a download cut by Ctrl+C and with a run cut after its first steps. Left: the same in `install.ps1` (its state in
+  `%LOCALAPPDATA%\nuclearlang\install.state`, its downloads continued with a `Range` request).
+
 - **The AI services ready to run from the installer** (ADR-installer-0003,
   [spec 009](../../../docs/04-specs/009-self-contained-ai-services/tasks.md)). Done: the ports are checked and
   chosen; the AI archive (`release/ai-runtime.sh`, the `ai` job of `release.yml`), downloaded and checked by both

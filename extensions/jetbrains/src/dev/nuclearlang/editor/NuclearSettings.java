@@ -59,20 +59,26 @@ public final class NuclearSettings {
         return plugin == null ? null : plugin.getPluginPath();
     }
 
-    /** The nuclear-lsp binary: setting → bundled with the plugin → PATH. */
+    /**
+     * The nuclear-lsp binary: setting → the installer's (this system's own build) → PATH → bundled with the plugin.
+     * The bundled one may be another system's build, so it is the last resort.
+     */
     public static String findServer() {
         String configured = serverPath();
         if (!configured.isBlank()) {
             return configured;
         }
-        String exe = System.getProperty("os.name").toLowerCase().contains("win") ? "nuclear-lsp.exe" : "nuclear-lsp";
-        Path root = pluginPath();
-        if (root != null) {
-            Path bundled = root.resolve("server").resolve(exe);
-            if (Files.isRegularFile(bundled)) {
-                bundled.toFile().setExecutable(true);
-                return bundled.toString();
-            }
+        boolean windows = System.getProperty("os.name").toLowerCase().contains("win");
+        String exe = windows ? "nuclear-lsp.exe" : "nuclear-lsp";
+        String install = System.getenv("NUCLEAR_INSTALL");
+        if (install == null || install.isBlank()) {
+            String local = System.getenv("LOCALAPPDATA");
+            install = windows && local != null ? Path.of(local, "nuclearlang").toString()
+                : Path.of(System.getProperty("user.home"), ".local", "share", "nuclearlang").toString();
+        }
+        Path installed = Path.of(install, "bin", exe);
+        if (Files.isExecutable(installed)) {
+            return installed.toString();
         }
         String path = System.getenv("PATH");
         if (path != null) {
@@ -81,6 +87,14 @@ public final class NuclearSettings {
                 if (Files.isExecutable(candidate)) {
                     return candidate.toString();
                 }
+            }
+        }
+        Path root = pluginPath();
+        if (root != null) {
+            Path bundled = root.resolve("server").resolve(exe);
+            if (Files.isRegularFile(bundled)) {
+                bundled.toFile().setExecutable(true);
+                return bundled.toString();
             }
         }
         return null;

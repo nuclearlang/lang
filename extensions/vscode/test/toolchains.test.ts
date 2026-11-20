@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import * as path from 'node:path';
 import test from 'node:test';
-import { onPath, ownPaths, parseDoctor, probe, toolchainEnv } from '../src/toolchains';
+import { onPath, ownPaths, parseDoctor, probe, serverCandidates, toolchainEnv } from '../src/toolchains';
 
 const ROOT = '/opt/nuc';
 const base = { NUCLEAR_INSTALL: ROOT, PATH: '/usr/bin:/bin' };
@@ -62,4 +62,15 @@ test('nuclear doctor --json, and an older CLI without it', () => {
   ]);
   assert.equal(parseDoctor('Doctor summary for NuclearLang\n[✓] nuclear CLI', {}), null);
   assert.equal(parseDoctor('{"ok":true}', {}), null);
+});
+
+test("the language server is the installer's first; the bundled Linux build is never tried on a Mac", () => {
+  const env = { NUCLEAR_INSTALL: '/inst', PATH: '/usr/bin' };
+  const mac = serverCandidates('/ext', env, 'darwin', 'arm64');
+  assert.equal(mac[0], path.join('/inst', 'bin', 'nuclear-lsp'));
+  assert.ok(mac.includes(path.join('/usr/bin', 'nuclear-lsp')));
+  assert.ok(!mac.includes(path.join('/ext', 'server', 'nuclear-lsp')));
+  const linux = serverCandidates('/ext', env, 'linux', 'x64');
+  assert.equal(linux[0], path.join('/inst', 'bin', 'nuclear-lsp'));
+  assert.ok(linux.includes(path.join('/ext', 'server', 'nuclear-lsp')));
 });

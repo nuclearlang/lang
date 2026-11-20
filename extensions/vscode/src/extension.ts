@@ -11,6 +11,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { appendLog } from '../../tools/nuclear-device-manager/src/launch-log';
+import { serverCandidates } from './toolchains';
 import { l10n, registerLanguage } from './i18n';
 import { activateDebug } from './debug';
 import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
@@ -456,31 +457,10 @@ export async function deactivate(): Promise<void> {
 
 // ------------------------------------------------------------------ server
 
-/** Finds the nuclear-lsp binary: setting → bundled with the extension → PATH → repository build. */
+/** The language server: the setting, else the first of `serverCandidates` that exists. */
 function findServer(context: vscode.ExtensionContext): string | undefined {
-  const exe = process.platform === 'win32' ? 'nuclear-lsp.exe' : 'nuclear-lsp';
   const configured = vscode.workspace.getConfiguration('nuclear').get<string>('server.path');
-  if (configured) {
-    return configured;
-  }
-  const candidates = [
-    context.asAbsolutePath(path.join('server', exe)),
-    // development: the extension runs from editors/vscode inside the repository
-    context.asAbsolutePath(path.join('..', 'target', 'release', exe)),
-    context.asAbsolutePath(path.join('..', 'target', 'debug', exe)),
-  ];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) {
-      return c;
-    }
-  }
-  for (const dir of (process.env.PATH ?? '').split(path.delimiter)) {
-    const c = path.join(dir, exe);
-    if (dir && fs.existsSync(c)) {
-      return c;
-    }
-  }
-  return undefined;
+  return configured || serverCandidates(context.extensionPath).find((c) => fs.existsSync(c));
 }
 
 async function startClient(context: vscode.ExtensionContext): Promise<void> {

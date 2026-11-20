@@ -117,8 +117,10 @@ braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) be
 and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`
 (yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the
 file is not published, not that the connection failed). The AI services' question is a box of what they are. At the
-end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns), then a
-green box: the command, the editors that got the extension, the AI services, what to run first. `install.sh` colors
+end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns); when an
+editor got the extension, a header box with READY in pixel letters names those editors (VS Code, Cursor...) and a
+yellow box says how to start in them (reopen the editor, the Workspace, a new project, a `.nuc` file, the theme
+Chernobyl Soft, the agent's MCP server); then a green box: the command, the AI services, what to run first. `install.sh` colors
 only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);
 piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows
 PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns
@@ -127,6 +129,16 @@ and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks t
 (`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to
 `~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\nuclearlang\setup.log`), and a failed step is a red box with
 its last lines, the error and what to do, never a traceback.
+
+**An interrupted install goes on** (`install.sh`). Each finished step (`downloaded`, `verified`, `installed`,
+`editor-<command>`, `ai-downloaded`, `ai-verified`, `ai-unpacked`) and the answer to the AI question are written to
+`~/.local/state/nuclearlang/install.state` (`XDG_STATE_HOME`); the downloads are kept in
+`~/.cache/nuclearlang/downloads` (`XDG_CACHE_HOME`). Run again with the same version, it shows a box of what was
+finished, skips each step whose result is still there (an installation whose `nuclear` runs, an `ai/` whose graph
+runs), continues a cut download where it stopped (`curl -C -`, `wget -c`) and goes on; a file that fails its checksum
+is deleted and its step forgotten, so the next run downloads it anew. Another version starts anew. A finished install
+(or one whose only failure is the AI set-up, which resumes on its own) deletes both; `--uninstall` too. On Ctrl+C every
+process of the running step (curl, tar) is stopped, so nothing keeps writing a file the next run continues.
 
 ## The AI services at the end of an install
 
