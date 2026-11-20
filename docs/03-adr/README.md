@@ -18,5 +18,6 @@ is not edited: a new one replaces it.
 | [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |
 | [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |
 | [ADR-platform-0012](0012-environments.md) | Environments are declared by `env()`, valued by dotenv files and the keyring; web and mobile resolve them at build | accepted |
+| [ADR-platform-0013](0013-local-models-on-standby.md) | The local models (Ollama, the Nuclear Developer, the `local` kind) are on standby behind one switch; the AI work is done by external providers and agents; the Smart Graph stays | accepted |
 
 [old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.
