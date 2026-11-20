@@ -80,7 +80,7 @@ incomplete.
 
 ## Updates
 
-`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`).
+`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`). With that release already here (NuclearLang and its AI services) it says so and runs nothing; `nuclear update --reinstall` (the installers' `--reinstall`, or `NUCLEAR_REINSTALL=1`) installs it again.
 An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).
 When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;
 a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;

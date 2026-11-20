@@ -89,7 +89,7 @@ testOnStandbyANewMemberGetsTheDefaultExternalChoiceAndTheLocalKindIsRefused(tmpP
   expect((localTeam({}, ROSTER)["members"] as <string, any>[]).all((m) => m["provider"] == "claude-code"))
   draft = { "name": "Old habits", "members": [{ "role": "developer", "kind": "local", "provider": "nuclear-developer" }] }
   made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps(draft))
-  expect(made["code"] == 1 and "standby" in "${(made["out"] as <string, any>)["error"]}", json.dumps(made))
+  expect(made["code"] == 1 and "no longer runs local models" in "${(made["out"] as <string, any>)["error"]}", json.dumps(made))
 
 testANewMemberGetsTheLocalDefaults(monkeypatch: any) void
   localOn(monkeypatch)

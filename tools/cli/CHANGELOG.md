@@ -4,6 +4,7 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- `nuclear update` with the latest release already here says so and runs nothing (it ran the whole installer again); `nuclear update --reinstall` installs it all the same (`NUCLEAR_REINSTALL=1` for the installers).
 - Fix (macOS): `nuclear update` said "this nuclear was not installed by the NuclearLang installer", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.
 - The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer
   (`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby. The

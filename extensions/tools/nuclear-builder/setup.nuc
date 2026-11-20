@@ -55,7 +55,7 @@ offeredProfiles() Profile[]
 // What a profile id asks for while the local models are on standby: null when it can be set up, else why not.
 onStandby(id: string) string?
   p = profileOf(id)
-  p == null or p!.coder == null or localModels() ? null : "the profile ${id} is on standby: the local models are off (ADR-platform-0013); only the profile remote is set up"
+  p == null or p!.coder == null or localModels() ? null : "the profile ${id} is not available: NuclearLang no longer installs local models; only the profile remote is set up"
 
 chatModelOf(p: Profile) string
   p.data["chat"] ?? CHAT_MODEL
@@ -864,7 +864,7 @@ STEP_ABOUT: <string, string> = {
   "knowledge": "Every card of NuclearLang into the graph, with the release's vectors (without them, about ten minutes)",
   "developer-service": "Started now and at every login, on 127.0.0.1 only",
   "chat-service": "Nuclear Chat, where the editor's Builder and Atlas work with your agents, now and at every login",
-  "standby": "The local models are on standby (ADR-platform-0013): what NuclearLang put here for them goes"
+  "standby": "What NuclearLang put here for the local models, which it no longer uses, goes"
 }
 
 // The Ollama models of a profile: the local agents' and the chat's; none without the local agents. The Smart Graph's
@@ -879,7 +879,7 @@ modelsOf(p: Profile) string[]
 // standby: a first step takes it away.
 steps(p: Profile, standby: boolean = false) Step[]
   // the Smart Graph in every profile (the MCP server reads it), with its own model: no Ollama for it
-  first = standby and not localModels() ? [Step("standby", "Take away the local models (on standby)")] : ([] as Step[])
+  first = standby and not localModels() ? [Step("standby", "Take away the local models NuclearLang no longer uses")] : ([] as Step[])
   graph = [...first, Step("graph", "Install the Smart Graph and the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("graph-model", "Download the Smart Graph's model (${EMBEDDINGS}, ${GRAPH_MODEL_GB} GB)")]
   if p.coder == null
     return [...graph, Step("graph-service", "Start the Smart Graph, now and at every login"), Step("knowledge", "Load the knowledge base into the graph"), Step("chat-service", "Start Nuclear Chat, now and at every login")]
@@ -1230,4 +1230,4 @@ retireLocal(say: (line: string) => void) void
   ollama = removeOllama(machine, say)
   writeMachine({ "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote", ...(models.left.isEmpty ? ({} as <string, string>) : { "NUCLEAR_PULLED_MODELS": models.left.join(",") }) }, drop = ["CODER_MODEL", "ASSISTANT_MODEL", "CHAT_MODEL", ...(models.left.isEmpty ? ["NUCLEAR_PULLED_MODELS"] : ([] as string[])), ...(ollama ? ["NUCLEAR_INSTALLED_OLLAMA"] : ([] as string[]))])
   say("wrote ${machineFile()}: profile remote")
-  say("freed ${models.gb.toFixed(1)} GB: the local models are on standby (ADR-platform-0013)")
+  say("freed ${models.gb.toFixed(1)} GB")

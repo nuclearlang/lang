@@ -35,6 +35,8 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+# `nuclear update --reinstall` asks for it through the environment
+if ($env:NUCLEAR_REINSTALL -eq '1') { $Reinstall = [switch]$true }
 $Repo = if ($env:NUCLEAR_REPO) { $env:NUCLEAR_REPO } else { 'nuclearlang/lang' }
 $Install = if ($env:NUCLEAR_INSTALL) { $env:NUCLEAR_INSTALL } else { Join-Path $env:LOCALAPPDATA 'nuclearlang' }
 $Bin = Join-Path $Install 'bin'
@@ -331,11 +333,6 @@ if (-not $NoModifyPath -and -not ($UserPath -contains $Bin)) {
 # Always installed, no question, with the profile `remote`: the local models are on standby (ADR-platform-0013), and a
 # profile of an earlier install (lite, medium, hard in ai.env) or one asked becomes `remote`; its set-up takes away
 # what was local. -NoAi (tests) skips them and the install ends incomplete.
-$Machine = Join-Path $env:APPDATA 'nuclearlang\ai.env'
-if (-not $AiProfile -and (Test-Path $Machine)) {
-  $AiProfile = (Get-Content $Machine | Where-Object { $_ -like 'NUCLEAR_AI_PROFILE=*' } | Select-Object -First 1) -replace '^NUCLEAR_AI_PROFILE=', ''
-}
-if ($AiProfile -and $AiProfile -ne 'remote') { Write-Host "the local models are on standby (ADR-platform-0013): profile remote, not $AiProfile" }
 $AiProfile = 'remote'
 $AiNote = ''
 if ($NoAi) { $AiNote = '-NoAi: the Smart Graph and the MCP server, which are required, were not installed. Run the installer without it.' }
@@ -390,24 +387,19 @@ if (-not $NoAi) {
   }
 }
 
-# --- the end: nuclear's own intro (the mushroom cloud), then the summary (a release before 0.1.6 has no `intro`) ---
+# --- the end: the summary (the header already showed the sign: once is enough) ---
 $NuclearExe = Join-Path $Bin 'nuclear.exe'
-if ($Animate -and [Console]::WindowWidth -ge 80 -and ((& $NuclearExe help 2>&1 | Out-String) -match '(?m)^  intro ')) {
-  Write-Host ''
-  cmd /c "`"$NuclearExe`" intro < NUL"
-}
 Write-Host ''
 $Summary = @("Command       $NuclearExe", '', 'Required', "  $Tick NuclearLang (the compiler, the language server, the standard library)")
-if (-not $NoAi -and -not $AiNote) { $Summary += @("  $Tick The Smart Graph (its own embeddings model, started at every login)", "  $Tick The MCP server in your AI clients (nuclear-builder setup --status)") }
+if (-not $NoAi -and -not $AiNote) { $Summary += @("  $Tick The Smart Graph (started at every login)", "  $Tick The MCP server in your AI clients") }
 else { $Summary += '  x The Smart Graph and the MCP server (below)' }
-if (-not $NoAgent) { $Summary += "  $Tick The nuclear skill (Claude Code, Codex, Cursor, Grok Build, OpenCode)" }
+if (-not $NoAgent) { $Summary += "  $Tick The nuclear skill for your AI agents" }
 $Summary += 'Added when possible'
 if ($Installed) { $Summary += "  $Tick The editor extension: $($Installed -join ', ')" }
 elseif ($NoVSCode) { $Summary += '  o The editor extension: not asked (-NoVSCode)' }
-else { $Summary += '  o The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions' }
-$Summary += '  o Local models: on standby (ADR-platform-0013); your agents and API providers do the AI work'
+else { $Summary += '  o The editor extension: no VS Code, Cursor, VSCodium or Windsurf found' }
 # each platform's toolchain is never installed here: found, or how to get it (the editor guides too)
-$Summary += "Each platform's own (only for the platforms you build; the editor guides you)"
+$Summary += "Each platform's own (only for the platforms you build)"
 $Tools = $null
 try { $Tools = ((& $NuclearExe doctor --json 2>$null | Out-String) | ConvertFrom-Json).toolchains } catch { }
 foreach ($t in @(@('flutter', 'Flutter', 'mobile', 'docs.flutter.dev/get-started/install/windows'), @('node', 'Node.js', 'web, NestJS', 'winget install OpenJS.NodeJS.LTS'), @('python', 'Python ', 'FastAPI', 'it comes with the AI services, or winget install Python.Python.3.12'))) {

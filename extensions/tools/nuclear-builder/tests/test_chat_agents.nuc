@@ -86,7 +86,7 @@ testOnStandbyNoLocalAgentIsOfferedAndTheDefaultIsTheFirstExternalOne(tmpPath: Pa
   expect(not ("nuclear-developer" in (models["providers"] as <string, any>)))
   asked: <string, any> = (modelsHere(root, "nuclear-developer")["providers"] as <string, any>)["nuclear-developer"]!
   expect(asked["models"] == [] and asked["why"] == STANDBY, json.dumps(asked))
-  expect("standby" in whyNotHere("nuclear-developer"))
+  expect("no longer runs local models" in whyNotHere("nuclear-developer"))
   // no agent on the PATH: the API provider whose key the vault notes, with its default model
   empty = tmpPath.joinpath("empty")
   empty.mkdir()

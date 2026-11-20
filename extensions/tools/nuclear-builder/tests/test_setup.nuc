@@ -384,13 +384,13 @@ testOnStandbyOnlyTheProfileRemoteIsOfferedAndALocalOneIsRefused(monkeypatch: any
   expect(shown["localModels"] == false and shown["suggested"] == "remote" and (shown["profiles"] as <string, any>[]).map((p) => p["id"]) == ["remote"])
   expect(not ((shown["requirements"] as <string, any>)["local"] as <string, any>[]).any((r) => r["id"] == "ollama"))
   for id in ["lite", "medium", "hard"]
-    expect("on standby" in "${onStandby(id)}")
+    expect("not available" in "${onStandby(id)}")
   expect(onStandby("remote") == null)
   capsys.readouterr()
   expect(setup(["--profile", "lite", "--yes"]) == 2)
-  expect("on standby" in "${capsys.readouterr().err}")
+  expect("not available" in "${capsys.readouterr().err}")
   expect(setupEvents(["--events", "--profile", "hard"]) == 2)
-  expect("on standby" in "${capsys.readouterr().out}")
+  expect("not available" in "${capsys.readouterr().out}")
   // `--yes` or not, nothing is asked: the profile is remote
   monkeypatch.setattr("nuclear_builder.setup.ai_root", () => null)
   monkeypatch.setattr("nuclear_builder.cli.have_requirements", (p: Profile, always: boolean) => true)
@@ -429,5 +429,5 @@ testTheStepStandbyTakesAwayTheLocalModelsNuclearLangPutHere(tmpPath: Path, monke
   m = readMachine()
   expect(m["NUCLEAR_AI_MODE"] == "remote" and m["NUCLEAR_AI_PROFILE"] == "remote" and m["NUCLEAR_GRAPH_PORT"] == "7878", "${m}")
   expect(not ("CODER_MODEL" in m) and not ("CHAT_MODEL" in m) and not ("NUCLEAR_PULLED_MODELS" in m))
-  expect(said.last == "freed 4.6 GB: the local models are on standby (ADR-platform-0013)", "${said}")
+  expect(said.last == "freed 4.6 GB", "${said}")
   expect(not standbyPending())

@@ -115,7 +115,7 @@ fn as_root() -> bool {
 
 /// Runs the public installer for the installation at `root`. On Windows it opens in a window of its own: the
 /// installer replaces `nuclear.exe`, which cannot happen while this process runs.
-fn run_installer(root: &Path) -> std::io::Result<bool> {
+fn run_installer(root: &Path, reinstall: bool) -> std::io::Result<bool> {
     let mut cmd = if cfg!(windows) {
         let mut c = Command::new("cmd");
         c.args(["/c", "start", "NuclearLang update", "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]);
@@ -126,11 +126,23 @@ fn run_installer(root: &Path) -> std::io::Result<bool> {
         c.args(["-c", "u=https://nuclearlang.github.io/install.sh; if command -v curl >/dev/null 2>&1; then curl -fsSL \"$u\" | sh; else wget -qO- \"$u\" | sh; fi"]);
         c
     };
-    Ok(cmd.env("NUCLEAR_INSTALL", root).env("NUCLEAR_UPDATE", "1").status()?.success())
+    cmd.env("NUCLEAR_INSTALL", root).env("NUCLEAR_UPDATE", "1");
+    if reinstall {
+        cmd.env("NUCLEAR_REINSTALL", "1");
+    }
+    Ok(cmd.status()?.success())
 }
 
-/// `nuclear update`: the latest release, now.
-pub fn command() -> ExitCode {
+/// Nothing to update: the latest release (asked now) is this binary's, and the AI services are of it too. Offline
+/// (no answer) is not "up to date": the installer is run and says what it can.
+fn up_to_date(root: &Path, latest: Option<&str>) -> bool {
+    let ai = std::fs::read_to_string(root.join("ai").join(".version")).ok();
+    latest.is_some_and(|l| !newer(l)) && ai.is_none_or(|v| v.trim() == CURRENT)
+}
+
+/// `nuclear update [--reinstall]`: the latest release, now; when it is already here, nothing (`--reinstall`: the
+/// installer again all the same).
+pub fn command(args: &[String]) -> ExitCode {
     if as_root() {
         eprintln!("nuclear update does not run under sudo: run it as the user who installed NuclearLang");
         return ExitCode::from(2);
@@ -139,7 +151,15 @@ pub fn command() -> ExitCode {
         eprintln!("this nuclear was not installed by the NuclearLang installer: update it the way it was installed");
         return ExitCode::from(2);
     };
-    match run_installer(&root) {
+    let reinstall = args.iter().any(|a| a == "--reinstall");
+    if !reinstall {
+        let latest = fetch_latest();
+        if up_to_date(&root, latest.as_deref().and_then(version_of)) {
+            println!("NuclearLang {CURRENT} is the latest release: nothing to update (nuclear update --reinstall installs it again)");
+            return ExitCode::SUCCESS;
+        }
+    }
+    match run_installer(&root, reinstall) {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::FAILURE,
         Err(e) => {
@@ -218,7 +238,7 @@ pub fn offer(args: &[String]) -> Option<ExitCode> {
             return None;
         }
     }
-    match run_installer(&root) {
+    match run_installer(&root, false) {
         Ok(true) if cfg!(windows) => Some(ExitCode::SUCCESS),
         // the installer replaced the file at `exe`: the new binary runs the command
         Ok(true) => Some(match Command::new(&exe).args(args).status() {
@@ -235,6 +255,20 @@ pub fn offer(args: &[String]) -> Option<ExitCode> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn up_to_date_only_when_the_latest_and_the_ai_services_are_this_version() {
+        let dir = std::env::temp_dir().join(format!("nuclear-update-same-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("ai")).unwrap();
+        assert!(up_to_date(&dir, Some(CURRENT)), "no AI services: the binary decides");
+        assert!(!up_to_date(&dir, Some("999.0.0")), "a newer release");
+        assert!(!up_to_date(&dir, None), "offline is not up to date");
+        std::fs::write(dir.join("ai/.version"), "0.0.1\n").unwrap();
+        assert!(!up_to_date(&dir, Some(CURRENT)), "AI services of another version");
+        std::fs::write(dir.join("ai/.version"), format!("{CURRENT}\n")).unwrap();
+        assert!(up_to_date(&dir, Some(CURRENT)));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[cfg(unix)]
     #[test]

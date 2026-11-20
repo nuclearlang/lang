@@ -14,9 +14,9 @@ USAGE = """
   nuclear-builder setup [--profile remote] [--yes]
                                   the AI services of this machine, step by step: the Smart Graph and its model, the
                                   MCP server in your AI clients, the knowledge base and Nuclear Chat, started now and
-                                  at every login (--yes: no questions). The local models are on standby
-                                  (ADR-platform-0013): the profiles lite, medium and hard are refused, and a machine
-                                  that has them loses what NuclearLang put there (the Developer's service, the models
+                                  at every login (--yes: no questions). NuclearLang no longer runs local models:
+                                  the profiles lite, medium and hard are refused, and a machine that has them loses
+                                  what NuclearLang put there (the Developer's service, the models
                                   it downloaded, Ollama when it installed it), told with the GB freed
   nuclear-builder setup --status [--json]      what is installed and running
   nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,
@@ -229,8 +229,6 @@ describeProfiles(hw: Hardware, suggested: string) void
   print("")
   if localModels()
     print("  ${paint("◆", "yellow")} ${paint("Where the agents run", "bold")}: on this machine (local models, fewer paid tokens) or remote only.")
-  else
-    print("  ${paint("◆", "yellow")} ${paint("The local models are on standby", "bold")} (ADR-platform-0013): the AI work is done by the agents and API providers you choose.")
   print("")
   for p in offeredProfiles()
     f = fit(p, hw)
@@ -357,7 +355,9 @@ setup(args: string[]) int
     return 2
   hw = hardware()
   suggested = recommend(hw, offeredProfiles())
-  describeProfiles(hw, suggested)
+  // the profiles are a choice only with the local models: on standby there is one, said by the steps themselves
+  if localModels()
+    describeProfiles(hw, suggested)
   names = offeredProfiles().map((x) => x.id).join(", ")
   // the local agents are optional and asked (ADR-installer-0006): the answer by default is `remote`, no local model;
   // the Smart Graph and the MCP server are installed in every profile
@@ -411,8 +411,8 @@ setup(args: string[]) int
   if p.coder != null
     box("The AI services are running", ["${paint("Profile", "dim")}        ${p.id} · ${modelsOf(p).join(", ")}", "${paint("Smart Graph", "dim")}    ${graph}", "${paint("Developer", "dim")}      127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}", "", clientsLine(), "", "${paint("nuclear-builder setup --status", "yellow")}  what runs · ${paint("--remove", "yellow")}  takes them away"], "green")
   else
-    later = localModels() ? "The local agents later: nuclear-builder setup again, with a local profile." : "The local models are on standby (ADR-platform-0013): your agents and API providers do the AI work."
-    box("The Smart Graph and Nuclear Chat are running", ["${paint("Profile", "dim")}        remote · no local model, no Ollama", "${paint("Smart Graph", "dim")}    ${graph}", "${paint("Nuclear Chat", "dim")}   127.0.0.1:${m["NUCLEAR_CHAT_PORT"] ?? "7880"}", "", clientsLine(), "", later], "green")
+    later: string[] = localModels() ? ["", "The local agents later: nuclear-builder setup again, with a local profile."] : []
+    box("The Smart Graph and Nuclear Chat are running", ["${paint("Smart Graph", "dim")}    ${graph}", "${paint("Nuclear Chat", "dim")}   127.0.0.1:${m["NUCLEAR_CHAT_PORT"] ?? "7880"}", "", clientsLine(), ...later], "green")
   0
 
 // Where the set-up writes everything its steps say: `~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%` on

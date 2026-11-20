@@ -274,7 +274,7 @@ testATeamOfTheLocalModelsIsWorkedByTheDefaultExternalChoiceWhileTheyAreOnStandby
   expect(members.map((m) => [m["id"], m["kind"], m["provider"]]) == [["lead", "agent", "codex"], ["developer", "agent", "codex"], ["qa", "agent", "codex"], ["devops", "agent", "claude-code"]], json.dumps(members))
   expect(members.take(3).all((m) => m["model"] == null) and members[3]["model"] == "haiku" and shown["techLead"] == "lead" and members[0]["instructions"] == "Keep it small.")
   warnings: string[] = shown["warnings"]!
-  expect(warnings.length == 3 and warnings.all((w) => "on standby (ADR-platform-0013)" in w and "Codex works it now" in w), json.dumps(warnings))
+  expect(warnings.length == 3 and warnings.all((w) => "no longer runs local models" in w and "Codex works it now" in w), json.dumps(warnings))
   file = tmpPath.joinpath("factory", "teams", "home-lab.json")
   expect(file.withName("home-lab.json.bak").readText() == before)
   stamp = json.loads(file.readText())["updated"]

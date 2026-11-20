@@ -4,6 +4,8 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- The installer says only what the user needs: the sign and the motto once (no second banner, no intro), no ADR or internal note, no profile boxes when there is nothing to choose, and boxes that never cut their text.
+- `nuclear update` with the latest release already here says so and runs nothing; `--reinstall` installs it all the same.
 - The website is published again (its check failed since 0.82.0: the web onboarding example was not what `nuclear new` writes now, `env("API_URL", …)`), so `nuclearlang.github.io/install.sh` is the release's installer again instead of an older one.
 - An update downloads the vectors of the knowledge base only when they changed: the release's SHA-256 is asked first, and vectors already here with that checksum are kept (`fetchVectors`, Nuclear Builder's set-up).
 - The local models are on standby (ADR-platform-0013): `"localModels": false` in Nuclear Builder's `setup.json`.

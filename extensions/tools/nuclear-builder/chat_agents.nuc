@@ -35,7 +35,7 @@ externalWorker(prices: <string, any> = {}, env: <string, string>? = null) <strin
   null
 
 // Why the local kind cannot work while its models are on standby.
-STANDBY = "the local models are on standby (ADR-platform-0013): choose an agent or an API provider"
+STANDBY = "NuclearLang no longer runs local models: choose an agent or an API provider"
 
 // What a command says when there is no external choice.
 NO_PROVIDER = "no agent or API provider on this machine: install an agent (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build) or keep an API key (nuclear-builder vault set <provider>), then choose it"

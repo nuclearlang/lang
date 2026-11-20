@@ -180,7 +180,7 @@ healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
       for k, v in standbyWorker!
         m[k] = v
       label = AGENT_LABELS["${standbyWorker!["provider"]}"] ?? "${standbyWorker!["provider"]}"
-      warnings.add(standbyNone ? "${who}: the local models are on standby (ADR-platform-0013); ${NO_PROVIDER} (${label} is set until then)" : "${who}: the local models are on standby (ADR-platform-0013); ${label} works it now")
+      warnings.add(standbyNone ? "${who}: NuclearLang no longer runs local models; ${NO_PROVIDER} (${label} is set until then)" : "${who}: NuclearLang no longer runs local models; ${label} works it now")
       kind = "${m["kind"]}"
     if isText(kind) and not (kind in PROVIDERS)
       warnings.add("${who}: the kind ${kind} is no longer known; the local Nuclear Developer works it now")

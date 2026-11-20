@@ -120,10 +120,10 @@ yellow, Synapsis in purple, the version and the system. Each long task runs whil
 braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) beside its title, a line of what it does,
 and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`
 (yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the
-file is not published, not that the connection failed). The AI services' question is a box of what they are. At the
-end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns); when an
-editor got the extension, a header box with READY in pixel letters names those editors (VS Code, Cursor...) and a
-yellow box says how to start in them (reopen the editor, the Workspace, a new project, a `.nuc` file, the theme
+file is not published, not that the connection failed). The sign and the motto are shown once, in the header (the
+user, 2026-11-20: no second banner, no intro, no ADR or internal note in what the user reads; a line longer than a box
+keeps its text whole without the right border, a note is wrapped to the box). At the end, when an editor got the
+extension, a yellow box says how to start in it (reopen the editor, the Workspace, a new project, a `.nuc` file, the theme
 Chernobyl Soft, the agent's MCP server); then a green box: the command, the AI services, what to run first. `install.sh` colors
 only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);
 piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows

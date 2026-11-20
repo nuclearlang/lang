@@ -111,12 +111,13 @@ D13() {  # uninstall, then install again
   check 'nuclear_runs' "and a new install works"
 }
 
-P1() {  # the local profiles are on standby (ADR-platform-0013): asked or remembered, they become remote
+P1() {  # the local profiles are on standby (ADR-platform-0013): asked or remembered, they become remote, silently
   machine P1; mkdir -p "$H/.config/nuclearlang"; printf 'NUCLEAR_AI_PROFILE=hard\n' > "$H/.config/nuclearlang/ai.env"
   install
-  check 'grep -q "on standby (ADR-platform-0013): profile remote, not hard" "$H/out"' "a remembered local profile becomes remote"
+  check 'nuclear_runs && ! grep -q -i -e "ADR-" -e "standby" -e "not hard" "$H/out"' "a remembered local profile: the install goes on and says nothing of it"
   install_with --profile lite --no-vscode
-  check 'grep -q "profile remote, not lite" "$H/out" && nuclear_runs' "an asked one too, and the install goes on"
+  check 'nuclear_runs && ! grep -q -i -e "ADR-" -e "standby" "$H/out"' "an asked one too"
+  check '[ "$(grep -c "Write only the logic" "$H/out")" -le 1 ]' "the sign and the motto are shown once"
 }
 
 PS1() {  # install.ps1 parses (PowerShell in one small container; skipped without Docker)

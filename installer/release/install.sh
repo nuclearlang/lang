@@ -30,7 +30,7 @@
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
 # (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai (tests only: skips the required Smart Graph and MCP server, the install ends incomplete),
 # --profile remote (NUCLEAR_AI_PROFILE; lite, medium and hard are on standby, ADR-platform-0013: they become
-# remote), --reinstall (download and replace even what is already
+# remote), --reinstall (NUCLEAR_REINSTALL=1: download and replace even what is already
 # there), --uninstall (everything the install made: the AI services' models, Ollama when it
 # installed it, their data and secrets, the caches, the editors' extension). NUCLEAR_INSTALL and NUCLEAR_BIN change the folders; NUCLEAR_REPO the
 # repository (owner/name) and NUCLEAR_DOWNLOAD the base url of the files (a mirror).
@@ -85,7 +85,12 @@ section() { say ""; say "  ${YELLOW}◆${OFF} ${BOLD}$1${OFF} ${DIM}$(line_of $(
 box_top() { say "  ${2:-$DIM}╭─${OFF} ${BOLD}$1${OFF} ${2:-$DIM}$(line_of $((BOXW - ${#1} - 5)) ─)╮${OFF}"; }
 # (a narrow terminal leaves the right border out rather than draw it over the text)
 RIGHT=""; [ -n "$esc" ] && [ "$BOXW" -ge 76 ] && RIGHT=1
-box_line() { say "  ${2:-$DIM}│${OFF} $1${RIGHT:+$esc[$((BOXW + 2))G${2:-$DIM}│$OFF}"; }
+box_line() {
+  # its width in characters whatever the locale: colors out, then UTF-8's continuation bytes out, then bytes counted
+  if [ -n "$RIGHT" ] && [ "$(printf '%s' "$1" | sed "s/$esc\[[0-9;]*m//g" | LC_ALL=C tr -d '\200-\277' | wc -c)" -le $((BOXW - 4)) ]; then
+    say "  ${2:-$DIM}│${OFF} $1$esc[$((BOXW + 2))G${2:-$DIM}│$OFF"
+  else say "  ${2:-$DIM}│${OFF} $1"; fi
+}
 box_end() { say "  ${1:-$DIM}╰$(line_of $((BOXW - 2)) ─)╯${OFF}"; }
 # Plain text wrapped to the box.
 box_text() { printf '%s\n' "$1" | fold -s -w $((BOXW - 4)) | while IFS= read -r l; do box_line "$l" "${2:-}"; done; }
@@ -249,7 +254,7 @@ trap '[ -n "$TASK_PID" ] && kill_tree "$TASK_PID"; [ -n "$esc" ] && printf "%s" 
 trap 'say ""; say "  Stopped."; exit 130' INT TERM
 
 UNINSTALL=0
-REINSTALL=0
+REINSTALL=${NUCLEAR_REINSTALL:-0}
 while [ $# -gt 0 ]; do
   case $1 in
     --version) VERSION=${2:?--version needs a value}; shift ;;
@@ -487,7 +492,7 @@ if [ "$AGENT" = 1 ]; then
   for d in $SKILL_DIRS; do
     mkdir -p "$d" && rm -rf "$d/nuclear" && cp -R "$INSTALL/agents/skills/nuclear" "$d/"
   done
-  ok "The ${BOLD}nuclear${OFF} skill for Claude Code, Codex, Cursor, Grok Build and OpenCode ${DIM}(what Nuclear is, for your agent)${OFF}"
+  ok "The ${BOLD}nuclear${OFF} skill for your AI agents ${DIM}(Claude Code, Codex, Cursor, Grok Build, OpenCode)${OFF}"
 fi
 
 # --- the PATH ---
@@ -533,11 +538,6 @@ fi
 # `remote`: the local models are on standby (ADR-platform-0013), and a profile of an earlier install (lite, medium,
 # hard in ai.env) or one asked becomes `remote`; its set-up takes away what was local. `--no-ai` (tests) skips them
 # and the install ends incomplete.
-MACHINE="${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang/ai.env"
-[ -n "$PROFILE" ] || PROFILE=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
-if [ -n "$PROFILE" ] && [ "$PROFILE" != remote ]; then
-  say "the local models are on standby (ADR-platform-0013): profile remote, not $PROFILE"
-fi
 PROFILE=remote
 ai_note=""
 if [ "$AI" = 0 ]; then
@@ -616,26 +616,20 @@ fi
 # (an incomplete install keeps them, so the next run goes on)
 if [ -z "$ai_note" ]; then rm -f "$STATE"; rm -rf "$CACHE"; fi
 
-# --- the end: nuclear's own intro (the mushroom cloud), then the summary ---
-# (a release before 0.1.6 has no `intro`)
-if [ -n "$esc" ] && [ "$cols" -ge 80 ] && "$BIN/nuclear" help 2>&1 | grep -q '^  intro '; then
-  say ""
-  "$BIN/nuclear" intro < /dev/null || true
-fi
+# --- the end: how to start in the editor, then the summary (the header already showed the sign: once is enough) ---
 say ""
 # the editors that got the extension: said big, with how to start in them
 if [ -s "$tmp/editors" ]; then
   names=$(awk 'NR > 1 { printf " · " } { printf "%s", $0 }' "$tmp/editors")
   if [ "$os" = macos ]; then key=Cmd; quit="Cmd+Q"; else key=Ctrl; quit="close every window"; fi
-  banner "READY" "The extension is in ${BOLD}$names${OFF}"
   box_top "Your editor" "$YELLOW"
   box_line "${BOLD}1${OFF}  Open ${BOLD}$names${OFF} ${DIM}(already open: $quit, then open it again)${OFF}" "$YELLOW"
-  box_line "${BOLD}2${OFF}  The trefoil in the left bar opens ${BOLD}Nuclear: Workspace${OFF}: projects, devices, AI" "$YELLOW"
-  box_line "${BOLD}3${OFF}  A new project: ${YELLOW}nuclear new my_app${OFF}, then open its folder ${DIM}(File › Open Folder)${OFF}" "$YELLOW"
+  box_line "${BOLD}2${OFF}  The trefoil in the left bar opens the ${BOLD}Nuclear workspace${OFF}" "$YELLOW"
+  box_line "${BOLD}3${OFF}  A new project: ${YELLOW}nuclear new my_app${OFF}, then open its folder" "$YELLOW"
   box_line "${BOLD}4${OFF}  A ${BOLD}.nuc${OFF} file gets colours, errors as you type, completion and ${BOLD}Run${OFF}" "$YELLOW"
   box_line "${BOLD}5${OFF}  The theme: ${YELLOW}$key+K $key+T${OFF} › ${BOLD}Chernobyl Soft${OFF} ${DIM}(or Chernobyl, brighter)${OFF}" "$YELLOW"
   if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then
-    box_line "${BOLD}6${OFF}  Your agent (Claude Code, Cursor, Codex) has the ${BOLD}nuclear${OFF} MCP server: ask it for an app" "$YELLOW"
+    box_line "${BOLD}6${OFF}  Your AI agent has the ${BOLD}nuclear${OFF} MCP server: ask it for an app" "$YELLOW"
   fi
   box_end "$YELLOW"
   say ""
@@ -647,16 +641,15 @@ box_line "" "$GREEN"
 box_line "${BOLD}Required${OFF}" "$GREEN"
 box_line "  ${GREEN}✓${OFF} NuclearLang ${DIM}the compiler, the language server, the standard library${OFF}" "$GREEN"
 if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then
-  box_line "  ${GREEN}✓${OFF} The Smart Graph ${DIM}with its own embeddings model, started at every login${OFF}" "$GREEN"
-  box_line "  ${GREEN}✓${OFF} The MCP server ${DIM}in your AI clients · nuclear-builder setup --status${OFF}" "$GREEN"
+  box_line "  ${GREEN}✓${OFF} The Smart Graph ${DIM}started at every login${OFF}" "$GREEN"
+  box_line "  ${GREEN}✓${OFF} The MCP server ${DIM}in your AI clients${OFF}" "$GREEN"
 else box_line "  ${RED}✗${OFF} The Smart Graph and the MCP server ${DIM}(below)${OFF}" "$GREEN"; fi
-if [ "$AGENT" = 1 ]; then box_line "  ${GREEN}✓${OFF} The nuclear skill ${DIM}for Claude Code, Codex, Cursor, Grok Build, OpenCode${OFF}" "$GREEN"; fi
+if [ "$AGENT" = 1 ]; then box_line "  ${GREEN}✓${OFF} The nuclear skill ${DIM}for your AI agents${OFF}" "$GREEN"; fi
 box_line "${BOLD}Added when possible${OFF}" "$GREEN"
 if [ -s "$tmp/editors" ]; then box_line "  ${GREEN}✓${OFF} The editor extension ${DIM}$names${OFF}" "$GREEN"
 elif [ "$VSCODE" = 0 ]; then box_line "  ${DIM}○ The editor extension: not asked (--no-vscode)${OFF}" "$GREEN"
-else box_line "  ${DIM}○ The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions${OFF}" "$GREEN"; fi
-box_line "  ${DIM}○ Local models: on standby (ADR-platform-0013); your agents and API providers do the AI work${OFF}" "$GREEN"
-box_line "${BOLD}Each platform's own${OFF} ${DIM}(only for the platforms you build; the editor guides you)${OFF}" "$GREEN"
+else box_line "  ${DIM}○ The editor extension: no VS Code, Cursor, VSCodium or Windsurf found${OFF}" "$GREEN"; fi
+box_line "${BOLD}Each platform's own${OFF} ${DIM}(only for the platforms you build)${OFF}" "$GREEN"
 doctor=$("$BIN/nuclear" doctor --json < /dev/null 2>/dev/null || true)
 toolchain() {
   found=$(printf '%s' "$doctor" | sed -n "s/.*\"$1\":{\"found\":\"\([a-z]*\)\",\"path\":\"\([^\"]*\)\".*/\1 \2/p")
@@ -667,7 +660,7 @@ toolchain() {
 }
 toolchain flutter "Flutter" "mobile" "docs.flutter.dev/get-started/install"
 toolchain node "Node.js" "web, NestJS" "nodejs.org (LTS)"
-toolchain python "Python " "FastAPI" "it comes with the AI services, or python.org (3.12+)"
+toolchain python "Python " "FastAPI" "python.org (3.12+)"
 box_line "" "$GREEN"
 box_line "${BOLD}Start with${OFF}    ${YELLOW}nuclear new my_app${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear doctor${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear help${OFF}" "$GREEN"
 box_line "${DIM}Docs          https://nuclearlang.github.io${OFF}" "$GREEN"
@@ -675,7 +668,7 @@ box_end "$GREEN"
 if [ -n "$ai_note" ]; then
   # a required part is missing: said in red, and the installer ends with an error (NuclearLang itself stays installed)
   box_top "Not complete" "$RED"
-  box_line "$ai_note" "$RED"
+  box_text "$ai_note" "$RED"
   box_end "$RED"
 fi
 if [ "$on_path" = 0 ]; then
