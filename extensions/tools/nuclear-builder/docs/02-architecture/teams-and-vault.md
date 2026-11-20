@@ -78,16 +78,26 @@ there are no presets.
   `temperaments()` (not checked when the list is not there); a save keeps it only when it differs from the hired
   employee's, and `teamShown` gives that one when there is none. `teamShown` also gives each member without a name
   the employee's, and `missing`: the roles the six stations need that no member has.
-- Who works a member when it is not said (`newMember`, for `team create` and `team member add`): the local Nuclear
-  Developer with the profile's `CODER_MODEL` for a developer and `ASSISTANT_MODEL` for the rest (`localWorker`); every
-  skill of its role on; a free id.
+- Who works a member when it is not said (`newMember`, for `team create` and `team member add`; `defaultWorker`):
+  while the local models are on standby (ADR-platform-0013), the default external choice (`externalWorker`: the first
+  agent whose command is on the PATH, Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else the first API
+  provider whose key the vault notes and that has a priced model, with its default model; else Claude Code, the user
+  to choose); with them on, the local Nuclear Developer with the profile's `CODER_MODEL` for a developer and
+  `ASSISTANT_MODEL` for the rest (`localWorker`); every skill of its role on; a free id.
+- **A local member on standby** (ADR-platform-0013): a member of kind `local` (or none, which meant local) or of the
+  provider `nuclear-developer`, the tech lead too, is worked by the default external choice when the team is read
+  (`healTeam`), each told in the team's `warnings` (`<member>: the local models are on standby (ADR-platform-0013);
+  Codex works it now`, or that a provider must be chosen); the file is written once, the one of before kept as
+  `<id>.json.bak`. The warnings come in `team show`, in each entry of `team list` and in `team screen` (each shown
+  team's, and every team's at the top as `<team name>: <warning>`), until the user saves the team. `team create`,
+  `team member add|update` refuse the kind `local` (`whyKey` `standby`).
 - Who works a member is an agent this machine has (`workableHere`, `chat_agents.nuc`, the rules of `agents --json`:
   `whyNotHere`; an agent that cannot gives `why` in English and `whyKey`, `whyArgs` (`notOnPath`, `noKey`, `noPrice`,
   `noAnswer`), which the screens say in their language): an agent's command on the tools' PATH, an API provider whose key the vault notes and that has a
-  priced model; the local Nuclear Developer always. `team create`, `team member add` and `team member update` (a
+  priced model; the local Nuclear Developer only while the local models are on. `team create`, `team member add` and `team member update` (a
   new kind or provider), and their tools, refuse one that is not, with why; a plain save does not check it, so a team
   made on another machine still opens.
-- `localTeam()`: a run's team when there is none at all: one local member per role (id the role, the first employee
+- `localTeam()`: a run's team when there is none at all: one member per role worked by `defaultWorker` (id the role, the first employee
   of its roster), id `local-team`, never saved; a retried run of it gets it again.
 - The logo (`setLogo`): `team logo <id> <image>` checks the image by its extension (`.png`, `.svg`, `.jpg` or
   `.jpeg`), its size (1 MB at most, `LOGO_MAX_BYTES`) and its first bytes (PNG's and JPEG's signatures; an SVG holds
@@ -241,12 +251,12 @@ new team is `team create`, members added or removed `team member add|remove`.
   4. *The roster*: filtered by role, temperament, gender, skill and words, several chosen at once, any number per
      role; the chosen list counts each role and flags the roles the stations need that it lacks;
   5. *Who works each member*: kind, provider and model from `agents --json` and `models --json` (providers.md), local
-     by default; the model is a select of every model the provider lists, every time (the installed and the
-     downloadable apart for the local agents, each with the memory it needs; *Other model…* opens a field where the
-     provider takes any model), a local one too big for this machine in red, asked in a dialog before it is chosen,
-     and said in a red line under its row while it is; an agent this machine
+     by default; the model is a select of every model the provider lists, every time (*Other model…* opens a field
+     where the provider takes any model); the kinds are agent and API only, a new member gets the first agent this
+     machine has (Claude Code when the list has not come), and the local kind is never offered (ADR-platform-0013:
+     `agents --json` and `models --json` entries of kind `local` from an older command are dropped by `cli.ts`); an agent this machine
      lacks is shown disabled with its why (as the chat's agent picker) and is never chosen. *The same for* sets one
-     agent and model for everyone, or for all the members of a role, in one click (*All local* beside it): a member
+     agent and model for everyone, or for all the members of a role, in one click: a member
      is their profile, not their model. Each row folds out *Make them different*: the temperament (the employee's
      own by default, or one of `temperaments.json`), their characteristics (the personality's note), instructions,
      the role's skills switched on or off and skills of their own. A PAID badge on each paid member, the count of
@@ -273,10 +283,11 @@ new team is `team create`, members added or removed `team member add|remove`.
     portrait, the name, the tech lead and PAID tags, the role and its stations, the headline in one line, the status
     (*On duty*, *Working* while a step of theirs runs), *Make tech lead* (`techLead`) and *Let go* (`team member
     remove`, asked in a dialog); under it the **Brain**: one list of agent · model pairs (*Claude Code · opus*, *OpenCode
-    · ollama/gemma4:12b*, *Nuclear Developer (local) · qwen2.5-coder:3b*, *Anthropic API · …*), grouped by agent, the
+    · …*, *Anthropic API · …*), grouped by agent, the
     paid ones marked `$`, the ones this machine lacks disabled with their why (`agents --json`, asked once per page, the
-    wizard's rules), every model of each provider (`models --json`; *Other model…* where any is taken; a too-big local
-    one in red, confirmed in a dialog, then a red line under the Brain), a model the machine does not list kept as it
+    wizard's rules), every model of each provider (`models --json`; *Other model…* where any is taken), a member an older file left
+    `local` said *converted to the default external agent* (the command's `warnings` of `team screen` and of the team
+    shown are drawn as a warning line at the top of the screen), a model the machine does not list kept as it
     is; choosing one is `team member update` with its
     kind, provider and model (the agent is never asked apart). Then the tabs: **Overview** (the brain with *Change*,
     the API key's state for an API, the cost: free or paid with the team's budget, the teams this employee is in,
@@ -293,7 +304,8 @@ new team is `team create`, members added or removed `team member add|remove`.
     profile), *Activity*, the stats (a ring with their average, each one a segmented bar), *Skills* by endorsements
     (three, then all), the temperament with its description, *Open to*, the HR note stamped `HR // INTERNAL`. The
     roster's provider · model chip on a member's row opens the Overview with the Brain focused;
-  - the **hiring pool** of a role (chosen in it, or the selected member's): a grid of portrait tiles (name,
+  - the **hiring pool** of a role, only while adding (a role's *+ Add* opens it under the team, *Done* closes it; a
+    built team shows only its members; the wizard has its own): a grid of portrait tiles (name,
     temperament, *In the team*), searched by words and filtered by temperament and gender (`filterRoster`), an
     inspector with the dossier of the tile under the pointer or focus; a click opens the whole profile, *+ Add* hires
     them as another member (`team member add`), a tile dropped on a member of its role replaces that member's

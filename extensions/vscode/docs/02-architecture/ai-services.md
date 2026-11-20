@@ -1,14 +1,19 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-20
 related: [workspace.md, ../../../tools/nuclear-builder/AGENTS.md, ../../../tools/nuclear-atlas/AGENTS.md, ../../../../installer/docs/08-guides/ai-setup.md]
 ---
 # The AI services in the editor: set-up, settings, connections, notifications
 
-What Nuclear Builder and Nuclear Atlas need around them. The services themselves (the Smart Graph, the Nuclear Developer) and
-their models are other projects; what a user does is in
+What Nuclear Builder and Nuclear Atlas need around them. The services themselves (the Smart Graph, the MCP server, Nuclear
+Chat) are other projects; what a user does is in
 [Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md).
+
+**The local models are on standby** ([ADR-platform-0013](../../../../docs/03-adr/0013-local-models-on-standby.md)):
+the AI work is done by external agents and providers. The editor offers no local model, no profile to choose, no
+Ollama step and no Nuclear Developer, whatever `setup --plan --json` says (`localModels` absent, from an older
+`nuclear-builder`, is off too).
 
 ## The set-up (`setupPanel.ts`, `aiMachine.ts`; ADR-installer-0002)
 
@@ -18,36 +23,34 @@ extension runs it as a process, one call per action, and keeps no process of it 
 
 | The extension asks | `nuclear-builder setup ...` | It gives |
 |---|---|---|
-| the page's state | `--plan --json --lang <en\|es>` | this machine, the profiles with `fit` and `note` (and `noteKey`, `noteArgs`: the page says the note in its language), the suggested one, the machine's choice, the AI root, the requirements of both modes (a `detail` with its `detailKey`); the profiles' and requirements' texts in the language asked (setup.json's `<field>_es` beside each English field). `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |
-| the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |
-| whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |
-| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=...` | written to `ai.env` |
-| a service again | `--restart graph\|developer` | exit 0 when the system's manager restarted it |
+| the page's state | `--plan --json --lang <en\|es>` | the profiles, the machine's choice, the AI root, `localModels`, the requirements (a `detail` with its `detailKey`); the texts in the language asked (setup.json's `<field>_es` beside each English field). The page keeps only the profile `remote` and its requirements. `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |
+| the steps | `--events --profile remote --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |
+| whether the services start at login | `--status --json` | `atLogin`, what runs |
+| the Smart Graph again | `--restart graph` | exit 0 when the system's manager restarted it |
 
 - `aiMachine.ts` is what the extension reads itself, with no process: `machineFile()` / `readMachine()`
-  (`~/.config/nuclearlang/ai.env`: Nuclear Builder's `defaultConfig` and `aiSettings` take their default models from
-  it; a model set in the settings wins), `urls()` (the ports chosen there) and `builder(args)`, which runs the AI
+  (`~/.config/nuclearlang/ai.env`), `urls()` (the Smart Graph's port chosen there) and `builder(args)`, which runs the AI
   archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the
   PATH's.
-- The steps, in order, each can run again: the graph and the MCP server (the archive's launchers linked onto the
+- The steps of the profile `remote`, in order, each can run again (an installation of before ADR-platform-0013
+  first gets `standby`: what NuclearLang put there for the local models goes): the graph and the MCP server (the archive's launchers linked onto the
   PATH; from source `uv tool install`, editable), the AI clients (the MCP server added to every client found:
   Claude Code, Codex and Grok Build with their `mcp add`, Cursor, OpenCode and Gemini CLI in their JSON files, the rest of each file
-  kept; spec 016), the Developer (in the archive; from source `nuclear install` and
-  the `nuclear-developer` launcher), the models (Ollama's `/api/pull`), the ports (each service keeps its port when
-  it already runs there, else the first one from 7878 / 7879 / 7880 (Nuclear Chat) upward it can listen on, written to `ai.env`;
-  ADR-installer-0003 §5) and the graph's service, the knowledge base (`connect` twice, `ingest`), the Developer's
-  service, Nuclear Chat's service (from source `nuclear-chat install`; `nuclear-chat serve` at login).
+  kept; spec 016), the graph's model, the ports (each service keeps its port when it already runs there, else the
+  first one from 7878 / 7880 (Nuclear Chat) upward it can listen on, written to `ai.env`; ADR-installer-0003 §5) and
+  the graph's service, the knowledge base (`connect` twice, `ingest`), Nuclear Chat's service (from source `nuclear-chat install`; `nuclear-chat serve` at login).
 - `setupPanel.ts` is the welcome (*Nuclear: Welcome and Set-Up*, spec 011 requirement 14), *Next, Next* with a
-  default on every step: 1 this machine and where the agents run, 2 the profile, 3 what it needs (polled every three
-  seconds, a new plan), 4 the installation (an installer runs in a terminal, `createTerminal` + `sendText`, never
-  hidden), 5 the toolchains (below), 6 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;
+  default on every step (`PAGES`; the buttons find a step by its id, `at(id)`): 1 the AI services (the profile
+  `remote`: what it sets up and what it leaves out), 2 what it needs (polled every three seconds, a new plan), 3 the
+  installation (an installer runs in a terminal, `createTerminal` + `sendText`, never hidden), 4 the toolchains
+  (below), 5 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;
   Codex's and OpenCode's switch is their `nuclear.ai.*.enabled`; the API keys go to `nuclear-builder vault set
   <provider>` on stdin, asked hidden, never in a setting; and who works the Builder's chat by default, `nuclear.builder.chat`,
-  chosen among the local agents, the agents and the APIs, with its model; a conversation can choose another), 7 the team (the squad screen mounted in the page,
+  chosen among the agents and the APIs, with its model; a conversation can choose another), 6 the team (the squad screen mounted in the page,
   `TeamsHost`; with no team yet it opens the new-team wizard, `team create`: no team is cloned from a preset,
-  ADR-platform-0010), 8 the spending (the `spending` section),
-  9 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the
-  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 10 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is).
+  ADR-platform-0010), 7 the spending (the `spending` section),
+  8 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the
+  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 9 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is).
   *Keep the defaults of the rest* jumps to the summary. `SetupPanel.offer` asks once while the welcome was never
   finished (`nuclear.onboarding.done`); *Settings and integrations* runs it again. Without the AI archive the
   machine steps say to run the installer again and the other steps still work.
@@ -78,20 +81,17 @@ next to it), Flutter's SDK (mobile, required). The settings `nuclear.toolchains.
   install it myself (I'll point to it)* (the dialog), *Install NuclearLang's own*, *Later*; Flutter is marked
   required for mobile. Settings and integrations has the section *Toolchains* with the same cards and the paths.
 
-## Settings and integrations (`settingsPanel.ts`, `aiSettings.ts`, `localModels.ts`; ADR-platform-0003)
+## Settings and integrations (`settingsPanel.ts`, `aiSettings.ts`; ADR-platform-0003)
 
 The tool `settings` of the strip (`Ctrl+Alt+S`).
 
 - `aiSettings()` reads `nuclear.ai.*` (`contributes.configuration` of `package.json`). `machineConfig()` is passed
   to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is
-  shared with CI. `serviceEnv()` is the environment the graph and the Developer are started with (`CODER_MODEL`,
-  `ASSISTANT_MODEL`, `OLLAMA_URL`, the ports). The graph's embeddings model is its own (no setting).
+  shared with CI. `serviceEnv()` is the environment the graph and the Builder's engine are started with (the graph's
+  url and port). The graph's embeddings model is its own (no setting).
 - The page:
-  - **services**: their health urls; *Start* / *Restart* go through the system's services first, else spawn
-    `<graphCommand> serve` / `nuclear-developer` (owned processes, stopped on deactivate);
-  - **models**: Ollama's `/api/tags`; `billionsOf` (`localModels.ts`) counts a model's size from what Ollama
-    reports, with the effective size of an `eNb` tag, against `MAX_BILLIONS` = 3.5 (the rule of the local models:
-    at most the 3B class); *Pull* runs as a task;
+  - **services**: the Smart Graph's health url; *Start* / *Restart* go through the system's service first, else
+    spawn `<graphCommand> serve` (an owned process, stopped on deactivate);
   - **MCP**: registers `nuclear.ai.mcpCommand` (default `nuclear-mcp`, the server of
     [`tools/mcp/`](../../../../tools/mcp/AGENTS.md), started with no argument) in Claude Code
     (`claude mcp get|add --scope user`), Codex (`codex mcp list|add`), Cursor (`~/.cursor/mcp.json` merged) and
@@ -125,6 +125,10 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
   `nuclear.ai.contextTokens` → `nuclear.atlas.contextTokens`) are copied at start-up at every level where the user
   set them (user, workspace, folder); the old one is removed only once the new one holds the value, and a level
   where the new id already has a value keeps both.
+- The local models on standby: a `nuclear.builder.chat` of the kind `local` is removed at its level (the default,
+  Claude Code's agent, takes over) and the user is told once; `chatProvider` reads one as the default before that.
+  `nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are no longer
+  declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).
 - The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless
   `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `"forceConfirm": true` in the project's
   `.nuclear/builder.json` brings both questions back.
@@ -159,17 +163,16 @@ only today.
 
 ## Checked connections (`connections.ts`; ADR-platform-0003)
 
-Every external connection of the extension: the Nuclear Developer, the Smart Graph, Ollama and the local models,
-and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira).
+Every external connection of the extension: the Smart Graph and each integration enabled in the settings (Claude
+Code, Codex, OpenCode, GitHub, Jira). No check of Ollama nor of the Developer (ADR-platform-0013).
 
-- `checkAll`: all of them. `checkForChat`: what a chat question needs. A Nuclear Builder run checks its own
-  (`preflight` of the engine).
+- `checkAll`: all of them. A Nuclear Builder run checks its own (`preflight` of the engine).
 - `watchConnections`: every `nuclear.ai.checkEveryMinutes`; a connection that stops answering, or answers again, is
   a notice of kind `settings`.
 
 ## Notifications (`notifications.ts`; ADR-platform-0003)
 
-What the local agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear
+What the agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear
 Chat, a Nuclear Builder run waits for the user, passed or failed, a connection stopped answering. One system every
 tool uses.
 
@@ -205,7 +208,10 @@ tool uses.
   --json`, the extension host only), `Relay` (each page's request ids kept apart, the token header added, one
   subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the
   general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation
-  is the setting `nuclear.builder.chat` when that agent is available, else the local one; each conversation then
+  is the setting `nuclear.builder.chat` when that agent is available, else the host file's default (an external
+  agent; a paid provider of a team's member or tech lead, chosen by the user there, gets `--confirm-spending` on its
+  responder and choice commands, so the chat does not ask the two spending questions again for it; not when
+  `nuclear.spending.forceConfirm` or the project's `forceConfirm` holds, nor for a provider no team names); each conversation then
   chooses its own in the chat's header), `ChatHost` (the one WebSocket, re-registered and caught up with `GET events?since=` after a
   reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`,
   `lineDiff`).

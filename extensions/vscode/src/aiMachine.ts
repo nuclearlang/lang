@@ -13,7 +13,7 @@ export function installDir(env: NodeJS.ProcessEnv = process.env): string {
   return env.NUCLEAR_INSTALL || (process.platform === 'win32' ? path.join(env.LOCALAPPDATA ?? os.homedir(), 'nuclearlang') : path.join(os.homedir(), '.local', 'share', 'nuclearlang'));
 }
 
-/** What the set-up chose on this machine (`KEY=value` lines): the mode, the profile, its models, the ports. */
+/** What the set-up chose on this machine (`KEY=value` lines): the mode, the profile, the ports. */
 export function machineFile(env: NodeJS.ProcessEnv = process.env): string {
   const base = process.platform === 'win32' ? (env.APPDATA ?? os.homedir()) : env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
   return path.join(base, 'nuclearlang', 'ai.env');
@@ -29,12 +29,10 @@ export function readMachine(file = machineFile()): Record<string, string> {
 }
 
 /** The ports the services listen on (127.0.0.1) when nothing else holds them. */
-export const PORTS = { graph: 7878, developer: 7879 };
+export const PORTS = { graph: 7878 };
 
 export interface Urls {
   graph: string;
-  developer: string;
-  ollama: string;
 }
 
 /** Where the services answer: the environment, else the ports the set-up chose, else the usual ones. */
@@ -42,8 +40,6 @@ export function urls(env: NodeJS.ProcessEnv = process.env): Urls {
   const m = readMachine();
   return {
     graph: env.NUCLEAR_GRAPH_URL || `http://127.0.0.1:${m.NUCLEAR_GRAPH_PORT || PORTS.graph}`,
-    developer: env.NUCLEAR_DEVELOPER_URL || `http://127.0.0.1:${m.NUCLEAR_DEVELOPER_PORT || PORTS.developer}`,
-    ollama: env.OLLAMA_URL || m.OLLAMA_URL || 'http://localhost:11434',
   };
 }
 

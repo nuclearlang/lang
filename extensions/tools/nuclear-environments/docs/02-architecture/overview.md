@@ -32,10 +32,10 @@ EnvironmentsPanel.show(project) ──► nuclear env list --json --project <roo
   for the keyring, `--local` for a `.local` file, nothing for `process` (the button is disabled). `use E`. The
   *Local* toggle adds `--local` to `set` and makes *Open file* open the `.local` file.
 - Failures (`failureOf`): no `nuclear` (spawn error) and a `nuclear` without `env` (exit not 0, its usage printed
-  without `nuclear env`) replace the grid with a notice and *Update NuclearLang* (`nuclear.update`); any other
+  without `nuclear env`) replace the grid with a notice that says to run `nuclear update` in a terminal; any other
   error stays above the grid until dismissed. What a successful command writes on stderr (a secret written to a
   `.local` file without a keyring) is shown as a note.
-- The page: `localize` (`extensions/vscode/src/i18n.ts`) gives it the language menu and the floating update button;
+- The page: `localize` (`extensions/vscode/src/i18n.ts`) gives it the language menu;
   its state comes in `state` messages, so a language switch redraws it as it was. Values are set as text only.
 - Keyboard: the grid is one tab stop (a roving `tabindex`); arrows, Home/End (Ctrl: first/last row) move; Enter or
   F2 edits; Enter saves, Escape cancels; Delete removes the value; Enter on a name opens its first use; Ctrl+F

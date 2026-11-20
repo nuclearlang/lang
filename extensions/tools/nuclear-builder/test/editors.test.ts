@@ -28,7 +28,6 @@ import { REPORTS_SCRIPT } from '../src/reports/page';
 import { chatProvider } from '../src/settings';
 import { backoff, checkConnections, DEFAULT_RETRY, retryAfter, toolEnv, transientStatus } from '../src/support';
 import { templatesOf } from '../../nuclear-atlas/src/chat';
-import { billionsOf, MAX_BILLIONS } from '../../../vscode/src/localModels';
 import * as http from 'node:http';
 
 const stub = vscode as unknown as { store: Record<string, Record<string, unknown>>; answers: (string | undefined)[]; asked: { message: string; detail?: string; items: string[] }[] };
@@ -120,8 +119,8 @@ const file = (id) => path.join(teams, id + '.json');
 if (sub === 'list') out(fs.readdirSync(teams).filter((f) => f.endsWith('.json')).map((f) => { const t = JSON.parse(fs.readFileSync(path.join(teams, f))); return { id: t.id, name: t.name, updated: t.updated, default: false }; }));
 if (sub === 'show') { if (!fs.existsSync(file(rest[0]))) out({ error: 'no team ' + rest[0] }, 1); out(JSON.parse(fs.readFileSync(file(rest[0])))); }
 if (sub === 'save') { const t = JSON.parse(stdin()); if (!t.name) out({ error: 'the team has no name' }, 1); t.id = t.id || t.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'); t.updated = 42; fs.writeFileSync(file(t.id), JSON.stringify(t)); out(t); }
-if (sub === 'create') { const d = JSON.parse(stdin()); const t = { id: d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: d.name, updated: 1, budgetUsd: d.budgetUsd ?? 5, techLead: null, members: d.members.map((m, i) => ({ id: m.employee ?? m.role + '-' + i, kind: 'local', provider: 'nuclear-developer', ...m })) }; fs.writeFileSync(file(t.id), JSON.stringify(t)); out(t); }
-if (sub === 'member') { const t = JSON.parse(fs.readFileSync(file(rest[1]))); if (rest[0] === 'add') t.members.push(...JSON.parse(stdin()).map((m) => ({ id: m.employee, kind: 'local', provider: 'nuclear-developer', ...m }))); if (rest[0] === 'remove') t.members = t.members.filter((m) => m.id !== rest[2]); if (rest[0] === 'update') Object.assign(t.members.find((m) => m.id === rest[2]), { kind: rest[4], provider: rest[6] }); fs.writeFileSync(file(t.id), JSON.stringify(t)); out(t); }
+if (sub === 'create') { const d = JSON.parse(stdin()); const t = { id: d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: d.name, updated: 1, budgetUsd: d.budgetUsd ?? 5, techLead: null, members: d.members.map((m, i) => ({ id: m.employee ?? m.role + '-' + i, kind: 'agent', provider: 'claude-code', ...m })) }; fs.writeFileSync(file(t.id), JSON.stringify(t)); out(t); }
+if (sub === 'member') { const t = JSON.parse(fs.readFileSync(file(rest[1]))); if (rest[0] === 'add') t.members.push(...JSON.parse(stdin()).map((m) => ({ id: m.employee, kind: 'agent', provider: 'claude-code', ...m }))); if (rest[0] === 'remove') t.members = t.members.filter((m) => m.id !== rest[2]); if (rest[0] === 'update') Object.assign(t.members.find((m) => m.id === rest[2]), { kind: rest[4], provider: rest[6] }); fs.writeFileSync(file(t.id), JSON.stringify(t)); out(t); }
 if (sub === 'suggest') out({ roles: [{ role: 'developer', candidates: [{ employee: 'dev-001', name: 'Neo', role: 'developer', headline: 'Yes', score: 3, why: [{ term: 'test', in: 'skill', text: 'Testing' }], args: rest }] }] });
 if (sub === 'name-suggest') out(['The Unpaid Interns', rest.join(' ')]);
 if (sub === 'roster') out({ developer: { role: 'developer', stats: ['speed', 'tests'], employees: [{ id: 'dev-001', name: 'Neo', stats: { speed: 91, tests: 12 } }], skills: ['write-tests'] }, qa: [{ id: 'qa-001', name: 'Bugsy', stats: { edge: 3 } }] });
@@ -426,9 +425,9 @@ test('the company screen\'s HUD: a stat\'s level, the budget gauge, the hiring p
   assert.deepEqual(filterPool(all, { q: 'breaks', gender: 'female' }).map((p) => p.name), ['Bugsy']);
   assert.deepEqual(filterPool(all, { temper: 'shy', skill: 'fuzzing' }), []);
   assert.deepEqual(rosterSkills({ developer: { employees: all.slice(0, 1) }, qa: { employees: all.slice(1) } }), ['Testing', 'Fuzzing']);
-  const draft = draftOf({ name: ' Crew ', description: '', purpose: 'p', skills: ['a'], budgetUsd: 3, lead: 1, logoFile: '/x.png', members: [twenty[0], twenty[5], { role: 'qa', kind: 'local', provider: 'nuclear-developer', model: 'gemma4:e2b' }] });
-  // a local member with no model is left to the command's local defaults
-  assert.deepEqual(draft, { name: 'Crew', description: '', purpose: 'p', skills: ['a'], budgetUsd: 3, techLead: 1, logoFile: '/x.png', members: [{ role: 'developer', employee: 'dev-0', kind: 'agent', provider: 'claude-code' }, { role: 'developer', employee: 'dev-5' }, { role: 'qa', kind: 'local', provider: 'nuclear-developer', model: 'gemma4:e2b' }] });
+  const draft = draftOf({ name: ' Crew ', description: '', purpose: 'p', skills: ['a'], budgetUsd: 3, lead: 1, logoFile: '/x.png', members: [twenty[0], twenty[5], { role: 'qa', kind: 'local', provider: 'nuclear-developer', model: 'gemma4:e2b' }, { role: 'qa', kind: 'api', provider: 'openrouter', model: 'gpt-5-mini' }] });
+  // who works a member is always written; an older local one becomes the default agent (ADR-platform-0013)
+  assert.deepEqual(draft, { name: 'Crew', description: '', purpose: 'p', skills: ['a'], budgetUsd: 3, techLead: 1, logoFile: '/x.png', members: [{ role: 'developer', employee: 'dev-0', kind: 'agent', provider: 'claude-code' }, { role: 'developer', employee: 'dev-5', kind: 'agent', provider: 'claude-code' }, { role: 'qa', kind: 'agent', provider: 'claude-code' }, { role: 'qa', kind: 'api', provider: 'openrouter', model: 'gpt-5-mini' }] });
   // a member is its profile, not its model: one agent for everyone (or a role), each one's own instructions and skills
   const crew = [{ role: 'developer', kind: 'local', provider: 'nuclear-developer', model: '' }, { role: 'qa', kind: 'local', provider: 'nuclear-developer', model: '' }];
   assert.deepEqual(sameForAll(crew, 'qa', { kind: 'agent', provider: 'claude-code', model: 'haiku' }).map((m) => m.provider), ['nuclear-developer', 'claude-code']);
@@ -436,14 +435,14 @@ test('the company screen\'s HUD: a stat\'s level, the budget gauge, the hiring p
   const own = { role: 'qa', employee: 'qa-1', kind: 'local', provider: 'nuclear-developer', model: '', instructions: ' Break it. ', skills: ['review'], extraSkills: [{ name: 'fuzz', text: 'Fuzz.' }, { name: '', text: '' }], temperament: 'grumpy', note: 'Never trusts green.' };
   assert.equal(differences(own), 5);
   assert.equal(differences({ ...own, instructions: '', skills: undefined, extraSkills: [], temperament: '', note: ' ' }), 0);
-  assert.deepEqual((draftOf({ name: 'x', description: '', purpose: '', skills: [], budgetUsd: 5, lead: -1, members: [own] }).members as unknown[])[0], { role: 'qa', employee: 'qa-1', instructions: 'Break it.', skills: ['review'], extraSkills: [{ name: 'fuzz', text: 'Fuzz.' }], personality: { temperament: 'grumpy', note: 'Never trusts green.' } });
+  assert.deepEqual((draftOf({ name: 'x', description: '', purpose: '', skills: [], budgetUsd: 5, lead: -1, members: [own] }).members as unknown[])[0], { role: 'qa', employee: 'qa-1', kind: 'agent', provider: 'claude-code', instructions: 'Break it.', skills: ['review'], extraSkills: [{ name: 'fuzz', text: 'Fuzz.' }], personality: { temperament: 'grumpy', note: 'Never trusts green.' } });
   // the page's script, with the helpers inlined, is whole JavaScript
   const window: { Squad?: { mount: unknown; receive: unknown } } = {};
   new Function('window', 'T', 't', SQUAD_SCRIPT)(window, {}, (k: string) => k);
   assert.equal(typeof window.Squad?.receive, 'function');
 });
 
-test('the model pickers list every model every time, survive repeated choices and ask before a model too big for the memory', () => {
+test('the model pickers list every model every time and survive repeated choices; no local kind, an older local member said converted', () => {
   // the page's script on a DOM that only keeps its HTML: the events are handed to its listeners as the browser would
   const on: Record<string, (e: unknown) => void> = {};
   const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };
@@ -453,50 +452,86 @@ test('the model pickers list every model every time, survive repeated choices an
   const squad = window.Squad!;
   squad.mount(el, (m) => sent.push(m as never), { company: false });
   const member = (id: string, role: string, kind: string, provider: string, model: string) => ({ id, role, kind, provider, model, skills: [], extraSkills: [], behaviour: {}, tasks: [] });
-  squad.receive({ type: 'team:state', teams: [{ id: 't', name: 'T' }], team: { id: 't', name: 'T', members: [member('dev', 'developer', 'local', 'nuclear-developer', 'qwen2.5-coder:3b'), member('qa', 'qa', 'agent', 'claude-code', 'opus')] }, roster: {} });
+  // an older team file: a member still local, and the command's conversion warning
+  squad.receive({ type: 'team:state', teams: [{ id: 't', name: 'T' }], team: { id: 't', name: 'T', members: [member('dev', 'developer', 'local', 'nuclear-developer', 'qwen2.5-coder:3b'), member('qa', 'qa', 'agent', 'claude-code', 'opus')] }, roster: {}, warnings: ['member dev was local: now claude-code'] });
+  assert.ok(el.innerHTML.includes('member dev was local: now claude-code') && el.innerHTML.includes('sq.converted'));
   // the machine's agents and every provider's models are asked once the member's brain is drawn
   assert.ok(sent.some((m) => m.type === 'team:wizard') && sent.some((m) => m.type === 'team:models'));
-  const local = [{ id: 'qwen2.5-coder:3b', installed: true, needGb: 3.3, fit: 'fits' }, { id: 'qwen2.5-coder:1.5b', installed: true, needGb: 2.2, fit: 'fits' }, { id: 'gemma4:26b', installed: true, needGb: 23.4, fit: 'too-big' }, { id: 'gemma4:e2b', installed: false, downloadGb: 7.2, needGb: 9.6, fit: 'tight' }];
-  squad.receive({ type: 'team:agents', agents: [{ id: 'nuclear-developer', provider: 'nuclear-developer', kind: 'local', available: true, models: [] }, { id: 'claude-code', provider: 'claude-code', kind: 'agent', available: true, models: ['haiku', 'sonnet', 'opus'] }] });
-  squad.receive({ type: 'team:models', models: { memory: { totalGb: 16, availableGb: 8 }, providers: { 'nuclear-developer': { models: local, free: false }, 'claude-code': { models: ['fable', 'opus', 'sonnet', 'haiku'].map((id) => ({ id, family: id, version: 'latest', alias: true })), free: true } } } });
+  squad.receive({ type: 'team:agents', agents: [{ id: 'claude-code', provider: 'claude-code', kind: 'agent', available: true, models: ['haiku', 'sonnet', 'opus'] }] });
+  squad.receive({ type: 'team:models', models: { memory: { totalGb: 16, availableGb: 8 }, providers: { 'claude-code': { models: ['fable', 'opus', 'sonnet', 'haiku'].map((id) => ({ id, family: id, version: 'latest', alias: true })), free: true } } } });
   const options = () => (el.innerHTML.match(/<option /g) ?? []).length;
   const change = (f: string, value: string) => on.change({ target: { dataset: { f }, value } });
   const click = (ds: Record<string, string>) => on.click({ target: { closest: () => ({ dataset: ds, disabled: false }) } });
   const all = options();
-  assert.ok(el.innerHTML.includes('value="local|nuclear-developer|gemma4:26b"') && el.innerHTML.includes('value="agent|claude-code|fable"'));
+  // no local kind, no Ollama model: the local models are on standby (ADR-platform-0013)
+  assert.ok(el.innerHTML.includes('value="agent|claude-code|fable"') && !el.innerHTML.includes('value="local|') && !el.innerHTML.includes('sq.kindWord.local'));
   // every line says what kind of thing it is, every group how it is paid; an alias says it is the latest
-  assert.ok(el.innerHTML.includes('Claude Code (sq.kindWord.agent) · fable — sq.model.latest') && el.innerHTML.includes('label="sq.group.agent Claude Code Claude"') && el.innerHTML.includes('Nuclear Developer (sq.kindWord.local) · qwen2.5-coder:3b'));
-  // the brain chosen again and again: every model still listed, each choice saved by its command
-  for (const v of ['agent|claude-code|opus', 'agent|claude-code|sonnet', 'local|nuclear-developer|qwen2.5-coder:1.5b', 'agent|claude-code|opus']) {
+  assert.ok(el.innerHTML.includes('Claude Code (sq.kindWord.agent) · fable — sq.model.latest') && el.innerHTML.includes('label="sq.group.agent Claude Code Claude"'));
+  // the brain chosen again and again: every model still listed (the converted line goes once a choice is made), each
+  // choice saved by its command
+  change('brain', 'agent|claude-code|haiku');
+  assert.equal(options(), all - 1);
+  for (const v of ['agent|claude-code|opus', 'agent|claude-code|sonnet', 'api|openrouter|', 'agent|claude-code|opus']) {
     change('brain', v);
-    assert.equal(options(), all, v);
+    assert.equal(options(), all - 1, v);
   }
-  assert.equal(sent.filter((m) => m.type === 'team:memberUpdate').length, 4);
-  // too big for this machine: asked first; cancelled, nothing is saved; confirmed, saved and said in red
-  change('brain', 'local|nuclear-developer|gemma4:26b');
-  assert.ok(el.innerHTML.includes('sq-ask') && sent.filter((m) => m.type === 'team:memberUpdate').length === 4);
-  click({ a: 'ramNo' });
-  assert.ok(!el.innerHTML.includes('sq-ask') && sent.filter((m) => m.type === 'team:memberUpdate').length === 4);
-  change('brain', 'local|nuclear-developer|gemma4:26b');
-  click({ a: 'ramYes' });
-  assert.deepEqual(sent.at(-1), { type: 'team:memberUpdate', id: 't', member: 'dev', change: { kind: 'local', provider: 'nuclear-developer', model: 'gemma4:26b' } });
-  assert.ok(el.innerHTML.includes('sq-ram bad') && el.innerHTML.includes('sq.ram.tooBig 23.4 16'));
-  // the wizard's step 5: a select of every model (no datalist), chosen again and again; Other… where any is taken
+  assert.equal(sent.filter((m) => m.type === 'team:memberUpdate').length, 5);
+  // the wizard's step 5: the kinds are agent and api only; the older local member is given the default agent
   click({ a: 'editMembers' });
   click({ wzgo: '4' });
+  assert.ok(el.innerHTML.includes('data-wzkind="0|agent"') && el.innerHTML.includes('data-wzkind="0|api"') && !el.innerHTML.includes('|local"') && !el.innerHTML.includes('wzAllLocal'));
   assert.ok(el.innerHTML.includes('<select data-f="wzmodel-1"') && !el.innerHTML.includes('datalist'));
   const step = options();
-  for (const v of ['qwen2.5-coder:1.5b', 'gemma4:e2b', 'qwen2.5-coder:3b', 'qwen2.5-coder:1.5b']) {
+  for (const v of ['haiku', 'sonnet', 'opus', 'haiku']) {
     change('wzmodel-0', v);
     assert.equal(options(), step, v);
   }
-  assert.ok(el.innerHTML.includes('sq-ram warn') === false);
   change('wzmodel-1', '__other__');
   assert.ok(el.innerHTML.includes('data-f="wzmodel-1-other"'));
   on.input({ target: { dataset: { f: 'wzmodel-1-other' }, value: ' claude-opus-5-5 ' } });
-  change('wzmodel-0', 'gemma4:26b');
-  click({ a: 'ramYes' });
-  assert.ok(el.innerHTML.includes('sq-ram bad'));
+});
+
+test('a built team shows only its members; the roster opens only to add, and closes; a member or a team opens its conversation in Nuclear Atlas', () => {
+  const on: Record<string, (e: unknown) => void> = {};
+  const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };
+  const sent: { type: string; [k: string]: unknown }[] = [];
+  const window: { Squad?: { mount(el: unknown, post: (m: unknown) => void, o: unknown): void; receive(m: unknown): boolean } } = {};
+  new Function('window', 'T', 't', 'document', 'matchMedia', SQUAD_SCRIPT)(window, {}, (k: string, ...a: unknown[]) => [k, ...a].join(' '), { activeElement: null }, () => ({ matches: true }));
+  const squad = window.Squad!;
+  squad.mount(el, (m) => sent.push(m as never), { company: false });
+  const member = (id: string, role: string) => ({ id, role, kind: 'agent', provider: 'claude-code', model: '', skills: [], extraSkills: [], behaviour: {}, tasks: [] });
+  const roster = { developer: { employees: [{ id: 'dev-0', name: 'Neo', profile: 'p' }, { id: 'dev-1', name: 'Trin', profile: 'q' }] } };
+  squad.receive({ type: 'team:state', teams: [{ id: 'core', name: 'Core' }], team: { id: 'core', name: 'Core', members: [member('m1', 'developer')] }, roster });
+  const click = (ds: Record<string, string>) => on.click({ target: { closest: () => ({ dataset: ds, disabled: false }) } });
+  // the team, and no catalogue of candidates under it
+  assert.ok(el.innerHTML.includes('data-member="m1"') && !el.innerHTML.includes('sq-roster') && !el.innerHTML.includes('ro-grid'));
+  // + Add of a role opens the catalogue; Done closes it
+  click({ addrole: 'developer' });
+  assert.ok(el.innerHTML.includes('sq-roster') && el.innerHTML.includes('data-addemp="dev-1"') && el.innerHTML.includes('data-a="addDone"'));
+  click({ a: 'addDone' });
+  assert.ok(!el.innerHTML.includes('sq-roster'));
+  // the wizard has its own catalogue
+  click({ a: 'wizard' });
+  click({ wzgo: '3' });
+  assert.ok(el.innerHTML.includes('ro-grid'));
+  // the conversations: the team's channel, a member's direct message (the host opens Nuclear Atlas on them)
+  click({ chatteam: 'core' });
+  click({ chatteam: 'core', chatm: 'm1' });
+  assert.deepEqual(sent.filter((m) => m.type === 'team:chat').map((m) => [m.team, m.member]), [['core', undefined], ['core', 'm1']]);
+  const src = (f: string) => fs.readFileSync(path.join(__dirname, '..', '..', '..', 'tools', 'nuclear-builder', 'src', f), 'utf8');
+  assert.match(src('teams/host.ts'), /'nuclear\.atlas\.open', undefined, member \? `dm-\$\{team\}-\$\{member\}` : team/);
+  assert.equal(PAGE_ACTIONS['team:chat'], 'editor');
+});
+
+test('the Builder page has no chat of its own: a member, the team or *Ask* open Nuclear Atlas', async () => {
+  const { html } = await import('../src/panel');
+  const page = html({ cspSource: 'vscode-resource:', asWebviewUri: (u: { fsPath: string }) => u.fsPath } as never, { fsPath: '/ext' } as never);
+  for (const gone of ['id="chat"', 'chatMount', 'chatTab', 'nuclearChat(', "type: 'chatOpen'", 'data-g="chat"']) assert.ok(!page.includes(gone), gone);
+  assert.ok(page.includes("type: 'atlas', channel: d.dm") && page.includes("type: 'atlas', channel: d.teamchat") && page.includes("d.act === 'askChat') return vscode.postMessage({ type: 'atlas' })"));
+  const src = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'tools', 'nuclear-builder', 'src', 'panel.ts'), 'utf8');
+  assert.match(src, /case 'atlas':[\s\S]{0,300}'nuclear\.atlas\.open', this\.root/);
+  assert.equal(PAGE_ACTIONS.atlas, 'editor');
+  assert.equal('chatTab' in PAGE_ACTIONS, false);
 });
 
 test('a spec is written where its component and layer say, and found there again', () => {
@@ -517,10 +552,11 @@ test('a spec is written where its component and layer say, and found there again
   assert.equal(newRunId(root, 'Loans', new Date('2026-11-18T10:00:00Z')), '20261118-loans-2');
 });
 
-test('the chat\'s provider is a setting: one the factory knows, else the local Nuclear Developer', () => {
-  assert.deepEqual(chatProvider(undefined), { kind: 'local', provider: 'nuclear-developer', model: '' });
+test('the chat\'s provider is a setting: one the factory knows, else the default agent (an older local one too)', () => {
+  assert.deepEqual(chatProvider(undefined), { kind: 'agent', provider: 'claude-code', model: '' });
+  assert.deepEqual(chatProvider({ kind: 'local', provider: 'nuclear-developer', model: 'gemma4:e2b' }), { kind: 'agent', provider: 'claude-code', model: '' });
   assert.deepEqual(chatProvider({ kind: 'api', provider: 'openrouter', model: 'gpt-5-mini' }), { kind: 'api', provider: 'openrouter', model: 'gpt-5-mini' });
-  assert.deepEqual(chatProvider({ kind: 'local', provider: 'claude-code' }), { kind: 'local', provider: 'nuclear-developer', model: '' });
+  assert.deepEqual(chatProvider({ kind: 'local', provider: 'claude-code' }), { kind: 'agent', provider: 'claude-code', model: '' });
 });
 
 // ---------- what the editors keep in TypeScript ----------
@@ -547,27 +583,16 @@ test('the tools are found even when the editor was started without the shell PAT
   assert.ok(win.Path!.startsWith('C:\\Windows;') && win.Path!.includes('nuclearlang') && !('PATH' in win));
 });
 
-test('the connections tell each service that does not answer, a model not installed and a missing tool', async () => {
-  const server = http.createServer((_, res) => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ models: [{ name: 'qwen2.5-coder:3b' }] })));
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const ollama = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
-  const checks = await checkConnections({ developerUrl: 'http://127.0.0.1:9', graphUrl: 'http://127.0.0.1:9', ollamaUrl: ollama, models: ['qwen2.5-coder:3b', 'gemma4:e2b'], tools: ['nuclear-missing-tool'], folders: [os.tmpdir()], minFreeMb: 1 });
-  server.closeAllConnections();
-  server.close();
-  assert.deepEqual(checks.filter((c) => !c.ok).map((c) => c.name).sort(), ['Nuclear Developer', 'Smart Graph', 'model gemma4:e2b', 'nuclear-missing-tool'].sort());
+test('the connections tell the Smart Graph that does not answer and a missing tool; nothing local is checked', async () => {
+  const checks = await checkConnections({ graphUrl: 'http://127.0.0.1:9', tools: ['nuclear-missing-tool'], folders: [os.tmpdir()], minFreeMb: 1 });
+  assert.deepEqual(checks.filter((c) => !c.ok).map((c) => c.name).sort(), ['Smart Graph', 'nuclear-missing-tool'].sort());
+  assert.ok(!checks.some((c) => /Developer|Ollama|^model /.test(c.name)));
 });
 
 test('Nuclear Atlas builds templates from the map', () => {
   const map = '## Component `books`\n\n- `x.nuc`\n  - usecase `AllBooks` — all\n';
   assert.ok(templatesOf(map, 'backend').some((t) => t.text.includes('`AllBooks`')));
   assert.ok(templatesOf(map, 'backend', 'es').some((t) => t.label === 'Explicar books'));
-});
-
-test('a local model is measured by its effective size, against the 3B rule', () => {
-  assert.equal(billionsOf('gemma4:e2b', '5.1B'), 2);
-  assert.equal(billionsOf('qwen2.5-coder:3b', '3.1B'), 3.1);
-  assert.ok(Math.abs(billionsOf('qwen2.5-coder:0.5b', '494.03M') - 0.494) < 0.001);
-  assert.ok(billionsOf('qwen2.5-coder:7b', '7.6B') > MAX_BILLIONS && billionsOf('gemma4:e4b', '8.0B') > MAX_BILLIONS);
 });
 
 // ---------- English and Spanish ----------
@@ -671,12 +696,14 @@ test('every kind of text the engine, the agents list and the set-up write has it
   assert.deepEqual(why.filter((k) => !(SQUAD.es as Record<string, string>)['sq.why.' + k] || !WHY_TEXTS.es[k]), []);
   // the set-up: a machine's fit, a requirement's state, the steps
   const setup = src('setup.nuc');
-  const fits = kinds(setup, /Fit\("[a-z]+", [^\n]*?, (?:hw\.vram >= p\.gb \? )?"([a-zA-Z]+)"/g).concat(['tightNoGpu', 'noGpu']);
-  const details = kinds(setup, /"(notInstalled|noAiServices|notRunning)"/g);
-  const ids = kinds(setup, /Step\("([a-z-]+)", /g).concat(['graphRemote']);
+  // with the switch off (ADR-platform-0013) only the remote profile's steps and details are shown: the local ones
+  // (fits, notRunning, developer, models, developer-service) stay in setup.nuc on standby, untested
+  const local = ['developer', 'models', 'developer-service'];
+  const details = kinds(setup, /"(notInstalled|noAiServices)"/g);
+  const ids = kinds(setup, /Step\("([a-z-]+)", /g).filter((k) => !local.includes(k)).concat(['graphRemote', 'standby']);
   const ses = SETUP.es as Record<string, string>;
-  assert.deepEqual([...fits.map((k) => 'fit.' + k), ...details.map((k) => 'detail.' + k), ...ids.map((k) => 'setupStep.' + k)].filter((k) => !ses[k]), []);
-  assert.ok(fits.length >= 6 && details.length === 3 && ids.length >= 10, [fits, details, ids].join(' | '));
+  assert.deepEqual([...details.map((k) => 'detail.' + k), ...ids.map((k) => 'setupStep.' + k)].filter((k) => !ses[k]), []);
+  assert.ok(details.length === 2 && ids.length >= 8, [details, ids].join(' | '));
   // said in the language, else the engine's English
   const T = { ...BUILDER.en, ...BUILDER.es } as Record<string, string>;
   assert.equal(stepTitle({ title: 'Repair a.nuc', key: 'repair', args: ['a.nuc'] }, T), 'Reparar a.nuc');

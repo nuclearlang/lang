@@ -18,7 +18,10 @@ const ANSWER_WAIT: Duration = Duration::from_secs(15);
 
 /// The installation this binary runs from, when a public installer made it (its `.version`); a build from source
 /// has none and is never updated here.
+/// `exe` is resolved first: macOS gives the path it was started by (`~/.local/bin/nuclear`, the installer's link), not
+/// the file in the installation that link points to, as Linux does.
 fn installation(exe: &Path) -> Option<PathBuf> {
+    let exe = std::fs::canonicalize(exe).unwrap_or_else(|_| exe.to_path_buf());
     let root = exe.parent()?.parent()?;
     root.join(".version").is_file().then(|| root.to_path_buf())
 }
@@ -232,6 +235,22 @@ pub fn offer(args: &[String]) -> Option<ExitCode> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn the_installation_is_found_through_the_installers_link() {
+        let dir = std::env::temp_dir().join(format!("nuclear-update-link-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("inst/bin")).unwrap();
+        std::fs::create_dir_all(dir.join("local/bin")).unwrap();
+        std::fs::write(dir.join("inst/.version"), "0.82.1").unwrap();
+        std::fs::write(dir.join("inst/bin/nuclear"), "").unwrap();
+        std::os::unix::fs::symlink(dir.join("inst/bin/nuclear"), dir.join("local/bin/nuclear")).unwrap();
+        // what macOS's current_exe gives: the link the user ran, not its target
+        let found = installation(&dir.join("local/bin/nuclear")).unwrap();
+        assert_eq!(found, std::fs::canonicalize(dir.join("inst")).unwrap());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn reads_the_version_of_the_redirect_and_of_the_api() {

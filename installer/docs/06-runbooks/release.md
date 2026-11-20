@@ -60,8 +60,7 @@ build: a plain `package.sh` links this machine's glibc and does not run on an ol
   `HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the
   checksum from there instead of a GitHub release.
 - **A clean machine in Docker** (`installer/release/clean-machine/`): nothing of NuclearLang inside, a user `dev`
-  who can sudo, systemd as on a real machine (so Ollama's installer and the AI set-up register their services the
-  usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own
+  who can sudo, systemd as on a real machine (so the AI set-up registers its services the usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own
   Python). The installer reads the archive mounted at
   `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`).
 
@@ -82,5 +81,5 @@ build: a plain `package.sh` links this machine's glibc and does not run on an ol
 
 `installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,nuclear-lsp,nuclear-builder}`,
 files in `~/.local/share/nuclearlang`). `cargo install` puts binaries in `~/.cargo/bin`, which is not on the user's
-PATH. After a change to a service's code on Linux: `systemctl --user restart nuclear-developer` (or
-`nuclear-graph`); its output: `journalctl --user -u nuclear-developer -n 50`.
+PATH. After a change to a service's code on Linux: `systemctl --user restart nuclear-chat` (or
+`nuclear-graph`); its output: `journalctl --user -u nuclear-chat -n 50`.

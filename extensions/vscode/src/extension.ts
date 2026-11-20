@@ -21,7 +21,6 @@ import { appDir, CARD, projectCard, readCard } from './card';
 import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
 import { activateWorkspace } from './workspace';
 import { checkSnapshot } from './snapshot';
-import { activateUpdateCheck } from './updateCheck';
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -43,7 +42,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // the language of every page and message (nuclear.language): the status bar's globe and the change event
   registerLanguage(context);
   // a newer release: the floating button of every NuclearLang page, before any page opens
-  activateUpdateCheck(context);
   // the toolchains' settings into the environment of every process and terminal, before the first one starts
   applyToolchains(context);
   generated = new GeneratedCodeProvider();

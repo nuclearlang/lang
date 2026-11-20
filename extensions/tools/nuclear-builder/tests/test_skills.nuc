@@ -72,6 +72,7 @@ testAMemberGetsTheTeamsTheAgentsAndItsOwnSkillsItsOwnFirst(tmpPath: Path, monkey
   expect(role.sources == { "payments": "team", "house-style": "member", "testing-in-nuclear": "library" } and "Even shorter." in role.text() and "Stripe only." in role.sharedText())
 
 testTheSkillsCommandsListShowCloneCreateUpdateDeleteAndSet(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   skillsHome(tmpPath, monkeypatch)
   made = skillsCall(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Bank", "skills": ["payments"], "members": [{ "role": "developer", "id": "dev" }] }))
   expect(made["code"] == 0, json.dumps(made))

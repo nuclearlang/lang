@@ -12,9 +12,9 @@ export const ROLES = ['analyst', 'architect', 'developer', 'qa', 'devops'] as co
 export type RoleId = (typeof ROLES)[number];
 export const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'delivery'] as const;
 
-/** Who may do a role, by kind (teams.nuc's PROVIDERS). */
+/** Who may do a role, by kind (teams.nuc's PROVIDERS). No `local` kind: the local models are on standby
+ * (ADR-platform-0013); a stored local member is converted by the command, with its `warnings`. */
 export const PROVIDERS = {
-  local: ['nuclear-developer'],
   agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'],
   api: ['anthropic', 'openai', 'google', 'openrouter'],
 } as const;
@@ -116,6 +116,8 @@ export interface Team {
   members: Member[];
   /** The roles it lacks to run every station (`team show`). */
   missing?: RoleId[];
+  /** What the command converted on read (a member that named the local kind, ADR-platform-0013). */
+  warnings?: string[];
 }
 
 /** A team's or a member's own skill (library.nuc `validOwnSkill`): `name` its title, `text` its markdown body, `from`
@@ -273,7 +275,8 @@ export const suggestMembers = (purpose: string, skills: string[], lang: 'en' | '
 /** Five satirical names for a team (`team name-suggest`). */
 export const suggestNames = (purpose: string, lang: 'en' | 'es') => team<string[]>(['name-suggest', '--purpose', purpose, '--lang', lang]);
 /** The agents of this machine (`agents --json`): who can work a member here; none from an older nuclear-builder. */
-export const agentsHere = () => call<Agent[]>(['agents', '--json']).catch(() => [] as Agent[]);
+// an older nuclear-builder may still list the local kind: never offered (ADR-platform-0013)
+export const agentsHere = () => call<Agent[]>(['agents', '--json']).then((xs) => xs.filter((a) => (a.kind as string) !== 'local'), () => [] as Agent[]);
 
 /** A model a provider offers (`models --json`): a local one with its size, memory need and fit on this machine. */
 export interface ModelInfo {
@@ -299,7 +302,7 @@ export interface ModelsHere {
 }
 /** Each provider's models, from the provider (Ollama's with their memory need), and this machine's memory; none when
  * the command cannot tell (the pickers then list what `agents --json` gave). */
-export const modelsHere = () => call<ModelsHere>(['models', '--json']).catch((): ModelsHere => ({ memory: { totalGb: 0, availableGb: 0 }, providers: {} }));
+export const modelsHere = () => call<ModelsHere>(['models', '--json']).then((m) => ({ ...m, providers: Object.fromEntries(Object.entries(m.providers ?? {}).filter(([, p]) => (p.kind as string) !== 'local')) })).catch((): ModelsHere => ({ memory: { totalGb: 0, availableGb: 0 }, providers: {} }));
 /** A team's name changed (`team update <id> --name`). */
 export const renameTeam = (id: string, name: string) => team<Team>(['update', id, '--name', name]);
 /** A copy of a team under a new name, its own id (`team duplicate`). */
@@ -319,12 +322,14 @@ export interface Screen {
   /** The library's skills and agents, each with its file (none from an older nuclear-builder). */
   library: LibraryEntry[];
   agents: LibraryEntry[];
+  /** What the command converted on read (ADR-platform-0013); none from an older nuclear-builder. */
+  warnings: string[];
 }
 export async function teamScreen(lang: 'en' | 'es'): Promise<Screen> {
-  const raw = await team<{ teams: TeamEntry[]; shown: Record<string, Team | { error: string }>; roster: Record<string, unknown>; temperaments?: Temperament[]; vault?: Record<string, boolean> | null; library?: LibraryEntry[]; agents?: LibraryEntry[] }>(['screen', '--lang', lang]);
+  const raw = await team<{ teams: TeamEntry[]; shown: Record<string, Team | { error: string }>; roster: Record<string, unknown>; temperaments?: Temperament[]; vault?: Record<string, boolean> | null; library?: LibraryEntry[]; agents?: LibraryEntry[]; warnings?: string[] }>(['screen', '--lang', lang]);
   const shown: Record<string, Team | null> = {};
   for (const [id, t] of Object.entries(raw.shown ?? {})) shown[id] = 'error' in t ? null : t;
-  return { teams: raw.teams ?? [], shown, roster: rosterOf(raw.roster ?? {}), temperaments: raw.temperaments ?? [], vault: raw.vault ?? null, library: raw.library ?? [], agents: raw.agents ?? [] };
+  return { teams: raw.teams ?? [], shown, roster: rosterOf(raw.roster ?? {}), temperaments: raw.temperaments ?? [], vault: raw.vault ?? null, library: raw.library ?? [], agents: raw.agents ?? [], warnings: raw.warnings ?? [] };
 }
 
 /** A roster as the command gives it: each role as its roster file (`{ role, stats, employees }`) or as the list of its

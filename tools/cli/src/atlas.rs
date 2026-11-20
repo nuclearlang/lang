@@ -86,7 +86,7 @@ pub const TOPICS: &[Topic] = &[
     topic!("cli", "tools", "the nuclear command: a quick start, the commands by job, how agents use it", "tools/cli/docs/08-guides/README.md"),
     topic!("commands", "tools", "every command and option of nuclear", "tools/cli/docs/08-guides/commands.md"),
     topic!("mcp", "tools", "the MCP server: set-up of each client, how a model works with it, every tool", "tools/mcp/docs/08-guides/mcp.md"),
-    topic!("ai-setup", "tools", "the AI services (Smart Graph, local developer, Chat): set-up, profiles, remote only", "installer/docs/08-guides/ai-setup.md"),
+    topic!("ai-setup", "tools", "the AI services (Smart Graph, Chat; the local models on standby): set-up, profiles, remove", "installer/docs/08-guides/ai-setup.md"),
     topic!("graph", "tools", "the Smart Graph: the knowledge base the agents read", "nuclear-graph-storage/docs/08-guides/README.md"),
     topic!("editors", "tools", "the editor extensions (VS Code, JetBrains, Zed) and their tools", "extensions/docs/08-guides/README.md"),
     topic!("vscode", "tools", "the VS Code extension: what it does and its settings", "extensions/vscode/docs/08-guides/README.md"),

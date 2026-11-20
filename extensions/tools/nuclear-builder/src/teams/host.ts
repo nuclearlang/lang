@@ -218,6 +218,13 @@ export class TeamsHost {
         if (!id) return;
         this.put(await clearTeamLogo(id));
         return this.state();
+      case 'team:chat': {
+        // a member's direct message or the team's channel, in Nuclear Atlas (the chat's ids: `<team>-<member>`, `<team>`)
+        const team = String(m.team ?? ''), member = m.member ? String(m.member) : '';
+        if (!/^[\w-]+$/.test(team) || (member && !/^[\w-]+$/.test(member))) return;
+        void vscode.commands.executeCommand('nuclear.atlas.open', undefined, member ? `dm-${team}-${member}` : team);
+        return;
+      }
       case 'team:reports':
         // the Reports page, filtered to the member
         void vscode.commands.executeCommand('nuclear.builder.reports', { team: m.team, member: m.member });
@@ -261,7 +268,7 @@ export class TeamsHost {
     // each member's steps in this team's runs (the profile's Activity); the onboarding knows no runs
     const runs = this.work?.() ?? [];
     const activity = team ? Object.fromEntries((team.members ?? []).map((x) => [x.id, memberActivity(runs, team.id, x.employee ?? '')])) : {};
-    this.post({ type: 'team:state', teams, team, logo: team ? logoData(team) : null, roster: s.roster, temperaments: s.temperaments, faces, thumbs, vault: s.vault, library: s.library ?? [], agents: s.agents ?? [], activity, company: this.work ? this.company(teams, s.shown) : null });
+    this.post({ type: 'team:state', teams, team, logo: team ? logoData(team) : null, roster: s.roster, temperaments: s.temperaments, faces, thumbs, vault: s.vault, library: s.library ?? [], agents: s.agents ?? [], warnings: [...(s.warnings ?? []), ...(team?.warnings ?? [])], activity, company: this.work ? this.company(teams, s.shown) : null });
     // each member's numbers from the factory's ledger (the member panel's Summary): after the page is drawn, never
     // holding it; an older nuclear-builder without `metrics` leaves them out
     if (team) void teamNumbers(team.id).then((numbers) => this.post({ type: 'team:numbers', team: team.id, numbers })).catch(() => undefined);

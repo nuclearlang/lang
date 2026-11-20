@@ -2,8 +2,10 @@
 
 `nuclear-mcp`: the program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang. It
 speaks the Model Context Protocol over stdio and offers the generators, the compiler and the command line, the Smart
-Graph, the local developer and the internet as tools. Its instructions tell every client how to work, so they all
-behave the same: generate first, let the local developer write the rest, then validate and correct.
+Graph and the internet as tools. Its instructions tell every client how to work, so they all behave the same:
+generate first, write the rest, then validate and correct. The local developer's tools (`developer_*`) are on
+standby with the local models ([ADR-platform-0013](../../docs/03-adr/0013-local-models-on-standby.md)): `LOCAL_MODELS`
+in `server.nuc`, held to `localModels` of Nuclear Builder's `setup.json` by a test.
 
 ## Stack
 
@@ -52,8 +54,9 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 4. **The `nuclear_project` tool runs only the commands of its list** (`PROJECT_COMMANDS`).
 5. **The graph is reached with the token of the client `mcp`**: the user decides whether MCP clients may read it.
    Never weaken that to make a tool easier.
-6. **A machine set up for remote agents only** gets no `graph_*` and no `developer_*` tools, and other
-   instructions. A new tool that needs the graph or the local developer takes one of those prefixes.
+6. **No `developer_*` tool while `LOCAL_MODELS` is false**, and a machine set up for remote agents only gets none
+   either; the `graph_*` tools are on every machine. A new tool that needs the graph or the local developer takes one
+   of those prefixes.
 7. **What comes from the internet is untrusted text**: no code blocks, and never a page of this machine or the
    local network.
 

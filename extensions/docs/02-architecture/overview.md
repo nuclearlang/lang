@@ -14,7 +14,7 @@ flowchart LR
   ext -- "LSP + nuclear/* over stdio" --> lsp[nuclear-lsp]
   lsp --> dialects[Dialects and platform contracts]
   ext -- "commands in a terminal or a process" --> cli[nuclear / nuclear-builder]
-  ext -- HTTP --> ai[Nuclear Developer, Smart Graph, Ollama]
+  ext -- HTTP --> ai[Smart Graph, Nuclear Chat]
   ext -- CDP --> browser[Headless Chromium: the devices]
   lsp -- writes --> files[".nuclear/ of the project"]
   cli -- writes --> files

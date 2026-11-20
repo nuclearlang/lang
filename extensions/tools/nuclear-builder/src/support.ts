@@ -82,11 +82,7 @@ export interface Check {
 }
 
 export interface Needs {
-  developerUrl: string;
   graphUrl: string;
-  ollamaUrl: string;
-  /** The local models that must be installed in Ollama. */
-  models: string[];
   /** Command line tools that must answer `--version` (`claude` when Claude leads). */
   tools: string[];
   /** Folders that need free space (the project, the temporary folder), at least `minFreeMb` each. */
@@ -117,26 +113,11 @@ export function freeMb(folder: string): number {
   return Math.floor((s.bavail * s.bsize) / 1024 / 1024);
 }
 
-/** Every service a task will use, checked now: each answers, the models are installed, the disks have room. */
+/** Every service a task will use, checked now: each answers, the disks have room. */
 export async function checkConnections(n: Needs, env: NodeJS.ProcessEnv = process.env): Promise<Check[]> {
-  const [dev, graph, tags] = await Promise.all([get(n.developerUrl + '/docs'), get(n.graphUrl + '/v1/health'), get(n.ollamaUrl + '/api/tags')]);
-  const out: Check[] = [
-    { name: 'Nuclear Developer', ok: dev.ok, detail: dev.ok ? n.developerUrl : `${n.developerUrl} does not answer (${dev.error ?? dev.status}): start it in Settings and integrations` },
-    { name: 'Smart Graph', ok: graph.ok, detail: graph.ok ? n.graphUrl : `${n.graphUrl} does not answer (${graph.error ?? graph.status}): nuclear-graph serve` },
-    { name: 'Ollama', ok: tags.ok, detail: tags.ok ? n.ollamaUrl : `${n.ollamaUrl} does not answer (${tags.error ?? tags.status}): start Ollama` },
-  ];
-  if (tags.ok) {
-    let installed: string[] = [];
-    try {
-      installed = (JSON.parse(tags.body) as { models: { name: string }[] }).models.map((m) => m.name);
-    } catch {
-      installed = [];
-    }
-    for (const m of n.models) {
-      const has = installed.some((i) => i === m || i === `${m}:latest`);
-      out.push({ name: `model ${m}`, ok: has, detail: has ? 'installed' : `not installed: ollama pull ${m} (or Pull in Settings and integrations)` });
-    }
-  }
+  // no Developer, Ollama or local model: the local models are on standby (ADR-platform-0013)
+  const graph = await get(n.graphUrl + '/v1/health');
+  const out: Check[] = [{ name: 'Smart Graph', ok: graph.ok, detail: graph.ok ? n.graphUrl : `${n.graphUrl} does not answer (${graph.error ?? graph.status}): nuclear-graph serve` }];
   out.push(...(await Promise.all(n.tools.map((t) => version(t, env)))));
   for (const f of n.folders) {
     try {

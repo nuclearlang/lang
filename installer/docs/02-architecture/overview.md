@@ -48,10 +48,11 @@ folder above the binary's `bin/`).
 2. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear` and `nuclear-lsp` in
    `$PREFIX/bin`.
 3. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the
-   set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself
+   set-up installs the graph editable and builds the MCP server in place (the Developer is on standby,
+   ADR-platform-0013: never built). The set-up itself
    (`extensions/tools/nuclear-builder`, Nuclear: the set-up and the software factory's line) is built and installed
    editable with uv as `nuclear-builder`; Nuclear Chat's command (`nuclear-chat/system`, Nuclear) the same way as
-   `nuclear-chat` (its service is built and started by the set-up's last step, `chat-service`). With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as
+   `nuclear-chat` (its service is built and started by the set-up's last step, `chat-service`). With `--ai`: `nuclear-builder setup --profile remote --yes`. With `--ai-runtime`: the AI archive staged as
    `ai/` and its own `nuclear-builder setup`.
 4. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).
 5. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the
@@ -76,7 +77,8 @@ the intro marker (`$XDG_STATE_HOME/synapsis`), the VS Code extension.
   installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer
   installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the
   MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,
-  `nuclear-mcp`, `nuclear-developer`, `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to
+  `nuclear-mcp`, `nuclear-developer` (in the archive but inert while the local models are on standby, ADR-platform-0013:
+  the set-up neither links nor starts it), `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to
   `ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the
   services print reaches a pipe whole on Windows and under a C locale), and the knowledge base; and `ai/nuclear-agents/{roles,skills,agents}`, the software factory's rosters with
   their portraits, temperaments and team names and the library of skills and agents, which Nuclear Builder reads
@@ -128,7 +130,7 @@ piped, it is plain text. `install.ps1` uses the console's colors and builds its 
 PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns
 and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,
 `box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does
-(`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to
+(`STEP_ABOUT`) and a bar when its output says a percent; everything a step says goes to
 `~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\nuclearlang\setup.log`), and a failed step is a red box with
 its last lines, the error and what to do, never a traceback.
 
@@ -136,8 +138,8 @@ its last lines, the error and what to do, never a traceback.
 [the user's list](../08-guides/what-gets-installed.md)). NuclearLang, the Smart Graph and the MCP server (the AI archive
 and its set-up) are required: no question is asked for them, and a missing one ends the run with a red *Not complete*
 box and exit code 1 (NuclearLang stays installed; the step log and the cache are kept, so a new run goes on). The
-extension is a task whose failure is a warning. The local agents are asked by the set-up (`remote` by default);
-without a terminal the profile is `remote`. Windows on ARM downloads the x64 AI archive; an Intel Mac has none.
+extension is a task whose failure is a warning. The profile is always `remote`: the local models are on standby
+(ADR-platform-0013), and a local profile asked or kept becomes `remote` with a note. Windows on ARM downloads the x64 AI archive; an Intel Mac has none.
 `install.ps1` ends with `Quit`: `exit` when run as a file, `break` under `irm | iex` (so the user's window stays). Both installers write `<installation>/.version` and
 `<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`
 (`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On
@@ -163,14 +165,15 @@ The installers do not install the services: they call the set-up (`nuclear-build
 archive's `ai/bin/nuclear-builder` (`extensions/tools/nuclear-builder/setup.nuc`, written in Nuclear). What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is
 ADR-installer-0002.
 
-- The profile is `--profile` / `NUCLEAR_AI_PROFILE`, else the one the machine has (`NUCLEAR_AI_PROFILE=` in
-  `~/.config/nuclearlang/ai.env`, `%APPDATA%\nuclearlang\ai.env`).
-- With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without
-  one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.
+- The profile is always `remote` (ADR-platform-0013): `nuclear-builder setup --profile remote --yes`, no questions.
+  A `--profile` / `-AiProfile` / `NUCLEAR_AI_PROFILE` of a local profile, or one the machine kept
+  (`NUCLEAR_AI_PROFILE=` in `~/.config/nuclearlang/ai.env`, `%APPDATA%\nuclearlang\ai.env`), becomes `remote` and the
+  installer says so; on such a machine the set-up's first step (`standby`) takes away what was local and says the GB
+  freed.
 - Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),
   so `nuclear-builder setup` works before the set-up ran; its line's commands (`run`, `retry`, `ci`…) are the software
   factory's, in Nuclear too: no node is needed.
 - The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.
-- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`
-  (`systemctl --user restart nuclear-developer` after a change to its code;
-  `journalctl --user -u nuclear-developer -n 50`); `nuclear-builder setup --status` says what is installed and running.
+- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-chat`
+  (`systemctl --user restart nuclear-chat` after a change to its code;
+  `journalctl --user -u nuclear-chat -n 50`); `nuclear-builder setup --status` says what is installed and running.

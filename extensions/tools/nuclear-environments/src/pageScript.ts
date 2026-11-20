@@ -110,11 +110,7 @@ export function envPage(api, H, ICON, RE) {
       text.appendChild(el('pre', '', f.detail));
     }
     box.appendChild(text);
-    if (f.kind === 'outdated' || f.kind === 'missing') {
-      const b = button('primary', 'update', t('updateNow'));
-      b.onclick = () => vscode.postMessage({ type: 'update' });
-      box.appendChild(b);
-    } else {
+    if (f.kind !== 'outdated' && f.kind !== 'missing') {
       const b = button('icon', null, '✕', t('dismiss'));
       b.onclick = () => vscode.postMessage({ type: 'dismiss' });
       box.appendChild(b);

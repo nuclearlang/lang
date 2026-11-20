@@ -29,6 +29,7 @@ call(args: string[], monkeypatch: any, capsys: any, stdin: string = "") <string,
   { "code": code, "out": out.trim().isEmpty ? null : json.loads(out) }
 
 testATeamIsSavedReadListedAndItsLastVersionKept(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   useTempHome(tmpPath, monkeypatch)
   draft = { "name": "Night shift", "purpose": "A shop", "skills": ["testing"], "members": [{ "role": "analyst", "kind": "agent", "provider": "claude-code", "model": "haiku" }, { "role": "architect" }] }
   made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps(draft))
@@ -78,7 +79,20 @@ testAnEmployeeIsCheckedAgainstTheRosterWhenThereIsOne() void
 
 // A member whose who-works is not said gets the local defaults (the profile's models); the team a run takes when
 // there is none at all is one local member per role, the first employee of each roster.
-testANewMemberGetsTheLocalDefaults() void
+// The local models on standby (ADR-platform-0013): a member whose who-works is not said gets the default external
+// choice (Claude Code is installed here), the team of a run with no team too, and the local kind is refused where who
+// works a member is chosen.
+testOnStandbyANewMemberGetsTheDefaultExternalChoiceAndTheLocalKindIsRefused(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  dev = newMember({ "role": "developer" }, [], {})
+  expect(dev["kind"] == "agent" and dev["provider"] == "claude-code" and dev["model"] == null, json.dumps(dev))
+  expect((localTeam({}, ROSTER)["members"] as <string, any>[]).all((m) => m["provider"] == "claude-code"))
+  draft = { "name": "Old habits", "members": [{ "role": "developer", "kind": "local", "provider": "nuclear-developer" }] }
+  made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps(draft))
+  expect(made["code"] == 1 and "standby" in "${(made["out"] as <string, any>)["error"]}", json.dumps(made))
+
+testANewMemberGetsTheLocalDefaults(monkeypatch: any) void
+  localOn(monkeypatch)
   machine = { "CODER_MODEL": "qwen2.5-coder:1.5b", "ASSISTANT_MODEL": "gemma4:e4b" }
   dev = newMember({ "role": "developer" }, [], machine)
   expect(dev["kind"] == "local" and dev["provider"] == "nuclear-developer" and dev["model"] == "qwen2.5-coder:1.5b" and dev["id"] == "developer")
@@ -161,6 +175,7 @@ testTheRosterOfEveryRoleInEachLanguage(tmpPath: Path, monkeypatch: any, capsys: 
 // The company screen in one call (`team screen`): the teams as `list` gives them, each one as `show` gives it, a file
 // that cannot be read as its error, the roster as `roster`, the temperaments and the vault's providers.
 testTheScreenGivesEverythingTheCompanyScreenDrawsInOneCall(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   useTempHome(tmpPath, monkeypatch)
   roles = tmpPath.joinpath("roles")
   roles.joinpath("qa", "roster").mkdir(parents = true)
@@ -170,7 +185,7 @@ testTheScreenGivesEverythingTheCompanyScreenDrawsInOneCall(tmpPath: Path, monkey
   tmpPath.joinpath("factory", "teams", "broken.json").writeText("{")
   screen = call(["team", "screen", "--json"], monkeypatch, capsys)["out"] as <string, any>
   listed = call(["team", "list", "--json"], monkeypatch, capsys)["out"] as <string, any>[]
-  expect(screen["teams"] == listed and screen.keys == ["teams", "shown", "roster", "temperaments", "vault", "library", "agents"])
+  expect(screen["teams"] == listed and screen.keys == ["localModels", "warnings", "teams", "shown", "roster", "temperaments", "vault", "library", "agents"] and screen["localModels"] == true)
   shown = screen["shown"] as <string, any>
   id = "${made["id"]}"
   expect(shown[id] == call(["team", "show", id, "--json"], monkeypatch, capsys)["out"])
@@ -306,6 +321,7 @@ testTheRosterGivesFacesAndAMemberMayChangeTheirTemperament(tmpPath: Path, monkey
 // ADR-platform-0010: a file of the first shape (one member per role, the tech lead a role) is written in the second
 // on its first read, through the normal write: the old one kept as `.bak`, each member's id its role.
 testAnOldTeamFileIsConvertedOnItsFirstRead(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   useTempHome(tmpPath, monkeypatch)
   teams = tmpPath.joinpath("factory", "teams")
   teams.mkdir(parents = true)
@@ -345,6 +361,7 @@ testAStationIsWorkedByTheAssignedMemberElseTheFirstOfItsRole(tmpPath: Path, monk
 // The wizard's commands: members added (twenty at once), updated and removed by their id; the tech lead's place
 // falls to the default when they leave; whether the team can run.
 testMembersAreAddedUpdatedAndRemovedByTheirId(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   useTempHome(tmpPath, monkeypatch)
   made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Big", "techLead": 1, "members": [{ "role": "analyst" }, { "role": "architect", "employee": "x-1" }] }))["out"] as <string, any>
   expect(made["techLead"] == "x-1", json.dumps(made))
@@ -427,6 +444,7 @@ testAMemberIsWorkedOnlyByAnAgentThisMachineHas(tmpPath: Path, monkeypatch: any, 
 // read as `devops` and written once (the old file kept as `.bak`), the member keeping its id; `--role delivery` is
 // still taken (one release) and answers `devops`; an old run's stations read so; the station keeps its name.
 testTheOldDeliveryRoleIsReadAsDevops(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   useTempHome(tmpPath, monkeypatch)
   dir = tmpPath.joinpath("factory", "teams")
   dir.mkdir(parents = true)

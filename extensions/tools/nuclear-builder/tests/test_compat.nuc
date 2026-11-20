@@ -58,6 +58,7 @@ printed(capsys: any) any
   json.loads(capsys.readouterr().out)
 
 testAFirstShapeTeamFromAPresetLoadsAsItsMembersWithItsOldFileKept(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   compatHome(tmpPath, monkeypatch)
   before = compatTeam(tmpPath, "v1-roles", "night-shift")
   expect(team(["list", "--json"]) == 0)
@@ -165,6 +166,7 @@ testTheRunsOfEarlierEnginesAreListedShownAndToldInTheJournal(tmpPath: Path, monk
   expect(retryLine(["list-characters"], false) == 2)
 
 testAnEngineThreeRunWithoutTeamMemberOrKeysIsRetriedFromItsStation(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   for fixture in ["engine3-no-team", "engine3-no-keys"]
     root = lineProject(tmpPath.joinpath(fixture), monkeypatch, [])
     compatRun(root, fixture)
@@ -230,6 +232,7 @@ testAnOlderChatHistoryIsReadWithItsSpendingConfirmed(tmpPath: Path, monkeypatch:
 // Values an earlier version kept that are gone today (a temperament, a base agent, a provider, a kind, an employee,
 // the tech lead): the team loads, each gone value left out with a warning that `team show` gives until the user saves.
 testATeamWhoseValuesDisappearedLoadsWithAWarningForEachNeverDropped(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   compatHome(tmpPath, monkeypatch)
   before = compatTeam(tmpPath, "v2-gone-values", "gone")
   // a file that is not JSON is listed with its error, never left out
@@ -251,3 +254,38 @@ testATeamWhoseValuesDisappearedLoadsWithAWarningForEachNeverDropped(tmpPath: Pat
   // the user's save answers them
   saved = saveTeam(loadTeam("gone"))
   expect(saved["warnings"] == null and loadTeam("gone")["warnings"] == null)
+
+// A team of the local models (0.82, `v2-local-0.82`) while they are on standby (ADR-platform-0013): each local member,
+// the tech lead and one with no who-works among them, is worked by the default external choice (the agent installed:
+// Codex here), each told in the team's `warnings`; the file is written once, the one of before kept whole as `.bak`.
+// With no agent and no key, Claude Code is set and the warning says a provider must be chosen.
+testATeamOfTheLocalModelsIsWorkedByTheDefaultExternalChoiceWhileTheyAreOnStandby(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  monkeypatch.setenv("HOME", "${tmpPath}")
+  bin = tmpPath.joinpath("bin")
+  bin.mkdir()
+  bin.joinpath("codex").writeText("#!/bin/sh\n")
+  bin.joinpath("codex").chmod(493)
+  monkeypatch.setenv("PATH", "${bin}")
+  before = compatTeam(tmpPath, "v2-local-0.82", "home-lab")
+  expect(team(["show", "home-lab", "--json"]) == 0)
+  shown: <string, any> = printed(capsys)
+  members: <string, any>[] = shown["members"]!
+  expect(members.map((m) => [m["id"], m["kind"], m["provider"]]) == [["lead", "agent", "codex"], ["developer", "agent", "codex"], ["qa", "agent", "codex"], ["devops", "agent", "claude-code"]], json.dumps(members))
+  expect(members.take(3).all((m) => m["model"] == null) and members[3]["model"] == "haiku" and shown["techLead"] == "lead" and members[0]["instructions"] == "Keep it small.")
+  warnings: string[] = shown["warnings"]!
+  expect(warnings.length == 3 and warnings.all((w) => "on standby (ADR-platform-0013)" in w and "Codex works it now" in w), json.dumps(warnings))
+  file = tmpPath.joinpath("factory", "teams", "home-lab.json")
+  expect(file.withName("home-lab.json.bak").readText() == before)
+  stamp = json.loads(file.readText())["updated"]
+  expect(loadTeam("home-lab")["updated"] == stamp, "read again: nothing more is written")
+  // the company screen tells it too
+  expect(team(["screen", "--json"]) == 0)
+  screen: <string, any> = printed(capsys)
+  expect(screen["localModels"] == false and ((screen["shown"] as <string, any>)["home-lab"] as <string, any>)["warnings"] == warnings)
+  expect(screen["warnings"] == warnings.map((w) => "Home lab: ${w}") and (screen["teams"] as <string, any>[])[0]["warnings"] == warnings, json.dumps(screen["warnings"]))
+  // no agent and no key on this machine: Claude Code until the user chooses
+  bin.joinpath("codex").unlink()
+  compatTeam(tmpPath, "v2-local-0.82", "home-lab")
+  again = loadTeam("home-lab")
+  expect(((again["members"] as <string, any>[]))[0]["provider"] == "claude-code" and (again["warnings"] as string[]).all((w) => NO_PROVIDER in w), json.dumps(again["warnings"]))

@@ -18,7 +18,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { lang, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
-import { withUpdateButton } from '../../../vscode/src/updateCheck';
 import { MOBILE_DEVICE } from './l10n';
 import { deviceSettings } from './settings';
 
@@ -701,7 +700,7 @@ export class DevicePanel {
           break;
       }
     });
-    view.webview.html = withUpdateButton(view.webview, this.html());
+    view.webview.html = this.html();
     this.stopped();
     devicesChanged.fire();
   }

@@ -246,7 +246,8 @@ readProviderModels(provider: string, root: string, memory: <string, any>, transp
   line = readLine(root, "")
   prices: <string, any> = line["prices"] ?? ({} as <string, any>)
   if kind == "local"
-    return ollamaModels(memory, transport)
+    // on standby (ADR-platform-0013): no Ollama model is listed
+    return localModels() ? ollamaModels(memory, transport) : { "models": [] as <string, any>[], "free": true, "source": "standby", "why": STANDBY }
   if provider == "claude-code"
     full = pricedIds("anthropic", prices).filter((id) => id.startsWith("claude-"))
     return { "models": claudeCodeIds(full).map((id) => { "id": id }), "free": true, "source": "claude" }

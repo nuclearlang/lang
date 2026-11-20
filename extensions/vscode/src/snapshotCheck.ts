@@ -43,14 +43,6 @@ function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-/** `latest` is a newer release than `own`. */
-export const newerVersion = (latest: string, own: string): boolean => compareVersions(latest, own) > 0;
-
-/** The version a `releases/latest` redirect names (`…/releases/tag/v0.81.0`), or undefined. */
-export function versionFromLatestUrl(url: string): string | undefined {
-  return /\/releases\/tag\/v?(\d+\.\d+\.\d+)\/?$/.exec(url)?.[1];
-}
-
 /** What makes the installation one snapshot again: nothing; `update` (NuclearLang and its services to the newest
  * release, which brings this extension's version: the stores publish with the release); or `extension` (this
  * extension is older than what is installed: the installed release's extension). */

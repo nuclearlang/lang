@@ -111,6 +111,14 @@ D13() {  # uninstall, then install again
   check 'nuclear_runs' "and a new install works"
 }
 
+P1() {  # the local profiles are on standby (ADR-platform-0013): asked or remembered, they become remote
+  machine P1; mkdir -p "$H/.config/nuclearlang"; printf 'NUCLEAR_AI_PROFILE=hard\n' > "$H/.config/nuclearlang/ai.env"
+  install
+  check 'grep -q "on standby (ADR-platform-0013): profile remote, not hard" "$H/out"' "a remembered local profile becomes remote"
+  install_with --profile lite --no-vscode
+  check 'grep -q "profile remote, not lite" "$H/out" && nuclear_runs' "an asked one too, and the install goes on"
+}
+
 PS1() {  # install.ps1 parses (PowerShell in one small container; skipped without Docker)
   machine PS1
   if ! command -v docker >/dev/null 2>&1; then echo "  - PS1 skipped (no docker)"; return; fi
@@ -119,7 +127,7 @@ PS1() {  # install.ps1 parses (PowerShell in one small container; skipped withou
   check '[ "$code" = 0 ]' "install.ps1 has no syntax errors"
 }
 
-ALL="D1 D2 E4 LOCK I1 D6 D7 D13 PS1"
+ALL="D1 D2 E4 LOCK I1 D6 D7 D13 P1 PS1"
 for CASE in ${*:-$ALL}; do
   echo "$CASE"
   "$CASE"

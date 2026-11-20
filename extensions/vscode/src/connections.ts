@@ -1,7 +1,8 @@
-// Every external connection of the extension, checked (ADR-platform-0003): the Nuclear Developer, the Smart Graph, Ollama and
-// the local models, and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira). Before
-// every task (a Builder run checks its own: builderEngine `preflight`; a chat question: `checkForChat`) and every
-// `nuclear.ai.checkEveryMinutes`: a connection that stops answering, or answers again, is a notification.
+// Every external connection of the extension, checked (ADR-platform-0003): the Smart Graph and each integration enabled
+// in the settings (Claude Code, Codex, OpenCode, GitHub, Jira). The local models are on standby (ADR-platform-0013): no
+// check of Ollama nor of the Nuclear Developer. Before every task (a Builder run checks its own: builderEngine
+// `preflight`) and every `nuclear.ai.checkEveryMinutes`: a connection that stops answering, or answers again, is a
+// notification.
 import { execFile } from 'node:child_process';
 import * as os from 'node:os';
 import * as vscode from 'vscode';
@@ -22,7 +23,7 @@ export async function checkAll(context: vscode.ExtensionContext): Promise<Check[
   const tools = [c.get('claude.command', 'claude')];
   if (c.get('codex.enabled', false)) tools.push(c.get('codex.command', 'codex'));
   if (c.get('opencode.enabled', false)) tools.push(c.get('opencode.command', 'opencode'));
-  const base = await checkConnections({ developerUrl: s.developerUrl, graphUrl: s.graphUrl, ollamaUrl: s.ollamaUrl, models: [s.coderModel, s.assistantModel], tools, folders: [os.tmpdir()], minFreeMb: c.get('watch.minFreeMb', 500) }, toolEnv());
+  const base = await checkConnections({ graphUrl: s.graphUrl, tools, folders: [os.tmpdir()], minFreeMb: c.get('watch.minFreeMb', 500) }, toolEnv());
   const gh = c.get('github.command', 'gh');
   const auth = await run(gh, ['auth', 'status']);
   base.push({ name: 'GitHub', ok: auth.ok, detail: auth.ok ? l10n.t('signed in') : l10n.t('{0} auth status: {1} (run gh auth login)', gh, auth.out.split('\n')[0] || l10n.t('not signed in')) });
@@ -44,13 +45,6 @@ export async function checkAll(context: vscode.ExtensionContext): Promise<Check[
     base.push({ name: 'Jira', ok, detail });
   }
   return base;
-}
-
-/** What a chat question needs: the Developer, the graph, Ollama and the assistant's model. `''` when all answer. */
-export async function checkForChat(): Promise<string> {
-  const s = aiSettings();
-  const checks = await checkConnections({ developerUrl: s.developerUrl, graphUrl: s.graphUrl, ollamaUrl: s.ollamaUrl, models: [s.assistantModel], tools: [], folders: [], minFreeMb: 0 });
-  return checks.filter((c) => !c.ok).map((c) => `${c.name}: ${c.detail}`).join('\n');
 }
 
 let last: Check[] = [];

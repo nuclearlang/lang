@@ -92,8 +92,8 @@ From a spec to a deploy. You write what you want, or import it from Jira or GitH
 
 ![Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph](https://nuclearlang.github.io/shots/atlas.webp)
 
-A chat about Nuclear answered on your machine. Atlas uses a local model and the **Nuclear Smart Graph**, the knowledge
-base of the language, its platforms and your projects. Nothing leaves your computer.
+A chat about your project and Nuclear, answered by the agent or provider you pick (Claude Code by default) over the
+**Nuclear Smart Graph**, the knowledge base of the language, its platforms and your projects.
 
 ## Nuclear Monitor · `Ctrl+Alt+F`
 

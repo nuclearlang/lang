@@ -33,8 +33,8 @@ Run in `extensions/vscode/`: `npm run compile`, `npm test` (`../tools/nuclear-en
 - The page never writes a file: every change is a `nuclear env` command. It opens a `.env` file only when asked.
 - A secret's value goes on the command's stdin (`nuclear env set NAME --secret`), never in its arguments, and is
   never shown (the list never prints it).
-- An error of a command is shown on the page, never swallowed; a `nuclear` without `env` (its usage printed) asks
-  to update NuclearLang (`nuclear.update`).
+- An error of a command is shown on the page, never swallowed; a `nuclear` without `env` (its usage printed) says
+  to run `nuclear update` in a terminal.
 
 ## Documents (read by task)
 | You need… | Read |

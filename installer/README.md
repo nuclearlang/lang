@@ -15,8 +15,9 @@ one-line installers, and the set-up of the AI services.
 
 - **One layout, one script** (`release/stage.sh`), one archive per system, one-line installers that check SHA-256
   ([ADR-installer-0001](docs/03-adr/0001-release-archives-and-one-line-installers.md)).
-- **The AI services come with the installer**, set up in steps by machine profile
-  ([ADR-installer-0002](docs/03-adr/0002-the-ai-services-come-with-the-installer.md)).
+- **The AI services come with the installer**, set up in steps
+  ([ADR-installer-0002](docs/03-adr/0002-the-ai-services-come-with-the-installer.md)); the local models are on standby
+  ([ADR-platform-0013](../docs/03-adr/0013-local-models-on-standby.md)): only the profile `remote`.
 - **POSIX `sh` and PowerShell**, needing only `curl`/`wget`, `tar` and a SHA-256 tool.
 - No release is published yet: the public one-liners fail until the first tag ([roadmap](docs/01-product/roadmap.md)).
 

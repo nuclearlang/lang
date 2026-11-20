@@ -13,6 +13,7 @@ import { lineJson } from '../../tools/nuclear-builder/src/runs';
 import { builderSettings } from '../../tools/nuclear-builder/src/settings';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
 import { notices } from './notifications';
+import { projectForcesConfirm, spendingSettings } from './spending';
 
 export const GIF_SOURCES = ['pack', 'tenor', 'giphy'] as const;
 export const chatGifs = (): string => {
@@ -41,7 +42,7 @@ async function registrationOf(root: string): Promise<Record<string, unknown>> {
     return registrationOf(root);
   }
   if (file.error) throw new Error(file.error);
-  return registration(file, { root, lang: l, gifs: chatGifs(), agent: builderSettings().chat as AgentProvider, face: (f) => faceData(f) });
+  return registration(file, { root, lang: l, gifs: chatGifs(), agent: builderSettings().chat as AgentProvider, face: (f) => faceData(f), forceConfirm: spendingSettings().forceConfirm || projectForcesConfirm(root) });
 }
 
 let host: ChatHost | undefined;

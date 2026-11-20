@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-20
 related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolchain.nuc, nuclear-graph-storage/web.nuc, tools/mcp/docs/08-guides/mcp.md]
 ---
 # The MCP server: overview
@@ -16,8 +16,8 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
         │ MCP (stdio)
         ▼
    nuclear-mcp ──────► nuclear                       the compiler, the command line, the generators
-        │           ──► nuclear-builder run|retry|restart a whole task by the local agents
-        │ HTTP      ──► Nuclear Developer (127.0.0.1:7879)   one file, its tests, its security findings
+        │           ──► nuclear-builder run|retry|restart a whole task by the local agents (on standby)
+        │ HTTP      ──► Nuclear Developer (127.0.0.1:7879)   one file, its tests, its security findings (on standby)
         │ HTTP      ──► Smart Graph (127.0.0.1:7878)         strategy, exact answers, search, memory
         └────────────► the internet                          an API's answer, its documentation
 ```
@@ -26,8 +26,8 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 |---|---|
 | `project_inspect`, `generate_*`, `nuclear_*` (`nuclear_project` among them) | only the installed `nuclear` command |
 | `api_inspect`, `web_search`, `web_read` | the internet |
-| `graph_*` | the Smart Graph, which a local profile of the set-up installs and starts |
-| `developer_*` | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |
+| `graph_*` | the Smart Graph, which every profile of the set-up installs and starts |
+| `developer_*` (on standby: not registered) | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |
 
 ## How a tool is declared
 
@@ -42,7 +42,15 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 - This is the pattern of an MCP server written in Nuclear: the Builder's, `nuclear-builder mcp`, is made the same way
   (its own project, [actions.md](../../../../extensions/tools/nuclear-builder/docs/02-architecture/actions.md)).
 
-## Two modes
+## The local models on standby
+
+`LOCAL_MODELS` (`false`, [ADR-platform-0013](../../../../docs/03-adr/0013-local-models-on-standby.md)) mirrors
+`localModels` of Nuclear Builder's `setup.json` (a test holds them equal). `localDeveloper()` is `LOCAL_MODELS` and a
+machine not of remote agents only: while it is false, `mcpServer()` registers no `developer_*` tool and
+`nuclear_start` answers the remote cycle, whatever the machine's mode. The developer's tools stay in the code; turning
+them on again is the user's decision (`LOCAL_MODELS = true` with `localModels: true`, and their own tests that day).
+
+## Two modes (with the local models on)
 
 `remoteOnly()` reads `NUCLEAR_AI_MODE`, else the mode of the machine's `ai.env` (`~/.config/nuclearlang/ai.env`,
 `%APPDATA%\nuclearlang\ai.env`), else `local`.
@@ -103,12 +111,15 @@ product is made with these tools: no target code for a feature, no native code t
 
 ## Installed alone
 
-A machine set up for remote agents only runs the server and the Smart Graph (ADR-installer-0004), but no local
-developer; the graph's package comes with the server, for `GraphClient`, `Toolchain` and `Web`.
+Every machine runs the server and the Smart Graph (ADR-installer-0004), but no local developer (on standby); the graph's package comes with the server, for `GraphClient`, `Toolchain` and `Web`.
 
 ## Tests (`tests/test_server.nuc`; `nuclear build . && .venv/bin/python -m pytest -q`)
 
-- `testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents`: the local mode offers the tools;
-  every tool is named in the guide of the server (`docs/08-guides/mcp.md`); the remote mode
-  offers more than ten tools, `graph_strategy` among them, and none of `developer_*`.
+- `testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesWhileTheLocalModelsAreOnStandby`: in the local and the remote
+  mode the server offers `nuclear_start` first, `graph_strategy` and the generators, and none of `developer_*`; every
+  tool is named in the guide of the server (`docs/08-guides/mcp.md`).
+- `testTheLocalModelsSwitchMirrorsNuclearBuildersSetup`: `LOCAL_MODELS` equals `localModels` of
+  `extensions/tools/nuclear-builder/setup.json` (only in the working tree).
+- `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear and never names
+  `developer_task` or `developer_review`.
 - `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.

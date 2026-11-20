@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [../../../docs/01-product/roadmap.md, ../02-architecture/workspace.md, ../02-architecture/ai-services.md]
 ---
 # Roadmap of the VS Code extension
@@ -14,9 +14,16 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
-- **The floating update button** (`updateCheck.ts`): the version parsing tested, never seen with a real newer
-  release published; the Nuclear Chat page and the runtime error page do not show it (the chat's input is where the
-  button floats).
+- **The Actions accordion and the chat's confirmation of a team's providers (Unreleased)**: the accordion is held by
+  `test/scripts.test.ts` (read from the page's source, not rendered) and the `--confirm-spending` of a team's paid
+  providers by `test/chat.test.ts`; neither seen in a running VS Code or Cursor.
+
+- **Local models on standby, ADR-platform-0013 (Unreleased)**: the welcome with only the profile `remote` (8 steps,
+  no profile, no Ollama), Settings and integrations without the Developer, Ollama and the local models, the
+  connections without their checks, a local `nuclear.builder.chat` converted with its notice: compiled and tested
+  (`npm test`, `test:compat`), never opened in a running VS Code. The local code (the profiles' cards, the model
+  picker of the settings page, the Developer's Start) was removed from the editor, not kept: turning the switch on
+  again needs that UI written again, with its tests.
 
 - **0.80.0, the version check at start** (`snapshot.ts`): tested (`test/snapshot.test.ts`), never seen in a running
   editor over a public installation of another version.

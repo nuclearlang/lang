@@ -14,3 +14,6 @@ not edited: a new one replaces it and the old one is marked `superseded by ADR-i
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../docs/03-adr/old-numbers.md).
+
+The local profiles of ADR-installer-0002, 0004 and 0006 (Ollama, the local agents asked) are on standby by
+[ADR-platform-0013](../../../docs/03-adr/0013-local-models-on-standby.md): the installers set up `remote` only.

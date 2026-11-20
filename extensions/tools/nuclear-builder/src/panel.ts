@@ -1,19 +1,19 @@
 // The Builder tool (ADR-platform-0003, spec 011 requirements 19-25): a workbench after n8n, one full-screen page like
 // Devices and HTTP. The specs' tree and the runs' accordion live in the Nuclear Workspace's column (`builderSidebar`,
 // drawn by vscode/src/workspace.ts; a click there drives this page). In the middle the run's diagram in C4's four
-// levels (flow.tsx), or the spec form that *New* opens; under it, always there, Nuclear Chat (spec 013) mounted on the
-// team's channel, where each run is told as a thread (followRun) and its questions are buttons; on
+// levels (flow.tsx), or the spec form that *New* opens. The page has no chat of its own: each run is told as a thread
+// of its team's channel in Nuclear Chat (followRun), its questions as buttons, and a click on a member or a team opens
+// Nuclear Atlas on that conversation (`nuclear.atlas.open`); on
 // the right the node picked, as a debugger's tree (its steps by title, each opening to its trace, tool calls,
 // decisions, files and log), above the run's log, one line per thing done, with the logo of the team doing the work
-// under it. *Who* is one label everywhere: employee · role · provider · model. The column and the chat fold and
-// resize, their sizes kept per viewer (the webview's state). The software factory's engine is Nuclear: each run is a
+// under it. *Who* is one label everywhere: employee · role · provider · model. The column folds and resizes, their sizes kept per viewer (the webview's state). The software factory's engine is Nuclear: each run is a
 // process, `nuclear-builder run … --events` (runs.ts), and the chat is the window's one connection to the service
 // (vscode/src/chatHost.ts, chatView.ts); both belong to the extension, not to the page; this file draws what they
 // write and passes the user's answers. What the page computes from its data is workbench.ts, inlined in its script. Plain HTML and script.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { aiSettings, jiraAuth, serviceEnv } from '../../../vscode/src/aiSettings';
+import { jiraAuth, serviceEnv } from '../../../vscode/src/aiSettings';
 import { notices } from '../../../vscode/src/notifications';
 import { readCard } from '../../../vscode/src/card';
 import { SettingsPanel } from '../../../vscode/src/settingsPanel';
@@ -22,10 +22,10 @@ import { lang, langButton, localize, pageI18n, texts, l10n } from '../../../vsco
 import { builderSettings } from './settings';
 import { BUILDER } from './l10n';
 import { faceData, listTeams, logoData, roleMember, roster, Roster, ROLES, showTeam, Team } from './teams/cli';
-import { Answer, Ask, Check, FACTORY_ENGINE, LAYERS, LineRun, lineJson, listRuns, loadRun, localSpecs, newRunId, orphaned, Piece, Run, Spec, specMarkdown, STATIONS, writeSpec } from './runs';
+import { Answer, Ask, Check, FACTORY_ENGINE, LAYERS, LineRun, lineJson, listRuns, loadRun, localSpecs, newRunId, orphaned, Run, Spec, specMarkdown, STATIONS, writeSpec } from './runs';
 import { CONFIG_FILE, githubIssue, jiraIssue, JiraAuth, jiraMine, suggestContext } from './support';
 import { missingCommand } from './support';
-import { chat, chatCsp, chatScript, openChatTab, teamChannel, wireChat } from '../../../vscode/src/chatView';
+import { chat, teamChannel } from '../../../vscode/src/chatView';
 import { askPost, askText, buttonOf, ChatEvent, fmt, lineDiff, RUN_TEXTS, runPosts } from '../../../vscode/src/chatHost';
 import { inline, initials, providerName, RunLite, runOutline, SpecEntry, specOfPath, specTree, stepTitle, stepTree, teamColor, teamLog, whoLabel } from './workbench';
 
@@ -43,14 +43,13 @@ type Message =
   | { type: 'jiraMine' }
   | { type: 'jiraSetup' }
   | { type: 'github'; ref: string }
-  | { type: 'plan'; spec: Spec }
   | { type: 'team'; id: string }
   | { type: 'start'; spec: Spec; team: string }
   | { type: 'saveSpec'; spec: Spec }
   | { type: 'runSpec'; id: string; path: string; team: string }
   | { type: 'specs' }
   | { type: 'picked'; spec: string | null; run: string | null; stage: string | null; step: string | null }
-  | { type: 'chatTab' }
+  | { type: 'atlas'; channel?: string }
   | { type: 'polish'; id: string }
   | { type: 'stop'; id: string }
   | { type: 'retry'; id: string; station?: string; scratch?: boolean }
@@ -123,7 +122,7 @@ async function teamCard(t: Team): Promise<unknown> {
   return { id: t.id, name: t.name, logo: logoData(t), techLead: leadRole(t), budgetUsd: t.budgetUsd, roles: ROLES.filter((role) => roleMember(t, role)).map((role) => {
     const x = roleMember(t, role)!;
     const who = r?.[role].employees.find((e) => e.id === x.employee);
-    return { role, employee: x.employee, name: x.name || who?.name || '', profile: who?.profile ?? '', face: faceData(who?.thumb ?? who?.face), kind: x.kind, provider: x.provider, model: x.model };
+    return { role, member: x.id, employee: x.employee, name: x.name || who?.name || '', profile: who?.profile ?? '', face: faceData(who?.thumb ?? who?.face), kind: x.kind, provider: x.provider, model: x.model };
   }) };
 }
 
@@ -390,7 +389,6 @@ export class BuilderPanel {
   private disposed = false;
   /** The ids of the specs the page knows: a new one the chat wrote opens. */
   private known = new Set<string>();
-  private readonly chatWire: ReturnType<typeof wireChat>;
   /** What the column asked before the page was ready: sent on its `ready`. */
   private pending: unknown;
 
@@ -404,22 +402,18 @@ export class BuilderPanel {
     this.panel.onDidDispose(() => {
       this.disposed = true;
       localized.dispose();
-      this.chatWire.dispose();
       BuilderPanel.current = undefined;
       notices.watch('builder', false);
-      this.lookChat(false);
     });
     // the team or the money changed (here or in Settings and integrations): the form shows what a run will use
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => (e.affectsConfiguration('nuclear.builder') || e.affectsConfiguration('nuclear.spending')) && !this.disposed && (this.state(), void this.teams())));
     this.panel.onDidChangeViewState((e) => {
       notices.watch('builder', e.webviewPanel.visible && e.webviewPanel.active);
-      this.lookChat(e.webviewPanel.visible);
       // back from the squad screen: its teams may have changed
       if (e.webviewPanel.visible) void this.teams();
     });
-    this.chatWire = wireChat(this.panel.webview, 'builder', () => this.root, teamChannel);
     followChat();
-    this.panel.webview.onDidReceiveMessage((m: Message) => this.chatWire.receive(m as { type?: string }) || void this.receive(m).catch((e) => this.post({ type: 'error', text: String(e instanceof Error ? e.message : e) })));
+    this.panel.webview.onDidReceiveMessage((m: Message) => void this.receive(m).catch((e) => this.post({ type: 'error', text: String(e instanceof Error ? e.message : e) })));
   }
 
   /** The Builder page, created or revealed, on the active project (or the first one). */
@@ -429,7 +423,6 @@ export class BuilderPanel {
     if (active && projects().some((x) => x.root === active)) p.root = active;
     p.panel.reveal(vscode.ViewColumn.Active);
     notices.watch('builder', true);
-    p.lookChat(true);
     p.state();
     const r = run ? loadRun(p.root, run) : undefined;
     if (r) p.post({ type: 'run', run: r, select: true });
@@ -443,13 +436,6 @@ export class BuilderPanel {
     else p.pending = { type: 'drive', ...m };
   }
   private ready = false;
-  /** The chat place the docked chat shows (its project's team channel), seen while the page is on screen. */
-  private looked = '';
-  private lookChat(on: boolean): void {
-    if (this.looked) notices.look(this.looked, false);
-    this.looked = on && this.root && chat().registered(this.root).channels.length ? `chat:${this.root}:${teamChannel(this.root)}` : '';
-    if (this.looked) notices.look(this.looked, true);
-  }
 
   static close(): void {
     BuilderPanel.current?.panel.dispose();
@@ -581,10 +567,12 @@ export class BuilderPanel {
         this.post({ type: 'select', id: m.id });
         driveRun(this.root, m.id, ['run', m.path.endsWith('.md') ? m.path : m.path + '/spec.md', ...(m.team ? ['--team', m.team] : [])]);
         return;
-      case 'chatTab':
-        return openChatTab(this.context, this.root);
+      case 'atlas':
+        // a member's direct message or a team's channel, in Nuclear Atlas (no channel: the project's team channel)
+        return void vscode.commands.executeCommand('nuclear.atlas.open', this.root, m.channel || (this.root ? teamChannel(this.root) : undefined));
       case 'polish':
-        return polishSpec(this.root, m.id);
+        await polishSpec(this.root, m.id);
+        return void vscode.commands.executeCommand('nuclear.atlas.open', this.root, teamChannel(this.root));
       case 'suggest':
         return this.post({ type: 'suggestions', list: this.root ? suggestContext(this.root, m.text) : [] });
       case 'jiraSetup':
@@ -602,14 +590,6 @@ export class BuilderPanel {
       }
       case 'github':
         return this.post({ type: 'issue', issue: await githubIssue(this.root, m.ref.trim()), source: 'github' });
-      case 'plan': {
-        const url = aiSettings().developerUrl;
-        const r = await fetch(url + '/developer/plan', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ spec: `# ${m.spec.title}\n\n${m.spec.description}\n\n${m.spec.criteria.map((c) => `- ${c}`).join('\n')}`, dialect: readCard(this.root)?.dialect ?? 'fastapi' }) }).catch((e) => {
-          throw new Error(l10n.t('the local developer is not running at {0} ({1})', url, String(e)));
-        });
-        const data = (await r.json()) as { pieces: Piece[] };
-        return this.post({ type: 'pieces', pieces: data.pieces ?? [] });
-      }
       case 'team':
         return this.post({ type: 'teamCard', team: await teamCard(await showTeam(m.id)) });
       case 'start':
@@ -718,10 +698,9 @@ export function html(webview: vscode.Webview, extension: vscode.Uri): string {
   // the run's diagram (flow.tsx, React Flow) is bundled apart by the extension's `npm run flow`
   const out = (f: string) => webview.asWebviewUri(vscode.Uri.joinPath(extension, 'out', f)).toString();
   const T = texts(BUILDER);
-  const csp = chatCsp(webview);
   const e = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
   return `<!DOCTYPE html><html lang="${lang()}"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${csp.img}; script-src 'nonce-${nonce}' ${csp.script};">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; img-src data: https:; script-src 'nonce-${nonce}' ${webview.cspSource};">
 <link rel="stylesheet" href="${out('builder-flow.css')}"><style>${CSS}</style></head><body>
 <header>
   <div class="brand"><svg viewBox="0 0 16 16"><path d="M8 1.5a6.5 6.5 0 1 0 6.3 8"/><path d="M14.5 4.5v4h-4"/></svg><b>Builder</b><span class="muted">${e(T.stagesLine)}</span></div>
@@ -735,11 +714,6 @@ export function html(webview: vscode.Webview, extension: vscode.Uri): string {
 <div class="wb" id="wb">
   <div class="mid">
     <main id="main"></main>
-    <div class="gutter h" data-g="chat"></div>
-    <section id="chat">
-      <div class="chathead"><span class="spark">✦</span><b>${e(T.chat)}</b><div class="grow"></div><button id="chatTab" title="${e(T.chatTabHint)}">⤢ ${e(T.chatTab)}</button><button class="fold" data-fold="chat" title="${e(T.foldChat)}" aria-label="${e(T.foldChat)}">▾</button></div>
-      <div id="chatMount"><div class="chatempty">${e(T.chatLoading)}</div></div>
-    </section>
   </div>
   <div class="gutter v" data-g="right"></div>
   <aside id="right" class="col">
@@ -756,7 +730,6 @@ export function html(webview: vscode.Webview, extension: vscode.Uri): string {
 <script nonce="${nonce}">${pageI18n(BUILDER)}</script>
 <script nonce="${nonce}" src="${out('builder-flow.js')}"></script>
 <script nonce="${nonce}">${WORKBENCH_JS}</script>
-<script nonce="${nonce}">${chatScript(webview, extension)}</script>
 <script nonce="${nonce}">${SCRIPT}</script>
 </body></html>`;
 }
@@ -894,7 +867,7 @@ pre { background: var(--vscode-textCodeBlock-background, #0002); padding: 10px; 
 .dtabs { display: flex; gap: 4px; margin: 10px 0; }
 .dtabs button.sel { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
 .empty { padding: 60px; text-align: center; color: var(--muted); }
-/* ---------- the workbench: three columns, the chat under the diagram, all foldable and resizable ---------- */
+/* ---------- the workbench: the diagram and the column on the right, foldable and resizable ---------- */
 .wb { display: grid; grid-template-columns: minmax(0, 1fr) 5px var(--rw, 380px); height: calc(100vh - 46px); transition: grid-template-columns .28s cubic-bezier(.2,.8,.2,1); }
 .wb.drag { transition: none; user-select: none; }
 .wb.fold-right { --rw: 30px; }
@@ -914,7 +887,7 @@ button.fold:hover { color: var(--fg); background: var(--vscode-toolbar-hoverBack
 .gutter.v { cursor: col-resize; } .gutter.v::after { inset: 0 2px; }
 .gutter.h { cursor: row-resize; height: 5px; flex-shrink: 0; } .gutter.h::after { inset: 2px 0; }
 .gutter:hover::after, .wb.drag .gutter.on::after { background: var(--accent); }
-.fold-right .gutter[data-g=right], .fold-chat .gutter[data-g=chat] { pointer-events: none; }
+.fold-right .gutter[data-g=right] { pointer-events: none; }
 .sec { text-transform: uppercase; font-size: 10.5px; letter-spacing: .08em; color: var(--muted); margin: 12px 4px 6px; font-weight: 600; }
 .count { display: inline-block; min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--vscode-badge-background, #8884); color: var(--vscode-badge-foreground, inherit); font-size: 10px; text-align: center; letter-spacing: 0; }
 .level { font-size: 10.5px; padding: 1px 7px; border-radius: 8px; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap; }
@@ -996,24 +969,13 @@ details.more > :not(summary) { margin-top: 6px; }
 .tf:hover { background: var(--vscode-list-hoverBackground); }
 .tf b { display: block; font-size: 12.5px; } .tf small { display: block; color: var(--muted); font-size: 11px; }
 .tlogo { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; display: inline-grid; place-items: center; color: #fff; font-weight: 700; font-size: 11.5px; letter-spacing: .02em; object-fit: cover; box-shadow: inset 0 0 0 1px #fff2; }
-/* the chat, docked under the diagram */
-#chat { height: var(--ch, 240px); min-height: 0; display: flex; flex-direction: column; flex-shrink: 0; background: var(--card); transition: height .28s cubic-bezier(.2,.8,.2,1); }
-.wb.drag #chat { transition: none; }
-.fold-chat #chat { height: 34px !important; }
-.fold-chat .chathead .fold { transform: rotate(180deg); }
-.chathead { display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex-shrink: 0; height: 34px; }
-.chathead a { cursor: pointer; color: var(--vscode-textLink-foreground); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chathead button { padding: 2px 9px; font-size: 12px; }
 .spark { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #a855f7); color: #fff; font-size: 11px; flex-shrink: 0; }
-#chatMount { flex: 1; min-height: 0; display: flex; flex-direction: column; } #chatMount > * { flex: 1; min-height: 0; }
-.fold-chat #chatMount { display: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: auto 0 0; }
 .chips a { cursor: pointer; padding: 4px 10px; border-radius: 12px; border: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
 .chips a:hover { color: var(--fg); border-color: var(--accent); }
-.chatempty { color: var(--muted); font-size: 12px; padding: 10px 14px; white-space: pre-wrap; } .chatempty.err { color: var(--bad); }
 .where { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 10px; }
 .where input, .where select { width: 100%; }
-@media (prefers-reduced-motion: reduce) { .wb, #chat, .fresh, .form, .home .hero, .home .line6 .n .av, .home .line6 .e { animation: none !important; transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .wb, .fresh, .form, .home .hero, .home .line6 .n .av, .home .line6 .e { animation: none !important; transition: none !important; } }
 #toast { position: fixed; bottom: 16px; right: 16px; padding: 10px 14px; border-radius: 6px; background: var(--vscode-notifications-background, var(--card)); border: 1px solid var(--line); display: none; max-width: 480px; z-index: 9; }
 #toast.err { border-color: var(--bad); }
 `;
@@ -1102,16 +1064,15 @@ let view = { mode: 'home', run: null, spec: null, stage: null, step: null, trace
 let form = blank();
 function blank() { return { useCase: 'feature', title: '', description: TEMPLATES.feature, criteria: [''], context: [], source: { kind: 'local' }, team: '', pieces: [], suggestions: [], srcTab: 'write', mine: [], component: '', layer: '' }; }
 
-// ---------- the layout: the columns' and the chat's sizes and folds, the open runs and tree nodes, per viewer ----------
-const L = Object.assign({ rw: 400, ch: 240, cw: 40, fold: { right: false, chat: false } }, (vscode.getState() ?? {}).layout ?? {});
+// ---------- the layout: the column's size and fold, the open runs and tree nodes, per viewer ----------
+const L = Object.assign({ rw: 400, cw: 40, fold: { right: false } }, (vscode.getState() ?? {}).layout ?? {});
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function save() { vscode.setState({ layout: L }); }
 function layout() {
   const wb = $('#wb');
   wb.style.setProperty('--rw', (L.fold.right ? 30 : L.rw) + 'px');
-  wb.style.setProperty('--ch', L.ch + 'px');
   wb.style.setProperty('--cw', L.cw + '%');
-  for (const k of ['right', 'chat']) wb.classList.toggle('fold-' + k, !!L.fold[k]);
+  wb.classList.toggle('fold-right', !!L.fold.right);
 }
 // the sizes kept are where the page opens, not where it animates to
 $('#wb').classList.add('drag');
@@ -1126,7 +1087,6 @@ document.addEventListener('pointerdown', (e) => {
   const move = (ev) => {
     const dx = ev.clientX - x0, dy = ev.clientY - y0;
     if (k === 'right') L.rw = clamp(s0.rw - dx, 260, 760);
-    if (k === 'chat') L.ch = clamp(s0.ch - dy, 110, innerHeight - 220);
     if (k === 'crew') L.cw = clamp(s0.cw - (dy / Math.max(1, $('.rcol').clientHeight)) * 100, 18, 82);
     layout();
   };
@@ -1207,7 +1167,6 @@ function paintForm() {
       + '<label class="f">' + esc(t('criteria')) + '</label>' + f.criteria.map((c, i) => '<div class="crit"><input data-crit="' + i + '" value="' + esc(c) + '" placeholder="' + esc(t('criterionPlaceholder')) + '"><button data-delcrit="' + i + '" title="' + esc(t('remove')) + '">✕</button></div>').join('') + '<div class="row"><button id="addCrit">＋ ' + esc(t('criterion')) + '</button><button id="readCrit" title="' + esc(t('readCritHint')) + '">' + esc(t('readCrit')) + '</button></div>')
     + section(3, t('context'), '<div class="muted" style="margin-bottom:8px">' + esc(t('contextHint')) + '</div><div class="row"><button id="suggest">↻ ' + esc(t('suggestAgain')) + '</button><input id="addCtx" placeholder="' + esc(t('anotherFile')) + '"><button id="addCtxGo">' + esc(t('add')) + '</button></div><div>' + (sugs + extra || '<div class="muted">' + esc(t('writeThenSuggest')) + '</div>') + '</div>')
     + section(4, t('theTeam'), teamPick()
-      + '<div class="row" style="margin-top:12px"><button id="preview">' + esc(t('preview')) + '</button><span class="muted">' + esc(t('previewHint')) + '</span></div>'
       + (f.pieces.length ? '<table class="pieces"><tr class="muted"><td>' + esc(t('pc.file')) + '</td><td>' + esc(t('pc.kind')) + '</td><td>' + esc(t('pc.task')) + '</td><td></td></tr>' + f.pieces.map((p, i) => '<tr><td><input data-pc="' + i + '" data-k="path" value="' + esc(p.path) + '"></td><td style="width:110px"><input data-pc="' + i + '" data-k="kind" value="' + esc(p.kind) + '"></td><td><input data-pc="' + i + '" data-k="task" value="' + esc(p.task) + '"></td><td><button data-delpc="' + i + '">✕</button></td></tr>').join('') + '</table>' : ''))
     + '<div class="go"><button id="reset">' + esc(t('clear')) + '</button><button id="saveSpec" title="' + esc(t('saveSpecHint')) + '">✓ ' + esc(t('saveSpec')) + '</button><button id="start" class="primary">▶ ' + esc(t('startRun')) + '</button></div></div>';
 }
@@ -1236,8 +1195,8 @@ function teamPick() {
     + '<a class="link" id="openTeam" tabindex="0" title="' + esc(t('teamLinkHint')) + '">👥 ' + esc(t('teamLink')) + '</a>'
     + '<a class="link" data-act="buildTeam" tabindex="0" title="' + esc(t('buildTeamHint')) + '">+ ' + esc(t('buildTeam')) + '</a>'
     + '<a class="link" id="openBudget" tabindex="0" title="' + esc(t('budgetLinkHint')) + '">💰 ' + esc(t('budgetLink')) + (budget === null ? '' : ' <span class="muted">' + esc(budget > 0 ? budget.toFixed(2) + ' USD' : t('noLimit')) + '</span>') + '</a></div>'
-    + (c && c.id === chosen ? '<div class="roster5">' + c.roles.map((x) => '<div class="hire" title="' + esc(x.profile) + '">' + av(x.role, x.employee) + '<div><b>' + esc(x.name || ACTORS[x.role].role) + '</b><small>' + esc(ACTORS[x.role].role) + '</small><small class="' + (x.kind && x.kind !== 'local' ? 'paid' : '') + '">' + esc(workedBy(x)) + '</small></div></div>').join('') + '</div>' : '')
-    + '<div class="muted" style="margin-top:8px;font-size:12px">' + esc(teams.project ? t('projectTeam') : '') + ' ' + esc(paid.length ? t('paidRoles', paid.map((x) => ACTORS[x.role].role).join(', ')) + ' ' + asks : t('allLocal')) + '</div>';
+    + (c && c.id === chosen ? '<div class="roster5">' + c.roles.map((x) => '<div class="hire" data-dm="' + esc('dm-' + c.id + '-' + x.member) + '" tabindex="0" role="button" title="' + esc(t('chatWith', x.name || ACTORS[x.role].role)) + '">' + av(x.role, x.employee) + '<div><b>' + esc(x.name || ACTORS[x.role].role) + '</b><small>' + esc(ACTORS[x.role].role) + '</small><small class="' + (x.kind && x.kind !== 'local' ? 'paid' : '') + '">' + esc(workedBy(x)) + '</small></div></div>').join('') + '</div>' : '')
+    + '<div class="muted" style="margin-top:8px;font-size:12px">' + esc(teams.project ? t('projectTeam') : '') + ' ' + esc(paid.length ? t('paidRoles', paid.map((x) => ACTORS[x.role].role).join(', ')) + ' ' + asks : '') + '</div>';
 }
 function section(n, title, body) { return '<div class="section"><div class="num">' + n + '</div><div><h2>' + esc(title) + '</h2>' + body + '</div></div>'; }
 function readForm() {
@@ -1434,14 +1393,10 @@ function drawFoot(r) {
   const info = r ? ctx : teamCard, lead = info?.roles?.find((x) => x.role === (info.techLead || 'architect'));
   const status = !r ? t('teamNext') : live(r) ? t('teamWorking') : t('teamWorked');
   const build = '<button class="tfnew" data-act="buildTeam" title="' + esc(t('buildTeamHint')) + '" aria-label="' + esc(t('buildTeam')) + '">' + TEAM_ICON + (name ? '' : ' ' + esc(t('buildTeam'))) + '</button>';
-  const html = (name ? '<a class="tf" data-squad="1" tabindex="0" title="' + esc(t('teamLinkHint')) + '">' + logoOf(name, id, info?.logo) + '<span><b>' + esc(name) + '</b><small>' + esc(lead?.name ? t('teamLed', lead.name) + ' · ' + status : status) + '</small></span></a>' : '<span class="tf muted">' + esc(t('noTeamYet')) + '</span>') + build;
+  const html = (name ? '<a class="tf" data-teamchat="' + esc(id ?? '') + '" tabindex="0" title="' + esc(t('teamChatHint', name)) + '">' + logoOf(name, id, info?.logo) + '<span><b>' + esc(name) + '</b><small>' + esc(lead?.name ? t('teamLed', lead.name) + ' · ' + status : status) + '</small></span></a>' : '<span class="tf muted">' + esc(t('noTeamYet')) + '</span>') + build;
   const el = $('#teamFoot');
   if (el._h !== html) { el.innerHTML = html; el._h = html; }
 }
-// ---------- the chat, docked under the diagram: Nuclear Chat mounted, its frames through the host ----------
-const chatPage = nuclearChat((m) => vscode.postMessage(m));
-let chatRoot = null;
-function chatOpen() { if (chatRoot === S.root) return; chatRoot = S.root; vscode.postMessage({ type: 'chatOpen' }); }
 function head(r) {
   const bad = failedStep(r);
   const idle = !live(r);
@@ -1556,19 +1511,21 @@ document.addEventListener('click', (e) => {
   if (ps && view.mode === 'run') { const [stage, step] = ps.dataset.pickstep.split('/'); Object.assign(view, { stage, step, trace: null, open: stage, inStep: null, level: null, auto: false }); drawRun(); return; }
   const le = e.target.closest('#log .le');
   if (le && !e.target.closest('a')) { const k = le.dataset.lk; if (logOpen.has(k)) logOpen.delete(k); else logOpen.add(k); $('#log')._html = ''; return drawLog(view.mode === 'run' ? view.run : null); }
-  const x = e.target.closest('[data-uc],[data-src],[data-stage],[data-over],[data-tab],[data-open],[data-ci],[data-jira],[data-delcrit],[data-delpc],[data-sug],[data-ctx],[data-answer],[data-check],[data-mark],[data-spec],[data-fold],[data-unfold],[data-try],[data-squad],[data-runspec],[data-polish],[data-act],button,a');
+  const x = e.target.closest('[data-uc],[data-src],[data-stage],[data-over],[data-tab],[data-open],[data-ci],[data-jira],[data-delcrit],[data-delpc],[data-sug],[data-ctx],[data-answer],[data-check],[data-mark],[data-spec],[data-fold],[data-unfold],[data-try],[data-squad],[data-runspec],[data-polish],[data-dm],[data-teamchat],[data-act],button,a');
   if (!x) { $('#ciPop').classList.remove('open'); return; }
   const d = x.dataset;
   if (x.id !== 'ci') $('#ciPop').classList.remove('open');
-  if (d.fold) return fold(d.fold, d.fold === 'chat' ? !L.fold.chat : true);
+  if (d.fold) return fold(d.fold, true);
   if (d.unfold) return fold(d.unfold, false);
   if (d.spec) return openSpec(d.spec);
   if (d.squad) return vscode.postMessage({ type: 'teams' });
   if (d.runspec) return vscode.postMessage({ type: 'runSpec', id: d.runspec, path: d.path, team: form.team || teams.chosen });
   if (d.act === 'new') return newSpec();
-  if (d.act === 'askChat') return fold('chat', false);
+  if (d.act === 'askChat') return vscode.postMessage({ type: 'atlas' });
+  if (d.dm) return vscode.postMessage({ type: 'atlas', channel: d.dm });
+  if (d.teamchat) return vscode.postMessage({ type: 'atlas', channel: d.teamchat });
   if (d.act === 'buildTeam') return vscode.postMessage({ type: 'teams', wizard: true });
-  if (d.polish) { fold('chat', false); return vscode.postMessage({ type: 'polish', id: d.polish }); }
+  if (d.polish) return vscode.postMessage({ type: 'polish', id: d.polish });
   if (d.act === 'showAsk') { fold('right', false); Object.assign(view, { stage: null, step: null, auto: false }); drawRun(); return $('#node').scrollTo({ top: 0, behavior: 'smooth' }); }
   if (d.uc) { readForm(); if (!form.description.trim() || Object.values(TEMPLATES).includes(form.description)) form.description = TEMPLATES[d.uc]; form.useCase = d.uc; return drawForm(); }
   if (d.src) { readForm(); form.srcTab = d.src; return drawForm(); }
@@ -1589,7 +1546,6 @@ document.addEventListener('click', (e) => {
     case 'new': return newSpec();
     case 'ci': return $('#ciPop').classList.toggle('open');
     case 'config': return vscode.postMessage({ type: 'config' });
-    case 'chatTab': return vscode.postMessage({ type: 'chatTab' });
     case 'addCrit': readForm(); form.criteria.push(''); drawForm(); return document.querySelector('[data-crit="' + (form.criteria.length - 1) + '"]')?.focus();
     case 'readCrit': { readForm(); const lines = form.description.split('\n'); const at = lines.findIndex((l) => /acceptance criteria|criterios de aceptaci/i.test(l)); const found = at < 0 ? [] : lines.slice(at + 1).map((l) => l.match(/^\s*(?:[-*]|\d+[.)])\s+(.+)$/)?.[1]).filter(Boolean); if (!found.length) return toast(t('noCritList')); form.criteria = found; return drawForm(); }
     case 'suggest': readForm(); return vscode.postMessage({ type: 'suggest', text: form.title + ' ' + form.description });
@@ -1598,7 +1554,6 @@ document.addEventListener('click', (e) => {
     case 'jiraMine': return vscode.postMessage({ type: 'jiraMine' });
     case 'jiraSetup': return vscode.postMessage({ type: 'jiraSetup' });
     case 'ghGo': return vscode.postMessage({ type: 'github', ref: $('#ghRef').value });
-    case 'preview': { const s = specOf(); if (!s.title) return toast(t('titleFirst'), true); toast(t('splitting')); return vscode.postMessage({ type: 'plan', spec: s }); }
     case 'reset': form = blank(); return drawForm();
     case 'saveSpec': case 'start': {
       const s = specOf();
@@ -1662,7 +1617,7 @@ window.addEventListener('message', (e) => {
     if (view.run) view.run = S.runs.find((r) => r.id === view.run.id) ?? view.run;
     if (selectNext) { const r = S.runs.find((x) => x.id === selectNext); if (r) { selectNext = null; view = fresh(r); } }
     if (view.mode === 'form' && !form.suggestions.length) vscode.postMessage({ type: 'suggest', text: form.title + ' ' + form.description });
-    draw(); chatOpen();
+    draw();
     if (driveNext) { const d = driveNext; driveNext = null; drive(d); }
   }
   if (m.type === 'run') {
@@ -1676,9 +1631,6 @@ window.addEventListener('message', (e) => {
   if (m.type === 'drive') drive(m);
   if (m.type === 'selectSpec') openSpec(m.id);
   if (m.type === 'specs') { specs = { list: m.specs, components: m.components, note: m.note ?? '', loaded: true }; report(); if (view.mode === 'spec') draw(); }
-  if (m.type === 'chatFrame') chatPage.frame(m.frame);
-  if (m.type === 'chatPath') chatPage.mount($('#chatMount'), m.path).catch((x) => { $('#chatMount').innerHTML = '<div class="chatempty err"></div>'; $('#chatMount').firstChild.textContent = String(x); });
-  if (m.type === 'chatError') { chatRoot = null; chatPage.unmount(); $('#chatMount').innerHTML = '<div class="chatempty err"></div>'; $('#chatMount').firstChild.textContent = m.text; }
   if (m.type === 'context') { keepFaces(m.context?.roles); teamCtx[m.id] = m.context; if (view.mode === 'run' && view.run?.id === m.id) drawRun(); }
   if (m.type === 'checks') { checksOf[m.id] = m.checks; if (view.mode === 'run' && view.run?.id === m.id) drawRun(); }
   if (m.type === 'teams') { teams = m; if (!teams.teams.some((x) => x.id === form.team)) form.team = ''; if (view.mode === 'form') { readForm(); drawForm(); } else if (view.mode !== 'run') drawRight(); }
@@ -1687,7 +1639,6 @@ window.addEventListener('message', (e) => {
   if (m.type === 'suggestions') { form.suggestions = m.list; if (!form.context.length) form.context = m.list.filter((s) => s.kind === 'agents').map((s) => s.path); if (view.mode === 'form') { readForm(); drawForm(); } }
   if (m.type === 'issue') { readForm(); const i = m.issue; form.title = i.title; form.description = i.description; form.criteria = i.criteria.length ? i.criteria : ['']; form.source = { kind: m.source, key: i.key, url: i.url }; form.srcTab = 'write'; drawForm(); toast(i.criteria.length ? t('importedWith', i.key, i.criteria.length) : t('importedNoCrit', i.key)); vscode.postMessage({ type: 'suggest', text: i.title + ' ' + i.description }); }
   if (m.type === 'mine') { form.mine = m.issues; drawForm(); }
-  if (m.type === 'pieces') { readForm(); form.pieces = m.pieces; drawForm(); toast(t('pieces', m.pieces.length)); }
   if (m.type === 'error') toast(m.text, true);
   if (m.type === 'info') toast(m.text);
 });

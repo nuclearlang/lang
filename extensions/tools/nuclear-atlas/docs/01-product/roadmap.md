@@ -6,8 +6,9 @@ related: [../02-architecture/overview.md, ../../../../vscode/docs/01-product/roa
 ---
 # Roadmap of Nuclear Atlas
 
-What the assistant answers is the pending work of `nuclear-graph-storage/`, `nuclear-agents/nuclear_developer/` and
-the Builder's general agent (`nuclear-builder member --role chat`).
+What the assistant answers is the pending work of `nuclear-graph-storage/` and the Builder's general agent
+(`nuclear-builder member --role chat`). The local models are on standby (ADR-platform-0013): Atlas is answered by an
+external agent or provider.
 
 ## Untested
 
@@ -17,6 +18,9 @@ the Builder's general agent (`nuclear-builder member --role chat`).
   composer by a click, were not tried.
 
 ## Pending
+
+- **Local models on standby, ADR-platform-0013** (2026-11-20): the line "no agent nor provider can answer" and its
+  link to the settings were never seen in a running VS Code.
 
 - The setting `nuclear.atlas.contextTokens` measured the old page's context meter: nothing reads it since the page is
   the chat. Remove it with its move in `vscode/src/migrateSettings.ts`, or give the meter back in the chat.

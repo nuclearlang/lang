@@ -434,9 +434,10 @@ window.Squad = (() => {
   const COLOR = { analyst: '#a970ff', architect: '#3b9dff', developer: '#f5a524', qa: '#14c8d8', devops: '#ff4d6d' };
   // the stations each role works (roles.nuc's STATION_ROLE), the roles' order
   const WORKS = { analyst: ['analysis'], architect: ['design'], developer: ['tests', 'code'], qa: ['quality'], devops: ['delivery'] };
-  const PROVIDERS = { local: ['nuclear-developer'], agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'], api: ['anthropic', 'openai', 'google', 'openrouter'] };
+  // no local kind: the local models are on standby (ADR-platform-0013)
+  const PROVIDERS = { agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'], api: ['anthropic', 'openai', 'google', 'openrouter'] };
   const PNAME = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
-  const MODELS = { 'nuclear-developer': ['qwen2.5-coder:3b', 'gemma4:e2b', 'qwen2.5-coder:1.5b'], 'claude-code': ['haiku', 'sonnet', 'opus'] };
+  const MODELS = { 'claude-code': ['haiku', 'sonnet', 'opus'] };
   const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'delivery'];
   const BEHAVIOURS = ['askBeforeWriting', 'explainDecisions', 'stopAtFirstFailure'];
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -445,7 +446,8 @@ window.Squad = (() => {
   // the company (every team as a panel), one team, or the wizard; the onboarding has no company, only its team
   let view = 'team', companyMode = false;
   // sel: the member on the sheet (its id); role: the hiring pool's role
-  let sel = null, role = 'developer', tab = 'overview', filter = '', ftemper = '', fgender = '', peek = null, viewing = null, skillsAll = false, saveTimer = null, savedAt = 0;
+  // adding: the roster's catalogue is open under the team (its *+ Add*), only until *Done*
+  let adding = false, sel = null, role = 'developer', tab = 'overview', filter = '', ftemper = '', fgender = '', peek = null, viewing = null, skillsAll = false, saveTimer = null, savedAt = 0;
   // the wizard's state (null: closed); AGENTS: who can work a member on this machine (agents --json)
   let W = null, AGENTS = null, autoWizard = false, agentsAsked = false;
   // the skills' drawer (null: closed): a preview, the editor or the library's picker, for a place (skPlace)
@@ -486,7 +488,7 @@ window.Squad = (() => {
   const fill = (x) => { x.skills ??= []; x.ownSkills ??= []; x.behaviour ??= {}; x.tasks ??= []; x.instructions ??= ''; return x; };
   // an age is a number, or already a sentence of the roster ("41 sprints")
   const ageText = (a) => /^\d+$/.test(String(a ?? '')) ? t('sq.age', a) : String(a ?? '');
-  const whoText = (x) => x ? (PNAME[x.provider] ?? x.provider) + (x.model ? ' · ' + x.model : '') : t('sq.nobody');
+  const whoText = (x) => wasLocal(x) ? t('sq.converted') : x ? (PNAME[x.provider] ?? x.provider) + (x.model ? ' · ' + x.model : '') : t('sq.nobody');
   const temperOf = (id) => (S.temperaments ?? []).find((m) => m.id === id);
   const temperName = (id) => { const m = temperOf(id); return m ? (m.name?.[t('sq.lang')] ?? m.name?.en ?? id) : id || ''; };
   // what people read of a temperament (its description in the page's language; its voice is the prompt's, English)
@@ -495,7 +497,9 @@ window.Squad = (() => {
   const memberName = (x) => x?.name || empOf(x)?.name || t('sq.role.' + x?.role);
   const opCode = (id) => String(id || '').toUpperCase();
   const worksText = (r) => WORKS[r].map((s) => t('sq.station.' + s)).join(' · ');
-  const ledOf = (x) => x?.kind === 'local' ? ['on', t('sq.led.local')] : ['paid', t('sq.led.paid')];
+  // a member an older file left local, not yet converted by the command: said, never offered (ADR-platform-0013)
+  const wasLocal = (x) => x?.kind === 'local' || x?.provider === 'nuclear-developer';
+  const ledOf = (x) => wasLocal(x) ? ['off', t('sq.converted')] : ['paid', t('sq.led.paid')];
   const leadOf = (team) => team?.techLead || '';
   const sep = '<i>//</i>', dot = '<i>·</i>';
   const isPaid = (x) => !!x?.kind && x.kind !== 'local';
@@ -509,14 +513,16 @@ window.Squad = (() => {
     if (S.missing) { el.innerHTML = '<div class="sq"><div class="sq-missing hud brk"><b>' + esc(t('sq.missingTitle')) + '</b><div>' + esc(S.missing) + '</div><div class="sq-muted" style="margin-top:6px">' + esc(t('sq.missingHelp')) + '</div><div class="sq-row"><button data-a="retry">' + esc(t('sq.tryAgain')) + '</button></div></div></div>'; return; }
     if (S.loading) { el.innerHTML = skeleton(); return; }
     if (view === 'wizard' && W) el.innerHTML = '<div class="sq">' + wizard() + '</div>' + toastHtml();
-    else if (view === 'company') el.innerHTML = '<div class="sq sq-company">' + company() + '</div>' + toastHtml();
-    else if (!S.team) el.innerHTML = '<div class="sq">' + bar() + empty() + '</div>' + toastHtml();
-    else el.innerHTML = '<div class="sq" style="--rc:' + COLOR[cur()?.role ?? role] + '">' + bar() + about() + teamSkills() + crew() + side() + rosterRow() + '</div>' + toastHtml();
+    else if (view === 'company') el.innerHTML = '<div class="sq sq-company">' + warnLine() + company() + '</div>' + toastHtml();
+    else if (!S.team) el.innerHTML = '<div class="sq">' + bar() + warnLine() + empty() + '</div>' + toastHtml();
+    else el.innerHTML = '<div class="sq" style="--rc:' + COLOR[cur()?.role ?? role] + '">' + bar() + warnLine() + about() + teamSkills() + crew() + side() + (adding ? rosterRow() : '') + '</div>' + toastHtml();
     const sq = el.querySelector('.sq'); if (sq) sq.scrollTop = keep;
     if (focusKey) { const b = el.querySelector('[data-f="' + focusKey + '"]'); if (b) { b.focus({ preventScroll: true }); if (caret) try { b.setSelectionRange(caret[0], caret[1]); } catch {} } }
     if (ask) { (el.querySelector('.sq') ?? el).insertAdjacentHTML('beforeend', askHtml()); el.querySelector('[data-a="ramNo"]')?.focus(); }
     if (SD && !S.loading && !S.missing) { const keepD = el.querySelector('.sk-panel')?.scrollTop ?? 0; (el.querySelector('.sq') ?? el).insertAdjacentHTML('beforeend', skillDrawer()); const pnl = el.querySelector('.sk-panel'); if (pnl) pnl.scrollTop = keepD; if (focusKey) { const b = el.querySelector('.sk-drawer [data-f="' + focusKey + '"]'); if (b) { b.focus({ preventScroll: true }); if (caret) try { b.setSelectionRange(caret[0], caret[1]); } catch {} } } }
   }
+  /** What the command converted on read (a member or a setting that named the local kind, ADR-platform-0013). */
+  const warnLine = () => (S.warnings ?? []).length ? '<div class="wz-lack hud" role="status">⚠ ' + S.warnings.map(esc).join('<br>') + '</div>' : '';
   /** The page's frame while its data comes (one team screen): the panels' places, shimmering; the text for readers. */
   const skeleton = () => '<div class="sq' + (view === 'company' ? ' sq-company' : '') + '" aria-busy="true"><span class="sk-sr" role="status">' + esc(t('sq.loading')) + '</span><div class="sk sk-bar"></div><div class="sk-grid">' + '<div class="sk sk-card"></div>'.repeat(view === 'company' ? 3 : 6) + '</div></div>';
   let toast = null;
@@ -538,7 +544,7 @@ window.Squad = (() => {
     const cards = list.map((c) => {
       const nameOf = (m) => m.name || people(m.role).find((e) => e.id === m.employee)?.name || t('sq.role.' + m.role);
       const shown = c.members.slice(0, 7);
-      const faces = shown.map((m) => '<span class="co-m" title="' + esc(nameOf(m) + ' · ' + t('sq.role.' + m.role) + (m.provider ? ' · ' + (PNAME[m.provider] ?? m.provider) + (m.model ? ' · ' + m.model : '') : '') + (m.id === c.techLead ? ' · ' + t('sq.techLead') : '')) + '">'
+      const faces = shown.map((m) => '<span class="co-m" data-chatteam="' + esc(c.id) + '" data-chatm="' + esc(m.id) + '" role="button" tabindex="0" title="' + esc(t('sq.chatWith', nameOf(m))) + ' · ' + esc(nameOf(m) + ' · ' + t('sq.role.' + m.role) + (m.provider ? ' · ' + (PNAME[m.provider] ?? m.provider) + (m.model ? ' · ' + m.model : '') : '') + (m.id === c.techLead ? ' · ' + t('sq.techLead') : '')) + '">'
         + pf(m.employee, nameOf(m), COLOR[m.role], '46px') + (m.id === c.techLead ? '<span class="tag lead">' + esc(t('sq.hud.leadTag')) + '</span>' : '<span class="lbl">' + esc(t('sq.abbr.' + m.role)) + '</span>') + '</span>').join('')
         + (c.members.length > shown.length ? '<span class="co-m"><span class="pf vacant" style="--s:46px"><span class="face">+' + (c.members.length - shown.length) + '</span></span><span class="lbl">' + esc(t('sq.wz.more')) + '</span></span>' : '');
       const counts = roleCounts(c.members), lack = c.missing ?? [];
@@ -552,7 +558,7 @@ window.Squad = (() => {
         + '<div class="co-top">' + logo(c.name, c.id, c.logo, 46) + '<div class="co-id"><b>' + esc(c.name) + (c.default ? ' <span class="tag def" title="' + esc(t('sq.isDefault')) + '">★ ' + esc(t('sq.default')) + '</span>' : '') + '</b><div class="co-desc' + (c.description ? '' : ' sq-muted') + '">' + esc(c.description || t('sq.noDescription')) + '</div></div></div>'
         + '<div class="co-ms">' + faces + '</div>' + byRole
         + '<div class="co-sec"><span class="lbl">' + esc(t('sq.worksOn')) + '</span>' + work + '</div>' + budget
-        + '<div class="co-open">' + esc(t('sq.openTeam')) + ' ›</div></div>';
+        + '<div class="co-open"><button data-chatteam="' + esc(c.id) + '" title="' + esc(t('sq.teamChatHint', c.name)) + '">💬 ' + esc(t('sq.teamChat')) + '</button><span class="sq-grow"></span>' + esc(t('sq.openTeam')) + ' ›</div></div>';
     }).join('');
     const kpi = (n, label) => '<div class="co-kpi"><b>' + String(n).padStart(2, '0') + '</b><span class="lbl">' + esc(label) + '</span></div>';
     return '<div class="co-head hud brk">' + mark(38) + '<div><div class="eyebrow">Nuclear Builder ' + sep.replace(/<\/?i>/g, '') + ' ' + esc(t('sq.hud.company')) + '</div><h1>' + esc(t('sq.company')) + '</h1><div class="sq-muted">' + esc(list.length === 1 ? t('sq.companyOne') : t('sq.companyHint', list.length)) + '</div></div>'
@@ -571,6 +577,7 @@ window.Squad = (() => {
       + '<div class="sq-team"><span class="lbl">' + esc(t('sq.team')) + '</span>' + (S.teams.length ? '<select data-a="open" aria-label="' + esc(t('sq.team')) + '">' + opts + '</select>' : '<b>' + esc(t('sq.noTeams')) + '</b>') + '</div>'
       + (entry?.default ? '<span class="tag def" title="' + esc(t('sq.isDefault')) + '">★ ' + esc(t('sq.default')) + '</span>' : S.team ? '<button data-a="default" title="' + esc(t('sq.setDefaultHint')) + '">☆ ' + esc(t('sq.setDefault')) + '</button>' : '')
       + newButton()
+      + (S.team ? '<button data-a="teamChat" title="' + esc(t('sq.teamChatHint', S.team.name)) + '">💬 ' + esc(t('sq.teamChat')) + '</button>' : '')
       + (S.team ? '<button data-a="editMembers" title="' + esc(t('sq.wz.editHint')) + '">' + esc(t('sq.wz.edit')) + '</button><button data-a="rename">' + esc(t('sq.rename')) + '</button><button data-a="duplicate">' + esc(t('sq.duplicate')) + '</button><button data-a="export">' + esc(t('sq.export')) + '</button>' : '')
       + '<button data-a="import">' + esc(t('sq.import')) + '</button>'
       + (S.team ? '<button class="danger" data-a="delete">' + esc(t('sq.delete')) + '</button>' : '')
@@ -667,12 +674,12 @@ window.Squad = (() => {
     const top = '<div class="mp-head">' + pf(p?.id, name, COLOR[r], '64px') + '<div class="mp-id"><h2>' + esc(name) + (lead ? '<span class="tag lead">' + esc(t('sq.techLead')) + '</span>' : '') + paidTag(x) + '</h2>'
       + '<div class="mp-sub"><span style="color:' + COLOR[r] + '">' + esc(t('sq.role.' + r)) + '</span> · ' + esc(worksText(r)) + '</div>'
       + (p ? '<div class="mp-line" title="' + esc(p.headline || p.profile) + '">' + esc(p.headline || p.profile) + '</div>' : '<div class="mp-line sq-muted">' + esc(t('sq.wz.noEmployee')) + '</div>') + '</div>'
-      + '<div class="mp-act">' + (lead ? '' : '<button data-a="lead">' + esc(t('sq.makeLead')) + '</button>') + '<button class="danger" data-a="remove">' + esc(t('sq.wz.letGo')) + '</button></div></div>';
+      + '<div class="mp-act"><button data-a="chat" title="' + esc(t('sq.chatWith', name)) + '">💬 ' + esc(t('sq.chat')) + '</button>' + (lead ? '' : '<button data-a="lead">' + esc(t('sq.makeLead')) + '</button>') + '<button class="danger" data-a="remove">' + esc(t('sq.wz.letGo')) + '</button></div></div>';
     const level = ramLevel(modelInfo(x.provider, x.model)), typing = brainOther?.provider === x.provider ? brainOther : null;
     const brain = '<div class="mp-brain"><label for="sqBrain" class="lbl">' + esc(t('sq.mp.brain')) + '</label><select id="sqBrain" data-f="brain" aria-describedby="sqBrainHint"' + (level ? ' class="ram-' + level + '"' : '') + '>' + brainOptions(x) + '</select>'
       + (typing ? '<span class="sq-model"><input data-f="brainother" value="' + esc(x.model ?? '') + '" placeholder="' + esc(t('sq.model.otherPlaceholder')) + '" aria-label="' + esc(t('sq.model.other')) + '"></span>' : '')
       + ramLine(x.provider, x.model)
-      + '<span id="sqBrainHint" class="sq-muted">' + esc(isPaid(x) ? t('sq.mp.brainPaid') : t('sq.mp.brainFree')) + '</span></div>';
+      + '<span id="sqBrainHint" class="sq-muted">' + esc(t('sq.mp.brainPaid')) + '</span></div>';
     const tabs = ['overview', 'person', 'skills', 'instructions', 'behaviour', 'tasks', 'profile'].map((id) => '<button data-tab="' + id + '" role="tab" aria-selected="' + (tab === id) + '" class="' + (tab === id ? 'sel' : '') + '">' + esc(t('sq.tab.' + id)) + '</button>').join('');
     const body = tab === 'overview' ? overview(x, p, acts) : tab === 'profile' ? (p ? sheet(true) : '<div class="li-none">' + esc(t('sq.wz.noEmployee')) + '</div>') : pane(x);
     return '<div class="hud brk mp" style="--rc:' + COLOR[r] + '">' + head + top + brain + '</div><div class="sq-box hud brk"><div class="sq-tabs" role="tablist">' + tabs + '</div>' + body + '</div>';
@@ -681,19 +688,20 @@ window.Squad = (() => {
    * agent, the paid ones marked, the ones that cannot work here disabled with why (the wizard's rules). */
   function brainOptions(x) {
     const kindOf = (prov) => Object.keys(PROVIDERS).find((k) => PROVIDERS[k].includes(prov)) ?? (AGENTS ?? []).find((a) => a.provider === prov)?.kind ?? 'api';
-    const ids = [...new Set([...PROVIDERS.local, ...PROVIDERS.agent, ...PROVIDERS.api, ...(AGENTS ?? []).map((a) => a.provider)])];
-    const cur = (x.kind || 'local') + '|' + x.provider + '|' + (x.model ?? '');
+    const ids = [...new Set([...PROVIDERS.agent, ...PROVIDERS.api, ...(AGENTS ?? []).map((a) => a.provider)])];
+    const cur = (x.kind || 'agent') + '|' + x.provider + '|' + (x.model ?? '');
     let found = false;
     const groups = ids.map((prov) => {
       const k = kindOf(prov), ok = usable(prov), label = provKind(prov);
       // the provider's default, then every model it lists (a too-big one in red), then *Other…* where any is taken
       const list = [{ id: '' }, ...(ok ? modelsFor(prov) : [])];
-      const opts = list.map((m) => { const v = k + '|' + prov + '|' + m.id, on = v === cur || (!found && prov === x.provider && !m.id && !x.model); if (on) found = true; const level = ramLevel(m); return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + (ok && m.priced !== false ? '' : ' disabled') + (level ? ' class="ram-' + level + '"' : '') + '>' + esc((k !== 'local' ? '$ ' : '') + label + ' · ' + (m.id ? modelText(m) : k === 'local' ? t('sq.wz.modelLocal') : t('sq.modelDefault')) + (ok ? '' : ' — ' + whyNot(prov))) + '</option>'; }).join('')
-        + (ok && freeModel(prov) ? '<option value="' + esc(k + '|' + prov + '|__other__') + '">' + esc((k !== 'local' ? '$ ' : '') + label + ' · ' + t('sq.model.other')) + '</option>' : '');
+      const opts = list.map((m) => { const v = k + '|' + prov + '|' + m.id, on = v === cur || (!found && prov === x.provider && !m.id && !x.model); if (on) found = true; const level = ramLevel(m); return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + (ok && m.priced !== false ? '' : ' disabled') + (level ? ' class="ram-' + level + '"' : '') + '>' + esc('$ ' + label + ' · ' + (m.id ? modelText(m) : t('sq.modelDefault')) + (ok ? '' : ' — ' + whyNot(prov))) + '</option>'; }).join('')
+        + (ok && freeModel(prov) ? '<option value="' + esc(k + '|' + prov + '|__other__') + '">' + esc('$ ' + label + ' · ' + t('sq.model.other')) + '</option>' : '');
       return '<optgroup label="' + esc(provGroup(prov)) + '">' + opts + '</optgroup>';
     }).join('');
     // a choice this machine does not list (a model typed in the wizard, another machine's agent) stays shown
-    return (found ? '' : '<option value="' + esc(cur) + '" selected>' + esc(whoText(x)) + '</option>') + groups;
+    // an older local member: said converted, its local value never offered again
+    return (found ? '' : '<option value="' + esc(wasLocal(x) ? '' : cur) + '" selected' + (wasLocal(x) ? ' disabled' : '') + '>' + esc(whoText(x)) + '</option>') + groups;
   }
   /** The member at a glance: its brain, status, teams, lead, cost and budget, temperament, skills and last work. */
   function overview(x, p, acts) {
@@ -709,7 +717,7 @@ window.Squad = (() => {
     return '<div class="ov">'
       + ro(t('sq.mp.brain'), esc(whoText(x)) + ' ' + paidTag(x), '<button data-a="brain">' + esc(t('sq.mp.change')) + '</button>')
       + (key ? ro(t('sq.apiKey'), key, keyBtn) : '')
-      + ro(t('sq.mp.cost'), esc(isPaid(x) ? t('sq.mp.paidBudget', budget > 0 ? budget.toFixed(2) + ' USD' : t('sq.mp.noLimit')) : t('sq.mp.free')))
+      + ro(t('sq.mp.cost'), esc(t('sq.mp.paidBudget', budget > 0 ? budget.toFixed(2) + ' USD' : t('sq.mp.noLimit'))))
       + numbersRow(x, ro)
       + ro(t('sq.mp.teams'), esc(teams.join(' · ')))
       + ro(t('sq.techLead'), esc(lead ? t('sq.mp.yes') : t('sq.mp.no')), lead ? '' : '<button data-a="lead">' + esc(t('sq.makeLead')) + '</button>')
@@ -773,7 +781,7 @@ window.Squad = (() => {
       + (inTeam(p.id) ? '<span class="tag lead hired">' + esc(t('sq.wz.inTeam')) + '</span>' : '<button class="primary hire" data-addemp="' + esc(p.id) + '">+ ' + esc(t('sq.wz.add')) + '</button>') + '</div>').join('');
     const sel0 = (f, anyText, values, value, label) => '<select data-f="' + f + '" aria-label="' + esc(anyText) + '"><option value="">' + esc(anyText) + '</option>' + values.map((v) => '<option value="' + esc(v) + '"' + (v === value ? ' selected' : '') + '>' + esc(label(v)) + '</option>').join('') + '</select>';
     const roleSel = '<select data-f="prole" aria-label="' + esc(t('sq.wz.role')) + '">' + ROLES.map((r) => '<option value="' + r + '"' + (r === role ? ' selected' : '') + '>' + esc(t('sq.role.' + r)) + '</option>').join('') + '</select>';
-    return '<div class="sq-roster hud brk"><div class="hs"><span>' + esc(t('sq.rosterOf', t('sq.role.' + role))) + '</span>' + dot + '<span>' + esc(t('sq.hud.shown', list.length, all.length)) + '</span></div>'
+    return '<div class="sq-roster hud brk"><div class="hs"><span>' + esc(t('sq.rosterOf', t('sq.role.' + role))) + '</span>' + dot + '<span>' + esc(t('sq.hud.shown', list.length, all.length)) + '</span><span class="sq-grow"></span><button data-a="addDone">' + esc(t('sq.addDone')) + '</button></div>'
       + '<div class="ro-filters">' + roleSel + '<input data-f="filter" placeholder="' + esc(t('sq.search')) + '" value="' + esc(filter) + '" aria-label="' + esc(t('sq.search')) + '">'
       + (tempers.length ? sel0('ftemper', t('sq.hud.anyTemper'), tempers, ftemper, temperName) : '') + (genders.length ? sel0('fgender', t('sq.hud.anyGender'), genders, fgender, (g) => T['sq.gender.' + g] ?? g) : '')
       + '<span class="sq-muted">' + esc(t('sq.rosterHint')) + '</span></div>'
@@ -1012,13 +1020,13 @@ window.Squad = (() => {
 
   // ---------- the new-team wizard (ADR-platform-0010): five steps, Next, Next ----------
   const STEPS = ['identity', 'purpose', 'suggested', 'roster', 'work'];
-  /** Who works a member by default: the local agents of this machine. */
-  const localWorker = () => ({ kind: 'local', provider: 'nuclear-developer', model: '' });
+  /** Who works a member by default: the first agent this machine has, else Claude Code (no local kind, ADR-platform-0013). */
+  const defaultWorker = () => { const p = firstUsable('agent') ?? 'claude-code'; return { kind: 'agent', provider: p, model: agentOf(p)?.defaultModel ?? '' }; };
   function openWizard(mode) {
     const editing = mode === 'edit' && S.team;
     W = { mode: editing ? 'edit' : 'new', step: editing ? 3 : 0, name: '', description: '', purpose: '', skills: [], ownSkills: [], skillText: '', logoFile: '', logoData: null, names: [], nameAt: -1, rolling: false,
-      members: editing ? members().map((x) => ({ id: x.id, role: x.role, employee: x.employee, name: x.name, kind: x.kind, provider: x.provider, model: x.model ?? '', instructions: x.instructions ?? '', skills: x.skills, extraSkills: (x.extraSkills ?? []).map((e) => ({ ...e })), temperament: x.personality?.temperament && x.personality.temperament !== empOf(x)?.temperament ? x.personality.temperament : '', note: x.personality?.note ?? '' })) : [],
-      lead: null, same: { role: '', kind: 'local', provider: 'nuclear-developer', model: '' }, open: [], suggestions: null, picked: [], fRole: '', fTemper: '', fGender: '', fSkill: '', fq: '', budgetUsd: editing ? S.team.budgetUsd ?? 5 : 5, creating: false };
+      members: editing ? members().map((x) => ({ id: x.id, role: x.role, employee: x.employee, name: x.name, ...(wasLocal(x) ? defaultWorker() : { kind: x.kind, provider: x.provider, model: x.model ?? '' }), instructions: x.instructions ?? '', skills: x.skills, extraSkills: (x.extraSkills ?? []).map((e) => ({ ...e })), temperament: x.personality?.temperament && x.personality.temperament !== empOf(x)?.temperament ? x.personality.temperament : '', note: x.personality?.note ?? '' })) : [],
+      lead: null, same: { role: '', ...defaultWorker() }, open: [], suggestions: null, picked: [], fRole: '', fTemper: '', fGender: '', fSkill: '', fq: '', budgetUsd: editing ? S.team.budgetUsd ?? 5 : 5, creating: false };
     view = 'wizard'; peek = null; SD = null; SQ = '';
     askAgents();
     draw();
@@ -1093,7 +1101,7 @@ window.Squad = (() => {
   /** An agent of this machine (agents --json), or what is known of it before the list comes. */
   const agentOf = (p) => (AGENTS ?? []).find((x) => x.provider === p);
   /** Whether a provider can work here: every one until the list comes (the command refuses one that cannot). */
-  const usable = (p) => p === 'nuclear-developer' || !AGENTS || !!agentOf(p)?.available;
+  const usable = (p) => !AGENTS || !!agentOf(p)?.available;
   // why a provider cannot work here, in the page's language (agents --json gives its key and arguments)
   const whyNot = (p) => { const a = agentOf(p); return a?.whyKey && T['sq.why.' + a.whyKey] ? t('sq.why.' + a.whyKey, ...(a.whyArgs ?? [])) : a?.why || t('sq.wz.notHere'); };
   /** A kind's providers, the ones this machine lacks disabled with why (as the chat's agent picker): never chosen. */
@@ -1106,12 +1114,12 @@ window.Squad = (() => {
   /** A provider's models as the pickers list them: the provider's own (models --json), else the names agents --json
    * gives, else the few known before either comes. */
   const modelsFor = (p) => HERE?.providers?.[p]?.models ?? [...new Set([...(agentOf(p)?.models ?? []), ...(MODELS[p] ?? [])])].map((id) => ({ id }));
-  /** What a provider is: local, agent (an agent's command line) or api (a model paid per token with a key). */
+  /** What a provider is: agent (an agent's command line) or api (a model paid per token with a key). */
   const kindOfProvider = (p) => Object.keys(PROVIDERS).find((k) => PROVIDERS[k].includes(p)) ?? agentOf(p)?.kind ?? 'api';
   // the account an agent's command line works on (its group says it)
   const ACCOUNT = { 'claude-code': 'Claude', opencode: 'OpenCode', codex: 'ChatGPT', 'gemini-cli': 'Google', cursor: 'Cursor', grok: 'xAI' };
   const provName = (p) => agentOf(p)?.label ?? (PNAME[p] ?? p) + (kindOfProvider(p) === 'api' ? ' API' : '');
-  /** A provider with its kind: "Claude Code (agent)", "Anthropic API (model)", "Nuclear Developer (local)". */
+  /** A provider with its kind: "Claude Code (agent)", "Anthropic API (model)". */
   const provKind = (p) => provName(p) + ' (' + t('sq.kindWord.' + kindOfProvider(p)) + ')';
   /** A provider's group: what it is and how it is paid ("Claude Code — agent, your Claude account"). */
   const provGroup = (p) => t('sq.group.' + kindOfProvider(p), provName(p), ACCOUNT[p] ?? provName(p));
@@ -1133,16 +1141,14 @@ window.Squad = (() => {
     return (level === 'bad' ? '⛔ ' : level === 'warn' ? '⚠ ' : '') + bits.join(' · ') + (level === 'bad' ? ' — ' + t('sq.ram.optBig') : level === 'warn' ? ' — ' + t('sq.ram.optTight') : '');
   }
   const modelOption = (value, x, on) => '<option value="' + esc(value) + '"' + (on ? ' selected' : '') + (x.priced === false ? ' disabled' : '') + (ramLevel(x) ? ' class="ram-' + ramLevel(x) + '"' : '') + '>' + esc(modelText(x)) + '</option>';
-  /** Every model of a provider, always (a select, not a filtered datalist): the default first, the installed and the
-   * downloadable apart for the local agents, a model chosen elsewhere kept, and *Other…* where any model is taken. */
+  /** Every model of a provider, always (a select, not a filtered datalist): the default first, a model chosen elsewhere kept, and *Other…* where any model is taken. */
   function modelOptions(p, cur, kind, typing) {
     // typing: *Other…* is the one selected, its field beside it holds the model
     const list = modelsFor(p), on = (id) => !typing && id === cur, known = typing || !cur || list.some((x) => x.id === cur);
     const group = (label, xs) => xs.length ? '<optgroup label="' + esc(label) + '">' + xs.map((x) => modelOption(x.id, x, on(x.id))).join('') + '</optgroup>' : '';
-    const local = list.some((x) => x.installed !== undefined);
-    return '<option value=""' + (on('') || (!cur && !typing) ? ' selected' : '') + '>' + esc(kind === 'local' ? t('sq.wz.modelLocal') : t('sq.modelDefault')) + '</option>'
+    return '<option value=""' + (on('') || (!cur && !typing) ? ' selected' : '') + '>' + esc(t('sq.modelDefault')) + '</option>'
       + (known ? '' : '<option value="' + esc(cur) + '" selected>' + esc(cur) + '</option>')
-      + (local ? group(provGroup(p) + ' · ' + t('sq.model.installed'), list.filter((x) => x.installed !== false)) + group(provGroup(p) + ' · ' + t('sq.model.pullable'), list.filter((x) => x.installed === false)) : group(provGroup(p), list))
+      + group(provGroup(p), list)
       + (freeModel(p) ? '<option value="__other__"' + (typing ? ' selected' : '') + '>' + esc(t('sq.model.other')) + '</option>' : '');
   }
   /** The model's picker: its select, coloured by the memory the chosen one needs, and the field of a typed model. */
@@ -1167,7 +1173,7 @@ window.Squad = (() => {
     + '<div class="sq-row"><button class="primary" data-a="ramNo">' + esc(t('sq.wz.cancel')) + '</button><button class="danger" data-a="ramYes">' + esc(t('sq.ram.useAnyway')) + '</button></div></div></div>';
   /** This machine's agents and every provider's models, asked once (the wizard, the member's brain). */
   function askAgents() { if (!AGENTS) post({ type: 'team:wizard' }); if (!HERE) post({ type: 'team:models' }); }
-  const kindButtons = (attr, cur) => '<div class="sq-seg" role="group" aria-label="' + esc(t('sq.whoWorks')) + '">' + ['local', 'agent', 'api'].map((k) => { const none = !firstUsable(k); return '<button ' + attr + k + '" aria-pressed="' + (cur === k) + '" class="' + (cur === k ? 'sel' : '') + '"' + (none && cur !== k ? ' disabled title="' + esc(t('sq.wz.noneHere')) + '"' : '') + '>' + esc(t('sq.wz.kind.' + k)) + '</button>'; }).join('') + '</div>';
+  const kindButtons = (attr, cur) => '<div class="sq-seg" role="group" aria-label="' + esc(t('sq.whoWorks')) + '">' + ['agent', 'api'].map((k) => { const none = !firstUsable(k); return '<button ' + attr + k + '" aria-pressed="' + (cur === k) + '" class="' + (cur === k ? 'sel' : '') + '"' + (none && cur !== k ? ' disabled title="' + esc(t('sq.wz.noneHere')) + '"' : '') + '>' + esc(t('sq.wz.kind.' + k)) + '</button>'; }).join('') + '</div>';
   /** Who works a member, the same for everyone or for a role's members (a member is its profile, not its model). */
   function sameBar() {
     const a = W.same, counts = roleCounts(W.members);
@@ -1176,7 +1182,7 @@ window.Squad = (() => {
       + '<select data-f="wzsameprov" aria-label="' + esc(t('sq.provider')) + '">' + providerOptions(a) + '</select>'
       + modelPicker('wzsamemodel', a.provider, a.model, a.kind, a.typing)
       + '<button class="primary" data-a="wzSame"' + (W.members.length && usable(a.provider) ? '' : ' disabled') + '>' + esc(t('sq.wz.apply')) + '</button>'
-      + '<button data-a="wzAllLocal"' + (paidMembers(W.members).length ? '' : ' disabled') + '>' + esc(t('sq.wz.setAllLocal')) + '</button>' + ramLine(a.provider, a.model) + '</div>';
+      + ramLine(a.provider, a.model) + '</div>';
   }
   /** What makes a member different: instructions, skills, temperament, characteristics (folded under its row). */
   function differentPanel(m, i) {
@@ -1197,7 +1203,7 @@ window.Squad = (() => {
         + '<button class="wz-open' + (open ? ' on' : '') + '" data-wzopen="' + i + '" aria-expanded="' + open + '" title="' + esc(t('sq.wz.differentHint')) + '">' + (open ? '▾ ' : '▸ ') + esc(n ? t('sq.wz.differentN', n) : t('sq.wz.different')) + '</button></div>'
         + kindButtons('data-wzkind="' + i + '|', m.kind) + '<select data-f="wzprov-' + i + '" aria-label="' + esc(t('sq.provider')) + '">' + providerOptions(m) + '</select>'
         + modelPicker('wzmodel-' + i, m.provider, m.model, m.kind, m.typing)
-        + (paidTag(m) || '<span class="tag tmp">' + esc(t('sq.wz.free')) + '</span>')
+        + paidTag(m)
         + (W.mode === 'new' ? '<label class="wz-lead"><input type="radio" name="wzlead" data-wzlead="' + i + '"' + (W.lead === m || (!W.members.includes(W.lead) && i === defaultLead()) ? ' checked' : '') + '> ' + esc(t('sq.techLead')) + '</label>' : '<span></span>')
         + (bad ? '<div class="wz-badwhy">⚠ ' + esc(t('sq.wz.cannotHere', agentOf(m.provider)?.label ?? PNAME[m.provider] ?? m.provider, whyNot(m.provider))) + '</div>' : '')
         + ramLine(m.provider, m.model)
@@ -1205,7 +1211,7 @@ window.Squad = (() => {
     }).join('');
     const warn = paid.length
       ? '<div class="wz-warn hud brk"><b>⚠ ' + esc(t('sq.wz.paidCount', paid.length, W.members.length)) + '</b><div>' + esc(t('sq.wz.costWarn', Number(W.budgetUsd || 0) > 0 ? Number(W.budgetUsd).toFixed(2) + ' USD' : t('sq.wz.noLimit'))) + '</div></div>'
-      : '<div class="wz-ok hud">✓ ' + esc(t('sq.wz.allLocal')) + '</div>';
+      : '';
     return '<h2>' + esc(t('sq.wz.workTitle')) + '</h2><div class="sq-muted">' + esc(t('sq.wz.workHint')) + '</div>' + warn + sameBar()
       + (W.mode === 'new' ? '<div class="sq-row" style="margin:0;justify-content:flex-end"><label class="wz-budget lbl">' + esc(t('sq.wz.budget')) + ' <input data-f="wzbudget" type="number" min="0" step="0.5" value="' + esc(W.budgetUsd) + '"> USD</label></div>' : '')
       + (removed.length ? '<div class="wz-lack hud">' + esc(t('sq.wz.leaving', removed.map((x) => memberName(x)).join(', '))) + '</div>' : '')
@@ -1216,7 +1222,7 @@ window.Squad = (() => {
   /** A member of the roster put in the wizard's team, kept in the roles' order (the steps show them grouped). */
   function addToWizard(role0, emp) {
     if (chosenIndex(role0, emp) >= 0) return;
-    W.members.push({ role: role0, employee: emp, name: '', ...localWorker() });
+    W.members.push({ role: role0, employee: emp, name: '', ...defaultWorker() });
     W.members.sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role));
   }
   function wzGo(n) {
@@ -1259,7 +1265,7 @@ window.Squad = (() => {
   function setKind(m, k) {
     if (m.kind === k) return;
     const p = firstUsable(k); if (!p) return;
-    m.kind = k; m.provider = p; m.model = k === 'local' ? '' : agentOf(p)?.defaultModel ?? ''; m.typing = false;
+    m.kind = k; m.provider = p; m.model = agentOf(p)?.defaultModel ?? ''; m.typing = false;
   }
   function wizardClick(ds) {
     if (ds.wzgo !== undefined) return wzGo(+ds.wzgo);
@@ -1287,7 +1293,6 @@ window.Squad = (() => {
       case 'wzAddPicked': for (const k of W.picked) { const [r, e] = k.split('|'); addToWizard(r, e); } W.picked = []; return draw();
       case 'wzClearPicked': W.picked = []; return draw();
       case 'wzPickAll': for (const p of filterPool(poolOf(), { role: W.fRole, temper: W.fTemper, gender: W.fGender, skill: W.fSkill, q: W.fq }).slice(0, 120)) { const k = p.role + '|' + p.id; if (chosenIndex(p.role, p.id) < 0 && !W.picked.includes(k)) W.picked.push(k); } return draw();
-      case 'wzAllLocal': for (const m of W.members) Object.assign(m, localWorker()); return draw();
       case 'wzSame': sameForAll(W.members, W.same.role, W.same); return draw();
     }
   }
@@ -1308,8 +1313,8 @@ window.Squad = (() => {
   function wizardChange(f, v) {
     let m;
     if (f === 'wzrole') W.fRole = v; else if (f === 'wztemper') W.fTemper = v; else if (f === 'wzgender') W.fGender = v; else if (f === 'wzfskill') W.fSkill = v;
-    else if ((m = f.match(/^wzprov-(\d+)$/))) { const x = W.members[+m[1]]; if (!usable(v)) return false; x.provider = v; x.model = x.kind === 'local' ? '' : agentOf(v)?.defaultModel ?? ''; x.typing = false; }
-    else if (f === 'wzsameprov') { if (!usable(v)) return false; W.same.provider = v; W.same.model = W.same.kind === 'local' ? '' : agentOf(v)?.defaultModel ?? ''; W.same.typing = false; }
+    else if ((m = f.match(/^wzprov-(\d+)$/))) { const x = W.members[+m[1]]; if (!usable(v)) return false; x.provider = v; x.model = agentOf(v)?.defaultModel ?? ''; x.typing = false; }
+    else if (f === 'wzsameprov') { if (!usable(v)) return false; W.same.provider = v; W.same.model = agentOf(v)?.defaultModel ?? ''; W.same.typing = false; }
     // a model chosen (a select: every model, every time); *Other…* opens its field; too big: confirmed first
     else if ((m = f.match(/^wzmodel-(\d+)$/)) || f === 'wzsamemodel') {
       const x = m ? W.members[+m[1]] : W.same;
@@ -1332,16 +1337,17 @@ window.Squad = (() => {
   function flush() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; post({ type: 'team:save', team: S.team }); } }
   function select(id) { const x = memberById(id); brainOther = null; sel = x?.id ?? null; if (x) role = x.role; filter = ''; ftemper = ''; fgender = ''; peek = null; viewing = null; skillsAll = false; }
   function onClick(e) {
-    const d = e.target.closest('[data-a],[data-cfg],[data-view],[data-member],[data-tab],[data-hire],[data-addemp],[data-addrole],[data-delxs],[data-deltask],[data-team],[data-gifs],[data-wzgo],[data-wzpick],[data-wztoggle],[data-wzdel],[data-wzdelskill],[data-wzskill],[data-wzkind],[data-wzlead],[data-wzsamekind],[data-wzopen],[data-wzsk],[data-wzxadd],[data-wzxdel],[data-skt],[data-skv],[data-ske],[data-skd],[data-skc],[data-sknew],[data-skpick],[data-sd]');
+    const d = e.target.closest('[data-chatteam],[data-a],[data-cfg],[data-view],[data-member],[data-tab],[data-hire],[data-addemp],[data-addrole],[data-delxs],[data-deltask],[data-team],[data-gifs],[data-wzgo],[data-wzpick],[data-wztoggle],[data-wzdel],[data-wzdelskill],[data-wzskill],[data-wzkind],[data-wzlead],[data-wzsamekind],[data-wzopen],[data-wzsk],[data-wzxadd],[data-wzxdel],[data-skt],[data-skv],[data-ske],[data-skd],[data-skc],[data-sknew],[data-skpick],[data-sd]');
     if (!d || !el.contains(d) || d.disabled) return;
     const ds = d.dataset;
     if (ds.a === 'ramYes' || ds.a === 'ramNo') { const yes = ds.a === 'ramYes' ? ask?.yes : null; ask = null; yes?.(); return draw(); }
     if (ask) return;
+    if (ds.chatteam) return post({ type: 'team:chat', team: ds.chatteam, member: ds.chatm || undefined });
     if (ds.a === 'wizard') { flush(); return openWizard('new'); }
     if (ds.a === 'editMembers') { flush(); return openWizard('edit'); }
     if (skillClick(ds)) return;
     if (view === 'wizard' && W) return wizardClick(ds);
-    if (ds.team) { view = 'team'; S.loading = true; draw(); return post({ type: 'team:open', id: ds.team }); }
+    if (ds.team) { adding = false; view = 'team'; S.loading = true; draw(); return post({ type: 'team:open', id: ds.team }); }
     const x = cur();
     if (ds.gifs) { x.personality = { gifs: 'sometimes', on: '', note: '', ...x.personality, gifs: ds.gifs }; changed(); return draw(); }
     if (ds.view) { const f = findEmp(ds.view); if (!f) return; if (f.role !== role) { role = f.role; filter = ''; ftemper = ''; fgender = ''; } const own = members().find((m) => m.employee === f.p.id); if (own) { sel = own.id; viewing = null; } else viewing = f.p.id; peek = f.p.id; skillsAll = false; draw(); return el.querySelector('.sq-side')?.scrollIntoView?.({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
@@ -1349,7 +1355,7 @@ window.Squad = (() => {
     if (ds.a === 'brain') return focusBrain();
     if (ds.a === 'reports') return post({ type: 'team:reports', team: S.team.id, member: x.id });
     if (ds.member) { select(ds.member); return draw(); }
-    if (ds.addrole) { role = ds.addrole; filter = ''; ftemper = ''; fgender = ''; peek = null; draw(); return el.querySelector('.sq-roster')?.scrollIntoView?.({ block: 'start' }); }
+    if (ds.addrole) { adding = true; role = ds.addrole; filter = ''; ftemper = ''; fgender = ''; peek = null; draw(); return el.querySelector('.sq-roster')?.scrollIntoView?.({ block: 'start' }); }
     if (ds.addemp) { flush(); S.loading = true; draw(); const f = findEmp(ds.addemp); return post({ type: 'team:memberAdd', id: S.team.id, members: [{ role: f?.role ?? role, employee: ds.addemp }] }); }
     if (ds.tab) { tab = ds.tab; return draw(); }
     if (ds.hire) return hire(ds.hire);
@@ -1369,6 +1375,9 @@ window.Squad = (() => {
       case 'lead': S.team.techLead = x.id; changed(); return draw();
       case 'remove': flush(); return post({ type: 'team:memberRemove', id, member: x.id, name: memberName(x) });
       case 'back': viewing = null; return draw();
+      case 'addDone': adding = false; peek = null; viewing = null; return draw();
+      case 'teamChat': flush(); return post({ type: 'team:chat', team: id });
+      case 'chat': flush(); return post({ type: 'team:chat', team: id, member: x.id });
       case 'skillsAll': skillsAll = !skillsAll; return draw();
       case 'delete': return post({ type: 'team:delete', id, name: S.team.name });
       case 'key': return post({ type: 'team:key', provider: x.provider });

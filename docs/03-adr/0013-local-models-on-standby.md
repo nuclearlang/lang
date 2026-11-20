@@ -28,9 +28,35 @@ agents (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Grok).
   to the default external choice, the old file kept as `.bak`, and the user is told.
 - **The Smart Graph is not touched**: it runs its own embeddings model (no Ollama, ADR-graph-0003), in the profile
   `remote` as before.
-- The code stays in the repository, untested by default; turning the switch on again is a decision of the user and
-  needs its own tests on that day.
+- The Nuclear code stays behind the switch (Nuclear Builder's set-up, engine and chat, the MCP server's
+  `developer_*` tools, the Nuclear Developer, which ships inert in the AI archive), and its tests still run with the
+  switch turned on in the test (`localOn`). The editors' local-model UI (the profile cards, the local model pickers,
+  the Developer's and Ollama's status and settings, `extensions/vscode/src/localModels.ts`) was removed: it is in git
+  at commit `ac61a04`, to be brought back and tested if the switch is turned on again, a decision of the user.
 
 ## Consequences
 Lighter installs (no GB of models, no Ollama), one way of working (paid or subscribed providers), fewer services to
 keep alive. The knowledge base says the local models are on standby.
+
+## The contract (what the commands answer while the switch is off)
+- `nuclear-builder setup --plan --json` carries `"localModels": false`, `"suggested": "remote"` and only the profile
+  `remote` in `profiles`; `requirements.local` is the same list as `requirements.remote` (no Ollama).
+- The profile `remote` runs the Smart Graph **and Nuclear Chat** (the Builder's and Atlas's workplace): its steps are
+  `graph`, `clients`, `graph-model`, `graph-service`, `knowledge`, `chat-service`; a machine that still has something
+  local of NuclearLang gets a first step `standby` (its title: "Take away the local models (on standby)"), which
+  removes the Developer's service and launcher, the models NuclearLang pulled, Ollama when NuclearLang installed it,
+  writes `ai.env` as `remote`, and says the GB freed.
+- `setup --profile lite|medium|hard` (also `--events`) is refused: exit 2, "on standby (ADR-platform-0013)". The
+  installers ask nothing and always run `setup --profile remote --yes`.
+- `agents --json`, `models --json` and `team screen` list no `local` kind and no Ollama model (`team screen` carries
+  `"localModels": false`). `models --provider nuclear-developer` answers no models and a `why`.
+- The default external choice (a member with no who-works, a converted one, the chat's general agent): the first
+  agent whose command is on the PATH, in the order Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else
+  the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else
+  none, and the command says a provider must be chosen (a converted member is then set to Claude Code with that
+  warning). A team's converted members are told as `warnings` (a list of texts): in the team of `team show`,
+  in each entry of `team list`, in each shown team of `team screen` and at its top (every team's, as
+  `<team name>: <warning>`); the team file is rewritten once, its old version kept as `<id>.json.bak`. `team create`
+  and `team member add|update` refuse the kind `local`.
+- `chat-host --json`: Atlas's `responder.choice` is the default external choice (`""` with `responder.why` when there
+  is none); its `choices` hold no local agent.

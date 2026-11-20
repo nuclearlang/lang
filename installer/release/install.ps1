@@ -8,10 +8,11 @@
 # GitHub, checks its SHA-256, installs it in %LOCALAPPDATA%\nuclearlang, puts its bin folder in your user PATH, gives the
 # AI agents the `nuclear` skill and installs the editor extension in every VS Code family editor on the PATH. No administrator rights. Then
 # the required Smart Graph and MCP server: their archive (a Python of their own with the Smart Graph, the MCP server
-# and the Nuclear Developer; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: the graph's
-# own embeddings model, the MCP server in the AI clients, the services at every login; it asks whether to add local
-# agents, `remote` by default, no local model). A machine already set up keeps its profile. -AiProfile
-# remote|lite|medium|hard takes that profile without questions; -NoAi (tests only) skips the required services and
+# and Nuclear Chat; nothing is needed on the machine) and their set-up (`nuclear-builder setup --profile remote --yes`:
+# the graph's own embeddings model, the MCP server in the AI clients, the Smart Graph and Nuclear Chat at every login).
+# The local models are on standby (ADR-platform-0013): no Ollama, no local model and no Nuclear Developer is offered
+# or installed, and an update takes away the ones an earlier install put here. -AiProfile lite|medium|hard (or one an
+# earlier install kept) becomes remote; -NoAi (tests only) skips the required services and
 # the install ends incomplete. Run it again at any time: what the same version installed is kept (-Reinstall
 # replaces it). A platform's toolchain (Flutter, Node.js) is never installed here: the summary says where to get it.
 #
@@ -19,7 +20,7 @@
 # install (-NoVSCode, -NoAgent, -NoModifyPath).
 #
 # Environment: NUCLEAR_VERSION, NUCLEAR_INSTALL (the folder), NUCLEAR_REPO (owner/name), NUCLEAR_DOWNLOAD (a mirror),
-# NUCLEAR_AI_PROFILE.
+# NUCLEAR_AI_PROFILE (only remote: the others are on standby).
 param(
   [string]$Version = $(if ($env:NUCLEAR_VERSION) { $env:NUCLEAR_VERSION } else { 'latest' }),
   [switch]$NoModifyPath,
@@ -327,19 +328,19 @@ if (-not $NoModifyPath -and -not ($UserPath -contains $Bin)) {
 }
 
 # --- the Smart Graph and the MCP server: required (ADR-installer-0006, ADR-installer-0003) ---
-# Always installed, no question: only the local agents are asked, by the set-up (`remote`, the default, adds no local
-# model). A machine already set up keeps its profile; without a terminal the profile is `remote`. -NoAi (tests)
-# skips them and the install ends incomplete.
+# Always installed, no question, with the profile `remote`: the local models are on standby (ADR-platform-0013), and a
+# profile of an earlier install (lite, medium, hard in ai.env) or one asked becomes `remote`; its set-up takes away
+# what was local. -NoAi (tests) skips them and the install ends incomplete.
 $Machine = Join-Path $env:APPDATA 'nuclearlang\ai.env'
 if (-not $AiProfile -and (Test-Path $Machine)) {
   $AiProfile = (Get-Content $Machine | Where-Object { $_ -like 'NUCLEAR_AI_PROFILE=*' } | Select-Object -First 1) -replace '^NUCLEAR_AI_PROFILE=', ''
 }
+if ($AiProfile -and $AiProfile -ne 'remote') { Write-Host "the local models are on standby (ADR-platform-0013): profile remote, not $AiProfile" }
+$AiProfile = 'remote'
 $AiNote = ''
-$Interactive = -not $env:CI -and [Environment]::UserInteractive
 if ($NoAi) { $AiNote = '-NoAi: the Smart Graph and the MCP server, which are required, were not installed. Run the installer without it.' }
 else {
   Section 'The Smart Graph and the MCP server'
-  if (-not $AiProfile -and -not $Interactive) { $AiProfile = 'remote' }
 }
 $AiDir = Join-Path $Install 'ai'
 if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
@@ -355,7 +356,7 @@ if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
     $AiZip = Join-Path $Tmp $AiName
     $Want = ''
     try {
-      Save-Url "$Base/$AiName" $AiZip 'Downloading the AI services' 'A Python of their own with the Smart Graph, the MCP server and the local agents'
+      Save-Url "$Base/$AiName" $AiZip 'Downloading the AI services' 'A Python of their own with the Smart Graph, the MCP server and Nuclear Chat'
       Ok 'Downloaded the AI services'
       $Want = (Get-Sum "$Base/$AiName.sha256")
     } catch {
@@ -382,16 +383,10 @@ if (-not $NoAi) {
   try { (Get-Process -Id $PID).PriorityClass = 'BelowNormal' } catch { }
   if (-not (Test-Path $Builder)) {
     $AiNote = 'The AI archive has no set-up: run this installer again (-Reinstall).'
-  } elseif ($AiProfile) {
-    Section "Set-up $Dot profile $AiProfile"
-    & $Builder setup --profile $AiProfile --yes
-    if ($LASTEXITCODE -ne 0) { $AiNote = 'The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed.' }
-  } elseif ($Interactive) {
-    Section 'Set-up'
-    & $Builder setup
-    if ($LASTEXITCODE -ne 0) { $AiNote = 'The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed.' }
   } else {
-    $AiNote = 'The Smart Graph and the MCP server are not set up: run `nuclear-builder setup --profile remote --yes`.'
+    Section "Set-up $Dot profile remote"
+    & $Builder setup --profile remote --yes
+    if ($LASTEXITCODE -ne 0) { $AiNote = 'The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed.' }
   }
 }
 
@@ -410,10 +405,7 @@ $Summary += 'Added when possible'
 if ($Installed) { $Summary += "  $Tick The editor extension: $($Installed -join ', ')" }
 elseif ($NoVSCode) { $Summary += '  o The editor extension: not asked (-NoVSCode)' }
 else { $Summary += '  o The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions' }
-$Summary += 'Optional, asked'
-$Chosen = if (Test-Path $Machine) { (Get-Content $Machine | Where-Object { $_ -like 'NUCLEAR_AI_PROFILE=*' } | Select-Object -First 1) -replace '^NUCLEAR_AI_PROFILE=', '' } else { '' }
-if ($Chosen -in @('lite', 'medium', 'hard')) { $Summary += "  $Tick Local agents: profile $Chosen (Ollama's models on this machine)" }
-else { $Summary += '  o Local agents: not chosen (remote: no local model); nuclear-builder setup to add them' }
+$Summary += '  o Local models: on standby (ADR-platform-0013); your agents and API providers do the AI work'
 # each platform's toolchain is never installed here: found, or how to get it (the editor guides too)
 $Summary += "Each platform's own (only for the platforms you build; the editor guides you)"
 $Tools = $null

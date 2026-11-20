@@ -24,5 +24,3 @@ FileSystemWatcher **/.nuclear/monitor/report.json ──► MonitorPanel.refresh
 - A click on a name posts `{ type: 'open', path, line }`; the panel opens `<project>/<path>` at the line (the
   project is the folder above `.nuclear/`).
 - Redraws are debounced (300 ms): the app writes at most every two seconds.
-- The page carries the floating update button of every NuclearLang page (`withUpdateButton`,
-  `extensions/vscode/src/updateCheck.ts`).

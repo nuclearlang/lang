@@ -15,3 +15,7 @@ crew(name: string, paid: string[] = [], known: <string, any>? = null) <string, a
       m["provider"] = "claude-code"
       m["model"] = "haiku"
   team
+
+// The local models switched on, for a test of their code (ADR-platform-0013: on standby, setup.json's `localModels`).
+localOn(monkeypatch: any) void
+  monkeypatch.setitem(DATA, "localModels", true)

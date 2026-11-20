@@ -132,8 +132,8 @@ export interface HostChoice {
 
 /** Why an agent cannot answer, by its kind (`agents --json`'s `whyKey`), in the chat's language. */
 export const WHY_TEXTS: Record<'en' | 'es', Record<string, string>> = {
-  en: { notOnPath: 'not installed: `{0}` is not on the PATH', noKey: 'no API key: nuclear-builder vault set {0}', noPrice: 'no model with a price: .nuclear/builder.json "prices"', noAnswer: '{0} does not answer: nuclear-builder setup --restart developer' },
-  es: { notOnPath: 'no instalado: `{0}` no está en el PATH', noKey: 'sin clave de API: nuclear-builder vault set {0}', noPrice: 'ningún modelo con precio: .nuclear/builder.json "prices"', noAnswer: '{0} no responde: nuclear-builder setup --restart developer' },
+  en: { notOnPath: 'not installed: `{0}` is not on the PATH', noKey: 'no API key: nuclear-builder vault set {0}', noPrice: 'no model with a price: .nuclear/builder.json "prices"', noAnswer: '{0} does not answer' },
+  es: { notOnPath: 'no instalado: `{0}` no está en el PATH', noKey: 'sin clave de API: nuclear-builder vault set {0}', noPrice: 'ningún modelo con precio: .nuclear/builder.json "prices"', noAnswer: '{0} no responde' },
 };
 /** A choice's `why` in `lang`, else the English the host file gave. */
 export const whyOf = (c: HostChoice, lang: 'en' | 'es'): string | undefined => (c.whyKey && WHY_TEXTS[lang][c.whyKey] ? fmt(WHY_TEXTS[lang][c.whyKey], ...(c.whyArgs ?? [])) : c.why);
@@ -166,7 +166,7 @@ export interface HostFile {
 
 /** Who works the general agent by default (the setting `nuclear.builder.chat`). */
 export interface AgentProvider {
-  kind: 'local' | 'agent' | 'api';
+  kind: 'agent' | 'api';
   provider: string;
   model?: string;
 }
@@ -176,14 +176,20 @@ export const AGENT = 'atlas';
 
 /** What `POST workspaces` takes from a host file: each member's face (a file path) as a picture the page can draw
  * (`face`: a `data:` URL); the general agent's default for a new conversation, the setting's provider when it is on
- * this machine (else the local agent, the host file's own); the language and the GIFs of the settings. */
-export function registration(file: HostFile, o: { root: string; lang: 'en' | 'es'; gifs: string; agent: AgentProvider; face: (file: string) => string | null }): Record<string, unknown> {
+ * this machine (else the host file's own default, an external agent: the local models are on standby, ADR-platform-0013); the language and the GIFs of the settings. */
+export function registration(file: HostFile, o: { root: string; lang: 'en' | 'es'; gifs: string; agent: AgentProvider; face: (file: string) => string | null; forceConfirm?: boolean }): Record<string, unknown> {
+  // the paid providers the user put in a team (a member's or the tech lead's): already chosen, so the chat does not ask
+  // the two spending questions again for them (`--confirm-spending`); a paid provider never chosen still asks, and a
+  // forced confirmation (the setting or the project's `forceConfirm`) always asks
+  const chosen = new Set(o.forceConfirm ? [] : file.members.filter((m) => m.team && m.brain?.paid).map((m) => m.brain!.provider));
+  const confirmed = (command: string[], provider: string | undefined) => (provider && chosen.has(provider) && !command.includes('--confirm-spending') ? [...command, '--confirm-spending'] : command);
   const members = file.members.map(({ face, temperament: _t, ...m }) => {
     const out = { ...m, personality: m.personality ?? {}, face: face ? o.face(face) ?? '' : '' };
     const r = m.responder;
     const wanted = r?.choices?.find((c) => c.id === o.agent.provider && c.available !== false);
     if (r && wanted) out.responder = { ...r, choice: wanted.id, model: o.agent.model ?? '' };
-    if (out.responder?.choices) out.responder = { ...out.responder, choices: out.responder.choices.map(({ whyKey: _k, whyArgs: _a, ...c }) => ({ ...c, ...(c.why || _k ? { why: whyOf({ ...c, whyKey: _k, whyArgs: _a }, o.lang) } : {}) })) };
+    if (out.responder?.choices) out.responder = { ...out.responder, choices: out.responder.choices.map(({ whyKey: _k, whyArgs: _a, ...c }) => ({ ...c, command: confirmed(c.command, c.id), ...(c.why || _k ? { why: whyOf({ ...c, whyKey: _k, whyArgs: _a }, o.lang) } : {}) })) };
+    if (out.responder) out.responder = { ...out.responder, command: confirmed(out.responder.command, out.responder.choices ? out.responder.choice : m.brain?.provider) };
     return out;
   });
   return { root: o.root, host: 'builder', members, teams: file.teams, channels: file.channels, lang: o.lang, gifs: o.gifs };

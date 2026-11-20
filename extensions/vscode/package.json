@@ -256,30 +256,10 @@
         "title": "%config.ai%",
         "order": 2,
         "properties": {
-          "nuclear.ai.developerUrl": {
-            "type": "string",
-            "default": "http://127.0.0.1:7879",
-            "description": "%nuclear.ai.developerUrl.desc%"
-          },
           "nuclear.ai.graphUrl": {
             "type": "string",
             "default": "http://127.0.0.1:7878",
             "description": "%nuclear.ai.graphUrl.desc%"
-          },
-          "nuclear.ai.ollamaUrl": {
-            "type": "string",
-            "default": "http://localhost:11434",
-            "description": "%nuclear.ai.ollamaUrl.desc%"
-          },
-          "nuclear.ai.models.coder": {
-            "type": "string",
-            "default": "qwen2.5-coder:3b",
-            "description": "%nuclear.ai.models.coder.desc%"
-          },
-          "nuclear.ai.models.assistant": {
-            "type": "string",
-            "default": "gemma4:e2b",
-            "description": "%nuclear.ai.models.assistant.desc%"
           },
           "nuclear.ai.mcpCommand": {
             "type": "string",
@@ -377,12 +357,6 @@
             "minimum": 1,
             "description": "%nuclear.ai.watch.callTimeoutMinutes.desc%"
           },
-          "nuclear.ai.watch.stallSeconds": {
-            "type": "number",
-            "default": 90,
-            "minimum": 10,
-            "description": "%nuclear.ai.watch.stallSeconds.desc%"
-          },
           "nuclear.ai.checkEveryMinutes": {
             "type": "number",
             "default": 5,
@@ -431,15 +405,14 @@
           "nuclear.builder.chat": {
             "type": "object",
             "default": {
-              "kind": "local",
-              "provider": "nuclear-developer",
+              "kind": "agent",
+              "provider": "claude-code",
               "model": ""
             },
             "properties": {
               "kind": {
                 "type": "string",
                 "enum": [
-                  "local",
                   "agent",
                   "api"
                 ],
@@ -448,7 +421,6 @@
               "provider": {
                 "type": "string",
                 "enum": [
-                  "nuclear-developer",
                   "claude-code",
                   "codex",
                   "gemini-cli",
@@ -1138,11 +1110,6 @@
       {
         "command": "nuclear.workspace.welcome",
         "title": "%command.nuclear.workspace.welcome%",
-        "category": "%category.nuclear%"
-      },
-      {
-        "command": "nuclear.update",
-        "title": "%command.nuclear.update%",
         "category": "%category.nuclear%"
       },
       {

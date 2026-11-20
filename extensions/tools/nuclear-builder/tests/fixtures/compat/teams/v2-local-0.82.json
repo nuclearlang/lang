@@ -1,0 +1,61 @@
+{
+  "id": "home-lab",
+  "name": "Home lab",
+  "description": "A team of the local models, as 0.82 wrote it",
+  "purpose": "A small shop",
+  "skills": [],
+  "logo": null,
+  "techLead": "lead",
+  "updated": 1763600000000,
+  "budgetUsd": 5,
+  "members": [
+    {
+      "id": "lead",
+      "role": "architect",
+      "kind": "local",
+      "provider": "nuclear-developer",
+      "model": "gemma4:e2b",
+      "employee": "arc-001",
+      "skills": [],
+      "instructions": "Keep it small.",
+      "behaviour": {},
+      "tasks": [],
+      "personality": { "gifs": "sometimes", "on": ["failure"], "note": "" }
+    },
+    {
+      "id": "developer",
+      "role": "developer",
+      "kind": "local",
+      "provider": "nuclear-developer",
+      "model": "qwen2.5-coder:3b",
+      "employee": "dev-001",
+      "skills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": { "gifs": "never", "on": [], "note": "" }
+    },
+    {
+      "id": "qa",
+      "role": "qa",
+      "employee": "qa-001",
+      "skills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": { "gifs": "sometimes", "on": ["failure"], "note": "" }
+    },
+    {
+      "id": "devops",
+      "role": "devops",
+      "kind": "agent",
+      "provider": "claude-code",
+      "model": "haiku",
+      "skills": [],
+      "instructions": "",
+      "behaviour": {},
+      "tasks": [],
+      "personality": { "gifs": "sometimes", "on": ["failure"], "note": "" }
+    }
+  ]
+}

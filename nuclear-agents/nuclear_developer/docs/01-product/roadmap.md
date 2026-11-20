@@ -11,6 +11,11 @@ query planner is in [the Smart Graph's roadmap](../../../../nuclear-graph-storag
 
 ## Half done
 
+- **On standby** (ADR-platform-0013): nothing of the Developer runs on any machine. Turning it on again requires the
+  switch `localModels` of Nuclear Builder's `setup.json` and `LOCAL_MODELS` of the MCP server true, the installers'
+  local profiles offered again, and the Developer's tests, its evaluation rounds and Nuclear Builder's local tests
+  run again on a machine with Ollama.
+
 **Two tasks lost in round 24** (spec 011, T1.4: the prompts moved into the roles with the same text): the knowledge
 base had changed since round 23. `web-manager` copies `@state(...State.full)` from the website's state managers
 (examples of the same kind) instead of the state the task writes (`loaded`); `graph-summary` copies the graph of the

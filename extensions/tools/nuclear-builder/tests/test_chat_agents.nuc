@@ -30,6 +30,7 @@ down() httpx.MockTransport
   httpx.MockTransport((request: httpx.Request) => httpx.Response(503))
 
 testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = agentsProject(tmpPath, monkeypatch)
   found = agentsHere(root, down())
   ids = found.map((a) => "${a["id"]}")
@@ -58,6 +59,7 @@ testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) 
   expect(choice["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "agent", "--provider", "claude-code"])
 
 testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = agentsProject(tmpPath, monkeypatch)
   host = chatHost(root, "es", down())
   members: <string, any>[] = host["members"]!
@@ -66,6 +68,35 @@ testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) v
   expect(atlas["id"] == "atlas" and atlas["role"] == "chat" and "agente general" in "${(atlas["profile"] as <string, any>)["bio"]}")
   expect(responder["choice"] == "nuclear-developer" and responder["paid"] == false and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "local", "--provider", "nuclear-developer"])
   expect((responder["choices"] as <string, any>[]).length == 11)
+
+// The local models on standby (ADR-platform-0013): no local agent is offered or listed with models, and the default
+// choice is the first agent installed, else the first API provider with a key, else none (a provider is chosen).
+testOnStandbyNoLocalAgentIsOfferedAndTheDefaultIsTheFirstExternalOne(tmpPath: Path, monkeypatch: any) void
+  root = agentsProject(tmpPath, monkeypatch)
+  expect(not localModels())
+  ids = agentsHere(root, down()).map((a) => "${a["id"]}")
+  expect(ids == AGENT_ORDER.filter((x) => x != "nuclear-developer"), json.dumps(ids))
+  // Claude Code is installed: it comes first
+  expect(externalWorker() == { "kind": "agent", "provider": "claude-code" }, json.dumps(externalWorker()))
+  host = chatHost(root, "en", down())
+  responder: <string, any> = (host["members"] as <string, any>[]).last["responder"]!
+  expect(responder["choice"] == "claude-code" and responder["paid"] == true and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "agent", "--provider", "claude-code"] and responder["why"] == null, json.dumps(responder))
+  expect(not (responder["choices"] as <string, any>[]).any((c) => c["kind"] == "local"))
+  models = modelsHere(root)
+  expect(not ("nuclear-developer" in (models["providers"] as <string, any>)))
+  asked: <string, any> = (modelsHere(root, "nuclear-developer")["providers"] as <string, any>)["nuclear-developer"]!
+  expect(asked["models"] == [] and asked["why"] == STANDBY, json.dumps(asked))
+  expect("standby" in whyNotHere("nuclear-developer"))
+  // no agent on the PATH: the API provider whose key the vault notes, with its default model
+  empty = tmpPath.joinpath("empty")
+  empty.mkdir()
+  monkeypatch.setenv("PATH", "${empty}")
+  expect(externalWorker() == { "kind": "api", "provider": "anthropic", "model": "claude-sonnet-5-5" }, json.dumps(externalWorker()))
+  // nothing at all: none, and the host says a provider must be chosen
+  tmpPath.joinpath("factory", "vault.json").writeText("[]")
+  expect(externalWorker() == null)
+  none: <string, any> = (chatHost(root, "en", down())["members"] as <string, any>[]).last["responder"]!
+  expect(none["choice"] == "" and none["why"] == NO_PROVIDER, json.dumps(none))
 
 testAChatTurnWithClaudeCodeStreamsItsText(tmpPath: Path) void
   told: <string, any>[] = []

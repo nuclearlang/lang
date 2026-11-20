@@ -1,6 +1,7 @@
 // The Nuclear Atlas tool (Ctrl+Alt+A): Nuclear Chat mounted as the page (spec 013 T3.3), on the direct message with
-// the general agent (`dm-atlas`, `nuclear-builder member --role chat`, the provider of `nuclear.builder.chat`; by
-// default the local Nuclear Developer with the Smart Graph). The conversation is the chat's, kept in the project
+// the general agent (`dm-atlas`, `nuclear-builder member --role chat`, the provider of `nuclear.builder.chat`: an
+// external agent or provider, Claude Code by default, over the Smart Graph; the local models are on standby,
+// ADR-platform-0013). When no agent nor provider can answer on this machine, the page says how to pick one. The conversation is the chat's, kept in the project
 // (`.nuclear/chat/`). `/task <what to do>` is an order: a run of the software factory with the project's team (the
 // Builder's `driveRun`), told by its members in the team's channel; Atlas says in the order's thread where it went
 // and how it ended. Above the chat, the templates built from the project's map fill the chat's composer.
@@ -20,6 +21,8 @@ import { templatesOf } from './chat';
 import { criteriaOf } from '../../nuclear-builder/src/support';
 import { loadRun, newRunId, Spec, writeSpec } from '../../nuclear-builder/src/runs';
 import { BuilderProject, driveRun } from '../../nuclear-builder/src/panel';
+import { agentsHere } from '../../nuclear-builder/src/teams/cli';
+import { SettingsPanel } from '../../../vscode/src/settingsPanel';
 
 const DM = `dm-${AGENT}`;
 
@@ -70,7 +73,7 @@ export class AtlasPanel {
   private disposed = false;
 
   private constructor(
-    context: vscode.ExtensionContext,
+    private readonly context: vscode.ExtensionContext,
     private readonly projects: () => BuilderProject[],
   ) {
     this.panel = vscode.window.createWebviewPanel('nuclear.atlas', 'Nuclear Atlas', vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
@@ -89,6 +92,7 @@ export class AtlasPanel {
     this.panel.webview.onDidReceiveMessage((m: { type?: string; root?: string }) => {
       if (this.wire.receive(m)) return;
       if (m.type === 'ready') this.state();
+      if (m.type === 'settings') SettingsPanel.show(this.context, 'builder');
       if (m.type === 'project' && m.root) ((this.root = m.root), (this.channel = DM), this.state());
     });
   }
@@ -130,6 +134,8 @@ export class AtlasPanel {
         templates: this.root ? templatesOf(map, card?.platform ?? '', lang()) : [],
         hasMap: !!map,
       });
+    // who can answer here (`agents --json`): none available, the page says how to pick one
+    void agentsHere().then((list) => !this.disposed && void this.panel.webview.postMessage({ type: 'provider', ready: list.some((a) => a.available) }));
   }
 }
 
@@ -150,8 +156,10 @@ export function html(webview: vscode.Webview, extension: vscode.Uri): string {
   .hint { opacity: .7; font-size: 12px; }
   #chat { flex: 1; min-height: 0; }
   .msg { padding: 16px 24px; opacity: .8; white-space: pre-wrap; } .msg.err { color: var(--vscode-errorForeground); opacity: 1; }
+  .noprov { padding: 8px 12px; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-editorWarning-foreground); } .noprov a { color: var(--vscode-textLink-foreground); cursor: pointer; }
 </style></head><body><div class="app">
 <header><b>Nuclear Atlas</b><select id="project" title="${texts(ATLAS).project}"></select><div class="templates" id="templates"></div><span class="hint" id="hint"></span>${langButton()}</header>
+<div class="noprov" id="noprov" hidden></div>
 <div id="chat"><div class="msg">${texts(ATLAS).loading}</div></div>
 </div>
 <script nonce="${nonce}">
@@ -177,6 +185,7 @@ addEventListener('message', (e) => {
   if (m.type === 'chatFrame') return page.frame(m.frame);
   if (m.type === 'chatPath') return page.mount($('#chat'), m.path).catch((x) => show(String(x), true));
   if (m.type === 'chatError') return show(m.text, true);
+  if (m.type === 'provider') { $('#noprov').hidden = m.ready; $('#noprov').innerHTML = esc(t('noProvider')) + ' <a data-settings="1" tabindex="0">' + esc(t('pickProvider')) + '</a>'; return; }
   if (m.type !== 'state') return;
   S = m;
   $('#project').innerHTML = S.projects.map((p) => '<option value="' + esc(p.root) + '"' + (p.root === S.root ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('');
@@ -185,7 +194,7 @@ addEventListener('message', (e) => {
   if (!S.root) return show(t('noProject'));
   if (mounted !== S.root) { mounted = S.root; vscode.postMessage({ type: 'chatOpen' }); }
 });
-document.addEventListener('click', (e) => { const b = e.target.closest('[data-tpl]'); if (b) compose(S.templates[+b.dataset.tpl].text); });
+document.addEventListener('click', (e) => { if (e.target.closest('[data-settings]')) return vscode.postMessage({ type: 'settings' }); const b = e.target.closest('[data-tpl]'); if (b) compose(S.templates[+b.dataset.tpl].text); });
 $('#project').addEventListener('change', (e) => vscode.postMessage({ type: 'project', root: e.target.value }));
 vscode.postMessage({ type: 'ready' });
 </script></body></html>`;

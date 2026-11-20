@@ -272,8 +272,15 @@ memberLine(args: string[]) int
   if not given.isEmpty
     role = "${given["role"]}"
   if role == "chat"
-    provider = option(args, "--provider") ?? "nuclear-developer"
-    given = { "provider": provider, "kind": option(args, "--kind") ?? kindOf(provider), "model": option(args, "--model") ?? "" }
+    // the general agent: the provider asked, else the local Developer while the local models are on, else the default
+    // external choice; the local one asked while they are on standby is that choice too (ADR-platform-0013)
+    asked = option(args, "--provider")
+    keep = asked != null and (asked != "nuclear-developer" or localModels())
+    w: <string, any>? = keep ? { "provider": asked } : localModels() ? { "provider": "nuclear-developer" } : externalWorker(readLine(root, "")["prices"] ?? ({} as <string, any>))
+    if w == null
+      return refuse(NO_PROVIDER)
+    provider = "${w!["provider"]}"
+    given = { "provider": provider, "kind": (keep ? option(args, "--kind") : null) ?? kindOf(provider), "model": (keep ? option(args, "--model") : null) ?? w!["model"] ?? "" }
   else if given.isEmpty
     return refuse("the team ${team["id"]} has no ${role}")
   if not ("${given["provider"] ?? "nuclear-developer"}" in ADAPTERS)
@@ -310,9 +317,15 @@ chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <st
     personality: <string, any> = r["personality"] ?? ({} as <string, any>)
     members.add({ "id": "${teamId}-${own}", "name": name, "role": role, "member": own, "team": teamId, "avatar": "${r["employee"] ?? "${teamId}-${own}"}", "face": p["thumb"] ?? p["face"], "temperament": personality["temperament"] ?? p["temperament"], "profile": { "bio": p["bio"] ?? "", "hrNote": p["hrNote"] ?? "", "lang": lang }, "personality": r["personality"], "brain": brainOf(r), "responder": { "command": ["nuclear-builder", "member", "--team", teamId, "--member", own], "paid": r["kind"] != "local" } })
   ids = members.map((m) => "${m["id"]}")
-  // the general agent: answered by the choice of its conversation (the local Nuclear Developer unless the host says)
+  // the general agent: answered by the choice of its conversation, else this default: the local Nuclear Developer
+  // while the local models are on, else the default external choice (ADR-platform-0013); none: `why` says to choose
   choices = chatChoices(agentsHere(root, transport))
-  members.add({ "id": GENERAL_AGENT, "name": "Atlas", "role": "chat", "team": "", "avatar": GENERAL_AGENT, "face": null, "temperament": null, "profile": { "bio": GENERAL_AGENT_BIO[lang] ?? GENERAL_AGENT_BIO["en"], "hrNote": "", "lang": lang }, "personality": { "gifs": "never", "on": [] as string[] }, "responder": { "command": choices[0]["command"], "paid": false, "choice": "nuclear-developer", "model": "", "choices": choices } })
+  w: <string, any>? = localModels() ? { "provider": "nuclear-developer" } : externalWorker(readLine(root, "")["prices"] ?? ({} as <string, any>))
+  chosen = w == null ? null : choices.find((c) => c["id"] == w!["provider"])
+  responder: <string, any> = { "command": (chosen ?? choices[0])["command"], "paid": chosen != null and chosen!["kind"] != "local", "choice": chosen == null ? "" : chosen!["id"], "model": w == null ? "" : w!["model"] ?? "", "choices": choices }
+  if chosen == null
+    responder["why"] = NO_PROVIDER
+  members.add({ "id": GENERAL_AGENT, "name": "Atlas", "role": "chat", "team": "", "avatar": GENERAL_AGENT, "face": null, "temperament": null, "profile": { "bio": GENERAL_AGENT_BIO[lang] ?? GENERAL_AGENT_BIO["en"], "hrNote": "", "lang": lang }, "personality": { "gifs": "never", "on": [] as string[] }, "responder": responder })
   // a message to the team goes to its tech lead; `@<role>` to the role's first member as listed here (Nuclear Chat)
   teams = [{ "id": teamId, "name": team["name"], "lead": team["techLead"] == null ? "" : "${teamId}-${team["techLead"]}" }]
   project = "${projectCard(root)["name"] ?? Path(root).name}"

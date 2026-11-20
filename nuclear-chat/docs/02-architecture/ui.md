@@ -89,7 +89,8 @@ general agent) shows who answers it in its header (`AgentPicker`, as in Claude's
 mark (local, an agent's command line, an API), its name, its model and *paid*; its menu lists the host's choices,
 one not on this machine disabled with its `why`, then the chosen agent's models (its own default first when it has
 one; a free model typed when it lists none). The default is the conversation's own choice, else the host's, else the
-local agent (`chosenAgent`, `chosenModel`); a pick calls `PUT …/agent`. The answer arrives as it is written
+first agent there (`chosenAgent`, `chosenModel`; while the local models are on standby, ADR-platform-0013, a host
+offers no local agent); a pick calls `PUT …/agent`. The answer arrives as it is written
 (`Streaming`, after the messages and in a thread): the member's row with *writing…*, its text as markdown (a fence
 not closed yet drawn as code), each tool it calls as a chip that spins, then turns green or red, and a caret; the
 posted answer replaces it with its cost. The composer completes `@` (members by name or role, teams), `#` (channels), `/` (`/poc`,

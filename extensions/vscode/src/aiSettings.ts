@@ -1,21 +1,17 @@
-// The settings of the AI services (`nuclear.ai.*`, the section "Nuclear: AI services"): where the services answer,
-// the local models, the retry policy, the MCP command, the providers' commands and the integrations. The Builder and
+// The settings of the AI services (`nuclear.ai.*`, the section "Nuclear: AI services"): where the Smart Graph answers,
+// the retry policy, the MCP command, the providers' commands and the integrations. The Builder and
 // Nuclear Atlas read it as the machine's defaults, with their own sections (`../../tools/<tool>/src/settings.ts`) and the
 // spending's (`spending.ts`); a project's `.nuclear/builder.json` still wins (it is shared with CI). Jira's
 // credentials live in the secret storage.
 import * as vscode from 'vscode';
 import { l10n } from './i18n';
-import { readMachine, urls } from './aiMachine';
+import { urls } from './aiMachine';
 import { JiraAuth, RetryPolicy, toolEnv } from '../../tools/nuclear-builder/src/support';
 
 export const JIRA_SECRET = 'nuclear.builder.jira';
 
 export interface AiSettings {
-  developerUrl: string;
   graphUrl: string;
-  ollamaUrl: string;
-  coderModel: string;
-  assistantModel: string;
   /** The Smart Graph's command (serve, connect, requests, revoke). */
   graphCommand: string;
   /** The MCP server's command, started with no argument by an AI client. */
@@ -25,26 +21,22 @@ export interface AiSettings {
 
 export function aiSettings(): AiSettings {
   const c = vscode.workspace.getConfiguration('nuclear.ai');
-  // a model the user set in the editor wins; else the one of the profile the set-up installed (ADR-installer-0002)
-  const machine = readMachine();
+  // a value the user set in the editor wins; else the one the set-up chose (ai.env, ADR-installer-0002)
   const model = (key: string, chosen: string | undefined) => {
     const i = c.inspect<string>(key);
     return i?.workspaceFolderValue ?? i?.workspaceValue ?? i?.globalValue ?? chosen ?? i?.defaultValue ?? '';
   };
   return {
     // an address set in the editor wins; else the port the set-up chose (ai.env)
-    developerUrl: model('developerUrl', urls().developer),
     graphUrl: model('graphUrl', urls().graph),
-    ollamaUrl: c.get('ollamaUrl', 'http://localhost:11434'),
-    coderModel: model('models.coder', machine.CODER_MODEL),
-    assistantModel: model('models.assistant', machine.ASSISTANT_MODEL),
     graphCommand: c.get('graphCommand', 'nuclear-graph'),
     mcpCommand: c.get('mcpCommand', 'nuclear-mcp'),
     retry: { attempts: c.get('retry.attempts', 5), baseMs: c.get('retry.baseMs', 1000), maxMs: c.get('retry.maxMs', 30000) },
   };
 }
 
-/** The environment the graph and the Developer start with, so they use the models and addresses of the settings. */
+/** The environment the graph and the Builder's engine start with, so they use the address of the settings. The local
+ * models are on standby (ADR-platform-0013): no model nor Developer port is passed. */
 export function serviceEnv(): NodeJS.ProcessEnv {
   const s = aiSettings();
   const port = (url: string, fallback: string) => {
@@ -56,12 +48,8 @@ export function serviceEnv(): NodeJS.ProcessEnv {
   };
   return {
     ...toolEnv(),
-    CODER_MODEL: s.coderModel,
-    ASSISTANT_MODEL: s.assistantModel,
-    OLLAMA_URL: s.ollamaUrl,
     NUCLEAR_GRAPH_URL: s.graphUrl,
     NUCLEAR_GRAPH_PORT: port(s.graphUrl, '7878'),
-    NUCLEAR_DEVELOPER_PORT: port(s.developerUrl, '7879'),
   };
 }
 

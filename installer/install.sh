@@ -2,13 +2,15 @@
 # Installs NuclearLang from this repository: the `nuclear` command with its dialects, type
 # definitions, specs and the Synapsis runtime packages, the language server (nuclear-lsp, used by Zed), `nuclear-builder` (the
 # Builder without the editor, ADR-platform-0003, with the set-up of the AI services: needs uv from source), plus the VS Code extension (which bundles its own copy of the LSP) and the Zed
-# extension. With --ai also the AI services, step by step (ADR-installer-0002): the Smart Graph, the Nuclear Developer, the models.
+# extension. With --ai also the AI services, step by step (ADR-installer-0002): the Smart Graph and Nuclear Chat, profile
+# remote (the local models, Ollama and the Nuclear Developer are on standby, ADR-platform-0013: an earlier set-up's are
+# taken away).
 #
 #   installer/install.sh                  install into ~/.local (PREFIX=/usr/local for another prefix)
 #   installer/install.sh --no-vscode      without the VS Code extension
 #   installer/install.sh --no-zed         without the Zed extension
 #   installer/install.sh --no-agent       without the `nuclear` skill for AI agents
-#   installer/install.sh --ai             then `nuclear-builder setup`: a profile for this machine, the services at every login
+#   installer/install.sh --ai             then `nuclear-builder setup --profile remote --yes`: the services at every login
 #   installer/install.sh --ai-runtime     the AI services as a release brings them (ADR-installer-0003): a Python of their own
 #                                         built from this tree (installer/release/ai-runtime.sh, needs uv), then the set-up;
 #                                         without it they are this tree's folders, the graph installed editable
@@ -72,7 +74,7 @@ ln -sf "$HOME_DIR/bin/nuclear" "$BIN_DIR/nuclear"
 ln -sf "$HOME_DIR/bin/nuclear-lsp" "$BIN_DIR/nuclear-lsp"
 
 # from source the AI services are the working tree's own folders (stage.sh copied them): their set-up installs the
-# graph editable and builds the Developer in place; the set-up itself (Nuclear, the python dialect) is this tree's
+# graph editable (the Developer is on standby: not built); the set-up itself (Nuclear, the python dialect) is this tree's
 # extensions/tools/nuclear-builder, installed editable with uv (its line runs the software factory, in Nuclear too)
 BUILDER="$BIN_DIR/nuclear-builder"
 if [ "$RUNTIME" = 1 ]; then
@@ -101,8 +103,8 @@ if [ "$AI" = 1 ]; then
   if ! "$BUILDER" --help >/dev/null 2>&1; then
     echo "note: --ai needs the set-up (uv, or --ai-runtime); the AI services skipped"
   else
-    NUCLEAR_INSTALL="$HOME_DIR" NUCLEAR_BIN="$BIN_DIR" "$BUILDER" setup \
-      || echo "note: the AI services are not set up; when you want them: nuclear-builder setup"
+    NUCLEAR_INSTALL="$HOME_DIR" NUCLEAR_BIN="$BIN_DIR" "$BUILDER" setup --profile remote --yes \
+      || echo "note: the AI services are not set up; when you want them: nuclear-builder setup --profile remote --yes"
   fi
 fi
 

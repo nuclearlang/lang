@@ -154,6 +154,9 @@ healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
   people = known ?? rosters()
   moods = temperaments().map((m) => "${m["id"]}")
   warnings: string[] = isinstance(t["warnings"], list) ? list(t["warnings"] as string[]) : ([] as string[])
+  // the default external choice, asked once for the team
+  standbyWorker: <string, any>? = null
+  standbyNone = false
   members: any[] = []
   for one in t["members"] as any[]
     if not isinstance(one, dict)
@@ -165,6 +168,20 @@ healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
       m["role"] = roleId("${m["role"]}")
     who = "${m["id"] ?? m["role"]}"
     kind = m["kind"] ?? "local"
+    // the local kind or a local model while the local models are on standby (ADR-platform-0013): the default external
+    // choice works it, and the user is told
+    if not localModels() and (kind == "local" or m["provider"] == "nuclear-developer")
+      if standbyWorker == null
+        found = externalWorker()
+        standbyNone = found == null
+        standbyWorker = found ?? FALLBACK_WORKER
+      for k in ["kind", "provider", "model"]
+        m.remove(k)
+      for k, v in standbyWorker!
+        m[k] = v
+      label = AGENT_LABELS["${standbyWorker!["provider"]}"] ?? "${standbyWorker!["provider"]}"
+      warnings.add(standbyNone ? "${who}: the local models are on standby (ADR-platform-0013); ${NO_PROVIDER} (${label} is set until then)" : "${who}: the local models are on standby (ADR-platform-0013); ${label} works it now")
+      kind = "${m["kind"]}"
     if isText(kind) and not (kind in PROVIDERS)
       warnings.add("${who}: the kind ${kind} is no longer known; the local Nuclear Developer works it now")
       for k in ["kind", "provider", "model"]
@@ -406,7 +423,11 @@ listTeams() <string, any>[]
   for id in teamIds()
     try
       t = loadTeam(id)
-      found.add({ "id": id, "name": t["name"], "description": t["description"] ?? "", "logo": logoPath(t), "techLead": t["techLead"], "members": ((t["members"] ?? []) as any[]).length, "updated": t["updated"], "default": id == chosen })
+      listed: <string, any> = { "id": id, "name": t["name"], "description": t["description"] ?? "", "logo": logoPath(t), "techLead": t["techLead"], "members": ((t["members"] ?? []) as any[]).length, "updated": t["updated"], "default": id == chosen }
+      // what a read converted or left out (`healTeam`), told until the user saves the team
+      if t["warnings"] != null
+        listed["warnings"] = t["warnings"]
+      found.add(listed)
     catch e
       if not isinstance(e, ValueError)
         throw e
@@ -549,7 +570,12 @@ localWorker(role: string, machine: <string, string>? = null) <string, any>
   model = role == "developer" ? (m["CODER_MODEL"] ?? "qwen2.5-coder:3b") : (m["ASSISTANT_MODEL"] ?? "gemma4:e2b")
   { "kind": "local", "provider": "nuclear-developer", "model": model }
 
-// A new member from what is given (`team create`, `team member add`): the local defaults where who works it is not
+// Who works a member when nothing says it: the local defaults while the local models are on, else the default
+// external choice (ADR-platform-0013), Claude Code when this machine has none (the user chooses).
+defaultWorker(role: string, machine: <string, string>? = null) <string, any>
+  localModels() ? localWorker(role, machine) : externalWorker() ?? FALLBACK_WORKER
+
+// A new member from what is given (`team create`, `team member add`): the default worker where who works it is not
 // said, every skill of its role switched on where its skills are not, a free id in the team.
 newMember(fields: <string, any>, members: <string, any>[], machine: <string, string>? = null) <string, any>
   role = roleId("${fields["role"] ?? ""}")
@@ -561,7 +587,7 @@ newMember(fields: <string, any>, members: <string, any>[], machine: <string, str
       m[key] = value
   m["role"] = role
   if m["kind"] == null and m["provider"] == null
-    for key, value in localWorker(role, machine)
+    for key, value in defaultWorker(role, machine)
       m[key] = m[key] ?? value
   if m["skills"] == null
     m["skills"] = roleSkills(role)
@@ -570,7 +596,7 @@ newMember(fields: <string, any>, members: <string, any>[], machine: <string, str
   m
 
 // The team a run takes when there is none at all (not saved): one member of each role, the first employee of its
-// roster, worked on this machine.
+// roster, worked by the default worker (`defaultWorker`).
 localTeam(machine: <string, string>? = null, known: <string, any>? = null) <string, any>
   people = known ?? rosters()
   members: <string, any>[] = []

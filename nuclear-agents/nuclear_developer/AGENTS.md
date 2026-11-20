@@ -5,6 +5,11 @@ diagnoser, acceptor, assistant) on models of at most 3B parameters, as the junio
 What a small model cannot hold comes from the Nuclear Smart Graph (a library of cards); what it writes is checked
 by the Nuclear compiler before it answers. ADR key: `developer`.
 
+> **On standby** (ADR-platform-0013, 2026-11-20): the local models are off. No installation installs, starts or
+> offers the Developer (Nuclear Builder's `setup.json`: `"localModels": false`; the MCP server registers no
+> `developer_*` tool); its code stays here, untested by default. Turning it on again is the user's decision and needs
+> its own tests on that day.
+
 The platform's rules are the root [`AGENTS.md`](../../AGENTS.md); the agents' index is
 [`../AGENTS.md`](../AGENTS.md).
 

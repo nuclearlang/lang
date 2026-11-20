@@ -2,7 +2,7 @@
 // roles a team lacks, the paid members, the pool's filter, the roster's skills, the draft of `team create`. Inlined in
 // the page's script by `toString()`: no import, each function uses nothing outside itself.
 
-/** A member as the wizard holds it: an employee of a role and who works them (`local` unless the user chose). */
+/** A member as the wizard holds it: an employee of a role and who works them (an agent or an API: no local kind, ADR-platform-0013). */
 export interface WizardMember {
   role: string;
   employee?: string;
@@ -73,14 +73,17 @@ export function rosterSkills(roster: Record<string, { employees?: { skills?: str
   return Object.keys(n).sort((a, b) => n[b] - n[a] || a.localeCompare(b));
 }
 
-/** The draft `team create` reads: who works a member is left out when it is the local default (the command gives it
- * the profile's model); the tech lead is the index of its member. */
+/** The draft `team create` reads: who works a member always written (an older `local` one becomes the default agent);
+ * the tech lead is the index of its member. */
 export function draftOf(w: { name: string; description: string; purpose: string; skills: string[]; ownSkills?: { id: string; name: string; description: string; text: string; from?: string }[]; budgetUsd: number; lead: number; logoFile?: string; members: WizardMember[] }): Record<string, unknown> {
   const members = w.members.map((m) => {
     const out: Record<string, unknown> = { role: m.role };
     if (m.employee) out.employee = m.employee;
     if (m.name) out.name = m.name;
-    if (m.kind !== 'local' || m.model) { out.kind = m.kind; out.provider = m.provider; if (m.model) out.model = m.model; }
+    const local = m.kind === 'local' || !m.kind;
+    out.kind = local ? 'agent' : m.kind;
+    out.provider = local ? 'claude-code' : m.provider;
+    if (m.model && !local) out.model = m.model;
     // what makes it different, each one only when it is set
     if (m.instructions?.trim()) out.instructions = m.instructions.trim();
     if (m.skills) out.skills = m.skills;

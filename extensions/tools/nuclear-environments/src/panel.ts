@@ -17,7 +17,7 @@ export interface EnvProject {
 }
 
 type Message =
-  | { type: 'ready' | 'refresh' | 'update' | 'dismiss' }
+  | { type: 'ready' | 'refresh' | 'dismiss' }
   | { type: 'project'; root: string }
   | { type: 'use'; env: string }
   | { type: 'set'; name: string; env: string; value: string; secret: boolean }
@@ -156,8 +156,6 @@ export class EnvironmentsPanel {
         return this.post();
       case 'refresh':
         return this.refresh();
-      case 'update':
-        return void vscode.commands.executeCommand('nuclear.update');
       case 'dismiss':
         this.error = this.note = undefined;
         return this.post();

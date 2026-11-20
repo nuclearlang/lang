@@ -4,7 +4,7 @@ use httpx
 use pathlib{ Path }
 
 // The agents that can answer a conversation on this machine (spec 013 requirement 17): the local Nuclear Developer
-// (always offered: the fallback when nothing else is configured), each agent whose command is on the tools' PATH,
+// (offered only while the local models are on, ADR-platform-0013), each agent whose command is on the tools' PATH,
 // each API provider whose key the vault notes (`factory/vault.json`: the keyring is not opened for a list) and that
 // has a model with a price. `nuclear-builder agents --json`, the tool `agents_list`, and the general agent's choices
 // in the chat's host file (`chat-host`).
@@ -12,6 +12,33 @@ use pathlib{ Path }
 AGENT_ORDER = ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"]
 
 AGENT_LABELS: <string, string> = { "nuclear-developer": "Nuclear Developer", "claude-code": "Claude Code", "opencode": "OpenCode", "codex": "Codex", "gemini-cli": "Gemini CLI", "cursor": "Cursor", "grok": "Grok Build", "anthropic": "Anthropic API", "openai": "OpenAI API", "google": "Google API", "openrouter": "OpenRouter API" }
+
+// The default external choice while the local models are on standby (ADR-platform-0013): the agents first, then the
+// API providers.
+EXTERNAL_ORDER = ["claude-code", "codex", "gemini-cli", "cursor", "opencode", "grok", "anthropic", "openai", "google", "openrouter"]
+
+// What a converted member is set to when this machine has no agent and no key: the user is told to choose.
+FALLBACK_WORKER: <string, any> = { "kind": "agent", "provider": "claude-code" }
+
+// Who works a member or answers the chat when nothing says it: the first agent whose command is on the PATH, else the
+// first API provider whose key the vault notes and that has a priced model (`prices`: the project's), with its
+// default model; null when there is none: a provider must be chosen.
+externalWorker(prices: <string, any> = {}, env: <string, string>? = null) <string, any>?
+  paths = env ?? toolEnv()
+  for id in EXTERNAL_ORDER
+    if whyNotHereSaid(id, prices, paths) == null
+      if providerKind(id) == "agent"
+        return { "kind": "agent", "provider": id }
+      models = apiModels(id, prices)
+      first = API_DEFAULTS[id] ?? ""
+      return { "kind": "api", "provider": id, "model": first in models ? first : models[0] }
+  null
+
+// Why the local kind cannot work while its models are on standby.
+STANDBY = "the local models are on standby (ADR-platform-0013): choose an agent or an API provider"
+
+// What a command says when there is no external choice.
+NO_PROVIDER = "no agent or API provider on this machine: install an agent (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build) or keep an API key (nuclear-builder vault set <provider>), then choose it"
 
 // Claude Code's aliases of its latest models; its own default when none is given.
 CLAUDE_MODELS = ["haiku", "sonnet", "opus"]
@@ -59,7 +86,8 @@ reason(text: string, key: string, args: string[]) <string, any>
 
 // Why a provider cannot work on this machine, empty when it can (the rules of `agents --json`): an agent whose command
 // is not on the tools' PATH; an API provider whose key the vault does not note, or with no model with a price. The
-// local Nuclear Developer always can (the fallback; whether its service answers is `agents`'s and the run's).
+// local Nuclear Developer can while the local models are on (whether its service answers is `agents`'s and the run's),
+// never while they are on standby (ADR-platform-0013).
 whyNotHere(provider: string, prices: <string, any> = {}, env: <string, string>? = null) string
   said = whyNotHereSaid(provider, prices, env)
   said == null ? "" : "${said!["text"]}"
@@ -68,7 +96,7 @@ whyNotHere(provider: string, prices: <string, any> = {}, env: <string, string>? 
 whyNotHereSaid(provider: string, prices: <string, any> = {}, env: <string, string>? = null) <string, any>?
   kind = providerKind(provider)
   if kind == "local"
-    return null
+    return localModels() ? null : reason(STANDBY, "standby", [] as string[])
   if kind == "agent"
     paths = env ?? toolEnv()
     command = agentCommand(provider, paths)
@@ -84,7 +112,7 @@ whyNotHereSaid(provider: string, prices: <string, any> = {}, env: <string, strin
 workableHere(m: <string, any>) void
   allowed: string[] = PROVIDERS["${m["kind"] ?? "local"}"] ?? ["nuclear-developer"]
   provider = "${m["provider"] ?? allowed[0]}"
-  if provider == "nuclear-developer"
+  if provider == "nuclear-developer" and localModels()
     return
   root = projectRoot("${Path.cwd()}")
   why = whyNotHere(provider, readLine(root, "")["prices"] ?? ({} as <string, any>))
@@ -107,13 +135,15 @@ agentsHere(root: string, transport: httpx.BaseTransport? = null) <string, any>[]
   line = readLine(root, "")
   out: <string, any>[] = []
   dev = developerUrl(line["developerUrl"])
-  client = httpx.Client(transport = transport)
   answers = false
-  try
-    answers = probe(client, dev + "/docs")["ok"] == true
-  finally
-    client.close()
-  out.add(agentOf("nuclear-developer", [], "", true, answers ? null : reason("${dev} does not answer: nuclear-builder setup --restart developer", "noAnswer", [dev])))
+  if localModels()
+    client = httpx.Client(transport = transport)
+    try
+      answers = probe(client, dev + "/docs")["ok"] == true
+    finally
+      client.close()
+  if localModels()
+    out.add(agentOf("nuclear-developer", [], "", true, answers ? null : reason("${dev} does not answer: nuclear-builder setup --restart developer", "noAnswer", [dev])))
   for id in AGENT_ORDER.filter((p) => providerKind(p) == "agent")
     command = agentCommand(id, env)
     found = shutil.which(command, path = env["PATH"])

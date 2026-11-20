@@ -54,3 +54,12 @@ export const Uri = { file: (p: string) => ({ fsPath: p }), joinPath: (u: { fsPat
 
 export const env = { language: 'en' };
 export const l10n = { t: (message: string, ...args: unknown[]) => message.replace(/\{(\d+)\}/g, (_, i) => String(args[+i])) };
+/** Enough of an event emitter for the modules the settings page imports (the notifications). */
+export class EventEmitter<T> {
+  private readonly listeners: ((e: T) => void)[] = [];
+  readonly event = (l: (e: T) => void) => (this.listeners.push(l), disposable);
+  fire(e: T): void {
+    for (const l of this.listeners) l(e);
+  }
+  dispose(): void {}
+}

@@ -90,11 +90,12 @@ stateless AgentMark(kind: string)
   build() Element
     span(className = "agent-mark ${kind}", children = span(className = "icon icon-${kind == "" ? "agent" : kind}"))
 
-// The agent a direct message is answered by: its own choice, else the host's default, else the local one (each only
-// when it is there).
+// The agent a direct message is answered by: its own choice, else the host's default, else the first one there (each
+// only when it is there); none when the host found none (the local models are on standby, ADR-platform-0013: a host
+// offers no local agent).
 chosenAgent(member: Member, channel: Channel) Choice?
   r = member.responder
-  r.choices.find((c) => c.id == channel.agent and c.available) ?? r.choices.find((c) => c.id == r.choice and c.available) ?? r.choices.find((c) => c.kind == "local")
+  r.choices.find((c) => c.id == channel.agent and c.available) ?? r.choices.find((c) => c.id == r.choice and c.available) ?? r.choices.find((c) => c.available)
 
 // Its model: the conversation's, or the host's for its default, or the agent's own default.
 chosenModel(member: Member, channel: Channel, choice: Choice) string

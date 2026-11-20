@@ -101,7 +101,7 @@ ChatTest
     fireEvent.keyDown(box, { "key": "Enter" })
     verify(MessagesRepository.say).called(1)
 
-  @test("a direct message is answered by its own agent, else the host's default, else the local one; its model too")
+  @test("a direct message is answered by its own agent, else the host's default, else the first one there; its model too")
   agents()
     agent = sampleAgent()
     expect(chosenAgent(agent, sampleRoom("dm-atlas", "dm", 0))?.id).toBe("nuclear-developer")
@@ -111,6 +111,9 @@ ChatTest
     gone = Channel(id = "dm-atlas", name = "Atlas", topic = "", kind = "dm", members = [], team = "", unread = 0, agent = "codex", model = "")
     expect(chosenAgent(agent, gone)?.id).toBe("nuclear-developer")
     expect(modelsOf(agent.responder.choices[1])).toEqual(["", "haiku", "opus"])
+    // no local agent offered (on standby) and no default of the host: the first agent there
+    external = Member(id = "atlas", name = "Atlas", role = "chat", team = "", avatar = "", profile = Profile(), personality = Personality(on = []), responder = Responder(command = [], paid = true, choice = "", model = "", choices = agent.responder.choices.filter((c) => c.kind != "local")), brain = agent.brain)
+    expect(chosenAgent(external, gone)?.id).toBe("claude-code")
 
   @test("an answer as it is written: its text grows, a tool is a chip marked when it answers, an open fence is code")
   streaming()

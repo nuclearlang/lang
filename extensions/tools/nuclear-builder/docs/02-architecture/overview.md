@@ -97,8 +97,7 @@ when a step of its own or a local agent's ran).
 - **Notifications**: a run's question (`gate`), its end (`done`, or `failed` with the stage and step that failed, so
   *Open* lands on that step), a run that did not start or was interrupted go to the extension's one notification
   system (`notices.add` of `vscode/src/notifications.ts`), which decides whether it pops up (the page on screen,
-  `nuclear.notifications`) and draws the Builder's badge on the strip. While the page is on screen, its docked chat's
-  team channel is a place looked at: what a member says there is not notified.
+  `nuclear.notifications`) and draws the Builder's badge on the strip.
 - **Right, below: the log** (requirement 24), one line per step done, newest last (the employee's portrait, else the drawn avatar, what, time, *who*); a click
   opens its detail (its outcome, its trace and tool calls, *show in the node*). Under it, the team doing the work: its
   logo (`logo` of the team file, read by `logoData` as a `data:` URL; none: its initials in its colour) and name, with
@@ -125,14 +124,13 @@ when a step of its own or a local agent's ran).
   is the engine's own and wins.
 - **A run of the earlier engine** (`engine` 2) is drawn as it is (its actors as the role that does that work now) and
   can only run again from scratch (`restart`).
-- **The chat** ([chat.md](chat.md)): Nuclear Chat's embedded UI (`out/chat-embed.js`, from `nuclear-chat/ui`)
-  mounted in the dock with a bridge over `postMessage`; its frames go through the window's one socket to the
-  service (the token never reaches the page). Each run is a thread of the team's channel, its questions buttons that
-  answer it, a spec's thread (*Polish in the chat* on a spec) shows a member's draft as a difference to accept.
-  *Open the chat* opens it as a full tab. The service down is said in the dock with how to fix it.
-- The messages of the webview: `start`, `saveSpec`, `runSpec`, `specs`, `chatOpen`, `chatFrame`, `chatTab`, `polish`, `answer`, `resume`, `retry`
+- **No chat of its own** ([chat.md](chat.md)): each run is a thread of the team's channel in Nuclear Chat, its
+  questions buttons that answer it, a spec's thread (*Polish in Nuclear Atlas* on a spec) shows a member's draft as a
+  difference to accept. A click on a member, on the team or on *Ask Nuclear Atlas* opens Nuclear Atlas on that
+  conversation (`atlas` → `nuclear.atlas.open`).
+- The messages of the webview: `start`, `saveSpec`, `runSpec`, `specs`, `atlas`, `polish`, `answer`, `resume`, `retry`
   (`station`, `scratch`), `stop`, `context` (who works each role: the run's stations, its steps' employees, its team,
-  the roster), `checks`, `check`, `team`, `teams`; to the page, `specs`, `selectSpec`, `chatPath`, `chatError` and `chatFrame` besides the run's.
+  the roster), `checks`, `check`, `team`, `teams`; to the page, `specs` and `selectSpec` besides the run's.
 
 ## The diagram (`flow.tsx`)
 

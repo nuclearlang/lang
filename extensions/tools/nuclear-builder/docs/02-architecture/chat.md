@@ -19,14 +19,18 @@ run in the team's channel, and does what its buttons ask.
 - `nuclear-builder member --team <id> --member <member id> --events` (`--role <role>`: the role's first member;
   `--role chat`): the responder, one answer per message
   ([teams-and-vault.md](teams-and-vault.md), "A member in Nuclear Chat"). `--role chat` is the general agent
-  (`--kind`, `--provider`, `--model`; the local Nuclear Developer by default).
+  (`--kind`, `--provider`, `--model`; by default the default external choice, `externalWorker`, while the local models
+  are on standby, ADR-platform-0013: the local one asked is that choice too, and with none the command refuses with
+  `NO_PROVIDER`; the local Nuclear Developer with them on).
 - **The general agent is a front for any agent** (spec 013 requirement 17): the host file gives the member `atlas`
   (role `chat`, its direct message `dm-atlas`) with `responder.choices`, one per agent of `nuclear-builder agents`
-  (`chat_agents.nuc`: the local Nuclear Developer always, Claude Code, OpenCode, Codex and Gemini CLI when their
+  (`chat_agents.nuc`: the local Nuclear Developer only while the local models are on, Claude Code, OpenCode, Codex and Gemini CLI when their
   command is on the PATH, the API providers when the vault notes their key and a model has a price; each with
   `{id, label, kind, command, paid, models, defaultModel, available, why?}` and its command `member --role chat
   --kind … --provider …`; the local one offers only the machine's chat model, `CHAT_MODEL` of `ai.env`, else
-  setup.json's `chat`), and `choice: "nuclear-developer"`. The user picks the agent and its model in the
+  setup.json's `chat`), and `choice`: the default external choice (`externalWorker`, its `model` with it) while the
+  local models are on standby, `""` with `why` (a provider must be chosen) when this machine has none;
+  `"nuclear-developer"` with them on. The user picks the agent and its model in the
   conversation's header; the chat runs that choice's command with `--model`. A spending confirmation holds only for
   the provider it named: another agent chosen for the same conversation asks twice again.
 - **The answer as it is written**: a chat's turn asks its adapter to stream (`inputs.stream`): Claude Code runs with
@@ -78,8 +82,11 @@ run in the team's channel, and does what its buttons ask.
   team the project uses (a quick pick), saves it (`line set team=<id>`) and registers with it,
   and what a page missed is read back (`GET events/{ws}?since=`). A service that cannot be reached is said in the
   page with how to fix it (`nuclear-builder setup`).
-- **The dock**: under the diagram, the chat mounted on the team's channel, folded and resized as before; *Open the
-  chat* opens it as a full editor tab (also the command *Nuclear Chat: Open the Chat*).
+- **No chat in the Builder's page** (the user, 2026-11-20): the conversations are Nuclear Atlas's. A member (the
+  team's roster in the spec form), the team (at the foot of the log), *Ask Nuclear Atlas* and *Polish in Nuclear
+  Atlas* send `atlas` with the channel (`dm-<team>-<member>`, the team's id, else `teamChannel`), and the host runs
+  `nuclear.atlas.open` (root, channel); the company screen does the same with `team:chat`. The chat as a full editor
+  tab stays the command *Nuclear Chat: Open the Chat*.
 - **A run is a thread** of its team's channel (`followRun`, from `driveRun`): the tech lead starts it (`run:<id>`,
   found again by the chat's search when the run goes on), each station that passes or fails is posted by the member
   of its role (a failure with `moment: "failure"`: the member's GIF personality applies), its end by the tech lead.
@@ -87,7 +94,7 @@ run in the team's channel, and does what its buttons ask.
   through `answerRun` (*Ask for a change* asks for the text in the editor) and the buttons go. The spending is told
   but confirmed only in the editor's two modal questions. A run of another team than the project's is told in
   `general`, as `system`.
-- **A spec's thread**: *Polish in the chat* on a spec opens its thread in the team's channel (the tech lead posts
+- **A spec's thread**: *Polish in Nuclear Atlas* on a spec opens its thread in the team's channel, then Nuclear Atlas on it (the tech lead posts
   `spec:<id>` with its text; once). A member's `spec_draft` is posted as the difference (`diff`) with *Accept* and
   *Discard*: the spec is written only on *Accept* (`spec accept`), and the specs' tree follows.
 - **`/poc <what>`** (the chat's `action`): not available yet, and said so in its thread: the factory runs only on a

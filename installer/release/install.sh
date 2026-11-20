@@ -11,15 +11,15 @@
 # the AI agents the `nuclear` skill and installs the editor extension in every editor of the VS Code family it finds
 # (VS Code, Insiders, Cursor, VSCodium, Windsurf; on macOS inside their apps too). No sudo. Then, asked in a
 # required Smart Graph and MCP server: their archive (a Python of their own with the Smart Graph, the MCP server and
-# the Nuclear Developer, about 160 MB; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: the
-# graph's own embeddings model, the MCP server in the AI clients, the services at every login; it asks whether to add
-# local agents, whose Ollama models are downloaded only for a local profile, `remote` adds none). A machine already set
-# up keeps its profile; without a terminal the profile is `remote`.
+# Nuclear Chat, about 160 MB; nothing is needed on the machine) and their set-up (`nuclear-builder setup --profile
+# remote --yes`: the graph's own embeddings model, the MCP server in the AI clients, the Smart Graph and Nuclear Chat
+# at every login). The local models are on standby (ADR-platform-0013): no Ollama, no local model and no Nuclear
+# Developer is offered or installed, and an update takes away the ones an earlier install put here.
 #
 # Run it again at any time: what is already there (the same version of NuclearLang, of the AI services) is kept and not
 # downloaded again, an interrupted run goes on from its step, and what is missing is added (an editor installed since).
 # Required: NuclearLang, the Smart Graph, the MCP server, the skill (a missing one ends the install with an error,
-# and a new run goes on). Added when possible: the editor extension. Asked: the local agents. A
+# and a new run goes on). Added when possible: the editor extension. A
 # platform's toolchain (Flutter for mobile, Node.js for web and NestJS) is never installed here: the summary and the
 # editor say what each platform needs and how to install it.
 #
@@ -29,8 +29,8 @@
 #
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
 # (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai (tests only: skips the required Smart Graph and MCP server, the install ends incomplete),
-# --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
-# that profile, no questions), --reinstall (download and replace even what is already
+# --profile remote (NUCLEAR_AI_PROFILE; lite, medium and hard are on standby, ADR-platform-0013: they become
+# remote), --reinstall (download and replace even what is already
 # there), --uninstall (everything the install made: the AI services' models, Ollama when it
 # installed it, their data and secrets, the caches, the editors' extension). NUCLEAR_INSTALL and NUCLEAR_BIN change the folders; NUCLEAR_REPO the
 # repository (owner/name) and NUCLEAR_DOWNLOAD the base url of the files (a mirror).
@@ -529,20 +529,21 @@ if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
 fi
 
 # --- the Smart Graph and the MCP server: required (ADR-installer-0006, ADR-installer-0003) ---
-# They come in the AI archive, inside the installation, and are always installed: no question. Only the local agents
-# are asked, by the set-up (a profile with Ollama's models, or `remote`: no local model, only the graph's own). A
-# machine already set up keeps its profile; without a terminal the profile is `remote`. `--no-ai` (tests) skips them
+# They come in the AI archive, inside the installation, and are always installed: no question. The profile is always
+# `remote`: the local models are on standby (ADR-platform-0013), and a profile of an earlier install (lite, medium,
+# hard in ai.env) or one asked becomes `remote`; its set-up takes away what was local. `--no-ai` (tests) skips them
 # and the install ends incomplete.
 MACHINE="${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang/ai.env"
 [ -n "$PROFILE" ] || PROFILE=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
+if [ -n "$PROFILE" ] && [ "$PROFILE" != remote ]; then
+  say "the local models are on standby (ADR-platform-0013): profile remote, not $PROFILE"
+fi
+PROFILE=remote
 ai_note=""
-tty=0
-[ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null && tty=1
 if [ "$AI" = 0 ]; then
   ai_note="--no-ai: the Smart Graph and the MCP server, which are required, were not installed. Run the installer without it."
 else
   section "The Smart Graph and the MCP server"
-  if [ -z "$PROFILE" ] && [ "$tty" = 0 ]; then PROFILE=remote; fi
 fi
 if [ "$AI" = 1 ]; then
   # their archive: a Python of their own with the services in it, unpacked as the installation's ai/
@@ -562,7 +563,7 @@ if [ "$AI" = 1 ]; then
   if done_step ai-downloaded && [ -s "$CACHE/$ai_name" ]; then again "Downloaded the AI services"; got_ai=0
   else
     got_ai=0
-    task "Downloading the AI services" "A Python of their own with the Smart Graph, the MCP server and the local agents" \
+    task "Downloading the AI services" "A Python of their own with the Smart Graph, the MCP server and Nuclear Chat" \
       --file "$CACHE/$ai_name" "$(size_of "$base/$ai_name")" resume_get "$base/$ai_name" "$CACHE/$ai_name" || got_ai=$?
     if [ "$got_ai" = 0 ]; then ok "Downloaded the AI services"; mark ai-downloaded; fi
   fi
@@ -604,16 +605,10 @@ gently() {
 if [ "$AI" = 1 ]; then
   if [ ! -x "$builder" ]; then
     ai_note="The AI archive has no set-up: run this installer again."
-  elif [ -n "$PROFILE" ]; then
-    section "Set-up · profile $PROFILE"
-    gently env NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile "$PROFILE" --yes >&2 \
-      || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
-  elif [ "$tty" = 1 ]; then
-    section "Set-up"
-    gently env NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup < /dev/tty >&2 \
-      || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
   else
-    ai_note="The Smart Graph and the MCP server are not set up: run \`nuclear-builder setup --profile remote --yes\`."
+    section "Set-up · profile remote"
+    gently env NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile remote --yes >&2 \
+      || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
   fi
 fi
 
@@ -660,12 +655,7 @@ box_line "${BOLD}Added when possible${OFF}" "$GREEN"
 if [ -s "$tmp/editors" ]; then box_line "  ${GREEN}✓${OFF} The editor extension ${DIM}$names${OFF}" "$GREEN"
 elif [ "$VSCODE" = 0 ]; then box_line "  ${DIM}○ The editor extension: not asked (--no-vscode)${OFF}" "$GREEN"
 else box_line "  ${DIM}○ The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions${OFF}" "$GREEN"; fi
-box_line "${BOLD}Optional, asked${OFF}" "$GREEN"
-chosen=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
-case $chosen in
-  lite|medium|hard) box_line "  ${GREEN}✓${OFF} Local agents ${DIM}profile $chosen: Ollama's models on this machine${OFF}" "$GREEN" ;;
-  *) box_line "  ${DIM}○ Local agents: not chosen (remote: no local model) · nuclear-builder setup to add them${OFF}" "$GREEN" ;;
-esac
+box_line "  ${DIM}○ Local models: on standby (ADR-platform-0013); your agents and API providers do the AI work${OFF}" "$GREEN"
 box_line "${BOLD}Each platform's own${OFF} ${DIM}(only for the platforms you build; the editor guides you)${OFF}" "$GREEN"
 doctor=$("$BIN/nuclear" doctor --json < /dev/null 2>/dev/null || true)
 toolchain() {

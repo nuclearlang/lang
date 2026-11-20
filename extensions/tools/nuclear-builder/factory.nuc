@@ -58,11 +58,12 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
     found!
 
   // Who works a station of `role`: the member the tech lead assigned for the run, else the role's first member
-  // (teams.nuc's `memberFor`); a role with no member is the local Nuclear Developer's.
+  // (teams.nuc's `memberFor`); a role with no member is the default worker's (the local Nuclear Developer, or the default
+  // external choice while the local models are on standby).
   assigned(role: string) <string, any>
     found = memberFor(team, role, run["assign"])
     // with the team's and the member's skills, and a base agent's text (library.nuc)
-    found == null ? ({ "kind": "local", "provider": "nuclear-developer" } as <string, any>) : withSkills(team, found!)
+    found == null ? (localModels() ? ({ "kind": "local", "provider": "nuclear-developer" } as <string, any>) : defaultWorker(role)) : withSkills(team, found!)
 
   // A new step of a station, saved and told. `key` and `args`: the step's kind for the screens, which say its title in
   // their language (`step.<key>` of their dictionaries, each argument at its place); the English `title` stays the

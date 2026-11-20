@@ -4,6 +4,18 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- The local models are on standby (ADR-platform-0013): `"localModels": false` in Nuclear Builder's `setup.json`.
+  `nuclear-builder setup` offers only the profile `remote`, which now runs the Smart Graph and Nuclear Chat;
+  `--profile lite|medium|hard` is refused as on standby; on a machine that had a local profile its first step takes
+  away what NuclearLang put there (the Developer's service and launcher, the models it pulled, Ollama when it
+  installed it), writes `ai.env` as `remote` and says the GB freed. `setup --plan --json` and `team screen` carry
+  `localModels`; `agents`, `models` and `team screen` list no local kind nor Ollama model. A member or tech lead of
+  the local kind is worked, on read, by the default external choice (the first agent installed: Claude Code, Codex,
+  Gemini CLI, Cursor, OpenCode, Grok Build; else an API provider with a key), told in the team's `warnings`, the file
+  of before kept as `.bak`; the chat's general agent defaults to that choice too. The installers never install
+  Ollama, a local model or the Developer (a remembered local profile becomes `remote`). The MCP server registers no
+  `developer_*` tool (`LOCAL_MODELS`, held to `setup.json` by a test) and `nuclear_start` never sends an agent to the
+  local Developer. Nuclear Chat's agent picker falls back to the first agent there, never a local one.
 - Environments (spec 021, ADR-platform-0012): every `env("NAME")` / `env("NAME", "default")` of a platform project
   is listed in `.nuclear/contract.json` (`env`: name, default, required, client, uses); a name or default that is not
   a text literal is N0310; N0311 (a secret read by a client) and N0312 (a required variable without a value) are

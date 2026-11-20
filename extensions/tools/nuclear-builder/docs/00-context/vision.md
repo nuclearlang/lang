@@ -30,6 +30,9 @@ example, so the junior gets it right next time.
   ([the MCP server](../../../../../tools/mcp/AGENTS.md)).
 
 ## Who leads, and why
+> **On standby** (ADR-platform-0013): the local models are off; every role is worked by an agent or an API provider
+> the user chooses. What follows is how the local developer was measured, kept for the day it is switched on again.
+
 *Claude leads, the local developer writes* is the default; *Local agents only* is the other choice.
 
 The local developer is measured against Claude Sonnet on a bank of 45 tasks, 18 of them held out: 42 single files of

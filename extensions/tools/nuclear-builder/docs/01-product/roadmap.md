@@ -11,6 +11,19 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Half done
 
+- **Local models on standby, ADR-platform-0013** (the engine and the set-up): `localModels` false in `setup.json`;
+  the set-up offers only `remote` (the Smart Graph and Nuclear Chat) and its step `standby` takes away what was local;
+  a local member is converted on read; the chat's default is the first external agent or provider. Turning them on
+  again requires: the switch true here and in the MCP server (`LOCAL_MODELS`), the profiles offered again by the
+  installers, the tests that run with `localOn` reviewed on a machine with Ollama (the factory with the real
+  Developer, the set-up's local steps), and `retireLocal` kept only for machines on `remote`. Untested: `retireLocal`
+  on a real machine that had a local profile (macOS's launch agent, Windows's Startup script, Ollama's removal).
+
+- **Local models on standby, ADR-platform-0013** (the editor's pages): the squad screen, the wizard, the Brain and
+  the chat's setting offer no `local` kind and no Ollama model; an older local member or chat setting is converted on
+  read and said. The memory guard of the pickers (`ramLevel`, `ramLine`, the too-big dialog in `teams/page.ts`) stays
+  in the code, dormant (only local models carried a fit) and untested; turning the switch on again needs its tests.
+
 - **The reports** ([spec 017](../../../../../docs/04-specs/017-productivity-reports/tasks.md), [reports.md](../02-architecture/reports.md)).
   Done: the usage of every provider at the source, the factory's ledger, `metrics` and its MCP tool, the VS Code page
   *Reports* and the member's numbers in their Summary. Left: the JetBrains tool window has no Reports page (the
@@ -44,8 +57,8 @@ What the agents, the strategies and the generators still lack is in their own pr
   one: a run of the earlier engine restarted from scratch is tested only up to its refusal by `retry` (the restart
   itself runs *Check the connections* against the machine).
 
-- **Nuclear Chat's host** (spec 013 T3.2, [chat.md](../02-architecture/chat.md)): the dock and the tab mount the
-  chat, a run is told as a thread with its buttons, a spec's draft is accepted or not. Left:
+- **Nuclear Chat's host** (spec 013 T3.2, [chat.md](../02-architecture/chat.md)): the page has no chat (Nuclear Atlas
+  has it, opened on a member's or a team's conversation), a run is told as a thread with its buttons, a spec's draft is accepted or not. Left:
   - **`/poc <what>`**: the factory runs only on a project's own code; a proof of concept needs `nuclear-builder run`
     on a scratch project made in `.nuclear/poc/<id>/` (`nuclear new` there, the run's writes kept inside it). Today
     the chat says it is not available.
@@ -71,6 +84,10 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Untested
 
+- **The Builder without its chat, the roster only while adding** (2026-11-20): tested (`editors.test.ts`: the page,
+  the squad's clicks), never opened in a running VS Code. A member or a team other than the project's run team opens
+  a channel Nuclear Chat did not register (`chatHost` registers only that team): Atlas shows the chat without it.
+  The opening needs the editor's `nuclear.atlas.open` command (root, channel).
 - **Grok Build in the step `clients`** (`grok mcp list|add|remove`, from xAI's documentation of 2026-11-20): tested with
   its command stubbed, never against a real `grok`.
 

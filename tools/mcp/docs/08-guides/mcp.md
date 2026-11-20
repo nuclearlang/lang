@@ -2,11 +2,14 @@
 
 MCP is the **Model Context Protocol**: an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts a program and calls
 the tools it offers. `nuclear-mcp` is that program for NuclearLang. It speaks MCP over stdio and gives a
-frontier model four things: the **generators** that write the standard code, the **local developer** that writes what
-is left, the **Smart Graph** to look things up instead of guessing, and the **compiler** to check everything.
+frontier model three things: the **generators** that write the standard code, the **Smart Graph** to look things up
+instead of guessing, and the **compiler** to check everything. The model writes what the generators do not.
 
-The server also tells the model how to work, so every client behaves the same: generate first, let the local
-developer write the rest, then validate and correct.
+The server also tells the model how to work, so every client behaves the same: generate first, write the rest, then
+validate and correct.
+
+The local models are **on standby** ([ADR-platform-0013](../../../../docs/03-adr/0013-local-models-on-standby.md)):
+the server registers no `developer_*` tool on any machine, and its work cycle never names the local developer.
 
 ## 1. Set up
 
@@ -30,9 +33,8 @@ Cursor reads `~/.cursor/mcp.json`, OpenCode `~/.config/opencode/opencode.json`:
 
 In VS Code, *Settings and integrations* (`Ctrl+Alt+S`) adds it to each client with a button.
 
-A machine set up for **remote agents only** has the Smart Graph but no local developer: the server then offers the
-generators, the compiler, the command line, the internet tools and the `graph_*` tools, without the `developer_*`
-tools, and tells the model to write what the generators do not.
+Every machine has the Smart Graph and no local developer: the server offers the generators, the compiler, the
+command line, the internet tools and the `graph_*` tools, and tells the model to write what the generators do not.
 
 What each group of tools needs running:
 
@@ -40,8 +42,7 @@ What each group of tools needs running:
 |---|---|
 | `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |
 | `api_inspect`, `web_search`, `web_read` | the internet |
-| `graph_*` | the Smart Graph (127.0.0.1:7878), which a local profile of the set-up installs and starts |
-| `developer_*` | the Nuclear Developer (127.0.0.1:7879), the graph and Ollama with the profile's models |
+| `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |
 
 ## 2. How a model works with it
 
@@ -50,7 +51,7 @@ anything about Nuclear. Its answer is the onboarding (what Nuclear and Synapsis 
 work cycle with these tools on this machine) and the atlas of every topic, each read with `nuclear_doc`; with a
 project folder, also the project's pieces and the sheet of its dialect. Nothing it reads points into a source tree.
 
-With the local AI services, the cycle then calls `graph_strategy` with the user's own words: it answers which
+The cycle then calls `graph_strategy` with the user's own words: it answers which
 kind of request it is and the plan of that kind
 ([the strategies](../../../../extensions/tools/nuclear-builder/docs/08-guides/follow-a-run.md#the-strategy-of-a-request)). For a feature the plan is this order:
 
@@ -60,17 +61,11 @@ kind of request it is and the plan of that kind
    or from `fields`. When neither gives them, the model looks up the API's documentation (`web_search`, `web_read`)
    and, if it is still unclear, asks the user: it never guesses. A use case that only calls a repository method is
    `generate_usecase` with `calls`.
-3. **The local developer writes the rest.** `developer_task` with what the generators did not write (a use case with
-   its own rules, a view's details): the local agents plan, write the tests first, write the code, run the tests and
-   the security review, and answer a journal of everything they did.
-4. **Wire.** Each use case the local developer wrote, with `generate_usecase` (its alias in the facade, its route).
+3. **Write the rest.** What the generators did not write (a use case with its own rules, a view's details): before
+   writing `.nuc` the model reads `nuclear_brief` and searches the graph or looks up a word with `nuclear_help`.
+4. **Wire.** Each use case it wrote, with `generate_usecase` (its alias in the facade, its route).
 5. **Validate.** `nuclear_check` of the project must say `ok` and `nuclear test` must pass.
-6. **Correct only what failed**, never what passed. Before writing `.nuc` the model reads `nuclear_brief` and
-   searches the graph. A run that failed for a passing cause is run again with `developer_retry`.
-7. **Review.** `developer_review` with what was corrected and why: the journal keeps it and the corrected files
-   become examples the local developer finds next time.
-
-The model writes the code itself only when the local developer is not running, and says so.
+6. **Correct only what failed**, never what passed.
 
 ## 3. The tools
 
@@ -85,7 +80,7 @@ options, the examples and what each platform gets.
 | `project_inspect(project)` | the project's platform and dialect, its components with their declarations by kind, the generators of its platform |
 | `project_monitor(project)` | where the app is slow (Nuclear Monitor): the hot spots and the time, calls, connections and memory of each Nuclear function and method, from the last run with `nuclear run --monitor` |
 | `project_run_log(project, lines)` | why the app failed or what it did: the last `lines` (default 200, at most 2000) of the project's `.nuclear/logs/run.log`, which `nuclear run` and the editor's devices write (each step, the build's errors, the server's output, `failed:` and `exited:`); only that file |
-| `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for the local developer and later sessions |
+| `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for later sessions |
 | `generate_component(project, component)` | a new component with its facade |
 | `generate_resource(project, component, name, from_json \| from_spec \| fields, source, path, actions, screen, plural, dry_run)` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or a screen with its state manager (mobile, web), the tests |
 | `generate_usecase(project, component, name, calls, route, dry_run)` | a use case wired into its component: its alias in the facade and, with `route` (backend), its route. With `calls` the use case is written too, because it only calls that repository method; without it the use case is one the project already has |
@@ -102,7 +97,9 @@ Nothing is overwritten and nothing is declared twice; `dry_run` shows the files 
 something finished refuses and says what to do: `generate_usecase` without `calls`, for a use case the project does
 not declare, answers where to write it.
 
-### The local developer
+### The local developer (on standby)
+
+Registered only when the local models are on again (ADR-platform-0013): today no machine has these tools.
 
 | Tool | What it does |
 |---|---|
@@ -122,7 +119,7 @@ not declare, answers where to write it.
 | `graph_search(query, shelf, k, platform, kind, type)` | the cards that answer a question, by meaning and by exact name (a diagnostic code, a command, a kind), each with the rows it links to. `shelf`: `concepts`, `language`, `platforms`, `tools`, `errors`, `capabilities`, `playbooks`, `examples`, `docs`, `memory`; empty searches all |
 | `graph_card(id)` | one row by its id: `error:N0114`, `kind:backend.usecase`, `tool:nuclear.gen.usecase`, `mcp:generate_usecase`, `playbook:add-a-use-case` |
 | `graph_prompt(use_case)` | the validated prompt of `feature`, `refactor`, `bug`, `docs`, `diagram`, `test`, `security`, `piece`, `plan` |
-| `graph_remember(id, text, collection, project)` | keeps a decision (`memory`) or a solved example (`examples`) for the local developer and later sessions |
+| `graph_remember(id, text, collection, project)` | keeps a decision (`memory`) or a solved example (`examples`) for later sessions |
 
 ### The compiler and the command line
 
@@ -150,7 +147,6 @@ not declare, answers where to write it.
 
 | The tool answers | What to do |
 |---|---|
-| `the local developer is not running at ...` | `nuclear-builder setup --status` says what is missing; restart it in *Settings and integrations*, or with [the command of your system](../../../../installer/docs/08-guides/ai-setup.md#5-after-the-set-up) |
 | the graph refuses the client | `nuclear-graph connect mcp --scopes read,write`, with the graph running |
 | `... is not inside a Synapsis project (no config.nuc)` | give the project's folder: `nuclear new <name>` creates one |
 | `'<command>' is not allowed here` | the `nuclear_project` tool runs only the commands of its list |

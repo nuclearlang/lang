@@ -4,6 +4,11 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- Fix (macOS): `nuclear update` said "this nuclear was not installed by the NuclearLang installer", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.
+- The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer
+  (`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby. The
+  MCP server registers no `developer_*` tool while its `LOCAL_MODELS` (held to Nuclear Builder's `localModels`) is
+  false, and `nuclear_start`'s work cycle never sends an agent to the local Developer.
 - Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run.
 
 ## 0.82.0

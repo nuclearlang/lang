@@ -88,6 +88,7 @@ testTheMcpServerSpeaksTheProtocolInAProject(tmpPath: Path, monkeypatch: any) voi
     client.close()
 
 testARunStartsApartAndWhatSpendsOrActsInTheUsersNameWaitsForTheUser(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = toolsProject(tmpPath, monkeypatch)
   tools = BuilderTools(root)
   specNew(root, "No criteria", "books")

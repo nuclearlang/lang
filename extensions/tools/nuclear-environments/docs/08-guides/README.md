@@ -23,4 +23,4 @@ related: [../../README.md]
    Click a use under a name to open the code at the line; the arrow of a column opens its `.env` file.
 
 The same from a terminal: `nuclear env list`, `nuclear env set NAME VALUE --env staging`. If the page asks you to
-update NuclearLang, your `nuclear` is older than the page: press *Update NuclearLang*.
+update NuclearLang, your `nuclear` is older than the page: run `nuclear update` in a terminal.

@@ -92,7 +92,9 @@ launch nuclear-graph 'import sys; from nuclear_graph.cli import main; sys.argv[0
 launch nuclear-mcp 'import sys; from nuclear_mcp.cli import main; sys.argv[0] = \"nuclear-mcp\"; sys.exit(main())'
 launch nuclear-builder 'import sys; from nuclear_builder.cli import main; sys.argv[0] = \"nuclear-builder\"; sys.exit(main())'
 launch nuclear-chat 'import os, sys; os.environ.setdefault(\"NUCLEAR_CHAT_SERVICE\", os.path.join(sys.prefix, \"..\", \"nuclear-chat\")); from nuclear_chat_system.cli import main; sys.argv[0] = \"nuclear-chat\"; sys.exit(main())'
-# the Developer: its port is the machine's (ai.env, read by the set-up's service files), else 7879
+# the Developer: its port is the machine's (ai.env, read by the set-up's service files), else 7879. Inert while the local
+# models are on standby (ADR-platform-0013): its code and launcher stay in the archive (Nuclear Builder's `hasRuntime`
+# looks for every launcher), but the set-up neither links nor starts it, and nothing here runs it
 launch nuclear-developer 'import os, sys, uvicorn; sys.exit(uvicorn.run(\"app.main:app\", host=\"127.0.0.1\", port=int(os.environ.get(\"NUCLEAR_DEVELOPER_PORT\") or 7879)))'
 
 # 5. the knowledge base the set-up ingests (the prompts, the roles' skills, are inside the graph's package)
@@ -128,6 +130,7 @@ printf '%s' "$roster" | "$PY" -c 'import json, sys; d = json.load(sys.stdin); r 
   || { echo "ai-runtime: nuclear-builder finds no roster, library or portraits in $AI/nuclear-agents" >&2; exit 1; }
 run nuclear-chat pack >/dev/null
 (cd "$AI/nuclear-chat" && "$PY" -c "import app.main") >/dev/null
+# the Developer's package imports (it is never started: on standby)
 "$PY" -c "import app.main" >/dev/null
 port=$("$PY" -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
 # the server by the Python itself, so the process stopped below is the server and not a cmd.exe in front of it

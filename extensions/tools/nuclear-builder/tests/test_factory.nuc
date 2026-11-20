@@ -68,6 +68,7 @@ stepsOf(run: <string, any>) <string, any>[]
   ((run["stages"] as <string, any>[]).map((st) => st["steps"] as <string, any>[])).flatten()
 
 testARunGoesThroughTheSixStationsByItsTeamWritingTheDocumentsAndStoppingAtItsGates(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch)
   calls: string[] = []
   f = factory(root, localCrew(), [{ "answer": "approve" }, { "answer": "yes" }, { "answer": "no" }], developer(calls))
@@ -99,6 +100,7 @@ testARunGoesThroughTheSixStationsByItsTeamWritingTheDocumentsAndStoppingAtItsGat
   expect(saved["status"] == "passed" and saved["engine"] == FACTORY_ENGINE and (saved["factory"] as <string, any>)["team"] == "local-team")
 
 testARunWithoutAnAnswerWaitsAndGoesOnWhereItWaitedWhenResumed(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch)
   calls: string[] = []
   team = localCrew()
@@ -115,6 +117,7 @@ testARunWithoutAnAnswerWaitsAndGoesOnWhereItWaitedWhenResumed(tmpPath: Path, mon
   expect(calls.count((c) => c == "/developer/analyze") == 1)
 
 testAChangeAskedAtAGateRunsTheStationAgainWithIt(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, ["analysis"], { "stations": ["analysis"] })
   calls: string[] = []
   f = factory(root, localCrew(), [{ "answer": "change", "text": "count the shelves too" }, { "answer": "approve" }], developer(calls))
@@ -124,6 +127,7 @@ testAChangeAskedAtAGateRunsTheStationAgainWithIt(tmpPath: Path, monkeypatch: any
   expect(stepsOf(run).map((s) => "${s["title"]}").filter((t: string) => t.startsWith("You")) == ["You asked for a change", "You approved it"])
 
 testTheUsersChecksAreMarkedBeforeQaGoesOn(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   addCheck(root, "count-books", "A load test of 100 users", "quality")
   calls: string[] = []
@@ -184,6 +188,7 @@ testNoSpendingWithoutBothYesesAndNoFlagWhereConfirmationIsForced(tmpPath: Path, 
   expect(stopped["status"] == "waiting" and run2["costUsd"] == 0)
 
 testWhatAFailedStepWroteIsUndoneAndARetryKeepsTheStationsThatPassed(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["test -f lib/never.nuc"], "build": [] as string[], "test": [] as string[] } })
   calls: string[] = []
   f = factory(root, localCrew(), [], developer(calls))
@@ -206,6 +211,7 @@ testWhatAFailedStepWroteIsUndoneAndARetryKeepsTheStationsThatPassed(tmpPath: Pat
   expect("- Retried from code at " in Path(root, RUNS_DIR, "count-books.md").readText())
 
 testARunAgainFromScratchUndoesEveryFileButOneChangedSince(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]
@@ -219,6 +225,7 @@ testARunAgainFromScratchUndoesEveryFileButOneChangedSince(tmpPath: Path, monkeyp
   expect("test/count_the_books_test.nuc" in (last["kept"] as string[]))
 
 testARunLeftRunningByAProcessThatStoppedIsRecoveredAndResumed(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   team = localCrew()
@@ -253,6 +260,7 @@ testACommandThatHangsIsKilledAfterItsLimit(tmpPath: Path, monkeypatch: any) void
   expect("timed out" in "${(st["steps"] as <string, any>[]).last["summary"]}")
 
 testTheConnectionsAreCheckedFirstAndEachProblemIsSaid(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "minFreeMb": 100_000_000 })
   down = (request: httpx.Request) => "${request.url.path}" == "/api/tags" ? httpx.Response(200, json = { "models": [{ "name": "gemma4:e2b" }] }) : httpx.Response(503, text = "down")
   team = localCrew()
@@ -268,6 +276,7 @@ testTheConnectionsAreCheckedFirstAndEachProblemIsSaid(tmpPath: Path, monkeypatch
 // A spec of a component's layer: every document, the checks, the questions, the journal, a retry and the newest
 // spec follow its folder (`specPath`).
 testARunOnASpecOfAComponentsLayerKeepsEverythingInThatFolder(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, ["analysis", "design"])
   Path(root, "specs", "booking", "domain").mkdir(parents = true)
   Path(root, "specs", "count-books").rename(Path(root, "specs", "booking", "domain", "count-books"))
@@ -296,6 +305,7 @@ testARunOnASpecOfAComponentsLayerKeepsEverythingInThatFolder(tmpPath: Path, monk
   expect(more["status"] == "passed" and Path(root, home, "qa-report.md").isFile() and not Path(root, "specs", "count-books").exists())
 
 testTheDeliveryMakesTheBranchTheCommitInTheUsersNameAndThePullRequestOnlyWhenApproved(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "stations": ["delivery"] })
   remote = tmpPath.joinpath("remote.git")
   git = (args: string[], at: string) => subprocess.run(["git", ...args], cwd = at, captureOutput = true, text = true)
@@ -368,6 +378,7 @@ again(run: <string, any>, root: string, team: <string, any>, transport: httpx.Mo
   Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false, "transport": transport })
 
 testAnyStepIsRunAgainFromItsIdTheStepsBeforeItKeptWhatTheOthersWroteUndone(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   team = localCrew()
@@ -394,6 +405,7 @@ testAnyStepIsRunAgainFromItsIdTheStepsBeforeItKeptWhatTheOthersWroteUndone(tmpPa
   expect(retryLine(["count-books", "--step", "code-99"], false) == 2)
 
 testARunLeftRunningGoesOnFromTheStepItWasInKeepingThePieceWrittenBefore(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   team = localCrew()
@@ -433,6 +445,7 @@ testACallNothingWorksOnIsCutAsStalledAndRetried() void
   expect(events.any((e) => e["step"] == "watch" and e["detail"] == "Ollama holds no model yet"))
 
 testTestsThatInjectAClassThePlanDoesNotHaveStopTheRunAtTestsFirstSayingSo(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   team = localCrew()
   run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["tests"])
@@ -446,6 +459,7 @@ testTestsThatInjectAClassThePlanDoesNotHaveStopTheRunAtTestsFirstSayingSo(tmpPat
   expect(not Path(root, "test", "count_the_books_test.nuc").exists())
 
 testWhenTheGeneratorsWroteEveryFileNothingIsAskedOfTheLocalTester(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   team = localCrew()
@@ -467,6 +481,7 @@ analysisOf(more: <string, any>) <string, any>
   found
 
 testTheQuestionsOfTheAnalysisStopTheRunUntilTheClientAnswersThem(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "stations": ["analysis"] })
   calls: string[] = []
   team = localCrew()
@@ -484,6 +499,7 @@ testTheQuestionsOfTheAnalysisStopTheRunUntilTheClientAnswersThem(tmpPath: Path, 
   expect(f.start()["status"] == "passed" and calls == ["/developer/analyze", "/developer/analyze"])
 
 testARenameRunsOnlyItsStationsAndWritesTheFilesTheToolGaveNoAgentPlansOrWrites(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   calls: string[] = []
   pieces = [{ "path": "components/books/domain/models/book.nuc", "kind": "", "task": "`Book` is now `Title`.", "code": "Title\n  name: string\n" }]
@@ -499,6 +515,7 @@ testARenameRunsOnlyItsStationsAndWritesTheFilesTheToolGaveNoAgentPlansOrWrites(t
   expect("- Strategy: refactor-rename · a rename (it writes \"rename\")" in Path(root, RUNS_DIR, "count-books.md").readText())
 
 testARequestThatIsNotARunStopsAtTheAnalysisAndADeveloperWithoutAnAnalystChangesNothing(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   team = localCrew()
   question = analysisOf({ "strategy": "strategy:question", "title": "Strategy: a question", "mode": "answer", "stages": [] as string[] })
@@ -511,6 +528,7 @@ testARequestThatIsNotARunStopsAtTheAnalysisAndADeveloperWithoutAnAnalystChangesN
   expect(done["status"] == "passed" and first["status"] == "skipped" and "no analysis, every station runs" in "${first["summary"]}" and done["analysis"] == null)
 
 testAPlanMadeAgainIsANewPlanThePlannersPiecesGoTheOnesTheUserWroteStay(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "stations": ["design"] })
   team = localCrew()
   run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["design"])
@@ -534,6 +552,7 @@ fakeNuclear(tmpPath: Path, monkeypatch: any, errors: string = "[]") void
   monkeypatch.setenv("PATH", "${bin}:${os.environ["PATH"]!}")
 
 testEachUseCaseTheCodeWroteIsWiredByTheGeneratorWithItsRoute(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   fakeNuclear(tmpPath, monkeypatch)
   team = localCrew()
@@ -547,6 +566,7 @@ testEachUseCaseTheCodeWroteIsWiredByTheGeneratorWithItsRoute(tmpPath: Path, monk
   expect((wired["decisions"] as <string, any>[])[0]["what"] == "wire the use case CountBooks with the generator, not with a model")
 
 testTheProjectsErrorsGoToTheCoderFileByFileAfterTheCompilersOwnFixes(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["grep -q fixed lib/count.nuc"] } })
   fakeNuclear(tmpPath, monkeypatch, "[{\"file\": \"lib/count.nuc\", \"line\": 1, \"col\": 1, \"code\": \"N0001\", \"message\": \"bad\", \"severity\": \"error\"}]")
   team = localCrew()
@@ -562,6 +582,7 @@ testTheProjectsErrorsGoToTheCoderFileByFileAfterTheCompilersOwnFixes(tmpPath: Pa
   expect(repair["key"] == "repair" and repair["args"] == ["lib/count.nuc"] and stepsOf(done).find((s) => s["title"] == "nuclear fix .")!["key"] == null)
 
 testAFailingTestIsRepairedInRoundsToldInNuclear(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["echo checked"], "build": [] as string[], "test": ["grep -q fixed lib/count.nuc"] } })
   fakeNuclear(tmpPath, monkeypatch)
   team = localCrew()
@@ -576,6 +597,7 @@ testAFailingTestIsRepairedInRoundsToldInNuclear(tmpPath: Path, monkeypatch: any)
   expect(Path(root, "lib", "count.nuc").readText().endsWith("// fixed\n"))
 
 testAPieceTheLocalCoderLeavesWithErrorsGoesToTheLead(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [])
   bin = tmpPath.joinpath("bin")
   bin.mkdir()
@@ -596,6 +618,7 @@ testAPieceTheLocalCoderLeavesWithErrorsGoesToTheLead(tmpPath: Path, monkeypatch:
 // A station run again judges its work again: a check of its role that failed in an earlier attempt runs again and
 // takes the new result, instead of failing Quality for good.
 testARoleCheckThatFailedBeforeRunsAgainWithItsStation(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch, [], { "commands": { "check": ["echo checked"], "build": [] as string[], "test": [] as string[], "probe": ["test -f ready"] } })
   calls: string[] = []
   given: <string, any>[] = [{ "answer": "yes" }, { "answer": "no" }]

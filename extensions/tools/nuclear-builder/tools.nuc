@@ -331,7 +331,7 @@ BuilderTools(root: string)
 
   // Make a new team and keep it: its name, description, purpose, skills, budget in USD, and its members (each
   // { role, employee, name, kind, provider, model, instructions, skills, extraSkills, personality: { temperament,
-  // note } }; who works one not said: the local Nuclear Developer; a provider this machine lacks is refused:
+  // note } }; who works one not said: the first agent installed, else an API with a key (the local models are on standby); a provider this machine lacks is refused:
   // agents_list). A member is its profile, not its model: one agent for all is fine, their instructions and skills
   // make them different. techLead is a member's id or index. Suggest the members first (team_suggest) and say which
   // ones cost money.
@@ -372,7 +372,7 @@ BuilderTools(root: string)
     attempt(body)
 
   // Add members to a team: `count` employees-to-be of a role (analyst, architect, developer, qa or devops; `delivery`, its id before, is still taken), the
-  // employee of the roster (for one), who works them (kind local, agent or api; provider; model: local by default)
+  // employee of the roster (for one), who works them (kind agent or api; provider; model: by default the first agent installed)
   // and a name. A paid provider costs money per run: say so to the user.
   teamMemberAddTool(id: string, role: string, employee: string? = null, kind: string? = null, provider: string? = null, model: string? = null, name: string? = null, count: int = 1) string
     body = () =>
@@ -394,7 +394,7 @@ BuilderTools(root: string)
       needsUser("team_member_remove", { "id": id, "member": member }, "Remove ${member} from the team ${id}?", "nuclear-builder team member remove ${id} ${member}")
     attempt(body)
 
-  // Change a member of a team (by its id): its kind (local, agent, api), provider (one this machine has: agents_list),
+  // Change a member of a team (by its id): its kind (agent, api), provider (one this machine has: agents_list),
   // model, employee of the roster, name, skills, extra skills ([{ name, text }]), instructions, temperament, how often
   // it sends a GIF (gifs: never, sometimes, often), the note of its personality (its characteristics) and its base
   // agent (an id of the library's agents: skills_list; empty takes it away); what is not given stays. Its skills here
@@ -567,7 +567,7 @@ BuilderTools(root: string)
       toolSaid(vaultList())
     attempt(body)
 
-  // The agents that can answer a conversation on this machine (the local Nuclear Developer, the agents whose command
+  // The agents that can answer a conversation on this machine (the agents whose command
   // is installed, the API providers with a key): their models and whether each is available, with why not.
   agentsListTool() string
     body = () =>
@@ -575,8 +575,7 @@ BuilderTools(root: string)
     attempt(body)
 
   // The models of each provider that can work here (or of one: provider), from the provider itself, and this
-  // machine's memory: a local model says its memory need and whether it fits, is tight or is too big (a too-big one
-  // can make the computer restart: choosing it is the user's).
+  // machine's memory (no local model while the local models are on standby).
   modelsListTool(provider: string = "") string
     body = () =>
       toolSaid(modelsHere(root, provider.isEmpty ? null : provider))

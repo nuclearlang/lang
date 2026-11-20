@@ -13,11 +13,12 @@ by component and layer, and the runs as an accordion: open several at once (a ru
 its stations and, for the one working, waiting or failed, its steps live. A click there opens it on the page: a spec,
 a run, or a station or step picked in the diagram and the node.
 
-On the page, the diagram with Nuclear Chat under it; on the right, above, **the node**; below, **the log**, with the
-logo of the team doing the work. The right column and the chat fold (`»` `▾`) and resize (drag their edges); the
-page remembers both. *Open the chat* opens the chat as a full tab.
+On the page, the diagram; on the right, above, **the node**; below, **the log**, with the logo of the team doing the
+work. The right column folds (`»`) and resizes (drag its edge); the page remembers it. The page has no chat: click
+the team at the foot of the log, or a member of the team in the spec form, and Nuclear Atlas opens on its channel or
+on your direct message with that member.
 
-In the chat, each run is a thread of its team's channel: the tech lead starts it, each member says when their
+In Nuclear Atlas, each run is a thread of its team's channel: the tech lead starts it, each member says when their
 station passed or failed (a failure may come with the member's GIF), and a gate or QA's plan is the member's
 question with buttons: **Approve**, **Ask for a change** (the editor asks what), **Later**, **Go on**. A click answers
 the run as the page does. Money is never answered in the chat: the editor asks its two questions.
@@ -122,11 +123,12 @@ Over MCP: `developer_retry`.
   Code closes or crashes in the middle, the run is found interrupted when it opens again, what was left half written
   is undone, and it goes on from that station (`nuclear.builder.resumeInterrupted`). Two windows never run the same
   run. *Stop* interrupts a run that works (what its working steps wrote is undone) and leaves one that waits waiting.
-- Every run first checks its connections (the Developer, the graph, Ollama and the local roles' models, each agent's
-  command, a key in the vault for each API provider, the MCP server, free disk).
+- Every run first checks its connections (the graph, each agent's command, a key in the vault for each API provider,
+  the MCP server, free disk; the Developer, Ollama and the local roles' models only for a local role, which no team
+  has while the local models are on standby, ADR-platform-0013).
 - A run does not stop when you switch tools or close its page. A notification, and a badge on the Nuclear icon,
   tell you when it waits for you and when it ends.
-- *Settings and integrations* (`Ctrl+Alt+S`) holds the services, the local models, the MCP server for Claude Code,
+- *Settings and integrations* (`Ctrl+Alt+S`) holds the Smart Graph, the MCP server for Claude Code,
   Codex and Cursor, the connections and the retries.
 
 ## The strategy of a request

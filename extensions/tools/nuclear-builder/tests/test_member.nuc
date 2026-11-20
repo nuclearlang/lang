@@ -36,6 +36,7 @@ memberOf(root: string, role: string, ask: <string, any>, lines: string[], events
   Member(root, id, given, readLine(root, "backend"), () => nextLine(lines), (e: <string, any>) => protocol.on(e), opts, team, role, ask)
 
 testAMemberAnswersAsTheirProfileWithTheFactorysTools(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = memberProject(tmpPath, monkeypatch)
   bodies: <string, any>[] = []
   first = "Voy.\n--- tool: spec_new ---\n{\"title\": \"Book a room\", \"component\": \"booking\", \"criteria\": [\"a booked room is not free\"]}"
@@ -55,6 +56,7 @@ testAMemberAnswersAsTheirProfileWithTheFactorysTools(tmpPath: Path, monkeypatch:
   expect(not ("spec_new (failed)" in "${bodies[1]["message"]}") and "## The tools answered" in "${bodies[1]["message"]}" and "book-a-room" in "${bodies[1]["message"]}")
 
 testAMembersGifIsALastLineNeverShownAndTheLanguageRuleIsFirstAndLast(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = memberProject(tmpPath, monkeypatch)
   bodies: <string, any>[] = []
   local = assistant(bodies, ["¡Jaja, me lo quedo!\n**gif:** Laugh"])
@@ -137,6 +139,7 @@ testTheResponderRefusesWhatItCannotAnswer(tmpPath: Path, monkeypatch: any, capsy
   expect(root.length > 0)
 
 testTheHostFileGivesTheProjectsTeamAsMembersAndChannels(tmpPath: Path, monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   root = memberProject(tmpPath, monkeypatch)
   host = chatHost(root, "es", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
   expect(host["host"] == "builder" and host["lang"] == "es" and host["teams"] == [{ "id": "night-shift", "name": "Night shift", "lead": "night-shift-developer" }])

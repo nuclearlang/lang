@@ -24,12 +24,12 @@ test('the relay keeps each page\'s ids apart, adds the token, and subscribes onc
   assert.deepEqual(r.drop('builder'), [{ unsubscribe: 'chat.w1' }]);
 });
 
-const choice = (id: string, kind: string, available = true) => ({ id, label: id, kind, command: ['nuclear-builder', 'member', '--role', 'chat', '--kind', kind, '--provider', id], paid: kind !== 'local', models: [], defaultModel: '', available });
+const choice = (id: string, kind: string, available = true) => ({ id, label: id, kind, command: ['nuclear-builder', 'member', '--role', 'chat', '--kind', kind, '--provider', id], paid: true, models: [], defaultModel: '', available });
 const file: HostFile = {
   host: 'builder',
   members: [
     { id: 'core-qa', name: 'Edgar', role: 'qa', team: 'core', avatar: 'qa-001', face: '/faces/qa-001.svg', temperament: 'nerd', profile: { bio: 'x' }, personality: null, responder: { command: ['nuclear-builder', 'member', '--team', 'core', '--role', 'qa'] }, brain: { agent: 'Claude Code', kind: 'agent', provider: 'claude-code', model: 'opus', paid: true } },
-    { id: 'atlas', name: 'Atlas', role: 'chat', team: '', face: null, temperament: null, personality: { gifs: 'never' }, responder: { command: choice('nuclear-developer', 'local').command, paid: false, choice: 'nuclear-developer', model: '', choices: [choice('nuclear-developer', 'local'), choice('anthropic', 'api'), choice('codex', 'agent', false)] } },
+    { id: 'atlas', name: 'Atlas', role: 'chat', team: '', face: null, temperament: null, personality: { gifs: 'never' }, responder: { command: choice('claude-code', 'agent').command, paid: true, choice: 'claude-code', model: '', choices: [choice('claude-code', 'agent'), choice('anthropic', 'api'), choice('codex', 'agent', false)] } },
   ],
   teams: [{ id: 'core', name: 'Core', lead: 'core-qa' }],
   channels: [{ id: 'general', name: 'general' }, { id: 'core', name: 'core', team: 'core' }],
@@ -46,10 +46,24 @@ test('a host file becomes the registration: faces as pictures, the general agent
   assert.equal(agent.id, 'atlas');
   assert.equal(agent.face, '');
   assert.deepEqual([agent.responder.choice, agent.responder.model, agent.responder.choices.length], ['anthropic', 'claude-haiku-5-5', 3]);
-  // a setting whose agent is not on this machine: the local agent stays the default
+  // a setting whose agent is not on this machine: the host file's default (an external agent) stays
   const off = registration(file, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'codex' }, face: () => null }) as { members: { responder: { choice: string } }[] };
-  assert.equal(off.members[1].responder.choice, 'nuclear-developer');
+  assert.equal(off.members[1].responder.choice, 'claude-code');
   assert.deepEqual([body.root, body.lang, body.gifs], ['/p', 'es', 'tenor']);
+});
+
+test('a paid provider the user put in the team is not confirmed again in the chat; one never chosen still is; a forced confirmation always is', () => {
+  type R = { members: { id: string; responder: { command: string[]; choices?: { id: string; command: string[] }[] } }[] };
+  const body = registration(file, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null }) as unknown as R;
+  const [qa, atlas] = body.members;
+  // the team's member works with Claude Code (paid, chosen in the team): its answers and Atlas's Claude Code go on
+  assert.ok(qa.responder.command.includes('--confirm-spending'));
+  assert.ok(atlas.responder.command.includes('--confirm-spending'));
+  assert.ok(atlas.responder.choices!.find((c) => c.id === 'claude-code')!.command.includes('--confirm-spending'));
+  // Anthropic's API was never put in a team: asked twice
+  assert.equal(atlas.responder.choices!.find((c) => c.id === 'anthropic')!.command.includes('--confirm-spending'), false);
+  const forced = registration(file, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null, forceConfirm: true }) as unknown as R;
+  assert.ok(forced.members.every((m) => !m.responder.command.includes('--confirm-spending') && (m.responder.choices ?? []).every((c) => !c.command.includes('--confirm-spending'))));
 });
 
 const run = (status: string, stages: [string, string][]): RunLike => ({ id: 'loans', status, spec: { title: 'Loans' }, costUsd: 0.25, stages: stages.map(([id, s]) => ({ id, title: id[0].toUpperCase() + id.slice(1), status: s, role: id === 'analysis' ? 'analyst' : 'qa', steps: [{ summary: `${id} said`, status: s, costUsd: 0.1 }] })) });

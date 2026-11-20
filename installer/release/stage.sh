@@ -68,7 +68,9 @@ done
 mkdir -p "$DEST/agents"
 cp -R "$REPO/tools/cli/agent-files/skills" "$DEST/agents/"
 # the AI services (ADR-installer-0002): the code of the Smart Graph with its knowledge base, and of the Nuclear Developer. Their
-# set-up (nuclear-builder setup, the editor) makes the environments, downloads the models and starts them.
+# set-up (nuclear-builder setup, the editor) makes the environments and starts them. The Developer's code travels but is
+# never built nor started while the local models are on standby (ADR-platform-0013): Nuclear Builder's `aiRoot` finds
+# the services' folder by its config.nuc.
 if [ -f "$GRAPH/pyproject.toml" ] && [ -f "$DEVELOPER/config.nuc" ]; then
   # the same folders as in the working tree (the Developer names the graph by a relative path)
   G="$DEST/ai/nuclear-graph-storage"

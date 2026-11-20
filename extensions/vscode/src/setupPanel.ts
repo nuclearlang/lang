@@ -1,10 +1,11 @@
 // The welcome (spec 011, requirement 14): the first-run onboarding, *Next, Next*, over every setting of the platform,
-// each step with its defaults. 1 this machine and where the agents run, 2 the profile (which models are downloaded and
-// how far each works, one suggested for the hardware), 3 what is needed (found by itself once installed, or installed
-// in a terminal), 4 the installation with its progress (ADR-installer-0002), 5 the toolchains of the platforms the user builds
-// (toolchainHost.ts: Python included, Flutter and Node.js installed by the user or by `nuclear setup`), 6 the providers (the agents found on the
-// PATH, the API keys handed to the vault, who works the Builder's chat), 7 the team (the squad screen: the new-team wizard when there is none), 8 the
-// spending, 9 the settings of each tool, then a summary. Everything lands in the settings or, for the teams and the
+// each step with its defaults. 1 the AI services of this machine (the profile `remote`: the Smart Graph and the MCP
+// server; the local models are on standby, ADR-platform-0013, so no profile is chosen and no model is downloaded),
+// 2 what is needed (found by itself once installed, or installed in a terminal), 3 the installation with its progress
+// (ADR-installer-0002), 4 the toolchains of the platforms the user builds (toolchainHost.ts: Python included, Flutter
+// and Node.js installed by the user or by `nuclear setup`), 5 the providers (the agents found on the PATH, the API keys
+// handed to the vault, who works the Builder's chat), 6 the team (the squad screen: the new-team wizard when there is
+// none), 7 the spending, 8 the settings of each tool, then a summary. Everything lands in the settings or, for the teams and the
 // keys, in what `nuclear-builder` keeps. The set-up of the services is `nuclear-builder setup` (written in Nuclear),
 // run as a process: its plan (`--plan --json`) and its steps (`--events`, one JSON line each). It can be run again
 // from Settings and integrations. Plain HTML and script, no framework; its texts are setupL10n.ts.
@@ -23,15 +24,16 @@ import { SQUAD_CSS, SQUAD_SCRIPT } from '../../tools/nuclear-builder/src/teams/p
 import { showTeam, vaultList } from '../../tools/nuclear-builder/src/teams/cli';
 import { handleToolchain, TC_CSS, TC_JS, TC_TEXTS, toolchainState } from './toolchainHost';
 
-/** What `nuclear-builder setup --plan --json` gives: the page's state (this machine, the profiles, the requirements). */
+/** What `nuclear-builder setup --plan --json` gives: the page's state (the profiles, the requirements). `localModels`
+ * is the switch of ADR-platform-0013: the page offers only the profile `remote` whatever it says (absent, from an
+ * older nuclear-builder, is off too). */
 interface Plan {
-  hw: unknown;
   platform: string;
-  suggested: string;
-  profiles: unknown[];
+  profiles: { id: string }[];
   machine: Record<string, string>;
   root: string | null;
-  requirements: { local: Requirement[]; remote: Requirement[] };
+  localModels?: boolean;
+  requirements: { local?: Requirement[]; remote: Requirement[] };
 }
 
 interface Requirement {
@@ -99,7 +101,7 @@ export class SetupPanel {
     const pick = await vscode.window.showInformationMessage(
       readMachine().NUCLEAR_AI_MODE
         ? l10n.t('NuclearLang: the welcome has new steps (the providers, the team, the spending, the settings of each tool). Walk through them? Every step has its default.')
-        : l10n.t('Welcome to NuclearLang: set it up step by step? Local agents write the code and save the tokens of your remote agent; the welcome reads this machine, proposes a default for every setting, and you choose.'),
+        : l10n.t('Welcome to NuclearLang: set it up step by step? The welcome sets up the Smart Graph and the MCP server for your agents, proposes a default for every setting, and you choose.'),
       start, later, never,
     );
     if (pick === start) SetupPanel.show(context);
@@ -116,8 +118,9 @@ export class SetupPanel {
       this.post({ type: 'missing', text: l10n.t('The set-up comes with the AI services, and they are not installed: run the NuclearLang installer again (without --no-ai). The other steps of the welcome still work.') });
       return;
     }
-    this.plan = plan;
-    this.post({ type: 'state', ...plan });
+    // only the profile `remote` and its requirements, whatever an older set-up still lists
+    this.plan = { ...plan, profiles: plan.profiles.filter((p) => p.id === 'remote'), requirements: { remote: plan.requirements.remote } };
+    this.post({ type: 'state', ...this.plan });
   }
 
   private async receive(m: Message): Promise<void> {
@@ -137,7 +140,7 @@ export class SetupPanel {
         return;
       case 'install': {
         // in a terminal the user sees: an installer may ask for a password, and its output is theirs to read
-        const r = this.plan?.requirements.local.find((x) => x.id === (m as { id: string }).id);
+        const r = this.plan?.requirements.remote.find((x) => x.id === (m as { id: string }).id);
         const command = r?.install[process.platform];
         if (!r || !command) return;
         const t = vscode.window.createTerminal({ name: l10n.t('Install {0}', r.title), env: toolEnv() as Record<string, string> });
@@ -146,7 +149,7 @@ export class SetupPanel {
         return;
       }
       case 'go':
-        return this.install(String((m as { profile: string }).profile), Number((m as { from: number }).from));
+        return this.install('remote', Number((m as { from: number }).from));
       case 'providers':
         return this.providers();
       case 'key': {
@@ -260,65 +263,63 @@ const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 ${FORM_JS}
 ${SQUAD_SCRIPT}
 ${TC_JS}
-const PAGES = ['machine', 'profile', 'requirements', 'install', 'toolchains', 'providers', 'team', 'spending', 'tools', 'summary'];
+const PAGES = ['machine', 'requirements', 'install', 'toolchains', 'providers', 'team', 'spending', 'tools', 'summary'];
+const at = (id) => PAGES.indexOf(id);
 // the step shown survives a re-render (a change of language)
-let S = null, missing = '', page = Math.max(0, Math.min(PAGES.length - 1, Math.floor(Number(vscode.getState()?.page)) || 0)), local = true, profile = '', run = null, timer = null, sections = [], prov = null, summary = null, squad = false, tc = null, later = {};
-const chosen = () => S.profiles.find((p) => p.id === (local ? profile : 'remote'));
-const needs = () => S.requirements[local ? 'local' : 'remote'];
+let S = null, missing = '', page = Math.max(0, Math.min(PAGES.length - 1, Math.floor(Number(vscode.getState()?.page)) || 0)), run = null, timer = null, sections = [], prov = null, summary = null, squad = false, tc = null, later = {};
+// the local models are on standby (ADR-platform-0013): the one profile is remote, the Smart Graph and the MCP server
+const chosen = () => S.profiles.find((p) => p.id === 'remote');
+const needs = () => S.requirements.remote;
 const sectionOf = (id) => sections.find((s) => s.id === id);
 document.getElementById('title').textContent = t('title');
 document.getElementById('intro').textContent = t('intro');
 
-function profileCard(p, pick) {
-  const badge = p.id === S.suggested ? '<span class="badge best">' + esc(t('suggestedHere')) + '</span>' : p.fit === 'no' ? '<span class="badge bad">' + esc(t('notHere')) + '</span>' : p.fit === 'tight' ? '<span class="badge warn">' + esc(t('tightHere')) + '</span>' : '';
-  return '<div class="card ' + (pick ? (p.id === profile ? 'on' : '') : 'plain') + '"' + (pick ? ' data-profile="' + p.id + '" tabindex="0"' : '') + '><h3>' + esc(p.title) + badge + '</h3>'
-    + '<div>' + esc(p.summary) + '</div>'
-    + (p.coder ? '<div class="muted" style="margin-top:4px">' + esc(t('downloads', p.gb, p.ram, p.minRam)) + ' · <code>' + [...new Set([p.coder, p.assistant])].map(esc).join('</code> + <code>') + '</code></div>'
-      + '<div class="' + (p.fit === 'no' ? 'bad' : p.fit === 'tight' ? 'warn' : 'muted') + '">' + esc(t('onThisMachine', said('fit.', p.noteKey, p.noteArgs, p.note))) + '</div>' : '')
-    + (p.coder ? '<div class="muted">' + esc(t('measured', p.measured)) + '</div>' : '')
+function profileCard(p) {
+  return '<div class="card plain"><h3>' + esc(p.title) + '</h3><div>' + esc(p.summary) + '</div>'
     + '<ul>' + p.works.map((w) => '<li><span class="ok">✓</span> ' + esc(w) + '</li>').join('') + p.limits.map((l) => '<li><span class="warn">✗</span> ' + esc(l) + '</li>').join('') + '</ul></div>';
 }
 const navBtns = (back, next, nextLabel, nextDisabled) => (back !== null ? '<button data-go="' + back + '">' + esc(t('back')) + '</button>' : '') + '<div class="grow"></div>' + (page < PAGES.length - 1 ? '<button data-skip="1">' + esc(t('skipAll')) + '</button>' : '') + (next !== null ? '<button class="primary" data-go="' + next + '"' + (nextDisabled ? ' disabled' : '') + '>' + esc(nextLabel || t('next')) + '</button>' : '');
 
 function machinePages() {
-  if (!S) return { out: missing ? '<h2>' + esc(t('step.machine')) + '</h2><div class="warn">' + esc(missing) + '</div>' : '<div class="muted">' + esc(t('reading')) + '</div>', nav: navBtns(null, missing ? 4 : null) };
-  const h = S.hw;
+  if (!S) return { out: missing ? '<h2>' + esc(t('step.machine')) + '</h2><div class="warn">' + esc(missing) + '</div>' : '<div class="muted">' + esc(t('reading')) + '</div>', nav: navBtns(null, missing ? at('toolchains') : null) };
+  const p = chosen();
   if (page === 0) {
     const was = S.machine.NUCLEAR_AI_PROFILE ? '<div class="muted">' + esc(t('setUpNow', S.machine.NUCLEAR_AI_PROFILE)) + '</div>' : '';
-    return { out: '<h2>' + esc(t('step.machine')) + '</h2><div>' + esc(h.cpu) + ' · ' + esc(t('threads', h.cores)) + ' · <b>' + esc(t('memory', h.ram)) + '</b> · ' + esc(h.gpu ? h.gpu + (h.vram ? ' (' + h.vram + ' GB)' : '') : t('noGpu')) + ' · ' + esc(t('diskFree', h.disk)) + '</div>' + was
-      + '<h2>' + esc(t('whereAgents')) + '</h2>'
-      + '<div class="card ' + (local ? 'on' : '') + '" data-local="1" tabindex="0"><h3>' + esc(t('here')) + '<span class="badge best">' + esc(t('hereBadge')) + '</span></h3><div>' + esc(t('hereText')) + '</div></div>'
-      + '<div class="card ' + (local ? '' : 'on') + '" data-local="0" tabindex="0"><h3>' + esc(t('remote')) + '</h3><div>' + esc(S.profiles.find((p) => p.id === 'remote').summary) + '</div></div>'
-      + (local ? '' : profileCard(S.profiles.find((p) => p.id === 'remote'), false)), nav: navBtns(null, local ? 1 : 2) };
+    return { out: '<h2>' + esc(t('step.machine')) + '</h2><div class="muted">' + esc(t('servicesHint')) + '</div>' + (p ? profileCard(p) : '') + was, nav: navBtns(null, 1) };
   }
-  if (page === 1) return { out: '<h2>' + esc(t('whichModels')) + '</h2><div class="muted">' + esc(t('whichModelsHint', h.ram)) + '</div>' + S.profiles.filter((p) => p.coder).map((p) => profileCard(p, true)).join(''), nav: navBtns(0, 2, null, !profile) };
-  if (page === 2) {
+  if (page === 1) {
     const all = needs();
     return { out: '<h2>' + esc(t('step.requirements')) + '</h2><div class="muted">' + esc(t('checkedEvery')) + '</div>'
       + all.map((r) => '<div class="card plain"><div class="row"><span class="' + (r.found ? 'ok' : 'bad') + '">' + (r.found ? '✓' : '✗') + '</span><div class="grow"><b>' + esc(r.title) + '</b> <span class="muted">' + esc(r.why) + '</span><div class="line">' + esc(said('detail.', r.detailKey, [], r.detail)) + '</div>'
         + (!r.found && r.note && r.note[S.platform] ? '<div class="muted">' + esc(r.note[S.platform]) + '</div>' : '') + '</div>'
         + (r.found ? '' : (r.install[S.platform] && r.detailKey !== 'notRunning' && !r.detail.startsWith('installed, not running') ? '<button class="primary" data-install="' + r.id + '" title="' + esc(r.install[S.platform]) + '">' + esc(t('installForMe')) + '</button>' : '') + '<button data-open="' + esc(r.url) + '">' + esc(t('installMyself')) + '</button>')
-        + '</div></div>').join('')
-      + (local && all.some((r) => r.local && !r.found) ? '<div class="muted">' + esc(t('noOllama')) + ' <a data-remote="1">' + esc(t('useRemote')) + '</a></div>' : ''), nav: navBtns(local ? 1 : 0, 3, null, !all.every((r) => r.found)) };
+        + '</div></div>').join(''), nav: navBtns(0, 2, null, !all.every((r) => r.found)) };
   }
-  const p = chosen();
   const already = S.machine.NUCLEAR_AI_PROFILE === p.id;
-  if (!run) return { out: '<h2>' + esc(t('readyInstall')) + '</h2>' + profileCard(p, false) + (already ? '<div class="ok">' + esc(t('alreadyInstalled', p.id)) + '</div>' : ''),
-    nav: '<button data-go="2">' + esc(t('back')) + '</button><div class="grow"></div>' + (already ? '<button data-go="4">' + esc(t('keepInstalled')) + '</button>' : '<button data-go="4">' + esc(t('installLater')) + '</button>') + '<button class="primary" data-run="0">' + esc(p.gb ? t('installGb', p.gb) : t('install')) + '</button>' };
+  if (!run) return { out: '<h2>' + esc(t('readyInstall')) + '</h2>' + profileCard(p) + (already ? '<div class="ok">' + esc(t('alreadyInstalled')) + '</div>' : ''),
+    nav: '<button data-go="1">' + esc(t('back')) + '</button><div class="grow"></div>' + (already ? '<button data-go="3">' + esc(t('keepInstalled')) + '</button>' : '<button data-go="3">' + esc(t('installLater')) + '</button>') + '<button class="primary" data-run="0">' + esc(t('install')) + '</button>' };
   const mark = { running: '…', done: '✓', failed: '✗' };
   return { out: '<h2>' + esc(run.done ? t('done') : run.failed !== null ? t('stepFailed') : t('installing')) + '</h2>'
-    + run.titles.map((x, i) => { const st = run.status[i]; return '<div class="card plain"><div class="row"><span class="' + (st === 'done' ? 'ok' : st === 'failed' ? 'bad' : '') + '">' + (mark[st] || '·') + '</span><div class="grow"><b>' + esc(said('setupStep.', run.ids[i] === 'graph' && !run.models ? 'graphRemote' : run.ids[i], [run.models], x)) + '</b><div class="line ' + (st === 'failed' ? 'bad' : '') + '">' + esc(run.line[i] || '') + '</div></div>' + (st === 'failed' ? '<button class="primary" data-run="' + i + '">' + esc(t('tryAgain')) + '</button>' : '') + '</div></div>'; }).join('')
-    + (run.done ? '<div>' + esc(run.local ? t('installedLocal', run.profile) : t('installedRemote')) + '</div>' : ''), nav: navBtns(2, run.done ? 4 : null) };
+    + run.titles.map((x, i) => { const st = run.status[i]; return '<div class="card plain"><div class="row"><span class="' + (st === 'done' ? 'ok' : st === 'failed' ? 'bad' : '') + '">' + (mark[st] || '·') + '</span><div class="grow"><b>' + esc(stepTitle(run, i, x)) + '</b><div class="line ' + (st === 'failed' ? 'bad' : '') + '">' + esc(run.line[i] || '') + '</div></div>' + (st === 'failed' ? '<button class="primary" data-run="' + i + '">' + esc(t('tryAgain')) + '</button>' : '') + '</div></div>'; }).join('')
+    + (run.done ? '<div>' + esc(t('installedRemote')) + '</div>' : ''), nav: navBtns(1, run.done ? 3 : null) };
+}
+/** A step's title in the page's language: the graph's step installs only the MCP server on an older set-up whose
+ * remote profile had no graph's model; the graph model's step says the model and size its English title names. */
+function stepTitle(run, i, english) {
+  const id = run.ids[i];
+  if (id === 'graph' && !run.ids.includes('graph-model')) return said('setupStep.', 'graphRemote', [], english);
+  if (id === 'graph-model') return said('setupStep.', id, [(/\\(([^)]*)\\)\\s*$/.exec(english) || [])[1] || run.models], english);
+  return said('setupStep.', id, [run.models], english);
 }
 function providersPage() {
-  if (!prov) return { out: '<h2>' + esc(t('step.providers')) + '</h2><div class="muted">' + esc(t('lookingProviders')) + '</div>', nav: navBtns(4, 6) };
+  if (!prov) return { out: '<h2>' + esc(t('step.providers')) + '</h2><div class="muted">' + esc(t('lookingProviders')) + '</div>', nav: navBtns(at('toolchains'), at('team')) };
   const agents = prov.agents.map((a) => '<div class="card plain"><div class="row"><span class="' + (a.found ? 'ok' : 'muted') + '">' + (a.found ? '✓' : '○') + '</span><div class="grow"><b>' + esc(a.name) + '</b> <code>' + esc(a.command) + '</code><div class="muted">' + esc(a.found ? (a.version || t('found')) : t('notFound')) + '</div></div>'
     + (a.enable && a.found ? '<label class="sf-sw" title="' + esc(t('useIt')) + '"><input type="checkbox" data-setting="' + esc(a.enable) + '" data-t="boolean"' + (a.enabled ? ' checked' : '') + ' aria-label="' + esc(t('useIt') + ' ' + a.name) + '"><span></span></label>' : '') + '</div></div>').join('');
   const keys = prov.vault.keys === null ? '<div class="warn">' + esc(t('vaultMissing', prov.vault.missing)) + '</div>'
     : prov.api.map((p) => '<div class="card plain"><div class="row"><span class="' + (prov.vault.keys[p] ? 'ok' : 'muted') + '">' + (prov.vault.keys[p] ? '✓' : '○') + '</span><div class="grow"><b>' + esc(t('api.' + p)) + '</b><div class="muted">' + esc(prov.vault.keys[p] ? t('keyKept') : t('noKey')) + '</div></div><button' + (prov.vault.keys[p] ? '' : ' class="primary"') + ' data-key="' + p + '">' + esc(prov.vault.keys[p] ? t('changeKey') : t('setKey')) + '</button></div></div>').join('');
   return { out: '<h2>' + esc(t('step.providers')) + '</h2><div class="muted">' + esc(t('providersIntro')) + '</div><h3 class="sec">' + esc(t('agentsHere')) + '</h3><div class="muted">' + esc(t('agentsHint')) + '</div>' + agents
     + '<h3 class="sec">' + esc(t('apiKeys')) + '</h3><div class="muted">' + esc(t('apiKeysHint')) + '</div>' + keys + '<div class="row" style="margin-top:8px"><button data-recheck="1">↻ ' + esc(t('checkAgain')) + '</button></div>'
-    + (chatItem() ? '<h3 class="sec">' + esc(t('chatWho')) + '</h3><div class="muted">' + esc(t('chatWhoHint')) + '</div>' + settingsForm({ items: [chatItem()] }) : ''), nav: navBtns(4, 6) };
+    + (chatItem() ? '<h3 class="sec">' + esc(t('chatWho')) + '</h3><div class="muted">' + esc(t('chatWhoHint')) + '</div>' + settingsForm({ items: [chatItem()] }) : ''), nav: navBtns(at('toolchains'), at('team')) };
 }
 /** Who works the Builder's chat (nuclear.builder.chat), chosen with the providers just found. */
 function chatItem() {
@@ -326,14 +327,14 @@ function chatItem() {
 }
 function toolsPage() {
   const ids = ['builder', 'chat', 'atlas', 'http', 'devices', 'language'];
-  return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + ids.map((id) => sectionOf(id) ? '<h3 class="sec">' + esc(sectionOf(id).title) + '</h3>' + settingsForm(sectionOf(id), ['nuclear.builder.team', 'nuclear.builder.chat', 'nuclear.language']) : '').join(''), nav: navBtns(7, 9) };
+  return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + ids.map((id) => sectionOf(id) ? '<h3 class="sec">' + esc(sectionOf(id).title) + '</h3>' + settingsForm(sectionOf(id), ['nuclear.builder.team', 'nuclear.builder.chat', 'nuclear.language']) : '').join(''), nav: navBtns(at('spending'), at('summary')) };
 }
 /** The toolchains of the platforms the user builds: found where, or installed by them, by NuclearLang, or later. */
 function toolchainsPage() {
   const head = '<h2>' + esc(t('step.toolchains')) + '</h2><div class="muted">' + esc(t('tc.intro')) + '</div>';
-  if (!tc) return { out: head + '<div class="muted">…</div>', nav: navBtns(3, 5) };
+  if (!tc) return { out: head + '<div class="muted">…</div>', nav: navBtns(at('install'), at('providers')) };
   return { out: head + '<h3 class="sec">' + esc(t('tc.platforms')) + '</h3><div class="muted">' + esc(t('tc.platformsHint')) + '</div>' + platformChecks(tc)
-    + '<h3 class="sec">' + esc(t('tc.title')) + '</h3>' + toolchainCards(tc, true, later) + '<div class="row" style="margin-top:8px"><button data-tc="tcCheck">↻ ' + esc(t('checkAgain')) + '</button></div>', nav: navBtns(3, 5) };
+    + '<h3 class="sec">' + esc(t('tc.title')) + '</h3>' + toolchainCards(tc, true, later) + '<div class="row" style="margin-top:8px"><button data-tc="tcCheck">↻ ' + esc(t('checkAgain')) + '</button></div>', nav: navBtns(at('install'), at('providers')) };
 }
 function tcSummary() {
   if (!tc) return '…';
@@ -343,29 +344,29 @@ function tcSummary() {
   return esc(want.map((p) => t('tc.p.' + p)).join(', ')) + '<div class="muted">' + list.map((x) => { const s = tc.statuses.find((y) => y.id === x.id) || { id: x.id, where: 'missing' }; return esc(x.name + ': ' + (s.where === 'missing' && later[x.id] ? t('tc.later') : tcWhere(s))); }).join(' · ') + '</div>';
 }
 function summaryPage() {
-  if (!summary) return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted">…</div>', nav: navBtns(8, null) };
+  if (!summary) return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted">…</div>', nav: navBtns(at('tools'), null) };
   const m = summary.machine, sp = summary.spending, keys = summary.vault ? Object.entries(summary.vault).filter(([, v]) => v).map(([k]) => t('api.' + k)) : [];
-  const PN = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
+  const PN = { 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
   // the members by role: how many, and who works the first (the one a station takes)
   const byRole = {}; for (const x of summary.team?.members ?? []) (byRole[x.role] ??= []).push(x);
   const roles = Object.entries(byRole).map(([r, xs]) => t('sq.role.' + r) + (xs.length > 1 ? ' ×' + xs.length : '') + ': ' + (PN[xs[0].provider] ?? xs[0].provider) + (xs[0].model ? ' · ' + xs[0].model : '')).join(' · ');
   const row = (label, value, go) => '<b>' + esc(label) + '</b><div>' + value + '</div><a data-go="' + go + '">' + esc(t('change')) + '</a>';
   return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('summaryIntro')) + '</div><div class="sum">'
-    + row(t('sumMachine'), esc(m.NUCLEAR_AI_PROFILE ? t('sumProfile', m.NUCLEAR_AI_PROFILE) : t('sumNotInstalled')), 0)
-    + row(t('sumToolchains'), tcSummary(), 4)
-    + row(t('sumProviders'), esc((prov ? prov.agents.filter((a) => a.found).map((a) => a.name).join(', ') : '') || t('sumNone')) + (keys.length ? '<div class="muted">' + esc(t('sumKeys', keys.join(', '))) + '</div>' : ''), 5)
-    + row(t('sumTeam'), summary.team ? '<b>' + esc(summary.team.name) + '</b><div class="muted">' + esc(roles) + '</div>' : esc(t('sumNoTeam')), 6)
-    + row(t('sumSpending'), esc(t('sumBudget', sp.budgetUsd > 0 ? sp.budgetUsd.toFixed(2) + ' USD' : t('noLimit'))) + ' · ' + esc(sp.forceConfirm ? t('sumForced') : sp.confirm ? t('sumTwice') : t('sumNoAsk')), 7)
-    + row(t('sumTools'), esc(t('sumToolsText')), 8)
-    + '</div>', nav: '<button data-go="8">' + esc(t('back')) + '</button><div class="grow"></div><button data-settings="1">' + esc(t('openSettings')) + '</button><button class="primary" data-finish="1">' + esc(t('finish')) + '</button>' };
+    + row(t('sumMachine'), esc(m.NUCLEAR_AI_PROFILE ? t('sumProfile', m.NUCLEAR_AI_PROFILE) : t('sumNotInstalled')), at('machine'))
+    + row(t('sumToolchains'), tcSummary(), at('toolchains'))
+    + row(t('sumProviders'), esc((prov ? prov.agents.filter((a) => a.found).map((a) => a.name).join(', ') : '') || t('sumNone')) + (keys.length ? '<div class="muted">' + esc(t('sumKeys', keys.join(', '))) + '</div>' : ''), at('providers'))
+    + row(t('sumTeam'), summary.team ? '<b>' + esc(summary.team.name) + '</b><div class="muted">' + esc(roles) + '</div>' : esc(t('sumNoTeam')), at('team'))
+    + row(t('sumSpending'), esc(t('sumBudget', sp.budgetUsd > 0 ? sp.budgetUsd.toFixed(2) + ' USD' : t('noLimit'))) + ' · ' + esc(sp.forceConfirm ? t('sumForced') : sp.confirm ? t('sumTwice') : t('sumNoAsk')), at('spending'))
+    + row(t('sumTools'), esc(t('sumToolsText')), at('tools'))
+    + '</div>', nav: '<button data-go="' + at('tools') + '">' + esc(t('back')) + '</button><div class="grow"></div><button data-settings="1">' + esc(t('openSettings')) + '</button><button class="primary" data-finish="1">' + esc(t('finish')) + '</button>' };
 }
 function draw() {
   document.getElementById('steps').innerHTML = PAGES.map((id, i) => '<a data-go="' + i + '" class="' + (i === page ? 'now' : i < page ? 'done' : '') + '" tabindex="0"><i>' + (i < page ? '✓' : i + 1) + '</i>' + esc(t('step.' + id)) + '</a>').join('');
   document.getElementById('progress').style.width = Math.round((page / (PAGES.length - 1)) * 100) + '%';
   const id = PAGES[page];
   document.getElementById('frame').className = id === 'team' ? 'wide' : 'narrow';
-  const v = page <= 3 ? machinePages() : id === 'providers' ? providersPage() : id === 'team' ? { out: '<h2>' + esc(t('step.team')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('teamIntro')) + '</div>', nav: navBtns(5, 7) }
-    : id === 'spending' ? { out: '<h2>' + esc(t('step.spending')) + '</h2><div class="muted">' + esc(t('spendingIntro')) + '</div>' + (sectionOf('spending') ? settingsForm(sectionOf('spending')) : ''), nav: navBtns(6, 8) }
+  const v = page <= at('install') ? machinePages() : id === 'providers' ? providersPage() : id === 'team' ? { out: '<h2>' + esc(t('step.team')) + '</h2><div class="muted" style="margin-bottom:10px">' + esc(t('teamIntro')) + '</div>', nav: navBtns(at('providers'), at('spending')) }
+    : id === 'spending' ? { out: '<h2>' + esc(t('step.spending')) + '</h2><div class="muted">' + esc(t('spendingIntro')) + '</div>' + (sectionOf('spending') ? settingsForm(sectionOf('spending')) : ''), nav: navBtns(at('team'), at('tools')) }
     : id === 'toolchains' ? toolchainsPage() : id === 'tools' ? toolsPage() : summaryPage();
   // the first step asks the language first (nuclear.language); the tools' step leaves it out
   const language = sectionOf('language')?.items.find((i) => i.key === 'nuclear.language');
@@ -376,7 +377,7 @@ function draw() {
   host.style.display = id === 'team' ? '' : 'none';
   if (id === 'team' && !squad) { squad = true; Squad.mount(host, (m) => vscode.postMessage(m)); }
   clearInterval(timer);
-  if (page === 2) timer = setInterval(() => vscode.postMessage({ type: 'check' }), 3000);
+  if (page === at('requirements')) timer = setInterval(() => vscode.postMessage({ type: 'check' }), 3000);
 }
 function goTo(n) {
   page = Math.max(0, Math.min(PAGES.length - 1, n));
@@ -390,19 +391,16 @@ function goTo(n) {
 document.addEventListener('click', (e) => {
   const tcb = e.target.closest('[data-tc]');
   if (tcb) { if (tcb.dataset.tc === 'tcLater') { later[tcb.dataset.tcId] = true; return draw(); } return vscode.postMessage({ type: tcb.dataset.tc, id: tcb.dataset.tcId }); }
-  const d = e.target.closest('[data-go],[data-local],[data-profile],[data-install],[data-open],[data-remote],[data-run],[data-settings],[data-key],[data-recheck],[data-skip],[data-finish]'); if (!d || d.disabled || document.getElementById('squadHost').contains(d)) return;
+  const d = e.target.closest('[data-go],[data-install],[data-open],[data-run],[data-settings],[data-key],[data-recheck],[data-skip],[data-finish]'); if (!d || d.disabled || document.getElementById('squadHost').contains(d)) return;
   if (d.dataset.go) return goTo(Number(d.dataset.go));
-  if (d.dataset.local) local = d.dataset.local === '1';
-  else if (d.dataset.profile) profile = d.dataset.profile;
-  else if (d.dataset.remote) { local = false; return goTo(2); }
-  else if (d.dataset.install) return vscode.postMessage({ type: 'install', id: d.dataset.install });
+  if (d.dataset.install) return vscode.postMessage({ type: 'install', id: d.dataset.install });
   else if (d.dataset.open) return vscode.postMessage({ type: 'open', url: d.dataset.open });
   else if (d.dataset.settings) return vscode.postMessage({ type: 'settings' });
   else if (d.dataset.key) return vscode.postMessage({ type: 'key', provider: d.dataset.key });
   else if (d.dataset.recheck) { prov = null; draw(); return vscode.postMessage({ type: 'providers' }); }
   else if (d.dataset.skip) return goTo(PAGES.length - 1);
   else if (d.dataset.finish) return vscode.postMessage({ type: 'finish' });
-  else if (d.dataset.run) { vscode.postMessage({ type: 'go', profile: chosen().id, from: Number(d.dataset.run) }); return; }
+  else if (d.dataset.run) { vscode.postMessage({ type: 'go', profile: 'remote', from: Number(d.dataset.run) }); return; }
   draw();
 });
 document.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.card[tabindex],.steps a')) { e.preventDefault(); e.target.click(); } });
@@ -411,8 +409,7 @@ window.addEventListener('message', (e) => {
   if (Squad.receive(m)) return;
   if (m.type === 'state') {
     const first = !S; S = m; missing = '';
-    if (first) { const was = S.machine.NUCLEAR_AI_PROFILE; local = was !== 'remote'; profile = was && was !== 'remote' ? was : S.suggested === 'remote' ? '' : S.suggested; }
-    if (first || page === 2) draw();
+    if (first || page === at('requirements')) draw();
   } else if (m.type === 'sections') { sections = m.sections; if (page === 0 || PAGES[page] === 'spending' || PAGES[page] === 'tools' || PAGES[page] === 'providers') draw(); }
   else if (m.type === 'providers') { prov = m; if (PAGES[page] === 'providers' || PAGES[page] === 'summary') draw(); }
   else if (m.type === 'toolchains') { tc = m; if (PAGES[page] === 'toolchains' || PAGES[page] === 'summary') draw(); }
@@ -423,7 +420,7 @@ window.addEventListener('message', (e) => {
   } else if (m.type === 'step') {
     run.status[m.index] = m.status; if (m.line || m.status === 'failed') run.line[m.index] = m.line; if (m.status === 'failed') run.failed = m.index;
     draw();
-  } else if (m.type === 'done') { run.done = true; run.profile = m.profile; run.local = m.local; draw(); }
+  } else if (m.type === 'done') { run.done = true; draw(); }
   else if (m.type === 'missing') { missing = m.text; draw(); }
   else if (m.type === 'failed') { document.getElementById('root').innerHTML = '<div class="bad">' + esc(m.text || m.line) + '</div>'; }
 });

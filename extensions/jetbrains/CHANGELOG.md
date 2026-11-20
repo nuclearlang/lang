@@ -4,6 +4,8 @@ All notable changes to nuclear-jetbrains are written here; versions follow [Sema
 
 ## Unreleased
 
+- The local models are on standby (ADR-platform-0013): the plugin never offered a local model, profile or the Nuclear Developer; Nuclear Builder's *Run the Spec with a Team…* now shows the `warnings` of `team list --json` (a member that named the local kind, converted to an external provider) and no longer speaks of a local team.
+
 - 0.81.0 (fix): HTTP Connections keeps the fields of `.nuclear/http.json` it does not know (the variables by project and component VS Code writes) when it selects an environment or adds an OpenAPI document or a socket url; the teams' members and skills come with the installer.
 
 - 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.

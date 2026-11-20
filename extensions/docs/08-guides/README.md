@@ -89,4 +89,4 @@ The details are in each editor's guide.
 | [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |
 | [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |
 | [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |
-| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models Nuclear Atlas and the Builder need |
+| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph and the MCP server Nuclear Atlas and the Builder use (the local models are on standby, ADR-platform-0013) |

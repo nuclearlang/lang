@@ -319,21 +319,23 @@ public final class NuclearBuilder {
                 return;
             }
             HttpConnections.Proj p = item.project();
-            List<String> ids = new ArrayList<>(), names = new ArrayList<>();
+            List<String> ids = new ArrayList<>(), names = new ArrayList<>(), warnings = new ArrayList<>();
             try {
                 for (JsonElement t : JsonParser.parseString(capture(p.root(), List.of("team", "list", "--json"))).getAsJsonArray()) {
                     JsonObject o = t.getAsJsonObject();
                     boolean dflt = o.has("default") && o.get("default").getAsBoolean();
                     ids.add(dflt ? 0 : ids.size(), str(o, "id"));
                     names.add(dflt ? 0 : names.size(), str(o, "name") + (dflt ? " (default)" : ""));
+                    // a member that named the local kind, converted on read to an external one (ADR-platform-0013)
+                    if (o.has("warnings") && o.get("warnings").isJsonArray()) for (JsonElement w : o.getAsJsonArray("warnings")) if (w.isJsonPrimitive()) warnings.add(str(o, "name") + ": " + w.getAsString());
                 }
             } catch (Exception e) {
-                // no team yet (or a nuclear-builder older than spec 011): the engine works with the local team (one local member per role)
+                // no team yet (or a nuclear-builder older than spec 011): the engine works with its default team
             }
             List<String> args = new ArrayList<>(List.of("run", p.root().relativize(item.spec()).toString()));
             if (!ids.isEmpty()) {
                 String[] options = names.toArray(String[]::new);
-                int i = Messages.showChooseDialog(project, "The team that works this run (Settings and integrations in VS Code makes and changes them)", "Run the Spec", null, options, options[0]);
+                int i = Messages.showChooseDialog(project, "The team that works this run (Settings and integrations in VS Code makes and changes them)" + (warnings.isEmpty() ? "" : "\n\n" + String.join("\n", warnings)), "Run the Spec", null, options, options[0]);
                 if (i < 0) return;
                 args.addAll(List.of("--team", ids.get(i)));
             }

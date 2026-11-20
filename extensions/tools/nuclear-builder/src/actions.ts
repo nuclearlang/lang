@@ -12,7 +12,7 @@ export const PAGE_ACTIONS: Record<string, string> = {
   saveSpec: 'spec new',
   start: 'spec new',
   runSpec: 'run',
-  chatTab: 'editor',
+  atlas: 'editor',
   polish: 'spec list',
   suggest: 'editor',
   jiraSetup: 'editor',
@@ -35,6 +35,7 @@ export const PAGE_ACTIONS: Record<string, string> = {
   exportCi: 'export',
   // the company screen (teams/host.ts)
   'team:ready': 'team screen',
+  'team:chat': 'editor',
   'team:open': 'team screen',
   'team:wizard': 'agents',
   'team:models': 'models',

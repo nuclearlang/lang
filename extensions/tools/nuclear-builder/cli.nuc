@@ -11,11 +11,13 @@ use pathlib{ Path }
 // for the editors, which run it as a process and draw what it prints (line.nuc has the line's commands).
 
 USAGE = """
-  nuclear-builder setup [--profile remote|lite|medium|hard] [--yes]
-                                  the AI services of this machine, step by step: it reads the hardware, suggests a
-                                  profile (which models are downloaded and how far each works), installs what is
-                                  missing (Ollama), downloads the models, loads the knowledge base and starts the
-                                  services, now and at every login (--yes: no questions, the suggested profile)
+  nuclear-builder setup [--profile remote] [--yes]
+                                  the AI services of this machine, step by step: the Smart Graph and its model, the
+                                  MCP server in your AI clients, the knowledge base and Nuclear Chat, started now and
+                                  at every login (--yes: no questions). The local models are on standby
+                                  (ADR-platform-0013): the profiles lite, medium and hard are refused, and a machine
+                                  that has them loses what NuclearLang put there (the Developer's service, the models
+                                  it downloaded, Ollama when it installed it), told with the GB freed
   nuclear-builder setup --status [--json]      what is installed and running
   nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,
                                   Codex, Grok Build, Cursor, OpenCode, Gemini CLI): after installing a client
@@ -25,7 +27,7 @@ USAGE = """
   nuclear-builder setup --plan --json          this machine, the profiles and how each sits on it, the requirements
   nuclear-builder setup --events --profile <id> [--from <step>]
                                   the steps of a profile, one JSON line per event (what the editors draw)
-  nuclear-builder setup --restart graph|developer   a service again, through the system's manager
+  nuclear-builder setup --restart graph|chat   a service again, through the system's manager
   nuclear-builder setup --set KEY=value ...    writes the machine's choice (ai.env)
   nuclear-builder setup --ports                chooses the services' ports again (at each login, before they start)
 
@@ -169,17 +171,21 @@ showStatus(asJson: boolean) int
 
 // This machine, the profiles with how each sits on it, and the requirements of both modes: what the editors' set-up
 // page draws, its texts in `lang` (setup.json's `<field>_<lang>` beside each English field; `localized`).
+// `localModels`: false while the local models are on standby (ADR-platform-0013): only `remote` is offered, and its
+// requirements are the local ones too.
 plan(lang: string = "en") <string, any>
   hw = hardware()
-  onMachine = PROFILES.map((p) => localized(profileOnMachine(p, hw), lang))
+  offered = offeredProfiles()
+  onMachine = offered.map((p) => localized(profileOnMachine(p, hw), lang))
   {
+    "localModels": localModels(),
     "hw": hw.asMap(),
     "platform": sys.platform,
-    "suggested": recommend(hw),
+    "suggested": recommend(hw, offered),
     "profiles": onMachine,
     "machine": readMachine(),
     "root": aiRoot(),
-    "requirements": { "local": localized(requirements(true), lang), "remote": localized(requirements(false), lang) }
+    "requirements": { "local": localized(requirements(localModels()), lang), "remote": localized(requirements(false), lang) }
   }
 
 profileOnMachine(p: Profile, hw: Hardware) <string, any>
@@ -194,13 +200,15 @@ profileOnMachine(p: Profile, hw: Hardware) <string, any>
 // The steps of a profile as JSON lines, from the step `from` on: `steps`, then `step` (running, a line, done or
 // failed), then `done`. The requirements are the caller's (the page installs them in a terminal the user sees).
 setupEvents(args: string[]) int
-  p = profileOf(option(args, "--profile") ?? "")
+  asked = option(args, "--profile") ?? ""
+  p = profileOf(asked)
   root = aiRoot()
-  if p == null or root == null
-    event({ "type": "failed", "line": p == null ? "no such profile" : "NuclearLang is installed without the AI services: run its installer again" })
+  standby = onStandby(asked)
+  if p == null or root == null or standby != null
+    event({ "type": "failed", "line": p == null ? "no such profile" : standby ?? "NuclearLang is installed without the AI services: run its installer again" })
     return 2
   first = (option(args, "--from") ?? "0").toInt() ?? 0
-  all = steps(p)
+  all = steps(p, standbyPending())
   // `ids`: each step's kind, said by the editors in their language (`models`: what the `models` step downloads)
   event({ "type": "steps", "titles": all.map((s) => s.title), "ids": all.map((s) => s.id), "models": modelsOf(p).join(", "), "from": first })
   for i in 0..all.length
@@ -219,9 +227,12 @@ setupEvents(args: string[]) int
 describeProfiles(hw: Hardware, suggested: string) void
   box("This machine", ["${hw.cpu} · ${hw.cores} threads · ${hw.ram} GB of memory", "${hw.gpu.isEmpty ? "no GPU with memory of its own" : hw.gpu} · ${hw.disk} GB of disk free"], "slate")
   print("")
-  print("  ${paint("◆", "yellow")} ${paint("Where the agents run", "bold")}: on this machine (local models, fewer paid tokens) or remote only.")
+  if localModels()
+    print("  ${paint("◆", "yellow")} ${paint("Where the agents run", "bold")}: on this machine (local models, fewer paid tokens) or remote only.")
+  else
+    print("  ${paint("◆", "yellow")} ${paint("The local models are on standby", "bold")} (ADR-platform-0013): the AI work is done by the agents and API providers you choose.")
   print("")
-  for p in PROFILES
+  for p in offeredProfiles()
     f = fit(p, hw)
     chosen = p.id == suggested
     lines: string[] = painted(p.data["summary"], "dim")
@@ -340,14 +351,20 @@ setup(args: string[]) int
     writeMachine(values)
     return 0
   always = "--yes" in args
+  standby = onStandby(option(args, "--profile") ?? "")
+  if standby != null
+    print(standby!, file = sys.stderr)
+    return 2
   hw = hardware()
-  suggested = recommend(hw)
+  suggested = recommend(hw, offeredProfiles())
   describeProfiles(hw, suggested)
-  names = PROFILES.map((x) => x.id).join(", ")
+  names = offeredProfiles().map((x) => x.id).join(", ")
   // the local agents are optional and asked (ADR-installer-0006): the answer by default is `remote`, no local model;
   // the Smart Graph and the MCP server are installed in every profile
-  print("  ${paint("Local agents", "bold")} are optional: ${paint("remote", "bold")} adds no local model (${suggested} suits this machine).")
-  p = profileOf(option(args, "--profile") ?? (always ? "remote" : ask("  ${paint("Which one?", "bold")} ${names} ${paint("[remote]", "yellow")}: ", "remote")))
+  if localModels()
+    print("  ${paint("Local agents", "bold")} are optional: ${paint("remote", "bold")} adds no local model (${suggested} suits this machine).")
+  // on standby there is nothing to choose: `remote`
+  p = profileOf(option(args, "--profile") ?? (always or not localModels() ? "remote" : ask("  ${paint("Which one?", "bold")} ${names} ${paint("[remote]", "yellow")}: ", "remote")))
   if p == null
     print("no such profile: ${names}", file = sys.stderr)
     return 2
@@ -365,7 +382,7 @@ setup(args: string[]) int
   if root == null
     print("NuclearLang is installed without the AI services: run its installer again (without --no-ai).", file = sys.stderr)
     return 1
-  all = steps(p)
+  all = steps(p!, standbyPending())
   log = setupLog()
   log.parent.mkdir(parents = true, existOk = true)
   log.writeText("# nuclear-builder setup, profile ${p.id}\n", encoding = "utf-8")
@@ -394,7 +411,8 @@ setup(args: string[]) int
   if p.coder != null
     box("The AI services are running", ["${paint("Profile", "dim")}        ${p.id} · ${modelsOf(p).join(", ")}", "${paint("Smart Graph", "dim")}    ${graph}", "${paint("Developer", "dim")}      127.0.0.1:${m["NUCLEAR_DEVELOPER_PORT"] ?? "7879"}", "", clientsLine(), "", "${paint("nuclear-builder setup --status", "yellow")}  what runs · ${paint("--remove", "yellow")}  takes them away"], "green")
   else
-    box("The Smart Graph is running", ["${paint("Profile", "dim")}        remote · no local model, no Ollama", "${paint("Smart Graph", "dim")}    ${graph}", "", clientsLine(), "", "The local agents later: nuclear-builder setup again, with a local profile."], "green")
+    later = localModels() ? "The local agents later: nuclear-builder setup again, with a local profile." : "The local models are on standby (ADR-platform-0013): your agents and API providers do the AI work."
+    box("The Smart Graph and Nuclear Chat are running", ["${paint("Profile", "dim")}        remote · no local model, no Ollama", "${paint("Smart Graph", "dim")}    ${graph}", "${paint("Nuclear Chat", "dim")}   127.0.0.1:${m["NUCLEAR_CHAT_PORT"] ?? "7880"}", "", clientsLine(), "", later], "green")
   0
 
 // Where the set-up writes everything its steps say: `~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%` on
@@ -439,8 +457,13 @@ teamScreen(lang: string) <string, any>
   catch e
     if not isinstance(e, RuntimeError) and not isinstance(e, OSError)
       throw e
+  // every team's warnings in one list, each with its team's name (ADR-platform-0013: the local members converted)
+  warnings: string[] = []
+  for t in found
+    for w in (t["warnings"] ?? []) as string[]
+      warnings.add("${t["name"]}: ${w}")
   // the library of skills and agents with their files: the wizard's chips, the previews, the editor's clones
-  { "teams": found, "shown": shown, "roster": rosterByRole(lang), "temperaments": temperaments(), "vault": vault, "library": librarySkills(lang), "agents": libraryAgents(lang) }
+  { "localModels": localModels(), "warnings": warnings, "teams": found, "shown": shown, "roster": rosterByRole(lang), "temperaments": temperaments(), "vault": vault, "library": librarySkills(lang), "agents": libraryAgents(lang) }
 
 // The teams' commands: one call per action, JSON on stdout (the editors' contract, design.md "Teams").
 team(args: string[]) int

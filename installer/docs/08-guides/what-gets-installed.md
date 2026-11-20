@@ -7,8 +7,9 @@ related: [installer/docs/03-adr/0006-only-nuclearlang-is-required.md, installer/
 # What the installer installs, what is yours to choose, and what it never installs
 
 NuclearLang, the Smart Graph and the MCP server are required and always installed, without a question: they are
-what lets your AI agents know Nuclear. The editor extension is added when an editor is there; the local agents are
-asked. What could not be added is listed at the end with how to add it.
+what lets your AI agents know Nuclear. The editor extension is added when an editor is there. The local models are on
+standby ([ADR-platform-0013](../../../docs/03-adr/0013-local-models-on-standby.md)): no Ollama, no local model and no
+Nuclear Developer is installed, and an update takes away the ones an earlier install put here. What could not be added is listed at the end with how to add it.
 Running the installer again is safe: what is already there is kept, what is missing is added
 ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md)).
 
@@ -34,11 +35,11 @@ installer installs NuclearLang and says the rest is missing.
 |---|---|---|---|
 | The editor extension | an editor of the VS Code family is found: VS Code, Insiders, Cursor, VSCodium, Windsurf | install the editor, then run the installer again; or search *NuclearLang* in its extensions | VS Code and Cursor on Linux and macOS |
 
-## Optional, asked
+## On standby
 
-| What | The question | Tried on |
-|---|---|---|
-| Local agents: the Nuclear Developer with Ollama's models (profiles `lite`, `medium`, `hard`) | the set-up asks the profile; `remote`, the answer by default, downloads no local model. Declined (the machine, Ollama or the models), it goes on as `remote` | Linux |
+| What | What the installer does |
+|---|---|
+| Local agents: the Nuclear Developer with Ollama's models (profiles `lite`, `medium`, `hard`) | never offered nor installed: the set-up's profile is always `remote` (a `--profile`, `-AiProfile` or `NUCLEAR_AI_PROFILE` of a local profile, or one an earlier install kept, becomes `remote` and is said). On a machine an earlier version set up with one, the set-up takes away the Developer's service, the models NuclearLang downloaded and Ollama when NuclearLang installed it, and says the GB freed ([the guide](ai-setup.md#2-the-steps)) |
 
 ## Each platform's own (yours, only for the platforms you build)
 
@@ -74,12 +75,12 @@ incomplete.
   the extension, the summary is shown again.
 - Interrupted (Ctrl+C, a closed terminal, a lost connection): it goes on from the step it reached, a download from
   where it stopped.
-- A new version: replaced, with the AI services' profile kept.
+- A new version: replaced, and the AI services set up again with the profile `remote`.
 - `--reinstall` (`-Reinstall` on Windows): downloads and replaces even what is there.
 
 ## Updates
 
-`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).
+`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`).
 An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).
 When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;
 a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;

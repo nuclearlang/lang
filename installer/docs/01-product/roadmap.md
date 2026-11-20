@@ -18,8 +18,8 @@ The pending work of the installers, the release and the set-up of the AI service
   [spec 009](../../../docs/04-specs/009-self-contained-ai-services/tasks.md)). Done: the ports are checked and
   chosen; the AI archive (`release/ai-runtime.sh`, the `ai` job of `release.yml`), downloaded and checked by both
   installers, removed by `--uninstall`, tried on the clean machine (no Python, no uv, no Node.js: install with `lite`,
-  the set-up in Nuclear, services, a reboot, `--uninstall`). Left:
-  - the welcome page where the user installs Ollama and the models.
+  the set-up in Nuclear, services, a reboot, `--uninstall`). Left: nothing while the local models are on standby (the
+  item below).
 
   The set-up is Nuclear's and comes in the archive; only Nuclear Builder's pipeline still runs on node
   (its roadmap).
@@ -33,12 +33,19 @@ The pending work of the installers, the release and the set-up of the AI service
   approved, remove the Open VSX administrator from the Marketplace publisher's Members, register the trusted publisher
   and delete the secret).
 - **The AI services built into the installer** (ADR-installer-0002; [the guide](../08-guides/ai-setup.md)). Left:
-  - The profiles: see *To decide with the user*. Then `setup.json` is written
-    (`extensions/tools/nuclear-builder/tests/test_setup.nuc` holds the guide to it).
-  - A GPU other than NVIDIA's and Apple silicon is not recognised: the development machine's Radeon 890M runs the
-    models and Ollama says "100% GPU", while the set-up says no GPU with memory of its own.
   - Android Studio has no wizard (`nuclear-builder setup`).
-  - The memory figures of the profiles (`ram`, `minRam`) come from the models' loaded size and the development
+- **Local models on standby** ([ADR-platform-0013](../../../docs/03-adr/0013-local-models-on-standby.md)): the
+  installers run `nuclear-builder setup --profile remote --yes` only, and a local profile asked or kept becomes
+  `remote` (`tests/run.sh` case `P1`). Turning them on again needs: the switch `localModels` of Nuclear Builder's
+  `setup.json`; the installers' profile choice back (`--profile`, `-AiProfile`, the remembered profile, the question
+  on a terminal, the summary's line); the guide's profiles table with their measures; and their own tests on each
+  system (Ollama's install and removal on Linux, macOS, Windows; a pull; the Developer's service). Kept for that day:
+  - the welcome page where the user installs Ollama and the models;
+  - the profiles: see *To decide with the user*; then `setup.json` is written
+    (`extensions/tools/nuclear-builder/tests/test_setup.nuc` holds the guide to it);
+  - a GPU other than NVIDIA's and Apple silicon is not recognised (the development machine's Radeon 890M runs the
+    models and Ollama says "100% GPU", while the set-up says no GPU with memory of its own);
+  - the memory figures of the profiles (`ram`, `minRam`) come from the models' loaded size and the development
     machine's behaviour, not from runs on 8 and 32 GB machines.
 
 ## Untested
@@ -57,11 +64,12 @@ The pending work of the installers, the release and the set-up of the AI service
 - The public installers (ADR-installer-0001): `install.sh` ran on macOS Apple silicon (2026-11-19, from the
   release) and on Linux x86_64; not tried: macOS Intel, the Rosetta detection, Linux aarch64. `install.ps1` is run on
   Windows by `installer-windows.yml` after each release (x64 with PowerShell 5.1 and 7, arm64); not tried there: the
-  editors' extension (the runners have no editor) and a profile with local agents.
+  editors' extension (the runners have no editor).
 - The AI set-up (ADR-installer-0002):
-  - macOS (launch agents, Homebrew) and Windows (the Startup script, `winget`, `install.ps1 -AiProfile`,
-    `nuclear-developer.cmd`) are written and never ran;
-  - a machine without uv or without Ollama;
+  - macOS (launch agents) and Windows (the Startup script) are written and never ran;
+  - an update of a machine set up with a local profile, on a real machine (the `standby` step: the Developer's
+    service, the models and Ollama taken away);
+  - a machine without uv;
   - the public one-liner with a real release;
   - a login after a real reboot of a desktop (the clean machine's reboot has no keyring; the wait for it is proved by
     a test only);
@@ -72,7 +80,7 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## To decide with the user
 
-- **The profiles of the AI set-up.** Every measurement is in `nuclear-agents/nuclear_developer/README.md`, "Models
+- **The profiles of the AI set-up** (on standby, ADR-platform-0013: only when the local models come back). Every measurement is in `nuclear-agents/nuclear_developer/README.md`, "Models
   measured".
   - `medium` (`qwen2.5-coder:3b` for both roles) does not end its chat nor its analyses, and the set-up offers it
     as it is.

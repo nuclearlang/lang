@@ -6,6 +6,10 @@ use httpx{ Response }
 use pathlib{ Path }
 use mcp/server/mcpserver{ MCPServer }
 
+// The local models are on standby (ADR-platform-0013): no `developer_*` tool is registered and nuclear_start never
+// sends an agent to the local developer. Mirrors `localModels` of Nuclear Builder's setup.json (a test holds them equal).
+LOCAL_MODELS = false
+
 // The local developer: the environment's address, else the port the set-up chose (ai.env), else 7879.
 DEVELOPER_PORT = Paths.machine()["NUCLEAR_DEVELOPER_PORT"] ?? "7879"
 DEVELOPER_URL = os.environ.get("NUCLEAR_DEVELOPER_URL") ?? "http://127.0.0.1:${DEVELOPER_PORT}"
@@ -19,15 +23,21 @@ LOCAL_FIRST = " Then, for a request, call graph_strategy with the user's own wor
 // local agents.
 GENERATORS = "For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. "
 LOCAL = "Then give developer_task only what the generators did not write (a use case with its own rules, a view's details), and wire each use case it wrote with generate_usecase (its alias in the facade, its route). For any task that writes or changes .nuc (a feature, a bug, a refactor, tests): 1) call developer_task first with the project folder, a title, the description and the acceptance criteria: the local agents plan, write the tests first, write the code, run the tests and the security review, and document everything they did in a journal it returns; 2) read the journal, then validate: nuclear_check of the project must say ok and nuclear test must pass; 3) correct only what failed or is wrong, never rewrite what passed; before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph instead of guessing; If the run failed, read its 'Why it failed' (the local diagnoser): when the cause was passing or you fixed it, call developer_retry instead of starting again. 4) call developer_review with the run, what you corrected and why, and the corrected files, so the journal keeps your review and the local developer learns from it. Write the code yourself only when developer_task cannot run (the local developer is not running) and say so."
-// A machine set up for remote agents only (ADR-installer-0002) has the Smart Graph (ADR-installer-0004) but no local
-// developer: the model writes what the generators do not, and the developer's tools are left out.
-REMOTE_NOTE = "This machine has no local agents (its user chose remote agents only; `nuclear-builder setup` installs them): the generators write the standard code, you write what is left, then validate and correct. "
+// A machine without the local developer (the local models on standby, ADR-platform-0013, or a machine set up for remote
+// agents only, ADR-installer-0002) has the Smart Graph (ADR-installer-0004): the model writes what the generators do
+// not, and the developer's tools are left out.
+REMOTE_NOTE = "No local agents work on this machine: the generators write the standard code, you write what is left, then validate and correct. "
 REMOTE = "Then write only what the generators did not write (a use case with its own rules, a view's details): before writing .nuc read nuclear_brief(<platform>: backend, mobile or web) and search the graph or look up a kind, a decorator or a command with nuclear_help instead of guessing; wire each use case you wrote with generate_usecase (its alias in the facade, its route). Then validate: nuclear_check of the project must say ok and nuclear test must pass; correct only what failed, never rewrite what passed."
 
 // Whether this machine was set up for remote agents only (`NUCLEAR_AI_MODE`, else the machine's `ai.env`).
 remoteOnly() boolean
   mode: string = os.environ.get("NUCLEAR_AI_MODE") ?? (Paths.machine()["NUCLEAR_AI_MODE"] ?? "local")
   mode == "remote"
+
+// Whether the local developer's tools and work cycle are offered: the local models on, and a machine not set up for
+// remote agents only.
+localDeveloper() boolean
+  LOCAL_MODELS and not remoteOnly()
 
 // The closest folder up with a config.nuc (a Synapsis project).
 projectOf(folder: string) Path?
@@ -96,7 +106,7 @@ shape(value: any, depth: int = 0) string
   "${pad}${shapeKind(value)}"
 
 // The tools of the MCP server of NuclearLang (stdio): the Nuclear Smart Graph, the `nuclear` and `nuclear` command
-// line tools and the local developer agents, for any MCP client (Claude Code, Codex, Cursor...). The graph is
+// line tools and, while the local models are on, the local developer agents, for any MCP client (Claude Code, Codex, Cursor...). The graph is
 // reached with the token of the client `mcp` (`nuclear-graph connect mcp`), so the user decides whether MCP clients
 // may read it. Each method with a comment is a tool, and the comment is what the client reads of it.
 McpTools(graph: GraphClient, tools: Toolchain, web: Web)
@@ -147,8 +157,8 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   graphPrompt(useCase: string) string
     ~graph.prompt(useCase)
 
-  // Keep a decision, a name or a solved example (collection examples: the task, then the validated .nuc) so the
-  // local developer and later sessions find it.
+  // Keep a decision, a name or a solved example (collection examples: the task, then the validated .nuc) so later
+  // sessions find it.
   graphRemember(id: string, text: string, collection: string = "memory", project: string = "") string
     ~graph.remember(id, text, collection, project)
 
@@ -173,7 +183,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       return start.out
     atlas = ~runTool(["nuclear", "help", "atlas"])
     strategy = "Call graph_strategy with the user's own words: it answers which kind of request it is and the plan of that kind; follow it. "
-    cycle = remoteOnly() ? "${REMOTE_NOTE}${strategy}${GENERATORS}${REMOTE}" : "${strategy}${GENERATORS}${LOCAL}"
+    cycle = localDeveloper() ? "${strategy}${GENERATORS}${LOCAL}" : "${REMOTE_NOTE}${strategy}${GENERATORS}${REMOTE}"
     parts = [start.out.trim(), "## The work cycle with the MCP tools on this machine\n\n${cycle}", atlas.out.trim()]
     root = project.length > 0 ? projectOf(project) : null
     if root != null
@@ -270,8 +280,8 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   projectRunLog(project: string, lines: int = 200) string
     runLogTail(project, lines)
 
-  // project_monitor, and the hot spots kept in the graph (`monitor:<project>`) so the local developer and later
-  // sessions know where the app was slow. Call it after a run with `nuclear run --monitor`.
+  // project_monitor, and the hot spots kept in the graph (`monitor:<project>`) so later sessions know where the app
+  // was slow. Call it after a run with `nuclear run --monitor`.
   graphMonitor(project: string) string
     found = ~tools.project(project, ["monitor"])
     if found.contains("hot spots (")
@@ -312,7 +322,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
   // controller of the route's prefix ("POST orders/{id}/cancel": a {name} is a parameter of the use case; the
   // controller is created when missing). With calls ("OrderRepository.pending": a method that repository declares)
   // the use case is written too, because it only calls that method. Without calls the use case must already be in
-  // the project: one with rules of its own is written first (developer_task, or by hand), then this wires it.
+  // the project: one with rules of its own is written first, then this wires it.
   // dry_run shows the files without writing them.
   generateUsecase(project: string, component: string, name: string, calls: string = "", route: string = "", dryRun: boolean = false) string
     args = ["gen", "usecase", component, name]
@@ -488,9 +498,9 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 
-// The MCP server with its tools. A machine set up for remote agents only gets the graph's but not the local developer's.
+// The MCP server with its tools: the local developer's only while `localDeveloper()` (the graph's always).
 mcpServer() MCPServer
-  remote = remoteOnly()
+  remote = not localDeveloper()
   server = MCPServer("nuclear", instructions = "${FIRST}${LOCAL_FIRST}")
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   for tool in tools.all()

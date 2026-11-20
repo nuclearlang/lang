@@ -5,7 +5,7 @@ its own `AGENTS.md` and `docs/`. Today there is one.
 
 | Agent | Folder | What it is | ADR key |
 |---|---|---|---|
-| Nuclear Developer | [`nuclear_developer/`](nuclear_developer/AGENTS.md) | the local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, acceptor, assistant) on models of at most 3B parameters, as the junior developer of a frontier model | `developer` |
+| Nuclear Developer | [`nuclear_developer/`](nuclear_developer/AGENTS.md) | the local agents (coder, tester, security reviewer, planner, analyst, documenter, diagnoser, acceptor, assistant) on models of at most 3B parameters, as the junior developer of a frontier model; on standby (ADR-platform-0013) | `developer` |
 
 The roles of the software factory (spec 011, ADR-platform-0005) are [`roles/`](roles/README.md): one folder per role
 (`analyst`, `architect`, `developer`, `qa`, `devops`) with its `role.md`, skills, templates, checks and roster, the

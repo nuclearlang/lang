@@ -15,8 +15,9 @@ related: [../02-architecture/overview.md, ../../../docs/04-specs/013-nuclear-cha
 - **The hosts** (spec 013 phase 3): VS Code's extension hosts the Builder and Atlas
   ([connect-a-host.md](../08-guides/connect-a-host.md), "The hosts of the editors"); the JetBrains window has no
   chat (out of this version). `/poc` reaches the Builder, which cannot run it yet (its roadmap).
-- **A remote profile has no chat service**: the set-up starts the services only for a profile with local agents
-  (`keepRemote` removes them); a user of remote agents only would start `nuclear-chat serve` by hand.
+- **Local models on standby** (ADR-platform-0013): the members answer only through external agents and API providers
+  (the host offers no local agent; the UI's default is the host's choice, else the first agent there). Turning them
+  on again needs the local member's answers run end to end again (its typing line `typing.local`, its GIF lines).
 
 ## Untested
 - A member's GIF with a streaming agent: `MemberLines` holds back a `gif:` line being written (tested with pieces);

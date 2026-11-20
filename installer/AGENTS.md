@@ -10,8 +10,11 @@ the set-up of the AI services the installers call at their end.
 - GitHub Actions for the release (`.github/workflows/release.yml`); static Linux binaries (musl).
 - The AI set-up is not code of this folder: it is `nuclear-builder setup`, written in Nuclear
   (`extensions/tools/nuclear-builder/setup.nuc`, profiles in `setup.json`), which the editors run as a process. The services themselves come in the AI archive
-  (`release/ai-runtime.sh`): a Python of their own with the Smart Graph, the MCP server and the Nuclear Developer,
-  unpacked as the installation's `ai/` (ADR-installer-0003).
+  (`release/ai-runtime.sh`): a Python of their own with the Smart Graph, the MCP server, Nuclear Chat and the Nuclear
+  Developer (inert), unpacked as the installation's `ai/` (ADR-installer-0003).
+- **The local models are on standby** ([ADR-platform-0013](../docs/03-adr/0013-local-models-on-standby.md)): the
+  installers never offer or install Ollama, a local model or the Developer; they run
+  `nuclear-builder setup --profile remote --yes`, and a local profile asked or kept becomes `remote` with a note.
 
 ## Commands
 
@@ -24,7 +27,7 @@ installer/release/package.sh [<rust target>]   # the archive of one target in in
 installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it
 installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/)
 installer/tests/distros.sh [<distro>...] # the installer on Debian, Ubuntu, Fedora, Arch, openSUSE, Alpine: one container at a time
-nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services
+nuclear-builder setup [--profile remote --yes | --status | --remove]   # the AI services (lite|medium|hard: on standby)
 ```
 
 After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it
@@ -65,12 +68,12 @@ irm https://nuclearlang.github.io/install.ps1 | iex
    removes everything an install created, the AI set-up's models, Ollama when it installed it, the data and the
    caches included; what was on the machine before stays (ADR-installer-0005). The source installer's `--uninstall`
    (a developer's machine) keeps the data.
-3. **Nothing is downloaded before the user chooses**: the AI set-up asks, and without a terminal (CI) nothing is
-   asked or downloaded (ADR-installer-0002).
+3. **Nothing is downloaded before the user chooses**: no local model is downloaded at all while they are on standby
+   (ADR-platform-0013); the required services' archive comes with the install (ADR-installer-0002, ADR-installer-0006).
 4. **Never run `--uninstall` or a public installer against the real `HOME` while testing**: use a fake `HOME` and a
    mirror ([the runbook](docs/06-runbooks/release.md)).
 5. **`docs/08-guides/ai-setup.md` is held to the profiles by a test** (`extensions/tools/nuclear-builder/tests/test_setup.nuc`
-   against `setup.json`): what a profile says of itself is changed in the data, then in the guide.
+   against `setup.json`): what the profile `remote` says of itself is changed in the data, then in the guide.
 6. **The user runs the installed binaries**: after a change to a binary, a dialect, a platform, a runtime package
    or the skill, `installer/install.sh` again.
 7. A change to an installer's options updates its own header comment (it is its `--help`), the guide and these
@@ -80,7 +83,7 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 
 | Read | When |
 |---|---|
-| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done or untested: the first release, macOS and Windows, the AI profiles |
+| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done or untested: the first release, macOS and Windows, the local models on standby |
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change a script: what each one does, the layout of an installation, the folders and variables, how the AI services are installed |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the release is archives and one-line installers, or why the AI services come with the installer and how their set-up is shaped |
 | [docs/06-runbooks/release.md](docs/06-runbooks/release.md) | You publish a release, build an archive by hand, or test an installer without touching your machine |

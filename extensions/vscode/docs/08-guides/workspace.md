@@ -35,8 +35,9 @@ the keyboard walks it (arrows, Home, End, Enter).
 
 ### The actions of a project
 
-The actions of the active project's platform are buttons under the project's name in the workspace, and also in
-the editor title bar, the row of the editor tabs (Cursor hides the title bar's; the workspace's are always there):
+The actions of the active project's platform are buttons in the editor title bar, the row of the editor tabs. Cursor
+hides the title bar's: there, open the **Actions** section at the bottom of the workspace's files pane (collapsed at
+first, like VS Code's npm scripts) and click an action:
 
 | Platform | Buttons |
 |---|---|
@@ -91,10 +92,8 @@ The tools act on the last project you were in.
 
 Every setting of the AI services on one page, saved as the `nuclear.ai.*` settings:
 
-- **Services**: the Smart Graph, the Nuclear Developer and Ollama, each with its state, and *Start* / *Restart*
-  with the chosen models.
-- **Models**: the models Ollama has, with their size. A model over the 3B class gets a warning. *Pull* downloads
-  a model.
+- **Services**: the Smart Graph, with its state, and *Start* / *Restart*. The local models are on standby
+  (ADR-platform-0013): the AI work is done by the agents and providers you choose, so there is no local model here.
 - **MCP**: adds the Nuclear MCP server (`nuclear-mcp`) to Claude Code, Codex, Cursor or OpenCode in one click.
 - **Connections**: the Smart Graph's clients and access requests (*Allow*, *Deny*, *Revoke*), Jira (its token is
   kept in VS Code's secret storage) and GitHub (`gh auth status`).

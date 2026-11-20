@@ -6,12 +6,13 @@ import { PROVIDERS } from './teams/cli';
 
 /** Who works the general agent of Nuclear Chat (the setting `nuclear.builder.chat`): a kind, a provider, its model. */
 export interface ChatProvider {
-  kind: 'local' | 'agent' | 'api';
+  kind: 'agent' | 'api';
   provider: string;
   model?: string;
 }
 
-export const DEFAULT_CHAT: ChatProvider = { kind: 'local', provider: 'nuclear-developer', model: '' };
+/** The default: an external agent (the local models are on standby, ADR-platform-0013). */
+export const DEFAULT_CHAT: ChatProvider = { kind: 'agent', provider: 'claude-code', model: '' };
 
 export const CLAUDE_MODELS = ['haiku', 'sonnet', 'opus'];
 
@@ -26,11 +27,11 @@ export interface BuilderSettings {
   chat: ChatProvider;
 }
 
-/** The setting's value when it names a provider of its kind, else the local Nuclear Developer. */
+/** The setting's value when it names a provider of its kind, else the default (an older `local` value included). */
 export function chatProvider(v: unknown): ChatProvider {
   const x = (v ?? {}) as Partial<ChatProvider>;
-  const ok = typeof x.kind === 'string' && x.kind in PROVIDERS && (PROVIDERS[x.kind] as readonly string[]).includes(String(x.provider));
-  return ok ? { kind: x.kind!, provider: x.provider!, model: typeof x.model === 'string' ? x.model : '' } : { ...DEFAULT_CHAT };
+  const ok = typeof x.kind === 'string' && Object.hasOwn(PROVIDERS, x.kind) && (PROVIDERS[x.kind as keyof typeof PROVIDERS] as readonly string[]).includes(String(x.provider));
+  return ok ? { kind: x.kind as ChatProvider['kind'], provider: x.provider!, model: typeof x.model === 'string' ? x.model : '' } : { ...DEFAULT_CHAT };
 }
 
 export function builderSettings(): BuilderSettings {

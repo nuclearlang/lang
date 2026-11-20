@@ -1,7 +1,7 @@
 // The Settings and integrations tool (Ctrl+Alt+S): every setting of the platform, one section per tool (spec 011,
-// settings by component), the same sections as VS Code's settings. *AI services*: the services (the Smart Graph, the
-// Nuclear Developer, Ollama) with their state and Start / Restart with the chosen models, the local models (installed,
-// their size against the 3B rule, pull), the MCP server in Claude Code, Codex, Cursor and OpenCode, the connections
+// settings by component), the same sections as VS Code's settings. *AI services*: the Smart Graph with its state and
+// Start / Restart (the local models are on standby, ADR-platform-0013: no Developer, no Ollama, no local model), the
+// MCP server in Claude Code, Codex, Cursor and OpenCode, the connections
 // (the graph's clients and pending access requests, Jira, GitHub), the retries (`nuclear.ai.*`, aiSettings.ts). The
 // Builder (its default team and the squad screen), the spending, Nuclear Atlas, HTTP Connections, the devices and the
 // language are drawn from their contributed settings (settingsForm.ts). The welcome can be run again from here.
@@ -13,7 +13,6 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { aiSettings, JIRA_SECRET, jiraAuth, serviceEnv } from './aiSettings';
 import { builder, builderJson, readMachine } from './aiMachine';
-import { billionsOf, MAX_BILLIONS } from './localModels';
 import { checkAll } from './connections';
 import { notices } from './notifications';
 import { lang, localize, pageI18n, l10n } from './i18n';
@@ -27,22 +26,13 @@ import { handleToolchain, TC_CSS, TC_JS, TC_TEXTS, toolchainState } from './tool
 type Message =
   | { type: 'ready' }
   | { type: 'set'; key: string; value: unknown }
-  | { type: 'start'; service: 'graph' | 'developer' }
-  | { type: 'pull'; model: string }
+  | { type: 'start'; service: 'graph' }
   | { type: 'mcp'; client: 'claude' | 'codex' | 'cursor' | 'opencode' }
   | { type: 'allow' | 'deny'; id: string }
   | { type: 'revoke'; client: string }
   | { type: 'connectMcp' }
   | { type: 'setSetting'; key: string; value: unknown }
   | { type: 'jira' | 'jiraOff' | 'openSettings' | 'setup' | 'teams' | 'gifKey' };
-
-export interface LocalModel {
-  name: string;
-  size: number;
-  parameters: string;
-  /** Billions of parameters that count for the rule: the effective size of an `eNb` model, else its parameters. */
-  billions: number;
-}
 
 const own = new Map<string, ChildProcess>(); // services started from the editor
 
@@ -117,16 +107,6 @@ export class SettingsPanel {
     void this.panel.webview.postMessage(m);
   }
 
-  private async models(): Promise<LocalModel[] | string> {
-    try {
-      const r = await fetch(aiSettings().ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(3000) });
-      const data = (await r.json()) as { models: { name: string; size: number; details?: { parameter_size?: string } }[] };
-      return data.models.map((m) => ({ name: m.name, size: m.size, parameters: m.details?.parameter_size ?? '', billions: billionsOf(m.name, m.details?.parameter_size ?? '') })).sort((a, b) => a.billions - b.billions);
-    } catch (e) {
-      return l10n.t('Ollama does not answer at {0} ({1})', aiSettings().ollamaUrl, e instanceof Error ? e.message : String(e));
-    }
-  }
-
   private async mcpState(): Promise<Record<string, string>> {
     const has = async (cmd: string) => (await run('sh', ['-c', 'command -v "$1"', 'sh', cmd])).code === 0;
     const out: Record<string, string> = {};
@@ -166,15 +146,12 @@ export class SettingsPanel {
       cursor: { mcpFile: c.get('cursor.mcpFile', '~/.cursor/mcp.json') },
       github: { command: c.get('github.command', 'gh') },
       jira: { site: c.get('jira.site', ''), email: c.get('jira.email', ''), criteriaField: c.get('jira.criteriaField', '') },
-      watch: { callTimeoutMinutes: c.get('watch.callTimeoutMinutes', 15), stallSeconds: c.get('watch.stallSeconds', 90) },
+      watch: { callTimeoutMinutes: c.get('watch.callTimeoutMinutes', 15) },
       checkEveryMinutes: c.get('checkEveryMinutes', 5),
     };
-    const [checks, graph, developer, ollama, models, mcp, gh, machine] = await Promise.all([
+    const [checks, graph, mcp, gh, machine] = await Promise.all([
       checkAll(this.context),
       up(s.graphUrl + '/v1/health'),
-      up(s.developerUrl + '/docs'),
-      up(s.ollamaUrl + '/api/tags'),
-      this.models(),
       this.mcpState(),
       run('gh', ['auth', 'status']),
       builderJson<{ atLogin: boolean }>(['--status', '--json']),
@@ -184,10 +161,8 @@ export class SettingsPanel {
     this.post({
       type: 'state',
       settings: s,
-      services: { graph, developer, ollama, own: [...own.keys()], atLogin: machine?.atLogin ?? false },
+      services: { graph, own: [...own.keys()], atLogin: machine?.atLogin ?? false },
       profile: readMachine().NUCLEAR_AI_PROFILE ?? '',
-      models,
-      max: MAX_BILLIONS,
       mcp,
       graphAccess,
       jira: !!(await this.context.secrets.get(JIRA_SECRET)),
@@ -216,8 +191,6 @@ export class SettingsPanel {
         return chatGifKey();
       case 'start':
         return this.start(m.service);
-      case 'pull':
-        return this.pull(m.model);
       case 'mcp':
         return this.addMcp(m.client);
       case 'connectMcp': {
@@ -253,13 +226,11 @@ export class SettingsPanel {
     }
   }
 
-  /** Starts (or restarts, when the editor started it) the graph or the Developer with the settings' models. */
-  private async start(service: 'graph' | 'developer'): Promise<void> {
+  /** Starts (or restarts, when the editor started it) the Smart Graph. */
+  private async start(service: 'graph'): Promise<void> {
     const s = aiSettings();
-    const [cmd, args, url] = service === 'graph' ? [s.graphCommand, ['serve'], s.graphUrl + '/v1/health'] : ['nuclear-developer', [], s.developerUrl + '/docs'];
-    // the services the set-up left in this system (ADR-installer-0002) start with the machine's file: the models chosen here go
-    // there, and the system's manager starts the service again
-    if (readMachine().NUCLEAR_AI_MODE === 'local') await builder(['setup', '--set', `CODER_MODEL=${s.coderModel}`, `ASSISTANT_MODEL=${s.assistantModel}`]);
+    const [cmd, args, url] = [s.graphCommand, ['serve'], s.graphUrl + '/v1/health'];
+    // the service the set-up left in this system (ADR-installer-0002): the system's manager starts it again
     if (!own.has(service) && (await builder(['setup', '--restart', service])).code === 0) {
       for (let i = 0; i < 40 && !(await up(url)); i++) await new Promise((r) => setTimeout(r, 500));
       return this.state();
@@ -270,7 +241,7 @@ export class SettingsPanel {
       own.delete(service);
       await new Promise((r) => setTimeout(r, 800));
     } else if (await up(url)) {
-      void vscode.window.showWarningMessage(l10n.t('The {0} is already running, started outside the editor: stop it there to restart it with these settings.', service === 'graph' ? 'Smart Graph' : 'Nuclear Developer'));
+      void vscode.window.showWarningMessage(l10n.t('The {0} is already running, started outside the editor: stop it there to restart it with these settings.', 'Smart Graph'));
       return;
     }
     if ((await run('sh', ['-c', 'command -v "$1"', 'sh', cmd])).code !== 0) {
@@ -285,22 +256,6 @@ export class SettingsPanel {
       void this.state();
     });
     for (let i = 0; i < 20 && !(await up(url)); i++) await new Promise((r) => setTimeout(r, 500));
-    return this.state();
-  }
-
-  private async pull(model: string): Promise<void> {
-    if (!/^[\w.:/-]+$/.test(model)) return;
-    const task = new vscode.Task({ type: 'nuclear', task: 'pull' }, vscode.TaskScope.Global, `ollama pull ${model}`, 'nuclear', new vscode.ProcessExecution('ollama', ['pull', model], { env: serviceEnv() as Record<string, string> }));
-    const done = new Promise<void>((resolve) => {
-      const sub = vscode.tasks.onDidEndTaskProcess((e) => {
-        if (e.execution.task === task) {
-          sub.dispose();
-          resolve();
-        }
-      });
-    });
-    await vscode.tasks.executeTask(task);
-    await done;
     return this.state();
   }
 
@@ -373,7 +328,6 @@ export function html(webview: vscode.Webview): string {
 <script nonce="${nonce}">
 ${pageI18n(SETTINGS, TC_TEXTS)}
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const gb = (n) => (n / 1e9).toFixed(1) + ' GB';
 ${FORM_JS}
 ${TC_JS}
 const SECTIONS = ['language', 'toolchains', 'ai', 'builder', 'spending', 'chat', 'atlas', 'http', 'devices'];
@@ -381,14 +335,6 @@ const SECTIONS = ['language', 'toolchains', 'ai', 'builder', 'spending', 'chat',
 let S = null, section = vscode.getState()?.section ?? 'ai';
 function field(key, label, value, help, type) {
   return '<label>' + esc(label) + '<div class="muted">' + esc(help) + '</div></label><input data-key="' + key + '" type="' + (type || 'text') + '" value="' + esc(value) + '">';
-}
-function modelSelect(key, label, value, help) {
-  const list = Array.isArray(S.models) ? S.models : [];
-  const names = list.map((m) => m.name);
-  const opts = (names.includes(value) ? names : [value, ...names]).map((n) => { const m = list.find((x) => x.name === n); return '<option value="' + esc(n) + '"' + (n === value ? ' selected' : '') + '>' + esc(n) + (m ? ' · ' + esc(m.parameters) + (m.billions > S.max ? ' · ' + t('over3b') : '') : ' · ' + t('notInstalled')) + '</option>'; }).join('');
-  const m = list.find((x) => x.name === value);
-  const warn = !m ? ' <button data-pull="' + esc(value) + '">' + esc(t('pull')) + '</button>' : m.billions > S.max ? ' <span class="over">' + esc(t('over3bRule')) + '</span>' : '';
-  return '<label>' + esc(label) + '<div class="muted">' + esc(help) + '</div></label><div><select data-key="' + key + '">' + opts + '</select>' + warn + '</div>';
 }
 function service(id, name, on, what, startable) {
   return '<div class="card"><span class="dot ' + (on ? 'on' : 'off') + '"></span><div class="grow"><b>' + esc(name) + '</b> <span class="muted">' + esc(what) + '</span></div>' + (startable ? '<button data-start="' + id + '">' + esc(S.services.own.includes(id) || (S.services.atLogin && on) ? t('restart') : on ? t('running') : t('start')) + '</button>' : '') + '</div>';
@@ -401,7 +347,6 @@ function drawNav() {
 }
 function drawAi() {
   const s = S.settings;
-  const models = Array.isArray(S.models) ? S.models : [];
   const access = S.graphAccess;
   const mcpName = { claude: 'Claude Code', codex: 'Codex', cursor: 'Cursor', opencode: 'OpenCode' };
   const I = S.integrations;
@@ -411,13 +356,7 @@ function drawAi() {
     + S.checks.map(check).join('')
     + '<h2>' + esc(t('services')) + '</h2><div class="muted" style="margin-bottom:8px">' + (S.profile ? esc(t('profile', S.profile)) + (S.services.atLogin ? esc(t('atLogin')) : '') + '. ' : esc(t('notSetUp')) + ' ') + '<button data-act="setup">' + esc(t('setUp')) + '</button></div>'
     + service('graph', 'Nuclear Smart Graph', S.services.graph, s.graphUrl + ' · ' + t('graphWhat'), true)
-    + service('developer', 'Nuclear Developer', S.services.developer, s.developerUrl + ' · ' + t('developerWhat'), true)
-    + service('ollama', 'Ollama', S.services.ollama, s.ollamaUrl + ' · ' + t('ollamaWhat'), false)
-    + '<div class="grid">' + field('graphUrl', t('graphUrl'), s.graphUrl, 'nuclear-graph serve') + field('developerUrl', t('developerUrl'), s.developerUrl, 'nuclear-developer') + field('ollamaUrl', t('ollamaUrl'), s.ollamaUrl, t('ollamaUrlHint')) + '</div>'
-    + '<h2>' + esc(t('localModels')) + '</h2><div class="muted">' + esc(t('localModelsHint')) + '</div><div class="grid" style="margin-top:8px">'
-    + modelSelect('models.coder', t('coder'), s.coderModel, t('coderHint'))
-    + modelSelect('models.assistant', t('assistant'), s.assistantModel, t('assistantHint'))
-    + '</div>' + (typeof S.models === 'string' ? '<p class="over">' + esc(S.models) + '</p>' : '<details style="margin-top:8px"><summary>' + esc(t('installedModels', models.length)) + '</summary><table><tr><th>' + esc(t('model')) + '</th><th>' + esc(t('parameters')) + '</th><th>' + esc(t('size')) + '</th><th></th></tr>' + models.map((m) => '<tr><td>' + esc(m.name) + '</td><td>' + esc(m.parameters) + '</td><td>' + gb(m.size) + '</td><td>' + (m.billions > S.max ? '<span class="over">' + esc(t('over3b')) + '</span>' : '<span class="badge">' + esc(t('allowed')) + '</span>') + '</td></tr>').join('') + '</table></details>')
+    + '<div class="grid">' + field('graphUrl', t('graphUrl'), s.graphUrl, 'nuclear-graph serve') + '</div>'
     + '<h2>' + esc(t('mcp')) + '</h2><div class="muted">' + esc(t('mcpHint', s.mcpCommand)) + '</div>'
     + Object.keys(mcpName).map((c) => '<div class="card"><span class="dot ' + (S.mcp[c] === 'added' ? 'on' : 'off') + '"></span><div class="grow"><b>' + mcpName[c] + '</b> <span class="muted">' + esc(t('mcp.' + S.mcp[c])) + '</span></div>' + (S.mcp[c] === 'not added' ? '<button class="primary" data-mcp="' + c + '">' + esc(t('add')) + '</button>' : '') + '</div>').join('')
     + '<div class="grid">' + field('mcpCommand', t('mcpCommand'), s.mcpCommand, t('mcpCommandHint')) + field('graphCommand', t('graphCommand'), s.graphCommand, t('graphCommandHint')) + '</div>'
@@ -437,7 +376,6 @@ function drawAi() {
     + '</div>'
     + '<h2>' + esc(t('whenFails')) + '</h2><div class="grid">'
     + field('watch.callTimeoutMinutes', t('callTimeout'), I.watch.callTimeoutMinutes, t('callTimeoutHint'), 'number')
-    + field('watch.stallSeconds', t('stall'), I.watch.stallSeconds, t('stallHint'), 'number')
     + field('checkEveryMinutes', t('checkEvery'), I.checkEveryMinutes, t('checkEveryHint'), 'number')
     + field('retry.attempts', t('tries'), s.retry.attempts, t('triesHint'), 'number')
     + field('retry.baseMs', t('firstWait'), s.retry.baseMs, t('firstWaitHint'), 'number')
@@ -474,13 +412,12 @@ document.addEventListener('change', (e) => {
   vscode.postMessage({ type: 'set', key: k, value: v });
 });
 document.addEventListener('click', (e) => {
-  const d = e.target.closest('[data-tc],[data-section],[data-start],[data-pull],[data-mcp],[data-allow],[data-deny],[data-revoke],[data-act],#openSettings'); if (!d) return;
+  const d = e.target.closest('[data-tc],[data-section],[data-start],[data-mcp],[data-allow],[data-deny],[data-revoke],[data-act],#openSettings'); if (!d) return;
   e.preventDefault();
   if (d.dataset.tc) return vscode.postMessage({ type: d.dataset.tc, id: d.dataset.tcId });
   if (d.dataset.section) { section = d.dataset.section; vscode.setState({ section }); window.scrollTo(0, 0); return S && draw(); }
   if (d.id === 'openSettings') return vscode.postMessage({ type: 'openSettings' });
   if (d.dataset.start) { d.disabled = true; d.textContent = t('starting'); return vscode.postMessage({ type: 'start', service: d.dataset.start }); }
-  if (d.dataset.pull) { d.disabled = true; d.textContent = t('pulling'); return vscode.postMessage({ type: 'pull', model: d.dataset.pull }); }
   if (d.dataset.mcp) return vscode.postMessage({ type: 'mcp', client: d.dataset.mcp });
   if (d.dataset.allow) return vscode.postMessage({ type: 'allow', id: d.dataset.allow });
   if (d.dataset.deny) return vscode.postMessage({ type: 'deny', id: d.dataset.deny });

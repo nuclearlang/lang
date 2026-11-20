@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-18
+updated: 2026-11-20
 related: [../01-product/roadmap.md, ../../../nuclear-builder/docs/02-architecture/chat.md, ../../../../../nuclear-chat/docs/02-architecture/ui.md]
 ---
 # Architecture of Nuclear Atlas
@@ -21,8 +21,12 @@ on the direct message with the general agent, `dm-atlas`.
 ## A question
 
 A message in `dm-atlas` is answered by the member `atlas` (`nuclear-builder member --role chat`, the provider of
-`nuclear.builder.chat`: by default the local Nuclear Developer, which reads the Smart Graph). The conversation is the
-chat's, kept in the project (`.nuclear/chat/dm-atlas.jsonl`), the same in the Builder's chat.
+`nuclear.builder.chat`: an external agent or provider, Claude Code by default, which reads the Smart Graph through
+the MCP server; the local models are on standby, ADR-platform-0013). When `agents --json` (the Builder's
+`agentsHere`) has no agent available, the page shows a line over the chat that says how to pick one, and its link
+opens Settings and integrations on Nuclear Builder. A paid provider the user already put in the team (a member's or
+the tech lead's) answers without the two spending questions; one never chosen asks them (`registration` in
+`vscode/src/chatHost.ts`). The conversation is the chat's, kept in the project (`.nuclear/chat/dm-atlas.jsonl`), the same in the Builder's chat.
 
 ## An order
 
@@ -35,7 +39,8 @@ thread where it went and how it ended (passed, failed, waiting), and a notice sa
 
 The notices of Nuclear Atlas are the workspace's: its orders' ends and what members say to the user in Nuclear
 Chat (a direct message, `@you`, a question, an answer), counted on the `atlas` badge of the strip and the activity
-bar ([the notifications](../../../../vscode/docs/02-architecture/ai-services.md)). *Open* on a chat notice calls
+bar ([the notifications](../../../../vscode/docs/02-architecture/ai-services.md)). *Open* on a chat notice, and the command `nuclear.atlas.open` (root, channel) that Nuclear Builder and the company
+screen run when a member or a team is clicked (the Builder has no chat of its own), call
 `AtlasPanel.show(…, channel)`: the page opens (or mounts the chat again) on that channel, the direct message with
 the member or the team's channel; choosing another project goes back to Atlas's direct message. Its texts are in English and Spanish in
 `src/l10n.ts`, in the chosen language (`nuclear.language`); the globe in its header changes it, and the page and the

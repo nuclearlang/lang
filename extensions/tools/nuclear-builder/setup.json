@@ -1,4 +1,5 @@
 {
+  "localModels": false,
   "requirements": [
     {
       "id": "nuclearlang",
@@ -55,7 +56,7 @@
     {
       "id": "remote",
       "title": "Remote agents and the Smart Graph",
-      "summary": "Only the Smart Graph runs on this machine, with its small model (no Ollama). Claude Code, Codex, Cursor or OpenCode get the Nuclear MCP server: the generators, the compiler, the command line and the knowledge base.",
+      "summary": "The Smart Graph, with its small model (no Ollama), and Nuclear Chat run on this machine. Claude Code, Codex, Cursor, Gemini CLI, OpenCode or Grok Build get the Nuclear MCP server: the generators, the compiler, the command line and the knowledge base.",
       "gb": 0.3,
       "ram": 2,
       "minRam": 2,
@@ -63,26 +64,28 @@
         "the generators (a resource, a use case, a screen) from your agent",
         "the compiler's checks and fixes, the documentation of every kind and decorator",
         "nuclear build, test and migrate from your agent",
-        "the Smart Graph: the strategy of each request and the search of the knowledge base, for your agent"
+        "the Smart Graph: the strategy of each request and the search of the knowledge base, for your agent",
+        "Nuclear Builder and Nuclear Atlas in the editor, worked by the agents and API providers you choose, in Nuclear Chat"
       ],
       "limits": [
         "your agent writes every line the generators do not: all of it is paid tokens",
-        "no Builder panel and no Nuclear Atlas in the editor"
+        "the local models are on standby (ADR-platform-0013): nothing is answered by a model of this machine but the Smart Graph's own"
       ],
-      "measured": "only the Smart Graph runs on this machine",
+      "measured": "only the Smart Graph and Nuclear Chat run on this machine",
       "title_es": "Agentes remotos y el Smart Graph",
-      "summary_es": "En esta máquina solo corre el Smart Graph, con su modelo pequeño (sin Ollama). Claude Code, Codex, Cursor u OpenCode reciben el servidor MCP de Nuclear: los generadores, el compilador, la línea de comandos y la base de conocimiento.",
+      "summary_es": "En esta máquina corren el Smart Graph, con su modelo pequeño (sin Ollama), y Nuclear Chat. Claude Code, Codex, Cursor, Gemini CLI, OpenCode o Grok Build reciben el servidor MCP de Nuclear: los generadores, el compilador, la línea de comandos y la base de conocimiento.",
       "works_es": [
         "los generadores (un recurso, un caso de uso, una pantalla) desde tu agente",
         "las comprobaciones y arreglos del compilador, la documentación de cada kind y decorador",
         "nuclear build, test y migrate desde tu agente",
-        "el Smart Graph: la estrategia de cada pedido y la búsqueda en la base de conocimiento, para tu agente"
+        "el Smart Graph: la estrategia de cada pedido y la búsqueda en la base de conocimiento, para tu agente",
+        "Nuclear Builder y Nuclear Atlas en el editor, trabajados por los agentes y proveedores de API que elijas, en Nuclear Chat"
       ],
       "limits_es": [
         "tu agente escribe cada línea que los generadores no escriben: todo son tokens de pago",
-        "sin el panel del Builder ni Nuclear Atlas en el editor"
+        "los modelos locales están en pausa (ADR-platform-0013): ningún modelo de esta máquina responde salvo el propio del Smart Graph"
       ],
-      "measured_es": "en esta máquina solo corre el Smart Graph"
+      "measured_es": "en esta máquina solo corren el Smart Graph y Nuclear Chat"
     },
     {
       "id": "lite",

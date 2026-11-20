@@ -42,6 +42,21 @@ GRAPH_MODEL_GB: double = DATA["embeddingsGb"]!
 // the small model the local chat answers with (the Developer's CHAT_MODEL), unless a profile names its own
 CHAT_MODEL: string = DATA["chat"]!
 
+// ADR-platform-0013: the local models (Ollama, the Nuclear Developer, the profiles lite, medium and hard, the `local`
+// kind of the members, the local chat) are on standby while setup.json says `"localModels": false`: nothing local is
+// offered, installed, started or listed. Their code stays; turning the switch on again needs its own tests.
+localModels() boolean
+  DATA["localModels"] != false
+
+// The profiles the set-up offers: every one, or only `remote` while the local models are on standby.
+offeredProfiles() Profile[]
+  localModels() ? PROFILES : PROFILES.filter((p) => p.coder == null)
+
+// What a profile id asks for while the local models are on standby: null when it can be set up, else why not.
+onStandby(id: string) string?
+  p = profileOf(id)
+  p == null or p!.coder == null or localModels() ? null : "the profile ${id} is on standby: the local models are off (ADR-platform-0013); only the profile remote is set up"
+
 chatModelOf(p: Profile) string
   p.data["chat"] ?? CHAT_MODEL
 
@@ -104,7 +119,8 @@ linkRuntime(root: string, bin: string? = null, system: string = sys.platform) st
   at = bin ?? binDir()
   Path(at).mkdir(parents = true, existOk = true)
   linked: string[] = []
-  for c in RUNTIME_COMMANDS
+  // the Developer's launcher stays in the archive, inert, while the local models are on standby
+  for c in RUNTIME_COMMANDS.filter((x) => localModels() or x != "nuclear-developer")
     if system == "win32"
       file = ntpath.join(at, "${c}.cmd")
       Path(file).writeText("@\"${ntpath.join(root, "bin", "${c}.cmd")}\" %*\r\n", encoding = "utf-8", newline = "")
@@ -139,11 +155,14 @@ readMachine(file: string? = null) <string, string>
       throw e
   values
 
-writeMachine(values: <string, string>, file: string? = null) void
+// `drop`: the keys taken out of the file.
+writeMachine(values: <string, string>, file: string? = null, drop: string[] = []) void
   at = Path(file ?? machineFile())
   all = readMachine("${at}")
   for k, v in values
     all[k] = v
+  for k in drop
+    all.remove(k)
   at.parent.mkdir(parents = true, existOk = true)
   lines = ["# The AI services of NuclearLang on this machine, written by their set-up (nuclear-builder setup, the editor)."]
   for k, v in all
@@ -441,7 +460,7 @@ status(u: <string, string>? = null) <string, any>
   machine = readMachine()
   models = installedModels(at["ollama"]!)
   wanted = [machine["CODER_MODEL"] ?? "", machine["ASSISTANT_MODEL"] ?? "", machine["CHAT_MODEL"] ?? ""].filter((m) => m.length > 0).unique()
-  files = serviceFiles(services = machine["NUCLEAR_AI_MODE"] == "remote" ? SERVICES.filter((s) => s.name == "graph") : SERVICES)
+  files = serviceFiles(services = machine["NUCLEAR_AI_MODE"] == "remote" ? SERVICES.filter((s) => s.name != "developer") : SERVICES)
   {
     "machine": machine,
     "file": machineFile(),
@@ -476,9 +495,9 @@ ServiceFile(path: string, text: string)
 
 // The files that start the services when the user logs in: systemd user units (Linux), launch agents (macOS), a
 // script of the Startup folder (Windows). They start with the machine's file as their environment.
-// The services a profile runs: the Smart Graph always, the Developer and the chat with the local agents.
+// The services a profile runs: the Smart Graph and Nuclear Chat always, the Developer with the local agents.
 servicesOf(p: Profile) Service[]
-  p.coder == null ? SERVICES.filter((s) => s.name == "graph") : SERVICES
+  p.coder == null ? SERVICES.filter((s) => s.name != "developer") : SERVICES
 
 serviceFiles(system: string = sys.platform, at: string? = null, bin: string? = null, machine: string? = null, pathEnv: string? = null, services: Service[] = SERVICES) ServiceFile[]
   h = at ?? home()
@@ -588,17 +607,18 @@ loadAgent(s: Service, path: string, changed: boolean, say: (line: string) => voi
     time.sleep(1.0 + attempt)
   throw RuntimeError("launchd did not take ${path}: ${last}. Log out and in, then run nuclear-builder setup again")
 
-removeServices(say: (line: string) => void) void
+// `services`: the ones taken away (every one by default; on Windows every one always: one script starts them all).
+removeServices(say: (line: string) => void, services: Service[] = SERVICES) void
   if sys.platform == "linux"
-    capture(["systemctl", "--user", "disable", "--now", ...SERVICES.map((s) => "nuclear-${s.name}")])
+    capture(["systemctl", "--user", "disable", "--now", ...services.map((s) => "nuclear-${s.name}")])
   if sys.platform == "darwin"
-    for s in SERVICES
+    for s in services
       capture(["launchctl", "bootout", "${gui()}/${label(s.name)}"])
   if sys.platform == "win32"
     // no service manager: the services are processes of the installation, which hold its files until stopped (this
     // process, the set-up, runs from it too and stays)
     capture(["powershell", "-NoProfile", "-Command", "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith('${installDir()}', [StringComparison]::OrdinalIgnoreCase) -and $_.ProcessId -ne ${os.getpid()} } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"])
-  for f in serviceFiles()
+  for f in serviceFiles(services = sys.platform == "win32" ? SERVICES : services)
     if Path(f.path).exists()
       say("removed ${f.path}")
     Path(f.path).unlink(missingOk = true)
@@ -843,7 +863,8 @@ STEP_ABOUT: <string, string> = {
   "graph-service": "Started now and at every login, on 127.0.0.1 only",
   "knowledge": "Every card of NuclearLang into the graph, with the release's vectors (without them, about ten minutes)",
   "developer-service": "Started now and at every login, on 127.0.0.1 only",
-  "chat-service": "The chat of the editor and of the local agents, now and at every login"
+  "chat-service": "Nuclear Chat, where the editor's Builder and Atlas work with your agents, now and at every login",
+  "standby": "The local models are on standby (ADR-platform-0013): what NuclearLang put here for them goes"
 }
 
 // The Ollama models of a profile: the local agents' and the chat's; none without the local agents. The Smart Graph's
@@ -854,11 +875,14 @@ modelsOf(p: Profile) string[]
   [p.coder ?? "", p.assistant ?? p.coder ?? "", chatModelOf(p)].filter((m) => m.length > 0).unique()
 
 // The steps that leave a profile installed and running, in order. Each can be run again: what is there is kept.
-steps(p: Profile) Step[]
+// `standby`: something local of NuclearLang is still on this machine (`standbyPending`) and the local models are on
+// standby: a first step takes it away.
+steps(p: Profile, standby: boolean = false) Step[]
   // the Smart Graph in every profile (the MCP server reads it), with its own model: no Ollama for it
-  graph = [Step("graph", "Install the Smart Graph and the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("graph-model", "Download the Smart Graph's model (${EMBEDDINGS}, ${GRAPH_MODEL_GB} GB)")]
+  first = standby and not localModels() ? [Step("standby", "Take away the local models (on standby)")] : ([] as Step[])
+  graph = [...first, Step("graph", "Install the Smart Graph and the MCP server"), Step("clients", "Add the MCP server to the AI clients of this machine"), Step("graph-model", "Download the Smart Graph's model (${EMBEDDINGS}, ${GRAPH_MODEL_GB} GB)")]
   if p.coder == null
-    return [...graph, Step("graph-service", "Start the Smart Graph, now and at every login"), Step("knowledge", "Load the knowledge base into the graph")]
+    return [...graph, Step("graph-service", "Start the Smart Graph, now and at every login"), Step("knowledge", "Load the knowledge base into the graph"), Step("chat-service", "Start Nuclear Chat, now and at every login")]
   [
     ...graph,
     Step("developer", "Build and install the Nuclear Developer"),
@@ -929,7 +953,8 @@ runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
     "graph-service" -> startGraph(p, say)
     "knowledge" -> loadKnowledge(root, say)
     "developer-service" -> startService("developer", "${urls()["developer"]}/docs", say)
-    "chat-service" -> startChat(root, say)
+    "chat-service" -> startChat(root, p, say)
+    "standby" -> retireLocal(say)
     _ ->
       throw RuntimeError("no step ${id}")
 
@@ -969,7 +994,7 @@ installDeveloper(root: string, say: (line: string) => void) void
 // Nuclear Chat's service (nuclear-chat/docs/02-architecture/overview.md): the AI archive brings it built; a working
 // tree builds it in place (`nuclear-chat install`, the command installer/install.sh installs). It makes its token
 // in the keyring the first time it starts (never in a file); its port is chosen with the others (`servicePorts`).
-startChat(root: string, say: (line: string) => void) void
+startChat(root: string, p: Profile, say: (line: string) => void) void
   if not hasRuntime(root)
     if which("nuclear-chat") == null
       throw RuntimeError("`nuclear-chat` is not installed: run installer/install.sh again")
@@ -980,7 +1005,7 @@ startChat(root: string, say: (line: string) => void) void
   for k, v in servicePorts(say)
     choice[k] = v
   writeMachine(choice)
-  enableServices(say)
+  enableServices(say, servicesOf(p))
   startService("chat", "${urls()["chat"]}/workspaces", say)
 
 downloadModels(p: Profile, say: (line: string) => void) void
@@ -1092,28 +1117,8 @@ ollamaRemoval(system: string = sys.platform) string[]
 // What was on the machine before the set-up stays.
 // `secrets` false leaves the keyring alone (the tests: the developer's machine has its own).
 purge(machine: <string, string>, say: (line: string) => void, secrets: boolean = true) void
-  ollama = urls()["ollama"]!
-  pulled = (machine["NUCLEAR_PULLED_MODELS"] ?? "").split(",").filter((m) => m.length > 0)
-  if not pulled.isEmpty and (up("${ollama}/api/tags") or startOllama())
-    for m in pulled
-      try
-        httpx.request("DELETE", "${ollama}/api/delete", json = { "model": m }, timeout = 30)
-        say("removed the model ${m}")
-      catch e
-        if not isinstance(e, httpx.HTTPError)
-          throw e
-        say("${m}: not removed (${e})")
-  if machine["NUCLEAR_INSTALLED_OLLAMA"] != null
-    left = installedModels(ollama)
-    steps = ollamaRemoval()
-    if sys.platform == "linux" and not sys.stdin.isatty()
-      say("Ollama was installed by the set-up; to take it away (it asks for your password): ${steps.join(" && ")}")
-    else
-      for step in steps
-        subprocess.run(step, shell = true, env = toolEnv())
-      say("removed Ollama")
-      if left.isEmpty
-        shutil.rmtree(Path(home(), ".ollama"), ignoreErrors = true)
+  removeModels(machine, say)
+  removeOllama(machine, say)
   for name in ["nuclear-graph", "nuclear-chat"]
     if secrets
       forgetSecrets(name)
@@ -1125,3 +1130,93 @@ purge(machine: <string, string>, say: (line: string) => void, secrets: boolean =
   if config.exists()
     shutil.rmtree(config, ignoreErrors = true)
     say("removed ${config}")
+
+// The models the set-up downloaded (`NUCLEAR_PULLED_MODELS`), deleted through Ollama (started for it when it is
+// installed and stopped); what was there before stays. The GB they took, and the ones that could not be deleted.
+Removed(gb: double, left: string[])
+
+removeModels(machine: <string, string>, say: (line: string) => void) Removed
+  ollama = urls()["ollama"]!
+  pulled = (machine["NUCLEAR_PULLED_MODELS"] ?? "").split(",").filter((m) => m.length > 0)
+  if pulled.isEmpty
+    return Removed(0.0, [])
+  if not up("${ollama}/api/tags") and not startOllama()
+    say("Ollama does not answer: the models ${pulled.join(", ")} stay (the next set-up takes them away)")
+    return Removed(0.0, pulled)
+  sizes = modelSizes(ollama)
+  freed = 0.0
+  left: string[] = []
+  for m in pulled
+    try
+      r = httpx.request("DELETE", "${ollama}/api/delete", content = json.dumps({ "model": m }), timeout = 30)
+      // 404: no longer there (the user deleted it)
+      if r.statusCode >= 400 and r.statusCode != 404
+        throw httpx.HTTPError("Ollama answered ${r.statusCode}")
+      freed += sizes[m] ?? sizes["${m}:latest"] ?? 0.0
+      say("removed the model ${m}")
+    catch e
+      if not isinstance(e, httpx.HTTPError)
+        throw e
+      left.add(m)
+      say("${m}: not removed (${e})")
+  Removed(freed, left)
+
+// The size of each model Ollama has, in GB, by name.
+modelSizes(ollama: string) <string, double>
+  sizes: <string, double> = {}
+  try
+    models: <string, any>[] = httpx.get("${ollama}/api/tags", timeout = 3).json()["models"]
+    for m in models
+      sizes["${m["name"]}"] = (m["size"] ?? 0) / 1_000_000_000
+  catch e
+    if not isinstance(e, httpx.HTTPError) and not isinstance(e, ValueError) and not isinstance(e, KeyError)
+      throw e
+  sizes
+
+// Ollama taken away when the set-up installed it (`NUCLEAR_INSTALLED_OLLAMA`), the way it came; on Linux without a
+// terminal (its removal asks for the administrator's password) the commands are said instead. True when it is gone or
+// was not the set-up's.
+removeOllama(machine: <string, string>, say: (line: string) => void) boolean
+  if machine["NUCLEAR_INSTALLED_OLLAMA"] == null
+    return true
+  left = installedModels(urls()["ollama"]!)
+  steps = ollamaRemoval()
+  if sys.platform == "linux" and not sys.stdin.isatty()
+    say("Ollama was installed by the set-up; to take it away (it asks for your password): ${steps.join(" && ")}")
+    return false
+  for step in steps
+    subprocess.run(step, shell = true, env = toolEnv())
+  say("removed Ollama")
+  if left.isEmpty
+    shutil.rmtree(Path(home(), ".ollama"), ignoreErrors = true)
+  true
+
+// ---------- the local models on standby (ADR-platform-0013) ----------
+
+// What NuclearLang left here for the local models: the Developer's file at login and its launcher.
+developerLeft() Path[]
+  files = sys.platform == "win32" ? ([] as ServiceFile[]) : serviceFiles(services = SERVICES.filter((s) => s.name == "developer"))
+  [...files.map((f) => Path(f.path)), Path(binDir(), launcher("").path)].filter((f) => f.exists() or f.isSymlink())
+
+// Whether this machine still has something local of NuclearLang: a local profile, models or an Ollama the set-up
+// installed, the Developer's files.
+standbyPending(machine: <string, string>? = null) boolean
+  m = machine ?? readMachine()
+  m["NUCLEAR_AI_MODE"] == "local" or not (m["NUCLEAR_PULLED_MODELS"] ?? "").isEmpty or m["NUCLEAR_INSTALLED_OLLAMA"] != null or not developerLeft().isEmpty
+
+// The step `standby`: everything local NuclearLang put on this machine taken away (what was here before stays,
+// ADR-installer-0005): the Developer's service and launcher, the models it downloaded, Ollama when it installed it;
+// the machine's file is `remote` from now on. It says what it removed and the GB freed.
+retireLocal(say: (line: string) => void) void
+  machine = readMachine()
+  if sys.platform != "win32"
+    removeServices(say, SERVICES.filter((s) => s.name == "developer"))
+  // on Windows the one script at login is written again by the next steps, without the Developer
+  for f in developerLeft()
+    f.unlink(missingOk = true)
+    say("removed ${f}")
+  models = removeModels(machine, say)
+  ollama = removeOllama(machine, say)
+  writeMachine({ "NUCLEAR_AI_MODE": "remote", "NUCLEAR_AI_PROFILE": "remote", ...(models.left.isEmpty ? ({} as <string, string>) : { "NUCLEAR_PULLED_MODELS": models.left.join(",") }) }, drop = ["CODER_MODEL", "ASSISTANT_MODEL", "CHAT_MODEL", ...(models.left.isEmpty ? ["NUCLEAR_PULLED_MODELS"] : ([] as string[])), ...(ollama ? ["NUCLEAR_INSTALLED_OLLAMA"] : ([] as string[]))])
+  say("wrote ${machineFile()}: profile remote")
+  say("freed ${models.gb.toFixed(1)} GB: the local models are on standby (ADR-platform-0013)")

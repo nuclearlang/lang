@@ -33,6 +33,9 @@ Every provider of a role is called the same way (`adapter.nuc`):
 
 ## Who does a role
 
+The kind `local` is on standby (ADR-platform-0013, `localModels` of `setup.json`): no team, picker or list offers it,
+and a member of it is converted on read (teams-and-vault.md); its adapter stays, dormant.
+
 | Kind | Provider | File | How | The role becomes | The cost |
 |---|---|---|---|---|---|
 | `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |

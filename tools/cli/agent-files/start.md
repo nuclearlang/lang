@@ -51,7 +51,7 @@ never search the disk for Nuclear's source code or its documents, and never gues
 | Tool | What it is for |
 |---|---|
 | `nuclear` | The command: compiler (`build`, `check`, `fix`, `fmt`), projects (`new`, `make`, `gen`, `add`, `run`, `test`), documentation (`help`, `spec`, `defs`) |
-| The `nuclear` MCP server | The same as tools for an agent: `nuclear_start` (this text), `nuclear_doc` (any topic), `nuclear_brief`, `nuclear_help`, `nuclear_defs`, `nuclear_check`, `nuclear_build`, the generators (`generate_*`), `project_inspect`; with the local AI services, the Smart Graph (`graph_*`) and the local developer (`developer_*`) |
+| The `nuclear` MCP server | The same as tools for an agent: `nuclear_start` (this text), `nuclear_doc` (any topic), `nuclear_brief`, `nuclear_help`, `nuclear_defs`, `nuclear_check`, `nuclear_build`, the generators (`generate_*`), `project_inspect`; the Smart Graph (`graph_*`); the local developer (`developer_*`) is on standby with the local models (ADR-platform-0013) |
 | The Smart Graph | The knowledge base behind the MCP server (local AI services): search by meaning and exact facts of every word, command and error, and the plan of each kind of request (`graph_strategy`) |
 | The editor extension | VS Code (also JetBrains, Zed): the language server (errors, completion, hover), the devices, Nuclear Builder, Nuclear Atlas, the settings of the AI services and of each client's MCP entry |
 

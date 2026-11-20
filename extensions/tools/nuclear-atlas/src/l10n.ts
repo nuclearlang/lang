@@ -14,6 +14,8 @@ export const ATLAS = dictionary({
     taskWaits: 'run:{0} waits for you: {1} (answer it in its thread, or on the Builder page).',
     taskFailed: 'run:{0} failed: its thread says where; *Retry* on the Builder page goes on from there.',
     taskNotStarted: 'The run did not start: {0}',
+    noProvider: 'No agent nor provider can answer on this machine: Atlas needs one (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build, or a model through an API with its key).',
+    pickProvider: 'Pick one in Settings and integrations → Nuclear Builder (who works the chat)',
   },
   es: {
     project: 'El proyecto',
@@ -26,5 +28,7 @@ export const ATLAS = dictionary({
     taskWaits: 'run:{0} te espera: {1} (respóndelo en su hilo, o en la página del Builder).',
     taskFailed: 'run:{0} falló: su hilo dice dónde; *Reintentar* en la página del Builder sigue desde ahí.',
     taskNotStarted: 'La ejecución no empezó: {0}',
+    noProvider: 'Ningún agente ni proveedor puede responder en esta máquina: Atlas necesita uno (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build, o un modelo por API con su clave).',
+    pickProvider: 'Elige uno en Ajustes e integraciones → Nuclear Builder (quién atiende el chat)',
   },
 });

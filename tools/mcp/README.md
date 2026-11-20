@@ -3,7 +3,8 @@
 [![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/mcp)
 
 The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio. Its tools:
-the **generators**, the **local developer**, the **Smart Graph** and the **compiler**.
+the **generators**, the **Smart Graph** and the **compiler** (the local developer is on standby with the local models,
+ADR-platform-0013).
 
 ## Why
 

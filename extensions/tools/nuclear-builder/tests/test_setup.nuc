@@ -1,3 +1,4 @@
+use sys
 use os
 use json
 use socket
@@ -38,12 +39,18 @@ testThePlanSaysItsTextsInTheLanguageAsked() void
   for r in REQUIREMENTS
     expect(r["why_es"] != null, "${r["id"]}: why_es")
 
-testTheGuideSaysOfEachProfileWhatItsDataSays() void
+testTheGuideSaysOfEachProfileWhatItsDataSays(monkeypatch: any) void
   // only in the working tree: installer/docs/08-guides/ai-setup.md
   page = Path(__file__).resolve().parents[5].joinpath("installer", "docs", "08-guides", "ai-setup.md")
   if not page.exists()
     return
   text = page.readText(encoding = "utf-8")
+  // on standby (ADR-platform-0013) the guide says so and holds the profile offered; the local ones when they are on
+  if not localModels()
+    remote = profileOf("remote")!
+    for line in ["| `remote` |", "| ${remote.gb} GB |", "standby", "ADR-platform-0013", ...(remote.data["works"] as string[]), ...(remote.data["limits"] as string[])]
+      expect(line in text, "installer/docs/08-guides/ai-setup.md lacks: ${line}")
+    return
   for p in PROFILES.filter((x) => x.coder != null)
     works: string[] = p.data["works"]!
     limits: string[] = p.data["limits"]!
@@ -126,8 +133,10 @@ testTheLauncherTakesTheMachineModelsUnlessTheCallerGivesItsOwn(tmpPath: Path) vo
 
 testAProfileIsInstalledInItsStepsAndRemoteAgentsAloneTakeTwo() void
   // the Smart Graph in every profile (the MCP server reads it), with its own model: Ollama only for the local agents
-  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "graph-model", "graph-service", "knowledge"])
-  expect(servicesOf(profileOf("remote")!).map((s) => s.name) == ["graph"] and servicesOf(profileOf("medium")!).length == 3)
+  expect(steps(profileOf("remote")!).map((s) => s.id) == ["graph", "clients", "graph-model", "graph-service", "knowledge", "chat-service"])
+  expect(servicesOf(profileOf("remote")!).map((s) => s.name) == ["graph", "chat"] and servicesOf(profileOf("medium")!).length == 3)
+  // a machine that still has something local, while the local models are on standby: they go first
+  expect(steps(profileOf("remote")!, true)[0].id == "standby" and steps(profileOf("remote")!, true).length == 7)
   expect(modelsOf(profileOf("remote")!).isEmpty and not (EMBEDDINGS in modelsOf(profileOf("hard")!)))
   expect(steps(profileOf("lite")!).map((s) => s.id) == ["graph", "clients", "graph-model", "developer", "models", "graph-service", "knowledge", "developer-service", "chat-service"])
   expect(EMBEDDINGS in steps(profileOf("hard")!)[2].title)
@@ -254,7 +263,7 @@ testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
     held.close()
   expect(PORTS == { "graph": 7878, "developer": 7879, "chat": 7880 })
 
-testTheAiArchiveIsFoundByItsLaunchersAndTheyAreLinkedOntoThePath(tmpPath: Path) void
+testTheAiArchiveIsFoundByItsLaunchersAndTheyAreLinkedOntoThePath(tmpPath: Path, monkeypatch: any) void
   root = tmpPath.joinpath("ai")
   bin = tmpPath.joinpath("bin")
   expect(not hasRuntime("${root}", "linux"))
@@ -264,6 +273,9 @@ testTheAiArchiveIsFoundByItsLaunchersAndTheyAreLinkedOntoThePath(tmpPath: Path) 
   expect(hasRuntime("${root}", "linux"))
   // Windows looks for the .cmd launchers
   expect(not hasRuntime("${root}", "win32"))
+  // the Developer's launcher stays in the archive, not linked, while the local models are on standby
+  expect(linkRuntime("${root}", "${bin}", "linux").map((l) => Path(l).name) == RUNTIME_COMMANDS.filter((c) => c != "nuclear-developer"))
+  localOn(monkeypatch)
   linked = linkRuntime("${root}", "${bin}", "linux")
   expect(linked.map((l) => Path(l).name) == RUNTIME_COMMANDS)
   for l in linked
@@ -333,6 +345,7 @@ testGrokBuildGetsTheMcpServerOnceAndLosesItOnRemove(tmpPath: Path, monkeypatch: 
 // The local agents are optional and asked (ADR-installer-0006): `--yes` without a profile is `remote`, and a local
 // profile whose models are declined goes on as `remote`; the Smart Graph and the MCP server come in both.
 testTheSetUpIsRemoteByDefaultAndADeclinedLocalProfileGoesOnAsRemote(monkeypatch: any, capsys: any) void
+  localOn(monkeypatch)
   asked: string[] = []
   monkeypatch.setattr("nuclear_builder.cli.have_requirements", (p: Profile, always: boolean) =>
     asked.add("requirements ${p.id}")
@@ -349,3 +362,61 @@ testTheSetUpIsRemoteByDefaultAndADeclinedLocalProfileGoesOnAsRemote(monkeypatch:
   expect(setup(["--profile", "lite", "--yes"]) == 1)
   expect(asked == ["requirements lite", "models lite"], "${asked}")
   expect("installed with the profile remote" in "${capsys.readouterr().out}")
+
+// The local models on standby (ADR-platform-0013): the plan offers only `remote` and says the switch; a local profile
+// is refused, in a terminal and for the editors, and nothing is asked.
+testOnStandbyOnlyTheProfileRemoteIsOfferedAndALocalOneIsRefused(monkeypatch: any, capsys: any) void
+  expect(not localModels() and offeredProfiles().map((p) => p.id) == ["remote"])
+  expect(PROFILES.length == 4, "the local profiles stay in the data")
+  monkeypatch.setattr("nuclear_builder.setup.hardware", () => machine(32))
+  shown = plan()
+  expect(shown["localModels"] == false and shown["suggested"] == "remote" and (shown["profiles"] as <string, any>[]).map((p) => p["id"]) == ["remote"])
+  expect(not ((shown["requirements"] as <string, any>)["local"] as <string, any>[]).any((r) => r["id"] == "ollama"))
+  for id in ["lite", "medium", "hard"]
+    expect("on standby" in "${onStandby(id)}")
+  expect(onStandby("remote") == null)
+  capsys.readouterr()
+  expect(setup(["--profile", "lite", "--yes"]) == 2)
+  expect("on standby" in "${capsys.readouterr().err}")
+  expect(setupEvents(["--events", "--profile", "hard"]) == 2)
+  expect("on standby" in "${capsys.readouterr().out}")
+  // `--yes` or not, nothing is asked: the profile is remote
+  monkeypatch.setattr("nuclear_builder.setup.ai_root", () => null)
+  monkeypatch.setattr("nuclear_builder.cli.have_requirements", (p: Profile, always: boolean) => true)
+  monkeypatch.setattr("nuclear_builder.terminal.ask", (q: string, d: string) =>
+    throw AssertionError("asked: ${q}"))
+  expect(setup([]) == 1)
+
+// The step `standby` takes away what NuclearLang put here for the local models and only that: the Developer's unit and
+// launcher, the models it pulled (Ollama stubbed: what was there before stays), Ollama when it installed it; the
+// machine's file is `remote`, and the GB freed are said.
+testTheStepStandbyTakesAwayTheLocalModelsNuclearLangPutHere(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("HOME", "${tmpPath}")
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  monkeypatch.setenv("NUCLEAR_BIN", "${tmpPath.joinpath("bin")}")
+  monkeypatch.setattr("nuclear_builder.setup.capture", (args: string[]) => Ran(0, ""))
+  expect(not standbyPending())
+  writeMachine({ "NUCLEAR_AI_MODE": "local", "NUCLEAR_AI_PROFILE": "medium", "CODER_MODEL": "qwen2.5-coder:3b", "ASSISTANT_MODEL": "qwen2.5-coder:3b", "CHAT_MODEL": "qwen3.5:2b", "NUCLEAR_PULLED_MODELS": "qwen2.5-coder:3b,qwen3.5:2b", "NUCLEAR_GRAPH_PORT": "7878" })
+  unitFile = Path(serviceFiles(services = SERVICES.filter((s) => s.name == "developer"))[0].path)
+  unitFile.parent.mkdir(parents = true)
+  unitFile.writeText("[Unit]\n")
+  launch = tmpPath.joinpath("bin", "nuclear-developer")
+  launch.parent.mkdir(parents = true)
+  launch.writeText("#!/bin/sh\n")
+  expect(standbyPending())
+  deleted: string[] = []
+  tags = { "models": [{ "name": "qwen2.5-coder:3b", "size": 1_900_000_000 }, { "name": "qwen3.5:2b", "size": 2_700_000_000 }, { "name": "mine:7b", "size": 4_000_000_000 }] }
+  monkeypatch.setattr("nuclear_builder.setup.up", (url: string) => true)
+  monkeypatch.setattr(httpx, "get", (url: string, timeout: double = 0.0) => httpx.Response(200, json = tags))
+  monkeypatch.setattr(httpx, "request", (method: string, url: string, content: string = "", timeout: double = 0.0) =>
+    deleted.add("${(json.loads(content) as <string, any>)["model"]}")
+    httpx.Response(200))
+  said: string[] = []
+  retireLocal((l) => said.add(l))
+  expect(deleted == ["qwen2.5-coder:3b", "qwen3.5:2b"], "${deleted}")
+  expect(not unitFile.exists() and not launch.exists())
+  m = readMachine()
+  expect(m["NUCLEAR_AI_MODE"] == "remote" and m["NUCLEAR_AI_PROFILE"] == "remote" and m["NUCLEAR_GRAPH_PORT"] == "7878", "${m}")
+  expect(not ("CODER_MODEL" in m) and not ("CHAT_MODEL" in m) and not ("NUCLEAR_PULLED_MODELS" in m))
+  expect(said.last == "freed 4.6 GB: the local models are on standby (ADR-platform-0013)", "${said}")
+  expect(not standbyPending())

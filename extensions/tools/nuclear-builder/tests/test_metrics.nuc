@@ -45,6 +45,7 @@ testAWriteCountsTheLinesItAddedAndRemoved() void
   expect(lineDelta("a\nb\n", "b\na\n") == { "added": 0, "removed": 0 })
 
 testARunAndAChatAnswerWriteTheirLinesInTheLedger(tmpPath: Path, monkeypatch: any) void
+  localOn(monkeypatch)
   root = lineProject(tmpPath, monkeypatch)
   calls: string[] = []
   answers: <string, any> = { "/developer/analyze": { "report": "The client needs a count.", "questions": [] as string[], "trace": [] as any[], "usage": { "inTokens": 120, "outTokens": 30, "model": "gemma4:e2b" } } }

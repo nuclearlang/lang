@@ -1,7 +1,8 @@
 // Backward compatibility on the editors' side (extensions/docs/06-runbooks/release.md "Backward compatibility"): what
 // an earlier version left, kept as it was under the fixtures, read by today's code: the run files of earlier engines
 // drawn by the page (the accordion, the log, a step's tree, its title in Spanish), the settings under the ids that
-// moved, and the saved projects of before 0.63.0 (one list for every folder). The engine's side is
+// moved, the saved projects of before 0.63.0 (one list for every folder), and the local models of before
+// ADR-platform-0013 (a local chat converted, no page offering them). The engine's side is
 // tests/test_compat.nuc.
 import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
@@ -12,7 +13,12 @@ import { MOVED, migrateSettings } from '../../../vscode/src/migrateSettings';
 import { savedInside } from '../../../vscode/src/savedProjects';
 import { runOutline, RunLite, specTree, stepTitle, stepTree, teamLog } from '../src/workbench';
 import { BUILDER } from '../src/l10n';
-import { SetupPanel } from '../../../vscode/src/setupPanel';
+import { SetupPanel, html as setupHtml } from '../../../vscode/src/setupPanel';
+import { html as settingsHtml } from '../../../vscode/src/settingsPanel';
+import { SETUP } from '../../../vscode/src/setupL10n';
+import { SETTINGS } from '../../../vscode/src/settingsL10n';
+import { chatProvider, DEFAULT_CHAT } from '../src/settings';
+import { SQUAD_SCRIPT } from '../src/teams/page';
 
 // the bundle runs from extensions/vscode/out/test; the fixtures are read from the sources
 const EXTENSIONS = path.resolve(__dirname, '..', '..', '..');
@@ -87,5 +93,63 @@ test('the welcome of an earlier version: offered while never finished, opened fr
     assert.equal(stub.panels.length, 1, version);
     const page = stub.panels[0].webview.html;
     assert.ok(page.includes("const PAGES = ['machine'") && page.includes('Math.min(PAGES.length - 1'), version);
+  }
+});
+
+test('the local models of an earlier version (ADR-platform-0013): a local chat goes to the default external agent, told once; the old local settings are ignored', async () => {
+  for (const l of Object.values(stub.store)) for (const k of Object.keys(l)) delete l[k];
+  const before = read(path.join(EDITOR, 'settings-0.82-local.json')) as Record<string, Record<string, unknown>>;
+  for (const [level, values] of Object.entries(before)) Object.assign(stub.store[level], values);
+  stub.asked.length = 0;
+  (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [{ uri: { fsPath: '/home/someone/app' } }];
+  const converted = await migrateSettings();
+  (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = undefined;
+  assert.deepEqual(converted, ['globalValue', 'workspaceFolderValue']);
+  assert.equal('nuclear.builder.chat' in stub.store.globalValue, false);
+  assert.equal('nuclear.builder.chat' in stub.store.workspaceFolderValue, false);
+  // an external choice is the user's: kept
+  assert.deepEqual(stub.store.workspaceValue['nuclear.builder.chat'], before.workspaceValue['nuclear.builder.chat']);
+  assert.equal(stub.asked.length, 1);
+  assert.match(stub.asked[0].message, /on standby/);
+  // read as the default external agent even before the migration ran
+  assert.deepEqual(chatProvider(before.globalValue['nuclear.builder.chat']), DEFAULT_CHAT);
+  assert.notEqual(DEFAULT_CHAT.kind, 'local' as never);
+  // the settings that only served the local models are no longer declared
+  const pkg = read(path.join(EXTENSIONS, 'vscode', 'package.json')) as { contributes: { configuration: { properties: Record<string, { default?: { kind?: string }; properties?: { kind?: { enum?: string[] } } }> }[] } };
+  const props = Object.assign({}, ...pkg.contributes.configuration.map((c) => c.properties));
+  for (const k of ['nuclear.ai.developerUrl', 'nuclear.ai.ollamaUrl', 'nuclear.ai.models.coder', 'nuclear.ai.models.assistant', 'nuclear.ai.watch.stallSeconds']) assert.equal(k in props, false, k);
+  assert.equal(props['nuclear.builder.chat'].default?.kind, 'agent');
+  assert.equal(props['nuclear.builder.chat'].properties?.kind?.enum?.includes('local'), false);
+});
+
+test('no page of the editor offers a local model, a profile to choose, Ollama or the Nuclear Developer (ADR-platform-0013)', () => {
+  const web = { cspSource: 'vscode-resource:' } as never;
+  // the squad screen mounted in the welcome is the Builder's (editors.test.ts holds it to no local kind); it still names
+  // the Nuclear Developer of an older member, only to say it was converted
+  for (const [name, page] of [['the welcome', setupHtml(web).replace(SQUAD_SCRIPT, '')], ['Settings and integrations', settingsHtml(web)]] as const) {
+    for (const word of [/ollama/i, /Nuclear Developer/, /data-profile/, /data-local/, /data-pull/, /'lite'|'medium'|'hard'/, /nuclear-developer/, /localModels/, /3B/])
+      assert.doesNotMatch(page, word, `${name}: ${word}`);
+  }
+  assert.match(setupHtml(web), /const PAGES = \['machine', 'requirements', 'install'/);
+  // the texts of the welcome and of the settings say nothing of local models either
+  for (const dict of [SETUP, SETTINGS]) for (const lang of ['en', 'es'] as const) for (const [k, v] of Object.entries(dict[lang])) assert.doesNotMatch(String(v), /Ollama|Nuclear Developer|3B|agentes? locales?|local agents?/i, `${lang} ${k}`);
+});
+
+test('every step of the remote set-up, and standby first on an older installation, has its title in English and Spanish', () => {
+  const ids = ['standby', 'graph', 'clients', 'graph-model', 'graph-service', 'knowledge', 'chat-service'];
+  for (const lang of ['en', 'es'] as const) for (const id of ids) assert.ok((SETUP[lang] as Record<string, string>)['setupStep.' + id], `${lang} ${id}`);
+  assert.equal(SETUP.en['setupStep.standby'], 'Removing the local models (on standby)');
+  assert.equal(SETUP.es['setupStep.standby'], 'Quitando los modelos locales (en standby)');
+  // the page's own stepTitle, run as the page runs it
+  const page = setupHtml({ cspSource: 'vscode-resource:' } as never);
+  const code = page.slice(page.indexOf('function stepTitle('), page.indexOf('function providersPage('));
+  const fmt = (s: string, a: string[]) => s.replace(/\{(\d+)\}/g, (_, i) => a[+i] ?? '');
+  for (const lang of ['en', 'es'] as const) {
+    const T = SETUP[lang] as Record<string, string>;
+    const said = (prefix: string, key: string, args: string[], english: string) => (key && T[prefix + key] ? fmt(T[prefix + key], args) : english);
+    const stepTitle = new Function('said', code + '; return stepTitle;')(said) as (run: { ids: string[]; models: string }, i: number, english: string) => string;
+    const run = { ids, models: '' };
+    const titles = ids.map((id, i) => stepTitle(run, i, id === 'graph-model' ? "Download the Smart Graph's model (EmbeddingGemma, 0.3 GB)" : 'english ' + id));
+    assert.deepEqual(titles, ids.map((id) => fmt(T['setupStep.' + id], id === 'graph-model' ? ['EmbeddingGemma, 0.3 GB'] : [])), lang);
   }
 });

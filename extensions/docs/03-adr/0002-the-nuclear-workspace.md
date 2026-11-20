@@ -40,6 +40,10 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
    - backend: ▷ Serve (`nuclear run`; the server restarts on each build), ◉ Debug (debugpy for fastapi, node with
      source maps for nestjs), Test, Build, Check, ⇄ API (its routes in the HTTP Connections tool);
    - web: ▷ Serve (`nuclear run`, Vite), ▭ Device, ◉ Debug, ↻ Reload, Build, Test, Check.
+
+   For an editor that hides an extension's title bar buttons (Cursor), the same actions are an *Actions* accordion
+   at the bottom of the files pane, apart from the tree and collapsed by default, like VS Code's npm scripts (the
+   user, 2026-11-20); never a row above the tree.
 7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web
    project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app
    has no packages. `nuclear build` writes `build/<name>.code-workspace` for every platform (the tasks build,

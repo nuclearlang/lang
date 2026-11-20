@@ -194,7 +194,7 @@ detachRun(root: string, id: string, args: string[]) <string, any>
 // The roles a team gives a paid provider at the stations of a run (the member who works each, `memberFor`), and the
 // run's budget: what its spending asks.
 paidOf(run: <string, any>, team: <string, any>) <string, any>
-  workers: <string, any>[] = ((run["stages"] ?? []) as <string, any>[]).map((st) => "${st["role"]}").unique().map((r) => memberFor(team, r, run["assign"]) ?? ({ "role": r, "kind": "local" } as <string, any>))
+  workers: <string, any>[] = ((run["stages"] ?? []) as <string, any>[]).map((st) => "${st["role"]}").unique().map((r) => memberFor(team, r, run["assign"]) ?? (localModels() ? ({ "role": r, "kind": "local" } as <string, any>) : { "role": r, ...defaultWorker(r) }))
   paid = workers.filter((m) => "${m["kind"] ?? "local"}" != "local")
   { "roles": paid.map((m) => "${m["role"]}"), "members": paid.map((m) => "${m["id"]}"), "providers": paid.map((m) => "${m["provider"]}").unique(), "budgetUsd": team["budgetUsd"] ?? 5.0 }
 

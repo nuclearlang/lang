@@ -1,4 +1,5 @@
 use os
+use json
 use asyncio
 use pathlib{ Path }
 
@@ -7,24 +8,33 @@ treeRoot() string
   given: string = os.environ.get("NUCLEAR_ROOT") ?? ""
   given.length > 0 ? given : "${Path(__file__).resolve().parents[5]}"
 
-testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesToAMachineOfRemoteAgents(monkeypatch: any) void
-  monkeypatch.setenv("NUCLEAR_AI_MODE", "local")
+toolNames() string[]
   names: string[] = []
   for tool in asyncio.run(mcpServer().listTools())
     names.add(tool.name)
-  expect("graph_answer" in names and "generate_resource" in names and "developer_task" in names and names[0] == "nuclear_start")
+  names
+
+// The local models are on standby (ADR-platform-0013): no developer_* tool on any machine, the graph's on every one.
+testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesWhileTheLocalModelsAreOnStandby(monkeypatch: any) void
+  for mode in ["local", "remote"]
+    monkeypatch.setenv("NUCLEAR_AI_MODE", mode)
+    names = toolNames()
+    expect("graph_strategy" in names and "generate_resource" in names and names[0] == "nuclear_start")
+    expect(not names.any((name) => name.startsWith("developer_")))
   // an agent with no context is sent to nuclear_start before anything else
   expect("call nuclear_start" in mcpServer().instructions!)
   // every tool is in the guide of the MCP server
   page: string = Path(treeRoot()).joinpath("tools/mcp/docs/08-guides/mcp.md").readText()
-  for name in names
+  for name in toolNames()
     expect("`${name}" in page)
-  monkeypatch.setenv("NUCLEAR_AI_MODE", "remote")
-  remote: string[] = []
-  for tool in asyncio.run(mcpServer().listTools())
-    remote.add(tool.name)
-  // remote agents only: the Smart Graph runs in every profile (ADR-installer-0004); only the local developer is absent
-  expect(remote.length > 10 and "graph_strategy" in remote and not remote.any((name) => name.startsWith("developer_")))
+
+// The server's switch is Nuclear Builder's: `localModels` of its setup.json (only in the working tree).
+testTheLocalModelsSwitchMirrorsNuclearBuildersSetup() void
+  file = Path(treeRoot()).joinpath("extensions", "tools", "nuclear-builder", "setup.json")
+  if not file.exists()
+    return
+  data: <string, any> = json.loads(file.readText(encoding = "utf-8"))
+  expect((data["localModels"] ?? true) == LOCAL_MODELS)
 
 testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape() void
   spec = specMarkdown("Loans", " A reader borrows a book. ", ["a book out is not lent"], "feature")
@@ -36,6 +46,8 @@ testAnAgentWithNoContextLearnsNuclearFromNuclearStart() void
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   start: string = asyncio.run(tools.nuclearStart())
   expect("Start here" in start and "The work cycle with the MCP tools" in start and "example/" in start)
+  // never sent to the local developer while the local models are on standby
+  expect(not ("developer_task" in start) and not ("developer_review" in start))
   doc: string = asyncio.run(tools.nuclearDoc("control"))
   expect("match" in doc)
 

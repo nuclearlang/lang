@@ -52,7 +52,7 @@ export function tools(): Tool[] {
       label: 'Nuclear Builder',
       short: 'BUILD',
       key: 'Ctrl+Alt+P',
-      about: l10n.t('Spec-driven work as a pipeline (ADR-platform-0003): a spec written here or imported from Jira or GitHub goes through plan, code, tests, security, artifacts and deploy; Claude plans, the local developer writes, every step shows who did what.'),
+      about: l10n.t('Spec-driven work as a pipeline (ADR-platform-0003): a spec written here or imported from Jira or GitHub goes through plan, code, tests, security, artifacts and deploy, each station worked by the agent or provider of its member; every step shows who did what.'),
       planned: [],
     },
     {
@@ -60,7 +60,7 @@ export function tools(): Tool[] {
       label: l10n.t('Your software company'),
       short: l10n.t('TEAMS'),
       key: 'Ctrl+Alt+E',
-      about: l10n.t('The teams of the software factory: each one a crew of employees by role (analyst, architect, developer, QA, DevOps), who works each one (a local agent or a provider) and its budget; a new team in five steps.'),
+      about: l10n.t('The teams of the software factory: each one a crew of employees by role (analyst, architect, developer, QA, DevOps), who works each one (an agent or a model of a provider) and its budget; a new team in five steps.'),
       planned: [],
       command: 'nuclear.builder.teams',
     },
@@ -78,7 +78,7 @@ export function tools(): Tool[] {
       label: 'Nuclear Atlas',
       short: 'ATLAS',
       key: 'Ctrl+Alt+A',
-      about: l10n.t('The local agent integrated with the RAG: a chat with the local agents (Nuclear Developer) over the active project, answered from its map and the Nuclear Smart Graph, the 100% local knowledge base the agents also read through the MCP; orders with /task run by the local agents, templates from the project, sessions kept in .nuclear/chat.'),
+      about: l10n.t("The general agent over the RAG: a chat about the active project, answered by the agent or provider you pick (nuclear.builder.chat) from its map and the Nuclear Smart Graph, the local knowledge base the agents also read through the MCP; orders with /task run by the project's team, templates from the project, sessions kept in .nuclear/chat."),
       planned: [],
     },
     {
@@ -136,7 +136,7 @@ export function tools(): Tool[] {
       label: l10n.t('Settings and integrations'),
       short: l10n.t('SETUP'),
       key: 'Ctrl+Alt+S',
-      about: l10n.t('Every setting of the AI loop in one page: the services and their state, the local models (3B rule), the MCP server in Claude Code, Codex and Cursor, the connections (graph clients, Jira, GitHub), retries.'),
+      about: l10n.t('Every setting of the AI loop in one page: the Smart Graph and its state, the MCP server in Claude Code, Codex and Cursor, the connections (graph clients, Jira, GitHub), retries.'),
       planned: [],
     },
   ];
@@ -211,7 +211,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   const ws = new Workspace(context, http);
   // the backend projects' scripts, like npm's: a task per command and the explorer's Nuclear Scripts view
   activateScripts(context, () => ws.projects(), ws.onDidChange.event);
-  // the notifications of the local agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
+  // the notifications of the agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
   notices.open = (n) => ws.openNotice(n);
   context.subscriptions.push(notices.onDidChange.event(() => ws.refresh()));
   followChatNotices();
@@ -260,6 +260,8 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     vscode.commands.registerCommand('nuclear.workspace.project', (index?: number) => ws.selectProject(index)),
     vscode.commands.registerCommand('nuclear.workspace.openProject', () => ws.openProject()),
     vscode.commands.registerCommand('nuclear.workspace.tool', (id?: string) => ws.openTool(id)),
+    // a member's direct message or a team's channel in Nuclear Atlas (the Builder's and the company screen's clicks)
+    vscode.commands.registerCommand('nuclear.atlas.open', (root?: string, channel?: string) => ws.openAtlas(root, channel)),
     vscode.commands.registerCommand('nuclear.workspace.action', (id?: string) => ws.action(id)),
     vscode.commands.registerCommand('nuclear.workspace.welcome', () => WelcomePanel.show(context, ws)),
     vscode.commands.registerCommand('nuclear.workspace.addToVsCode', () => ws.addToVsCode()),
@@ -446,6 +448,12 @@ class Workspace implements vscode.WebviewViewProvider {
     else AtlasPanel.show(this.context, () => this.projects(), n.root, chatWhere(n));
   }
 
+  /** Nuclear Atlas on a conversation: `dm-<member>` or a team's channel, of `root` (else the last project). */
+  async openAtlas(root?: string, channel?: string): Promise<void> {
+    await this.go(TOOL_PREFIX + 'atlas');
+    AtlasPanel.show(this.context, () => this.projects(), root ?? this.context.workspaceState.get<string>(LAST_PROJECT), channel);
+  }
+
   async openTool(id?: string): Promise<void> {
     let tool = tools().find((t) => t.id === id);
     if (!id) {
@@ -562,7 +570,7 @@ class Workspace implements vscode.WebviewViewProvider {
     void vscode.commands.executeCommand('setContext', 'nuclear.platform', active?.platform ?? '');
     if (!this.view) return;
     const unread = notices.unread();
-    this.view.badge = unread ? { value: unread, tooltip: unread === 1 ? l10n.t('1 notification of the local agents') : l10n.t('{0} notifications of the local agents', unread) } : undefined;
+    this.view.badge = unread ? { value: unread, tooltip: unread === 1 ? l10n.t('1 notification of the agents') : l10n.t('{0} notifications of the agents', unread) } : undefined;
     const webview = this.view.webview;
     this.watchFiles(active?.root);
     const tool = tools().find((t) => TOOL_PREFIX + t.id === key);
@@ -937,6 +945,11 @@ export function stripHtml(webview: vscode.Webview): string {
   .actions button { font-family: inherit; font-size: 11px; padding: 2px 7px; border-radius: 3px; border: 1px solid var(--vscode-button-border, transparent); background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); cursor: pointer; }
   .actions button:hover { background: var(--vscode-button-secondaryHoverBackground); }
   .actions button.primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+  .acc { flex: none; border-top: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, #8884)); }
+  .acc-h { display: flex; align-items: center; gap: 2px; width: 100%; height: 22px; padding: 0 4px; border: none; background: var(--vscode-sideBarSectionHeader-background, transparent); color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground)); font: 700 11px var(--vscode-font-family); text-transform: uppercase; cursor: pointer; text-align: left; }
+  .acc-h .c { width: 16px; height: 16px; display: flex; transition: transform .1s ease; } .acc-h .c svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.3; }
+  .acc.open .acc-h .c { transform: rotate(90deg); } .acc-b { display: none; padding-bottom: 4px; } .acc.open .acc-b { display: block; }
+  .acc-b .row { padding-left: 20px; gap: 6px; } .acc-b .row .k { width: 14px; text-align: center; opacity: .8; }
   .envbar { display: flex; align-items: center; gap: 6px; padding: 2px 10px 6px; font-size: 11px; opacity: .85; flex: none; }
   .envbar a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   .tree { flex: 1; overflow: auto; }
@@ -1112,8 +1125,10 @@ export function stripHtml(webview: vscode.Webview): string {
     pane.appendChild(h);
   }
 
-  // the files of the active project, under its actions: in this pane, because an editor may hide the title bar's
-  // (Cursor shows none of an extension's); the title bar has them too
+  // the files of the active project, and below them its platform's actions as a collapsed accordion like VS Code's
+  // npm scripts, apart from the tree (ADR-extensions-0002 rule 6: the actions live in the editor title bar, never
+  // inside the file tree; the accordion is for an editor that hides the title bar's, as Cursor does)
+  let actionsOpen = false;
   function renderFiles(pane, p) {
     if (!p.project) {
       head(pane, t('workspace'));
@@ -1124,20 +1139,30 @@ export function stripHtml(webview: vscode.Webview): string {
       return;
     }
     head(pane, p.project.name, (p.project.platform || '') + ' ' + p.project.dialect);
-    if (p.project.actions.length) {
-      const bar = el('div', 'actions');
-      for (const a of p.project.actions) {
-        const b = el('button', a.id === 'run' ? 'primary' : '', a.label);
-        b.title = a.title + (a.key ? ' (' + a.key + ')' : '');
-        b.addEventListener('click', () => vscode.postMessage({ type: 'action', id: a.id }));
-        bar.appendChild(b);
-      }
-      pane.appendChild(bar);
-    }
     const tree = el('div', 'tree files'); tree.id = 'tree'; tree.tabIndex = 0; tree.dataset.vscodeContext = p.project.ctx;
     tree.addEventListener('keydown', treeKey);
     pane.appendChild(tree);
     renderTree();
+    if (p.project.actions.length) {
+      const acc = el('div', 'acc' + (actionsOpen ? ' open' : ''));
+      const h = el('button', 'acc-h'); h.setAttribute('aria-expanded', String(actionsOpen));
+      h.innerHTML = '<span class="c"><svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>';
+      h.appendChild(document.createTextNode(t('actions')));
+      h.addEventListener('click', () => { actionsOpen = !actionsOpen; acc.classList.toggle('open', actionsOpen); h.setAttribute('aria-expanded', String(actionsOpen)); });
+      acc.appendChild(h);
+      const list = el('div', 'acc-b');
+      for (const a of p.project.actions) {
+        const r = el('div', 'row'); r.tabIndex = 0; r.setAttribute('role', 'button');
+        r.title = a.title + (a.key ? ' (' + a.key + ')' : '');
+        r.appendChild(el('span', 'k', a.key || ''));
+        r.appendChild(el('span', '', a.label));
+        r.addEventListener('click', () => vscode.postMessage({ type: 'action', id: a.id }));
+        r.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.click(); } });
+        list.appendChild(r);
+      }
+      acc.appendChild(list);
+      pane.appendChild(acc);
+    }
   }
   // shortcut: the explorer's default indent (8 px) and guides on hover, not the user's workbench.tree.* settings
   const INDENT = 8;
@@ -1368,7 +1393,7 @@ export function stripHtml(webview: vscode.Webview): string {
     box.innerHTML = '';
     box.hidden = !list || !list.length;
     if (box.hidden) return;
-    // what the local agents did while you were elsewhere, from every tool: newest first, a click goes there
+    // what the agents did while you were elsewhere, from every tool: newest first, a click goes there
     box.appendChild(el('div', 'section', t('notifications')));
     for (const n of list) {
       const row = el('div', 'notice t-' + n.tool + (n.read ? '' : ' unread') + ' ' + n.level);
