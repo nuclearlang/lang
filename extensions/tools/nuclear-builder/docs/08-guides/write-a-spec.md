@@ -51,7 +51,7 @@ spec it writes appears in the tree). The form opens in the middle:
 4. **The team**: the team that works the run, one of yours (the project's `.nuclear/builder.json` `"team"`, else the
    setting `nuclear.builder.team`, else your default team is chosen first). The form shows its members: each employee's
    funny name and avatar, the role and who does its work (the Nuclear Developer on this machine, or a paid provider in
-   amber: Claude Code, Codex, Gemini CLI, OpenCode, an API). *Team…* opens the company screen, where teams are made ([make a team](make-a-team.md)) and
+   amber: Claude Code, Codex, Gemini CLI, OpenCode, Cursor, Grok Build, an API). *Team…* opens the company screen, where teams are made ([make a team](make-a-team.md)) and
    changed; *Budget* opens the Spending section of *Settings and integrations* (the team's budget per run and the
    confirmations). When a role is paid, the run asks you twice before its first paid call, the second time with the
    amount. *Preview the plan* shows the pieces the local planner would make, so you can edit them before starting.

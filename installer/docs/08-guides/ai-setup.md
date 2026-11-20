@@ -35,7 +35,7 @@ The same steps run in the three. Run it again whenever you want another choice: 
    The models Ollama already has are used as they are; the ones missing are listed with the size, and downloaded
    only when you say yes (`--yes`: without asking).
 4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine
-   (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of
+   (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of
    yours), the Nuclear Developer, the models, the knowledge base loaded
    into the graph (a few seconds with the vectors the release computed; about ten minutes on a processor when they
    cannot be downloaded), and the services started. A step that fails says why and is
@@ -87,7 +87,7 @@ In a terminal, without questions: `nuclear-builder setup --profile medium --yes`
 ## 4. Remote agents and the Smart Graph
 
 Only the Smart Graph runs on your machine, with its own model (EmbeddingGemma in ONNX, 0.3 GB; no Ollama), and the MCP server,
-which the set-up adds to every AI client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
+which the set-up adds to every AI client it finds. Claude Code, Codex, Grok Build, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools
 ([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). Your agent also gets the Smart Graph: the strategy of each request and the search of the knowledge base. What you
 give up: the Builder panel of the editor and the local agents themselves, so your remote
 agent writes every line the generators do not and all of it is paid tokens.
@@ -127,7 +127,7 @@ To give your agent the MCP server: the buttons of *Settings and integrations*, o
   you had, without questions.
 - **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama
   (`ollama rm <model>` frees their disk).
-- **A client installed later** (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`
+- **A client installed later** (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`
   adds the MCP server to it.
 - **Remove:** `nuclear-builder setup --remove` takes the services away, and the MCP server out of each AI client;
   Ollama, its models and the graph's data stay. `--remove --all` also takes away everything the set-up installed

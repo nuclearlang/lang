@@ -2,7 +2,7 @@ use os
 use json
 use pathlib{ Path }
 
-// The agent adapters with their command lines stubbed: a fake `claude`, `opencode`, `codex` and `gemini` on the PATH
+// The agent adapters with their command lines stubbed: a fake `claude`, `opencode`, `codex`, `gemini`, `agent` and `grok` on the PATH
 // write down their arguments and the files of the folders they were given, print the lines a real one prints, and
 // write the document in `specs/<id>/` as an agent edits files.
 
@@ -15,6 +15,7 @@ for a in "$@"; do
 done
 [ -n "$OPENCODE_CONFIG_DIR" ] && find "$OPENCODE_CONFIG_DIR" "$OPENCODE_CONFIG" -type f -exec sh -c 'echo "== $1"; cat "$1"' _ {} \\; >> "$FAKE_LOG.files"
 [ -n "$GEMINI_CLI_SYSTEM_SETTINGS_PATH" ] && cat "$GEMINI_CLI_SYSTEM_SETTINGS_PATH" >> "$FAKE_LOG.files"
+[ -n "$GROK_HOME" ] && cat "$GROK_HOME/config.toml" "$GROK_HOME/auth.json" >> "$FAKE_LOG.files"
 [ -n "$FAKE_DOC" ] && printf '# Analysis\\nby the agent\\n' > "$FAKE_DOC"
 cat "$FAKE_OUT"
 exit $((FAKE_EXIT + 0))
@@ -104,3 +105,68 @@ testCodexAndGeminiCliGetTheRoleInThePromptAndTheMcpServer(tmpPath: Path, monkeyp
   said = geminiLog.readText()
   expect("--output-format\nstream-json" in said and "--model\ngemini-2.5-flash" in said and "Be brief." in said)
   expect("run_shell_command" in Path("${geminiLog}.files").readText())
+
+testAPluginGivesTheMcpServersToCursorWithNoShellAndNoTokens(tmpPath: Path, monkeypatch: any) void
+  lines = [{ "type": "system", "subtype": "init", "model": "gpt-5" }, { "type": "user", "message": { "content": [{ "type": "text", "text": "the prompt" }] } }, { "type": "tool_call", "subtype": "started", "call_id": "c1", "tool_call": { "readToolCall": { "args": { "path": "a.nuc" } } } }, { "type": "tool_call", "subtype": "completed", "call_id": "c1", "tool_call": { "readToolCall": { "args": { "path": "a.nuc" }, "result": { "success": { "content": "x" } } } } }, { "type": "assistant", "message": { "content": [{ "type": "text", "text": "Reading." }] } }, { "type": "result", "subtype": "success", "is_error": false, "result": "Cursor done.", "duration_ms": 10, "session_id": "s" }]
+  log = fakeAgent(tmpPath, monkeypatch, "agent", lines)
+  // `agent` is Cursor's only when its real path names Cursor, as its installer's link does (the name of this test keeps
+  // "cursor" out of its temporary folder's: pytest takes its first 30 letters)
+  bin = tmpPath.joinpath("bin")
+  expect(agentCommand("cursor", toolEnv()) == "cursor-agent")
+  real = tmpPath.joinpath("cursor-agent", "versions", "1")
+  real.mkdir(parents = true)
+  bin.joinpath("agent").rename(real.joinpath("cursor-agent"))
+  bin.joinpath("agent").symlinkTo(real.joinpath("cursor-agent"))
+  expect(agentCommand("cursor", toolEnv()) == "agent")
+  events: <string, any>[] = []
+  work = agentWork(tmpPath, monkeypatch, "sonnet-4")
+  out = runAdapter(cursorAdapter, analyst(tmpPath), "analysis", work, (e) => events.add(e), "cursor")
+  expect(out.ok and out.text == "Cursor done." and out.costUsd == 0, out.error)
+  args = log.readText().split("\n")
+  expect(args.take(9) == ["-p", "--output-format", "stream-json", "--force", "--approve-mcps", "--trust", "--workspace", work.root, "--plugin-dir"], json.dumps(args))
+  expect(args[args.indexOf("--model") + 1] == "sonnet-4" and "Be brief." in args.join("\n"))
+  files = Path("${log}.files").readText()
+  expect("\"nuclear-mcp\"" in files and "nuclear_builder" in files and "beforeShellExecution" in files and "SystemExit(2)" in files)
+  expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text"] and events[0]["tool"] == "read")
+  expect(out.usage["inTokens"] == null and out.usage["outTokens"] == null and out.usage["model"] == "gpt-5", json.dumps(out.usage))
+  // nothing stays: the plugin is gone, the project has no `.cursor`
+  expect(not Path(args[9]).exists() and not Path(work.root, ".cursor").exists())
+  // a failure: is_error, or a command that ends badly
+  fakeAgent(tmpPath, monkeypatch, "cursor-agent", [{ "type": "result", "subtype": "error", "is_error": true, "result": "no login" }])
+  bin.joinpath("agent").unlink()
+  failed = runAdapter(cursorAdapter, analyst(tmpPath), "analysis", work, (e) => null, "cursor")
+  expect(not failed.ok and "no login" in failed.error, failed.error)
+  monkeypatch.setenv("FAKE_EXIT", "2")
+  fakeAgent(tmpPath, monkeypatch, "cursor-agent", [])
+  expect("Cursor ended with 2" in runAdapter(cursorAdapter, analyst(tmpPath), "analysis", work, (e) => null).error)
+
+testGrokGetsItsOwnHomeWithTheMcpServersAndTheUsersLoginAndLeavesNothing(tmpPath: Path, monkeypatch: any) void
+  mine = tmpPath.joinpath("user-grok")
+  mine.mkdir()
+  mine.joinpath("auth.json").writeText("{\"token\": \"t\"}")
+  mine.joinpath("config.toml").writeText("[mcp_servers.other]\ncommand = \"other\"\n")
+  monkeypatch.setenv("GROK_HOME", "${mine}")
+  lines = [{ "type": "user", "text": "the prompt" }, { "type": "tool_call", "id": "t1", "name": "nuclear_check", "input": { "path": "." } }, { "type": "tool_result", "id": "t1", "output": "ok" }, { "type": "thinking", "text": "hmm" }, { "type": "text_delta", "delta": "Grok " }, { "type": "text_delta", "delta": "done." }, { "type": "end", "stopReason": "end_turn" }]
+  log = fakeAgent(tmpPath, monkeypatch, "grok", lines)
+  events: <string, any>[] = []
+  work = agentWork(tmpPath, monkeypatch, "grok-4")
+  out = runAdapter(grokAdapter, analyst(tmpPath), "analysis", work, (e) => events.add(e), "grok")
+  expect(out.ok and out.text == "Grok done." and out.costUsd == 0, "${out.text} ${out.error}")
+  args = log.readText().split("\n")
+  expect(args.take(2) == ["--no-auto-update", "-p"] and args[args.indexOf("--output-format") + 1] == "streaming-json" and "--always-approve" in args, json.dumps(args))
+  expect(args[args.indexOf("--cwd") + 1] == work.root and args[args.indexOf("-m") + 1] == "grok-4" and "--rules\n# Analyst" in args.join("\n") and "Be brief." in args.join("\n"))
+  files = Path("${log}.files").readText()
+  // the run's config: the two servers, the shell denied, not the user's servers; the user's login linked
+  expect("[mcp_servers.nuclear]\ncommand = \"nuclear-mcp\"" in files and "[mcp_servers.nuclear_builder]" in files and "tool = \"bash\"" in files and not ("other" in files) and "\"token\"" in files, files)
+  expect(events.map((e) => e["type"]) == ["tool", "tool-result", "text", "text"])
+  expect(out.usage["inTokens"] == null and out.usage["outTokens"] == null)
+  // the user's files as they were, nothing in the project
+  expect(mine.joinpath("auth.json").readText() == "{\"token\": \"t\"}" and "other" in mine.joinpath("config.toml").readText())
+  expect(not Path(work.root, ".grok").exists())
+  fakeAgent(tmpPath, monkeypatch, "grok", [{ "type": "error", "message": "no key" }])
+  failed = runAdapter(grokAdapter, analyst(tmpPath), "analysis", work, (e) => null, "grok")
+  expect(not failed.ok and "no key" in failed.error, failed.error)
+  // a final result's text wins
+  found: <string, any> = { "text": "", "failed": false }
+  grokLine({ "type": "result", "result": "All." }, (e: <string, any>) => null, found)
+  expect(found["text"] == "All." and found["failed"] == false)

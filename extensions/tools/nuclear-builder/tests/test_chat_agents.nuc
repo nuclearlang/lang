@@ -33,7 +33,7 @@ testTheAgentsOfThisMachineAreOfferedWithWhyNot(tmpPath: Path, monkeypatch: any) 
   root = agentsProject(tmpPath, monkeypatch)
   found = agentsHere(root, down())
   ids = found.map((a) => "${a["id"]}")
-  expect(ids == ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "anthropic", "openai", "google", "openrouter"], json.dumps(ids))
+  expect(ids == ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"], json.dumps(ids))
   byId: <string, any> = {}
   for a in found
     byId["${a["id"]}"] = a
@@ -65,7 +65,7 @@ testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) v
   responder: <string, any> = atlas["responder"]!
   expect(atlas["id"] == "atlas" and atlas["role"] == "chat" and "agente general" in "${(atlas["profile"] as <string, any>)["bio"]}")
   expect(responder["choice"] == "nuclear-developer" and responder["paid"] == false and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "local", "--provider", "nuclear-developer"])
-  expect((responder["choices"] as <string, any>[]).length == 9)
+  expect((responder["choices"] as <string, any>[]).length == 11)
 
 testAChatTurnWithClaudeCodeStreamsItsText(tmpPath: Path) void
   told: <string, any>[] = []

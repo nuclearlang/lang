@@ -594,54 +594,16 @@
    }
   },
   {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-2-repository.51adee",
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-2-repository.3fecd7",
    "type": "spec",
    "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.2 Repository",
-   "summary": "@repository(path = \"character\") repository CharacterRepository @get(path = \":id\") one(id: int) Result<Error, Character> from future import annotations from synapsis import AppError, HttpRepository, Result class CharacterRepository(HttpRepository): path = \"character\" async def one(self, id: int) ->…",
+   "summary": "def alive_since(self, year: int, max_: int = 20) -> Awaitable[list[Character]]: q = self.query() q.where({\"status\": \"alive\", \"year\": gte(year)}) q.order_by(\"name\") q.limit(max_) return q.get_many() A page and a relation: repository ProjectRepository withTasks(id: int) Result<Error, Project>…",
    "body": [
-    "```nuclear",
-    "@repository(path = \"character\")",
-    "repository CharacterRepository",
-    "  @get(path = \":id\")",
-    "  one(id: int) Result<Error, Character>",
-    "```",
-    "",
-    "```python",
-    "from __future__ import annotations",
-    "",
-    "from synapsis import AppError, HttpRepository, Result",
-    "",
-    "class CharacterRepository(HttpRepository):",
-    "    path = \"character\"",
-    "",
-    "    async def one(self, id: int) -> Result[AppError, Character]:",
-    "        return await self.send(\"GET\", \":id\", { \"id\": id }, Character)",
-    "```"
-   ],
-   "platforms": [
-    "backend"
-   ],
-   "agents": false,
-   "sources": [
-    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
-   ],
-   "meta": {
-    "section": "05-backend-dialects",
-    "repo": "nuclearlang",
-    "dialect": "fastapi"
-   }
-  },
-  {
-   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-2-repository.863cd3",
-   "type": "spec",
-   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.2 Repository",
-   "summary": "def alive_since(self, year: int, max: int = 20) -> Awaitable[list[Character]]: q = self.query() q.where({\"status\": \"alive\", \"year\": gte(year)}) q.order_by(\"name\") q.limit(max) return q.get_many() A page and a relation: repository ProjectRepository withTasks(id: int) Result<Error, Project> where({…",
-   "body": [
-    "def alive_since(self, year: int, max: int = 20) -> Awaitable[list[Character]]:",
+    "def alive_since(self, year: int, max_: int = 20) -> Awaitable[list[Character]]:",
     "        q = self.query()",
     "        q.where({\"status\": \"alive\", \"year\": gte(year)})",
     "        q.order_by(\"name\")",
-    "        q.limit(max)",
+    "        q.limit(max_)",
     "        return q.get_many()",
     "```",
     "",
@@ -682,6 +644,44 @@
     "",
     "An HTTP repository (another API, ADR-codegen-0001; nuclear-synapsis-framework/platforms/backend/docs/07-reference/backend.md §2.2): an `HttpRepository` that sends each call through",
     "the `Http` connection (httpx) and validates the answer against the declared type (pydantic):"
+   ],
+   "platforms": [
+    "backend"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclearlang/dialects/python/docs/07-reference/fastapi.md"
+   ],
+   "meta": {
+    "section": "05-backend-dialects",
+    "repo": "nuclearlang",
+    "dialect": "fastapi"
+   }
+  },
+  {
+   "id": "doc:nuclearlang/dialects/python/docs/07-reference/fastapi.md#2-kinds-2-2-repository.51adee",
+   "type": "spec",
+   "title": "Dialect `fastapi` (→ `fastapi`): the `backend` platform in Python — 2.2 Repository",
+   "summary": "@repository(path = \"character\") repository CharacterRepository @get(path = \":id\") one(id: int) Result<Error, Character> from future import annotations from synapsis import AppError, HttpRepository, Result class CharacterRepository(HttpRepository): path = \"character\" async def one(self, id: int) ->…",
+   "body": [
+    "```nuclear",
+    "@repository(path = \"character\")",
+    "repository CharacterRepository",
+    "  @get(path = \":id\")",
+    "  one(id: int) Result<Error, Character>",
+    "```",
+    "",
+    "```python",
+    "from __future__ import annotations",
+    "",
+    "from synapsis import AppError, HttpRepository, Result",
+    "",
+    "class CharacterRepository(HttpRepository):",
+    "    path = \"character\"",
+    "",
+    "    async def one(self, id: int) -> Result[AppError, Character]:",
+    "        return await self.send(\"GET\", \":id\", { \"id\": id }, Character)",
+    "```"
    ],
    "platforms": [
     "backend"

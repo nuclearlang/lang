@@ -96,7 +96,7 @@ The toolchains of the platforms (*Settings and integrations* → Toolchains, and
 |---|---|---|
 | `nuclear.toolchains.python` | `""` | optional: another Python for the fastapi backends; empty: the Python included with NuclearLang, else the PATH's |
 | `nuclear.toolchains.node` | `""` | Node.js for TypeScript, NestJS and React; empty: NuclearLang's own (`nuclear setup node`), else the PATH's |
-| `nuclear.toolchains.flutter` | `""` | Flutter's SDK folder or its `flutter`, required for mobile; empty: NuclearLang's own (`nuclear setup flutter`), else the PATH's |
+| `nuclear.toolchains.flutter` | `""` | Flutter's SDK folder or its `flutter`, required for mobile; empty: the one the Dart extension uses (`dart.flutterSdkPath`), NuclearLang's own (`nuclear setup flutter`), the PATH's, the usual folders (`~/development/flutter`, `~/Developer/flutter`, fvm, Homebrew...) or your login shell's: a Flutter already on the machine is never installed again |
 | `nuclear.toolchains.platforms` | `[]` | the platforms you build; the welcome asks only their toolchains |
 
 Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run,

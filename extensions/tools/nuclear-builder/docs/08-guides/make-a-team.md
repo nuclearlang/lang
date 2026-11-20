@@ -8,7 +8,7 @@ related: [write-a-spec.md, ask-the-team.md, ../02-architecture/teams-and-vault.m
 
 A team is the people you hire from the roster, as many per role as you want: twenty developers if you need them.
 Each member is worked by the local agents on this machine, by a provider's agent (Claude Code, OpenCode, Codex,
-Gemini CLI) or by an API model. Open *Your software company* (the Builder's *Team…*, or *Settings and integrations* →
+Gemini CLI, Cursor, Grok Build) or by an API model. Open *Your software company* (the Builder's *Team…*, or *Settings and integrations* →
 Nuclear Builder) and press **New team**: five steps, *Next, Next*.
 
 1. **Identity**: a logo (pick an image; it shows in the hexagon), the name (the die, *Suggest a name*, rolls a new

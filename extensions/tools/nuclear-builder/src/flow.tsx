@@ -63,7 +63,7 @@ const dur = (s?: { started?: number; ended?: number }) => {
   return ms < 1000 ? ms + ' ms' : ms < 60000 ? (ms / 1000).toFixed(1) + ' s' : Math.floor(ms / 60000) + ' min ' + Math.round((ms % 60000) / 1000) + ' s';
 };
 const status = (ctx: FlowProps, s: string) => ctx.t('flow.status.' + s);
-const PROVIDER_NAME: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
+const PROVIDER_NAME: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
 /** Who does a station's or a step's work: "Claude Code · haiku". */
 const doneBy = (x: { provider?: string; model?: string }) => (x.provider ? (PROVIDER_NAME[x.provider] ?? x.provider) + (x.model ? ' · ' + x.model : '') : '');
 /** The label without the name the card already shows in bold. */

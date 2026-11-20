@@ -9,9 +9,9 @@ use pathlib{ Path }
 // has a model with a price. `nuclear-builder agents --json`, the tool `agents_list`, and the general agent's choices
 // in the chat's host file (`chat-host`).
 
-AGENT_ORDER = ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "anthropic", "openai", "google", "openrouter"]
+AGENT_ORDER = ["nuclear-developer", "claude-code", "opencode", "codex", "gemini-cli", "cursor", "grok", "anthropic", "openai", "google", "openrouter"]
 
-AGENT_LABELS: <string, string> = { "nuclear-developer": "Nuclear Developer", "claude-code": "Claude Code", "opencode": "OpenCode", "codex": "Codex", "gemini-cli": "Gemini CLI", "anthropic": "Anthropic API", "openai": "OpenAI API", "google": "Google API", "openrouter": "OpenRouter API" }
+AGENT_LABELS: <string, string> = { "nuclear-developer": "Nuclear Developer", "claude-code": "Claude Code", "opencode": "OpenCode", "codex": "Codex", "gemini-cli": "Gemini CLI", "cursor": "Cursor", "grok": "Grok Build", "anthropic": "Anthropic API", "openai": "OpenAI API", "google": "Google API", "openrouter": "OpenRouter API" }
 
 // Claude Code's aliases of its latest models; its own default when none is given.
 CLAUDE_MODELS = ["haiku", "sonnet", "opus"]
@@ -70,8 +70,9 @@ whyNotHereSaid(provider: string, prices: <string, any> = {}, env: <string, strin
   if kind == "local"
     return null
   if kind == "agent"
-    command = AGENT_COMMANDS[provider] ?? provider
-    return shutil.which(command, path = (env ?? toolEnv())["PATH"]) == null ? reason("`${command}` is not on the PATH", "notOnPath", [command]) : null
+    paths = env ?? toolEnv()
+    command = agentCommand(provider, paths)
+    return shutil.which(command, path = paths["PATH"]) == null ? reason("`${command}` is not on the PATH", "notOnPath", [command]) : null
   if not (provider in notedProviders())
     return reason("no key: nuclear-builder vault set ${provider}", "noKey", [provider])
   apiModels(provider, prices).isEmpty ? reason("no model with a price: .nuclear/builder.json \"prices\"", "noPrice", [] as string[]) : null
@@ -114,10 +115,11 @@ agentsHere(root: string, transport: httpx.BaseTransport? = null) <string, any>[]
     client.close()
   out.add(agentOf("nuclear-developer", [], "", true, answers ? null : reason("${dev} does not answer: nuclear-builder setup --restart developer", "noAnswer", [dev])))
   for id in AGENT_ORDER.filter((p) => providerKind(p) == "agent")
-    found = shutil.which(AGENT_COMMANDS[id]!, path = env["PATH"])
+    command = agentCommand(id, env)
+    found = shutil.which(command, path = env["PATH"])
     why = whyNotHereSaid(id, {}, env)
     if found == null or why != null
-      out.add(agentOf(id, [], "", false, why ?? reason("`${AGENT_COMMANDS[id]}` is not on the PATH", "notOnPath", [AGENT_COMMANDS[id]!])))
+      out.add(agentOf(id, [], "", false, why ?? reason("`${command}` is not on the PATH", "notOnPath", [command])))
     else if id == "claude-code"
       out.add(agentOf(id, CLAUDE_MODELS, "", true))
     else if id == "opencode"

@@ -1099,27 +1099,6 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.358914",
-   "type": "context",
-   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "and the bar moves as bytes come.",
-   "body": [
-    "and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,",
-    "`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does",
-    "(`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to",
-    "`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\\nuclearlang\\setup.log`), and a failed step is a red box with",
-    "its last lines, the error and what to do, never a traceback."
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5f9bb8",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
@@ -1138,6 +1117,29 @@
     "| The commands | links in `~/.local/bin` (`NUCLEAR_BIN`) | the installation's `bin` |",
     "| The PATH | a marked line in `.bashrc`, `.zshrc`, `.profile`; a `conf.d` file for fish | the user's `Path` |",
     "| Options | `--version <v>`, `--no-modify-path`, `--no-vscode`, `--no-agent`, `--no-ai`, `--profile <id>`, `--uninstall` | `-Version`, `-NoModifyPath`, `-NoVSCode`, `-NoAgent`, `-NoAi`, `-AiProfile`, `-Uninstall` |"
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.8192e1",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "piped, it is plain text.",
+   "body": [
+    "piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows",
+    "PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns",
+    "and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,",
+    "`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does",
+    "(`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to",
+    "`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\\nuclearlang\\setup.log`), and a failed step is a red box with",
+    "its last lines, the error and what to do, never a traceback."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1168,23 +1170,20 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.ed59bb",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.9ebe44",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in yellow, Synapsis in purple, the version and the system.",
+   "summary": "`editor-<command>`, `ai-downloaded`, `ai-verified`, `ai-unpacked`) and the answer to the AI question are written to `~/.local/state/nuclearlang/install.state` (`XDG_STATE_HOME`); the downloads are kept in `~/.cache/nuclearlang/downloads` (`XDG_CACHE_HOME`).",
    "body": [
-    "**The look.** Both open with a box of the header `nuclear` prints (`tools/cli/src/framework/landing.rs`): the",
-    "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in",
-    "yellow, Synapsis in purple, the version and the system. Each long task runs while the loading icon turns: the sign in",
-    "braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) beside its title, a line of what it does,",
-    "and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`",
-    "(yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the",
-    "file is not published, not that the connection failed). The AI services' question is a box of what they are. At the",
-    "end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns), then a",
-    "green box: the command, the editors that got the extension, the AI services, what to run first. `install.sh` colors",
-    "only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);",
-    "piped, it is plain text. `install.ps1` uses the console's colors and builds its symbols from their code points (Windows",
-    "PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns"
+    "**An interrupted install goes on** (`install.sh`). Each finished step (`downloaded`, `verified`, `installed`,",
+    "`editor-<command>`, `ai-downloaded`, `ai-verified`, `ai-unpacked`) and the answer to the AI question are written to",
+    "`~/.local/state/nuclearlang/install.state` (`XDG_STATE_HOME`); the downloads are kept in",
+    "`~/.cache/nuclearlang/downloads` (`XDG_CACHE_HOME`). Run again with the same version, it shows a box of what was",
+    "finished, skips each step whose result is still there (an installation whose `nuclear` runs, an `ai/` whose graph",
+    "runs), continues a cut download where it stopped (`curl -C -`, `wget -c`) and goes on; a file that fails its checksum",
+    "is deleted and its step forgotten, so the next run downloads it anew. Another version starts anew. A finished install",
+    "(or one whose only failure is the AI set-up, which resumes on its own) deletes both; `--uninstall` too. On Ctrl+C every",
+    "process of the running step (curl, tar) is stopped, so nothing keeps writing a file the next run continues."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1196,12 +1195,41 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.39f39f",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.d93393",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in yellow, Synapsis in purple, the version and the system.",
+   "body": [
+    "**The look.** Both open with a box of the header `nuclear` prints (`tools/cli/src/framework/landing.rs`): the",
+    "radiation sign (the same 16 × 12 pixels, `▀`/`▄`), the title in pixel letters (INSTALLER, UNINSTALL), NuclearLang in",
+    "yellow, Synapsis in purple, the version and the system. Each long task runs while the loading icon turns: the sign in",
+    "braille (14 × 12 dots, 12 frames of 10°, the trefoil repeating every 120°) beside its title, a line of what it does,",
+    "and a bar of the bytes against the size the server says (or the seconds). Done is one line `✓` (green), a warning `!`",
+    "(yellow); a failure is a red box with what was being done, the command's last lines and what to do (a 404 says the",
+    "file is not published, not that the connection failed). The AI services' question is a box of what they are. At the",
+    "end `nuclear intro` plays the CLI's mushroom cloud (a release with that command, a terminal of 80 columns); when an",
+    "editor got the extension, a header box with READY in pixel letters names those editors (VS Code, Cursor...) and a",
+    "yellow box says how to start in them (reopen the editor, the Workspace, a new project, a `.nuc` file, the theme",
+    "Chernobyl Soft, the agent's MCP server); then a green box: the command, the AI services, what to run first. `install.sh` colors",
+    "only on a terminal without `NO_COLOR`: 24-bit when `COLORTERM` says so, else the closest of the 256 (macOS Terminal);"
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.8f89dc",
    "type": "context",
    "title": "The installers: overview — The release",
-   "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base.",
+   "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the services print reaches a pipe whole on Windows and under a C locale), and the knowledge base.",
    "body": [
-    "`ai/nuclear-chat/app`: its package is `app`, as the Developer's), and the knowledge base. Before packing it fails if a `.pth` points into the",
+    "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the",
+    "  services print reaches a pipe whole on Windows and under a C locale), and the knowledge base. Before packing it fails if a `.pth` points into the",
     "  checkout, then tries each launcher and the graph's `/v1/health`. `AI_STAGE=<folder>` only stages it",
     "  (`installer/install.sh --ai`).",
     "- `.github/workflows/release.yml`: on a tag `v<version>` (or by hand). Job `archive`: six targets",
@@ -1301,8 +1329,11 @@
    "summary": "1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.",
    "body": [
     "1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.",
-    "2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives and the VS Code extension and",
-    "   publishes them, with `install.sh` and `install.ps1`, in the GitHub release of that tag. It can also be started",
+    "2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
+    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
+    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
+    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
+    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
     "   by hand (`workflow_dispatch`).",
     "3. The public one-liners download from that release: without a release they fail with a clear error.",
     "4. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
@@ -1399,6 +1430,32 @@
    }
   },
   {
+   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.10244b",
+   "type": "guide",
+   "title": "Set up the AI services — 2. The steps",
+   "summary": "Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it).",
+   "body": [
+    "Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it). A program",
+    "   already on the machine is used as it is, with no question; an Ollama that is installed but stopped is started.",
+    "   The models Ollama already has are used as they are; the ones missing are listed with the size, and downloaded",
+    "   only when you say yes (`--yes`: without asking).",
+    "4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine",
+    "   (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of",
+    "   yours), the Nuclear Developer, the models, the knowledge base loaded",
+    "   into the graph (a few seconds with the vectors the release computed; about ten minutes on a processor when they",
+    "   cannot be downloaded), and the services started. A step that fails says why and is",
+    "   tried again from there."
+   ],
+   "sources": [
+    "installer/docs/08-guides/ai-setup.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.305f2f",
    "type": "guide",
    "title": "Set up the AI services — 2. The steps",
@@ -1416,31 +1473,6 @@
     "   | NuclearLang | the `nuclear` command, the code of the services | its installer |",
     "   | [uv](https://docs.astral.sh/uv/) | the Python environments of the services (it brings its own Python) | its installer, in your user folder |",
     "   | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |"
-   ],
-   "sources": [
-    "installer/docs/08-guides/ai-setup.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.53dadf",
-   "type": "guide",
-   "title": "Set up the AI services — 2. The steps",
-   "summary": "Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it).",
-   "body": [
-    "Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it). A program",
-    "   already on the machine is used as it is, with no question; an Ollama that is installed but stopped is started.",
-    "   The models Ollama already has are used as they are; the ones missing are listed with the size, and downloaded",
-    "   only when you say yes (`--yes`: without asking).",
-    "4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine",
-    "   (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of",
-    "   yours), the Nuclear Developer, the models, the knowledge base loaded",
-    "   into the graph (about ten minutes the first time on a processor; later only what changed), and the services started. A step that fails says why and is",
-    "   tried again from there."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1544,7 +1576,7 @@
    "summary": "Only the Smart Graph runs on your machine, with its own model (EmbeddingGemma in ONNX, 0.3 GB; no Ollama), and the MCP server, which the set-up adds to every AI client it finds.",
    "body": [
     "Only the Smart Graph runs on your machine, with its own model (EmbeddingGemma in ONNX, 0.3 GB; no Ollama), and the MCP server,",
-    "which the set-up adds to every AI client it finds. Claude Code, Codex, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
+    "which the set-up adds to every AI client it finds. Claude Code, Codex, Grok Build, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
     "([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). Your agent also gets the Smart Graph: the strategy of each request and the search of the knowledge base. What you",
     "give up: the Builder panel of the editor and the local agents themselves, so your remote",
     "agent writes every line the generators do not and all of it is paid tokens."
@@ -1625,7 +1657,7 @@
     "  you had, without questions.",
     "- **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama",
     "  (`ollama rm <model>` frees their disk).",
-    "- **A client installed later** (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`",
+    "- **A client installed later** (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`",
     "  adds the MCP server to it.",
     "- **Remove:** `nuclear-builder setup --remove` takes the services away, and the MCP server out of each AI client;",
     "  Ollama, its models and the graph's data stay. `--remove --all` also takes away everything the set-up installed",
@@ -1795,7 +1827,7 @@
     "|---|---|---|---|",
     "| The command line tool | `tools/cli/` | The `nuclear` command: the compiler's commands (build, check, fix, fmt, help, spec, defs, contracts, dialect, agent) and the framework's (new, make, gen, run, test, install, migrate, add, devices...) | [cli/AGENTS.md](cli/AGENTS.md) |",
     "| The code generator | `tools/code_generator/` | The crate `nuclear-codegen`: what `nuclear new`, `make` and `gen` write, from each platform's `generators.toml` | [code_generator/AGENTS.md](code_generator/AGENTS.md) |",
-    "| The MCP server | `tools/mcp/` | `nuclear-mcp`, a Nuclear project of its own: the tools an AI client (Claude Code, Codex, Cursor, OpenCode) calls: the generators, the compiler, the command line, the Smart Graph, the local developer, the internet | [mcp/AGENTS.md](mcp/AGENTS.md) |"
+    "| The MCP server | `tools/mcp/` | `nuclear-mcp`, a Nuclear project of its own: the tools an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) calls: the generators, the compiler, the command line, the Smart Graph, the local developer, the internet | [mcp/AGENTS.md](mcp/AGENTS.md) |"
    ],
    "sources": [
     "tools/AGENTS.md"
@@ -3961,7 +3993,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.db0e21",
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.c4ae61",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
    "summary": "setup doctor [--json] what NuclearLang and Synapsis need: CLIs, dialect, package, the toolchains, VS Code (--json: the toolchains, for the editor) setup [flutter] [--dir ~/develop] install Flutter step by step (system packages, SDK, PATH) setup node | python Nuclear's own Node.js (nestjs, react)…",
@@ -3976,7 +4008,7 @@
     "",
     "options",
     "  --project <dir>   project folder (default: the folder with main.nuc, here or above)",
-    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)",
+    "  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter..., your shell's PATH)",
     "```"
    ],
    "sources": [

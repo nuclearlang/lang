@@ -15,7 +15,7 @@ export const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'deli
 /** Who may do a role, by kind (teams.nuc's PROVIDERS). */
 export const PROVIDERS = {
   local: ['nuclear-developer'],
-  agent: ['claude-code', 'codex', 'gemini-cli', 'opencode'],
+  agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'],
   api: ['anthropic', 'openai', 'google', 'openrouter'],
 } as const;
 export type Kind = keyof typeof PROVIDERS;

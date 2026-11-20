@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import * as path from 'node:path';
 import test from 'node:test';
-import { onPath, ownPaths, parseDoctor, probe, serverCandidates, toolchainEnv } from '../src/toolchains';
+import { dartFlutterRoot, onPath, ownPaths, parseDoctor, probe, serverCandidates, toolchainEnv } from '../src/toolchains';
 
 const ROOT = '/opt/nuc';
 const base = { NUCLEAR_INSTALL: ROOT, PATH: '/usr/bin:/bin' };
@@ -73,4 +73,11 @@ test("the language server is the installer's first; the bundled Linux build is n
   const linux = serverCandidates('/ext', env, 'linux', 'x64');
   assert.equal(linux[0], path.join('/inst', 'bin', 'nuclear-lsp'));
   assert.ok(linux.includes(path.join('/ext', 'server', 'nuclear-lsp')));
+});
+
+test("the Dart extension's Flutter is used: no second Flutter is offered", () => {
+  const has = (f: string) => f === path.join('/sdk/flutter', 'bin', 'flutter') || f === path.join('/b/flutter', 'bin', 'flutter');
+  assert.equal(dartFlutterRoot('/sdk/flutter', undefined, has, 'darwin'), '/sdk/flutter');
+  assert.equal(dartFlutterRoot('', ['/gone', '/b/flutter'], has, 'darwin'), '/b/flutter');
+  assert.equal(dartFlutterRoot(undefined, ['/gone'], has, 'darwin'), undefined);
 });

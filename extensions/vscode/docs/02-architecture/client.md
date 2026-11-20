@@ -22,7 +22,12 @@ of a dialect.
 
 The toolchains' settings (`nuclear.toolchains.*`) are in the environment of every process the extension starts and
 every terminal: `NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`/`FLUTTER`, which `nuclear` reads before its own and
-the PATH ([ai-services.md](ai-services.md#the-toolchains-toolchainsts-toolchainhostts)).
+the PATH ([ai-services.md](ai-services.md#the-toolchains-toolchainsts-toolchainhostts)); with no Flutter setting and no
+Flutter variable, the Dart extension's `dart.flutterSdkPath` (or `dart.flutterSdkPaths`) is `FLUTTER_ROOT`.
+
+The language server (`serverCandidates`, `toolchains.ts`): `nuclear.server.path`, else the installer's
+`<installation>/bin/nuclear-lsp` (this system's own build), the PATH, the build bundled in `server/` (a Linux x86_64
+build: only on Linux x86_64), a build of the repository.
 
 Settings: `nuclear.dialect` (`flutter` by default; `base` checks only the base language), `nuclear.dialectPaths`,
 `nuclear.server.path`, `nuclear.trace.server`.

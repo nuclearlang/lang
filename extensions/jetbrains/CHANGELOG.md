@@ -4,6 +4,8 @@ All notable changes to nuclear-jetbrains are written here; versions follow [Sema
 
 ## Unreleased
 
+- 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).
+
 - 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build).
 
 - 0.74.0: no change of its own (`nuclear run` writes the project's run log; the VS Code devices' and Serve's steps).

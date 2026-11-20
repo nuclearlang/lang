@@ -755,7 +755,7 @@
    "id": "limit:remote-agents-only",
    "type": "limit",
    "title": "Limit: a machine set up for remote agents only",
-   "summary": "With the profile `remote` only the Smart Graph runs on the machine, with its own small model (0.3 GB, no Ollama): no local agents. The MCP server gives a remote agent (Claude Code, Codex, Cursor, OpenCode) the generators, the compiler, the command line, the internet tools and the `graph_*` tools; the `developer_*` tools are absent, and the Builder panel of the editor does not work.",
+   "summary": "With the profile `remote` only the Smart Graph runs on the machine, with its own small model (0.3 GB, no Ollama): no local agents. The MCP server gives a remote agent (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) the generators, the compiler, the command line, the internet tools and the `graph_*` tools; the `developer_*` tools are absent, and the Builder panel of the editor does not work.",
    "body": [
     "- The remote agent writes every line the generators do not write, and all of it is paid tokens. With a local profile the local agents write it and the remote agent only leads, validates and corrects.",
     "- The strategy of a request (`graph_strategy`) and the search of the knowledge base work: the Smart Graph runs in every profile (ADR-installer-0004, ADR-graph-0003).",

@@ -71,6 +71,9 @@ What the agents, the strategies and the generators still lack is in their own pr
 
 ## Untested
 
+- **Grok Build in the step `clients`** (`grok mcp list|add|remove`, from xAI's documentation of 2026-11-20): tested with
+  its command stubbed, never against a real `grok`.
+
 - **The workbench in a running VS Code** (0.59.0): its page was checked rendered standalone in a headless browser
   (English and Spanish, an empty project, two runs at once, the form, folded columns) and its clicks
   there (the accordion picks the node, the tree opens a spec, the form saves with its component). Never opened in VS
@@ -108,6 +111,15 @@ What the agents, the strategies and the generators still lack is in their own pr
   2.2.7) and tested with their commands stubbed; no paid call was made. OpenCode's `--format json` lines and Codex's
   and Gemini CLI's whole adapters (`adapter_codex.nuc`, `adapter_gemini_cli.nuc`: not installed on the machine they
   were written on) follow their documentation only.
+- **Cursor and Grok Build with a real call** (`adapter_cursor.nuc`, `adapter_grok.nuc`, 2026-11-19): written from
+  their documentation and tested with their commands stubbed; neither CLI was installed. Not tried against the real
+  ones: that `agent -p` loads a `--plugin-dir` plugin's `mcp.json` and runs its `beforeShellExecution` hook (the
+  shell's denial) in a headless run; that `agent`'s real path names Cursor on macOS and Windows as on Linux; Grok's
+  `streaming-json` events (undocumented: read defensively, providers.md says what was assumed) and whether they
+  carry tokens (not reported until they are known); that Grok reads the run's `GROK_HOME` with the user's entries
+  linked (its login among them: a login refreshed by a rename during the run would be lost with the temporary
+  folder; `XAI_API_KEY` has no such risk; on Windows without the right to link, only `XAI_API_KEY` works). Neither
+  lists its models here yet (Cursor has `agent --list-models`).
 - **The API adapters with a real call** (Anthropic, OpenAI, Google, OpenRouter): HTTP stubbed only. OpenAI's and
   Google's prices are the project's (`.nuclear/builder.json` `"prices"`); a model without one is refused.
 - **The vault on macOS and Windows** (`security`, the password vault through PowerShell): written, never ran.

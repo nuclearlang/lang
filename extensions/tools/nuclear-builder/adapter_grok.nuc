@@ -1,0 +1,85 @@
+use os
+use json
+use pathlib{ Path }
+
+// The Grok Build adapter (`grok -p`, xAI's CLI). UNTESTED against a real Grok Build: it is not installed on the
+// machine this was written on; the flags are those of its documented headless mode (`--no-auto-update`, `-p`,
+// `--output-format streaming-json`, `--always-approve`, `--cwd`, `--rules`, `-m`). Grok has no flag for an MCP
+// configuration: the run gets its own `GROK_HOME` in its temporary folder, every entry of the user's (`GROK_HOME`,
+// else `~/.grok`: the login, the sessions, the skills) linked into it but `config.toml`, which is the run's: the
+// Nuclear MCP server and the Builder's (`[mcp_servers.*]`) and the shell denied (`[permission]`, a deny rule holds
+// under `--always-approve`). The role goes to `--rules` (added to the system prompt). The lines of `streaming-json`
+// are not documented: they are read defensively (the text of any event that carries one, a final event's result,
+// an error). Grok brings its own login (`grok login` or `XAI_API_KEY`); its tokens are not reported, its cost 0.
+
+// The run's `GROK_HOME`: the user's entries linked, its own `config.toml`.
+renderGrokHome(work: Work, at: Path) <string, string>
+  home = at.joinpath("grok-home")
+  home.mkdir()
+  given: string = os.environ.get("GROK_HOME") ?? ""
+  mine = given.isEmpty ? Path.home().joinpath(".grok") : Path(given)
+  if mine.isDir()
+    for one in mine.iterdir()
+      if one.name != "config.toml"
+        try
+          home.joinpath(one.name).symlinkTo(one, targetIsDirectory = one.isDir())
+        catch e
+          // shortcut: no link (Windows without the right to make one): the run needs `XAI_API_KEY`
+          if not isinstance(e, OSError)
+            throw e
+  servers: string[] = []
+  for name, server in mcpServers(work.mcpCommand, work.root)
+    servers.add("[mcp_servers.${name}]\ncommand = ${json.dumps(server["command"])}\nargs = ${json.dumps(server["args"])}\n")
+  home.joinpath("config.toml").writeText("${servers.join("\n")}\n[permission]\nrules = [{ action = \"deny\", tool = \"bash\" }]\n")
+  env = toolEnv()
+  env["GROK_HOME"] = "${home}"
+  env
+
+grokArgs(role: Role, prompt: string, work: Work) string[]
+  args = ["grok", "--no-auto-update", "-p", prompt, "--output-format", "streaming-json", "--always-approve", "--cwd", work.root, "--rules", role.text()]
+  if work.model.length > 0
+    args.addAll(["-m", work.model])
+  args
+
+// One line of `--output-format streaming-json` (undocumented): a tool call or its result, an error, the end with its
+// result, or a piece of the answer (a delta added, a whole text kept; the prompt and the thinking are not the answer).
+grokLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, any>) void
+  kind = "${ev["type"] ?? ev["event"] ?? ""}"
+  piece = ev["text"] ?? ev["content"] ?? ev["delta"]
+  if "tool" in kind
+    id = ev["id"] ?? ev["tool_call_id"] ?? ev["call_id"]
+    if "result" in kind or ev["status"] == "completed" or ev["status"] == "error"
+      emit({ "type": "tool-result", "id": id, "ok": ev["status"] != "error" and ev["is_error"] != true and ev["error"] == null, "text": "${ev["output"] ?? ev["result"] ?? piece ?? ""}".substring(0, 20000) })
+    else
+      emit({ "type": "tool", "id": id, "tool": "${ev["name"] ?? ev["tool_name"] ?? ev["tool"] ?? kind}", "input": json.dumps(ev["input"] ?? ev["arguments"] ?? ev["args"] ?? {}).substring(0, 4000) })
+  else if kind == "error" or ev["is_error"] == true
+    found["failed"] = true
+    found["text"] = "${ev["message"] ?? json.dumps(ev["error"] ?? ev)}"
+  else if kind in ["result", "done", "end", "final"] or ev["stopReason"] != null or ev["stop_reason"] != null
+    said = ev["result"] ?? piece
+    if isinstance(said, str)
+      found["text"] = said
+  else if isinstance(piece, str) and ev["role"] != "user" and not ("user" in kind or "thinking" in kind or "reasoning" in kind)
+    text = "${piece}"
+    delta = "delta" in kind or "chunk" in kind or ev["delta"] != null
+    found["text"] = delta ? "${found["text"] ?? ""}${text}" : text
+    emit({ "type": "text", "text": text })
+
+grokAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  at = renderDir("grok")
+  events: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  try
+    env = renderGrokHome(work, at)
+    ran = streamCommand(grokArgs(role, stationPrompt(role, station, work, false), work), work.root, env, (line) => onGrokLine(line, say, found), work.timeoutMs)
+    agentOutcome("Grok Build", ran, found, events, work)
+  finally
+    dropRenderDir(at)
+
+onGrokLine(line: string, emit: (e: <string, any>) => void, found: <string, any>) void
+  ev = jsonLine(line)
+  if ev != null
+    grokLine(ev!, emit, found)

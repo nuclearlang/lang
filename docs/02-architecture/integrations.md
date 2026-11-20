@@ -15,7 +15,7 @@ related: []
 | The commands of `nuclear` and their JSON output | `tools/cli/` | the extensions, the agents, the MCP server | `tools/cli/docs/` |
 | What `new`, `make` and `gen` write (`Wrote::Created` / `Kept`, `generators.toml`) | `tools/code_generator/` | `tools/cli/` | `tools/code_generator/docs/` |
 | The devices (`nuclear device`, `nuclear terminal-device`) | `device-emulators/` | `tools/cli/` | `device-emulators/docs/` |
-| MCP tools (stdio, `nuclear-mcp`) | `tools/mcp/` | Claude Code, Codex, Cursor, OpenCode | `tools/mcp/docs/` |
+| MCP tools (stdio, `nuclear-mcp`) | `tools/mcp/` | Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI | `tools/mcp/docs/` |
 | The graph's HTTP API (127.0.0.1:7878, a token per client) | `nuclear-graph-storage/` | the Developer, the MCP server, the editors | `nuclear-graph-storage/docs/` |
 | The Developer's HTTP API (127.0.0.1:7879) | `nuclear-agents/nuclear_developer/` | the pipeline tool, Nuclear Atlas, the MCP server | `nuclear-agents/nuclear_developer/docs/` |
 | A backend's published contract (OpenAPI, `/.nuclear/contract.json`) | a backend project | mobile and web projects (`contracts(...)`) | `nuclear-synapsis-framework/docs/` |

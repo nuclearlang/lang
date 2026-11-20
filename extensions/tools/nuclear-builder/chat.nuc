@@ -86,7 +86,7 @@ keyLines(body: string) <string, any>?
 
 // The kind of a provider when the editor does not say it.
 kindOf(provider: string) string
-  provider == "nuclear-developer" ? "local" : provider in ["claude-code", "opencode", "codex", "gemini-cli"] ? "agent" : "api"
+  provider == "nuclear-developer" ? "local" : provider in PROVIDERS["agent"]! ? "agent" : "api"
 
 // Every file of the roles' folder, as it is: what the chat's agent must leave as it found it.
 roleFiles(dir: Path?) <string, any>

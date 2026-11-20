@@ -4,12 +4,24 @@ use shutil
 use tempfile
 use subprocess
 use httpx
+use pathlib{ Path }
 
 // *Check the connections*: before the first station runs, everything the run's team will use is checked: the
 // Nuclear Developer, the Smart Graph, Ollama and the models of the local roles; the command line of each agent; a key
 // in the vault for each API provider; the MCP server; free disk in the project and the temporary folder.
 
-AGENT_COMMANDS: <string, string> = { "claude-code": "claude", "opencode": "opencode", "codex": "codex", "gemini-cli": "gemini" }
+AGENT_COMMANDS: <string, string> = { "claude-code": "claude", "opencode": "opencode", "codex": "codex", "gemini-cli": "gemini", "cursor": "agent", "grok": "grok" }
+
+// The command of an agent provider on this PATH. Cursor's CLI is `agent`, a generic name: it is Cursor's only when
+// its real path names Cursor (its installer's link into `~/.local/share/cursor-agent/`), else the older
+// `cursor-agent`; with no `agent` at all, `agent` (what is missing is said as the current name).
+agentCommand(provider: string, env: <string, string>) string
+  if provider != "cursor"
+    return AGENT_COMMANDS[provider] ?? provider
+  found = shutil.which("agent", path = env["PATH"])
+  if found != null and "cursor" in "${Path(found!).resolve()}".lower()
+    return "agent"
+  found == null and shutil.which("cursor-agent", path = env["PATH"]) == null ? "agent" : "cursor-agent"
 
 check(name: string, ok: boolean, detail: string) <string, any>
   { "name": name, "ok": ok, "detail": detail }
@@ -59,8 +71,7 @@ checkConnections(team: <string, any>, root: string, config: <string, any>, trans
   finally
     client.close()
   for provider in roles.filter((r) => r["kind"] == "agent").map((r) => "${r["provider"]}").unique()
-    command = AGENT_COMMANDS[provider]!
-    out.add(versionCheck(command, env))
+    out.add(versionCheck(agentCommand(provider, env), env))
   for provider in roles.filter((r) => r["kind"] == "api").map((r) => "${r["provider"]}").unique()
     try
       kept = vaultKey(provider, 0) != null

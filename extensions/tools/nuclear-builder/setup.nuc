@@ -769,7 +769,7 @@ removeJsonEntry(file: Path, table: string) string?
 
 // Whether this machine has an AI client the step `clients` can give the MCP server to.
 anyAiClient() boolean
-  which("claude") != null or which("codex") != null or jsonClients().any((c) => which(c.command) != null or Path(c.folder).isDir())
+  which("claude") != null or which("codex") != null or which("grok") != null or jsonClients().any((c) => which(c.command) != null or Path(c.folder).isDir())
 
 // The step `clients`: the server added to every AI client of this machine.
 connectClients(say: (line: string) => void) void
@@ -789,12 +789,20 @@ connectClients(say: (line: string) => void) void
     else
       ran = capture(["codex", "mcp", "add", "nuclear", "--", command])
       say(ran.code == 0 ? "Codex: added the nuclear MCP server" : "Codex: ${ran.out.trim()}")
+  // Grok Build keeps its servers in ~/.grok/config.toml, written by its own command
+  if which("grok") != null
+    found = true
+    if Regex(r"\bnuclear\b").test(capture(["grok", "mcp", "list"]).out)
+      say("Grok Build: the nuclear MCP server is already there")
+    else
+      ran = capture(["grok", "mcp", "add", "nuclear", "--", command])
+      say(ran.code == 0 ? "Grok Build: added the nuclear MCP server" : "Grok Build: ${ran.out.trim()}")
   for c in jsonClients()
     if which(c.command) != null or Path(c.folder).isDir()
       found = true
       say("${c.name}: ${addJsonEntry(Path(c.file), c.table, mcpEntry(c.name, command))}")
   if not found
-    say("no AI client found (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): run this step again after installing one (nuclear-builder setup --clients), or add `${command}` as an MCP server by hand")
+    say("no AI client found (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI): run this step again after installing one (nuclear-builder setup --clients), or add `${command}` as an MCP server by hand")
 
 // The server taken out of every client, when the services are removed (its command goes with them).
 disconnectClients(say: (line: string) => void) void
@@ -804,6 +812,9 @@ disconnectClients(say: (line: string) => void) void
   if which("codex") != null and Regex(r"\bnuclear\b").test(capture(["codex", "mcp", "list"]).out)
     capture(["codex", "mcp", "remove", "nuclear"])
     say("Codex: removed the nuclear MCP server")
+  if which("grok") != null and Regex(r"\bnuclear\b").test(capture(["grok", "mcp", "list"]).out)
+    capture(["grok", "mcp", "remove", "nuclear"])
+    say("Grok Build: removed the nuclear MCP server")
   for c in jsonClients()
     done = removeJsonEntry(Path(c.file), c.table)
     if done != null
@@ -817,7 +828,7 @@ Step(id: string, title: string)
 // What a step does, in one line a user reads while it runs (the installer's and the set-up's terminal).
 STEP_ABOUT: <string, string> = {
   "graph": "The commands of the Smart Graph and the MCP server, linked from the AI archive",
-  "clients": "Claude Code, Codex, Cursor, OpenCode and Gemini CLI get Nuclear's MCP server",
+  "clients": "Claude Code, Codex, Grok Build, Cursor, OpenCode and Gemini CLI get Nuclear's MCP server",
   "graph-model": "EmbeddingGemma for ONNX Runtime, and the vectors this release computed for the knowledge base",
   "developer": "The service of the local agents, which plan, write and review code",
   "models": "The local agents' models, downloaded by Ollama",

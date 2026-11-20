@@ -22,6 +22,8 @@ the tokens its provider reports. A count the provider did not report is `null` (
 | `opencode` | each `step_finish`'s `tokens.input` + `cache.read` + `cache.write`, summed | `tokens.output` + `tokens.reasoning` | asked |
 | `codex` | each `turn.completed`'s `usage.input_tokens`, summed | `output_tokens` | asked |
 | `gemini-cli` | the result's `stats.input_tokens` | `stats.output_tokens` | asked |
+| `cursor` | not reported (its `stream-json` has no tokens) | not reported | the `system`/`init` line's `model` |
+| `grok` | not reported (its `streaming-json` is not documented) | not reported | asked |
 | the APIs | each turn's tokens (the loop of `adapter_api.nuc`), summed | each turn's, summed | asked |
 | `nuclear-developer` | the reply's `usage.inTokens` (Ollama's `prompt_eval_count`, summed over the request's model calls) | `usage.outTokens` (`eval_count`) | `usage.model` |
 

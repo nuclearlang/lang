@@ -153,7 +153,7 @@ setup
 
 options
   --project <dir>   project folder (default: the folder with main.nuc, here or above)
-  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)
+  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter..., your shell's PATH)
 ```
 
 ## `nuclear gen`

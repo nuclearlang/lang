@@ -4,6 +4,7 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- 0.77.0: a Flutter already on the machine is used, never installed again: the one the Dart extension uses (`dart.flutterSdkPath`), more usual folders (`~/Developer/flutter`, Homebrew, puro...) and, last, the PATH of your login shell. Nuclear Builder: Cursor (its `agent` CLI) and xAI's Grok Build (`grok`) can work a team member and answer the chat, like Claude Code, Codex, Gemini CLI and OpenCode. Each gets the Nuclear MCP server and the Builder's for the run only (Cursor in a plugin of the run, Grok in a home of its own), never written into your files, and no shell. Neither reports its tokens: the reports say *not reported*. Written from their documentation; not yet tried against the real CLIs.
 - 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons).
 
 - 0.75.0: the Smart Graph needs no Ollama (it runs its own embeddings model), so the setting `nuclear.ai.models.embeddings` is gone (an old value is ignored) and the set-up page shows the graph's model as a step of its own; the installer puts this extension in every editor of the VS Code family it finds (VS Code, Insiders, Cursor, VSCodium, Windsurf; on macOS inside their apps).

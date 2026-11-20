@@ -40,7 +40,7 @@ you want in Nuclear Chat; the member that answers uses the Builder's tools, the 
 ## Any agent, not only the chat
 
 The Builder's tools are an MCP server, `nuclear-builder mcp`. The factory gives it to every agent it runs (Claude
-Code, OpenCode, Codex, Gemini CLI, an API model) beside `nuclear-mcp`. To give it to your own agent in a project:
+Code, OpenCode, Codex, Gemini CLI, Cursor, Grok Build, an API model) beside `nuclear-mcp`. To give it to your own agent in a project:
 
 ```sh
 claude mcp add nuclear_builder -- nuclear-builder mcp --root /path/to/project

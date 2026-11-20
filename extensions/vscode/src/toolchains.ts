@@ -135,3 +135,13 @@ export function serverCandidates(extensionDir: string, env: NodeJS.ProcessEnv = 
     path.join(extensionDir, '..', 'target', 'debug', exe),
   ];
 }
+
+/**
+ * The Flutter SDK the Dart extension already uses (`dart.flutterSdkPath`, or the first of `dart.flutterSdkPaths` that
+ * holds an SDK): with no setting of Nuclear's and no variable, it is Flutter's root for `nuclear`, so a Flutter already
+ * on the machine is never offered again.
+ */
+export function dartFlutterRoot(sdkPath: unknown, sdkPaths: unknown, exists: Exists = fs.existsSync, platform: NodeJS.Platform = process.platform): string | undefined {
+  const all = [sdkPath, ...(Array.isArray(sdkPaths) ? sdkPaths : [])].filter((p): p is string => typeof p === 'string' && p.trim() !== '');
+  return all.map((p) => p.trim()).find((p) => exists(flutterBin(p, platform)));
+}

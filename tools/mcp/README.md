@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/mcp)
 
-The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang, over stdio. Its tools:
+The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio. Its tools:
 the **generators**, the **local developer**, the **Smart Graph** and the **compiler**.
 
 ## Why

@@ -434,8 +434,8 @@ window.Squad = (() => {
   const COLOR = { analyst: '#a970ff', architect: '#3b9dff', developer: '#f5a524', qa: '#14c8d8', devops: '#ff4d6d' };
   // the stations each role works (roles.nuc's STATION_ROLE), the roles' order
   const WORKS = { analyst: ['analysis'], architect: ['design'], developer: ['tests', 'code'], qa: ['quality'], devops: ['delivery'] };
-  const PROVIDERS = { local: ['nuclear-developer'], agent: ['claude-code', 'codex', 'gemini-cli', 'opencode'], api: ['anthropic', 'openai', 'google', 'openrouter'] };
-  const PNAME = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
+  const PROVIDERS = { local: ['nuclear-developer'], agent: ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'], api: ['anthropic', 'openai', 'google', 'openrouter'] };
+  const PNAME = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
   const MODELS = { 'nuclear-developer': ['qwen2.5-coder:3b', 'gemma4:e2b', 'qwen2.5-coder:1.5b'], 'claude-code': ['haiku', 'sonnet', 'opus'] };
   const STATIONS = ['analysis', 'design', 'tests', 'code', 'quality', 'delivery'];
   const BEHAVIOURS = ['askBeforeWriting', 'explainDecisions', 'stopAtFirstFailure'];
@@ -1109,7 +1109,7 @@ window.Squad = (() => {
   /** What a provider is: local, agent (an agent's command line) or api (a model paid per token with a key). */
   const kindOfProvider = (p) => Object.keys(PROVIDERS).find((k) => PROVIDERS[k].includes(p)) ?? agentOf(p)?.kind ?? 'api';
   // the account an agent's command line works on (its group says it)
-  const ACCOUNT = { 'claude-code': 'Claude', opencode: 'OpenCode', codex: 'ChatGPT', 'gemini-cli': 'Google' };
+  const ACCOUNT = { 'claude-code': 'Claude', opencode: 'OpenCode', codex: 'ChatGPT', 'gemini-cli': 'Google', cursor: 'Cursor', grok: 'xAI' };
   const provName = (p) => agentOf(p)?.label ?? (PNAME[p] ?? p) + (kindOfProvider(p) === 'api' ? ' API' : '');
   /** A provider with its kind: "Claude Code (agent)", "Anthropic API (model)", "Nuclear Developer (local)". */
   const provKind = (p) => provName(p) + ' (' + t('sq.kindWord.' + kindOfProvider(p)) + ')';

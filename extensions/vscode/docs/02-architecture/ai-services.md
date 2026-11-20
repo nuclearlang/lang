@@ -31,7 +31,7 @@ extension runs it as a process, one call per action, and keeps no process of it 
   PATH's.
 - The steps, in order, each can run again: the graph and the MCP server (the archive's launchers linked onto the
   PATH; from source `uv tool install`, editable), the AI clients (the MCP server added to every client found:
-  Claude Code and Codex with their `mcp add`, Cursor, OpenCode and Gemini CLI in their JSON files, the rest of each file
+  Claude Code, Codex and Grok Build with their `mcp add`, Cursor, OpenCode and Gemini CLI in their JSON files, the rest of each file
   kept; spec 016), the Developer (in the archive; from source `nuclear install` and
   the `nuclear-developer` launcher), the models (Ollama's `/api/pull`), the ports (each service keeps its port when
   it already runs there, else the first one from 7878 / 7879 / 7880 (Nuclear Chat) upward it can listen on, written to `ai.env`;

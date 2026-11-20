@@ -45,6 +45,9 @@ const AGENTS = [
   { id: 'claude-code', name: 'Claude Code', setting: 'nuclear.ai.claude.command', fallback: 'claude' },
   { id: 'codex', name: 'Codex', setting: 'nuclear.ai.codex.command', fallback: 'codex', enable: 'nuclear.ai.codex.enabled' },
   { id: 'gemini-cli', name: 'Gemini CLI', fallback: 'gemini' },
+  // Cursor's `agent` is a generic name: its installer's `cursor-agent` is asked, never someone else's `agent`
+  { id: 'cursor', name: 'Cursor', fallback: 'cursor-agent' },
+  { id: 'grok', name: 'Grok Build', fallback: 'grok' },
   { id: 'opencode', name: 'OpenCode', setting: 'nuclear.ai.opencode.command', fallback: 'opencode', enable: 'nuclear.ai.opencode.enabled' },
 ];
 const API_PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter'];
@@ -342,7 +345,7 @@ function tcSummary() {
 function summaryPage() {
   if (!summary) return { out: '<h2>' + esc(t('step.summary')) + '</h2><div class="muted">…</div>', nav: navBtns(8, null) };
   const m = summary.machine, sp = summary.spending, keys = summary.vault ? Object.entries(summary.vault).filter(([, v]) => v).map(([k]) => t('api.' + k)) : [];
-  const PN = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
+  const PN = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
   // the members by role: how many, and who works the first (the one a station takes)
   const byRole = {}; for (const x of summary.team?.members ?? []) (byRole[x.role] ??= []).push(x);
   const roles = Object.entries(byRole).map(([r, xs]) => t('sq.role.' + r) + (xs.length > 1 ? ' ×' + xs.length : '') + ': ' + (PN[xs[0].provider] ?? xs[0].provider) + (xs[0].model ? ' · ' + xs[0].model : '')).join(' · ');

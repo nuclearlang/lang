@@ -7758,7 +7758,10 @@
     "  (`NUCLEAR_INSTALLED_OLLAMA`) and what it downloaded (`NUCLEAR_PULLED_MODELS`), and only that is removed.",
     "- Ollama on Linux was installed into the system by its own installer: removing it needs the administrator, so",
     "  without a terminal the set-up says the commands instead of running them.",
-    "- `nuclear-builder setup --remove` alone (the editors' button) still keeps Ollama, the models and the data."
+    "- `nuclear-builder setup --remove` alone (the editors' button) still keeps Ollama, the models and the data.",
+    "- On Windows the services are processes of the installation (no service manager): they are stopped before anything",
+    "  is removed, or Windows keeps the files they hold; the uninstaller says when a folder could not be removed instead",
+    "  of reporting it done (found by `installer-windows.yml`, 2026-11-20)."
    ],
    "agents": false,
    "sources": [
@@ -9028,11 +9031,12 @@
    "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#consequences",
    "type": "adr",
    "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Consequences",
-   "summary": "ingests embed only what changed), and up to about 2.3 GB of memory while it runs (1.1 GB after it).",
+   "summary": "minutes on a processor instead of under 3 with Ollama on a GPU, and up to about 2.3 GB of memory while it runs (1.1 GB after it); with them it takes seconds.",
    "body": [
     "- Positive: the graph needs nothing on the machine; `remote` installs no Ollama; the model is half Ollama's size.",
-    "- Negative: the first ingest takes about 9 minutes on a processor instead of under 3 with Ollama on a GPU (later",
-    "  ingests embed only what changed), and up to about 2.3 GB of memory while it runs (1.1 GB after it). One question",
+    "- Negative: without the release's vectors (a release before 0.1.8, no connection) the first ingest takes about 9",
+    "  minutes on a processor instead of under 3 with Ollama on a GPU, and up to about 2.3 GB of memory while it runs",
+    "  (1.1 GB after it); with them it takes seconds. Later ingests embed only what changed. One question",
     "  of the 188 is missed: \"how do I delete or close a conversation and search old messages in nuclear chat\" finds",
     "  `can:workplace-chat` fourth instead of in the first three."
    ],
@@ -9068,7 +9072,7 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#decision",
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#decision.d6e79d",
    "type": "adr",
    "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Decision",
    "summary": "licence), run inside the server's process by ONNX Runtime and `tokenizers`.",
@@ -9081,7 +9085,33 @@
     "  model`, a step of the set-up; else the first search). Hugging Face's cache keeps links to its blobs, which ONNX",
     "  Runtime refuses for a model's data file.",
     "- Texts are embedded in batches of at most 4096 tokens, the shortest first, without ONNX Runtime's memory arena: the",
-    "  memory of a batch grows with the square of its longest text."
+    "  memory of a batch grows with the square of its longest text.",
+    "- Each release computes the vectors of its knowledge base once (`nuclear-graph embeddings`, the release's job",
+    "  `embeddings`) and publishes them as `nuclearlang-embeddings-<version>.npz` with its `.sha256`: one file for every",
+    "  system, since a vector depends only on the text and the model. The set-up downloads it into the data folder",
+    "  (`models/embeddings.npz`); an ingest takes each vector it holds (keyed by the export and the exact text) and gives"
+   ],
+   "agents": false,
+   "sources": [
+    "nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/docs/03-adr/0003-the-graph-runs-its-own-embeddings-model.md#decision.e57719",
+   "type": "adr",
+   "title": "ADR-graph-0003: The graph runs its own embeddings model (EmbeddingGemma in ONNX), with no Ollama — Decision",
+   "summary": "only the rest to the model, which is then loaded only if something is missing.",
+   "body": [
+    "only the rest to the model, which is then loaded only if something is missing. The store itself cannot be shipped:",
+    "  its documents are sealed with a key of each machine.",
+    "- The release starts from the previous release's file (`nuclear-graph embeddings --reuse`): the texts that did not",
+    "  change keep their vectors and only the changed ones are computed, so a release of code or UI computes none (7 s",
+    "  instead of 10 minutes)."
    ],
    "agents": false,
    "sources": [

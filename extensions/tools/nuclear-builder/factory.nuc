@@ -24,7 +24,7 @@ STATION_TASK: <string, string> = { "analysis": "Read the spec as the client's re
 STRATEGY_STATIONS: <string, string> = { "generate": "design", "plan": "design", "test": "tests", "code": "code", "verify": "quality", "security": "quality" }
 
 // The adapter of each provider.
-ADAPTERS: <string, (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome> = { "nuclear-developer": localAdapter, "claude-code": claudeCodeAdapter, "opencode": openCodeAdapter, "codex": codexAdapter, "gemini-cli": geminiCliAdapter, "anthropic": anthropicAdapter, "openai": openAIAdapter, "google": googleAdapter, "openrouter": openRouterAdapter }
+ADAPTERS: <string, (role: Role, station: string, work: Work, emit: (e: <string, any>) => void) => Outcome> = { "nuclear-developer": localAdapter, "claude-code": claudeCodeAdapter, "opencode": openCodeAdapter, "codex": codexAdapter, "gemini-cli": geminiCliAdapter, "cursor": cursorAdapter, "grok": grokAdapter, "anthropic": anthropicAdapter, "openai": openAIAdapter, "google": googleAdapter, "openrouter": openRouterAdapter }
 
 // A run that cannot go on now: it waits for an answer of the user (a gate, the spending), or for a command.
 RunStop(message: string) : RuntimeError(message)

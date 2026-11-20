@@ -78,7 +78,7 @@ export function settingSections(context: vscode.ExtensionContext): SettingSectio
 }
 
 const isAssignment = (p: { type?: string; properties?: Record<string, unknown> }) => p.type === 'object' && !!p.properties?.kind && !!p.properties?.provider;
-const NAMES: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
+const NAMES: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
 const CHOICES = () => (Object.keys(PROVIDERS) as (keyof typeof PROVIDERS)[]).map((kind) => ({
   kind,
   label: kind === 'local' ? l10n.t('The local agents (free)') : kind === 'agent' ? l10n.t("A provider's agent (its own login)") : l10n.t("A provider's model through an API (a key in the vault)"),

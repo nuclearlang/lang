@@ -43,7 +43,7 @@ An agent asks the same with the MCP tool `metrics` ("how much did the team spend
 
 - **Measured, never estimated.** The tokens are the provider's own counts (Claude Code's usage, OpenCode's steps,
   Codex's and Gemini CLI's turns, the APIs' usage, Ollama's counts for the local agents). A provider that reports none
-  is counted as *not reported*, not as a guess.
+  (Cursor and Grok Build today) is counted as *not reported*, not as a guess.
 - **Local against paid**: the local agents cost nothing in money; their tokens and time are still counted.
 - **Runs of before**: the runs a project made before this version are copied into the ledger once, with what their
   files had (their money and times; no tokens nor lines).

@@ -1,0 +1,77 @@
+use sys
+use json
+use pathlib{ Path }
+
+// The Cursor adapter (`agent -p`, Cursor's CLI; `cursor-agent` on older installs: `agentCommand`). UNTESTED against
+// a real Cursor CLI: it is not installed on the machine this was written on; the flags are those of its documented
+// headless mode (`-p`, `--output-format stream-json`, `--force`, `--approve-mcps`, `--trust`, `--workspace`,
+// `--plugin-dir`, `--model`). Cursor has no flag for an MCP configuration: the Nuclear MCP server and the Builder's
+// come in a plugin of the run's temporary folder (`--plugin-dir`: its `mcp.json`), which also denies the shell (a
+// `beforeShellExecution` hook that exits 2, `failClosed`: `--force` lets everything run that is not denied). The
+// role is given at the head of the prompt. Cursor brings its own login (`agent login` or `CURSOR_API_KEY`) and
+// reports neither tokens nor cost: its tokens are not reported, its cost 0.
+
+// Writes the plugin given to `--plugin-dir`: its manifest, the two MCP servers and the hook that denies the shell.
+renderCursorPlugin(work: Work, at: Path) Path
+  plugin = at.joinpath("plugin")
+  plugin.joinpath(".cursor-plugin").mkdir(parents = true)
+  plugin.joinpath(".cursor-plugin", "plugin.json").writeText(json.dumps({ "name": "nuclear-factory", "version": "1.0.0", "description": "NuclearLang's software factory, for one run." }))
+  plugin.joinpath("mcp.json").writeText(json.dumps({ "mcpServers": mcpServers(work.mcpCommand, work.root) }, indent = 2))
+  plugin.joinpath("hooks").mkdir()
+  deny = "\"${sys.executable}\" -c \"raise SystemExit(2)\""
+  plugin.joinpath("hooks", "hooks.json").writeText(json.dumps({ "version": 1, "hooks": { "beforeShellExecution": [{ "command": deny, "failClosed": true }] } }, indent = 2))
+  plugin
+
+cursorArgs(command: string, prompt: string, work: Work, plugin: Path) string[]
+  args = [command, "-p", "--output-format", "stream-json", "--force", "--approve-mcps", "--trust", "--workspace", work.root, "--plugin-dir", "${plugin}"]
+  if work.model.length > 0
+    args.addAll(["--model", work.model])
+  [...args, prompt]
+
+// One line of `--output-format stream-json`: the session's start, a message, a tool call that started or ended, the
+// end with its result.
+cursorLine(ev: <string, any>, emit: (e: <string, any>) => void, found: <string, any>) void
+  kind = "${ev["type"] ?? ""}"
+  if kind == "system" and ev["subtype"] == "init"
+    found["model"] = ev["model"] ?? ""
+  else if kind == "assistant"
+    message: <string, any> = ev["message"] ?? ({} as <string, any>)
+    parts: <string, any>[] = message["content"] ?? []
+    text = parts.filter((c) => c["type"] == "text").map((c) => "${c["text"] ?? ""}").join("")
+    if text.length > 0
+      found["text"] = text
+      emit({ "type": "text", "text": text })
+  else if kind == "tool_call"
+    // `tool_call` holds one key, the tool's kind (`readToolCall`, `function`, …): its `args` and, when it ended, its `result`
+    call: <string, any> = ev["tool_call"] ?? ({} as <string, any>)
+    name = call.keys.isEmpty ? "tool" : "${call.keys.first}"
+    body: <string, any> = call[name] ?? ({} as <string, any>)
+    tool = "${body["name"] ?? name.replace("ToolCall", "")}"
+    if ev["subtype"] == "completed"
+      result: <string, any> = body["result"] ?? ({} as <string, any>)
+      emit({ "type": "tool-result", "id": ev["call_id"], "ok": result["error"] == null, "text": json.dumps(result["success"] ?? result).substring(0, 20000) })
+    else
+      emit({ "type": "tool", "id": ev["call_id"], "tool": tool, "input": json.dumps(body["args"] ?? body["arguments"] ?? {}).substring(0, 4000) })
+  else if kind == "result"
+    found["text"] = ev["result"] ?? found["text"]
+    found["failed"] = ev["is_error"] == true or (ev["subtype"] != null and ev["subtype"] != "success")
+
+cursorAdapter(role: Role, station: string, work: Work, emit: (e: <string, any>) => void) Outcome
+  at = renderDir("cursor")
+  events: <string, any>[] = []
+  found: <string, any> = { "text": "", "cost": 0.0, "failed": false }
+  say = (e: <string, any>) =>
+    events.add(e)
+    emit(e)
+  try
+    env = toolEnv()
+    prompt = "## The ${role.title} of the software factory\n\n${role.text()}\n\n${stationPrompt(role, station, work, false)}"
+    ran = streamCommand(cursorArgs(agentCommand("cursor", env), prompt, work, renderCursorPlugin(work, at)), work.root, env, (line) => onCursorLine(line, say, found), work.timeoutMs)
+    agentOutcome("Cursor", ran, found, events, work)
+  finally
+    dropRenderDir(at)
+
+onCursorLine(line: string, emit: (e: <string, any>) => void, found: <string, any>) void
+  ev = jsonLine(line)
+  if ev != null
+    cursorLine(ev!, emit, found)

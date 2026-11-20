@@ -18,7 +18,7 @@ USAGE = """
                                   services, now and at every login (--yes: no questions, the suggested profile)
   nuclear-builder setup --status [--json]      what is installed and running
   nuclear-builder setup --clients              adds the MCP server to every AI client of this machine (Claude Code,
-                                  Codex, Cursor, OpenCode, Gemini CLI): after installing a client
+                                  Codex, Grok Build, Cursor, OpenCode, Gemini CLI): after installing a client
   nuclear-builder setup --remove               takes the services away (Ollama, its models and the graph's data stay)
   nuclear-builder setup --remove --all         also what the set-up installed and made: its models, Ollama when it
                                                installed it, the graph's and the chat's data and secrets, its folder
@@ -586,4 +586,4 @@ main(argv: string[]? = null) void
 
 // What the set-up's last line says of the AI clients: they have the MCP server only when one was found.
 clientsLine() string
-  anyAiClient() ? "Your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients." : "No AI client was found (Claude Code, Codex, Cursor, OpenCode, Gemini CLI): after installing one, nuclear-builder setup --clients."
+  anyAiClient() ? "Your AI clients have the MCP server (nuclear-mcp); a client installed later: nuclear-builder setup --clients." : "No AI client was found (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI): after installing one, nuclear-builder setup --clients."

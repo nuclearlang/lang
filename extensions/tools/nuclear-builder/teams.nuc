@@ -17,7 +17,7 @@ use pathlib{ Path }
 // `factory/settings.json` (`{ "defaultTeam": "<id>" }`).
 
 // The providers of each kind (design.md "Who does a role").
-PROVIDERS: <string, string[]> = { "local": ["nuclear-developer"], "agent": ["claude-code", "codex", "gemini-cli", "opencode"], "api": ["anthropic", "openai", "google", "openrouter"] }
+PROVIDERS: <string, string[]> = { "local": ["nuclear-developer"], "agent": ["claude-code", "codex", "gemini-cli", "opencode", "cursor", "grok"], "api": ["anthropic", "openai", "google", "openrouter"] }
 
 DEFAULT_BUDGET = 5.0
 

@@ -295,3 +295,32 @@ testTheMcpServerIsAddedToAClientsFileAndTakenOutKeepingTheRest(tmpPath: Path) vo
   expect("wrote" in addJsonEntry(empty, "mcpServers", mcpEntry("Cursor", "nuclear-mcp")) and "nuclear" in empty.readText())
   expect(mcpEntry("Gemini CLI", "nuclear-mcp") == { "command": "nuclear-mcp" })
   expect(jsonClients({ "XDG_CONFIG_HOME": "/cfg" })[1].file == "${Path("/cfg", "opencode", "opencode.json")}")
+
+// Grok Build gets the MCP server with its own command (`grok mcp add`), once, and loses it with the services.
+testGrokBuildGetsTheMcpServerOnceAndLosesItOnRemove(tmpPath: Path, monkeypatch: any) void
+  servers: string[] = []
+  calls: string[][] = []
+  fake = (args: string[], cwd: string? = null) =>
+    calls.add(args)
+    if args[1] == "mcp" and args[2] == "list"
+      return Ran(0, servers.join("\n"))
+    if args[1] == "mcp" and args[2] == "add"
+      servers.add(args[3])
+    if args[1] == "mcp" and args[2] == "remove"
+      servers.remove(args[3])
+    Ran(0, "")
+  monkeypatch.setattr("nuclear_builder.setup.capture", fake)
+  monkeypatch.setattr("nuclear_builder.setup.which", (name: string) => name == "grok" ? "/bin/grok" : null)
+  monkeypatch.setattr("nuclear_builder.setup.home", () => tmpPath)
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath(".config")}")
+  said: string[] = []
+  connectClients((l) => said.add(l))
+  expect(said == ["Grok Build: added the nuclear MCP server"], "${said}")
+  add = calls.find((c) => c[2] == "add")!
+  expect(add[0] == "grok" and add[3] == "nuclear" and add[4] == "--", "${add}")
+  said.clear()
+  connectClients((l) => said.add(l))
+  expect(said == ["Grok Build: the nuclear MCP server is already there"], "${said}")
+  said.clear()
+  disconnectClients((l) => said.add(l))
+  expect(said == ["Grok Build: removed the nuclear MCP server"] and servers.isEmpty, "${said}")

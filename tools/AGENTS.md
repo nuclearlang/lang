@@ -7,7 +7,7 @@ documents itself; open the `AGENTS.md` of the one the task touches.
 |---|---|---|---|
 | The command line tool | `tools/cli/` | The `nuclear` command: the compiler's commands (build, check, fix, fmt, help, spec, defs, contracts, dialect, agent) and the framework's (new, make, gen, run, test, install, migrate, add, devices...) | [cli/AGENTS.md](cli/AGENTS.md) |
 | The code generator | `tools/code_generator/` | The crate `nuclear-codegen`: what `nuclear new`, `make` and `gen` write, from each platform's `generators.toml` | [code_generator/AGENTS.md](code_generator/AGENTS.md) |
-| The MCP server | `tools/mcp/` | `nuclear-mcp`, a Nuclear project of its own: the tools an AI client (Claude Code, Codex, Cursor, OpenCode) calls: the generators, the compiler, the command line, the Smart Graph, the local developer, the internet | [mcp/AGENTS.md](mcp/AGENTS.md) |
+| The MCP server | `tools/mcp/` | `nuclear-mcp`, a Nuclear project of its own: the tools an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) calls: the generators, the compiler, the command line, the Smart Graph, the local developer, the internet | [mcp/AGENTS.md](mcp/AGENTS.md) |
 
 ## How they lean on each other
 

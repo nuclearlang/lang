@@ -747,13 +747,13 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.b5e353",
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.ab55c5",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
    "summary": "Where the code is",
    "body": [
     "| `adapter.nuc` | the providers' interface (`Role`, `Work`, `Outcome` with its `usage`, `runAdapter`), the role composed from its folder, the documents, the files changed, a command's lines, the retries |",
-    "| `adapter_local.nuc`, `adapter_claude_code.nuc`, `adapter_opencode.nuc`, `adapter_codex.nuc`, `adapter_gemini_cli.nuc` | the `local` and `agent` adapters, one per provider |",
+    "| `adapter_local.nuc`, `adapter_claude_code.nuc`, `adapter_opencode.nuc`, `adapter_codex.nuc`, `adapter_gemini_cli.nuc`, `adapter_cursor.nuc`, `adapter_grok.nuc` | the `local` and `agent` adapters, one per provider |",
     "| `adapter_api.nuc`, `api_anthropic.nuc`, `api_openai.nuc`, `api_google.nuc`, `api_openrouter.nuc` | the factory's loop for the `api` providers (the MCP server as a client, the prices, the budget) and each one's wire format |",
     "| `tests/*.nuc` | the tests (pytest): the set-up, the teams, the vault, the adapters, the agents (their commands stubbed), the APIs (HTTP stubbed), the factory (the Developer stubbed), the specs, the chat and the members (their providers stubbed), the reports (`test_metrics.nuc`: the usage of each agent, the ledger, a fixture ledger's views), with `tests/support.nuc`; `test_compat.nuc` loads the files of earlier versions kept in `tests/fixtures/compat/` (teams, runs, flat specs, the line, an older chat; the release's backward-compatibility battery) |",
     "| `src/runs.ts` | a run for the editors: the run file's types, the spec's markdown, `LineRun` (one run's process: `nuclear-builder … --events`), `lineJson`; no `vscode` import |"
@@ -2358,7 +2358,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.c6fc06",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.f5c673",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
    "summary": "The commands (`line.nuc`, `cli.nuc`)",
@@ -2368,7 +2368,7 @@
     "| `nuclear-builder connections`, `read <path>` | *Check the connections*; a file of the project as text (PDF, `.pptx`, markdown) |",
     "| `nuclear-builder mcp [--root <dir>]` | the Builder's MCP server: every command above as a tool ([actions.md](actions.md)) |",
     "| `nuclear-builder team …`, `vault …` | the teams and the keys ([teams-and-vault.md](teams-and-vault.md)) |",
-    "| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)) |"
+    "| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -2712,7 +2712,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.5597b9",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.41bc22",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)",
    "summary": "matter, the skills the team switched on, its templates and `checks.toml`) and the member's `instructions` (a base agent's text first) and the skills of the team and the member (`assigned.sharedSkills`, `library.nuc` `withSkills`: the member's own over the team's, the team's over the library's;…",
@@ -2722,13 +2722,38 @@
     "  agent's text first) and the skills of the team and the member (`assigned.sharedSkills`, `library.nuc`",
     "  `withSkills`: the member's own over the team's, the team's over the library's; `role.sources` says where each one",
     "  that is not the role's comes from). Every adapter renders them as the role's skills: Claude Code's plugin",
-    "  `skills/<id>/SKILL.md`, OpenCode's `.opencode/agent/<role>.md`, Codex's `AGENTS.md`, Gemini CLI's `GEMINI.md`, an",
+    "  `skills/<id>/SKILL.md`, OpenCode's `.opencode/agent/<role>.md`, Codex's `AGENTS.md`, Gemini CLI's `GEMINI.md`, Cursor's prompt, Grok Build's `--rules`, an",
     "  API model's system prompt (`role.text()`), and the local Developer's `context` (`role.sharedText()` first and whole,",
     "  the documents in what is left); `tests/test_skills.nuc` renders every skill of the library for each one. The role's files are only read. A role whose folder is not there yet gets one line of mission",
     "  that says so. `role.text()` is the whole role as one text.",
     "- `Work`: the project, the spec's folder (`specs/<component>/[<layer>/]<id>/`), the task, the documents of the stations before, the documents to write, the",
-    "  model, the step's budget (USD), the MCP server's command, the timeout, and `inputs` (the platform, a route, the",
-    "  retries, an httpx transport in tests, a key, the project's prices)."
+    "  model, the step's budget (USD), the MCP server's command, the timeout, and `inputs` (the platform, a route, the"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.63e84d",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)",
+   "summary": "retries, an httpx transport in tests, a key, the project's prices).",
+   "body": [
+    "retries, an httpx transport in tests, a key, the project's prices).",
+    "- `Outcome`: ok, the last text, the documents (written into the spec's folder by an agent, else found in the answer",
+    "  after `--- document: <name> ---` lines, or the whole answer when one was asked), the project files it changed",
+    "  (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error,",
+    "  and the `usage` (`{inTokens, outTokens, costUsd, ms, provider, model}`, stamped by `runAdapter`; a count the provider",
+    "  does not report is null; each provider's source: [reports.md](reports.md)).",
+    "- Events, one shape for every provider: `text`, `tool` (`id`, `tool`, `input`), `tool-result` (`id`, `ok`,",
+    "  `text`), `cost` (`usd`), `tokens`, `retry`, `trace`.",
+    "- `runAdapter` turns an exception into a failed outcome. `stationPrompt` is the task every provider gets: the role",
+    "  and station, the documents before, the templates of the documents to write."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2758,20 +2783,23 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#the-providers-one-interface-an-adapter-each-adapter-nuc-api-nuc.f40fe8",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.17b255",
    "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)",
-   "summary": "after `--- document: <name> ---` lines, or the whole answer when one was asked), the project files it changed (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error, and the `usage` (`{inTokens, outTokens, costUsd, ms, provider,…",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "`GROK_HOME` of its own in the temporary folder, each entry of the user's (`GROK_HOME`, else `~/.grok`: the login, the sessions, the skills) linked into it, and its own `config.toml` with `[mcp_servers.nuclear]`, `[mcp_servers.nuclear_builder]` and `[permission] rules = [{ action = \"deny\", tool =…",
    "body": [
-    "- `Outcome`: ok, the last text, the documents (written into the spec's folder by an agent, else found in the answer",
-    "  after `--- document: <name> ---` lines, or the whole answer when one was asked), the project files it changed",
-    "  (two snapshots: not `build/`, `.nuclear/`, `node_modules/`…, nor the spec's folder), the cost, the events, the error,",
-    "  and the `usage` (`{inTokens, outTokens, costUsd, ms, provider, model}`, stamped by `runAdapter`; a count the provider",
-    "  does not report is null; each provider's source: [reports.md](reports.md)).",
-    "- Events, one shape for every provider: `text`, `tool` (`id`, `tool`, `input`), `tool-result` (`id`, `ok`,",
-    "  `text`), `cost` (`usd`), `tokens`, `retry`, `trace`.",
-    "- `runAdapter` turns an exception into a failed outcome. `stationPrompt` is the task every provider gets: the role",
-    "  and station, the documents before, the templates of the documents to write."
+    "- **Grok Build** (`adapter_grok.nuc`): no flag nor variable gives it an MCP configuration but its home: the run gets a",
+    "  `GROK_HOME` of its own in the temporary folder, each entry of the user's (`GROK_HOME`, else `~/.grok`: the login,",
+    "  the sessions, the skills) linked into it, and its own `config.toml` with `[mcp_servers.nuclear]`,",
+    "  `[mcp_servers.nuclear_builder]` and `[permission] rules = [{ action = \"deny\", tool = \"bash\" }]` (a deny holds under",
+    "  `--always-approve`); the user's `config.toml` is not read for that run, and their files are never written. The",
+    "  role is `--rules`. Its `streaming-json` events are **not documented**: the adapter assumes JSON objects with a",
+    "  `type` (or `event`); a `tool…` one is a call, or its result when its type says `result` or its `status` ended; an",
+    "  `error` (or `is_error`) fails the call; a `result`/`done`/`end`/`final` one (or one with a `stopReason`) gives the",
+    "  answer when it carries `result` or `text`; any other with a `text`, `content` or `delta` string is a piece of the",
+    "  answer (added when it is a delta or a chunk), but the user's prompt and the thinking. No tokens nor cost are read.",
+    "  Its login: `grok login` or `XAI_API_KEY`.",
+    "- The flags of `claude` were checked against Claude Code 2.1.327's `--help`, those of `opencode` against OpenCode"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2783,40 +2811,13 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.1485f2",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.22e5e5",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "`.nuclear/builder.json` `\"prices\": { \"<provider>/<model>\": [input, output] }`, USD per million tokens).",
+   "summary": "taken); OpenCode `opencode models`; Codex, Gemini CLI, Cursor and Grok Build list none here (their own default, or a model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI `GET /v1/models` without the embedding, audio and image models,…",
    "body": [
-    "`.nuclear/builder.json` `\"prices\": { \"<provider>/<model>\": [input, output] }`, USD per million tokens).",
-    "- A chat's turn (`inputs.stream`, Nuclear Chat) adds `--include-partial-messages` to `claude`: its",
-    "  `stream_event` lines' `text_delta`s are `text-delta` events, the answer as it is written; a run never streams.",
-    "- Which agents are on this machine is `nuclear-builder agents --json` (`chat_agents.nuc`, the tool `agents_list`):",
-    "  an agent when its command is on the tools' PATH (Claude Code's models are its aliases `haiku`, `sonnet`, `opus`;",
-    "  OpenCode's are `opencode models` when it answers in 5 s, else one typed by hand; Codex's and Gemini CLI's their",
-    "  own default), an API provider when the vault notes its key (`vault.json`, the keyring is not opened for a list)",
-    "  and it has a priced model (`PRICES`, the project's `prices`).",
-    "- Which models each provider offers is `nuclear-builder models [--provider <id>] [--fresh] --json` (`models.nuc`, the",
-    "  tool `models_list`), from the provider itself (spec 011 requirement 35): Claude Code its aliases `fable`, `opus`,",
-    "  `sonnet`, `haiku` and the full ids of the price table (`claude --help`: an alias or a model's full name; free text",
-    "  taken); OpenCode `opencode models`; Codex and Gemini CLI list none from their command line (their own default, or a"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.1f6e7d",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI `GET /v1/models` without the embedding, audio and image models, Google `models` with `generateContent`, OpenRouter `api/v1/models`: free calls), else its priced models, each said…",
-   "body": [
-    "model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI",
+    "taken); OpenCode `opencode models`; Codex, Gemini CLI, Cursor and Grok Build list none here (their own default, or a",
+    "  model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI",
     "  `GET /v1/models` without the embedding, audio and image models, Google `models` with `generateContent`, OpenRouter",
     "  `api/v1/models`: free calls), else its priced models, each said `priced` or not (a run needs a price; OpenRouter",
     "  reports each call's cost); the local agents every model Ollama has installed (`/api/tags`, the embedding models",
@@ -2826,8 +2827,7 @@
     "  Each model says what it is (`modelNamed`): its `family`, its `version` and a `label` (`claude-opus-5-5` → opus",
     "  5.5, `qwen2.5-coder:3b` → qwen2.5-coder 3b, `gemini-2.5-pro` → gemini 2.5 pro), `alias` for an alias, whose",
     "  version is `latest`. Claude Code lists each alias followed by every version of its family it accepts, the newest",
-    "  first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·",
-    "  opus 5.5 (claude-opus-5-5)*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*) and every"
+    "  first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2839,7 +2839,27 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.273bf2",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.2441f3",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "Who does a role",
+   "body": [
+    "| `api` | `anthropic` | `api_anthropic.nuc` | the Messages API, `anthropic-version: 2026-10-21` | the system prompt; the MCP tools as client tools | tokens × `PRICES` |",
+    "| `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |",
+    "| `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |",
+    "| `api` | `openrouter` | `api_openrouter.nuc` | Chat Completions at OpenRouter with `usage.include` | as OpenAI | what OpenRouter reports |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.5519de",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
    "summary": "developer) and the Builder's, `nuclear-builder mcp --root <project>` (`nuclear_builder`: every action of the Builder's pages, actions.md), from `mcpServers(command, root)` (`adapter.nuc`); its command is `NUCLEAR_BUILDER_COMMAND`, else `nuclear-builder`.",
@@ -2848,15 +2868,14 @@
     "  developer) and the Builder's, `nuclear-builder mcp --root <project>` (`nuclear_builder`: every action of the",
     "  Builder's pages, [actions.md](actions.md)), from `mcpServers(command, root)` (`adapter.nuc`); its command is",
     "  `NUCLEAR_BUILDER_COMMAND`, else `nuclear-builder`. OpenCode gets both in its `mcp` table, Codex as `-c",
-    "  mcp_servers.*`, Gemini CLI in its settings, the API loop as two clients (each call goes to the server that has the",
+    "  mcp_servers.*`, Gemini CLI in its settings, Cursor in a plugin, Grok Build in a `GROK_HOME` of its own, the API loop as two clients (each call goes to the server that has the",
     "  tool).",
     "- An agent's command runs in the project with the tools' PATH (`streamCommand`): each stdout line as it comes, the",
     "  process group killed after the timeout (exit -9). The temporary folder is removed after the call: nothing goes",
     "  into the user's files. No agent gets a shell: commands are data (`.nuclear/builder.json`).",
     "- The API loop (`adapter_api.nuc`, `apiLoop`): `nuclear-mcp` and `nuclear-builder mcp` started in the project, `initialize`, `tools/list`,",
     "  then up to `MAX_TURNS` (30) turns: the model answers, each tool it calls goes to the server (`tools/call`), the",
-    "  results go back. The key comes from the vault (`vaultKey`). Before every turn the step's cost is held against its",
-    "  budget; a model with no price is refused before any call (`PRICES` has Anthropic's of 2026-11-03; others go in"
+    "  results go back. The key comes from the vault (`vaultKey`). Before every turn the step's cost is held against its"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2868,15 +2887,23 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.2daa24",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.607694",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer `needsUser` for a too-big one, applied only after the user's yes.",
+   "summary": "budget; a model with no price is refused before any call (`PRICES` has Anthropic's of 2026-11-03; others go in `.nuclear/builder.json` `\"prices\": { \"<provider>/<model>\": [input, output] }`, USD per million tokens).",
    "body": [
-    "tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer",
-    "  `needsUser` for a too-big one, applied only after the user's yes.",
-    "- The flags of `claude` were checked against Claude Code 2.1.327's `--help`, those of `opencode` against OpenCode",
-    "  2.2.7's. Codex and Gemini CLI are written from their documented headless modes, untested here (roadmap)."
+    "budget; a model with no price is refused before any call (`PRICES` has Anthropic's of 2026-11-03; others go in",
+    "  `.nuclear/builder.json` `\"prices\": { \"<provider>/<model>\": [input, output] }`, USD per million tokens).",
+    "- A chat's turn (`inputs.stream`, Nuclear Chat) adds `--include-partial-messages` to `claude`: its",
+    "  `stream_event` lines' `text_delta`s are `text-delta` events, the answer as it is written; a run never streams.",
+    "- Which agents are on this machine is `nuclear-builder agents --json` (`chat_agents.nuc`, the tool `agents_list`):",
+    "  an agent when its command is on the tools' PATH (Claude Code's models are its aliases `haiku`, `sonnet`, `opus`;",
+    "  OpenCode's are `opencode models` when it answers in 5 s, else one typed by hand; Codex's, Gemini CLI's, Cursor's and Grok Build's their",
+    "  own default), an API provider when the vault notes its key (`vault.json`, the keyring is not opened for a list)",
+    "  and it has a priced model (`PRICES`, the project's `prices`).",
+    "- Which models each provider offers is `nuclear-builder models [--provider <id>] [--fresh] --json` (`models.nuc`, the",
+    "  tool `models_list`), from the provider itself (spec 011 requirement 35): Claude Code its aliases `fable`, `opus`,",
+    "  `sonnet`, `haiku` and the full ids of the price table (`claude --help`: an alias or a model's full name; free text"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2888,45 +2915,13 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.359c20",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.a08d60",
    "type": "context",
    "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a key*, *Local — this machine, free*).",
+   "summary": "2.2.7's.",
    "body": [
-    "group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a",
-    "  key*, *Local — this machine, free*). The general agent's chat is the exception: its local choice offers only the machine's chat",
-    "  model (`CHAT_MODEL`, [chat.md](chat.md)).",
-    "- **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and",
-    "  `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows",
-    "  `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per",
-    "  weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at",
-    "  Ollama's default context), and its fit `fitOf`: **too-big** when the need passes the machine's memory less what",
-    "  the system and the editor keep (2 GB, or 15% of a bigger machine), since it can make the computer freeze or",
-    "  restart; **tight** when it passes the memory free now (it swaps unless other programs give memory back); else",
-    "  **fits**. A margin, not a measure; the GPU's own memory is not counted. The pickers draw too-big in red and ask",
-    "  before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.992c0a",
-   "type": "context",
-   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
-   "summary": "Who does a role",
-   "body": [
-    "| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |",
-    "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |",
-    "| `api` | `anthropic` | `api_anthropic.nuc` | the Messages API, `anthropic-version: 2026-10-21` | the system prompt; the MCP tools as client tools | tokens × `PRICES` |",
-    "| `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |",
-    "| `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |",
-    "| `api` | `openrouter` | `api_openrouter.nuc` | Chat Completions at OpenRouter with `usage.include` | as OpenAI | what OpenRouter reports |"
+    "2.2.7's. Codex, Gemini CLI, Cursor and Grok Build are written from their documented headless modes, untested here",
+    "  (roadmap)."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -2948,6 +2943,83 @@
     "| `local` | `nuclear-developer` | `adapter_local.nuc` | HTTP: a route per station (`LOCAL_ROUTES`, or `inputs.route`), watched while it waits (`inputs.watch`: cut after the call's limit or `stallSeconds` with nothing working on it) and retried with `backoff` on a passing failure | the body's `role`, `task`, `context` | 0 |",
     "| `agent` | `claude-code` | `adapter_claude_code.nuc` | `claude -p --output-format stream-json --verbose --mcp-config --strict-mcp-config --plugin-dir --append-system-prompt --tools Read,Write,Edit,Glob,Grep --allowedTools … mcp__nuclear mcp__nuclear_builder --no-session-persistence [--model] [--max-budget-usd]` | a plugin in the run's temporary folder: `skills/<name>/SKILL.md`, the sub-agent `agents/<role>.md`; and the session's system prompt | `total_cost_usd` |",
     "| `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.cea30f",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "opus 5.5 (claude-opus-5-5)*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*) and every group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a key*, *Local — this machine, free*).",
+   "body": [
+    "opus 5.5 (claude-opus-5-5)*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*) and every",
+    "  group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a",
+    "  key*, *Local — this machine, free*). The general agent's chat is the exception: its local choice offers only the machine's chat",
+    "  model (`CHAT_MODEL`, [chat.md](chat.md)).",
+    "- **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and",
+    "  `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows",
+    "  `Win32_OperatingSystem`), the model's need `memoryNeed` = its size on disk (else its parameters × the bytes per",
+    "  weight of its quantization: Q4 0.58, Q8 1.06, F16 2…) × 1.2 (the runner's buffers) + 1 GB (the context's cache at",
+    "  Ollama's default context), and its fit `fitOf`: **too-big** when the need passes the machine's memory less what",
+    "  the system and the editor keep (2 GB, or 15% of a bigger machine), since it can make the computer freeze or",
+    "  restart; **tight** when it passes the memory free now (it swaps unless other programs give memory back); else",
+    "  **fits**. A margin, not a measure; the GPU's own memory is not counted. The pickers draw too-big in red and ask"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.d49056",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "Who does a role",
+   "body": [
+    "| `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |",
+    "| `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |",
+    "| `agent` | `cursor` | `adapter_cursor.nuc` | `agent -p --output-format stream-json --force --approve-mcps --trust --workspace <root> --plugin-dir <plugin> [--model] <prompt>` (`cursor-agent` when `agent` is not Cursor's), the MCP servers in the plugin's `mcp.json` | the role's text at the head of the prompt (shell denied by the plugin's hook) | 0 (tokens not reported) |",
+    "| `agent` | `grok` | `adapter_grok.nuc` | `grok --no-auto-update -p <prompt> --output-format streaming-json --always-approve --cwd <root> --rules <role> [-m]`, `GROK_HOME` in the temporary folder | `--rules`, added to the system prompt (shell denied in the run's `config.toml`) | 0 (tokens not reported) |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/providers.md#who-does-a-role.f99d7d",
+   "type": "context",
+   "title": "The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`) — Who does a role",
+   "summary": "before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer `needsUser` for a too-big one, applied only after the user's yes.",
+   "body": [
+    "before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or",
+    "  tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer",
+    "  `needsUser` for a too-big one, applied only after the user's yes.",
+    "- **Cursor** (`adapter_cursor.nuc`): its command is `agent`, a generic name, taken as Cursor's only when its real path",
+    "  names Cursor (the installer links `~/.local/bin/agent` into `~/.local/share/cursor-agent/`), else the older",
+    "  `cursor-agent` (`agentCommand`, `preflight.nuc`: *Check the connections* and `agents --json` ask the same). Cursor has",
+    "  no flag for an MCP configuration (only `.cursor/mcp.json` of the project or the home): the two servers come in a",
+    "  plugin of the run's temporary folder (`--plugin-dir`: `.cursor-plugin/plugin.json` and `mcp.json`), which also",
+    "  denies the shell with a `beforeShellExecution` hook that exits 2 (`failClosed`); `--force` lets everything run that",
+    "  is not denied, and without it what needs an approval is refused. The role goes at the head of the prompt. Its",
+    "  `stream-json` lines: `system`/`init` (the model), `assistant` (`message.content[].text`), `tool_call` (`started`,",
+    "  `completed` with its `result`), and the `result` (`result`, `is_error`, `subtype`): no tokens nor cost. Its login:",
+    "  `agent login` or `CURSOR_API_KEY`."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/providers.md"
@@ -3089,7 +3161,31 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.a2a82d",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.4e50dd",
+   "type": "context",
+   "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The usage at the source (`adapter.nuc`)",
+   "summary": "The Nuclear Developer counts per request (its `TALLY`, a context variable each request sets and every model call adds to; `nuclear-agents/nuclear_developer`); an older Developer gives no `usage`: not reported.",
+   "body": [
+    "The Nuclear Developer counts per request (its `TALLY`, a context variable each request sets and every model call adds",
+    "to; `nuclear-agents/nuclear_developer`); an older Developer gives no `usage`: not reported.",
+    "",
+    "A step keeps the sum of its calls as `usage` (`sumUsage`) and the lines it changed as `lines: {added, removed}` (from",
+    "the run's `writes`: each write has `added` and `removed`, counted per line as a diff's stat counts them, a moved line",
+    "neither). A gate keeps its times in `run.gates` (`{id, kind, station, opened, answered, answer}`). A chat's answer sums",
+    "its provider's calls the same way. A run file without these fields (an earlier version) still loads: its steps have no",
+    "usage nor lines, and the reports say so."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.7988d3",
    "type": "context",
    "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The usage at the source (`adapter.nuc`)",
    "summary": "Every provider's call gives its `Outcome.usage`: `{inTokens, outTokens, costUsd, ms, provider, model}`.",
@@ -3104,32 +3200,10 @@
     "| `opencode` | each `step_finish`'s `tokens.input` + `cache.read` + `cache.write`, summed | `tokens.output` + `tokens.reasoning` | asked |",
     "| `codex` | each `turn.completed`'s `usage.input_tokens`, summed | `output_tokens` | asked |",
     "| `gemini-cli` | the result's `stats.input_tokens` | `stats.output_tokens` | asked |",
+    "| `cursor` | not reported (its `stream-json` has no tokens) | not reported | the `system`/`init` line's `model` |",
+    "| `grok` | not reported (its `streaming-json` is not documented) | not reported | asked |",
     "| the APIs | each turn's tokens (the loop of `adapter_api.nuc`), summed | each turn's, summed | asked |",
-    "| `nuclear-developer` | the reply's `usage.inTokens` (Ollama's `prompt_eval_count`, summed over the request's model calls) | `usage.outTokens` (`eval_count`) | `usage.model` |",
-    "",
-    "The Nuclear Developer counts per request (its `TALLY`, a context variable each request sets and every model call adds",
-    "to; `nuclear-agents/nuclear_developer`); an older Developer gives no `usage`: not reported."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/reports.md#the-usage-at-the-source-adapter-nuc.f302c8",
-   "type": "context",
-   "title": "The reports: the usage, the factory's ledger, `metrics` (spec 017) — The usage at the source (`adapter.nuc`)",
-   "summary": "A step keeps the sum of its calls as `usage` (`sumUsage`) and the lines it changed as `lines: {added, removed}` (from the run's `writes`: each write has `added` and `removed`, counted per line as a diff's stat counts them, a moved line neither).",
-   "body": [
-    "A step keeps the sum of its calls as `usage` (`sumUsage`) and the lines it changed as `lines: {added, removed}` (from",
-    "the run's `writes`: each write has `added` and `removed`, counted per line as a diff's stat counts them, a moved line",
-    "neither). A gate keeps its times in `run.gates` (`{id, kind, station, opened, answered, answer}`). A chat's answer sums",
-    "its provider's calls the same way. A run file without these fields (an earlier version) still loads: its steps have no",
-    "usage nor lines, and the reports say so."
+    "| `nuclear-developer` | the reply's `usage.inTokens` (Ollama's `prompt_eval_count`, summed over the request's model calls) | `usage.outTokens` (`eval_count`) | `usage.model` |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
@@ -3928,7 +4002,7 @@
    "summary": "The Builder's tools are an MCP server, `nuclear-builder mcp`.",
    "body": [
     "The Builder's tools are an MCP server, `nuclear-builder mcp`. The factory gives it to every agent it runs (Claude",
-    "Code, OpenCode, Codex, Gemini CLI, an API model) beside `nuclear-mcp`. To give it to your own agent in a project:",
+    "Code, OpenCode, Codex, Gemini CLI, Cursor, Grok Build, an API model) beside `nuclear-mcp`. To give it to your own agent in a project:",
     "",
     "```sh",
     "claude mcp add nuclear_builder -- nuclear-builder mcp --root /path/to/project",
@@ -4386,14 +4460,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.945383",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/make-a-team.md#make-a-team.a48847",
    "type": "guide",
    "title": "Make a team",
    "summary": "A team is the people you hire from the roster, as many per role as you want: twenty developers if you need them.",
    "body": [
     "A team is the people you hire from the roster, as many per role as you want: twenty developers if you need them.",
     "Each member is worked by the local agents on this machine, by a provider's agent (Claude Code, OpenCode, Codex,",
-    "Gemini CLI) or by an API model. Open *Your software company* (the Builder's *Team…*, or *Settings and integrations* →",
+    "Gemini CLI, Cursor, Grok Build) or by an API model. Open *Your software company* (the Builder's *Team…*, or *Settings and integrations* →",
     "Nuclear Builder) and press **New team**: five steps, *Next, Next*."
    ],
    "sources": [
@@ -4699,7 +4773,7 @@
    "body": [
     "- **Measured, never estimated.** The tokens are the provider's own counts (Claude Code's usage, OpenCode's steps,",
     "  Codex's and Gemini CLI's turns, the APIs' usage, Ollama's counts for the local agents). A provider that reports none",
-    "  is counted as *not reported*, not as a guess.",
+    "  (Cursor and Grok Build today) is counted as *not reported*, not as a guess.",
     "- **Local against paid**: the local agents cost nothing in money; their tokens and time are still counted.",
     "- **Runs of before**: the runs a project made before this version are copied into the ledger once, with what their",
     "  files had (their money and times; no tokens nor lines)."
@@ -4793,7 +4867,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md#2-write-the-spec-in-vs-code.8db992",
+   "id": "doc:extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md#2-write-the-spec-in-vs-code.24cc88",
    "type": "guide",
    "title": "Write a spec and start the Builder — 2. Write the spec in VS Code",
    "summary": "0. Where it belongs: the business component (one of the project's `components/`, or *Whole project*, `_global`) and, when the spec touches only one, its layer (presentation, domain, data).",
@@ -4810,7 +4884,7 @@
     "4. **The team**: the team that works the run, one of yours (the project's `.nuclear/builder.json` `\"team\"`, else the",
     "   setting `nuclear.builder.team`, else your default team is chosen first). The form shows its members: each employee's",
     "   funny name and avatar, the role and who does its work (the Nuclear Developer on this machine, or a paid provider in",
-    "   amber: Claude Code, Codex, Gemini CLI, OpenCode, an API). *Team…* opens the company screen, where teams are made ([make a team](make-a-team.md)) and"
+    "   amber: Claude Code, Codex, Gemini CLI, OpenCode, Cursor, Grok Build, an API). *Team…* opens the company screen, where teams are made ([make a team](make-a-team.md)) and"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/08-guides/write-a-spec.md"
@@ -16061,6 +16135,31 @@
    }
   },
   {
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.0a1ee6",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples, documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the base is behind the tree; `knowledge review` confirms a hand-written row…",
+   "body": [
+    "diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
+    "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
+    "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
+    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what",
+    "  agents wrote at run time. A client writes only `memory` and `examples`.",
+    "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),",
+    "  `GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
+    "  `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`,",
+    "  `declarations`, `context`). MCP `developer_code` takes `project` and the local coder reads the project by itself."
+   ],
+   "sources": [
+    "nuclear-graph-storage/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.2261c1",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -16089,24 +16188,24 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.4b6b37",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.46fcf7",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "work\" (27).",
+   "summary": "owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the documents' key would open no card).",
    "body": [
-    "work\" (27). `knowledge ask` holds the open questions marked `exact = false` in `questions.toml` to no query.",
-    "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every",
-    "  item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
-    "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
-    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server.",
-    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
-    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
-    "  was the same as the one asked.",
-    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no",
-    "  owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
+    "owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
     "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
     "  keyring is waited for, then refused, and never made again.",
-    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that"
+    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that",
+    "  question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
+    "  is a question of `concept:mcp`, no longer of `query:mcp.tools`.",
+    "- The package is typed (`py.typed`): a project that uses it is checked against it.",
+    "- The graph is a library (ADR-graph-0001): nine shelves (`concepts`, `language`, `platforms`, `tools`, `errors`,",
+    "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,",
+    "  instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest). Search by",
+    "  meaning and by exact name over several shelves; `GET /v1/cards/{id}`; `nuclear-graph card`, `search -p --agents`;",
+    "  MCP `graph_search` by shelf and `graph_card`.",
+    "- The knowledge base is asset files: `knowledge build` generates the rows from the working tree (`extract.py`:"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16147,24 +16246,25 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.6742f0",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.636c8c",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "(ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before.",
+   "summary": "ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps the text after the front matter (`Paths.roles`, was `Paths.prompts`); the package carries `nuclear_graph/roles`; a prompt named by two skills is refused.",
    "body": [
-    "- The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process",
-    "  (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come",
-    "  from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.",
-    "- The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each",
-    "  command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with",
-    "  every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six",
-    "  stations (`stage:analysis` … `stage:delivery`), read from its engine (`run.nuc`, `roles.nuc`) since the TypeScript",
-    "  engine is gone; `concept:loop` describes the factory, and the rows that linked the nine old stages link the",
-    "  stations (`deploy` → `tool:nuclear-builder.ci`).",
-    "- The prompts moved into the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,",
-    "  ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps",
+    "ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps",
     "  the text after the front matter (`Paths.roles`, was `Paths.prompts`); the package carries `nuclear_graph/roles`; a",
-    "  prompt named by two skills is refused. The folder `prompts/` is gone. The software factory is a row"
+    "  prompt named by two skills is refused. The folder `prompts/` is gone. The software factory is a row",
+    "  (`concept:software-factory`).",
+    "- The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them",
+    "  now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of",
+    "  the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
+    "- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was",
+    "  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in",
+    "  `paths.nuc`; `Paths.machine()` gives the same).",
+    "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
+    "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
+    "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
+    "  project added (ADR-lang-0008)."
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16200,75 +16300,52 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.9bbf93",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.7f30d5",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "agents wrote at run time.",
+   "summary": "closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`, because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp work\" (27).",
    "body": [
-    "agents wrote at run time. A client writes only `memory` and `examples`.",
-    "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),",
-    "  `GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
-    "  `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`,",
-    "  `declarations`, `context`). MCP `developer_code` takes `project` and the local coder reads the project by itself."
-   ],
-   "sources": [
-    "nuclear-graph-storage/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.c55271",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "question the 15 rows of `query:mcp.commands`.",
-   "body": [
-    "question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
-    "  is a question of `concept:mcp`, no longer of `query:mcp.tools`.",
-    "- The package is typed (`py.typed`): a project that uses it is checked against it.",
-    "- The graph is a library (ADR-graph-0001): nine shelves (`concepts`, `language`, `platforms`, `tools`, `errors`,",
-    "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,",
-    "  instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest). Search by",
-    "  meaning and by exact name over several shelves; `GET /v1/cards/{id}`; `nuclear-graph card`, `search -p --agents`;",
-    "  MCP `graph_search` by shelf and `graph_card`.",
-    "- The knowledge base is asset files: `knowledge build` generates the rows from the working tree (`extract.py`:",
-    "  diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
-    "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
-    "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
-    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what"
-   ],
-   "sources": [
-    "nuclear-graph-storage/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.ccd2bf",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "(`concept:software-factory`).",
-   "body": [
-    "(`concept:software-factory`).",
-    "- The constants of a file are read by the others as they are (`SHELVES`, `PLATFORMS`...): the compiler imports them",
-    "  now, so the functions that only returned them (`shelfTable()`, `platformNames()`...) and `toolchain.nuc`'s copy of",
-    "  the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
-    "- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was",
-    "  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in",
-    "  `paths.nuc`; `Paths.machine()` gives the same).",
-    "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
-    "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
-    "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
-    "  project added (ADR-lang-0008).",
     "- The planner runs a query of the exact facts only when its exact question is closer to what was asked than the",
     "  closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`,",
-    "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp"
+    "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp",
+    "  work\" (27). `knowledge ask` holds the open questions marked `exact = false` in `questions.toml` to no query.",
+    "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every",
+    "  item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
+    "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
+    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server.",
+    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
+    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
+    "  was the same as the one asked.",
+    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no"
+   ],
+   "sources": [
+    "nuclear-graph-storage/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.f1522d",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so an install loads the base in seconds; a text the file does not hold goes to the model.",
+   "body": [
+    "- The vectors of the knowledge base come with each release (`nuclearlang-embeddings-<version>.npz`, one file for every",
+    "  system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so",
+    "  an install loads the base in seconds; a text the file does not hold goes to the model.",
+    "- The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process",
+    "  (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come",
+    "  from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.",
+    "- The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each",
+    "  command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with",
+    "  every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six",
+    "  stations (`stage:analysis` … `stage:delivery`), read from its engine (`run.nuc`, `roles.nuc`) since the TypeScript",
+    "  engine is gone; `concept:loop` describes the factory, and the rows that linked the nine old stages link the",
+    "  stations (`deploy` → `tool:nuclear-builder.ci`).",
+    "- The prompts moved into the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -19033,9 +19110,9 @@
    "id": "doc:tools/mcp/AGENTS.md#the-mcp-server",
    "type": "readme",
    "title": "The MCP server",
-   "summary": "`nuclear-mcp`: the program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang.",
+   "summary": "`nuclear-mcp`: the program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang.",
    "body": [
-    "`nuclear-mcp`: the program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang. It",
+    "`nuclear-mcp`: the program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang. It",
     "speaks the Model Context Protocol over stdio and offers the generators, the compiler and the command line, the Smart",
     "Graph, the local developer and the internet as tools. Its instructions tell every client how to work, so they all",
     "behave the same: generate first, let the local developer write the rest, then validate and correct."
@@ -19076,11 +19153,11 @@
    "id": "doc:tools/mcp/README.md#nuclear-mcp-the-mcp-server",
    "type": "readme",
    "title": "`nuclear-mcp`, the MCP server",
-   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang, over stdio.",
+   "summary": "![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · Website The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio.",
    "body": [
     "[![ci](https://github.com/nuclearlang/lang/actions/workflows/ci.yml/badge.svg)](https://github.com/nuclearlang/lang/actions/workflows/ci.yml) · [Website](https://nuclearlang.github.io/tools/mcp)",
     "",
-    "The program an AI client (Claude Code, Codex, Cursor, OpenCode) starts to work with NuclearLang, over stdio. Its tools:",
+    "The program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang, over stdio. Its tools:",
     "the **generators**, the **local developer**, the **Smart Graph** and the **compiler**."
    ],
    "sources": [
@@ -19744,9 +19821,9 @@
    "id": "doc:tools/mcp/docs/08-guides/mcp.md#the-mcp-server-of-nuclearlang",
    "type": "guide",
    "title": "The MCP server of NuclearLang",
-   "summary": "MCP is the Model Context Protocol: an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls the tools it offers.",
+   "summary": "MCP is the Model Context Protocol: an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts a program and calls the tools it offers.",
    "body": [
-    "MCP is the **Model Context Protocol**: an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls",
+    "MCP is the **Model Context Protocol**: an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts a program and calls",
     "the tools it offers. `nuclear-mcp` is that program for NuclearLang. It speaks MCP over stdio and gives a",
     "frontier model four things: the **generators** that write the standard code, the **local developer** that writes what",
     "is left, the **Smart Graph** to look things up instead of guessing, and the **compiler** to check everything.",

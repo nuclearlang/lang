@@ -1,6 +1,6 @@
 # The MCP server of NuclearLang
 
-MCP is the **Model Context Protocol**: an AI client (Claude Code, Codex, Cursor, OpenCode) starts a program and calls
+MCP is the **Model Context Protocol**: an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts a program and calls
 the tools it offers. `nuclear-mcp` is that program for NuclearLang. It speaks MCP over stdio and gives a
 frontier model four things: the **generators** that write the standard code, the **local developer** that writes what
 is left, the **Smart Graph** to look things up instead of guessing, and the **compiler** to check everything.

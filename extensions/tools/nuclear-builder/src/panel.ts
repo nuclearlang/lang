@@ -75,7 +75,7 @@ export const knownRuns = (): Run[] => [...knownRoots].flatMap((root) => listRuns
 /** An answer given to a run that waited with no process: its resume answers the same question with it. */
 
 const CI_PATHS = { github: '.github/workflows/nuclear-builder.yml', gitlab: '.gitlab-ci.yml', bitbucket: 'bitbucket-pipelines.yml' };
-const PROVIDER_NAMES: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
+const PROVIDER_NAMES: Record<string, string> = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter' };
 
 /** The spending's flags for the engine: `--confirm-spending` when the user turned the questions off (and nothing forces
  * them), `--force-confirm` when the user forces them (the project's `"forceConfirm"` is the engine's own). */
@@ -1037,7 +1037,7 @@ const OLD = { planner: 'analyst', claude: 'architect', coder: 'developer', teste
 const who = (a) => ACTORS[a] ? a : OLD[a] ?? 'shell';
 for (const [id, a] of Object.entries(ACTORS)) { a.role = t('actor.' + id + '.role'); a.does = t('actor.' + id + '.does'); a.not = t('actor.' + id + '.not'); }
 const ROLES = ['analyst', 'architect', 'developer', 'qa', 'devops'];
-const PROVIDERS = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
+const PROVIDERS = { 'nuclear-developer': 'Nuclear Developer', 'claude-code': 'Claude Code', codex: 'Codex', 'gemini-cli': 'Gemini CLI', cursor: 'Cursor', grok: 'Grok Build', opencode: 'OpenCode', anthropic: 'Anthropic', openai: 'OpenAI', google: 'Google', openrouter: 'OpenRouter', shell: 'Shell' };
 /** Who works a role: on a run, its team's member (from the host); elsewhere the chosen team's; without either, the
  * roster's default employee of the role (the host's defaults), so every station has a face. */
 const hired = (a) => {

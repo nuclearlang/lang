@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-19
 related: [teams-and-vault.md, engine.md, ../../../../../docs/04-specs/011-software-factory/design.md]
 ---
 # The providers: one interface, an adapter each (`adapter*.nuc`, `api_*.nuc`)
@@ -14,7 +14,7 @@ Every provider of a role is called the same way (`adapter.nuc`):
   agent's text first) and the skills of the team and the member (`assigned.sharedSkills`, `library.nuc`
   `withSkills`: the member's own over the team's, the team's over the library's; `role.sources` says where each one
   that is not the role's comes from). Every adapter renders them as the role's skills: Claude Code's plugin
-  `skills/<id>/SKILL.md`, OpenCode's `.opencode/agent/<role>.md`, Codex's `AGENTS.md`, Gemini CLI's `GEMINI.md`, an
+  `skills/<id>/SKILL.md`, OpenCode's `.opencode/agent/<role>.md`, Codex's `AGENTS.md`, Gemini CLI's `GEMINI.md`, Cursor's prompt, Grok Build's `--rules`, an
   API model's system prompt (`role.text()`), and the local Developer's `context` (`role.sharedText()` first and whole,
   the documents in what is left); `tests/test_skills.nuc` renders every skill of the library for each one. The role's files are only read. A role whose folder is not there yet gets one line of mission
   that says so. `role.text()` is the whole role as one text.
@@ -40,6 +40,8 @@ Every provider of a role is called the same way (`adapter.nuc`):
 | `agent` | `opencode` | `adapter_opencode.nuc` | `opencode run --agent <role> --format json --auto [--model provider/model]`, `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` in the temporary folder | `.opencode/agent/<role>.md` (shell denied) | the sum of `step_finish` costs |
 | `agent` | `codex` | `adapter_codex.nuc` | `codex exec --json --skip-git-repo-check --sandbox workspace-write -C <root> -c mcp_servers.nuclear.* -c mcp_servers.nuclear_builder.* [--model]` | an `AGENTS.md` section, at the head of the prompt | 0 (its tokens counted from `turn.completed`) |
 | `agent` | `gemini-cli` | `adapter_gemini_cli.nuc` | `gemini -p --output-format stream-json --approval-mode auto_edit --allowed-mcp-server-names nuclear nuclear_builder [--model]`, the MCP servers in `GEMINI_CLI_SYSTEM_SETTINGS_PATH` | a `GEMINI.md`, at the head of the prompt (shell excluded) | 0 (its tokens counted from the result's `stats`) |
+| `agent` | `cursor` | `adapter_cursor.nuc` | `agent -p --output-format stream-json --force --approve-mcps --trust --workspace <root> --plugin-dir <plugin> [--model] <prompt>` (`cursor-agent` when `agent` is not Cursor's), the MCP servers in the plugin's `mcp.json` | the role's text at the head of the prompt (shell denied by the plugin's hook) | 0 (tokens not reported) |
+| `agent` | `grok` | `adapter_grok.nuc` | `grok --no-auto-update -p <prompt> --output-format streaming-json --always-approve --cwd <root> --rules <role> [-m]`, `GROK_HOME` in the temporary folder | `--rules`, added to the system prompt (shell denied in the run's `config.toml`) | 0 (tokens not reported) |
 | `api` | `anthropic` | `api_anthropic.nuc` | the Messages API, `anthropic-version: 2026-10-21` | the system prompt; the MCP tools as client tools | tokens × `PRICES` |
 | `api` | `openai` | `api_openai.nuc` | Chat Completions | the system message; the tools as functions | tokens × the project's `prices` |
 | `api` | `google` | `api_google.nuc` | `models/<model>:generateContent` (schemas without `$schema` and `additionalProperties`) | `systemInstruction`; function declarations | tokens × the project's `prices` |
@@ -49,7 +51,7 @@ Every provider of a role is called the same way (`adapter.nuc`):
   developer) and the Builder's, `nuclear-builder mcp --root <project>` (`nuclear_builder`: every action of the
   Builder's pages, [actions.md](actions.md)), from `mcpServers(command, root)` (`adapter.nuc`); its command is
   `NUCLEAR_BUILDER_COMMAND`, else `nuclear-builder`. OpenCode gets both in its `mcp` table, Codex as `-c
-  mcp_servers.*`, Gemini CLI in its settings, the API loop as two clients (each call goes to the server that has the
+  mcp_servers.*`, Gemini CLI in its settings, Cursor in a plugin, Grok Build in a `GROK_HOME` of its own, the API loop as two clients (each call goes to the server that has the
   tool).
 - An agent's command runs in the project with the tools' PATH (`streamCommand`): each stdout line as it comes, the
   process group killed after the timeout (exit -9). The temporary folder is removed after the call: nothing goes
@@ -63,13 +65,13 @@ Every provider of a role is called the same way (`adapter.nuc`):
   `stream_event` lines' `text_delta`s are `text-delta` events, the answer as it is written; a run never streams.
 - Which agents are on this machine is `nuclear-builder agents --json` (`chat_agents.nuc`, the tool `agents_list`):
   an agent when its command is on the tools' PATH (Claude Code's models are its aliases `haiku`, `sonnet`, `opus`;
-  OpenCode's are `opencode models` when it answers in 5 s, else one typed by hand; Codex's and Gemini CLI's their
+  OpenCode's are `opencode models` when it answers in 5 s, else one typed by hand; Codex's, Gemini CLI's, Cursor's and Grok Build's their
   own default), an API provider when the vault notes its key (`vault.json`, the keyring is not opened for a list)
   and it has a priced model (`PRICES`, the project's `prices`).
 - Which models each provider offers is `nuclear-builder models [--provider <id>] [--fresh] --json` (`models.nuc`, the
   tool `models_list`), from the provider itself (spec 011 requirement 35): Claude Code its aliases `fable`, `opus`,
   `sonnet`, `haiku` and the full ids of the price table (`claude --help`: an alias or a model's full name; free text
-  taken); OpenCode `opencode models`; Codex and Gemini CLI list none from their command line (their own default, or a
+  taken); OpenCode `opencode models`; Codex, Gemini CLI, Cursor and Grok Build list none here (their own default, or a
   model typed); an API provider its list endpoint when the vault notes its key (Anthropic `GET /v1/models`, OpenAI
   `GET /v1/models` without the embedding, audio and image models, Google `models` with `generateContent`, OpenRouter
   `api/v1/models`: free calls), else its priced models, each said `priced` or not (a run needs a price; OpenRouter
@@ -96,5 +98,27 @@ Every provider of a role is called the same way (`adapter.nuc`):
   before choosing it; `team create`, `team member add` and `team member update` answer `warnings` (each too-big or
   tight local member: `{member, model, needGb, totalGb, availableGb, fit, text}`); their MCP tools answer
   `needsUser` for a too-big one, applied only after the user's yes.
+- **Cursor** (`adapter_cursor.nuc`): its command is `agent`, a generic name, taken as Cursor's only when its real path
+  names Cursor (the installer links `~/.local/bin/agent` into `~/.local/share/cursor-agent/`), else the older
+  `cursor-agent` (`agentCommand`, `preflight.nuc`: *Check the connections* and `agents --json` ask the same). Cursor has
+  no flag for an MCP configuration (only `.cursor/mcp.json` of the project or the home): the two servers come in a
+  plugin of the run's temporary folder (`--plugin-dir`: `.cursor-plugin/plugin.json` and `mcp.json`), which also
+  denies the shell with a `beforeShellExecution` hook that exits 2 (`failClosed`); `--force` lets everything run that
+  is not denied, and without it what needs an approval is refused. The role goes at the head of the prompt. Its
+  `stream-json` lines: `system`/`init` (the model), `assistant` (`message.content[].text`), `tool_call` (`started`,
+  `completed` with its `result`), and the `result` (`result`, `is_error`, `subtype`): no tokens nor cost. Its login:
+  `agent login` or `CURSOR_API_KEY`.
+- **Grok Build** (`adapter_grok.nuc`): no flag nor variable gives it an MCP configuration but its home: the run gets a
+  `GROK_HOME` of its own in the temporary folder, each entry of the user's (`GROK_HOME`, else `~/.grok`: the login,
+  the sessions, the skills) linked into it, and its own `config.toml` with `[mcp_servers.nuclear]`,
+  `[mcp_servers.nuclear_builder]` and `[permission] rules = [{ action = "deny", tool = "bash" }]` (a deny holds under
+  `--always-approve`); the user's `config.toml` is not read for that run, and their files are never written. The
+  role is `--rules`. Its `streaming-json` events are **not documented**: the adapter assumes JSON objects with a
+  `type` (or `event`); a `tool…` one is a call, or its result when its type says `result` or its `status` ended; an
+  `error` (or `is_error`) fails the call; a `result`/`done`/`end`/`final` one (or one with a `stopReason`) gives the
+  answer when it carries `result` or `text`; any other with a `text`, `content` or `delta` string is a piece of the
+  answer (added when it is a delta or a chunk), but the user's prompt and the thinking. No tokens nor cost are read.
+  Its login: `grok login` or `XAI_API_KEY`.
 - The flags of `claude` were checked against Claude Code 2.1.327's `--help`, those of `opencode` against OpenCode
-  2.2.7's. Codex and Gemini CLI are written from their documented headless modes, untested here (roadmap).
+  2.2.7's. Codex, Gemini CLI, Cursor and Grok Build are written from their documented headless modes, untested here
+  (roadmap).

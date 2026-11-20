@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { dictionary, l10n } from './i18n';
 import { readCard } from './card';
-import { onPath, parseDoctor, Paths, Platform, probe, Status, ToolchainId, toolchainEnv, TOOLCHAINS } from './toolchains';
+import { dartFlutterRoot, onPath, parseDoctor, Paths, Platform, probe, Status, ToolchainId, toolchainEnv, TOOLCHAINS } from './toolchains';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
 
 const VARS = ['NUCLEAR_PYTHON', 'NUCLEAR_NODE', 'FLUTTER', 'FLUTTER_ROOT'] as const;
@@ -23,7 +23,16 @@ export function toolchainPaths(): Paths {
   return Object.fromEntries(IDS.map((id) => [id, c.get<string>(id, '')])) as Paths;
 }
 
-const original = (): NodeJS.ProcessEnv => ({ ...process.env, ...ORIGINAL });
+/** The editor's environment, with the Dart extension's Flutter as FLUTTER_ROOT when the user set no Flutter variable. */
+const original = (): NodeJS.ProcessEnv => {
+  const env: NodeJS.ProcessEnv = { ...process.env, ...ORIGINAL };
+  if (!env.FLUTTER && !env.FLUTTER_ROOT) {
+    const dart = vscode.workspace.getConfiguration('dart');
+    const root = dartFlutterRoot(dart.get('flutterSdkPath'), dart.get('flutterSdkPaths'));
+    if (root) env.FLUTTER_ROOT = root;
+  }
+  return env;
+};
 
 /** The settings into the extension host's environment and the terminals'; again on every change. */
 export function applyToolchains(context: vscode.ExtensionContext): void {
@@ -39,7 +48,7 @@ export function applyToolchains(context: vscode.ExtensionContext): void {
     }
   };
   apply();
-  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => e.affectsConfiguration('nuclear.toolchains') && apply()));
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => (e.affectsConfiguration('nuclear.toolchains') || e.affectsConfiguration('dart.flutterSdkPath') || e.affectsConfiguration('dart.flutterSdkPaths')) && apply()));
 }
 
 export interface ToolchainState {

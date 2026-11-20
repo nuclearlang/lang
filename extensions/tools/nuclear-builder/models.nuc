@@ -255,7 +255,7 @@ readProviderModels(provider: string, root: string, memory: <string, any>, transp
     ids = found == null ? ([] as string[]) : openCodeModels(found!, toolEnv())
     return { "models": ids.map((id) => { "id": id }), "free": true, "source": "opencode" }
   if kind == "agent"
-    // Codex and Gemini CLI list no models from their command line: their own default, or a model typed by hand
+    // Codex, Gemini CLI, Cursor and Grok Build list no models here: their own default, or a model typed by hand
     return { "models": [] as <string, any>[], "free": true, "source": "default" }
   apiProviderModels(provider, prices, transport)
 

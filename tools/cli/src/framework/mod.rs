@@ -126,7 +126,7 @@ setup
 
 options
   --project <dir>   project folder (default: the folder with main.nuc, here or above)
-  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter...)
+  FLUTTER           the flutter binary (default: found by itself: FLUTTER_ROOT, PATH, ~/develop/flutter, fvm, ~/development/flutter..., your shell's PATH)
 
 docs: nuclear help flutter";
 
@@ -623,11 +623,44 @@ fn find_flutter() -> Option<PathBuf> {
     dirs.extend(std::env::var_os("PATH").map(|p| std::env::split_paths(&p).collect::<Vec<_>>()).unwrap_or_default());
     dirs.extend(
         // develop/flutter: where `nuclear setup` installs it (Flutter's manual install), found without the shell's PATH
-        ["develop/flutter/bin", "fvm/default/bin", "development/flutter/bin", "flutter/bin", "snap/flutter/common/flutter/bin"]
-            .map(|d| home.join(d)),
+        [
+            "develop/flutter/bin",
+            "fvm/default/bin",
+            "development/flutter/bin",
+            "Developer/flutter/bin",
+            "flutter/bin",
+            "sdk/flutter/bin",
+            "sdks/flutter/bin",
+            "tools/flutter/bin",
+            "Documents/flutter/bin",
+            ".puro/envs/stable/flutter/bin",
+            "snap/flutter/common/flutter/bin",
+        ]
+        .map(|d| home.join(d)),
     );
-    dirs.extend(["/opt/flutter/bin", "/usr/lib/flutter/bin", "/usr/local/flutter/bin"].map(PathBuf::from));
-    dirs.into_iter().map(|d| d.join("flutter")).find(|f| f.is_file())
+    dirs.extend(
+        ["/opt/homebrew/bin", "/usr/local/bin", "/opt/flutter/bin", "/usr/lib/flutter/bin", "/usr/local/flutter/bin"]
+            .map(PathBuf::from),
+    );
+    dirs.into_iter().map(|d| d.join("flutter")).find(|f| f.is_file()).or_else(flutter_of_the_shell)
+}
+
+/// The last resort: the flutter the user's own shell finds (its rc files may add any folder to the PATH, which an
+/// editor started from the desktop does not read). A Flutter already on the machine is never installed twice.
+fn flutter_of_the_shell() -> Option<PathBuf> {
+    if cfg!(windows) {
+        return None;
+    }
+    let shell = std::env::var_os("SHELL").unwrap_or_else(|| "/bin/sh".into());
+    let out = Command::new(shell)
+        .args(["-lic", "command -v flutter"])
+        .stdin(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .output()
+        .ok()?;
+    let line = String::from_utf8_lossy(&out.stdout).lines().map(str::trim).rfind(|l| l.starts_with('/'))?.to_string();
+    let bin = PathBuf::from(line);
+    bin.is_file().then_some(bin)
 }
 
 const NO_FLUTTER: &str = "Flutter was not found.
@@ -636,7 +669,9 @@ synapsis needs the Flutter SDK to create, build and run the app (your .nuc files
 `nuclear check` works without Flutter).
 
 Where synapsis looked: $FLUTTER, $FLUTTER_ROOT/bin, .fvm/flutter_sdk (fvm, in the project or above),
-the PATH, ~/develop/flutter (nuclear setup), ~/fvm/default, ~/development/flutter, ~/flutter, ~/snap/flutter, /opt/flutter, /usr/lib/flutter.
+the PATH, ~/develop/flutter (nuclear setup), ~/fvm/default, ~/development/flutter, ~/Developer/flutter, ~/flutter,
+~/sdk(s)/flutter, ~/tools/flutter, ~/Documents/flutter, puro, ~/snap/flutter, Homebrew, /opt/flutter, /usr/lib/flutter,
+and the PATH of your login shell.
 
 Possible causes:
   - Flutter is not installed.
