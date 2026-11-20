@@ -63,8 +63,9 @@
    "id": "faq:start-a-project",
    "type": "faq",
    "title": "How do I start a project?",
-   "summary": "`nuclear new <name> -p backend` (or `-p mobile`, `-p web`) makes a project of `.nuc` files; `-d` picks a dialect. Then `nuclear build`, `nuclear install`, `nuclear run` and `nuclear test`.",
+   "summary": "Start from a workspace: `nuclear workspace new <path>` makes the folder of the business project, then `nuclear workspace add <app> --platform backend|web|mobile` adds each app (or `nuclear new <name> -p …` inside it). Then, in an app: `nuclear build`, `nuclear install`, `nuclear run`, `nuclear test`. By chat: ask your agent, which does it through the MCP server, asking first.",
    "body": [
+    "```sh\nnuclear workspace new ~/work/tasks --description \"Tasks for teams\"   # the workspace (concept:workspace)\ncd ~/work/tasks\nnuclear workspace add tasks_api --platform backend   # fastapi; --dialect nestjs for TypeScript\nnuclear workspace add tasks_web --platform web\n```\n\nA single project without a workspace still works:",
     "```sh",
     "nuclear new tasks_api -p backend            # a backend (fastapi; -d nestjs for TypeScript)",
     "nuclear new tasks_app                       # a mobile app (flutter)",
@@ -104,6 +105,10 @@
     {
      "rel": "next",
      "to": "concept:generators"
+    },
+    {
+     "rel": "starts-from",
+     "to": "concept:workspace"
     }
    ],
    "sources": [

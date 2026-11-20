@@ -323,6 +323,10 @@
     "- On top: the project, and the templates (`templatesOf(map, platform, lang)`, `src/chat.ts`: built from the map's",
     "  components, use cases and controllers or screens; its label and its prompt in the page's language). A template is put in the chat's composer (its `textarea`, in",
     "  the chat's open shadow root), its `…` selected to fill.",
+    "- `AtlasPanel.compose(root, text)`: the direct message on a folder that need not be a project (a Nuclear workspace,",
+    "  or the extension's own folder for the welcome before there is one; listed in the project picker), with `text` put",
+    "  in the composer once the chat is drawn, for the user to read and send: the welcome's and the workspace menu's *Do it",
+    "  with me by chat* (spec 022).",
     "- Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`",
     "  to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down",
     "  is said on the page with how to fix it."
@@ -2776,7 +2780,11 @@
     "`nuclear-builder` that has no `spec` yet, the page places it itself in the same layout (`writeSpec`, `specPathOf`).",
     "Everything else is the engine's (engine.md): the run file and its log, the station's documents in the spec's folder (`specs/<component>/[<layer>/]<id>/`), the",
     "checks (`checks.json` there, changed only through `nuclear-builder checks`), the exported CI file (`nuclear-builder",
-    "export`). Jira's site, email and API token are in VS Code's secret storage (`nuclear.builder.jira`)."
+    "export`). Jira's site, email and API token are in VS Code's secret storage (`nuclear.builder.jira`).",
+    "",
+    "The page reads the specs again by itself when a `spec.md` of the project's `specs/` is created, changed or deleted (a",
+    "`FileSystemWatcher` on the active project, 300 ms after a burst, disposed with the page): a spec written by the MCP",
+    "server's `spec_create`, a terminal or git shows at once."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"

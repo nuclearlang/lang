@@ -1228,6 +1228,34 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#one-architecture",
+   "type": "readme",
+   "title": "Synapsis: three platforms, one code per platform — One architecture",
+   "summary": "The platforms share the same architecture, so moving from one to another means learning its kinds, not a new way to think: use cases) and its entry points (`presentation/` in Flutter, `api/` in the backends, `ai/` for agents).",
+   "body": [
+    "The platforms share the same architecture, so moving from one to another means learning its kinds, not a new",
+    "way to think:",
+    "",
+    "- **Components** by feature (`components/tasks/`), each with `data/` (entities, repositories), `domain/` (models,",
+    "  use cases) and its entry points (`presentation/` in Flutter, `api/` in the backends, `ai/` for agents).",
+    "- **Kinds** say what a declaration is: `usecase`, `repository`, `controller`, `stateless`, `agent`, `graph`...",
+    "  The dialect writes the class, its decorators, its registration in the injector and its imports.",
+    "- **`appcomponent`** is what the rest of the app sees of a component; one component never reaches inside another.",
+    "- **Errors are values:** a use case answers `Result<Error, T>`; a controller turns `Err(NotFound(...))` into a 404.",
+    "- **Connections** (a database, a chat model, Kafka, Redis, an AI provider) are listed in",
+    "  `config/project_config.nuc`, never opened by hand.",
+    "- **Tests in Nuclear:** `tests Name` with `@test(...)` methods, written for the target's test runner."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#plugins-only-what-the-project-uses",
    "type": "readme",
    "title": "Synapsis: three platforms, one code per platform — Plugins: only what the project uses",
@@ -1297,26 +1325,42 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#synapsis-three-platforms-one-code-per-platform.2c3e49",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#start-from-a-workspace",
+   "type": "readme",
+   "title": "Synapsis: three platforms, one code per platform — Start from a workspace",
+   "summary": "A business project is a workspace: a folder with its apps (a backend, a web app, mobile apps) and the file `.workspace/workspace.nuc` that names them, so the editor, the MCP server and the agents find them.",
+   "body": [
+    "A business project is a **workspace**: a folder with its apps (a backend, a web app, mobile apps) and the file",
+    "`.workspace/workspace.nuc` that names them, so the editor, the MCP server and the agents find them. Do the work by",
+    "chat with your agent: in VS Code the welcome page (`Ctrl+Alt+W`) and the workspace's menu have *Do it with me by chat*,",
+    "which opens Nuclear Atlas with the request written; the agent uses the MCP server's tools (`workspace_create`,",
+    "`app_add`, `spec_create`...) and asks you before each change. The commands do the same from a terminal:",
+    "",
+    "```sh",
+    "nuclear workspace new shop --description \"An online shop\"",
+    "cd shop",
+    "nuclear workspace add shop_api --platform backend",
+    "nuclear workspace add shop_web --platform web",
+    "```",
+    "",
+    "The [tutorial](tutorial.md) starts that way and ends with a short tour of each tool of the editor; the commands are in",
+    "`nuclear help workspace`."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/README.md#synapsis-three-platforms-one-code-per-platform.146743",
    "type": "readme",
    "title": "Synapsis: three platforms, one code per platform",
-   "summary": "The platforms share the same architecture, so moving from one to another means learning its kinds, not a new way to think: use cases) and its entry points (`presentation/` in Flutter, `api/` in the backends, `ai/` for agents).",
-   "body": [
-    "| `web` | `react` (TypeScript) | React 19 (no JSX), React Router 7, Vite, Vitest | [React](../../../nuclearlang/dialects/typescript/docs/08-guides/react.md) | [web.md](../../platforms/web/docs/07-reference/web.md), [react.md](../../../nuclearlang/dialects/typescript/docs/07-reference/react.md) |",
-    "",
-    "The platforms share the same architecture, so moving from one to another means learning its kinds, not a new",
-    "way to think:",
-    "",
-    "- **Components** by feature (`components/tasks/`), each with `data/` (entities, repositories), `domain/` (models,",
-    "  use cases) and its entry points (`presentation/` in Flutter, `api/` in the backends, `ai/` for agents).",
-    "- **Kinds** say what a declaration is: `usecase`, `repository`, `controller`, `stateless`, `agent`, `graph`...",
-    "  The dialect writes the class, its decorators, its registration in the injector and its imports.",
-    "- **`appcomponent`** is what the rest of the app sees of a component; one component never reaches inside another.",
-    "- **Errors are values:** a use case answers `Result<Error, T>`; a controller turns `Err(NotFound(...))` into a 404.",
-    "- **Connections** (a database, a chat model, Kafka, Redis, an AI provider) are listed in",
-    "  `config/project_config.nuc`, never opened by hand.",
-    "- **Tests in Nuclear:** `tests Name` with `@test(...)` methods, written for the target's test runner."
-   ],
+   "summary": "Synapsis: three platforms, one code per platform",
+   "body": "| `web` | `react` (TypeScript) | React 19 (no JSX), React Router 7, Vite, Vitest | [React](../../../nuclearlang/dialects/typescript/docs/08-guides/react.md) | [web.md](../../platforms/web/docs/07-reference/web.md), [react.md](../../../nuclearlang/dialects/typescript/docs/07-reference/react.md) |",
    "sources": [
     "nuclear-synapsis-framework/docs/08-guides/README.md"
    ],
@@ -2115,16 +2159,55 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-project.18d042",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-workspace-and-the-app.2d7063",
    "type": "guide",
-   "title": "Tutorial: a Flutter app from scratch with Synapsis — 1. Create the project",
-   "summary": "cd ~/Documents/projects # wherever you want nuclear new my_store cd my_store It creates only `.nuc` files: `main.nuc`, `config.nuc`, `config/project_config.nuc` and a `home` component with its screen at `/`.",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — 1. Create the workspace and the app",
+   "summary": "A workspace is a folder for one business project: its apps (a mobile app, a web app, a backend) live in it side by side, and its file `.workspace/workspace.nuc` says which apps belong to it, so the editor, the MCP server and your agents always find them.",
    "body": [
+    "A workspace is a folder for one business project: its apps (a mobile app, a web app, a backend) live in it side by",
+    "side, and its file `.workspace/workspace.nuc` says which apps belong to it, so the editor, the MCP server and your",
+    "agents always find them.",
+    "",
+    "**By chat (VS Code).** The welcome page opens on the first run (later: `Ctrl+Alt+W`). In step 1 click *Do it with",
+    "me by chat*: Nuclear Atlas opens with the request written, for example",
+    "",
+    "> Create my NuclearLang workspace in ~/Documents/projects/my_store named my_store, then ask me which apps it has.",
+    "",
+    "Send it. Your agent creates it through the MCP server (`workspace_create`), and before each change it asks you to",
+    "confirm. Then ask for the app the same way (step 2 of the welcome):",
+    "",
+    "> Add to my NuclearLang workspace my_store a mobile app named my_store.",
+    "",
+    "The workspace's name heads the Nuclear view (`Ctrl+Alt+N`), and the app is a tab of its strip. Without the chat,",
+    "the welcome's own fields, `+` on the strip and *Nuclear: Create a Workspace* do the same.",
+    "",
+    "**With the commands:**",
+    "",
     "```sh",
-    "cd ~/Documents/projects      # wherever you want",
-    "nuclear new my_store",
+    "cd ~/Documents/projects                         # wherever you want",
+    "nuclear workspace new my_store                  # the folder and its marker",
     "cd my_store",
-    "```",
+    "nuclear workspace add my_store --platform mobile # nuclear new inside the workspace, written into the marker",
+    "cd my_store",
+    "```"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-workspace-and-the-app.6ad3f3",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — 1. Create the workspace and the app",
+   "summary": "`nuclear workspace list` shows the apps; `nuclear help workspace` has every command (rename, remove, edit).",
+   "body": [
+    "`nuclear workspace list` shows the apps; `nuclear help workspace` has every command (rename, remove, edit). A",
+    "`nuclear new my_store` run anywhere inside a workspace does the same as `workspace add`.",
     "",
     "It creates only `.nuc` files: `main.nuc`, `config.nuc`, `config/project_config.nuc` and a `home` component with",
     "its screen at `/`. The Flutter app goes to `build/app`, which is never edited by hand.",
@@ -2147,13 +2230,7 @@
     "",
     "To use a pub.dev package, add it with the CLI. It writes it in `config.nuc` and generates its type definitions,",
     "so the transpiler writes its imports by itself. `dependencies` and `devDependencies` appear with their first",
-    "package and disappear when the last one is removed:",
-    "",
-    "```sh",
-    "nuclear add hive                      # hive@^2.2.0 to pin the version (the same command on every platform)",
-    "nuclear remove hive",
-    "nuclear flutter add hive --dev        # for devDependencies; hive:^2.2.0 as Flutter writes it",
-    "```"
+    "package and disappear when the last one is removed:"
    ],
    "sources": [
     "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
@@ -2165,11 +2242,17 @@
    }
   },
   {
-   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-project.2aa53a",
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#1-create-the-workspace-and-the-app.d8265c",
    "type": "guide",
-   "title": "Tutorial: a Flutter app from scratch with Synapsis — 1. Create the project",
-   "summary": "main() void ~startSynapsis() Hive.init(\"data\") // import 'package:hive/hive.dart' comes out by itself runApp(App()) The definitions are stored once in `~/.cache/nuclearlang/defs` and serve all your projects; removing the package does not delete them.",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — 1. Create the workspace and the app",
+   "summary": "nuclear add hive # hive@^2.2.0 to pin the version (the same command on every platform) nuclear remove hive nuclear flutter add hive --dev # for devDependencies; hive:^2.2.0 as Flutter writes it main() void ~startSynapsis() Hive.init(\"data\") // import 'package:hive/hive.dart' comes out by itself…",
    "body": [
+    "```sh",
+    "nuclear add hive                      # hive@^2.2.0 to pin the version (the same command on every platform)",
+    "nuclear remove hive",
+    "nuclear flutter add hive --dev        # for devDependencies; hive:^2.2.0 as Flutter writes it",
+    "```",
+    "",
     "```nuclear",
     "main() void",
     "  ~startSynapsis()",
@@ -2651,6 +2734,67 @@
    }
   },
   {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#the-editor-s-tools-in-short.3d872e",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — The editor's tools, in short",
+   "summary": "The editor's tools, in short",
+   "body": [
+    "| Reports (`Ctrl+Alt+K`) | what the teams did and what it cost | pick a period, a team or a member |",
+    "| Settings and integrations (`Ctrl+Alt+S`) | every setting in one page | the providers, the spending, each tool's options, the AI services' set-up |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#the-editor-s-tools-in-short.40036e",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — The editor's tools, in short",
+   "summary": "Each one is at the bottom of the Nuclear view's strip (`Ctrl+Alt+N`), with its key; the welcome's step 3 is the same tour, with a button to open each.",
+   "body": [
+    "Each one is at the bottom of the Nuclear view's strip (`Ctrl+Alt+N`), with its key; the welcome's step 3 is the same",
+    "tour, with a button to open each."
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#the-editor-s-tools-in-short.692691",
+   "type": "guide",
+   "title": "Tutorial: a Flutter app from scratch with Synapsis — The editor's tools, in short",
+   "summary": "The editor's tools, in short",
+   "body": [
+    "| Tool | What it is | How it works |",
+    "|---|---|---|",
+    "| The workspace and its apps | one tab per app: its files, its platform's actions in the title bar | the workspace's name opens its menu (rename, its apps, its marker); `+` adds an app; right click renames or removes one |",
+    "| HTTP Connections (`Ctrl+Alt+H`) | every endpoint of your apps as a tree, like Postman | click an endpoint, send the request, read the answer; WebSockets too |",
+    "| Environments (`Ctrl+Alt+Y`) | an app's variables by environment | edit a value or a secret (kept in the keyring) without opening a file |",
+    "| Nuclear Builder (`Ctrl+Alt+P`) and *Your software company* (`Ctrl+Alt+E`) | a spec taken by your team of agents through analysis, design, tests, code, quality and delivery | write a spec (or ask the chat), run it, answer its questions; the company screen makes the teams |",
+    "| Nuclear Atlas (`Ctrl+Alt+A`) and Nuclear Chat | the chat with your agent and your team's members | ask about the code, give an order with `/task`, or have the agent do the work through the MCP server |",
+    "| The devices (`Ctrl+Alt+V`) | phones and browsers beside the code | ▭ Device or ▷ Run on one; several at once, each with its session |",
+    "| Nuclear Monitor (`Ctrl+Alt+F`) | where a running app is slow | run with `--monitor`, then open it: each function's time, calls and memory |"
+   ],
+   "sources": [
+    "nuclear-synapsis-framework/docs/08-guides/tutorial.md"
+   ],
+   "meta": {
+    "section": "04-synapsis",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:nuclear-synapsis-framework/docs/08-guides/tutorial.md#tutorial-a-flutter-app-from-scratch-with-synapsis",
    "type": "guide",
    "title": "Tutorial: a Flutter app from scratch with Synapsis",
@@ -2658,7 +2802,8 @@
    "body": [
     "We are going to build **my_store**, an app that shows the products of a public API (fakestoreapi.com): a",
     "component with its repository, a use case, the screen's state, the screen, navigation and its tests. Everything",
-    "is written in Nuclear; the Flutter app is generated by itself.",
+    "is written in Nuclear; the Flutter app is generated by itself. It starts from a **workspace**, the folder of one",
+    "business project, and each step can be done by chat with your agent, or with the commands shown beside it.",
     "",
     "The full rules are in [nuclearlang/dialects/dart/docs/07-reference/flutter.md](../../../nuclearlang/dialects/dart/docs/07-reference/flutter.md) (or `nuclear help flutter`)."
    ],

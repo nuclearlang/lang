@@ -10140,14 +10140,15 @@
    "id": "doc:docs/04-specs/022-workspaces-and-mcp/tasks.md#spec-022-tasks",
    "type": "spec",
    "title": "Spec 022 — Tasks",
-   "summary": "the Builder's page reads the specs again when a `specs//spec.md` appears or changes (a spec written by the MCP server shows at once: today it shows on the page's next refresh).",
+   "summary": "the chat; the Builder's page reads the specs again when a `specs//spec.md` appears or changes.",
    "body": [
     "- [x] `nuclear workspace` (CLI, the marker, `nuclear new` inside a workspace), the parser reads the marker; docs.",
     "- [x] MCP: workspaces and apps, specs (in the Builder at once), teams and members, all confirmed; `mcp-coverage.md`.",
-    "- [ ] Editor: recent workspaces, the slots from the marker, the empty panel, the welcome's three steps with the chat;",
-    "  the Builder's page reads the specs again when a `specs/**/spec.md` appears or changes (a spec written by the MCP",
-    "  server shows at once: today it shows on the page's next refresh).",
-    "- [ ] The tutorial and the guides from a workspace, by chat; the tour of each tool.",
+    "- [x] Editor (VS Code): recent workspaces, the slots from the marker, the empty panel, the welcome's three steps with",
+    "  the chat; the Builder's page reads the specs again when a `specs/**/spec.md` appears or changes.",
+    "- [ ] Editor (JetBrains): the same workspace (the recent list, the apps as the projects, the empty state, the",
+    "  commands); recorded in `extensions/jetbrains/docs/01-product/roadmap.md`.",
+    "- [x] The tutorial and the guides from a workspace, by chat; the tour of each tool.",
     "- [ ] Knowledge base rows; the delivery gate passes; release."
    ],
    "agents": false,
@@ -10335,12 +10336,29 @@
    }
   },
   {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#consequences",
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#consequences.b691d0",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Consequences",
-   "summary": "time; every action has a key.",
+   "summary": "`Ctrl+Alt+<letter>` (the user rebinds).",
+   "body": "`Ctrl+Alt+<letter>` (the user rebinds).",
+   "agents": false,
+   "sources": [
+    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#consequences.f77141",
+   "type": "adr",
+   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Consequences",
+   "summary": "project found by every tool and agent through the workspace's marker, never lost when VS Code changes folder; the screen for one thing at a time; every action has a key.",
    "body": [
-    "- Positive: one place for every Nuclear feature; projects side by side without windows; the screen for one thing at a",
+    "- Positive: one place for every Nuclear feature; projects side by side without windows; the apps of one business",
+    "  project found by every tool and agent through the workspace's marker, never lost when VS Code changes folder; the screen for one thing at a",
     "  time; every action has a key.",
     "- Negative:",
     "  - The HTTP tree and the file tree are drawn by the webview, not native trees: the file tree has no git decorations",
@@ -10354,8 +10372,7 @@
     "  - The editor title bar is the only toolbar an extension can fill, so the actions show only while an editor is open",
     "    (not on the welcome page).",
     "  - The terminals the actions open are named per project and action, but not swapped with the workspace.",
-    "  - `Ctrl+1` … `Ctrl+9` replace VS Code's \"focus editor group N\"; a desktop environment may take a",
-    "    `Ctrl+Alt+<letter>` (the user rebinds)."
+    "  - `Ctrl+1` … `Ctrl+9` replace VS Code's \"focus editor group N\"; a desktop environment may take a"
    ],
    "agents": false,
    "sources": [
@@ -10478,26 +10495,6 @@
    }
   },
   {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.91b8e3",
-   "type": "adr",
-   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
-   "summary": "editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
-   "body": [
-    "editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
-    "13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,",
-    "    `Alt+Shift+H`). Zed cannot contribute keybindings or views."
-   ],
-   "agents": false,
-   "sources": [
-    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.b7fb8e",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
@@ -10562,6 +10559,35 @@
     "   emulators, because hot reload is watched while coding. Entering a backend, a web or another tool workspace parks",
     "   them: the panel closes, the app keeps running headless with its session, and the next mobile workspace gives it a",
     "   panel again. Every switch parks the devices and takes them back after the code is reopened, so each device lands in"
+   ],
+   "agents": false,
+   "sources": [
+    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.fa374d",
+   "type": "adr",
+   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
+   "summary": "editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
+   "body": [
+    "editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
+    "13. **The Nuclear workspace is the unit of work** (amended by the user, 2026-11-20, spec 022). A Nuclear workspace is",
+    "    a folder for one business project with `.workspace/workspace.nuc`, the marker that names its apps; the strip's",
+    "    project tabs are its apps, read through `nuclear workspace … --json` and refreshed when the marker changes. The",
+    "    editor, not VS Code's folder, remembers the workspaces (the recent list) and the projects opened by hand, so a",
+    "    change of VS Code's folder never loses them; the open one is the workspace that holds VS Code's folder, else the",
+    "    last one opened. With no workspace and no project the view says why and offers the recent workspaces, *Open a",
+    "    workspace…* and *Create a workspace*. The first run starts with the workspace: the welcome's three steps (create",
+    "    it, add its apps, a tour of every tool), each also done by chat with the user's agent through the MCP server,",
+    "    which asks before each change. A folder without a marker still works as before: its projects are the tabs.",
+    "14. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,",
+    "    `Alt+Shift+H`). Zed cannot contribute keybindings or views."
    ],
    "agents": false,
    "sources": [

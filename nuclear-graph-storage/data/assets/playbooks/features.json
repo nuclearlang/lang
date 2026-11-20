@@ -560,9 +560,9 @@
    "id": "playbook:new-project",
    "type": "playbook",
    "title": "Playbook: start a project",
-   "summary": "`nuclear new <name> -p <platform>`, set the connections and plugins, build, install, test and run. Then add features with the generators.",
+   "summary": "In a workspace (`nuclear workspace new <path>`, or the one that exists), `nuclear workspace add <app> --platform <platform>`; set the connections and plugins, build, install, test and run. Then add features with the generators.",
    "body": [
-    "1. `nuclear new <name> -p backend|mobile|web [-d <dialect>]`.",
+    "1. The workspace: `nuclear workspace show` (or `nuclear workspace new <path>`), then `nuclear workspace add <app> --platform backend|mobile|web [--dialect <dialect>]` (an agent: `workspace_show`, `app_add`, each asked first).",
     "2. `config.nuc`: the app's name and version; `plugins(...)` for what it uses.",
     "3. `config/project_config.nuc`: the connections (a database, an `Http(baseUrl)`, a model).",
     "4. `nuclear build`, `nuclear install`, `nuclear test`, `nuclear run`.",
@@ -591,6 +591,10 @@
     {
      "rel": "concept",
      "to": "concept:config"
+    },
+    {
+     "rel": "in",
+     "to": "concept:workspace"
     }
    ],
    "sources": [
