@@ -8572,12 +8572,13 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.59a997",
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.5c277c",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Tasks — Phase 3 — Findable",
    "summary": "grammar is public in `nuclearlang/nuclear-tmlanguage`): the pull request (`languages.yml`, `samples/Nuclear/`, `script/add-grammar`) once they are in 200 repositories of several owners; then `.gitattributes` loses its `linguist-language` lines.",
    "body": [
-    "grammar is public in `nuclearlang/nuclear-tmlanguage`): the pull request (`languages.yml`, `samples/Nuclear/`,",
+    "- [ ] T3.9 agent: Nuclear in GitHub Linguist with the extensions `.nuc` and `.nuclear` (both free there today; the",
+    "      grammar is public in `nuclearlang/nuclear-tmlanguage`): the pull request (`languages.yml`, `samples/Nuclear/`,",
     "      `script/add-grammar`) once they are in 200 repositories of several owners; then `.gitattributes` loses its",
     "      `linguist-language` lines."
    ],
@@ -8592,7 +8593,7 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.9f90e6",
+   "id": "doc:docs/04-specs/019-launch-and-growth/tasks.md#phase-3-findable.c2404f",
    "type": "spec",
    "title": "Spec 019: Launch and growth — Tasks — Phase 3 — Findable",
    "summary": "OIDC login).",
@@ -8604,13 +8605,13 @@
     "      `synapsis-nest`, `synapsis-web`; pub.dev `synapsis`; crates.io `nuclear-cli`), trusted publishing each.",
     "      user: the accounts and each registry's trusted publisher (as the Marketplace).",
     "- [ ] T3.4 agent: Homebrew tap, Scoop bucket, winget manifest, AUR package, updated by the release.",
-    "- [ ] T3.5 user: Open VSX namespace verified (EclipseFdn/open-vsx.org#16010), then the agent moves it to trusted",
-    "      publishing and the user deletes `OVSX_PAT`.",
+    "- [ ] T3.5 Open VSX namespace verified (EclipseFdn/open-vsx.org#16010, done 2026-11-20); release.yml publishes with",
+    "      trusted publishing once the secret is gone (done). Left, user: register the trusted publisher on open-vsx.org",
+    "      (nuclearlang/lang, release.yml), delete `OVSX_PAT`.",
     "- [ ] T3.6 agent: the pages that answer the questions people ask an AI (R2.2).",
     "- [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact",
     "      attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).",
-    "- [ ] T3.8 agent: pull requests to the awesome lists that accept the project.",
-    "- [ ] T3.9 agent: Nuclear in GitHub Linguist with the extensions `.nuc` and `.nuclear` (both free there today; the"
+    "- [ ] T3.8 agent: pull requests to the awesome lists that accept the project."
    ],
    "agents": false,
    "sources": [
