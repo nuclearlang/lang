@@ -60,9 +60,10 @@ payment, a decision, a click in a website's settings), **agent → user** (the a
 - [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact
       attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).
 - [ ] T3.8 agent: pull requests to the awesome lists that accept the project.
-- [ ] T3.9 agent: Nuclear in GitHub Linguist (`.nuc` is free there today): the grammar in a public repository of its
-      own (MIT), then the pull request (`languages.yml`, `samples/Nuclear/`, `script/add-grammar`) once `.nuc` is in
-      200 repositories of several owners; then `.gitattributes` loses its `linguist-language` line.
+- [ ] T3.9 agent: Nuclear in GitHub Linguist with the extensions `.nuc` and `.nuclear` (both free there today): the
+      grammar in a public repository of its own (MIT), then the pull request (`languages.yml`, `samples/Nuclear/`,
+      `script/add-grammar`) once they are in 200 repositories of several owners; then `.gitattributes` loses its
+      `linguist-language` lines.
 
 ## Phase 4 — Launch (after phases 1-3 and spec 020's first round)
 
