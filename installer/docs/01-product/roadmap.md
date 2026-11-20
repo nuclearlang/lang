@@ -27,6 +27,9 @@ The pending work of the installers, the release and the set-up of the AI service
 - **The first release.** The installers and the release workflow are written (ADR-installer-0001): binaries for
   Linux, macOS and Windows and a one-command installer. They work once a tag `v*` exists. Left: the first release
   tag `v0.1.0`; `release.yml` never ran, and the public one-line installer fails without a release.
+- **The extension in the stores.** The job `marketplaces` of `release.yml` publishes the `.vsix` on the Visual Studio
+  Marketplace (Trusted Publishing) and Open VSX ([the runbook](../06-runbooks/release.md)). Left: the publisher
+  `nuclearlang` and its Trusted Publishing policy, the Open VSX namespace and the secret `OVSX_PAT`; the job never ran.
 - **The AI services built into the installer** (ADR-installer-0002; [the guide](../08-guides/ai-setup.md)). Left:
   - The profiles: see *To decide with the user*. Then `setup.json` is written
     (`extensions/tools/nuclear-builder/tests/test_setup.nuc` holds the guide to it).

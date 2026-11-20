@@ -10,19 +10,22 @@
 # `nuclear` and `nuclear-lsp` linked in ~/.local/bin, puts that folder in the PATH of your shells, gives
 # the AI agents the `nuclear` skill and installs the editor extension in every editor of the VS Code family it finds
 # (VS Code, Insiders, Cursor, VSCodium, Windsurf; on macOS inside their apps too). No sudo. Then, asked in a
-# terminal, the AI services: their archive (a Python of their own with the Smart Graph, the MCP server and the Nuclear
-# Developer, about 160 MB; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: it reads this
-# machine, suggests a profile and asks before anything else is downloaded). A machine already set up gets them again
-# for the new version, without questions.
+# required Smart Graph and MCP server: their archive (a Python of their own with the Smart Graph, the MCP server and
+# the Nuclear Developer, about 160 MB; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: the
+# graph's own embeddings model, the MCP server in the AI clients, the services at every login; it asks whether to add
+# local agents, whose Ollama models are downloaded only for a local profile, `remote` adds none). A machine already set
+# up keeps its profile; without a terminal the profile is `remote`.
 #
 # Run it again at any time: what is already there (the same version of NuclearLang, of the AI services) is kept and not
 # downloaded again, an interrupted run goes on from its step, and what is missing is added (an editor installed since).
-# Only NuclearLang itself is required; the extension, the skill and the AI services are added when they can be, and a
+# Required: NuclearLang, the Smart Graph, the MCP server, the skill (a missing one ends the install with an error,
+# and a new run goes on). Added when possible: the editor extension. Asked: the local agents. A
 # platform's toolchain (Flutter for mobile, Node.js for web and NestJS) is never installed here: the summary and the
 # editor say what each platform needs and how to install it.
 #
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
-# (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai, --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
+# (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai (tests only: skips the required Smart Graph and MCP server, the install ends incomplete),
+# --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
 # that profile, no questions), --reinstall (download and replace even what is already
 # there), --uninstall (everything the install made: the AI services' models, Ollama when it
 # installed it, their data and secrets, the caches, the editors' extension). NUCLEAR_INSTALL and NUCLEAR_BIN change the folders; NUCLEAR_REPO the
@@ -252,7 +255,7 @@ while [ $# -gt 0 ]; do
     --profile) PROFILE=${2:?--profile needs a value}; shift ;;
     --uninstall) UNINSTALL=1 ;;
     --reinstall) REINSTALL=1 ;;
-    -h|--help) sed -n '2,29p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,/^set -eu/p' "$0" 2>/dev/null | sed '$d' | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) say "unknown option: $1"; exit 2 ;;
   esac
   shift
@@ -495,34 +498,21 @@ if [ "$VSCODE" = 1 ] && [ -n "$(editors)" ]; then
   fi
 fi
 
-# --- the AI services (ADR-installer-0002, ADR-installer-0003) ---
-# They live inside the installation: a machine already set up gets them again for this version, with the profile it
-# had. A new one is asked, in the terminal; nothing is downloaded before the user chooses.
+# --- the Smart Graph and the MCP server: required (ADR-installer-0006, ADR-installer-0003) ---
+# They come in the AI archive, inside the installation, and are always installed: no question. Only the local agents
+# are asked, by the set-up (a profile with Ollama's models, or `remote`: no local model, only the graph's own). A
+# machine already set up keeps its profile; without a terminal the profile is `remote`. `--no-ai` (tests) skips them
+# and the install ends incomplete.
 MACHINE="${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang/ai.env"
 [ -n "$PROFILE" ] || PROFILE=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
 ai_note=""
 tty=0
 [ -z "${CI:-}" ] && (: < /dev/tty) 2>/dev/null && tty=1
-# a resumed run keeps the answer of the first one
-case $(state_get ai) in no) AI=0; ai_note="The AI services are not installed: run this installer again when you want them." ;; esac
-if [ "$AI" = 1 ]; then section "The AI services"; fi
-if [ "$AI" = 1 ] && [ -z "$PROFILE" ] && [ "$(state_get ai)" != yes ]; then
-  if [ "$tty" = 1 ]; then
-    box_top "What they are"
-    box_line "${BOLD}The Smart Graph${OFF}  what agents know of NuclearLang, searched by meaning"
-    box_line "${BOLD}The MCP server${OFF}   the generators, the compiler and the graph, for agents"
-    box_line "${BOLD}Local agents${OFF}     optional: small models on this machine that write code"
-    box_line ""
-    box_line "${DIM}About 160 MB now. The set-up then asks before any model is downloaded.${OFF}"
-    box_end
-    printf '\n  %sDownload them?%s %s[Y/n]%s ' "$BOLD" "$OFF" "$YELLOW" "$OFF" >&2
-    read -r answer < /dev/tty || answer=n
-    case $answer in [nN]*) AI=0; ai_note="The AI services are not installed: run this installer again when you want them." ;; esac
-    if [ "$AI" = 1 ]; then remember ai yes; else remember ai no; fi
-  else
-    AI=0
-    ai_note="The AI services are not installed (no terminal here): run this installer in a terminal, or with --profile."
-  fi
+if [ "$AI" = 0 ]; then
+  ai_note="--no-ai: the Smart Graph and the MCP server, which are required, were not installed. Run the installer without it."
+else
+  section "The Smart Graph and the MCP server"
+  if [ -z "$PROFILE" ] && [ "$tty" = 0 ]; then PROFILE=remote; fi
 fi
 if [ "$AI" = 1 ]; then
   # their archive: a Python of their own with the services in it, unpacked as the installation's ai/
@@ -561,11 +551,14 @@ if [ "$AI" = 1 ]; then
       mark ai-unpacked
     else
       AI=0
-      ai_note="The AI services do not run on this system (a Linux needs glibc); NuclearLang itself is installed."
+      ai_note="The Smart Graph and the MCP server do not run on this system (their Python needs a Linux with glibc, not musl/Alpine). NuclearLang itself is installed."
     fi
   else
     AI=0
-    ai_note="The AI services of $VERSION are not published for $where."
+    if [ "$os-$arch" = macos-x86_64 ]; then
+      # onnxruntime (the graph's model runtime) publishes no wheel for an Intel Mac: no AI archive is built for it
+      ai_note="The Smart Graph and the MCP server do not run on an Intel Mac yet (their model runtime, onnxruntime, is not published for it). NuclearLang itself is installed."
+    else ai_note="The Smart Graph and the MCP server of $VERSION could not be downloaded for $where: check the connection and run the installer again."; fi
   fi
   fi
 fi
@@ -577,18 +570,19 @@ if [ "$AI" = 1 ]; then
   elif [ -n "$PROFILE" ]; then
     section "Set-up · profile $PROFILE"
     NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup --profile "$PROFILE" --yes >&2 \
-      || ai_note="The AI services are not fully set up: run \`nuclear-builder setup\`; it goes on from the step that failed."
+      || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
   elif [ "$tty" = 1 ]; then
     section "Set-up"
     NUCLEAR_INSTALL="$INSTALL" NUCLEAR_BIN="$BIN" "$builder" setup < /dev/tty >&2 \
-      || ai_note="The AI services are not fully set up: run \`nuclear-builder setup\`; it goes on from the step that failed."
+      || ai_note="The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed."
   else
-    ai_note="The AI services are not set up (no terminal here): run \`nuclear-builder setup\`."
+    ai_note="The Smart Graph and the MCP server are not set up: run \`nuclear-builder setup --profile remote --yes\`."
   fi
 fi
 
 # --- finished: the step log and the downloads go (a set-up that did not end keeps them, so a new run resumes it) ---
-case $ai_note in *"not fully set up"*) ;; *) rm -f "$STATE"; rm -rf "$CACHE" ;; esac
+# (an incomplete install keeps them, so the next run goes on)
+if [ -z "$ai_note" ]; then rm -f "$STATE"; rm -rf "$CACHE"; fi
 
 # --- the end: nuclear's own intro (the mushroom cloud), then the summary ---
 # (a release before 0.1.6 has no `intro`)
@@ -620,13 +614,21 @@ box_line "" "$GREEN"
 # what is on this machine: required, added when it can be, and each platform's toolchain (never installed here)
 box_line "${BOLD}Required${OFF}" "$GREEN"
 box_line "  ${GREEN}✓${OFF} NuclearLang ${DIM}the compiler, the language server, the standard library${OFF}" "$GREEN"
+if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then
+  box_line "  ${GREEN}✓${OFF} The Smart Graph ${DIM}with its own embeddings model, started at every login${OFF}" "$GREEN"
+  box_line "  ${GREEN}✓${OFF} The MCP server ${DIM}in your AI clients · nuclear-builder setup --status${OFF}" "$GREEN"
+else box_line "  ${RED}✗${OFF} The Smart Graph and the MCP server ${DIM}(below)${OFF}" "$GREEN"; fi
+if [ "$AGENT" = 1 ]; then box_line "  ${GREEN}✓${OFF} The nuclear skill ${DIM}for Claude Code, Codex, Cursor, Grok Build, OpenCode${OFF}" "$GREEN"; fi
 box_line "${BOLD}Added when possible${OFF}" "$GREEN"
 if [ -s "$tmp/editors" ]; then box_line "  ${GREEN}✓${OFF} The editor extension ${DIM}$names${OFF}" "$GREEN"
 elif [ "$VSCODE" = 0 ]; then box_line "  ${DIM}○ The editor extension: not asked (--no-vscode)${OFF}" "$GREEN"
 else box_line "  ${DIM}○ The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions${OFF}" "$GREEN"; fi
-if [ "$AGENT" = 1 ]; then box_line "  ${GREEN}✓${OFF} The nuclear skill ${DIM}for Claude Code, Codex, Cursor, Grok Build, OpenCode${OFF}" "$GREEN"; fi
-if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then box_line "  ${GREEN}✓${OFF} The AI services ${DIM}the Smart Graph, the MCP server · nuclear-builder setup --status${OFF}" "$GREEN"
-elif [ -n "$ai_note" ]; then box_line "  ${YELLOW}!${OFF} The AI services ${DIM}(below)${OFF}" "$GREEN"; fi
+box_line "${BOLD}Optional, asked${OFF}" "$GREEN"
+chosen=$(sed -n 's/^NUCLEAR_AI_PROFILE=//p' "$MACHINE" 2>/dev/null || true)
+case $chosen in
+  lite|medium|hard) box_line "  ${GREEN}✓${OFF} Local agents ${DIM}profile $chosen: Ollama's models on this machine${OFF}" "$GREEN" ;;
+  *) box_line "  ${DIM}○ Local agents: not chosen (remote: no local model) · nuclear-builder setup to add them${OFF}" "$GREEN" ;;
+esac
 box_line "${BOLD}Each platform's own${OFF} ${DIM}(only for the platforms you build; the editor guides you)${OFF}" "$GREEN"
 doctor=$("$BIN/nuclear" doctor --json < /dev/null 2>/dev/null || true)
 toolchain() {
@@ -643,9 +645,15 @@ box_line "" "$GREEN"
 box_line "${BOLD}Start with${OFF}    ${YELLOW}nuclear new my_app${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear doctor${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear help${OFF}" "$GREEN"
 box_line "${DIM}Docs          https://nuclearlang.github.io${OFF}" "$GREEN"
 box_end "$GREEN"
-[ -z "$ai_note" ] || warn "$ai_note"
+if [ -n "$ai_note" ]; then
+  # a required part is missing: said in red, and the installer ends with an error (NuclearLang itself stays installed)
+  box_top "Not complete" "$RED"
+  box_line "$ai_note" "$RED"
+  box_end "$RED"
+fi
 if [ "$on_path" = 0 ]; then
   if [ "$MODIFY_PATH" = 1 ]; then warn "Open a new terminal ${DIM}(or run: export PATH=\"$(short "$BIN" | sed 's|^~|$HOME|'):\$PATH\")${OFF}"
   else warn "Add $BIN to your PATH: export PATH=\"$BIN:\$PATH\""; fi
 fi
 say ""
+[ -z "$ai_note" ] || exit 1

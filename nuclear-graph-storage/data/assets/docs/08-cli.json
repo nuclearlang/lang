@@ -1115,21 +1115,22 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.4257e8",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5145b5",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
    "summary": "the user's list).",
    "body": [
     "**What is required, what is added, a new run** ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md),",
-    "[the user's list](../08-guides/what-gets-installed.md)). Only the core archive is a `must`; the extension, the skill",
-    "and the AI services are tasks whose failure is a warning. Both installers write `<installation>/.version` and",
+    "[the user's list](../08-guides/what-gets-installed.md)). NuclearLang, the Smart Graph and the MCP server (the AI archive",
+    "and its set-up) are required: no question is asked for them, and a missing one ends the run with a red *Not complete*",
+    "box and exit code 1 (NuclearLang stays installed; the step log and the cache are kept, so a new run goes on). The",
+    "extension is a task whose failure is a warning. The local agents are asked by the set-up (`remote` by default);",
+    "without a terminal the profile is `remote`. Windows on ARM downloads the x64 AI archive; an Intel Mac has none.",
+    "`install.ps1` ends with `Quit`: `exit` when run as a file, `break` under `irm | iex` (so the user's window stays). Both installers write `<installation>/.version` and",
     "`<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`",
     "(`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On",
     "Windows the processes running from a folder are stopped before it is replaced (`Stop-Under`). The final box lists",
-    "*Required*, *Added when possible* and *Each platform's own*: the toolchains `nuclear doctor --json` finds, or where",
-    "to get each; no toolchain is installed by the installers. `--uninstall` also removes the empty line written before",
-    "each PATH line, a `.profile` left empty, the folders the install made when nothing else is in them, and the",
-    "extension's folder an editor only marked removed (Cursor deletes it at its next start)."
+    "*Required*, *Added when possible* and *Each platform's own*: the toolchains `nuclear doctor --json` finds, or where"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1212,11 +1213,15 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.9ebe44",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.ab9b74",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "`editor-<command>`, `ai-downloaded`, `ai-verified`, `ai-unpacked`) and the answer to the AI question are written to `~/.local/state/nuclearlang/install.state` (`XDG_STATE_HOME`); the downloads are kept in `~/.cache/nuclearlang/downloads` (`XDG_CACHE_HOME`).",
+   "summary": "to get each; no toolchain is installed by the installers.",
    "body": [
+    "to get each; no toolchain is installed by the installers. `--uninstall` also removes the empty line written before",
+    "each PATH line, a `.profile` left empty, the folders the install made when nothing else is in them, and the",
+    "extension's folder an editor only marked removed (Cursor deletes it at its next start).",
+    "",
     "**An interrupted install goes on** (`install.sh`). Each finished step (`downloaded`, `verified`, `installed`,",
     "`editor-<command>`, `ai-downloaded`, `ai-verified`, `ai-unpacked`) and the answer to the AI question are written to",
     "`~/.local/state/nuclearlang/install.state` (`XDG_STATE_HOME`); the downloads are kept in",
@@ -1386,7 +1391,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.fcb416",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.90c7af",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
    "summary": "1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.",
@@ -1398,9 +1403,9 @@
     "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
     "   `install.ps1`, in the GitHub release of that tag. It can also be started",
     "   by hand (`workflow_dispatch`).",
-    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (secret `VSCE_PAT`, a token",
-    "   of Azure DevOps with the scope *Marketplace → Manage*, organization *All accessible organizations*) and on Open",
-    "   VSX (secret `OVSX_PAT`, namespace `nuclearlang`). The stores read the `version` of",
+    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
+    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
+    "   environment) and on Open VSX (secret `OVSX_PAT`, namespace `nuclearlang`). The stores read the `version` of",
     "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
     "   stop the GitHub release.",
     "4. The public one-liners download from that release: without a release they fail with a clear error.",
@@ -1477,7 +1482,7 @@
    "body": [
     "| Where | How |",
     "|---|---|",
-    "| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \\| sh` asks at its end, in the terminal |",
+    "| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \\| sh` runs it at its end: the graph and the MCP server always, the local agents asked in the terminal (none without a terminal) |",
     "| VS Code | the offer the first time the extension starts, or *Nuclear: Set Up the AI Services* in the command palette, or *Set-up…* in *Settings and integrations* (`Ctrl+Alt+S`) |",
     "| A terminal, any time | `nuclear-builder setup` |",
     "",
@@ -1519,16 +1524,17 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.305f2f",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.9235cc",
    "type": "guide",
    "title": "Set up the AI services — 2. The steps",
    "summary": "1. This machine.",
    "body": [
-    "1. **This machine.** The processor, the memory, the GPU and the free disk, and where the agents run: on this machine",
-    "   (suggested: local agents write the code, so your remote agent spends tokens only on leading and correcting) or",
-    "   remote agents only.",
-    "2. **The profile.** Which models are downloaded. One is suggested for your memory and disk; the ones that are tight",
-    "   or do not fit are marked, with the reason. The choice is yours.",
+    "1. **This machine.** The processor, the memory, the GPU and the free disk, and where the agents run: remote agents",
+    "   only (`remote`, the answer by default) or also local agents on this machine (they write the code, so your remote",
+    "   agent spends tokens only on leading and correcting).",
+    "2. **The profile.** Which local models are downloaded, if any. The one that fits your memory and disk is named; the",
+    "   ones that are tight or do not fit are marked, with the reason. A local profile you decline at any step (the",
+    "   machine, Ollama, the models) goes on as `remote`: the Smart Graph and the MCP server are installed anyway.",
     "3. **What it needs.** Each program is found by itself once installed, or installed for you in a terminal you see:",
     "",
     "   | Program | For | Installed for you with |",
@@ -1811,8 +1817,10 @@
    "body": [
     "NuclearLang comes with two services that run on your machine: the **Smart Graph** (what an agent needs to know about",
     "NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the **Nuclear Developer** (small local models",
-    "that plan, write, test and review code). Their set-up reads your machine, suggests which models fit it, tells you how",
-    "far each choice works, and installs what you choose. Nothing is downloaded before you say so."
+    "that plan, write, test and review code). The Smart Graph and the MCP server are required: every install has them,",
+    "with the graph's own small model and no question ([what gets installed](what-gets-installed.md)). The local agents",
+    "are optional: the set-up reads your machine, says which profile of models fits it and how far each works, and asks;",
+    "its answer by default is `remote`, which downloads no local model."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1831,10 +1839,7 @@
    "body": [
     "| What | When | If it is not added | Tried on |",
     "|---|---|---|---|",
-    "| The editor extension | an editor of the VS Code family is found: VS Code, Insiders, Cursor, VSCodium, Windsurf | install the editor, then run the installer again; or search *NuclearLang* in its extensions | VS Code and Cursor on Linux and macOS |",
-    "| The `nuclear` skill | always (`--no-agent` skips it) | — | Claude Code |",
-    "| The AI services: the Smart Graph, the MCP server | you answer yes (or `--profile`) | `nuclear-builder setup`, or the installer again | profile `remote` on Linux, macOS and Windows; the local profiles on Linux |",
-    "| Nuclear's MCP server in your AI clients | Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI are found | `nuclear-builder setup --clients` after installing one | Claude Code, Cursor; Grok Build not yet |"
+    "| The editor extension | an editor of the VS Code family is found: VS Code, Insiders, Cursor, VSCodium, Windsurf | install the editor, then run the installer again; or search *NuclearLang* in its extensions | VS Code and Cursor on Linux and macOS |"
    ],
    "sources": [
     "installer/docs/08-guides/what-gets-installed.md"
@@ -1894,13 +1899,34 @@
    "id": "doc:installer/docs/08-guides/what-gets-installed.md#never-installed-named-with-steps-when-a-platform-needs-them",
    "type": "guide",
    "title": "What the installer installs, what is yours to choose, and what it never installs — Never installed (named, with steps, when a platform…",
-   "summary": "Never installed (named, with steps, when a platform needs them)",
+   "summary": "`--no-ai` (`-NoAi`) exists for tests only: it skips the Smart Graph and the MCP server, and the install ends incomplete.",
    "body": [
+    "`--no-ai` (`-NoAi`) exists for tests only: it skips the Smart Graph and the MCP server, and the install ends",
+    "incomplete.",
+    "",
     "| What | Needed for | How |",
     "|---|---|---|",
     "| Xcode (App Store) and CocoaPods | iOS apps | the App Store; `sudo gem install cocoapods` or `brew install cocoapods` |",
-    "| Android Studio and an Android SDK | Android apps | [developer.android.com/studio](https://developer.android.com/studio), then `flutter doctor --android-licenses` |",
-    "| Ollama and its models | the local agents | the set-up asks, and installs only what its profile needs |"
+    "| Android Studio and an Android SDK | Android apps | [developer.android.com/studio](https://developer.android.com/studio), then `flutter doctor --android-licenses` |"
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#optional-asked",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Optional, asked",
+   "summary": "Optional, asked",
+   "body": [
+    "| What | The question | Tried on |",
+    "|---|---|---|",
+    "| Local agents: the Nuclear Developer with Ollama's models (profiles `lite`, `medium`, `hard`) | the set-up asks the profile; `remote`, the answer by default, downloads no local model. Declined (the machine, Ollama or the models), it goes on as `remote` | Linux |"
    ],
    "sources": [
     "installer/docs/08-guides/what-gets-installed.md"
@@ -1915,13 +1941,21 @@
    "id": "doc:installer/docs/08-guides/what-gets-installed.md#required",
    "type": "guide",
    "title": "What the installer installs, what is yours to choose, and what it never installs — Required",
-   "summary": "Linux aarch64 and macOS Intel get their own build from the same release; they were not tried on a machine yet.",
+   "summary": "A missing one ends the install with an error (NuclearLang itself stays installed); run the installer again and it goes on from there.",
    "body": [
+    "A missing one ends the install with an error (NuclearLang itself stays installed); run the installer again and it",
+    "goes on from there.",
+    "",
     "| What | Why | Tried on |",
     "|---|---|---|",
     "| NuclearLang: `nuclear`, `nuclear-lsp`, the dialects, the standard library, on your PATH | writes, checks and builds Nuclear for every platform | Linux x86_64, macOS Apple silicon, Windows x64 and ARM64 |",
+    "| The Smart Graph, with its own embeddings model (about 300 MB, no Ollama) and the release's vectors, started at every login | what agents know of NuclearLang, searched by meaning | Linux, macOS Apple silicon, Windows x64; Windows ARM64 (the x64 archive) by the release's Windows test |",
+    "| The MCP server (`nuclear-mcp`), given to every AI client found: Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI | the generators, the compiler and the graph, for your agent | Claude Code and Cursor; Grok Build not yet |",
+    "| The `nuclear` skill | what Nuclear is, for your agent | Claude Code |",
     "",
-    "Linux aarch64 and macOS Intel get their own build from the same release; they were not tried on a machine yet."
+    "Linux aarch64 and macOS Intel get NuclearLang's own build; neither was tried on a machine yet. **An Intel Mac",
+    "cannot complete the install yet**: the Smart Graph's model runtime (onnxruntime) is not published for it, so the",
+    "installer installs NuclearLang and says the rest is missing."
    ],
    "sources": [
     "installer/docs/08-guides/what-gets-installed.md"
@@ -1958,10 +1992,11 @@
    "id": "doc:installer/docs/08-guides/what-gets-installed.md#what-the-installer-installs-what-is-yours-to-choose-and-what-it-never-installs",
    "type": "guide",
    "title": "What the installer installs, what is yours to choose, and what it never installs",
-   "summary": "Only NuclearLang itself is required: whatever else is missing on your machine, the install ends with `nuclear` working.",
+   "summary": "NuclearLang, the Smart Graph and the MCP server are required and always installed, without a question: they are what lets your AI agents know Nuclear.",
    "body": [
-    "Only NuclearLang itself is required: whatever else is missing on your machine, the install ends with `nuclear`",
-    "working. The rest is added when it can be, and what it could not add is listed at the end with how to add it.",
+    "NuclearLang, the Smart Graph and the MCP server are required and always installed, without a question: they are",
+    "what lets your AI agents know Nuclear. The editor extension is added when an editor is there; the local agents are",
+    "asked. What could not be added is listed at the end with how to add it.",
     "Running the installer again is safe: what is already there is kept, what is missing is added",
     "([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md))."
    ],

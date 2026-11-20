@@ -295,6 +295,11 @@ haveModels(p: Profile, always: boolean) boolean
   print("Nothing is downloaded. Run `nuclear-builder setup` again when you want the models, or choose the profile `remote`.")
   false
 
+// The profile `remote`, said: the local agents are left out, the Smart Graph and the MCP server go on.
+withoutLocalAgents() Profile?
+  print("  ${paint("○", "dim")} No local agents: the Smart Graph and the MCP server are installed with the profile ${paint("remote", "bold")} (the local agents later: nuclear-builder setup).")
+  profileOf("remote")
+
 // The AI services of this machine, in a terminal: the same steps as the editors' set-up page.
 setup(args: string[]) int
   if "--help" in args or "-h" in args
@@ -331,17 +336,23 @@ setup(args: string[]) int
   suggested = recommend(hw)
   describeProfiles(hw, suggested)
   names = PROFILES.map((x) => x.id).join(", ")
-  p = profileOf(option(args, "--profile") ?? (always ? suggested : ask("  ${paint("Which one?", "bold")} ${names} ${paint("[${suggested}]", "yellow")}: ", suggested)))
+  // the local agents are optional and asked (ADR-installer-0006): the answer by default is `remote`, no local model;
+  // the Smart Graph and the MCP server are installed in every profile
+  print("  ${paint("Local agents", "bold")} are optional: ${paint("remote", "bold")} adds no local model (${suggested} suits this machine).")
+  p = profileOf(option(args, "--profile") ?? (always ? "remote" : ask("  ${paint("Which one?", "bold")} ${names} ${paint("[remote]", "yellow")}: ", "remote")))
   if p == null
     print("no such profile: ${names}", file = sys.stderr)
     return 2
   f = fit(p, hw)
+  // a local profile not taken (not for this machine, Ollama or its models declined) leaves the required part: `remote`
   if f.fit == "no" and not yes(always ? "y" : ask("${p.title} is not for this machine (${f.note}). Install it anyway? [y/N]: ", "n"))
-    return 1
-  if not haveRequirements(p, always)
-    return 1
-  if not haveModels(p, always)
-    return 1
+    p = withoutLocalAgents()
+  if not haveRequirements(p!, always)
+    p = withoutLocalAgents()
+    if not haveRequirements(p!, always)
+      return 1
+  if not haveModels(p!, always)
+    p = withoutLocalAgents()
   root = aiRoot()
   if root == null
     print("NuclearLang is installed without the AI services: run its installer again (without --no-ai).", file = sys.stderr)

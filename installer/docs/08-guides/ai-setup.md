@@ -2,14 +2,16 @@
 
 NuclearLang comes with two services that run on your machine: the **Smart Graph** (what an agent needs to know about
 NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the **Nuclear Developer** (small local models
-that plan, write, test and review code). Their set-up reads your machine, suggests which models fit it, tells you how
-far each choice works, and installs what you choose. Nothing is downloaded before you say so.
+that plan, write, test and review code). The Smart Graph and the MCP server are required: every install has them,
+with the graph's own small model and no question ([what gets installed](what-gets-installed.md)). The local agents
+are optional: the set-up reads your machine, says which profile of models fits it and how far each works, and asks;
+its answer by default is `remote`, which downloads no local model.
 
 ## 1. Start it
 
 | Where | How |
 |---|---|
-| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \| sh` asks at its end, in the terminal |
+| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \| sh` runs it at its end: the graph and the MCP server always, the local agents asked in the terminal (none without a terminal) |
 | VS Code | the offer the first time the extension starts, or *Nuclear: Set Up the AI Services* in the command palette, or *Set-up…* in *Settings and integrations* (`Ctrl+Alt+S`) |
 | A terminal, any time | `nuclear-builder setup` |
 
@@ -17,11 +19,12 @@ The same steps run in the three. Run it again whenever you want another choice: 
 
 ## 2. The steps
 
-1. **This machine.** The processor, the memory, the GPU and the free disk, and where the agents run: on this machine
-   (suggested: local agents write the code, so your remote agent spends tokens only on leading and correcting) or
-   remote agents only.
-2. **The profile.** Which models are downloaded. One is suggested for your memory and disk; the ones that are tight
-   or do not fit are marked, with the reason. The choice is yours.
+1. **This machine.** The processor, the memory, the GPU and the free disk, and where the agents run: remote agents
+   only (`remote`, the answer by default) or also local agents on this machine (they write the code, so your remote
+   agent spends tokens only on leading and correcting).
+2. **The profile.** Which local models are downloaded, if any. The one that fits your memory and disk is named; the
+   ones that are tight or do not fit are marked, with the reason. A local profile you decline at any step (the
+   machine, Ollama, the models) goes on as `remote`: the Smart Graph and the MCP server are installed anyway.
 3. **What it needs.** Each program is found by itself once installed, or installed for you in a terminal you see:
 
    | Program | For | Installed for you with |

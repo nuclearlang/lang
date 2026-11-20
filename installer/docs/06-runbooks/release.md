@@ -15,9 +15,9 @@ related: [installer/release/package.sh, installer/release/clean-machine/Dockerfi
    that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and
    `install.ps1`, in the GitHub release of that tag. It can also be started
    by hand (`workflow_dispatch`).
-3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (secret `VSCE_PAT`, a token
-   of Azure DevOps with the scope *Marketplace → Manage*, organization *All accessible organizations*) and on Open
-   VSX (secret `OVSX_PAT`, namespace `nuclearlang`). The stores read the `version` of
+3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;
+   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no
+   environment) and on Open VSX (secret `OVSX_PAT`, namespace `nuclearlang`). The stores read the `version` of
    `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not
    stop the GitHub release.
 4. The public one-liners download from that release: without a release they fail with a clear error.

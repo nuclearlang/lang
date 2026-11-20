@@ -7,7 +7,7 @@
    "id": "faq:install",
    "type": "faq",
    "title": "How do I install NuclearLang?",
-   "summary": "One command installs the release of your system: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` on Linux and macOS, `irm https://nuclearlang.github.io/install.ps1 | iex` on Windows. At its end it offers the set-up of the AI services (the Smart Graph, the local agents and the models that fit your machine); `--no-ai` skips it.",
+   "summary": "One command installs the release of your system: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` on Linux and macOS, `irm https://nuclearlang.github.io/install.ps1 | iex` on Windows. At its end it installs the Smart Graph and the MCP server, which are required, and asks only whether to add local agents (`remote`, the answer by default, downloads no local model).",
    "body": [
     "```sh",
     "curl -fsSL https://nuclearlang.github.io/install.sh | sh        # Linux and macOS",

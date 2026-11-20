@@ -324,3 +324,23 @@ testGrokBuildGetsTheMcpServerOnceAndLosesItOnRemove(tmpPath: Path, monkeypatch: 
   said.clear()
   disconnectClients((l) => said.add(l))
   expect(said == ["Grok Build: removed the nuclear MCP server"] and servers.isEmpty, "${said}")
+
+// The local agents are optional and asked (ADR-installer-0006): `--yes` without a profile is `remote`, and a local
+// profile whose models are declined goes on as `remote`; the Smart Graph and the MCP server come in both.
+testTheSetUpIsRemoteByDefaultAndADeclinedLocalProfileGoesOnAsRemote(monkeypatch: any, capsys: any) void
+  asked: string[] = []
+  monkeypatch.setattr("nuclear_builder.cli.have_requirements", (p: Profile, always: boolean) =>
+    asked.add("requirements ${p.id}")
+    true)
+  monkeypatch.setattr("nuclear_builder.cli.have_models", (p: Profile, always: boolean) =>
+    asked.add("models ${p.id}")
+    p.id == "remote")
+  // the steps stop where the installation is looked for: what was chosen before is what is tested
+  monkeypatch.setattr("nuclear_builder.setup.ai_root", () => null)
+  expect(setup(["--yes"]) == 1)
+  expect(asked == ["requirements remote", "models remote"], "${asked}")
+  asked.clear()
+  capsys.readouterr()
+  expect(setup(["--profile", "lite", "--yes"]) == 1)
+  expect(asked == ["requirements lite", "models lite"], "${asked}")
+  expect("installed with the profile remote" in "${capsys.readouterr().out}")

@@ -6,11 +6,14 @@
 #
 # It downloads the release of this architecture (x86_64 or arm64) from
 # GitHub, checks its SHA-256, installs it in %LOCALAPPDATA%\nuclearlang, puts its bin folder in your user PATH, gives the
-# AI agents the `nuclear` skill and installs the editor extension in every VS Code family editor on the PATH. No administrator rights. Then,
-# asked, the AI services: their archive (a Python of their own with the Smart Graph, the MCP server and the Nuclear
-# Developer; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: it reads this machine,
-# suggests a profile and asks before anything else is downloaded; a machine already set up is brought up to date
-# without questions). -NoAi skips them; -AiProfile remote|lite|medium|hard takes that profile without questions.
+# AI agents the `nuclear` skill and installs the editor extension in every VS Code family editor on the PATH. No administrator rights. Then
+# the required Smart Graph and MCP server: their archive (a Python of their own with the Smart Graph, the MCP server
+# and the Nuclear Developer; nothing is needed on the machine) and their set-up (`nuclear-builder setup`: the graph's
+# own embeddings model, the MCP server in the AI clients, the services at every login; it asks whether to add local
+# agents, `remote` by default, no local model). A machine already set up keeps its profile. -AiProfile
+# remote|lite|medium|hard takes that profile without questions; -NoAi (tests only) skips the required services and
+# the install ends incomplete. Run it again at any time: what the same version installed is kept (-Reinstall
+# replaces it). A platform's toolchain (Flutter, Node.js) is never installed here: the summary says where to get it.
 #
 # Environment: NUCLEAR_VERSION, NUCLEAR_INSTALL (the folder), NUCLEAR_REPO (owner/name), NUCLEAR_DOWNLOAD (a mirror),
 # NUCLEAR_AI_PROFILE.
@@ -162,11 +165,18 @@ function Get-Sum([string]$Url) {
   (($client.DownloadString($Url)).Trim() -split '\s+')[0].ToLower()
 }
 # What failed, in a red box with what to do; then the installer stops.
+# Ends the installer with an error code. Run as a file (-File, CI) it exits; run by `irm | iex` it is the user's own
+# PowerShell, which `exit` would close with the error still unread: `break` stops the script and the window stays.
+function Quit([int]$Code) {
+  $global:LASTEXITCODE = $Code
+  if ($PSCommandPath) { exit $Code }
+  break
+}
 function Fail([string]$Title, [string]$Why, [string]$Todo) {
   Write-Host ''
   Box "Could not finish: $Title" @($Why, '', $Todo) 'Red'
   Write-Host ''
-  exit 1
+  Quit 1
 }
 
 # the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
@@ -209,7 +219,7 @@ if ($Uninstall) {
 $Arch = switch ($env:PROCESSOR_ARCHITECTURE) {
   'AMD64' { 'x86_64' }
   'ARM64' { 'aarch64' }
-  default { Write-Host "This processor is not supported: $env:PROCESSOR_ARCHITECTURE (x86_64 and arm64 are)."; exit 1 }
+  default { Write-Host "This processor is not supported: $env:PROCESSOR_ARCHITECTURE (x86_64 and arm64 are)."; Quit 1 }
 }
 
 # --- which release ---
@@ -294,27 +304,20 @@ if (-not $NoModifyPath -and -not ($UserPath -contains $Bin)) {
   Ok "$Bin in your user PATH (a new terminal sees it)"
 }
 
-# --- the AI services (ADR-installer-0002, ADR-installer-0003) ---
-# Their environments live inside the installation: a machine already set up gets them again for this version, with
-# the profile it had. A new one is asked; nothing is downloaded before the user chooses.
+# --- the Smart Graph and the MCP server: required (ADR-installer-0006, ADR-installer-0003) ---
+# Always installed, no question: only the local agents are asked, by the set-up (`remote`, the default, adds no local
+# model). A machine already set up keeps its profile; without a terminal the profile is `remote`. -NoAi (tests)
+# skips them and the install ends incomplete.
 $Machine = Join-Path $env:APPDATA 'nuclearlang\ai.env'
 if (-not $AiProfile -and (Test-Path $Machine)) {
   $AiProfile = (Get-Content $Machine | Where-Object { $_ -like 'NUCLEAR_AI_PROFILE=*' } | Select-Object -First 1) -replace '^NUCLEAR_AI_PROFILE=', ''
 }
 $AiNote = ''
 $Interactive = -not $env:CI -and [Environment]::UserInteractive
-if (-not $NoAi -and -not $AiProfile) {
-  if ($Interactive) {
-    Section 'The AI services'
-    Box 'What they are' @('The Smart Graph: what agents know of NuclearLang, searched by meaning', 'The MCP server: the generators, the compiler and the graph, for your agent', 'Local agents: optional, small models on this machine that write code', '', 'About 160 MB now. The set-up then asks before any model is downloaded.')
-    Write-Host ''
-    Write-Host '  Download them? ' -NoNewline; Write-Host '[Y/n] ' -ForegroundColor Yellow -NoNewline
-    $Answer = Read-Host
-    if ($Answer -match '^[nN]') { $NoAi = $true; $AiNote = 'The AI services are not installed: run this installer again when you want them.' }
-  } else {
-    $NoAi = $true
-    $AiNote = 'The AI services are not installed (no terminal here): run this installer in a terminal, or with -AiProfile.'
-  }
+if ($NoAi) { $AiNote = '-NoAi: the Smart Graph and the MCP server, which are required, were not installed. Run the installer without it.' }
+else {
+  Section 'The Smart Graph and the MCP server'
+  if (-not $AiProfile -and -not $Interactive) { $AiProfile = 'remote' }
 }
 $AiDir = Join-Path $Install 'ai'
 if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
@@ -322,7 +325,8 @@ if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
   Ok "The AI services of $Version are already here (kept: nothing downloaded)"
 } elseif (-not $NoAi) {
   # their archive (ADR-installer-0003): a Python of their own with the services in it, unpacked as the installation's ai\
-  $AiName = "nuclearlang-ai-$Version-windows-$Arch.zip"
+  # Windows on ARM runs the x64 archive (its emulation of x64): onnxruntime publishes no wheel for Windows ARM64
+  $AiName = "nuclearlang-ai-$Version-windows-x86_64.zip"
   $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("nuclearlang-ai-" + [Guid]::NewGuid())
   New-Item -ItemType Directory -Path $Tmp | Out-Null
   try {
@@ -334,7 +338,7 @@ if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
       $Want = (Get-Sum "$Base/$AiName.sha256")
     } catch {
       $NoAi = $true
-      $AiNote = "The AI services of $Version are not published for Windows $Arch."
+      $AiNote = "The Smart Graph and the MCP server of $Version could not be downloaded for Windows $Arch`: check the connection and run the installer again."
     }
     if (-not $NoAi) {
       if ($Want -ne (Get-FileHash $AiZip -Algorithm SHA256).Hash.ToLower()) { Fail 'Verifying the AI services' 'The file does not match the release''s checksum (SHA-256).' 'Run the installer again: the file is downloaded anew.' }
@@ -352,17 +356,17 @@ if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
 }
 if (-not $NoAi) {
   if (-not (Test-Path $Builder)) {
-    $AiNote = 'The AI archive has no set-up: run this installer again.'
+    $AiNote = 'The AI archive has no set-up: run this installer again (-Reinstall).'
   } elseif ($AiProfile) {
     Section "Set-up $Dot profile $AiProfile"
     & $Builder setup --profile $AiProfile --yes
-    if ($LASTEXITCODE -ne 0) { $AiNote = 'The AI services are not set up: run `nuclear-builder setup`.' }
+    if ($LASTEXITCODE -ne 0) { $AiNote = 'The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed.' }
   } elseif ($Interactive) {
     Section 'Set-up'
     & $Builder setup
-    if ($LASTEXITCODE -ne 0) { $AiNote = 'The AI services are not set up: run `nuclear-builder setup` when you want them.' }
+    if ($LASTEXITCODE -ne 0) { $AiNote = 'The Smart Graph and the MCP server are not fully set up: run the installer again; it goes on from the step that failed.' }
   } else {
-    $AiNote = 'The AI services are not set up (no terminal here): run `nuclear-builder setup`.'
+    $AiNote = 'The Smart Graph and the MCP server are not set up: run `nuclear-builder setup --profile remote --yes`.'
   }
 }
 
@@ -373,13 +377,18 @@ if ($Animate -and [Console]::WindowWidth -ge 80 -and ((& $NuclearExe help 2>&1 |
   cmd /c "`"$NuclearExe`" intro < NUL"
 }
 Write-Host ''
-$Summary = @("Command       $NuclearExe", '', 'Required', "  $Tick NuclearLang (the compiler, the language server, the standard library)", 'Added when possible')
+$Summary = @("Command       $NuclearExe", '', 'Required', "  $Tick NuclearLang (the compiler, the language server, the standard library)")
+if (-not $NoAi -and -not $AiNote) { $Summary += @("  $Tick The Smart Graph (its own embeddings model, started at every login)", "  $Tick The MCP server in your AI clients (nuclear-builder setup --status)") }
+else { $Summary += '  x The Smart Graph and the MCP server (below)' }
+if (-not $NoAgent) { $Summary += "  $Tick The nuclear skill (Claude Code, Codex, Cursor, Grok Build, OpenCode)" }
+$Summary += 'Added when possible'
 if ($Installed) { $Summary += "  $Tick The editor extension: $($Installed -join ', ')" }
 elseif ($NoVSCode) { $Summary += '  o The editor extension: not asked (-NoVSCode)' }
 else { $Summary += '  o The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions' }
-if (-not $NoAgent) { $Summary += "  $Tick The nuclear skill (Claude Code, Codex, Cursor, Grok Build, OpenCode)" }
-if (-not $NoAi -and -not $AiNote) { $Summary += "  $Tick The AI services: the Smart Graph, the MCP server (nuclear-builder setup --status)" }
-elseif ($AiNote) { $Summary += '  ! The AI services (below)' }
+$Summary += 'Optional, asked'
+$Chosen = if (Test-Path $Machine) { (Get-Content $Machine | Where-Object { $_ -like 'NUCLEAR_AI_PROFILE=*' } | Select-Object -First 1) -replace '^NUCLEAR_AI_PROFILE=', '' } else { '' }
+if ($Chosen -in @('lite', 'medium', 'hard')) { $Summary += "  $Tick Local agents: profile $Chosen (Ollama's models on this machine)" }
+else { $Summary += '  o Local agents: not chosen (remote: no local model); nuclear-builder setup to add them' }
 # each platform's toolchain is never installed here: found, or how to get it (the editor guides too)
 $Summary += "Each platform's own (only for the platforms you build; the editor guides you)"
 $Tools = $null
@@ -391,6 +400,12 @@ foreach ($t in @(@('flutter', 'Flutter', 'mobile', 'docs.flutter.dev/get-started
 }
 $Summary += @('', "Start with    nuclear new my_app  $Dot  nuclear doctor  $Dot  nuclear help", 'Docs          https://nuclearlang.github.io')
 Box "NuclearLang $Version is installed" $Summary 'Green'
-if ($AiNote) { Warn $AiNote }
 Warn 'Open a new terminal so the PATH includes NuclearLang.'
+if ($AiNote) {
+  # a required part is missing: the installer ends with an error (NuclearLang itself stays installed)
+  Write-Host ''
+  Box 'Not complete' @($AiNote) 'Red'
+  Write-Host ''
+  Quit 1
+}
 Write-Host ''

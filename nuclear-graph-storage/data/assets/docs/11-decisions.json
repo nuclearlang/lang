@@ -7795,12 +7795,14 @@
   {
    "id": "doc:installer/docs/03-adr/0006-only-nuclearlang-is-required.md#consequences",
    "type": "adr",
-   "title": "ADR-installer-0006: Only NuclearLang is required; the rest is added when it can be; a platform's toolchain is never installed by the…",
-   "summary": "is never asked for Flutter; running the installer again is safe and fast.",
+   "title": "ADR-installer-0006: NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents…",
+   "summary": "backend or web user is never asked for Flutter; running the installer again is safe and fast.",
    "body": [
-    "- Positive: a fresh machine always ends with NuclearLang installed, whatever is missing on it; a backend or web user",
-    "  is never asked for Flutter; running the installer again is safe and fast.",
-    "- Negative: a mobile user installs Flutter themselves (with the steps shown), unless they choose NuclearLang's own."
+    "- Positive: every machine has what agents need to know Nuclear (the graph and the MCP server) without a question; a",
+    "  backend or web user is never asked for Flutter; running the installer again is safe and fast.",
+    "- Negative: about 460 MB more for every install (the AI archive and the graph's model); an Intel Mac cannot complete",
+    "  the install until the graph's runtime runs there; a mobile user installs Flutter themselves (with the steps shown),",
+    "  unless they choose NuclearLang's own."
    ],
    "agents": false,
    "sources": [
@@ -7815,7 +7817,7 @@
   {
    "id": "doc:installer/docs/03-adr/0006-only-nuclearlang-is-required.md#context-and-problem",
    "type": "adr",
-   "title": "ADR-installer-0006: Only NuclearLang is required; the rest is added when it can be; a platform's toolchain is never installed by the…",
+   "title": "ADR-installer-0006: NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents…",
    "summary": "On a Mac without Flutter the install never finished (2026-11-20): the editor's welcome marked Flutter as required whatever the user builds (every platform was assumed when none was chosen), and its highlighted button ran `nuclear setup flutter`, which on macOS waits in a terminal for Apple's tools…",
    "body": [
     "On a Mac without Flutter the install never finished (2026-11-20): the editor's welcome marked Flutter as required",
@@ -7835,25 +7837,21 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/0006-only-nuclearlang-is-required.md#decision.0d7d38",
+   "id": "doc:installer/docs/03-adr/0006-only-nuclearlang-is-required.md#decision.a7823e",
    "type": "adr",
-   "title": "ADR-installer-0006: Only NuclearLang is required; the rest is added when it can be; a platform's toolchain is never installed by the…",
-   "summary": "standard library, with `nuclear` on the PATH.",
+   "title": "ADR-installer-0006: NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents…",
+   "summary": "installed by the installer.",
    "body": [
-    "- **Required** (the install fails without it): NuclearLang itself, its compiler, language server, dialects and",
-    "  standard library, with `nuclear` on the PATH. Nothing else is required.",
-    "- **Added when possible** (never stops the install; what could not be added is said with how to add it later): the",
-    "  extension in every editor of the VS Code family found, the agents' `nuclear` skill, the AI services when the user",
-    "  says yes (their archive, their set-up, the MCP server in the AI clients).",
-    "- **Each platform's toolchain** (Flutter for mobile, Node.js for web and NestJS, Python for FastAPI) is never",
-    "  installed by the installer. The installer's summary says which are found and where to get the rest; the editor",
+    "installed by the installer. The installer's summary says which are found and where to get the rest; the editor",
     "  says it again for the platforms the user chose (or the workspace's projects): a toolchain is needed only for them,",
     "  and none before a choice. Its highlighted action is the user's own install with this system's steps; NuclearLang's",
     "  own (`nuclear setup <toolchain>`) is a secondary choice, offered on Linux and macOS only, and marked where it was",
     "  never tried on a clean machine.",
-    "- **Never installed**, only named with steps: Xcode, Android Studio, CocoaPods, Ollama's models unless the set-up's",
-    "  profile asks for them.",
-    "- **A new run keeps what is there**: the installation and the AI services record their version (`.version`); a run"
+    "- **Never installed**, only named with steps: Xcode, Android Studio, CocoaPods.",
+    "- **A new run keeps what is there**: the installation and the AI services record their version (`.version`); a run",
+    "  of the same version keeps them and downloads nothing, adds what is missing (an editor installed since), and goes on",
+    "  from the step an interrupted run reached. `--reinstall` (`-Reinstall`) replaces them. On Windows the services'",
+    "  processes are stopped before a folder is replaced."
    ],
    "agents": false,
    "sources": [
@@ -7866,14 +7864,24 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/0006-only-nuclearlang-is-required.md#decision.819c10",
+   "id": "doc:installer/docs/03-adr/0006-only-nuclearlang-is-required.md#decision.b80080",
    "type": "adr",
-   "title": "ADR-installer-0006: Only NuclearLang is required; the rest is added when it can be; a platform's toolchain is never installed by the…",
-   "summary": "of the same version keeps them and downloads nothing, adds what is missing (an editor installed since), and goes on from the step an interrupted run reached.",
+   "title": "ADR-installer-0006: NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents…",
+   "summary": "staying installed, and a new run goes on from there): NuclearLang itself (its compiler, language server, dialects and standard library, `nuclear` on the PATH); the Smart Graph with its own embeddings model and the release's vectors, started at every login; the MCP server, given to every AI client…",
    "body": [
-    "of the same version keeps them and downloads nothing, adds what is missing (an editor installed since), and goes on",
-    "  from the step an interrupted run reached. `--reinstall` (`-Reinstall`) replaces them. On Windows the services'",
-    "  processes are stopped before a folder is replaced."
+    "- **Required** (always installed, never asked; a missing one ends the install with an error, NuclearLang itself",
+    "  staying installed, and a new run goes on from there): NuclearLang itself (its compiler, language server, dialects",
+    "  and standard library, `nuclear` on the PATH); the Smart Graph with its own embeddings model and the release's",
+    "  vectors, started at every login; the MCP server, given to every AI client found; the agents' `nuclear` skill.",
+    "  `--no-ai` (`-NoAi`) is for tests only: it skips the graph and the MCP server and the install ends incomplete.",
+    "- **Added when possible** (never stops the install; what could not be added is said with how to add it later): the",
+    "  extension in every editor of the VS Code family found.",
+    "- **Optional, asked**: the local agents (the Nuclear Developer with Ollama's models). The set-up asks with `remote`",
+    "  as the answer by default, which downloads no local model; a local profile whose machine, Ollama or models are",
+    "  declined goes on as `remote`. Without a terminal the profile is `remote`.",
+    "- Where the graph's runtime is not published, the install says so and ends incomplete: an Intel Mac (onnxruntime has",
+    "  no wheel for it). Windows on ARM runs the x64 archive under its x64 emulation.",
+    "- **Each platform's toolchain** (Flutter for mobile, Node.js for web and NestJS, Python for FastAPI) is never"
    ],
    "agents": false,
    "sources": [
@@ -7924,7 +7932,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.c84223",
+   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.d90cdb",
    "type": "adr",
    "title": "Decisions of the installers and the release",
    "summary": "Decisions of the installers and the release",
@@ -7936,7 +7944,7 @@
     "| [ADR-installer-0003](0003-the-ai-services-bring-their-own-python.md) | The AI services bring their own Python; nothing is assumed on the user's machine; Ollama is the user's; the ports are chosen | accepted |",
     "| [ADR-installer-0004](0004-the-smart-graph-runs-in-every-profile.md) | The Smart Graph runs in every profile; what is on the machine is used; a missing model is asked for | accepted |",
     "| [ADR-installer-0005](0005-an-uninstall-leaves-nothing.md) | An uninstall leaves nothing of NuclearLang: what the install and the set-up made goes, what was there stays | accepted |",
-    "| [ADR-installer-0006](0006-only-nuclearlang-is-required.md) | Only NuclearLang is required; the rest is added when it can be; a platform's toolchain is never installed by the installer; a new run keeps what is there | accepted |"
+    "| [ADR-installer-0006](0006-only-nuclearlang-is-required.md) | NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents are asked; a toolchain is never installed by the installer; a new run keeps what is there | accepted |"
    ],
    "agents": false,
    "sources": [

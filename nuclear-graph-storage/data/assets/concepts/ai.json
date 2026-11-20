@@ -21,7 +21,7 @@
     "",
     "Everything local runs on your machine: the models on Ollama, the graph and the Developer on `127.0.0.1`. It goes to the internet only when you choose a frontier model to lead, import a spec from Jira or GitHub, read an API's answer or documentation, or deploy.",
     "",
-    "Set up once: `nuclear-builder setup` (the installer's last step; VS Code has it as a wizard). It suggests the models that fit the machine, installs everything and starts the services at every login."
+    "Set up once: `nuclear-builder setup` (the installer's last step; VS Code has it as a wizard). It always installs the Smart Graph and the MCP server, asks whether to add local agents (the models that fit the machine; `remote` by default, no local model) and starts the services at every login."
    ],
    "keys": [
     "ai",
@@ -346,9 +346,9 @@
    "id": "concept:ai-setup",
    "type": "concept",
    "title": "The set-up of the AI services: a profile of models for the machine",
-   "summary": "One set-up installs the Smart Graph, the Nuclear Developer and the models: `nuclear-builder setup` in a terminal, a wizard in VS Code, the last step of the installer. It reads the machine, suggests a profile (`lite`, `medium`, `hard`, or `remote`: remote agents only), says how far each works, and starts the graph, the Developer and Nuclear Chat at every login. The user chooses what is downloaded.",
+   "summary": "One set-up installs the Smart Graph, the Nuclear Developer and the models: `nuclear-builder setup`, a wizard in VS Code, the installer's last step. It reads the machine, asks the profile (`remote`, the answer by default: remote agents only, no local model; or `lite`, `medium`, `hard`, named when they fit), says how far each works, and starts the graph, the Developer and Nuclear Chat at every login.",
    "body": [
-    "**The profiles.** The suggested one is the heaviest that runs well with the machine's memory and disk; a tight one and one that does not fit are marked with the reason, and may still be chosen.",
+    "**The profiles.** The one named for this machine is the heaviest that runs well with its memory and disk (the answer by default stays `remote`); a tight one and one that does not fit are marked with the reason, and may still be chosen.",
     "",
     "| Profile | Models | Downloads | Memory | Measured |",
     "|---|---|---|---|---|",

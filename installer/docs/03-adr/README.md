@@ -10,7 +10,7 @@ not edited: a new one replaces it and the old one is marked `superseded by ADR-i
 | [ADR-installer-0003](0003-the-ai-services-bring-their-own-python.md) | The AI services bring their own Python; nothing is assumed on the user's machine; Ollama is the user's; the ports are chosen | accepted |
 | [ADR-installer-0004](0004-the-smart-graph-runs-in-every-profile.md) | The Smart Graph runs in every profile; what is on the machine is used; a missing model is asked for | accepted |
 | [ADR-installer-0005](0005-an-uninstall-leaves-nothing.md) | An uninstall leaves nothing of NuclearLang: what the install and the set-up made goes, what was there stays | accepted |
-| [ADR-installer-0006](0006-only-nuclearlang-is-required.md) | Only NuclearLang is required; the rest is added when it can be; a platform's toolchain is never installed by the installer; a new run keeps what is there | accepted |
+| [ADR-installer-0006](0006-only-nuclearlang-is-required.md) | NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents are asked; a toolchain is never installed by the installer; a new run keeps what is there | accepted |
 
 A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see
 [the table of old numbers](../../../docs/03-adr/old-numbers.md).

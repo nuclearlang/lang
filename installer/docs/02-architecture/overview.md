@@ -131,8 +131,12 @@ and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks t
 its last lines, the error and what to do, never a traceback.
 
 **What is required, what is added, a new run** ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md),
-[the user's list](../08-guides/what-gets-installed.md)). Only the core archive is a `must`; the extension, the skill
-and the AI services are tasks whose failure is a warning. Both installers write `<installation>/.version` and
+[the user's list](../08-guides/what-gets-installed.md)). NuclearLang, the Smart Graph and the MCP server (the AI archive
+and its set-up) are required: no question is asked for them, and a missing one ends the run with a red *Not complete*
+box and exit code 1 (NuclearLang stays installed; the step log and the cache are kept, so a new run goes on). The
+extension is a task whose failure is a warning. The local agents are asked by the set-up (`remote` by default);
+without a terminal the profile is `remote`. Windows on ARM downloads the x64 AI archive; an Intel Mac has none.
+`install.ps1` ends with `Quit`: `exit` when run as a file, `break` under `irm | iex` (so the user's window stays). Both installers write `<installation>/.version` and
 `<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`
 (`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On
 Windows the processes running from a folder are stopped before it is replaced (`Stop-Under`). The final box lists
