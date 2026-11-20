@@ -1281,7 +1281,9 @@
     "- **Versions follow [Semantic Versioning](https://semver.org).** One version for the whole platform: a release is a snapshot of",
     "  every piece (the crates, the extensions, the Smart Graph, the MCP server, the services), all at the version of",
     "  its tag. A fix raises PATCH, a new feature that breaks nothing MINOR (PATCH back to 0), a",
-    "  breaking change MAJOR; while the version is `0.x`, a breaking change raises MINOR. The release is the tag `v<version>` pushed, with each project's",
+    "  breaking change MAJOR; while the version is `0.x`, a breaking change raises MINOR. The release: `installer/release/version.sh <version>` writes it into every project and lock",
+    "  file (ADR-platform-0011), `nuclear-graph knowledge build` at that version, then the tag `v<version>` pushed (the CI",
+    "  fails when a manifest or the knowledge base differs), with each project's",
     "  `CHANGELOG.md` entries under that version ([the release runbook](../../installer/docs/06-runbooks/release.md)).",
     "- Commits only in the user's name: no co-author line.",
     "- `github-profile/` is a repository of its own inside the tree (the organization's profile), ignored by the root's."
