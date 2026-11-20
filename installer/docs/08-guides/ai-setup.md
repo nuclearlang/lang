@@ -37,7 +37,8 @@ The same steps run in the three. Run it again whenever you want another choice: 
 4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine
    (Claude Code, Codex, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of
    yours), the Nuclear Developer, the models, the knowledge base loaded
-   into the graph (about ten minutes the first time on a processor; later only what changed), and the services started. A step that fails says why and is
+   into the graph (a few seconds with the vectors the release computed; about ten minutes on a processor when they
+   cannot be downloaded), and the services started. A step that fails says why and is
    tried again from there.
 
 ## 3. The profiles

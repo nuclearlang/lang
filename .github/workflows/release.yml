@@ -114,8 +114,35 @@ jobs:
             installer/dist/nuclearlang-ai-*.zip
             installer/dist/nuclearlang-ai-*.sha256
 
+  # The vectors of the knowledge base, once for every system (ADR-graph-0003): a vector depends only on the text and
+  # the model, so one file serves Linux, macOS and Windows; the set-up downloads it and the graph loads the base in
+  # seconds instead of running its model over every row.
+  embeddings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.13.8'
+      - name: nuclear, to build the graph from its .nuc
+        run: cargo build --release --quiet -p nuclear-cli
+      - name: The vectors of the knowledge base
+        working-directory: nuclear-graph-storage
+        run: |
+          v=$(sed -n 's/^version = "\(.*\)"/\1/p' ../Cargo.toml | head -n 1)
+          ../target/release/nuclear build .
+          uv sync --quiet --extra server
+          mkdir -p ../installer/dist
+          NUCLEAR_GRAPH_HOME="$RUNNER_TEMP/graph" NUCLEAR_GRAPH_NO_KEYRING=1 NUCLEAR_ROOT="$GITHUB_WORKSPACE" HF_HUB_VERBOSITY=error \
+            .venv/bin/python -c 'import sys; from nuclear_graph.cli import main; main(sys.argv[1:])' embeddings "../installer/dist/nuclearlang-embeddings-$v.npz"
+          cd ../installer/dist && sha256sum "nuclearlang-embeddings-$v.npz" > "nuclearlang-embeddings-$v.npz.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: embeddings
+          path: installer/dist/nuclearlang-embeddings-*
+
   publish:
-    needs: [archive, ai, vscode]
+    needs: [archive, ai, vscode, embeddings]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

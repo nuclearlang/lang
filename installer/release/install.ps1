@@ -177,6 +177,11 @@ if ($Uninstall) {
   Section 'Uninstalling'
   # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
   if (Test-Path $Builder) { & $Builder setup --remove --all | Out-Null; Ok 'The AI services, with the models and data their set-up made' }
+  # Windows starts the services as processes of the installation (no service manager): they hold its files until stopped
+  Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+    Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($Install, [StringComparison]::OrdinalIgnoreCase) } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+  Start-Sleep -Seconds 1
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
   Remove-Item -Recurse -Force (Join-Path $env:APPDATA 'nuclearlang') -ErrorAction SilentlyContinue
   Remove-Item -Recurse -Force (Join-Path $env:USERPROFILE '.cache\nuclearlang') -ErrorAction SilentlyContinue
@@ -185,7 +190,8 @@ if ($Uninstall) {
   foreach ($e in @('code', 'code-insiders', 'cursor', 'codium', 'windsurf')) {
     if (Get-Command $e -ErrorAction SilentlyContinue) { & $e --uninstall-extension nuclearlang.nuclearlang *> $null; Ok "Editor extension removed from $e" }
   }
-  Ok 'The commands, the installation, the skill, the caches and the PATH entry'
+  if (Test-Path $Install) { Warn "$Install could not be removed (a program still uses it): close it, then remove the folder by hand" }
+  else { Ok 'The commands, the installation, the skill, the caches and the PATH entry' }
   Write-Host ''
   Box 'Uninstalled' @('NuclearLang is uninstalled.', 'What was on this machine before the install stays.') 'Green'
   Write-Host ''

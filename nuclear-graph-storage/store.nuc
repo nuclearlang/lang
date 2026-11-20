@@ -1,4 +1,5 @@
 use os
+use hashlib
 use chromadb
 use numpy
 use chromadb/config{ Settings }
@@ -76,9 +77,62 @@ LOADED: LocalModel[] = []
 
 // The vectors of texts already shaped for the model (`asDocument`, `asQuery`), by the embeddings model.
 localEmbed(shaped: string[]) double[][]
+  withPrecomputed(shaped, precomputed(), modelEmbed)
+
+// The vectors of texts by the model itself, loaded the first time it is needed.
+modelEmbed(shaped: string[]) double[][]
   if LOADED.isEmpty
     LOADED.add(LocalModel(modelFolder()))
   LOADED[0].embed(shaped)
+
+// ---------- the vectors computed ahead (ADR-graph-0003) ----------
+// A release computes the vectors of its knowledge base once and publishes them (`nuclearlang-embeddings-<v>.npz`,
+// the same file for every system: a vector depends only on the text and the model); the set-up puts it in the data
+// folder, and an ingest takes each vector from it instead of running the model over every row. A text it does not
+// hold (a row added later, a question) goes to the model.
+
+// The key of a text in that file: the model's export and the text exactly as embedded.
+vectorKey(shaped: string) string
+  hashlib.sha1("${EMBED_FILE}\n${shaped}".toBytes()).hexdigest()
+
+// Where the set-up puts the vectors of this release's knowledge base.
+precomputedFile() Path
+  Paths.home().joinpath("models", "embeddings.npz")
+
+// The vectors computed ahead, by key, read once per process; none without the file or when it is another export's.
+PRECOMPUTED: <string, double[]>[] = []
+precomputed() <string, double[]>
+  if PRECOMPUTED.isEmpty
+    PRECOMPUTED.add(readPrecomputed(precomputedFile()))
+  PRECOMPUTED[0]
+
+readPrecomputed(file: Path) <string, double[]>
+  found: <string, double[]> = {}
+  if not file.isFile()
+    return found
+  data: any = numpy.load("${file}")
+  if "${data["export"]}" != EMBED_FILE
+    return found
+  keys: string[] = data["keys"].tolist()
+  rows: double[][] = data["vectors"].astype(numpy.float32).tolist()
+  for i in 0..keys.length
+    found[keys[i]] = rows[i]
+  found
+
+// Writes vectors by key to `file` (float16: a search needs no more), with the export they belong to.
+writePrecomputed(file: Path, vectors: <string, double[]>) void
+  keys: string[] = vectors.keys.sorted()
+  numpy.savezCompressed("${file}", export = numpy.array(EMBED_FILE), keys = numpy.array(keys), vectors = numpy.array(keys.map((k) => vectors[k]!), dtype = numpy.float16))
+
+// The vectors of `shaped`: each one `known` holds as it is, the rest by `compute` (called only when some are missing).
+withPrecomputed(shaped: string[], known: <string, double[]>, compute: (texts: string[]) => double[][]) double[][]
+  out: double[][] = shaped.map((t) => known[vectorKey(t)] ?? ([] as double[]))
+  missing: int[] = (0..shaped.length).filter((i) => out[i].isEmpty)
+  if not missing.isEmpty
+    made = compute(missing.map((i) => shaped[i]))
+    for j in 0..missing.length
+      out[missing[j]] = made[j]
+  out
 
 // What a read of a collection with its vectors becomes for a search: each item (id, metadata) with how far its vector
 // is from `vector` by direction (cosine: 0 is the same one), the closest first.

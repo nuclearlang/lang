@@ -178,7 +178,8 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `prompts() <string, any>[]` — The validated prompt of each use case (`feature`, `piece`...) and of each agent step (`agent.repair`...): every skill of the roles (`nuclear-agents/roles/<role>/skills/*.md`, ADR-developer-0002) that names one in its front matter (`prompt: agent.repair`). The prompt is the text after the front matter; a name given twice is refused.
     - `stored(store: Store) <string, Loaded[]>` — The rows of the base as the store holds them (each shelf's cards, read back from their sealed documents and their metadata): what the exact facts are made from when the graph starts. What an agent kept at run time is not a card, and is left out.
     - `sync(store: Store, collection: string, items: <string, any>[], keep: string[], log: (line: string) => void) <string, int>` — Makes a collection hold exactly `items` (and the ids of `keep`), embedding only the ones whose hash changed.
-    - `ingest(store: Store, folder: Path, log: (line: string) => void, facts: Facts?) <string, any>` — The knowledge base folder `root` becomes what the graph knows: its shelves, and with `facts` its exact facts, made again whole. An invalid base is refused whole: the graph never holds half of a revision.
+    - `exportVectors(folder: Path, out: Path, log: (line: string) => void) int` — The knowledge base folder `root` becomes what the graph knows: its shelves, and with `facts` its exact facts, made again whole. An invalid base is refused whole: the graph never holds half of a revision. The vectors of every text the knowledge base `folder` embeds, computed by the model and written by key to `out` (`nuclear-graph embeddings`): what a release publishes, so an install ingests without running the model over every row. The ingest runs into a throwaway store with a key of its own; gives how many vectors it wrote.
+    - `ingest(store: Store, folder: Path, log: (line: string) => void, facts: Facts?) <string, any>`
 - `knowledge.nuc`
   - `Knowledge` — The knowledge base as a folder (`nuclear-graph-storage/data`; ADR-graph-0001): the asset files the Smart Graph ingests, their schema and their version.  - `assets/<shelf>/<name>.json` with `"origin": "generated"`: written here from the working tree (the `Extract*` modules); never edited by hand. `<name>.overlay.json` beside one adds hand-written fields to its rows (links, examples, questions). - `assets/<shelf>/<name>.json` with `"origin": "curated"`: written by hand (the purpose, the concepts, the playbooks, the capabilities, the failures). Each row names the `sources` it was written from. - `manifest.json`: the schema, the revision and every row with its hash and the revision that last changed it; for a curated row, the hash of each of its sources when it was last reviewed.  `build` writes what is generated, validates everything and raises the revision when a row changed. `check` fails when the assets are not what the tree generates now, when a row is invalid, or when a source of a curated row changed since its review: the base is never left behind the code.
     - `context(tree: Path, out: Path, mcp: () => <string, any>, help: () => string, routes: () => <string, any>[]) Context` — What the extraction reads for the base `out` of the tree `tree`: its `sections.toml`, the website it names, and what the caller gives of this machine (the MCP server's tools, the command line's help, the HTTP routes).
@@ -329,6 +330,13 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
     - `session: any`
     - `embed(shaped: string[]) double[][]` — The vectors of `shaped`, in its order. The texts go by length, so a batch pads little, and a batch holds at most `BATCH_TOKENS` tokens: the memory of a batch grows with the square of its longest text, so long texts go alone.
   - `localEmbed(shaped: string[]) double[][]` — The vectors of texts already shaped for the model (`asDocument`, `asQuery`), by the embeddings model.
+  - `modelEmbed(shaped: string[]) double[][]` — The vectors of texts by the model itself, loaded the first time it is needed.
+  - `vectorKey(shaped: string) string` — The key of a text in that file: the model's export and the text exactly as embedded.
+  - `precomputedFile() Path` — Where the set-up puts the vectors of this release's knowledge base.
+  - `precomputed() <string, double[]>` — (no description)
+  - `readPrecomputed(file: Path) <string, double[]>` — (no description)
+  - `writePrecomputed(file: Path, vectors: <string, double[]>) void` — Writes vectors by key to `file` (float16: a search needs no more), with the export they belong to.
+  - `withPrecomputed(shaped: string[], known: <string, double[]>, compute: (texts: string[]) => double[][]) double[][]` — The vectors of `shaped`: each one `known` holds as it is, the rest by `compute` (called only when some are missing).
   - `closest(got: any, vector: double[]) <string, any>[]` — What a read of a collection with its vectors becomes for a search: each item (id, metadata) with how far its vector is from `vector` by direction (cosine: 0 is the same one), the closest first.
   - `textOr(first: any, second: any) string` — The first of two values that is a text with something in it.
   - `storable(meta: <string, any>) <string, any>` — What Chroma keeps as metadata: texts, numbers, booleans and lists of texts that are not empty.
@@ -454,3 +462,7 @@ Written by `nuclear check` and `nuclear build`: every declaration with its kind,
   - `testThePromptsAreTheRolesSkillsWithoutTheirFrontMatter() void` — (no description)
 - `tests/test_secrets.nuc`
   - `testASecretOfAClosedKeyringIsRefusedAndNeverMadeAgain(tmpPath: Path, monkeypatch: any) void` — (no description)
+- `tests/test_vectors.nuc`
+  - `testAKnownVectorIsTakenAndOnlyTheRestGoesToTheModel() void` — (no description)
+  - `testTheFileKeepsTheVectorsByTextAndExport(tmpPath: Path) void` — (no description)
+  - `testAFileOfAnotherExportIsNotUsed(tmpPath: Path) void` — (no description)

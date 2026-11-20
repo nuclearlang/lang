@@ -122,6 +122,9 @@ graphParser() any
   sub = p.addSubparsers(dest = "cmd", required = true)
   sub.addParser("serve", help = "run the graph on 127.0.0.1 (NUCLEAR_GRAPH_PORT, default 7878)")
   sub.addParser("model", help = "download the embeddings model into the data folder now (the first search does it otherwise)")
+  e = sub.addParser("embeddings", help = "compute the vectors of a knowledge base and write them to a file (what a release publishes, so an install ingests in seconds)")
+  e.addArgument("out", help = "the file to write (.npz)")
+  e.addArgument("folder", nargs = "?", default = "", help = "the knowledge folder (default: <tree>/nuclear-graph-storage/data)")
   k = sub.addParser("knowledge", help = "the knowledge base folder (nuclear-graph-storage/data): build its assets from the working tree, check that they are what the tree gives now, record the review of a hand-written row, ask the running graph the questions of questions.toml and see that each finds its row, or compile every Nuclear example of the hand-written rows")
   k.addArgument("action", choices = ["build", "check", "review", "ask", "examples"])
   k.addArgument("ids", nargs = "*", help = "review: the rows that still hold (default: every row whose source changed); ask: only the questions that contain one of these words")
@@ -230,6 +233,13 @@ connectCommand(client: string, scopes: string, show: boolean) void
 main(argv: string[]? = null) void
   args = graphParser().parseArgs(argv)
   cmd = "${args.cmd}"
+  if cmd == "embeddings"
+    given = "${args.folder}"
+    folder: Path = given.length > 0 ? Path(given).resolve() : Path(treeRoot()).resolve().joinpath("nuclear-graph-storage", "data")
+    // the store's and the model's libraries are the server's: loaded only for this command
+    count = graphPart("ingest").Ingest.exportVectors(folder, Path("${args.out}"), (line: string) => print(line))
+    print("${count} vectors written to ${args.out}")
+    return
   if cmd == "model"
     // the store's libraries are the server's: loaded only for this command
     print("the embeddings model is in ${graphPart("store").modelFolder()}")

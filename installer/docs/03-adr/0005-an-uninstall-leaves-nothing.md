@@ -22,6 +22,9 @@ Ollama it installed. On the first install on macOS (2026-11-19) the user had to 
 - Ollama on Linux was installed into the system by its own installer: removing it needs the administrator, so
   without a terminal the set-up says the commands instead of running them.
 - `nuclear-builder setup --remove` alone (the editors' button) still keeps Ollama, the models and the data.
+- On Windows the services are processes of the installation (no service manager): they are stopped before anything
+  is removed, or Windows keeps the files they hold; the uninstaller says when a folder could not be removed instead
+  of reporting it done (found by `installer-windows.yml`, 2026-11-20).
 
 ## Consequences
 - Positive: one command leaves the machine as it was before the install.

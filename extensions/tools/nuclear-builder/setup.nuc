@@ -2,6 +2,7 @@ use os
 use sys
 use json
 use time
+use hashlib
 use shutil
 use socket
 use ntpath
@@ -542,6 +543,8 @@ enableServices(say: (line: string) => void, services: Service[] = SERVICES) bool
   files = serviceFiles(services = services)
   if files.isEmpty or not serviceManager()
     return false
+  // a file already there with the same text needs no reload: the service it starts keeps running
+  changed = files.map((f) => not Path(f.path).exists() or Path(f.path).readText(encoding = "utf-8") != f.text)
   for f in files
     Path(f.path).parent.mkdir(parents = true, existOk = true)
     Path(f.path).writeText(f.text, encoding = "utf-8", newline = "")
@@ -551,9 +554,31 @@ enableServices(say: (line: string) => void, services: Service[] = SERVICES) bool
     runCommand(["systemctl", "--user", "enable", ...services.map((s) => "nuclear-${s.name}")], say)
   else if sys.platform == "darwin"
     for i in 0..services.length
-      capture(["launchctl", "bootout", "${gui()}/${label(services[i].name)}"])
-      runCommand(["launchctl", "bootstrap", gui(), files[i].path], say)
+      loadAgent(services[i], files[i].path, changed[i], say)
   true
+
+// A launch agent loaded into this session (launchctl): left as it is when loaded and unchanged; else taken out, waited
+// for (`bootout` returns before launchd lets the service go, and a `bootstrap` then fails with "5: Input/output
+// error"), and loaded again, a few times while launchd still holds it.
+loadAgent(s: Service, path: string, changed: boolean, say: (line: string) => void) void
+  target = "${gui()}/${label(s.name)}"
+  if not changed and capture(["launchctl", "print", target]).code == 0
+    say("${s.title}: already started at login")
+    return
+  capture(["launchctl", "bootout", target])
+  for i in 0..20
+    if capture(["launchctl", "print", target]).code != 0
+      break
+    time.sleep(0.5)
+  last = ""
+  for attempt in 0..6
+    ran = capture(["launchctl", "bootstrap", gui(), path])
+    if ran.code == 0
+      say("${s.title}: started at every login")
+      return
+    last = ran.out.trim()
+    time.sleep(1.0 + attempt)
+  throw RuntimeError("launchd did not take ${path}: ${last}. Log out and in, then run nuclear-builder setup again")
 
 removeServices(say: (line: string) => void) void
   if sys.platform == "linux"
@@ -561,6 +586,10 @@ removeServices(say: (line: string) => void) void
   if sys.platform == "darwin"
     for s in SERVICES
       capture(["launchctl", "bootout", "${gui()}/${label(s.name)}"])
+  if sys.platform == "win32"
+    // no service manager: the services are processes of the installation, which hold its files until stopped (this
+    // process, the set-up, runs from it too and stays)
+    capture(["powershell", "-NoProfile", "-Command", "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith('${installDir()}', [StringComparison]::OrdinalIgnoreCase) -and $_.ProcessId -ne ${os.getpid()} } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"])
   for f in serviceFiles()
     if Path(f.path).exists()
       say("removed ${f.path}")
@@ -789,11 +818,11 @@ Step(id: string, title: string)
 STEP_ABOUT: <string, string> = {
   "graph": "The commands of the Smart Graph and the MCP server, linked from the AI archive",
   "clients": "Claude Code, Codex, Cursor, OpenCode and Gemini CLI get Nuclear's MCP server",
-  "graph-model": "EmbeddingGemma for ONNX Runtime, from Hugging Face: how the graph finds by meaning (once)",
+  "graph-model": "EmbeddingGemma for ONNX Runtime, and the vectors this release computed for the knowledge base",
   "developer": "The service of the local agents, which plan, write and review code",
   "models": "The local agents' models, downloaded by Ollama",
   "graph-service": "Started now and at every login, on 127.0.0.1 only",
-  "knowledge": "Every card of NuclearLang read into the graph: about ten minutes the first time",
+  "knowledge": "Every card of NuclearLang into the graph, with the release's vectors (without them, about ten minutes)",
   "developer-service": "Started now and at every login, on 127.0.0.1 only",
   "chat-service": "The chat of the editor and of the local agents, now and at every login"
 }
@@ -821,6 +850,52 @@ steps(p: Profile) Step[]
     Step("chat-service", "Start Nuclear Chat, now and at every login")
   ]
 
+// The step `graph-model`: the Smart Graph's model, then the vectors of this release's knowledge base.
+graphModel(say: (line: string) => void) void
+  // quiet: Hugging Face warns of unauthenticated downloads, which a public model is
+  runCommand([joinOn(sys.platform, [binDir(), "nuclear-graph"]), "model"], say, env = { "HF_HUB_VERBOSITY": "error", "HF_HUB_DISABLE_PROGRESS_BARS": "1" })
+  fetchVectors(say)
+
+// Where the graph reads the vectors computed ahead: its data folder's `models/embeddings.npz`.
+vectorsFile() Path
+  given = os.environ.get("NUCLEAR_GRAPH_HOME") ?? ""
+  (given.length > 0 ? Path(given) : dataFolder("nuclear-graph")).joinpath("models", "embeddings.npz")
+
+// The release's address of a file: `NUCLEAR_DOWNLOAD` (a mirror, as the installers read it), else the GitHub release
+// of `version` (`NUCLEAR_REPO`, default nuclearlang/lang).
+releaseUrl(version: string, name: string, env: <string, string>? = null) string
+  e = env ?? dict(os.environ)
+  base = e["NUCLEAR_DOWNLOAD"] ?? "https://github.com/${e["NUCLEAR_REPO"] ?? "nuclearlang/lang"}/releases/download/v${version}"
+  "${base}/${name}"
+
+// The vectors of this release's knowledge base (ADR-graph-0003), computed once by the release for every system: with
+// them the graph loads the knowledge base in seconds instead of running its model over every row. They go where the
+// graph reads them (its data folder's `models/embeddings.npz`), checked against their SHA-256. Without them (a
+// release that has none, no connection) the graph computes the vectors itself: slower, never failing.
+fetchVectors(say: (line: string) => void) void
+  root = aiRoot()
+  version = root != null and Path(root!, "VERSION").isFile() ? Path(root!, "VERSION").readText(encoding = "utf-8").trim() : ""
+  if version.length == 0
+    say("no release version here: the graph computes the vectors of the knowledge base itself")
+    return
+  name = "nuclearlang-embeddings-${version}.npz"
+  target = vectorsFile()
+  try
+    sum = httpx.get(releaseUrl(version, "${name}.sha256"), followRedirects = true, timeout = 30)
+    sum.raiseForStatus()
+    file = httpx.get(releaseUrl(version, name), followRedirects = true, timeout = 300)
+    file.raiseForStatus()
+    if hashlib.sha256(file.content).hexdigest() != sum.text.trim().split()[0]
+      say("the vectors of ${version} did not match their SHA-256: the graph computes them itself")
+      return
+    target.parent.mkdir(parents = true, existOk = true)
+    target.writeBytes(file.content)
+    say("the vectors of the knowledge base, computed by the release (${(file.content.length / 1048576).toFixed(1)} MB): it loads in seconds")
+  catch e
+    if not isinstance(e, httpx.HTTPError)
+      throw e
+    say("the vectors of ${version} are not published (${e}): the graph computes them itself, about ten minutes")
+
 // Runs one step of a profile, with the services' folder `root`.
 runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
   match id
@@ -829,8 +904,7 @@ runStep(id: string, p: Profile, root: string, say: (line: string) => void) void
     "machine" -> keepRemote(p, say)
     "developer" -> installDeveloper(root, say)
     "models" -> downloadModels(p, say)
-    // quiet: Hugging Face warns of unauthenticated downloads, which a public model is
-    "graph-model" -> runCommand([joinOn(sys.platform, [binDir(), "nuclear-graph"]), "model"], say, env = { "HF_HUB_VERBOSITY": "error", "HF_HUB_DISABLE_PROGRESS_BARS": "1" })
+    "graph-model" -> graphModel(say)
     "graph-service" -> startGraph(p, say)
     "knowledge" -> loadKnowledge(root, say)
     "developer-service" -> startService("developer", "${urls()["developer"]}/docs", say)
@@ -919,7 +993,7 @@ loadKnowledge(root: string, say: (line: string) => void) void
   // the ingest prints its report as JSON at the end: only its progress lines are said
   progress = (line: string) => line[0] in "{}\"]" ? null : say(line)
   // the graph answers only when every row is read: the user sees it is still at work, every minute
-  say("the first time the graph reads every row: about ten minutes on a processor (later only what changed)")
+  say(vectorsFile().isFile() ? "every row with the vectors the release computed: a few seconds" : "the first time the graph reads every row: about ten minutes on a processor (later only what changed)")
   done = threading.Event()
   started = time.time()
   beat = () =>

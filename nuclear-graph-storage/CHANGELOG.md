@@ -4,6 +4,9 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- The vectors of the knowledge base come with each release (`nuclearlang-embeddings-<version>.npz`, one file for every
+  system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so
+  an install loads the base in seconds; a text the file does not hold goes to the model.
 - The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process
   (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come
   from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.

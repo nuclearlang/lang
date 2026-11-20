@@ -1,0 +1,37 @@
+use numpy
+use pathlib{ Path }
+
+// The vectors computed ahead (ADR-graph-0003): an ingest takes each vector the release published and gives only the
+// rest to the model; the file keeps them by text and export, and a file of another export is not used.
+
+testAKnownVectorIsTakenAndOnlyTheRestGoesToTheModel() void
+  known: <string, double[]> = {}
+  known[vectorKey("title: a | text: one")] = [1.0, 0.0]
+  asked: string[][] = []
+  model = (texts: string[]) =>
+    asked.add(texts)
+    texts.map((t) => [0.0, 1.0])
+  got = withPrecomputed(["title: a | text: one", "title: b | text: two"], known, model)
+  expect(got == [[1.0, 0.0], [0.0, 1.0]])
+  expect(asked == [["title: b | text: two"]])
+  // every vector known: the model is not called (nor loaded)
+  asked.clear()
+  withPrecomputed(["title: a | text: one"], known, model)
+  expect(asked.isEmpty)
+
+testTheFileKeepsTheVectorsByTextAndExport(tmpPath: Path) void
+  file = tmpPath.joinpath("embeddings.npz")
+  vectors: <string, double[]> = {}
+  vectors[vectorKey("x")] = [0.5, -0.25]
+  vectors[vectorKey("y")] = [1.0, 0.0]
+  writePrecomputed(file, vectors)
+  back = readPrecomputed(file)
+  expect(back.length == 2 and back[vectorKey("x")] == [0.5, -0.25])
+  // the key is the export's too: the same text under another export is another vector
+  expect(vectorKey("x").length == 40 and vectorKey("x") != vectorKey("x "))
+
+testAFileOfAnotherExportIsNotUsed(tmpPath: Path) void
+  file = tmpPath.joinpath("other.npz")
+  numpy.savezCompressed("${file}", export = numpy.array("model_q4"), keys = numpy.array([vectorKey("x")]), vectors = numpy.array([[1.0]], dtype = numpy.float16))
+  expect(readPrecomputed(file).isEmpty)
+  expect(readPrecomputed(tmpPath.joinpath("missing.npz")).isEmpty)

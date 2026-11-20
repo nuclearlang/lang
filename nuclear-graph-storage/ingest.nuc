@@ -1,4 +1,7 @@
+use shutil
 use hashlib
+use secrets
+use tempfile
 use pathlib{ Path }
 
 BATCH = 64
@@ -72,6 +75,24 @@ Ingest
 
   // The knowledge base folder `root` becomes what the graph knows: its shelves, and with `facts` its exact facts,
   // made again whole. An invalid base is refused whole: the graph never holds half of a revision.
+  // The vectors of every text the knowledge base `folder` embeds, computed by the model and written by key to `out`
+  // (`nuclear-graph embeddings`): what a release publishes, so an install ingests without running the model over
+  // every row. The ingest runs into a throwaway store with a key of its own; gives how many vectors it wrote.
+  static exportVectors(folder: Path, out: Path, log: (line: string) => void) int
+    made: <string, double[]> = {}
+    record = (shaped: string[]) =>
+      vectors = modelEmbed(shaped)
+      for i in 0..shaped.length
+        made[vectorKey(shaped[i])] = vectors[i]
+      vectors
+    scratch = tempfile.mkdtemp()
+    try
+      Ingest.ingest(Store(path = scratch, key = secrets.tokenBytes(32), embed = record), folder, log)
+    finally
+      shutil.rmtree(scratch, ignoreErrors = true)
+    writePrecomputed(out, made)
+    made.length
+
   static ingest(store: Store, folder: Path, log: (line: string) => void, facts: Facts? = null) <string, any>
     root: Path = folder.resolve()
     if not root.joinpath("manifest.json").isFile() or not root.joinpath("assets").isDir()

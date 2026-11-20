@@ -177,6 +177,40 @@ testASpinnerWithoutATerminalSaysItsWorkInFewLines(capsys: any) void
   expect("... Download the models" in out and "✓ Download the models" in out, out)
   expect(out.split("\n").filter((l) => "% of" in l).length == 11, out)
 
+// macOS (found on the first install, 2026-11-19): a later step loaded every agent again, and a `bootstrap` right after
+// `bootout` failed with "5: Input/output error". An unchanged loaded agent is left alone; a changed one is waited for.
+testALaunchAgentIsLeftAloneWhenLoadedAndRetriedWhileLaunchdHoldsIt(monkeypatch: any) void
+  calls: string[] = []
+  loaded = [true]
+  failures = [1]
+  fake = (args: string[], cwd: string? = null) =>
+    calls.add(args[1])
+    if args[1] == "print"
+      return Ran(loaded[0] ? 0 : 113, "")
+    if args[1] == "bootout"
+      loaded[0] = false
+      return Ran(0, "")
+    if failures[0] > 0
+      failures[0] -= 1
+      return Ran(5, "Bootstrap failed: 5: Input/output error")
+    loaded[0] = true
+    Ran(0, "")
+  monkeypatch.setattr("nuclear_builder.setup.capture", fake)
+  monkeypatch.setattr("time.sleep", (s: double) => null)
+  said: string[] = []
+  graph = serviceOf("graph")
+  loadAgent(graph, "/x/graph.plist", false, (l) => said.add(l))
+  expect(calls == ["print"] and "already started" in said[0], "${calls}")
+  calls.clear()
+  loadAgent(graph, "/x/graph.plist", true, (l) => said.add(l))
+  expect(calls == ["bootout", "print", "bootstrap", "bootstrap"] and "started at every login" in said.last, "${calls}")
+
+// The vectors computed ahead come from the release of this archive, or a mirror (ADR-graph-0003).
+testTheReleasesVectorsAreFetchedFromItsReleaseOrAMirror() void
+  expect(releaseUrl("0.1.8", "nuclearlang-embeddings-0.1.8.npz", {}) == "https://github.com/nuclearlang/lang/releases/download/v0.1.8/nuclearlang-embeddings-0.1.8.npz")
+  expect(releaseUrl("0.1.8", "x.npz", { "NUCLEAR_DOWNLOAD": "http://127.0.0.1:9000" }) == "http://127.0.0.1:9000/x.npz")
+  expect(releaseUrl("0.1.8", "x.npz", { "NUCLEAR_REPO": "me/fork" }).startsWith("https://github.com/me/fork/releases/download/v0.1.8/"))
+
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   held.bind(socket.getaddrinfo("127.0.0.1", 0, socket.AF_INET, socket.SOCK_STREAM)[0][4])

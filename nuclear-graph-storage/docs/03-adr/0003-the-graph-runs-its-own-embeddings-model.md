@@ -21,6 +21,12 @@ system, with the same quality.
   Runtime refuses for a model's data file.
 - Texts are embedded in batches of at most 4096 tokens, the shortest first, without ONNX Runtime's memory arena: the
   memory of a batch grows with the square of its longest text.
+- Each release computes the vectors of its knowledge base once (`nuclear-graph embeddings`, the release's job
+  `embeddings`) and publishes them as `nuclearlang-embeddings-<version>.npz` with its `.sha256`: one file for every
+  system, since a vector depends only on the text and the model. The set-up downloads it into the data folder
+  (`models/embeddings.npz`); an ingest takes each vector it holds (keyed by the export and the exact text) and gives
+  only the rest to the model, which is then loaded only if something is missing. The store itself cannot be shipped:
+  its documents are sealed with a key of each machine.
 
 ## Options considered (measured on 2026-11-19 with the 188 questions of `data/questions.toml`)
 
@@ -38,8 +44,9 @@ The ONNX exports and Ollama give the same vector for a short text (cosine 1.0000
 
 ## Consequences
 - Positive: the graph needs nothing on the machine; `remote` installs no Ollama; the model is half Ollama's size.
-- Negative: the first ingest takes about 9 minutes on a processor instead of under 3 with Ollama on a GPU (later
-  ingests embed only what changed), and up to about 2.3 GB of memory while it runs (1.1 GB after it). One question
+- Negative: without the release's vectors (a release before 0.1.8, no connection) the first ingest takes about 9
+  minutes on a processor instead of under 3 with Ollama on a GPU, and up to about 2.3 GB of memory while it runs
+  (1.1 GB after it); with them it takes seconds. Later ingests embed only what changed. One question
   of the 188 is missed: "how do I delete or close a conversation and search old messages in nuclear chat" finds
   `can:workplace-chat` fourth instead of in the first three.
 

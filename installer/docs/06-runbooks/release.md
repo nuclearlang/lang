@@ -9,8 +9,10 @@ related: [installer/release/package.sh, installer/release/clean-machine/Dockerfi
 ## Publish a release
 
 1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.
-2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives and the VS Code extension and
-   publishes them, with `install.sh` and `install.ps1`, in the GitHub release of that tag. It can also be started
+2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code
+   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:
+   the job `embeddings` runs `nuclear-graph embeddings`, ADR-graph-0003), and publishes them, with `install.sh` and
+   `install.ps1`, in the GitHub release of that tag. It can also be started
    by hand (`workflow_dispatch`).
 3. The public one-liners download from that release: without a release they fail with a clear error.
 4. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows
