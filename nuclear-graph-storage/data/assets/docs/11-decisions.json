@@ -7256,7 +7256,7 @@
    "body": [
     "| ID | Case | Expected | State |",
     "|---|---|---|---|",
-    "| L1 | The Windows firewall asks when a service listens | it never asks: every service binds `127.0.0.1` only | verify per service |",
+    "| L1 | The Windows firewall asks when a service listens | it never asks: every service binds `127.0.0.1` only | handled on Linux (graph 7878, Developer 7879, Chat 7880, Ollama 11434 seen on `127.0.0.1` only); Windows verify |",
     "| L2 | Windows Defender / SmartScreen flags the unsigned binaries or the bundled Python | the binaries are signed; when one is blocked, the message says so | gap (nothing is signed) |",
     "| L3 | macOS Gatekeeper on the binaries | signed and notarized | gap |",
     "| L4 | A corporate firewall, TLS inspection | the download says the certificate failed and offers a mirror | gap |"
