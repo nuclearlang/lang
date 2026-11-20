@@ -1,6 +1,6 @@
 //! The update of an installation made by the public installers: `nuclear update`, and the question every run in a
-//! terminal asks when a newer release is out. The latest version is fetched in the background at most once a day,
-//! so no command waits for the network; the update itself is the public installer, run again (it keeps the choices
+//! terminal asks when a newer release is out. The latest version is asked at most once a day, waiting at most
+//! three seconds (offline the command goes on), so the first run after an install already knows; the update itself is the public installer, run again (it keeps the choices
 //! of the last install: `NUCLEAR_UPDATE=1`).
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
@@ -57,33 +57,44 @@ fn younger_than_a_day(file: &Path) -> bool {
     modified.is_ok_and(|t| SystemTime::now().duration_since(t).map_or(true, |age| age < DAY))
 }
 
-/// What the last check found, and a new check in the background when it is older than a day.
+/// The latest release: what the last check found while it is younger than a day; else asked now, waiting at most
+/// `CHECK_WAIT` (once a day, as Flutter and oh-my-zsh do), so the first run after an install already knows. Offline,
+/// the old answer is used and nothing is asked again for a day.
 fn known_latest(cache: &Path) -> Option<String> {
-    let text = std::fs::read_to_string(cache).unwrap_or_default();
-    if !younger_than_a_day(cache) {
-        refresh(cache);
+    let old = std::fs::read_to_string(cache).unwrap_or_default();
+    if younger_than_a_day(cache) {
+        return version_of(&old).map(String::from);
     }
-    version_of(&text).map(String::from)
+    let fresh = fetch_latest();
+    if let Some(dir) = cache.parent() {
+        let _ = std::fs::create_dir_all(dir);
+        // offline the old answer stays, with a new date: the next check is tomorrow, not on every run
+        let _ = std::fs::write(cache, fresh.as_deref().unwrap_or(&old));
+    }
+    version_of(fresh.as_deref().unwrap_or(&old)).map(String::from)
 }
 
-/// curl (or wget) writes the latest release into the cache, detached: this run does not wait for it.
-fn refresh(cache: &Path) {
-    let Some(dir) = cache.parent() else { return };
-    let Ok(file) = std::fs::create_dir_all(dir).and_then(|_| std::fs::File::create(cache)) else { return };
+/// The longest a command waits for the release check (once a day at most).
+const CHECK_WAIT: &str = "3";
+
+/// What curl (the url `releases/latest` redirects to) or wget (the API's answer) says of the latest release, or
+/// `None` without network, without either tool, or past `CHECK_WAIT` seconds.
+fn fetch_latest() -> Option<String> {
     let null = if cfg!(windows) { "NUL" } else { "/dev/null" };
     let mut curl = Command::new("curl");
-    curl.args(["-fsSLI", "--max-time", "15", "-o", null, "-w", "%{url_effective}", LATEST_URL]);
+    curl.args(["-fsSLI", "--connect-timeout", CHECK_WAIT, "--max-time", CHECK_WAIT, "-o", null, "-w", "%{url_effective}", LATEST_URL]);
     let mut wget = Command::new("wget");
-    wget.args(["-qO-", "--timeout=15", LATEST_API]);
+    wget.args(["-qO-", &format!("--timeout={CHECK_WAIT}"), "--tries=1", LATEST_API]);
     for mut cmd in [curl, wget] {
-        // its own process group: the terminal closing right after this command does not stop it
-        #[cfg(unix)]
-        std::os::unix::process::CommandExt::process_group(&mut cmd, 0);
-        let Ok(out) = file.try_clone() else { return };
-        if cmd.stdin(Stdio::null()).stdout(out).stderr(Stdio::null()).spawn().is_ok() {
-            return;
+        match cmd.stdin(Stdio::null()).stderr(Stdio::null()).output() {
+            Ok(out) => {
+                let text = String::from_utf8_lossy(&out.stdout).into_owned();
+                return (out.status.success() && version_of(&text).is_some()).then_some(text);
+            }
+            Err(_) => continue, // this tool is not on the machine: the next one
         }
     }
+    None
 }
 
 /// Under `sudo`: the installers need no administrator (ADR-installer-0005), and an update as root would leave files
