@@ -905,7 +905,7 @@
    "id": "concept:ecosystem",
    "type": "architecture",
    "title": "The parts of the NuclearLang ecosystem",
-   "summary": "One repository, a project per folder: the language (compiler, language server, dialects), the framework Synapsis with its three platforms, the tools (the `nuclear` command, the code generator, the MCP server), the editor extensions and their tools, the devices, the Smart Graph, the local agents, Nuclear Chat, the installer and the website.",
+   "summary": "One repository, a project per folder: the language (compiler, language server, dialects), the framework Synapsis with its three platforms, the tools (the `nuclear` command, the code generator, the MCP server), the editor extensions and their tools, the devices, the Smart Graph, the roles and the local agents (on standby), Nuclear Chat, the installer and the website.",
    "body": [
     "| Folder | What it is |",
     "|---|---|",
@@ -916,12 +916,12 @@
     "| `extensions/` | the VS Code, JetBrains and Zed extensions and their tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices) |",
     "| `device-emulators/` | the devices the tools and the editors start |",
     "| `nuclear-graph-storage/` | the Smart Graph: the local, private knowledge base every agent reads |",
-    "| `nuclear-agents/` | the local agents (the Nuclear Developer) |\n| `nuclear-chat/` | Nuclear Chat, the software factory's workplace (a Synapsis backend and its embedded web UI), used by the Builder and Nuclear Atlas |",
+    "| `nuclear-agents/` | the roles and skills every agent reads, and the local agents (the Nuclear Developer, on standby: ADR-platform-0013) |\n| `nuclear-chat/` | Nuclear Chat, the software factory's workplace (a Synapsis backend and its embedded web UI), used by the Builder and Nuclear Atlas |",
     "| `installer/` | the installers and the release |",
     "| `website/` | the documentation site, written in Nuclear |",
     "| `docs/` | what is about the whole platform: vision, architecture, decisions, standards |",
     "",
-    "How they fit: you write `.nuc`; one command, `nuclear`, checks and builds it and runs the project's life (new, make, gen, build, run, test); the editor shows it all through the language server; the graph knows everything written here; the local agents use the graph and the compiler to write code; the Builder takes a spec through them; an MCP client (Claude Code, Codex, Cursor) reaches all of it through `nuclear-mcp`.",
+    "How they fit: you write `.nuc`; one command, `nuclear`, checks and builds it and runs the project's life (new, make, gen, build, run, test); the editor shows it all through the language server; the graph knows everything written here; the agents and API providers you choose (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; an API model) reach the graph, the compiler and the generators through `nuclear-mcp`; the Builder takes a spec through a team of them; Nuclear Chat is where they answer you.",
     "",
     "Each component's version has a row: `component:nuclear`, `component:nuclear-vscode`, `component:nuclear-graph`..."
    ],
@@ -979,10 +979,10 @@
    "id": "concept:editors",
    "type": "concept",
    "title": "The editors: VS Code, Android Studio (JetBrains) and Zed",
-   "summary": "One language server gives the three editors diagnostics, completion, hover, rename and the documentation of every word. VS Code adds the Nuclear workspace: run and debug `.nuc`, devices, HTTP Connections (an HTTP client), the Builder, Nuclear Atlas (the chat with the local agents over the Smart Graph) and the settings of the AI pieces.",
+   "summary": "One language server gives the three editors diagnostics, completion, hover, rename and the documentation of every word. VS Code adds the Nuclear workspace: run and debug `.nuc`, devices, HTTP Connections (an HTTP client), the Builder, Nuclear Atlas (the chat with the agent or API provider you choose, over the Smart Graph) and the settings of the AI pieces.",
    "body": [
     "- **The language server** (`nuclear-lsp`): diagnostics with quick fixes, completion, hover with the documentation of a kind or decorator, signature help, rename. It follows the platform and dialect of the project's manifest (`config.nuc` or `nuclear.toml`).",
-    "- **VS Code** (`nuclear-vscode`): the Nuclear workspace with a tab per project and tools; the actions of the active project in the editor's title bar (run, debug, device, build, test, check); breakpoints in `.nuc` lines; the Synapsis device for a mobile app and a web device; HTTP Connections (`Ctrl+Alt+H`); the Builder (`Ctrl+Alt+P`); Nuclear Atlas, the chat with the local agents over the Smart Graph (`Ctrl+Alt+A`); the settings and integrations page (`Ctrl+Alt+S`).",
+    "- **VS Code** (`nuclear-vscode`): the Nuclear workspace with a tab per project and tools; the actions of the active project in the editor's title bar (run, debug, device, build, test, check); breakpoints in `.nuc` lines; the Synapsis device for a mobile app and a web device; HTTP Connections (`Ctrl+Alt+H`); the Builder (`Ctrl+Alt+P`); Nuclear Atlas, the chat with the agent or API provider you choose over the Smart Graph (`Ctrl+Alt+A`); the settings and integrations page (`Ctrl+Alt+S`).",
     "- **Android Studio and IntelliJ** (`nuclear-jetbrains`): the language, `.nuc` breakpoints for a mobile app, and two tool windows: HTTP Connections (`Alt+Shift+H`) and Nuclear Builder (`Alt+Shift+P`).",
     "- **Zed** (`nuclear-zed`): the language with a tree-sitter grammar and the same server, tasks and runnables.",
     "",
@@ -1035,11 +1035,11 @@
    "id": "concept:open-source",
    "type": "concept",
    "title": "NuclearLang is open source",
-   "summary": "Everything is open source under Apache-2.0, in one repository of the `nuclearlang` organization on GitHub: the language and its dialects, Synapsis and its platforms, the tools, the editor extensions, the Smart Graph, the Nuclear Developer and the knowledge base.",
+   "summary": "Everything is open source under Apache-2.0, in one repository of the `nuclearlang` organization on GitHub: the language and its dialects, Synapsis and its platforms, the tools, the editor extensions, the Smart Graph, the Nuclear Developer (on standby) and the knowledge base.",
    "body": [
     "- License: Apache-2.0 for the whole tree and every runtime package.",
     "- Home: `https://github.com/nuclearlang/lang`, one repository; the website is `https://nuclearlang.github.io`; each folder is a project with its own `AGENTS.md` and `docs/`. The organization's profile is its own `.github` repository.",
-    "- A release is installed with one command: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` (Linux, macOS) or `irm https://nuclearlang.github.io/install.ps1 | iex` (Windows). From the source tree: `installer/install.sh` (`--ai` adds the graph and the local agents)."
+    "- A release is installed with one command: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` (Linux, macOS) or `irm https://nuclearlang.github.io/install.ps1 | iex` (Windows). From the source tree: `installer/install.sh` (`--ai` also sets up the Smart Graph, the MCP server and Nuclear Chat)."
    ],
    "keys": [
     "open source",

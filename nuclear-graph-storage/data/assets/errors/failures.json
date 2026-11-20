@@ -119,10 +119,6 @@
      "to": "failure:no-access-to-the-graph"
     },
     {
-     "rel": "see-also",
-     "to": "failure:a-model-is-missing"
-    },
-    {
      "rel": "playbook",
      "to": "playbook:set-up-the-ai-services"
     }
@@ -130,7 +126,7 @@
    "sources": [
     "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#When it fails",
     "nuclear-graph-storage/docs/06-runbooks/install-and-serve.md#Settings",
-    "installer/docs/08-guides/ai-setup.md#5. After the set-up"
+    "installer/docs/08-guides/ai-setup.md#4. After the set-up"
    ],
    "meta": {
     "family": "transient",
@@ -147,7 +143,7 @@
     "",
     "**Cause.** Each client has its own token, kept in your keyring, with scopes: `read` (search, cards, prompts), `write` (remember, add examples), `admin` (ingest, manage: only the owner).",
     "",
-    "**Next step.** `nuclear-graph connect nuclear-developer --scopes read,write` (the local agents), `nuclear-graph connect mcp --scopes read,write` (the MCP server), with the graph running; `nuclear-graph requests` shows who asked; `nuclear-graph allow <request>`. Restart the client so it reads its token (`NUCLEAR_GRAPH_TOKEN`, else the keyring).",
+    "**Next step.** `nuclear-graph connect mcp --scopes read,write` (the MCP server), with the graph running; `nuclear-graph requests` shows who asked; `nuclear-graph allow <request>`. Restart the client so it reads its token (`NUCLEAR_GRAPH_TOKEN`, else the keyring).",
     "",
     "**The keyring was closed.** A graph that starts at login may run before the keyring opens: it waits for the keyring, then refuses, and never makes a second key or token."
    ],
@@ -185,12 +181,14 @@
   {
    "id": "failure:the-developer-is-not-running",
    "type": "failure",
-   "title": "Failure: the Nuclear Developer is not running",
-   "summary": "A stage of the Builder, Nuclear Atlas or an MCP tool cannot reach the local agents at `127.0.0.1:7879`. Start their service again (`nuclear-builder setup --status` says what is down); a run checks it before it starts and retries a passing failure with growing waits.",
+   "title": "Failure: the Nuclear Developer is not running (it is on standby)",
+   "summary": "The Nuclear Developer (the local agents at `127.0.0.1:7879`) is on standby (ADR-platform-0013): no set-up installs it and no team, MCP tool or chat uses it. A message that it is not running comes from an installation before that decision or a team member of the old local kind: update NuclearLang (`nuclear update`) and give the work to an agent or an API provider.",
    "body": [
-    "**Looks like.** `the local developer is not running at http://127.0.0.1:7879`, `fetch failed`, a run that stops at its preflight step.",
+    "**Looks like.** `the local developer is not running at http://127.0.0.1:7879`, `fetch failed`, a run that stops at its preflight step naming the Developer.",
     "",
-    "**Next step.** `nuclear-builder setup --status`; then `systemctl --user restart nuclear-developer` on Linux (`journalctl --user -u nuclear-developer -n 50` says why it stopped), `launchctl kickstart -k gui/$UID/io.github.nuclearlang.developer` on macOS, or the settings page of VS Code. A machine never set up: `nuclear-builder setup`. By hand: `nuclear-developer &`; another port: `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_DEVELOPER_URL`. Then `nuclear-builder retry <run>`: the steps that passed are kept."
+    "**Cause.** An installation from before ADR-platform-0013, or a team member of the kind `local`. The local models are off behind one switch: `localModels: false` in Nuclear Builder's `setup.json`.",
+    "",
+    "**Next step.** `nuclear update` (or the installer again): the set-up runs the profile `remote`, takes away the Developer's service, the models NuclearLang pulled and Ollama when NuclearLang installed it, and says the GB freed. A team member of the old local kind is converted on read to the default external choice (the first agent whose command is on the PATH: Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else an API provider with a key in the vault), the team's old file kept as `<id>.json.bak` and a warning shown. Then `nuclear-builder retry <run>`: the steps that passed are kept."
    ],
    "keys": [
     "developer is not running",
@@ -216,7 +214,9 @@
     }
    ],
    "sources": [
-    "tools/mcp/server.nuc"
+    "docs/03-adr/0013-local-models-on-standby.md#Decision",
+    "installer/docs/08-guides/ai-setup.md#2. The steps",
+    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
    ],
    "meta": {
     "family": "transient",
@@ -227,13 +227,13 @@
    "id": "failure:a-service-started-by-hand-holds-its-port",
    "type": "failure",
    "title": "Failure: the set-up stops because a service started by hand answers on its port",
-   "summary": "The set-up of the AI services stops at *Start the Smart Graph* (or *the Nuclear Developer*, *Nuclear Chat*) with `a ... started by hand already answers at ...`: a graph, a Developer or a chat service started in a terminal holds the port, so the system's service cannot take it. Stop that process with the command the message gives and try the step again.",
+   "summary": "The set-up of the AI services stops at *Start the Smart Graph* (or *Nuclear Chat*) with `a ... started by hand already answers at ...`: a graph or a chat service started in a terminal holds the port, so the system's service cannot take it. Stop that process with the command the message gives and try the step again.",
    "body": [
     "**Looks like.** `a Nuclear Smart Graph started by hand already answers at http://127.0.0.1:7878/v1/health: stop it (pkill -f 'nuclear-graph serve') and run the set-up again, so the service of this system takes its place`.",
     "",
-    "**Cause.** Before the set-up existed the services were started with `nuclear-graph serve &` and `nuclear-developer &`. Such a process keeps running old code and is gone after a restart of the machine; the set-up does not kill a process it did not start.",
+    "**Cause.** Before the set-up existed the services were started with `nuclear-graph serve &` and `nuclear-chat serve &`. Such a process keeps running old code and is gone after a restart of the machine; the set-up does not kill a process it did not start.",
     "",
-    "**Next step.** `pkill -f 'nuclear-graph serve'` (the graph) or `pkill -f 'uvicorn app.main:app'` (the Developer), `pkill -f 'nuclear-chat serve'` (Nuclear Chat); then *Try again* in the wizard, or `nuclear-builder setup --profile <the same> --yes`. A service the editor started (the settings page's *Start*) stops when the editor closes."
+    "**Next step.** `pkill -f 'nuclear-graph serve'` (the graph) or `pkill -f 'nuclear-chat serve'` (Nuclear Chat); then *Try again* in the wizard, or `nuclear-builder setup --profile remote --yes`. A service the editor started (the settings page's *Start*) stops when the editor closes."
    ],
    "keys": [
     "started by hand",
@@ -255,7 +255,7 @@
     }
    ],
    "sources": [
-    "installer/docs/08-guides/ai-setup.md#7. When a step fails"
+    "installer/docs/08-guides/ai-setup.md#6. When a step fails"
    ],
    "meta": {
     "family": "environment",
@@ -266,11 +266,13 @@
    "id": "failure:a-model-is-missing",
    "type": "failure",
    "title": "Failure: Ollama is not running, or a model is not installed",
-   "summary": "The local agents and the graph's embeddings run on Ollama. When Ollama is down, a model was never pulled, or another program holds the model, calls fail or wait: start Ollama and let the set-up download the models of the machine's profile.",
+   "summary": "NuclearLang's own local models (Ollama, the Nuclear Developer) are on standby (ADR-platform-0013): no tool of NuclearLang needs Ollama or a pulled model, and the Smart Graph runs its own model. Such a message from NuclearLang's tools comes from an old installation: update it. An app of yours with the `ollama` plugin needs Ollama running with its model pulled.",
    "body": [
-    "**Looks like.** `model 'qwen2.5-coder:3b' not found`, `the Nuclear Developer does not answer at ...`, a call that never answers, `connection refused` on port 11434 (`OLLAMA_URL`, default `http://localhost:11434`).",
+    "**Looks like.** `model 'qwen2.5-coder:3b' not found`, `the Nuclear Developer does not answer at ...`, `connection refused` on port 11434 (`OLLAMA_URL`, default `http://localhost:11434`).",
     "",
-    "**Next step.** `ollama serve`; `nuclear-builder setup --status` says what is missing (most often a model of the profile), and running `nuclear-builder setup` again downloads the profile's models (by hand: `ollama pull <model>`; `ollama list` shows what is installed). A download that stopped goes on from where it stopped when the step is tried again."
+    "**From NuclearLang's tools.** `nuclear update` (or the installer again): the set-up runs only the profile `remote` and takes away what NuclearLang put there for the local models (the Developer, the models it pulled, Ollama when it installed it; what was on the machine before stays). The work goes to the agents and API providers you choose (`faq:local-models`).",
+    "",
+    "**From your app** (a backend with `plugins(ollama = true)`): start Ollama (`ollama serve`) and pull the model its connection names (`ollama pull <model>`; `ollama list` shows what is installed)."
    ],
    "keys": [
     "ollama",
@@ -290,11 +292,15 @@
     {
      "rel": "concept",
      "to": "concept:ai-setup"
+    },
+    {
+     "rel": "plugin",
+     "to": "concept:plugins"
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/docs/06-runbooks/run.md#When it fails",
-    "installer/docs/08-guides/ai-setup.md#7. When a step fails"
+    "docs/03-adr/0013-local-models-on-standby.md#Decision",
+    "installer/docs/08-guides/ai-setup.md#2. The steps"
    ],
    "meta": {
     "family": "environment",
@@ -309,7 +315,7 @@
    "body": [
     "**Looks like.** `timed out`, `timeout`, `temporarily unavailable`, a status 408, 425, 429, 502, 503 or 504.",
     "",
-    "**Next step.** Nothing at first: the Builder retries with exponential backoff (`.nuclear/builder.json`, `retry`). Still failing: see which service the message names (the Developer, the graph, Ollama) and start it; then `nuclear-builder retry <run>`. A compiler error or a failing test is never retried blindly."
+    "**Next step.** Nothing at first: the Builder retries with exponential backoff (`.nuclear/builder.json`, `retry`). Still failing: see which service the message names (the graph, Nuclear Chat, an agent or an API provider) and start it; then `nuclear-builder retry <run>`. A compiler error or a failing test is never retried blindly."
    ],
    "keys": [
     "timed out",
@@ -324,10 +330,6 @@
     {
      "rel": "tool",
      "to": "tool:nuclear-builder.retry"
-    },
-    {
-     "rel": "see-also",
-     "to": "failure:the-developer-is-not-running"
     },
     {
      "rel": "see-also",
@@ -478,7 +480,7 @@
     "",
     "**Cause.** A spec in plain words (\"an author has a name; POST /authors adds one\") needs someone to decide the names and the files; the local planner splits what a spec says, it does not design.",
     "",
-    "**Next step.** One sentence per declaration, with its kind word and its name; or give the resource's data (a `GET <url>` line, an example answer) so the generators write it; or `--lead claude`. Then `nuclear-builder retry <run> --from plan`."
+    "**Next step.** One sentence per declaration, with its kind word and its name; or give the resource's data (a `GET <url>` line, an example answer) so the generators write it; or give the station to a team member worked by a stronger agent or model. Then `nuclear-builder retry <run> --from plan`."
    ],
    "keys": [
     "0 pieces",
@@ -815,14 +817,14 @@
   {
    "id": "failure:an-answer-never-ends",
    "type": "failure",
-   "title": "Failure: a model's answer never ends and the Developer stops answering",
-   "summary": "Nothing limits the length of a factory model's answer (the chat's is capped at 1024 tokens). A model that enters an answer without end keeps writing, and the Developer waits for it: every call after it waits too, until the model is stopped in Ollama and the Developer is restarted.",
+   "title": "Failure: a local model's answer never ends (the local models are on standby)",
+   "summary": "Seen with the Nuclear Developer's local models, now on standby (ADR-platform-0013): no tool of NuclearLang runs a local model, so it happens only on an installation from before that decision, where a model's answer has no limit and the Developer waits for it. Stop the model and update NuclearLang (`nuclear update`): the Developer and its models are taken away.",
    "body": [
-    "**Looks like.** A chat question, an analysis or a piece that has no answer after several minutes, and every later call to the Developer waits as well; `ollama ps` shows the model loaded and working.",
+    "**Looks like.** A chat question, an analysis or a piece with no answer after several minutes, and every later call to the Developer waiting as well; `ollama ps` shows the model loaded and working.",
     "",
-    "**Cause.** The coder's and the assistant's connections give a model its context window only (`config/project_config.nuc`), not a limit on what it writes; the chat's model (`CHAT_MODEL`) has one, 1024 tokens. Seen with `qwen2.5-coder:3b` as assistant (the `medium` profile), `llama3.2:1b`, `phi3:3.8b`, and `qwen2.5:1.5b` as the chat's model before its limit; the two models of the `hard` profile did not do it in the measured rounds.",
+    "**Cause.** The Developer's connections gave a model its context window only, not a limit on what it writes. Seen with `qwen2.5-coder:3b` as assistant, `llama3.2:1b`, `phi3:3.8b` and `qwen2.5:1.5b`.",
     "",
-    "**Next step.** `ollama stop <model>`, then restart the Developer (`systemctl --user restart nuclear-developer` on Linux, or *Restart* in the editor's settings page), and ask again. If the same model does it again, use the profile whose assistant is `gemma4:e2b` (`nuclear-builder setup`)."
+    "**Next step.** `ollama stop <model>`, then `nuclear update`: the set-up of the profile `remote` takes away the Developer's service and the models NuclearLang pulled. The work goes to an agent or an API provider."
    ],
    "keys": [
     "never ends",
@@ -847,7 +849,8 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#Known limits"
+    "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#Known limits",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "family": "environment",

@@ -6,10 +6,10 @@
   {
    "id": "query:agent",
    "type": "query",
-   "title": "Exact: one local agent",
-   "summary": "One local agent of the Nuclear Developer by its name: its steps in order, its model and what it does.",
+   "title": "Exact: one local agent (on standby)",
+   "summary": "One local agent of the Nuclear Developer (on standby, ADR-platform-0013) by its name: its steps in order, its model and what it does.",
    "body": [
-    "One local agent of the Nuclear Developer by its name: its steps in order, its model and what it does.",
+    "One local agent of the Nuclear Developer (on standby, ADR-platform-0013) by its name: its steps in order, its model and what it does.",
     "",
     "It reads `agents` of the exact facts; its parameters: `agent` (needed).",
     "",
@@ -53,10 +53,10 @@
   {
    "id": "query:agents",
    "type": "query",
-   "title": "Exact: the local agents of the Nuclear Developer",
-   "summary": "Every local agent of the Nuclear Developer (analyst, planner, coder, tester, security, diagnoser, documenter, acceptor, assistant): its steps in order, its model and what it does.",
+   "title": "Exact: the local agents of the Nuclear Developer (on standby)",
+   "summary": "Every local agent of the Nuclear Developer, on standby (ADR-platform-0013) (analyst, planner, coder, tester, security, diagnoser, documenter, acceptor, assistant): its steps in order, its model and what it does.",
    "body": [
-    "Every local agent of the Nuclear Developer (analyst, planner, coder, tester, security, diagnoser, documenter, acceptor, assistant): its steps in order, its model and what it does.",
+    "Every local agent of the Nuclear Developer, on standby (ADR-platform-0013) (analyst, planner, coder, tester, security, diagnoser, documenter, acceptor, assistant): its steps in order, its model and what it does.",
     "",
     "It reads `agents` of the exact facts.",
     "",
@@ -961,9 +961,9 @@
    "id": "query:http.routes",
    "type": "query",
    "title": "Exact: the HTTP routes of the Smart Graph and of the Nuclear Developer",
-   "summary": "Every HTTP route of the Smart Graph (127.0.0.1:7878) and of the Nuclear Developer (127.0.0.1:7879): its verb, its path, the scope a token needs and what it answers.",
+   "summary": "Every HTTP route of the Smart Graph (127.0.0.1:7878) and of the Nuclear Developer (127.0.0.1:7879, on standby): its verb, its path, the scope a token needs and what it answers.",
    "body": [
-    "Every HTTP route of the Smart Graph (127.0.0.1:7878) and of the Nuclear Developer (127.0.0.1:7879): its verb, its path, the scope a token needs and what it answers.",
+    "Every HTTP route of the Smart Graph (127.0.0.1:7878) and of the Nuclear Developer (127.0.0.1:7879, on standby): its verb, its path, the scope a token needs and what it answers.",
     "",
     "It reads `routes` of the exact facts; its parameters: `service`.",
     "",
@@ -1401,9 +1401,9 @@
    "id": "query:mcp.commands",
    "type": "query",
    "title": "Exact: each MCP tool and the command line it is the same as",
-   "summary": "The MCP tools that run a command line, each with that command: `generate_resource` is `nuclear gen resource`, `nuclear_check` is `nuclear check`, `developer_task` is `nuclear-builder run`.",
+   "summary": "The MCP tools that run a command line, each with that command: `generate_resource` is `nuclear gen resource`, `nuclear_check` is `nuclear check`, `nuclear_build` is `nuclear build`.",
    "body": [
-    "The MCP tools that run a command line, each with that command: `generate_resource` is `nuclear gen resource`, `nuclear_check` is `nuclear check`, `developer_task` is `nuclear-builder run`.",
+    "The MCP tools that run a command line, each with that command: `generate_resource` is `nuclear gen resource`, `nuclear_check` is `nuclear check`, `nuclear_build` is `nuclear build`.",
     "",
     "It reads `mcp_tools` of the exact facts.",
     "",
@@ -1441,9 +1441,9 @@
    "id": "query:mcp.group",
    "type": "query",
    "title": "Exact: the MCP tools of one group, with their parameters",
-   "summary": "The tools of one group of the MCP server (the generators `generate_*`, the graph `graph_*`, the compiler `nuclear_*`, the local developer `developer_*`, the internet `web_*`), each with every parameter, its type and its default, and the command it runs.",
+   "summary": "The tools of one group of the MCP server (the generators `generate_*`, the graph `graph_*`, the compiler `nuclear_*`, the internet `web_*`), each with every parameter, its type and its default, and the command it runs.",
    "body": [
-    "The tools of one group of the MCP server (the generators `generate_*`, the graph `graph_*`, the compiler `nuclear_*`, the local developer `developer_*`, the internet `web_*`), each with every parameter, its type and its default, and the command it runs.",
+    "The tools of one group of the MCP server (the generators `generate_*`, the graph `graph_*`, the compiler `nuclear_*`, the internet `web_*`), each with every parameter, its type and its default, and the command it runs.",
     "",
     "It reads `mcp_params`, `mcp_tools` of the exact facts; its parameters: `grp` (needed).",
     "",
@@ -1457,7 +1457,7 @@
     "options of the mcp generators",
     "describeme a detalle que servicio y opciones tiene el mcp de generadores",
     "que opciones tienen los generadores del mcp",
-    "detalla las tools developer del mcp",
+    "detalla las tools del compilador en el mcp",
     "herramientas del mcp para el grafo con sus parametros"
    ],
    "sources": [
@@ -1487,9 +1487,9 @@
    "id": "query:mcp.tool",
    "type": "query",
    "title": "Exact: the parameters of one MCP tool",
-   "summary": "Every parameter of one tool of the MCP server (generate_resource, graph_search, developer_task...): its name, its type, whether it is required and its default.",
+   "summary": "Every parameter of one tool of the MCP server (generate_resource, graph_search, nuclear_check...): its name, its type, whether it is required and its default.",
    "body": [
-    "Every parameter of one tool of the MCP server (generate_resource, graph_search, developer_task...): its name, its type, whether it is required and its default.",
+    "Every parameter of one tool of the MCP server (generate_resource, graph_search, nuclear_check...): its name, its type, whether it is required and its default.",
     "",
     "It reads `mcp_params` of the exact facts; its parameters: `tool` (needed).",
     "",
@@ -1500,10 +1500,10 @@
    "asks": [
     "parameters of generate_resource",
     "what does graph_search take",
-    "arguments of developer_task",
+    "arguments of nuclear_check",
     "que parametros tiene generate_resource",
     "que recibe graph_search",
-    "argumentos de developer_task",
+    "argumentos de nuclear_check",
     "opciones de generate_usecase"
    ],
    "sources": [

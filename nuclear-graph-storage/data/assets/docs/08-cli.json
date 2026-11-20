@@ -654,7 +654,7 @@
     "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
     "installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/)",
     "installer/tests/distros.sh [<distro>...] # the installer on Debian, Ubuntu, Fedora, Arch, openSUSE, Alpine: one container at a time",
-    "nuclear-builder setup [--profile <id> --yes | --status | --remove]   # the AI services",
+    "nuclear-builder setup [--profile remote --yes | --status | --remove]   # the AI services (lite|medium|hard: on standby)",
     "```",
     "",
     "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it",
@@ -698,14 +698,14 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#documents.94cfe1",
+   "id": "doc:installer/AGENTS.md#documents.75acda",
    "type": "readme",
    "title": "The installers and the release — Documents",
    "summary": "Elsewhere:",
    "body": [
     "| Read | When |",
     "|---|---|",
-    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done or untested: the first release, macOS and Windows, the AI profiles |",
+    "| [docs/01-product/roadmap.md](docs/01-product/roadmap.md) | You look for what is half done or untested: the first release, macOS and Windows, the local models on standby |",
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change a script: what each one does, the layout of an installation, the folders and variables, how the AI services are installed |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the release is archives and one-line installers, or why the AI services come with the installer and how their set-up is shaped |",
     "| [docs/06-runbooks/release.md](docs/06-runbooks/release.md) | You publish a release, build an archive by hand, or test an installer without touching your machine |",
@@ -791,7 +791,7 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#rules.f61f5e",
+   "id": "doc:installer/AGENTS.md#rules.ff3a45",
    "type": "readme",
    "title": "The installers and the release — Rules",
    "summary": "1. One layout, one script.",
@@ -802,12 +802,12 @@
     "   removes everything an install created, the AI set-up's models, Ollama when it installed it, the data and the",
     "   caches included; what was on the machine before stays (ADR-installer-0005). The source installer's `--uninstall`",
     "   (a developer's machine) keeps the data.",
-    "3. **Nothing is downloaded before the user chooses**: the AI set-up asks, and without a terminal (CI) nothing is",
-    "   asked or downloaded (ADR-installer-0002).",
+    "3. **Nothing is downloaded before the user chooses**: no local model is downloaded at all while they are on standby",
+    "   (ADR-platform-0013); the required services' archive comes with the install (ADR-installer-0002, ADR-installer-0006).",
     "4. **Never run `--uninstall` or a public installer against the real `HOME` while testing**: use a fake `HOME` and a",
     "   mirror ([the runbook](docs/06-runbooks/release.md)).",
     "5. **`docs/08-guides/ai-setup.md` is held to the profiles by a test** (`extensions/tools/nuclear-builder/tests/test_setup.nuc`",
-    "   against `setup.json`): what a profile says of itself is changed in the data, then in the guide.",
+    "   against `setup.json`): what the profile `remote` says of itself is changed in the data, then in the guide.",
     "6. **The user runs the installed binaries**: after a change to a binary, a dialect, a platform, a runtime package",
     "   or the skill, `installer/install.sh` again."
    ],
@@ -830,8 +830,11 @@
     "- GitHub Actions for the release (`.github/workflows/release.yml`); static Linux binaries (musl).",
     "- The AI set-up is not code of this folder: it is `nuclear-builder setup`, written in Nuclear",
     "  (`extensions/tools/nuclear-builder/setup.nuc`, profiles in `setup.json`), which the editors run as a process. The services themselves come in the AI archive",
-    "  (`release/ai-runtime.sh`): a Python of their own with the Smart Graph, the MCP server and the Nuclear Developer,",
-    "  unpacked as the installation's `ai/` (ADR-installer-0003)."
+    "  (`release/ai-runtime.sh`): a Python of their own with the Smart Graph, the MCP server, Nuclear Chat and the Nuclear",
+    "  Developer (inert), unpacked as the installation's `ai/` (ADR-installer-0003).",
+    "- **The local models are on standby** ([ADR-platform-0013](../docs/03-adr/0013-local-models-on-standby.md)): the",
+    "  installers never offer or install Ollama, a local model or the Developer; they run",
+    "  `nuclear-builder setup --profile remote --yes`, and a local profile asked or kept becomes `remote` with a note."
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -869,8 +872,9 @@
    "body": [
     "- **One layout, one script** (`release/stage.sh`), one archive per system, one-line installers that check SHA-256",
     "  ([ADR-installer-0001](docs/03-adr/0001-release-archives-and-one-line-installers.md)).",
-    "- **The AI services come with the installer**, set up in steps by machine profile",
-    "  ([ADR-installer-0002](docs/03-adr/0002-the-ai-services-come-with-the-installer.md)).",
+    "- **The AI services come with the installer**, set up in steps",
+    "  ([ADR-installer-0002](docs/03-adr/0002-the-ai-services-come-with-the-installer.md)); the local models are on standby",
+    "  ([ADR-platform-0013](../docs/03-adr/0013-local-models-on-standby.md)): only the profile `remote`.",
     "- **POSIX `sh` and PowerShell**, needing only `curl`/`wget`, `tar` and a SHA-256 tool.",
     "- No release is published yet: the public one-liners fail until the first tag ([roadmap](docs/01-product/roadmap.md))."
    ],
@@ -965,11 +969,13 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.29a115",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.336f76",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
-   "summary": "6. A check: the installed `nuclear dialect list` must run.",
+   "summary": "installer: `npm run package` there).",
    "body": [
+    "installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
+    "   `wasm32-wasip2` is there (`--no-zed`).",
     "6. A check: the installed `nuclear dialect list` must run. A hint when `$PREFIX/bin` is not on the PATH.",
     "",
     "`--uninstall`: the AI services first (`nuclear-builder setup --remove`), the links, `uv tool uninstall nuclear-graph`, `nuclear-mcp` and `nuclear-chat-system`, the Zed extension, the installation, the skill,",
@@ -985,7 +991,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.6e6d8d",
+   "id": "doc:installer/docs/02-architecture/overview.md#from-source-install-sh.ab7b0d",
    "type": "context",
    "title": "The installers: overview — From source (`install.sh`)",
    "summary": "1. `cargo build --release -p nuclear-cli -p nuclear-lsp`.",
@@ -994,16 +1000,15 @@
     "2. `stage.sh` into `$PREFIX/share/nuclearlang` (`PREFIX` defaults to `~/.local`), links `nuclear` and `nuclear-lsp` in",
     "   `$PREFIX/bin`.",
     "3. `ai/nuclear-graph-storage`, `ai/nuclear-agents` and `ai/tools` become links to the tree's own folders, so the",
-    "   set-up installs the graph editable and builds the Developer and the MCP server in place. The set-up itself",
+    "   set-up installs the graph editable and builds the MCP server in place (the Developer is on standby,",
+    "   ADR-platform-0013: never built). The set-up itself",
     "   (`extensions/tools/nuclear-builder`, Nuclear: the set-up and the software factory's line) is built and installed",
     "   editable with uv as `nuclear-builder`; Nuclear Chat's command (`nuclear-chat/system`, Nuclear) the same way as",
-    "   `nuclear-chat` (its service is built and started by the set-up's last step, `chat-service`). With `--ai`: `nuclear-builder setup`. With `--ai-runtime`: the AI archive staged as",
+    "   `nuclear-chat` (its service is built and started by the set-up's last step, `chat-service`). With `--ai`: `nuclear-builder setup --profile remote --yes`. With `--ai-runtime`: the AI archive staged as",
     "   `ai/` and its own `nuclear-builder setup`.",
     "4. The skill copied into `~/.claude/skills`, `~/.agents/skills`, `~/.codex/skills` (`--no-agent` skips it).",
     "5. The VS Code extension: the newest `extensions/vscode/nuclearlang-*.vsix` (`sort -V`), when `code` is on the",
-    "   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the",
-    "   installer: `npm run package` there). The Zed extension: `extensions/zed/build.sh`, when Zed is installed and the Rust target",
-    "   `wasm32-wasip2` is there (`--no-zed`)."
+    "   PATH (`--no-vscode`); a note when that package is not the version of `package.json` (it is not built by the"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1015,26 +1020,42 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-ai-services-at-the-end-of-an-install",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-ai-services-at-the-end-of-an-install.52070b",
+   "type": "context",
+   "title": "The installers: overview — The AI services at the end of an install",
+   "summary": "A `--profile` / `-AiProfile` / `NUCLEAR_AI_PROFILE` of a local profile, or one the machine kept (`NUCLEAR_AI_PROFILE=` in `~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`), becomes `remote` and the installer says so; on such a machine the set-up's first step (`standby`) takes away…",
+   "body": [
+    "- The profile is always `remote` (ADR-platform-0013): `nuclear-builder setup --profile remote --yes`, no questions.",
+    "  A `--profile` / `-AiProfile` / `NUCLEAR_AI_PROFILE` of a local profile, or one the machine kept",
+    "  (`NUCLEAR_AI_PROFILE=` in `~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`), becomes `remote` and the",
+    "  installer says so; on such a machine the set-up's first step (`standby`) takes away what was local and says the GB",
+    "  freed.",
+    "- Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),",
+    "  so `nuclear-builder setup` works before the set-up ran; its line's commands (`run`, `retry`, `ci`…) are the software",
+    "  factory's, in Nuclear too: no node is needed.",
+    "- The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.",
+    "- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-chat`",
+    "  (`systemctl --user restart nuclear-chat` after a change to its code;",
+    "  `journalctl --user -u nuclear-chat -n 50`); `nuclear-builder setup --status` says what is installed and running."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-ai-services-at-the-end-of-an-install.a84e93",
    "type": "context",
    "title": "The installers: overview — The AI services at the end of an install",
    "summary": "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS archive's `ai/bin/nuclear-builder` (`extensions/tools/nuclear-builder/setup.nuc`, written in Nuclear).",
    "body": [
     "The installers do not install the services: they call the set-up (`nuclear-builder setup`), whose engine is the VS",
     "archive's `ai/bin/nuclear-builder` (`extensions/tools/nuclear-builder/setup.nuc`, written in Nuclear). What a user sees is [the guide](../08-guides/ai-setup.md); why it is shaped so is",
-    "ADR-installer-0002.",
-    "",
-    "- The profile is `--profile` / `NUCLEAR_AI_PROFILE`, else the one the machine has (`NUCLEAR_AI_PROFILE=` in",
-    "  `~/.config/nuclearlang/ai.env`, `%APPDATA%\\nuclearlang\\ai.env`).",
-    "- With a profile: `nuclear-builder setup --profile <id> --yes`, no questions (an update keeps the choice). Without",
-    "  one and with a terminal (not CI): `nuclear-builder setup`, which asks. Without a terminal: nothing, and a note.",
-    "- Unpacking the AI archive links `nuclear-builder` to the archive's (`ai/bin/nuclear-builder`; a `.cmd` on Windows),",
-    "  so `nuclear-builder setup` works before the set-up ran; its line's commands (`run`, `retry`, `ci`…) are the software",
-    "  factory's, in Nuclear too: no node is needed.",
-    "- The set-up is given the folders through `NUCLEAR_INSTALL` and `NUCLEAR_BIN`.",
-    "- On Linux the services are the systemd user units `nuclear-graph` and `nuclear-developer`",
-    "  (`systemctl --user restart nuclear-developer` after a change to its code;",
-    "  `journalctl --user -u nuclear-developer -n 50`); `nuclear-builder setup --status` says what is installed and running."
+    "ADR-installer-0002."
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1141,33 +1162,6 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5145b5",
-   "type": "context",
-   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
-   "summary": "the user's list).",
-   "body": [
-    "**What is required, what is added, a new run** ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md),",
-    "[the user's list](../08-guides/what-gets-installed.md)). NuclearLang, the Smart Graph and the MCP server (the AI archive",
-    "and its set-up) are required: no question is asked for them, and a missing one ends the run with a red *Not complete*",
-    "box and exit code 1 (NuclearLang stays installed; the step log and the cache are kept, so a new run goes on). The",
-    "extension is a task whose failure is a warning. The local agents are asked by the set-up (`remote` by default);",
-    "without a terminal the profile is `remote`. Windows on ARM downloads the x64 AI archive; an Intel Mac has none.",
-    "`install.ps1` ends with `Quit`: `exit` when run as a file, `break` under `irm | iex` (so the user's window stays). Both installers write `<installation>/.version` and",
-    "`<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`",
-    "(`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On",
-    "Windows the processes running from a folder are stopped before it is replaced (`Stop-Under`). The final box lists",
-    "*Required*, *Added when possible* and *Each platform's own*: the toolchains `nuclear doctor --json` finds, or where"
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5f9bb8",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
@@ -1197,7 +1191,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.8192e1",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.8c5b98",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
    "summary": "piped, it is plain text.",
@@ -1206,9 +1200,36 @@
     "PowerShell 5.1 may read the file in another encoding); its downloads read the stream in chunks, so the icon turns",
     "and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks the same (`terminal.nuc`: `paint`,",
     "`box`, `Spinner`): the machine and each profile in boxes, each step with the turning sign, a line of what it does",
-    "(`STEP_ABOUT`) and a bar when its output says a percent (an Ollama pull); everything a step says goes to",
+    "(`STEP_ABOUT`) and a bar when its output says a percent; everything a step says goes to",
     "`~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\\nuclearlang\\setup.log`), and a failed step is a red box with",
     "its last lines, the error and what to do, never a traceback."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.96c18e",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "the user's list).",
+   "body": [
+    "**What is required, what is added, a new run** ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md),",
+    "[the user's list](../08-guides/what-gets-installed.md)). NuclearLang, the Smart Graph and the MCP server (the AI archive",
+    "and its set-up) are required: no question is asked for them, and a missing one ends the run with a red *Not complete*",
+    "box and exit code 1 (NuclearLang stays installed; the step log and the cache are kept, so a new run goes on). The",
+    "extension is a task whose failure is a warning. The profile is always `remote`: the local models are on standby",
+    "(ADR-platform-0013), and a local profile asked or kept becomes `remote` with a note. Windows on ARM downloads the x64 AI archive; an Intel Mac has none.",
+    "`install.ps1` ends with `Quit`: `exit` when run as a file, `break` under `irm | iex` (so the user's window stays). Both installers write `<installation>/.version` and",
+    "`<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`",
+    "(`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On",
+    "Windows the processes running from a folder are stopped before it is replaced (`Stop-Under`). The final box lists",
+    "*Required*, *Added when possible* and *Each platform's own*: the toolchains `nuclear doctor --json` finds, or where"
    ],
    "sources": [
     "installer/docs/02-architecture/overview.md"
@@ -1296,59 +1317,13 @@
    }
   },
   {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.b3f7d1",
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.170f52",
    "type": "context",
    "title": "The installers: overview — The release",
-   "summary": "runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so.",
+   "summary": "the set-up neither links nor starts it), `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to `ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the services print reaches a pipe whole on Windows and under a…",
    "body": [
-    "runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so. Job `publish`: every archive,",
-    "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
-    "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.cdd2d6",
-   "type": "context",
-   "title": "The installers: overview — The release",
-   "summary": "`platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
-   "body": [
-    "- `release/build-runtimes.sh`: `npm ci` (or `npm install`) and `npm run build` in every",
-    "  `platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
-    "- `release/package.sh [<rust target>]`: builds `nuclear` and `nuclear-lsp` for the target (or this machine), stages them,",
-    "  writes `VERSION`, and makes `dist/nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with its",
-    "  `.sha256`, and `dist/latest` (the version a mirror serves). The version is the workspace's (`Cargo.toml`",
-    "  `[workspace.package]`); `os` is `linux`, `macos` or `windows`, `arch` `x86_64` or `aarch64`.",
-    "- `release/ai-runtime.sh`: the AI archive of this machine (ADR-installer-0003),",
-    "  `dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows) and its `.sha256`, unpacked as the",
-    "  installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer",
-    "  installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the",
-    "  MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,",
-    "  `nuclear-mcp`, `nuclear-developer`, `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to"
-   ],
-   "sources": [
-    "installer/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/02-architecture/overview.md#the-release.d0b5db",
-   "type": "context",
-   "title": "The installers: overview — The release",
-   "summary": "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the services print reaches a pipe whole on Windows and under a C locale), and the knowledge base; and `ai/nuclear-agents/{roles,skills,agents}`, the software factory's rosters with their…",
-   "body": [
-    "`ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the",
+    "the set-up neither links nor starts it), `nuclear-builder`, `nuclear-chat` (which serves Nuclear Chat's service, copied to",
+    "  `ai/nuclear-chat/app`: its package is `app`, as the Developer's; each starts its Python with `-X utf8`, so what the",
     "  services print reaches a pipe whole on Windows and under a C locale), and the knowledge base; and `ai/nuclear-agents/{roles,skills,agents}`, the software factory's rosters with",
     "  their portraits, temperaments and team names and the library of skills and agents, which Nuclear Builder reads",
     "  (the archive is refused when `nuclear-builder team screen`, run from it, finds no roster, library or portraits). Before packing it fails if a `.pth` points into the",
@@ -1370,6 +1345,53 @@
    }
   },
   {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.5c97bd",
+   "type": "context",
+   "title": "The installers: overview — The release",
+   "summary": "`platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
+   "body": [
+    "- `release/build-runtimes.sh`: `npm ci` (or `npm install`) and `npm run build` in every",
+    "  `platforms/<platform>/packages/<name>` with a `build` script, then `nuclear-builder` in `extensions/vscode`.",
+    "- `release/package.sh [<rust target>]`: builds `nuclear` and `nuclear-lsp` for the target (or this machine), stages them,",
+    "  writes `VERSION`, and makes `dist/nuclearlang-<version>-<os>-<arch>.tar.gz` (`.zip` for Windows) with its",
+    "  `.sha256`, and `dist/latest` (the version a mirror serves). The version is the workspace's (`Cargo.toml`",
+    "  `[workspace.package]`); `os` is `linux`, `macos` or `windows`, `arch` `x86_64` or `aarch64`.",
+    "- `release/ai-runtime.sh`: the AI archive of this machine (ADR-installer-0003),",
+    "  `dist/nuclearlang-ai-<version>-<os>-<arch>.tar.gz` (`.zip` on Windows) and its `.sha256`, unpacked as the",
+    "  installation's `ai/`: a python-build-standalone with the graph `[server]`, the MCP server and the Developer",
+    "  installed from what `nuclear build` writes (with Nuclear Builder's set-up and Nuclear Chat's command), pinned by the graph's `uv.lock` (`uv pip install --no-sources`, or the",
+    "  MCP server's editable source of the graph would install a link to the checkout), the launchers `ai/bin/nuclear-graph`,",
+    "  `nuclear-mcp`, `nuclear-developer` (in the archive but inert while the local models are on standby, ADR-platform-0013:"
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-release.b3f7d1",
+   "type": "context",
+   "title": "The installers: overview — The release",
+   "summary": "runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so.",
+   "body": [
+    "runs; an Intel Mac has none (onnxruntime, chromadb's, publishes no wheel for it) and the installer says so. Job `publish`: every archive,",
+    "  checksum and `.vsix`, plus both installers, as assets of the GitHub release.",
+    "- The website serves both installers at its root (`https://nuclearlang.github.io/install.sh`, `install.ps1`)."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/06-runbooks/release.md#after-a-change-in-the-tree",
    "type": "context",
    "title": "Release, and test an installer — After a change in the tree",
@@ -1377,8 +1399,8 @@
    "body": [
     "`installer/install.sh` again: the user runs the installed binaries (`~/.local/bin/{nuclear,nuclear-lsp,nuclear-builder}`,",
     "files in `~/.local/share/nuclearlang`). `cargo install` puts binaries in `~/.cargo/bin`, which is not on the user's",
-    "PATH. After a change to a service's code on Linux: `systemctl --user restart nuclear-developer` (or",
-    "`nuclear-graph`); its output: `journalctl --user -u nuclear-developer -n 50`."
+    "PATH. After a change to a service's code on Linux: `systemctl --user restart nuclear-chat` (or",
+    "`nuclear-graph`); its output: `journalctl --user -u nuclear-chat -n 50`."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1502,7 +1524,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.4b4fee",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.b7d76b",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
    "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), in seconds, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on six distributions one container at a time, against `package.sh…",
@@ -1517,8 +1539,7 @@
     "  `HOME=<an empty folder>` and `NUCLEAR_DOWNLOAD=<the url of that server>`: it reads `latest`, the archive and the",
     "  checksum from there instead of a GitHub release.",
     "- **A clean machine in Docker** (`installer/release/clean-machine/`): nothing of NuclearLang inside, a user `dev`",
-    "  who can sudo, systemd as on a real machine (so Ollama's installer and the AI set-up register their services the",
-    "  usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own",
+    "  who can sudo, systemd as on a real machine (so the AI set-up registers its services the usual way), git as on any developer's machine, and no Python and no Node.js (the AI services and their set-up bring their own",
     "  Python). The installer reads the archive mounted at",
     "  `/mirror` (`NUCLEAR_DOWNLOAD=file:///mirror`)."
    ],
@@ -1539,11 +1560,11 @@
    "body": [
     "| Where | How |",
     "|---|---|",
-    "| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \\| sh` runs it at its end: the graph and the MCP server always, the local agents asked in the terminal (none without a terminal) |",
+    "| The installer | `curl -fsSL https://nuclearlang.github.io/install.sh \\| sh` runs it at its end, with no question |",
     "| VS Code | the offer the first time the extension starts, or *Nuclear: Set Up the AI Services* in the command palette, or *Set-up…* in *Settings and integrations* (`Ctrl+Alt+S`) |",
-    "| A terminal, any time | `nuclear-builder setup` |",
+    "| A terminal, any time | `nuclear-builder setup --profile remote --yes` |",
     "",
-    "The same steps run in the three. Run it again whenever you want another choice: what is installed is kept."
+    "The same steps run in the three. Run it again at any time: what is installed is kept."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1555,21 +1576,23 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.10244b",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps",
    "type": "guide",
    "title": "Set up the AI services — 2. The steps",
-   "summary": "Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it).",
+   "summary": "1. What it needs.",
    "body": [
-    "Ollama runs the local agents' models: without it, choose the remote agents (the Smart Graph does not need it). A program",
-    "   already on the machine is used as it is, with no question; an Ollama that is installed but stopped is started.",
-    "   The models Ollama already has are used as they are; the ones missing are listed with the size, and downloaded",
-    "   only when you say yes (`--yes`: without asking).",
-    "4. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine",
-    "   (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no step of",
-    "   yours), the Nuclear Developer, the models, the knowledge base loaded",
-    "   into the graph (a few seconds with the vectors the release computed; about ten minutes on a processor when they",
-    "   cannot be downloaded), and the services started. A step that fails says why and is",
-    "   tried again from there."
+    "1. **What it needs.** NuclearLang (the `nuclear` command, the code of the services); from the source tree also",
+    "   [uv](https://docs.astral.sh/uv/) (the Python environments of the services). A release's archive brings its own",
+    "   Python: nothing else is needed.",
+    "2. **What was local.** On a machine an earlier version set up with a local profile, a first step takes away what",
+    "   NuclearLang put there for the local models: the Nuclear Developer's service and launcher, the models NuclearLang",
+    "   downloaded, and Ollama when NuclearLang installed it (what was on the machine before stays, ADR-installer-0005).",
+    "   `ai.env` becomes `remote`, and the step says what it removed and how many GB were freed.",
+    "3. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine",
+    "   (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no",
+    "   step of yours), the graph's model, the knowledge base loaded into the graph (a few seconds with the vectors the",
+    "   release computed; about ten minutes on a processor when they cannot be downloaded), and the Smart Graph and Nuclear",
+    "   Chat started. A step that fails says why and is tried again from there."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1581,110 +1604,27 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#2-the-steps.9235cc",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profile",
    "type": "guide",
-   "title": "Set up the AI services — 2. The steps",
-   "summary": "1. This machine.",
+   "title": "Set up the AI services — 3. The profile",
+   "summary": "The Smart Graph's model is EmbeddingGemma in ONNX (0.3 GB, counted above), which makes the graph's vectors: the graph runs it itself, inside its own process, so it needs no Ollama.",
    "body": [
-    "1. **This machine.** The processor, the memory, the GPU and the free disk, and where the agents run: remote agents",
-    "   only (`remote`, the answer by default) or also local agents on this machine (they write the code, so your remote",
-    "   agent spends tokens only on leading and correcting).",
-    "2. **The profile.** Which local models are downloaded, if any. The one that fits your memory and disk is named; the",
-    "   ones that are tight or do not fit are marked, with the reason. A local profile you decline at any step (the",
-    "   machine, Ollama, the models) goes on as `remote`: the Smart Graph and the MCP server are installed anyway.",
-    "3. **What it needs.** Each program is found by itself once installed, or installed for you in a terminal you see:",
-    "",
-    "   | Program | For | Installed for you with |",
-    "   |---|---|---|",
-    "   | NuclearLang | the `nuclear` command, the code of the services | its installer |",
-    "   | [uv](https://docs.astral.sh/uv/) | the Python environments of the services (it brings its own Python) | its installer, in your user folder |",
-    "   | [Ollama](https://ollama.com) | running the local models | its own installer on Linux (it asks for your password), Homebrew on macOS, `winget` on Windows |"
-   ],
-   "sources": [
-    "installer/docs/08-guides/ai-setup.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.c357ca",
-   "type": "guide",
-   "title": "Set up the AI services — 3. The profiles",
-   "summary": "3. The profiles",
-   "body": [
-    "- Works: the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent.",
-    "- Works: the generators and the compiler's fixes, which need no model.",
-    "- Does not, or less: not measured yet: its model is half the size of the coder the project measures, so expect it to miss more and your remote agent to correct more.",
-    "- Does not, or less: plans, reviews and chat answers come from a small model made for code.",
-    "",
-    "**`medium`: The coder the project measures does everything, also the plans and the reviews: one 3B model in memory.**",
-    "",
-    "- Works: the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent.",
-    "- Works: the generators and the compiler's fixes, which need no model.",
-    "- Works: a file is written as in hard: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before.",
-    "- Works: the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message.",
-    "- Does not, or less: plans and reviews come from a model made for code: as assistant it answered 6 of the first 8 chat questions as required, where hard answers 10 of 10.",
-    "- Does not, or less: some answers are slow: one chat question had not ended after five minutes.",
-    "- Does not, or less: turning a request in plain words into generator calls is not measured yet with this model."
-   ],
-   "sources": [
-    "installer/docs/08-guides/ai-setup.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.c6cf7d",
-   "type": "guide",
-   "title": "Set up the AI services — 3. The profiles",
-   "summary": "The set-up suggests the heaviest profile your machine runs well.",
-   "body": [
-    "**`hard`: The set every measurement of the project was made with: a coder and a separate model to plan, review and answer.**",
-    "",
-    "- Works: the Smart Graph: the strategy of each request and the knowledge base, for the local agents and for your remote agent.",
-    "- Works: the generators and the compiler's fixes, which need no model.",
-    "- Works: 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen before.",
-    "- Works: the assistant answers 10 of 10 questions about NuclearLang as required, and reads 10 of 11 requests right.",
-    "- Works: the chat answers with its own small model, `qwen3.5:2b`: about 4 GB while you chat, freed 3 minutes after the last message.",
-    "- Does not, or less: its assistant model takes 7.2 GB: with 16 GB of memory little else stays open.",
-    "- Does not, or less: a whole feature of several files passes 2 times of 3: your remote agent validates and corrects.",
-    "",
-    "The set-up suggests the heaviest profile your machine runs well. A profile marked *tight* loads and works with",
-    "little else open; one marked *not for this machine* may still be chosen, and will be slow or fail to load.",
-    "",
-    "In a terminal, without questions: `nuclear-builder setup --profile medium --yes`."
-   ],
-   "sources": [
-    "installer/docs/08-guides/ai-setup.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profiles.f7b2d4",
-   "type": "guide",
-   "title": "Set up the AI services — 3. The profiles",
-   "summary": "Every profile downloads the Smart Graph's model, EmbeddingGemma in ONNX (0.3 GB, counted above), which makes the graph's vectors: the graph runs it itself, inside its own process, so it needs no Ollama.",
-   "body": [
-    "| Profile | Models | Downloads | Memory | Measured with the Developer's evaluation |",
+    "| Profile | Models | Downloads | Memory | Measured |",
     "|---|---|---|---|---|",
-    "| `lite` | `qwen2.5-coder:1.5b` | 1.3 GB | 8 GB (4 GB at least) | not measured yet |",
-    "| `medium` | `qwen2.5-coder:3b`; the chat `qwen3.5:2b` | 4.9 GB | 12 GB (8 GB at least) | as coder, the model of hard: 43 of 45 single-file tasks, 16 of 18 never seen; as assistant, 6 of the first 8 chat questions (hard: 10 of 10) |",
-    "| `hard` | `qwen2.5-coder:3b` + `gemma4:e2b`; the chat `qwen3.5:2b` | 12.1 GB | 24 GB (16 GB at least) | 43 of 45 single-file tasks (Claude Sonnet: 39), 16 of 18 never seen, 2 of 3 whole features, 10 of 10 chat questions, 10 of 11 analyses |",
-    "| `remote` | none (the Smart Graph's own) | 0.3 GB | 2 GB | only the Smart Graph runs on the machine |",
+    "| `remote` | none (the Smart Graph's own) | 0.3 GB | 2 GB | only the Smart Graph and Nuclear Chat run on this machine |",
     "",
-    "Every profile downloads the Smart Graph's model, EmbeddingGemma in ONNX (0.3 GB, counted above), which makes the graph's vectors: the graph runs it itself, inside its own process, so it needs no Ollama. The Smart Graph runs in every profile, because the MCP server reads it; Ollama is needed only by the local agents.",
+    "The Smart Graph's model is EmbeddingGemma in ONNX (0.3 GB, counted above), which makes the graph's vectors: the graph",
+    "runs it itself, inside its own process, so it needs no Ollama.",
     "",
-    "**`lite`: One 1.5B model does everything: for a machine with little memory.**"
+    "**`remote`: Remote agents and the Smart Graph.**",
+    "",
+    "- Works: the generators (a resource, a use case, a screen) from your agent.",
+    "- Works: the compiler's checks and fixes, the documentation of every kind and decorator.",
+    "- Works: nuclear build, test and migrate from your agent.",
+    "- Works: the Smart Graph: the strategy of each request and the search of the knowledge base, for your agent.",
+    "- Works: Nuclear Builder and Nuclear Atlas in the editor, worked by the agents and API providers you choose, in Nuclear Chat.",
+    "- Does not, or less: your agent writes every line the generators do not: all of it is paid tokens.",
+    "- Does not, or less: the local models are on standby (ADR-platform-0013): nothing is answered by a model of this machine but the Smart Graph's own."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1696,16 +1636,16 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#4-remote-agents-and-the-smart-graph",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#3-the-profile-on-standby",
    "type": "guide",
-   "title": "Set up the AI services — 4. Remote agents and the Smart Graph",
-   "summary": "Only the Smart Graph runs on your machine, with its own model (EmbeddingGemma in ONNX, 0.3 GB; no Ollama), and the MCP server, which the set-up adds to every AI client it finds.",
+   "title": "Set up the AI services — On standby",
+   "summary": "The profiles `lite`, `medium` and `hard` (local models through Ollama, the Nuclear Developer) stay in Nuclear Builder's data and code but are not offered nor installable: `nuclear-builder setup --profile lite` says they are on standby, and an installer given one (`--profile`, `-AiProfile`,…",
    "body": [
-    "Only the Smart Graph runs on your machine, with its own model (EmbeddingGemma in ONNX, 0.3 GB; no Ollama), and the MCP server,",
-    "which the set-up adds to every AI client it finds. Claude Code, Codex, Grok Build, Cursor, OpenCode or Gemini CLI get the generators, the compiler, the documentation of every word and the `nuclear` commands as tools",
-    "([the MCP server](../../../tools/mcp/docs/08-guides/mcp.md)). Your agent also gets the Smart Graph: the strategy of each request and the search of the knowledge base. What you",
-    "give up: the Builder panel of the editor and the local agents themselves, so your remote",
-    "agent writes every line the generators do not and all of it is paid tokens."
+    "The profiles `lite`, `medium` and `hard` (local models through Ollama, the Nuclear Developer) stay in Nuclear",
+    "Builder's data and code but are not offered nor installable: `nuclear-builder setup --profile lite` says they are on",
+    "standby, and an installer given one (`--profile`, `-AiProfile`, `NUCLEAR_AI_PROFILE`, or a profile an earlier install",
+    "kept in `ai.env`) takes `remote` and says so. Turning them on again is a decision of the user: the switch",
+    "`localModels` of Nuclear Builder's `setup.json`, with their own tests on each system that day."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1717,20 +1657,19 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.8b9dd7",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#4-after-the-set-up.3fae05",
    "type": "guide",
-   "title": "Set up the AI services — 5. After the set-up",
-   "summary": "The services start at every login and are started again if they fail: the Smart Graph, the Nuclear Developer and Nuclear Chat (the factory's workplace: its token is made the first time and kept in your keyring; the editors get it from `nuclear-chat connect --json`).",
+   "title": "Set up the AI services — 4. After the set-up",
+   "summary": "The services start at every login and are started again if they fail: the Smart Graph and Nuclear Chat (its token is made the first time and kept in your keyring; the editors get it from `nuclear-chat connect --json`).",
    "body": [
-    "The services start at every login and are started again if they fail: the Smart Graph, the Nuclear Developer and",
-    "Nuclear Chat (the factory's workplace: its token is made the first time and kept in your keyring; the editors get",
-    "it from `nuclear-chat connect --json`).",
+    "The services start at every login and are started again if they fail: the Smart Graph and Nuclear Chat (its token is",
+    "made the first time and kept in your keyring; the editors get it from `nuclear-chat connect --json`).",
     "",
     "| | Linux | macOS | Windows |",
     "|---|---|---|---|",
-    "| What starts them | three systemd user units | three launch agents | a script of the Startup folder |",
-    "| State | `systemctl --user status nuclear-graph nuclear-developer nuclear-chat` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |",
-    "| Restart | `systemctl --user restart nuclear-developer` | `launchctl kickstart -k gui/$UID/io.github.nuclearlang.developer` | sign out and in |",
+    "| What starts them | two systemd user units | two launch agents | a script of the Startup folder |",
+    "| State | `systemctl --user status nuclear-graph nuclear-chat` | `launchctl print gui/$UID/io.github.nuclearlang.graph` | `nuclear-builder setup --status` |",
+    "| Restart | `systemctl --user restart nuclear-chat` | `launchctl kickstart -k gui/$UID/io.github.nuclearlang.chat` | sign out and in |",
     "| Their output | `journalctl --user -u nuclear-graph -n 50` | `~/Library/Logs/nuclear-graph.log` | |",
     "",
     "`nuclear-builder setup --status` says on every system what is installed and running. In VS Code, *Settings and",
@@ -1738,10 +1677,11 @@
     "",
     "| What | Where |",
     "|---|---|",
-    "| Your choice (the mode, the profile, its models) | `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`) |",
+    "| Your choice (the mode, the profile, the ports) | `~/.config/nuclearlang/ai.env` (`%APPDATA%\\nuclearlang\\ai.env`) |",
     "| The code of the services | `~/.local/share/nuclearlang/ai/` (`%LOCALAPPDATA%\\nuclearlang\\ai\\`) |",
     "| The graph's data, encrypted | `~/.local/share/nuclear-graph/` |",
-    "| The models | Ollama's own folder (`ollama list`) |"
+    "",
+    "In idle the two services take about 150 MB of memory."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1753,14 +1693,11 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#5-after-the-set-up.8c939d",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#4-after-the-set-up.93fe10",
    "type": "guide",
-   "title": "Set up the AI services — 5. After the set-up",
-   "summary": "In idle the two services take about 150 MB of memory.",
+   "title": "Set up the AI services — 4. After the set-up",
+   "summary": "To give your agent the MCP server: the buttons of *Settings and integrations*, or `claude mcp add --scope user nuclear -- nuclear-mcp` (every client).",
    "body": [
-    "In idle the two services take about 150 MB of memory. A model is loaded by Ollama when an agent asks and freed a few",
-    "minutes later.",
-    "",
     "To give your agent the MCP server: the buttons of *Settings and integrations*, or",
     "`claude mcp add --scope user nuclear -- nuclear-mcp` ([every client](../../../tools/mcp/docs/08-guides/mcp.md#1-set-up))."
    ],
@@ -1774,25 +1711,23 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#6-update-and-remove",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#5-update-and-remove",
    "type": "guide",
-   "title": "Set up the AI services — 6. Update and remove",
-   "summary": "you had, without questions.",
+   "title": "Set up the AI services — 5. Update and remove",
+   "summary": "out).",
    "body": [
-    "- **Update:** run the installer again, or `nuclear update` (in a terminal `nuclear` also asks when a new release is out). It brings the new version and sets the services up again with the profile",
-    "  you had, without questions.",
-    "- **Another profile:** run the set-up again and choose it. The models of the old one stay in Ollama",
-    "  (`ollama rm <model>` frees their disk).",
+    "- **Update:** run the installer again, or `nuclear update` (in a terminal `nuclear` also asks when a new release is",
+    "  out). It brings the new version and sets the services up again with the profile `remote`, without questions; a",
+    "  machine that had a local profile loses what NuclearLang put there for it (step 2 above).",
     "- **A client installed later** (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI): `nuclear-builder setup --clients`",
     "  adds the MCP server to it.",
     "- **Remove:** `nuclear-builder setup --remove` takes the services away, and the MCP server out of each AI client;",
-    "  Ollama, its models and the graph's data stay. `--remove --all` also takes away everything the set-up installed",
-    "  and made: the models it downloaded, Ollama when it installed it (on Linux it says the commands: they need your",
-    "  password), the graph's and the chat's data and secrets, and its folder (Nuclear Builder's teams, keys and runs).",
-    "  What was on your machine before the set-up stays. The installer's `--uninstall` runs `--remove --all`, and also",
-    "  takes away the compiler's cache and the editors' extension: nothing of NuclearLang is left.",
-    "- **In a script or CI:** `--no-ai` skips the set-up, `--profile <id>` takes that profile without questions, and",
-    "  without a terminal nothing is asked or downloaded."
+    "  the graph's data stays. `--remove --all` also takes away everything the set-up installed and made: the models an",
+    "  earlier version downloaded, Ollama when it installed it (on Linux it says the commands: they need your password),",
+    "  the graph's and the chat's data and secrets, and its folder (Nuclear Builder's teams, keys and runs). What was on",
+    "  your machine before the set-up stays. The installer's `--uninstall` runs `--remove --all`, and also takes away the",
+    "  compiler's cache and the editors' extension: nothing of NuclearLang is left.",
+    "- **In a script or CI:** `--no-ai` skips the set-up, and without a terminal nothing is asked."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1804,16 +1739,38 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails.044991",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#6-when-a-step-fails.a9826a",
    "type": "guide",
-   "title": "Set up the AI services — 7. When a step fails",
+   "title": "Set up the AI services — 6. When a step fails",
+   "summary": "6. When a step fails",
+   "body": [
+    "| It says | What to do |",
+    "|---|---|",
+    "| the graph or Nuclear Chat on a port other than 7878 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. The ports are checked again at every login, before the services start (`nuclear-builder setup --ports`): a program that took one since gets the service moved. Nothing to do |",
+    "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
+    "| `no Python 3.12 or newer, and uv could not install one` | (from the source tree) install Python 3.12 or newer and try again |",
+    "| Ollama was installed by the set-up; to take it away ... | on Linux without a terminal the set-up cannot ask for your password: run the commands it gives |"
+   ],
+   "sources": [
+    "installer/docs/08-guides/ai-setup.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/ai-setup.md#6-when-a-step-fails.fa6e20",
+   "type": "guide",
+   "title": "Set up the AI services — 6. When a step fails",
    "summary": "A step that fails is a red box: what it was doing, the last lines it said, the error and what to do.",
    "body": [
     "A step that fails is a red box: what it was doing, the last lines it said, the error and what to do. Everything the",
     "steps said is in `~/.local/state/nuclearlang/setup.log` (Windows: `%LOCALAPPDATA%\\nuclearlang\\setup.log`). Run",
-    "`nuclear-builder setup` again: what is done stays, and it goes on from the step that failed. While a step runs, the",
-    "NuclearLang sign turns beside it with what it does; the first load of the knowledge base takes about ten minutes and",
-    "shows the time it has taken."
+    "`nuclear-builder setup --profile remote --yes` again: what is done stays, and it goes on from the step that failed.",
+    "While a step runs, the NuclearLang sign turns beside it with what it does; the first load of the knowledge base",
+    "takes about ten minutes and shows the time it has taken."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1825,37 +1782,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#7-when-a-step-fails.b2c35a",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#7-from-the-source-tree",
    "type": "guide",
-   "title": "Set up the AI services — 7. When a step fails",
-   "summary": "7. When a step fails",
+   "title": "Set up the AI services — 7. From the source tree",
+   "summary": "`installer/install.sh --ai` runs the same set-up over the tree's own folders: the graph is installed editable, so a change to it is live after a restart of its service.",
    "body": [
-    "| It says | What to do |",
-    "|---|---|",
-    "| the graph, the Developer or Nuclear Chat on a port other than 7878 / 7879 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_DEVELOPER_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. The ports are checked again at every login, before the services start (`nuclear-builder setup --ports`): a program that took one since gets the service moved. Nothing to do |",
-    "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
-    "| `Ollama refused to pull ...`, or a model stays at the same percent | check the disk and the connection; the download goes on from where it stopped when the step is tried again |",
-    "| `no Python 3.12 or newer, and uv could not install one` | install Python 3.12 or newer and try again |",
-    "| `the Nuclear Developer does not answer at ...` | its output (the table above) says why; most often a model of the profile is missing: `nuclear-builder setup --status` |"
-   ],
-   "sources": [
-    "installer/docs/08-guides/ai-setup.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#8-from-the-source-tree",
-   "type": "guide",
-   "title": "Set up the AI services — 8. From the source tree",
-   "summary": "`installer/install.sh --ai` runs the same set-up over the tree's own folders: the graph is installed editable and the Developer is built in place, so a change to either is live after a restart of its service.",
-   "body": [
-    "`installer/install.sh --ai` runs the same set-up over the tree's own folders: the graph is installed editable and the",
-    "Developer is built in place, so a change to either is live after a restart of its service. After changing the",
-    "knowledge base: `nuclear-graph knowledge build && nuclear-graph ingest`."
+    "`installer/install.sh --ai` runs the same set-up over the tree's own folders: the graph is installed editable, so a",
+    "change to it is live after a restart of its service. After changing the knowledge base:",
+    "`nuclear-graph knowledge build && nuclear-graph ingest`."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1870,14 +1804,16 @@
    "id": "doc:installer/docs/08-guides/ai-setup.md#set-up-the-ai-services",
    "type": "guide",
    "title": "Set up the AI services",
-   "summary": "NuclearLang comes with two services that run on your machine: the Smart Graph (what an agent needs to know about NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the Nuclear Developer (small local models that plan, write, test and review code).",
+   "summary": "NuclearLang comes with two services that run on your machine: the Smart Graph (what an agent needs to know about NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and Nuclear Chat (the factory's workplace, where Nuclear Builder's teams and Nuclear Atlas answer…",
    "body": [
     "NuclearLang comes with two services that run on your machine: the **Smart Graph** (what an agent needs to know about",
-    "NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and the **Nuclear Developer** (small local models",
-    "that plan, write, test and review code). The Smart Graph and the MCP server are required: every install has them,",
-    "with the graph's own small model and no question ([what gets installed](what-gets-installed.md)). The local agents",
-    "are optional: the set-up reads your machine, says which profile of models fits it and how far each works, and asks;",
-    "its answer by default is `remote`, which downloads no local model."
+    "NuclearLang and Synapsis, read through the MCP server your agent talks to, `tools/mcp`) and **Nuclear Chat** (the",
+    "factory's workplace, where Nuclear Builder's teams and Nuclear Atlas answer you). Both are required: every install",
+    "has them, with the graph's own small model and no question ([what gets installed](what-gets-installed.md)).",
+    "",
+    "The AI work is done by the agents and API providers you choose (Claude Code, Codex, Gemini CLI, Cursor, OpenCode,",
+    "Grok Build; Anthropic, OpenAI, Google, OpenRouter). **The local models are on standby** (ADR-platform-0013): no",
+    "Ollama, no local model and no Nuclear Developer is offered or installed, and the set-up has one profile, `remote`."
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
@@ -1976,14 +1912,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/what-gets-installed.md#optional-asked",
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#on-standby",
    "type": "guide",
-   "title": "What the installer installs, what is yours to choose, and what it never installs — Optional, asked",
-   "summary": "Optional, asked",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — On standby",
+   "summary": "On standby",
    "body": [
-    "| What | The question | Tried on |",
-    "|---|---|---|",
-    "| Local agents: the Nuclear Developer with Ollama's models (profiles `lite`, `medium`, `hard`) | the set-up asks the profile; `remote`, the answer by default, downloads no local model. Declined (the machine, Ollama or the models), it goes on as `remote` | Linux |"
+    "| What | What the installer does |",
+    "|---|---|",
+    "| Local agents: the Nuclear Developer with Ollama's models (profiles `lite`, `medium`, `hard`) | never offered nor installed: the set-up's profile is always `remote` (a `--profile`, `-AiProfile` or `NUCLEAR_AI_PROFILE` of a local profile, or one an earlier install kept, becomes `remote` and is said). On a machine an earlier version set up with one, the set-up takes away the Developer's service, the models NuclearLang downloaded and Ollama when NuclearLang installed it, and says the GB freed ([the guide](ai-setup.md#2-the-steps)) |"
    ],
    "sources": [
     "installer/docs/08-guides/what-gets-installed.md"
@@ -2033,7 +1969,7 @@
     "  the extension, the summary is shown again.",
     "- Interrupted (Ctrl+C, a closed terminal, a lost connection): it goes on from the step it reached, a download from",
     "  where it stopped.",
-    "- A new version: replaced, with the AI services' profile kept.",
+    "- A new version: replaced, and the AI services set up again with the profile `remote`.",
     "- `--reinstall` (`-Reinstall` on Windows): downloads and replaces even what is there."
    ],
    "sources": [
@@ -2049,9 +1985,9 @@
    "id": "doc:installer/docs/08-guides/what-gets-installed.md#updates",
    "type": "guide",
    "title": "What the installer installs, what is yours to choose, and what it never installs — Updates",
-   "summary": "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).",
+   "summary": "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`).",
    "body": [
-    "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).",
+    "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile `remote`).",
     "An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).",
     "When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;",
     "a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;",
@@ -2075,8 +2011,9 @@
    "summary": "NuclearLang, the Smart Graph and the MCP server are required and always installed, without a question: they are what lets your AI agents know Nuclear.",
    "body": [
     "NuclearLang, the Smart Graph and the MCP server are required and always installed, without a question: they are",
-    "what lets your AI agents know Nuclear. The editor extension is added when an editor is there; the local agents are",
-    "asked. What could not be added is listed at the end with how to add it.",
+    "what lets your AI agents know Nuclear. The editor extension is added when an editor is there. The local models are on",
+    "standby ([ADR-platform-0013](../../../docs/03-adr/0013-local-models-on-standby.md)): no Ollama, no local model and no",
+    "Nuclear Developer is installed, and an update takes away the ones an earlier install put here. What could not be added is listed at the end with how to add it.",
     "Running the installer again is safe: what is already there is kept, what is missing is added",
     "([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md))."
    ],
@@ -2606,8 +2543,15 @@
    "id": "doc:tools/cli/CHANGELOG.md#unreleased",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run.",
+   "summary": "(`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby.",
+   "body": [
+    "- Fix (macOS): `nuclear update` said \"this nuclear was not installed by the NuclearLang installer\", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.",
+    "- The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer",
+    "  (`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby. The",
+    "  MCP server registers no `developer_*` tool while its `LOCAL_MODELS` (held to Nuclear Builder's `localModels`) is",
+    "  false, and `nuclear_start`'s work cycle never sends an agent to the local Developer.",
+    "- Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run."
+   ],
    "sources": [
     "tools/cli/CHANGELOG.md"
    ],
@@ -3504,7 +3448,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.bbf508",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.658990",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
    "summary": "One binary, two sets of commands (ADR-cli-0003)",
@@ -3513,6 +3457,7 @@
     "|---|---|---|",
     "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
     "| Environments | `src/env.rs` | Spec 021: the dotenv parser, the precedence of the files, the keyring (crate `keyring`: Secret Service over zbus, Keychain, Credential Manager; the account `<project>-<key>/<env>/<NAME>`, the key of `.nuclear/env-key`; without a keyring a secret goes to `.env.<env>.local`), `--env` / `NUCLEAR_ENV` / `.nuclear/env`, `nuclear env`, what `build` writes (`build/.env`, or `Manifest::env` for a client) and N0311/N0312 at each `env()` |",
+    "| Update | `src/update.rs` | `nuclear update` (the public installer run again for this installation) and the question before a command in a terminal when a newer release is out: the check at most once a day, waiting at most 3 seconds; the installation is the folder above the binary's `bin/`, found after resolving the installer's link (macOS gives the link's path) |",
     "| The framework's | `src/framework/` | A Synapsis project of any platform: create it, build it, run it, test it, migrate its database, add packages, start a device, generate code |"
    ],
    "sources": [

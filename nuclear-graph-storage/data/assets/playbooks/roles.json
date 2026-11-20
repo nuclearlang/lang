@@ -190,7 +190,7 @@
    "title": "Role: devops (builds, runs, migrates and ships)",
    "summary": "Devops keeps the project running: it builds, installs, runs and migrates with the `nuclear` commands, diagnoses the machine, and takes the pipeline's commands to a CI server. It runs only the commands the project declares.",
    "body": [
-    "- **Does**: `nuclear build | install | run | test`, `nuclear migrate`, `nuclear doctor`, `nuclear repair`; `.nuclear/builder.json`; `nuclear-builder ci | export`; the AI services (`nuclear-builder setup`, `nuclear-builder setup --status`; they are services of the system: `systemctl --user restart nuclear-developer`).",
+    "- **Does**: `nuclear build | install | run | test`, `nuclear migrate`, `nuclear doctor`, `nuclear repair`; `.nuclear/builder.json`; `nuclear-builder ci | export`; the AI services (`nuclear-builder setup`, `nuclear-builder setup --status`; they are services of the system: `systemctl --user restart nuclear-graph nuclear-chat`).",
     "- **Playbooks**: `playbook:new-project`, `playbook:migrate-the-database`, `playbook:deploy`, `playbook:connect-an-mcp-client`.",
     "- **Skill**: `skill:devops`.",
     "- **Stops at**: a Dockerfile, a server's configuration or a cloud's deploy: there is no generator for them; the command is the user's."
@@ -302,12 +302,12 @@
   {
    "id": "role:lead",
    "type": "role",
-   "title": "Role: lead (the frontier model that manages the local developer)",
-   "summary": "The lead is a frontier model (Claude Sonnet, Opus, Haiku, or another over MCP). It holds the whole picture: it understands the spec, makes the decisions, generates, plans small orders for the local developer, validates, corrects only what failed and records its review.",
+   "title": "Role: lead (the frontier model that leads the work)",
+   "summary": "The lead is a frontier model (Claude Sonnet, Opus, Haiku, or another over MCP). It holds the whole picture: it understands the spec, makes the decisions, generates, writes or assigns the pieces no generator writes, validates and corrects only what failed. The local developer it once managed is on standby (ADR-platform-0013).",
    "body": [
     "- **Keeps**: the data model, the names, the architecture, the review.",
-    "- **Gives away**: every file that follows from data (the generators) and every small piece (the local developer).",
-    "- **Tools**: all the MCP tools; first `project_inspect` and `generate_resource`, then `developer_task`, at the end `developer_review`.",
+    "- **Gives away**: every file that follows from data (the generators) and, in the Builder, each station to the team member the tech lead assigns.",
+    "- **Tools**: all the MCP tools; first `nuclear_start`, `project_inspect` and `generate_resource`, then `nuclear_brief` and `graph_search` before writing `.nuc`, at the end `nuclear_check` and `nuclear test`.",
     "- **Playbook**: `playbook:work-under-a-lead`."
    ],
    "keys": [
@@ -317,7 +317,7 @@
    ],
    "asks": [
     "what is the lead",
-    "who manages the local agents"
+    "who leads the agents"
    ],
    "links": [
     {
@@ -525,7 +525,7 @@
    "id": "skill:devops",
    "type": "skill",
    "title": "Skill: devops",
-   "summary": "The project's life with `synapsis` (build, install, run, test, migrate, doctor, repair), the pipeline's commands in `.nuclear/builder.json`, the CI file exported by `nuclear-builder`, and the three local services (Ollama, the graph, the Developer).",
+   "summary": "The project's life with `synapsis` (build, install, run, test, migrate, doctor, repair), the pipeline's commands in `.nuclear/builder.json`, the CI file exported by `nuclear-builder`, and the two local services (the Smart Graph and Nuclear Chat).",
    "body": [
     "`playbook:deploy`, `playbook:migrate-the-database`, `playbook:new-project`, `playbook:connect-an-mcp-client`; the failures of the environment: `failure:a-command-is-not-found`, `failure:the-graph-is-not-running`, `failure:the-developer-is-not-running`, `failure:a-model-is-missing`."
    ],

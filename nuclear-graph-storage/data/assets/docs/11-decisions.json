@@ -1510,6 +1510,180 @@
    }
   },
   {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#consequences",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Consequences",
+   "summary": "Lighter installs (no GB of models, no Ollama), one way of working (paid or subscribed providers), fewer services to keep alive.",
+   "body": [
+    "Lighter installs (no GB of models, no Ollama), one way of working (paid or subscribed providers), fewer services to",
+    "keep alive. The knowledge base says the local models are on standby."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#context-and-problem",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Context and problem",
+   "summary": "NuclearLang ran local LLMs through Ollama: the Nuclear Developer service, the `local` kind of Nuclear Builder's members, the profiles `lite`, `medium` and `hard` of the AI set-up, the local chat of Nuclear Chat and Nuclear Atlas.",
+   "body": [
+    "NuclearLang ran local LLMs through Ollama: the Nuclear Developer service, the `local` kind of Nuclear Builder's",
+    "members, the profiles `lite`, `medium` and `hard` of the AI set-up, the local chat of Nuclear Chat and Nuclear Atlas.",
+    "The user decided (2026-11-20) to put all of it on standby and work only with external AI providers (APIs) and",
+    "agents (Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Grok)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#decision.6265c3",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Decision",
+   "summary": "to the default external choice, the old file kept as `.bak`, and the user is told.",
+   "body": [
+    "to the default external choice, the old file kept as `.bak`, and the user is told.",
+    "- **The Smart Graph is not touched**: it runs its own embeddings model (no Ollama, ADR-graph-0003), in the profile",
+    "  `remote` as before.",
+    "- The Nuclear code stays behind the switch (Nuclear Builder's set-up, engine and chat, the MCP server's",
+    "  `developer_*` tools, the Nuclear Developer, which ships inert in the AI archive), and its tests still run with the",
+    "  switch turned on in the test (`localOn`). The editors' local-model UI (the profile cards, the local model pickers,",
+    "  the Developer's and Ollama's status and settings, `extensions/vscode/src/localModels.ts`) was removed: it is in git",
+    "  at commit `ac61a04`, to be brought back and tested if the switch is turned on again, a decision of the user."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#decision.c6393e",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — Decision",
+   "summary": "that runs or offers a local model reads it, directly (Nuclear Builder: the set-up, the engine, the chat) or through the JSON of the `nuclear-builder` commands the editors already run (`setup --plan --json` carries `localModels`).",
+   "body": [
+    "- **One switch, off**: `localModels: false` in Nuclear Builder's `setup.json` (shipped in its package). Every part",
+    "  that runs or offers a local model reads it, directly (Nuclear Builder: the set-up, the engine, the chat) or through",
+    "  the JSON of the `nuclear-builder` commands the editors already run (`setup --plan --json` carries `localModels`).",
+    "  The MCP server mirrors it in one constant, held to `setup.json` by a test.",
+    "- With the switch off nothing local is offered, installed, started or listed: the set-up has only the profile",
+    "  `remote` (the Smart Graph and the MCP server); the installers never install Ollama, a local model or the Developer;",
+    "  Nuclear Builder has no `local` kind and no Ollama models in its pickers; the MCP server registers no `developer_*`",
+    "  tool; the editors show no local model, profile, Ollama step or Developer status.",
+    "- **Nuclear Atlas** is answered by an external provider or agent the user picks, over the Smart Graph, as Nuclear",
+    "  Chat's members are.",
+    "- **Existing installations**: an update takes away everything local NuclearLang put there: the Developer's service,",
+    "  the models NuclearLang downloaded, and Ollama when NuclearLang installed it (what was on the machine before stays,",
+    "  ADR-installer-0005). A team member or a setting that named the local kind or a local model is converted on read"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#the-contract-what-the-commands-answer-while-the-switch-is-off.5be2fe",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — The contract (what the commands…",
+   "summary": "`remote` in `profiles`; `requirements.local` is the same list as `requirements.remote` (no Ollama).",
+   "body": [
+    "- `nuclear-builder setup --plan --json` carries `\"localModels\": false`, `\"suggested\": \"remote\"` and only the profile",
+    "  `remote` in `profiles`; `requirements.local` is the same list as `requirements.remote` (no Ollama).",
+    "- The profile `remote` runs the Smart Graph **and Nuclear Chat** (the Builder's and Atlas's workplace): its steps are",
+    "  `graph`, `clients`, `graph-model`, `graph-service`, `knowledge`, `chat-service`; a machine that still has something",
+    "  local of NuclearLang gets a first step `standby` (its title: \"Take away the local models (on standby)\"), which",
+    "  removes the Developer's service and launcher, the models NuclearLang pulled, Ollama when NuclearLang installed it,",
+    "  writes `ai.env` as `remote`, and says the GB freed.",
+    "- `setup --profile lite|medium|hard` (also `--events`) is refused: exit 2, \"on standby (ADR-platform-0013)\". The",
+    "  installers ask nothing and always run `setup --profile remote --yes`.",
+    "- `agents --json`, `models --json` and `team screen` list no `local` kind and no Ollama model (`team screen` carries",
+    "  `\"localModels\": false`). `models --provider nuclear-developer` answers no models and a `why`.",
+    "- The default external choice (a member with no who-works, a converted one, the chat's general agent): the first",
+    "  agent whose command is on the PATH, in the order Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; else"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/0013-local-models-on-standby.md#the-contract-what-the-commands-answer-while-the-switch-is-off.af4b5e",
+   "type": "adr",
+   "title": "ADR-platform-0013: The local models are on standby; the AI work is done by external providers and agents — The contract (what the commands…",
+   "summary": "the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else none, and the command says a provider must be chosen (a converted member is then set to Claude Code with that warning).",
+   "body": [
+    "the first API provider whose key the vault notes (Anthropic, OpenAI, Google, OpenRouter) with a priced model; else",
+    "  none, and the command says a provider must be chosen (a converted member is then set to Claude Code with that",
+    "  warning). A team's converted members are told as `warnings` (a list of texts): in the team of `team show`,",
+    "  in each entry of `team list`, in each shown team of `team screen` and at its top (every team's, as",
+    "  `<team name>: <warning>`); the team file is rewritten once, its old version kept as `<id>.json.bak`. `team create`",
+    "  and `team member add|update` refuse the kind `local`.",
+    "- `chat-host --json`: Atlas's `responder.choice` is the default external choice (`\"\"` with `responder.why` when there",
+    "  is none); its `choices` hold no local agent."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/0013-local-models-on-standby.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.8ae647",
+   "type": "adr",
+   "title": "Decisions of the platform",
+   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
+   "body": [
+    "| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |",
+    "| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |",
+    "| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |",
+    "| [ADR-platform-0012](0012-environments.md) | Environments are declared by `env()`, valued by dotenv files and the keyring; web and mobile resolve them at build | accepted |",
+    "| [ADR-platform-0013](0013-local-models-on-standby.md) | The local models (Ollama, the Nuclear Developer, the `local` kind) are on standby behind one switch; the AI work is done by external providers and agents; the Smart Graph stays | accepted |",
+    "",
+    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.ac5460",
    "type": "adr",
    "title": "Decisions of the platform",
@@ -1545,29 +1719,6 @@
     "Only the decisions about the whole platform. Each project keeps its own in its `docs/03-adr/`, numbered from 0001",
     "and cited with its key (`../README.md` has the table of keys). The format is `0000-template.md`. An accepted ADR",
     "is not edited: a new one replaces it."
-   ],
-   "agents": false,
-   "sources": [
-    "docs/03-adr/README.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:docs/03-adr/README.md#decisions-of-the-platform.cbeae6",
-   "type": "adr",
-   "title": "Decisions of the platform",
-   "summary": "old-numbers.md: the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.",
-   "body": [
-    "| [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |",
-    "| [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |",
-    "| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |",
-    "| [ADR-platform-0012](0012-environments.md) | Environments are declared by `env()`, valued by dotenv files and the keyring; web and mobile resolve them at build | accepted |",
-    "",
-    "[old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now."
    ],
    "agents": false,
    "sources": [
@@ -9834,6 +9985,35 @@
    }
   },
   {
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.29b993",
+   "type": "adr",
+   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
+   "summary": "tablets and phones), rotation, *Responsive* with any size, zoom; an address bar with back, forward, reload (Shift: without cache), the page in the user's browser and Chrome's DevTools of the page; `prefers-color-scheme`, network throttling (fast 4G, slow 3G, offline), no cache; a dock with the…",
+   "body": [
+    "tablets and phones), rotation, *Responsive* with any size, zoom; an address bar with back, forward, reload (Shift:",
+    "   without cache), the page in the user's browser and Chrome's DevTools of the page; `prefers-color-scheme`, network",
+    "   throttling (fast 4G, slow 3G, offline), no cache; a dock with the page's Console (errors counted, a line's source",
+    "   opens the generated file) and Network (method, status, address, type, size, time), filtered; a screenshot into",
+    "   `build/screenshots/`; ◉ Debug attaches VS Code's JavaScript debugger to that page.",
+    "10. **The file tree is the explorer's equal.** It wears the Chernobyl icon theme with VS Code's own lookup (file",
+    "    name, longest extension, folder name, open or closed) and hides what `files.exclude` hides.",
+    "11. **Keyboard first.** Fixed bindings: `Ctrl+1` … `Ctrl+9` the project tabs, `Ctrl+Alt+N` the container,",
+    "    `Ctrl+Alt+O` open a project, `Ctrl+Alt+W` the welcome page, one `Ctrl+Alt+<letter>` per tool (`H`, `V`, `P`, `D`,",
+    "    `M`, `A`, `S`) and per action (`R`, `G`, `L`, `B`, `T`, `C`). Clicking a tab or an action does the same and shows",
+    "    a short toast with its shortcut, so the mouse teaches the keys. The user may rebind any of them.",
+    "12. **A welcome page at startup** (`nuclear.workspace.welcome`, on by default, only when the window restored no"
+   ],
+   "agents": false,
+   "sources": [
+    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.54528a",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
@@ -9863,24 +10043,24 @@
    }
   },
   {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.69b120",
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.8dc311",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
-   "summary": "7. Every platform runs, debugs and reloads pre-configured, as Flutter does.",
+   "summary": "extension's storage).",
    "body": [
-    "7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web",
-    "   project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app",
-    "   has no packages. `nuclear build` writes `build/<name>.code-workspace` for every platform (the tasks build,",
-    "   install, run, test, check and the dialect's debug launch), and every `nuclear build` writes `.nuclear/lines.json`,",
-    "   so a breakpoint in a `.nuc` stops in every debugger and the paused line shows in the `.nuc`.",
-    "8. **The tools are workspaces too, independent of the projects.**",
-    "   - The HTTP Connections tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts",
-    "     / components → endpoints, OpenAPI documents, the environment); a component is an editor tab and each endpoint a",
-    "     tab inside it, so the tab bar never fills with requests. A component panel keeps its tabs, forms and responses",
-    "     while its workspace is left. Environments belong to the window (`<first folder>/.nuclear/http.json`, else the",
-    "     extension's storage).",
+    "extension's storage).",
     "   - The Devices tool lists the open Synapsis devices with their state and opens as many as wanted (a preset each),",
-    "     each in its own locked editor group tiled horizontally with its own app, so several users can be signed in at"
+    "     each in its own locked editor group tiled horizontally with its own app, so several users can be signed in at",
+    "     once. A project's ▭ Device offers the open devices, a new one or the Devices workspace; ▷ Run and ◉ Debug of a",
+    "     mobile project offer the same plus *Other Flutter device…* (Flutter's own picker). A run that names no device",
+    "     takes a free one or opens a new one, never a running one; a device's ▷ run restarts its own app.",
+    "   - **An app lives on its own.** Closing a device tab only hides it (the app and its session go on; the Devices",
+    "     workspace lists it as hidden and shows it again). The ✕ of the Devices workspace, the panel's ■ or the end of",
+    "     its session end it at once (session, page connection, browser, Flutter). A watchdog runs every minute: a device",
+    "     nobody looked at for 30 minutes ends, and any Flutter or browser process of this window that no device owns is",
+    "     killed. Devices take the lowest free number; a session is named after its device.",
+    "9. **The web device.** ▭ Device of a web project opens the app beside the code in a headless Chromium the editor",
+    "   drives, with the mobile device's machinery: desktop, laptop, tablet and phone sizes (user agent and touch for"
    ],
    "agents": false,
    "sources": [
@@ -9893,24 +10073,44 @@
    }
   },
   {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.9e93ec",
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.91b8e3",
    "type": "adr",
    "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
-   "summary": "throttling (fast 4G, slow 3G, offline), no cache; a dock with the page's Console (errors counted, a line's source opens the generated file) and Network (method, status, address, type, size, time), filtered; a screenshot into `build/screenshots/`; ◉ Debug attaches VS Code's JavaScript debugger to…",
+   "summary": "editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
    "body": [
-    "throttling (fast 4G, slow 3G, offline), no cache; a dock with the page's Console (errors counted, a line's source",
-    "   opens the generated file) and Network (method, status, address, type, size, time), filtered; a screenshot into",
-    "   `build/screenshots/`; ◉ Debug attaches VS Code's JavaScript debugger to that page.",
-    "10. **The file tree is the explorer's equal.** It wears the Chernobyl icon theme with VS Code's own lookup (file",
-    "    name, longest extension, folder name, open or closed) and hides what `files.exclude` hides.",
-    "11. **Keyboard first.** Fixed bindings: `Ctrl+1` … `Ctrl+9` the project tabs, `Ctrl+Alt+N` the container,",
-    "    `Ctrl+Alt+O` open a project, `Ctrl+Alt+W` the welcome page, one `Ctrl+Alt+<letter>` per tool (`H`, `V`, `P`, `D`,",
-    "    `M`, `A`, `S`) and per action (`R`, `G`, `L`, `B`, `T`, `C`). Clicking a tab or an action does the same and shows",
-    "    a short toast with its shortcut, so the mouse teaches the keys. The user may rebind any of them.",
-    "12. **A welcome page at startup** (`nuclear.workspace.welcome`, on by default, only when the window restored no",
-    "    editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
+    "editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.",
     "13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,",
     "    `Alt+Shift+H`). Zed cannot contribute keybindings or views."
+   ],
+   "agents": false,
+   "sources": [
+    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.b7fb8e",
+   "type": "adr",
+   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
+   "summary": "For an editor that hides an extension's title bar buttons (Cursor), the same actions are an *Actions* accordion at the bottom of the files pane, apart from the tree and collapsed by default, like VS Code's npm scripts (the user, 2026-11-20); never a row above the tree.",
+   "body": [
+    "For an editor that hides an extension's title bar buttons (Cursor), the same actions are an *Actions* accordion",
+    "   at the bottom of the files pane, apart from the tree and collapsed by default, like VS Code's npm scripts (the",
+    "   user, 2026-11-20); never a row above the tree.",
+    "7. **Every platform runs, debugs and reloads pre-configured, as Flutter does.** Saving a `.nuc` of a backend or web",
+    "   project builds it, so the running server or page reloads (`nuclear.buildOnSave`); `install` runs first when the app",
+    "   has no packages. `nuclear build` writes `build/<name>.code-workspace` for every platform (the tasks build,",
+    "   install, run, test, check and the dialect's debug launch), and every `nuclear build` writes `.nuclear/lines.json`,",
+    "   so a breakpoint in a `.nuc` stops in every debugger and the paused line shows in the `.nuc`.",
+    "8. **The tools are workspaces too, independent of the projects.**",
+    "   - The HTTP Connections tool works like Bruno: its pane is the endpoints tree of every project (platform → project → contracts",
+    "     / components → endpoints, OpenAPI documents, the environment); a component is an editor tab and each endpoint a",
+    "     tab inside it, so the tab bar never fills with requests. A component panel keeps its tabs, forms and responses",
+    "     while its workspace is left. Environments belong to the window (`<first folder>/.nuclear/http.json`, else the"
    ],
    "agents": false,
    "sources": [
@@ -9957,35 +10157,6 @@
     "   emulators, because hot reload is watched while coding. Entering a backend, a web or another tool workspace parks",
     "   them: the panel closes, the app keeps running headless with its session, and the next mobile workspace gives it a",
     "   panel again. Every switch parks the devices and takes them back after the code is reopened, so each device lands in"
-   ],
-   "agents": false,
-   "sources": [
-    "extensions/docs/03-adr/0002-the-nuclear-workspace.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/docs/03-adr/0002-the-nuclear-workspace.md#decision.f7f9a1",
-   "type": "adr",
-   "title": "ADR-0002: The Nuclear workspace in the editor: projects and tools as tabs, one thing on screen, keyboard first — Decision",
-   "summary": "once.",
-   "body": [
-    "once. A project's ▭ Device offers the open devices, a new one or the Devices workspace; ▷ Run and ◉ Debug of a",
-    "     mobile project offer the same plus *Other Flutter device…* (Flutter's own picker). A run that names no device",
-    "     takes a free one or opens a new one, never a running one; a device's ▷ run restarts its own app.",
-    "   - **An app lives on its own.** Closing a device tab only hides it (the app and its session go on; the Devices",
-    "     workspace lists it as hidden and shows it again). The ✕ of the Devices workspace, the panel's ■ or the end of",
-    "     its session end it at once (session, page connection, browser, Flutter). A watchdog runs every minute: a device",
-    "     nobody looked at for 30 minutes ends, and any Flutter or browser process of this window that no device owns is",
-    "     killed. Devices take the lowest free number; a session is named after its device.",
-    "9. **The web device.** ▭ Device of a web project opens the app beside the code in a headless Chromium the editor",
-    "   drives, with the mobile device's machinery: desktop, laptop, tablet and phone sizes (user agent and touch for",
-    "   tablets and phones), rotation, *Responsive* with any size, zoom; an address bar with back, forward, reload (Shift:",
-    "   without cache), the page in the user's browser and Chrome's DevTools of the page; `prefers-color-scheme`, network"
    ],
    "agents": false,
    "sources": [
@@ -10882,25 +11053,6 @@
    }
   },
   {
-   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.5118b3",
-   "type": "adr",
-   "title": "Decisions of the installers and the release",
-   "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
-   "body": [
-    "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
-    "[the table of old numbers](../../../docs/03-adr/old-numbers.md)."
-   ],
-   "agents": false,
-   "sources": [
-    "installer/docs/03-adr/README.md"
-   ],
-   "meta": {
-    "section": "11-decisions",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.8dd863",
    "type": "adr",
    "title": "Decisions of the installers and the release",
@@ -10933,6 +11085,28 @@
     "| [ADR-installer-0004](0004-the-smart-graph-runs-in-every-profile.md) | The Smart Graph runs in every profile; what is on the machine is used; a missing model is asked for | accepted |",
     "| [ADR-installer-0005](0005-an-uninstall-leaves-nothing.md) | An uninstall leaves nothing of NuclearLang: what the install and the set-up made goes, what was there stays | accepted |",
     "| [ADR-installer-0006](0006-only-nuclearlang-is-required.md) | NuclearLang, the Smart Graph and the MCP server are required; the extension is added when it can be; the local agents are asked; a toolchain is never installed by the installer; a new run keeps what is there | accepted |"
+   ],
+   "agents": false,
+   "sources": [
+    "installer/docs/03-adr/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/03-adr/README.md#decisions-of-the-installers-and-the-release.ebe31b",
+   "type": "adr",
+   "title": "Decisions of the installers and the release",
+   "summary": "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see the table of old numbers.",
+   "body": [
+    "A decision cited by its old platform-wide number (`ADR-00NN`, in code or commits before 2026-11-16): see",
+    "[the table of old numbers](../../../docs/03-adr/old-numbers.md).",
+    "",
+    "The local profiles of ADR-installer-0002, 0004 and 0006 (Ollama, the local agents asked) are on standby by",
+    "[ADR-platform-0013](../../../docs/03-adr/0013-local-models-on-standby.md): the installers set up `remote` only."
    ],
    "agents": false,
    "sources": [

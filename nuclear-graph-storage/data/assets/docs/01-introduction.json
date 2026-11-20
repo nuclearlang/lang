@@ -389,6 +389,34 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.ebfdf1",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "`nuclear-builder setup` offers only the profile `remote`, which now runs the Smart Graph and Nuclear Chat; `--profile lite|medium|hard` is refused as on standby; on a machine that had a local profile its first step takes away what NuclearLang put there (the Developer's service and launcher, the…",
+   "body": [
+    "- The local models are on standby (ADR-platform-0013): `\"localModels\": false` in Nuclear Builder's `setup.json`.",
+    "  `nuclear-builder setup` offers only the profile `remote`, which now runs the Smart Graph and Nuclear Chat;",
+    "  `--profile lite|medium|hard` is refused as on standby; on a machine that had a local profile its first step takes",
+    "  away what NuclearLang put there (the Developer's service and launcher, the models it pulled, Ollama when it",
+    "  installed it), writes `ai.env` as `remote` and says the GB freed. `setup --plan --json` and `team screen` carry",
+    "  `localModels`; `agents`, `models` and `team screen` list no local kind nor Ollama model. A member or tech lead of",
+    "  the local kind is worked, on read, by the default external choice (the first agent installed: Claude Code, Codex,",
+    "  Gemini CLI, Cursor, OpenCode, Grok Build; else an API provider with a key), told in the team's `warnings`, the file",
+    "  of before kept as `.bak`; the chat's general agent defaults to that choice too. The installers never install",
+    "  Ollama, a local model or the Developer (a remembered local profile becomes `remote`). The MCP server registers no",
+    "  `developer_*` tool (`LOCAL_MODELS`, held to `setup.json` by a test) and `nuclear_start` never sends an agent to the",
+    "  local Developer. Nuclear Chat's agent picker falls back to the first agent there, never a local one."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CODE_OF_CONDUCT.md#code-of-conduct",
    "type": "doc",
    "title": "Code of conduct",

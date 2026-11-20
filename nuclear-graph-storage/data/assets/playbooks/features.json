@@ -20,9 +20,9 @@
     "9. **Review.** Security (`playbook:security-review`); format (`nuclear fmt .`).",
     "10. **Document.** What was built, how it was checked and what is left, in the run's journal.",
     "",
-    "Stop and say it when: the spec names nothing to build, a fact is missing and cannot be found, a step failed three times, or the task is beyond the local agents (`playbook:escalate`).",
+    "Stop and say it when: the spec names nothing to build, a fact is missing and cannot be found, a step failed three times, or the task is beyond the agent at work (`playbook:escalate`).",
     "",
-    "Run it whole: the Builder (`nuclear-builder run specs/<component>/<id>/spec.md`), or `developer_task` over MCP."
+    "Run it whole: the Builder (`nuclear-builder run specs/<component>/<id>/spec.md`), or `/task <text>` in Nuclear Atlas."
    ],
    "keys": [
     "feature",
@@ -91,7 +91,7 @@
    "id": "playbook:decompose-a-spec",
    "type": "playbook",
    "title": "Playbook: split a spec into big parts, tasks and pieces",
-   "summary": "Three levels. Big parts: one per resource or capability the spec names. Tasks: the layers of each part (data, domain, facade, entry point, tests). Pieces: one file with one declaration, small enough for one order to a local agent. Order them so each piece uses only what is before it.",
+   "summary": "Three levels. Big parts: one per resource or capability the spec names. Tasks: the layers of each part (data, domain, facade, entry point, tests). Pieces: one file with one declaration, small enough for one order to an agent. Order them so each piece uses only what is before it.",
    "body": [
     "**Level 1: the big parts.** Read the spec for its nouns and its verbs. Each thing it stores or reads (a character, an order, a reader) is a resource; each thing it does that is not about one resource (a sign-in, a report, an assistant) is a capability. One part per resource or capability, each in a component named after it in plural (`characters`).",
     "",

@@ -229,7 +229,7 @@
    "id": "concept:agents-and-graphs",
    "type": "theory",
    "title": "Theory: agents, tools and graphs of steps",
-   "summary": "An agent is a model that can call tools. Left free, it chooses which tool to call next; in a graph, the steps are fixed and the model only fills each one. Small models follow fixed steps far better than they choose tools, so the local agents are graphs.",
+   "summary": "An agent is a model that can call tools. Left free, it chooses which tool to call next; in a graph, the steps are fixed and the model only fills each one. Small models follow fixed steps far better than they choose tools, so the local agents (the Nuclear Developer, on standby) are graphs.",
    "body": [
     "- **Tool**: a function a model may call, described by its name, parameters and a sentence.",
     "- **Free agent**: the model decides the next tool from the conversation. It needs a strong model: a weak one loops, calls the wrong tool or stops early.",
@@ -316,9 +316,11 @@
   {
    "id": "concept:distillation",
    "type": "theory",
-   "title": "How the local agents were trained: retrieval and distillation, measured",
+   "title": "How the local agents (on standby) were trained: retrieval and distillation, measured",
    "summary": "The local agents were not trained by changing weights. A frontier model answered a bank of tasks once; its answers that pass the compiler became examples in the graph; the local coder is measured against it on tasks whose answers the graph never saw, and every failure is fixed with a general rule or more knowledge.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; what follows is how they were trained and measured, kept for the day the switch `localModels` is turned on again.",
+    "",
     "1. **Reference**: Claude Sonnet answers every task of the bank once, with the same guide and one repair with the compiler's errors.",
     "2. **Distill**: its answers to the *train* tasks that pass become examples in the graph (`solved:` rows). The *test* tasks are held out: their answers never reach the graph.",
     "3. **Local**: the local coder answers every task. An answer passes when `nuclear check` reports no errors and it has every acceptance text.",

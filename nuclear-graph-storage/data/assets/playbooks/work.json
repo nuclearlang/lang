@@ -254,7 +254,7 @@
    "id": "playbook:refactor",
    "type": "playbook",
    "title": "Playbook: refactor without changing behaviour",
-   "summary": "Run the tests first; move or rename in small steps, each one checked by the compiler; keep the platform's architecture; hand mechanical rewrites to the local developer one file at a time; no test is deleted.",
+   "summary": "Run the tests first; move or rename in small steps, each one checked by the compiler; keep the platform's architecture; do mechanical rewrites one file at a time; no test is deleted.",
    "body": [
     "1. `nuclear test`: what passes now must pass at the end.",
     "2. Find every caller of what moves (the project map; `nuclear check .` after each step).",
@@ -263,7 +263,7 @@
     "5. Mechanical rewrites (a field renamed in N files): one order per file.",
     "6. Report what moved, what was deleted and why.",
     "",
-    "A refactor that needs to understand several files at once is led by a frontier model; the local agents do its mechanical steps."
+    "A refactor that needs to understand several files at once is led by a frontier model; its mechanical steps go one file at a time."
    ],
    "keys": [
     "refactor",
@@ -501,8 +501,8 @@
   {
    "id": "playbook:escalate",
    "type": "playbook",
-   "title": "Playbook: when a task is beyond the local agent",
-   "summary": "Say it early and plainly: what was asked, what is missing or too large, and the options: split the task, give the missing facts, or let a frontier model lead (`--lead claude`, or `developer_task` from an MCP client). Never invent to keep going, and never report as done what was not checked.",
+   "title": "Playbook: when a task is beyond the agent at work",
+   "summary": "Say it early and plainly: what was asked, what is missing or too large, and the options: split the task, give the missing facts, or give it to a stronger model (another team member in the Builder, or a frontier agent over MCP). Never invent to keep going, and never report as done what was not checked.",
    "body": [
     "**When.**",
     "",
@@ -512,7 +512,7 @@
     "- A capabilities row says the platform cannot do it yet.",
     "- The same step failed three times.",
     "",
-    "**How it is found.** The plan of a spec says it before any code: the capabilities rows whose trigger words the spec writes (\"authentication\" on the backend, \"form\" on the web), a spec longer than a local model reads at once, a plan without pieces or with too many.",
+    "**How it is found.** The plan of a spec says it before any code: the capabilities rows whose trigger words the spec writes (\"authentication\" on the backend, \"form\" on the web), a spec longer than the model reads at once, a plan without pieces or with too many.",
     "",
     "**What to say** (to the user in the chat, or in the run's journal):",
     "",
@@ -522,7 +522,7 @@
     "4. the options:",
     "   - **split it**: the pieces the agent can do now;",
     "   - **give the facts**: the exact question (which fields? which rule when X?);",
-    "   - **a lead**: `nuclear-builder run <spec> --lead claude`, or from Claude Code, Codex or Cursor the tool `developer_task`: the frontier model plans and reviews, the local agents write each small piece;",
+    "   - **a stronger model**: the station given to a team member worked by a frontier agent or API model (`nuclear-builder team member update`), or the user's agent (Claude Code, Codex, Cursor) over MCP;",
     "   - **not possible yet**: the platform's limit and what exists instead.",
     "",
     "**Never**: guess a name, a field or a rule; write the easy half and call it done; delete or weaken a test."
@@ -538,7 +538,7 @@
     "what happens when the agent cannot do a task",
     "how does the agent ask for help",
     "when does the agent call claude",
-    "the task is too big for the local model"
+    "the task is too big for the model"
    ],
    "links": [
     {
@@ -573,23 +573,16 @@
   {
    "id": "playbook:work-under-a-lead",
    "type": "playbook",
-   "title": "Playbook: a frontier model leads, the local developer writes",
-   "summary": "The lead (Sonnet, Opus, Haiku or another model over MCP) understands the spec and the project, generates the standard code, plans the rest as small orders, lets the local developer write each one, validates with the compiler and the tests, corrects only what failed and records its review.",
+   "title": "Playbook: a frontier model leads and writes over MCP",
+   "summary": "The lead (Sonnet, Opus, Haiku or another model over MCP) understands the spec and the project, generates the standard code, writes the rest in small pieces, validates with the compiler and the tests and corrects only what failed. The local developer it once gave small orders to is on standby (ADR-platform-0013): no `developer_*` tool is registered.",
    "body": [
-    "**For the lead.**",
-    "",
-    "0. Nothing about Nuclear known yet: `nuclear_start` first (the rules, the work cycle, the atlas; `nuclear_doc` for a topic).",
+    "0. Nothing about Nuclear known yet: `nuclear_start` first (the rules, the work cycle, the atlas; `nuclear_doc` for a topic); then `graph_strategy` with the user's own words.",
     "1. `project_inspect`; for every resource the spec names, `generate_resource` (fields from the spec, `api_inspect`, or the documentation with `web_search` and `web_read`; ask the user when none gives them).",
-    "2. `developer_task(project, title, description, criteria)` with only what the generators did not write. Write each piece as an order a junior can follow: the path, the kind, every name and signature, the pieces it uses, the acceptance criterion it serves. A use case it wrote is wired with `generate_usecase` (its alias in the facade; backend: its route), not by another order.",
-    "3. Read the journal it returns: what each agent did, the files, what is left.",
-    "4. Validate: `nuclear_check(path = <project>)` says `ok`; `synapsis(command = \"test\")` passes.",
-    "5. Correct only what failed or is wrong; never rewrite what passed. Before writing `.nuc`: `nuclear_brief(<platform>)` and `graph_search`.",
-    "6. A failed run: read its *Why it failed*; `developer_retry` when the cause was passing or is fixed.",
-    "7. `developer_review(project, run, notes, files)`: the corrected files become examples for the local developer.",
+    "2. Write only what the generators did not, one piece at a time: the path, the kind, every name and signature, the pieces it uses, the acceptance criterion it serves. Before writing `.nuc`: `nuclear_brief(<platform>)` and `graph_search`. A use case is wired with `generate_usecase` (its alias in the facade; backend: its route).",
+    "3. Validate: `nuclear_check(path = <project>)` says `ok`; the project's tests pass (`nuclear test`).",
+    "4. Correct only what failed or is wrong; never rewrite what passed.",
     "",
-    "**For the local developer.** Each order is small and complete; it needs no picture of the whole. It writes the file, checks it, repairs it and answers; what it cannot do it says, and the lead takes it.",
-    "",
-    "One file outside a run: `developer_code(task, platform, path, kind, project)`. The order is short: the path, the kind, every name and signature. With `project`, the local coder reads by itself the files that declare those names, so the lead pastes nothing."
+    "**A whole spec in the Builder.** A team's stations are worked by its members (agents or API models), each assigned by the tech lead (`concept:loop`); `nuclear-builder retry <run>` runs a failed one again, the steps that passed kept."
    ],
    "keys": [
     "lead",
@@ -601,9 +594,9 @@
     "frontier"
    ],
    "asks": [
-    "how does claude work with the local agent",
+    "how does claude lead the work with nuclear",
     "how do I let sonnet lead",
-    "what does the lead do with the local developer"
+    "what does the lead do over mcp"
    ],
    "links": [
     {
@@ -612,29 +605,17 @@
     },
     {
      "rel": "tool",
-     "to": "mcp:developer_task"
-    },
-    {
-     "rel": "tool",
-     "to": "mcp:developer_review"
-    },
-    {
-     "rel": "tool",
-     "to": "mcp:developer_retry"
-    },
-    {
-     "rel": "tool",
-     "to": "mcp:developer_code"
-    },
-    {
-     "rel": "tool",
      "to": "mcp:generate_resource"
+    },
+    {
+     "rel": "concept",
+     "to": "concept:loop"
     }
    ],
    "sources": [
     "tools/mcp/server.nuc",
-    "nuclear-agents/roles/architect/skills/plan-for-a-local-developer.md",
-    "nuclear-agents/roles/developer/skills/build-a-feature.md"
+    "nuclear-agents/roles/developer/skills/build-a-feature.md",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "use_case": "lead",
@@ -645,7 +626,7 @@
    "id": "playbook:connect-an-mcp-client",
    "type": "playbook",
    "title": "Playbook: connect Claude Code, Codex or Cursor to NuclearLang",
-   "summary": "Set up the AI services, then add `nuclear-mcp` to the client as an MCP server named `nuclear`. The client then has the generators, the local developer, the graph and the compiler as tools.",
+   "summary": "Set up the AI services, then add `nuclear-mcp` to the client as an MCP server named `nuclear`. The client then has the generators, the graph and the compiler as tools.",
    "body": [
     "```sh",
     "nuclear-builder setup                                # once: the services, and MCP clients' access to the graph",
@@ -658,7 +639,7 @@
     "- VS Code: *Settings and integrations* (`Ctrl+Alt+S`) has a button per client.",
     "- Check it: ask the client to call `graph_search` with \"what is nuclear\".",
     "- The graph refuses the client: `nuclear-graph connect mcp --scopes read,write`, with the graph running.",
-    "- A machine set up for remote agents only has the `graph_*` tools but no `developer_*` tool (`limit:remote-agents-only`)."
+    "- The server registers no `developer_*` tool: the local models are on standby (ADR-platform-0013, `limit:remote-agents-only`)."
    ],
    "keys": [
     "connect mcp",
@@ -706,42 +687,40 @@
   {
    "id": "playbook:set-up-the-ai-services",
    "type": "playbook",
-   "title": "Playbook: set up the AI services (the Smart Graph, the local agents, the models)",
-   "summary": "Run the set-up: `nuclear-builder setup` in a terminal, *Nuclear: Set Up the AI Services* in VS Code, or the last step of the installer. It always installs the Smart Graph and the MCP server, asks whether to add local agents (`remote` by default: no local model), installs what is missing and starts the Smart Graph, the Nuclear Developer and Nuclear Chat, now and at every login.",
+   "title": "Playbook: set up the AI services (the Smart Graph, the MCP server, Nuclear Chat)",
+   "summary": "Run `nuclear-builder setup --profile remote --yes` in a terminal, *Nuclear: Set Up the AI Services* in VS Code, or the last step of the installer (no question). It installs the Smart Graph, its model and the MCP server, adds the server to every AI client, loads the knowledge base and starts the Smart Graph and Nuclear Chat, now and at every login. `remote` is the one profile: the local models are on standby.",
    "body": [
     "```sh",
-    "nuclear-builder setup                          # asks where the agents run and which profile",
-    "nuclear-builder setup --profile medium --yes   # no questions",
+    "nuclear-builder setup --profile remote --yes   # no questions",
     "nuclear-builder setup --status                 # what is installed and running",
-    "nuclear-builder setup --remove                 # takes the services away (Ollama and its models stay; --all: everything it made)",
+    "nuclear-builder setup --clients                # the MCP server in a client installed later",
+    "nuclear-builder setup --remove                 # takes the services away (the graph's data stays; --all: everything it made)",
     "```",
     "",
-    "1. **This machine**: its processor, memory, GPU and free disk; and where the agents run: remote agents only (the answer by default) or also on this machine (it saves tokens).",
-    "2. **The profile**: `lite`, `medium` or `hard`: what each downloads, the memory it wants, what works with it and what does not. The ones that fit are named; a local profile declined goes on as `remote`.",
-    "3. **What it needs**: NuclearLang with its AI archive (nothing else: the set-up and the services bring their own Python, and the Smart Graph its own model), and Ollama only for a local profile. Each is found by itself once installed, or installed for you in a terminal (Ollama's installer asks for your password on Linux); an Ollama installed but stopped is started, the models it has are used, a missing one is asked for.",
-    "4. **Install**: the Smart Graph, its model and the MCP server, the Nuclear Developer and the Ollama models (local profiles), the knowledge base into the graph (seconds with the vectors the release computed; without them, minutes on a processor), the services started (Nuclear Chat last: from the source tree it is built by `nuclear-chat install`), the MCP server added to every AI client found (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI; a client installed later: `nuclear-builder setup --clients`). A step that fails says why; try again from it.",
+    "1. **What it needs**: NuclearLang with its AI archive (the set-up and the services bring their own Python, the Smart Graph its own model); from the source tree also `uv`.",
+    "2. **What was local**: on a machine an earlier version set up with a local profile, a first step takes away the Nuclear Developer's service and launcher, the models NuclearLang downloaded and Ollama when NuclearLang installed it, writes `ai.env` as `remote` and says the GB freed.",
+    "3. **Install**: the Smart Graph, its model and the MCP server, the MCP server added to every AI client found (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build), the knowledge base into the graph (seconds with the vectors the release computed; without them, about ten minutes on a processor), the Smart Graph and Nuclear Chat started. A step that fails says why; try again from it.",
     "",
     "- Afterwards, give your agent the MCP server: `claude mcp add --scope user nuclear -- nuclear-mcp`, or the buttons of *Settings and integrations* in VS Code.",
-    "- Another profile later: run it again; what is installed is kept.",
-    "- In CI or a script: the installer's `--no-ai` skips it, `--profile <id>` takes one without questions.",
+    "- `--profile lite|medium|hard` is refused: the local models are on standby (`faq:local-models`).",
+    "- In CI or a script: the installer's `--no-ai` skips it.",
     "- From the source tree: `installer/install.sh --ai` (it needs `uv`), or `--ai-runtime` to build the AI archive as a release brings it.",
     "- The editors run the same set-up as a process: `nuclear-builder setup --plan --json` and `--events`."
    ],
    "keys": [
     "nuclear-builder setup",
     "set up the ai services",
-    "install the local agents",
+    "install the smart graph",
     "wizard",
     "--profile",
     "--status"
    ],
    "asks": [
-    "how do I install the local agents",
     "how do I install the smart graph",
     "how do I set up the ai services",
-    "como instalo los agentes locales",
-    "how do I change the models the agents use",
-    "how do I uninstall the ai services"
+    "como instalo el smart graph",
+    "how do I uninstall the ai services",
+    "can I still install the local agents"
    ],
    "links": [
     {
@@ -761,12 +740,12 @@
      "to": "failure:a-service-started-by-hand-holds-its-port"
     },
     {
-     "rel": "failure",
-     "to": "failure:a-model-is-missing"
-    },
-    {
      "rel": "limit",
      "to": "limit:remote-agents-only"
+    },
+    {
+     "rel": "faq",
+     "to": "faq:local-models"
     }
    ],
    "sources": [

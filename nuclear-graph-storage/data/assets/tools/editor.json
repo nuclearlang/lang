@@ -8,7 +8,7 @@
    "id": "editor:vscode.commands",
    "type": "editor",
    "title": "VS Code: the commands of the Nuclear extension and their shortcuts",
-   "summary": "The 82 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
+   "summary": "The 81 commands the Nuclear extension adds to VS Code, each with its keyboard shortcut: the workspace, run and debug, devices, HTTP Connections, the Builder, Nuclear Atlas and the settings.",
    "body": [
     "- %command.nuclear.chooseLanguage% (`nuclear.chooseLanguage`)",
     "- %command.nuclear.monitor.open% (`nuclear.monitor.open`)",
@@ -16,7 +16,6 @@
     "- %command.nuclear.workspace.action% (`nuclear.workspace.action`)",
     "- %command.nuclear.workspace.addToVsCode% (`nuclear.workspace.addToVsCode`)",
     "- %command.nuclear.workspace.welcome% — `ctrl+alt+w` (`nuclear.workspace.welcome`)",
-    "- %command.nuclear.update% (`nuclear.update`)",
     "- %command.nuclear.ai.setup% (`nuclear.ai.setup`)",
     "- %command.nuclear.builder.teams% (`nuclear.builder.teams`)",
     "- %command.nuclear.builder.reports% (`nuclear.builder.reports`)",
@@ -136,11 +135,6 @@
       "title": "%command.nuclear.workspace.welcome%",
       "command": "nuclear.workspace.welcome",
       "keys": "ctrl+alt+w"
-     },
-     {
-      "title": "%command.nuclear.update%",
-      "command": "nuclear.update",
-      "keys": ""
      },
      {
       "title": "%command.nuclear.ai.setup%",
@@ -524,13 +518,9 @@
    "id": "editor:vscode.settings.ai",
    "type": "editor",
    "title": "VS Code: the settings of the Nuclear extension for the AI loop, the local agents and their integrations",
-   "summary": "The 24 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
+   "summary": "The 19 settings of the Nuclear extension for the AI loop, the local agents and their integrations, with their defaults.",
    "body": [
-    "- `nuclear.ai.developerUrl` (default `\"http://127.0.0.1:7879\"`): %nuclear.ai.developerUrl.desc%",
     "- `nuclear.ai.graphUrl` (default `\"http://127.0.0.1:7878\"`): %nuclear.ai.graphUrl.desc%",
-    "- `nuclear.ai.ollamaUrl` (default `\"http://localhost:11434\"`): %nuclear.ai.ollamaUrl.desc%",
-    "- `nuclear.ai.models.coder` (default `\"qwen2.5-coder:3b\"`): %nuclear.ai.models.coder.desc%",
-    "- `nuclear.ai.models.assistant` (default `\"gemma4:e2b\"`): %nuclear.ai.models.assistant.desc%",
     "- `nuclear.ai.mcpCommand` (default `\"nuclear-mcp\"`): %nuclear.ai.mcpCommand.desc%",
     "- `nuclear.ai.graphCommand` (default `\"nuclear-graph\"`): %nuclear.ai.graphCommand.desc%",
     "- `nuclear.ai.retry.attempts` (default `5`): %nuclear.ai.retry.attempts.desc%",
@@ -548,7 +538,6 @@
     "- `nuclear.ai.jira.email` (default `\"\"`): %nuclear.ai.jira.email.desc%",
     "- `nuclear.ai.jira.criteriaField` (default `\"\"`): %nuclear.ai.jira.criteriaField.desc%",
     "- `nuclear.ai.watch.callTimeoutMinutes` (default `15`): %nuclear.ai.watch.callTimeoutMinutes.desc%",
-    "- `nuclear.ai.watch.stallSeconds` (default `90`): %nuclear.ai.watch.stallSeconds.desc%",
     "- `nuclear.ai.checkEveryMinutes` (default `5`): %nuclear.ai.checkEveryMinutes.desc%"
    ],
    "keys": [
@@ -564,29 +553,9 @@
    "data": {
     "settings": [
      {
-      "name": "nuclear.ai.developerUrl",
-      "default": "\"http://127.0.0.1:7879\"",
-      "does": "%nuclear.ai.developerUrl.desc%"
-     },
-     {
       "name": "nuclear.ai.graphUrl",
       "default": "\"http://127.0.0.1:7878\"",
       "does": "%nuclear.ai.graphUrl.desc%"
-     },
-     {
-      "name": "nuclear.ai.ollamaUrl",
-      "default": "\"http://localhost:11434\"",
-      "does": "%nuclear.ai.ollamaUrl.desc%"
-     },
-     {
-      "name": "nuclear.ai.models.coder",
-      "default": "\"qwen2.5-coder:3b\"",
-      "does": "%nuclear.ai.models.coder.desc%"
-     },
-     {
-      "name": "nuclear.ai.models.assistant",
-      "default": "\"gemma4:e2b\"",
-      "does": "%nuclear.ai.models.assistant.desc%"
      },
      {
       "name": "nuclear.ai.mcpCommand",
@@ -674,11 +643,6 @@
       "does": "%nuclear.ai.watch.callTimeoutMinutes.desc%"
      },
      {
-      "name": "nuclear.ai.watch.stallSeconds",
-      "default": "90",
-      "does": "%nuclear.ai.watch.stallSeconds.desc%"
-     },
-     {
       "name": "nuclear.ai.checkEveryMinutes",
       "default": "5",
       "does": "%nuclear.ai.checkEveryMinutes.desc%"
@@ -711,7 +675,7 @@
     "- `nuclear.builder.resumeInterrupted` (default `true`): %nuclear.builder.resumeInterrupted.desc%",
     "- `nuclear.builder.minFreeMb` (default `500`): %nuclear.builder.minFreeMb.desc%",
     "- `nuclear.builder.commandTimeoutMinutes` (default `20`): %nuclear.builder.commandTimeoutMinutes.desc%",
-    "- `nuclear.builder.chat` (default `{\"kind\": \"local\", \"provider\": \"nuclear-developer\", \"model\": \"\"}`): %nuclear.builder.chat.desc%",
+    "- `nuclear.builder.chat` (default `{\"kind\": \"agent\", \"provider\": \"claude-code\", \"model\": \"\"}`): %nuclear.builder.chat.desc%",
     "- `nuclear.spending.budgetUsd` (default `5`): %nuclear.spending.budgetUsd.desc%",
     "- `nuclear.spending.confirm` (default `true`): %nuclear.spending.confirm.desc%",
     "- `nuclear.spending.forceConfirm` (default `false`): %nuclear.spending.forceConfirm.desc%",
@@ -934,7 +898,7 @@
      },
      {
       "name": "nuclear.builder.chat",
-      "default": "{\"kind\": \"local\", \"provider\": \"nuclear-developer\", \"model\": \"\"}",
+      "default": "{\"kind\": \"agent\", \"provider\": \"claude-code\", \"model\": \"\"}",
       "does": "%nuclear.builder.chat.desc%"
      },
      {

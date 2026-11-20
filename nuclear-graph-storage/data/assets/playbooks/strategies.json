@@ -1432,7 +1432,7 @@
    "id": "strategy:refactor-move-extract",
    "type": "strategy",
    "title": "Strategy: a refactor that moves, extracts, splits or merges",
-   "summary": "Where to cut needs several files understood at once: a frontier model or the user decides it and writes the pieces; the local agents do each mechanical step, one file at a time, the compiler after each and the tests before and after.",
+   "summary": "Where to cut needs several files understood at once: a frontier model or the user decides it and writes the pieces; an agent does each mechanical step, one file at a time, the compiler after each and the tests before and after.",
    "body": [
     "**The plan.**",
     "",
@@ -2625,7 +2625,7 @@
     "**The plan.**",
     "",
     "1. The message: from the request or the failed step's log.",
-    "2. The local diagnoser classifies it: passing (a service that was down), environment (something missing on the machine), or the code after all.",
+    "2. Classify it: passing (a service that was down), environment (something missing on the machine), or the code after all.",
     "3. The failure's card: `failure:the-developer-is-not-running`, `failure:the-graph-is-not-running`, `failure:a-model-is-missing`, `failure:a-package-is-missing`, `failure:a-command-is-not-found`, `failure:the-disk-is-full`, `failure:a-call-timed-out`.",
     "4. `nuclear doctor`: what of the machine is missing; `nuclear install` for the project's packages.",
     "5. Do what the card says, then run the failed step again (`nuclear-builder retry`).",
@@ -2650,10 +2650,6 @@
     "se acabó el espacio en disco"
    ],
    "links": [
-    {
-     "rel": "agent",
-     "to": "agent:diagnoser"
-    },
     {
      "rel": "tool",
      "to": "tool:nuclear.doctor"
@@ -2892,7 +2888,7 @@
    "id": "strategy:document",
    "type": "strategy",
    "title": "Strategy: documentation of what was built",
-   "summary": "The local agents read and write only Nuclear: they answer the text (what each declaration does, from the project map and the code) and write doc comments in `.nuc`; a `.md` file is put in place by the user or the lead.",
+   "summary": "An agent answers the text (what each declaration does, from the project map and the code) and writes doc comments in `.nuc`; a `.md` file is put in place by the user or the lead.",
    "body": [
     "**The plan.**",
     "",
@@ -3158,7 +3154,7 @@
   {
    "id": "strategy:beyond",
    "type": "strategy",
-   "title": "Strategy: something NuclearLang or the local agents cannot do",
+   "title": "Strategy: something NuclearLang or an agent cannot do",
    "summary": "Say it before writing anything: the row that names the limit, what is possible instead, and who takes it (a frontier model, the user, a later version). Never half of it.",
    "body": [
     "**The plan.**",
@@ -3166,7 +3162,7 @@
     "1. Which limit: the capabilities rows whose words the request writes (`cannot:*`, `limit:*`).",
     "2. By design: target code is never read or converted into Nuclear (`cannot:read-target-code`); Node.js with Express is postponed (`cannot:nodejs-express`).",
     "3. Not yet in a platform: `limit:backend-not-yet`, `limit:mobile-not-yet`, `limit:web-first-version`, `limit:generators`.",
-    "4. Beyond a local model, not the platform: one small file per order, 8192 tokens, no judgment (`limit:agent-one-file`, `limit:agent-context`, `limit:agent-reasoning`): a frontier model leads (`playbook:escalate`).",
+    "4. Beyond the model at work, not the platform (too big, or a judgment nobody gave): split it, give the missing facts, or give it to a stronger model (`playbook:escalate`). The limits of the local agents, on standby, are `limit:agent-one-file`, `limit:agent-context` and `limit:agent-reasoning`.",
     "5. What is possible instead: the closest thing the platform does, with its row.",
     "6. The part of the request that is possible is a request of its own, with its strategy.",
     "",

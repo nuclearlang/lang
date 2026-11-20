@@ -19,7 +19,7 @@
     "- **Dialects**: data files (TOML and templates) loaded at run time that say how Nuclear is written in a target. A dialect is added without changing the compiler.",
     "- **Synapsis**: the framework. Three platforms (`backend`, `mobile`, `web`), each written once in Nuclear and built by its dialects (`fastapi`, `nestjs`, `flutter`, `react`).",
     "",
-    "Around it there is a full toolchain: one command line, `nuclear`, a language server, extensions for VS Code, Android Studio and Zed, a private knowledge base (the Nuclear Smart Graph), an MCP server (`nuclear-mcp`), local AI agents (the Nuclear Developer) and a pipeline from a spec to deployed code (the Builder, `nuclear-builder`).",
+    "Around it there is a full toolchain: one command line, `nuclear`, a language server, extensions for VS Code, Android Studio and Zed, a private knowledge base (the Nuclear Smart Graph), an MCP server (`nuclear-mcp`) that gives any agent (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build) the generators, the compiler and the graph, and a pipeline from a spec to deployed code worked by the agents and API providers you choose (the Builder, `nuclear-builder`). NuclearLang's own local agents (the Nuclear Developer) are on standby (ADR-platform-0013).",
     "",
     "It is open source (Apache-2.0), in the spirit of Rust, Deno, Gleam and Bun."
    ],
@@ -94,7 +94,7 @@
     "",
     "What it leaves out on purpose: it never reads or converts target code into Nuclear, it does not replace the target's own tools, and it has no package manager of its own.",
     "",
-    "Because the language is small and regular, a local model of at most 3B parameters with the right knowledge base writes it well: the local developer passes 43 of 45 tasks of its evaluation, where Claude Sonnet passes 39 (`concept:nuclear-developer`)."
+    "Because the language is small and regular, even a model of at most 3B parameters with the right knowledge base writes it well: the Nuclear Developer, measured before its local models were put on standby (ADR-platform-0013), passed 43 of 45 tasks of its evaluation, where Claude Sonnet passed 39 (`concept:nuclear-developer`). A frontier agent spends few tokens on it for the same reason."
    ],
    "keys": [
     "why nuclear",
@@ -163,10 +163,10 @@
     "- One code, several technologies: the Nuclear of a platform never changes when its dialect changes (a backend builds as FastAPI or as NestJS).",
     "- The generated code is the code an expert would write in the target, and it passes the target's strict analyzer (`tsc --strict`, `flutter analyze`, `pyright --strict`).",
     "- Transpiling is instant: a project builds in about 20 ms; a build with no changes takes about 40 ms.",
-    "- AI that runs on your machine: local agents of at most 3B parameters, a private knowledge base and no code sent anywhere unless you choose a frontier model to lead.",
+    "- AI on your terms: the agents and API providers you choose (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build; Anthropic, OpenAI, Google, OpenRouter) read a private knowledge base on your machine, and your code goes only to the provider you chose.",
     "- Open source, Apache-2.0.",
     "",
-    "**What is measured.** On the evaluation the local 3B coder passes every task of one file (42 of 42; Claude Sonnet passes 36). In the benchmark of generated code against hand-written code the output is identical and the slowest generated program takes 1.11 times the hand-written one."
+    "**What is measured.** On the evaluation the local 3B coder (the Nuclear Developer, now on standby) passed every task of one file (42 of 42; Claude Sonnet passed 36). In the benchmark of generated code against hand-written code the output is identical and the slowest generated program takes 1.11 times the hand-written one."
    ],
    "keys": [
     "advantages",
@@ -355,7 +355,7 @@
    "title": "Who NuclearLang is for",
    "summary": "For AI coding agents (few tokens, one way to write, fixes in the errors), for developers of apps and backends (only business logic, one CLI, native editor support) and for dialect authors (a new target without touching the compiler).",
    "body": [
-    "- **AI coding agents** (Claude, Codex, OpenCode, a local model): few tokens, one way to write each thing, diagnostics with fixes, a short sheet to follow (`nuclear spec --brief`), type definitions so they do not invent APIs, an MCP server with every tool.",
+    "- **AI coding agents** (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build): few tokens, one way to write each thing, diagnostics with fixes, a short sheet to follow (`nuclear spec --brief`), type definitions so they do not invent APIs, an MCP server with every tool.",
     "- **Developers of apps and backends**: they write business logic only; one CLI builds, tests and runs the project; the editor works like a native one.",
     "- **Dialect authors**: they add a target language or a framework with data files, templates and tests, never with Rust.",
     "",

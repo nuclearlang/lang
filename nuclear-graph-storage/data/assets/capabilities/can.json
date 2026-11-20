@@ -190,7 +190,7 @@
         "- AI (plugin `ai`, with `ollama` or `openai`): `tools Name` (each method with a doc comment is a tool), `agent Name(tools: T)` with a `prompt`, `@state(S) graph Name` whose methods are nodes (`@start`, `@next(\"node\")`), a `state` for the graph, `Chroma` vectors (plugin `chroma`).",
         "- A test replaces the model with `FakeModel([\"answer\"])`.",
         "",
-        "The Nuclear Developer itself is written with these kinds."
+        "The Nuclear Developer (NuclearLang's local agents, on standby) is itself written with these kinds."
       ],
       "keys": [
         "events",
@@ -559,10 +559,10 @@
       "id": "can:ai-workflow",
       "type": "can",
       "title": "Can: take a spec to tested code with AI agents, on your machine or under a frontier model",
-      "summary": "The Builder runs a spec through the factory's stations with a team (each role done by the local agents, a provider's agent or a provider's model); every run is documented, waits at its gates for you, and is exportable as CI.",
+      "summary": "The Builder runs a spec through the factory's stations with a team (each role done by a provider's agent or a provider's model); every run is documented, waits at its gates for you, and is exportable as CI.",
       "body": [
         "- From a terminal: `nuclear-builder run specs/<component>/<id>/spec.md` runs the factory (Analysis, Design, Tests first, Code, Quality, Delivery) with the run's team (`nuclear-builder team …`); `--lead` is ignored. Or `/task` in Nuclear Atlas.",
-        "- The editors run the same factory as a process: VS Code's Builder page and Android Studio's tool window (the team, the gates, QA's checks, the two spending questions); the MCP tools `developer_task`, `developer_retry`, `developer_review` stay.",
+        "- The editors run the same factory as a process: VS Code's Builder page and Android Studio's tool window (the team, the gates, QA's checks, the two spending questions).",
         "- Nuclear Chat under the Builder's diagram (and as a full tab): each run is a thread of its team's channel, told by the member of each station, its gates and QA's plan as buttons that answer the run; a member does everything the page does (`nuclear-builder mcp`, see can:agents-do-everything): reads the slides, writes specs with their criteria (`spec_new`), starts runs, answers gates, or proposes a change of a spec as a difference the user accepts (`nuclear-builder spec accept|discard`); anything a paid member spends is confirmed twice in the editor.",
         "- The teams as your software company (VS Code): each team any number of members per role, hired with a wizard (a suggested name, the purpose and skills, members suggested with why, the roster's filters, who works each member and what it costs: `nuclear-builder team create|suggest|name-suggest|member add`), a logo, a description and a tech lead who answers for it; a run's node reads like a debugger, and who did each step is one label, `<employee> · <role> · <provider> · <model>`.",
         "- Specs imported from Jira or a GitHub issue (VS Code).",
@@ -577,7 +577,7 @@
       ],
       "asks": [
         "can the agent build a whole feature",
-        "can I use claude with the local agents",
+        "can I use claude in the builder",
         "can nuclear run in ci"
       ],
       "links": [
@@ -617,7 +617,7 @@
         "- A run of the factory is a thread of its team's channel; `/poc <what>` is not available yet (the factory cannot run on a scratch folder).",
         "- Who answers: a direct message's member; `@<member>` by id, name, first name or role; `@<team>`, or a team's channel without a member mentioned: the team's tech lead.",
         "- A member answers through its responder, a command run once per answer with `--events` (the conversation in, `typing`, `text`, `tool`, `ask`, `done` out); its questions reach the user and the answer goes back to it; the cost is shown on the message.",
-        "- A front for any agent: a direct message with the general agent (Atlas) has a menu in its header to choose who answers it, as in Claude's own app: the local Nuclear Developer (always offered, the default with nothing configured), Claude Code, OpenCode, Codex, Gemini CLI or an API model, each with its model; only what is on this machine is offered (`nuclear-builder agents --json`, the MCP tool `agents_list`; one not found disabled with why). The choice is kept per conversation (`PUT channels/{ws}/{channel}/agent`, `channels.json`); the setting `nuclear.builder.chat` is the default for new ones; a paid agent is still confirmed twice. The answer arrives as it is written (`text-delta` → the event `message.delta`; Claude Code streams), with its markdown, code, tool chips and cost.",
+        "- A front for any agent: a direct message with the general agent (Atlas) has a menu in its header to choose who answers it, as in Claude's own app: Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build or an API model, each with its model; by default the first agent installed, else an API provider with a key, else it says a provider must be chosen; only what is on this machine is offered (`nuclear-builder agents --json`, the MCP tool `agents_list`; one not found disabled with why). The choice is kept per conversation (`PUT channels/{ws}/{channel}/agent`, `channels.json`); the setting `nuclear.builder.chat` is the default for new ones; a paid agent is still confirmed twice. The answer arrives as it is written (`text-delta` → the event `message.delta`; Claude Code streams), with its markdown, code, tool chips and cost.",
         "- A member answers in the user's chosen language (`nuclear.language`), or in the language the user wrote in; may end an answer with a GIF of the pack by personality; a direct message shows under the member's name the brain that answers (`<agent> · <model> · paid|local`).",
         "- The history is append-only JSON lines per channel (edits and reactions are lines, a crash loses nothing), searchable, with unread counts.",
         "- Real time: the service's WebSocket (`/ws`) serves the same routes and pushes each workspace's events (`{\"subscribe\": \"chat.<workspace>\"}`); `GET events/{ws}?since=` reads what a client missed.",
@@ -1055,7 +1055,7 @@
         "- 56 tools (the skills too: `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `team_skills_set`; `models_list`, `agents_list`): specs (`spec_new`, `spec_list`, `spec_show`, `spec_draft`, `spec_accept`, `spec_discard`, `spec_move`, `spec_migrate`, `spec_delete`), runs (`run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`), the reports (`metrics`), QA's plan (`checks`, `check_switch`, `check_add`, `check_mark`), teams (`team_*`: the new-team wizard's `team_create`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_member_add|remove|update`), the line (`line_show`, `line_set`), `ci_export`, `connections_check`, `project_read`, `vault_list`, `agents_list` (the agents a conversation can choose on this machine).",
         "- Money: a tool never confirms it; it answers `waiting: spending` and the run waits for the user's two confirmations (the editor's two questions, or two in the chat; force confirmation holds).",
         "- The user's: deleting a spec or a team, a restart from scratch, the delivery gate (a commit and a pull request in the user's name), the line's gates, commands and forceConfirm, replacing a CI file answer `needsUser`; the chat asks the user and applies it on a yes. Merging is never a tool; an API key is kept only by the user.",
-        "- Every agent gets it: Claude Code (`--mcp-config`, `mcp__nuclear_builder`), OpenCode (its `mcp` table), Codex (`-c mcp_servers.nuclear_builder.*`), Gemini CLI (its settings), Cursor (a plugin of the run, `--plugin-dir`), Grok Build (the run's own `GROK_HOME`), an API model's loop (a second MCP client); the local Nuclear Developer calls the same tools as text blocks.",
+        "- Every agent gets it: Claude Code (`--mcp-config`, `mcp__nuclear_builder`), OpenCode (its `mcp` table), Codex (`-c mcp_servers.nuclear_builder.*`), Gemini CLI (its settings), Cursor (a plugin of the run, `--plugin-dir`), Grok Build (the run's own `GROK_HOME`), an API model's loop (a second MCP client).",
         "- Your own agent: `claude mcp add nuclear_builder -- nuclear-builder mcp --root <project>`."
       ],
       "keys": [
@@ -1112,7 +1112,7 @@
       "body": [
         "- The views: `bill` (tokens in and out, USD, local against paid, by period, provider and model, team, member, project; the budget each run used), `throughput` (specs delivered, velocity by team), `cycle` (cycle time and time per station), `burndown`, `flow` (cumulative flow), `waiting` (the gates open now and how long), `quality` (failures, retries, first-try pass rate per station), `people` (each member's steps, answers, lines, passes, fails, tokens, money), `indicators` (cost per delivered spec, tokens per useful line, the local share).",
         "- `nuclear-builder metrics [--project <name|dir>] [--team <id>] [--member <id>] [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--by day|week] [--view <view>] --json`; the MCP tool takes `since` and `until` for the dates.",
-        "- Measured at the source, never estimated: Claude Code's usage, OpenCode's steps, Codex's and Gemini CLI's turns, the APIs' usage, Ollama's counts for the local Nuclear Developer; a provider that reports none is counted as not reported.",
+        "- Measured at the source, never estimated: Claude Code's usage, OpenCode's steps, Codex's and Gemini CLI's turns, the APIs' usage; a provider that reports none is counted as not reported.",
         "- A member's numbers are also in their panel's Summary on *Your software company*; the runs of before are copied into the ledger once, with what their files had."
       ],
       "keys": [

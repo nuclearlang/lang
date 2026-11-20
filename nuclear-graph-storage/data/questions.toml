@@ -175,7 +175,6 @@ top = 1
 ask = "what is the nuclear developer"
 expect = ["concept:nuclear-developer"]
 top = 1
-says = ["3B", "coder"]
 
 [[question]]
 ask = "que modelos usa el agente local"
@@ -200,7 +199,8 @@ top = 1
 
 [[question]]
 ask = "when should a frontier model lead instead of the local agents"
-expect = ["concept:local-first", "playbook:work-under-a-lead", "limit:agent-reasoning", "playbook:escalate"]
+# the local agents are on standby (ADR-platform-0013): the answer is that row, or how a stronger model leads
+expect = ["faq:local-models", "concept:nuclear-developer", "concept:local-first", "playbook:work-under-a-lead", "playbook:escalate"]
 
 [[question]]
 ask = "what is the software factory"
@@ -838,16 +838,26 @@ expect = ["strategy:beyond"]
 request = true
 
 [[question]]
-ask = "how do I install the local agents and the smart graph"
+ask = "how do I set up the smart graph and the mcp server"
 expect = ["playbook:set-up-the-ai-services"]
 
 [[question]]
 ask = "que perfil de modelos elijo para mi maquina"
-expect = ["concept:ai-setup"]
+expect = ["concept:ai-setup", "faq:local-models"]
 
 [[question]]
 ask = "can I use nuclear with claude code only, without ollama"
 expect = ["limit:remote-agents-only"]
+
+[[question]]
+ask = "are the local models of nuclearlang on standby"
+expect = ["faq:local-models", "concept:nuclear-developer"]
+top = 2
+
+[[question]]
+ask = "por que ya no hay modelos locales ni ollama en nuclear"
+expect = ["faq:local-models", "concept:nuclear-developer"]
+top = 2
 
 [[question]]
 ask = "the setup says a smart graph started by hand already answers"
@@ -882,7 +892,7 @@ expect = ["concept:mcp"]
 ask = "que servicios ofrece el mcp?"
 exact = true
 expect = ["query:mcp.tools"]
-says = ["graph_search", "generate_resource", "developer_task", "nuclear_check"]
+says = ["graph_search", "generate_resource", "nuclear_check"]
 
 [[question]]
 ask = "which tools does the mcp server have"

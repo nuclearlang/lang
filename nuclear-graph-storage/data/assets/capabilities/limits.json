@@ -417,8 +417,8 @@
     "- Mobile: a real phone, macOS; the local database on a real device and on web.",
     "- Backend: PostgreSQL, MySQL, MariaDB, Redis, Kafka with a broker, OpenAI; migrations on anything but SQLite; `nuclear migrate` on Windows.",
     "- Web: the `characters` example in a browser; the `WebSocket` connection and a mounted app against a running backend (only a fake socket and bridge); the website's animations, its screenshots' windows and callouts and its logos per theme on Safari and Firefox (only Chromium ran).",
-    "- Installers: `install.sh` ran on macOS Apple silicon and Linux x86_64 from the published release, with the AI set-up on macOS; `install.ps1` is run on a real Windows by the workflow `installer-windows` after each release (x64 with PowerShell 5.1 and 7, arm64). Not tried: macOS Intel, Linux aarch64, the editors' extension and a local profile on Windows, `nuclear setup flutter|node` on a clean macOS (the editor offers it second, marked as not tried there), Grok Build's MCP connection and the Cursor and Grok Build providers of Nuclear Builder against their real CLIs.",
-    "- Editors: the Nuclear workspace and the AI pages inside a running VS Code; the JetBrains plugin in a running IDE (only compiled). The extensions' 0.52.x (HTTP Connections and Nuclear Atlas renamed, the ports the set-up chooses) were never opened in a running VS Code or IDE; the VS Code extension inside Cursor was installed on Linux and macOS, its language server on macOS not yet confirmed."
+    "- Installers: `install.sh` ran on macOS Apple silicon and Linux x86_64 from the published release, with the AI set-up on macOS; `install.ps1` is run on a real Windows by the workflow `installer-windows` after each release (x64 with PowerShell 5.1 and 7, arm64). Not tried: macOS Intel, Linux aarch64, the editors' extension on Windows, an update of a machine set up with a local profile (the `standby` step that takes the local models away), `nuclear setup flutter|node` on a clean macOS (the editor offers it second, marked as not tried there), Grok Build's MCP connection and the Cursor and Grok Build providers of Nuclear Builder against their real CLIs.",
+    "- Editors: the Nuclear workspace and the AI pages inside a running VS Code; the JetBrains plugin in a running IDE (only compiled). The extensions' 0.52.x (HTTP Connections and Nuclear Atlas renamed, the ports the set-up chooses) and the pages without the local models (ADR-platform-0013: the welcome with only the profile `remote`) were never opened in a running VS Code or IDE; the VS Code extension inside Cursor was installed on Linux and macOS, its language server on macOS not yet confirmed."
    ],
    "keys": [
     "untested",
@@ -471,9 +471,11 @@
   {
    "id": "limit:agent-one-file",
    "type": "agent-limit",
-   "title": "The local agent's limit: one small file per order, and no decisions",
+   "title": "The local agent's limit: one small file per order, and no decisions (on standby)",
    "summary": "A local agent writes ONE file from a precise order: its path, its kind, every name it must use and the files it depends on. It does not choose names, data, architecture or which files a feature needs: those come from the spec, the generators, the planner or a lead.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; this limit is theirs, for the day the switch `localModels` is turned on again. The work is done by the agents and API providers you choose.",
+    "",
     "An order it does well:",
     "",
     "> usecase `BooksOfAuthor(books: BookRepository)` in `components/books/domain/usecases/books_of_author.nuc`: `exec(author: string) Result<Error, Book[]>` returns `~books.byAuthor(author)`.",
@@ -517,7 +519,8 @@
    "sources": [
     "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#The agents",
     "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#How an agent works",
-    "nuclear-agents/nuclear_developer/docs/00-context/vision.md#What it does not do"
+    "nuclear-agents/nuclear_developer/docs/00-context/vision.md#What it does not do",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "area": "agent",
@@ -527,9 +530,11 @@
   {
    "id": "limit:agent-context",
    "type": "agent-limit",
-   "title": "The local agent's limit: a context window of 8192 tokens",
+   "title": "The local agent's limit: a context window of 8192 tokens (on standby)",
    "summary": "Each local model reads at most 8192 tokens per call (about 30 000 characters), shared by the guide, the knowledge, the examples, the files it depends on, the task and its answer. A spec, a file or a log larger than what is left does not fit: it is split, summarised by a tool, or given to a lead.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; this limit is theirs, for the day the switch `localModels` is turned on again. The work is done by the agents and API providers you choose.",
+    "",
     "What fits in one call, roughly: the guide (3 500 characters), four or five cards of knowledge (6 000), two examples (3 000), the files the piece depends on (up to 6 000), the task (up to 2 000) and the answer (up to 5 000).",
     "",
     "Signs that a task exceeds it:",
@@ -568,7 +573,8 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/config/project_config.nuc"
+    "nuclear-agents/nuclear_developer/config/project_config.nuc",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "area": "agent",
@@ -578,9 +584,11 @@
   {
    "id": "limit:agent-reasoning",
    "type": "agent-limit",
-   "title": "The local agent's limit: what needs understanding or judgment",
+   "title": "The local agent's limit: what needs understanding or judgment (on standby)",
    "summary": "A 3B model follows a rule and copies a shape; it does not design. A spec in plain words with nothing named, a change across many files, a new algorithm, a bug whose cause is unknown, the design of a view and a security judgment are beyond it: it says so and asks for a lead or for the missing facts.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; this limit is theirs, for the day the switch `localModels` is turned on again. The work is done by the agents and API providers you choose.",
+    "",
     "Beyond the local agents working alone:",
     "",
     "- **A spec without names** (\"an author has a name; POST /authors adds one\"): someone must name the model, the repository, the use case, the component.",
@@ -592,7 +600,7 @@
     "- **Whether something is safe**: it lists findings against known rules; it does not judge a design.",
     "- **Facts it does not have**: an API's fields nobody gave, a library the graph does not know.",
     "",
-    "What it does instead: it names what is missing in one sentence, proposes the split it can do, and asks for a frontier model to lead (`--lead claude`, or `developer_task` from an MCP client) or for the user to decide. It never invents a name, a field or a rule to keep going."
+    "What it does instead: it names what is missing in one sentence, proposes the split it can do, and asks for a stronger model to take it (a team member worked by a frontier agent or API model, or the user's agent over MCP) or for the user to decide. It never invents a name, a field or a rule to keep going."
    ],
    "keys": [
     "too complex",
@@ -622,7 +630,8 @@
    ],
    "sources": [
     "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#Known limits",
-    "nuclear-agents/nuclear_developer/docs/01-product/roadmap.md"
+    "nuclear-agents/nuclear_developer/docs/01-product/roadmap.md",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "area": "agent",
@@ -632,9 +641,11 @@
   {
    "id": "limit:agent-features",
    "type": "agent-limit",
-   "title": "The local agent's limit, measured: single files yes, whole features with help",
+   "title": "The local agent's limit, measured: single files yes, whole features with help (on standby)",
    "summary": "Measured on the evaluation: on single files the local coder passes every task of the bank (42 of 42; Claude Sonnet passes 36). On features of several files written by the local agents alone it passes one or two of three, where Sonnet passes the three. So a feature goes through the generators first, and under a lead when it has a design of its own.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; this limit is theirs, for the day the switch `localModels` is turned on again. The work is done by the agents and API providers you choose.",
+    "",
     "- Single files, every backend kind and the mobile and web platforms: all 42 tasks pass; 16 of the 18 held-out tasks pass (Sonnet 17).",
     "- Features of 4 to 6 files, planned and written by the local agents alone: one or two of three, depending on the round. What fails: a piece renames a method the spec writes, or two pieces declare the same thing.",
     "- Known weak points: the tester may copy a solved example close to its task instead of testing the task; the planner names a component in the singular.",
@@ -662,7 +673,8 @@
     }
    ],
    "sources": [
-    "nuclear-agents/nuclear_developer/docs/05-standards/testing.md#Evaluation: how it was trained"
+    "nuclear-agents/nuclear_developer/docs/05-standards/testing.md#Evaluation: how it was trained",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "area": "agent",
@@ -672,9 +684,11 @@
   {
    "id": "limit:agent-nuclear-only",
    "type": "agent-limit",
-   "title": "The local agent's limit: it reads and writes only Nuclear",
+   "title": "The local agent's limit: it reads and writes only Nuclear (on standby)",
    "summary": "A local agent writes `.nuc` files for a platform (`backend`, `mobile`, `web`) and nothing else: no Python, TypeScript or Dart, no file under `build/`, no shell script, no configuration of the target. A failure of the generated code reaches it told at the `.nuc` lines.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; this limit is theirs, for the day the switch `localModels` is turned on again. The work is done by the agents and API providers you choose.",
+    "",
     "- It names a platform, never a dialect.",
     "- It never edits generated code; a problem there is a problem of the `.nuc` or of the dialect.",
     "- It does not read the dialects underneath, the runtimes or the target languages' rules.",
@@ -696,7 +710,8 @@
    "sources": [
     "nuclear-agents/nuclear_developer/docs/00-context/vision.md#What it does not do",
     "nuclear-agents/nuclear_developer/docs/02-architecture/overview.md#What an agent reads",
-    "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md"
+    "extensions/tools/nuclear-builder/docs/08-guides/pipeline-commands.md",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "area": "agent",
@@ -706,9 +721,11 @@
   {
    "id": "limit:agent-internet",
    "type": "agent-limit",
-   "title": "The local agent's limit: the internet is for facts, and needs a search engine",
+   "title": "The local agent's limit: the internet is for facts, and needs a search engine (on standby)",
    "summary": "The agents reach the internet through the web tools only: a search and the text of public pages, without code blocks. A useful search needs your own SearXNG or a Brave Search key; without one the search is Wikipedia. A page of this machine or of the local network is never read.",
    "body": [
+    "**On standby** (ADR-platform-0013): the local agents are not installed nor offered; this limit is theirs, for the day the switch `localModels` is turned on again. The work is done by the agents and API providers you choose.",
+    "",
     "- `web_search(query)` and `web_read(url)`: facts for the business logic (an API's routes and fields, a format, a rule), never code to copy.",
     "- `api_inspect(url)`: the shape of an API's JSON answer, the best source of a resource's fields.",
     "- The search engine, the first available: `NUCLEAR_SEARXNG_URL`, the key kept by `nuclear-graph web-key brave`, else Wikipedia.",
@@ -744,7 +761,8 @@
     }
    ],
    "sources": [
-    "nuclear-graph-storage/web.nuc"
+    "nuclear-graph-storage/web.nuc",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "area": "agent",
@@ -754,14 +772,14 @@
   {
    "id": "limit:remote-agents-only",
    "type": "limit",
-   "title": "Limit: a machine set up for remote agents only",
-   "summary": "With the profile `remote` only the Smart Graph runs on the machine, with its own small model (0.3 GB, no Ollama): no local agents. The MCP server gives a remote agent (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) the generators, the compiler, the command line, the internet tools and the `graph_*` tools; the `developer_*` tools are absent, and the Builder panel of the editor does not work.",
+   "title": "Limit: remote agents only, the one profile while the local models are on standby",
+   "summary": "The profile `remote` is the only one (ADR-platform-0013): only the Smart Graph (its own small model, 0.3 GB, no Ollama) and Nuclear Chat run here. The MCP server gives an agent (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) the generators, the compiler, the command line, the internet tools and the `graph_*` tools, no `developer_*` tool; the Builder's teams are worked by agents and API providers.",
    "body": [
-    "- The remote agent writes every line the generators do not write, and all of it is paid tokens. With a local profile the local agents write it and the remote agent only leads, validates and corrects.",
+    "- The agent writes every line the generators do not write: all of it is paid tokens, or the agent's subscription.",
     "- The strategy of a request (`graph_strategy`) and the search of the knowledge base work: the Smart Graph runs in every profile (ADR-installer-0004, ADR-graph-0003).",
-    "- `nuclear-builder run` needs the Nuclear Developer: it fails its first check on such a machine.",
-    "- It is the choice for a machine too small for the lightest local profile, or for a user who does not want Ollama: it needs no Ollama.",
-    "- To get the local agents later: `nuclear-builder setup` again, with a local profile."
+    "- `nuclear-builder run` works with a team whose members are agents or API models: each run checks each agent's command and a key in the vault for each API provider.",
+    "- It needs no Ollama and no GPU.",
+    "- The local profiles (`lite`, `medium`, `hard`) are on standby: `nuclear-builder setup --profile lite` is refused; turning them on again is a decision of the user (`faq:local-models`)."
    ],
    "keys": [
     "remote agents only",
@@ -787,11 +805,16 @@
     {
      "rel": "playbook",
      "to": "playbook:set-up-the-ai-services"
+    },
+    {
+     "rel": "faq",
+     "to": "faq:local-models"
     }
    ],
    "sources": [
-    "installer/docs/08-guides/ai-setup.md#4. Remote agents and the Smart Graph",
-    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#Decision"
+    "installer/docs/08-guides/ai-setup.md#3. The profile",
+    "installer/docs/03-adr/0004-the-smart-graph-runs-in-every-profile.md#Decision",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "platforms": [],
    "meta": {

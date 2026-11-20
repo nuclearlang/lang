@@ -7,7 +7,7 @@
    "id": "faq:install",
    "type": "faq",
    "title": "How do I install NuclearLang?",
-   "summary": "One command installs the release of your system: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` on Linux and macOS, `irm https://nuclearlang.github.io/install.ps1 | iex` on Windows. At its end it installs the Smart Graph and the MCP server, which are required, and asks only whether to add local agents (`remote`, the answer by default, downloads no local model).",
+   "summary": "One command installs the release of your system: `curl -fsSL https://nuclearlang.github.io/install.sh | sh` on Linux and macOS, `irm https://nuclearlang.github.io/install.ps1 | iex` on Windows. At its end, with no question, it sets up the Smart Graph, the MCP server and Nuclear Chat (the profile `remote`); the AI work is done by the agents and API providers you choose (the local models are on standby).",
    "body": [
     "```sh",
     "curl -fsSL https://nuclearlang.github.io/install.sh | sh        # Linux and macOS",
@@ -171,28 +171,31 @@
   {
    "id": "faq:local-models",
    "type": "faq",
-   "title": "Which models do the local agents use, and can I change them?",
-   "summary": "On Ollama, by the profile the set-up installed. `hard`: `qwen2.5-coder:3b` writes code and `gemma4:e2b` plans and reviews; `medium`: `qwen2.5-coder:3b`; `lite`: `qwen2.5-coder:1.5b`. The chat answers with one small model of its own, `qwen3.5:2b` (`lite`: its one model). The graph runs its own model, not an Ollama one. None is over 3B parameters of effective size; no GPU is needed.",
+   "title": "Which local models does NuclearLang use? None: they are on standby",
+   "summary": "None: NuclearLang's own local models (Ollama, the Nuclear Developer, the profiles `lite`, `medium`, `hard`, the local chat model) are on standby behind one switch (`localModels: false`, ADR-platform-0013). The set-up installs only `remote`: the Smart Graph (its own small model, no Ollama), the MCP server and Nuclear Chat. The AI work is done by the agents and API providers you choose.",
    "body": [
-    "- Which set a machine gets: `nuclear-builder setup` suggests one for its memory and disk (`concept:ai-setup` has what each downloads and how far it works); `nuclear-builder setup --status` says which one is installed.",
-    "- Another profile: run the set-up again. One model by hand: `CODER_MODEL`, `ASSISTANT_MODEL`, and `CHAT_MODEL` in `~/.config/nuclearlang/ai.env`, then restart the services.",
-    "- In VS Code: the *Settings and integrations* page (`Ctrl+Alt+S`) lists the Ollama models under the 3B rule, pulls one and restarts the services with it.",
-    "- A model over 3B parameters is not accepted: the agents are built for small models (fixed steps, the graph as memory, the compiler as judge).",
-    "- Without a GPU an answer takes from seconds to a few minutes; Ollama uses a GPU when the machine has one."
+    "- **Who does the work**: an agent on your machine (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build) or an API provider with its key in the vault (Anthropic, OpenAI, Google, OpenRouter): Nuclear Builder's team members, Nuclear Atlas and the chat.",
+    "- **Atlas and the chat** answer with the first agent whose command is installed, else an API provider with a key, else they say a provider must be chosen; the setting `nuclear.builder.chat` picks it (Claude Code by default).",
+    "- **An older installation**: an update (`nuclear update`, or the installer again) takes away the Developer's service, the models NuclearLang pulled and Ollama when NuclearLang installed it (what was there before stays), and says how many GB it freed. A team member of the old `local` kind is converted on read to an external choice, the old file kept as `.bak`, with a warning.",
+    "- **Refused while on standby**: `nuclear-builder setup --profile lite|medium|hard`; the MCP server registers no `developer_*` tool.",
+    "- **Turning them on again** is a decision of the user: the switch `localModels` of Nuclear Builder's `setup.json`.",
+    "- **Not on standby**: an app of yours still calls a model through Ollama with the `ollama` plugin (`concept:plugins`): that is a feature of the platforms."
    ],
    "keys": [
     "models",
     "ollama",
     "qwen",
-    "gemma",
-    "modelos"
+    "local models",
+    "standby",
+    "modelos locales"
    ],
    "asks": [
     "which model does the local agent use",
-    "can I use another model",
+    "can I use a local model",
+    "are the local models on standby",
+    "do I need ollama",
     "do I need a gpu",
-    "how big are the local models",
-    "is there a lighter model than gemma4"
+    "puedo usar un modelo local"
    ],
    "links": [
     {
@@ -200,21 +203,22 @@
      "to": "concept:nuclear-developer"
     },
     {
-     "rel": "limit",
-     "to": "limit:agent-context"
-    },
-    {
-     "rel": "settings",
-     "to": "editor:vscode.settings.ai"
-    },
-    {
      "rel": "concept",
      "to": "concept:ai-setup"
+    },
+    {
+     "rel": "limit",
+     "to": "limit:remote-agents-only"
+    },
+    {
+     "rel": "plugin",
+     "to": "concept:plugins"
     }
    ],
    "sources": [
-    "installer/docs/08-guides/ai-setup.md#3. The profiles",
-    "nuclear-agents/nuclear_developer/config/project_config.nuc"
+    "docs/03-adr/0013-local-models-on-standby.md#Decision",
+    "installer/docs/08-guides/ai-setup.md#On standby",
+    "extensions/tools/nuclear-builder/setup.json"
    ],
    "meta": {
     "topic": "ai"
@@ -224,11 +228,11 @@
    "id": "faq:privacy",
    "type": "faq",
    "title": "Is my code sent anywhere?",
-   "summary": "The local pieces keep it on your machine: the local agents' models run on Ollama, the graph's model inside the graph, and the Smart Graph and the Nuclear Developer listen on `127.0.0.1` only. Something leaves the machine when you choose it: a frontier model that leads, a spec imported from Jira or GitHub, an API read for its fields, a web search, a deploy.",
+   "summary": "The services of NuclearLang run on your machine and listen on `127.0.0.1` only: the Smart Graph (with its own model) and Nuclear Chat. Your code leaves the machine when you choose it: the agent or API provider that does the work reads what it is given, a spec imported from Jira or GitHub, an API read for its fields, a web search, a deploy.",
    "body": [
     "- The graph refuses web pages (any request with an `Origin` header), gives nothing without a token you allowed (`nuclear-graph connect`, `allow`), and stores its texts encrypted (AES-256-GCM, the key in your keyring).",
     "- The internet tools (`web_read`) refuse local addresses.",
-    "- The Builder lets you choose who leads: *Claude leads, the local developer writes* (the default) or *Local agents only*. What a frontier model reads leaves the machine, as with any frontier model (ADR-platform-0003).",
+    "- Nuclear Builder's team members, Nuclear Atlas and the chat are worked by the agents and API providers you choose; what one reads leaves the machine, as with any frontier model. The local models are on standby (ADR-platform-0013).",
     "- What the factory spent and made (the factory's ledger of tokens, money, time and lines, `~/.config/nuclearlang/factory/ledger/`) stays on your machine; the reports read it there (`nuclear-builder metrics`)."
    ],
    "keys": [
@@ -255,7 +259,7 @@
    ],
    "sources": [
     "nuclear-graph-storage/docs/05-standards/security.md#How it is protected",
-    "nuclear-agents/nuclear_developer/docs/08-guides/README.md",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision",
     "extensions/tools/nuclear-builder/docs/00-context/vision.md#Who leads, and why",
     "docs/03-adr/0003-the-ai-loop.md",
     "extensions/tools/nuclear-builder/docs/02-architecture/reports.md"
@@ -306,18 +310,18 @@
   {
    "id": "faq:ask-the-agent",
    "type": "faq",
-   "title": "How do I ask the local agent to do something?",
+   "title": "How do I ask an agent to do something?",
    "summary": "In VS Code open Nuclear Atlas (`Ctrl+Alt+A`): your direct message with the general agent in Nuclear Chat, answered from the project and the Smart Graph; `/task <what to do>` there is an order, run by the Builder with your team and told in the team's channel. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
    "body": [
-    "- **A question** (\"what does `BooksAppComponent` expose?\", \"how do I add a route?\"): the assistant answers and changes nothing.",
+    "- **A question** (\"what does `BooksAppComponent` expose?\", \"how do I add a route?\"): the agent answers and changes nothing.",
     "- **An order** (`/task add a use case that lists the books of an author`): a run of the Builder with the project's team; its members tell each station as a thread of the team's channel, and its journal says what was done.",
     "- **A feature**: a spec in the Builder (*+ New spec*, `Ctrl+Alt+P`). Name each piece with the platform's words (a model `Book`, a repository `BookRepository`, a use case `ListBooks`) and add one acceptance criterion per behaviour. For a resource of an API, add its `GET <url>` line or an example answer and the generators write it.",
     "- **Talk to a member** in the Builder's chat: `@qa`, `@<name>`, or the team's channel (its tech lead answers).",
-    "- **Choose who answers**: the dropdown in Atlas's header picks the agent (the local Nuclear Developer by default, Claude Code, OpenCode, Codex, Gemini CLI, an API model) and its model, per conversation; it works with the Builder's MCP tools, so it can read a document, write the specs and start their runs.",
+    "- **Choose who answers**: the dropdown in Atlas's header picks the agent (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build, an API model) and its model, per conversation; by default the first agent installed, else an API provider with a key (the setting `nuclear.builder.chat`), and with none it says a provider must be chosen; it works with the Builder's MCP tools, so it can read a document, write the specs and start their runs.",
     "- **From a terminal**: `nuclear-builder run specs/<component>/<id>/spec.md` (the run's team decides who works each station).",
-    "- **From Claude Code, Codex or Cursor**: the MCP tool `developer_task`.",
+    "- **From Claude Code, Codex or Cursor**: the MCP server `nuclear-mcp` (the generators, the compiler, the graph).",
     "",
-    "The agent tells you when a task is beyond it; then let a frontier model lead or split the task."
+    "The agent tells you when a task is beyond it; then give it to a stronger model or split the task."
    ],
    "keys": [
     "chat",
@@ -328,16 +332,12 @@
    ],
    "asks": [
     "how do I use the agent",
-    "how do I talk to the local agent",
+    "how do I talk to the agent",
     "como le pido algo al agente",
     "how do I write a spec",
     "what is /task"
    ],
    "links": [
-    {
-     "rel": "agent",
-     "to": "agent:assistant"
-    },
     {
      "rel": "playbook",
      "to": "playbook:feature-from-a-spec"
@@ -467,9 +467,9 @@
    "id": "faq:update-nuclearlang",
    "type": "faq",
    "title": "How do I update NuclearLang?",
-   "summary": "`nuclear update` installs the latest release (the installer run again: NuclearLang and the AI services, the profile and the choices of the last install kept). In a terminal, `nuclear` also asks `Update now? [Y]es / [n]o / [l]ater` before a command when a newer release is out.",
+   "summary": "`nuclear update` installs the latest release (the installer run again: NuclearLang and the AI services with the profile `remote`, the choices of the last install kept; what an earlier install put there for the local models is taken away). In a terminal, `nuclear` also asks `Update now? [Y]es / [n]o / [l]ater` before a command when a newer release is out.",
    "body": [
-    "One key answers; no key in 15 seconds goes on (a script in a terminal is never stopped); `l` waits a day. The check runs at most once a day (curl, or wget): the first command of the day waits at most 3 seconds for it, so the first run after an install already asks, and offline the command goes on. It never asks in editors, agents, pipes, CI, `make`, npm scripts or under `sudo`. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off. In VS Code every NuclearLang page shows a floating *Update to <version>* button (and the status bar) that runs `nuclear update`.",
+    "One key answers; no key in 15 seconds goes on (a script in a terminal is never stopped); `l` waits a day. The check runs at most once a day (curl, or wget): the first command of the day waits at most 3 seconds for it, so the first run after an install already asks, and offline the command goes on. It never asks in editors, agents, pipes, CI, `make`, npm scripts or under `sudo`. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
     "",
     "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built. One install runs at a time."
    ],

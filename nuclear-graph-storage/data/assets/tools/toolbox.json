@@ -6,15 +6,15 @@
   {
    "id": "service:agent-toolbox",
    "type": "service",
-   "title": "The toolbox of the local agents: what a Nuclear agent can use",
-   "summary": "A local agent works with five sets of tools, called by its fixed steps and never chosen by the model: the Smart Graph (what it knows), the compiler (what is right), the `nuclear` commands and generators (what is standard), the project's files (what exists) and the internet (facts it lacks).",
+   "title": "The toolbox of the local agents (on standby): what a Nuclear agent can use",
+   "summary": "The local agents (the Nuclear Developer) are on standby (ADR-platform-0013); their toolbox stays in the code: five sets of tools called by fixed steps, never chosen by the model: the Smart Graph (what it knows), the compiler (what is right), the `nuclear` commands and generators (what is standard), the project's files (what exists) and the internet. An agent you choose gets the same over MCP.",
    "body": [
     "| Tools | What they do | Where |",
     "|---|---|---|",
-    "| **The graph** | `search` (by meaning and exact name, by shelf), `card` (a row by its id), `examples` (validated code of a kind), `kinds` (how people write each kind), `applies` (what of a spec the platform cannot do yet), `strategy` (which kind of request a text is, and the plan of that kind), `strategy` (which kind of request a text is, and the plan of that kind), `brief`, `prompt`, `remember` | `nuclear_graph.client.GraphClient` |",
+    "| **The graph** | `search` (by meaning and exact name, by shelf), `card` (a row by its id), `examples` (validated code of a kind), `kinds` (how people write each kind), `applies` (what of a spec the platform cannot do yet), `strategy` (which kind of request a text is, and the plan of that kind), `brief`, `prompt`, `remember` | `nuclear_graph.client.GraphClient` |",
     "| **The compiler** | `check` (a piece or a project: `ok` or one line per error), `build`, `fmt`, `help`, `brief`, `layout` and `pathOf` (where a kind's file goes) | `nuclear_graph.toolchain.Toolchain` |",
     "| **The project's commands** | `synapsis` in a project: `gen inspect`, `gen resource`, `gen component`, `make`, `build`, `install`, `test`, `explain`, `migrate`, `doctor` | `Toolchain.synapsis` |",
-    "| **The project's files** | `read` (numbered lines), `list` (a folder), `find` (a glob), `grep` (a text), `outline` (a file's declarations), `declarations` (every name and its file), `context` (the files that declare the names a task writes), `renamed` (every file that writes a name, with another in its place: a rename without a model), `renamed` (every file that writes a name, with another in its place: a rename without a model) | `nuclear_graph.workspace.Workspace` |",
+    "| **The project's files** | `read` (numbered lines), `list` (a folder), `find` (a glob), `grep` (a text), `outline` (a file's declarations), `declarations` (every name and its file), `context` (the files that declare the names a task writes), `renamed` (every file that writes a name, with another in its place: a rename without a model) | `nuclear_graph.workspace.Workspace` |",
     "| **The internet** | `search`, `read` (a public page as text, without code), `research` (a search and its first pages); the shape of an API's answer (`api_inspect`) | `nuclear_graph.web.Web`, the MCP tools |",
     "",
     "How they are used:",
@@ -22,7 +22,7 @@
     "- **By fixed steps.** A small model follows steps better than it chooses tools: the coder's steps are recall (graph) → read the files its task names (project) → write → check (compiler) → repair with each error's card (graph) → hold the answer to the task's own words.",
     "- **Read-only on the project.** The files toolbox never leaves the project's folder and never reads generated or hidden folders. An agent's file is written by the Builder, which keeps the ledger that undoes it.",
     "- **Only declared commands.** The shell of the Builder runs the commands of `.nuclear/builder.json`; an agent runs `nuclear` and `synapsis`, nothing else.",
-    "- **The same tools for a frontier model**, over MCP: `graph_search`, `graph_card`, `nuclear_check`, `synapsis`, `project_inspect`, `generate_resource`, `api_inspect`, `web_search`, `web_read`, `developer_code` (with `project`, the local coder reads the project by itself)."
+    "- **The same tools for the agent you choose**, over MCP: `graph_search`, `graph_card`, `nuclear_check`, `synapsis`, `project_inspect`, `generate_resource`, `api_inspect`, `web_search`, `web_read`."
    ],
    "keys": [
     "toolbox",
@@ -64,7 +64,8 @@
    ],
    "sources": [
     "nuclear-graph-storage/workspace.nuc",
-    "nuclear-agents/nuclear_developer/components/developer/ai/workbench.nuc"
+    "nuclear-agents/nuclear_developer/components/developer/ai/workbench.nuc",
+    "docs/03-adr/0013-local-models-on-standby.md#Decision"
    ],
    "meta": {
     "tool": "developer",

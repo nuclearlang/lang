@@ -97,23 +97,14 @@
    }
   },
   {
-   "id": "doc:extensions/AGENTS.md#projects.2416a9",
+   "id": "doc:extensions/AGENTS.md#projects.64aa62",
    "type": "readme",
    "title": "Editor extensions — Projects",
    "summary": "Projects",
    "body": [
-    "| Project | What it is |",
-    "|---|---|",
-    "| [vscode/](vscode/AGENTS.md) | the VS Code extension: the client, the Nuclear workspace, run, debug, the themes |",
-    "| [jetbrains/](jetbrains/AGENTS.md) | the Android Studio / IntelliJ plugin |",
-    "| [zed/](zed/AGENTS.md) | the Zed extension |",
-    "| [tools/nuclear-builder/](tools/nuclear-builder/AGENTS.md) | Nuclear Builder: the pipeline tool and the `nuclear-builder` command |",
-    "| [tools/nuclear-http-connections/](tools/nuclear-http-connections/AGENTS.md) | HTTP Connections: the tool like Postman (HTTP/REST and WebSockets) |",
-    "| [tools/nuclear-atlas/](tools/nuclear-atlas/AGENTS.md) | Nuclear Atlas: the local agent integrated with the RAG (the chat with the local agents over the Nuclear Smart Graph) |",
-    "| [tools/nuclear-monitor/](tools/nuclear-monitor/AGENTS.md) | Nuclear Monitor: each Nuclear function's time, calls, connections and memory as an accordion of bars (VS Code) |",
-    "| [tools/nuclear-environments/](tools/nuclear-environments/AGENTS.md) | Environments: a project's variables by environment (`.env` files, the keyring), edited through `nuclear env` (VS Code, spec 021) |",
-    "| [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Synapsis device and the web device |",
-    "| [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |"
+    "| [tools/nuclear-ui-designer/](tools/nuclear-ui-designer/AGENTS.md) | not built |",
+    "| [tools/nuclear-backend-designer/](tools/nuclear-backend-designer/AGENTS.md) | not built |",
+    "| [tools/nuclear-storage-connector/](tools/nuclear-storage-connector/AGENTS.md) | not built |"
    ],
    "sources": [
     "extensions/AGENTS.md"
@@ -125,14 +116,23 @@
    }
   },
   {
-   "id": "doc:extensions/AGENTS.md#projects.64aa62",
+   "id": "doc:extensions/AGENTS.md#projects.b9409d",
    "type": "readme",
    "title": "Editor extensions — Projects",
    "summary": "Projects",
    "body": [
-    "| [tools/nuclear-ui-designer/](tools/nuclear-ui-designer/AGENTS.md) | not built |",
-    "| [tools/nuclear-backend-designer/](tools/nuclear-backend-designer/AGENTS.md) | not built |",
-    "| [tools/nuclear-storage-connector/](tools/nuclear-storage-connector/AGENTS.md) | not built |"
+    "| Project | What it is |",
+    "|---|---|",
+    "| [vscode/](vscode/AGENTS.md) | the VS Code extension: the client, the Nuclear workspace, run, debug, the themes |",
+    "| [jetbrains/](jetbrains/AGENTS.md) | the Android Studio / IntelliJ plugin |",
+    "| [zed/](zed/AGENTS.md) | the Zed extension |",
+    "| [tools/nuclear-builder/](tools/nuclear-builder/AGENTS.md) | Nuclear Builder: the pipeline tool and the `nuclear-builder` command |",
+    "| [tools/nuclear-http-connections/](tools/nuclear-http-connections/AGENTS.md) | HTTP Connections: the tool like Postman (HTTP/REST and WebSockets) |",
+    "| [tools/nuclear-atlas/](tools/nuclear-atlas/AGENTS.md) | Nuclear Atlas: the general agent over the RAG (a chat answered by the agent or provider you pick, over the Nuclear Smart Graph) |",
+    "| [tools/nuclear-monitor/](tools/nuclear-monitor/AGENTS.md) | Nuclear Monitor: each Nuclear function's time, calls, connections and memory as an accordion of bars (VS Code) |",
+    "| [tools/nuclear-environments/](tools/nuclear-environments/AGENTS.md) | Environments: a project's variables by environment (`.env` files, the keyring), edited through `nuclear env` (VS Code, spec 021) |",
+    "| [tools/nuclear-device-manager/](tools/nuclear-device-manager/AGENTS.md) | the devices inside the editor: the Synapsis device and the web device |",
+    "| [tools/nuclear-documentor/](tools/nuclear-documentor/AGENTS.md) | not built |"
    ],
    "sources": [
     "extensions/AGENTS.md"
@@ -1032,6 +1032,25 @@
    }
   },
   {
+   "id": "doc:extensions/docs/08-guides/README.md#the-guides.4f08c2",
+   "type": "readme",
+   "title": "The editor extensions — The guides",
+   "summary": "The guides",
+   "body": [
+    "| [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |",
+    "| [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |",
+    "| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph and the MCP server Nuclear Atlas and the Builder use (the local models are on standby, ADR-platform-0013) |"
+   ],
+   "sources": [
+    "extensions/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/docs/08-guides/README.md#the-guides.8ae2a8",
    "type": "readme",
    "title": "The editor extensions — The guides",
@@ -1048,25 +1067,6 @@
     "| [Environments](../../tools/nuclear-environments/docs/08-guides/README.md) | edit a project's variables by environment (`.env` files, secrets in the keyring) without opening a file |",
     "| [Devices](../../tools/nuclear-device-manager/docs/08-guides/README.md) | run a mobile app or a web app inside VS Code |",
     "| [Nuclear Atlas](../../tools/nuclear-atlas/docs/08-guides/README.md) | ask about your project and give orders to the local agents |"
-   ],
-   "sources": [
-    "extensions/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/docs/08-guides/README.md#the-guides.f6ed7e",
-   "type": "readme",
-   "title": "The editor extensions — The guides",
-   "summary": "The guides",
-   "body": [
-    "| [Nuclear Monitor](../../tools/nuclear-monitor/docs/08-guides/README.md) | where the app spends its time: each Nuclear function's time, calls, connections and memory (VS Code) |",
-    "| [Nuclear Builder](../../tools/nuclear-builder/docs/08-guides/README.md) | take a spec through plan, tests, code and deploy |",
-    "| [Set up the AI services](../../../installer/docs/08-guides/ai-setup.md) | install the Smart Graph, the Nuclear Developer and the models Nuclear Atlas and the Builder need |"
    ],
    "sources": [
     "extensions/docs/08-guides/README.md"
@@ -1425,11 +1425,13 @@
    }
   },
   {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.4ccf78",
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.7cdc2e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- The local models are on standby (ADR-platform-0013): the plugin never offered a local model, profile or the Nuclear Developer; Nuclear Builder's *Run the Spec with a Team…* now shows the `warnings` of `team list --json` (a member that named the local kind, converted to an external provider) and no longer speaks of a local team.",
+    "",
     "- 0.81.0 (fix): HTTP Connections keeps the fields of `.nuclear/http.json` it does not know (the variables by project and component VS Code writes) when it selects an environment or adds an OpenAPI document or a socket url; the teams' members and skills come with the installer.",
     "",
     "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
@@ -2587,9 +2589,7 @@
     "  (spec 011, settings by component).",
     "- Its texts are in English and Spanish in `src/l10n.ts` (a dictionary of `extensions/vscode/src/i18n.ts`), for the Synapsis device (`mobile-device.ts`) and the web device (`web-device.ts`); device names, Hot Reload / Hot Restart and network presets stay as they are.",
     "  The host sends the page the texts of the chosen language (`nuclear.language`); English is the fallback. A change",
-    "  of language reaches a device's page when it opens next: re-rendering it would cut its live screen.",
-    "- Both devices' pages carry the floating update button of every NuclearLang page (`withUpdateButton`,",
-    "  `extensions/vscode/src/updateCheck.ts`)."
+    "  of language reaches a device's page when it opens next: re-rendering it would cut its live screen."
    ],
    "sources": [
     "extensions/tools/nuclear-device-manager/docs/02-architecture/overview.md"
@@ -3088,8 +3088,8 @@
     "- The page never writes a file: every change is a `nuclear env` command. It opens a `.env` file only when asked.",
     "- A secret's value goes on the command's stdin (`nuclear env set NAME --secret`), never in its arguments, and is",
     "  never shown (the list never prints it).",
-    "- An error of a command is shown on the page, never swallowed; a `nuclear` without `env` (its usage printed) asks",
-    "  to update NuclearLang (`nuclear.update`)."
+    "- An error of a command is shown on the page, never swallowed; a `nuclear` without `env` (its usage printed) says",
+    "  to run `nuclear update` in a terminal."
    ],
    "sources": [
     "extensions/tools/nuclear-environments/AGENTS.md"
@@ -3227,31 +3227,6 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-environments/docs/02-architecture/overview.md#how-the-list-reaches-the-page.1e22c2",
-   "type": "context",
-   "title": "How the list reaches the page",
-   "summary": "without `nuclear env`) replace the grid with a notice and *Update NuclearLang* (`nuclear.update`); any other error stays above the grid until dismissed.",
-   "body": [
-    "- Failures (`failureOf`): no `nuclear` (spawn error) and a `nuclear` without `env` (exit not 0, its usage printed",
-    "  without `nuclear env`) replace the grid with a notice and *Update NuclearLang* (`nuclear.update`); any other",
-    "  error stays above the grid until dismissed. What a successful command writes on stderr (a secret written to a",
-    "  `.local` file without a keyring) is shown as a note.",
-    "- The page: `localize` (`extensions/vscode/src/i18n.ts`) gives it the language menu and the floating update button;",
-    "  its state comes in `state` messages, so a language switch redraws it as it was. Values are set as text only.",
-    "- Keyboard: the grid is one tab stop (a roving `tabindex`); arrows, Home/End (Ctrl: first/last row) move; Enter or",
-    "  F2 edits; Enter saves, Escape cancels; Delete removes the value; Enter on a name opens its first use; Ctrl+F",
-    "  filters."
-   ],
-   "sources": [
-    "extensions/tools/nuclear-environments/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/tools/nuclear-environments/docs/02-architecture/overview.md#how-the-list-reaches-the-page.3cf3b1",
    "type": "context",
    "title": "How the list reaches the page",
@@ -3308,13 +3283,38 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-environments/docs/08-guides/README.md#environments.43779f",
+   "id": "doc:extensions/tools/nuclear-environments/docs/02-architecture/overview.md#how-the-list-reaches-the-page.df2d01",
+   "type": "context",
+   "title": "How the list reaches the page",
+   "summary": "without `nuclear env`) replace the grid with a notice that says to run `nuclear update` in a terminal; any other error stays above the grid until dismissed.",
+   "body": [
+    "- Failures (`failureOf`): no `nuclear` (spawn error) and a `nuclear` without `env` (exit not 0, its usage printed",
+    "  without `nuclear env`) replace the grid with a notice that says to run `nuclear update` in a terminal; any other",
+    "  error stays above the grid until dismissed. What a successful command writes on stderr (a secret written to a",
+    "  `.local` file without a keyring) is shown as a note.",
+    "- The page: `localize` (`extensions/vscode/src/i18n.ts`) gives it the language menu;",
+    "  its state comes in `state` messages, so a language switch redraws it as it was. Values are set as text only.",
+    "- Keyboard: the grid is one tab stop (a roving `tabindex`); arrows, Home/End (Ctrl: first/last row) move; Enter or",
+    "  F2 edits; Enter saves, Escape cancels; Delete removes the value; Enter on a name opens its first use; Ctrl+F",
+    "  filters."
+   ],
+   "sources": [
+    "extensions/tools/nuclear-environments/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/tools/nuclear-environments/docs/08-guides/README.md#environments.088580",
    "type": "readme",
    "title": "Environments",
    "summary": "The same from a terminal: `nuclear env list`, `nuclear env set NAME VALUE --env staging`.",
    "body": [
     "The same from a terminal: `nuclear env list`, `nuclear env set NAME VALUE --env staging`. If the page asks you to",
-    "update NuclearLang, your `nuclear` is older than the page: press *Update NuclearLang*."
+    "update NuclearLang, your `nuclear` is older than the page: run `nuclear update` in a terminal."
    ],
    "sources": [
     "extensions/tools/nuclear-environments/docs/08-guides/README.md"
@@ -4604,9 +4604,7 @@
     "  their parent (their own time is then zero).",
     "- A click on a name posts `{ type: 'open', path, line }`; the panel opens `<project>/<path>` at the line (the",
     "  project is the folder above `.nuclear/`).",
-    "- Redraws are debounced (300 ms): the app writes at most every two seconds.",
-    "- The page carries the floating update button of every NuclearLang page (`withUpdateButton`,",
-    "  `extensions/vscode/src/updateCheck.ts`)."
+    "- Redraws are debounced (300 ms): the app writes at most every two seconds."
    ],
    "sources": [
     "extensions/tools/nuclear-monitor/docs/02-architecture/overview.md"
@@ -5353,6 +5351,25 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.84cd97",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The welcome's installation shows the new first step of an older installation, *Removing the local models (on standby)* / *Quitando los modelos locales (en standby)*, with its lines (the last one says what it freed), and every step of the remote set-up has its title in both languages: the Smart Graph and the MCP server, the AI clients, the graph's model (with its name and size), the graph's service, the knowledge base and Nuclear Chat's service.",
+    "- Nuclear Builder has no chat of its own any more: a member or a team (in the Builder and in *Your software company*: a member's face, *💬 Talk*, a team's *💬 Channel*) opens Nuclear Atlas on that conversation, the member's direct message or the team's channel (`nuclear.atlas.open`). A built team shows only its members: the catalogue of candidates appears in the new-team wizard, and under a team only while you add members (a role's *+ Add*, closed with *Done*).",
+    "- The actions of a project (▷ Run or Serve, ◉ Debug, ↻ Reload, ▭ Device, Build, Test, Check, ⇄ API) no longer sit as a row of buttons above the file tree: they are in the editor title bar and, for Cursor (which hides those), in an *Actions* section at the bottom of the workspace's files pane, collapsed by default like VS Code's npm scripts."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.90846d",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5376,6 +5393,21 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- 0.49.0: the Builder shows a run as a graph and lets any of it run again. A column per stage, a node per step in the order it ran and, under each step, the steps its agent followed; a click on a node opens it beside the graph: what it did, the decisions it took and why (each step now keeps them: which strategy and by which signs, why a stage is left out, why a file goes to the tester, why a planned piece is dropped), its input, its output and its code. *Run again from this step* on every step, passed or failed (it and every step after it; the steps before it are kept), *Run <stage> again* on every stage, *Run again from scratch* on the run; what the steps left out wrote is undone first, and a file changed since the run wrote it is kept (`nuclear-builder retry <run> --step <id>`, `nuclear-builder restart <run>`). A run made by an older version (no analysis, no Generate stage) gets today's stages and starts from scratch at any retry. A plan made again drops the pieces a planner gave and keeps the ones written in the form. When the verification passes, each acceptance criterion is held against what the run left (`/developer/accept`): the ones not shown met are listed as left for the reviewer, in the page and in the journal. The local planner is given the spec alone (the context files' words are not the request's). The set-up builds the Smart Graph, now written in Nuclear, before",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.93982c",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- The local models are on standby (ADR-platform-0013): the AI work is done by the agents and providers you choose. The welcome sets up only the Smart Graph and the MCP server (no profile to choose, no Ollama, no model download, no memory warning); Settings and integrations has no Nuclear Developer, Ollama or local models; the connections no longer check them; Nuclear Builder offers no local kind nor Ollama models (a member still marked local shows the conversion the command made); Nuclear Atlas is answered by the agent or provider of `nuclear.builder.chat` (Claude Code by default) and, when none can answer here, says how to pick one. A `nuclear.builder.chat` set to the local kind is converted to the default and you are told once; `nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are gone (an old value is ignored).",
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -5506,6 +5538,24 @@
     "- 0.53.0: the set-up of the AI services is `nuclear-builder setup`, written in Nuclear and brought by the AI archive: the set-up page and *Settings and integrations* run it as a process (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), one call per action, so the one-line installer sets the services up with no Node.js on the machine. The bundled `python` dialect writes `print`'s named arguments (`flush=True`), a map of a `??` in a `for`, a conditional spread and `a?.b ?? c` as valid Python, and a local or a member no longer imports another file of the project.",
     "- 0.52.2: the AI set-up checks that the Smart Graph's and the Nuclear Developer's ports can be listened on and takes the next free one when another program holds 7878 or 7879, written to `ai.env`, which the editor, the graph and the MCP server read (ADR-installer-0003).",
     "- 0.52.1: the repository is `nuclearlang/lang` (was `nuclearlang/nuclear`): the extension's `repository` and `bugs`, and the installer address Nuclear Builder suggests."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.b53cf7",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Nuclear Chat and Nuclear Atlas no longer ask the two spending questions for a paid provider you already put in a team (a member's or the tech lead's agent or API): you chose it there. A paid provider you never chose still asks twice, and `forceConfirm` (the setting or the project's `.nuclear/builder.json`) still asks always.",
+    "- The floating *Update to <version>* button, its status bar item and the command *Nuclear: Update NuclearLang to the latest release* (`nuclear.update`) are gone: run `nuclear update` in a terminal. The notification at start that compares this extension with the installed NuclearLang stays. Environments, on a `nuclear` without `env`, now says to run `nuclear update` in a terminal."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -5742,12 +5792,12 @@
    "id": "doc:extensions/vscode/README.md#nuclear-atlas-ctrl-alt-a",
    "type": "readme",
    "title": "NuclearLang for VS Code — Nuclear Atlas · `Ctrl+Alt+A`",
-   "summary": "!Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph A chat about Nuclear answered on your machine.",
+   "summary": "!Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph A chat about your project and Nuclear, answered by the agent or provider you pick (Claude Code by default) over the",
    "body": [
     "![Nuclear Atlas: a question about the ecosystem answered by the local agent from the Smart Graph](https://nuclearlang.github.io/shots/atlas.webp)",
     "",
-    "A chat about Nuclear answered on your machine. Atlas uses a local model and the **Nuclear Smart Graph**, the knowledge",
-    "base of the language, its platforms and your projects. Nothing leaves your computer."
+    "A chat about your project and Nuclear, answered by the agent or provider you pick (Claude Code by default) over the",
+    "**Nuclear Smart Graph**, the knowledge base of the language, its platforms and your projects."
    ],
    "sources": [
     "extensions/vscode/README.md"
@@ -6018,13 +6068,12 @@
    "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#checked-connections-connections-ts-adr-platform-0003",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Checked connections (`connections.ts`; ADR-platform-0003)",
-   "summary": "Every external connection of the extension: the Nuclear Developer, the Smart Graph, Ollama and the local models, and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira).",
+   "summary": "Every external connection of the extension: the Smart Graph and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira).",
    "body": [
-    "Every external connection of the extension: the Nuclear Developer, the Smart Graph, Ollama and the local models,",
-    "and each integration enabled in the settings (Claude Code, Codex, OpenCode, GitHub, Jira).",
+    "Every external connection of the extension: the Smart Graph and each integration enabled in the settings (Claude",
+    "Code, Codex, OpenCode, GitHub, Jira). No check of Ollama nor of the Developer (ADR-platform-0013).",
     "",
-    "- `checkAll`: all of them. `checkForChat`: what a chat question needs. A Nuclear Builder run checks its own",
-    "  (`preflight` of the engine).",
+    "- `checkAll`: all of them. A Nuclear Builder run checks its own (`preflight` of the engine).",
     "- `watchConnections`: every `nuclear.ai.checkEveryMinutes`; a connection that stops answering, or answers again, is",
     "  a notice of kind `settings`."
    ],
@@ -6167,12 +6216,12 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#notifications-notifications-ts-adr-platform-0003.c8684c",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#notifications-notifications-ts-adr-platform-0003.f4da52",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Notifications (`notifications.ts`; ADR-platform-0003)",
-   "summary": "What the local agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear Chat, a Nuclear Builder run waits for the user, passed or failed, a connection stopped answering.",
+   "summary": "What the agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear Chat, a Nuclear Builder run waits for the user, passed or failed, a connection stopped answering.",
    "body": [
-    "What the local agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear",
+    "What the agents did while the user was elsewhere: a member answered, mentioned or asked the user in Nuclear",
     "Chat, a Nuclear Builder run waits for the user, passed or failed, a connection stopped answering. One system every",
     "tool uses."
    ],
@@ -6186,7 +6235,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013.4a0521",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Nuclear Chat (spec 013)",
    "summary": "subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation is the setting `nuclear.builder.chat` when that agent is available, else…",
@@ -6195,13 +6244,32 @@
     "  --json`, the extension host only), `Relay` (each page's request ids kept apart, the token header added, one",
     "  subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the",
     "  general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation",
-    "  is the setting `nuclear.builder.chat` when that agent is available, else the local one; each conversation then",
+    "  is the setting `nuclear.builder.chat` when that agent is available, else the host file's default (an external",
+    "  agent; a paid provider of a team's member or tech lead, chosen by the user there, gets `--confirm-spending` on its",
+    "  responder and choice commands, so the chat does not ask the two spending questions again for it; not when",
+    "  `nuclear.spending.forceConfirm` or the project's `forceConfirm` holds, nor for a provider no team names); each conversation then",
     "  chooses its own in the chat's header), `ChatHost` (the one WebSocket, re-registered and caught up with `GET events?since=` after a",
     "  reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`,",
     "  `lineDiff`).",
     "- `src/chatView.ts`: the window's `chat()`, `wireChat` (a page's frames ↔ the connection; `chatOpen` → `chatPath`",
-    "  or `chatError` with how to fix it), `chatScript` (the page's `nuclearChat(post)`: the embedded bundle imported",
-    "  from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command",
+    "  or `chatError` with how to fix it), `chatScript` (the page's `nuclearChat(post)`: the embedded bundle imported"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013.ce7ffb",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Nuclear Chat (spec 013)",
+   "summary": "from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command `nuclear.chat.open`) and the GIF key (`nuclear.chat.gifKey`).",
+   "body": [
+    "from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command",
     "  `nuclear.chat.open`) and the GIF key (`nuclear.chat.gifKey`).",
     "- `npm run chat` (in `compile`) copies `../../nuclear-chat/ui/build/app/dist-embed/embed.js` to `out/chat-embed.js`:",
     "  build it first there (`nuclear build`, `npm run build:embed`)."
@@ -6216,31 +6284,12 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.9648c3",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-adr-platform-0003.49cdfa",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
-   "summary": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
-   "body": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.aeff21",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
-   "summary": "(`jiraAuth`), `gh auth status`; with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español; devices): `settingSections` reads `contributes.configuration` with the texts of `package.nls*.json` in the editor's language and the values now; the page draws each as a…",
+   "summary": "devices): `settingSections` reads `contributes.configuration` with the texts of `package.nls*.json` in the editor's language and the values now; the page draws each as a form (`FORM_JS`) and `applySetting` checks a value against its contributed type, enum and range before it writes it (the page is…",
    "body": [
-    "(`jiraAuth`), `gh auth status`;",
-    "  - **the toolchains** follow it: the cards above and the paths' form;",
-    "  - **the language** is the first section (as it is the onboarding's first step): `nuclear.language`, *Automatic*",
-    "    with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español;",
-    "  - **the other sections** (Nuclear Builder, the spending, Nuclear Chat, Nuclear Atlas, HTTP Connections, the",
+    "- **the other sections** (Nuclear Builder, the spending, Nuclear Chat, Nuclear Atlas, HTTP Connections, the",
     "    devices): `settingSections` reads `contributes.configuration` with the texts of `package.nls*.json` in the",
     "    editor's language and the values now; the page draws each as a form (`FORM_JS`) and `applySetting` checks a",
     "    value against its contributed type, enum and range before it writes it (the page is a trust boundary). The",
@@ -6260,27 +6309,28 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-localmodels-ts-adr-plat.f01406",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-adr-platform-0003.7c1bf6",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
    "summary": "to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is shared with CI.",
    "body": [
     "- `aiSettings()` reads `nuclear.ai.*` (`contributes.configuration` of `package.json`). `machineConfig()` is passed",
     "  to `readConfig(root, platform, machine)`: defaults < settings < the project's `.nuclear/builder.json`, which is",
-    "  shared with CI. `serviceEnv()` is the environment the graph and the Developer are started with (`CODER_MODEL`,",
-    "  `ASSISTANT_MODEL`, `OLLAMA_URL`, the ports). The graph's embeddings model is its own (no setting).",
+    "  shared with CI. `serviceEnv()` is the environment the graph and the Builder's engine are started with (the graph's",
+    "  url and port). The graph's embeddings model is its own (no setting).",
     "- The page:",
-    "  - **services**: their health urls; *Start* / *Restart* go through the system's services first, else spawn",
-    "    `<graphCommand> serve` / `nuclear-developer` (owned processes, stopped on deactivate);",
-    "  - **models**: Ollama's `/api/tags`; `billionsOf` (`localModels.ts`) counts a model's size from what Ollama",
-    "    reports, with the effective size of an `eNb` tag, against `MAX_BILLIONS` = 3.5 (the rule of the local models:",
-    "    at most the 3B class); *Pull* runs as a task;",
+    "  - **services**: the Smart Graph's health url; *Start* / *Restart* go through the system's service first, else",
+    "    spawn `<graphCommand> serve` (an owned process, stopped on deactivate);",
     "  - **MCP**: registers `nuclear.ai.mcpCommand` (default `nuclear-mcp`, the server of",
     "    [`tools/mcp/`](../../../../tools/mcp/AGENTS.md), started with no argument) in Claude Code",
     "    (`claude mcp get|add --scope user`), Codex (`codex mcp list|add`), Cursor (`~/.cursor/mcp.json` merged) and",
     "    OpenCode;",
     "  - **connections**: `nuclear.ai.graphCommand` (default `nuclear-graph`)",
-    "    `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage"
+    "    `requests|allow|deny|revoke|connect mcp`, Jira in the secret storage",
+    "    (`jiraAuth`), `gh auth status`;",
+    "  - **the toolchains** follow it: the cards above and the paths' form;",
+    "  - **the language** is the first section (as it is the onboarding's first step): `nuclear.language`, *Automatic*",
+    "    with what it resolves to here (`autoResolved`: *Español (from the editor)*), English, Español;"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6292,7 +6342,43 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-and-integrations-settingspanel-ts-aisettings-ts-adr-platform-0003.9648c3",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings and integrations (`settingsPanel.ts`,…",
+   "summary": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
+   "body": "The tool `settings` of the strip (`Ctrl+Alt+S`).",
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.73e504",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
+   "summary": "`nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are no longer declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
+   "body": [
+    "`nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are no longer",
+    "  declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
+    "- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless",
+    "  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `\"forceConfirm\": true` in the project's",
+    "  `.nuclear/builder.json` brings both questions back."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.db4f29",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
    "summary": "(`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`, given to the chat as the workspace's `gifs`, every project registered again when it changes), and the `settings.ts` of HTTP Connections and the devices.",
@@ -6308,9 +6394,8 @@
     "  `nuclear.ai.contextTokens` → `nuclear.atlas.contextTokens`) are copied at start-up at every level where the user",
     "  set them (user, workspace, folder); the old one is removed only once the new one holds the value, and a level",
     "  where the new id already has a value keeps both.",
-    "- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless",
-    "  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `\"forceConfirm\": true` in the project's",
-    "  `.nuclear/builder.json` brings both questions back."
+    "- The local models on standby: a `nuclear.builder.chat` of the kind `local` is removed at its level (the default,",
+    "  Claude Code's agent, takes over) and the user is told once; `chatProvider` reads one as the default before that."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6327,9 +6412,14 @@
    "title": "The AI services in the editor: set-up, settings, connections, notifications",
    "summary": "What Nuclear Builder and Nuclear Atlas need around them.",
    "body": [
-    "What Nuclear Builder and Nuclear Atlas need around them. The services themselves (the Smart Graph, the Nuclear Developer) and",
-    "their models are other projects; what a user does is in",
-    "[Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)."
+    "What Nuclear Builder and Nuclear Atlas need around them. The services themselves (the Smart Graph, the MCP server, Nuclear",
+    "Chat) are other projects; what a user does is in",
+    "[Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md).",
+    "",
+    "**The local models are on standby** ([ADR-platform-0013](../../../../docs/03-adr/0013-local-models-on-standby.md)):",
+    "the AI work is done by external agents and providers. The editor offers no local model, no profile to choose, no",
+    "Ollama step and no Nuclear Developer, whatever `setup --plan --json` says (`localModels` absent, from an older",
+    "`nuclear-builder`, is off too)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6341,7 +6431,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.1c9f77",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.834af4",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
    "summary": "The set-up is `nuclear-builder setup`, written in Nuclear (`../../../tools/nuclear-builder/setup.nuc`, its data `setup.json`).",
@@ -6352,67 +6442,10 @@
     "",
     "| The extension asks | `nuclear-builder setup ...` | It gives |",
     "|---|---|---|",
-    "| the page's state | `--plan --json --lang <en\\|es>` | this machine, the profiles with `fit` and `note` (and `noteKey`, `noteArgs`: the page says the note in its language), the suggested one, the machine's choice, the AI root, the requirements of both modes (a `detail` with its `detailKey`); the profiles' and requirements' texts in the language asked (setup.json's `<field>_es` beside each English field). `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |",
-    "| the steps of a profile | `--events --profile <id> --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |",
-    "| whether the services start at login | `--status --json` | `atLogin`, what runs, the missing models |",
-    "| the models chosen in the settings | `--set CODER_MODEL=... ASSISTANT_MODEL=...` | written to `ai.env` |",
-    "| a service again | `--restart graph\\|developer` | exit 0 when the system's manager restarted it |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.7fd8fb",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
-   "summary": "default on every step: 1 this machine and where the agents run, 2 the profile, 3 what it needs (polled every three seconds, a new plan), 4 the installation (an installer runs in a terminal, `createTerminal` + `sendText`, never hidden), 5 the toolchains (below), 6 the providers (Claude Code, Codex,…",
-   "body": [
-    "- `setupPanel.ts` is the welcome (*Nuclear: Welcome and Set-Up*, spec 011 requirement 14), *Next, Next* with a",
-    "  default on every step: 1 this machine and where the agents run, 2 the profile, 3 what it needs (polled every three",
-    "  seconds, a new plan), 4 the installation (an installer runs in a terminal, `createTerminal` + `sendText`, never",
-    "  hidden), 5 the toolchains (below), 6 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;",
-    "  Codex's and OpenCode's switch is their `nuclear.ai.*.enabled`; the API keys go to `nuclear-builder vault set",
-    "  <provider>` on stdin, asked hidden, never in a setting; and who works the Builder's chat by default, `nuclear.builder.chat`,",
-    "  chosen among the local agents, the agents and the APIs, with its model; a conversation can choose another), 7 the team (the squad screen mounted in the page,",
-    "  `TeamsHost`; with no team yet it opens the new-team wizard, `team create`: no team is cloned from a preset,",
-    "  ADR-platform-0010), 8 the spending (the `spending` section),",
-    "  9 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the",
-    "  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 10 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is)."
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.9b4f9e",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
-   "summary": "(`~/.config/nuclearlang/ai.env`: Nuclear Builder's `defaultConfig` and `aiSettings` take their default models from it; a model set in the settings wins), `urls()` (the ports chosen there) and `builder(args)`, which runs the AI archive's `<installation>/ai/bin/nuclear-builder` (it runs before the…",
-   "body": [
-    "- `aiMachine.ts` is what the extension reads itself, with no process: `machineFile()` / `readMachine()`",
-    "  (`~/.config/nuclearlang/ai.env`: Nuclear Builder's `defaultConfig` and `aiSettings` take their default models from",
-    "  it; a model set in the settings wins), `urls()` (the ports chosen there) and `builder(args)`, which runs the AI",
-    "  archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the",
-    "  PATH's.",
-    "- The steps, in order, each can run again: the graph and the MCP server (the archive's launchers linked onto the",
-    "  PATH; from source `uv tool install`, editable), the AI clients (the MCP server added to every client found:",
-    "  Claude Code, Codex and Grok Build with their `mcp add`, Cursor, OpenCode and Gemini CLI in their JSON files, the rest of each file",
-    "  kept; spec 016), the Developer (in the archive; from source `nuclear install` and",
-    "  the `nuclear-developer` launcher), the models (Ollama's `/api/pull`), the ports (each service keeps its port when",
-    "  it already runs there, else the first one from 7878 / 7879 / 7880 (Nuclear Chat) upward it can listen on, written to `ai.env`;",
-    "  ADR-installer-0003 §5) and the graph's service, the knowledge base (`connect` twice, `ingest`), the Developer's",
-    "  service, Nuclear Chat's service (from source `nuclear-chat install`; `nuclear-chat serve` at login)."
+    "| the page's state | `--plan --json --lang <en\\|es>` | the profiles, the machine's choice, the AI root, `localModels`, the requirements (a `detail` with its `detailKey`); the texts in the language asked (setup.json's `<field>_es` beside each English field). The page keeps only the profile `remote` and its requirements. `--events` gives the steps' `ids` and `models` beside their English `titles`, said by the page in its language |",
+    "| the steps | `--events --profile remote --from <step>` | one JSON line per event: `steps`, `step` (running with a line, done, failed), `done`; the page's messages as they are |",
+    "| whether the services start at login | `--status --json` | `atLogin`, what runs |",
+    "| the Smart Graph again | `--restart graph` | exit 0 when the system's manager restarted it |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6432,6 +6465,61 @@
     "*Keep the defaults of the rest* jumps to the summary. `SetupPanel.offer` asks once while the welcome was never",
     "  finished (`nuclear.onboarding.done`); *Settings and integrations* runs it again. Without the AI archive the",
     "  machine steps say to run the installer again and the other steps still work."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.bed60a",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
+   "summary": "(`~/.config/nuclearlang/ai.env`), `urls()` (the Smart Graph's port chosen there) and `builder(args)`, which runs the AI archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the PATH's.",
+   "body": [
+    "- `aiMachine.ts` is what the extension reads itself, with no process: `machineFile()` / `readMachine()`",
+    "  (`~/.config/nuclearlang/ai.env`), `urls()` (the Smart Graph's port chosen there) and `builder(args)`, which runs the AI",
+    "  archive's `<installation>/ai/bin/nuclear-builder` (it runs before the set-up linked it onto the PATH), else the",
+    "  PATH's.",
+    "- The steps of the profile `remote`, in order, each can run again (an installation of before ADR-platform-0013",
+    "  first gets `standby`: what NuclearLang put there for the local models goes): the graph and the MCP server (the archive's launchers linked onto the",
+    "  PATH; from source `uv tool install`, editable), the AI clients (the MCP server added to every client found:",
+    "  Claude Code, Codex and Grok Build with their `mcp add`, Cursor, OpenCode and Gemini CLI in their JSON files, the rest of each file",
+    "  kept; spec 016), the graph's model, the ports (each service keeps its port when it already runs there, else the",
+    "  first one from 7878 / 7880 (Nuclear Chat) upward it can listen on, written to `ai.env`; ADR-installer-0003 §5) and",
+    "  the graph's service, the knowledge base (`connect` twice, `ingest`), Nuclear Chat's service (from source `nuclear-chat install`; `nuclear-chat serve` at login).",
+    "- `setupPanel.ts` is the welcome (*Nuclear: Welcome and Set-Up*, spec 011 requirement 14), *Next, Next* with a"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#the-set-up-setuppanel-ts-aimachine-ts-adr-installer-0002.de8abe",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — The set-up (`setupPanel.ts`, `aiMachine.ts`;…",
+   "summary": "default on every step (`PAGES`; the buttons find a step by its id, `at(id)`): 1 the AI services (the profile `remote`: what it sets up and what it leaves out), 2 what it needs (polled every three seconds, a new plan), 3 the installation (an installer runs in a terminal, `createTerminal` +…",
+   "body": [
+    "default on every step (`PAGES`; the buttons find a step by its id, `at(id)`): 1 the AI services (the profile",
+    "  `remote`: what it sets up and what it leaves out), 2 what it needs (polled every three seconds, a new plan), 3 the",
+    "  installation (an installer runs in a terminal, `createTerminal` + `sendText`, never hidden), 4 the toolchains",
+    "  (below), 5 the providers (Claude Code, Codex, Gemini CLI, OpenCode found on the PATH by running their command;",
+    "  Codex's and OpenCode's switch is their `nuclear.ai.*.enabled`; the API keys go to `nuclear-builder vault set",
+    "  <provider>` on stdin, asked hidden, never in a setting; and who works the Builder's chat by default, `nuclear.builder.chat`,",
+    "  chosen among the agents and the APIs, with its model; a conversation can choose another), 6 the team (the squad screen mounted in the page,",
+    "  `TeamsHost`; with no team yet it opens the new-team wizard, `team create`: no team is cloned from a preset,",
+    "  ADR-platform-0010), 7 the spending (the `spending` section),",
+    "  8 each tool's settings (the sections of `settingsForm.ts`; an object setting with a `kind` and a `provider`, the",
+    "  chat's, is an *assignment*: a provider chosen by kind and a model, checked by `applySetting`), 9 a summary with *Change* on every line (the toolchains' line: the platforms and where each toolchain is)."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6798,7 +6886,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.00a87c",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.824e2c",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
@@ -6810,7 +6898,8 @@
     "| `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |",
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
     "| `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |",
-    "| `updateCheck.ts` | a newer release: the `releases/latest` redirect at most every 12 hours (globalState cache), the status bar item, the command `nuclear.update`, and the floating button `withUpdateButton` injects into every page (`localize` in `i18n.ts`, and the devices' and Monitor's pages), shown or hidden by a `nuclear:update` message, so an open page never re-renders; its version comparison is `snapshotCheck.ts`'s, tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |"
+    "| `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |",
+    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -6822,16 +6911,17 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.209fae",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.b5eee0",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
    "body": [
-    "| `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |",
-    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |",
     "| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |",
     "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |",
-    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |"
+    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |",
+    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
+    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
+    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -6843,14 +6933,11 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.6e86ef",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.ff35f4",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
    "body": [
-    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
-    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
-    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
     "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
     "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
     "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
@@ -7249,14 +7336,14 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.675a7e",
+   "id": "doc:extensions/vscode/docs/02-architecture/workspace.md#the-actions-of-a-project.529b93",
    "type": "context",
    "title": "The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`) — The actions of a project",
-   "summary": "`platformActions()[platform]` are the buttons of the files pane, under the project's name (`renderFiles`, the `.actions` row; a click posts `action`), and the `editor/title` buttons of `package.json` (Cursor shows none of an extension's title bar buttons): the commands `nuclear.action.<id>`, shown…",
+   "summary": "`platformActions()[platform]` are the `editor/title` buttons of `package.json` and, for an editor that shows none of an extension's title bar buttons (Cursor), the rows of the *Actions* accordion at the bottom of the files pane, below the tree and collapsed by default (`renderFiles`, `.acc`; a…",
    "body": [
-    "`platformActions()[platform]` are the buttons of the files pane, under the project's name (`renderFiles`, the",
-    "`.actions` row; a click posts `action`), and the `editor/title` buttons of `package.json` (Cursor shows none of an",
-    "extension's title bar buttons): the commands `nuclear.action.<id>`,",
+    "`platformActions()[platform]` are the `editor/title` buttons of `package.json` and, for an editor that shows none of",
+    "an extension's title bar buttons (Cursor), the rows of the *Actions* accordion at the bottom of the files pane, below",
+    "the tree and collapsed by default (`renderFiles`, `.acc`; a click posts `action`; ADR-extensions-0002 rule 6): the commands `nuclear.action.<id>`,",
     "shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.",
     "",
     "| Platform | Actions |",
@@ -7880,12 +7967,8 @@
     "installed release. It asks once per pair of versions and blocks nothing. A NuclearLang built from source is not",
     "compared.",
     "",
-    "When a newer release is out, every NuclearLang page (the workspace, Nuclear Builder, your software company, HTTP",
-    "Connections, the devices, the settings, Nuclear Monitor, Environments) shows a floating **Update to <version>** button in its",
-    "bottom-right corner, and the status bar shows it too; the button runs `nuclear update` in a terminal (NuclearLang, its",
-    "AI services and this extension), then *Reload Window*. Its ✕ hides it on that page. The check reads the redirect of the",
-    "releases page at most every 12 hours; `NUCLEAR_NO_UPDATE_CHECK=1` turns it off. The command is *Nuclear: Update",
-    "NuclearLang to the latest release*."
+    "To update to a newer release, run `nuclear update` in a terminal (NuclearLang, its AI services and this extension),",
+    "then *Reload Window*."
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/README.md"
@@ -8173,13 +8256,40 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.39534a",
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.c1aa74",
    "type": "guide",
    "title": "The Nuclear workspace — The actions of a project",
-   "summary": "The actions of the active project's platform are buttons under the project's name in the workspace, and also in the editor title bar, the row of the editor tabs (Cursor hides the title bar's; the workspace's are always there): Device and API have no key.",
+   "summary": "use: a Synapsis device (shown or hidden), a new one, *Other Flutter device…* or the Devices workspace.",
    "body": [
-    "The actions of the active project's platform are buttons under the project's name in the workspace, and also in",
-    "the editor title bar, the row of the editor tabs (Cursor hides the title bar's; the workspace's are always there):",
+    "- Mobile ▷ Run and ◉ Debug build the app and launch it. ▷ Run, ◉ Debug and ▭ Device first ask which device to",
+    "  use: a Synapsis device (shown or hidden), a new one, *Other Flutter device…* or the Devices workspace.",
+    "- A mobile project opened as a tab is outside the VS Code workspace, and the Dart extension runs Flutter only",
+    "  inside it. So ▷ Run, ◉ Debug and ▭ Device add the folder first: the window reloads once, then the action goes on.",
+    "- Backend and web ▷ Serve, ⚒ Build, ✓ Test and ☑ Check run in a terminal named `<project> · <action>` (`nuclear",
+    "  run`, `build`, `test`, `check`). When the app has no packages yet, `nuclear install` runs first.",
+    "- Web ▭ Device, ◉ Debug and ↻ Reload use [the web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md).",
+    "- Backend ⇄ opens the project's routes in HTTP Connections.",
+    "",
+    "How a run and a debug session work: [run, debug and tasks](run-and-debug.md)."
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.ea9b40",
+   "type": "guide",
+   "title": "The Nuclear workspace — The actions of a project",
+   "summary": "The actions of the active project's platform are buttons in the editor title bar, the row of the editor tabs.",
+   "body": [
+    "The actions of the active project's platform are buttons in the editor title bar, the row of the editor tabs. Cursor",
+    "hides the title bar's: there, open the **Actions** section at the bottom of the workspace's files pane (collapsed at",
+    "first, like VS Code's npm scripts) and click an action:",
     "",
     "| Platform | Buttons |",
     "|---|---|",
@@ -8197,32 +8307,6 @@
     "| `Ctrl+Alt+C` | Check |",
     "",
     "Device and API have no key. *Nuclear: Run an Action of the Active Project* lists them all."
-   ],
-   "sources": [
-    "extensions/vscode/docs/08-guides/workspace.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/08-guides/workspace.md#project-tabs-the-actions-of-a-project.c1aa74",
-   "type": "guide",
-   "title": "The Nuclear workspace — The actions of a project",
-   "summary": "use: a Synapsis device (shown or hidden), a new one, *Other Flutter device…* or the Devices workspace.",
-   "body": [
-    "- Mobile ▷ Run and ◉ Debug build the app and launch it. ▷ Run, ◉ Debug and ▭ Device first ask which device to",
-    "  use: a Synapsis device (shown or hidden), a new one, *Other Flutter device…* or the Devices workspace.",
-    "- A mobile project opened as a tab is outside the VS Code workspace, and the Dart extension runs Flutter only",
-    "  inside it. So ▷ Run, ◉ Debug and ▭ Device add the folder first: the window reloads once, then the action goes on.",
-    "- Backend and web ▷ Serve, ⚒ Build, ✓ Test and ☑ Check run in a terminal named `<project> · <action>` (`nuclear",
-    "  run`, `build`, `test`, `check`). When the app has no packages yet, `nuclear install` runs first.",
-    "- Web ▭ Device, ◉ Debug and ↻ Reload use [the web device](../../../tools/nuclear-device-manager/docs/08-guides/README.md).",
-    "- Backend ⇄ opens the project's routes in HTTP Connections.",
-    "",
-    "How a run and a debug session work: [run, debug and tasks](run-and-debug.md)."
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/workspace.md"
@@ -8299,14 +8383,12 @@
    "id": "doc:extensions/vscode/docs/08-guides/workspace.md#tool-tabs-settings-and-integrations",
    "type": "guide",
    "title": "The Nuclear workspace — Settings and integrations",
-   "summary": "Every setting of the AI services on one page, saved as the `nuclear.ai.*` settings: with the chosen models.",
+   "summary": "Every setting of the AI services on one page, saved as the `nuclear.ai.*` settings: (ADR-platform-0013): the AI work is done by the agents and providers you choose, so there is no local model here.",
    "body": [
     "Every setting of the AI services on one page, saved as the `nuclear.ai.*` settings:",
     "",
-    "- **Services**: the Smart Graph, the Nuclear Developer and Ollama, each with its state, and *Start* / *Restart*",
-    "  with the chosen models.",
-    "- **Models**: the models Ollama has, with their size. A model over the 3B class gets a warning. *Pull* downloads",
-    "  a model.",
+    "- **Services**: the Smart Graph, with its state, and *Start* / *Restart*. The local models are on standby",
+    "  (ADR-platform-0013): the AI work is done by the agents and providers you choose, so there is no local model here.",
     "- **MCP**: adds the Nuclear MCP server (`nuclear-mcp`) to Claude Code, Codex, Cursor or OpenCode in one click.",
     "- **Connections**: the Smart Graph's clients and access requests (*Allow*, *Deny*, *Revoke*), Jira (its token is",
     "  kept in VS Code's secret storage) and GitHub (`gh auth status`).",
