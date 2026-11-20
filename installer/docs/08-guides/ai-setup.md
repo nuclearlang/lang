@@ -31,7 +31,8 @@ The same steps run in the three. Run it again at any time: what is installed is 
 3. **Install.** The Smart Graph and the MCP server, the MCP server added to every AI client on this machine
    (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI: an agent opened in any of them finds Nuclear with no
    step of yours), the graph's model, the knowledge base loaded into the graph (a few seconds with the vectors the
-   release computed; about ten minutes on a processor when they cannot be downloaded), and the Smart Graph and Nuclear
+   release computed; about ten minutes on a processor when they cannot be downloaded; an update whose knowledge base
+   did not change keeps the vectors already here, checked against the release's SHA-256, and downloads nothing), and the Smart Graph and Nuclear
    Chat started. A step that fails says why and is tried again from there.
 
 ## 3. The profile

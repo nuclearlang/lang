@@ -926,11 +926,16 @@ fetchVectors(say: (line: string) => void) void
   try
     sum = httpx.get(releaseUrl(version, "${name}.sha256"), followRedirects = true, timeout = 30)
     sum.raiseForStatus()
+    want = sum.text.trim().split()[0]
+    // the knowledge base did not change since the last install: the vectors here are the release's, kept
+    if sameVectors(target, want)
+      say("the vectors of the knowledge base did not change (SHA-256 checked): kept, nothing downloaded")
+      return
     file = httpx.get(releaseUrl(version, name), followRedirects = true, timeout = 300)
     file.raiseForStatus()
     // typed: a member of the library (`length`) on a value the compiler does not know is written as it is
     data: Bytes = file.content
-    if hashlib.sha256(data).hexdigest() != sum.text.trim().split()[0]
+    if hashlib.sha256(data).hexdigest() != want
       say("the vectors of ${version} did not match their SHA-256: the graph computes them itself")
       return
     target.parent.mkdir(parents = true, existOk = true)
@@ -940,6 +945,12 @@ fetchVectors(say: (line: string) => void) void
     if not isinstance(e, httpx.HTTPError)
       throw e
     say("the vectors of ${version} are not published (${e}): the graph computes them itself, about ten minutes")
+
+// The vectors at `target` are the file whose SHA-256 is `want` (a damaged or older file is not).
+sameVectors(target: Path, want: string) boolean
+  if not target.isFile()
+    return false
+  hashlib.sha256(target.readBytes()).hexdigest() == want
 
 // Runs one step of a profile, with the services' folder `root`.
 runStep(id: string, p: Profile, root: string, say: (line: string) => void) void

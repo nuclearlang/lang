@@ -1,6 +1,7 @@
-// The connections and services of the whole app (nuclear help web).
+// The connections and services of the whole app (nuclear help web). API_URL: the backend of each environment
+// (.env, .env.<environment>: nuclear env set API_URL <url> --env <environment>).
 appConfig ProjectConfig
   connections: Connection[] = [
     Http(connectionName = "todos", baseUrl = "https://jsonplaceholder.typicode.com"),
-    Http(baseUrl = "http://localhost:8000/", timeout = 5000),
+    Http(baseUrl = env("API_URL", "http://localhost:8000/"), timeout = 5000),
   ]

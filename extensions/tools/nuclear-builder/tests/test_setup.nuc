@@ -244,6 +244,17 @@ testTheReleasesVectorsAreDownloadedCheckedAndKept(tmpPath: Path, monkeypatch: an
   fetchVectors((l) => said.add(l))
   expect(tmpPath.joinpath("graph", "models", "embeddings.npz").readBytes() == body, "${said}")
   expect("loads in seconds" in said.last, "${said}")
+  // an update whose knowledge base did not change: only the checksum is asked, the file kept
+  asked: string[] = []
+  monkeypatch.setattr(
+    "httpx.get",
+    (url: string, followRedirects: boolean = false, timeout: double = 0.0)
+      asked.add(url)
+      answer(url, followRedirects, timeout)
+  )
+  fetchVectors((l) => said.add(l))
+  expect(asked.length == 1 and asked[0].endsWith(".sha256"), "${asked}")
+  expect("did not change" in said.last, "${said}")
 
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

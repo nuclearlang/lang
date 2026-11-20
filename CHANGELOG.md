@@ -4,6 +4,8 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- The website is published again (its check failed since 0.82.0: the web onboarding example was not what `nuclear new` writes now, `env("API_URL", …)`), so `nuclearlang.github.io/install.sh` is the release's installer again instead of an older one.
+- An update downloads the vectors of the knowledge base only when they changed: the release's SHA-256 is asked first, and vectors already here with that checksum are kept (`fetchVectors`, Nuclear Builder's set-up).
 - The local models are on standby (ADR-platform-0013): `"localModels": false` in Nuclear Builder's `setup.json`.
   `nuclear-builder setup` offers only the profile `remote`, which now runs the Smart Graph and Nuclear Chat;
   `--profile lite|medium|hard` is refused as on standby; on a machine that had a local profile its first step takes
