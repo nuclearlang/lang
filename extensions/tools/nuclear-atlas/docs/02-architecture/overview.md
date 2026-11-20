@@ -18,6 +18,8 @@ on the direct message with the general agent, `dm-atlas`.
   or the extension's own folder for the welcome before there is one; listed in the project picker), with `text` put
   in the composer once the chat is drawn, for the user to read and send: the welcome's and the workspace menu's *Do it
   with me by chat* (spec 022).
+- With no project at all the chat opens on `AtlasPanel.fallback` (the editor's: the open workspace's folder, else the
+  welcome's), `chatRoots` of `src/chat.ts`; the prompts to start from are shown only on a project.
 - Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`
   to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down
   is said on the page with how to fix it.

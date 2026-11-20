@@ -15,6 +15,7 @@ import { builder, builderJson, readMachine } from './aiMachine';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
 import { lang, langButton, localize, pageI18n, l10n } from './i18n';
 import { SETUP } from './setupL10n';
+import { advance, ONBOARDING, Onboarding } from './onboarding';
 import { applySetting, FORM_CSS, FORM_JS, settingSections } from './settingsForm';
 import { spendingSettings } from './spending';
 import { askKey, TeamsHost } from '../../tools/nuclear-builder/src/teams/host';
@@ -53,8 +54,14 @@ const AGENTS = [
   { id: 'opencode', name: 'OpenCode', setting: 'nuclear.ai.opencode.command', fallback: 'opencode', enable: 'nuclear.ai.opencode.enabled' },
 ];
 const API_PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter'];
-const DONE = 'nuclear.onboarding.done';
-const DECLINED = 'nuclear.ai.setup.declined';
+export const SETUP_DONE = 'nuclear.onboarding.done';
+export const SETUP_DECLINED = 'nuclear.ai.setup.declined';
+
+/** The onboarding's last step was the AI services: finished or declined, it is done (src/onboarding.ts). */
+async function onboardingDone(context: vscode.ExtensionContext): Promise<void> {
+  const o = context.globalState.get<Onboarding>(ONBOARDING);
+  if (o?.step === 'services') await context.globalState.update(ONBOARDING, advance(o, 'done', Date.now()));
+}
 
 type Message =
   | { type: 'ready' | 'check' | 'settings' | 'providers' | 'summary' | 'finish' }
@@ -96,7 +103,7 @@ export class SetupPanel {
 
   /** Once, when the extension starts and the welcome was never finished: the offer, never the page by itself. */
   static async offer(context: vscode.ExtensionContext): Promise<void> {
-    if (context.globalState.get(DONE) || context.globalState.get(DECLINED)) return;
+    if (context.globalState.get(SETUP_DONE) || context.globalState.get(SETUP_DECLINED)) return;
     const start = l10n.t('Start'), later = l10n.t('Later'), never = l10n.t("Don't ask again");
     const pick = await vscode.window.showInformationMessage(
       readMachine().NUCLEAR_AI_MODE
@@ -105,7 +112,7 @@ export class SetupPanel {
       start, later, never,
     );
     if (pick === start) SetupPanel.show(context);
-    if (pick === never) await context.globalState.update(DECLINED, true);
+    if (pick === never) await context.globalState.update(SETUP_DECLINED, true).then(() => onboardingDone(context));
   }
 
   private post(m: unknown): void {
@@ -169,7 +176,8 @@ export class SetupPanel {
       case 'summary':
         return this.summary();
       case 'finish':
-        await this.context.globalState.update(DONE, true);
+        await this.context.globalState.update(SETUP_DONE, true);
+        await onboardingDone(this.context);
         this.panel.dispose();
         return;
     }

@@ -17,7 +17,7 @@ import { notices } from '../../../vscode/src/notifications';
 import { chat, chatCsp, chatScript, teamChannel, wireChat } from '../../../vscode/src/chatView';
 import { AGENT, ChatEvent, fmt } from '../../../vscode/src/chatHost';
 import { ATLAS } from './l10n';
-import { templatesOf } from './chat';
+import { chatRoots, templatesOf } from './chat';
 import { criteriaOf } from '../../nuclear-builder/src/support';
 import { loadRun, newRunId, Spec, writeSpec } from '../../nuclear-builder/src/runs';
 import { BuilderProject, driveRun } from '../../nuclear-builder/src/panel';
@@ -140,6 +140,9 @@ export class AtlasPanel {
     }
   }
 
+  /** Where the chat opens when there is no project (the editor's: the open workspace, else the welcome's folder). */
+  static fallback: (() => { root: string; name: string } | undefined) | undefined;
+
   static close(): void {
     AtlasPanel.current?.panel.dispose();
   }
@@ -149,8 +152,11 @@ export class AtlasPanel {
   }
 
   private state(): void {
-    const projects = [...this.projects(), ...(this.extra ? [this.extra] : [])];
-    if (!projects.some((p) => p.root === this.root)) this.root = projects[0]?.root ?? '';
+    const own = this.projects();
+    const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root);
+    this.root = root;
+    // the prompts to start from are a project's (its map, its components): none on a workspace's or the welcome's folder
+    const isProject = own.some((p) => p.root === root);
     const card = this.root ? readCard(this.root) : undefined;
     const map = this.root ? mapOf(this.root) : '';
     if (!this.disposed)
@@ -158,8 +164,8 @@ export class AtlasPanel {
         type: 'state',
         projects: projects.map((p) => ({ root: p.root, name: p.name })),
         root: this.root,
-        templates: this.root ? templatesOf(map, card?.platform ?? '', lang()) : [],
-        hasMap: !!map || this.root === this.extra?.root,
+        templates: isProject ? templatesOf(map, card?.platform ?? '', lang()) : [],
+        hasMap: !!map || !isProject,
       });
     // who can answer here (`agents --json`): none available, the page says how to pick one
     void agentsHere().then((list) => !this.disposed && void this.panel.webview.postMessage({ type: 'provider', ready: list.some((a) => a.available) }));

@@ -180,9 +180,29 @@ one card per tool (`TOUR`: the workspace, HTTP Connections, Environments, the Bu
 Chat, the devices, Monitor, Reports, the settings), each with its key and *open it*; then a link to the AI services'
 set-up (`nuclear.ai.setup`, unchanged), the shortcuts folded, the startup switch. Its texts are `welcomeL10n.ts`; it is
 drawn again only when what it shows changed and keeps what the user typed (`vscode.setState`). The first run starts
-with it: on activation, when it was never shown (`globalState` `nuclear.workspace.welcomed`) and there is no recent
-workspace, it opens, and the AI services' offer (`SetupPanel.offer`) waits until it is closed. Later it opens at startup
-only when `nuclear.workspace.welcome` is on and every tab group is empty.
+with it, and its progress survives a reload, a new window and a closed editor (`src/onboarding.ts`, no `vscode`
+import, `test/onboarding.test.ts`):
+
+- `globalState` `nuclear.onboarding` = `{step, root?, chosenWindow?, at}`, the step one of `workspace`, `apps`,
+  `tour`, `services`, `done`, never going back (`advance`). It is written before anything that may reload or close
+  the window: `openIn` saves `apps` with the workspace's root and the window chosen before `vscode.openFolder` (which
+  restarts the extensions); *Next: the tour* saves `tour`; *Finish: set up the AI services* saves `services`, opens the
+  set-up page and closes the welcome; *Skip the welcome* saves `done`.
+- On activation, `resume` decides: a saved step that is not `done` comes back (`services` ends once the set-up's
+  `nuclear.onboarding.done` or `nuclear.ai.setup.declined` is set; its page marks the onboarding `done` when it finishes
+  or is declined); never saved and nothing here, the first run (`workspace`). The welcome opens at its step
+  (`resumeWelcome`) on its workspace; when this window shows another workspace, *Continue setting up NuclearLang with
+  the workspace …?* offers to open it. At `services` the set-up is offered (`SetupPanel.offer`); while the onboarding
+  goes on, `extension.ts` makes no offer of its own.
+- *A new window*: the progress is global, so the new window resumes the welcome and this one closes it
+  (`WelcomePanel.handOver`, no offer).
+- Closed by the user: after the tour it moves to `services`; at any step the set-up is offered, and the workspace's
+  steps come back at the next start.
+- 0.84.0 marked `nuclear.workspace.welcomed` the moment the welcome opened, finished or not: with no saved progress,
+  that flag, no recent workspace whose marker names an app and the AI services not set up, the onboarding is resumed
+  once (at `apps` on the last workspace, else `workspace`; fixture `global-state-0.84.0-onboarding.json`).
+
+Once it is `done`, the page opens at startup only when `nuclear.workspace.welcome` is on and every tab group is empty.
 
 ## The right-click menu of the file tree (`treeMenu.ts`)
 

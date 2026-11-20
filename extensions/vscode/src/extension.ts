@@ -102,8 +102,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('nuclear.builder.teams', (o?: { wizard?: boolean }) => TeamsPanel.show(context, !!o?.wizard)),
     vscode.commands.registerCommand('nuclear.builder.reports', (f?: { team?: string; member?: string }) => ReportsPanel.show(context, f)),
   );
-  // the first run starts with the workspace (the welcome's three steps): the offer comes when that page closes
-  if (!workspace.firstRun) void SetupPanel.offer(context);
+  // while the onboarding goes on (the workspace, its apps, the tour), it makes the offer itself at its last step
+  if (!workspace.onboardingActive) void SetupPanel.offer(context);
   // one release, one snapshot (ADR-platform-0011): an extension the store updated alone offers to bring the rest
   setTimeout(() => checkSnapshot(context), 4000);
   activateDevice(context, findSynapsis, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));

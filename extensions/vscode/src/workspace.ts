@@ -19,7 +19,7 @@ import { chatGifKey, disposeChat, openChatTab } from './chatView';
 import { followChatNotices, Notice, notices } from './notifications';
 import { chatWhere } from './notify';
 import { SettingsPanel } from './settingsPanel';
-import { SetupPanel } from './setupPanel';
+import { SETUP_DECLINED, SETUP_DONE, SetupPanel } from './setupPanel';
 import { watchConnections } from './connections';
 import { BuilderPanel, builderSidebar, resumeOrphans, sidebarChanged } from '../../tools/nuclear-builder/src/panel';
 import { inline, runOutline, specOfPath, specTree } from '../../tools/nuclear-builder/src/workbench';
@@ -33,6 +33,7 @@ import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
 import { activateEnvironments } from '../../tools/nuclear-environments/src/panel';
 import { alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseDialects, PLATFORMS, RECENT, Recent, remember, WorkspaceInfo, workspaceCli } from './workspaces';
 import { nuclearCommand } from './toolchains';
+import { advance, markerHasApps, ONBOARDING, Onboarding, resume, Step, WELCOMED } from './onboarding';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
 
 interface Tool {
@@ -197,8 +198,6 @@ const ACTIVE = 'nuclear.workspace.active';
 const LAST_PROJECT = 'nuclear.workspace.lastProject';
 const TABS = 'nuclear.workspace.tabs';
 const WELCOME = 'nuclear.workspace.welcome';
-/** The welcome's three steps were shown on the first run (global state). */
-const WELCOMED = 'nuclear.workspace.welcomed';
 const CONTAINER = 'workbench.view.extension.nuclear';
 const TOOL_PREFIX = 'tool:';
 /** A run/debug/device asked for a project that had to join the workspace folders first (user state: the join
@@ -216,6 +215,8 @@ const DIALECT_ICONS: Record<string, string> = { flutter: 'flutter', react: 'reac
 
 export function activateWorkspace(context: vscode.ExtensionContext, http: HttpModel): Workspace {
   const ws = new Workspace(context, http);
+  // Nuclear Atlas with no project yet (a new workspace, the welcome): its chat on the workspace's folder
+  AtlasPanel.fallback = () => ws.chatFolder();
   // the backend projects' scripts, like npm's: a task per command and the explorer's Nuclear Scripts view
   activateScripts(context, () => ws.projects(), ws.onDidChange.event);
   // the notifications of the agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
@@ -288,13 +289,19 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     void ws.go(pending.root).then(() => ws.action(pending.id));
     return ws;
   }
-  // the first run starts with the workspace: the welcome's three steps, once, on a machine with no workspace yet (the
-  // AI services' offer waits until it is closed); later, the page at startup only when the user turned it on
-  if (!context.globalState.get(WELCOMED) && !alive(context.globalState.get<Recent[]>(RECENT)).length) {
-    ws.firstRun = true;
-    void context.globalState.update(WELCOMED, true);
-    void loaded.then(() => WelcomePanel.show(context, ws));
-  } else if (vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) && vscode.window.tabGroups.all.every((g) => g.tabs.length === 0)) {
+  // the onboarding (the workspace, its apps, the tour, then the AI services) resumes where it was, whatever closed or
+  // reloaded the window; once done, the page at startup only when the user turned it on
+  const o = resume({
+    saved: context.globalState.get<Onboarding>(ONBOARDING),
+    welcomed: !!context.globalState.get(WELCOMED),
+    servicesDone: !!context.globalState.get(SETUP_DONE) || !!context.globalState.get(SETUP_DECLINED),
+    recent: alive(context.globalState.get<Recent[]>(RECENT)).map((r) => ({ root: r.root, apps: markerHasApps(r.root) })),
+    now: Date.now(),
+  });
+  void context.globalState.update(ONBOARDING, o);
+  if (o.step === 'services') void SetupPanel.offer(context);
+  else if (o.step !== 'done') void loaded.then(() => ws.resumeWelcome(o));
+  else if (vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) && vscode.window.tabGroups.all.every((g) => g.tabs.length === 0)) {
     WelcomePanel.show(context, ws);
   }
   return ws;
@@ -315,8 +322,10 @@ class Workspace implements vscode.WebviewViewProvider {
   private current: WorkspaceInfo | undefined;
   private markerWatch: vscode.Disposable | undefined;
   private installedDialects: Promise<string[]> | undefined;
-  /** This activation opened the welcome as the first run: closing it offers the AI services' set-up. */
-  firstRun = false;
+  /** The onboarding is not done: it owns the AI services' offer (extension.ts makes none). */
+  get onboardingActive(): boolean {
+    return this.onboarding().step !== 'done';
+  }
 
   constructor(
     private readonly context: vscode.ExtensionContext,
@@ -478,9 +487,15 @@ class Workspace implements vscode.WebviewViewProvider {
    * A window whose folder is already inside the workspace just shows it. */
   private async openIn(w: WorkspaceInfo): Promise<void> {
     await this.context.globalState.update(RECENT, remember(this.context.globalState.get<Recent[]>(RECENT), w, Date.now()));
+    // the onboarding goes on with this workspace's apps, here or in the window that opens it (saved first: opening a
+    // folder restarts the extensions)
+    const onboarding = ['workspace', 'apps'].includes(this.onboarding().step);
     const folders = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
     const inside = folders.some((f) => f === w.root || f.startsWith(w.root + path.sep));
-    if (inside) return this.setWorkspace(w);
+    if (inside) {
+      if (onboarding) await this.setOnboarding('apps', { root: w.root, chosenWindow: 'this' });
+      return this.setWorkspace(w);
+    }
     let newWindow = false;
     if (folders.length) {
       const here = l10n.t('This window'), apart = l10n.t('A new window');
@@ -488,7 +503,33 @@ class Workspace implements vscode.WebviewViewProvider {
       if (!pick) return;
       newWindow = pick === apart;
     }
+    if (onboarding) await this.setOnboarding('apps', { root: w.root, chosenWindow: newWindow ? 'new' : 'this' });
     await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(w.root), { forceNewWindow: newWindow });
+    // the new window resumes the welcome (the progress is global): this one hands it over
+    if (newWindow && onboarding) WelcomePanel.handOver();
+  }
+
+  // ---------- the onboarding (src/onboarding.ts) ----------
+
+  onboarding(): Onboarding {
+    return this.context.globalState.get<Onboarding>(ONBOARDING) ?? { step: 'done', at: 0 };
+  }
+
+  /** The onboarding moves on (never back), saved before anything that may reload or close the window. */
+  async setOnboarding(to: Step, extra: Partial<Onboarding> = {}): Promise<void> {
+    await this.context.globalState.update(ONBOARDING, advance(this.onboarding(), to, Date.now(), extra));
+    this.onDidChange.fire();
+  }
+
+  /** On activation: the welcome at its step, on the onboarding's workspace (offered when this window shows another). */
+  async resumeWelcome(o: Onboarding): Promise<void> {
+    if (o.root && this.current?.root !== o.root && fs.existsSync(markerOf(o.root))) {
+      const open = l10n.t('Open it'), later = l10n.t('Not now');
+      const pick = await vscode.window.showInformationMessage(l10n.t('Continue setting up NuclearLang with the workspace {0}?', path.basename(o.root)), open, later);
+      if (pick === open) return this.openWorkspace(o.root);
+      if (pick !== later) return;
+    }
+    WelcomePanel.show(this.context, this);
   }
 
   /** A workspace to work on: the open one, else the user is offered to create or open one. */
@@ -617,14 +658,17 @@ class Workspace implements vscode.WebviewViewProvider {
    * welcome's chat), `text` in the composer for the user to send; the agent works through the MCP server, which asks
    * the user before each change. */
   chat(text: string): void {
+    const where = this.chatFolder();
+    void this.go(TOOL_PREFIX + 'atlas').then(() => AtlasPanel.compose(this.context, () => this.projects(), where, text));
+  }
+
+  /** The folder a chat opens on without a project: the open workspace, else the editor's own `welcome` folder. */
+  chatFolder(): { root: string; name: string } {
     const w = this.current;
-    let where = w && { root: w.root, name: w.name };
-    if (!where) {
-      const root = vscode.Uri.joinPath(this.context.globalStorageUri, 'welcome').fsPath;
-      fs.mkdirSync(root, { recursive: true });
-      where = { root, name: l10n.t('Welcome') };
-    }
-    void this.go(TOOL_PREFIX + 'atlas').then(() => AtlasPanel.compose(this.context, () => this.projects(), where!, text));
+    if (w) return { root: w.root, name: w.name };
+    const root = vscode.Uri.joinPath(this.context.globalStorageUri, 'welcome').fsPath;
+    fs.mkdirSync(root, { recursive: true });
+    return { root, name: l10n.t('Welcome') };
   }
 
   // ---------- switching ----------
@@ -1870,6 +1914,16 @@ class WelcomePanel {
   private readonly nonce = Math.random().toString(36).slice(2);
   private dialects: Record<string, string[]> = {};
   private shown = '';
+  /** Closed by the onboarding itself (a new window took it, the AI services' step, a skip): no offer. */
+  private handedOver = false;
+
+  /** The welcome closes without offering anything: another window or page goes on with the onboarding. */
+  static handOver(): void {
+    const c = WelcomePanel.current;
+    if (!c) return;
+    c.handedOver = true;
+    c.panel.dispose();
+  }
 
   private constructor(private readonly context: vscode.ExtensionContext, private readonly ws: Workspace) {
     this.panel = vscode.window.createWebviewPanel('nuclear.welcome', l10n.t('Nuclear workspace'), vscode.ViewColumn.One, {
@@ -1883,11 +1937,10 @@ class WelcomePanel {
       WelcomePanel.current = undefined;
       this.listener.dispose();
       relang.dispose();
-      // the first run started with the workspace: the AI services' set-up is offered now
-      if (ws.firstRun) {
-        ws.firstRun = false;
-        void SetupPanel.offer(context);
-      }
+      // closed by the user while the onboarding goes on: after the tour it moves to the AI services; at any step their
+      // set-up is offered (the workspace's steps come back at the next start)
+      if (this.handedOver || !ws.onboardingActive) return;
+      void (ws.onboarding().step === 'tour' ? ws.setOnboarding('services') : Promise.resolve()).then(() => SetupPanel.offer(context));
     });
     this.panel.webview.onDidReceiveMessage((m: { type: string; [k: string]: unknown }) => void this.receive(m));
     void Promise.all(PLATFORMS.map(async (p) => [p, await ws.dialects(p)] as const)).then((all) => ((this.dialects = Object.fromEntries(all)), this.render()));
@@ -1922,6 +1975,19 @@ class WelcomePanel {
         return this.ws.openTool(str('id'));
       case 'setup':
         return void vscode.commands.executeCommand('nuclear.ai.setup');
+      case 'next': {
+        // the tour after the apps; the AI services' set-up after the tour (its page opens, this one closes)
+        const to = str('to') === 'services' ? 'services' : 'tour';
+        await this.ws.setOnboarding(to);
+        if (to === 'services') {
+          SetupPanel.show(this.context);
+          WelcomePanel.handOver();
+        }
+        return;
+      }
+      case 'skip':
+        await this.ws.setOnboarding('done');
+        return WelcomePanel.handOver();
       case 'startup':
         return void vscode.workspace.getConfiguration().update(WELCOME, m.on === true, vscode.ConfigurationTarget.Global);
       case 'chat': {
@@ -1958,6 +2024,9 @@ class WelcomePanel {
 <p><button id="create">${w.createWs}</button> <button class="secondary" id="openws">${w.openWs}</button> ${chat('create')}</p>
 ${this.ws.recent().length ? `<p class="muted">${w.recent}</p>${this.ws.recent().map((r) => `<div class="project" data-open="${esc(r.root)}"><div class="grow"><div class="name">${esc(r.name)}</div><div class="path">${esc(r.root)}</div></div></div>`).join('')}` : ''}`;
     const apps = cur?.apps ?? [];
+    // the onboarding's step (src/onboarding.ts): what is next is lit; done once it is finished or skipped
+    const at = this.ws.onboarding().step;
+    const onboarding = at !== 'done';
     const step2 = cur
       ? `${apps.length ? apps.map((a) => `<div class="project"${a.exists ? ` data-root="${esc(path.join(cur.root, a.folder))}"` : ''}><div class="grow"><div class="name">${esc(a.name)} <span class="muted">${esc(a.platform)} · ${esc(a.dialect ?? '')}</span></div><div class="path">${esc(a.folder)}${a.exists ? '' : ` · ${w.missing}`}</div></div></div>`).join('') : `<p class="muted">${w.noApps}</p>`}
 <div class="form"><label>${w.platform}<select id="platform">${PLATFORMS.map((p) => `<option value="${p}">${p}</option>`).join('')}</select></label>
@@ -1969,9 +2038,10 @@ ${this.ws.recent().length ? `<p class="muted">${w.recent}</p>${this.ws.recent().
     const body = `
 <h1><img src="${logo}" alt=""> ${w.welcome}</h1>
 <p class="lead">${w.lead3}</p>
-<section class="${cur ? 'done' : 'now'}"><h2>1 · ${w.step1}</h2><p>${w.step1About}</p>${step1}</section>
-<section class="${cur ? (apps.length ? 'done' : 'now') : ''}"><h2>2 · ${w.step2}</h2><p>${w.step2About}</p>${step2}</section>
-<section><h2>3 · ${w.step3}</h2><p>${w.step3About} ${chat('tour')}</p><div class="cards">${tour}</div></section>
+${onboarding ? `<p class="muted">${w.resumes} <a data-skip="1">${w.skip}</a></p>` : ''}
+<section class="${(cur ? 'done' : 'now')}"><h2>1 · ${w.step1}</h2><p>${w.step1About}</p>${step1}</section>
+<section class="${(!cur ? '' : at === 'apps' || at === 'workspace' ? 'now' : 'done')}"><h2>2 · ${w.step2}</h2><p>${w.step2About}</p>${step2}${cur && (at === 'apps' || at === 'workspace') ? `<p><button class="secondary" data-next="tour">${w.nextTour}</button></p>` : ''}</section>
+<section class="${(at === 'tour' ? 'now' : at === 'services' || at === 'done' ? 'done' : '')}"><h2>3 · ${w.step3}</h2><p>${w.step3About} ${chat('tour')}</p><div class="cards">${tour}</div>${onboarding ? `<p><button data-next="services">${w.nextServices}</button></p>` : ''}</section>
 <section><h2>${w.aiTitle}</h2><p>${w.aiAbout} <button class="secondary" id="setup">${w.aiSetup}</button></p></section>
 <details><summary>${w.keyboard}</summary>
 <table>${shortcuts(w).map(([k, d]) => `<tr><td><kbd>${k}</kbd></td><td>${esc(d)}</td></tr>`).join('')}</table>
@@ -2003,6 +2073,9 @@ ${this.ws.recent().length ? `<p class="muted">${w.recent}</p>${this.ws.recent().
   $('setup').addEventListener('click', () => vscode.postMessage({ type: 'setup' }));
   $('startup').addEventListener('change', (ev) => vscode.postMessage({ type: 'startup', on: ev.target.checked }));
   document.addEventListener('click', (e) => {
+    const n = e.target.closest('[data-next]');
+    if (n) return vscode.postMessage({ type: 'next', to: n.dataset.next });
+    if (e.target.closest('[data-skip]')) return vscode.postMessage({ type: 'skip' });
     const c = e.target.closest('[data-chat]');
     if (c) return vscode.postMessage({ type: 'chat', step: c.dataset.chat, parent: val('parent'), name: val('wsname'), platform: val('platform'), app: val('appname') });
     const t = e.target.closest('[data-tool]');

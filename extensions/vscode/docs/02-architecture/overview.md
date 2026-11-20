@@ -20,6 +20,7 @@ finishes (`onStartupFinished`).
 | `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |
 | `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |
 | `workspaces.ts` | the Nuclear workspaces (spec 022): `nuclear workspace … --json` and its JSON, the recent list, the projects opened by hand of before 0.84 moved to the global list, the empty panel's reason, the dialects of a platform; no `vscode` import | [workspace.md](workspace.md) |
+| `onboarding.ts` | the onboarding's progress (the workspace, its apps, the tour, the AI services), resumed after a reload or a closed editor, 0.84.0's flag migrated; no `vscode` import | [workspace.md](workspace.md) |
 | `savedProjects.ts` | the projects saved for every folder before 0.63.0, kept for `npm run test:compat` | [workspace.md](workspace.md) |
 | `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |
 | `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |

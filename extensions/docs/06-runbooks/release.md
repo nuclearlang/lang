@@ -75,7 +75,7 @@ A user updates over data an earlier version wrote. Before packaging:
      fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title
      without `key` in English), every setting under an id that moved, the projects saved for every folder before
      0.63.0 and those each folder kept until 0.83 (`workspace-state-0.83.json`, `test/workspaces.test.ts`: they join the
-     editor's global list), the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and
+     editor's global list), the welcome of 0.84.0 never finished (`global-state-0.84.0-onboarding.json`, `test/onboarding.test.ts`: resumed once), the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and
      opened from the offer, never asked again once declined or done).
 
    Each loads without an error, converts on read where its format changed (the original kept as `.bak`) and says

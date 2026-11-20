@@ -14,6 +14,11 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **The onboarding resumed (Unreleased, the fix of 0.84.0)**: `test/onboarding.test.ts` covers the steps, the resume
+  decision and the migration of 0.84.0's flag; never run in a window: *This window* → reload → the welcome at *Add your
+  apps*, *A new window* taking the welcome over, a closed editor resumed, Atlas's chat on a workspace with no app (the
+  chat service registering a folder that is not a project was checked with `nuclear-builder chat-host --json --root
+  <workspace>` only), whether a webview's dispose runs when the editor quits (it would move the tour to the AI services).
 - **The Nuclear workspaces and the three-step welcome (Unreleased, spec 022)**: compiled and tested
   (`test/workspaces.test.ts`, the l10n test), the CLI calls tried against a built `nuclear`; never run in a VS Code
   window: the empty panel, the header's menu, *This window / A new window*, the marker's watcher outside VS Code's
