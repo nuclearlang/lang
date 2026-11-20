@@ -1462,6 +1462,94 @@
    }
   },
   {
+   "id": "mcp:nuclear_env",
+   "type": "mcp",
+   "title": "`nuclear_env` — a tool of the Nuclear MCP server",
+   "summary": "The environments of a Synapsis project (spec 021): every env(\"NAME\", \"default\") of its code and the values of each environment (.env, .env.<environment>, their .local versions, the system's keyring).",
+   "body": [
+    "The environments of a Synapsis project (spec 021): every env(\"NAME\", \"default\") of its code and the values of each environment (.env, .env.<environment>, their .local versions, the system's keyring). action: list (JSON: every variable × every environment, required ones without a value are null; env alone: that one), envs (the environments and the active one), set (name, value; env: that environment, else the shared .env; local: the .local file of this machine), unset (name; secret: the keyring's), use (env: the project's active one). A secret is never set here: its value must not pass through a model; ask the user to run `nuclear env set NAME --secret --env <environment>` in a terminal, which reads it hidden.",
+    "",
+    "Parameters:",
+    "",
+    "- `project`: string",
+    "- `action`: string",
+    "- `name`: string = `\"\"`",
+    "- `value`: string = `\"\"`",
+    "- `env`: string = `\"\"`",
+    "- `local`: boolean = `false`",
+    "- `secret`: boolean = `false`"
+   ],
+   "keys": [
+    "nuclear_env",
+    "nuclear env"
+   ],
+   "asks": [
+    "what does nuclear_env do",
+    "que hace nuclear_env"
+   ],
+   "links": [
+    {
+     "rel": "part-of",
+     "to": "mcp:server"
+    }
+   ],
+   "sources": [
+    "tools/mcp/server.nuc"
+   ],
+   "meta": {
+    "tool": "mcp",
+    "name": "nuclear_env"
+   },
+   "data": {
+    "group": "nuclear",
+    "runs": "nuclear",
+    "params": [
+     {
+      "name": "project",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "action",
+      "type": "string",
+      "required": true,
+      "default": ""
+     },
+     {
+      "name": "name",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "value",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "env",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "local",
+      "type": "boolean",
+      "required": false,
+      "default": "false"
+     },
+     {
+      "name": "secret",
+      "type": "boolean",
+      "required": false,
+      "default": "false"
+     }
+    ]
+   }
+  },
+  {
    "id": "mcp:nuclear_fmt",
    "type": "mcp",
    "title": "`nuclear_fmt` — a tool of the Nuclear MCP server",
@@ -1815,13 +1903,13 @@
    "id": "mcp:server",
    "type": "mcp",
    "title": "The Nuclear MCP server: its tools and how a client must work with them",
-   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 32 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
+   "summary": "`nuclear-mcp` speaks the Model Context Protocol over stdio and gives an AI client 33 tools: the Smart Graph, the compiler, the `nuclear` commands, the generators, the internet and the local developer.",
    "body": [
     "The instructions every client receives:",
     "",
     "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Then, for a request, call graph_strategy with the user's own words and follow its plan.",
     "",
-    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`."
+    "Its tools: `nuclear_start`, `nuclear_doc`, `graph_search`, `graph_answer`, `graph_strategy`, `graph_card`, `graph_prompt`, `graph_remember`, `nuclear_check`, `nuclear_build`, `nuclear_help`, `nuclear_brief`, `nuclear_fmt`, `nuclear_defs`, `nuclear_project`, `nuclear_env`, `project_inspect`, `project_monitor`, `project_run_log`, `graph_monitor`, `generate_component`, `generate_resource`, `generate_usecase`, `generate_screen`, `api_inspect`, `web_search`, `web_read`, `developer_task`, `developer_retry`, `developer_review`, `developer_code`, `developer_test`, `developer_security`."
    ],
    "keys": [
     "mcp",

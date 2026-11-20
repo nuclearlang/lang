@@ -2054,7 +2054,7 @@
     "`nuclear update` runs the installer again for the latest release (NuclearLang and the AI services, profile kept).",
     "An update keeps the choices of the last install (`--no-vscode`, `--no-agent`, `--no-modify-path`, `NUCLEAR_BIN`).",
     "When a newer release is out, `nuclear` asks before a command in a terminal: `Update now? [Y]es / [n]o / [l]ater`;",
-    "a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens in the background once a day, never in editors, agents, pipes or CI;",
+    "a yes updates, then runs the command; later waits a day; no answer in 15 seconds goes on. The check happens at most once a day, the first command of the day waiting at most 3 seconds for it (offline it goes on), never in editors, agents, pipes or CI;",
     "`NUCLEAR_NO_UPDATE_CHECK=1` turns the question off; never inside `make`, an npm script or under `sudo`. A `nuclear`",
     "built from source is never updated this way. One install runs at a time: a second one says so and stops. The set-up of the AI services runs at a low priority, so a",
     "busy machine stays usable while the knowledge base loads."
@@ -2505,24 +2505,9 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#changelog",
+   "id": "doc:tools/cli/CHANGELOG.md#0-82-0.184a3a",
    "type": "changelog",
-   "title": "Changelog",
-   "summary": "All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow Semantic Versioning.",
-   "body": "All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow [Semantic Versioning](https://semver.org).",
-   "sources": [
-    "tools/cli/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.184a3a",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
+   "title": "Changelog — 0.82.0",
    "summary": "npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install.",
    "body": "npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install.",
    "sources": [
@@ -2535,9 +2520,9 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.2dba9f",
+   "id": "doc:tools/cli/CHANGELOG.md#0-82-0.2dba9f",
    "type": "changelog",
-   "title": "Changelog — Unreleased",
+   "title": "Changelog — 0.82.0",
    "summary": "(ADR-lang-0008): a backend or web project installs the package with its dialect's package manager, writes it in `config.nuc` and generates its type definitions into `defs/` (`dependencies.rs`); a mobile app goes through `flutter add`.",
    "body": [
     "- `nuclear add <package>[@version]... [--module <m>]` and `nuclear remove <package>...` on every platform",
@@ -2560,10 +2545,10 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.834918",
+   "id": "doc:tools/cli/CHANGELOG.md#0-82-0.834918",
    "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
+   "title": "Changelog — 0.82.0",
+   "summary": "0.82.0",
    "body": "- `nuclear gen resource` on a resource that exists finishes what it adds: a new action also gets the repository's method and the controller's route (it left a use case calling a method nobody had). `--source db --actions search` is refused: which column is searched is a decision (a query of the repository, wired with `gen usecase --calls`). ADR-developer-0001.",
    "sources": [
     "tools/cli/CHANGELOG.md"
@@ -2575,9 +2560,9 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.943012",
+   "id": "doc:tools/cli/CHANGELOG.md#0-82-0.943012",
    "type": "changelog",
-   "title": "Changelog — Unreleased",
+   "title": "Changelog — 0.82.0",
    "summary": "value from stdin, kept in the system's keyring, never printed; without a keyring, `.env.<env>.local` and a message); `--env <name>` on `run`, `build`, `test`, `check` (else `NUCLEAR_ENV`, else the active one, else `development`; tests: `test`); the dotenv files `.env` < `.env.<env>` < `.env.local`…",
    "body": [
     "- Environments (spec 021): `nuclear env list|set|unset|envs|use` (`--json`, `--env`, `--local`, `--secret`; a secret's",
@@ -2593,6 +2578,36 @@
     "  can no longer end it or start another command).",
     "- The update question is one key, `[Y]es / [n]o / [l]ater` (a day): no key in 15 s goes on, never inside `make`, an"
    ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#changelog",
+   "type": "changelog",
+   "title": "Changelog",
+   "summary": "All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow Semantic Versioning.",
+   "body": "All notable changes to the `nuclear` command (its framework commands too) are written here; versions follow [Semantic Versioning](https://semver.org).",
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- Fix: the update question shows on the first command after a newer release is out, the first run after an install included, as Flutter and oh-my-zsh do: the check is asked at most once a day and waits at most 3 seconds (offline the command goes on). Before, the first run only started the check in the background and asked nothing until a later run.",
    "sources": [
     "tools/cli/CHANGELOG.md"
    ],
