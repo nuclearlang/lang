@@ -30,8 +30,8 @@ package, its commands) is in that platform's roadmap.
   - a controller method named like a route decorator (`post`, `get`) hides the decorator in the class body: the
     module fails to import (`TypeError: post() missing 3 required positional arguments`) and `nuclear check` says
     nothing. Wanted: N-code, or the decorators imported under names no method takes.
-- **`.join()` on a value typed `any` is written as the library's string join** (found 2026-11-19): a field `worker:
-  any` holding a `Thread`, `worker.join()`, became `"".join(map(str, self.worker))` and failed at run time;
+- **A member of the library on a value typed `any` is written wrong** (found 2026-11-19 and 20): `.length` stays `.length` (`file.content.length` of an httpx answer failed: `'bytes' object has no attribute 'length'`), and `.join()` on a field `worker:
+  any` holding a `Thread` became `"".join(map(str, self.worker))` and failed at run time;
   `nuclear check` said nothing. Typing the field (`worker: Thread?`) gives `worker.join()`. Wanted: a member of the
   library is not assumed on `any` (the call is left as written), or an N-code.
 - **Logs with call sites for Python.** `fastapi` has no `[call_site]` section (the `flutter` and `react` dialects

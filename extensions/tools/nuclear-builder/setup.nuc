@@ -885,12 +885,14 @@ fetchVectors(say: (line: string) => void) void
     sum.raiseForStatus()
     file = httpx.get(releaseUrl(version, name), followRedirects = true, timeout = 300)
     file.raiseForStatus()
-    if hashlib.sha256(file.content).hexdigest() != sum.text.trim().split()[0]
+    // typed: a member of the library (`length`) on a value the compiler does not know is written as it is
+    data: Bytes = file.content
+    if hashlib.sha256(data).hexdigest() != sum.text.trim().split()[0]
       say("the vectors of ${version} did not match their SHA-256: the graph computes them itself")
       return
     target.parent.mkdir(parents = true, existOk = true)
-    target.writeBytes(file.content)
-    say("the vectors of the knowledge base, computed by the release (${(file.content.length / 1048576).toFixed(1)} MB): it loads in seconds")
+    target.writeBytes(data)
+    say("the vectors of the knowledge base, computed by the release (${(data.length / 1048576).toFixed(1)} MB): it loads in seconds")
   catch e
     if not isinstance(e, httpx.HTTPError)
       throw e

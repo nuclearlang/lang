@@ -1,6 +1,8 @@
 use os
 use json
 use socket
+use httpx
+use hashlib
 use subprocess
 use pathlib{ Path }
 
@@ -210,6 +212,24 @@ testTheReleasesVectorsAreFetchedFromItsReleaseOrAMirror() void
   expect(releaseUrl("0.1.8", "nuclearlang-embeddings-0.1.8.npz", {}) == "https://github.com/nuclearlang/lang/releases/download/v0.1.8/nuclearlang-embeddings-0.1.8.npz")
   expect(releaseUrl("0.1.8", "x.npz", { "NUCLEAR_DOWNLOAD": "http://127.0.0.1:9000" }) == "http://127.0.0.1:9000/x.npz")
   expect(releaseUrl("0.1.8", "x.npz", { "NUCLEAR_REPO": "me/fork" }).startsWith("https://github.com/me/fork/releases/download/v0.1.8/"))
+
+// The release's vectors land where the graph reads them, checked against their SHA-256 (found on Windows, 0.1.8:
+// the step failed after the download, on the size of the file it said).
+testTheReleasesVectorsAreDownloadedCheckedAndKept(tmpPath: Path, monkeypatch: any) void
+  ai = tmpPath.joinpath("ai")
+  ai.mkdir()
+  ai.joinpath("VERSION").writeText("0.1.8")
+  body: Bytes = "vectors".toBytes()
+  digest = hashlib.sha256(body).hexdigest()
+  answer = (url: string, followRedirects: boolean = false, timeout: double = 0.0) =>
+    httpx.Response(200, content = url.endsWith(".sha256") ? "${digest}  nuclearlang-embeddings-0.1.8.npz".toBytes() : body, request = httpx.Request("GET", url))
+  monkeypatch.setattr("nuclear_builder.setup.ai_root", () => "${ai}")
+  monkeypatch.setattr("httpx.get", answer)
+  monkeypatch.setenv("NUCLEAR_GRAPH_HOME", "${tmpPath.joinpath("graph")}")
+  said: string[] = []
+  fetchVectors((l) => said.add(l))
+  expect(tmpPath.joinpath("graph", "models", "embeddings.npz").readBytes() == body, "${said}")
+  expect("loads in seconds" in said.last, "${said}")
 
 testAServiceTakesTheNextFreePortWhenAnotherProgramHoldsItsOwn() void
   held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
