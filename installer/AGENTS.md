@@ -74,6 +74,7 @@ irm https://nuclearlang.github.io/install.ps1 | iex
 | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change a script: what each one does, the layout of an installation, the folders and variables, how the AI services are installed |
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the release is archives and one-line installers, or why the AI services come with the installer and how their set-up is shaped |
 | [docs/06-runbooks/release.md](docs/06-runbooks/release.md) | You publish a release, build an archive by hand, or test an installer without touching your machine |
+| [docs/08-guides/what-gets-installed.md](docs/08-guides/what-gets-installed.md) | You need what is required, what is added when possible, each platform's toolchain, what is never installed, and what a new run does |
 | [docs/08-guides/ai-setup.md](docs/08-guides/ai-setup.md) | You need what a user reads about the AI services: the steps, the profiles, where things are, update, remove, failures |
 
 Elsewhere:

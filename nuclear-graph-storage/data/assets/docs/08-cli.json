@@ -674,10 +674,31 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#documents",
+   "id": "doc:installer/AGENTS.md#documents.34c22f",
    "type": "readme",
    "title": "The installers and the release — Documents",
-   "summary": "Elsewhere: the CLI's agent support.",
+   "summary": "the CLI's agent support.",
+   "body": [
+    "- The skill the installers copy and the files a project gets:",
+    "  [the CLI's agent support](../tools/cli/docs/02-architecture/agent-support.md).",
+    "- The services the set-up installs: [the Smart Graph](../nuclear-graph-storage/AGENTS.md),",
+    "  [the agents](../nuclear-agents/AGENTS.md); the MCP server: [tools/mcp](../tools/mcp/AGENTS.md).",
+    "- The wizard of the editor and `nuclear-builder`: [the extensions](../extensions/AGENTS.md)."
+   ],
+   "sources": [
+    "installer/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/AGENTS.md#documents.94cfe1",
+   "type": "readme",
+   "title": "The installers and the release — Documents",
+   "summary": "Elsewhere:",
    "body": [
     "| Read | When |",
     "|---|---|",
@@ -685,15 +706,10 @@
     "| [docs/02-architecture/overview.md](docs/02-architecture/overview.md) | You change a script: what each one does, the layout of an installation, the folders and variables, how the AI services are installed |",
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why the release is archives and one-line installers, or why the AI services come with the installer and how their set-up is shaped |",
     "| [docs/06-runbooks/release.md](docs/06-runbooks/release.md) | You publish a release, build an archive by hand, or test an installer without touching your machine |",
+    "| [docs/08-guides/what-gets-installed.md](docs/08-guides/what-gets-installed.md) | You need what is required, what is added when possible, each platform's toolchain, what is never installed, and what a new run does |",
     "| [docs/08-guides/ai-setup.md](docs/08-guides/ai-setup.md) | You need what a user reads about the AI services: the steps, the profiles, where things are, update, remove, failures |",
     "",
-    "Elsewhere:",
-    "",
-    "- The skill the installers copy and the files a project gets:",
-    "  [the CLI's agent support](../tools/cli/docs/02-architecture/agent-support.md).",
-    "- The services the set-up installs: [the Smart Graph](../nuclear-graph-storage/AGENTS.md),",
-    "  [the agents](../nuclear-agents/AGENTS.md); the MCP server: [tools/mcp](../tools/mcp/AGENTS.md).",
-    "- The wizard of the editor and `nuclear-builder`: [the extensions](../extensions/AGENTS.md)."
+    "Elsewhere:"
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -1099,6 +1115,32 @@
    }
   },
   {
+   "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.4257e8",
+   "type": "context",
+   "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
+   "summary": "the user's list).",
+   "body": [
+    "**What is required, what is added, a new run** ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md),",
+    "[the user's list](../08-guides/what-gets-installed.md)). Only the core archive is a `must`; the extension, the skill",
+    "and the AI services are tasks whose failure is a warning. Both installers write `<installation>/.version` and",
+    "`<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`",
+    "(`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On",
+    "Windows the processes running from a folder are stopped before it is replaced (`Stop-Under`). The final box lists",
+    "*Required*, *Added when possible* and *Each platform's own*: the toolchains `nuclear doctor --json` finds, or where",
+    "to get each; no toolchain is installed by the installers. `--uninstall` also removes the empty line written before",
+    "each PATH line, a `.profile` left empty, the folders the install made when nothing else is in them, and the",
+    "extension's folder an editor only marked removed (Cursor deletes it at its next start)."
+   ],
+   "sources": [
+    "installer/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:installer/docs/02-architecture/overview.md#the-public-installers-release-install-sh-release-install-ps1.5f9bb8",
    "type": "context",
    "title": "The installers: overview — The public installers (`release/install.sh`, `release/install.ps1`)",
@@ -1323,7 +1365,28 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.2453f5",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the Smart Graph answers, and uninstalls it leaving nothing.",
+   "body": [
+    "PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
+    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
+    "   nuclearlang/lang -f version=<version>`.",
+    "",
+    "The workflow has never run ([roadmap](../01-product/roadmap.md))."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.fcb416",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
    "summary": "1. The version is `version` of `[workspace.package]` in the root `Cargo.toml`.",
@@ -1335,13 +1398,13 @@
     "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
     "   `install.ps1`, in the GitHub release of that tag. It can also be started",
     "   by hand (`workflow_dispatch`).",
-    "3. The public one-liners download from that release: without a release they fail with a clear error.",
-    "4. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
-    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
-    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
-    "   nuclearlang/lang -f version=<version>`.",
-    "",
-    "The workflow has never run ([roadmap](../01-product/roadmap.md))."
+    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (secret `VSCE_PAT`, a token",
+    "   of Azure DevOps with the scope *Marketplace → Manage*, organization *All accessible organizations*) and on Open",
+    "   VSX (secret `OVSX_PAT`, namespace `nuclearlang`). The stores read the `version` of",
+    "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
+    "   stop the GitHub release.",
+    "4. The public one-liners download from that release: without a release they fail with a clear error.",
+    "5. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1753,6 +1816,157 @@
    ],
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#added-when-possible-never-stops-the-install",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Added when possible (never stops the install)",
+   "summary": "Added when possible (never stops the install)",
+   "body": [
+    "| What | When | If it is not added | Tried on |",
+    "|---|---|---|---|",
+    "| The editor extension | an editor of the VS Code family is found: VS Code, Insiders, Cursor, VSCodium, Windsurf | install the editor, then run the installer again; or search *NuclearLang* in its extensions | VS Code and Cursor on Linux and macOS |",
+    "| The `nuclear` skill | always (`--no-agent` skips it) | — | Claude Code |",
+    "| The AI services: the Smart Graph, the MCP server | you answer yes (or `--profile`) | `nuclear-builder setup`, or the installer again | profile `remote` on Linux, macOS and Windows; the local profiles on Linux |",
+    "| Nuclear's MCP server in your AI clients | Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI are found | `nuclear-builder setup --clients` after installing one | Claude Code, Cursor; Grok Build not yet |"
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#each-platform-s-own-yours-only-for-the-platforms-you-build.5b6d3d",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Each platform's own (yours, only for the platforms you…",
+   "summary": "None is needed to write, check and build Nuclear.",
+   "body": [
+    "None is needed to write, check and build Nuclear. The installer's summary says which are found; the editor's",
+    "welcome and *Settings and integrations › Toolchains* ask only for the platforms you choose, with this system's steps.",
+    "A toolchain already on the machine is found (its setting, its variable, the PATH, the usual folders, your login",
+    "shell's PATH; Flutter also from the Dart extension's `dart.flutterSdkPath`) and never installed twice.",
+    "",
+    "| Platform | Toolchain | How to install it |",
+    "|---|---|---|",
+    "| Mobile | Flutter | macOS: `xcode-select --install`, then `brew install --cask flutter` or [Flutter's macOS guide](https://docs.flutter.dev/get-started/install/macos); Linux: `sudo snap install flutter --classic` or [Flutter's Linux guide](https://docs.flutter.dev/get-started/install/linux); Windows: [Flutter's Windows guide](https://docs.flutter.dev/get-started/install/windows). Then `flutter doctor` in a new terminal |",
+    "| Web, NestJS | Node.js 20+ | macOS: `brew install node` or the LTS of [nodejs.org](https://nodejs.org); Linux: your distribution's `nodejs` or nodejs.org; Windows: `winget install OpenJS.NodeJS.LTS` |",
+    "| FastAPI | Python 3.12+ | comes with the AI services; another one: `brew install python@3.12`, your distribution's `python3`, `winget install Python.Python.3.12` |"
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#each-platform-s-own-yours-only-for-the-platforms-you-build.5e064b",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Each platform's own (yours, only for the platforms you…",
+   "summary": "`nuclear setup flutter|node|python` installs NuclearLang's own on Linux and macOS (the editor offers it as a second choice).",
+   "body": [
+    "`nuclear setup flutter|node|python` installs NuclearLang's own on Linux and macOS (the editor offers it as a second",
+    "choice). Tried on a clean machine: Flutter on Linux only. On macOS it waits for Apple's command line tools in the",
+    "terminal it runs in: if it stops, install the toolchain with the steps above."
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#never-installed-named-with-steps-when-a-platform-needs-them",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Never installed (named, with steps, when a platform…",
+   "summary": "Never installed (named, with steps, when a platform needs them)",
+   "body": [
+    "| What | Needed for | How |",
+    "|---|---|---|",
+    "| Xcode (App Store) and CocoaPods | iOS apps | the App Store; `sudo gem install cocoapods` or `brew install cocoapods` |",
+    "| Android Studio and an Android SDK | Android apps | [developer.android.com/studio](https://developer.android.com/studio), then `flutter doctor --android-licenses` |",
+    "| Ollama and its models | the local agents | the set-up asks, and installs only what its profile needs |"
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#required",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Required",
+   "summary": "Linux aarch64 and macOS Intel get their own build from the same release; they were not tried on a machine yet.",
+   "body": [
+    "| What | Why | Tried on |",
+    "|---|---|---|",
+    "| NuclearLang: `nuclear`, `nuclear-lsp`, the dialects, the standard library, on your PATH | writes, checks and builds Nuclear for every platform | Linux x86_64, macOS Apple silicon, Windows x64 and ARM64 |",
+    "",
+    "Linux aarch64 and macOS Intel get their own build from the same release; they were not tried on a machine yet."
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#run-it-again",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs — Run it again",
+   "summary": "the extension, the summary is shown again.",
+   "body": [
+    "- The same version: NuclearLang and the AI services are kept (nothing downloaded), an editor installed since gets",
+    "  the extension, the summary is shown again.",
+    "- Interrupted (Ctrl+C, a closed terminal, a lost connection): it goes on from the step it reached, a download from",
+    "  where it stopped.",
+    "- A new version: replaced, with the AI services' profile kept.",
+    "- `--reinstall` (`-Reinstall` on Windows): downloads and replaces even what is there."
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/what-gets-installed.md#what-the-installer-installs-what-is-yours-to-choose-and-what-it-never-installs",
+   "type": "guide",
+   "title": "What the installer installs, what is yours to choose, and what it never installs",
+   "summary": "Only NuclearLang itself is required: whatever else is missing on your machine, the install ends with `nuclear` working.",
+   "body": [
+    "Only NuclearLang itself is required: whatever else is missing on your machine, the install ends with `nuclear`",
+    "working. The rest is added when it can be, and what it could not add is listed at the end with how to add it.",
+    "Running the installer again is safe: what is already there is kept, what is missing is added",
+    "([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md))."
+   ],
+   "sources": [
+    "installer/docs/08-guides/what-gets-installed.md"
    ],
    "meta": {
     "section": "08-cli",

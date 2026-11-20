@@ -38,6 +38,10 @@ The pending work of the installers, the release and the set-up of the AI service
 
 ## Untested
 
+- **A new run on Windows** (`install.ps1`: `.version`, `-Reinstall` while the services run, `Stop-Under`): written
+  without a Windows at hand; `installer-windows.yml` runs it again and with `-Reinstall` on every case.
+- **`nuclear setup flutter|node` on a clean macOS** (the editor's second choice, marked there as not tried).
+
 - Tried on the clean machine on 2026-11-18 (spec 016), Linux x86_64 from a local mirror, profile `remote`: the
   install, the `clients` step (OpenCode and Gemini CLI written), `nuclear help start` and the atlas, the MCP server
   over stdio (`nuclear_start`, `nuclear_doc`), `nuclear new` of a backend and of a mobile app with its context

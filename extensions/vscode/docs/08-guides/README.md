@@ -100,8 +100,11 @@ The toolchains of the platforms (*Settings and integrations* → Toolchains, and
 | `nuclear.toolchains.platforms` | `[]` | the platforms you build; the welcome asks only their toolchains |
 
 Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run,
-debug session and terminal of the editor. The page shows where each was found and has *Browse…*, *Install
-NuclearLang's own* (in a terminal you see) and *Use the one on PATH*.
+debug session and terminal of the editor. A toolchain is needed only for the platforms you build (the setting
+`nuclear.toolchains.platforms`, else the workspace's projects); before you choose, none is. The page shows where
+each was found; a missing one has *How to install it* (this system's steps), *I'll install it myself* (then point to
+it), *Install NuclearLang's own* (Linux and macOS, in a terminal you see; marked where it was never tried on a clean
+machine) and *Use the one on PATH*.
 
 The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool
 (`Ctrl+Alt+S`), where each one has its default. The most used:

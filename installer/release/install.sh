@@ -15,9 +15,16 @@
 # machine, suggests a profile and asks before anything else is downloaded). A machine already set up gets them again
 # for the new version, without questions.
 #
+# Run it again at any time: what is already there (the same version of NuclearLang, of the AI services) is kept and not
+# downloaded again, an interrupted run goes on from its step, and what is missing is added (an editor installed since).
+# Only NuclearLang itself is required; the extension, the skill and the AI services are added when they can be, and a
+# platform's toolchain (Flutter for mobile, Node.js for web and NestJS) is never installed here: the summary and the
+# editor say what each platform needs and how to install it.
+#
 # Options (or environment): --version <v> (NUCLEAR_VERSION, default: the latest), --no-modify-path
 # (NUCLEAR_NO_MODIFY_PATH=1), --no-vscode, --no-agent, --no-ai, --profile remote|lite|medium|hard (NUCLEAR_AI_PROFILE:
-# that profile, no questions), --uninstall (everything the install made: the AI services' models, Ollama when it
+# that profile, no questions), --reinstall (download and replace even what is already
+# there), --uninstall (everything the install made: the AI services' models, Ollama when it
 # installed it, their data and secrets, the caches, the editors' extension). NUCLEAR_INSTALL and NUCLEAR_BIN change the folders; NUCLEAR_REPO the
 # repository (owner/name) and NUCLEAR_DOWNLOAD the base url of the files (a mirror).
 set -eu
@@ -234,6 +241,7 @@ trap '[ -n "$TASK_PID" ] && kill_tree "$TASK_PID"; [ -n "$esc" ] && printf "%s" 
 trap 'say ""; say "  Stopped."; exit 130' INT TERM
 
 UNINSTALL=0
+REINSTALL=0
 while [ $# -gt 0 ]; do
   case $1 in
     --version) VERSION=${2:?--version needs a value}; shift ;;
@@ -243,7 +251,8 @@ while [ $# -gt 0 ]; do
     --no-ai) AI=0 ;;
     --profile) PROFILE=${2:?--profile needs a value}; shift ;;
     --uninstall) UNINSTALL=1 ;;
-    -h|--help) sed -n '2,22p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --reinstall) REINSTALL=1 ;;
+    -h|--help) sed -n '2,29p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) say "unknown option: $1"; exit 2 ;;
   esac
   shift
@@ -267,9 +276,18 @@ if [ "$UNINSTALL" = 1 ]; then
     # the compiler's cache of type definitions and the folder of the machine's choices
     rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/nuclearlang" "${XDG_CONFIG_HOME:-$HOME/.config}/nuclearlang" \
       "${XDG_STATE_HOME:-$HOME/.local/state}/nuclearlang"
-    for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.config/fish/conf.d/nuclearlang.fish"; do
-      if [ -f "$rc" ] && grep -q "$MARK" "$rc"; then grep -v "$MARK" "$rc" > "$rc.nuclear" && mv "$rc.nuclear" "$rc"; fi
+    # the PATH line goes with the empty line written before it; a file left with nothing (the .profile the install
+    # made) goes too, and fish's file is the install's own
+    for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+      if [ -f "$rc" ] && grep -q "$MARK" "$rc"; then
+        awk -v m="$MARK" 'index($0, m) { held = 0; next } { if (held) { print ""; held = 0 } } /^$/ { held = 1; next } { print } END { if (held) print "" }' "$rc" > "$rc.nuclear" && mv "$rc.nuclear" "$rc"
+        if ! grep -q '[^[:space:]]' "$rc"; then rm -f "$rc"; fi
+      fi
     done
+    rm -f "$HOME/.config/fish/conf.d/nuclearlang.fish"
+    # the folders the install made, when nothing else is in them (rmdir never removes one that holds something)
+    for d in $SKILL_DIRS; do rmdir "$d" "$(dirname "$d")" 2>/dev/null || true; done
+    rmdir "$BIN" "$(dirname "$INSTALL")" "${XDG_STATE_HOME:-$HOME/.local/state}" "$HOME/.local" 2>/dev/null || true
   }
   must "Removing NuclearLang" "NuclearLang removed" "Remove $(short "$INSTALL") by hand, then run the uninstaller again." \
     "The commands, the installation, the agents' skill, the caches and the PATH lines" remove_core
@@ -280,6 +298,8 @@ if [ "$UNINSTALL" = 1 ]; then
       ok "Editor extension removed from $(basename "$cli")"
     fi
   done 3< "$tmp/editor-list"
+  # an editor may only mark the extension removed and delete its folder at its next start (Cursor): it goes now
+  for d in .vscode .vscode-insiders .cursor .vscode-oss .windsurf; do rm -rf "$HOME/$d/extensions/nuclearlang.nuclearlang-"*; done
   say ""
   box_top "Uninstalled" "$GREEN"
   box_line "${GREEN}${BOLD}NuclearLang is uninstalled.${OFF}" "$GREEN"
@@ -395,14 +415,22 @@ verify_or_drop() {
 }
 install_core() {
   tar -xzf "$CACHE/$name" -C "$tmp"
-  # an install without the AI services keeps the ones already there (their running services use them)
-  if [ "$AI" = 0 ] && [ -d "$INSTALL/ai" ]; then mv "$INSTALL/ai" "$tmp/nuclearlang/ai"; fi
+  # the AI services already there are kept (their running services use them; a new version of them replaces them later)
+  if [ -d "$INSTALL/ai" ]; then mv "$INSTALL/ai" "$tmp/nuclearlang/ai"; fi
   rm -rf "$INSTALL"
   mkdir -p "$(dirname "$INSTALL")" "$BIN"
   mv "$tmp/nuclearlang" "$INSTALL"
-  for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done
+  link_core
   "$BIN/nuclear" dialect list > /dev/null || { echo "the installed nuclear does not run on this system"; exit 1; }
+  # what a new run reads to keep it
+  printf '%s\n' "$VERSION" > "$INSTALL/.version"
 }
+link_core() { for b in nuclear nuclear-lsp; do ln -sf "$INSTALL/bin/$b" "$BIN/$b"; done; }
+# this version, already installed and running: a new run keeps it (--reinstall replaces it)
+if [ "$REINSTALL" = 0 ] && [ "$(cat "$INSTALL/.version" 2>/dev/null)" = "$VERSION" ] && "$INSTALL/bin/nuclear" dialect list > /dev/null 2>&1; then
+  mkdir -p "$BIN"; link_core
+  ok "NuclearLang $VERSION is already installed in $(short "$INSTALL") ${DIM}(kept: nothing downloaded)${OFF}"
+else
 if done_step downloaded && [ -s "$CACHE/$name" ]; then again "Downloaded NuclearLang $VERSION"; else
   must "Downloading NuclearLang $VERSION" "Downloaded NuclearLang $VERSION" "Check your connection and run the installer again: the download goes on from where it stopped." \
     "The compiler, the language server and the standard library, for $where" \
@@ -420,12 +448,13 @@ if done_step installed && "$BIN/nuclear" dialect list > /dev/null 2>&1; then aga
     "Unpacked, with the commands nuclear and nuclear-lsp linked in $(short "$BIN")" install_core
   mark installed
 fi
+fi
 
 if [ "$AGENT" = 1 ]; then
   for d in $SKILL_DIRS; do
     mkdir -p "$d" && rm -rf "$d/nuclear" && cp -R "$INSTALL/agents/skills/nuclear" "$d/"
   done
-  ok "The ${BOLD}nuclear${OFF} skill for Claude Code, Codex, Cursor and OpenCode ${DIM}(what Nuclear is, for your agent)${OFF}"
+  ok "The ${BOLD}nuclear${OFF} skill for Claude Code, Codex, Cursor, Grok Build and OpenCode ${DIM}(what Nuclear is, for your agent)${OFF}"
 fi
 
 # --- the PATH ---
@@ -503,7 +532,13 @@ if [ "$AI" = 1 ]; then
     tar -xzf "$CACHE/$ai_name" -C "$INSTALL"
     # a Linux without glibc (Alpine, musl) runs nuclear but not the services' Python
     "$INSTALL/ai/bin/nuclear-graph" --help > /dev/null 2>&1 || { rm -rf "$INSTALL/ai"; echo "nolibc"; exit 3; }
+    printf '%s\n' "$VERSION" > "$INSTALL/ai/.version"
   }
+  got_ai=0
+  if [ "$REINSTALL" = 0 ] && [ "$(cat "$INSTALL/ai/.version" 2>/dev/null)" = "$VERSION" ] && "$INSTALL/ai/bin/nuclear-graph" --help > /dev/null 2>&1; then
+    ln -sf "$INSTALL/ai/bin/nuclear-builder" "$BIN/nuclear-builder"
+    ok "The AI services of $VERSION are already here ${DIM}(kept: nothing downloaded)${OFF}"
+  else
   if done_step ai-downloaded && [ -s "$CACHE/$ai_name" ]; then again "Downloaded the AI services"; got_ai=0
   else
     got_ai=0
@@ -531,6 +566,7 @@ if [ "$AI" = 1 ]; then
   else
     AI=0
     ai_note="The AI services of $VERSION are not published for $where."
+  fi
   fi
 fi
 # the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
@@ -580,8 +616,29 @@ if [ -s "$tmp/editors" ]; then
 fi
 box_top "NuclearLang $VERSION is installed" "$GREEN"
 box_line "${DIM}Command${OFF}       $(short "$BIN")/nuclear" "$GREEN"
-[ -s "$tmp/editors" ] && box_line "${DIM}Editors${OFF}       $names" "$GREEN"
-if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then box_line "${DIM}AI services${OFF}   running ${DIM}· nuclear-builder setup --status${OFF}" "$GREEN"; fi
+box_line "" "$GREEN"
+# what is on this machine: required, added when it can be, and each platform's toolchain (never installed here)
+box_line "${BOLD}Required${OFF}" "$GREEN"
+box_line "  ${GREEN}✓${OFF} NuclearLang ${DIM}the compiler, the language server, the standard library${OFF}" "$GREEN"
+box_line "${BOLD}Added when possible${OFF}" "$GREEN"
+if [ -s "$tmp/editors" ]; then box_line "  ${GREEN}✓${OFF} The editor extension ${DIM}$names${OFF}" "$GREEN"
+elif [ "$VSCODE" = 0 ]; then box_line "  ${DIM}○ The editor extension: not asked (--no-vscode)${OFF}" "$GREEN"
+else box_line "  ${DIM}○ The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions${OFF}" "$GREEN"; fi
+if [ "$AGENT" = 1 ]; then box_line "  ${GREEN}✓${OFF} The nuclear skill ${DIM}for Claude Code, Codex, Cursor, Grok Build, OpenCode${OFF}" "$GREEN"; fi
+if [ "$AI" = 1 ] && [ -z "$ai_note" ]; then box_line "  ${GREEN}✓${OFF} The AI services ${DIM}the Smart Graph, the MCP server · nuclear-builder setup --status${OFF}" "$GREEN"
+elif [ -n "$ai_note" ]; then box_line "  ${YELLOW}!${OFF} The AI services ${DIM}(below)${OFF}" "$GREEN"; fi
+box_line "${BOLD}Each platform's own${OFF} ${DIM}(only for the platforms you build; the editor guides you)${OFF}" "$GREEN"
+doctor=$("$BIN/nuclear" doctor --json < /dev/null 2>/dev/null || true)
+toolchain() {
+  found=$(printf '%s' "$doctor" | sed -n "s/.*\"$1\":{\"found\":\"\([a-z]*\)\",\"path\":\"\([^\"]*\)\".*/\1 \2/p")
+  case ${found%% *} in
+    ''|missing|broken) box_line "  ${DIM}○ $2  $3: not found · $4${OFF}" "$GREEN" ;;
+    *) box_line "  ${GREEN}✓${OFF} $2  ${DIM}$3 · $(short "${found#* }")${OFF}" "$GREEN" ;;
+  esac
+}
+toolchain flutter "Flutter" "mobile" "docs.flutter.dev/get-started/install"
+toolchain node "Node.js" "web, NestJS" "nodejs.org (LTS)"
+toolchain python "Python " "FastAPI" "it comes with the AI services, or python.org (3.12+)"
 box_line "" "$GREEN"
 box_line "${BOLD}Start with${OFF}    ${YELLOW}nuclear new my_app${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear doctor${OFF}  ${DIM}·${OFF}  ${YELLOW}nuclear help${OFF}" "$GREEN"
 box_line "${DIM}Docs          https://nuclearlang.github.io${OFF}" "$GREEN"

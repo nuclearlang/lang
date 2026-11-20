@@ -1369,6 +1369,27 @@
    }
   },
   {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.2c1a96",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.78.0: no change of its own (VS Code's toolchains, only for the platforms you build).",
+    "",
+    "- 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).",
+    "",
+    "- 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build)."
+   ],
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.3b8d04",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -1398,21 +1419,6 @@
     "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
     "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension."
    ],
-   "sources": [
-    "extensions/jetbrains/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.8fbebb",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": "- 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build).",
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
    ],
@@ -4489,24 +4495,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.0f0a74",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Nuclear Builder: Cursor (its `agent` CLI) and xAI's Grok Build (`grok`) can work a team member and answer the chat, like Claude Code, Codex, Gemini CLI and OpenCode. Each gets the Nuclear MCP server and the Builder's for the run only (Cursor in a plugin of the run, Grok in a home of its own), never written into your files, and no shell. Neither reports its tokens: the reports say *not reported*. Written from their documentation; not yet tried against the real CLIs.",
-    "- 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons)."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.117eaa",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4657,6 +4645,26 @@
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": "- 0.58.0: the welcome is the first-run onboarding over every setting, *Next, Next*, a default on every step: this machine and the profile, what it needs, the installation, the providers (Claude Code, Codex, Gemini CLI and OpenCode found on the machine; the API keys handed to the system's keyring, never to a setting), the team, the spending (the budget, the two confirmations), each tool's settings and a summary; *Settings and integrations* runs it again. The squad screen (*Builder Teams: Hire the Squad*): a football pitch with the five roles, the hired employee's card on each (face, name, profile, six stats, the HR note), the roster as a row of cards that turn over, hiring by a click or by dragging a card onto the pitch, and each one's settings (local agents, an agent or an API, the model, the skills, instructions, behaviours, tasks); several teams, new from a preset, renamed, duplicated, deleted, exported, imported, one the default; every change saved by `nuclear-builder team`. The settings are one section per tool (`nuclear.ai.*`, `nuclear.builder.*`, `nuclear.spending.*` with `confirm` and `forceConfirm`, `nuclear.atlas.*`, `nuclear.http.*`, `nuclear.devices.*`), the same in *Settings and integrations*; a value set under a moved id moves with it. Everything the extension shows is in English and Spanish, following VS Code's language (the set-up's own profile texts excepted). N",
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.6517ff",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine.",
+    "",
+    "- 0.77.0: a Flutter already on the machine is used, never installed again: the one the Dart extension uses (`dart.flutterSdkPath`), more usual folders (`~/Developer/flutter`, Homebrew, puro...) and, last, the PATH of your login shell. Nuclear Builder: Cursor (its `agent` CLI) and xAI's Grok Build (`grok`) can work a team member and answer the chat, like Claude Code, Codex, Gemini CLI and OpenCode. Each gets the Nuclear MCP server and the Builder's for the run only (Cursor in a plugin of the run, Grok in a home of its own), never written into your files, and no shell. Neither reports its tokens: the reports say *not reported*. Written from their documentation; not yet tried against the real CLIs.",
+    "- 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons)."
+   ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
    ],
@@ -6823,32 +6831,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.3110e7",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Settings",
-   "summary": "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`, `nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its new one by itself.",
-   "body": [
-    "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`,",
-    "`nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its",
-    "new one by itself.",
-    "",
-    "The extension speaks English or Spanish: `nuclear.language` (`auto`: VS Code's display language when it is English",
-    "or Spanish, else the operating system's, else English). The globe in every page's header and in the status bar",
-    "changes it at once, with no restart: the pages, the messages, Nuclear Chat and what the agents answer in. Command",
-    "titles and setting descriptions follow VS Code's own language (VS Code does not let an extension change them).",
-    "",
-    "A project's `.nuclear/builder.json` wins over these settings for its own Nuclear Builder runs."
-   ],
-   "sources": [
-    "extensions/vscode/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.332a7b",
    "type": "readme",
    "title": "NuclearLang for VS Code — Settings",
@@ -6876,40 +6858,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.35a091",
-   "type": "readme",
-   "title": "NuclearLang for VS Code — Settings",
-   "summary": "Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run, debug session and terminal of the editor.",
-   "body": [
-    "Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run,",
-    "debug session and terminal of the editor. The page shows where each was found and has *Browse…*, *Install",
-    "NuclearLang's own* (in a terminal you see) and *Use the one on PATH*.",
-    "",
-    "The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool",
-    "(`Ctrl+Alt+S`), where each one has its default. The most used:",
-    "",
-    "| Setting | Default |",
-    "|---|---|",
-    "| `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |",
-    "| `nuclear.ai.models.coder` · `.assistant` | `qwen2.5-coder:3b` · `gemma4:e2b` |",
-    "| `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |",
-    "| `nuclear.ai.checkEveryMinutes` | `5` |",
-    "| `nuclear.builder.team` | `\"\"` (the default team) |",
-    "| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |",
-    "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |",
-    "| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |",
-    "| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |"
-   ],
-   "sources": [
-    "extensions/vscode/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.40798d",
    "type": "readme",
    "title": "NuclearLang for VS Code — Settings",
@@ -6926,6 +6874,84 @@
     "| `nuclear.toolchains.node` | `\"\"` | Node.js for TypeScript, NestJS and React; empty: NuclearLang's own (`nuclear setup node`), else the PATH's |",
     "| `nuclear.toolchains.flutter` | `\"\"` | Flutter's SDK folder or its `flutter`, required for mobile; empty: the one the Dart extension uses (`dart.flutterSdkPath`), NuclearLang's own (`nuclear setup flutter`), the PATH's, the usual folders (`~/development/flutter`, `~/Developer/flutter`, fvm, Homebrew...) or your login shell's: a Flutter already on the machine is never installed again |",
     "| `nuclear.toolchains.platforms` | `[]` | the platforms you build; the welcome asks only their toolchains |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.5b8c34",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Settings",
+   "summary": "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`, `nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its new one by itself.",
+   "body": [
+    "| Setting | Default |",
+    "|---|---|",
+    "| `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |",
+    "| `nuclear.ai.models.coder` · `.assistant` | `qwen2.5-coder:3b` · `gemma4:e2b` |",
+    "| `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |",
+    "| `nuclear.ai.checkEveryMinutes` | `5` |",
+    "| `nuclear.builder.team` | `\"\"` (the default team) |",
+    "| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |",
+    "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |",
+    "| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |",
+    "| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |",
+    "",
+    "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`,",
+    "`nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its",
+    "new one by itself."
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.60fb91",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Settings",
+   "summary": "The extension speaks English or Spanish: `nuclear.language` (`auto`: VS Code's display language when it is English or Spanish, else the operating system's, else English).",
+   "body": [
+    "The extension speaks English or Spanish: `nuclear.language` (`auto`: VS Code's display language when it is English",
+    "or Spanish, else the operating system's, else English). The globe in every page's header and in the status bar",
+    "changes it at once, with no restart: the pages, the messages, Nuclear Chat and what the agents answer in. Command",
+    "titles and setting descriptions follow VS Code's own language (VS Code does not let an extension change them).",
+    "",
+    "A project's `.nuclear/builder.json` wins over these settings for its own Nuclear Builder runs."
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.f755a8",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Settings",
+   "summary": "Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run, debug session and terminal of the editor.",
+   "body": [
+    "Each one reaches `nuclear` as a variable (`NUCLEAR_PYTHON`, `NUCLEAR_NODE`, `FLUTTER_ROOT`) in every task, run,",
+    "debug session and terminal of the editor. A toolchain is needed only for the platforms you build (the setting",
+    "`nuclear.toolchains.platforms`, else the workspace's projects); before you choose, none is. The page shows where",
+    "each was found; a missing one has *How to install it* (this system's steps), *I'll install it myself* (then point to",
+    "it), *Install NuclearLang's own* (Linux and macOS, in a terminal you see; marked where it was never tried on a clean",
+    "machine) and *Use the one on PATH*.",
+    "",
+    "The other settings are one section per tool, edited in VS Code's settings or in the *Settings and integrations* tool",
+    "(`Ctrl+Alt+S`), where each one has its default. The most used:"
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/README.md"

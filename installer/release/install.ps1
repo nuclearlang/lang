@@ -21,7 +21,8 @@ param(
   [switch]$NoAgent,
   [switch]$NoAi,
   [string]$AiProfile = $env:NUCLEAR_AI_PROFILE,
-  [switch]$Uninstall
+  [switch]$Uninstall,
+  [switch]$Reinstall
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
@@ -170,6 +171,16 @@ function Fail([string]$Title, [string]$Why, [string]$Todo) {
 
 # the set-up is the AI archive's own nuclear-builder: it needs nothing on the machine
 $Builder = Join-Path $Install 'ai\bin\nuclear-builder.cmd'
+# Windows starts the services as processes of the installation (no service manager): they hold its files until
+# stopped, so nothing under $Under can be replaced or removed while they run (their set-up starts them again)
+function Stop-Under([string]$Under) {
+  Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+    Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($Under, [StringComparison]::OrdinalIgnoreCase) } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+  Start-Sleep -Seconds 1
+}
+# the version a run installed (.version): a new run of the same version keeps what is there (-Reinstall replaces it)
+function Same-Version([string]$Folder) { (-not $Reinstall) -and ((Get-Content (Join-Path $Folder '.version') -ErrorAction SilentlyContinue) -eq $Version) }
 $env:NUCLEAR_INSTALL = $Install
 
 if ($Uninstall) {
@@ -177,11 +188,7 @@ if ($Uninstall) {
   Section 'Uninstalling'
   # the AI services first (what starts them at login, the graph's tool): their set-up takes them away
   if (Test-Path $Builder) { & $Builder setup --remove --all | Out-Null; Ok 'The AI services, with the models and data their set-up made' }
-  # Windows starts the services as processes of the installation (no service manager): they hold its files until stopped
-  Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-    Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($Install, [StringComparison]::OrdinalIgnoreCase) } |
-    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-  Start-Sleep -Seconds 1
+  Stop-Under $Install
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
   Remove-Item -Recurse -Force (Join-Path $env:APPDATA 'nuclearlang') -ErrorAction SilentlyContinue
   Remove-Item -Recurse -Force (Join-Path $env:USERPROFILE '.cache\nuclearlang') -ErrorAction SilentlyContinue
@@ -224,6 +231,9 @@ $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("nuclearlang-" + [Guid]::NewGuid())
 New-Item -ItemType Directory -Path $Tmp | Out-Null
 try {
   Section "NuclearLang $Version"
+  $NuclearHere = (Same-Version $Install) -and (Test-Path (Join-Path $Bin 'nuclear.exe'))
+  if ($NuclearHere) { & (Join-Path $Bin 'nuclear.exe') dialect list | Out-Null; $NuclearHere = $LASTEXITCODE -eq 0 }
+  if ($NuclearHere) { Ok "NuclearLang $Version is already installed in $Install (kept: nothing downloaded)" } else {
   $Zip = Join-Path $Tmp $Name
   try { Save-Url "$Base/$Name" $Zip "Downloading NuclearLang $Version" "The compiler, the language server and the standard library, for Windows $Dot $Arch" }
   catch { Fail "Downloading NuclearLang $Version" "$($_.Exception.Message)" 'Check your connection and run the installer again. The releases: https://github.com/nuclearlang/lang/releases' }
@@ -235,12 +245,19 @@ try {
 
   # --- install ---
   Expand-Archive $Zip -DestinationPath $Tmp -Force
+  # the AI services already there are kept (a new version of them replaces them later); their processes let go first
+  Stop-Under $Install
+  $OldAi = Join-Path $Install 'ai'
+  if (Test-Path $OldAi) { Move-Item $OldAi (Join-Path $Tmp 'nuclearlang\ai') }
   Remove-Item -Recurse -Force $Install -ErrorAction SilentlyContinue
+  if (Test-Path $Install) { Fail 'Installing' "$Install could not be replaced: a program still uses it." 'Close the editors and terminals that use NuclearLang, then run the installer again.' }
   New-Item -ItemType Directory -Path (Split-Path $Install) -Force | Out-Null
   Move-Item (Join-Path $Tmp 'nuclearlang') $Install
   & (Join-Path $Bin 'nuclear.exe') dialect list | Out-Null
   if ($LASTEXITCODE -ne 0) { Fail 'Installing' 'The installed nuclear does not run on this system.' 'Check that your antivirus let it in, then run the installer again.' }
+  Set-Content -Path (Join-Path $Install '.version') -Value $Version -Encoding ascii
   Ok "Installed in $Install"
+  }
 
   if (-not $NoAgent) {
     foreach ($d in $SkillDirs) {
@@ -248,7 +265,7 @@ try {
       Remove-Item -Recurse -Force (Join-Path $d 'nuclear') -ErrorAction SilentlyContinue
       Copy-Item -Recurse (Join-Path $Install 'agents\skills\nuclear') $d
     }
-    Ok 'The nuclear skill for Claude Code, Codex, Cursor and OpenCode (what Nuclear is, for your agent)'
+    Ok 'The nuclear skill for Claude Code, Codex, Cursor, Grok Build and OpenCode (what Nuclear is, for your agent)'
   }
 
   # every editor of the VS Code family on the PATH
@@ -299,7 +316,11 @@ if (-not $NoAi -and -not $AiProfile) {
     $AiNote = 'The AI services are not installed (no terminal here): run this installer in a terminal, or with -AiProfile.'
   }
 }
-if (-not $NoAi) {
+$AiDir = Join-Path $Install 'ai'
+if (-not $NoAi -and (Same-Version $AiDir) -and (Test-Path $Builder)) {
+  Set-Content -Path (Join-Path $Bin 'nuclear-builder.cmd') -Value "@`"$Builder`" %*" -Encoding ascii
+  Ok "The AI services of $Version are already here (kept: nothing downloaded)"
+} elseif (-not $NoAi) {
   # their archive (ADR-installer-0003): a Python of their own with the services in it, unpacked as the installation's ai\
   $AiName = "nuclearlang-ai-$Version-windows-$Arch.zip"
   $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("nuclearlang-ai-" + [Guid]::NewGuid())
@@ -317,8 +338,10 @@ if (-not $NoAi) {
     }
     if (-not $NoAi) {
       if ($Want -ne (Get-FileHash $AiZip -Algorithm SHA256).Hash.ToLower()) { Fail 'Verifying the AI services' 'The file does not match the release''s checksum (SHA-256).' 'Run the installer again: the file is downloaded anew.' }
-      Remove-Item -Recurse -Force (Join-Path $Install 'ai') -ErrorAction SilentlyContinue
+      Stop-Under $AiDir
+      Remove-Item -Recurse -Force $AiDir -ErrorAction SilentlyContinue
       Expand-Archive $AiZip -DestinationPath $Install -Force
+      Set-Content -Path (Join-Path $AiDir '.version') -Value $Version -Encoding ascii
       # nuclear-builder is the archive's from now on: `nuclear-builder setup` works before the set-up ran
       Set-Content -Path (Join-Path $Bin 'nuclear-builder.cmd') -Value "@`"$Builder`" %*" -Encoding ascii
       Ok 'The AI services, unpacked (their own Python: nothing else is needed on this machine)'
@@ -350,9 +373,22 @@ if ($Animate -and [Console]::WindowWidth -ge 80 -and ((& $NuclearExe help 2>&1 |
   cmd /c "`"$NuclearExe`" intro < NUL"
 }
 Write-Host ''
-$Summary = @("Command       $NuclearExe")
-if ($Installed) { $Summary += "Editors       $($Installed -join ', ')" }
-if (-not $NoAi -and -not $AiNote) { $Summary += 'AI services   running (nuclear-builder setup --status)' }
+$Summary = @("Command       $NuclearExe", '', 'Required', "  $Tick NuclearLang (the compiler, the language server, the standard library)", 'Added when possible')
+if ($Installed) { $Summary += "  $Tick The editor extension: $($Installed -join ', ')" }
+elseif ($NoVSCode) { $Summary += '  o The editor extension: not asked (-NoVSCode)' }
+else { $Summary += '  o The editor extension: no VS Code, Cursor, VSCodium or Windsurf here; search NuclearLang in its extensions' }
+if (-not $NoAgent) { $Summary += "  $Tick The nuclear skill (Claude Code, Codex, Cursor, Grok Build, OpenCode)" }
+if (-not $NoAi -and -not $AiNote) { $Summary += "  $Tick The AI services: the Smart Graph, the MCP server (nuclear-builder setup --status)" }
+elseif ($AiNote) { $Summary += '  ! The AI services (below)' }
+# each platform's toolchain is never installed here: found, or how to get it (the editor guides too)
+$Summary += "Each platform's own (only for the platforms you build; the editor guides you)"
+$Tools = $null
+try { $Tools = ((& $NuclearExe doctor --json 2>$null | Out-String) | ConvertFrom-Json).toolchains } catch { }
+foreach ($t in @(@('flutter', 'Flutter', 'mobile', 'docs.flutter.dev/get-started/install/windows'), @('node', 'Node.js', 'web, NestJS', 'winget install OpenJS.NodeJS.LTS'), @('python', 'Python ', 'FastAPI', 'it comes with the AI services, or winget install Python.Python.3.12'))) {
+  $f = if ($Tools) { $Tools.($t[0]) } else { $null }
+  if ($f -and $f.found -and $f.found -ne 'missing' -and $f.found -ne 'broken') { $Summary += "  $Tick $($t[1])  $($t[2]) $Dot $($f.path)" }
+  else { $Summary += "  o $($t[1])  $($t[2]): not found $Dot $($t[3])" }
+}
 $Summary += @('', "Start with    nuclear new my_app  $Dot  nuclear doctor  $Dot  nuclear help", 'Docs          https://nuclearlang.github.io')
 Box "NuclearLang $Version is installed" $Summary 'Green'
 if ($AiNote) { Warn $AiNote }

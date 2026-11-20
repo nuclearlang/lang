@@ -72,6 +72,29 @@ jobs:
           name: vscode
           path: dist/*.vsix
 
+  # the same .vsix on the Visual Studio Marketplace and Open VSX; a job of its own, so a store that fails never stops
+  # the GitHub release. The version the stores read is package.json's: a version already published is skipped.
+  marketplaces:
+    needs: vscode
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode
+          path: dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - name: Visual Studio Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx --yes @vscode/vsce@3.2.1 publish --packagePath dist/*.vsix --skip-duplicate
+      - name: Open VSX
+        if: ${{ !cancelled() }}
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: npx --yes ovsx@0.10.1 publish dist/*.vsix --skip-duplicate
+
   # the AI services' archive (ADR-installer-0003): a Python of their own with the Smart Graph, the MCP server and the
   # Nuclear Developer, built and tried on a runner of each system (glibc Linux: onnxruntime has no musl wheel)
   ai:

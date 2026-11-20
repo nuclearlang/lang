@@ -4,6 +4,8 @@ All notable changes to nuclear-vscode are written here; versions follow [Semanti
 
 ## Unreleased
 
+- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine.
+
 - 0.77.0: a Flutter already on the machine is used, never installed again: the one the Dart extension uses (`dart.flutterSdkPath`), more usual folders (`~/Developer/flutter`, Homebrew, puro...) and, last, the PATH of your login shell. Nuclear Builder: Cursor (its `agent` CLI) and xAI's Grok Build (`grok`) can work a team member and answer the chat, like Claude Code, Codex, Gemini CLI and OpenCode. Each gets the Nuclear MCP server and the Builder's for the run only (Cursor in a plugin of the run, Grok in a home of its own), never written into your files, and no shell. Neither reports its tokens: the reports say *not reported*. Written from their documentation; not yet tried against the real CLIs.
 - 0.76.0 (fix): the language server starts on macOS and Windows: the extension ran the Linux build it carries (`spawn ENOEXEC`), and now takes the installer's own `nuclear-lsp` first, then the PATH; the bundled one is tried only on Linux x86_64. The theme picker offers *Chernobyl Soft* first (and its icons).
 

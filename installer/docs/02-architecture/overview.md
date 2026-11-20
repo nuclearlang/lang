@@ -130,6 +130,17 @@ and the bar moves as bytes come. The AI set-up (`nuclear-builder setup`) looks t
 `~/.local/state/nuclearlang/setup.log` (`%LOCALAPPDATA%\nuclearlang\setup.log`), and a failed step is a red box with
 its last lines, the error and what to do, never a traceback.
 
+**What is required, what is added, a new run** ([ADR-installer-0006](../03-adr/0006-only-nuclearlang-is-required.md),
+[the user's list](../08-guides/what-gets-installed.md)). Only the core archive is a `must`; the extension, the skill
+and the AI services are tasks whose failure is a warning. Both installers write `<installation>/.version` and
+`<installation>/ai/.version`: a run of the same version keeps what is there (nothing downloaded), `--reinstall`
+(`-Reinstall`) replaces it; a new core keeps the `ai/` already there (a new AI archive replaces it later). On
+Windows the processes running from a folder are stopped before it is replaced (`Stop-Under`). The final box lists
+*Required*, *Added when possible* and *Each platform's own*: the toolchains `nuclear doctor --json` finds, or where
+to get each; no toolchain is installed by the installers. `--uninstall` also removes the empty line written before
+each PATH line, a `.profile` left empty, the folders the install made when nothing else is in them, and the
+extension's folder an editor only marked removed (Cursor deletes it at its next start).
+
 **An interrupted install goes on** (`install.sh`). Each finished step (`downloaded`, `verified`, `installed`,
 `editor-<command>`, `ai-downloaded`, `ai-verified`, `ai-unpacked`) and the answer to the AI question are written to
 `~/.local/state/nuclearlang/install.state` (`XDG_STATE_HOME`); the downloads are kept in

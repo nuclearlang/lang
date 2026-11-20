@@ -58,6 +58,24 @@ jobs:
           $status = & $builder setup --status --json | Out-String | ConvertFrom-Json
           $status | ConvertTo-Json -Depth 4
           if (-not $status.graph) { Write-Error 'the Smart Graph does not answer'; exit 1 }
+      # run again: what is there is kept (nothing downloaded); then -Reinstall replaces it while the services run
+      - name: Run again, then reinstall
+        run: |
+          $v = "$env:WANTED".TrimStart('v'); if (-not $v) { $v = 'latest' }
+          $options = @('-Version', $v, '-NoVSCode')
+          if ('${{ matrix.ai }}') { $options += @('-AiProfile', '${{ matrix.ai }}') } else { $options += '-NoAi' }
+          $again = & ${{ matrix.shell }} -NoProfile -ExecutionPolicy Bypass -File ./installer/release/install.ps1 @options *>&1 | Out-String
+          Write-Output $again
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($v -ne 'latest' -and $again -notmatch 'already installed') { Write-Error 'a second run of the same version did not keep the installation'; exit 1 }
+          & ${{ matrix.shell }} -NoProfile -ExecutionPolicy Bypass -File ./installer/release/install.ps1 @options -Reinstall
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & (Join-Path $env:LOCALAPPDATA 'nuclearlang\bin\nuclear.exe') dialect list
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if ('${{ matrix.ai }}') {
+            $status = & (Join-Path $env:LOCALAPPDATA 'nuclearlang\ai\bin\nuclear-builder.cmd') setup --status --json | Out-String | ConvertFrom-Json
+            if (-not $status.graph) { Write-Error 'the Smart Graph does not answer after -Reinstall'; exit 1 }
+          }
       - name: Uninstall
         run: |
           & ${{ matrix.shell }} -NoProfile -ExecutionPolicy Bypass -File ./installer/release/install.ps1 -Uninstall
