@@ -330,7 +330,7 @@ ${pageI18n(SETTINGS, TC_TEXTS)}
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 ${FORM_JS}
 ${TC_JS}
-const SECTIONS = ['language', 'toolchains', 'ai', 'builder', 'spending', 'chat', 'atlas', 'http', 'devices'];
+const SECTIONS = ['language', 'toolchains', 'ai', 'builder', 'spending', 'chat', 'http', 'devices'];
 // the section shown survives a re-render (a change of language)
 let S = null, section = vscode.getState()?.section ?? 'ai';
 function field(key, label, value, help, type) {
@@ -354,7 +354,7 @@ function drawAi() {
   const toggle = (key, label, value, help) => '<label>' + esc(label) + '<div class="muted">' + esc(help) + '</div></label><div><input type="checkbox" data-key="' + key + '"' + (value ? ' checked' : '') + ' style="width:auto"></div>';
   return '<h2>' + esc(t('checkedNow')) + '</h2><div class="muted">' + esc(t('checkedNowHint', I.checkEveryMinutes)) + '</div>'
     + S.checks.map(check).join('')
-    + '<h2>' + esc(t('services')) + '</h2><div class="muted" style="margin-bottom:8px">' + (S.profile ? esc(t('profile', S.profile)) + (S.services.atLogin ? esc(t('atLogin')) : '') + '. ' : esc(t('notSetUp')) + ' ') + '<button data-act="setup">' + esc(t('setUp')) + '</button></div>'
+    + '<h2>' + esc(t('services')) + '</h2><div class="muted" style="margin-bottom:8px">' + (S.profile ? esc(t('setUpDone')) + (S.services.atLogin ? esc(t('atLogin')) : '') + '. ' : esc(t('notSetUp')) + ' ') + '<button data-act="setup">' + esc(t('setUp')) + '</button></div>'
     + service('graph', 'Nuclear Smart Graph', S.services.graph, s.graphUrl + ' · ' + t('graphWhat'), true)
     + '<div class="grid">' + field('graphUrl', t('graphUrl'), s.graphUrl, 'nuclear-graph serve') + '</div>'
     + '<h2>' + esc(t('mcp')) + '</h2><div class="muted">' + esc(t('mcpHint', s.mcpCommand)) + '</div>'
@@ -386,7 +386,7 @@ function drawBuilder() {
   const sec = sectionOf('builder'), team = sec?.items.find((i) => i.key === 'nuclear.builder.team');
   const T0 = S.teams;
   const opts = '<option value="">' + esc(t('teamOnboarding')) + '</option>' + T0.list.map((x) => '<option value="' + esc(x.id) + '"' + (x.id === team?.value ? ' selected' : '') + '>' + esc(x.name) + (x.default ? ' ★' : '') + '</option>').join('');
-  return '<div class="hero"><div style="font-family:var(--vscode-editor-font-family,monospace);font-size:11px;letter-spacing:.12em;border:1px solid currentColor;padding:6px 8px">TEAMS</div><div class="grow"><b>' + esc(t('squadTitle')) + '</b><div class="muted">' + esc(T0.missing || t('squadHint')) + '</div></div><button class="primary" data-act="teams">' + esc(t('openSquad')) + '</button></div>'
+  return '<div class="hero"><div style="font-family:var(--vscode-editor-font-family,monospace);font-size:11px;letter-spacing:.12em;border:1px solid currentColor;padding:6px 8px">' + esc(t('squadBadge')) + '</div><div class="grow"><b>' + esc(t('squadTitle')) + '</b><div class="muted">' + esc(T0.missing || t('squadHint')) + '</div></div><button class="primary" data-act="teams">' + esc(t('openSquad')) + '</button></div>'
     + '<div class="sf"><div class="sf-row"><label class="sf-l"><b>team</b><code>nuclear.builder.team</code><div class="sf-d">' + esc(team?.description ?? '') + '</div></label><div class="sf-i"><select data-setting="nuclear.builder.team" data-t="string"' + (T0.missing ? ' disabled' : '') + '>' + opts + '</select></div></div></div>'
     + settingsForm(sec, ['nuclear.builder.team']);
 }

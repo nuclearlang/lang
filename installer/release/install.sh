@@ -86,9 +86,13 @@ box_top() { say "  ${2:-$DIM}╭─${OFF} ${BOLD}$1${OFF} ${2:-$DIM}$(line_of $(
 # (a narrow terminal leaves the right border out rather than draw it over the text)
 RIGHT=""; [ -n "$esc" ] && [ "$BOXW" -ge 76 ] && RIGHT=1
 box_line() {
+  plain=$1; [ -n "$esc" ] && plain=$(printf '%s' "$1" | sed "s/$esc\[[0-9;]*m//g")
   # its width in characters whatever the locale: colors out, then UTF-8's continuation bytes out, then bytes counted
-  if [ -n "$RIGHT" ] && [ "$(printf '%s' "$1" | sed "s/$esc\[[0-9;]*m//g" | LC_ALL=C tr -d '\200-\277' | wc -c)" -le $((BOXW - 4)) ]; then
-    say "  ${2:-$DIM}│${OFF} $1$esc[$((BOXW + 2))G${2:-$DIM}│$OFF"
+  width=$(printf '%s' "$plain" | LC_ALL=C tr -d '\200-\277' | wc -c)
+  # wider than the box: wrapped, without its colors (a line wider than the terminal would break the box)
+  if [ "$width" -gt $((BOXW - 4)) ]; then
+    printf '%s\n' "$plain" | fold -s -w $((BOXW - 4)) | while IFS= read -r l; do box_line "$l" "${2:-}"; done
+  elif [ -n "$RIGHT" ]; then say "  ${2:-$DIM}│${OFF} $1$esc[$((BOXW + 2))G${2:-$DIM}│$OFF"
   else say "  ${2:-$DIM}│${OFF} $1"; fi
 }
 box_end() { say "  ${1:-$DIM}╰$(line_of $((BOXW - 2)) ─)╯${OFF}"; }
@@ -111,6 +115,14 @@ banner() {
   word=$1; detail=$2
   if [ -z "$esc" ]; then
     say ""; say "  NuclearLang $word · $detail"; say "  Write only the logic; transpilers do the rest."; say ""; return
+  fi
+  # the sign, the pixel letters and the motto beside it need a box of 76: a narrower terminal gets the words alone
+  if [ "$BOXW" -lt 76 ]; then
+    say ""; box_top "NuclearLang" "$SLATE"
+    box_line "${BOLD}${YELLOW}NuclearLang${OFF}  ${DIM}·${OFF}  ${BOLD}${PURPLE}Synapsis${OFF}" "$SLATE"
+    box_text "Write only the logic; transpilers do the rest." "$SLATE"
+    box_text "$detail" "$SLATE"
+    box_end "$SLATE"; return
   fi
   rows=""
   for r in 1 2 3 4 5; do
@@ -174,6 +186,12 @@ failure() {
   say ""
   exit 1
 }
+# A text cut to `n` columns with … (a line wider than the terminal wraps, and the turning sign's redraw, three lines up,
+# would leave its frames behind): bytes are at least columns, and a character cut in half is dropped.
+fit() {
+  if [ "$(printf '%s' "$1" | LC_ALL=C wc -c)" -le "$2" ]; then printf '%s' "$1"
+  else printf '%s' "$1" | LC_ALL=C awk -v n="$2" '{ s = substr($0, 1, n - 1); sub(/[\300-\377][\200-\277]*$/, "", s); printf "%s…", s }'; fi
+}
 # A task: its title, what it does, and the command that does it, run in the background while the sign turns.
 # `--file <path> <bytes>`: a download, whose bar is the file's size against the bytes expected.
 task() {
@@ -186,6 +204,9 @@ task() {
   if [ -n "$esc" ]; then
     printf '%s' "$esc[?25l" >&2
     say ""; say ""; say ""
+    # the sign and its gap take 12 columns; the bar's line needs 30 beside the bar
+    room=$((cols - 13)); title=$(fit "$title" "$room"); about=$(fit "$about" "$room")
+    barw=$((room - 34)); [ "$barw" -gt 24 ] && barw=24; [ "$barw" -lt 6 ] && barw=6
     i=0; start=$(date +%s)
     while kill -0 "$TASK_PID" 2>/dev/null; do
       f=$((i % 12 + 1)); i=$((i + 1))
@@ -194,7 +215,7 @@ task() {
         have=0; [ -f "$file" ] && have=$(wc -c < "$file" | tr -d ' '); have=${have:-0}
         if [ "$total" -gt 0 ]; then
           pct=$((have * 100 / total)); [ "$pct" -gt 100 ] && pct=100
-          detail="$(bar "$pct" 24)  ${BOLD}$pct%${OFF}  ${DIM}$(human "$have") of $(human "$total") · ${secs} s${OFF}"
+          detail="$(bar "$pct" "$barw")  ${BOLD}$pct%${OFF}  ${DIM}$(human "$have") of $(human "$total") · ${secs} s${OFF}"
         else detail="${DIM}$(human "$have") · ${secs} s${OFF}"; fi
       else
         detail="${DIM}${secs} s${OFF}"

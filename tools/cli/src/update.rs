@@ -133,6 +133,16 @@ fn run_installer(root: &Path, reinstall: bool) -> std::io::Result<bool> {
     Ok(cmd.status()?.success())
 }
 
+/// What `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints instead of running the installer.
+fn dry_run(root: &Path, reinstall: bool) -> String {
+    let script = if cfg!(windows) { "install.ps1" } else { "install.sh" };
+    let again = if reinstall { " NUCLEAR_REINSTALL=1" } else { "" };
+    format!(
+        "would run https://nuclearlang.github.io/{script} with NUCLEAR_INSTALL={} NUCLEAR_UPDATE=1{again}",
+        root.display()
+    )
+}
+
 /// Nothing to update: the latest release (asked now) is this binary's, and the AI services are of it too. Offline
 /// (no answer) is not "up to date": the installer is run and says what it can.
 fn up_to_date(root: &Path, latest: Option<&str>) -> bool {
@@ -152,6 +162,11 @@ pub fn command(args: &[String]) -> ExitCode {
         return ExitCode::from(2);
     };
     let reinstall = args.iter().any(|a| a == "--reinstall");
+    // the delivery tests (installer/tests/run.sh, UPD1): the installation found through the link, nothing run
+    if std::env::var_os("NUCLEAR_UPDATE_DRYRUN").is_some_and(|v| v == "1") {
+        println!("{}", dry_run(&root, reinstall));
+        return ExitCode::SUCCESS;
+    }
     if !reinstall {
         let latest = fetch_latest();
         if up_to_date(&root, latest.as_deref().and_then(version_of)) {
@@ -284,6 +299,13 @@ mod tests {
         let found = installation(&dir.join("local/bin/nuclear")).unwrap();
         assert_eq!(found, std::fs::canonicalize(dir.join("inst")).unwrap());
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn the_dry_run_names_the_installation_and_the_options() {
+        let line = dry_run(Path::new("/x/nuclearlang"), true);
+        assert!(line.contains("NUCLEAR_INSTALL=/x/nuclearlang NUCLEAR_UPDATE=1 NUCLEAR_REINSTALL=1"), "{line}");
+        assert!(!dry_run(Path::new("/x"), false).contains("REINSTALL"));
     }
 
     #[test]

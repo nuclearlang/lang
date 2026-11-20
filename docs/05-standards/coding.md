@@ -32,9 +32,13 @@ The rules every project shares. A project's own conventions are in its `docs/05-
   every piece (the crates, the extensions, the Smart Graph, the MCP server, the services), all at the version of
   its tag. A fix raises PATCH, a new feature that breaks nothing MINOR (PATCH back to 0), a
   breaking change MAJOR; while the version is `0.x`, a breaking change raises MINOR. The release: `installer/release/version.sh <version>` writes it into every project and lock
-  file (ADR-platform-0011), `nuclear-graph knowledge build` at that version, then the tag `v<version>` pushed (the CI
-  fails when a manifest or the knowledge base differs), with each project's
-  `CHANGELOG.md` entries under that version ([the release runbook](../../installer/docs/06-runbooks/release.md)).
+  file (ADR-platform-0011), `nuclear-graph knowledge build` at that version, then **`installer/release/delivery.sh <version>`, which must pass
+  before the tag** (every test of the tree, the website exactly as its workflow, the knowledge base, the installer
+  tests with what the user reads and an update from the previous release), then the tag `v<version>` pushed (the CI
+  fails when a manifest or the knowledge base differs), with each project's `CHANGELOG.md` entries under that version,
+  and then **`installer/release/after-release.sh <version>`** (every workflow green, every asset, the site serving the
+  tag's installers, the public one-liner and an update in a fake `HOME`): a release is done only when it passes
+  ([the release runbook](../../installer/docs/06-runbooks/release.md)).
 - Commits only in the user's name: no co-author line.
 - `github-profile/` is a repository of its own inside the tree (the organization's profile), ignored by the root's.
 

@@ -19,6 +19,12 @@ The pending work of the server. A done item is deleted.
 
 ## Pending
 
+- **`workspace_delete` removes the marker itself**: `nuclear workspace` has no `delete`; when the CLI has one, the
+  tool calls it. `testTheWorkspaceToolsAgainstTheInstalledCommand` skips until the installed `nuclear` has
+  `nuclear workspace`.
+- **What an agent cannot do yet through the server**:
+  [mcp-coverage.md](../../../../docs/04-specs/022-workspaces-and-mcp/mcp-coverage.md).
+
 - **The local models on standby** ([ADR-platform-0013](../../../../docs/03-adr/0013-local-models-on-standby.md)): no
   `developer_*` tool is registered (`LOCAL_MODELS = false`). Turning them on again needs `LOCAL_MODELS = true` with
   `localModels: true` in Nuclear Builder's `setup.json`, the Developer installed by the set-up again, and tests of the

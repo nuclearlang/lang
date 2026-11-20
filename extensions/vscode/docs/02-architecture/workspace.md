@@ -1,10 +1,10 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-19
-related: [../../../docs/03-adr/0002-the-nuclear-workspace.md, client.md, ai-services.md]
+updated: 2026-11-20
+related: [../../../docs/03-adr/0002-the-nuclear-workspace.md, client.md, ai-services.md, ../../../../docs/04-specs/022-workspaces-and-mcp/design.md]
 ---
-# The Nuclear workspace (`src/workspace.ts`, `src/treeMenu.ts`)
+# The Nuclear workspace (`src/workspace.ts`, `src/workspaces.ts`, `src/treeMenu.ts`)
 
 The decision and its limits: [ADR-extensions-0002](../../../docs/03-adr/0002-the-nuclear-workspace.md). Not run in
 a VS Code window yet ([roadmap](../01-product/roadmap.md)).
@@ -104,11 +104,54 @@ shown by the context key `nuclear.platform` that `refresh()` sets, run by `actio
 - `Workspace.pickDevice(p, mode)` asks which device ▷ Run / ◉ Debug / ▭ Device use; `Workspace.mobileRoot`: the
   Devices pane runs a mobile project only.
 
-## Projects and the switch of tabs
+## The Nuclear workspace and its apps (spec 022)
 
-Projects = `findProjects()` (the workspace folders) + the roots opened with *Open a Project* (`Ctrl+Alt+O`) in this folder, saved in `workspaceState` (`savedProjects.ts`): each folder's workspace shows only its own projects, never another folder's (before 0.63.0 they were kept in `globalState` for every folder; a folder keeps the ones inside it)
-`nuclear.workspace.projects` (opened with `openProject`, read by `projectAt`: the card, else `config.nuc` /
-`nuclear.toml` by regex).
+A Nuclear workspace is a folder with `.workspace/workspace.nuc` (one business project and its apps; the CLI's guide:
+`nuclear help workspace`). The extension reads and changes it only through `nuclear workspace … --json` (the installed
+`nuclear`, `nuclearCommand()`), parsed by `src/workspaces.ts` (no `vscode` import; `test/workspaces.test.ts`): the
+answer is the last JSON line (`add` prints `nuclear new`'s lines first), `null` from `find` outside a workspace,
+`{"error"}` (exit 1) shown as `nuclear workspace: <message>`; an older `nuclear` without the command is told to update.
+
+- **The open workspace** (`Workspace.loadWorkspace`, on activation and when VS Code's folders change): the one that
+  holds one of VS Code's folders (`find --json` run in it), else the last one opened (`show --workspace <root>`).
+- **The recent workspaces**: `globalState` `nuclear.workspaces.recent` (`{root, name, openedAt}`, the last opened
+  first, at most 10, `remember`); the ones whose marker is gone are not offered (`alive`). Never `workspaceState`: a
+  change of VS Code's folder never loses them.
+- **The slots of the strip** are the workspace's apps whose folder exists, in the marker's order (`projectAt` of each,
+  else the app's own JSON), then the projects opened by hand. Without a workspace: the projects of VS Code's folders
+  (`findProjects()`), then the ones opened by hand. A `FileSystemWatcher` on `<root>/.workspace/workspace.nuc` reads
+  the workspace again (300 ms after a burst): an app added by the MCP server, an agent or a terminal appears at once.
+- **The projects opened by hand** (*Open a Project as a Tab*, `Ctrl+Alt+O`): `globalState` `nuclear.workspace.projects`,
+  one list for every folder (`saved()`). From 0.63 to 0.83 each VS Code folder kept its own in `workspaceState`, which
+  is why they "disappeared" when VS Code opened another folder: that entry joins the global list when its folder opens
+  and is cleared (`migrateSaved`; fixtures `test/fixtures/compat/global-state-0.62.json` and
+  `workspace-state-0.83.json`).
+- **The header**: the workspace's initials head the strip and its name heads the files pane (`.wsbar`); both open
+  `workspaceMenu()` (rename, description, add / rename / remove an app, open the marker, *Do it with me by chat*, the
+  recent workspaces, open, create). `+` adds an app when a workspace is open (else opens a project as a tab); the right
+  click on an app's tab offers rename and remove.
+- **The empty panel** (`emptyState`: no workspace and no project): why (no folder open, or the folder is not a
+  workspace), the recent workspaces, *Open a workspace…*, *Create a workspace*, and the old *open a project as a tab*.
+
+| Command | What it does |
+|---|---|
+| `nuclear.workspace.create` | the parent folder (picker) and the name; `workspace new <parent>/<name> --name <name>`; then it opens |
+| `nuclear.workspace.open` | a folder (picker) or a recent root; `find`; a folder that is not a workspace is offered to become one (`workspace new <folder>`) |
+| `nuclear.workspace.addApp` | the platform (the three), the dialect (the platform's installed ones, `nuclear dialect list` filtered by `dialectsOf`, the default first; asked only when there are several), the name; `workspace add`; the new app's tab opens |
+| `nuclear.workspace.removeApp` | confirmed (modal): *Remove, keep the folder* or *Remove and delete the folder…*, which asks again before `--delete` |
+| `nuclear.workspace.renameApp` | `workspace rename <folder> <new>` (the project's `app(name)` stays) |
+| `nuclear.workspace.menu` | the header's menu |
+
+Opening a workspace (`openIn`): in an empty window it becomes the window's folder (`vscode.openFolder`); in a window
+with a folder it asks *This window* (the folder replaced) or *A new window*; a window whose folder is inside the
+workspace just shows it.
+
+**Do it with me by chat** (`Workspace.chat`): Nuclear Atlas opens on its direct message with a first message in the
+composer (`AtlasPanel.compose`), on the workspace's folder, or before there is one on the extension's own
+`globalStorage/welcome` folder. The user sends it; the agent works through the MCP server's tools (`workspace_create`,
+`app_add`…), which ask the user before each change.
+
+## The switch of tabs
 
 `go(key)` calls `switchTabs(from, to)`:
 
@@ -125,13 +168,21 @@ Clicking a tab or an action posts a toast with its shortcut.
 
 ## Commands and keys
 
-Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode}`; `project`, `tool` and
+Commands `nuclear.workspace.{show,project,openProject,tool,action,welcome,addToVsCode,create,open,addApp,removeApp,renameApp,menu}`; `project`, `tool` and
 `action` without arguments show a quick pick. Keybindings in `package.json`: `Ctrl+1..9` the project tabs,
 `Ctrl+Alt+N/O/W` the container, open a project, the welcome page; the tools `Ctrl+Alt+P/E/K/A/H/V/F/Y/D/M/S`; the actions
 `Ctrl+Alt+R/G/L/B/T/C` on `nuclear.action.*` (`Ctrl+Alt+R` is `run` on mobile and `serve` on backend and web).
 
-`WelcomePanel` is a singleton in column one, drawn again on `Workspace.onDidChange`; it opens on activation (since 0.73.2 only when the user turned it on: the setting is off by default) when
-`nuclear.workspace.welcome` is on and every tab group is empty.
+`WelcomePanel` is a singleton in column one: the welcome of spec 022 in three short steps, each with *Do it with me
+by chat*: (1) *Create your workspace* (what a workspace and its marker are, the parent folder and the name, or open
+one, or a recent one), (2) *Add your apps* (the workspace's apps listed, a platform, its dialect and a name), (3) a tour,
+one card per tool (`TOUR`: the workspace, HTTP Connections, Environments, the Builder and the teams, Atlas and Nuclear
+Chat, the devices, Monitor, Reports, the settings), each with its key and *open it*; then a link to the AI services'
+set-up (`nuclear.ai.setup`, unchanged), the shortcuts folded, the startup switch. Its texts are `welcomeL10n.ts`; it is
+drawn again only when what it shows changed and keeps what the user typed (`vscode.setState`). The first run starts
+with it: on activation, when it was never shown (`globalState` `nuclear.workspace.welcomed`) and there is no recent
+workspace, it opens, and the AI services' offer (`SetupPanel.offer`) waits until it is closed. Later it opens at startup
+only when `nuclear.workspace.welcome` is on and every tab group is empty.
 
 ## The right-click menu of the file tree (`treeMenu.ts`)
 

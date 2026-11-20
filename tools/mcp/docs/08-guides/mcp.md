@@ -43,6 +43,8 @@ What each group of tools needs running:
 | `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |
 | `api_inspect`, `web_search`, `web_read` | the internet |
 | `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |
+| `workspace_*`, `app_*` | the installed `nuclear` (`nuclear workspace`) |
+| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |
 
 ## 2. How a model works with it
 
@@ -50,6 +52,18 @@ An agent may know nothing about Nuclear: the server's instructions only tell it 
 anything about Nuclear. Its answer is the onboarding (what Nuclear and Synapsis are, the rules never broken, the
 work cycle with these tools on this machine) and the atlas of every topic, each read with `nuclear_doc`; with a
 project folder, also the project's pieces and the sheet of its dialect. Nothing it reads points into a source tree.
+
+The work starts from a **workspace** (spec 022): the folder that holds `.workspace/workspace.nuc` and names the apps
+of one business project. The model reads it with `workspace_show`; for a new product it creates it
+(`workspace_create`) and adds each app (`app_add`), writes each feature as a spec (`spec_create`, shown in Nuclear
+Builder at once) and keeps the teams (`team_*`, `member_*`).
+
+**Every change is the user's yes first.** A tool that changes a workspace, an app, a spec or a team asks the user
+through the client (MCP elicitation: what will change, yes or no) and changes nothing on a no. A client that cannot
+ask gets a preview instead: `{"preview", "changed": "nothing yet", "confirm": "<token>", "expiresInSeconds": 300}`.
+The model shows the preview to the user and, only on their yes, calls the same tool again with the same arguments and
+`confirm` set to the token. The token is valid once, for 5 minutes, for that tool and those arguments only; any other
+call with it is refused and changes nothing.
 
 The cycle then calls `graph_strategy` with the user's own words: it answers which
 kind of request it is and the plan of that kind
@@ -136,6 +150,50 @@ Registered only when the local models are on again (ADR-platform-0013): today no
 | `nuclear_project(project, command, args)` | `new`, `build`, `install`, `test`, `check`, `analyze`, `make`, `gen`, `migrate`, `add`, `remove`, `explain` in a project (`add` with a name: a package of the target and its type definitions) |
 | `nuclear_env(project, action, name, value, env, local, secret)` | the environments of a project (spec 021): `list` (every `env()` of the code × every environment, as JSON; a secret never shows its value), `envs`, `set` (into `.env`, or `.env.<env>` with `env`; `local`: the `.local` file), `unset`, `use` (the active environment). A secret is never set through the server: the user runs `nuclear env set NAME --secret --env <environment>` in a terminal |
 
+### Workspaces and apps
+
+Each is a `nuclear workspace … --json` command. `workspace` is the workspace's folder or any folder inside it. Every
+tool but `workspace_show` asks the user first (`confirm`: the preview's token, for a client that cannot ask).
+
+| Tool | What it does |
+|---|---|
+| `workspace_create(path, name, description, confirm)` | the folder and its marker `.workspace/workspace.nuc` (`nuclear workspace new`) |
+| `workspace_show(workspace)` | `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}` |
+| `workspace_edit(workspace, name, description, confirm)` | the workspace's name or description (`nuclear workspace edit`) |
+| `workspace_delete(workspace, delete_folders, confirm)` | removes the marker; the apps' folders stay unless `delete_folders` is true (then each app is removed with `nuclear workspace remove <app> --delete`); the question says which |
+| `app_add(workspace, app, platform, dialect, confirm)` | an app made by `nuclear new` inside the workspace and named in the marker (`mobile`, `web`, `backend`) |
+| `app_rename(workspace, app, new_name, confirm)` | `nuclear workspace rename <app> <new>` |
+| `app_remove(workspace, app, delete_folder, confirm)` | the marker stops naming the app; its folder is deleted only with `delete_folder` true |
+
+### Specs
+
+Each is a `nuclear-builder spec … --json` command in the project: the spec lives where Nuclear Builder reads it
+(`specs/<component>/[<layer>/]<id>/spec.md`).
+
+| Tool | What it does |
+|---|---|
+| `spec_create(project, component, title, criteria, layer, use_case, description, text, confirm)` | a new spec (`spec new`): its acceptance criteria are required (or `text`, the whole markdown); asks the user first |
+| `spec_list(project)` | the specs by component and layer, with their runs |
+| `spec_show(project, id)` | a spec's markdown, what it says, its draft, its run's status |
+| `spec_edit(project, id, text, confirm)` | the spec's whole new markdown over it (`spec update <id> --stdin`); asks the user first |
+
+### Teams and members
+
+Each is a `nuclear-builder team …` command; a member is never of the local kind (the local models are on standby).
+Every tool but `team_list` and `team_show` asks the user first.
+
+| Tool | What it does |
+|---|---|
+| `team_list()` | the teams |
+| `team_show(team)` | a team, its members, purpose, skills, tech lead, budget |
+| `team_create(name, purpose, description, skills, members, budget_usd, confirm)` | `team create` with the draft on stdin; `members`: `[{role, employee, kind, provider, model, name}]` |
+| `team_edit(team, name, description, purpose, skills, lead, budget_usd, confirm)` | `team update` |
+| `team_delete(team, confirm)` | `team delete` (the file kept as `<id>.json.bak`) |
+| `member_add(team, role, employee, kind, provider, model, name, count, confirm)` | `team member add` |
+| `member_edit(team, member, kind, provider, model, employee, name, instructions, temperament, skills, confirm)` | `team member update` |
+| `member_remove(team, member, confirm)` | `team member remove` |
+| `skills_set(team, skills, member, confirm)` | `team skills set`: the team's library skills, or a member's |
+
 ### The internet
 
 | Tool | What it does |
@@ -152,6 +210,10 @@ Registered only when the local models are on again (ADR-platform-0013): today no
 | `'<command>' is not allowed here` | the `nuclear_project` tool runs only the commands of its list |
 | `'--' is not allowed here` | what follows `--` goes to the target's own tools (a port, a host): an agent never passes it through the MCP server |
 | `no run log yet in ...` | the app never ran in that project: run it once (`nuclear run`, or ▷ Run / ▭ Device in the editor), then call `project_run_log` again |
+| `{"declined": …}` | the user said no: nothing changed; ask what to do instead |
+| `{"preview": …, "confirm": …}` | the client cannot ask: show the preview to the user, then call again with `confirm` only on their yes |
+| `the confirm token is unknown, expired or used` / `for another change` | nothing changed: call the tool again without `confirm` for a new preview |
+| an error that `workspace` is not a command of `nuclear` | the installed NuclearLang is older than its workspaces: `nuclear update` |
 | a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |
 
 The graph knows every tool of this page: ask it with `graph_card("mcp:<tool>")`, or ask the editor's chat

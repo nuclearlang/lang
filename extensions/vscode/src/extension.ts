@@ -95,14 +95,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   debugNuc = activateDebug(context, (dir?: string) => (dir ? synapsisOf(path.join(dir, '_')) : findSynapsis()));
   const http = activateHttpConnections(context);
   activateMonitor(context);
-  activateWorkspace(context, http);
+  const workspace = activateWorkspace(context, http);
   // the set-up of the AI services (ADR-installer-0002): a command, and an offer on a machine that was never set up
   context.subscriptions.push(
     vscode.commands.registerCommand('nuclear.ai.setup', () => SetupPanel.show(context)),
     vscode.commands.registerCommand('nuclear.builder.teams', (o?: { wizard?: boolean }) => TeamsPanel.show(context, !!o?.wizard)),
     vscode.commands.registerCommand('nuclear.builder.reports', (f?: { team?: string; member?: string }) => ReportsPanel.show(context, f)),
   );
-  void SetupPanel.offer(context);
+  // the first run starts with the workspace (the welcome's three steps): the offer comes when that page closes
+  if (!workspace.firstRun) void SetupPanel.offer(context);
   // one release, one snapshot (ADR-platform-0011): an extension the store updated alone offers to bring the rest
   setTimeout(() => checkSnapshot(context), 4000);
   activateDevice(context, findSynapsis, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));

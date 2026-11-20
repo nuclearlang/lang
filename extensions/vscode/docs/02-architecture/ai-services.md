@@ -117,12 +117,11 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
 - One `contributes.configuration` section per tool, each read in code by its own module: `aiSettings.ts`
   (`nuclear.ai.*`), `../tools/nuclear-builder/src/settings.ts`, `spending.ts`, `chatView.ts` (`nuclear.chat.gifs`,
   given to the chat as the workspace's `gifs`, every project registered again when it changes), and the `settings.ts`
-  of HTTP Connections and the devices. `nuclear.atlas.contextTokens` is read by nothing since Atlas's page is the
-  chat (Atlas's roadmap).
+  of HTTP Connections and the devices. Nuclear Atlas has no setting of its own (`nuclear.atlas.contextTokens`
+  is gone with its former meter).
 - The settings that moved (`MOVED` in `migrateSettings.ts`: `nuclear.ai.claudeModel` → `nuclear.builder.claudeModel`,
   `nuclear.ai.claude.maxBudgetUsd` → `nuclear.spending.budgetUsd`, `nuclear.ai.resumeInterrupted`,
-  `nuclear.ai.watch.minFreeMb` and `nuclear.ai.watch.commandTimeoutMinutes` → `nuclear.builder.*`,
-  `nuclear.ai.contextTokens` → `nuclear.atlas.contextTokens`) are copied at start-up at every level where the user
+  `nuclear.ai.watch.minFreeMb` and `nuclear.ai.watch.commandTimeoutMinutes` → `nuclear.builder.*`) are copied at start-up at every level where the user
   set them (user, workspace, folder); the old one is removed only once the new one holds the value, and a level
   where the new id already has a value keeps both.
 - The local models on standby: a `nuclear.builder.chat` of the kind `local` is removed at its level (the default,

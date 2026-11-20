@@ -316,6 +316,62 @@
    }
   },
   {
+   "id": "concept:workspace",
+   "type": "concept",
+   "title": "The workspace: one business project and its apps (`.workspace/workspace.nuc`)",
+   "summary": "A workspace is a folder for one business project and the apps that form it (a backend, web sites, mobile apps), marked by `.workspace/workspace.nuc`. The editor, the MCP server and agents recognize it, so work starts there instead of searching a folder full of projects. `nuclear workspace` makes it and adds, renames and removes its apps; the MCP server does the same, asking the user first.",
+   "body": [
+    "```nuclear",
+    "// .workspace/workspace.nuc",
+    "workspace(name = \"citofony\", description = \"An intercom for buildings\")",
+    "app(folder = \"citofony_api\", platform = \"backend\")",
+    "app(folder = \"citofony_web\", platform = \"web\")",
+    "app(folder = \"citofony_client\", platform = \"mobile\")",
+    "```",
+    "",
+    "- `nuclear workspace new <path> [--name] [--description]`, `add <app> --platform mobile|web|backend [--dialect]`, `remove <app> [--delete]`, `rename <app> <new>`, `edit`, `list`, `show`, `find` (all with `--json`); `--workspace <dir>`, else the workspace holding the current folder.",
+    "- Each app is a Synapsis project in its own folder of the workspace (its `config.nuc`); its folder is the snake_case project name. `nuclear new` run inside a workspace makes the app in the workspace's root and adds it.",
+    "- `nuclear check` in the workspace's root checks every app; `nuclear doctor` shows the workspace and a missing app's folder.",
+    "- An agent: `workspace_show` first, then `workspace_create` / `app_add` (never a loose folder); every change is asked first.",
+    "- The editor remembers the workspaces (recent ones) and shows the open one's apps as the projects of the Nuclear workspace."
+   ],
+   "keys": [
+    "workspace",
+    "workspace.nuc",
+    ".workspace",
+    "apps",
+    "monorepo",
+    "business project",
+    "nuclear workspace",
+    "proyecto de negocio"
+   ],
+   "asks": [
+    "how do I create a workspace",
+    "how do I add an app to my project",
+    "where do I keep the backend and the web app together",
+    "como creo un workspace",
+    "what is a nuclear workspace"
+   ],
+   "links": [
+    {
+     "rel": "each-app-is",
+     "to": "concept:config"
+    },
+    {
+     "rel": "agents-use",
+     "to": "concept:mcp"
+    }
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/projects.md",
+    "tools/cli/docs/08-guides/workspace.md",
+    "docs/04-specs/022-workspaces-and-mcp/requirements.md"
+   ],
+   "meta": {
+    "topic": "synapsis"
+   }
+  },
+  {
    "id": "concept:config",
    "type": "concept",
    "title": "`config.nuc` and the connections: the configuration of a project",
@@ -347,7 +403,8 @@
     "",
     "Real time and guards are configuration too: a backend's `WebSocketServer(path = \"ws\")` in `connections` and `guards: Guard[] = [NoOrigin(), Token(value = env(\"TOKEN\"))]`; a web app's `WebSocket(url = \"ws://...\")` instead of `Http(...)` (can:real-time, can:backend-guards).",
     "",
-    "A value that changes per machine or per environment comes from `env(\"DATABASE_URL\", \"default\")`, valued by the project's `.env` files and the keyring (concept:environments). A secret is never written in the code."
+    "A value that changes per machine or per environment comes from `env(\"DATABASE_URL\", \"default\")`, valued by the project's `.env` files and the keyring (concept:environments). A secret is never written in the code.",
+    "Several apps of one business project live in a workspace: a folder with `.workspace/workspace.nuc` that lists them, each with its own `config.nuc` (concept:workspace)."
    ],
    "keys": [
     "config.nuc",
@@ -382,6 +439,10 @@
     {
      "rel": "environments",
      "to": "concept:environments"
+    },
+    {
+     "rel": "grouped-in",
+     "to": "concept:workspace"
     }
    ],
    "sources": [

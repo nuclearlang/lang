@@ -1,7 +1,7 @@
 use sys
 use pathlib{ Path }
 
-// The commands of the specs (`nuclear-builder spec new | list | show | delete | move | migrate | accept | discard [--json]`), for a terminal and the
+// The commands of the specs (`nuclear-builder spec new | list | show | update | delete | move | migrate | accept | discard [--json]`), for a terminal and the
 // editors (JSON on stdout, an error as {"error": "…"} with exit code 1); the layout is specs.nuc's.
 
 // `spec new`: the spec's base in its component's folder, with its acceptance criteria; its id from the title, never
@@ -42,6 +42,21 @@ specShow(root: string, id: string) <string, any>
   draft = dir.joinpath(SPEC_DRAFT)
   run = loadRun(root, id)
   { "id": id, "path": found!["path"], "text": text, "spec": parseSpec(text, id), "draft": draft.isFile() ? draft.readText(encoding = "utf-8") : null, "run": run == null ? null : run!["status"] }
+
+// `spec update`: the spec's whole markdown (from its `# title`) written over its file at once; its folder, documents
+// and checks stay; a spec whose run is running stays as it is.
+specUpdate(root: string, id: string, text: string) <string, any>
+  found = findSpec(root, id)
+  if found == null
+    throw ValueError("no spec `${id}` (nuclear-builder spec list)")
+  if not text.trim().startsWith("# ")
+    throw ValueError("a spec's markdown starts with its `# title`")
+  run = loadRun(root, id)
+  if run != null and run!["status"] == "running" and not orphaned(run!["owner"])
+    throw ValueError("the run ${id} is running: change its spec when it ends")
+  written = text.trim() + "\n"
+  writeAtomic(Path(root, "${found!["path"]}", "spec.md"), written)
+  { "id": id, "path": found!["path"], "spec": parseSpec(written, id) }
 
 // `spec delete`: the spec's folder (its documents and checks among it) goes to `.nuclear/builder/deleted/`, never
 // destroyed; a spec whose run is running stays.
@@ -190,7 +205,7 @@ specSettle(root: string, id: string, accept: bool) <string, any>
   draft.unlink()
   { "id": id, "path": found!["path"], "accepted": true, "spec": parseSpec(text, id) }
 
-// `nuclear-builder spec new|list|show|delete|move|migrate|accept|discard [--json]`
+// `nuclear-builder spec new|list|show|update|delete|move|migrate|accept|discard [--json]`
 specLine(args: string[]) int
   root = projectRoot("${Path.cwd()}")
   what = args.isEmpty ? "list" : args[0]
@@ -210,6 +225,9 @@ specLine(args: string[]) int
     else if what == "show" and not words.isEmpty
       shown = specShow(root, words[0])
       asJson ? printJson(shown) : print(shown["text"])
+    else if what == "update" and not words.isEmpty
+      changed = specUpdate(root, words[0], sys.stdin.read())
+      asJson ? printJson(changed) : print("wrote ${changed["path"]}/spec.md")
     else if what == "delete" and not words.isEmpty
       gone = specDelete(root, words[0])
       asJson ? printJson(gone) : print("${gone["from"]} → ${gone["kept"]}")
@@ -229,7 +247,7 @@ specLine(args: string[]) int
       if done.any((d) => d["error"] != null)
         return 1
     else
-      printJson({ "error": "usage: nuclear-builder spec new --title … --component … [--layer …] [--use-case …] [--description …] [--criteria …]... [--stdin] | list | show <id> | delete <id> | move <id> --component … [--layer …] | migrate | accept <id> | discard <id> [--json]" })
+      printJson({ "error": "usage: nuclear-builder spec new --title … --component … [--layer …] [--use-case …] [--description …] [--criteria …]... [--stdin] | list | show <id> | update <id> --stdin | delete <id> | move <id> --component … [--layer …] | migrate | accept <id> | discard <id> [--json]" })
       return 1
   catch e
     if not isinstance(e, ValueError) and not isinstance(e, OSError)

@@ -10,9 +10,9 @@ related: [requirements.md, tasks.md]
 ```nuclear
 // The workspace: the business project and the apps that form it (nuclear workspace …).
 workspace(name = "citofony", description = "An intercom for buildings")
-app(folder = "citofony-api", platform = "backend")
-app(folder = "citofony-web", platform = "web")
-app(folder = "citofony-client", platform = "mobile")
+app(folder = "citofony_api", platform = "backend")
+app(folder = "citofony_web", platform = "web")
+app(folder = "citofony_client", platform = "mobile")
 ```
 A folder is a workspace when it holds `.workspace/workspace.nuc`. Each app is a Synapsis project (its `config.nuc`)
 in the named folder. The `.workspace/` folder can hold more later (the workspace's specs or teams); nothing else is
@@ -31,6 +31,23 @@ nuclear workspace find [--json]                   # the workspace that holds the
 ```
 `--workspace` absent: the workspace that holds the current folder. `--json` gives `show`'s object (or `{error}`).
 Deleting an app's folder only with `--delete`.
+
+As built (the CLI, 2026-11-20):
+- An app's folder is the name `nuclear new` gives the project: letters, digits and `_` (`add citofony-api` makes
+  `citofony_api`), so the folders of requirement 1 are written with `_`. A marker written by hand may name any plain
+  folder (one name, no `/`, no `..`, not hidden); `workspace(...)` takes only `name` and `description`, `app(...)`
+  only `folder` and `platform`; anything else is N0303 with its line.
+- `<app>` in the commands is the app's folder. In the JSON, `name` is the project's name (`app(name)` of its
+  `config.nuc`, else its folder's) and `dialect` its `config.nuc`'s (`null` without one); `exists`: the folder is there.
+- Every command with `--json` prints `show`'s object (`list` too); `find` outside a workspace prints `null` (exit 0);
+  a refusal prints `{"error": "..."}` (exit 1).
+- `add` passes `nuclear new`'s own options on (`--org`, `--websocket`, `--token`). `new` refuses a folder inside
+  another workspace and a project's folder.
+- `rename <app> <new>` without `--project-name` leaves `config.nuc` as it is.
+- `nuclear check` in a workspace's folder (not inside an app) checks every app; with `--json` it asks to run it in
+  one app. `nuclear doctor` there adds a Workspace line (its apps, a missing folder).
+- The atlas topic `workspace` is the CLI's guide (`tools/cli/docs/08-guides/workspace.md`); the editor's workspace
+  panel is the topic `editor-workspace`.
 
 ## The editor
 - Recent workspaces: `globalState` `nuclear.workspaces.recent` (root, name, last opened), never `workspaceState`.

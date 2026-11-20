@@ -50,12 +50,12 @@ out(text: string) <string, any>
 
 testEveryToolIsDocumentedAndEveryPageActionNamesOne() void
   names = builderToolNames()
-  expect(names.length == 56 and names.length == builderToolList(".").length, "${names.length}")
+  expect(names.length == 57 and names.length == builderToolList(".").length, "${names.length}")
   page = builderDir().joinpath("docs", "02-architecture", "actions.md").readText()
   for name in names
     expect("`${name}`" in page, "${name} is not in actions.md")
   // every command a tool names is in the command's help
-  for command in ["spec new", "spec show", "run answer", "run stop", "team member", "line show", "connections", "read <path>", "mcp", "skills list", "skills show", "skills clone", "skills create", "team skills set", "metrics"]
+  for command in ["spec new", "spec show", "spec update", "run answer", "run stop", "team member", "line show", "connections", "read <path>", "mcp", "skills list", "skills show", "skills clone", "skills create", "team skills set", "metrics"]
     expect("nuclear-builder ${command}" in USAGE, command)
 
 testTheMcpServerSpeaksTheProtocolInAProject(tmpPath: Path, monkeypatch: any) void

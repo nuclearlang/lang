@@ -5,7 +5,9 @@
 #   installer/tests/run.sh            every case, one after the other
 #   installer/tests/run.sh E4 D2      only those
 #
-# PS1 parses install.ps1 in a PowerShell container (one at a time, 1 CPU, 1 GB: this machine has limits).
+# OUT1 renders what a terminal shows (util-linux `script`, python3: installer/tests/screen.py) and reads it as the user
+# does; UPD1 downloads the previous published release (network: "skipped (offline)" without it, which
+# installer/release/delivery.sh refuses unless --offline-ok). PS1 parses install.ps1 in a PowerShell container (one at a time, 1 CPU, 1 GB: this machine has limits).
 #
 # Never the real HOME: every test runs in a new empty folder with HOME and every XDG folder inside it, and the AI
 # services are skipped (--no-ai), so nothing is registered at login and no port is taken.
@@ -120,6 +122,56 @@ P1() {  # the local profiles are on standby (ADR-platform-0013): asked or rememb
   check '[ "$(grep -c "Write only the logic" "$H/out")" -le 1 ]' "the sign and the motto are shown once"
 }
 
+OUT1() {  # what the user reads: the installer in a terminal of 80 and of 60 columns, with colors, as the screen shows it
+  if ! script -qec true /dev/null < /dev/null > /dev/null 2>&1; then echo "  - OUT1 skipped (no util-linux script)"; return; fi
+  machine OUT1
+  check 'python3 "$ROOT/installer/tests/screen.py" --self-test > "$H/out" 2>&1' "the screen renderer passes its self-test"
+  for c in 80 60; do
+    machine "OUT1-$c"
+    env -i PATH="$PATH" HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" \
+      XDG_STATE_HOME="$H/.local/state" XDG_DATA_HOME="$H/.local/share" TERM=xterm-256color COLORTERM=truecolor \
+      NUCLEAR_DOWNLOAD="file://$DIST" script -qec "stty cols $c rows 40; sh '$INSTALLER' --no-ai --no-vscode" "$H/tty" \
+      < /dev/null > /dev/null 2>&1
+    python3 "$ROOT/installer/tests/screen.py" "$c" "$H/tty" > "$H/screen" 2> "$H/out"
+    check '[ ! -s "$H/out" ]' "$c columns: every box's right border at its column or absent, no box line wrapped, no frame of the sign left"
+    cp "$H/screen" "$H/out"
+    check '! grep -q -i -e "ADR-" -e "spec 0" -e "standby" -e "TODO" "$H/screen"' "$c columns: no internal text (ADR ids, specs, standby, TODO)"
+    check '[ "$(grep -c "Write only the logic" "$H/screen")" = 1 ]' "$c columns: the sign and its motto once"
+    check '[ ! -e "$H/.local/state/synapsis/intro_seen" ] && grep -q "is installed" "$H/screen"' "$c columns: no nuclear intro, and the summary"
+  done
+}
+
+# The newest published release older than this tree's version, and its files for this system in $1 (a mirror).
+previous_release() {
+  current=$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/Cargo.toml" | head -n 1)
+  PREV=$(curl -fsS --max-time 15 "https://api.github.com/repos/nuclearlang/lang/releases?per_page=30" 2>/dev/null \
+    | sed -n 's/.*"tag_name": *"v\([0-9.]*\)".*/\1/p' | { cat; echo "$current"; } | sort -t . -k1,1n -k2,2n -k3,3n -u \
+    | sed -n "/^$current\$/{x;p;q;};h")
+  [ -n "$PREV" ] || return 1
+  case $(uname -s) in Darwin) os=macos ;; *) os=linux ;; esac
+  case $(uname -m) in arm64|aarch64) arch=aarch64 ;; *) arch=x86_64 ;; esac
+  name="nuclearlang-$PREV-$os-$arch.tar.gz"; url="https://github.com/nuclearlang/lang/releases/download/v$PREV"
+  mkdir -p "$1" && echo "$PREV" > "$1/latest" &&
+    curl -fsSL --max-time 120 -o "$1/$name" "$url/$name" && curl -fsSL --max-time 30 -o "$1/$name.sha256" "$url/$name.sha256" &&
+    curl -fsSL --max-time 30 -o "$1/install.sh" "$url/install.sh"
+}
+
+UPD1() {  # an update from the previous published release, as `nuclear update` runs it, and a symlinked nuclear
+  machine UPD1
+  if ! previous_release "$WORK/previous"; then echo "  - UPD1 skipped (offline: the previous release could not be downloaded)"; return; fi
+  env -i PATH="$PATH" HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" XDG_STATE_HOME="$H/.local/state" \
+    XDG_DATA_HOME="$H/.local/share" NO_COLOR=1 NUCLEAR_DOWNLOAD="file://$WORK/previous" \
+    sh "$WORK/previous/install.sh" --no-ai --no-vscode > "$H/out" 2>&1 < /dev/null
+  check 'grep -qx "$PREV" "$H/.local/share/nuclearlang/.version"' "the previous release ($PREV) installs with its own installer"
+  ENVS="NUCLEAR_UPDATE=1 NUCLEAR_INSTALL=$H/.local/share/nuclearlang" install_with --no-vscode
+  check 'grep -qx "$current" "$H/.local/share/nuclearlang/.version" && nuclear_runs' "this installer updates it to $current and nuclear runs"
+  check '[ -L "$H/.local/bin/nuclear" ]' "nuclear in ~/.local/bin is the installer's link"
+  env -i PATH="$PATH" HOME="$H" XDG_CONFIG_HOME="$H/.config" XDG_CACHE_HOME="$H/.cache" XDG_STATE_HOME="$H/.local/state" \
+    XDG_DATA_HOME="$H/.local/share" NO_COLOR=1 NUCLEAR_UPDATE_DRYRUN=1 "$H/.local/bin/nuclear" update > "$H/out" 2>&1 < /dev/null
+  check 'grep -q "would run .*NUCLEAR_INSTALL=.*nuclearlang NUCLEAR_UPDATE=1" "$H/out" && ! grep -q "was not installed" "$H/out"' \
+    "nuclear update through the link finds its installation"
+}
+
 PS1() {  # install.ps1 parses (PowerShell in one small container; skipped without Docker)
   machine PS1
   if ! command -v docker >/dev/null 2>&1; then echo "  - PS1 skipped (no docker)"; return; fi
@@ -128,7 +180,7 @@ PS1() {  # install.ps1 parses (PowerShell in one small container; skipped withou
   check '[ "$code" = 0 ]' "install.ps1 has no syntax errors"
 }
 
-ALL="D1 D2 E4 LOCK I1 D6 D7 D13 P1 PS1"
+ALL="D1 D2 E4 LOCK I1 D6 D7 D13 P1 OUT1 UPD1 PS1"
 for CASE in ${*:-$ALL}; do
   echo "$CASE"
   "$CASE"

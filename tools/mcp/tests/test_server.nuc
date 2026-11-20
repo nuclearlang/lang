@@ -22,7 +22,7 @@ testTheMcpServerOffersItsToolsAndNoneOfTheLocalOnesWhileTheLocalModelsAreOnStand
     expect("graph_strategy" in names and "generate_resource" in names and names[0] == "nuclear_start")
     expect(not names.any((name) => name.startsWith("developer_")))
   // an agent with no context is sent to nuclear_start before anything else
-  expect("call nuclear_start" in mcpServer().instructions!)
+  expect("call nuclear_start" in mcpServer().instructions! and "workspace" in mcpServer().instructions!)
   // every tool is in the guide of the MCP server
   page: string = Path(treeRoot()).joinpath("tools/mcp/docs/08-guides/mcp.md").readText()
   for name in toolNames()
@@ -45,7 +45,7 @@ testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape() void
 testAnAgentWithNoContextLearnsNuclearFromNuclearStart() void
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   start: string = asyncio.run(tools.nuclearStart())
-  expect("Start here" in start and "The work cycle with the MCP tools" in start and "example/" in start)
+  expect("Start here" in start and "The work cycle with the MCP tools" in start and "example/" in start and "workspace_create" in start and "confirm token" in start)
   // never sent to the local developer while the local models are on standby
   expect(not ("developer_task" in start) and not ("developer_review" in start))
   doc: string = asyncio.run(tools.nuclearDoc("control"))

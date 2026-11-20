@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-16
+updated: 2026-11-20
 related: [../02-architecture/overview.md, ../01-product/roadmap.md]
 ---
 # Testing the VS Code extension
@@ -12,6 +12,9 @@ related: [../02-architecture/overview.md, ../01-product/roadmap.md]
 |---|---|---|
 | Types | every file of `src/` and of `../tools/*/src` | `npm run compile` (`tsc -p . --noEmit` before the bundle) |
 | The editors' side, without the editor | the money's two confirmations, the moved settings, the teams through `nuclear-builder team`, a Builder run as a process (its question as an `ask`, the answer on stdin, exit 3 when nobody answers) against a stub command, the retries, the tools' `PATH`, the connections, Nuclear Atlas's templates, the 3B rule of the local models, every host text in Spanish, the language (`nuclear.language`: the setting, the editor, the system, the default), `l10n.t` (the Spanish bundle, the English fallback), every page dictionary's Spanish, the globe in every page's header | `npm test` → `../tools/nuclear-builder/test/editors.test.ts` (`vscode` stubbed by `test/vscode-stub.ts`) |
+| The Nuclear workspaces (spec 022) | `nuclear workspace … --json` parsed (the last JSON line, `null`, `{error}`, an older `nuclear`'s usage), the recent list (first, once, at most 10, only those still there), the projects opened by hand kept per folder until 0.83 joining the global list (fixtures `global-state-0.62.json`, `workspace-state-0.83.json`), the empty panel's reason, the dialects of a platform | `npm test` → `test/workspaces.test.ts` |
+| Spanish everywhere | every key of `package.nls.json` in `package.nls.es.json`; every `l10n.t('…')` literal of `src/` and `../tools/*/src` (and the backend scripts' details) in `l10n/bundle.l10n.es.json`; every page dictionary's `es` with every key of its `en` (nested ones too), and no file with a dictionary left out of the test | `npm test` → `test/l10n.test.ts` |
+| No local models (ADR-platform-0013) | no contributed setting (its id, its texts in English and Spanish) nor the Settings and integrations page names Ollama, a local model or profile, the Nuclear Developer or `contextTokens`; the Smart Graph's settings stay | `npm test` → `test/no-local.test.ts`; the old values in `../tools/nuclear-builder/test/compat.test.ts` |
 | The toolchains | the variables the settings give `nuclear` (a Flutter executable or SDK root, the included Python by default, the user's own variables kept), where each is found (setting → variable → NuclearLang's own → PATH, Windows' extensions), `nuclear doctor --json` and an older CLI without it | `npm test` → `test/toolchains.test.ts`; the welcome's step and the settings' section by hand in a headless browser |
 | The notifications' rules | what pops up for each `nuclear.notifications`, a notice seen by its tool or place, a repeat folded, the badges, which chat events call the user (direct messages, `@you`, questions, an answer's end; never the user's own, `system`, an edit, a run's progress or question) | `npm test` → `test/notify.test.ts`; the strip and the Builder's page by hand in a headless browser |
 | Nuclear Chat's host | the relay of the pages' frames (ids apart, the token added, one subscription per topic), the host file → the registration, a run's posts and buttons, a spec draft's difference, the connection against a fake socket (registered again and caught up after a reconnection; a service down answered 503 with how to fix it) | `npm test` → `test/chat.test.ts`; against the real service, by hand from Node (spec 013 T3.2's check) |

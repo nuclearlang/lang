@@ -114,6 +114,8 @@ takes about ten minutes and shows the time it has taken.
 | It says | What to do |
 |---|---|
 | the graph or Nuclear Chat on a port other than 7878 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. The ports are checked again at every login, before the services start (`nuclear-builder setup --ports`): a program that took one since gets the service moved. Nothing to do |
+| `the Nuclear Chat does not answer at ...` (or the Smart Graph), with its last lines | the set-up waited, started it again and, when another program held its port without answering, moved it to a free port; the lines it shows are the service's own (`~/Library/Logs/nuclear-chat.log` on macOS, `journalctl --user -u nuclear-chat` on Linux): fix what they say, then run the installer again |
+| `stopped another copy of the Nuclear Chat (process …)` | a copy of an older version, of a source install or started by hand was still running: one runs now, the one of this installation |
 | `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |
 | `no Python 3.12 or newer, and uv could not install one` | (from the source tree) install Python 3.12 or newer and try again |
 | Ollama was installed by the set-up; to take it away ... | on Linux without a terminal the set-up cannot ask for your password: run the commands it gives |

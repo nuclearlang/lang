@@ -352,7 +352,8 @@
    "body": [
     "**Looks like.** `no main.nuc or config.nuc in <folder> or above`, `<folder> is not inside a Synapsis project (no config.nuc)`.",
     "",
-    "**Next step.** `cd` into the project (the folder that has `config.nuc`), or `--project <dir>`; a new one: `nuclear new <name> -p backend|mobile|web`."
+    "**Next step.** `cd` into the project (the folder that has `config.nuc`), or `--project <dir>`; a new one: `nuclear new <name> -p backend|mobile|web`.",
+    "In a workspace's root (`.workspace/workspace.nuc`, not a project itself), `nuclear check` checks every app of the workspace; a command that needs one project is run in that app's folder (`nuclear workspace show` lists them) (concept:workspace)."
    ],
    "keys": [
     "no config.nuc",

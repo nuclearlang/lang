@@ -326,7 +326,7 @@ function chatItem() {
   return sectionOf('builder')?.items.find((i) => i.key === 'nuclear.builder.chat');
 }
 function toolsPage() {
-  const ids = ['builder', 'chat', 'atlas', 'http', 'devices', 'language'];
+  const ids = ['builder', 'chat', 'http', 'devices', 'language'];
   return { out: '<h2>' + esc(t('step.tools')) + '</h2><div class="muted">' + esc(t('toolsIntro')) + '</div>' + ids.map((id) => sectionOf(id) ? '<h3 class="sec">' + esc(sectionOf(id).title) + '</h3>' + settingsForm(sectionOf(id), ['nuclear.builder.team', 'nuclear.builder.chat', 'nuclear.language']) : '').join(''), nav: navBtns(at('spending'), at('summary')) };
 }
 /** The toolchains of the platforms the user builds: found where, or installed by them, by NuclearLang, or later. */

@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-17
+updated: 2026-11-20
 related: [../../../docs/01-product/roadmap.md, ../02-architecture/overview.md]
 ---
 # Roadmap of the JetBrains plugin
@@ -19,6 +19,11 @@ What is common to the three editors: [the editors' roadmap](../../../docs/01-pro
 
 ## Pending
 
+- **The Nuclear workspaces** (spec 022, VS Code has them since 2026-11-20): the recent workspaces kept by the IDE (not
+  by its project), the workspace's apps (`nuclear workspace show --json`) as the projects the tool windows act on,
+  refreshed when `.workspace/workspace.nuc` changes, the empty state (why, the recent ones, open, create), the actions
+  *Create a Workspace*, *Open a Workspace*, *Add / Remove / Rename an App* over `nuclear workspace … --json`, and the
+  welcome's three steps with *Do it with me by chat* (needs Nuclear Atlas in the plugin).
 - Mixed debugging in Android Studio (stepping by Nuclear line; VS Code has it).
 - **The language button** (spec 011, req. 18, T5.13): VS Code has `nuclear.language` (automatic, English, Español)
   and a globe in every page and the status bar; the plugin is in English only, with no setting and no button. It

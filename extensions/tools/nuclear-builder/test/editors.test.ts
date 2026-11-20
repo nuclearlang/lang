@@ -89,14 +89,14 @@ test('a setting that moved keeps the user\'s value; a value already set in the n
   reset();
   stub.store.globalValue['nuclear.ai.claude.maxBudgetUsd'] = 12;
   stub.store.globalValue['nuclear.ai.claudeModel'] = 'opus';
-  stub.store.globalValue['nuclear.ai.contextTokens'] = 4096;
-  stub.store.globalValue['nuclear.atlas.contextTokens'] = 16384;
+  stub.store.globalValue['nuclear.ai.resumeInterrupted'] = false;
+  stub.store.globalValue['nuclear.builder.resumeInterrupted'] = true;
   await migrateSettings();
   assert.equal(stub.store.globalValue['nuclear.spending.budgetUsd'], 12);
   assert.equal(stub.store.globalValue['nuclear.builder.claudeModel'], 'opus');
   assert.equal('nuclear.ai.claude.maxBudgetUsd' in stub.store.globalValue, false);
-  assert.equal(stub.store.globalValue['nuclear.atlas.contextTokens'], 16384);
-  assert.equal(stub.store.globalValue['nuclear.ai.contextTokens'], 4096, 'kept where the user can see it');
+  assert.equal(stub.store.globalValue['nuclear.builder.resumeInterrupted'], true);
+  assert.equal(stub.store.globalValue['nuclear.ai.resumeInterrupted'], false, 'kept where the user can see it');
 });
 
 /** A `nuclear-builder` that keeps teams in a folder, as the contract says (JSON on stdout, errors as {"error"} and 1). */

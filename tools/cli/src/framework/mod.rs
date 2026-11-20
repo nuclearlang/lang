@@ -21,6 +21,9 @@ mod setup;
 mod toolchain;
 mod vscode;
 mod watch;
+mod workspace;
+
+pub use workspace::MARKER as WORKSPACE_MARKER;
 
 use nuclear_diag::{SourceFile, json_items, render_text};
 use nuclear_dialect::{Dialect, Loader};
@@ -66,6 +69,23 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   explain [--json]                           a run-time error or a test's output (stdin) at its .nuc lines, explained
   monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
                                              calls in a loop, connections, memory) and each function's time
+
+workspace (spec 022: a folder whose .workspace/workspace.nuc names the business project and its apps;
+nuclear help workspace)
+  workspace new <path> [--name <n>] [--description <d>]
+                                             the folder and its marker
+  workspace add <app> --platform mobile|web|backend [--dialect <d>]
+                                             nuclear new of the app in the workspace's folder, written in the marker
+                                             (nuclear new anywhere inside a workspace does the same)
+  workspace remove <app> [--delete]          out of the marker; --delete also deletes its folder
+  workspace rename <app> <new> [--project-name] | rename --workspace-name <n>
+                                             the app's folder and its entry (--project-name: also its app(name))
+  workspace edit [--name <n>] [--description <d>]
+  workspace list | show | find               its apps; the workspace and its apps; the workspace of this folder
+      [--workspace <dir>] [--json]           default: the workspace that holds the current folder; --json: show's
+                                             object {root, name, description, apps: [{name, folder, platform,
+                                             dialect, exists}]} (find: or null), {error} when it fails
+  check (in a workspace's folder)            checks every app in turn (--json: run it in one app)
 
 environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,
 .env.<env>.local, the system's keyring, the process: the later wins)
@@ -159,6 +179,7 @@ const OWN: &[&str] = &[
     "new", "n", "make", "g", "gen", "run", "test", "install", "migrate", "add", "remove", "device", "dv", "devices",
     "terminal-device", "td", "watch", "code", "analyze", "clean", "repair", "explain", "pub", "flutter", "emulators",
     "logs", "screenshot", "attach", "gen-l10n", "doctor", "setup", "credits", "author", "intro", "monitor", "env",
+    "workspace",
 ];
 /// What `build` takes in a project of the framework instead of a path: a target of the platform's own tool.
 const TARGETS: &[&str] = &["apk", "appbundle", "ios", "ipa", "web", "macos", "linux", "windows"];
@@ -238,26 +259,33 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             print!("{}", landing::usage(USAGE));
             Ok(())
         }
-        "new" | "n" => new_project(rest),
+        "new" | "n" => {
+            // inside a workspace (any folder under it) the app goes to the workspace's folder and into its marker
+            let here = std::env::current_dir().unwrap_or_default();
+            new_project_in(rest, workspace::find(&here).as_deref())
+        }
+        "workspace" => {
+            // `--json`: only the JSON on stdout, whatever `nuclear new` runs (flutter create) prints
+            if rest.iter().any(|a| a == "--json") {
+                CHILD_STDOUT_TO_STDERR.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+            workspace::command(rest)
+        }
         "env" => with_root(project_dir, |root| env_command(root, &rest)),
         "make" | "g" => with_root(project_dir, |root| make(root, rest)),
         "gen" => with_root(project_dir, |root| gen_command(root, rest)),
-        "check" => with_root(project_dir, |root| {
-            // backend and web projects are checked by `nuclear` (it loads every dialect); the Flutter check below
-            // resolves pubspec packages and fonts, which they do not have
-            if non_mobile_manifest(root)?.is_some() {
-                let mut a = vec!["check", "."];
-                if rest.iter().any(|x| x == "--json") {
-                    a.push("--json");
-                }
-                // `--env` (spec 021): the child reports the required variables without a value too
-                if let Some(e) = crate::env::explicit() {
-                    a.extend(["--env", e]);
-                }
-                return run("nuclear", root, &a);
+        "check" => {
+            let here = std::env::current_dir().unwrap_or_default();
+            let in_project = here.ancestors().any(|d| d.join("main.nuc").is_file() || d.join(packages::CONFIG).is_file());
+            match workspace::find(&here).filter(|_| project_dir.is_none() && !in_project) {
+                // a workspace's folder (not one of its apps): every app checked in turn; JSON is one app's
+                Some(_) if rest.iter().any(|a| a == "--json") => Err(
+                    "this is a workspace's folder: run `nuclear check --json` in one of its apps (--project <folder>)".into(),
+                ),
+                Some(ws) => workspace::check_all(&ws, |root| check_project(root, &rest)),
+                None => with_root(project_dir, |root| check_project(root, &rest)),
             }
-            check(root, rest.iter().any(|a| a == "--json"))
-        }),
+        }
         "agent" if rest.first().is_some_and(|a| a == "init") => {
             with_root(project_dir, |root| agent_init(root, &any_manifest(root).map(|m| m.dialect)?))
         }
@@ -353,7 +381,7 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             if rest.iter().any(|a| a == "--json") {
                 println!("{}", doctor::json());
             } else {
-                doctor::doctor(start.ancestors().find(|d| d.join("main.nuc").is_file()));
+                doctor::doctor(start.ancestors().find(|d| d.join("main.nuc").is_file()), workspace::find(&start).as_deref());
             }
             Ok(())
         }
@@ -396,6 +424,24 @@ pub fn main(mut args: Vec<String>) -> ExitCode {
             if e == CODE_ERRORS { ExitCode::from(2) } else { ExitCode::FAILURE }
         }
     }
+}
+
+/// `nuclear check` in one project.
+fn check_project(root: &Path, rest: &[String]) -> Result<(), String> {
+    // backend and web projects are checked by `nuclear` (it loads every dialect); the Flutter check below
+    // resolves pubspec packages and fonts, which they do not have
+    if non_mobile_manifest(root)?.is_some() {
+        let mut a = vec!["check", "."];
+        if rest.iter().any(|x| x == "--json") {
+            a.push("--json");
+        }
+        // `--env` (spec 021): the child reports the required variables without a value too
+        if let Some(e) = crate::env::explicit() {
+            a.extend(["--env", e]);
+        }
+        return run("nuclear", root, &a);
+    }
+    check(root, rest.iter().any(|a| a == "--json"))
 }
 
 /// Removes `--name value` from `args` and returns the value.
@@ -1002,6 +1048,9 @@ fn shell_output(dir: &Path, command: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&out.stdout).into_owned())
 }
 
+/// Set by a command whose stdout is JSON: the programs `run` starts print on stderr.
+static CHILD_STDOUT_TO_STDERR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 fn run(program: &str, dir: &Path, args: &[&str]) -> Result<(), String> {
     let shown = format!(
         "{} {}",
@@ -1009,7 +1058,11 @@ fn run(program: &str, dir: &Path, args: &[&str]) -> Result<(), String> {
         args.join(" ")
     );
     eprintln!("{} {}", landing::dim("$"), landing::cmd(&shown));
-    let status = Command::new(program).args(args).current_dir(dir).status().map_err(|e| match e.kind() {
+    let mut command = Command::new(program);
+    if CHILD_STDOUT_TO_STDERR.load(std::sync::atomic::Ordering::Relaxed) {
+        command.stdout(std::io::stderr());
+    }
+    let status = command.args(args).current_dir(dir).status().map_err(|e| match e.kind() {
         std::io::ErrorKind::NotFound if program.ends_with("flutter") => format!("{program}: {e}\n\n{NO_FLUTTER}"),
         _ => format!("cannot run {program}: {e}"),
     })?;
@@ -1074,7 +1127,9 @@ fn hint_for(word: &str) -> String {
 /// `nuclear new [-p mobile] [-d flutter] <name>`: a project of a platform, built with a dialect (ADR-synapsis-0002).
 /// Only mobile/flutter gets its app created and built here; a backend project gets its `.nuc` skeleton and is
 /// built with `nuclear build .`.
-fn new_project(rest: Vec<String>) -> Result<(), String> {
+/// Inside a workspace (`workspace`: its folder) the project is made in the workspace's folder and written into its
+/// marker as soon as its `.nuc` files are (before Flutter, which may be missing).
+fn new_project_in(rest: Vec<String>, workspace: Option<&Path>) -> Result<(), String> {
     let mut rest = rest;
     let org = take_option(&mut rest, "--org").unwrap_or_else(|| "com.example".into());
     // real time and guards (ADR-synapsis-0007, ADR-synapsis-0008)
@@ -1090,7 +1145,11 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
     if let Some(extra) = rest.get(1) {
         return Err(format!("unexpected argument '{extra}' ({})\n{usage}", hint_for(extra)));
     }
-    let root = PathBuf::from(&name);
+    let root = workspace.map_or_else(|| PathBuf::from(&name), |w| w.join(&name));
+    let register = || match workspace {
+        Some(w) => workspace::register(w, &name, &platform).map(|_| eprintln!("  {} {} ({})", landing::ok("added"), name, w.join(workspace::MARKER).display())),
+        None => Ok(()),
+    };
     if root.join(packages::CONFIG).exists() {
         return Err(format!("{} already has a config.nuc", root.display()));
     }
@@ -1115,6 +1174,7 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
         let backend = backend.unwrap_or_else(|| "http://localhost".into());
         let report = scaffold::write(&root, &scaffold::web_project(&name, &dialect, &backend, &options)).map_err(|e| e.to_string())?;
         eprintln!("{}", written(&report));
+        register()?;
         new_agent_files(&root, &name, &platform, &d);
         eprintln!("\n{} web project {} created. Next:", landing::ok("✓"), landing::name(&name));
         eprintln!("  {}", landing::cmd(&format!("cd {name} && nuclear build")));
@@ -1126,6 +1186,7 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
     if platform != MOBILE {
         let report = scaffold::write(&root, &scaffold::backend_project(&name, &dialect, &options)).map_err(|e| e.to_string())?;
         eprintln!("{}", written(&report));
+        register()?;
         new_agent_files(&root, &name, &platform, &d);
         eprintln!("\n{} {platform} project {} created. Next:", landing::ok("✓"), landing::name(&name));
         eprintln!("  {}", landing::cmd(&format!("cd {name} && nuclear build && nuclear install")));
@@ -1135,6 +1196,7 @@ fn new_project(rest: Vec<String>) -> Result<(), String> {
     }
     let report = scaffold::write(&root, &scaffold::project(&name)).map_err(|e| e.to_string())?;
     eprintln!("{}", written(&report));
+    register()?;
     // AI agents: AGENTS.md, CLAUDE.md, the Cursor rule and the check hook (not fatal: nuclear may be missing)
     new_agent_files(&root, &name, &platform, &d);
     let next = format!("\n\nThe project's .nuc files are in {name}/. Once Flutter works: cd {name} && nuclear build");
@@ -1162,8 +1224,10 @@ fn new_agent_files(root: &Path, name: &str, platform: &str, d: &nuclear_dialect:
         Ok(report) => eprintln!("{}", written(&report)),
         Err(e) => eprintln!("{} {e}", landing::dim("context documents not written:")),
     }
-    if let Err(e) = agent_init(root, &d.name) {
-        eprintln!("{} {e}", landing::dim("agent files not written:"));
+    match crate::agent::init(root, Some(&d.name), None) {
+        // stderr: `nuclear workspace add --json` keeps stdout for its JSON
+        Ok(done) => done.iter().for_each(|d| eprintln!("✓ {d}")),
+        Err(e) => eprintln!("{} {e}", landing::dim("agent files not written:")),
     }
 }
 

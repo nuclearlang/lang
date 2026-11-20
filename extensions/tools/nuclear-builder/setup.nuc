@@ -1,4 +1,5 @@
 use os
+use signal
 use sys
 use json
 use time
@@ -364,10 +365,14 @@ choosePort(preferred: int, ours: (port: int) => boolean, taken: int[] = []) int
 // choice: every service and client reads them there (ADR-installer-0003).
 servicePorts(say: (line: string) => void) <string, string>
   m = readMachine()
-  graph = choosePort((m["NUCLEAR_GRAPH_PORT"] ?? "").toInt() ?? PORTS["graph"]!, (p) => up("http://127.0.0.1:${p}/v1/health"))
-  developer = choosePort((m["NUCLEAR_DEVELOPER_PORT"] ?? "").toInt() ?? PORTS["developer"]!, (p) => up("http://127.0.0.1:${p}/docs"), [graph])
+  // a port is ours when our service answers there, or when it is the one written for our service and that service is
+  // loaded in the system's manager: it may still be starting (spec 018 F2: the graph's agent chooses the ports again at
+  // each start, maybe while Nuclear Chat starts; its port must not move under it)
+  mine = (name: string, key: string, path: string) => (p: int) => up("http://127.0.0.1:${p}${path}") or ("${p}" == (m[key] ?? "") and loaded(name))
+  graph = choosePort((m["NUCLEAR_GRAPH_PORT"] ?? "").toInt() ?? PORTS["graph"]!, mine("graph", "NUCLEAR_GRAPH_PORT", "/v1/health"))
+  developer = choosePort((m["NUCLEAR_DEVELOPER_PORT"] ?? "").toInt() ?? PORTS["developer"]!, mine("developer", "NUCLEAR_DEVELOPER_PORT", "/docs"), [graph])
   say(portLine("Smart Graph", graph, PORTS["graph"]!))
-  chat = choosePort((m["NUCLEAR_CHAT_PORT"] ?? "").toInt() ?? PORTS["chat"]!, (p) => up("http://127.0.0.1:${p}/workspaces"), [graph, developer])
+  chat = choosePort((m["NUCLEAR_CHAT_PORT"] ?? "").toInt() ?? PORTS["chat"]!, mine("chat", "NUCLEAR_CHAT_PORT", "/workspaces"), [graph, developer])
   say(portLine("Nuclear Developer", developer, PORTS["developer"]!))
   say(portLine("Nuclear Chat", chat, PORTS["chat"]!))
   { "NUCLEAR_GRAPH_PORT": "${graph}", "NUCLEAR_DEVELOPER_PORT": "${developer}", "NUCLEAR_CHAT_PORT": "${chat}" }
@@ -555,6 +560,14 @@ serviceManager() boolean
   sys.platform == "darwin" or sys.platform == "win32"
 
 // Starts a service again through the system's manager; false when the system keeps none (the caller starts it).
+// Our service of `name` is loaded in the system's manager (running or starting); false without one.
+loaded(name: string) boolean
+  if sys.platform == "darwin"
+    return capture(["launchctl", "print", "${gui()}/${label(name)}"]).code == 0
+  if sys.platform == "linux"
+    return capture(["systemctl", "--user", "show", "-p", "ActiveState", "--value", "nuclear-${name}"]).out.trim() in ["active", "activating", "reloading"]
+  false
+
 restartService(name: string) boolean
   file = serviceFiles().find((f) => name in f.path or sys.platform == "win32")
   if file == null or not Path(file.path).exists() or not serviceManager()
@@ -649,14 +662,107 @@ startService(name: string, url: string, say: (line: string) => void) void
       env[k] = v
     detach([joinOn(sys.platform, [binDir(), s.args[0]]), ...s.args.skip(1)], env)
     say("started ${s.args[0]} (this system starts no services at login: start it again after a restart, here or in the editor's settings)")
-  for i in 0..120
-    if up(url)
-      break
-    time.sleep(0.5)
-  if not up(url)
-    journal = sys.platform == "linux" ? " (journalctl --user -u nuclear-${name} -n 30)" : ""
-    throw RuntimeError("the ${s.title} does not answer at ${url}${journal}")
+  // a first start can be slow (a new Python compiles its files, a database is made): waited for, then the service is
+  // restarted once, then, when another program holds its port without answering, it moves to a free port
+  if not waitUp(url, 90.0)
+    say("${s.title} does not answer yet at ${url}: started again")
+    restartService(name)
+    if not waitUp(url, 90.0)
+      moved = movePort(name, say)
+      if moved == null or not waitUp(moved!, 90.0)
+        throw RuntimeError("the ${s.title} does not answer at ${moved ?? url}, after waiting, a restart${moved != null ? " and a new port" : ""}. Its last lines:\n${serviceLog(name)}")
+      url = moved!
+  for pid in strays(name, psLines(), jobPid(name))
+    stopProcess(pid)
+    say("stopped another copy of the ${s.title} (process ${pid}): one runs, the one of this installation")
   say("${s.title}: ${url}")
+
+// What marks a process as one of our services, whatever started it: the AI archive's launcher (`-c … <module>.cli`)
+// or a script of a source install (`nuclear-<name> serve`).
+SERVICE_MARKS: <string, string[]> = { "graph": ["nuclear_graph.cli", "nuclear-graph serve"], "chat": ["nuclear_chat_system.cli", "nuclear-chat serve"], "developer": ["uvicorn app.main:app"] }
+
+// The processes of this machine: `<pid> <command line>` each (none on Windows: its services stop with the install).
+psLines() string[]
+  if sys.platform == "win32"
+    return []
+  capture(["ps", "-axo", "pid=,command="]).out.split("\n")
+
+// The process the system's manager runs for our service of `name` (0: none known).
+jobPid(name: string) int
+  if sys.platform == "darwin"
+    for line in capture(["launchctl", "print", "${gui()}/${label(name)}"]).out.split("\n")
+      at = line.trim()
+      if at.startsWith("pid = ")
+        return at.substring(6).trim().toInt() ?? 0
+  if sys.platform == "linux"
+    return capture(["systemctl", "--user", "show", "-p", "MainPID", "--value", "nuclear-${name}"]).out.trim().toInt() ?? 0
+  0
+
+// The copies of our service of `name` other than the one the system's manager runs (an older version's left running,
+// one started by hand or by a source install): each holds the port or competes for it. None when the manager's own
+// process is not known (nothing is stopped on a guess).
+strays(name: string, lines: string[], job: int) int[]
+  if job == 0
+    return []
+  marks = SERVICE_MARKS[name] ?? ([] as string[])
+  found: int[] = []
+  for line in lines
+    row = line.trim()
+    at = row.indexOf(" ")
+    pid = at > 0 ? row.substring(0, at).toInt() ?? 0 : 0
+    command = pid > 0 ? row.substring(at + 1).trim() : ""
+    // the service itself (`… serve`), never a command of the same tool (`nuclear-graph ingest`) nor a shell around it
+    serving = name == "developer" or command.endsWith(" serve") or " serve " in command
+    if pid > 0 and pid != job and pid != os.getpid() and serving and marks.any((m) => m in command) and not ("/bin/sh -c" in command)
+      found.add(pid)
+  found
+
+stopProcess(pid: int) void
+  try
+    os.kill(pid, signal.SIGTERM)
+  catch e
+    if not isinstance(e, OSError)
+      throw e
+
+// Waits up to `seconds` for something to answer at `url`.
+waitUp(url: string, seconds: double) boolean
+  until = time.monotonic() + seconds
+  while time.monotonic() < until
+    if up(url)
+      return true
+    time.sleep(0.5)
+  up(url)
+
+// The service of `name` to a free port when another program holds its own without answering: the machine's file and
+// the service's file written again, the service loaded again. Its new url, or null when its port is free (the
+// service itself does not start: a new port would not help).
+movePort(name: string, say: (line: string) => void) string?
+  key = "NUCLEAR_${name.upper()}_PORT"
+  m = readMachine()
+  held = (m[key] ?? "").toInt() ?? PORTS[name]!
+  if canListen(held)
+    return null
+  others = ["graph", "developer", "chat"].filter((n) => n != name).map((n) => (m["NUCLEAR_${n.upper()}_PORT"] ?? "").toInt() ?? PORTS[n]!)
+  port = choosePort(held + 1, (p) => false, others)
+  values: <string, string> = {}
+  values[key] = "${port}"
+  writeMachine(values)
+  say("${serviceOf(name).title}: port ${port} (${held} is held by another program that does not answer)")
+  enableServices(say, [serviceOf(name)])
+  restartService(name)
+  "${urls()[name]}${name == "graph" ? "/v1/health" : name == "chat" ? "/workspaces" : "/docs"}"
+
+// The last lines the service wrote (macOS: its log in ~/Library/Logs; Linux: its journal), for the error it ends in.
+serviceLog(name: string) string
+  if sys.platform == "darwin"
+    log = Path.home().joinpath("Library", "Logs", "nuclear-${name}.log")
+    if not log.isFile()
+      return "(no ${log})"
+    lines = log.readText(encoding = "utf-8", errors = "replace").split("\n").filter((l) => l.trim().length > 0)
+    return lines.slice(Math.max(0, lines.length - 15)).join("\n")
+  if sys.platform == "linux"
+    return capture(["journalctl", "--user", "-u", "nuclear-${name}", "-n", "15", "--no-pager"]).out.trim()
+  "(see the service's window)"
 
 // ---------- from the working tree (no AI archive) ----------
 

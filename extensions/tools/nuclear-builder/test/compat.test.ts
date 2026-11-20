@@ -54,14 +54,18 @@ test('every setting of an earlier version under a moved id reaches its new id at
   for (const l of Object.values(stub.store)) for (const k of Object.keys(l)) delete l[k];
   const before = read(path.join(EDITOR, 'settings-0.57.json')) as Record<string, Record<string, unknown>>;
   for (const [level, values] of Object.entries(before)) Object.assign(stub.store[level], values);
-  // the fixture holds every id that moved
-  assert.deepEqual(Object.keys(before.globalValue).sort(), Object.keys(MOVED).sort());
+  // the fixture holds every id that moved, and one removed since (Atlas's former meter): ignored, never moved
+  assert.deepEqual(Object.keys(before.globalValue).sort(), [...Object.keys(MOVED), 'nuclear.ai.contextTokens'].sort());
   // one folder open: its own level too
   (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [{ uri: { fsPath: '/home/someone/app' } }];
   await migrateSettings();
   (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = undefined;
   for (const [level, values] of Object.entries(before))
     for (const [from, value] of Object.entries(values)) {
+      if (!(from in MOVED)) {
+        assert.equal(stub.store[level][from], value, `${level} ${from} left as it was`);
+        continue;
+      }
       assert.equal(stub.store[level][MOVED[from]], value, `${level} ${from}`);
       assert.equal(from in stub.store[level], false, `${level} ${from} removed`);
     }
@@ -117,7 +121,7 @@ test('the local models of an earlier version (ADR-platform-0013): a local chat g
   // the settings that only served the local models are no longer declared
   const pkg = read(path.join(EXTENSIONS, 'vscode', 'package.json')) as { contributes: { configuration: { properties: Record<string, { default?: { kind?: string }; properties?: { kind?: { enum?: string[] } } }> }[] } };
   const props = Object.assign({}, ...pkg.contributes.configuration.map((c) => c.properties));
-  for (const k of ['nuclear.ai.developerUrl', 'nuclear.ai.ollamaUrl', 'nuclear.ai.models.coder', 'nuclear.ai.models.assistant', 'nuclear.ai.watch.stallSeconds']) assert.equal(k in props, false, k);
+  for (const k of ['nuclear.ai.developerUrl', 'nuclear.ai.ollamaUrl', 'nuclear.ai.models.coder', 'nuclear.ai.models.assistant', 'nuclear.ai.watch.stallSeconds', 'nuclear.ai.contextTokens', 'nuclear.atlas.contextTokens']) assert.equal(k in props, false, k);
   assert.equal(props['nuclear.builder.chat'].default?.kind, 'agent');
   assert.equal(props['nuclear.builder.chat'].properties?.kind?.enum?.includes('local'), false);
 });

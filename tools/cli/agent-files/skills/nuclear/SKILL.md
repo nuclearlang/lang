@@ -33,6 +33,11 @@ It says only what changes from TypeScript/Dart. Do not load the full spec (`nucl
 
 ## 2. Work cycle
 
+0. Start from a workspace: the folder of the business project, whose `.workspace/workspace.nuc` lists its apps
+   (`nuclear workspace find --json`, then `nuclear workspace show --json`: each app's folder, platform and dialect).
+   None yet: `nuclear workspace new <path> --name <n>`; a new app: `nuclear workspace add <app> --platform
+   mobile|web|backend` (it is `nuclear new` inside the workspace; `nuclear new` there registers the app too). Work
+   inside one app's folder; never search the disk for projects (`nuclear help workspace`).
 1. Synapsis: generate a resource's finished code first (models, repository, a use case per action, the facade,
    the controller or the screen, tests): `nuclear gen inspect`, then `nuclear gen resource <component> <Name>
    --from-json <url|file> | --from-spec <spec.md> | --fields "id:int name:string"` (ADR-codegen-0001). Write by hand only

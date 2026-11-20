@@ -29,6 +29,7 @@ Merging a pull request is never a tool, nor a command.
 | New spec (the form; with its criteria) | `spec new --title … --component … [--layer] [--use-case] [--description] [--criteria …]… [--stdin]` | `spec_new` (criteria required: the tool asks for them) | anyone |
 | The specs' tree | `spec list --json` | `spec_list` | anyone |
 | Open a spec | `spec show <id> --json` | `spec_show` | anyone |
+| Replace a spec's text (its whole markdown; the Nuclear MCP server's `spec_edit`, the user's yes asked there) | `spec update <id> --stdin` | `spec_update` | user |
 | A member's draft (*Polish in the chat*) | — (the chat's tool) | `spec_draft` | anyone |
 | Accept a draft (button in the thread) | `spec accept <id>` | `spec_accept` | user |
 | Discard a draft | `spec discard <id>` | `spec_discard` | user |
@@ -141,4 +142,4 @@ The wizard keeps a new team's skills and clones in its draft until *Create team*
 | The form's helpers: Jira and GitHub issues, the context suggested, the pieces the local Developer proposes | `src/support.ts`, the page | they fill the form; the agents have the Nuclear MCP server and the issue's text (roadmap: as commands) |
 | Open a file, the chat's tab, the company screen (`teams`; `wizard`: its new-team wizard, the page's *Build a team*) | the editor | drawing |
 
-55 tools; with the host's, 71 actions.
+57 tools; with the host's, 73 actions.

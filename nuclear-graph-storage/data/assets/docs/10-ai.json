@@ -318,10 +318,10 @@
    "id": "doc:extensions/tools/nuclear-atlas/docs/02-architecture/overview.md#the-page-src-panel-ts",
    "type": "context",
    "title": "Architecture of Nuclear Atlas — The page (`src/panel.ts`)",
-   "summary": "components, use cases and controllers or screens).",
+   "summary": "components, use cases and controllers or screens; its label and its prompt in the page's language).",
    "body": [
     "- On top: the project, and the templates (`templatesOf(map, platform, lang)`, `src/chat.ts`: built from the map's",
-    "  components, use cases and controllers or screens). A template is put in the chat's composer (its `textarea`, in",
+    "  components, use cases and controllers or screens; its label and its prompt in the page's language). A template is put in the chat's composer (its `textarea`, in",
     "  the chat's open shadow root), its `…` selected to fill.",
     "- Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`",
     "  to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down",
@@ -625,6 +625,27 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.01c6b3",
+   "type": "readme",
+   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
+   "summary": "Where the code is",
+   "body": [
+    "| File | What it is |",
+    "|---|---|",
+    "| `setup.nuc` | the set-up: the switch `localModels()` and the profiles offered (`offeredProfiles`, `onStandby`), this machine, the profiles and how each sits on it, the ports, the services at login, the steps (`standby` first on a machine that still has something local, `retireLocal`: the Developer's service and launcher, the models it pulled, Ollama when it installed it, the GB freed; the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |",
+    "| `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `update`, and `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (`lazy_imports` of `nuclear.toml` puts each import in its command's branch: the `mcp` library is 300 ms), so every other command starts in under 100 ms |",
+    "| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal` |"
+   ],
+   "sources": [
+    "extensions/tools/nuclear-builder/AGENTS.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.183ef0",
    "type": "readme",
    "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
@@ -675,27 +696,6 @@
     "| `adapter.nuc` | the providers' interface (`Role`, `Work`, `Outcome` with its `usage`, `runAdapter`), the role composed from its folder, the documents, the files changed, a command's lines, the retries |",
     "| `adapter_local.nuc`, `adapter_claude_code.nuc`, `adapter_opencode.nuc`, `adapter_codex.nuc`, `adapter_gemini_cli.nuc`, `adapter_cursor.nuc`, `adapter_grok.nuc` | the `local` and `agent` adapters, one per provider |",
     "| `adapter_api.nuc`, `api_anthropic.nuc`, `api_openai.nuc`, `api_google.nuc`, `api_openrouter.nuc` | the factory's loop for the `api` providers (the MCP server as a client, the prices, the budget) and each one's wire format |"
-   ],
-   "sources": [
-    "extensions/tools/nuclear-builder/AGENTS.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/tools/nuclear-builder/AGENTS.md#where-the-code-is.4545c0",
-   "type": "readme",
-   "title": "Nuclear Builder (`nuclear-builder`) — Where the code is",
-   "summary": "Where the code is",
-   "body": [
-    "| File | What it is |",
-    "|---|---|",
-    "| `setup.nuc` | the set-up: the switch `localModels()` and the profiles offered (`offeredProfiles`, `onStandby`), this machine, the profiles and how each sits on it, the ports, the services at login, the steps (`standby` first on a machine that still has something local, `retireLocal`: the Developer's service and launcher, the models it pulled, Ollama when it installed it, the GB freed; the commands they run say each line as it comes, a Python one too: `PYTHONUNBUFFERED`); no editor |",
-    "| `cli.nuc`, `terminal.nuc` | the `nuclear-builder` command: `setup` in a terminal and for the editors (`--plan --json`, `--events`, `--status --json`, `--restart`, `--set`), `team …` and `vault …` (JSON for the editors; `team screen`: the company screen in one call), `spec …` (with `accept`/`discard` of a draft), `member`, `chat-host`, `agents`, the line's commands of `line.nuc`; `member`, `chat-host` and `mcp` import their modules when they run (`lazy_imports` of `nuclear.toml` puts each import in its command's branch: the `mcp` library is 300 ms), so every other command starts in under 100 ms |",
-    "| `line.nuc` | `run`, `retry`, `restart`, `runs`, `checks`, `ci`, `export`, `line`: the factory in a terminal, a CI job, an editor's process (`--events`: JSON lines out, answers in) or apart (`--detach`); `run answer|stop|show|journal` |"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/AGENTS.md"
@@ -1531,6 +1531,7 @@
     "| New spec (the form; with its criteria) | `spec new --title … --component … [--layer] [--use-case] [--description] [--criteria …]… [--stdin]` | `spec_new` (criteria required: the tool asks for them) | anyone |",
     "| The specs' tree | `spec list --json` | `spec_list` | anyone |",
     "| Open a spec | `spec show <id> --json` | `spec_show` | anyone |",
+    "| Replace a spec's text (its whole markdown; the Nuclear MCP server's `spec_edit`, the user's yes asked there) | `spec update <id> --stdin` | `spec_update` | user |",
     "| A member's draft (*Polish in the chat*) | — (the chat's tool) | `spec_draft` | anyone |",
     "| Accept a draft (button in the thread) | `spec accept <id>` | `spec_accept` | user |",
     "| Discard a draft | `spec discard <id>` | `spec_discard` | user |",
@@ -1621,7 +1622,7 @@
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/actions.md#what-stays-with-the-host",
    "type": "context",
    "title": "The actions: every button is a command and a tool — What stays with the host",
-   "summary": "55 tools; with the host's, 71 actions.",
+   "summary": "57 tools; with the host's, 73 actions.",
    "body": [
     "| Action | Where | Why |",
     "|---|---|---|",
@@ -1632,7 +1633,7 @@
     "| The form's helpers: Jira and GitHub issues, the context suggested, the pieces the local Developer proposes | `src/support.ts`, the page | they fill the form; the agents have the Nuclear MCP server and the issue's text (roadmap: as commands) |",
     "| Open a file, the chat's tab, the company screen (`teams`; `wizard`: its new-team wizard, the page's *Build a team*) | the editor | drawing |",
     "",
-    "55 tools; with the host's, 71 actions."
+    "57 tools; with the host's, 73 actions."
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/actions.md"
@@ -2049,12 +2050,14 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.7f45f0",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.70a90b",
    "type": "context",
    "title": "The engine — The specs by component and layer (`specs.nuc`, `spec_line.nuc`)",
-   "summary": "prints `{id, from, path, spec}`.",
+   "summary": "there already, a folder holding other specs or a run still running is refused), its `- Component:`/`- Layer:` lines set, the folders left empty removed, and its run's `specPath`, ledger paths and steps' `files` moved with it; prints `{id, from, path, spec}`.",
    "body": [
-    "prints `{id, from, path, spec}`.",
+    "there already, a folder holding other specs or a run still running is refused), its `- Component:`/`- Layer:` lines",
+    "  set, the folders left empty removed, and its run's `specPath`, ledger paths and steps' `files` moved with it;",
+    "  prints `{id, from, path, spec}`.",
     "- `spec migrate [--json]`: each flat spec to its component: its `- Component:` (and `- Layer:`), else the component",
     "  most of its files touch (its run's ledger and its pieces, `components/<c>/…`; the layer when all of them are in",
     "  one), else `_global`; prints `[{id, from, path, by}]` (`by`: `spec`, `files`, `nothing`), or `{id, from, error}`",
@@ -2070,7 +2073,7 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.be26b7",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/engine.md#the-software-factory-factory-nuc-the-specs-by-component-and-layer-specs-nuc-spec.8b5934",
    "type": "context",
    "title": "The engine — The specs by component and layer (`specs.nuc`, `spec_line.nuc`)",
    "summary": "[--stdin] --json`: the spec's base (title, use case, `- Source: local`, component, layer, description, its acceptance criteria as `- [ ] …`, `- (none yet)` without them) in its folder, or with `--stdin` the whole markdown read there (from its `# title`), its id from the title and never one in use…",
@@ -2083,11 +2086,10 @@
     "  reads it). A component is a folder name (`[A-Za-z_][A-Za-z0-9_-]*`), a use case one of the editors' seven.",
     "- `spec show <id> --json`: `{id, path, text, spec, draft, run}` (the draft's text or null, the run's status).",
     "  `spec delete <id>`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it).",
+    "- `spec update <id> --stdin --json`: the whole markdown on stdin (from its `# title`) over `spec.md`, at once; `{id, path, spec}`; refused while its run is running.",
     "- `spec list --json`: `[{id, title, component, layer, path, updated, runs}]`, sorted by component, layer and title",
     "  (`component` is `\"\"` for a flat spec; `updated` in ms; `runs` the run ids of the spec).",
-    "- `spec move <id> --component … [--layer …] --json`: the folder renamed whole (nothing copied, nothing lost; a folder",
-    "  there already, a folder holding other specs or a run still running is refused), its `- Component:`/`- Layer:` lines",
-    "  set, the folders left empty removed, and its run's `specPath`, ledger paths and steps' `files` moved with it;"
+    "- `spec move <id> --component … [--layer …] --json`: the folder renamed whole (nothing copied, nothing lost; a folder"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/engine.md"
@@ -2406,6 +2408,21 @@
    }
   },
   {
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.05e13f",
+   "type": "context",
+   "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
+   "summary": "edge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |",
+   "body": "edge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |",
+   "sources": [
+    "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.3449c1",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
@@ -2435,17 +2452,17 @@
    }
   },
   {
-   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.9b06fb",
+   "id": "doc:extensions/tools/nuclear-builder/docs/02-architecture/overview.md#the-commands-line-nuc-cli-nuc.6b8f3c",
    "type": "context",
    "title": "Architecture of Nuclear Builder — The commands (`line.nuc`, `cli.nuc`)",
    "summary": "The commands (`line.nuc`, `cli.nuc`)",
    "body": [
-    "| `nuclear-builder spec new\\|list\\|show\\|delete\\|move\\|migrate\\|accept\\|discard` | the specs ([engine.md](engine.md)) |",
+    "| `nuclear-builder spec new\\|list\\|show\\|update\\|delete\\|move\\|migrate\\|accept\\|discard` | the specs ([engine.md](engine.md)) |",
     "| `nuclear-builder line show\\|set KEY=<json>` | the project's line, `.nuclear/builder.json` (each key checked) |",
     "| `nuclear-builder connections`, `read <path>` | *Check the connections*; a file of the project as text (PDF, `.pptx`, markdown) |",
     "| `nuclear-builder mcp [--root <dir>]` | the Builder's MCP server: every command above as a tool ([actions.md](actions.md)) |",
     "| `nuclear-builder team …`, `vault …` | the teams and the keys ([teams-and-vault.md](teams-and-vault.md)) |",
-    "| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back; its step `graph-model` fetches the release's vectors of the knowledge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |"
+    "| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back; each service it starts (`startService`) is waited for 90 s, started again once, then moved to a free port when another program holds its own without answering, and the other copies of it (an older version's, a source install's) are stopped (`strays`), its error carrying the service's last lines; a port written for our service that is loaded but still starting is kept (`servicePorts`, `loaded`); its step `graph-model` fetches the release's vectors of the knowl"
    ],
    "sources": [
     "extensions/tools/nuclear-builder/docs/02-architecture/overview.md"
@@ -18834,25 +18851,23 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#2-work-cycle.8436d0",
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#2-work-cycle.22dbc5",
    "type": "doc",
    "title": "NuclearLang — 2. Work cycle",
-   "summary": "1. Synapsis: generate a resource's finished code first (models, repository, a use case per action, the facade, the controller or the screen, tests): `nuclear gen inspect`, then `nuclear gen resource <component> <Name> what is left.",
+   "summary": "0. Start from a workspace: the folder of the business project, whose `.workspace/workspace.nuc` lists its apps (`nuclear workspace find --json`, then `nuclear workspace show --json`: each app's folder, platform and dialect).",
    "body": [
+    "0. Start from a workspace: the folder of the business project, whose `.workspace/workspace.nuc` lists its apps",
+    "   (`nuclear workspace find --json`, then `nuclear workspace show --json`: each app's folder, platform and dialect).",
+    "   None yet: `nuclear workspace new <path> --name <n>`; a new app: `nuclear workspace add <app> --platform",
+    "   mobile|web|backend` (it is `nuclear new` inside the workspace; `nuclear new` there registers the app too). Work",
+    "   inside one app's folder; never search the disk for projects (`nuclear help workspace`).",
     "1. Synapsis: generate a resource's finished code first (models, repository, a use case per action, the facade,",
     "   the controller or the screen, tests): `nuclear gen inspect`, then `nuclear gen resource <component> <Name>",
     "   --from-json <url|file> | --from-spec <spec.md> | --fields \"id:int name:string\"` (ADR-codegen-0001). Write by hand only",
     "   what is left. A use case you wrote is wired by `nuclear gen usecase <component> <Name> [--route \"POST",
     "   orders/{id}/cancel\"]` (its alias in the facade; backend: its route); one that only calls a repository method is",
     "   written by it too (`--calls <Repository>.<method>`). With the Nuclear MCP server, call `graph_strategy` first with",
-    "   the request: it answers which kind of request it is (a resource, one screen, a rename, a failing test...) and the",
-    "   plan of that kind. Create each other piece with its generator, so it lands in",
-    "   the right folder with the right kind:",
-    "   `nuclear make component|screen|usecase|repository|model|event|guard|widget|page|test ...` (`nuclear help`).",
-    "2. Write the code following the sheet. Copy the style of the project's existing `.nuc` files.",
-    "3. Check until clean, and fix exactly what each error says (most carry a `fix`):",
-    "   - Synapsis: `nuclear check --json` (must print `[]`), then `nuclear analyze` (no `error •` lines) and, with",
-    "     tests, `nuclear test`."
+    "   the request: it answers which kind of request it is (a resource, one screen, a rename, a failing test...) and the"
    ],
    "sources": [
     "tools/cli/agent-files/skills/nuclear/SKILL.md"
@@ -18864,12 +18879,19 @@
    }
   },
   {
-   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#2-work-cycle.926bc1",
+   "id": "doc:tools/cli/agent-files/skills/nuclear/SKILL.md#2-work-cycle.e3d43d",
    "type": "doc",
    "title": "NuclearLang — 2. Work cycle",
-   "summary": "then `nuclear build file.nuc --dialect <d> -o file.ts`.",
+   "summary": "plan of that kind.",
    "body": [
-    "- fastapi: `nuclear check . --json`, `nuclear build .`, then in `build/`: `pyright` and `pytest`.",
+    "plan of that kind. Create each other piece with its generator, so it lands in",
+    "   the right folder with the right kind:",
+    "   `nuclear make component|screen|usecase|repository|model|event|guard|widget|page|test ...` (`nuclear help`).",
+    "2. Write the code following the sheet. Copy the style of the project's existing `.nuc` files.",
+    "3. Check until clean, and fix exactly what each error says (most carry a `fix`):",
+    "   - Synapsis: `nuclear check --json` (must print `[]`), then `nuclear analyze` (no `error •` lines) and, with",
+    "     tests, `nuclear test`.",
+    "   - fastapi: `nuclear check . --json`, `nuclear build .`, then in `build/`: `pyright` and `pytest`.",
     "   - Other projects: `nuclear check <folder> --json`; a single file: `nuclear check file.nuc --dialect <d> --json`,",
     "     then `nuclear build file.nuc --dialect <d> -o file.ts`.",
     "4. Format what you wrote: `nuclear fmt <folder>` (only spacing and indentation; `--check` lists what would change).",
@@ -19212,8 +19234,12 @@
    "body": [
     "- `server.nuc`: the server, its instructions (`FIRST`) and every tool (`McpTools`, `mcpServer`, `mcpTools`,",
     "  `remoteOnly`); `nuclearStart` and `nuclearDoc` teach Nuclear.",
+    "- `work.nuc`: the tools of the user's work (`WorkTools`: `workspace_*`, `app_*`, `spec_*`, `team_*`, `member_*`,",
+    "  `skills_set`), each a call of `nuclear workspace` or `nuclear-builder` (`runCommand`), and the confirmation every",
+    "  change goes through (`confirmed`); `projectOf`.",
     "- `cli.nuc`: `nuclear-mcp` and `nuclear-mcp tools`. `__init__.nuc`: the package's name.",
-    "- `tests/`: `test_server.nuc` and `support.nuc` (`expect`).",
+    "- `tests/`: `test_server.nuc`, `test_work.nuc` (the work's tools with a fake command runner and a fake client) and",
+    "  `support.nuc` (`expect`).",
     "- `defs/python/nuclear_graph/0.2.0/`: the type definitions of the graph's package the server imports (generated:",
     "  regenerate them when the graph's `client`, `toolchain`, `paths`, `web` or `workspace` change).",
     "- `docs/`: this project's documents (the table below)."
@@ -19228,14 +19254,17 @@
    }
   },
   {
-   "id": "doc:tools/mcp/AGENTS.md#rules.59ca50",
+   "id": "doc:tools/mcp/AGENTS.md#rules.9e253d",
    "type": "readme",
    "title": "The MCP server — Rules",
    "summary": "either; the `graph_*` tools are on every machine.",
    "body": [
     "either; the `graph_*` tools are on every machine. A new tool that needs the graph or the local developer takes one",
     "   of those prefixes.",
-    "7. **What comes from the internet is untrusted text**: no code blocks, and never a page of this machine or the",
+    "7. **Every tool that changes the user's work asks the user first** (`confirmed`): MCP elicitation, or a preview",
+    "   with a `confirm` token (bound to the tool and its exact arguments, 5 minutes, once, kept in the process only).",
+    "   A tool never changes anything before that yes, and never deletes a folder unless its argument says so.",
+    "8. **What comes from the internet is untrusted text**: no code blocks, and never a page of this machine or the",
     "   local network."
    ],
    "sources": [
@@ -19287,7 +19316,8 @@
     "  `nuclear-mcp` = `nuclear_mcp.cli:main`).",
     "- The `mcp` Python library (`mcp>=2.3`), `httpx` for the Nuclear Developer and the internet, and the Smart Graph's",
     "  package `nuclear-graph` (from `../../nuclear-graph-storage`, editable): its `GraphClient`, `Toolchain` and `Web`.",
-    "- It needs the installed `nuclear` command; `nuclear-builder` for `developer_task` / `developer_retry`."
+    "- It needs the installed `nuclear` command; `nuclear-builder` for the specs, the teams and `developer_task` /",
+    "  `developer_retry`."
    ],
    "sources": [
     "tools/mcp/AGENTS.md"
@@ -19306,7 +19336,8 @@
    "body": [
     "`nuclear-mcp`: the program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang. It",
     "speaks the Model Context Protocol over stdio and offers the generators, the compiler and the command line, the Smart",
-    "Graph and the internet as tools. Its instructions tell every client how to work, so they all behave the same:",
+    "Graph and the internet as tools, and the tools that organize the user's work (spec 022): workspaces and their apps,",
+    "the specs Nuclear Builder reads, the teams; every change among them is asked to the user first. Its instructions tell every client how to work, so they all behave the same:",
     "generate first, write the rest, then validate and correct. The local developer's tools (`developer_*`) are on",
     "standby with the local models ([ADR-platform-0013](../../docs/03-adr/0013-local-models-on-standby.md)): `LOCAL_MODELS`",
     "in `server.nuc`, held to `localModels` of Nuclear Builder's `setup.json` by a test."
@@ -19434,7 +19465,10 @@
     "  tool, and the comment is what the client reads of it.** The method `graphSearch` is the tool `graph_search`.",
     "- `all()` lists the tools in the order a client sees them: the graph's, the compiler's, `nuclear_project`,",
     "  the generators, the internet, the developer's.",
-    "- `mcpServer()` makes the server `nuclear` with its instructions and adds each tool of `all()`.",
+    "- `WorkTools(runner)` (`work.nuc`) holds the tools of the user's work, the same way; `runner` runs a command",
+    "  (`runCommand`: stdin, stdout, at most 600 s) and a test gives its own.",
+    "- `mcpServer()` makes the server `nuclear` with its instructions and adds each tool of `McpTools.all()` and",
+    "  `WorkTools.all()`.",
     "- `mcpTools()` gives the instructions and the tools as data (`{instructions, tools: [{name, description, schema}]}`)",
     "  to the knowledge base's build (it runs `nuclear-mcp tools`), so the graph has a row per tool (`mcp:<tool>`) and",
     "  answers \"which tools\" exactly.",
@@ -19500,7 +19534,13 @@
     "  `extensions/tools/nuclear-builder/setup.json` (only in the working tree).",
     "- `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear and never names",
     "  `developer_task` or `developer_review`.",
-    "- `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`."
+    "- `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.",
+    "- `tests/test_work.nuc`: a change asked by elicitation is done only on a yes (declined, cancelled, unticked: nothing",
+    "  runs); through the MCP library's own client (elicitation accepted, declined, absent); a client that cannot ask gets",
+    "  a preview and a token for that exact change, once (another change's token, a used one, an expired one, an unknown",
+    "  one: refused); `workspace_delete` removes the marker and the apps' folders only when asked; the apps', specs' and",
+    "  teams' tools call their commands with the right arguments, folder and stdin, and never hire a local member; the",
+    "  real `nuclear workspace` (skipped while the installed `nuclear` has none)."
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
@@ -19609,6 +19649,56 @@
    }
   },
   {
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-user-s-work-and-its-confirmation-spec-022.42372c",
+   "type": "context",
+   "title": "The MCP server: overview — The user's work and its confirmation (spec 022)",
+   "summary": "`PENDING` (the server process's memory), not expired (`CONFIRM_MS`, 5 minutes) and bound to `tool` and these exact arguments (`changeKey`); it is used up either way.",
+   "body": [
+    "`PENDING` (the server process's memory), not expired (`CONFIRM_MS`, 5 minutes) and bound to `tool` and these exact",
+    "  arguments (`changeKey`); it is used up either way. Without it, a client that declared `elicitation` and has a",
+    "  channel back (`canAsk`) is asked `change` + \"Do it?\" with one boolean (`YES_SCHEMA`): only an accepted `true` goes",
+    "  on, anything else answers `{declined, changed: \"nothing\"}`. Otherwise (or when the question fails) the tool answers",
+    "  `{preview, changed: \"nothing yet\", confirm, expiresInSeconds, next}` and runs nothing."
+   ],
+   "sources": [
+    "tools/mcp/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#the-user-s-work-and-its-confirmation-spec-022.ba7c02",
+   "type": "context",
+   "title": "The MCP server: overview — The user's work and its confirmation (spec 022)",
+   "summary": "`workspace_show`, `workspace_edit`, `app_add`, `app_rename`, `app_remove` → `nuclear workspace show|edit|add|rename|remove … removes each app with `remove <app> --delete` only with `delete_folders`, then removes the marker `.workspace/workspace.nuc` (and `.workspace/` when empty) itself: the CLI…",
+   "body": [
+    "- **Workspaces and apps**: `workspace_create` → `nuclear workspace new <path> [--name] [--description] --json`;",
+    "  `workspace_show`, `workspace_edit`, `app_add`, `app_rename`, `app_remove` → `nuclear workspace show|edit|add|rename|remove …",
+    "  --json`, run in the folder given (the CLI finds the workspace that holds it). `workspace_delete` reads `show`,",
+    "  removes each app with `remove <app> --delete` only with `delete_folders`, then removes the marker",
+    "  `.workspace/workspace.nuc` (and `.workspace/` when empty) itself: the CLI has no `workspace delete` yet.",
+    "- **Specs**: `spec_create`, `spec_list`, `spec_show`, `spec_edit` → `nuclear-builder spec new|list|show|update …",
+    "  --json` in the project (`projectOf`), so the spec is where Nuclear Builder reads it.",
+    "- **Teams**: `team_list`, `team_show`, `team_create` (the draft on stdin), `team_edit` (`team update`), `team_delete`,",
+    "  `member_add`, `member_edit` (`team member update`), `member_remove`, `skills_set` (`team skills set`). A member of",
+    "  the local kind is refused before the command (`LOCAL_STANDBY`).",
+    "- A name, an id or a path that starts with `-` is refused (it would be read as an option); free text never starts",
+    "  with `--`.",
+    "- **`confirmed(ctx, tool, args, change, confirm)`**, before every change: with `confirm`, the token must be one of"
+   ],
+   "sources": [
+    "tools/mcp/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/mcp/docs/02-architecture/overview.md#two-modes-with-the-local-models-on.246df6",
    "type": "context",
    "title": "The MCP server: overview — Two modes (with the local models on)",
@@ -19658,28 +19748,47 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/02-architecture/overview.md#what-it-stands-on",
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#what-it-stands-on.955c45",
    "type": "context",
    "title": "The MCP server: overview — What it stands on",
-   "summary": "Claude Code / Codex / Cursor / OpenCode │ MCP (stdio) ▼ nuclear-mcp ──────► nuclear the compiler, the command line, the generators │ ──► nuclear-builder run|retry|restart a whole task by the local agents (on standby) │ HTTP ──► Nuclear Developer (127.0.0.1:7879) one file, its tests, its security…",
+   "summary": "What it stands on",
+   "body": [
+    "| Tools | They need |",
+    "|---|---|",
+    "| `project_inspect`, `generate_*`, `nuclear_*` (`nuclear_project` among them) | only the installed `nuclear` command |",
+    "| `workspace_*`, `app_*` | the installed `nuclear` with `nuclear workspace` |",
+    "| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |",
+    "| `api_inspect`, `web_search`, `web_read` | the internet |",
+    "| `graph_*` | the Smart Graph, which every profile of the set-up installs and starts |",
+    "| `developer_*` (on standby: not registered) | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |"
+   ],
+   "sources": [
+    "tools/mcp/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/02-architecture/overview.md#what-it-stands-on.f8a561",
+   "type": "context",
+   "title": "The MCP server: overview — What it stands on",
+   "summary": "Claude Code / Codex / Cursor / OpenCode │ MCP (stdio) ▼ nuclear-mcp ──────► nuclear the compiler, the command line, the generators │ ──► nuclear workspace … the workspaces and their apps │ ──► nuclear-builder spec|team … the specs, the teams and their members │ ──► nuclear-builder…",
    "body": [
     "```",
     " Claude Code / Codex / Cursor / OpenCode",
     "        │ MCP (stdio)",
     "        ▼",
     "   nuclear-mcp ──────► nuclear                       the compiler, the command line, the generators",
+    "        │           ──► nuclear workspace …                  the workspaces and their apps",
+    "        │           ──► nuclear-builder spec|team …          the specs, the teams and their members",
     "        │           ──► nuclear-builder run|retry|restart a whole task by the local agents (on standby)",
     "        │ HTTP      ──► Nuclear Developer (127.0.0.1:7879)   one file, its tests, its security findings (on standby)",
     "        │ HTTP      ──► Smart Graph (127.0.0.1:7878)         strategy, exact answers, search, memory",
     "        └────────────► the internet                          an API's answer, its documentation",
-    "```",
-    "",
-    "| Tools | They need |",
-    "|---|---|",
-    "| `project_inspect`, `generate_*`, `nuclear_*` (`nuclear_project` among them) | only the installed `nuclear` command |",
-    "| `api_inspect`, `web_search`, `web_read` | the internet |",
-    "| `graph_*` | the Smart Graph, which every profile of the set-up installs and starts |",
-    "| `developer_*` (on standby: not registered) | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |"
+    "```"
    ],
    "sources": [
     "tools/mcp/docs/02-architecture/overview.md"
@@ -19725,7 +19834,34 @@
     "|---|---|",
     "| `project_inspect`, `generate_*`, `nuclear_*` | only the installed `nuclear` command |",
     "| `api_inspect`, `web_search`, `web_read` | the internet |",
-    "| `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |"
+    "| `graph_*` | the Smart Graph (127.0.0.1:7878), which the set-up installs and starts |",
+    "| `workspace_*`, `app_*` | the installed `nuclear` (`nuclear workspace`) |",
+    "| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#2-how-a-model-works-with-it.3bff13",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — 2. How a model works with it",
+   "summary": "An agent may know nothing about Nuclear: the server's instructions only tell it to call `nuclear_start` before anything about Nuclear.",
+   "body": [
+    "An agent may know nothing about Nuclear: the server's instructions only tell it to call `nuclear_start` before",
+    "anything about Nuclear. Its answer is the onboarding (what Nuclear and Synapsis are, the rules never broken, the",
+    "work cycle with these tools on this machine) and the atlas of every topic, each read with `nuclear_doc`; with a",
+    "project folder, also the project's pieces and the sheet of its dialect. Nothing it reads points into a source tree.",
+    "",
+    "The work starts from a **workspace** (spec 022): the folder that holds `.workspace/workspace.nuc` and names the apps",
+    "of one business project. The model reads it with `workspace_show`; for a new product it creates it",
+    "(`workspace_create`) and adds each app (`app_add`), writes each feature as a spec (`spec_create`, shown in Nuclear",
+    "Builder at once) and keeps the teams (`team_*`, `member_*`)."
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
@@ -19764,15 +19900,17 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#2-how-a-model-works-with-it.be0f2f",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#2-how-a-model-works-with-it.d0c47c",
    "type": "guide",
    "title": "The MCP server of NuclearLang — 2. How a model works with it",
-   "summary": "An agent may know nothing about Nuclear: the server's instructions only tell it to call `nuclear_start` before anything about Nuclear.",
+   "summary": "through the client (MCP elicitation: what will change, yes or no) and changes nothing on a no.",
    "body": [
-    "An agent may know nothing about Nuclear: the server's instructions only tell it to call `nuclear_start` before",
-    "anything about Nuclear. Its answer is the onboarding (what Nuclear and Synapsis are, the rules never broken, the",
-    "work cycle with these tools on this machine) and the atlas of every topic, each read with `nuclear_doc`; with a",
-    "project folder, also the project's pieces and the sheet of its dialect. Nothing it reads points into a source tree.",
+    "**Every change is the user's yes first.** A tool that changes a workspace, an app, a spec or a team asks the user",
+    "through the client (MCP elicitation: what will change, yes or no) and changes nothing on a no. A client that cannot",
+    "ask gets a preview instead: `{\"preview\", \"changed\": \"nothing yet\", \"confirm\": \"<token>\", \"expiresInSeconds\": 300}`.",
+    "The model shows the preview to the user and, only on their yes, calls the same tool again with the same arguments and",
+    "`confirm` set to the token. The token is valid once, for 5 minutes, for that tool and those arguments only; any other",
+    "call with it is refused and changes nothing.",
     "",
     "The cycle then calls `graph_strategy` with the user's own words: it answers which",
     "kind of request it is and the plan of that kind",
@@ -19849,6 +19987,61 @@
     "| `graph_monitor(project)` | `project_monitor`, and its hot spots kept in the graph (`monitor:<project>`) for later sessions |",
     "| `generate_component(project, component)` | a new component with its facade |",
     "| `generate_resource(project, component, name, from_json \\| from_spec \\| fields, source, path, actions, screen, plural, dry_run)` | a resource: models, repository, a use case per action, the facade's aliases, the controller (backend) or a screen with its state manager (mobile, web), the tests |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-specs",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — Specs",
+   "summary": "Each is a `nuclear-builder spec … --json` command in the project: the spec lives where Nuclear Builder reads it (`specs/<component>/[<layer>/]<id>/spec.md`).",
+   "body": [
+    "Each is a `nuclear-builder spec … --json` command in the project: the spec lives where Nuclear Builder reads it",
+    "(`specs/<component>/[<layer>/]<id>/spec.md`).",
+    "",
+    "| Tool | What it does |",
+    "|---|---|",
+    "| `spec_create(project, component, title, criteria, layer, use_case, description, text, confirm)` | a new spec (`spec new`): its acceptance criteria are required (or `text`, the whole markdown); asks the user first |",
+    "| `spec_list(project)` | the specs by component and layer, with their runs |",
+    "| `spec_show(project, id)` | a spec's markdown, what it says, its draft, its run's status |",
+    "| `spec_edit(project, id, text, confirm)` | the spec's whole new markdown over it (`spec update <id> --stdin`); asks the user first |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-teams-and-members",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — Teams and members",
+   "summary": "Each is a `nuclear-builder team …` command; a member is never of the local kind (the local models are on standby).",
+   "body": [
+    "Each is a `nuclear-builder team …` command; a member is never of the local kind (the local models are on standby).",
+    "Every tool but `team_list` and `team_show` asks the user first.",
+    "",
+    "| Tool | What it does |",
+    "|---|---|",
+    "| `team_list()` | the teams |",
+    "| `team_show(team)` | a team, its members, purpose, skills, tech lead, budget |",
+    "| `team_create(name, purpose, description, skills, members, budget_usd, confirm)` | `team create` with the draft on stdin; `members`: `[{role, employee, kind, provider, model, name}]` |",
+    "| `team_edit(team, name, description, purpose, skills, lead, budget_usd, confirm)` | `team update` |",
+    "| `team_delete(team, confirm)` | `team delete` (the file kept as `<id>.json.bak`) |",
+    "| `member_add(team, role, employee, kind, provider, model, name, count, confirm)` | `team member add` |",
+    "| `member_edit(team, member, kind, provider, model, employee, name, instructions, temperament, skills, confirm)` | `team member update` |",
+    "| `member_remove(team, member, confirm)` | `team member remove` |",
+    "| `skills_set(team, skills, member, confirm)` | `team skills set`: the team's library skills, or a member's |"
    ],
    "sources": [
     "tools/mcp/docs/08-guides/mcp.md"
@@ -19986,10 +20179,38 @@
    }
   },
   {
-   "id": "doc:tools/mcp/docs/08-guides/mcp.md#4-when-a-tool-fails",
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#3-the-tools-workspaces-and-apps",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — Workspaces and apps",
+   "summary": "Each is a `nuclear workspace … --json` command.",
+   "body": [
+    "Each is a `nuclear workspace … --json` command. `workspace` is the workspace's folder or any folder inside it. Every",
+    "tool but `workspace_show` asks the user first (`confirm`: the preview's token, for a client that cannot ask).",
+    "",
+    "| Tool | What it does |",
+    "|---|---|",
+    "| `workspace_create(path, name, description, confirm)` | the folder and its marker `.workspace/workspace.nuc` (`nuclear workspace new`) |",
+    "| `workspace_show(workspace)` | `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}` |",
+    "| `workspace_edit(workspace, name, description, confirm)` | the workspace's name or description (`nuclear workspace edit`) |",
+    "| `workspace_delete(workspace, delete_folders, confirm)` | removes the marker; the apps' folders stay unless `delete_folders` is true (then each app is removed with `nuclear workspace remove <app> --delete`); the question says which |",
+    "| `app_add(workspace, app, platform, dialect, confirm)` | an app made by `nuclear new` inside the workspace and named in the marker (`mobile`, `web`, `backend`) |",
+    "| `app_rename(workspace, app, new_name, confirm)` | `nuclear workspace rename <app> <new>` |",
+    "| `app_remove(workspace, app, delete_folder, confirm)` | the marker stops naming the app; its folder is deleted only with `delete_folder` true |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#4-when-a-tool-fails.831661",
    "type": "guide",
    "title": "The MCP server of NuclearLang — 4. When a tool fails",
-   "summary": "The graph knows every tool of this page: ask it with `graph_card(\"mcp:<tool>\")`, or ask the editor's chat (`Ctrl+Alt+A`) in your own words.",
+   "summary": "4. When a tool fails",
    "body": [
     "| The tool answers | What to do |",
     "|---|---|",
@@ -19998,8 +20219,27 @@
     "| `'<command>' is not allowed here` | the `nuclear_project` tool runs only the commands of its list |",
     "| `'--' is not allowed here` | what follows `--` goes to the target's own tools (a port, a host): an agent never passes it through the MCP server |",
     "| `no run log yet in ...` | the app never ran in that project: run it once (`nuclear run`, or ▷ Run / ▭ Device in the editor), then call `project_run_log` again |",
-    "| a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |",
-    "",
+    "| `{\"declined\": …}` | the user said no: nothing changed; ask what to do instead |",
+    "| `{\"preview\": …, \"confirm\": …}` | the client cannot ask: show the preview to the user, then call again with `confirm` only on their yes |",
+    "| `the confirm token is unknown, expired or used` / `for another change` | nothing changed: call the tool again without `confirm` for a new preview |",
+    "| an error that `workspace` is not a command of `nuclear` | the installed NuclearLang is older than its workspaces: `nuclear update` |",
+    "| a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |"
+   ],
+   "sources": [
+    "tools/mcp/docs/08-guides/mcp.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/mcp/docs/08-guides/mcp.md#4-when-a-tool-fails.b3175f",
+   "type": "guide",
+   "title": "The MCP server of NuclearLang — 4. When a tool fails",
+   "summary": "The graph knows every tool of this page: ask it with `graph_card(\"mcp:<tool>\")`, or ask the editor's chat (`Ctrl+Alt+A`) in your own words.",
+   "body": [
     "The graph knows every tool of this page: ask it with `graph_card(\"mcp:<tool>\")`, or ask the editor's chat",
     "(`Ctrl+Alt+A`) in your own words."
    ],

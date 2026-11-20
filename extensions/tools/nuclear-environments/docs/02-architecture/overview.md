@@ -40,3 +40,5 @@ EnvironmentsPanel.show(project) ──► nuclear env list --json --project <roo
 - Keyboard: the grid is one tab stop (a roving `tabindex`); arrows, Home/End (Ctrl: first/last row) move; Enter or
   F2 edits; Enter saves, Escape cancels; Delete removes the value; Enter on a name opens its first use; Ctrl+F
   filters.
+
+- The page and its editor tab are titled in the language of the editor (`texts(ENV).title`: *Environments* / *Entornos*), like every text of the page.

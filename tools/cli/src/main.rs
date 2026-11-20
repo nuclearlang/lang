@@ -730,6 +730,10 @@ fn project_command(args: &Args, cmd: &str, path: &str) -> ExitCode {
     let root = PathBuf::from(path);
     let manifest = match project::Manifest::read(&root) {
         Ok(m) => m,
+        Err(_) if root.join(framework::WORKSPACE_MARKER).is_file() => {
+            eprintln!("{path} is a workspace's folder, not a project: `nuclear check` there checks each app, or name one");
+            return ExitCode::FAILURE;
+        }
         Err(e) => {
             eprintln!("error[N0303]: {e}");
             return ExitCode::FAILURE;

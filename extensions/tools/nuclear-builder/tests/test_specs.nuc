@@ -1,3 +1,4 @@
+use io
 use json
 use pathlib{ Path }
 
@@ -116,3 +117,19 @@ testAMembersDraftOfASpecIsWrittenBesideItAndOnlyAcceptedByTheUser(tmpPath: Path,
   accepted = said(specLine(["accept", "lend-a-book", "--json"]), capsys)
   expect(accepted["code"] == 0 and ((accepted["out"] as <string, any>)["spec"] as <string, any>)["title"] == "Lend a book for two weeks")
   expect(spec.readText().startsWith("# Lend a book for two weeks") and not Path(root, "specs", "books", "lend-a-book", "spec.draft.md").exists())
+
+testASpecsTextIsReplacedByUpdateAndOnlyByTheUserThroughATool(tmpPath: Path, monkeypatch: any, capsys: any) void
+  root = specsProject(tmpPath, monkeypatch)
+  specNew(root, "Lend a book", "books", "", "feature", "", ["a lent book is not free"])
+  spec = Path(root, "specs", "books", "lend-a-book", "spec.md")
+  monkeypatch.setattr("sys.stdin", io.StringIO("# Lend a book for two weeks\n\n- Component: books\n"))
+  changed = said(specLine(["update", "lend-a-book", "--stdin", "--json"]), capsys)
+  expect(changed["code"] == 0 and ((changed["out"] as <string, any>)["spec"] as <string, any>)["title"] == "Lend a book for two weeks", json.dumps(changed))
+  expect(spec.readText() == "# Lend a book for two weeks\n\n- Component: books\n")
+  monkeypatch.setattr("sys.stdin", io.StringIO("no title"))
+  expect(said(specLine(["update", "lend-a-book", "--json"]), capsys)["code"] == 1 and spec.readText().startsWith("# Lend a book for two weeks"))
+  // the Builder's tool only asks the user; their yes applies it
+  asked = userDecision(BuilderTools(root).specUpdateTool("lend-a-book", "# Lend it\n"))
+  expect(asked != null and (asked!["needsUser"] as <string, any>)["tool"] == "spec_update" and spec.readText().startsWith("# Lend a book for two weeks"))
+  applyForUser(root, "spec_update", { "id": "lend-a-book", "text": "# Lend it\n" })
+  expect(spec.readText() == "# Lend it\n")

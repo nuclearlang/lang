@@ -22,8 +22,6 @@ external agent or provider.
 - **Local models on standby, ADR-platform-0013** (2026-11-20): the line "no agent nor provider can answer" and its
   link to the settings were never seen in a running VS Code.
 
-- The setting `nuclear.atlas.contextTokens` measured the old page's context meter: nothing reads it since the page is
-  the chat. Remove it with its move in `vscode/src/migrateSettings.ts`, or give the meter back in the chat.
 - The sessions of the earlier page (`.nuclear/chat/<id>.json`) are not read any more and are not moved into the chat.
 
 Nuclear Atlas in Android Studio: [the plugin's roadmap](../../../../jetbrains/docs/01-product/roadmap.md).

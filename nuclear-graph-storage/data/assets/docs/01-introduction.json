@@ -29,14 +29,15 @@
    }
   },
   {
-   "id": "doc:AGENTS.md#hard-rules.11074e",
+   "id": "doc:AGENTS.md#hard-rules.9a9f12",
    "type": "readme",
    "title": "NuclearLang — Hard rules",
    "summary": "installations is released with a tag `v<version>`: one version for the whole platform, that follows Semantic Versioning: a fix raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises MINOR) (docs/05-standards/coding.md).",
    "body": [
     "installations is released with a tag `v<version>`: one version for the whole platform, that follows [Semantic Versioning](https://semver.org): a fix",
     "    raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises",
-    "    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)).",
+    "    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)). A tag is pushed only after",
+    "    `installer/release/delivery.sh <version>` passes; after it, `installer/release/after-release.sh <version>`.",
     "11. `CodeBuilder/` is teaching material only: never in references, context or code.",
     "12. Node.js/Express is postponed by the user: do not touch it until asked.",
     "13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).",
@@ -412,6 +413,42 @@
    }
   },
   {
+   "id": "doc:CHANGELOG.md#unreleased.a6f30f",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- A service that does not answer at the end of the set-up (found on a new Mac: Nuclear Chat) is waited for, started again and, when another program holds its port without answering, moved to a free port; the port of our own service that is still starting is no longer moved under it; another copy of a service (an older version's, a source install's, one started by hand) is stopped, so one runs; a failure shows the service's own last lines. `installer/tests/stack.sh` checks the stack a real machine is left with.",
+    "- The delivery gate: `installer/release/delivery.sh <version>` must pass before a tag (version check, `cargo test`, clippy with 0 warnings, the VS Code extension's compile and tests, Nuclear Builder's, the MCP server's and the backend runtimes' tests, the website exactly as its workflow, `knowledge check`, the archive and every installer test), and `installer/release/after-release.sh <version>` after it (every workflow green, every asset, the site serving the tag's installers, the public one-liner and an update from the previous release in a fake HOME)."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.b00ac5",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- The installer's tests read what the user reads: `OUT1` runs the installer in a terminal of 80 and 60 columns with colors and checks the rendered screen (no internal text, the motto once, no `nuclear intro`, every box's border in its column, no box line wrapped); `UPD1` updates the previous published release and runs `nuclear update` through the installer's link. `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints what it would run.",
+    "- Fix: in a terminal narrower than a box's text the installer wrapped it past the border (the summary at 60 columns, the header's pixel letters); such a line is now wrapped inside the box, and a narrow terminal gets the header in words. The turning sign's lines are cut to the terminal, so a long one no longer leaves its frames on the screen."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:CHANGELOG.md#unreleased.e462e7",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -425,6 +462,21 @@
     "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
     "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring."
    ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.fb5680",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": "- The MCP server organizes the user's work (spec 022): `workspace_create`, `workspace_show`, `workspace_edit`, `workspace_delete`, `app_add`, `app_rename`, `app_remove` (`nuclear workspace`); `spec_create`, `spec_list`, `spec_show`, `spec_edit` (written where Nuclear Builder reads them); `team_list`, `team_show`, `team_create`, `team_edit`, `team_delete`, `member_add`, `member_edit`, `member_remove`, `skills_set` (never a local member). Every change asks the user first: MCP elicitation, or for a client without it a preview and a `confirm` token valid once for 5 minutes for that exact change. A folder is deleted only when the call says so. Its instructions and `nuclear_start` start the work from a workspace. Nuclear Builder has `spec update <id> --stdin` and its tool `spec_update` (the user's). What an agent cannot do yet through the server: `docs/04-specs/022-workspaces-and-mcp/mcp-coverage.md`.",
    "sources": [
     "CHANGELOG.md"
    ],
@@ -1665,7 +1717,7 @@
    }
   },
   {
-   "id": "doc:docs/05-standards/coding.md#git",
+   "id": "doc:docs/05-standards/coding.md#git.405ce5",
    "type": "context",
    "title": "How code is written here — Git",
    "summary": "current, everything deployed (point 7).",
@@ -1677,9 +1729,29 @@
     "  every piece (the crates, the extensions, the Smart Graph, the MCP server, the services), all at the version of",
     "  its tag. A fix raises PATCH, a new feature that breaks nothing MINOR (PATCH back to 0), a",
     "  breaking change MAJOR; while the version is `0.x`, a breaking change raises MINOR. The release: `installer/release/version.sh <version>` writes it into every project and lock",
-    "  file (ADR-platform-0011), `nuclear-graph knowledge build` at that version, then the tag `v<version>` pushed (the CI",
-    "  fails when a manifest or the knowledge base differs), with each project's",
-    "  `CHANGELOG.md` entries under that version ([the release runbook](../../installer/docs/06-runbooks/release.md)).",
+    "  file (ADR-platform-0011), `nuclear-graph knowledge build` at that version, then **`installer/release/delivery.sh <version>`, which must pass",
+    "  before the tag** (every test of the tree, the website exactly as its workflow, the knowledge base, the installer",
+    "  tests with what the user reads and an update from the previous release), then the tag `v<version>` pushed (the CI",
+    "  fails when a manifest or the knowledge base differs), with each project's `CHANGELOG.md` entries under that version,"
+   ],
+   "sources": [
+    "docs/05-standards/coding.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/05-standards/coding.md#git.c33a05",
+   "type": "context",
+   "title": "How code is written here — Git",
+   "summary": "and then `installer/release/after-release.sh <version>` (every workflow green, every asset, the site serving the tag's installers, the public one-liner and an update in a fake `HOME`): a release is done only when it passes (the release runbook).",
+   "body": [
+    "and then **`installer/release/after-release.sh <version>`** (every workflow green, every asset, the site serving the",
+    "  tag's installers, the public one-liner and an update in a fake `HOME`): a release is done only when it passes",
+    "  ([the release runbook](../../installer/docs/06-runbooks/release.md)).",
     "- Commits only in the user's name: no co-author line.",
     "- `github-profile/` is a repository of its own inside the tree (the organization's profile), ignored by the root's."
    ],

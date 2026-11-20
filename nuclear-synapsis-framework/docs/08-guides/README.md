@@ -14,6 +14,26 @@ in Python only) ties code to one dialect.
 | `backend` | `nestjs` (TypeScript) | NestJS 12, Sequelize, class-validator, LangChain.js, LangGraph.js | [NestJS](../../../nuclearlang/dialects/typescript/docs/08-guides/nestjs.md) | [backend.md](../../platforms/backend/docs/07-reference/backend.md), [nestjs.md](../../../nuclearlang/dialects/typescript/docs/07-reference/nestjs.md) |
 | `web` | `react` (TypeScript) | React 19 (no JSX), React Router 7, Vite, Vitest | [React](../../../nuclearlang/dialects/typescript/docs/08-guides/react.md) | [web.md](../../platforms/web/docs/07-reference/web.md), [react.md](../../../nuclearlang/dialects/typescript/docs/07-reference/react.md) |
 
+## Start from a workspace
+
+A business project is a **workspace**: a folder with its apps (a backend, a web app, mobile apps) and the file
+`.workspace/workspace.nuc` that names them, so the editor, the MCP server and the agents find them. Do the work by
+chat with your agent: in VS Code the welcome page (`Ctrl+Alt+W`) and the workspace's menu have *Do it with me by chat*,
+which opens Nuclear Atlas with the request written; the agent uses the MCP server's tools (`workspace_create`,
+`app_add`, `spec_create`...) and asks you before each change. The commands do the same from a terminal:
+
+```sh
+nuclear workspace new shop --description "An online shop"
+cd shop
+nuclear workspace add shop_api --platform backend
+nuclear workspace add shop_web --platform web
+```
+
+The [tutorial](tutorial.md) starts that way and ends with a short tour of each tool of the editor; the commands are in
+`nuclear help workspace`.
+
+## One architecture
+
 The platforms share the same architecture, so moving from one to another means learning its kinds, not a new
 way to think:
 

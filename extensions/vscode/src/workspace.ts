@@ -6,8 +6,9 @@
 // welcome page at startup lists the projects and the shortcuts. VS Code's own explorer, search and git are not
 // touched: a project opened here is a tab, not a window nor a workspace folder (unless the user adds it).
 
+import { execFile } from 'node:child_process';
 import * as fs from 'node:fs';
-import { savedInside } from './savedProjects';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { Launch, logFile, logSize, reason, RUN_STALL_MS, RunFollower, RunStep } from '../../tools/nuclear-device-manager/src/launch-log';
@@ -18,6 +19,7 @@ import { chatGifKey, disposeChat, openChatTab } from './chatView';
 import { followChatNotices, Notice, notices } from './notifications';
 import { chatWhere } from './notify';
 import { SettingsPanel } from './settingsPanel';
+import { SetupPanel } from './setupPanel';
 import { watchConnections } from './connections';
 import { BuilderPanel, builderSidebar, resumeOrphans, sidebarChanged } from '../../tools/nuclear-builder/src/panel';
 import { inline, runOutline, specOfPath, specTree } from '../../tools/nuclear-builder/src/workbench';
@@ -29,6 +31,9 @@ import { lang, langButton, localize, onDidChangeLang, pageI18n, texts, l10n } fr
 import { STRIP } from './workspaceL10n';
 import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
 import { activateEnvironments } from '../../tools/nuclear-environments/src/panel';
+import { alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parseDialects, PLATFORMS, RECENT, Recent, remember, WorkspaceInfo, workspaceCli } from './workspaces';
+import { nuclearCommand } from './toolchains';
+import { toolEnv } from '../../tools/nuclear-builder/src/support';
 
 interface Tool {
   id: string;
@@ -192,6 +197,8 @@ const ACTIVE = 'nuclear.workspace.active';
 const LAST_PROJECT = 'nuclear.workspace.lastProject';
 const TABS = 'nuclear.workspace.tabs';
 const WELCOME = 'nuclear.workspace.welcome';
+/** The welcome's three steps were shown on the first run (global state). */
+const WELCOMED = 'nuclear.workspace.welcomed';
 const CONTAINER = 'workbench.view.extension.nuclear';
 const TOOL_PREFIX = 'tool:';
 /** A run/debug/device asked for a project that had to join the workspace folders first (user state: the join
@@ -232,7 +239,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
   // every external connection, checked now and regularly: a notification when one stops answering
   watchConnections(context);
   registerTreeCommands(context);
-  http.extraRoots = () => ws.saved();
+  http.extraRoots = () => ws.projects().map((p) => p.root);
   // the Environments page (spec 021): the workspace's projects, the last one first
   activateEnvironments(context, () => ws.projects(), () => context.workspaceState.get<string>(LAST_PROJECT));
   http.refresh();
@@ -249,7 +256,7 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     cards.onDidCreate(() => ws.refresh()),
     cards.onDidDelete(() => ws.refresh()),
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      ws.refresh();
+      void ws.loadWorkspace();
       // the Dart extension decides at activation whether the workspace has Flutter projects: reload, then continue
       const pending = context.globalState.get<PendingAction>(PENDING);
       if (pending && inFolders(pending.root)) void vscode.commands.executeCommand('workbench.action.reloadWindow');
@@ -265,15 +272,29 @@ export function activateWorkspace(context: vscode.ExtensionContext, http: HttpMo
     vscode.commands.registerCommand('nuclear.workspace.action', (id?: string) => ws.action(id)),
     vscode.commands.registerCommand('nuclear.workspace.welcome', () => WelcomePanel.show(context, ws)),
     vscode.commands.registerCommand('nuclear.workspace.addToVsCode', () => ws.addToVsCode()),
+    // the Nuclear workspaces (spec 022): `nuclear workspace … --json`
+    vscode.commands.registerCommand('nuclear.workspace.create', () => ws.createWorkspace()),
+    vscode.commands.registerCommand('nuclear.workspace.open', (root?: string) => ws.openWorkspace(root)),
+    vscode.commands.registerCommand('nuclear.workspace.addApp', () => ws.addApp()),
+    vscode.commands.registerCommand('nuclear.workspace.removeApp', (root?: string) => ws.removeApp(root)),
+    vscode.commands.registerCommand('nuclear.workspace.renameApp', (root?: string) => ws.renameApp(root)),
+    vscode.commands.registerCommand('nuclear.workspace.menu', () => ws.workspaceMenu()),
   );
+  // the workspace that holds VS Code's folder, else the last one opened; then the strip draws its apps
+  const loaded = ws.loadWorkspace();
   const pending = context.globalState.get<PendingAction>(PENDING);
   if (pending && Date.now() - pending.at < 300_000 && inFolders(pending.root)) {
     void context.globalState.update(PENDING, undefined);
     void ws.go(pending.root).then(() => ws.action(pending.id));
     return ws;
   }
-  // the welcome page at startup, unless the user turned it off or the window restored editors
-  if (vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) && vscode.window.tabGroups.all.every((g) => g.tabs.length === 0)) {
+  // the first run starts with the workspace: the welcome's three steps, once, on a machine with no workspace yet (the
+  // AI services' offer waits until it is closed); later, the page at startup only when the user turned it on
+  if (!context.globalState.get(WELCOMED) && !alive(context.globalState.get<Recent[]>(RECENT)).length) {
+    ws.firstRun = true;
+    void context.globalState.update(WELCOMED, true);
+    void loaded.then(() => WelcomePanel.show(context, ws));
+  } else if (vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) && vscode.window.tabGroups.all.every((g) => g.tabs.length === 0)) {
     WelcomePanel.show(context, ws);
   }
   return ws;
@@ -290,6 +311,12 @@ class Workspace implements vscode.WebviewViewProvider {
   private filesWatcher: vscode.Disposable | undefined;
   private readonly icons: Icons;
   readonly onDidChange = new vscode.EventEmitter<void>();
+  /** The Nuclear workspace open in this window (`nuclear workspace show --json`), when there is one. */
+  private current: WorkspaceInfo | undefined;
+  private markerWatch: vscode.Disposable | undefined;
+  private installedDialects: Promise<string[]> | undefined;
+  /** This activation opened the welcome as the first run: closing it offers the AI services' set-up. */
+  firstRun = false;
 
   constructor(
     private readonly context: vscode.ExtensionContext,
@@ -308,9 +335,17 @@ class Workspace implements vscode.WebviewViewProvider {
 
   // ---------- what is open ----------
 
-  /** The projects of the workspace folders first, then the ones opened here, in the order they were opened. */
+  /** The apps of the open workspace (else the projects of VS Code's folders), then the ones opened by hand. */
   projects(): Project[] {
-    const out = findProjects();
+    const w = this.current;
+    const out = w
+      ? w.apps
+          .filter((a) => a.exists)
+          .map((a) => {
+            const root = path.join(w.root, a.folder);
+            return projectAt(root) ?? { root, name: a.name, platform: a.platform, dialect: a.dialect ?? '', contracts: [] };
+          })
+      : findProjects();
     const seen = new Set(out.map((p) => p.root));
     for (const root of this.saved()) {
       if (seen.has(root)) continue;
@@ -336,14 +371,260 @@ class Workspace implements vscode.WebviewViewProvider {
     return all.find((p) => p.root === root) ?? all[0];
   }
 
-  /** The projects opened in this folder's workspace (Ctrl+Alt+O), kept per folder: another folder never shows them. */
+  /** The projects opened by hand (Ctrl+Alt+O), kept by the editor (global state), whatever folder VS Code has open;
+   * the ones a folder kept from 0.63 to 0.83 (workspace state) join them when that folder opens. */
   saved(): string[] {
-    const here = this.context.workspaceState.get<string[]>(SAVED);
-    if (here) return here;
-    // before 0.63.0 they were kept for every folder: this folder keeps those inside it
-    const inside = savedInside(this.context.globalState.get<string[]>(SAVED, []), (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath));
-    void this.context.workspaceState.update(SAVED, inside);
-    return inside;
+    const { saved, changed } = migrateSaved(this.context.globalState.get<string[]>(SAVED), this.context.workspaceState.get<string[]>(SAVED));
+    if (changed) void this.context.globalState.update(SAVED, saved).then(() => this.context.workspaceState.update(SAVED, undefined));
+    return saved;
+  }
+
+  // ---------- the Nuclear workspace (spec 022) ----------
+
+  workspace(): WorkspaceInfo | undefined {
+    return this.current;
+  }
+
+  /** The recent workspaces whose marker is still there, the last opened first. */
+  recent(): Recent[] {
+    return alive(this.context.globalState.get<Recent[]>(RECENT));
+  }
+
+  private cli(args: string[], cwd?: string): Promise<WorkspaceInfo | null> {
+    return workspaceCli(nuclearCommand(), args, cwd ?? this.current?.root ?? os.homedir(), toolEnv());
+  }
+
+  /** The workspace that holds one of VS Code's folders, else the last one opened. */
+  async loadWorkspace(): Promise<void> {
+    let found: WorkspaceInfo | null = null;
+    for (const f of vscode.workspace.workspaceFolders ?? []) {
+      found = await this.cli(['find'], f.uri.fsPath).catch(() => null);
+      if (found) break;
+    }
+    const last = this.recent()[0];
+    if (!found && last) found = await this.cli(['show', '--workspace', last.root], last.root).catch(() => null);
+    await this.setWorkspace(found ?? undefined);
+  }
+
+  private async setWorkspace(w: WorkspaceInfo | undefined): Promise<void> {
+    const moved = w?.root !== this.current?.root;
+    this.current = w;
+    if (w) await this.context.globalState.update(RECENT, remember(this.context.globalState.get<Recent[]>(RECENT), w, Date.now()));
+    if (moved) this.watchMarker();
+    this.http.refresh();
+    this.refresh();
+  }
+
+  /** The marker changed (a command, the MCP server, an agent, by hand): its apps read again, once per burst. */
+  private watchMarker(): void {
+    this.markerWatch?.dispose();
+    this.markerWatch = undefined;
+    const root = this.current?.root;
+    if (!root) return;
+    const w = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(root), '.workspace/workspace.nuc'));
+    let timer: NodeJS.Timeout | undefined;
+    const again = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void this.reload(), 300);
+    };
+    this.markerWatch = vscode.Disposable.from(w, w.onDidCreate(again), w.onDidChange(again), w.onDidDelete(again), { dispose: () => clearTimeout(timer) });
+    this.context.subscriptions.push(this.markerWatch);
+  }
+
+  private async reload(): Promise<void> {
+    const root = this.current?.root;
+    if (root) await this.setWorkspace((await this.cli(['show', '--workspace', root], root).catch(() => null)) ?? undefined);
+  }
+
+  /** Runs a change of the workspace with a progress notification; a refusal is shown with the command's message. */
+  private async change(title: string, args: string[], cwd?: string): Promise<WorkspaceInfo | undefined> {
+    try {
+      const w = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, () => this.cli(args, cwd));
+      return w ?? undefined;
+    } catch (e) {
+      void vscode.window.showErrorMessage(l10n.t('nuclear workspace: {0}', e instanceof Error ? e.message : String(e)));
+      return undefined;
+    }
+  }
+
+  /** *Create a workspace*: its parent folder and its name, `nuclear workspace new`, then it opens. */
+  async createWorkspace(parent?: string, name?: string): Promise<WorkspaceInfo | undefined> {
+    parent ??= (await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, title: l10n.t('The folder the workspace goes in'), openLabel: l10n.t('Make the workspace here') }))?.[0]?.fsPath;
+    if (!parent) return undefined;
+    name ??= await vscode.window.showInputBox({ title: l10n.t('The workspace\'s name'), prompt: l10n.t('One business project: its folder is made inside {0}', parent), validateInput: (v) => (/^[^/\\.][^/\\]*$/.test(v.trim()) ? undefined : l10n.t('A plain folder name: no "/", not hidden')) });
+    if (!name?.trim()) return undefined;
+    const w = await this.change(l10n.t('Creating the workspace {0}…', name.trim()), ['new', path.join(parent, name.trim()), '--name', name.trim()], parent);
+    if (w) await this.openIn(w);
+    return w;
+  }
+
+  /** *Open a workspace…*: a recent one, or a folder (a folder that is not one: offered to make it one). */
+  async openWorkspace(root?: string): Promise<void> {
+    root ??= (await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, title: l10n.t('Open a Nuclear workspace'), openLabel: l10n.t('Open the workspace') }))?.[0]?.fsPath;
+    if (!root) return;
+    let w: WorkspaceInfo | null | undefined = await this.cli(['find'], root).catch((e: Error) => (void vscode.window.showErrorMessage(l10n.t('nuclear workspace: {0}', e.message)), undefined));
+    if (w === undefined) return;
+    if (w === null) {
+      const make = l10n.t('Make it a workspace');
+      const pick = await vscode.window.showInformationMessage(l10n.t('{0} is not a Nuclear workspace (it has no .workspace/workspace.nuc). Make it one?', path.basename(root)), { modal: true }, make);
+      if (pick !== make) return;
+      w = await this.change(l10n.t('Creating the workspace {0}…', path.basename(root)), ['new', root], root);
+      if (!w) return;
+    }
+    await this.openIn(w);
+  }
+
+  /** An empty window takes the workspace as its folder; any other asks: this window (its folder replaced) or a new one.
+   * A window whose folder is already inside the workspace just shows it. */
+  private async openIn(w: WorkspaceInfo): Promise<void> {
+    await this.context.globalState.update(RECENT, remember(this.context.globalState.get<Recent[]>(RECENT), w, Date.now()));
+    const folders = (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
+    const inside = folders.some((f) => f === w.root || f.startsWith(w.root + path.sep));
+    if (inside) return this.setWorkspace(w);
+    let newWindow = false;
+    if (folders.length) {
+      const here = l10n.t('This window'), apart = l10n.t('A new window');
+      const pick = await vscode.window.showInformationMessage(l10n.t('Open the workspace {0}', w.name), { modal: true, detail: l10n.t('This window closes the folder open now ({0}); a new window keeps it.', folders.map((f) => path.basename(f)).join(', ')) }, here, apart);
+      if (!pick) return;
+      newWindow = pick === apart;
+    }
+    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(w.root), { forceNewWindow: newWindow });
+  }
+
+  /** A workspace to work on: the open one, else the user is offered to create or open one. */
+  private async needWorkspace(): Promise<WorkspaceInfo | undefined> {
+    if (this.current) return this.current;
+    const create = l10n.t('Create a workspace'), open = l10n.t('Open a workspace…');
+    const pick = await vscode.window.showInformationMessage(l10n.t('No Nuclear workspace is open: an app belongs to one.'), create, open);
+    if (pick === create) return this.createWorkspace();
+    if (pick === open) await this.openWorkspace();
+    return undefined;
+  }
+
+  /** The dialects of a platform this machine has, its default first. */
+  async dialects(platform: string): Promise<string[]> {
+    this.installedDialects ??= new Promise((resolve) =>
+      execFile(nuclearCommand(), ['dialect', 'list'], { env: toolEnv(), timeout: 15000, shell: process.platform === 'win32' }, (_e: unknown, out: unknown) => resolve(parseDialects(String(out ?? '')))),
+    );
+    return dialectsOf(platform, await this.installedDialects);
+  }
+
+  /** *Add an app*: its name, its platform and dialect; `nuclear workspace add` makes it (`nuclear new`) in the workspace. */
+  async addApp(name?: string, platform?: string, dialect?: string): Promise<WorkspaceInfo | undefined> {
+    const w = await this.needWorkspace();
+    if (!w) return undefined;
+    if (!platform) {
+      const about: Record<string, string> = { backend: l10n.t('a server: its API, its database, its agents'), web: l10n.t('a web app in the browser'), mobile: l10n.t('a phone app (Android, iOS)') };
+      platform = (await vscode.window.showQuickPick(PLATFORMS.map((p) => ({ label: p, description: about[p] })), { title: l10n.t('Add an app to {0}: its platform', w.name) }))?.label;
+      if (!platform) return undefined;
+    }
+    if (!dialect) {
+      const all = await this.dialects(platform);
+      dialect = all.length > 1 ? (await vscode.window.showQuickPick(all.map((d, i) => ({ label: d, description: i === 0 ? l10n.t('the default') : '' })), { title: l10n.t('The dialect of the {0} app', platform) }))?.label : all[0];
+      if (!dialect) return undefined;
+    }
+    name ??= await vscode.window.showInputBox({ title: l10n.t('The app\'s name'), prompt: l10n.t('Letters, digits and _: its folder in {0}', w.name), validateInput: (v) => (appFolder(v) ? undefined : l10n.t('Letters, digits and _')) });
+    if (!name?.trim()) return undefined;
+    const done = await this.change(l10n.t('Adding the app {0} (nuclear new)…', name.trim()), ['add', name.trim(), '--platform', platform, '--dialect', dialect, '--workspace', w.root], w.root);
+    if (!done) return undefined;
+    await this.setWorkspace(done);
+    const app = done.apps.find((a) => a.folder === appFolder(name!));
+    if (app?.exists) await this.go(path.join(done.root, app.folder));
+    return done;
+  }
+
+  /** The app of a tab, else one picked. */
+  private async pickApp(root: string | undefined, title: string): Promise<{ w: WorkspaceInfo; folder: string; name: string } | undefined> {
+    const w = await this.needWorkspace();
+    if (!w) return undefined;
+    let app = root ? w.apps.find((a) => path.join(w.root, a.folder) === root) : undefined;
+    if (!app) {
+      if (!w.apps.length) return void vscode.window.showInformationMessage(l10n.t('{0} has no app yet.', w.name)), undefined;
+      app = (await vscode.window.showQuickPick(w.apps.map((a) => ({ label: a.name, description: `${a.platform} · ${a.dialect ?? ''}`, detail: a.folder, a })), { title }))?.a;
+    }
+    return app && { w, folder: app.folder, name: app.name };
+  }
+
+  /** *Remove an app*: out of the marker, its folder kept; deleting the folder is a choice of its own, confirmed again. */
+  async removeApp(root?: string): Promise<void> {
+    const a = await this.pickApp(root, l10n.t('Remove an app from the workspace'));
+    if (!a) return;
+    const keep = l10n.t('Remove, keep the folder'), del = l10n.t('Remove and delete the folder…');
+    const pick = await vscode.window.showWarningMessage(l10n.t('Remove {0} from the workspace {1}?', a.name, a.w.name), { modal: true, detail: l10n.t('The app leaves .workspace/workspace.nuc; its folder {0} stays unless you choose to delete it.', a.folder) }, keep, del);
+    if (!pick) return;
+    const args = ['remove', a.folder, '--workspace', a.w.root];
+    if (pick === del) {
+      const sure = l10n.t('Delete the folder');
+      const again = await vscode.window.showWarningMessage(l10n.t('Delete the folder {0} and every file in it?', path.join(a.w.root, a.folder)), { modal: true, detail: l10n.t('This cannot be undone.') }, sure);
+      if (again !== sure) return;
+      args.push('--delete');
+    }
+    const done = await this.change(l10n.t('Removing the app {0}…', a.name), args, a.w.root);
+    if (done) await this.setWorkspace(done);
+  }
+
+  /** *Rename an app*: its folder and its entry (the project's own name in its config.nuc stays). */
+  async renameApp(root?: string): Promise<void> {
+    const a = await this.pickApp(root, l10n.t('Rename an app of the workspace'));
+    if (!a) return;
+    const to = await vscode.window.showInputBox({ title: l10n.t('Rename {0}', a.folder), value: a.folder, validateInput: (v) => (appFolder(v) ? undefined : l10n.t('Letters, digits and _')) });
+    if (!to?.trim() || to.trim() === a.folder) return;
+    const done = await this.change(l10n.t('Renaming the app {0}…', a.folder), ['rename', a.folder, to.trim(), '--workspace', a.w.root], a.w.root);
+    if (done) await this.setWorkspace(done);
+  }
+
+  /** The workspace's menu (its name on the column): rename it, its description, its apps, its marker, another one. */
+  async workspaceMenu(): Promise<void> {
+    const w = this.current;
+    type Item = vscode.QuickPickItem & { id: string };
+    const items: Item[] = [
+      ...(w
+        ? [
+            { label: `$(edit) ${l10n.t('Rename the workspace')}`, id: 'rename' },
+            { label: `$(note) ${l10n.t('Edit its description')}`, description: w.description, id: 'describe' },
+            { label: `$(add) ${l10n.t('Add an app')}`, id: 'add' },
+            { label: `$(symbol-key) ${l10n.t('Rename an app')}`, id: 'renameApp' },
+            { label: `$(trash) ${l10n.t('Remove an app')}`, id: 'removeApp' },
+            { label: `$(file-code) ${l10n.t('Open .workspace/workspace.nuc')}`, id: 'marker' },
+            { label: `$(comment-discussion) ${l10n.t('Do it with me by chat')}`, description: 'Nuclear Atlas', id: 'chat' },
+          ]
+        : []),
+      ...this.recent()
+        .filter((r) => r.root !== w?.root)
+        .map((r) => ({ label: `$(history) ${r.name}`, description: r.root, id: 'recent:' + r.root })),
+      { label: `$(folder-opened) ${l10n.t('Open a workspace…')}`, id: 'open' },
+      { label: `$(new-folder) ${l10n.t('Create a workspace')}`, id: 'create' },
+    ];
+    const pick = await vscode.window.showQuickPick(items, { title: w ? l10n.t('Workspace {0}', w.name) : l10n.t('Nuclear workspaces') });
+    if (!pick) return;
+    if (pick.id.startsWith('recent:')) return this.openWorkspace(pick.id.slice(7));
+    if (pick.id === 'open') return this.openWorkspace();
+    if (pick.id === 'create') return void (await this.createWorkspace());
+    if (!w) return;
+    if (pick.id === 'add') return void (await this.addApp());
+    if (pick.id === 'renameApp') return this.renameApp();
+    if (pick.id === 'removeApp') return this.removeApp();
+    if (pick.id === 'marker') return void (await vscode.window.showTextDocument(vscode.Uri.file(markerOf(w.root))));
+    if (pick.id === 'chat') return this.chat(texts(WELCOME_TEXTS).chatApps.replace('{0}', w.root).replace('{1}', w.name));
+    const rename = pick.id === 'rename';
+    const v = await vscode.window.showInputBox({ title: rename ? l10n.t('The workspace\'s name') : l10n.t('The workspace\'s description'), value: rename ? w.name : w.description });
+    if (v === undefined || (rename && !v.trim())) return;
+    const done = await this.change(l10n.t('Changing the workspace {0}…', w.name), ['edit', rename ? '--name' : '--description', v.trim(), '--workspace', w.root], w.root);
+    if (done) await this.setWorkspace(done);
+  }
+
+  /** *Do it with me by chat*: Nuclear Atlas on the workspace (before there is one, on the editor's own folder for the
+   * welcome's chat), `text` in the composer for the user to send; the agent works through the MCP server, which asks
+   * the user before each change. */
+  chat(text: string): void {
+    const w = this.current;
+    let where = w && { root: w.root, name: w.name };
+    if (!where) {
+      const root = vscode.Uri.joinPath(this.context.globalStorageUri, 'welcome').fsPath;
+      fs.mkdirSync(root, { recursive: true });
+      where = { root, name: l10n.t('Welcome') };
+    }
+    void this.go(TOOL_PREFIX + 'atlas').then(() => AtlasPanel.compose(this.context, () => this.projects(), where!, text));
   }
 
   // ---------- switching ----------
@@ -426,13 +707,21 @@ class Workspace implements vscode.WebviewViewProvider {
       return;
     }
     const saved = this.saved();
-    if (!saved.includes(root)) await this.context.workspaceState.update(SAVED, [...saved, root]);
+    if (!saved.includes(root)) await this.context.globalState.update(SAVED, [...saved, root]);
     this.http.refresh();
     await this.go(root);
   }
 
+  /** The right click on an app's tab: rename it, remove it from the workspace. */
+  private async appMenu(root: string): Promise<void> {
+    const rename = l10n.t('Rename the app…'), remove = l10n.t('Remove it from the workspace…');
+    const pick = await vscode.window.showQuickPick([rename, remove], { title: path.basename(root) });
+    if (pick === rename) await this.renameApp(root);
+    if (pick === remove) await this.removeApp(root);
+  }
+
   async removeProject(root: string): Promise<void> {
-    await this.context.workspaceState.update(SAVED, this.saved().filter((r) => r !== root));
+    await this.context.globalState.update(SAVED, this.saved().filter((r) => r !== root));
     if (this.activeKey() === root) await this.context.workspaceState.update(ACTIVE, undefined);
     this.http.refresh();
     this.refresh();
@@ -584,9 +873,15 @@ class Workspace implements vscode.WebviewViewProvider {
           : tool.id === 'builder'
             ? { kind: 'builder', sidebar: builderSidebar() }
             : { kind: 'template', tool: { id: tool.id, label: tool.label, about: tool.about, key: tool.key, soon: tool.planned.length > 0 } };
+    const w = this.current;
+    const apps = new Set(w?.apps.map((a) => path.join(w.root, a.folder)));
     void webview.postMessage({
       type: 'state',
+      // the open Nuclear workspace (its name heads the column), or why there is nothing (the empty panel)
+      workspace: w ? { name: w.name, root: w.root } : null,
+      empty: emptyState(w, this.projects().length, (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath), this.recent()),
       projects: this.projects().map((p) => ({
+        app: apps.has(p.root),
         root: p.root,
         name: p.name,
         platform: p.platform,
@@ -666,7 +961,23 @@ class Workspace implements vscode.WebviewViewProvider {
           if (m.root) void this.removeProject(m.root);
           break;
         case 'add':
+          // the strip's +: an app of the open workspace, else a project opened by hand
+          void (this.current ? this.addApp() : this.openProject());
+          break;
+        case 'openProject':
           void this.openProject();
+          break;
+        case 'wsMenu':
+          void this.workspaceMenu();
+          break;
+        case 'wsOpen':
+          void this.openWorkspace(m.root);
+          break;
+        case 'wsCreate':
+          void this.createWorkspace();
+          break;
+        case 'appMenu':
+          if (m.root) void this.appMenu(m.root);
           break;
         case 'tool':
           if (m.id) void this.openTool(m.id);
@@ -935,6 +1246,15 @@ export function stripHtml(webview: vscode.Webview): string {
   .tip.on { opacity: 1; } .tip b { display: block; } .tip kbd { font-family: var(--vscode-editor-font-family); font-size: 11px; opacity: .8; } .tip small { display: block; opacity: .7; margin-top: 2px; }
   .tab.add { opacity: .5; font-size: 16px; font-weight: 300; border: 1px dashed currentColor; }
   .tab.add:hover { opacity: 1; }
+  .tab.ws { margin-top: 6px; border-radius: 50%; font-size: 9px; opacity: .9; border: 1px solid var(--vscode-focusBorder); }
+  .wsbar { display: flex; align-items: center; gap: 6px; padding: 6px 10px 2px; font-size: 11px; cursor: pointer; flex: none; opacity: .85; }
+  .wsbar:hover, .wsbar:focus { opacity: 1; outline: none; } .wsbar b { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .wsbar span { margin-left: auto; opacity: .7; }
+  .nows { padding: 12px 10px; line-height: 1.5; } .nows p { margin: 0 0 10px; opacity: .8; }
+  .nows button { display: block; width: 100%; margin: 6px 0; padding: 5px 8px; font: inherit; cursor: pointer; color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: none; border-radius: 3px; text-align: left; }
+  .nows button.secondary { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+  .nows .recent { padding: 4px 6px; border-radius: 3px; cursor: pointer; } .nows .recent:hover, .nows .recent:focus { background: var(--vscode-list-hoverBackground); outline: none; }
+  .nows .recent small { display: block; opacity: .6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nows a { color: var(--vscode-textLink-foreground); cursor: pointer; }
   .col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .pane { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
   .notes { flex: none; max-height: 38%; overflow: auto; border-top: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, #8884)); padding-bottom: 4px; } .notes .section { margin-top: 8px; }
@@ -1055,19 +1375,27 @@ export function stripHtml(webview: vscode.Webview): string {
   function renderStrip() {
     const ps = $('projects');
     ps.innerHTML = '';
+    // the open workspace heads the strip: its menu (rename, its apps, its marker, another workspace)
+    if (state.workspace) {
+      const wt = tab(initials(state.workspace.name), t('wsTitle', state.workspace.name), false);
+      wt.classList.add('ws');
+      wt.addEventListener('click', () => vscode.postMessage({ type: 'wsMenu' }));
+      ps.appendChild(wt);
+    }
     state.projects.forEach((p, i) => {
       const key = i < 9 ? 'Ctrl+' + (i + 1) : '';
-      const tb = tab(p.platformIcon ? '' : initials(p.name), p.name + ' · ' + (p.platform || '') + ' ' + p.dialect + (key ? '  (' + key + ')' : '') + (p.saved ? '\\n' + t('removeHint') : ''), p.root === state.active);
+      const tb = tab(p.platformIcon ? '' : initials(p.name), p.name + ' · ' + (p.platform || '') + ' ' + p.dialect + (key ? '  (' + key + ')' : '') + (p.app ? '\\n' + t('appHint') : p.saved ? '\\n' + t('removeHint') : ''), p.root === state.active);
       if (p.platformIcon) { const pi = el('img', 'pi'); pi.src = p.platformIcon; tb.appendChild(pi); }
       if (p.dialectIcon) { const di = el('img', 'di'); di.src = p.dialectIcon; tb.appendChild(di); }
       if (key) tb.appendChild(el('span', 'n', String(i + 1)));
       tb.addEventListener('click', () => { vscode.postMessage({ type: 'project', root: p.root }); if (key) toast(key, t('opens', p.name)); });
-      if (p.saved) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'remove', root: p.root }); });
+      if (p.app) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'appMenu', root: p.root }); });
+      else if (p.saved) tb.addEventListener('contextmenu', (ev) => { ev.preventDefault(); vscode.postMessage({ type: 'remove', root: p.root }); });
       ps.appendChild(tb);
     });
-    const add = tab('+', t('openTab'), false);
+    const add = tab('+', state.workspace ? t('addApp', state.workspace.name) : t('openTab'), false);
     add.classList.add('add');
-    add.addEventListener('click', () => { vscode.postMessage({ type: 'add' }); toast('Ctrl+Alt+O', t('opensAProject')); });
+    add.addEventListener('click', () => { vscode.postMessage({ type: 'add' }); if (!state.workspace) toast('Ctrl+Alt+O', t('opensAProject')); });
     ps.appendChild(add);
     const ts = $('tools');
     ts.innerHTML = '';
@@ -1129,11 +1457,44 @@ export function stripHtml(webview: vscode.Webview): string {
   // npm scripts, apart from the tree (ADR-extensions-0002 rule 6: the actions live in the editor title bar, never
   // inside the file tree; the accordion is for an editor that hides the title bar's, as Cursor does)
   let actionsOpen = false;
+  // the open workspace's name over its files: a click opens its menu
+  function wsBar(pane) {
+    if (!state.workspace) return;
+    const b = el('div', 'wsbar'); b.tabIndex = 0; b.setAttribute('role', 'button'); b.title = t('wsTitle', state.workspace.name);
+    b.appendChild(el('b', '', state.workspace.name)); b.appendChild(el('span', '', '⋯'));
+    b.addEventListener('click', () => vscode.postMessage({ type: 'wsMenu' }));
+    b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); } });
+    pane.appendChild(b);
+  }
+  // no workspace and no project: why, the recent workspaces, open one, create one (and the projects opened by hand)
+  function renderNoWorkspace(pane, empty) {
+    head(pane, t('workspace'));
+    const box = el('div', 'nows');
+    box.appendChild(el('p', '', t(empty.reason === 'noFolder' ? 'wsNoFolder' : 'wsNotWorkspace')));
+    if (empty.recent.length) {
+      box.appendChild(el('div', 'section', t('wsRecent')));
+      for (const r of empty.recent) {
+        const d = el('div', 'recent', r.name); d.tabIndex = 0; d.setAttribute('role', 'button');
+        d.appendChild(el('small', '', r.root));
+        d.addEventListener('click', () => vscode.postMessage({ type: 'wsOpen', root: r.root }));
+        d.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } });
+        box.appendChild(d);
+      }
+    }
+    const open = el('button', '', t('wsOpen')); open.addEventListener('click', () => vscode.postMessage({ type: 'wsOpen' }));
+    const create = el('button', 'secondary', t('wsCreate')); create.addEventListener('click', () => vscode.postMessage({ type: 'wsCreate' }));
+    box.appendChild(open); box.appendChild(create);
+    const old = el('p', ''); old.innerHTML = t('wsOrProject'); box.appendChild(old);
+    pane.appendChild(box);
+    old.querySelector('a')?.addEventListener('click', () => vscode.postMessage({ type: 'openProject' }));
+  }
   function renderFiles(pane, p) {
+    if (!p.project && state.empty) return renderNoWorkspace(pane, state.empty);
+    wsBar(pane);
     if (!p.project) {
-      head(pane, t('workspace'));
+      head(pane, state.workspace ? state.workspace.name : t('workspace'));
       const e = el('div', 'empty');
-      e.innerHTML = t('noProject');
+      e.innerHTML = state.workspace ? t('wsNoApp') : t('noProject');
       pane.appendChild(e);
       $('addLink').addEventListener('click', () => vscode.postMessage({ type: 'add' }));
       return;
@@ -1471,6 +1832,20 @@ function page(webview: vscode.Webview, title: string, body: string, nonce: strin
   code { font-family: var(--vscode-editor-font-family); font-size: 12px; }
   .template { border: 1px dashed var(--vscode-widget-border, #888); border-radius: 6px; padding: 14px 18px; margin-top: 18px; }
   label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  section { border-left: 3px solid var(--vscode-widget-border, #8884); padding: 2px 0 6px 16px; margin: 18px 0; }
+  section.now { border-left-color: var(--vscode-focusBorder); } section.done { border-left-color: var(--vscode-testing-iconPassed, #3fb950); }
+  section h2 { margin-top: 6px; }
+  .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
+  .form label { flex-direction: column; align-items: stretch; gap: 4px; font-size: 12px; cursor: default; }
+  .form .row { display: flex; gap: 6px; } .form .row input { flex: 1; min-width: 0; }
+  input, select { font: inherit; padding: 4px 6px; color: var(--vscode-input-foreground); background: var(--vscode-input-background); border: 1px solid var(--vscode-input-border, var(--vscode-widget-border, transparent)); border-radius: 3px; }
+  button.chat { background: transparent; color: var(--vscode-textLink-foreground); border: 1px solid var(--vscode-textLink-foreground); }
+  .ok { margin: 8px 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .card { border: 1px solid var(--vscode-widget-border, #8884); border-radius: 6px; padding: 10px 12px; } .card p { margin: 4px 0; font-size: 12px; }
+  a { color: var(--vscode-textLink-foreground); cursor: pointer; }
+  details { margin: 22px 0 8px; } summary { cursor: pointer; opacity: .8; }
+  label.check { display: inline-flex; }
 </style>
 <title>${title}</title>
 </head>
@@ -1478,10 +1853,23 @@ function page(webview: vscode.Webview, title: string, body: string, nonce: strin
 </html>`;
 }
 
+/** The tour of the welcome: one card per tool, what it is and how to open it (`tour.<id>` of welcomeL10n.ts). */
+const TOUR = ['workspace', 'http-connections', 'environments', 'builder', 'atlas', 'devices', 'monitor', 'reports', 'settings'] as const;
+
+/**
+ * The welcome (spec 022 requirement 5), three short steps: (1) create the workspace, (2) add its apps, (3) a tour of
+ * every tool. Each step has *Do it with me by chat*: Nuclear Atlas opens with a first message for the user's agent,
+ * which does it through the MCP server, asking before each change. The AI services are the set-up page's
+ * (`nuclear.ai.setup`), linked at the end. The page is drawn again only when what it shows changed; what the user typed
+ * survives in the webview's state.
+ */
 class WelcomePanel {
   private static current: WelcomePanel | undefined;
   private readonly panel: vscode.WebviewPanel;
   private readonly listener: vscode.Disposable;
+  private readonly nonce = Math.random().toString(36).slice(2);
+  private dialects: Record<string, string[]> = {};
+  private shown = '';
 
   private constructor(private readonly context: vscode.ExtensionContext, private readonly ws: Workspace) {
     this.panel = vscode.window.createWebviewPanel('nuclear.welcome', l10n.t('Nuclear workspace'), vscode.ViewColumn.One, {
@@ -1495,12 +1883,14 @@ class WelcomePanel {
       WelcomePanel.current = undefined;
       this.listener.dispose();
       relang.dispose();
+      // the first run started with the workspace: the AI services' set-up is offered now
+      if (ws.firstRun) {
+        ws.firstRun = false;
+        void SetupPanel.offer(context);
+      }
     });
-    this.panel.webview.onDidReceiveMessage((m: { type: string; root?: string; on?: boolean }) => {
-      if (m.type === 'project' && m.root) void ws.go(m.root);
-      if (m.type === 'open') void ws.openProject();
-      if (m.type === 'startup') void vscode.workspace.getConfiguration().update(WELCOME, m.on, vscode.ConfigurationTarget.Global);
-    });
+    this.panel.webview.onDidReceiveMessage((m: { type: string; [k: string]: unknown }) => void this.receive(m));
+    void Promise.all(PLATFORMS.map(async (p) => [p, await ws.dialects(p)] as const)).then((all) => ((this.dialects = Object.fromEntries(all)), this.render()));
     this.render();
   }
 
@@ -1509,45 +1899,129 @@ class WelcomePanel {
     else WelcomePanel.current.panel.reveal();
   }
 
+  private async receive(m: { type: string; [k: string]: unknown }): Promise<void> {
+    const str = (k: string) => (typeof m[k] === 'string' ? (m[k] as string).trim() : '');
+    const w = texts(WELCOME_TEXTS);
+    const cur = this.ws.workspace();
+    switch (m.type) {
+      case 'pick': {
+        const parent = (await vscode.window.showOpenDialog({ canSelectFolders: true, canSelectFiles: false, title: l10n.t('The folder the workspace goes in'), openLabel: l10n.t('Make the workspace here') }))?.[0]?.fsPath;
+        if (parent) void this.panel.webview.postMessage({ type: 'parent', path: parent });
+        return;
+      }
+      case 'create':
+        return void (await this.ws.createWorkspace(str('parent') || undefined, str('name') || undefined));
+      case 'open':
+        return this.ws.openWorkspace(str('root') || undefined);
+      case 'addApp':
+        return void (await this.ws.addApp(str('name') || undefined, str('platform') || undefined, str('dialect') || undefined));
+      case 'project':
+        return void (str('root') && this.ws.go(str('root')));
+      case 'tool':
+        if (str('id') === 'workspace') return void vscode.commands.executeCommand('nuclear.workspace.show');
+        return this.ws.openTool(str('id'));
+      case 'setup':
+        return void vscode.commands.executeCommand('nuclear.ai.setup');
+      case 'startup':
+        return void vscode.workspace.getConfiguration().update(WELCOME, m.on === true, vscode.ConfigurationTarget.Global);
+      case 'chat': {
+        const step = str('step');
+        const parent = str('parent'), name = str('name'), app = str('app'), platform = str('platform') || 'backend';
+        const text =
+          step === 'create'
+            ? parent && name
+              ? fill(w.chatCreate, path.join(parent, name), name)
+              : w.chatCreateAsk
+            : step === 'apps'
+              ? cur
+                ? app
+                  ? fill(w.chatApp, cur.root, cur.name, platform, app)
+                  : fill(w.chatApps, cur.root, cur.name)
+                : w.chatCreateAsk
+              : w.chatTour;
+        return this.ws.chat(text);
+      }
+    }
+  }
+
   private render(): void {
-    const nonce = Math.random().toString(36).slice(2);
     const w = texts(WELCOME_TEXTS);
     const logo = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'icons', 'icon.svg'));
-    const active = this.ws.activeKey();
-    const projects = this.ws.projects();
-    const list = projects.length
-      ? projects
-          .map(
-            (p, i) => `<div class="project${p.root === active ? ' on' : ''}" data-root="${esc(p.root)}">
-  ${i < 9 ? `<kbd>Ctrl+${i + 1}</kbd>` : '<kbd> </kbd>'}
-  <div class="grow"><div class="name">${esc(p.name)} <span class="muted">${esc(p.platform ?? '')} · ${esc(p.dialect)}</span></div><div class="path">${esc(p.root)}</div></div>
-</div>`,
-          )
-          .join('')
-      : `<p class="muted">${w.noProjects}</p>`;
+    const cur = this.ws.workspace();
+    const keyOf = (id: string) => tools().find((t) => t.id === id)?.key ?? 'Ctrl+Alt+N';
+    const chat = (step: string) => `<button class="chat" data-chat="${step}">💬 ${w.byChat}</button>`;
+    const step1 = cur
+      ? `<p class="ok">✓ <b>${esc(cur.name)}</b> <code>${esc(cur.root)}</code></p>
+<p><button class="secondary" id="another">${w.createAnother}</button> <button class="secondary" id="openws">${w.openWs}</button></p>`
+      : `<div class="form"><label>${w.parent}<span class="row"><input id="parent" placeholder="${w.parentHint}"><button class="secondary" id="pick">${w.choose}</button></span></label>
+<label>${w.wsName}<input id="wsname" placeholder="citofony"></label></div>
+<p><button id="create">${w.createWs}</button> <button class="secondary" id="openws">${w.openWs}</button> ${chat('create')}</p>
+${this.ws.recent().length ? `<p class="muted">${w.recent}</p>${this.ws.recent().map((r) => `<div class="project" data-open="${esc(r.root)}"><div class="grow"><div class="name">${esc(r.name)}</div><div class="path">${esc(r.root)}</div></div></div>`).join('')}` : ''}`;
+    const apps = cur?.apps ?? [];
+    const step2 = cur
+      ? `${apps.length ? apps.map((a) => `<div class="project"${a.exists ? ` data-root="${esc(path.join(cur.root, a.folder))}"` : ''}><div class="grow"><div class="name">${esc(a.name)} <span class="muted">${esc(a.platform)} · ${esc(a.dialect ?? '')}</span></div><div class="path">${esc(a.folder)}${a.exists ? '' : ` · ${w.missing}`}</div></div></div>`).join('') : `<p class="muted">${w.noApps}</p>`}
+<div class="form"><label>${w.platform}<select id="platform">${PLATFORMS.map((p) => `<option value="${p}">${p}</option>`).join('')}</select></label>
+<label>${w.dialect}<select id="dialect"></select></label>
+<label>${w.appName}<input id="appname" placeholder="${esc(cur.name.replace(/[^A-Za-z0-9_]+/g, '_'))}_api"></label></div>
+<p><button id="add">${w.addApp}</button> ${chat('apps')}</p>`
+      : `<p class="muted">${w.firstWs}</p>`;
+    const tour = TOUR.map((id) => `<div class="card"><b>${(w as Record<string, string>)[`tour.${id}.title`]}</b><p>${(w as Record<string, string>)[`tour.${id}`]}</p><p class="muted"><kbd>${keyOf(id)}</kbd> <a data-tool="${id}">${w.openIt}</a></p></div>`).join('');
     const body = `
-<h1><img src="${logo}" alt=""> ${w.title}</h1>
-<p class="lead">${w.lead}</p>
-<p>${w.intro}</p>
-<h2>${w.projects}</h2>
-${list}
-<p><button id="open">${w.openTab}</button> <span class="muted">Ctrl+Alt+O</span></p>
-<h2>${w.keyboard}</h2>
+<h1><img src="${logo}" alt=""> ${w.welcome}</h1>
+<p class="lead">${w.lead3}</p>
+<section class="${cur ? 'done' : 'now'}"><h2>1 · ${w.step1}</h2><p>${w.step1About}</p>${step1}</section>
+<section class="${cur ? (apps.length ? 'done' : 'now') : ''}"><h2>2 · ${w.step2}</h2><p>${w.step2About}</p>${step2}</section>
+<section><h2>3 · ${w.step3}</h2><p>${w.step3About} ${chat('tour')}</p><div class="cards">${tour}</div></section>
+<section><h2>${w.aiTitle}</h2><p>${w.aiAbout} <button class="secondary" id="setup">${w.aiSetup}</button></p></section>
+<details><summary>${w.keyboard}</summary>
 <table>${shortcuts(w).map(([k, d]) => `<tr><td><kbd>${k}</kbd></td><td>${esc(d)}</td></tr>`).join('')}</table>
-<p class="muted">${w.keyboardNote}</p>
-<h2>${w.tools}</h2>
-<table>${tools().map((t) => `<tr><td><kbd>${t.key}</kbd></td><td><b>${esc(t.label)}</b>${t.planned.length ? ` <span class="muted">${w.templateTag}</span>` : ''}<br><span class="muted">${esc(t.about)}</span></td></tr>`).join('')}</table>
-<h2>${w.startup}</h2>
-<label><input type="checkbox" id="startup" ${vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) ? 'checked' : ''}> ${w.startupLabel}</label>
-<script nonce="${nonce}">
+<p class="muted">${w.keyboardNote}</p></details>
+<p><label class="check"><input type="checkbox" id="startup" ${vscode.workspace.getConfiguration().get<boolean>(WELCOME, false) ? 'checked' : ''}> ${w.startupLabel}</label></p>
+<script nonce="${this.nonce}">
   const vscode = acquireVsCodeApi();
-  document.querySelectorAll('.project').forEach((p) => p.addEventListener('click', () => vscode.postMessage({ type: 'project', root: p.dataset.root })));
-  document.getElementById('open').addEventListener('click', () => vscode.postMessage({ type: 'open' }));
-  document.getElementById('startup').addEventListener('change', (ev) => vscode.postMessage({ type: 'startup', on: ev.target.checked }));
+  const DIALECTS = ${JSON.stringify(this.dialects)};
+  const $ = (id) => document.getElementById(id);
+  const val = (id) => ($(id) ? $(id).value : '');
+  const saved = vscode.getState() || {};
+  for (const id of ['parent', 'wsname', 'platform', 'appname']) if ($(id) && saved[id]) $(id).value = saved[id];
+  function dialects() {
+    if (!$('platform')) return;
+    const list = DIALECTS[$('platform').value] || [];
+    $('dialect').innerHTML = list.map((d) => '<option>' + d + '</option>').join('');
+    if (saved.dialect && list.includes(saved.dialect)) $('dialect').value = saved.dialect;
+  }
+  dialects();
+  const keep = () => vscode.setState({ parent: val('parent'), wsname: val('wsname'), platform: val('platform'), dialect: val('dialect'), appname: val('appname') });
+  document.addEventListener('input', keep);
+  $('platform')?.addEventListener('change', () => { saved.dialect = ''; dialects(); keep(); });
+  addEventListener('message', (e) => { if (e.data.type === 'parent') { $('parent').value = e.data.path; keep(); } });
+  $('pick')?.addEventListener('click', () => vscode.postMessage({ type: 'pick' }));
+  $('create')?.addEventListener('click', () => vscode.postMessage({ type: 'create', parent: val('parent'), name: val('wsname') }));
+  $('another')?.addEventListener('click', () => vscode.postMessage({ type: 'create' }));
+  $('openws')?.addEventListener('click', () => vscode.postMessage({ type: 'open' }));
+  $('add')?.addEventListener('click', () => { vscode.postMessage({ type: 'addApp', platform: val('platform'), dialect: val('dialect'), name: val('appname') }); $('appname').value = ''; keep(); });
+  $('setup').addEventListener('click', () => vscode.postMessage({ type: 'setup' }));
+  $('startup').addEventListener('change', (ev) => vscode.postMessage({ type: 'startup', on: ev.target.checked }));
+  document.addEventListener('click', (e) => {
+    const c = e.target.closest('[data-chat]');
+    if (c) return vscode.postMessage({ type: 'chat', step: c.dataset.chat, parent: val('parent'), name: val('wsname'), platform: val('platform'), app: val('appname') });
+    const t = e.target.closest('[data-tool]');
+    if (t) return vscode.postMessage({ type: 'tool', id: t.dataset.tool });
+    const o = e.target.closest('[data-open]');
+    if (o) return vscode.postMessage({ type: 'open', root: o.dataset.open });
+    const p = e.target.closest('[data-root]');
+    if (p) vscode.postMessage({ type: 'project', root: p.dataset.root });
+  });
 </script>`;
-    this.panel.webview.html = page(this.panel.webview, w.title, body, nonce);
+    // drawn again only when it changed: a notification elsewhere never resets what the user is typing
+    if (body === this.shown) return;
+    this.shown = body;
+    this.panel.webview.html = page(this.panel.webview, w.welcome, body, this.nonce);
   }
 }
+
+/** `{0}`, `{1}`… of a text. */
+const fill = (text: string, ...args: string[]): string => text.replace(/\{(\d+)\}/g, (_, i) => args[+i] ?? '');
 
 /** A tool that is not built yet: its page says what it will do, full screen, with its shortcut. */
 class ToolPanel {

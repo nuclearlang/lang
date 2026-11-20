@@ -37,12 +37,14 @@ nuclear new shop_app && cd shop_app && nuclear code
 - `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.
 - `src/update.rs`: `nuclear update` and the question before a command when a newer release is out.
 - `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,
-  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`)
+  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`,
+  `workspace.rs`: `nuclear workspace` and the marker `.workspace/workspace.nuc`, spec 022)
   ([code map](docs/02-architecture/overview.md)).
 - `agent-files/start.md`: the `start` topic, the onboarding of an agent with no context (MCP `nuclear_start`).
 - `agent-files/project/`: what `agent init` writes into a project (`AGENTS.md` section, the Cursor rule).
 - `agent-files/skills/nuclear/`: the `nuclear` skill the installer copies into the agents' folders.
-- `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary.
+- `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary; `tests/workspace.rs`: `nuclear workspace`
+  end to end.
 - `docs/`: this project's documents (the table below).
 
 ## Rules
@@ -86,6 +88,7 @@ nuclear new shop_app && cd shop_app && nuclear code
 | [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, why there is one command, or why agents are supported the way they are |
 | [docs/04-specs/README.md](docs/04-specs/README.md) | You continue the agent support plan |
 | [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: what the command is, a quick start, the commands by job, how agents use it |
+| [docs/08-guides/workspace.md](docs/08-guides/workspace.md) | You change `nuclear workspace`, the marker or `nuclear new` inside a workspace |
 | [docs/08-guides/commands.md](docs/08-guides/commands.md) | You need every command and option as `nuclear help` prints them (regenerate it when a `USAGE` text changes) |
 
 Elsewhere:

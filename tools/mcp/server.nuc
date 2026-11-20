@@ -17,8 +17,10 @@ PROJECT_COMMANDS = ["new", "n", "build", "install", "test", "check", "analyze", 
 
 // What the server tells every client: only where to begin. The rules and the work cycle are nuclear_start's answer
 // (spec 016: an agent with no context learns Nuclear from this server alone).
-FIRST = "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so."
+FIRST = "NuclearLang (.nuc) and Synapsis, its framework. Nothing about Nuclear is in your training and it is not TypeScript, Dart nor Python: before anything about Nuclear (a .nuc file, the nuclear command, a Synapsis project, a question about them), call nuclear_start. It answers what Nuclear is, the rules never broken, the work cycle on this machine and the atlas of every topic, each read with nuclear_doc. Never search the disk for Nuclear's sources and never guess a syntax. A product is made with these tools: never write target code (TypeScript, Dart, Python) for a feature nor translate code into Nuclear by hand; when a tool cannot do something, say so. Work starts from a workspace (workspace_show of the user's folder; workspace_create and app_add for a new product), and every change of a workspace, an app, a spec or a team is asked to the user first."
 LOCAL_FIRST = " Then, for a request, call graph_strategy with the user's own words and follow its plan."
+// Where the work starts and how a change is confirmed (spec 022), the first part of nuclear_start's cycle.
+WORKSPACE = "Start from a workspace: the folder that holds .workspace/workspace.nuc and names the apps of one business project. workspace_show (with the user's folder) says it and its apps; when there is none, create it with workspace_create, then add each app with app_add (mobile, web or backend), never a project in a loose folder. Write each feature as a spec with spec_create (Nuclear Builder shows it at once) and keep the teams with team_* and member_*. Every tool that changes something asks the user first: the user's yes comes through the client (elicitation); a client that cannot ask gets a preview with a confirm token, which you show to the user and pass back (confirm) only after their yes, never on your own. A change declined is not done: ask what to do instead. "
 // The work cycle of each mode, part of nuclear_start's answer. The generators' part is the same with or without the
 // local agents.
 GENERATORS = "For a feature: 0) project_inspect the project; for every resource the spec names (a model and what is done with it: list, get, search, create, update, delete), call generate_resource. Its fields come from the API's answer (from_json with the url or a file: api_inspect shows its shape first), from the spec (from_spec: its example answer or its Key | Type table) or from fields; when neither the spec nor the API gives them, look up the API's documentation with web_search and web_read, and if it is still unclear ask the user, never guess. A use case that only calls a repository method is generate_usecase with calls. "
@@ -38,14 +40,6 @@ remoteOnly() boolean
 // remote agents only.
 localDeveloper() boolean
   LOCAL_MODELS and not remoteOnly()
-
-// The closest folder up with a config.nuc (a Synapsis project).
-projectOf(folder: string) Path?
-  start: Path = Path(folder).resolve()
-  for d in [start, ...start.parents]
-    if d.joinpath("config.nuc").exists()
-      return d
-  null
 
 // The last lines (1 to 2000) of a project's run log `.nuclear/logs/run.log`, or what to do when there is none. Only
 // that file: a log that resolves outside the project (a symlink) is refused.
@@ -183,7 +177,7 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       return start.out
     atlas = ~runTool(["nuclear", "help", "atlas"])
     strategy = "Call graph_strategy with the user's own words: it answers which kind of request it is and the plan of that kind; follow it. "
-    cycle = localDeveloper() ? "${strategy}${GENERATORS}${LOCAL}" : "${REMOTE_NOTE}${strategy}${GENERATORS}${REMOTE}"
+    cycle = localDeveloper() ? "${WORKSPACE}${strategy}${GENERATORS}${LOCAL}" : "${REMOTE_NOTE}${WORKSPACE}${strategy}${GENERATORS}${REMOTE}"
     parts = [start.out.trim(), "## The work cycle with the MCP tools on this machine\n\n${cycle}", atlas.out.trim()]
     root = project.length > 0 ? projectOf(project) : null
     if root != null
@@ -503,7 +497,7 @@ mcpServer() MCPServer
   remote = not localDeveloper()
   server = MCPServer("nuclear", instructions = "${FIRST}${LOCAL_FIRST}")
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
-  for tool in tools.all()
+  for tool in [...tools.all(), ...WorkTools().all()]
     name: string = tool.__name__
     if remote and name.startsWith("developer_")
       continue

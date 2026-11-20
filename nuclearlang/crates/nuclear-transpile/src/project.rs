@@ -489,11 +489,44 @@ pub fn check_config(source: &str, dialect: &Dialect) -> (Config, Vec<Diagnostic>
 
 type SpannedConfig = BTreeMap<String, Vec<(String, String, Span)>>;
 
+/// One named argument of a manifest's call: `name = "value"` (its value as text) with where each part is written.
+#[derive(Debug, Clone)]
+pub struct CallArg {
+    pub name: String,
+    pub value: String,
+    pub name_span: Span,
+    pub value_span: Span,
+}
+
+/// One top-level call of a file read as a manifest (`app(folder = "api", platform = "backend")`), in the order it
+/// is written: what `config.nuc` and the workspace's marker (`.workspace/workspace.nuc`) are made of.
+#[derive(Debug, Clone)]
+pub struct Call {
+    pub section: String,
+    pub args: Vec<CallArg>,
+    pub span: Span,
+}
+
 fn read_config_spans(source: &str, sections: &[String]) -> (SpannedConfig, Vec<Diagnostic>) {
+    let (calls, mut diags) = read_calls(source, sections);
+    let mut config = SpannedConfig::new();
+    for call in calls {
+        if config.contains_key(&call.section) {
+            diags.push(Diagnostic::error(codes::PROJECT, call.span, format!("'{}' is written twice", call.section)));
+        }
+        let entries = config.entry(call.section).or_default();
+        entries.extend(call.args.into_iter().map(|a| (a.name, a.value, a.name_span)));
+    }
+    (config, diags)
+}
+
+/// Reads a file of top-level calls of `sections` with named arguments whose values are a text, a number or a
+/// boolean, each call apart and in order (a section may be written more than once). Anything else is N0303.
+pub fn read_calls(source: &str, sections: &[String]) -> (Vec<Call>, Vec<Diagnostic>) {
     use nuclear_syntax::ast::{ExprKind, Stmt, StrPiece};
     let p = nuclear_syntax::parse(source);
     let mut diags = p.diagnostics;
-    let mut config = SpannedConfig::new();
+    let mut calls = Vec::new();
     let expected = sections.join(", ");
     for item in &p.file.items {
         let call = match item {
@@ -518,10 +551,7 @@ fn read_config_spans(source: &str, sections: &[String]) -> (SpannedConfig, Vec<D
             }
             continue;
         };
-        if config.contains_key(&section) {
-            diags.push(Diagnostic::error(codes::PROJECT, span, format!("'{section}' is written twice")));
-        }
-        let entries = config.entry(section).or_default();
+        let mut entries = Vec::new();
         for a in args {
             let value = match &a.value.kind {
                 ExprKind::Str(pieces) if pieces.iter().all(|x| matches!(x, StrPiece::Text(_))) => Some(
@@ -531,12 +561,15 @@ fn read_config_spans(source: &str, sections: &[String]) -> (SpannedConfig, Vec<D
                 ExprKind::Number(_) => source.get(a.value.span.start..a.value.span.end).map(str::to_string),
                 _ => None,
             };
+            let value_span = a.value.span;
             match (&a.name, value) {
-                (Some(name), Some(v)) => entries.push((name.name.clone(), v, name.span)),
+                (Some(name), Some(v)) => {
+                    entries.push(CallArg { name: name.name.clone(), value: v, name_span: name.span, value_span })
+                }
                 // a name that is not an identifier (`date-fns`, `@nestjs/axios`): "name@value"
                 (None, Some(v)) if matches!(a.value.kind, ExprKind::Str(_)) && split_entry(&v).is_some() => {
                     let (name, value) = split_entry(&v).unwrap_or_default();
-                    entries.push((name.to_string(), value.to_string(), a.value.span));
+                    entries.push(CallArg { name: name.into(), value: value.into(), name_span: value_span, value_span });
                 }
                 (None, _) => {
                     let msg = "write it as name = value (\"name@value\" when the name is not an identifier)";
@@ -548,8 +581,9 @@ fn read_config_spans(source: &str, sections: &[String]) -> (SpannedConfig, Vec<D
                 }
             }
         }
+        calls.push(Call { section, args: entries, span });
     }
-    (config, diags)
+    (calls, diags)
 }
 
 /// `"name@value"`, an entry of the manifest whose name is not an identifier (`"date-fns@^3.0.0"`,

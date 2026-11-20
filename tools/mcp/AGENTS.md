@@ -2,7 +2,8 @@
 
 `nuclear-mcp`: the program an AI client (Claude Code, Codex, Grok Build, Cursor, OpenCode, Gemini CLI) starts to work with NuclearLang. It
 speaks the Model Context Protocol over stdio and offers the generators, the compiler and the command line, the Smart
-Graph and the internet as tools. Its instructions tell every client how to work, so they all behave the same:
+Graph and the internet as tools, and the tools that organize the user's work (spec 022): workspaces and their apps,
+the specs Nuclear Builder reads, the teams; every change among them is asked to the user first. Its instructions tell every client how to work, so they all behave the same:
 generate first, write the rest, then validate and correct. The local developer's tools (`developer_*`) are on
 standby with the local models ([ADR-platform-0013](../../docs/03-adr/0013-local-models-on-standby.md)): `LOCAL_MODELS`
 in `server.nuc`, held to `localModels` of Nuclear Builder's `setup.json` by a test.
@@ -14,7 +15,8 @@ in `server.nuc`, held to `localModels` of Nuclear Builder's `setup.json` by a te
   `nuclear-mcp` = `nuclear_mcp.cli:main`).
 - The `mcp` Python library (`mcp>=2.3`), `httpx` for the Nuclear Developer and the internet, and the Smart Graph's
   package `nuclear-graph` (from `../../nuclear-graph-storage`, editable): its `GraphClient`, `Toolchain` and `Web`.
-- It needs the installed `nuclear` command; `nuclear-builder` for `developer_task` / `developer_retry`.
+- It needs the installed `nuclear` command; `nuclear-builder` for the specs, the teams and `developer_task` /
+  `developer_retry`.
 
 ## Commands
 
@@ -34,8 +36,12 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 
 - `server.nuc`: the server, its instructions (`FIRST`) and every tool (`McpTools`, `mcpServer`, `mcpTools`,
   `remoteOnly`); `nuclearStart` and `nuclearDoc` teach Nuclear.
+- `work.nuc`: the tools of the user's work (`WorkTools`: `workspace_*`, `app_*`, `spec_*`, `team_*`, `member_*`,
+  `skills_set`), each a call of `nuclear workspace` or `nuclear-builder` (`runCommand`), and the confirmation every
+  change goes through (`confirmed`); `projectOf`.
 - `cli.nuc`: `nuclear-mcp` and `nuclear-mcp tools`. `__init__.nuc`: the package's name.
-- `tests/`: `test_server.nuc` and `support.nuc` (`expect`).
+- `tests/`: `test_server.nuc`, `test_work.nuc` (the work's tools with a fake command runner and a fake client) and
+  `support.nuc` (`expect`).
 - `defs/python/nuclear_graph/0.2.0/`: the type definitions of the graph's package the server imports (generated:
   regenerate them when the graph's `client`, `toolchain`, `paths`, `web` or `workspace` change).
 - `docs/`: this project's documents (the table below).
@@ -57,7 +63,10 @@ nuclear-graph connect mcp --scopes read,write # allow MCP clients to read the gr
 6. **No `developer_*` tool while `LOCAL_MODELS` is false**, and a machine set up for remote agents only gets none
    either; the `graph_*` tools are on every machine. A new tool that needs the graph or the local developer takes one
    of those prefixes.
-7. **What comes from the internet is untrusted text**: no code blocks, and never a page of this machine or the
+7. **Every tool that changes the user's work asks the user first** (`confirmed`): MCP elicitation, or a preview
+   with a `confirm` token (bound to the tool and its exact arguments, 5 minutes, once, kept in the process only).
+   A tool never changes anything before that yes, and never deletes a folder unless its argument says so.
+8. **What comes from the internet is untrusted text**: no code blocks, and never a page of this machine or the
    local network.
 
 ## Documents

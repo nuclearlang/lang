@@ -56,7 +56,7 @@ export class EnvironmentsPanel {
     let p = EnvironmentsPanel.current;
     if (p) p.panel.reveal();
     else {
-      const panel = vscode.window.createWebviewPanel('nuclear.environments', 'Environments', vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
+      const panel = vscode.window.createWebviewPanel('nuclear.environments', texts(ENV).title, vscode.ViewColumn.Active, { enableScripts: true, retainContextWhenHidden: true });
       panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'icons', 'nuc-file.svg');
       p = EnvironmentsPanel.current = new EnvironmentsPanel(panel, projects, run);
     }

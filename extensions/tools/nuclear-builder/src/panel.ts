@@ -391,6 +391,8 @@ export class BuilderPanel {
   private known = new Set<string>();
   /** What the column asked before the page was ready: sent on its `ready`. */
   private pending: unknown;
+  /** The project's `spec.md` files watched (a spec written by the MCP server or a terminal shows at once). */
+  private specsWatch: { root: string; watcher: vscode.Disposable } | undefined;
 
   private constructor(
     private readonly context: vscode.ExtensionContext,
@@ -402,6 +404,7 @@ export class BuilderPanel {
     this.panel.onDidDispose(() => {
       this.disposed = true;
       localized.dispose();
+      this.specsWatch?.watcher.dispose();
       BuilderPanel.current = undefined;
       notices.watch('builder', false);
     });
@@ -459,6 +462,7 @@ export class BuilderPanel {
   state(): void {
     const projects = this.projects();
     if (!projects.some((p) => p.root === this.root)) this.root = projects[0]?.root ?? '';
+    this.watchSpecs();
     const card = this.root ? readCard(this.root) : undefined;
     const runs = this.root ? listRuns(this.root) : [];
     setSidebar({ root: this.root, project: projects.find((p) => p.root === this.root)?.name ?? '', runs: runs.map(lite), running: [...lines.keys()], ...(sidebar.root === this.root ? {} : { specs: [] }) });
@@ -471,6 +475,22 @@ export class BuilderPanel {
       running: [...lines.keys()],
       spending: { ...spendingSettings(), projectForces: projectForcesConfirm(this.root) },
     });
+  }
+
+  /** A spec created, changed or deleted in the project (by the MCP server's `spec_create`, a terminal, git): the
+   * tree read again, once per burst (300 ms). */
+  private watchSpecs(): void {
+    if (this.specsWatch?.root === this.root) return;
+    this.specsWatch?.watcher.dispose();
+    this.specsWatch = undefined;
+    if (!this.root || this.disposed) return;
+    const w = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(this.root), 'specs/**/spec.md'));
+    let timer: NodeJS.Timeout | undefined;
+    const again = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void this.specs().catch(() => undefined), 300);
+    };
+    this.specsWatch = { root: this.root, watcher: vscode.Disposable.from(w, w.onDidCreate(again), w.onDidChange(again), w.onDidDelete(again), { dispose: () => clearTimeout(timer) }) };
   }
 
   /** The specs of the project (`nuclear-builder spec list --json`; read from disk when the installed command has no

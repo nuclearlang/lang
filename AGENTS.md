@@ -68,7 +68,8 @@ fast as an expert's, instant transpilation, minimal readable Nuclear.
     is done: only the paths it changed, in the user's name, with no co-author line. A change that must reach the
     installations is released with a tag `v<version>`: one version for the whole platform, that follows [Semantic Versioning](https://semver.org): a fix
     raises PATCH, a new feature MINOR, a breaking change MAJOR (while the version is `0.x`, a breaking change raises
-    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)).
+    MINOR) ([docs/05-standards/coding.md](docs/05-standards/coding.md#git)). A tag is pushed only after
+    `installer/release/delivery.sh <version>` passes; after it, `installer/release/after-release.sh <version>`.
 11. `CodeBuilder/` is teaching material only: never in references, context or code.
 12. Node.js/Express is postponed by the user: do not touch it until asked.
 13. **A product is made with the tools** ([ADR-platform-0004](docs/03-adr/0004-products-are-made-with-the-tools.md)).

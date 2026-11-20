@@ -148,6 +148,13 @@ BuilderTools(root: string)
       toolSaid(specDraft(root, id, text))
     attempt(body)
 
+  // Ask the user to replace a spec's text with a new one (its whole markdown, from its `# title`): the user's decision.
+  // To propose a change for the user to read first, use spec_draft.
+  specUpdateTool(id: string, text: string) string
+    body = () =>
+      needsUser("spec_update", { "id": id, "text": text }, "Replace the text of the spec ${id} with the new one?", "nuclear-builder spec update ${id} --stdin")
+    attempt(body)
+
   // Ask the user to accept a spec's draft (it becomes the spec): the user's decision.
   specAcceptTool(id: string) string
     body = () =>
@@ -584,7 +591,7 @@ BuilderTools(root: string)
   // Every tool, in the order an agent lists them.
   all() any[]
     [
-      specNewTool, specListTool, specShowTool, specDraftTool, specAcceptTool, specDiscardTool, specMoveTool, specMigrateTool, specDeleteTool,
+      specNewTool, specListTool, specShowTool, specUpdateTool, specDraftTool, specAcceptTool, specDiscardTool, specMoveTool, specMigrateTool, specDeleteTool,
       runStartTool, runsTool, metricsTool, runFileTool, runJournalTool, runAnswerTool, runResumeTool, runRetryTool, runRestartTool, runStopTool,
       checksTool, checkSwitchTool, checkAddTool, checkMarkTool,
       teamListTool, teamShowTool, teamCreateTool, teamSuggestTool, teamNameSuggestTool, teamRunnableTool, teamUpdateTool, teamMemberAddTool, teamMemberRemoveTool, teamMemberUpdateTool, teamDuplicateTool, teamDeleteTool, teamDefaultTool, teamExportTool, teamImportTool, teamLogoTool, teamRosterTool, teamTemperamentsTool,
@@ -602,7 +609,7 @@ userDecision(text: string) <string, any>?
   null
 
 // The actions only the user's yes applies.
-USER_ACTIONS = ["skills_delete", "spec_accept", "spec_discard", "spec_delete", "team_delete", "team_member_remove", "team_create", "team_member_add", "team_member_update", "run_restart", "run_answer", "line_set", "ci_export", "run_spending"]
+USER_ACTIONS = ["skills_delete", "spec_update", "spec_accept", "spec_discard", "spec_delete", "team_delete", "team_member_remove", "team_create", "team_member_add", "team_member_update", "run_restart", "run_answer", "line_set", "ci_export", "run_spending"]
 
 // The user's yes to what a tool asked of them, applied (the host calls it only after the user said yes): the action
 // of a `needsUser`, or `run_spending` (the spending confirmed twice: kept in the run, which goes on).
@@ -611,6 +618,7 @@ applyForUser(root: string, tool: string, input: <string, any>) <string, any>
   if not (tool in USER_ACTIONS)
     throw ValueError("no action `${tool}` for the user")
   match tool
+    "spec_update" -> specUpdate(root, id, "${input["text"] ?? ""}")
     "spec_accept" -> specSettle(root, id, true)
     "spec_discard" -> specSettle(root, id, false)
     "spec_delete" -> specDelete(root, id)

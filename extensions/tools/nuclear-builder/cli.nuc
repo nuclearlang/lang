@@ -108,6 +108,8 @@ USAGE = """
                                   criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}
   nuclear-builder spec show <id> | delete <id> [--json]
                                   a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/
+  nuclear-builder spec update <id> --stdin [--json]
+                                  the spec's whole markdown (from its # title, on stdin) over its spec.md
   nuclear-builder spec list [--json]           the specs by component and layer, with their runs
   nuclear-builder spec move <id> --component … [--layer …] [--json]
                                   a spec's folder to another component or layer (its run follows)

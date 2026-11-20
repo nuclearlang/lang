@@ -15,7 +15,10 @@ asking. The extensions carry the platform's one version: a release of them is a 
 1. Raise the platform's version (minor for a feature, patch for a fix) with `installer/release/version.sh <version>`:
    it writes every project, these three extensions among them, and their lock files. Then the examples of each
    `README.md` that name a version, and the release of the whole platform
-   ([the installer's runbook](../../../installer/docs/06-runbooks/release.md)).
+   ([the installer's runbook](../../../installer/docs/06-runbooks/release.md)): no tag before
+   `installer/release/delivery.sh <version>` passes (it runs `npm run compile` and `npm test` here, the Spanish of
+   every text and the settings with no local model among them), and `installer/release/after-release.sh <version>`
+   after it.
 2. Write the change in the `CHANGELOG.md` of each extension it reaches.
 3. Build (the VS Code extension carries Nuclear Chat's UI: `nuclear-chat/ui/build-embed.sh` first, after `npm ci` in
    `nuclearlang/tools/node` and `installer/release/build-runtimes.sh`; the CI and the release do the same):
@@ -71,7 +74,8 @@ A user updates over data an earlier version wrote. Before packaging:
    - the editors (`npm run test:compat` in `vscode/`, also part of `npm test`: `tools/nuclear-builder/test/compat.test.ts`,
      fixtures in `vscode/test/fixtures/compat/`): the run files on the page (outline, log, a step's tree, a title
      without `key` in English), every setting under an id that moved, the projects saved for every folder before
-     0.63.0, the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and
+     0.63.0 and those each folder kept until 0.83 (`workspace-state-0.83.json`, `test/workspaces.test.ts`: they join the
+     editor's global list), the welcome's state of earlier versions (`global-state-onboarding.json`: offered while never finished and
      opened from the offer, never asked again once declined or done).
 
    Each loads without an error, converts on read where its format changed (the original kept as `.bak`) and says

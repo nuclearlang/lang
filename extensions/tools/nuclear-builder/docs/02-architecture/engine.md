@@ -154,6 +154,7 @@ The editors' commands (one call each, JSON on stdout with `--json`, an error as 
   reads it). A component is a folder name (`[A-Za-z_][A-Za-z0-9_-]*`), a use case one of the editors' seven.
 - `spec show <id> --json`: `{id, path, text, spec, draft, run}` (the draft's text or null, the run's status).
   `spec delete <id>`: the folder moved to `.nuclear/builder/deleted/<id>-<ms>/` (a running run refuses it).
+- `spec update <id> --stdin --json`: the whole markdown on stdin (from its `# title`) over `spec.md`, at once; `{id, path, spec}`; refused while its run is running.
 - `spec list --json`: `[{id, title, component, layer, path, updated, runs}]`, sorted by component, layer and title
   (`component` is `""` for a flat spec; `updated` in ms; `runs` the run ids of the spec).
 - `spec move <id> --component … [--layer …] --json`: the folder renamed whole (nothing copied, nothing lost; a folder

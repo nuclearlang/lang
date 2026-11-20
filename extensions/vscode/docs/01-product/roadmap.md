@@ -14,6 +14,12 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **The Nuclear workspaces and the three-step welcome (Unreleased, spec 022)**: compiled and tested
+  (`test/workspaces.test.ts`, the l10n test), the CLI calls tried against a built `nuclear`; never run in a VS Code
+  window: the empty panel, the header's menu, *This window / A new window*, the marker's watcher outside VS Code's
+  folders, Atlas's composer filled by *Do it with me by chat* (`AtlasPanel.compose`, on the extension's
+  `globalStorage/welcome` folder before a workspace exists), the first run's order (the welcome, then the AI services'
+  offer). The installed `nuclear` must have `workspace` (0.84): an older one is told to update.
 - **The Actions accordion and the chat's confirmation of a team's providers (Unreleased)**: the accordion is held by
   `test/scripts.test.ts` (read from the page's source, not rendered) and the `--confirm-spending` of a team's paid
   providers by `test/chat.test.ts`; neither seen in a running VS Code or Cursor.

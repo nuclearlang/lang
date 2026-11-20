@@ -114,8 +114,7 @@ The other settings are one section per tool, edited in VS Code's settings or in 
 
 | Setting | Default |
 |---|---|
-| `nuclear.ai.developerUrl` · `nuclear.ai.graphUrl` · `nuclear.ai.ollamaUrl` | `http://127.0.0.1:7879` · `http://127.0.0.1:7878` · `http://localhost:11434` |
-| `nuclear.ai.models.coder` · `.assistant` | `qwen2.5-coder:3b` · `gemma4:e2b` |
+| `nuclear.ai.graphUrl` | `http://127.0.0.1:7878` |
 | `nuclear.ai.mcpCommand` · `nuclear.ai.graphCommand` | `nuclear-mcp` · `nuclear-graph` |
 | `nuclear.ai.checkEveryMinutes` | `5` |
 | `nuclear.builder.team` | `""` (the default team) |
@@ -124,9 +123,10 @@ The other settings are one section per tool, edited in VS Code's settings or in 
 | `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |
 | `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |
 
-A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.contextTokens`,
+A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`,
 `nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its
-new one by itself.
+new one by itself. The settings of the local models and of Atlas's former meter (`nuclear.ai.developerUrl`,
+`ollamaUrl`, `models.*`, `nuclear.ai.contextTokens`, `nuclear.atlas.contextTokens`) are gone: an old value is ignored.
 
 The extension speaks English or Spanish: `nuclear.language` (`auto`: VS Code's display language when it is English
 or Spanish, else the operating system's, else English). The globe in every page's header and in the status bar

@@ -98,6 +98,23 @@ backend (fastapi, nestjs; the dialect's [toolchain] runs in build/)
   monitor [--json]                           the report of the last run with --monitor: its hot spots (slow, async
                                              calls in a loop, connections, memory) and each function's time
 
+workspace (spec 022: a folder whose .workspace/workspace.nuc names the business project and its apps;
+nuclear help workspace)
+  workspace new <path> [--name <n>] [--description <d>]
+                                             the folder and its marker
+  workspace add <app> --platform mobile|web|backend [--dialect <d>]
+                                             nuclear new of the app in the workspace's folder, written in the marker
+                                             (nuclear new anywhere inside a workspace does the same)
+  workspace remove <app> [--delete]          out of the marker; --delete also deletes its folder
+  workspace rename <app> <new> [--project-name] | rename --workspace-name <n>
+                                             the app's folder and its entry (--project-name: also its app(name))
+  workspace edit [--name <n>] [--description <d>]
+  workspace list | show | find               its apps; the workspace and its apps; the workspace of this folder
+      [--workspace <dir>] [--json]           default: the workspace that holds the current folder; --json: show's
+                                             object {root, name, description, apps: [{name, folder, platform,
+                                             dialect, exists}]} (find: or null), {error} when it fails
+  check (in a workspace's folder)            checks every app in turn (--json: run it in one app)
+
 environments (spec 021: every env("NAME", "default") of the code; values in .env, .env.<env>, .env.local,
 .env.<env>.local, the system's keyring, the process: the later wins)
   env list [--env <name>] [--json]           every variable (the code's and the files') × every environment

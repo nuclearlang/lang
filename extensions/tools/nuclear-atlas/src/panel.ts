@@ -71,6 +71,11 @@ export class AtlasPanel {
   /** The channel the chat opens on: Atlas's direct message, or the one a notification names. */
   private channel = DM;
   private disposed = false;
+  /** A folder that is not one of the projects the chat is opened on (a workspace, the onboarding's folder). */
+  private extra: { root: string; name: string } | undefined;
+  /** A first message for the composer, sent when the page is ready. */
+  private draft = '';
+  private ready = false;
 
   private constructor(
     private readonly context: vscode.ExtensionContext,
@@ -91,10 +96,32 @@ export class AtlasPanel {
     this.panel.onDidChangeViewState((e) => notices.watch('atlas', e.webviewPanel.visible && e.webviewPanel.active));
     this.panel.webview.onDidReceiveMessage((m: { type?: string; root?: string }) => {
       if (this.wire.receive(m)) return;
-      if (m.type === 'ready') this.state();
+      if (m.type === 'ready') {
+        this.ready = true;
+        this.state();
+        if (this.draft) void this.panel.webview.postMessage({ type: 'draft', text: this.draft });
+        this.draft = '';
+      }
       if (m.type === 'settings') SettingsPanel.show(this.context, 'builder');
       if (m.type === 'project' && m.root) ((this.root = m.root), (this.channel = DM), this.state());
     });
+  }
+
+  /** Atlas's direct message on `root` (a workspace or any folder, not only a project) with `text` in the composer, for
+   * the user to read and send: the onboarding's *Do it with me by chat*. */
+  static compose(context: vscode.ExtensionContext, projects: () => BuilderProject[], where: { root: string; name: string }, text: string): void {
+    const p = AtlasPanel.current ?? (AtlasPanel.current = new AtlasPanel(context, projects));
+    const moved = p.ready && (p.root !== where.root || p.channel !== DM);
+    p.extra = projects().some((x) => x.root === where.root) ? undefined : where;
+    p.root = where.root;
+    p.channel = DM;
+    p.panel.reveal(vscode.ViewColumn.Active);
+    notices.watch('atlas', true);
+    p.state();
+    if (moved) p.wire.receive({ type: 'chatOpen' });
+    // a page not ready yet gets it on its `ready`
+    if (p.ready) void p.panel.webview.postMessage({ type: 'draft', text });
+    else p.draft = text;
   }
 
   /** The Nuclear Atlas page, created or revealed, on the active project (or the first one); with `channel` (a
@@ -122,7 +149,7 @@ export class AtlasPanel {
   }
 
   private state(): void {
-    const projects = this.projects();
+    const projects = [...this.projects(), ...(this.extra ? [this.extra] : [])];
     if (!projects.some((p) => p.root === this.root)) this.root = projects[0]?.root ?? '';
     const card = this.root ? readCard(this.root) : undefined;
     const map = this.root ? mapOf(this.root) : '';
@@ -132,7 +159,7 @@ export class AtlasPanel {
         projects: projects.map((p) => ({ root: p.root, name: p.name })),
         root: this.root,
         templates: this.root ? templatesOf(map, card?.platform ?? '', lang()) : [],
-        hasMap: !!map,
+        hasMap: !!map || this.root === this.extra?.root,
       });
     // who can answer here (`agents --json`): none available, the page says how to pick one
     void agentsHere().then((list) => !this.disposed && void this.panel.webview.postMessage({ type: 'provider', ready: list.some((a) => a.available) }));
@@ -168,7 +195,13 @@ ${chatScript(webview, extension)}
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const page = nuclearChat((m) => vscode.postMessage(m));
-let S = { projects: [], root: '', templates: [], hasMap: true }, mounted = null;
+let S = { projects: [], root: '', templates: [], hasMap: true }, mounted = null, draft = '';
+/** The onboarding's first message: into the composer once the chat has drawn it. */
+function offerDraft(tries = 20) {
+  if (!draft) return;
+  if ($('#chat').shadowRoot?.querySelector('textarea')) return compose(draft), (draft = '');
+  if (tries > 0) setTimeout(() => offerDraft(tries - 1), 150);
+}
 /** A template into the chat's composer (its textarea, inside the chat's shadow root), the "…" selected to fill. */
 function compose(text) {
   const box = $('#chat').shadowRoot?.querySelector('textarea');
@@ -183,7 +216,8 @@ function show(text, error) { page.unmount(); mounted = null; $('#chat').innerHTM
 addEventListener('message', (e) => {
   const m = e.data;
   if (m.type === 'chatFrame') return page.frame(m.frame);
-  if (m.type === 'chatPath') return page.mount($('#chat'), m.path).catch((x) => show(String(x), true));
+  if (m.type === 'chatPath') return page.mount($('#chat'), m.path).then(() => offerDraft(), (x) => show(String(x), true));
+  if (m.type === 'draft') return (draft = m.text), offerDraft();
   if (m.type === 'chatError') return show(m.text, true);
   if (m.type === 'provider') { $('#noprov').hidden = m.ready; $('#noprov').innerHTML = esc(t('noProvider')) + ' <a data-settings="1" tabindex="0">' + esc(t('pickProvider')) + '</a>'; return; }
   if (m.type !== 'state') return;

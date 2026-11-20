@@ -4,6 +4,18 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.
+  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,
+  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's
+  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`
+  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:
+  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`
+  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear
+  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace
+  panel is `editor-workspace`.
+
+- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`).
+
 - `nuclear update` with the latest release already here says so and runs nothing (it ran the whole installer again); `nuclear update --reinstall` installs it all the same (`NUCLEAR_REINSTALL=1` for the installers).
 - Fix (macOS): `nuclear update` said "this nuclear was not installed by the NuclearLang installer", and the update question never showed, because macOS gives the path of the installer's link (`~/.local/bin/nuclear`) and the installation was looked for beside it; the link is now resolved first.
 - The local models are on standby (ADR-platform-0013): `nuclear help start` no longer offers the local developer

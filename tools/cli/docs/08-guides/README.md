@@ -81,7 +81,8 @@ exact `fix` (every code: [the diagnostics](../../../../nuclearlang/docs/07-refer
 
 | Job | Command | What it does |
 |---|---|---|
-| Start | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files |
+| Start | `workspace new <path>` / `workspace add <app> --platform <p>` | a workspace (the folder of a business project and its apps) and an app in it ([workspaces](workspace.md)) |
+| | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files (inside a workspace: in its folder, and registered) |
 | | `agent init` | `AGENTS.md`, `CLAUDE.md`, a Cursor rule and a check hook for AI agents |
 | | `code` | open the project in VS Code (run, debug, devices, hot reload) |
 | Write code | `gen resource <component> <Name>` | finished models, repository, use cases, controller or screen, tests |
@@ -131,6 +132,7 @@ An agent learns Nuclear from the command, not from guessing
 
 ## Go deeper
 
+- [Workspaces](workspace.md): the folder of a business project and its apps, the marker, `nuclear workspace`.
 - [Every command and option](commands.md), verbatim from `nuclear help`.
 - [The generators' guide](../../../code_generator/docs/08-guides/README.md): what `new`, `make` and `gen` write.
 - [The Synapsis tutorial](../../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.

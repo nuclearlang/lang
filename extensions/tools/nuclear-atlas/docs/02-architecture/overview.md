@@ -12,8 +12,12 @@ on the direct message with the general agent, `dm-atlas`.
 ## The page (`src/panel.ts`)
 
 - On top: the project, and the templates (`templatesOf(map, platform, lang)`, `src/chat.ts`: built from the map's
-  components, use cases and controllers or screens). A template is put in the chat's composer (its `textarea`, in
+  components, use cases and controllers or screens; its label and its prompt in the page's language). A template is put in the chat's composer (its `textarea`, in
   the chat's open shadow root), its `…` selected to fill.
+- `AtlasPanel.compose(root, text)`: the direct message on a folder that need not be a project (a Nuclear workspace,
+  or the extension's own folder for the welcome before there is one; listed in the project picker), with `text` put
+  in the composer once the chat is drawn, for the user to read and send: the welcome's and the workspace menu's *Do it
+  with me by chat* (spec 022).
 - Below: the embedded chat (`out/chat-embed.js`) mounted on `/<workspace>/dm-atlas`, its frames over `postMessage`
   to the window's one connection (`vscode/src/chatHost.ts`, `chatView.ts`, shared with the Builder). The service down
   is said on the page with how to fix it.

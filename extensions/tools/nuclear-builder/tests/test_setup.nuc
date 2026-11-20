@@ -431,3 +431,99 @@ testTheStepStandbyTakesAwayTheLocalModelsNuclearLangPutHere(tmpPath: Path, monke
   expect(not ("CODER_MODEL" in m) and not ("CHAT_MODEL" in m) and not ("NUCLEAR_PULLED_MODELS" in m))
   expect(said.last == "freed 4.6 GB", "${said}")
   expect(not standbyPending())
+
+// ---------- a service that does not answer (found on a new Mac, 0.83.1: Nuclear Chat "does not answer") ----------
+
+// The clock of these tests: every sleep moves it, so a wait of 90 s takes no time.
+fakeClock(monkeypatch: any) void
+  now: double[] = [0.0]
+  monkeypatch.setattr("time.monotonic", () => now[0])
+  monkeypatch.setattr("time.sleep", (s: double) => now.add(now.removeLast() + s))
+
+// A port written for our service, held by it while it starts (it does not answer yet), is kept: the graph's agent,
+// choosing the ports again at its start, must not move Nuclear Chat's port under it.
+testThePortOfOurServiceThatIsStillStartingIsKept(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  held.bind(socket.getaddrinfo("127.0.0.1", 0, socket.AF_INET, socket.SOCK_STREAM)[0][4])
+  held.listen(1)
+  port: int = held.getsockname()[1]
+  try
+    writeMachine({ "NUCLEAR_CHAT_PORT": "${port}" })
+    monkeypatch.setattr("nuclear_builder.setup.up", (url: string) => false)
+    monkeypatch.setattr("nuclear_builder.setup.loaded", (name: string) => name == "chat")
+    expect(servicePorts((l) => null)["NUCLEAR_CHAT_PORT"] == "${port}", "a loaded service keeps its port")
+    // not loaded: another program holds it, the next free one is taken
+    monkeypatch.setattr("nuclear_builder.setup.loaded", (name: string) => false)
+    expect(servicePorts((l) => null)["NUCLEAR_CHAT_PORT"] != "${port}", "a port of another program is left")
+  finally
+    held.close()
+
+// A service loaded but silent is started again, and answers then.
+testASilentServiceIsRestartedOnce(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  fakeClock(monkeypatch)
+  restarts: int[] = []
+  monkeypatch.setattr("nuclear_builder.setup.capture", (args: string[]) => Ran(0, "active"))
+  monkeypatch.setattr("nuclear_builder.setup.restart_service", (name: string) => restarts.add(1) ?? true)
+  // it answers only after the second start (the set-up's own restart, then the one of the silence)
+  monkeypatch.setattr("nuclear_builder.setup.up", (url: string) => restarts.length >= 2)
+  said: string[] = []
+  startService("chat", "http://127.0.0.1:7880/workspaces", (l) => said.add(l))
+  expect(restarts.length == 2 and said.any((l) => "started again" in l) and "7880" in said.last, "${said}")
+
+// Another program holds the service's port and does not answer: the service moves to a free port, written for it.
+testAServiceMovesToAFreePortWhenItsOwnIsHeldWithoutAnAnswer(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  fakeClock(monkeypatch)
+  held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  held.bind(socket.getaddrinfo("127.0.0.1", 0, socket.AF_INET, socket.SOCK_STREAM)[0][4])
+  held.listen(1)
+  port: int = held.getsockname()[1]
+  try
+    writeMachine({ "NUCLEAR_CHAT_PORT": "${port}" })
+    monkeypatch.setattr("nuclear_builder.setup.capture", (args: string[]) => Ran(0, "active"))
+    monkeypatch.setattr("nuclear_builder.setup.restart_service", (name: string) => true)
+    monkeypatch.setattr("nuclear_builder.setup.enable_services", (say: any, services: any = null) => true)
+    // it answers on any port but the held one
+    monkeypatch.setattr("nuclear_builder.setup.up", (url: string) => not (":${port}/" in url))
+    said: string[] = []
+    startService("chat", "http://127.0.0.1:${port}/workspaces", (l) => said.add(l))
+    moved = readMachine()["NUCLEAR_CHAT_PORT"]
+    expect(moved != "${port}" and moved in said.last, "${said}")
+    expect(said.any((l) => "held by another program that does not answer" in l), "${said}")
+  finally
+    held.close()
+
+// A service that never answers on a free port ends in an error with its own last lines, not a bare "does not answer".
+testAServiceThatNeverAnswersEndsWithItsLastLines(tmpPath: Path, monkeypatch: any) void
+  monkeypatch.setenv("XDG_CONFIG_HOME", "${tmpPath.joinpath("config")}")
+  fakeClock(monkeypatch)
+  monkeypatch.setattr("nuclear_builder.setup.capture", (args: string[]) => Ran(0, "active"))
+  monkeypatch.setattr("nuclear_builder.setup.restart_service", (name: string) => true)
+  monkeypatch.setattr("nuclear_builder.setup.up", (url: string) => false)
+  monkeypatch.setattr("nuclear_builder.setup.service_log", (name: string) => "Traceback: ModuleNotFoundError: x")
+  free = choosePort(PORTS["chat"]!, (p: int) => false)
+  writeMachine({ "NUCLEAR_CHAT_PORT": "${free}" })
+  message = ""
+  try
+    startService("chat", "http://127.0.0.1:${free}/workspaces", (l) => null)
+  catch e
+    message = "${e}"
+  expect("a restart" in message and "ModuleNotFoundError" in message, message)
+
+// One copy of each service runs: an older one (another version's, one started by hand or by a source install) is
+// found; the system manager's own process, a command of the same tool and a shell around it are not.
+testOnlyTheCopiesOfAServiceBesideTheManagersOwnAreStrays() void
+  lines = [
+    "  101 /Users/a/.local/share/nuclearlang/ai/python/bin/python3 -X utf8 -c import os, sys; from nuclear_chat_system.cli import main; sys.exit(main()) serve",
+    "  202 /old/nuclearlang/ai/python/bin/python3 -X utf8 -c import os, sys; from nuclear_chat_system.cli import main; sys.exit(main()) serve",
+    "  303 /usr/bin/python3 /Users/a/.local/bin/nuclear-chat serve",
+    "  404 /Users/a/.local/share/nuclearlang/ai/python/bin/python3 -X utf8 -c from nuclear_chat_system.cli import main pack",
+    "  505 /bin/sh -c set -a; . ai.env; exec nuclear-chat serve",
+    "  606 python3 -c from nuclear_graph.cli import main serve",
+  ]
+  expect(strays("chat", lines, 101) == [202, 303], "${strays("chat", lines, 101)}")
+  expect(strays("graph", lines, 606) == ([] as int[]))
+  // the manager's process unknown: nothing is stopped on a guess
+  expect(strays("chat", lines, 0) == ([] as int[]))

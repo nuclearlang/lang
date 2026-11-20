@@ -1,7 +1,7 @@
 ---
 status: accepted
 owner: Julian Molina
-updated: 2026-11-19
+updated: 2026-11-20
 related: [README.md, run-and-debug.md, ../02-architecture/workspace.md, ../../../docs/03-adr/0002-the-nuclear-workspace.md]
 ---
 # The Nuclear workspace
@@ -11,12 +11,39 @@ pane beside it. Each tab is a workspace of its own, either a project or a tool. 
 area: the editors of the tab you leave are saved and closed, and those of the tab you enter are opened again. An
 unsaved editor stays open (you never get a save prompt), and the devices stay beside the code.
 
+## Your workspace and its apps
+
+Start from a **Nuclear workspace**: a folder for one business project and its apps (a backend, a web app, mobile
+apps). Its file `.workspace/workspace.nuc` says which apps belong to it, so the editor, the MCP server and your agents
+always find them. The editor opens the workspace that holds VS Code's open folder, else the last one you opened: the
+recent workspaces are remembered by the editor, so a change of VS Code's folder never loses them.
+
+- **Create a workspace**: *Nuclear: Create a Workspace* asks the folder it goes in and its name.
+- **Open one**: *Nuclear: Open a Workspace* (a folder that is not a workspace yet is offered to become one). In an
+  empty window it becomes the window's folder; otherwise you choose this window or a new one.
+- **Add an app**: `+` on the strip, or *Nuclear: Add an App to the Workspace*: its platform (backend, web, mobile),
+  its dialect when the platform has several (the default first) and its name. The app is made inside the workspace
+  (`nuclear new`) and its tab opens.
+- **Rename or remove an app**: right click on its tab. Removing takes it out of the workspace and keeps its folder,
+  unless you choose to delete the folder too (asked twice).
+- **The workspace's menu**: its initials at the top of the strip, or its name over the files: rename it, its
+  description, its apps, its marker file, another workspace, *Do it with me by chat*.
+- **By chat**: *Do it with me by chat* opens Nuclear Atlas with the request written in the composer. Send it, and
+  your agent does it through the MCP server, asking you before each change.
+
+With no workspace and no project, the view says why (no folder is open, or the open folder is not a workspace) and
+offers the recent workspaces, *Open a workspace…* and *Create a workspace*. The same commands also work from a
+terminal: `nuclear workspace new|add|remove|rename|edit|list` (`nuclear help workspace`).
+
+The welcome page (`Ctrl+Alt+W`, opened on the first run) walks the three steps: create the workspace, add its apps, a
+tour of each tool.
+
 ## Project tabs
 
-The projects are at the top of the strip. They are the Nuclear projects of the VS Code workspace folders, plus
-the ones you opened with *Open a Project as a Tab* (`Ctrl+Alt+O`). That command remembers the folder without
-adding it to the VS Code workspace. Each tab shows its platform's glyph with the dialect's icon as a badge.
-`Ctrl+1` … `Ctrl+9` go to the first nine projects. `+` opens another one.
+The apps of the workspace are at the top of the strip, in the order of its marker, then the projects you opened with
+*Open a Project as a Tab* (`Ctrl+Alt+O`), which the editor remembers for every folder. With no workspace open, the
+tabs are the Nuclear projects of the VS Code workspace folders and the ones you opened. Each tab shows its platform's
+glyph with the dialect's icon as a badge. `Ctrl+1` … `Ctrl+9` go to the first nine.
 
 The pane of a project is its file tree, beside the strip, drawn like VS Code's explorer, with the icons of the
 Chernobyl icon theme. It follows `files.exclude` and selects the file of the active editor. A click opens a file;

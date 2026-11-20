@@ -1,0 +1,197 @@
+use json
+use shutil
+use asyncio
+use pytest
+use mcp_types
+use pathlib{ Path }
+use mcp/client/client{ Client }
+use mcp/server/mcpserver{ MCPServer }
+
+// The tools that organize the user's work (spec 022): each change asked first (elicitation, or a preview and its
+// confirm token), and each tool a thin call of `nuclear workspace` or `nuclear-builder`, run here by a fake runner.
+
+// A command runner that answers `out` and keeps every call: [args, cwd, stdin].
+Runner(out: string = "{\"ok\": true}")
+  calls: any[][] = []
+
+  run(args: string[], cwd: string? = null, stdin: string = "") Ran
+    ~asyncio.sleep(0)
+    calls.add([args, cwd, stdin])
+    Ran(0, out)
+
+// What a client answers to an elicitation.
+Reply(action: string, content: <string, any>? = null)
+
+Caps(elicitation: any = null)
+
+// A client's session: whether it can ask (its capabilities) and what its user answers.
+Session(clientCapabilities: Caps, reply: Reply, canSendRequest: boolean = true)
+  asked: string[] = []
+
+  elicitForm(message: string, requestedSchema: any, relatedRequestId: any = null) Reply
+    ~asyncio.sleep(0)
+    asked.add(message)
+    reply
+
+// A tool call's context, as the MCP library gives it.
+Ctx(session: Session, requestId: int = 1)
+
+asking(action: string, yes: boolean = true) Ctx
+  Ctx(Session(Caps({ "form": {} as <string, any> }), Reply(action, { "confirm": yes })))
+
+said(text: string) <string, any>
+  json.loads(text)
+
+testAChangeAskedByElicitationIsDoneOnlyOnTheUsersYes(tmpPath: Path) void
+  runner = Runner()
+  tools = WorkTools(runner.run)
+  yes = asking("accept")
+  asyncio.run(tools.workspaceCreate("${tmpPath}/shop", "shop", "", "", yes))
+  expect(runner.calls.length == 1 and runner.calls[0][0] == ["nuclear", "workspace", "new", "${tmpPath.resolve()}/shop", "--name", "shop", "--json"])
+  expect("Create the workspace `shop`" in yes.session.asked[0] and ".workspace/workspace.nuc" in yes.session.asked[0])
+  // declined, cancelled or a yes unticked: nothing runs
+  for ctx in [asking("decline"), asking("cancel"), asking("accept", false)]
+    out = said(asyncio.run(tools.workspaceCreate("${tmpPath}/shop", "shop", "", "", ctx)))
+    expect(out["declined"] != null and runner.calls.length == 1)
+
+// The yes or no a real client's user gives (the MCP library's client, over the initialize handshake of stdio).
+Answering(yes: boolean)
+  asked: string[] = []
+
+  answer(context: any, params: any) any
+    ~asyncio.sleep(0)
+    asked.add("${params.message}")
+    mcpTypes.ElicitResult(action = yes ? "accept" : "decline", content = yes ? { "confirm": true } : null)
+
+called(server: MCPServer, answering: Answering?, tool: string, args: <string, any>) string
+  client = answering == null ? Client(server, mode = "legacy") : Client(server, elicitationCallback = answering!.answer, mode = "legacy")
+  ~client.__aenter__()
+  try
+    result = ~client.callTool(tool, args)
+    parts: any[] = result.content
+    return "${parts[0].text}"
+  finally
+    ~client.__aexit__(null, null, null)
+
+testAToolAsksThroughTheProtocolsElicitationAndFallsBackToAPreview() void
+  runner = Runner()
+  server = MCPServer("test")
+  for tool in WorkTools(runner.run).all()
+    server.addTool(tool)
+  yes = Answering(true)
+  expect(said(asyncio.run(called(server, yes, "team_delete", { "team": "dev" })))["ok"] == true and "Delete the team `dev`" in yes.asked[0])
+  no = Answering(false)
+  expect(said(asyncio.run(called(server, no, "team_delete", { "team": "dev" })))["declined"] != null and runner.calls.length == 1)
+  // a client without elicitation: the preview and its token
+  expect(said(asyncio.run(called(server, null, "team_delete", { "team": "dev" })))["confirm"] != null and runner.calls.length == 1)
+
+testAClientThatCannotAskGetsAPreviewAndATokenForThatExactChangeOnce(tmpPath: Path) void
+  runner = Runner()
+  tools = WorkTools(runner.run)
+  // no context, or a client without the elicitation capability: a preview, nothing run
+  for ctx in [null, Ctx(Session(Caps(), Reply("accept", { "confirm": true })))]
+    preview = said(asyncio.run(tools.teamDelete("dev-team", "", ctx)))
+    expect(preview["confirm"] != null and "Delete the team `dev-team`" in "${preview["preview"]}" and runner.calls.isEmpty)
+  token = "${said(asyncio.run(tools.teamDelete("dev-team")))["confirm"]}"
+  // the token of another change is refused, and used up
+  wrong = said(asyncio.run(tools.teamDelete("other-team", token)))
+  expect("another change" in "${wrong["error"]}" and runner.calls.isEmpty)
+  token = "${said(asyncio.run(tools.teamDelete("dev-team")))["confirm"]}"
+  asyncio.run(tools.teamDelete("dev-team", token))
+  expect(runner.calls.length == 1 and runner.calls[0][0] == ["nuclear-builder", "team", "delete", "dev-team", "--json"])
+  // once only
+  again = said(asyncio.run(tools.teamDelete("dev-team", token)))
+  expect("unknown, expired or used" in "${again["error"]}" and runner.calls.length == 1)
+  // expired after five minutes
+  late = "${said(asyncio.run(tools.teamDelete("dev-team")))["confirm"]}"
+  PENDING[late]!["until"] = 0
+  expect("expired" in "${said(asyncio.run(tools.teamDelete("dev-team", late)))["error"]}" and runner.calls.length == 1)
+  expect("unknown" in "${said(asyncio.run(tools.teamDelete("dev-team", "made-up")))["error"]}" and runner.calls.length == 1)
+
+testDeletingAWorkspaceRemovesItsMarkerAndItsAppsFoldersOnlyWhenAsked(tmpPath: Path) void
+  root = tmpPath.joinpath("shop")
+  root.joinpath(".workspace").mkdir(parents = true)
+  root.joinpath(".workspace", "workspace.nuc").writeText("workspace(name = \"shop\")\n")
+  root.joinpath("shop-api").mkdir()
+  shown = Json.encode({ "root": "${root}", "name": "shop", "apps": [{ "name": "shop-api", "folder": "shop-api", "platform": "backend" }] })
+  runner = Runner(shown)
+  tools = WorkTools(runner.run)
+  yes = asking("accept")
+  done = said(asyncio.run(tools.workspaceDelete("${root}", false, "", yes)))
+  expect(done["deleted"] == "${root}" and not root.joinpath(".workspace").exists() and root.joinpath("shop-api").isDir())
+  expect("only its marker" in yes.session.asked[0] and "stay as they are" in yes.session.asked[0])
+  expect(runner.calls.map((c) => c[0]) == [["nuclear", "workspace", "show", "--json"]])
+  // the folders too, said in the question, each removed by `nuclear workspace remove --delete`
+  root.joinpath(".workspace").mkdir()
+  root.joinpath(".workspace", "workspace.nuc").writeText("workspace(name = \"shop\")\n")
+  sure = asking("accept")
+  asyncio.run(tools.workspaceDelete("${root}", true, "", sure))
+  expect("AND the folders of its 1 app(s): shop-api" in sure.session.asked[0])
+  expect(runner.calls.last[0] == ["nuclear", "workspace", "remove", "shop-api", "--delete", "--json"] and runner.calls.last[1] == "${root}")
+
+testTheAppsToolsCallTheWorkspaceCommandInTheWorkspace(tmpPath: Path) void
+  runner = Runner()
+  tools = WorkTools(runner.run)
+  yes = asking("accept")
+  asyncio.run(tools.appAdd("${tmpPath}", "shop-web", "web", "react", "", yes))
+  asyncio.run(tools.appRename("${tmpPath}", "shop-web", "shop-site", "", yes))
+  asyncio.run(tools.appRemove("${tmpPath}", "shop-site", false, "", yes))
+  asyncio.run(tools.appRemove("${tmpPath}", "shop-site", true, "", yes))
+  expect(runner.calls.map((c) => c[0]) == [["nuclear", "workspace", "add", "shop-web", "--platform", "web", "--dialect", "react", "--json"], ["nuclear", "workspace", "rename", "shop-web", "shop-site", "--json"], ["nuclear", "workspace", "remove", "shop-site", "--json"], ["nuclear", "workspace", "remove", "shop-site", "--delete", "--json"]])
+  expect(runner.calls.all((c) => c[1] == "${tmpPath}") and "delete its folder" in yes.session.asked[3])
+  // a platform that is not one, a word read as an option: refused before asking
+  expect("not a platform" in "${said(asyncio.run(tools.appAdd("${tmpPath}", "x", "desktop", "", "", yes)))["error"]}")
+  expect(said(asyncio.run(tools.appRename("${tmpPath}", "x", "--delete", "", yes)))["error"] != null and yes.session.asked.length == 4)
+
+testASpecIsWrittenByNuclearBuilderInTheProjectAndEditedWholeAfterTheUsersYes(tmpPath: Path) void
+  project = tmpPath.joinpath("shop")
+  project.mkdir()
+  project.joinpath("config.nuc").writeText("")
+  runner = Runner("{\"id\": \"lend-a-book\", \"path\": \"specs/books/lend-a-book\"}")
+  tools = WorkTools(runner.run)
+  yes = asking("accept")
+  refused = said(asyncio.run(tools.specCreate("${project}", "books", "Lend a book", [] as string[], "", "feature", "", "", "", yes)))
+  expect("acceptance criteria" in "${refused["error"]}" and runner.calls.isEmpty)
+  asyncio.run(tools.specCreate("${project}", "books", "Lend a book", ["a lent book is not free"], "domain", "feature", "A reader borrows a book.", "", "", yes))
+  expect(runner.calls[0][0] == ["nuclear-builder", "spec", "new", "--title", "Lend a book", "--component", "books", "--use-case", "feature", "--layer", "domain", "--description", "A reader borrows a book.", "--criteria", "a lent book is not free", "--json"])
+  expect(runner.calls[0][1] == "${project}" and "specs/books/domain/<id>/spec.md" in yes.session.asked[0] and "- a lent book is not free" in yes.session.asked[0])
+  asyncio.run(tools.specEdit("${project}", "lend-a-book", "# Lend a book for two weeks\n", "", yes))
+  expect(runner.calls.last[0] == ["nuclear-builder", "spec", "update", "lend-a-book", "--stdin", "--json"] and runner.calls.last[2] == "# Lend a book for two weeks\n")
+  expect("specs/books/lend-a-book/spec.md" in yes.session.asked[1])
+  expect("not inside a Synapsis project" in "${said(asyncio.run(tools.specList("${tmpPath}")))["error"]}")
+
+testTheTeamsToolsCallNuclearBuilderAndNeverHireALocalMember() void
+  runner = Runner()
+  tools = WorkTools(runner.run)
+  yes = asking("accept")
+  expect(LOCAL_STANDBY in "${said(asyncio.run(tools.memberAdd("dev", "developer", "", "local", "", "", "", 1, "", yes)))["error"]}")
+  expect(LOCAL_STANDBY in "${said(asyncio.run(tools.teamCreate("Dev", "", "", null, [{ "role": "qa", "kind": "local" }], null, "", yes)))["error"]}" and runner.calls.isEmpty)
+  asyncio.run(tools.teamCreate("Dev", "Ship the shop", "", ["testing"], [{ "role": "developer", "provider": "claude-code" }], 5.0, "", yes))
+  expect(runner.calls[0][0] == ["nuclear-builder", "team", "create", "--json"] and json.loads("${runner.calls[0][2]}")["members"] == [{ "role": "developer", "provider": "claude-code" }])
+  asyncio.run(tools.memberAdd("dev", "qa", "", "agent", "codex", "", "", 2, "", yes))
+  expect(runner.calls[1][0] == ["nuclear-builder", "team", "member", "add", "dev", "--role", "qa", "--kind", "agent", "--provider", "codex", "--count", "2", "--json"])
+  asyncio.run(tools.memberEdit("dev", "qa-001", "", "", "", "", "", "Be thorough", "", null, "", yes))
+  expect(runner.calls[2][0] == ["nuclear-builder", "team", "member", "update", "dev", "qa-001", "--instructions", "Be thorough", "--json"])
+  asyncio.run(tools.memberRemove("dev", "qa-001", "", yes))
+  asyncio.run(tools.skillsSet("dev", ["testing", "security"], "", "", yes))
+  asyncio.run(tools.teamEdit("dev", "Developers", "", "", null, "", null, "", yes))
+  expect(runner.calls.slice(3).map((c) => c[0]) == [["nuclear-builder", "team", "member", "remove", "dev", "qa-001", "--json"], ["nuclear-builder", "team", "skills", "set", "dev", "--skills", "testing,security", "--json"], ["nuclear-builder", "team", "update", "dev", "--name", "Developers", "--json"]])
+  asyncio.run(tools.teamList())
+  expect(runner.calls.last[0] == ["nuclear-builder", "team", "list", "--json"] and yes.session.asked.length == 6)
+
+// The real `nuclear workspace` (skipped until the installed command has it): create, show, edit and delete.
+testTheWorkspaceToolsAgainstTheInstalledCommand(tmpPath: Path) void
+  if shutil.which("nuclear") == null
+    pytest.skip("no nuclear command")
+  probe: Ran = asyncio.run(runCommand(["nuclear", "workspace", "show", "--json"], "${tmpPath}"))
+  if not probe.out.trim().startsWith("{")
+    pytest.skip("the installed nuclear has no `workspace` command yet")
+  tools = WorkTools()
+  yes = asking("accept")
+  made = said(asyncio.run(tools.workspaceCreate("${tmpPath}/shop", "shop", "A shop", "", yes)))
+  expect(Path(tmpPath, "shop", ".workspace", "workspace.nuc").isFile(), Json.encode(made))
+  asyncio.run(tools.workspaceEdit("${tmpPath}/shop", "", "The shop", "", yes))
+  shown = said(asyncio.run(tools.workspaceShow("${tmpPath}/shop")))
+  expect(shown["name"] == "shop" and shown["description"] == "The shop", Json.encode(shown))
+  asyncio.run(tools.workspaceDelete("${tmpPath}/shop", false, "", yes))
+  expect(not Path(tmpPath, "shop", ".workspace", "workspace.nuc").exists() and Path(tmpPath, "shop").isDir())

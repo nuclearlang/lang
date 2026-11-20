@@ -234,6 +234,8 @@
     "                                criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}",
     "nuclear-builder spec show <id> | delete <id> [--json]",
     "                                a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/",
+    "nuclear-builder spec update <id> --stdin [--json]",
+    "                                the spec's whole markdown (from its # title, on stdin) over its spec.md",
     "nuclear-builder spec list [--json]           the specs by component and layer, with their runs",
     "nuclear-builder spec move <id> --component … [--layer …] [--json]",
     "                                a spec's folder to another component or layer (its run follows)",
@@ -800,7 +802,7 @@
    "id": "tool:nuclear-builder.spec",
    "type": "cli",
    "title": "`nuclear-builder spec` — The base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance criteria…",
-   "summary": "The base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}; A spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/; The specs by component and layer, with their runs; A spec's folder to another component or layer (its run follows); The specs of the flat…",
+   "summary": "The base of a spec in specs/<component>/[<layer>/]<id>/spec.md, with its acceptance criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}; A spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/; The spec's whole markdown (from its # title, on stdin) over its spec.md; The specs by component and layer, with their runs; A spec's folder…",
    "body": [
     "```text",
     "nuclear-builder spec new --title … --component <name>|_global [--layer presentation|domain|data] [--use-case …] [--description …] [--criteria …]... [--stdin] [--json]",
@@ -808,6 +810,8 @@
     "                                criteria (--criteria, repeated; --stdin: the whole markdown on stdin): {id, path, spec}",
     "nuclear-builder spec show <id> | delete <id> [--json]",
     "                                a spec's markdown, its draft and its run · its folder to .nuclear/builder/deleted/",
+    "nuclear-builder spec update <id> --stdin [--json]",
+    "                                the spec's whole markdown (from its # title, on stdin) over its spec.md",
     "nuclear-builder spec list [--json]           the specs by component and layer, with their runs",
     "nuclear-builder spec move <id> --component … [--layer …] [--json]",
     "                                a spec's folder to another component or layer (its run follows)",
@@ -2886,11 +2890,12 @@
   {
    "id": "tool:nuclear.update",
    "type": "cli",
-   "title": "`nuclear update` — Install the latest release (the installer, run again); in a terminal every command asks to update…",
-   "summary": "Install the latest release (the installer, run again); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
+   "title": "`nuclear update` — Install the latest release (the installer, run again; nothing when it is already here,…",
+   "summary": "Install the latest release (the installer, run again; nothing when it is already here, --reinstall: all the same); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
    "body": [
     "```text",
-    "  nuclear update                                              install the latest release (the installer, run again); in a terminal every",
+    "  nuclear update [--reinstall]                                install the latest release (the installer, run again; nothing when it is",
+    "                                                              already here, --reinstall: all the same); in a terminal every",
     "                                                              command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)",
     "```"
    ],
@@ -2910,10 +2915,10 @@
     "entries": [
      {
       "what": "update",
-      "usage": "nuclear update",
+      "usage": "nuclear update [--reinstall]",
       "alias": "",
       "note": "",
-      "does": "Install the latest release (the installer, run again); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)"
+      "does": "Install the latest release (the installer, run again; nothing when it is already here, --reinstall: all the same); in a terminal every command asks to update when a newer release is out (NUCLEAR_NO_UPDATE_CHECK=1: never)"
      }
     ]
    }

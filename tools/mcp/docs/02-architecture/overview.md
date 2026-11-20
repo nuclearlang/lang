@@ -16,6 +16,8 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
         │ MCP (stdio)
         ▼
    nuclear-mcp ──────► nuclear                       the compiler, the command line, the generators
+        │           ──► nuclear workspace …                  the workspaces and their apps
+        │           ──► nuclear-builder spec|team …          the specs, the teams and their members
         │           ──► nuclear-builder run|retry|restart a whole task by the local agents (on standby)
         │ HTTP      ──► Nuclear Developer (127.0.0.1:7879)   one file, its tests, its security findings (on standby)
         │ HTTP      ──► Smart Graph (127.0.0.1:7878)         strategy, exact answers, search, memory
@@ -25,6 +27,8 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
 | Tools | They need |
 |---|---|
 | `project_inspect`, `generate_*`, `nuclear_*` (`nuclear_project` among them) | only the installed `nuclear` command |
+| `workspace_*`, `app_*` | the installed `nuclear` with `nuclear workspace` |
+| `spec_*`, `team_*`, `member_*`, `skills_set` | the installed `nuclear-builder` |
 | `api_inspect`, `web_search`, `web_read` | the internet |
 | `graph_*` | the Smart Graph, which every profile of the set-up installs and starts |
 | `developer_*` (on standby: not registered) | the Nuclear Developer, the graph and Ollama with the profile's models; `developer_task` and `developer_retry` also `nuclear-builder` |
@@ -35,7 +39,10 @@ related: [tools/mcp/server.nuc, tools/mcp/cli.nuc, nuclear-graph-storage/toolcha
   tool, and the comment is what the client reads of it.** The method `graphSearch` is the tool `graph_search`.
 - `all()` lists the tools in the order a client sees them: the graph's, the compiler's, `nuclear_project`,
   the generators, the internet, the developer's.
-- `mcpServer()` makes the server `nuclear` with its instructions and adds each tool of `all()`.
+- `WorkTools(runner)` (`work.nuc`) holds the tools of the user's work, the same way; `runner` runs a command
+  (`runCommand`: stdin, stdout, at most 600 s) and a test gives its own.
+- `mcpServer()` makes the server `nuclear` with its instructions and adds each tool of `McpTools.all()` and
+  `WorkTools.all()`.
 - `mcpTools()` gives the instructions and the tools as data (`{instructions, tools: [{name, description, schema}]}`)
   to the knowledge base's build (it runs `nuclear-mcp tools`), so the graph has a row per tool (`mcp:<tool>`) and
   answers "which tools" exactly.
@@ -100,6 +107,27 @@ product is made with these tools: no target code for a feature, no native code t
   logic, never code: the agents keep writing only Nuclear), and a url whose host resolves to this machine or the
   local network is refused (`publicUrl`): the graph and the Developer listen on 127.0.0.1.
 
+## The user's work and its confirmation (spec 022)
+
+- **Workspaces and apps**: `workspace_create` → `nuclear workspace new <path> [--name] [--description] --json`;
+  `workspace_show`, `workspace_edit`, `app_add`, `app_rename`, `app_remove` → `nuclear workspace show|edit|add|rename|remove …
+  --json`, run in the folder given (the CLI finds the workspace that holds it). `workspace_delete` reads `show`,
+  removes each app with `remove <app> --delete` only with `delete_folders`, then removes the marker
+  `.workspace/workspace.nuc` (and `.workspace/` when empty) itself: the CLI has no `workspace delete` yet.
+- **Specs**: `spec_create`, `spec_list`, `spec_show`, `spec_edit` → `nuclear-builder spec new|list|show|update …
+  --json` in the project (`projectOf`), so the spec is where Nuclear Builder reads it.
+- **Teams**: `team_list`, `team_show`, `team_create` (the draft on stdin), `team_edit` (`team update`), `team_delete`,
+  `member_add`, `member_edit` (`team member update`), `member_remove`, `skills_set` (`team skills set`). A member of
+  the local kind is refused before the command (`LOCAL_STANDBY`).
+- A name, an id or a path that starts with `-` is refused (it would be read as an option); free text never starts
+  with `--`.
+- **`confirmed(ctx, tool, args, change, confirm)`**, before every change: with `confirm`, the token must be one of
+  `PENDING` (the server process's memory), not expired (`CONFIRM_MS`, 5 minutes) and bound to `tool` and these exact
+  arguments (`changeKey`); it is used up either way. Without it, a client that declared `elicitation` and has a
+  channel back (`canAsk`) is asked `change` + "Do it?" with one boolean (`YES_SCHEMA`): only an accepted `true` goes
+  on, anything else answers `{declined, changed: "nothing"}`. Otherwise (or when the question fails) the tool answers
+  `{preview, changed: "nothing yet", confirm, expiresInSeconds, next}` and runs nothing.
+
 ## Settings
 
 | Variable | Default |
@@ -123,3 +151,9 @@ Every machine runs the server and the Smart Graph (ADR-installer-0004), but no l
 - `testAnAgentWithNoContextLearnsNuclearFromNuclearStart`: `nuclear_start` teaches Nuclear and never names
   `developer_task` or `developer_review`.
 - `testASpecIsLedByTheLocalAgentsAndAnApisAnswerIsShownAsAShape`: `specMarkdown` and `shape`.
+- `tests/test_work.nuc`: a change asked by elicitation is done only on a yes (declined, cancelled, unticked: nothing
+  runs); through the MCP library's own client (elicitation accepted, declined, absent); a client that cannot ask gets
+  a preview and a token for that exact change, once (another change's token, a used one, an expired one, an unknown
+  one: refused); `workspace_delete` removes the marker and the apps' folders only when asked; the apps', specs' and
+  teams' tools call their commands with the right arguments, folder and stdin, and never hire a local member; the
+  real `nuclear workspace` (skipped while the installed `nuclear` has none).

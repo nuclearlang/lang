@@ -147,6 +147,24 @@ nuclear contracts update [name]   # fetch (url) or read (path) and regenerate co
 
 Example: `examples/examples-flutter-dialect/tasks_app` over `examples/examples-backend/tasks_api`.
 
+### 1.3 The workspace's marker: `.workspace/workspace.nuc`
+
+A folder is a **workspace** (the business project and the apps that form it) when it holds
+`.workspace/workspace.nuc`. It is read as `config.nuc` is, by the same parser (top-level calls with named text
+values, N0303 otherwise), except that `app(...)` is written once per app:
+
+```nuclear
+// .workspace/workspace.nuc
+workspace(name = "citofony", description = "An intercom for buildings")   // once; name required
+app(folder = "citofony_api", platform = "backend")                        // one per app
+app(folder = "citofony_web", platform = "web")
+```
+
+`workspace(...)` takes only `name` and `description`; `app(...)` only `folder` (one plain folder of the workspace:
+no `/`, no `..`, not hidden; each once) and `platform` (`mobile`, `web` or `backend`). Each app is a Synapsis
+project (§1) in its folder; its dialect is its own `config.nuc`'s. No dialect reads the marker: `nuclear workspace`
+writes it (`nuclear help workspace`).
+
 ## 2. Files and names
 
 - Each `x.nuc` is written to `<sources>/x.<extension>` with the same relative path: with

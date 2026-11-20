@@ -3,7 +3,8 @@
 // where the new id already has a value keeps it, and the old value stays there for the user to see: nothing is lost.
 // The local models are on standby (ADR-platform-0013): a `nuclear.builder.chat` of the kind `local` is removed at its
 // level, so the default external agent works the chat, and the user is told once. The settings that only served the
-// local models (`nuclear.ai.developerUrl`, `ollamaUrl`, `models.*`) are no longer declared: their values are ignored.
+// local models (`nuclear.ai.developerUrl`, `ollamaUrl`, `models.*`) and the context window of Atlas's former meter
+// (`nuclear.ai.contextTokens`, `nuclear.atlas.contextTokens`) are no longer declared: their values are ignored.
 import * as vscode from 'vscode';
 import { l10n } from './i18n';
 
@@ -13,7 +14,6 @@ export const MOVED: Record<string, string> = {
   'nuclear.ai.resumeInterrupted': 'nuclear.builder.resumeInterrupted',
   'nuclear.ai.watch.minFreeMb': 'nuclear.builder.minFreeMb',
   'nuclear.ai.watch.commandTimeoutMinutes': 'nuclear.builder.commandTimeoutMinutes',
-  'nuclear.ai.contextTokens': 'nuclear.atlas.contextTokens',
 };
 
 /** The levels where a value of `nuclear.builder.chat` named the local kind, removed; the ids moved are in `MOVED`. */

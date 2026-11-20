@@ -640,7 +640,7 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#commands",
+   "id": "doc:installer/AGENTS.md#commands.4b5d3a",
    "type": "readme",
    "title": "The installers and the release — Commands",
    "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/version.sh [<v>|--check [v<v>]] # one version for every project (ADR-platform-0011): print, write, check…",
@@ -649,14 +649,32 @@
     "installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)",
     "installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall",
     "installer/release/version.sh [<v>|--check [v<v>]]   # one version for every project (ADR-platform-0011): print, write, check",
+    "installer/release/delivery.sh <v> [--offline-ok] [--only <step>,...]   # the gate before `git tag v<v>`: every check, in order",
+    "installer/release/after-release.sh <v>   # after the tag: workflows, assets, the site's installers, the one-liner, an update",
+    "installer/tests/stack.sh                 # on a real machine, after an install: one job and one process of each service, each answering",
     "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/",
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
     "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
-    "installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/)",
+    "installer/tests/run.sh [<case>...]       # the failure tests of spec 018 on this machine (fake HOME, the archive of dist/), OUT1, UPD1",
     "installer/tests/distros.sh [<distro>...] # the installer on Debian, Ubuntu, Fedora, Arch, openSUSE, Alpine: one container at a time",
     "nuclear-builder setup [--profile remote --yes | --status | --remove]   # the AI services (lite|medium|hard: on standby)",
-    "```",
-    "",
+    "```"
+   ],
+   "sources": [
+    "installer/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/AGENTS.md#commands.f14121",
+   "type": "readme",
+   "title": "The installers and the release — Commands",
+   "summary": "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it (`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).",
+   "body": [
     "After a release, `.github/workflows/installer-windows.yml` installs it on a real Windows and uninstalls it",
     "(`gh workflow run installer-windows -R nuclearlang/lang -f version=<v>`).",
     "",
@@ -724,12 +742,17 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#folders.dfd91f",
+   "id": "doc:installer/AGENTS.md#folders.652ca0",
    "type": "readme",
    "title": "The installers and the release — Folders",
-   "summary": "`package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
+   "summary": "80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.",
    "body": [
-    "`package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
+    "80 and 60 columns and reads the screen as the user does (`tests/screen.py` renders it: boxes, internal text, the",
+    "  sign once); `UPD1` updates the previous published release and runs `nuclear update` through its link",
+    "  (`NUCLEAR_UPDATE_DRYRUN=1`); `PS1` parses `install.ps1` in a PowerShell container.",
+    "  `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never",
+    "  `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:",
+    "  `package.sh x86_64-unknown-linux-musl` (a plain `package.sh` links this machine's glibc).",
     "- `dist/`: what `package.sh` writes (ignored by git).",
     "- `docs/`: this project's documents (the table below)."
    ],
@@ -743,7 +766,7 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#folders.fba874",
+   "id": "doc:installer/AGENTS.md#folders.c7bb75",
    "type": "readme",
    "title": "The installers and the release — Folders",
    "summary": "`nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).",
@@ -757,11 +780,11 @@
     "- `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.",
     "- `release/ai-runtime.sh`: the AI archive of this machine, built and tried before it is packed.",
     "- `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).",
+    "- `release/delivery.sh`: the delivery gate, one command that must pass before a tag (its header lists the steps; logs",
+    "  in `target/delivery/`). `release/after-release.sh`: the checks after the tag, where the user gets the release.",
     "- `release/clean-machine/`: a Docker image of a clean Linux machine with systemd, to try an install as a new user.",
     "- `tests/run.sh`: the installer's failure tests (spec 018): each case a fake `HOME` can hold, against the archive",
-    "  `package.sh` wrote; never the real `HOME`, never the AI services; `PS1` parses `install.ps1` in a PowerShell container.",
-    "  `tests/distros.sh`: the installer in a container of each distribution, one at a time (1 CPU, 1 GB, never",
-    "  `--privileged`), as a new user, then `nuclear new` + `check`. It needs the static archive:"
+    "  `package.sh` wrote; never the real `HOME`, never the AI services; `OUT1` runs the installer in a pseudo-terminal of"
    ],
    "sources": [
     "installer/AGENTS.md"
@@ -773,12 +796,14 @@
    }
   },
   {
-   "id": "doc:installer/AGENTS.md#rules.79fa47",
+   "id": "doc:installer/AGENTS.md#rules.dfd89e",
    "type": "readme",
    "title": "The installers and the release — Rules",
-   "summary": "7. A change to an installer's options updates its own header comment (it is its `--help`), the guide and these documents.",
+   "summary": "7. A tag is pushed only after `release/delivery.sh <version>` passes, and a release is done when `release/after-release.sh <version>` passes (the runbook).",
    "body": [
-    "7. A change to an installer's options updates its own header comment (it is its `--help`), the guide and these",
+    "7. **A tag is pushed only after `release/delivery.sh <version>` passes**, and a release is done when",
+    "   `release/after-release.sh <version>` passes ([the runbook](docs/06-runbooks/release.md)).",
+    "8. A change to an installer's options updates its own header comment (it is its `--help`), the guide and these",
     "   documents."
    ],
    "sources": [
@@ -1436,7 +1461,35 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.488bed",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.1c3594",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "7. After the tag: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the GitHub release has every asset `release.yml` publishes (the six archives, the…",
+   "body": [
+    "7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its",
+    "   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the",
+    "   GitHub release has every asset `release.yml` publishes (the six archives, the four AI archives, each `.sha256`, the",
+    "   `.vsix`, the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`",
+    "   are byte-identical to the tag's (retried for 10 minutes: the site publishes after the website workflow); and runs",
+    "   the user's path in a fake `HOME`: the public one-liner, and the previous release installed by its own installer and",
+    "   updated as `nuclear update` does. The release is done only when it passes; a failure is fixed by a PATCH release.",
+    "   `AFTER_RELEASE_WAIT` and `AFTER_RELEASE_SITE` change the minutes it waits.",
+    "8. **On a real Mac and a real Linux** (the services cannot start in a fake `HOME`): the public one-liner on a machine",
+    "   that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
+    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each",
+    "   answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.4d5e97",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
    "summary": "1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other manifest), raised by Semantic Versioning: a fix PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) (coding.md).",
@@ -1449,12 +1502,11 @@
     "   `nuclear-graph knowledge build` (the knowledge base names each component's version), `knowledge check`, `ingest`;",
     "   `installer/release/version.sh --check v<version>` must say *every project is at <version>*. The CI checks it on",
     "   every push and the job `snapshot` of the release before anything is built.",
-    "2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
-    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
-    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
-    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
-    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
-    "   by hand (`workflow_dispatch`)."
+    "2. **The delivery gate**: `installer/release/delivery.sh <version>` must pass; no tag before it. It runs, in order and",
+    "   stopping at the first failure (its log in `target/delivery/<step>.log`, with how to fix it): `version.sh --check",
+    "   v<version>`; `cargo test`; `cargo clippy --all-targets -- -D warnings`; this tree's `nuclear` staged in a temporary",
+    "   installation and put first on `PATH`; `extensions/vscode` `npm run compile` and `npm test` (every text has its",
+    "   Spanish, no local-model setting); Nuclear Builder (`nuclear check`, `nuclear build`, pytest); the MCP server"
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1466,25 +1518,88 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.6ba0df",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.5f23e3",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token; the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no environment) and on Open VSX (namespace `nuclearlang`: the secret…",
+   "summary": "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding example that is no longer what `nuclear new` writes fails here, then…",
    "body": [
-    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
+    "(`nuclear check`, build, pytest); the backend runtimes (synapsis-py pytest, synapsis-nest `npm test`); the website",
+    "   exactly as `.github/workflows/website.yml` (`node tools/content.mjs` without `UPDATE_EXAMPLES`, so an onboarding",
+    "   example that is no longer what `nuclear new` writes fails here, then `nuclear build`, `install`, `test`, the bundle);",
+    "   `nuclear-graph knowledge check` clean; `package.sh` and every case of `installer/tests/run.sh`. Among them `OUT1`,",
+    "   what the user reads (the installer in a pseudo-terminal of 80 and 60 columns with colors, rendered by",
+    "   `installer/tests/screen.py`: no `ADR-`, `spec 0`, `standby` or `TODO`, the motto once, no `nuclear intro`, every",
+    "   box's right border at its column or absent, no box line wrapped, no frame of the turning sign left), and `UPD1`, an",
+    "   update from the previous published release with `nuclear` through its link (`NUCLEAR_UPDATE_DRYRUN=1 nuclear",
+    "   update`). `UPD1` needs the network: skipped offline, the gate fails unless `--offline-ok`. `--only <step>,...` runs",
+    "   some steps, to try them; never before a tag. Each check was added after a release that shipped without it: a",
+    "   website that had failed three releases (the site kept an old `install.sh`), a tag with a failing `cargo test`,",
+    "   internal text and cut boxes in the installer's output, `nuclear update` broken on macOS by the installer's link."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.b93cd1",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "The workflow `installer-windows.yml` has never run (roadmap).",
+   "body": "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md)).",
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.c50d5a",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "6. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the Smart Graph answers, and uninstalls it leaving nothing.",
+   "body": [
+    "6. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
+    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
+    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
+    "   nuclearlang/lang -f version=<version>`."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.e2d791",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "3. Push the tag `v<version>`.",
+   "body": [
+    "3. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
+    "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
+    "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
+    "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
+    "   `install.ps1`, in the GitHub release of that tag. It can also be started",
+    "   by hand (`workflow_dispatch`).",
+    "4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
     "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
     "   environment) and on Open VSX (namespace `nuclearlang`: the secret",
     "   `OVSX_PAT`, a token scoped to the namespace with *Publishing only*; without it, Trusted Publishing, which Open VSX",
     "   lets register only once the namespace is verified). The stores read the `version` of",
     "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
     "   stop the GitHub release.",
-    "4. The public one-liners download from that release: without a release they fail with a clear error.",
-    "5. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
-    "   PowerShell 5.1 with the AI services' profile `remote`, PowerShell 7, and arm64), checks that `nuclear` runs and the",
-    "   Smart Graph answers, and uninstalls it leaving nothing. By hand: `gh workflow run installer-windows -R",
-    "   nuclearlang/lang -f version=<version>`.",
-    "",
-    "The workflow has never run ([roadmap](../01-product/roadmap.md))."
+    "5. The public one-liners download from that release: without a release they fail with a clear error."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1524,14 +1639,14 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.b7d76b",
+   "id": "doc:installer/docs/06-runbooks/release.md#test-an-installer-without-touching-your-machine.a4f248",
    "type": "context",
    "title": "Release, and test an installer — Test an installer without touching your machine",
-   "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), in seconds, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on six distributions one container at a time, against `package.sh…",
+   "summary": "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken binary, uninstall), what the user reads (`OUT1`) and an update from the previous release (`UPD1`), in a minute, against `package.sh`'s archive; and `installer/tests/distros.sh`, the…",
    "body": [
     "**Never run `--uninstall` or a public installer against your real `HOME`.** First `installer/tests/run.sh`: the",
     "failure cases of spec 018 (fresh, same version, an update keeping the choices, the lock, sudo, interrupted, a broken",
-    "binary, uninstall), in seconds, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on",
+    "binary, uninstall), what the user reads (`OUT1`) and an update from the previous release (`UPD1`), in a minute, against `package.sh`'s archive; and `installer/tests/distros.sh`, the installer on",
     "six distributions one container at a time, against `package.sh x86_64-unknown-linux-musl` (the release's static",
     "build: a plain `package.sh` links this machine's glibc and does not run on an older distribution). Then, for the AI services, two ways:",
     "",
@@ -1740,7 +1855,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/08-guides/ai-setup.md#6-when-a-step-fails.a9826a",
+   "id": "doc:installer/docs/08-guides/ai-setup.md#6-when-a-step-fails.683373",
    "type": "guide",
    "title": "Set up the AI services — 6. When a step fails",
    "summary": "6. When a step fails",
@@ -1748,10 +1863,26 @@
     "| It says | What to do |",
     "|---|---|",
     "| the graph or Nuclear Chat on a port other than 7878 / 7880 | another program held it: the set-up took the next free one and wrote it to `ai.env` (`NUCLEAR_GRAPH_PORT`, `NUCLEAR_CHAT_PORT`); the tools and the editor read it there. The ports are checked again at every login, before the services start (`nuclear-builder setup --ports`): a program that took one since gets the service moved. Nothing to do |",
+    "| `the Nuclear Chat does not answer at ...` (or the Smart Graph), with its last lines | the set-up waited, started it again and, when another program held its port without answering, moved it to a free port; the lines it shows are the service's own (`~/Library/Logs/nuclear-chat.log` on macOS, `journalctl --user -u nuclear-chat` on Linux): fix what they say, then run the installer again |",
+    "| `stopped another copy of the Nuclear Chat (process …)` | a copy of an older version, of a source install or started by hand was still running: one runs now, the one of this installation |",
     "| `a Nuclear Smart Graph started by hand already answers at ...` | a graph you started in a terminal holds the port: stop it with the command the message gives, then *Try again* |",
-    "| `no Python 3.12 or newer, and uv could not install one` | (from the source tree) install Python 3.12 or newer and try again |",
-    "| Ollama was installed by the set-up; to take it away ... | on Linux without a terminal the set-up cannot ask for your password: run the commands it gives |"
+    "| `no Python 3.12 or newer, and uv could not install one` | (from the source tree) install Python 3.12 or newer and try again |"
    ],
+   "sources": [
+    "installer/docs/08-guides/ai-setup.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/08-guides/ai-setup.md#6-when-a-step-fails.cd382e",
+   "type": "guide",
+   "title": "Set up the AI services — 6. When a step fails",
+   "summary": "6. When a step fails",
+   "body": "| Ollama was installed by the set-up; to take it away ... | on Linux without a terminal the set-up cannot ask for your password: run the commands it gives |",
    "sources": [
     "installer/docs/08-guides/ai-setup.md"
    ],
@@ -2241,7 +2372,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#documents.4b5371",
+   "id": "doc:tools/cli/AGENTS.md#documents.ad6e18",
    "type": "readme",
    "title": "The command line tool — Documents",
    "summary": "Elsewhere: the flutter reference (§11).",
@@ -2249,6 +2380,7 @@
     "| [docs/03-adr/README.md](docs/03-adr/README.md) | You need why a command has its shape, why there is one command, or why agents are supported the way they are |",
     "| [docs/04-specs/README.md](docs/04-specs/README.md) | You continue the agent support plan |",
     "| [docs/08-guides/README.md](docs/08-guides/README.md) | You need the user's view: what the command is, a quick start, the commands by job, how agents use it |",
+    "| [docs/08-guides/workspace.md](docs/08-guides/workspace.md) | You change `nuclear workspace`, the marker or `nuclear new` inside a workspace |",
     "| [docs/08-guides/commands.md](docs/08-guides/commands.md) | You need every command and option as `nuclear help` prints them (regenerate it when a `USAGE` text changes) |",
     "",
     "Elsewhere:",
@@ -2295,7 +2427,22 @@
    }
   },
   {
-   "id": "doc:tools/cli/AGENTS.md#folders",
+   "id": "doc:tools/cli/AGENTS.md#folders.072386",
+   "type": "readme",
+   "title": "The command line tool — Folders",
+   "summary": "Folders",
+   "body": "- `docs/`: this project's documents (the table below).",
+   "sources": [
+    "tools/cli/AGENTS.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/AGENTS.md#folders.a40287",
    "type": "readme",
    "title": "The command line tool — Folders",
    "summary": "`framework::claims` takes goes to `framework::main`.",
@@ -2307,13 +2454,14 @@
     "- `src/agent.rs`: `nuclear agent init` and `nuclear agent hook`.",
     "- `src/update.rs`: `nuclear update` and the question before a command when a newer release is out.",
     "- `src/framework/`: the framework's commands (`mod.rs`, with `claims` and its own `USAGE`; `assets.rs`,",
-    "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`)",
+    "  `dependencies.rs`, `doctor.rs`, `explain.rs`, `landing.rs`, `packages.rs`, `setup.rs`, `toolchain.rs` (Python and Node.js: found, or Nuclear's own, ADR-cli-0004), `vscode.rs`, `watch.rs`,",
+    "  `workspace.rs`: `nuclear workspace` and the marker `.workspace/workspace.nuc`, spec 022)",
     "  ([code map](docs/02-architecture/overview.md)).",
     "- `agent-files/start.md`: the `start` topic, the onboarding of an agent with no context (MCP `nuclear_start`).",
     "- `agent-files/project/`: what `agent init` writes into a project (`AGENTS.md` section, the Cursor rule).",
     "- `agent-files/skills/nuclear/`: the `nuclear` skill the installer copies into the agents' folders.",
-    "- `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary.",
-    "- `docs/`: this project's documents (the table below)."
+    "- `tests/build.rs`: `nuclear build` and `nuclear fix` through the binary; `tests/workspace.rs`: `nuclear workspace`",
+    "  end to end."
    ],
    "sources": [
     "tools/cli/AGENTS.md"
@@ -2541,7 +2689,34 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.27bc28",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder, platform)` per app), read by the compiler's parser as `config.nuc` is.",
+   "body": [
+    "- Workspaces (spec 022): `nuclear workspace new|add|remove|rename|edit|list|show|find [--workspace <dir>] [--json]`.",
+    "  A workspace is a folder with `.workspace/workspace.nuc` (`workspace(name, description)` and an `app(folder,",
+    "  platform)` per app), read by the compiler's parser as `config.nuc` is. `add` is `nuclear new` in the workspace's",
+    "  folder; `nuclear new` anywhere inside a workspace makes the project in its folder and registers it; `remove`",
+    "  deletes the folder only with `--delete` (never one outside the workspace); `rename` moves the folder (`--project-name`:",
+    "  also `app(name)`). `--json` prints `{root, name, description, apps: [{name, folder, platform, dialect, exists}]}`",
+    "  (`find`: or `null`; `{error}` on a refusal). `nuclear check` in a workspace's folder checks every app; `nuclear",
+    "  doctor` there says the workspace's apps. The atlas's topic `workspace` is now this guide; the editor's workspace",
+    "  panel is `editor-workspace`.",
+    "",
+    "- `NUCLEAR_UPDATE_DRYRUN=1 nuclear update` prints the installation it found and what it would run, and runs nothing (the installer's test `UPD1` and `after-release.sh`)."
+   ],
+   "sources": [
+    "tools/cli/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.85fc60",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "(`developer_*`) among the MCP server's tools, and the atlas's `ai-setup` says the local models are on standby.",
@@ -3312,20 +3487,18 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.36c474",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.08dd5a",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
-   "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
+   "summary": "Code map of `src/framework/`",
    "body": [
+    "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
+    "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
+    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |",
     "| `vscode.rs` | `build/<name>.code-workspace` | [build.md](build.md) |",
     "| `doctor.rs`, `setup.rs` | `doctor` (only what NuclearLang and Synapsis need: the command, the dialect, the package, Flutter, VS Code), `setup [--dir]` (installs Flutter step by step, asking first) | — |",
     "| `watch.rs` | `watch`: polls the `.nuc` dates every 250 ms; prints `nuclear: transpiling/ready/errors`; exits when its parent dies (Unix) | [build.md](build.md) |",
-    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |",
-    "",
-    "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
-    "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
-    "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
-    "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
+    "| `landing.rs` | The landing page, the animation, the header, the colors, the help | [landing.md](landing.md) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3337,7 +3510,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.6dc0df",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.71ed80",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
    "summary": "Code map of `src/framework/`",
@@ -3345,7 +3518,7 @@
     "| File | What it does | More |",
     "|---|---|---|",
     "| `mod.rs` | `claims`, `main` and the commands: `new` (n), `make` (g) with aliases, `gen`, `code`, `watch`, `build`, `run`, `test [--integration]`, `analyze`, `check`, `migrate`, `add`, `remove`, `pub`, `agent init`, `doctor`, `setup`, `repair`, `explain`, `credits`/`author`, `intro`, the gateway to `flutter`; `find_flutter` / `NO_FLUTTER`; the project root is the folder with `main.nuc` or `config.nuc`, here or above (`--project <dir>` chooses it) | [build.md](build.md) |",
-    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |"
+    "| `workspace.rs` | `nuclear workspace new\\|add\\|remove\\|rename\\|edit\\|list\\|show\\|find [--workspace <dir>] [--json]` (spec 022): the only reader and writer of the marker `.workspace/workspace.nuc` (read with `project::read_calls`, the parser of `config.nuc`, each `app(...)` apart; written whole, comments above each call kept, `workspace(...)` first and the apps in their order, through `nuclear_syntax::fmt`, renamed over the old file). `find` walks up from the current folder. `add` is `new_project_in` with the workspace's folder; `nuclear new` anywhere inside a workspace makes the project in its folder and `register`s it once its `.nuc` are written. `--json` sends what `run` starts (flutter create) to stderr (`CHILD_STDOUT_TO_STDERR`). `check_all`: `nuclear check` in a workspace's folder checks each app; `doctor` adds a Workspace line | [workspace guide](../08-guides"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3357,16 +3530,35 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.d5148e",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.a32f1b",
    "type": "context",
    "title": "The command line tool: overview — Code map of `src/framework/`",
-   "summary": "Code map of `src/framework/`",
+   "summary": "/workspace.md) |",
    "body": [
+    "/workspace.md) |",
+    "| `monitor.rs` | `nuclear monitor [--json]` (spec 015 of the platform): the report of a run with `--monitor` (`.nuclear/monitor/report.json`, found here or above) as its hot spots (`slow`, `loop`, `connections`, `memory`) and the call tree; `--monitor` itself is read by `main` (`NUCLEAR_MONITOR`, then `NUCLEAR_MONITOR_FILE` set to the project's report by `monitored`, inherited by the build and the app it starts) | [build.md](build.md) |",
     "| `runlog.rs` | the project's run log `.nuclear/logs/run.log` of `nuclear run`: an ISO time per line, ANSI stripped, kept under 1 MB, never stopping the run when it cannot be written; `step: build|install|serve <url>|flutter`, the build's and the server's output (tee'd: stdin inherited, stdout/stderr piped to the terminal and the log, colours kept on a terminal), `failed: <why>`, `exited: <code>`; a mobile run logs only its steps (Flutter keeps the terminal). The editor follows it (▷ Serve) and the MCP tool `project_run_log` reads it | — |",
-    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |",
-    "| `packages.rs` | `config.nuc` sync and editing, third-party definitions of a mobile app, `flutter add` / `remove` | [packages.md](packages.md) |",
-    "| `dependencies.rs` | `nuclear add` / `remove <package>` of a backend or web project through the dialect's `[toolchain] package_*`, definitions into the project's `defs/` (`ADR-lang-0008`) | [packages.md](packages.md) |",
-    "| `assets.rs` | Assets by convention (`ADR-mobile-0001`) | [packages.md](packages.md) |"
+    "| `explain.rs` | `nuclear explain [--json]`: a run-time error or a test's output on stdin (Dart, Python, Node stacks) → `title`, `hint` (`HINTS`), `frames` in `.nuc` (mobile: the app's line map; backend and web: `<output>/.nuclear/lines.json`); what the Nuclear Builder's local agents read instead of the raw log | [build.md](build.md) |"
+   ],
+   "sources": [
+    "tools/cli/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#code-map-of-src-framework.caaac0",
+   "type": "context",
+   "title": "The command line tool: overview — Code map of `src/framework/`",
+   "summary": "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports (the code generator).",
+   "body": [
+    "`new`, `make` and `gen` are written by `nuclear_codegen` (`scaffold`, `generate`; ADR-codegen-0001): `mod.rs` keeps",
+    "only the commands (`make`, `make_from_layout`, `gen_command`, `ensure_http`, `GEN_USAGE`) and prints what it reports",
+    "([the code generator](../../../code_generator/AGENTS.md)). `device` and `terminal-device` parse and run through",
+    "`nuclear_devices` (ADR-devices-0001; [the devices](../../../../device-emulators/AGENTS.md))."
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3423,7 +3615,7 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.214c63",
+   "id": "doc:tools/cli/docs/02-architecture/overview.md#one-binary-two-sets-of-commands-adr-cli-0003.824d49",
    "type": "context",
    "title": "The command line tool: overview — One binary, two sets of commands (ADR-cli-0003)",
    "summary": "One binary, two sets of commands (ADR-cli-0003)",
@@ -3432,7 +3624,7 @@
     "|---|---|---|",
     "| The compiler's | `src/main.rs`, `src/agent.rs` | A file or a `nuclear.toml` / `config.nuc` project; the documentation and the specs; type definitions; contracts; dialects; a project's agent files ([nuclear-command.md](nuclear-command.md)) |",
     "| Environments | `src/env.rs` | Spec 021: the dotenv parser, the precedence of the files, the keyring (crate `keyring`: Secret Service over zbus, Keychain, Credential Manager; the account `<project>-<key>/<env>/<NAME>`, the key of `.nuclear/env-key`; without a keyring a secret goes to `.env.<env>.local`), `--env` / `NUCLEAR_ENV` / `.nuclear/env`, `nuclear env`, what `build` writes (`build/.env`, or `Manifest::env` for a client) and N0311/N0312 at each `env()` |",
-    "| Update | `src/update.rs` | `nuclear update [--reinstall]` (the public installer run again for this installation; nothing when the latest release and its AI services are already here, `--reinstall` passes `NUCLEAR_REINSTALL=1`) and the question before a command in a terminal when a newer release is out: the check at most once a day, waiting at most 3 seconds; the installation is the folder above the binary's `bin/`, found after resolving the installer's link (macOS gives the link's path) |"
+    "| Update | `src/update.rs` | `nuclear update [--reinstall]` (the public installer run again for this installation; nothing when the latest release and its AI services are already here, `--reinstall` passes `NUCLEAR_REINSTALL=1`) and the question before a command in a terminal when a newer release is out: the check at most once a day, waiting at most 3 seconds; the installation is the folder above the binary's `bin/`, found after resolving the installer's link (macOS gives the link's path); `NUCLEAR_UPDATE_DRYRUN=1` prints the installation found and what it would run, and runs nothing (the installer's test UPD1) |"
    ],
    "sources": [
     "tools/cli/docs/02-architecture/overview.md"
@@ -3779,6 +3971,7 @@
    "title": "The `nuclear` command — Go deeper",
    "summary": "the compiler's commands.",
    "body": [
+    "- [Workspaces](workspace.md): the folder of a business project and its apps, the marker, `nuclear workspace`.",
     "- [Every command and option](commands.md), verbatim from `nuclear help`.",
     "- [The generators' guide](../../../code_generator/docs/08-guides/README.md): what `new`, `make` and `gen` write.",
     "- [The Synapsis tutorial](../../../../nuclear-synapsis-framework/docs/08-guides/tutorial.md): an app from scratch.",
@@ -3850,11 +4043,13 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.275223",
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.5b5064",
    "type": "readme",
    "title": "The `nuclear` command — The commands, by job",
    "summary": "`nuclear help <topic>` prints a chapter of the guide or a reference: `nuclear help generators`, `nuclear help backend`, `nuclear help tutorial`, `nuclear help diagnostics`.",
    "body": [
+    "| Machine | `doctor`, `setup` | what is missing; install Flutter step by step |",
+    "",
     "`nuclear help <topic>` prints a chapter of the guide or a reference: `nuclear help generators`, `nuclear help",
     "backend`, `nuclear help tutorial`, `nuclear help diagnostics`. `nuclear help <word> --dialect <name>` explains a",
     "kind or decorator of a dialect, and `nuclear help layout --platform <p>` where each kind's file goes."
@@ -3869,14 +4064,15 @@
    }
   },
   {
-   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.9e8e68",
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.5c8202",
    "type": "readme",
    "title": "The `nuclear` command — The commands, by job",
    "summary": "The commands, by job",
    "body": [
     "| Job | Command | What it does |",
     "|---|---|---|",
-    "| Start | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files |",
+    "| Start | `workspace new <path>` / `workspace add <app> --platform <p>` | a workspace (the folder of a business project and its apps) and an app in it ([workspaces](workspace.md)) |",
+    "| | `new <name> -p <platform> [-d <dialect>]` | a new project of `mobile`, `backend` or `web`, only `.nuc` files (inside a workspace: in its folder, and registered) |",
     "| | `agent init` | `AGENTS.md`, `CLAUDE.md`, a Cursor rule and a check hook for AI agents |",
     "| | `code` | open the project in VS Code (run, debug, devices, hot reload) |",
     "| Write code | `gen resource <component> <Name>` | finished models, repository, use cases, controller or screen, tests |",
@@ -3886,9 +4082,36 @@
     "| Libraries | `add <package>[@version]` | install a package of the target, write it in `config.nuc`, generate its type definitions |",
     "| | `remove <package>` | the reverse |",
     "| | `defs list` / `defs show` / `defs search` | read the type definitions of a library |",
-    "| Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |",
+    "| Correct | `check [--json]` | the errors and the architecture rules of every `.nuc` |"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.7f1c63",
+   "type": "readme",
+   "title": "The `nuclear` command — The commands, by job",
+   "summary": "The commands, by job",
+   "body": [
     "| | `fix <folder\\|file.nuc>` | apply every exact fix of the errors (the editor's quick fixes) |",
-    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |"
+    "| | `fmt <file.nuc\\|folder> [--check]` | rewrite the files in the canonical layout |",
+    "| Environments | `env list` / `env set NAME value [--env e]` / `env set NAME --secret` / `env use e` | the variables the code reads (`env(\"NAME\", \"default\")`) by environment: `.env` files beside `config.nuc`, secrets in the system's keyring |",
+    "| | `run\\|build\\|test\\|check --env <e>` | the environment of the command (else `NUCLEAR_ENV`, else the active one, else `development`; `test` for tests) |",
+    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |",
+    "| | `install` | the runtime and the app's packages (backend, web) |",
+    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
+    "| | `test [--integration]` | the tests written in Nuclear |",
+    "| | `watch` | transpile each time a `.nuc` changes |",
+    "| | `migrate make <message>` / `migrate` / `migrate down` | the database migrations (backend) |",
+    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
+    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |",
+    "| Learn | `help [<topic>]`, `spec [--brief]` | the documentation embedded in the binary; the language for agents |"
    ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"
@@ -3905,34 +4128,6 @@
    "title": "The `nuclear` command — The commands, by job",
    "summary": "`nuclear help` prints every one; the exact usage text is in commands.md.",
    "body": "`nuclear help` prints every one; the exact usage text is in [commands.md](commands.md).",
-   "sources": [
-    "tools/cli/docs/08-guides/README.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/README.md#the-commands-by-job.d48a77",
-   "type": "readme",
-   "title": "The `nuclear` command — The commands, by job",
-   "summary": "The commands, by job",
-   "body": [
-    "| Environments | `env list` / `env set NAME value [--env e]` / `env set NAME --secret` / `env use e` | the variables the code reads (`env(\"NAME\", \"default\")`) by environment: `.env` files beside `config.nuc`, secrets in the system's keyring |",
-    "| | `run\\|build\\|test\\|check --env <e>` | the environment of the command (else `NUCLEAR_ENV`, else the active one, else `development`; `test` for tests) |",
-    "| Build and run | `build` | transpile the project into `build/` (mobile: also `build apk`, `web`, `ios`...) |",
-    "| | `install` | the runtime and the app's packages (backend, web) |",
-    "| | `run` | the server (backend, web) or the app on a device (mobile) |",
-    "| | `test [--integration]` | the tests written in Nuclear |",
-    "| | `watch` | transpile each time a `.nuc` changes |",
-    "| | `migrate make <message>` / `migrate` / `migrate down` | the database migrations (backend) |",
-    "| Mobile | `device [<device>]`, `terminal-device` | a test device in its own window, or in this terminal |",
-    "| | `analyze`, `repair`, `clean`, `explain` | the generated app's analysis, repair from scratch, a run-time error at its `.nuc` lines |",
-    "| Learn | `help [<topic>]`, `spec [--brief]` | the documentation embedded in the binary; the language for agents |",
-    "| Machine | `doctor`, `setup` | what is missing; install Flutter step by step |"
-   ],
    "sources": [
     "tools/cli/docs/08-guides/README.md"
    ],
@@ -4251,6 +4446,37 @@
    }
   },
   {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.7e43fa",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "workspace (spec 022: a folder whose .workspace/workspace.nuc names the business project and its apps; nuclear help workspace) workspace new <path> [--name <n>] [--description <d>] the folder and its marker workspace add <app> --platform mobile|web|backend [--dialect <d>] nuclear new of the app in…",
+   "body": [
+    "workspace (spec 022: a folder whose .workspace/workspace.nuc names the business project and its apps;",
+    "nuclear help workspace)",
+    "  workspace new <path> [--name <n>] [--description <d>]",
+    "                                             the folder and its marker",
+    "  workspace add <app> --platform mobile|web|backend [--dialect <d>]",
+    "                                             nuclear new of the app in the workspace's folder, written in the marker",
+    "                                             (nuclear new anywhere inside a workspace does the same)",
+    "  workspace remove <app> [--delete]          out of the marker; --delete also deletes its folder",
+    "  workspace rename <app> <new> [--project-name] | rename --workspace-name <n>",
+    "                                             the app's folder and its entry (--project-name: also its app(name))",
+    "  workspace edit [--name <n>] [--description <d>]",
+    "  workspace list | show | find               its apps; the workspace and its apps; the workspace of this folder",
+    "      [--workspace <dir>] [--json]           default: the workspace that holds the current folder; --json: show's",
+    "                                             object {root, name, description, apps: [{name, folder, platform,",
+    "                                             dialect, exists}]} (find: or null), {error} when it fails"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.83def1",
    "type": "guide",
    "title": "Every command of `nuclear` — The framework's commands",
@@ -4289,6 +4515,37 @@
     "  device list                                the running devices and the devices it can be",
     "  terminal-device [<device>] [--render kitty|sixel|text|blocks]",
     "                                        (td) the Synapsis Terminal device: the app inside this terminal"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.982176",
+   "type": "guide",
+   "title": "Every command of `nuclear` — The framework's commands",
+   "summary": "check (in a workspace's folder) checks every app in turn (--json: run it in one app) environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local, .env.<env>.local, the system's keyring, the process: the later wins) env list [--env <name>] [--json] every…",
+   "body": [
+    "check (in a workspace's folder)            checks every app in turn (--json: run it in one app)",
+    "",
+    "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,",
+    ".env.<env>.local, the system's keyring, the process: the later wins)",
+    "  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment",
+    "  env set <NAME> [<value>] [--env <name>] [--local] [--secret]",
+    "                                             a value in .env (--env: .env.<name>; --local: the .local file);",
+    "                                             --secret: the system's keyring (without a value: read from stdin)",
+    "  env unset <NAME> [--env <name>] [--local] [--secret]",
+    "  env envs [--json]                          the environments and the active one",
+    "  env use <name>                             the project's active environment (.nuclear/env)",
+    "  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,",
+    "                                             else development; test: test). run refuses a required variable without",
+    "                                             a value; build writes build/.env (backend) or the values of the code",
+    "                                             (web, mobile; a secret is refused); check --env reports the missing ones"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4343,35 +4600,6 @@
     "  integration <name>                    (it) an integration test in integration_test/",
     "  backend and web projects: <kind> <component> <Name> [--screen <screen>]   any kind of the platform, at its",
     "      place (`nuclear help layout --platform <p>`), from the platform's skeleton (e.g. `make entity books Book`)"
-   ],
-   "sources": [
-    "tools/cli/docs/08-guides/commands.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:tools/cli/docs/08-guides/commands.md#the-framework-s-commands.a9e167",
-   "type": "guide",
-   "title": "Every command of `nuclear` — The framework's commands",
-   "summary": "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local, .env.<env>.local, the system's keyring, the process: the later wins) env list [--env <name>] [--json] every variable (the code's and the files') × every environment env set <NAME> [<value>]…",
-   "body": [
-    "environments (spec 021: every env(\"NAME\", \"default\") of the code; values in .env, .env.<env>, .env.local,",
-    ".env.<env>.local, the system's keyring, the process: the later wins)",
-    "  env list [--env <name>] [--json]           every variable (the code's and the files') × every environment",
-    "  env set <NAME> [<value>] [--env <name>] [--local] [--secret]",
-    "                                             a value in .env (--env: .env.<name>; --local: the .local file);",
-    "                                             --secret: the system's keyring (without a value: read from stdin)",
-    "  env unset <NAME> [--env <name>] [--local] [--secret]",
-    "  env envs [--json]                          the environments and the active one",
-    "  env use <name>                             the project's active environment (.nuclear/env)",
-    "  run|build|test|check --env <name>          the environment of the command (else NUCLEAR_ENV, else the active one,",
-    "                                             else development; test: test). run refuses a required variable without",
-    "                                             a value; build writes build/.env (backend) or the values of the code",
-    "                                             (web, mobile; a secret is refused); check --env reports the missing ones"
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
@@ -4460,6 +4688,124 @@
    ],
    "sources": [
     "tools/cli/docs/08-guides/commands.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/workspace.md#change-it",
+   "type": "guide",
+   "title": "Workspaces — Change it",
+   "summary": "Every command takes `--workspace <dir>` (default: the workspace that holds the current folder, found by walking up) and `--json`, which prints one object, the same for every command: {\"root\": \"/home/me/citofony\", \"name\": \"citofony\", \"description\": \"An intercom for buildings\", \"apps\": [{\"name\":…",
+   "body": [
+    "| Command | What it does |",
+    "|---|---|",
+    "| `workspace rename <app> <new>` | renames the app's folder and its entry; the project's `app(name)` in its `config.nuc` stays unless `--project-name` (a project without `app(name)` takes its folder's name). Run `nuclear install` in it again: a virtual environment keeps the path it was made in |",
+    "| `workspace rename --workspace-name <n>`, `workspace edit [--name <n>] [--description <d>]` | the workspace's name and description |",
+    "| `workspace remove <app>` | out of the marker only; its folder stays. `--delete` deletes the folder too, never a folder outside the workspace |",
+    "| `workspace show`, `workspace find` | the workspace and its apps; the workspace that holds the current folder |",
+    "",
+    "Every command takes `--workspace <dir>` (default: the workspace that holds the current folder, found by walking up)",
+    "and `--json`, which prints one object, the same for every command:",
+    "",
+    "```json",
+    "{\"root\": \"/home/me/citofony\", \"name\": \"citofony\", \"description\": \"An intercom for buildings\",",
+    " \"apps\": [{\"name\": \"citofony_api\", \"folder\": \"citofony_api\", \"platform\": \"backend\", \"dialect\": \"fastapi\", \"exists\": true}]}",
+    "```",
+    "",
+    "`name` and `dialect` come from each app's `config.nuc` (`dialect` is `null` when its folder has no project); `find",
+    "--json` prints `null` outside a workspace; a refusal is `{\"error\": \"...\"}` with exit code 1."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/workspace.md#check-it",
+   "type": "guide",
+   "title": "Workspaces — Check it",
+   "summary": "`--json` is one app's (run it in the app, or `--project <folder>`).",
+   "body": [
+    "- `nuclear check` in the workspace's folder (not inside an app) checks every app in turn and fails when one fails;",
+    "  `--json` is one app's (run it in the app, or `--project <folder>`).",
+    "- `nuclear doctor` there also says the workspace's apps and any app whose folder is missing."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/workspace.md#make-one-and-add-its-apps",
+   "type": "guide",
+   "title": "Workspaces — Make one and add its apps",
+   "summary": "nuclear workspace new citofony --description \"An intercom for buildings\" cd citofony nuclear workspace add citofony_api --platform backend # nuclear new, in the workspace, then the marker nuclear workspace add citofony_web --platform web --dialect react nuclear workspace list `add` is `nuclear…",
+   "body": [
+    "```sh",
+    "nuclear workspace new citofony --description \"An intercom for buildings\"",
+    "cd citofony",
+    "nuclear workspace add citofony_api --platform backend            # nuclear new, in the workspace, then the marker",
+    "nuclear workspace add citofony_web --platform web --dialect react",
+    "nuclear workspace list",
+    "```",
+    "",
+    "`add` is `nuclear new`: the same files, the same default dialect of each platform (`backend`: fastapi, `web`:",
+    "react, `mobile`: flutter) and the same options (`--org`, `--websocket`, `--token`). `nuclear new <name>` run in any",
+    "folder inside a workspace does the same: the project is made in the workspace's folder, not in the current one, and",
+    "written into the marker. An app's name is a project's name: letters, digits and `_` (`citofony-api` becomes",
+    "`citofony_api`), so it is always a plain folder of the workspace."
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/workspace.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:tools/cli/docs/08-guides/workspace.md#workspaces",
+   "type": "guide",
+   "title": "Workspaces",
+   "summary": "A workspace is a folder that organizes one business project and the apps that form it: a mobile app, a web app, a backend or several of each.",
+   "body": [
+    "A **workspace** is a folder that organizes one business project and the apps that form it: a mobile app, a web app,",
+    "a backend or several of each. Start every piece of work from one: the editor, the MCP server and the agents find the",
+    "apps through it instead of searching a folder full of projects in other languages.",
+    "",
+    "```",
+    "citofony/                      the workspace",
+    "  .workspace/workspace.nuc     the marker: the workspace and its apps",
+    "  citofony_api/                a backend (a Synapsis project: its config.nuc)",
+    "  citofony_web/                a web app",
+    "  citofony_client/             a mobile app",
+    "```",
+    "",
+    "A folder is a workspace when it holds `.workspace/workspace.nuc`. The marker is Nuclear, written by the commands",
+    "below (edit it by hand only to reword its comments):",
+    "",
+    "```nuclear",
+    "// The workspace: the business project and the apps that form it (nuclear workspace ...).",
+    "workspace(name = \"citofony\", description = \"An intercom for buildings\")",
+    "app(folder = \"citofony_api\", platform = \"backend\")",
+    "app(folder = \"citofony_web\", platform = \"web\")",
+    "```"
+   ],
+   "sources": [
+    "tools/cli/docs/08-guides/workspace.md"
    ],
    "meta": {
     "section": "08-cli",

@@ -55,6 +55,10 @@ Everything else is the engine's (engine.md): the run file and its log, the stati
 checks (`checks.json` there, changed only through `nuclear-builder checks`), the exported CI file (`nuclear-builder
 export`). Jira's site, email and API token are in VS Code's secret storage (`nuclear.builder.jira`).
 
+The page reads the specs again by itself when a `spec.md` of the project's `specs/` is created, changed or deleted (a
+`FileSystemWatcher` on the active project, 300 ms after a burst, disposed with the page): a spec written by the MCP
+server's `spec_create`, a terminal or git shows at once.
+
 ## The page (`panel.ts`): the workbench
 
 After n8n (spec 011, requirements 19-25): the diagram and the chat in the middle, the node and the log on the right;
@@ -169,12 +173,12 @@ step working or failed and its neighbours.
 | `nuclear-builder ci [stage...]` | the deterministic stages of `.nuclear/builder.json` |
 | `nuclear-builder export github\|gitlab\|bitbucket` | writes the CI file |
 | `nuclear-builder runs [--json]` | the runs of this project |
-| `nuclear-builder spec new\|list\|show\|delete\|move\|migrate\|accept\|discard` | the specs ([engine.md](engine.md)) |
+| `nuclear-builder spec new\|list\|show\|update\|delete\|move\|migrate\|accept\|discard` | the specs ([engine.md](engine.md)) |
 | `nuclear-builder line show\|set KEY=<json>` | the project's line, `.nuclear/builder.json` (each key checked) |
 | `nuclear-builder connections`, `read <path>` | *Check the connections*; a file of the project as text (PDF, `.pptx`, markdown) |
 | `nuclear-builder mcp [--root <dir>]` | the Builder's MCP server: every command above as a tool ([actions.md](actions.md)) |
 | `nuclear-builder team …`, `vault …` | the teams and the keys ([teams-and-vault.md](teams-and-vault.md)) |
-| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back; its step `graph-model` fetches the release's vectors of the knowledge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |
+| `nuclear-builder setup …` | the AI services of this machine (`setup.nuc`; [the set-up](../../../../vscode/docs/02-architecture/ai-services.md)); its step `clients` gives the MCP server to Claude Code, Codex and Grok Build (their `mcp add`) and to Cursor, OpenCode and Gemini CLI (their JSON files), and `--remove` takes it back; each service it starts (`startService`) is waited for 90 s, started again once, then moved to a free port when another program holds its own without answering, and the other copies of it (an older version's, a source install's) are stopped (`strays`), its error carrying the service's last lines; a port written for our service that is loaded but still starting is kept (`servicePorts`, `loaded`); its step `graph-model` fetches the release's vectors of the knowledge base (`fetchVectors`) only when their SHA-256 differs from the vectors already here |
 
 ## The JetBrains tool window (`NuclearBuilder.java`)
 

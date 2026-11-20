@@ -23,7 +23,7 @@ fn check(status: Status, title: impl Into<String>, details: Vec<String>) -> Chec
     Check { status, title: title.into(), details }
 }
 
-pub fn doctor(project: Option<&Path>) {
+pub fn doctor(project: Option<&Path>, workspace: Option<&Path>) {
     use super::landing::{bad, cmd, dim, name, ok, warn};
     println!(
         "{} {}\n",
@@ -33,6 +33,7 @@ pub fn doctor(project: Option<&Path>) {
     let mut checks = vec![synapsis(), nuclear(), dialect(), package(), flutter()];
     checks.extend(super::toolchain::ALL.into_iter().map(toolchain));
     checks.push(vscode());
+    checks.extend(workspace.map(workspace_check));
     checks.extend(project.map(project_check));
     for c in &checks {
         let mark = match c.status {
@@ -281,6 +282,25 @@ fn vscode() -> Check {
             check(Status::Ok, "VS Code with the NuclearLang, Dart and Flutter extensions", vec![home_relative(&code)])
         }
         false => check(Status::Warn, "VS Code: extensions missing", missing),
+    }
+}
+
+/// The workspace that holds the current folder: its marker read, and each app's folder there.
+fn workspace_check(root: &Path) -> Check {
+    match super::workspace::load(root) {
+        Err(e) => check(Status::Fail, "Workspace: its marker cannot be read", vec![home_relative(root), e]),
+        Ok(ws) => {
+            let missing: Vec<String> = ws.apps.iter().filter(|a| !root.join(&a.folder).is_dir()).map(|a| a.folder.clone()).collect();
+            let apps = ws.apps.iter().map(|a| format!("{} ({})", a.folder, a.platform)).collect::<Vec<_>>().join(", ");
+            let mut details = vec![home_relative(root), format!("apps: {}", if apps.is_empty() { "none yet".into() } else { apps })];
+            match missing.is_empty() {
+                true => check(Status::Ok, format!("Workspace {}", ws.name), details),
+                false => {
+                    details.push(format!("missing folders: {} (nuclear workspace remove <app>)", missing.join(", ")));
+                    check(Status::Warn, format!("Workspace {}: an app's folder is missing", ws.name), details)
+                }
+            }
+        }
     }
 }
 

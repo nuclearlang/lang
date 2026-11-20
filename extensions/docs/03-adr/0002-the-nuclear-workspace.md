@@ -80,7 +80,16 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
     a short toast with its shortcut, so the mouse teaches the keys. The user may rebind any of them.
 12. **A welcome page at startup** (`nuclear.workspace.welcome`, on by default, only when the window restored no
     editor) explains the workspace, lists the projects with their shortcut and the tools, and can turn itself off.
-13. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,
+13. **The Nuclear workspace is the unit of work** (amended by the user, 2026-11-20, spec 022). A Nuclear workspace is
+    a folder for one business project with `.workspace/workspace.nuc`, the marker that names its apps; the strip's
+    project tabs are its apps, read through `nuclear workspace … --json` and refreshed when the marker changes. The
+    editor, not VS Code's folder, remembers the workspaces (the recent list) and the projects opened by hand, so a
+    change of VS Code's folder never loses them; the open one is the workspace that holds VS Code's folder, else the
+    last one opened. With no workspace and no project the view says why and offers the recent workspaces, *Open a
+    workspace…* and *Create a workspace*. The first run starts with the workspace: the welcome's three steps (create
+    it, add its apps, a tour of every tool), each also done by chat with the user's agent through the MCP server,
+    which asks before each change. A folder without a marker still works as before: its projects are the tabs.
+14. **The other editors.** Android Studio gets tool windows and actions with shortcuts (the HTTP Connections tool window,
     `Alt+Shift+H`). Zed cannot contribute keybindings or views.
 
 ## Options considered
@@ -92,7 +101,8 @@ The VS Code extension first; Android Studio and Zed follow as far as their platf
 4. A horizontal tab row above a native tree: it fits the sidebar's stacking, but not the vertical strip the user drew.
 
 ## Consequences
-- Positive: one place for every Nuclear feature; projects side by side without windows; the screen for one thing at a
+- Positive: one place for every Nuclear feature; projects side by side without windows; the apps of one business
+  project found by every tool and agent through the workspace's marker, never lost when VS Code changes folder; the screen for one thing at a
   time; every action has a key.
 - Negative:
   - The HTTP tree and the file tree are drawn by the webview, not native trees: the file tree has no git decorations

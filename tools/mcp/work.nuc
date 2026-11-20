@@ -1,0 +1,494 @@
+use sys
+use json
+use shutil
+use codecs
+use asyncio
+use secrets
+use pathlib{ Path }
+use mcp/server/mcpserver{ Context }
+
+// What an agent organizes in the user's name (spec 022): the workspaces and their apps (`nuclear workspace … --json`),
+// the specs Nuclear Builder reads (`nuclear-builder spec … --json`) and the teams of the software factory
+// (`nuclear-builder team …`). Every tool here is a thin call of one of those commands, and every one that changes
+// something asks the user's yes first (`confirmed`).
+
+APP_PLATFORMS = ["mobile", "web", "backend"]
+// How long a preview's token is valid (milliseconds); it is used once.
+CONFIRM_MS = 300000
+// The previews waiting for the user's yes, kept in the server's process only: token → {key, until}.
+PENDING: <string, <string, any>> = {}
+// What a client that can ask its user (MCP elicitation) shows: one yes or no.
+YES_SCHEMA: <string, any> = { "type": "object", "properties": { "confirm": { "type": "boolean", "title": "Yes, do it", "default": true } }, "required": ["confirm"] }
+
+// The closest folder up with a config.nuc (a Synapsis project).
+projectOf(folder: string) Path?
+  start: Path = Path(folder).resolve()
+  for d in [start, ...start.parents]
+    if d.joinpath("config.nuc").exists()
+      return d
+  null
+
+// Runs a command with `stdin` on its standard input and waits for it, at most `timeout` seconds: its exit code and
+// what it printed (its standard output; its errors when it printed nothing else).
+runCommand(args: string[], cwd: string? = null, stdin: string = "", timeout: int = 600) Ran
+  if shutil.which(args[0]) == null
+    return Ran(127, "${args[0]} is not installed (run the NuclearLang installer)")
+  p = ~asyncio.createSubprocessExec(...args, cwd = cwd, stdin = asyncio.subprocess.PIPE, stdout = asyncio.subprocess.PIPE, stderr = asyncio.subprocess.PIPE)
+  try
+    done = ~asyncio.waitFor(p.communicate(stdin.toBytes()), timeout)
+    out = codecs.decode(done[0], "utf-8", "replace")
+    Ran(p.returncode ?? 0, out.trim().isEmpty ? codecs.decode(done[1], "utf-8", "replace") : out)
+  catch e
+    if not isinstance(e, TimeoutError)
+      throw e
+    p.kill()
+    Ran(124, "${args.join(" ")}: timed out after ${timeout} s")
+
+// A command's answer for the agent: its JSON as it printed it, or {"error"} when it failed without one.
+answerOf(ran: Ran) string
+  out = ran.out.trim()
+  if ran.code == 0 and not out.isEmpty
+    return out
+  if out.startsWith("{") or out.startsWith("[")
+    return out
+  Json.encode({ "error": out.isEmpty ? "exited ${ran.code}" : out })
+
+// An error answer.
+refused(text: string) string
+  Json.encode({ "error": text })
+
+// The first word that would be read as an option of the command (it starts with -), or null.
+optionLike(words: string[]) string?
+  words.find((w) => w.startsWith("-"))
+
+// The key a token is bound to: the tool and its exact arguments.
+changeKey(tool: string, args: <string, any>) string
+  "${tool} ${Json.encode(args)}"
+
+// Whether the client said it can ask its user (the `elicitation` capability).
+canAsk(ctx: Context?) boolean
+  if ctx == null
+    return false
+  try
+    caps = ctx!.session.clientCapabilities
+    // a client of the newer protocol reached in its own process has no channel back for the question
+    return caps != null and caps.elicitation != null and ctx!.session.canSendRequest
+  catch e
+    // outside a request there is no session
+    return false
+
+// The user's yes to a change, asked before it is made: null when the user said yes (the tool goes on), else what the
+// tool answers instead, having changed nothing. `change` says exactly what will change. A client that can ask
+// (elicitation) asks its user yes or no; one that cannot gets a preview with a `confirm` token, bound to this tool and
+// these arguments, valid 5 minutes and once: calling the tool again with it is the user's yes.
+confirmed(ctx: Context?, tool: string, args: <string, any>, change: string, confirm: string) string?
+  now = DateTime.now().millis
+  for token in PENDING.keys
+    if (PENDING[token]!["until"] as int) < now
+      PENDING.remove(token)
+  key = changeKey(tool, args)
+  if not confirm.isEmpty
+    held = PENDING.remove(confirm)
+    if held == null
+      return refused("nothing changed: the confirm token is unknown, expired or used; call ${tool} again without confirm for a new preview")
+    if "${held!["key"]}" != key
+      return refused("nothing changed: the confirm token is for another change (another tool or other arguments); call ${tool} again without confirm for a preview of this one")
+    return null
+  if canAsk(ctx)
+    try
+      answer = ~ctx!.session.elicitForm(message = "${change}\n\nDo it?", requestedSchema = YES_SCHEMA, relatedRequestId = ctx!.requestId)
+      content: <string, any> = answer.content ?? ({} as <string, any>)
+      if answer.action == "accept" and content["confirm"] == true
+        return null
+      return Json.encode({ "declined": change, "changed": "nothing: the user said no" })
+    catch e
+      // the client said it can ask but the question failed: the preview instead
+      print("elicitation failed: ${e}", file = sys.stderr)
+  token = secrets.tokenUrlsafe(12)
+  PENDING[token] = { "key": key, "until": now + CONFIRM_MS }
+  Json.encode({ "preview": change, "changed": "nothing yet", "confirm": token, "expiresInSeconds": CONFIRM_MS ~/ 1000, "next": "show this preview to the user; only on their yes, call ${tool} again with the same arguments and confirm=\"${token}\" (valid once, for 5 minutes)" })
+
+// The tools that organize the user's work (spec 022): workspaces and apps, specs, teams and members. `runner` runs a
+// command (`runCommand`; a test gives its own). Each method with a comment is a tool, and the comment is what the
+// client reads of it; every change is confirmed by the user (elicitation, or a preview and its confirm token).
+WorkTools(runner: any = runCommand)
+  // `nuclear workspace <args> --json` in a folder of the workspace.
+  workspaceRun(args: string[], folder: string? = null) string
+    ran: Ran = ~runner(["nuclear", "workspace", ...args, "--json"], folder, "")
+    answerOf(ran)
+
+  // `nuclear-builder <args>` in a folder (a project), with `stdin`.
+  builderRun(args: string[], folder: string? = null, stdin: string = "") string
+    ran: Ran = ~runner(["nuclear-builder", ...args], folder, stdin)
+    answerOf(ran)
+
+  // ---------- workspaces and apps ----------
+
+  // Create a workspace: a folder that organizes one business project and the apps that form it, recognized by its
+  // marker `.workspace/workspace.nuc` (the editor, this server and the agents start from it). path: where (the folder
+  // is made); name (default: the folder's name) and description. Start every new product here, then app_add its apps.
+  // Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  workspaceCreate(path: string, name: string = "", description: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([path, name, description])
+    if bad != null
+      return refused("'${bad}' is not a path, a name or a description (it starts with -)")
+    target = Path(path).expanduser().resolve()
+    shown = name.isEmpty ? target.name : name
+    change = "Create the workspace `${shown}` in ${target}: the folder and its marker .workspace/workspace.nuc, which names the apps added to it."
+    no = ~confirmed(ctx, "workspace_create", { "path": "${target}", "name": name, "description": description }, change, confirm)
+    if no != null
+      return no!
+    args = ["new", "${target}"]
+    if not name.isEmpty
+      args = [...args, "--name", name]
+    if not description.isEmpty
+      args = [...args, "--description", description]
+    ~workspaceRun(args)
+
+  // A workspace and its apps: {root, name, description, apps: [{name, folder, platform, dialect, exists}]}. workspace:
+  // its folder or any folder inside it. Read it first: the apps are the projects to work in.
+  workspaceShow(workspace: string) string
+    if not Path(workspace).isDir()
+      return refused("${workspace} is not a folder")
+    ~workspaceRun(["show"], workspace)
+
+  // Rename a workspace or change its description (its marker). workspace: its folder or one inside it. Asks the user
+  // first (confirm: the token of a preview, when the client cannot ask).
+  workspaceEdit(workspace: string, name: string = "", description: string = "", confirm: string = "", ctx: Context? = null) string
+    if not Path(workspace).isDir()
+      return refused("${workspace} is not a folder")
+    if name.isEmpty and description.isEmpty
+      return refused("say what changes: name, description or both")
+    bad = optionLike([name, description])
+    if bad != null
+      return refused("'${bad}' is not a name or a description (it starts with -)")
+    parts: string[] = []
+    if not name.isEmpty
+      parts.add("its name becomes `${name}`")
+    if not description.isEmpty
+      parts.add("its description becomes \"${description}\"")
+    change = "Change the workspace of ${Path(workspace).resolve()}: ${parts.join(" and ")} (its marker .workspace/workspace.nuc)."
+    no = ~confirmed(ctx, "workspace_edit", { "workspace": "${Path(workspace).resolve()}", "name": name, "description": description }, change, confirm)
+    if no != null
+      return no!
+    args = ["edit"]
+    if not name.isEmpty
+      args = [...args, "--name", name]
+    if not description.isEmpty
+      args = [...args, "--description", description]
+    ~workspaceRun(args, workspace)
+
+  // Stop a folder being a workspace: its marker `.workspace/workspace.nuc` is removed; its apps' folders stay unless
+  // delete_folders is true (then every app's folder is deleted, with all its files: only when the user asked for
+  // it). Asks the user first, saying which (confirm: the token of a preview, when the client cannot ask).
+  workspaceDelete(workspace: string, deleteFolders: boolean = false, confirm: string = "", ctx: Context? = null) string
+    if not Path(workspace).isDir()
+      return refused("${workspace} is not a folder")
+    said = ~workspaceRun(["show"], workspace)
+    shown = jsonOf(said)
+    if shown == null or shown!["root"] == null
+      return said
+    root = "${shown!["root"]}"
+    apps = ((shown!["apps"] ?? []) as <string, any>[]).map((a) => "${a["name"]}")
+    named = apps.isEmpty ? "no apps" : "${apps.length} app(s): ${apps.join(", ")}"
+    change = deleteFolders ? "Delete the workspace `${shown!["name"]}` (${root}): its marker .workspace/workspace.nuc AND the folders of its ${named}, with every file in them. This cannot be undone." : "Remove the workspace `${shown!["name"]}` (${root}): only its marker .workspace/workspace.nuc; the folders of its ${named} stay as they are."
+    no = ~confirmed(ctx, "workspace_delete", { "workspace": root, "deleteFolders": deleteFolders }, change, confirm)
+    if no != null
+      return no!
+    if deleteFolders
+      for app in apps
+        gone = jsonOf(~workspaceRun(["remove", app, "--delete"], root))
+        if gone == null or gone!["error"] != null
+          return refused("the app ${app} was not removed (${gone == null ? "no answer" : gone!["error"]}); the workspace's marker is kept")
+    // shortcut: the marker is removed here because `nuclear workspace` has no `delete` yet; call it when it does
+    marker = Path(root, ".workspace", "workspace.nuc")
+    if marker.isFile()
+      marker.unlink()
+    held = Path(root, ".workspace")
+    if held.isDir() and (list(held.iterdir()) as Path[]).isEmpty
+      held.rmdir()
+    Json.encode({ "deleted": root, "apps": apps, "foldersDeleted": deleteFolders })
+
+  // Add an app to a workspace: `nuclear new` makes it in a folder of the workspace and the marker names it. app: its
+  // name (its folder); platform: mobile, web or backend; dialect: optional (the platform's default). Asks the user
+  // first (confirm: the token of a preview, when the client cannot ask).
+  appAdd(workspace: string, app: string, platform: string, dialect: string = "", confirm: string = "", ctx: Context? = null) string
+    if not Path(workspace).isDir()
+      return refused("${workspace} is not a folder")
+    if not (platform in APP_PLATFORMS)
+      return refused("'${platform}' is not a platform: ${APP_PLATFORMS.join(", ")}")
+    bad = optionLike([app, dialect])
+    if bad != null or app.isEmpty
+      return refused("'${bad ?? app}' is not an app's name or a dialect")
+    made = dialect.isEmpty ? platform : "${platform}, ${dialect}"
+    change = "Add the app `${app}` (${made}) to the workspace of ${Path(workspace).resolve()}: nuclear new makes its folder ${app}/ and the marker names it."
+    no = ~confirmed(ctx, "app_add", { "workspace": "${Path(workspace).resolve()}", "app": app, "platform": platform, "dialect": dialect }, change, confirm)
+    if no != null
+      return no!
+    args = ["add", app, "--platform", platform]
+    if not dialect.isEmpty
+      args = [...args, "--dialect", dialect]
+    ~workspaceRun(args, workspace)
+
+  // Rename an app of a workspace (new_name: its new name). Asks the user first (confirm: the token of a preview,
+  // when the client cannot ask).
+  appRename(workspace: string, app: string, newName: string, confirm: string = "", ctx: Context? = null) string
+    if not Path(workspace).isDir()
+      return refused("${workspace} is not a folder")
+    bad = optionLike([app, newName])
+    if bad != null or app.isEmpty or newName.isEmpty
+      return refused("an app and its new name are needed (neither starts with -)")
+    change = "Rename the app `${app}` of the workspace of ${Path(workspace).resolve()} to `${newName}`."
+    no = ~confirmed(ctx, "app_rename", { "workspace": "${Path(workspace).resolve()}", "app": app, "newName": newName }, change, confirm)
+    if no != null
+      return no!
+    ~workspaceRun(["rename", app, newName], workspace)
+
+  // Remove an app from a workspace (the marker stops naming it); its folder is deleted only with delete_folder true
+  // (every file in it: only when the user asked for it). Asks the user first, saying which (confirm: the token of a
+  // preview, when the client cannot ask).
+  appRemove(workspace: string, app: string, deleteFolder: boolean = false, confirm: string = "", ctx: Context? = null) string
+    if not Path(workspace).isDir()
+      return refused("${workspace} is not a folder")
+    bad = optionLike([app])
+    if bad != null or app.isEmpty
+      return refused("'${app}' is not an app's name")
+    where = Path(workspace).resolve()
+    change = deleteFolder ? "Remove the app `${app}` from the workspace of ${where} AND delete its folder with every file in it. This cannot be undone." : "Remove the app `${app}` from the workspace of ${where} (the marker stops naming it); its folder stays as it is."
+    no = ~confirmed(ctx, "app_remove", { "workspace": "${where}", "app": app, "deleteFolder": deleteFolder }, change, confirm)
+    if no != null
+      return no!
+    ~workspaceRun(deleteFolder ? ["remove", app, "--delete"] : ["remove", app], workspace)
+
+  // ---------- specs (Nuclear Builder reads them: specs/<component>/[<layer>/]<id>/spec.md) ----------
+
+  // Write a new spec of a project where Nuclear Builder reads it (it shows in the Builder at once): its title, its
+  // business component (a folder of components/, or _global for the whole project), its acceptance criteria (each
+  // one checkable: ask the user for them when they are not given), and optionally its layer (presentation, domain or
+  // data), its use case (feature, refactor, bug, test, security, docs, diagram) and its description; or text: the
+  // spec's whole markdown, from its `# title`. Asks the user first (confirm: the token of a preview, when the client
+  // cannot ask).
+  specCreate(project: string, component: string, title: string, criteria: string[]? = null, layer: string = "", useCase: string = "feature", description: string = "", text: string = "", confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    kept = (criteria ?? []).map((c: string) => c.trim()).filter((c: string) => not c.isEmpty)
+    if kept.isEmpty and text.trim().isEmpty
+      return refused("a spec needs its acceptance criteria (each one checkable): ask the user for them")
+    bad = optionLike([component, title, layer, useCase])
+    if bad != null or title.trim().isEmpty or component.trim().isEmpty
+      return refused("a spec needs a title and a component (neither starts with -)")
+    if [description, ...kept].any((w) => w.startsWith("--"))
+      return refused("a description or a criterion never starts with --")
+    folder = layer.isEmpty ? "specs/${component}/<id>" : "specs/${component}/${layer}/<id>"
+    items = kept.isEmpty ? "the criteria of its text" : kept.map((c) => "- ${c}").join("\n")
+    change = "Write the spec \"${title}\" (${useCase}) in the project ${root}: ${folder}/spec.md, shown in Nuclear Builder at once. Its acceptance criteria:\n${items}"
+    no = ~confirmed(ctx, "spec_create", { "project": "${root}", "component": component, "title": title, "criteria": kept, "layer": layer, "useCase": useCase, "description": description, "text": text }, change, confirm)
+    if no != null
+      return no!
+    args = ["spec", "new", "--title", title, "--component", component, "--use-case", useCase]
+    if not layer.isEmpty
+      args = [...args, "--layer", layer]
+    if not description.isEmpty
+      args = [...args, "--description", description]
+    for c in kept
+      args = [...args, "--criteria", c]
+    if not text.trim().isEmpty
+      args.add("--stdin")
+    ~builderRun([...args, "--json"], "${root}", text)
+
+  // The specs of a project, by component and layer, with their runs.
+  specList(project: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    ~builderRun(["spec", "list", "--json"], "${root}")
+
+  // One spec of a project: its markdown, what it says (title, criteria...), its draft when it has one, its run's status.
+  specShow(project: string, id: string) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-")
+      return refused("'${id}' is not a spec's id")
+    ~builderRun(["spec", "show", id, "--json"], "${root}")
+
+  // Replace the text of a spec (its whole markdown, from its `# title`; spec_show gives the current one). Asks the
+  // user first (confirm: the token of a preview, when the client cannot ask).
+  specEdit(project: string, id: string, text: string, confirm: string = "", ctx: Context? = null) string
+    root = projectOf(project)
+    if root == null
+      return refused("${project} is not inside a Synapsis project (no config.nuc)")
+    if id.startsWith("-") or id.isEmpty
+      return refused("'${id}' is not a spec's id")
+    if not text.trim().startsWith("# ")
+      return refused("a spec's text is its whole markdown, from its `# title`")
+    said = ~builderRun(["spec", "show", id, "--json"], "${root}")
+    shown = jsonOf(said)
+    if shown == null or shown!["path"] == null
+      return said
+    title = text.trim().split("\n")[0].substring(2)
+    change = "Replace the text of the spec `${id}` (${shown!["path"]}/spec.md in ${root}) with the new one (${text.trim().split("\n").length} lines, titled \"${title}\")."
+    no = ~confirmed(ctx, "spec_edit", { "project": "${root}", "id": id, "text": text }, change, confirm)
+    if no != null
+      return no!
+    ~builderRun(["spec", "update", id, "--stdin", "--json"], "${root}", text)
+
+  // ---------- teams of the software factory (Nuclear Builder) ----------
+
+  // The teams: id, name, members, the default one.
+  teamList() string
+    ~builderRun(["team", "list", "--json"])
+
+  // One team: its members (each its id, role, employee, who works it), purpose, skills, tech lead, budget.
+  teamShow(team: string) string
+    if team.startsWith("-") or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    ~builderRun(["team", "show", team])
+
+  // Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role
+  // (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a
+  // member not said: the default external agent. Members are never of the local kind (the local models are on
+  // standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  teamCreate(name: string, purpose: string = "", description: string = "", skills: string[]? = null, members: <string, any>[]? = null, budgetUsd: double? = null, confirm: string = "", ctx: Context? = null) string
+    if name.trim().isEmpty
+      return refused("a team needs a name")
+    hired: <string, any>[] = members ?? []
+    if hired.any((m) => m["kind"] == "local")
+      return refused(LOCAL_STANDBY)
+    draft: <string, any> = { "name": name, "purpose": purpose, "description": description, "skills": skills ?? [], "members": hired }
+    if budgetUsd != null
+      draft["budgetUsd"] = budgetUsd
+    who = hired.map((m) => "${m["role"]}${m["name"] != null ? " ${m["name"]}" : ""}${m["provider"] != null ? " (${m["provider"]}${m["model"] != null ? " ${m["model"]}" : ""})" : ""}")
+    change = "Create the team `${name}` with ${hired.length} member(s)${who.isEmpty ? "" : ": ${who.join(", ")}"}${budgetUsd != null ? "; budget ${budgetUsd} USD" : ""}."
+    no = ~confirmed(ctx, "team_create", draft, change, confirm)
+    if no != null
+      return no!
+    ~builderRun(["team", "create", "--json"], null, Json.encode(draft))
+
+  // Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech
+  // lead) or budget_usd. Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  teamEdit(team: string, name: string = "", description: string = "", purpose: string = "", skills: string[]? = null, lead: string = "", budgetUsd: double? = null, confirm: string = "", ctx: Context? = null) string
+    flags: <string, string> = { "--name": name, "--description": description, "--purpose": purpose, "--lead": lead }
+    if skills != null
+      flags["--skills"] = skills!.join(",")
+    if budgetUsd != null
+      flags["--budget"] = "${budgetUsd}"
+    given = flags.keys.filter((k) => not flags[k]!.isEmpty or k == "--skills")
+    if team.startsWith("-") or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    if given.isEmpty
+      return refused("say what changes: name, description, purpose, skills, lead or budget_usd")
+    bad = optionLike(given.map((k) => flags[k]!))
+    if bad != null
+      return refused("'${bad}' starts with -")
+    change = "Change the team `${team}`: ${given.map((k) => "${k.substring(2)} → ${flags[k]}").join("; ")}."
+    no = ~confirmed(ctx, "team_edit", { "team": team, "flags": flags }, change, confirm)
+    if no != null
+      return no!
+    args = ["team", "update", team]
+    for k in given
+      args = [...args, k, flags[k]!]
+    ~builderRun([...args, "--json"])
+
+  // Delete a team (its file is kept as <id>.json.bak). Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask).
+  teamDelete(team: string, confirm: string = "", ctx: Context? = null) string
+    if team.startsWith("-") or team.isEmpty
+      return refused("'${team}' is not a team's id")
+    no = ~confirmed(ctx, "team_delete", { "team": team }, "Delete the team `${team}` (its file is kept as ${team}.json.bak).", confirm)
+    if no != null
+      return no!
+    ~builderRun(["team", "delete", team, "--json"])
+
+  // Hire members into a team: role (analyst, architect, developer, qa, devops), and optionally employee (of the
+  // roster), kind (agent or api), provider, model (one this machine has), name, count. Never the local kind (the
+  // local models are on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  memberAdd(team: string, role: string, employee: string = "", kind: string = "", provider: string = "", model: string = "", name: string = "", count: int = 1, confirm: string = "", ctx: Context? = null) string
+    if kind == "local"
+      return refused(LOCAL_STANDBY)
+    flags: <string, string> = { "--role": role, "--employee": employee, "--kind": kind, "--provider": provider, "--model": model, "--name": name }
+    given = flags.keys.filter((k) => not flags[k]!.isEmpty)
+    bad = optionLike([team, ...given.map((k) => flags[k]!)])
+    if bad != null or team.isEmpty or role.isEmpty
+      return refused("a team and a role are needed (no value starts with -)")
+    who = provider.isEmpty ? "the default agent" : "${provider}${model.isEmpty ? "" : " ${model}"}"
+    named = name.isEmpty ? "" : " named ${name}"
+    change = "Hire ${count} ${role}${named} into the team `${team}`, worked by ${who}."
+    no = ~confirmed(ctx, "member_add", { "team": team, "flags": flags, "count": count }, change, confirm)
+    if no != null
+      return no!
+    args = ["team", "member", "add", team]
+    for k in given
+      args = [...args, k, flags[k]!]
+    ~builderRun([...args, "--count", "${Math.max(1, count)}", "--json"])
+
+  // Change a member of a team (member: its id in the team): who works it (kind agent or api, provider, model), its
+  // employee, name, instructions, temperament or skills (the whole list). Never the local kind (the local models are
+  // on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  memberEdit(team: string, member: string, kind: string = "", provider: string = "", model: string = "", employee: string = "", name: string = "", instructions: string = "", temperament: string = "", skills: string[]? = null, confirm: string = "", ctx: Context? = null) string
+    if kind == "local"
+      return refused(LOCAL_STANDBY)
+    flags: <string, string> = { "--kind": kind, "--provider": provider, "--model": model, "--employee": employee, "--name": name, "--instructions": instructions, "--temperament": temperament }
+    if skills != null
+      flags["--skills"] = skills!.join(",")
+    given = flags.keys.filter((k) => not flags[k]!.isEmpty or k == "--skills")
+    bad = optionLike([team, member, ...given.map((k) => flags[k]!)])
+    if bad != null or team.isEmpty or member.isEmpty
+      return refused("a team and a member are needed (no value starts with -)")
+    if given.isEmpty
+      return refused("say what changes of the member")
+    change = "Change the member `${member}` of the team `${team}`: ${given.map((k) => "${k.substring(2)} → ${flags[k]}").join("; ")}."
+    no = ~confirmed(ctx, "member_edit", { "team": team, "member": member, "flags": flags }, change, confirm)
+    if no != null
+      return no!
+    args = ["team", "member", "update", team, member]
+    for k in given
+      args = [...args, k, flags[k]!]
+    ~builderRun([...args, "--json"])
+
+  // Let a member go (member: its id in the team). Asks the user first (confirm: the token of a preview, when the
+  // client cannot ask).
+  memberRemove(team: string, member: string, confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([team, member])
+    if bad != null or team.isEmpty or member.isEmpty
+      return refused("a team and a member are needed (neither starts with -)")
+    no = ~confirmed(ctx, "member_remove", { "team": team, "member": member }, "Remove the member `${member}` from the team `${team}`.", confirm)
+    if no != null
+      return no!
+    ~builderRun(["team", "member", "remove", team, member, "--json"])
+
+  // Set the library skills of a team (every member inherits them) or, with member, of one member: skills is the whole
+  // list of skill ids (Nuclear Builder's `skills list` names them). Asks the user first (confirm: the token of a
+  // preview, when the client cannot ask).
+  skillsSet(team: string, skills: string[], member: string = "", confirm: string = "", ctx: Context? = null) string
+    bad = optionLike([team, member, ...skills])
+    if bad != null or team.isEmpty
+      return refused("a team is needed (no value starts with -)")
+    whose = member.isEmpty ? "the team `${team}` (every member inherits them)" : "the member `${member}` of the team `${team}`"
+    change = "Set the skills of ${whose} to: ${skills.isEmpty ? "none" : skills.join(", ")}."
+    no = ~confirmed(ctx, "skills_set", { "team": team, "skills": skills, "member": member }, change, confirm)
+    if no != null
+      return no!
+    args = ["team", "skills", "set", team, "--skills", skills.join(",")]
+    if not member.isEmpty
+      args = [...args, "--member", member]
+    ~builderRun([...args, "--json"])
+
+  // Every tool, in the order a client lists them.
+  all() any[]
+    [
+      workspaceCreate, workspaceShow, workspaceEdit, workspaceDelete, appAdd, appRename, appRemove,
+      specCreate, specList, specShow, specEdit,
+      teamList, teamShow, teamCreate, teamEdit, teamDelete, memberAdd, memberEdit, memberRemove, skillsSet,
+    ]
+
+LOCAL_STANDBY = "no member of the local kind: the local models are on standby (ADR-platform-0013); a member is worked by an agent (kind agent) or an API provider (kind api)"
+
+// A JSON object of a command's answer, or null.
+jsonOf(text: string) <string, any>?
+  try
+    found = json.loads(text)
+    return isinstance(found, dict) ? found : null
+  catch e
+    return null
