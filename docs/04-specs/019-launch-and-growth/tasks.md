@@ -54,8 +54,9 @@ payment, a decision, a click in a website's settings), **agent → user** (the a
       `synapsis-nest`, `synapsis-web`; pub.dev `synapsis`; crates.io `nuclear-cli`), trusted publishing each.
       user: the accounts and each registry's trusted publisher (as the Marketplace).
 - [ ] T3.4 agent: Homebrew tap, Scoop bucket, winget manifest, AUR package, updated by the release.
-- [ ] T3.5 user: Open VSX namespace verified (EclipseFdn/open-vsx.org#16010), then the agent moves it to trusted
-      publishing and the user deletes `OVSX_PAT`.
+- [ ] T3.5 Open VSX namespace verified (EclipseFdn/open-vsx.org#16010, done 2026-11-20); release.yml publishes with
+      trusted publishing once the secret is gone (done). Left, user: register the trusted publisher on open-vsx.org
+      (nuclearlang/lang, release.yml), delete `OVSX_PAT`.
 - [ ] T3.6 agent: the pages that answer the questions people ask an AI (R2.2).
 - [ ] T3.7 agent: signing and provenance of the release archives (cosign or minisign, GitHub artifact
       attestations, an SBOM per archive); user: Apple Developer and a Windows code-signing certificate (paid).

@@ -28,10 +28,11 @@ The pending work of the installers, the release and the set-up of the AI service
   Linux, macOS and Windows and a one-command installer. They work once a tag `v*` exists. Left: the first release
   tag `v0.1.0`; `release.yml` never ran, and the public one-line installer fails without a release.
 - **The extension in the stores.** The job `marketplaces` of `release.yml` publishes the `.vsix`
-  ([the runbook](../06-runbooks/release.md)); v0.1.15 published 0.78.0 on the Visual Studio Marketplace. Left: Open VSX
-  publishes with the secret `OVSX_PAT` until its namespace is verified (asked in EclipseFdn/open-vsx.org#16010; once
-  approved, remove the Open VSX administrator from the Marketplace publisher's Members, register the trusted publisher
-  and delete the secret).
+  ([the runbook](../06-runbooks/release.md)); both stores have 0.86.0. The Open VSX namespace `nuclearlang` is verified
+  (EclipseFdn/open-vsx.org#16010, 2026-11-20); the job publishes with Trusted Publishing as soon as `OVSX_PAT` is gone.
+  Left, for the user: register the trusted publisher on open-vsx.org (the namespace's settings: GitHub, repository
+  nuclearlang/lang, workflow release.yml), delete the secret `OVSX_PAT`, and remove the Open VSX administrator from the
+  Marketplace publisher's Members.
 - **The AI services built into the installer** (ADR-installer-0002; [the guide](../08-guides/ai-setup.md)). Left:
   - Android Studio has no wizard (`nuclear-builder setup`).
 - **Local models on standby** ([ADR-platform-0013](../../../docs/03-adr/0013-local-models-on-standby.md)): the

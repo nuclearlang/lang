@@ -41,9 +41,9 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
    by hand (`workflow_dispatch`).
 4. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;
    the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no
-   environment) and on Open VSX (namespace `nuclearlang`: the secret
-   `OVSX_PAT`, a token scoped to the namespace with *Publishing only*; without it, Trusted Publishing, which Open VSX
-   lets register only once the namespace is verified). The stores read the `version` of
+   environment) and on Open VSX (namespace `nuclearlang`, verified: Trusted Publishing with the trusted publisher
+   nuclearlang/lang, `release.yml`, registered on open-vsx.org; the secret `OVSX_PAT`, a token scoped to the namespace
+   with *Publishing only*, is used instead only while it exists). The stores read the `version` of
    `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not
    stop the GitHub release.
 5. The public one-liners download from that release: without a release they fail with a clear error.
