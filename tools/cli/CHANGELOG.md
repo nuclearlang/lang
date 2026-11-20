@@ -12,6 +12,9 @@ All notable changes to the `nuclear` command (its framework commands too) are wr
 
 ## Unreleased
 
+- Security (spec 018): a name given to `make` or `gen` that leaves the project (`/`, `..`) is refused before anything
+  is written; each argument after `--` is one shell word; on Windows every value is quoted for `cmd` (`"`, `%`, `&`
+  can no longer end it or start another command).
 - The update question is one key, `[Y]es / [n]o / [l]ater` (a day): no key in 15 s goes on, never inside `make`, an
   npm script or under `sudo`; the check falls back to `wget`; an update keeps the choices of the last install.
 

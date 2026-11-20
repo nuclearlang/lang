@@ -181,7 +181,8 @@
           "nuclear.server.path": {
             "type": "string",
             "default": "",
-            "markdownDescription": "%nuclear.server.path.md%"
+            "markdownDescription": "%nuclear.server.path.md%",
+            "scope": "machine"
           },
           "nuclear.trace.server": {
             "type": "string",
@@ -283,12 +284,14 @@
           "nuclear.ai.mcpCommand": {
             "type": "string",
             "default": "nuclear-mcp",
-            "description": "%nuclear.ai.mcpCommand.desc%"
+            "description": "%nuclear.ai.mcpCommand.desc%",
+            "scope": "machine"
           },
           "nuclear.ai.graphCommand": {
             "type": "string",
             "default": "nuclear-graph",
-            "description": "%nuclear.ai.graphCommand.desc%"
+            "description": "%nuclear.ai.graphCommand.desc%",
+            "scope": "machine"
           },
           "nuclear.ai.retry.attempts": {
             "type": "number",
@@ -312,7 +315,8 @@
           "nuclear.ai.claude.command": {
             "type": "string",
             "default": "claude",
-            "description": "%nuclear.ai.claude.command.desc%"
+            "description": "%nuclear.ai.claude.command.desc%",
+            "scope": "machine"
           },
           "nuclear.ai.codex.enabled": {
             "type": "boolean",
@@ -322,7 +326,8 @@
           "nuclear.ai.codex.command": {
             "type": "string",
             "default": "codex",
-            "description": "%nuclear.ai.codex.command.desc%"
+            "description": "%nuclear.ai.codex.command.desc%",
+            "scope": "machine"
           },
           "nuclear.ai.opencode.enabled": {
             "type": "boolean",
@@ -332,7 +337,8 @@
           "nuclear.ai.opencode.command": {
             "type": "string",
             "default": "opencode",
-            "description": "%nuclear.ai.opencode.command.desc%"
+            "description": "%nuclear.ai.opencode.command.desc%",
+            "scope": "machine"
           },
           "nuclear.ai.opencode.configFile": {
             "type": "string",
@@ -347,7 +353,8 @@
           "nuclear.ai.github.command": {
             "type": "string",
             "default": "gh",
-            "description": "%nuclear.ai.github.command.desc%"
+            "description": "%nuclear.ai.github.command.desc%",
+            "scope": "machine"
           },
           "nuclear.ai.jira.site": {
             "type": "string",
@@ -2291,5 +2298,11 @@
     "react-dom": "19.2.9",
     "typescript": "5.5.4"
   },
-  "l10n": "./l10n"
+  "l10n": "./l10n",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Nuclear runs the language server and nuclear build on the project's files: it waits until the folder is trusted."
+    }
+  }
 }

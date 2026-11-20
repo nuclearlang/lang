@@ -497,8 +497,22 @@ pub enum Wrote {
     Kept,
 }
 
+/// A generated file stays inside the project: a name with `/`, `..` or a root (`make controller x ../../evil`, an
+/// agent's arguments through the MCP server) is refused before anything is written (spec 018 M7).
+pub fn inside(rel: &Path) -> std::io::Result<()> {
+    use std::path::Component;
+    if rel.components().all(|c| matches!(c, Component::Normal(_) | Component::CurDir)) {
+        return Ok(());
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::InvalidInput,
+        format!("'{}' leaves the project: a name is letters, digits and _", rel.display()),
+    ))
+}
+
 /// Writes the files under `root`; an existing file is kept (generators never overwrite code).
 pub fn write(root: &Path, files: &Files) -> std::io::Result<Vec<(Wrote, PathBuf)>> {
+    files.iter().try_for_each(|(rel, _)| inside(rel))?;
     let mut report = Vec::new();
     for (rel, text) in files {
         let p = root.join(rel);
@@ -599,5 +613,21 @@ mod tests {
 
     fn nuclear_syntax_check(text: &str) -> Vec<String> {
         nuclear_transpile::check(text, None).iter().map(|d| d.message.clone()).collect()
+    }
+}
+
+#[cfg(test)]
+mod inside_tests {
+    use super::*;
+
+    #[test]
+    fn a_name_never_leaves_the_project() {
+        assert!(inside(Path::new("components/tasks/api/tasks_controller.nuc")).is_ok());
+        assert!(inside(Path::new("components/tasks/api/../../../evil.nuc")).is_err());
+        assert!(inside(Path::new("/etc/evil.nuc")).is_err());
+        let files: Files = vec![(PathBuf::from("a.nuc"), String::new()), (PathBuf::from("../b.nuc"), String::new())].into_iter().collect();
+        let dir = std::env::temp_dir().join(format!("nuclear-inside-{}", std::process::id()));
+        assert!(write(&dir, &files).is_err());
+        assert!(!dir.join("a.nuc").exists(), "nothing is written when one file would leave the project");
     }
 }

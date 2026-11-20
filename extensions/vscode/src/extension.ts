@@ -11,7 +11,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { appendLog } from '../../tools/nuclear-device-manager/src/launch-log';
-import { serverCandidates } from './toolchains';
+import { nuclearCommand, serverCandidates, taskEnv } from './toolchains';
 import { l10n, registerLanguage } from './i18n';
 import { activateDebug } from './debug';
 import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
@@ -165,8 +165,8 @@ function findSynapsis(root?: string): Synapsis | undefined {
         return {
           root: folder,
           app: resolved.cwd ?? resolved.webRoot,
-          command: task.command,
-          env: task.options?.env ?? {},
+          command: nuclearCommand(),
+          env: taskEnv(task.options?.env),
           launch: resolved,
         };
       } catch {

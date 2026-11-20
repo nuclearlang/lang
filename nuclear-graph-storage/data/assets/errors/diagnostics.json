@@ -1035,6 +1035,43 @@
    ]
   },
   {
+   "id": "error:N0023",
+   "type": "diagnostic",
+   "title": "N0023 — nesting too deep",
+   "summary": "Nesting too deep: more than 200 levels of expressions, blocks or types; the rest of the file is not read (the parser stops instead of overflowing its stack)",
+   "body": [
+    "`N0023` · parser · error",
+    "",
+    "**What it is.** Nesting too deep: more than 200 levels of expressions, blocks or types; the rest of the file is not read (the parser stops instead of overflowing its stack)",
+    "",
+    "**Why.** Expressions, blocks or types are nested more than 200 levels: the rest of the file is not read. Name the inner parts (a variable, a function) so each line stays shallow.",
+    "",
+    "**Example.** `x = ((((…1…))))` 2,000 times",
+    "",
+    "**Fix.** name the inner parts: a variable, a function"
+   ],
+   "keys": [
+    "n0023",
+    "nesting too deep"
+   ],
+   "sources": [
+    "nuclearlang/docs/07-reference/diagnostics.md",
+    "nuclearlang/crates/nuclear-diag/src/lib.rs"
+   ],
+   "meta": {
+    "code": "N0023",
+    "family": "syntax",
+    "severity": "error"
+   },
+   "data": {
+    "stage": "parser",
+    "title": "nesting too deep",
+    "what": "Nesting too deep: more than 200 levels of expressions, blocks or types; the rest of the file is not read (the parser stops instead of overflowing its stack)",
+    "fix": "name the inner parts: a variable, a function",
+    "example": "`x = ((((…1…))))` 2,000 times"
+   }
+  },
+  {
    "id": "error:N0102",
    "type": "diagnostic",
    "title": "N0102 — duplicate declaration",

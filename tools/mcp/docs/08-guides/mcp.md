@@ -153,6 +153,7 @@ not declare, answers where to write it.
 | the graph refuses the client | `nuclear-graph connect mcp --scopes read,write`, with the graph running |
 | `... is not inside a Synapsis project (no config.nuc)` | give the project's folder: `nuclear new <name>` creates one |
 | `'<command>' is not allowed here` | the `nuclear_project` tool runs only the commands of its list |
+| `'--' is not allowed here` | what follows `--` goes to the target's own tools (a port, a host): an agent never passes it through the MCP server |
 | `no run log yet in ...` | the app never ran in that project: run it once (`nuclear run`, or ▷ Run / ▭ Device in the editor), then call `project_run_log` again |
 | a generator refuses | its message says what is missing: [when a generator refuses](../../../../nuclear-synapsis-framework/docs/08-guides/generators.md#4-when-a-generator-refuses) |
 

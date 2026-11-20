@@ -767,7 +767,8 @@ fn toolchain_command(
             command.push_str(&fill_command(dialect, &local.replace("{{path}}", &shell_quote(&path.display().to_string())), vars)?);
         }
     }
-    let extra = passthrough(rest);
+    // each argument after `--` is one word: never a second command (spec 018 M4)
+    let extra: Vec<String> = passthrough(rest).iter().map(|a| shell_quote(a)).collect();
     if !extra.is_empty() {
         command.push(' ');
         command.push_str(&extra.join(" "));
@@ -885,7 +886,39 @@ fn package_command(root: &Path, what: &str, rest: &[String]) -> Result<(), Strin
 
 /// `value` as one word of the system's shell.
 fn shell_quote(value: &str) -> String {
-    if cfg!(windows) { format!("\"{}\"", value.replace('"', "\\\"")) } else { format!("'{}'", value.replace('\'', "'\\''")) }
+    if cfg!(windows) { cmd_quote(value) } else { format!("'{}'", value.replace('\'', "'\\''")) }
+}
+
+/// One word for `cmd /C` (spec 018 M5): quoted as the program reads its arguments (backslashes before a quote and at
+/// the end doubled), then every character cmd itself would act on (`"`, `%`, `&`, `|`...) escaped with `^`, so no
+/// value can end the word, expand a variable or start another command.
+fn cmd_quote(value: &str) -> String {
+    let mut argv = String::from("\"");
+    let mut slashes = 0;
+    for c in value.chars() {
+        match c {
+            '\\' => slashes += 1,
+            '"' => {
+                argv.push_str(&"\\".repeat(slashes * 2 + 1));
+                argv.push('"');
+                slashes = 0;
+            }
+            _ => {
+                argv.push_str(&"\\".repeat(slashes));
+                argv.push(c);
+                slashes = 0;
+            }
+        }
+    }
+    argv.push_str(&"\\".repeat(slashes * 2));
+    argv.push('"');
+    argv.chars().fold(String::new(), |mut out, c| {
+        if "()%!^\"<>&|".contains(c) {
+            out.push('^');
+        }
+        out.push(c);
+        out
+    })
 }
 
 /// `nuclear migrate [make "<message>" | up | down]` (ADR-backend-0001): the dialect's `migrate_make` / `migrate` /
@@ -2024,8 +2057,11 @@ mod tests {
 
     #[test]
     fn a_placeholder_is_one_shell_word() {
+        assert_eq!(super::cmd_quote(r#"say "hi""#), r#"^"say \^"hi\^"^""#);
+        assert_eq!(super::cmd_quote(r#"a"&calc&"%PATH%"#), r#"^"a\^"^&calc^&\^"^%PATH^%^""#);
+        assert_eq!(super::cmd_quote(r"C:\dir\"), r#"^"C:\dir\\^""#);
         if cfg!(windows) {
-            assert_eq!(super::shell_quote(r#"say "hi""#), r#""say \"hi\"""#);
+            assert_eq!(super::shell_quote("x"), super::cmd_quote("x"));
         } else {
             assert_eq!(super::shell_quote("it's done"), r"'it'\''s done'");
             let out = std::process::Command::new("sh").args(["-c", &format!("printf %s {}", super::shell_quote("a 'b' $c"))]).output().unwrap();

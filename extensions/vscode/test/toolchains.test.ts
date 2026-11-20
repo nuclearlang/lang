@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import * as path from 'node:path';
 import test from 'node:test';
-import { dartFlutterRoot, onPath, ownPaths, parseDoctor, probe, serverCandidates, toolchainEnv } from '../src/toolchains';
+import { dartFlutterRoot, nuclearCommand, onPath, ownPaths, parseDoctor, probe, serverCandidates, taskEnv, toolchainEnv } from '../src/toolchains';
 
 const ROOT = '/opt/nuc';
 const base = { NUCLEAR_INSTALL: ROOT, PATH: '/usr/bin:/bin' };
@@ -80,4 +80,13 @@ test("the Dart extension's Flutter is used: no second Flutter is offered", () =>
   assert.equal(dartFlutterRoot('/sdk/flutter', undefined, has, 'darwin'), '/sdk/flutter');
   assert.equal(dartFlutterRoot('', ['/gone', '/b/flutter'], has, 'darwin'), '/b/flutter');
   assert.equal(dartFlutterRoot(undefined, ['/gone'], has, 'darwin'), undefined);
+});
+
+// spec 018 M2: a cloned project never chooses the program or the variables the extension runs
+test('the extension runs the installed nuclear and only a toolchain variable from a project', () => {
+  assert.equal(nuclearCommand(base, 'linux', has(path.join(ROOT, 'bin', 'nuclear'))), path.join(ROOT, 'bin', 'nuclear'));
+  assert.equal(nuclearCommand(base, 'linux', has('/usr/bin/nuclear')), path.join('/usr/bin', 'nuclear'));
+  assert.equal(nuclearCommand(base, 'linux', () => false), 'nuclear');
+  assert.deepEqual(taskEnv({ FLUTTER_ROOT: '/f', LD_PRELOAD: '/evil.so', NODE_OPTIONS: '--require /evil.js' }), { FLUTTER_ROOT: '/f' });
+  assert.deepEqual(taskEnv(undefined), {});
 });

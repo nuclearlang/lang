@@ -179,14 +179,14 @@ State: **handled** (code exists and was tried), **written** (code exists, never 
 
 | ID | Case | Expected | State |
 |---|---|---|---|
-| M1 | A cloned repository sets `nuclear.server.path` in `.vscode/settings.json` | ignored: the setting is machine scope, restricted in an untrusted workspace | **gap** |
-| M2 | A committed `build/*.code-workspace` names the command and environment the extension runs on save | the extension runs only the installed `nuclear`, never a command or environment from the project | **gap** |
+| M1 | A cloned repository sets `nuclear.server.path` in `.vscode/settings.json` | ignored: the setting is machine scope, restricted in an untrusted workspace | handled (machine scope; untrusted folders wait) |
+| M2 | A committed `build/*.code-workspace` names the command and environment the extension runs on save | the extension runs only the installed `nuclear`, never a command or environment from the project | handled (`nuclearCommand`, `taskEnv`, a test) |
 | M3 | A cloned project's own dialect, kind or `[toolchain]` runs commands on `build`/`run`/`install` | a project-local dialect is asked for once per project; `build` never runs a shell | **gap** |
-| M4 | Arguments after `--` (from the MCP server's `nuclear_project`) pasted into a shell | every argument quoted; the MCP refuses `--` | **gap** |
-| M5 | Windows quoting of `nuclear add` package names and messages (`"`, `%`, `&`) | arguments passed without a shell, or refused | **gap** |
+| M4 | Arguments after `--` (from the MCP server's `nuclear_project`) pasted into a shell | every argument quoted; the MCP refuses `--` | handled (tests in the CLI and the MCP server) |
+| M5 | Windows quoting of `nuclear add` package names and messages (`"`, `%`, `&`) | quoted for `cmd` (argv rules, then `^` before every character cmd acts on) | handled (unit test; not run on Windows) |
 | M6 | Config values (`app(description = ...)`) pasted raw into JSON, TOML and HTML templates | escaped for the target format | **gap** |
-| M7 | `nuclear make` / `gen` names with `/` or `..` write outside the project | refused: a name is `^[A-Za-z][A-Za-z0-9_]*$` | **gap** (confirmed) |
-| M8 | Deep nesting (2,000 parentheses) overflows the parser's stack: `nuclear check` and the LSP abort | a depth limit and a diagnostic | **gap** (confirmed) |
+| M7 | `nuclear make` / `gen` names with `/` or `..` write outside the project | refused before anything is written (`scaffold::inside`, every generator) | handled (test) |
+| M8 | Deep nesting (2,000 parentheses) overflows the parser's stack: `nuclear check` and the LSP abort | N0023 past 200 levels | handled (test on a 2 MB stack) |
 | M9 | The Nuclear Developer (7879) has no token, no `Origin` and no `Host` check | the same as the graph and Chat: a token, `Origin` refused, `Host` checked | **gap** |
 | M10 | The checksum comes from the same release as the archive; nothing is signed | a signature verified with a key in the installer | **gap** |
 | M11 | `nuclear update` pipes the site's installer into a shell | the installer of the release, verified; PowerShell by its full path | **gap** |

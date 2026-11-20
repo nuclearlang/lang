@@ -4660,6 +4660,25 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.58104c",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Security (spec 018): the extension runs only the installed `nuclear`, never a command or a variable a project's `build/*.code-workspace` names (only `FLUTTER_ROOT`, `JAVA_HOME`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` are taken from it); the settings that name a program (`nuclear.server.path`, the AI clients' commands) are of the machine, never of a repository's `.vscode/settings.json`; in an untrusted folder the extension waits for it to be trusted.",
+    "- Without NuclearLang on the machine (the extension from a store), the extension says NuclearLang is not installed and offers *Install NuclearLang* (the public installer in a terminal), instead of a `cargo build` of a source tree. A test holds that no message names one.",
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them. At start the extension compares its version with the installed NuclearLang (`.version`, and `ai/.version`): an extension the store updated alone offers *Update NuclearLang* (`nuclear update`, the newest release whole), an older one offers the extension of the installed release, AI services of another version offer the update; once per pair of versions, nothing blocked, nothing asked on a build from source."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.643206",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4986,24 +5005,6 @@
    "body": [
     "- 0.47.0: right-click menu in the Nuclear workspace file tree: New File/Folder, Rename and Delete (to the trash), and *New with Synapsis* (`nuclear make`/`gen`) limited to what the clicked folder and the platform allow; build/, node_modules/ and the files that make a project are protected.",
     "- 0.48.0: the set-up of the AI services (ADR-installer-0002). *Nuclear: Set Up the AI Services* is a wizard in four steps: this machine (processor, memory, GPU, disk) and where the agents run (here, or remote agents only); the profile (`lite`, `medium`, `hard`: what each downloads, the memory it wants, what works and what does not, one suggested for the machine); what it needs (NuclearLang, uv, Ollama: found by itself once installed, or installed in a terminal); the installation with its progress and *Try again*. Offered once on a machine never set up; *Set-up…* in *Settings and integrations*, whose Start and Restart now go through the system's services. `nuclear-builder setup [--profile <id>] [--yes] | --status | --remove` is the same set-up in a terminal. The services start at every login (systemd user units, launch agents, the Startup folder). The Builder's and the editor's default models are the ones of the machine's profile (`~/.config/nuclearlang/ai.env`)."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.f278e0",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- Without NuclearLang on the machine (the extension from a store), the extension says NuclearLang is not installed and offers *Install NuclearLang* (the public installer in a terminal), instead of a `cargo build` of a source tree. A test holds that no message names one.",
-    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them. At start the extension compares its version with the installed NuclearLang (`.version`, and `ai/.version`): an extension the store updated alone offers *Update NuclearLang* (`nuclear update`, the newest release whole), an older one offers the extension of the installed release, AI services of another version offer the update; once per pair of versions, nothing blocked, nothing asked on a build from source."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"

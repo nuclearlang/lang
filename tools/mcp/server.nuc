@@ -217,6 +217,9 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
     if not (command in PROJECT_COMMANDS)
       return "'${command}' is not allowed here (allowed: ${PROJECT_COMMANDS.sorted().join(", ")})"
     given: string[] = args ?? []
+    // what follows `--` goes to the target's own tools (a port, a host): an agent never chooses those (spec 018 M4)
+    if "--" in given
+      return "'--' is not allowed here: the arguments are Nuclear's own, the target's tools are not reached from the MCP server"
     ~tools.project(project, [command, ...given])
 
   // Where the app is slow (Nuclear Monitor): the hot spots (slow, async calls in a loop, many connections, much

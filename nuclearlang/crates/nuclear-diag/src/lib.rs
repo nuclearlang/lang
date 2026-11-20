@@ -137,6 +137,11 @@ pub mod codes {
         title: "habit of another language",
         explanation: "A form of TypeScript, Dart, Python or Java (`{ }` blocks, `await`, `const x =`, `new`, `class`, `def`, `elif`, `None`, `#` comments, the return type first). The message gives the NuclearLang form and, when it is exact, a fix.",
     };
+    pub const TOO_DEEP: Code = Code {
+        id: "N0023",
+        title: "nesting too deep",
+        explanation: "Expressions, blocks or types are nested more than 200 levels: the rest of the file is not read. Name the inner parts (a variable, a function) so each line stays shallow.",
+    };
     pub const DUPLICATE_DECL: Code = Code {
         id: "N0102",
         title: "duplicate declaration",
@@ -410,6 +415,7 @@ pub mod codes {
         VOID_ONE_LINER,
         COMMENT_LINE,
         FOREIGN_HABIT,
+        TOO_DEEP,
         DUPLICATE_DECL,
         BRANCHING_VALUE,
         ENUM_SYNTAX,

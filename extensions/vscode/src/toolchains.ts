@@ -118,6 +118,25 @@ export function parseDoctor(text: string, paths: Paths): Status[] | null {
 }
 
 /**
+ * The `nuclear` the extension runs: the installer's, then the PATH, else the bare name. Never a command a project
+ * names in its files: a cloned repository's `build/*.code-workspace` could name any program (spec 018 M2).
+ */
+export function nuclearCommand(env: NodeJS.ProcessEnv = process.env, platform = process.platform, exists: (file: string) => boolean = fs.existsSync): string {
+  const exe = platform === 'win32' ? 'nuclear.exe' : 'nuclear';
+  const key = Object.keys(env).find((k) => k.toUpperCase() === 'PATH') ?? 'PATH';
+  const sep = platform === 'win32' ? ';' : ':';
+  const onPath = (toolEnv(env, undefined, platform)[key] ?? '').split(sep).filter(Boolean).map((d) => path.join(d, exe));
+  return [path.join(installDir(env), 'bin', exe), ...onPath].find((c) => exists(c)) ?? 'nuclear';
+}
+
+/** The variables of a project's build task the extension passes on: only the toolchains' own (`FLUTTER_ROOT`), never
+ * one that loads code into a process (`LD_PRELOAD`, `NODE_OPTIONS`...) from a cloned repository (spec 018 M2). */
+export function taskEnv(env: Record<string, unknown> | undefined): Record<string, string> {
+  const allowed = ['FLUTTER_ROOT', 'JAVA_HOME', 'ANDROID_HOME', 'ANDROID_SDK_ROOT'];
+  return Object.fromEntries(Object.entries(env ?? {}).filter(([k, v]) => allowed.includes(k) && typeof v === 'string')) as Record<string, string>;
+}
+
+/**
  * Where the language server may be, in order: the installer's (this system's own build) → the PATH → the one bundled in
  * the extension → a build of the repository (development). The bundled one is a Linux x86_64 build: anywhere else it
  * cannot run (spawn ENOEXEC on a Mac), so it is not a candidate there.

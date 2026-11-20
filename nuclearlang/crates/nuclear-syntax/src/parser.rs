@@ -60,11 +60,16 @@ struct Parser<'s> {
     diags: Vec<Diagnostic>,
     /// Parsing a cascade section: a `..` line belongs to the outer cascade, not to this section.
     in_cascade: bool,
+    /// How deep the expressions, blocks and types being read are nested (`enter`).
+    depth: usize,
 }
+
+/// Deeper than this, the parser stops instead of overflowing its stack (the language server's threads included).
+const MAX_DEPTH: usize = 200;
 
 impl<'s> Parser<'s> {
     fn new(src: &'s str, toks: Vec<Token>) -> Self {
-        Parser { src, toks, pos: 0, diags: Vec::new(), in_cascade: false }
+        Parser { src, toks, pos: 0, diags: Vec::new(), in_cascade: false, depth: 0 }
     }
 
     // ---------- token helpers ----------
@@ -193,6 +198,20 @@ impl<'s> Parser<'s> {
         while self.at_newline() {
             self.bump();
         }
+    }
+
+    /// One level deeper; past `MAX_DEPTH` the error is reported once and the rest of the file is skipped (`false`).
+    fn enter(&mut self) -> bool {
+        if self.depth >= MAX_DEPTH {
+            if !self.at_eof() {
+                let span = self.span();
+                self.report(codes::TOO_DEEP, span, format!("nested more than {MAX_DEPTH} levels: the rest of the file is not read"));
+                self.pos = self.toks.len() - 1;
+            }
+            return false;
+        }
+        self.depth += 1;
+        true
     }
 
     fn report(&mut self, code: Code, span: Span, msg: impl Into<String>) {
@@ -840,6 +859,16 @@ impl<'s> Parser<'s> {
 
     /// `NEWLINE INDENT stmts DEDENT`, with the NEWLINE already consumed.
     fn block(&mut self) -> Block {
+        if !self.enter() {
+            let at = self.span().start;
+            return Block { span: Span::new(at, at), stmts: Vec::new() };
+        }
+        let b = self.block_inner();
+        self.depth -= 1;
+        b
+    }
+
+    fn block_inner(&mut self) -> Block {
         let start = self.span().start;
         let mut stmts = Vec::new();
         if !matches!(self.peek(), TokenKind::Indent) {
@@ -1261,6 +1290,15 @@ impl<'s> Parser<'s> {
     // ---------- expressions ----------
 
     fn expr(&mut self) -> Option<Expr> {
+        if !self.enter() {
+            return None;
+        }
+        let r = self.expr_inner();
+        self.depth -= 1;
+        r
+    }
+
+    fn expr_inner(&mut self) -> Option<Expr> {
         if let Some(l) = self.try_lambda() {
             return l;
         }
@@ -1412,6 +1450,15 @@ impl<'s> Parser<'s> {
     }
 
     fn not_expr(&mut self) -> Option<Expr> {
+        if !self.enter() {
+            return None;
+        }
+        let r = self.not_expr_inner();
+        self.depth -= 1;
+        r
+    }
+
+    fn not_expr_inner(&mut self) -> Option<Expr> {
         if self.at_kw(Keyword::Not) {
             let start = self.bump().span.start;
             let expr = self.not_expr()?;
@@ -1546,6 +1593,15 @@ impl<'s> Parser<'s> {
     }
 
     fn unary(&mut self) -> Option<Expr> {
+        if !self.enter() {
+            return None;
+        }
+        let r = self.unary_inner();
+        self.depth -= 1;
+        r
+    }
+
+    fn unary_inner(&mut self) -> Option<Expr> {
         let op = match self.peek() {
             TokenKind::Punct(Punct::Minus) => UnaryOp::Neg,
             TokenKind::Punct(Punct::Tilde) => UnaryOp::Await,
@@ -1911,6 +1967,15 @@ impl<'s> Parser<'s> {
     }
 
     fn ty(&mut self) -> Option<Type> {
+        if !self.enter() {
+            return None;
+        }
+        let r = self.ty_inner();
+        self.depth -= 1;
+        r
+    }
+
+    fn ty_inner(&mut self) -> Option<Type> {
         let first = self.postfix_type()?;
         if !self.at_punct(Punct::Pipe) {
             return Some(first);

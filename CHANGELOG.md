@@ -4,6 +4,8 @@ All notable changes to nuclear are written here; versions follow [Semantic Versi
 
 ## Unreleased
 
+- Nesting deeper than 200 levels (expressions, blocks, types) is the error N0023, instead of a stack overflow that
+  aborted `nuclear check` and the language server on one file (spec 018 M8).
 - Any package of the target is used through Nuclear (ADR-lang-0008). A name called like its package is imported by name
   (`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`; before, as the package itself); `index.json` has
   `defaults`, a package's default export (`import dayjs from 'dayjs'`), which `gen.js` now describes; `config.nuc`

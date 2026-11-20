@@ -271,40 +271,16 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.10aaab",
+   "id": "doc:CHANGELOG.md#unreleased.4af7fd",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- `nuclear_transpile::map::shape`: a declaration of a project as its source writes it (its file, its header's parameters, each method's parameters, return type and whether it awaits), which `nuclear gen usecase` reads; the `usecase` generator and whole-member merges in `spec/dialects.md` (ADR-codegen-0001).",
-    "- `docs/ai/mcp.md`: the MCP server's page (how to add it to each client, the order a model works in, every tool by group, what to do when one fails); the Builder page links to it.",
-    "- ADR-developer-0001: a strategy for each kind of request (a whole system, one screen, a rename, a failing test...), as rows of the Smart Graph that the analyst and the Builder follow; `docs/ai/loop.md` (the strategy of a request) and `docs/ai/mcp.md` (`graph_strategy`); the skill names it."
-   ],
-   "sources": [
-    "CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "01-introduction",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:CHANGELOG.md#unreleased.203dfc",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "(`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`; before, as the package itself); `index.json` has `defaults`, a package's default export (`import dayjs from 'dayjs'`), which `gen.js` now describes; `config.nuc` takes a name that is not an identifier (`\"date-fns@^4.1.0\"`);…",
-   "body": [
-    "- Any package of the target is used through Nuclear (ADR-lang-0008). A name called like its package is imported by name",
-    "  (`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`; before, as the package itself); `index.json` has",
-    "  `defaults`, a package's default export (`import dayjs from 'dayjs'`), which `gen.js` now describes; `config.nuc`",
-    "  takes a name that is not an identifier (`\"date-fns@^4.1.0\"`); `[project.manifest.advice]`; `nuclear defs` reads the",
-    "  packages of the project it runs in; `gen.py --distribution` and `gen.js --package`; `defs.dart` skips the library of",
-    "  a plugin the app has not enabled (it failed every `flutter add` there). A member of a module (`np.max(list)` after",
-    "  `use numpy as np`) or of a library's function or object (`lodash.map(...)`) is the library's own: it was rewritten",
-    "  as the member of Nuclear's library with that name (`_max(np)`).",
-    "- First public version.",
-    "- `STATUS.md` holds only what is left to do (half done, untested, pending) and keeps no log: what a task did is written in the documentation of its area, and no file is made to hold history (`AGENTS.md` rule 6, `docs/context/workflow.md`); the start hook (`tools/context/check.sh session`) warns when the file is over 40 KB."
+    "- `STATUS.md` holds only what is left to do (half done, untested, pending) and keeps no log: what a task did is written in the documentation of its area, and no file is made to hold history (`AGENTS.md` rule 6, `docs/context/workflow.md`); the start hook (`tools/context/check.sh session`) warns when the file is over 40 KB.",
+    "- `nuclear agent hook` checks a project with its own type definitions (`<project>/defs`), as `nuclear check` does: it reported every name of them as an error after each edit.",
+    "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
+    "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring.",
+    "- ADR-graph-0001: the Smart Graph is a library of typed, linked, versioned rows; the definition of done includes the knowledge base (`nuclear-graph knowledge build | check`, `ingest`) and the end-of-turn hook (`tools/context/check.sh stop`) runs the check."
    ],
    "sources": [
     "CHANGELOG.md"
@@ -350,16 +326,42 @@
    }
   },
   {
-   "id": "doc:CHANGELOG.md#unreleased.bf5130",
+   "id": "doc:CHANGELOG.md#unreleased.c24c65",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "aborted `nuclear check` and the language server on one file (spec 018 M8).",
+   "body": [
+    "- Nesting deeper than 200 levels (expressions, blocks, types) is the error N0023, instead of a stack overflow that",
+    "  aborted `nuclear check` and the language server on one file (spec 018 M8).",
+    "- Any package of the target is used through Nuclear (ADR-lang-0008). A name called like its package is imported by name",
+    "  (`from tqdm import tqdm`, `import { nanoid } from 'nanoid'`; before, as the package itself); `index.json` has",
+    "  `defaults`, a package's default export (`import dayjs from 'dayjs'`), which `gen.js` now describes; `config.nuc`",
+    "  takes a name that is not an identifier (`\"date-fns@^4.1.0\"`); `[project.manifest.advice]`; `nuclear defs` reads the",
+    "  packages of the project it runs in; `gen.py --distribution` and `gen.js --package`; `defs.dart` skips the library of",
+    "  a plugin the app has not enabled (it failed every `flutter add` there). A member of a module (`np.max(list)` after",
+    "  `use numpy as np`) or of a library's function or object (`lodash.map(...)`) is the library's own: it was rewritten",
+    "  as the member of Nuclear's library with that name (`_max(np)`).",
+    "- First public version."
+   ],
+   "sources": [
+    "CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "01-introduction",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:CHANGELOG.md#unreleased.c6af65",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- `nuclear agent hook` checks a project with its own type definitions (`<project>/defs`), as `nuclear check` does: it reported every name of them as an error after each edit.",
-    "- The `try` template gets `catch_used` (the block names the caught value): the `python` dialect writes `except Exception:` when it does not, since a name nothing reads is an error of pyright's strict mode (`spec/python.md` §3.12).",
-    "- ADR-graph-0002: the planner of the Smart Graph runs an exact query only when its question is closer than the closest card; ADR-graph-0001: the graph's search is exact; ADR-installer-0002: a service that starts at login waits for the keyring.",
-    "- ADR-graph-0001: the Smart Graph is a library of typed, linked, versioned rows; the definition of done includes the knowledge base (`nuclear-graph knowledge build | check`, `ingest`) and the end-of-turn hook (`tools/context/check.sh stop`) runs the check.",
-    "- `[[generators]]` and `[gen]` in a platform's contract (`Dialect.generators`, `gen_values`); a facade alias named like its use case's field gets the field `<name>Instance` (ADR-codegen-0001)."
+    "- `[[generators]]` and `[gen]` in a platform's contract (`Dialect.generators`, `gen_values`); a facade alias named like its use case's field gets the field `<name>Instance` (ADR-codegen-0001).",
+    "- `nuclear_transpile::map::shape`: a declaration of a project as its source writes it (its file, its header's parameters, each method's parameters, return type and whether it awaits), which `nuclear gen usecase` reads; the `usecase` generator and whole-member merges in `spec/dialects.md` (ADR-codegen-0001).",
+    "- `docs/ai/mcp.md`: the MCP server's page (how to add it to each client, the order a model works in, every tool by group, what to do when one fails); the Builder page links to it.",
+    "- ADR-developer-0001: a strategy for each kind of request (a whole system, one screen, a rename, a failing test...), as rows of the Smart Graph that the analyst and the Builder follow; `docs/ai/loop.md` (the strategy of a request) and `docs/ai/mcp.md` (`graph_strategy`); the skill names it."
    ],
    "sources": [
     "CHANGELOG.md"

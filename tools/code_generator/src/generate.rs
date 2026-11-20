@@ -553,6 +553,7 @@ fn members(text: &str) -> Vec<Vec<&str>> {
 /// controller) that gets the members it does not have yet (an alias; a route with its decorator and its body), told
 /// by their head line. Returns what happened to each file.
 pub fn write(root: &Path, files: &[(PathBuf, String, bool)]) -> std::io::Result<Vec<(String, &'static str)>> {
+    files.iter().try_for_each(|(rel, _, _)| scaffold::inside(rel))?;
     let mut report = Vec::new();
     for (rel, text, merge) in files {
         let p = root.join(rel);

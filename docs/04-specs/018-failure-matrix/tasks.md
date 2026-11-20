@@ -24,8 +24,8 @@ related: [requirements.md, design.md]
 
 ## Phase 1b: security (group M), each fix with its test
 
-- [ ] M8 depth limit in the parser; M7 names checked in `make`/`gen`; M4/M5 no shell for arguments.
-- [ ] M1/M2 the extension: machine-scope server path, restricted configurations, no command from `build/`.
+- [x] M8 depth limit in the parser; M7 names checked in `make`/`gen`; M4/M5 arguments quoted, `--` refused by the MCP.
+- [x] M1/M2 the extension: machine-scope server path, restricted configurations, no command from `build/`.
 - [ ] M3 project-local dialects asked once; M6 escaping per target format; M9 the Developer's token and checks.
 - [ ] M10/M11 signed releases verified by the installers and by `nuclear update`; M12 actions pinned.
 

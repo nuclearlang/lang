@@ -320,3 +320,30 @@ fn a_decorator_after_the_last_member_says_where_it_goes() {
     assert_eq!(parsed.diagnostics.len(), 1, "{:#?}", parsed.diagnostics);
     assert!(parsed.diagnostics[0].message.contains("'@column' has no member below it"), "{}", parsed.diagnostics[0].message);
 }
+
+/// Spec 018 M8: nesting deep enough to overflow the stack is an error (N0023), never a crash, on a thread with the
+/// 2 MB stack the language server's threads get.
+#[test]
+fn deep_nesting_is_an_error_not_a_crash() {
+    let mut ifs = String::from("main()\n");
+    for i in 0..1000 {
+        ifs += &format!("{}if true\n", "  ".repeat(i + 1));
+    }
+    ifs += &format!("{}x = 1\n", "  ".repeat(1001));
+    let cases = [
+        format!("main()\n  x = {}1{}\n", "(".repeat(5000), ")".repeat(5000)),
+        format!("main()\n  x = {}1{}\n", "[".repeat(5000), "]".repeat(5000)),
+        format!("main()\n  x = {}1\n", "-".repeat(50000)),
+        format!("main()\n  x = {}true\n", "not ".repeat(20000)),
+        format!("main()\n  x: {}int{} = []\n", "List<".repeat(3000), ">".repeat(3000)),
+        format!("main()\n  x = {}1\n", "a => ".repeat(5000)),
+        ifs,
+    ];
+    let handle = std::thread::Builder::new()
+        .stack_size(2 * 1024 * 1024)
+        .spawn(move || cases.iter().map(|c| parse(c).diagnostics.iter().any(|d| d.code.id == "N0023")).collect::<Vec<_>>())
+        .unwrap();
+    assert_eq!(handle.join().expect("the parser overflowed its stack"), vec![true; 7]);
+    // ordinary nesting stays legal
+    assert!(parse("main()\n  x = ((((1))))\n").diagnostics.is_empty());
+}
