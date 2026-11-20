@@ -6718,6 +6718,562 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/018-failure-matrix/design.md#a-test-per-group.afe655",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Design — A test per group",
+   "summary": "server and their message checked.",
+   "body": [
+    "- **G (services):** each service killed, crash-looped, its store corrupted; the MCP tools called through the MCP",
+    "  server and their message checked.",
+    "- **I (permissions):** the installer and `nuclear update` under root; a read-only `HOME`."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/design.md#a-test-per-group.b56478",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Design — A test per group",
+   "summary": "platform, `nuclear check`; the services answer (`setup --status`); a reboot of the image (systemd) and the services are back.",
+   "body": [
+    "- **A (machine):** install from the mirror in each image/runner; `nuclear help start`, `nuclear new` of each",
+    "  platform, `nuclear check`; the services answer (`setup --status`); a reboot of the image (systemd) and the services",
+    "  are back. A12: a user created as `josé maría`. A16: the same run behind a proxy and with the network cut.",
+    "- **B (toolchains):** images with and without Flutter (PATH, fvm, snap where it runs), an old Flutter; `nuclear",
+    "  doctor`, `nuclear setup`, `nuclear build apk|web`, the backend and web paths unaffected.",
+    "- **C, H (editors, LSP):** the extension test opens a `.nuc`, waits for diagnostics, and for each case: no",
+    "  `nuclear-lsp`, an older one, a crashing one (a stub that exits), the PATH of a desktop launch; asserts the message",
+    "  and that no message names a path of the source tree.",
+    "- **D (versions):** N installed, then N+1 by the installer, by `nuclear update`, by the question answered \"y\";",
+    "  interrupt at every step with `timeout -s INT` and run again; the stuck states injected one by one; downgrade.",
+    "- **E (choices):** each option at the first install, then an upgrade: the options kept; a `make` target in a",
+    "  pseudo-terminal that calls `nuclear` with a newer release known: it does not block.",
+    "- **F (ports):** each port held before the set-up, then held only before a reboot; an older service on the port."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/design.md#one-harness-four-places",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Design — One harness, four places",
+   "summary": "One harness, four places",
+   "body": [
+    "| Place | Hosts | Cases |",
+    "|---|---|---|",
+    "| **Docker matrix** (CI, `installer/release/clean-machine/` grown to one image per distribution) | Debian, Ubuntu, Fedora (SELinux off), Arch, openSUSE, Alpine, NixOS; systemd and without it | A1, A3-A5, A12-A16, A18, B*, D*, E*, F*, G*, I* |",
+    "| **GitHub runners** (`installer-<os>.yml`, after each release and by hand) | `ubuntu-24.04-arm`, `macos-13` (Intel), `macos-14` (Apple silicon), `windows-latest`, `windows-11-arm` | A2, A7-A11, A17, C2, C7, C9, D3, D6 on Windows |",
+    "| **Editor tests** (`@vscode/test-electron` under `xvfb`, the extension against the installed `nuclear-lsp`) | VS Code stable and the oldest supported, VSCodium | C1-C6, C9, H* |",
+    "| **Manual pass** (a checklist in `installer/docs/06-runbooks/`, filled before a minor release) | a real desktop: reboot, keyring, Gatekeeper, SmartScreen, snap/flatpak editors, JetBrains, Zed, WSL2 | A6, A17, C5, C8, G5 |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/design.md#order",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Design — Order",
+   "summary": "The gaps that can strand a user come first (C4/H1, E4, E6, F2, I1, D6 on Windows, D7), each fixed with its test; then the harness grows group by group, and every case that passes moves from the table's *State* to handled.",
+   "body": [
+    "The gaps that can strand a user come first (C4/H1, E4, E6, F2, I1, D6 on Windows, D7), each fixed with its test;",
+    "then the harness grows group by group, and every case that passes moves from the table's *State* to **handled**."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/design.md#the-building-blocks",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Design — The building blocks",
+   "summary": "`version.sh`, as N+1; served with `NUCLEAR_DOWNLOAD`.",
+   "body": [
+    "- **Two releases in a mirror.** `package.sh` builds the archives of the tree as version N and, with",
+    "  `version.sh`, as N+1; served with `NUCLEAR_DOWNLOAD`. Every upgrade, downgrade and stuck-version case runs offline",
+    "  against it, so no test needs a published release.",
+    "- **A fake `HOME` with every XDG variable redirected** (the rule of the installer: never the real `HOME`).",
+    "- **Fault injection**, one helper per fault: hold a port (`nc -l`/`python -m http.server <port>`), kill or crash a",
+    "  service, corrupt the store (`truncate` a Chroma file), cut the network (`--network none`, or a proxy that drops",
+    "  after N bytes), fill the disk (a small `tmpfs` as `HOME`), `noexec` mounts, a read-only `HOME`, a broken",
+    "  `.version`, a state file of a missing version, a client configuration with comments.",
+    "- **A pseudo-terminal** (`script -qec`) to answer the questions (the update question, the profile) and to prove that",
+    "  without one nothing is asked."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/design.md#what-each-test-checks-the-same-assertions-everywhere",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Design — What each test checks (the same assertions everywhere)",
+   "summary": "1. The exit code (0 only when everything required is there).",
+   "body": [
+    "1. The exit code (0 only when everything required is there).",
+    "2. The last box: its title and that it names the one action that fixes it.",
+    "3. The machine after it: the previous installation runs (`nuclear dialect list`), or a new run resumes and",
+    "   finishes; the user's own things untouched (a checksum of their files before and after).",
+    "4. After the fix (the action the message gave): the case passes."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#fail-safe-rules-every-case-is-held-to-them",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — Fail-safe rules (every case is held to them)",
+   "summary": "1. Never half done.",
+   "body": [
+    "1. **Never half done.** A run that stops leaves the previous working installation, or a state a new run resumes.",
+    "2. **Never silent.** A failure says what it was doing, why, and the one action that fixes it; exit code non-zero.",
+    "3. **Never stuck.** There is always a way forward without the source tree: run the installer again,",
+    "   `--reinstall`, `--uninstall`, `nuclear update`, `nuclear doctor`, `nuclear-builder setup --status`.",
+    "4. **Never the user's things.** What was on the machine before (an Ollama, a Flutter, an editor's settings, an AI",
+    "   client's configuration, another program's port) stays as it was.",
+    "5. **Degrade, don't fail.** What is optional (an editor, a toolchain, local agents) missing makes its feature say",
+    "   so; the rest works."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#goal",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — Goal",
+   "summary": "NuclearLang is installed, upgraded, run and removed on any machine a user may have, in any state that machine may be in, and it never leaves the user stuck: every case below either works or stops with a message that says what happened and what to do, and a new run goes on from there.",
+   "body": [
+    "NuclearLang is installed, upgraded, run and removed on any machine a user may have, in any state that machine may",
+    "be in, and it never leaves the user stuck: every case below either works or stops with a message that says what",
+    "happened and what to do, and a new run goes on from there. Each case has a test that proves it, run by the CI",
+    "where a runner can host it and by a written manual pass where none can."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — The cases",
+   "summary": "State: handled (code exists and was tried), written (code exists, never tried on that system), gap (nothing handles it), verify (not known).",
+   "body": [
+    "State: **handled** (code exists and was tried), **written** (code exists, never tried on that system), **gap**",
+    "(nothing handles it), **verify** (not known)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-a-the-machine.418463",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — A. The machine",
+   "summary": "A.",
+   "body": [
+    "| A12 | A user name with spaces or non-ASCII (`C:\\Users\\José María`, `/home/josé`) | every path quoted; services start | gap (never tried) |",
+    "| A13 | Shells: bash, zsh, fish, nushell, PowerShell profile | `nuclear` on the PATH in a new terminal | handled for bash/zsh/fish/profile; nushell gap |",
+    "| A14 | `/home` or `/tmp` mounted `noexec`, SELinux enforcing | said which folder cannot run programs | gap |",
+    "| A15 | The disk fills during the download or the knowledge base load | stops, says the space needed, the previous install works | verify |",
+    "| A16 | No internet, a proxy (`HTTPS_PROXY`), GitHub blocked or rate-limited | says it, offers `NUCLEAR_DOWNLOAD` (a mirror) | partly (`curl` reads the proxy; no message names a mirror) |",
+    "| A17 | Antivirus quarantines `nuclear.exe` (Defender, SmartScreen); macOS Gatekeeper | says the binary was blocked and how to allow it | partly (Windows message after the install; macOS verify) |",
+    "| A18 | A wrong clock (TLS fails) | says to fix the clock | gap |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-a-the-machine.7c2635",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — A. The machine",
+   "summary": "A.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| A1 | Linux x86_64: Ubuntu/Debian, Fedora, Arch, openSUSE | installs, services at login (systemd user) | handled (clean machine: Debian-based only) |",
+    "| A2 | Linux aarch64 (Raspberry Pi, ARM servers, Asahi) | the same | written |",
+    "| A3 | Alpine / musl | NuclearLang installed; the AI services said to need glibc; install ends incomplete with that reason | written |",
+    "| A4 | NixOS (no FHS), immutable distros (Silverblue) | static `nuclear` runs; the AI Python may not: said, not a crash | verify |",
+    "| A5 | Linux without a systemd user session (WSL, containers, Void) | services as processes, said at the end | written |",
+    "| A6 | WSL2 next to a Windows install | each side its own installation; the Windows editor sees the WSL one only through Remote-WSL | verify |",
+    "| A7 | macOS Apple silicon | installs, launch agents | handled (once, 2026-11-19) |",
+    "| A8 | macOS Intel | NuclearLang installed; no AI archive: said | written |",
+    "| A9 | macOS Apple silicon under Rosetta (an x86 terminal) | the arm64 archive is chosen | written |",
+    "| A10 | Windows 10/11 x64, PowerShell 5.1 and 7 | installs, Startup script | handled by `installer-windows.yml` (no AI profile with local agents) |",
+    "| A11 | Windows on ARM | arm64 core, x64 AI archive | handled by `installer-windows.yml` |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-b-the-platforms-toolchains",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — B. The platforms' toolchains",
+   "summary": "B.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| B1 | No Flutter | `nuclear doctor` and the editor say it; `nuclear setup` installs it; backend and web unaffected | handled |",
+    "| B2 | Flutter on the PATH (any channel), from snap, from fvm | found and used; its version checked | partly (PATH yes; snap/fvm verify) |",
+    "| B3 | Flutter too old for the dialect, or a broken Flutter (`flutter doctor` fails) | said with the version needed | verify |",
+    "| B4 | No Android SDK / no Xcode | mobile builds for the other targets work; the missing one said | written |",
+    "| B5 | No Node.js / Python, an old one, one from nvm/pyenv/asdf | Nuclear's own toolchain (ADR-cli-0004) or the user's, never a mix | written |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-c-the-editors",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — C. The editors",
+   "summary": "C.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| C1 | No editor | install completes; the summary says how to add one later | handled |",
+    "| C2 | One or several of VS Code, Insiders, Cursor, VSCodium, Windsurf | the extension in each | handled (Linux); macOS written |",
+    "| C3 | The extension already there, older or newer than NuclearLang | the extension says the versions differ and offers `nuclear update` | written (0.80.0, `snapshotCheck.ts`) |",
+    "| C4 | The extension from a store, NuclearLang never installed | the extension offers the installer, never a path of the source tree | **gap**: its message names `cargo build … in the nuclear repository` |",
+    "| C5 | VS Code from snap or flatpak (sandboxed, another PATH) | the extension finds `nuclear-lsp` by its installation path | verify |",
+    "| C6 | The editor launched from the desktop (a PATH without `~/.local/bin`) | the same | handled (`toolchains.ts`) |",
+    "| C7 | The editor's CLI not on the PATH (macOS `code`) | found inside the app | written |",
+    "| C8 | JetBrains, Zed | the plugin/extension finds the LSP | verify |",
+    "| C9 | The editor open during an upgrade | Linux/macOS: the LSP restarts on the new binary; Windows: closed and restarted, said | verify |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-d-versions-and-lifecycle.42c8cb",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — D. Versions and lifecycle",
+   "summary": "D.",
+   "body": [
+    "| D10 | Source install over a public one, and the reverse | one installation on the PATH; `nuclear update` never replaces a source build | verify (`.version` left behind?) |",
+    "| D11 | Two installations (another `NUCLEAR_INSTALL`/PREFIX) | `nuclear doctor` names both and which one runs | gap |",
+    "| D12 | A project made with an older version opened with a newer one | builds, or says what to run (`nuclear repair`) | verify |",
+    "| D13 | Uninstall, then install again | a clean install | handled (Linux) |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-d-versions-and-lifecycle.507198",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — D. Versions and lifecycle",
+   "summary": "D.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| D1 | A fresh install | everything required, the summary | handled |",
+    "| D2 | The same version again | kept, nothing downloaded | handled |",
+    "| D3 | Upgrade N → N+1 (installer, `nuclear update`, the question) | replaced, profile kept, services restarted at the new version | written (the \"yes\" path never run) |",
+    "| D4 | Upgrade across many versions (0.1.x → 0.80.0; binaries without `nuclear update`) | the installer run by hand works the same | verify |",
+    "| D5 | Downgrade (`--version` older) | allowed, said; data of a newer graph either read or rebuilt | gap |",
+    "| D6 | Interrupted at each step (Ctrl+C, closed terminal, lost connection, reboot) | a new run resumes | handled on Linux/macOS; **gap** on Windows (roadmap) |",
+    "| D7 | Stuck version (\"punto muerto\"): the state file names a release that no longer exists, `.version` present but the binary broken, the core new and `ai/` old | the next run detects it and replaces what is broken; `--reinstall` always gets out | partly |",
+    "| D8 | A release missing the asset of this system | says it, the previous install untouched | handled (message) |",
+    "| D9 | The store's extension updated before the release's archives exist | the extension waits, says the release is on its way | verify |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-e-what-the-user-chose",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — E. What the user chose",
+   "summary": "E.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| E1 | Declined local agents | `remote`; nothing of Ollama downloaded | handled |",
+    "| E2 | `--no-ai`, or stopped at a question | ends incomplete, says the one command that finishes | handled |",
+    "| E3 | No terminal (`curl … \\| sh` in CI) | nothing asked, profile `remote` | handled |",
+    "| E4 | `--no-vscode`, `--no-agent`, `--no-modify-path` at the first install | a later update keeps those choices | **gap** (the update runs the defaults) |",
+    "| E5 | Declined the update question | the command runs; asked again (or later) | handled |",
+    "| E6 | A script or `make` in a terminal | never blocked by the update question | **gap** |",
+    "| E7 | An Ollama the user had before; an uninstall | Ollama and its models stay | handled |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-f-ports-and-other-programs",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — F. Ports and other programs",
+   "summary": "F.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| F1 | 7878 / 7879 / 7880 held by another program at the set-up | the next free port, written in `ai.env`, read by every tool | handled |",
+    "| F2 | The port free at the set-up, taken at a later login | the service picks a free one again, or says which program holds it | **gap** (the port is chosen once) |",
+    "| F3 | The port held by a Nuclear service of an older version | stopped and replaced by the new one | verify |",
+    "| F4 | Ollama's 11434 held by another program, an Ollama not running, a remote Ollama | said; `ollamaUrl` taken from the settings | partly |",
+    "| F5 | `localhost` resolving to IPv6 only, or a firewall prompt (Windows) | services bound where clients look | verify |",
+    "| F6 | Two users on one machine | each user's own ports | verify (F1 covers it if the second user's set-up runs after the first) |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-g-our-services",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — G. Our services",
+   "summary": "G.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| G1 | The Smart Graph down / crashing at start | the MCP tools say it and how to start it; `setup --status` shows it | handled (message) |",
+    "| G2 | The Developer down, a model missing | said with `setup --status` | handled |",
+    "| G3 | Nuclear Chat down | the editor says it | verify |",
+    "| G4 | The graph's store damaged, or written by another version | rebuilt from the release's knowledge base, said | gap |",
+    "| G5 | No keyring (headless Linux, a locked Keychain) | the services wait or say it | written (a test only) |",
+    "| G6 | The MCP server registered in a client, then the installation moved/upgraded | the client's entry still works | verify |",
+    "| G7 | A client's configuration file the user wrote by hand (comments, invalid JSON) | never broken: kept, said | verify |",
+    "| G8 | A service in a crash loop | stops restarting, says where its log is | verify |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-h-the-language-server",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — H. The language server",
+   "summary": "H.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| H1 | `nuclear-lsp` missing | the extension says it and offers the installer | **gap** (C4) |",
+    "| H2 | The LSP and the extension of different versions | said (C3) | written |",
+    "| H3 | The LSP crashes on a file | restarted, the file named; the editor stays usable | verify |",
+    "| H4 | A large project (thousands of `.nuc`) | answers within the golden rule's limits | verify |",
+    "| H5 | The dialects not found (installation moved) | said with the path it looked in | verify |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/requirements.md#the-cases-i-users-and-permissions",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Requirements — I. Users and permissions",
+   "summary": "I.",
+   "body": [
+    "| ID | Case | Expected | State |",
+    "|---|---|---|---|",
+    "| I1 | `sudo` / root running the installer or `nuclear` | refused with the reason (no sudo, ADR) | gap for `nuclear update` |",
+    "| I2 | A read-only or network home, a managed corporate machine | said which folder cannot be written | verify |"
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/tasks.md#phase-1-the-gaps-that-strand-a-user-each-with-its-test",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Tasks — Phase 1: the gaps that strand a user (each with its test)",
+   "summary": "and a new run read them.",
+   "body": [
+    "- [ ] C4/H1: the extension without `nuclear-lsp` offers the installer, no path of the source tree (extensions/vscode).",
+    "- [ ] E4: the public installers remember the first install's options (`.options` beside `.version`); `nuclear update`",
+    "      and a new run read them.",
+    "- [ ] E6: the update question never blocks a script: asked only when the parent is an interactive shell, with a",
+    "      \"later\" answer (24 h) (tools/cli `update.rs`).",
+    "- [ ] I1: `nuclear update` and the installers refuse to run as root.",
+    "- [ ] Two updates at once: a lock in the installers' state folder.",
+    "- [ ] `nuclear update` with `wget` when there is no `curl`; the message of a half-done update says the real version.",
+    "- [ ] F2: a service whose port is taken at login picks a free one and writes it to `ai.env`, or says which program",
+    "      holds it (nuclear-builder).",
+    "- [ ] D6 on Windows: `install.ps1` resumes an interrupted install (installer roadmap).",
+    "- [ ] D7: a stuck installation (broken binary under a `.version`, a state of a missing release, core and `ai/` of",
+    "      different versions) is detected and repaired by a new run."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/tasks.md#phase-2-the-harness",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Tasks — Phase 2: the harness",
+   "summary": "Phase 2: the harness",
+   "body": [
+    "- [ ] Two releases in a mirror (N and N+1) from the tree, for every upgrade test.",
+    "- [ ] The fault-injection helpers and the four assertions (design.md).",
+    "- [ ] Docker images per distribution (A1, A3-A5) in the CI.",
+    "- [ ] `installer-linux-arm.yml` and `installer-macos.yml` (Intel and Apple silicon) like `installer-windows.yml`.",
+    "- [ ] The extension test under `xvfb` (C, H)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/018-failure-matrix/tasks.md#phase-3-every-group-to-handled",
+   "type": "spec",
+   "title": "Spec 018: Every machine, every state, fail-safe — Tasks — Phase 3: every group to *handled*",
+   "summary": "Phase 3: every group to *handled*",
+   "body": [
+    "- [ ] A, B, D, E, F, G, I through the Docker matrix and the runners.",
+    "- [ ] The manual pass checklist in `installer/docs/06-runbooks/` (A6, A17, C5, C8, G5), filled before a minor release.",
+    "- [ ] Each case that passes changes its *State* in requirements.md; the spec is done when none is gap or verify."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/018-failure-matrix/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform.096416",
    "type": "readme",
    "title": "Specs of the platform",
@@ -6782,13 +7338,14 @@
    }
   },
   {
-   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.96b860",
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.dc3d42",
    "type": "readme",
    "title": "Specs of the platform",
    "summary": "Specs of the platform",
    "body": [
     "| [016-agent-onboarding](016-agent-onboarding/requirements.md) | An agent with no context learns Nuclear from the MCP server alone: `nuclear_start`, the atlas of topics embedded in the binary, the context documents `nuclear new` writes, every client integrated by the set-up, measured by a sandboxed run | in progress (phases 1-5 done; the other clients and the extension left) |",
-    "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |"
+    "| [017-productivity-reports](017-productivity-reports/requirements.md) | Productivity and consumption: tokens, money, time, lines of code and results by agent, model, member, team and project, with charts; a command and an MCP tool | done (left: JetBrains window, CSV export, budgets and alerts: the Builder's roadmap) |",
+    "| [018-failure-matrix](018-failure-matrix/requirements.md) | Every machine, every state, fail-safe: the cases where NuclearLang can fail (systems, architectures, toolchains, editors, versions and upgrades, the user's choices, ports, our services, the LSP, permissions), each with its expected behaviour, its state and its test | draft |"
    ],
    "agents": false,
    "sources": [
