@@ -36,3 +36,7 @@ What is common to the three editors: [the editors' roadmap](../../../docs/01-pro
   component and layer (it lists the flat `specs/*/spec.md` and its *New Spec* writes `specs/<id>/`: it should write
   through `nuclear-builder spec new` and list with `spec list --json`), no runs' accordion and no chat (`nuclear-builder
   chat --events`).
+- **Spec 023 in the tool window** (2026-11-20): VS Code asks the spending only for an API paid by use (an agent's
+  subscription is answered yes unless `forceConfirm`); the tool window still asks for every paid provider when the
+  engine asks. It has no team view, so no model for the whole team, method or instructions (the command and the MCP
+  server set them: `nuclear-builder team update --kind --provider --model --method --instructions`).

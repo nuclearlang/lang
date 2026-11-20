@@ -4866,21 +4866,16 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/AGENTS.md#commands.478c62",
+   "id": "doc:extensions/vscode/AGENTS.md#commands.7efb35",
    "type": "readme",
    "title": "VS Code extension — Commands",
-   "summary": "npm install npm run compile # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js npm run watch # out/extension.js on every change npm test # ../tools/nuclear-builder/test/editors.test.ts, then…",
+   "summary": "npm run package # theme + compile + server + vsce → nuclearlang-<version>.vsix code --install-extension nuclearlang-<version>.vsix To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → Chernobyl.",
    "body": [
-    "```sh",
-    "npm install",
-    "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
-    "npm run watch       # out/extension.js on every change",
-    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, ../tools/nuclear-environments/test/environments.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts, test/snapshot.test.ts, test/toolchainPage.test.ts, the devices' tests, test/workspaces.test.ts (the Nuclear workspaces: the CLI's JSON, the recent list, the projects opened by hand of before 0.84), test/onboarding.test.ts (the onboarding resumed, 0.84.0's flag), test/fresh-machine.test.ts, test/l10n.test.ts (Spanish for every text), test/no-local.test.ts (no local-model setting) and `npm run test:compat`, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
-    "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
-    "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
     "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
     "code --install-extension nuclearlang-<version>.vsix",
-    "```"
+    "```",
+    "",
+    "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → **Chernobyl**."
    ],
    "sources": [
     "extensions/vscode/AGENTS.md"
@@ -4892,11 +4887,19 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/AGENTS.md#commands.8e7e60",
+   "id": "doc:extensions/vscode/AGENTS.md#commands.cab6a7",
    "type": "readme",
    "title": "VS Code extension — Commands",
-   "summary": "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → Chernobyl.",
-   "body": "To develop: open this folder in VS Code and press F5; then *Preferences: Color Theme* → **Chernobyl**.",
+   "summary": "npm install npm run compile # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js npm run watch # out/extension.js on every change npm test # ../tools/nuclear-builder/test/editors.test.ts, then…",
+   "body": [
+    "```sh",
+    "npm install",
+    "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
+    "npm run watch       # out/extension.js on every change",
+    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, ../tools/nuclear-environments/test/environments.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts, test/snapshot.test.ts, test/toolchainPage.test.ts, the devices' tests, test/workspaces.test.ts (the Nuclear workspaces: the CLI's JSON, the recent list, the projects opened by hand of before 0.84), test/onboarding.test.ts (the onboarding resumed, 0.84.0's flag), test/fresh-machine.test.ts, test/l10n.test.ts (Spanish for every text), test/no-local.test.ts (no local-model setting), test/assets.test.ts (the pages' files local first: no URL of the internet loaded, a missing file taken from the release, checked) and `npm run test:compat`, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
+    "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
+    "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)"
+   ],
    "sources": [
     "extensions/vscode/AGENTS.md"
    ],
@@ -5218,6 +5221,24 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.3495fa",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- Nuclear Atlas no longer runs `/task`: Atlas informs (spec 023). A `/task` said to it is answered with the tech leads to ask, each a link to their conversation (or, with no team, an offer to make one); a tech lead plans the work and runs it through the Builder.",
+    "- **Teams that work like human teams** (spec 023, the editor's part): Nuclear Chat lists Atlas and each team's tech lead, not every member (a member's old conversations stay in the project); *Talk* on a member who does not lead is *Ask the tech lead*, and a member's face on the company screen or the Builder opens the lead's conversation; a run's stations are told by the tech lead. The team's page has **How the team works**: the *Model for the whole team* (none, an agent or an API, its provider and model, chosen once; each member says *Team's model* or *Own model*, and a member's Brain has *Team's model* to give its own up), the *Method* (Scrum by default, or your own) and the *Instructions* every member follows; the new-team wizard has them too. Spending is asked only for an API paid by use: an agent's subscription (Claude Code, Codex, Cursor…) is never asked, in a run or in the chat; `nuclear.spending.forceConfirm` still asks for everything. Nuclear Atlas informs: its hint says it explains and sends work to a tech lead, and its templates no longer order work (*Add a feature*, *Tests of…*, *Fix a bug* became *Who can do"
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.36a5ae",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -5258,6 +5279,25 @@
    "body": [
     "- Fix: the welcome is resumed where it was. *Create a workspace* → *This window* reloads the editor, and 0.84.0 lost the welcome there (it was marked seen the moment it opened) and never offered the AI services. Its progress is now kept by the editor (the workspace, its apps, the tour, the AI services) and saved before the window reloads: you land back at *Add your apps* with your workspace open; a new window takes the welcome over; closing the editor halfway brings it back at that step next time; *Next: the tour*, *Finish: set up the AI services* and *Skip the welcome* move it on. A 0.84.0 welcome that was never finished (no workspace with an app, no AI services) comes back once.",
     "- Nuclear Atlas works before there is an app: with no project its chat opens on the workspace's folder (or the welcome's), so *Do it with me by chat* works at every step; the prompts that need a project are hidden there."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.432cf9",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "a task?* and *Why work with a team?*).",
+   "body": [
+    "a task?* and *Why work with a team?*).",
+    "- **Local first** (spec 023): no page loads anything from the internet (a test scans every page and bundle). If a bundled file is missing (a broken install), the extension says so, takes the same version's files from its GitHub release, checks them (the release's `.sha256`, else the size and the version inside) and keeps them in its storage; *Reload Window* then uses them. Pages that use that copy keep the extension's own folder readable.",
+    "- Fix: Nuclear Atlas (\"Failed to fetch dynamically imported module … chat-embed.js\") and the Builder's diagram (\"the diagram did not load\") broke once a team's faces were shown: adding the faces' folder replaced the page's default roots, so its own scripts could no longer be read. The extension's folder now stays readable."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -6314,24 +6354,23 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013.4a0521",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013.b7a055",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Nuclear Chat (spec 013)",
-   "summary": "subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation is the setting `nuclear.builder.chat` when that agent is available, else…",
+   "summary": "subscription per topic), `registration` (the Builder's host file → `POST workspaces`: only the general agent and each team's tech lead are registered, so Nuclear Chat lists them and no other member (spec 023, requirement 2; the other members' old conversations stay in the project, readable, not…",
    "body": [
     "- `src/chatHost.ts` (no `vscode` import, tested by `test/chat.test.ts`): `readConnect` (`nuclear-chat connect",
     "  --json`, the extension host only), `Relay` (each page's request ids kept apart, the token header added, one",
-    "  subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the",
+    "  subscription per topic), `registration` (the Builder's host file → `POST workspaces`: only the general agent and",
+    "  each team's tech lead are registered, so Nuclear Chat lists them and no other member (spec 023, requirement 2; the",
+    "  other members' old conversations stay in the project, readable, not listed); faces as `data:` URLs; the",
     "  general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation",
     "  is the setting `nuclear.builder.chat` when that agent is available, else the host file's default (an external",
-    "  agent; a paid provider of a team's member or tech lead, chosen by the user there, gets `--confirm-spending` on its",
-    "  responder and choice commands, so the chat does not ask the two spending questions again for it; not when",
-    "  `nuclear.spending.forceConfirm` or the project's `forceConfirm` holds, nor for a provider no team names); each conversation then",
-    "  chooses its own in the chat's header), `ChatHost` (the one WebSocket, re-registered and caught up with `GET events?since=` after a",
-    "  reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`,",
-    "  `lineDiff`).",
-    "- `src/chatView.ts`: the window's `chat()`, `wireChat` (a page's frames ↔ the connection; `chatOpen` → `chatPath`",
-    "  or `chatError` with how to fix it), `chatScript` (the page's `nuclearChat(post)`: the embedded bundle imported"
+    "  agent; `--confirm-spending` on a responder's and a choice's command skips the two spending questions: every agent",
+    "  (kind `agent`, a subscription) gets it, and an API (kind `api`) gets it when the user put that provider in a team (a",
+    "  member's or the tech lead's); never when `nuclear.spending.forceConfirm` or the project's `forceConfirm` holds; an",
+    "  API no team names is asked); each conversation then",
+    "  chooses its own in the chat's header), `ChatHost` (the one WebSocket, re-registered and caught up with `GET events?since=` after a"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -6343,12 +6382,16 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013.ce7ffb",
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#nuclear-chat-spec-013.d0dad6",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Nuclear Chat (spec 013)",
-   "summary": "from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command `nuclear.chat.open`) and the GIF key (`nuclear.chat.gifKey`).",
+   "summary": "reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`, `lineDiff`).",
    "body": [
-    "from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command",
+    "reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`,",
+    "  `lineDiff`).",
+    "- `src/chatView.ts`: the window's `chat()`, `wireChat` (a page's frames ↔ the connection; `chatOpen` → `chatPath`",
+    "  or `chatError` with how to fix it), `chatScript` (the page's `nuclearChat(post)`: the embedded bundle imported",
+    "  from `out/chat-embed.js`, its bridge over `postMessage`), `chatCsp`, the tab (`openChatTab`, command",
     "  `nuclear.chat.open`) and the GIF key (`nuclear.chat.gifKey`).",
     "- `npm run chat` (in `compile`) copies `../../nuclear-chat/ui/build/app/dist-embed/embed.js` to `out/chat-embed.js`:",
     "  build it first there (`nuclear build`, `npm run build:embed`)."
@@ -6436,6 +6479,29 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.160500",
+   "type": "context",
+   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
+   "summary": "declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
+   "body": [
+    "declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
+    "- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless",
+    "  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `\"forceConfirm\": true` in the project's",
+    "  `.nuclear/builder.json` brings both questions back. Only work paid by use through an API key (kind `api`) is asked",
+    "  (spec 023, requirement 4): `asksFor(providers, …)` is false when every provider of a run's question is an agent",
+    "  (Claude Code, Codex, Cursor…: a subscription), unless the questions are forced, which asks every provider; a",
+    "  provider it does not know is asked."
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/ai-services.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.b90e65",
    "type": "context",
    "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
@@ -6454,26 +6520,6 @@
     "- The local models on standby: a `nuclear.builder.chat` of the kind `local` is removed at its level (the default,",
     "  Claude Code's agent, takes over) and the user is told once; `chatProvider` reads one as the default before that.",
     "  `nuclear.ai.developerUrl`, `ollamaUrl`, `models.coder`, `models.assistant` and `watch.stallSeconds` are no longer"
-   ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/ai-services.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/ai-services.md#settings-by-component-spec-011.e78a94",
-   "type": "context",
-   "title": "The AI services in the editor: set-up, settings, connections, notifications — Settings by component (spec 011)",
-   "summary": "declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
-   "body": [
-    "declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).",
-    "- The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless",
-    "  `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `\"forceConfirm\": true` in the project's",
-    "  `.nuclear/builder.json` brings both questions back."
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/ai-services.md"
@@ -7011,17 +7057,35 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.8fcab8",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.a40842",
+   "type": "context",
+   "title": "The VS Code extension: its files — `src/`",
+   "summary": "es and bundles for a URL of the internet they would load) | overview.md |",
+   "body": [
+    "es and bundles for a URL of the internet they would load) | [overview.md](overview.md) |",
+    "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
+    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
+    "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.b87cbf",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
    "body": [
     "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
     "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
-    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
-    "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
-    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
-    "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
+    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent (only for an API's work, unless forced) | [ai-services.md](ai-services.md) |",
+    "| `assets.ts`, `assetsPage.ts` | the pages' bundled files, local first (spec 023): a page's URL of `out/chat-embed.js`, `out/builder-flow.*` or an icon from the extension's folder, else from the copy kept in `<globalStorage>/assets/<version>/` (that folder added to the page's roots, beside the extension's); a file in neither (a broken install) is said and taken once from this version's release (`nuclearlang-<version>.vsix` of `github.com/nuclearlang/lang`), checked against its `.sha256` (else its announced size and its `extension/package.json` version), only the pages' files extracted; then *Reload Window*. No `vscode` import in `assets.ts` (`test/assets.test.ts`, which also scans every page's sourc"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -8167,7 +8231,7 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.b73464",
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#settings.e60832",
    "type": "readme",
    "title": "NuclearLang for VS Code — Settings",
    "summary": "A value set under an old id (`nuclear.ai.claudeModel`, `nuclear.ai.claude.maxBudgetUsd`, `nuclear.ai.resumeInterrupted`, `nuclear.ai.watch.minFreeMb`, `nuclear.ai.watch.commandTimeoutMinutes`) moves to its new one by itself.",
@@ -8179,7 +8243,7 @@
     "| `nuclear.ai.checkEveryMinutes` | `5` |",
     "| `nuclear.builder.team` | `\"\"` (the default team) |",
     "| `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |",
-    "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |",
+    "| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` (asked: only an API paid by use; an agent's subscription is not, unless `forceConfirm`) |",
     "| `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |",
     "| `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |",
     "",
@@ -8223,22 +8287,37 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/08-guides/README.md#troubleshooting",
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#troubleshooting.9aebff",
    "type": "readme",
    "title": "NuclearLang for VS Code — Troubleshooting",
    "summary": "Troubleshooting",
    "body": [
     "| What you see | What to do |",
     "|---|---|",
+    "| *A file of the NuclearLang extension is missing* | the install is broken (a page's script, style or icon is gone). The extension takes the same version's files from its release on GitHub, checks them and keeps them in its storage: reload the window when it says so. If it cannot (no network, the check fails), install the extension again. Nothing else is loaded from the internet: every page's files come with the extension. |",
     "| No diagnostics, no completion | *Nuclear: Restart Language Server*. If `nuclear.server.path` is set, check the path. Set `nuclear.trace.server` to `messages` and read the *Output* panel. |",
     "| Diagnostics of the wrong dialect | the file is outside a project: set `nuclear.dialect`, or create the project's `config.nuc` / `nuclear.toml` |",
     "| A dialect of your own is not found | add its folder to `nuclear.dialectPaths` |",
     "| The server is gone after a while | normal: it stops 5 minutes after the last `.nuc` closes and starts again with the next one |",
     "| After the first build of a mobile app, no devices in the picker | accept *Reload Window*: the Dart extension looks for apps only when the window opens |",
     "| A build fails | read the *Synapsis* output panel; the extension runs `nuclear repair` once by itself |",
-    "| A new theme does not show | quit VS Code completely and open it again |",
-    "| Nuclear Atlas or the Builder says a service is down | open *Settings and integrations* (`Ctrl+Alt+S`) and *Start* it, or run the set-up ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)) |"
+    "| A new theme does not show | quit VS Code completely and open it again |"
    ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#troubleshooting.ca35e0",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Troubleshooting",
+   "summary": "Troubleshooting",
+   "body": "| Nuclear Atlas or the Builder says a service is down | open *Settings and integrations* (`Ctrl+Alt+S`) and *Start* it, or run the set-up ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)) |",
    "sources": [
     "extensions/vscode/docs/08-guides/README.md"
    ],

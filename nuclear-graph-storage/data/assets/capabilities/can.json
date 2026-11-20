@@ -624,7 +624,8 @@
         "- GIFs: a pack of 36 animated drawings made for the project (works offline); a member sends one by personality; Tenor or Giphy only with a key in the keyring (`nuclear-chat gif-key tenor`) and the project's yes, asked once.",
         "- Started at login by the AI set-up (`nuclear-builder setup`); by hand: `nuclear-chat serve`.",
         "- Conversations as in Slack, each a route a host or an agent calls too: edit the user's message (`PATCH messages/{ws}/message/{id}`), delete any (`DELETE`, it shows deleted, its thread stays); close, archive, open again, rename or retopic a conversation (`PATCH channels/{ws}/{channel}` `{state|name|topic}`), delete it (`DELETE channels/{ws}/{channel}`: its history moved to `.nuclear/chat/deleted/`); make a channel with chosen members (`POST channels/{ws}`). In the page: *New message* and Ctrl+K open the quick switcher (any member's direct message, any channel), *Members* lists everyone, the header's ⋯ holds the conversation's actions.",
-        "- Search every message: `GET messages/{ws}/search?words=` with `from:@<member>` (`from:@you`) and `in:#<channel>`; in the page the header's *Search*, whose result opens the message highlighted in its channel or thread; a host opens the page at a message with `/<ws>/<channel>?message=<id>&thread=<id>` (VS Code's chat notifications do)."
+        "- Search every message: `GET messages/{ws}/search?words=` with `from:@<member>` (`from:@you`) and `in:#<channel>`; in the page the header's *Search*, whose result opens the message highlighted in its channel or thread; a host opens the page at a message with `/<ws>/<channel>?message=<id>&thread=<id>` (VS Code's chat notifications do).",
+        "- Who is listed: Atlas and each team's tech lead (spec 023); the other members work through the runs and post there as themselves; an older direct message with a member stays readable (the quick switcher finds it), never deleted."
       ],
       "keys": [
         "nuclear chat",
@@ -647,7 +648,10 @@
         "como hablo con mi equipo",
         "where is the chat in the builder",
         "can I choose which agent answers in the chat",
-        "how do I talk to claude code from nuclear chat"
+        "how do I talk to claude code from nuclear chat",
+        "how do I delete or close a conversation in nuclear chat",
+        "how do I search old messages",
+        "where is an older conversation with a member"
       ],
       "links": [
         {
@@ -1053,7 +1057,7 @@
       "body": [
         "- In the chat: `read docs/slides.pdf and write all the specs from those slides, then write the code through the Builder` — the member calls `project_read` (a PDF with pdftotext, a .pptx, markdown), `spec_new` with the acceptance criteria (refused without them: it asks), then `run_start` for each spec; each run is told in its thread.",
         "- 57 tools (the skills too: `skills_list`, `skills_show`, `skills_clone`, `skills_create`, `skills_update`, `skills_delete`, `team_skills_set`; `models_list`, `agents_list`): specs (`spec_new`, `spec_list`, `spec_show`, `spec_update` (the whole spec, the user approves), `spec_draft`, `spec_accept`, `spec_discard`, `spec_move`, `spec_migrate`, `spec_delete`), runs (`run_start`, `runs`, `run_file`, `run_journal`, `run_answer`, `run_resume`, `run_retry`, `run_restart`, `run_stop`), the reports (`metrics`), QA's plan (`checks`, `check_switch`, `check_add`, `check_mark`), teams (`team_*`: the new-team wizard's `team_create`, `team_suggest`, `team_name_suggest`, `team_runnable`, `team_member_add|remove|update`), the line (`line_show`, `line_set`), `ci_export`, `connections_check`, `project_read`, `vault_list`, `agents_list` (the agents a conversation can choose on this machine).",
-        "- Money: a tool never confirms it; it answers `waiting: spending` and the run waits for the user's two confirmations (the editor's two questions, or two in the chat; force confirmation holds).",
+        "- Money: only work paid by use (kind `api`) is asked; a tool never confirms it: it answers `waiting: spending` and the run waits for the user's two confirmations (the editor's two questions, or two in the chat); an agent's subscription is not asked; force confirmation asks everything.",
         "- The user's: deleting a spec or a team, a restart from scratch, the delivery gate (a commit and a pull request in the user's name), the line's gates, commands and forceConfirm, replacing a CI file answer `needsUser`; the chat asks the user and applies it on a yes. Merging is never a tool; an API key is kept only by the user.",
         "- Every agent gets it: Claude Code (`--mcp-config`, `mcp__nuclear_builder`), OpenCode (its `mcp` table), Codex (`-c mcp_servers.nuclear_builder.*`), Gemini CLI (its settings), Cursor (a plugin of the run, `--plugin-dir`), Grok Build (the run's own `GROK_HOME`), an API model's loop (a second MCP client).",
         "- Your own agent: `claude mcp add nuclear_builder -- nuclear-builder mcp --root <project>`."

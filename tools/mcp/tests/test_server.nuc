@@ -79,3 +79,13 @@ testASecretNeverPassesThroughTheEnvironmentsTool() void
   expect("not set through the MCP server" in said and not ("s3cret" in said))
   expect("not an action" in asyncio.run(tools.nuclearEnv(".", "delete")))
   expect("starts with -" in asyncio.run(tools.nuclearEnv(".", "set", "A", "--secret")))
+
+// Nuclear Atlas only informs (spec 023): `--informs` offers what teaches and reads, and the team tools (which ask
+// first), never a tool that does the work.
+testTheInformingServerOffersNoToolThatDoesTheWork() void
+  names: string[] = []
+  for tool in asyncio.run(mcpServer(true).listTools())
+    names.add(tool.name)
+  expect("nuclear_start" in names and "graph_answer" in names and "team_create" in names and "team_list" in names)
+  expect(not ("spec_create" in names) and not ("nuclear_build" in names) and not ("generate_resource" in names) and not ("nuclear_project" in names) and not ("workspace_create" in names))
+  expect(names.all((n) => n in INFORM_TOOLS))

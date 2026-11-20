@@ -28,6 +28,7 @@ import { missingCommand } from './support';
 import { chat, teamChannel } from '../../../vscode/src/chatView';
 import { askPost, askText, buttonOf, ChatEvent, fmt, lineDiff, RUN_TEXTS, runPosts } from '../../../vscode/src/chatHost';
 import { inline, initials, providerName, RunLite, runOutline, SpecEntry, specOfPath, specTree, stepTitle, stepTree, teamColor, teamLog, whoLabel } from './workbench';
+import { assetUrl } from '../../../vscode/src/assetsPage';
 
 export interface BuilderProject {
   root: string;
@@ -152,7 +153,8 @@ export function driveRun(root: string, id: string, args: string[]): LineRun {
       // the engine asks twice; the editor asks its own two modal questions at the first and answers both
       if (a.id === 'spending-2' && spendingOk) return void p.answer({ answer: 'yes' });
       const providers = (a.providers ?? []).map((x) => PROVIDER_NAMES[x] ?? x);
-      spendingOk = await confirmSpending({ what: l10n.t('The Builder run "{0}"', run?.spec.title ?? id), providers, amountUsd: a.budgetUsd ?? run?.factory?.budgetUsd ?? 5, root });
+      // only an API's work is asked (an agent's subscription is not), unless the questions are forced
+      spendingOk = await confirmSpending({ what: l10n.t('The Builder run "{0}"', run?.spec.title ?? id), providers, amountUsd: a.budgetUsd ?? run?.factory?.budgetUsd ?? 5, root, ...(a.providers?.length ? { ids: a.providers } : {}) });
       p.answer({ answer: spendingOk ? 'yes' : 'no' });
       return;
     }
@@ -228,12 +230,14 @@ const chatTexts = () => RUN_TEXTS[lang()];
 const buttoned = new Map<string, { text: string; channel: string; thread?: string }>();
 
 /** Where a run is told: its team's channel when the project's registration has it (else `general`), the member of a
- * role (`<team>-<role>`, else `system`) and the team's tech lead. */
+ * role (`<team>-<role>` when the chat has it, else the team's tech lead, who reports the run: the chat lists only the
+ * tech leads, spec 023) and the tech lead. */
 async function placeOf(root: string, team: string): Promise<{ ws: string; channel: string; member: (role?: string) => string; lead: string }> {
   const ws = await chat().workspace(root);
   const reg = chat().registered(root);
-  const member = (role?: string) => (role && reg.members.includes(`${team}-${role}`) ? `${team}-${role}` : 'system');
-  return { ws, channel: reg.channels.includes(team) ? team : 'general', member, lead: reg.lead(team) ?? 'system' };
+  const lead = reg.lead(team);
+  const member = (role?: string) => (role && reg.members.includes(`${team}-${role}`) ? `${team}-${role}` : lead && reg.members.includes(lead) ? lead : 'system');
+  return { ws, channel: reg.channels.includes(team) ? team : 'general', member, lead: lead ?? 'system' };
 }
 
 /** The thread a host opened for a piece of work (`run:<id>`, `spec:<id>`): the oldest message that links it. */
@@ -716,7 +720,7 @@ export class BuilderPanel {
 export function html(webview: vscode.Webview, extension: vscode.Uri): string {
   const nonce = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
   // the run's diagram (flow.tsx, React Flow) is bundled apart by the extension's `npm run flow`
-  const out = (f: string) => webview.asWebviewUri(vscode.Uri.joinPath(extension, 'out', f)).toString();
+  const out = (f: string) => assetUrl(webview, extension, `out/${f}`);
   const T = texts(BUILDER);
   const e = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
   return `<!DOCTYPE html><html lang="${lang()}"><head><meta charset="utf-8">
@@ -1215,7 +1219,7 @@ function teamPick() {
     + '<a class="link" id="openTeam" tabindex="0" title="' + esc(t('teamLinkHint')) + '">👥 ' + esc(t('teamLink')) + '</a>'
     + '<a class="link" data-act="buildTeam" tabindex="0" title="' + esc(t('buildTeamHint')) + '">+ ' + esc(t('buildTeam')) + '</a>'
     + '<a class="link" id="openBudget" tabindex="0" title="' + esc(t('budgetLinkHint')) + '">💰 ' + esc(t('budgetLink')) + (budget === null ? '' : ' <span class="muted">' + esc(budget > 0 ? budget.toFixed(2) + ' USD' : t('noLimit')) + '</span>') + '</a></div>'
-    + (c && c.id === chosen ? '<div class="roster5">' + c.roles.map((x) => '<div class="hire" data-dm="' + esc('dm-' + c.id + '-' + x.member) + '" tabindex="0" role="button" title="' + esc(t('chatWith', x.name || ACTORS[x.role].role)) + '">' + av(x.role, x.employee) + '<div><b>' + esc(x.name || ACTORS[x.role].role) + '</b><small>' + esc(ACTORS[x.role].role) + '</small><small class="' + (x.kind && x.kind !== 'local' ? 'paid' : '') + '">' + esc(workedBy(x)) + '</small></div></div>').join('') + '</div>' : '')
+    + (c && c.id === chosen ? '<div class="roster5">' + c.roles.map((x) => { const lead = c.roles.find((y) => y.role === c.techLead); return '<div class="hire" data-dm="' + esc(lead ? 'dm-' + c.id + '-' + lead.member : c.id) + '" tabindex="0" role="button" title="' + esc(lead === x ? t('chatWith', x.name || ACTORS[x.role].role) : t('askLeadFor', lead?.name || (lead ? ACTORS[lead.role].role : ''), x.name || ACTORS[x.role].role)) + '">' + av(x.role, x.employee) + '<div><b>' + esc(x.name || ACTORS[x.role].role) + '</b><small>' + esc(ACTORS[x.role].role) + '</small><small class="' + (x.kind && x.kind !== 'local' ? 'paid' : '') + '">' + esc(workedBy(x)) + '</small></div></div>'; }).join('') + '</div>' : '')
     + '<div class="muted" style="margin-top:8px;font-size:12px">' + esc(teams.project ? t('projectTeam') : '') + ' ' + esc(paid.length ? t('paidRoles', paid.map((x) => ACTORS[x.role].role).join(', ')) + ' ' + asks : '') + '</div>';
 }
 function section(n, title, body) { return '<div class="section"><div class="num">' + n + '</div><div><h2>' + esc(title) + '</h2>' + body + '</div></div>'; }

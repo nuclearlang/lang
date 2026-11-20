@@ -49,7 +49,7 @@ $bad" "fix it, then a PATCH release (a failed website means the site still serve
 ok "every workflow succeeded: $(printf '%s\n' "$runs" | cut -f 1 | sort -u | tr '\n' ' ')"
 
 # --- 2. the assets: what release.yml publishes (the archive matrix, the AI matrix, the extension, the vectors) ---
-want="install.sh install.ps1 nuclearlang-$V.vsix nuclearlang-embeddings-$V.npz nuclearlang-embeddings-$V.npz.sha256"
+want="install.sh install.ps1 nuclearlang-$V.vsix nuclearlang-$V.vsix.sha256 nuclearlang-embeddings-$V.npz nuclearlang-embeddings-$V.npz.sha256"
 for t in linux-x86_64.tar.gz linux-aarch64.tar.gz macos-x86_64.tar.gz macos-aarch64.tar.gz windows-x86_64.zip windows-aarch64.zip; do
   want="$want nuclearlang-$V-$t nuclearlang-$V-$t.sha256"
 done

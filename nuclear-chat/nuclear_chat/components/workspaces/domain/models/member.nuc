@@ -16,3 +16,7 @@ Member
   responder: Responder = Responder()
   // who works the member (an agent and its model), drawn in a direct message's header
   brain: Brain = Brain()
+  // whether the member is one of the chat's people (the members list, #general, a direct message of their own); one
+  // not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with
+  // them stays readable
+  listed: boolean = true

@@ -289,3 +289,19 @@ testATeamOfTheLocalModelsIsWorkedByTheDefaultExternalChoiceWhileTheyAreOnStandby
   compatTeam(tmpPath, "v2-local-0.82", "home-lab")
   again = loadTeam("home-lab")
   expect(((again["members"] as <string, any>[]))[0]["provider"] == "claude-code" and (again["warnings"] as string[]).all((w) => NO_PROVIDER in w), json.dumps(again["warnings"]))
+
+// A team of before spec 023 (0.84) reads as Scrum, with no instructions and no brain of its own: every member keeps
+// the one it had. A team with its brain (0.85) keeps it: a member without its own is worked by the team's.
+testATeamOfBeforeItsMethodAndBrainReadsAsScrumWithEveryMemberItsOwn(tmpPath: Path, monkeypatch: any, capsys: any) void
+  compatHome(tmpPath, monkeypatch)
+  compatTeam(tmpPath, "v2-members", "payments")
+  expect(team(["show", "payments", "--json"]) == 0)
+  shown: <string, any> = printed(capsys)
+  expect(shown["method"] == "" and "Scrum" in "${shown["methodText"]}" and shown["instructions"] == "" and shown["brain"] == null, json.dumps(shown["brain"]))
+  expect((shown["members"] as <string, any>[]).all((m) => m["inheritsBrain"] == false and m["provider"] == "claude-code"))
+  compatTeam(tmpPath, "v3-team-brain-0.85", "brains")
+  expect(team(["show", "brains", "--json"]) == 0)
+  brains: <string, any> = printed(capsys)
+  members: <string, any>[] = brains["members"]!
+  expect(brains["brain"] == { "kind": "agent", "provider": "codex", "model": "gpt-5" } and brains["methodText"] == "Kanban: one card at a time, limits on work in progress.")
+  expect(members[0]["inheritsBrain"] == true and members[0]["provider"] == "codex" and members[1]["inheritsBrain"] == false and members[1]["provider"] == "claude-code", json.dumps(members))

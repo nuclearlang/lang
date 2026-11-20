@@ -10,7 +10,7 @@ related: [vision.md, ../02-architecture/api.md]
 |---|---|
 | **host** | a tool that uses the chat (`builder`, `atlas`): it registers a project with its members, teams and channels, and gives each member a responder |
 | **workspace** | a project registered by its host; its id (`w…`) is its folder's fingerprint, the same folder is the same workspace |
-| **member** | someone of a team as the host gives them: `id`, `name`, `role`, `team`, `avatar` (the host's id of their portrait), `face` (the picture the page draws: a `data:` or `https:` URL), `profile` (bio, HR note, language), `personality`, `responder` |
+| **member** | someone of a team as the host gives them: `id`, `name`, `role`, `team`, `avatar` (the host's id of their portrait), `face` (the picture the page draws: a `data:` or `https:` URL), `profile` (bio, HR note, language), `personality`, `responder`, `listed` (one of the chat's people, with a direct message; false: writes in channels and threads only) |
 | **team** | a team at work in the project: `id`, `name`, `lead` (the member id of its tech lead) |
 | **tech lead** | the member who answers a message to the team: its channel without a member mentioned, `@<team>`, a thread of its channel; without `lead`, the team's first member |
 | **channel** | `general`, one per team (its `team`, or its id is the team's), one the user made, or a direct message `dm-<member>` (kind `dm`) |

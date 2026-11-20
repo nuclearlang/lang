@@ -1,6 +1,7 @@
 use io
 use sys
 use json
+use asyncio
 use httpx
 use pathlib{ Path }
 
@@ -51,7 +52,7 @@ testAMemberAnswersAsTheirProfileWithTheFactorysTools(tmpPath: Path, monkeypatch:
   // the member's own prompt: their name, role, profile in the conversation's language, personality, the team's
   // instructions, the factory's tools, the chat's conversation; the tools' results in the second call
   message = "${bodies[0]["message"]}"
-  for part in ["You are Neo, the Developer of the team Night shift", "#night-shift", "Escribe tests de noche.", "Nunca tarde, nunca temprano.", "Dry humour.", "- Temperament: Grumpy", "## How you write\n\nYou are grumpy: terse, blunt messages.", "Tests before code.", "You are the team's tech lead", "speak for everyone", "accountable for the team's work", "`spec_new`", "- booking", "you: hola equipo", "you: escribe la base", "answer in Spanish", "Responde en español."]
+  for part in ["You are Neo, the Developer of the team Night shift", "#night-shift", "Escribe tests de noche.", "Nunca tarde, nunca temprano.", "Dry humour.", "- Temperament: Grumpy", "## How you write\n\nYou are grumpy: terse, blunt messages.", "Tests before code.", "You are the team's tech lead", "speak for everyone", "accountable for the team's work", "`spec_new`", "- booking", "you: hola equipo", "you: escribe la base", "answer in Spanish", "Responde en español.", "your first answer is the plan", "who of your team does each part", "run_start", "## Your team, by station", "- analysis: Ana, the Analyst", "- tests first: Neo, the Developer", "- quality: nobody (the team has no QA)"]
     expect(part in message, part)
   expect(not ("spec_new (failed)" in "${bodies[1]["message"]}") and "## The tools answered" in "${bodies[1]["message"]}" and "book-a-room" in "${bodies[1]["message"]}")
 
@@ -100,25 +101,33 @@ testAMemberWritingItsGifLineNeverStreamsIt() void
 testAPaidMemberIsConfirmedTwiceOnceForTheConversation(tmpPath: Path, monkeypatch: any) void
   root = memberProject(tmpPath, monkeypatch)
   log = fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "result", "result": "Two runs passed.", "total_cost_usd": 0.02, "is_error": false }])
+  // an agent's subscription is not asked (spec 023 requirement 4): forceConfirm asks it, as an API's is asked
+  free: <string, any>[] = []
+  memberOf(root, "analyst", { "member": "night-shift-analyst", "channel": "night-shift", "thread": "m0", "messages": [], "said": "hi", "lang": "en" }, [], free).respond()
+  expect(not free.any((e) => e["type"] == "ask") and free.last == { "type": "done", "costUsd": 0.02 }, json.dumps(free))
+  log.unlink()
+  forcing: <string, any> = { "forceConfirm": true }
   ask: <string, any> = { "member": "night-shift-analyst", "channel": "night-shift", "thread": "m1", "messages": [], "said": "what was done?", "lang": "en" }
   refused: <string, any>[] = []
-  memberOf(root, "analyst", ask, [json.dumps({ "answer": "no" })], refused).respond()
+  memberOf(root, "analyst", ask, [json.dumps({ "answer": "no" })], refused, forcing).respond()
   expect(refused.map((e) => e["type"]) == ["typing", "ask", "done"] and refused.last["error"] == "the spending was not confirmed" and not log.exists())
   events: <string, any>[] = []
-  memberOf(root, "analyst", ask, [json.dumps({ "answer": "yes" }), json.dumps({ "answer": "yes" })], events).respond()
+  memberOf(root, "analyst", ask, [json.dumps({ "answer": "yes" }), json.dumps({ "answer": "yes" })], events, forcing).respond()
   asks = events.filter((e) => e["type"] == "ask")
   expect(asks.map((a) => a["id"]) == ["spending-1", "spending-2"] and asks[1]["budgetUsd"] == 2.0 and asks[0]["kind"] == "spending", json.dumps(events))
   expect(events.last == { "type": "done", "costUsd": 0.02 } and events.any((e) => e == { "type": "text", "text": "Two runs passed." }))
   files = Path("${log}.files")
   sent = log.readText() + (files.exists() ? files.readText() : "")
   expect("You are Ana, the Analyst of the team Night shift" in sent and "## Your tech lead\n\nNeo, the Developer, answers for the team" in sent and not ("You are the team's tech lead" in sent))
+  // every member follows the team's method (Scrum: the team wrote none) and its instructions
+  expect("## How the team Night shift works" in sent and "The method: Scrum." in sent)
   // the same conversation does not ask again; another thread does
   again: <string, any>[] = []
-  memberOf(root, "analyst", ask, [], again).respond()
+  memberOf(root, "analyst", ask, [], again, forcing).respond()
   expect(not again.any((e) => e["type"] == "ask") and again.last["costUsd"] == 0.02)
   other: <string, any>[] = []
   ask["thread"] = "m2"
-  memberOf(root, "analyst", ask, [], other).respond()
+  memberOf(root, "analyst", ask, [], other, forcing).respond()
   expect(other.map((e) => e["type"]) == ["typing", "ask", "done"])
 
 // Runs `nuclear-builder member <args>` with `stdin`; gives its exit code and the JSON lines it printed.
@@ -145,11 +154,13 @@ testTheHostFileGivesTheProjectsTeamAsMembersAndChannels(tmpPath: Path, monkeypat
   expect(host["host"] == "builder" and host["lang"] == "es" and host["teams"] == [{ "id": "night-shift", "name": "Night shift", "lead": "night-shift-developer" }])
   members: <string, any>[] = host["members"]!
   expect(members.map((m) => m["id"]) == ["night-shift-developer", "night-shift-analyst", "atlas"])
-  expect(members[0] == { "id": "night-shift-developer", "name": "Neo", "role": "developer", "member": "developer", "team": "night-shift", "avatar": "dev-017", "face": "${tmpPath.joinpath("roles", "developer", "roster", "faces", "thumb", "dev-017.webp")}", "temperament": "grumpy", "profile": { "bio": "Escribe tests de noche.", "hrNote": "Nunca tarde, nunca temprano.", "lang": "es" }, "personality": { "gifs": "often", "on": ["failure", "success"], "note": "Dry humour.", "temperament": "grumpy" }, "brain": { "agent": "Nuclear Developer", "kind": "local", "provider": "nuclear-developer", "model": "qwen2.5-coder:3b", "paid": false }, "responder": { "command": ["nuclear-builder", "member", "--team", "night-shift", "--member", "developer"], "paid": false } }, json.dumps(members[0]))
+  // only the tech lead and Atlas are listed (spec 023 requirement 2): the people of the chat, each a direct message
+  expect(members.map((m) => m["listed"]) == [true, false, true])
+  expect(members[0] == { "id": "night-shift-developer", "name": "Neo", "role": "developer", "member": "developer", "team": "night-shift", "listed": true, "avatar": "dev-017", "face": "${tmpPath.joinpath("roles", "developer", "roster", "faces", "thumb", "dev-017.webp")}", "temperament": "grumpy", "profile": { "bio": "Escribe tests de noche.", "hrNote": "Nunca tarde, nunca temprano.", "lang": "es" }, "personality": { "gifs": "often", "on": ["failure", "success"], "note": "Dry humour.", "temperament": "grumpy" }, "brain": { "agent": "Nuclear Developer", "kind": "local", "provider": "nuclear-developer", "model": "qwen2.5-coder:3b", "paid": false }, "responder": { "command": ["nuclear-builder", "member", "--team", "night-shift", "--member", "developer"], "paid": false } }, json.dumps(members[0]))
   // a member without an employee: the name given, the team's id as the avatar's seed, the default personality
   expect(members[1]["name"] == "Ana" and members[1]["avatar"] == "night-shift-analyst" and (members[1]["responder"] as <string, any>)["paid"] == true and members[1]["personality"] == { "gifs": "sometimes", "on": ["failure"], "note": "" } and members[1]["face"] == null and members[1]["temperament"] == null)
   expect(members[1]["brain"] == { "agent": "Claude Code", "kind": "agent", "provider": "claude-code", "model": "haiku", "paid": true })
-  expect(host["channels"] == [{ "id": "general", "name": "general", "topic": "The project app", "members": ["night-shift-developer", "night-shift-analyst"] }, { "id": "night-shift", "name": "night-shift", "topic": "We ship at dawn.", "members": ["night-shift-developer", "night-shift-analyst"] }])
+  expect(host["channels"] == [{ "id": "general", "name": "general", "topic": "The project app", "members": ["night-shift-developer"] }, { "id": "night-shift", "name": "night-shift", "topic": "We ship at dawn.", "members": ["night-shift-developer"] }], json.dumps(host["channels"]))
   expect(chatHostLine(["--json", "--root", root]) == 0 and json.loads(capsys.readouterr().out)["lang"] == "en")
 
 // Every member of the team is in the chat, any number per role (`<team>-<member id>`, answered by `--member`).
@@ -161,13 +172,51 @@ testEveryMemberOfTheTeamIsInTheChat(tmpPath: Path, monkeypatch: any) void
   expect(members.map((m) => m["id"]) == ["night-shift-developer", "night-shift-analyst", "night-shift-dev-2", "atlas"])
   expect((members[2]["responder"] as <string, any>)["command"] == ["nuclear-builder", "member", "--team", "night-shift", "--member", "dev-2"])
 
-// Several saved teams and none of them the project's nor the default: the host file is an error with the teams to
-// choose from (the editor asks once), never the unsaved local team.
-testSeveralTeamsAndNoneChosenAskWhichOne(tmpPath: Path, monkeypatch: any, capsys: any) void
+// Every saved team is in the chat (spec 023 requirement 2), the project's first: several and none chosen are no error,
+// never the unsaved local team; a team without members has no tech lead and nobody listed.
+testEveryTeamIsInTheChatWithItsTechLead(tmpPath: Path, monkeypatch: any, capsys: any) void
   root = memberProject(tmpPath, monkeypatch)
-  saveTeam({ "id": "day-shift", "name": "Day shift", "members": [] as any[] })
+  saveTeam({ "id": "day-shift", "name": "Day shift", "members": [{ "id": "qa", "role": "qa", "kind": "agent", "provider": "codex" }, { "id": "arch", "role": "architect", "kind": "agent", "provider": "codex" }] })
+  saveTeam({ "id": "empty", "name": "Empty", "members": [] as any[] })
+  host = chatHost(root, "en", httpx.MockTransport((request: httpx.Request) => httpx.Response(503)))
+  // the project's team first, then the others; a team naming no tech lead is led by its Architect
+  expect(host["teams"] == [{ "id": "night-shift", "name": "Night shift", "lead": "night-shift-developer" }, { "id": "day-shift", "name": "Day shift", "lead": "day-shift-arch" }, { "id": "empty", "name": "Empty", "lead": "" }], json.dumps(host["teams"]))
+  members: <string, any>[] = host["members"]!
+  expect(members.filter((m) => m["listed"] == true).map((m) => m["id"]) == ["night-shift-developer", "day-shift-arch", "atlas"])
+  expect((host["channels"] as <string, any>[]).map((c) => c["id"]) == ["general", "night-shift", "day-shift", "empty"])
   setDefaultTeam(null)
   Path(root, ".nuclear", "builder.json").writeText("{}")
-  expect(chatHostLine(["--json", "--root", root]) == 1)
+  expect(chatHostLine(["--json", "--root", root]) == 0)
   said = json.loads(capsys.readouterr().out)
-  expect(said["chooseTeam"] == [{ "id": "day-shift", "name": "Day shift" }, { "id": "night-shift", "name": "Night shift" }] and "line set team" in "${said["error"]}", json.dumps(said))
+  expect(not ("error" in said) and (said["teams"] as <string, any>[]).map((t) => t["id"]) == ["day-shift", "empty", "night-shift"], json.dumps(said["teams"]))
+
+// Nuclear Atlas only informs (spec 023 requirement 1): its prompt sends a task to a free team's tech lead (or offers to
+// make a team), and its tools are those that read and teach: no spec written, no run started.
+testAtlasOnlyInformsAndNamesTheFreeTeamsWithTheirTechLead(tmpPath: Path, monkeypatch: any) void
+  root = memberProject(tmpPath, monkeypatch)
+  log = fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "result", "result": "Talk to Neo.", "total_cost_usd": 0.0, "is_error": false }])
+  ask: <string, any> = { "member": "atlas", "channel": "dm-atlas", "thread": "", "messages": [], "said": "write me a login screen", "lang": "en" }
+  events: <string, any>[] = []
+  protocol = MemberLines((x: <string, any>) => events.add(x))
+  atlas = Member(root, "atlas-test", { "kind": "agent", "provider": "claude-code" }, readLine(root, "backend"), () => null, (e: <string, any>) => protocol.on(e), { "events": true }, loadTeam("night-shift"), "chat", ask)
+  atlas.respond()
+  expect(not events.any((e) => e["type"] == "ask") and events.last == { "type": "done", "costUsd": 0.0 }, json.dumps(events))
+  sent = log.readText()
+  for part in ["You only inform", "a team's tech lead does it", "offer to make one here", "team_create", "## The teams", "- Night shift (`night-shift`): free; its tech lead Neo, the Developer", "costs no more tokens", "## Your tools"]
+    expect(part in sent, part)
+  expect(not ("every action of Nuclear Builder" in sent))
+  // its tools: the informing ones of both MCP servers
+  names = asyncio.run(builderMcpServer(root, true).listTools()).map((t: any) => "${t.name}")
+  expect("team_list" in names and "project_read" in names and not ("spec_new" in names) and not ("run_start" in names) and not ("team_create" in names), json.dumps(names))
+  expect(chatTool(root, "spec_new", { "title": "x" }, true)["error"] == true and "no tool" in "${chatTool(root, "run_start", {}, true)["text"]}")
+  work = Work(root, root, "", {}, [], "", 0.0, "nuclear-mcp", 1000, { "informs": true })
+  servers = mcpServers(work)
+  expect((servers["nuclear"] as <string, any>)["args"] == ["--informs"] and "--informs" in ((servers["nuclear_builder"] as <string, any>)["args"] as string[]))
+  expect((mcpServers(Work(root, root, "", {}, [], "", 0.0))["nuclear"] as <string, any>)["args"] == [])
+  // a team with a run in progress is busy; with none, Atlas offers to make one
+  run = newRun(root, { "name": "app" }, { "id": "s1", "title": "S" }, loadTeam("night-shift"), ["design"], "specs/s1")
+  run["status"] = "waiting"
+  saveRun(run)
+  expect("busy (runs in progress: s1)" in atlas.teamsSection())
+  deleteTeam("night-shift")
+  expect("There is no team yet" in atlas.teamsSection())

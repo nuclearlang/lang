@@ -130,7 +130,10 @@ The tool `settings` of the strip (`Ctrl+Alt+S`).
   declared: their values are ignored (`tools/nuclear-builder/test/compat.test.ts`).
 - The money (`spending.ts`): `confirmSpending` asks twice (the second time with the amount and the providers) unless
   `nuclear.spending.confirm` is off; `nuclear.spending.forceConfirm` or `"forceConfirm": true` in the project's
-  `.nuclear/builder.json` brings both questions back.
+  `.nuclear/builder.json` brings both questions back. Only work paid by use through an API key (kind `api`) is asked
+  (spec 023, requirement 4): `asksFor(providers, …)` is false when every provider of a run's question is an agent
+  (Claude Code, Codex, Cursor…: a subscription), unless the questions are forced, which asks every provider; a
+  provider it does not know is asked.
 
 ## Languages (spec 011)
 
@@ -205,12 +208,15 @@ tool uses.
 
 - `src/chatHost.ts` (no `vscode` import, tested by `test/chat.test.ts`): `readConnect` (`nuclear-chat connect
   --json`, the extension host only), `Relay` (each page's request ids kept apart, the token header added, one
-  subscription per topic), `registration` (the Builder's host file → `POST workspaces`: faces as `data:` URLs; the
+  subscription per topic), `registration` (the Builder's host file → `POST workspaces`: only the general agent and
+  each team's tech lead are registered, so Nuclear Chat lists them and no other member (spec 023, requirement 2; the
+  other members' old conversations stay in the project, readable, not listed); faces as `data:` URLs; the
   general agent `atlas` comes with its choices, the agents of this machine, and its default for a new conversation
   is the setting `nuclear.builder.chat` when that agent is available, else the host file's default (an external
-  agent; a paid provider of a team's member or tech lead, chosen by the user there, gets `--confirm-spending` on its
-  responder and choice commands, so the chat does not ask the two spending questions again for it; not when
-  `nuclear.spending.forceConfirm` or the project's `forceConfirm` holds, nor for a provider no team names); each conversation then
+  agent; `--confirm-spending` on a responder's and a choice's command skips the two spending questions: every agent
+  (kind `agent`, a subscription) gets it, and an API (kind `api`) gets it when the user put that provider in a team (a
+  member's or the tech lead's); never when `nuclear.spending.forceConfirm` or the project's `forceConfirm` holds; an
+  API no team names is asked); each conversation then
   chooses its own in the chat's header), `ChatHost` (the one WebSocket, re-registered and caught up with `GET events?since=` after a
   reconnection, the host's own requests and events), and a run's posts (`runPosts`, `askPost`, `buttonOf`,
   `lineDiff`).

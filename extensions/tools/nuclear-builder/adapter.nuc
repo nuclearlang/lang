@@ -258,14 +258,23 @@ builderMcpCommand() string
   given: string = os.environ.get("NUCLEAR_BUILDER_COMMAND") ?? ""
   given.isEmpty ? "nuclear-builder" : given
 
-// Its arguments for a project.
-builderMcpArgs(root: string) string[]
-  ["mcp", "--root", root]
+// Whether the work is the informing agent's (Nuclear Atlas, spec 023): both MCP servers then offer only the tools
+// that read and teach, and the team tools that ask the user first (`--informs`); none that does the work.
+informs(work: Work) boolean
+  work.inputs["informs"] == true
+
+// The Nuclear MCP server's arguments for a work.
+nuclearMcpArgs(work: Work) string[]
+  informs(work) ? ["--informs"] : ([] as string[])
+
+// The Builder's server's arguments for a work in the project `root`.
+builderMcpArgs(work: Work) string[]
+  ["mcp", "--root", work.root, ...nuclearMcpArgs(work)]
 
 // The MCP servers every agent gets, as their configuration names them: NuclearLang's (`nuclear`) and the Builder's
-// (`nuclear_builder`, every action of the Builder's pages in the project `root`).
-mcpServers(command: string, root: string) <string, any>
-  { "nuclear": { "command": command, "args": [] as string[] }, "nuclear_builder": { "command": builderMcpCommand(), "args": builderMcpArgs(root) } }
+// (`nuclear_builder`, every action of the Builder's pages in the work's project).
+mcpServers(work: Work) <string, any>
+  { "nuclear": { "command": work.mcpCommand, "args": nuclearMcpArgs(work) }, "nuclear_builder": { "command": builderMcpCommand(), "args": builderMcpArgs(work) } }
 
 // Runs a command in the project and gives each line it prints to `onLine`; the whole process group is killed after
 // `timeoutMs`. The exit code, -9 when it was killed, and the end of what it said on stderr.

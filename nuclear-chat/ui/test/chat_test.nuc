@@ -150,6 +150,17 @@ ChatTest
     expect(targets(ws, rooms, "#back", false, Texts(lang = "en")).map((t) => t.channel)).toEqual(["backend"])
     expect(targets(ws, rooms, "", true, Texts(lang = "en")).length).toBe(3)
 
+  @test("a member the host no longer lists is out of the members list and the sidebar; their kept direct message is found by the switcher")
+  unlisted()
+    ws = sampleWorkspace()
+    ws.members[1].listed = false
+    rooms = [sampleRoom("general", "channel", 0), sampleRoom("dm-ada", "dm", 0), sampleRoom("dm-grace", "dm", 0)]
+    expect(targets(ws, rooms, "", true, Texts(lang = "en")).map((t) => t.channel)).toEqual(["dm-ada", "dm-atlas"])
+    expect(targets(ws, rooms, "grace", false, Texts(lang = "en")).map((t) => t.channel)).toEqual(["dm-grace"])
+    expect(sidebarDms(ws, rooms, "general").map((c) => c.id)).toEqual(["dm-ada"])
+    expect(sidebarDms(ws, rooms, "dm-grace").map((c) => c.id)).toEqual(["dm-ada", "dm-grace"])
+    expect(targets(ws, [sampleRoom("general", "channel", 0)], "grace", false, Texts(lang = "en")).isEmpty).toBe(true)
+
   @test("a search's words are marked in the text, its filters are not words")
   searchMarks()
     expect(wordsOf("Schema from:@ada in:#core")).toEqual(["schema"])

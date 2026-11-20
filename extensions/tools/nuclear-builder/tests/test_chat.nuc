@@ -74,17 +74,23 @@ testTheChatWritesASpecsBaseWithTheFactorysToolAndKeepsItsHistory(tmpPath: Path, 
   chatOf(root, "c1", {}, [say("and now?")], again, { "transport": assistant(bodies, ["Nothing else."]) }).start()
   expect((again[0]["messages"] as <string, any>[]).length == 4 and again.last["step"] == "turn-2" and "you: and now?" in "${bodies.last["message"]}" and "Its base is in" in "${bodies.last["message"]}")
 
+// An agent's subscription is not asked (spec 023 requirement 4); forceConfirm asks it twice, as an API's is asked.
 testAPaidProviderIsConfirmedTwiceOnceForTheConversation(tmpPath: Path, monkeypatch: any) void
   root = chatProject(tmpPath, monkeypatch)
   log = fakeAgent(tmpPath, monkeypatch, "claude", [{ "type": "assistant", "message": { "content": [{ "type": "text", "text": "Two runs passed." }] } }, { "type": "result", "result": "Two runs passed.", "total_cost_usd": 0.02, "is_error": false }])
   claude: <string, any> = { "kind": "agent", "provider": "claude-code", "model": "haiku" }
+  free: <string, any>[] = []
+  chatOf(root, "subscription", claude, [say("hi")], free).start()
+  expect(not ("ask" in kinds(free)) and free.last["status"] == "answered", json.dumps(free))
+  forcing: <string, any> = { "forceConfirm": true }
   // no: nothing is called
+  log.unlink(missingOk = true)
   refused: <string, any>[] = []
-  chatOf(root, "paid", claude, [say("what was done?"), json.dumps({ "answer": "no" })], refused).start()
+  chatOf(root, "paid", claude, [say("what was done?"), json.dumps({ "answer": "no" })], refused, forcing).start()
   expect(kinds(refused) == ["history", "ask", "done"] and refused.last["status"] == "stopped" and not log.exists())
   // yes twice: the call, its cost; a message said while it asks waits its turn
   events: <string, any>[] = []
-  chatOf(root, "paid", claude, [say("what was done?"), say("and the cost?"), json.dumps({ "answer": "yes" }), json.dumps({ "answer": "yes" })], events, { "budgetUsd": 1.5 }).start()
+  chatOf(root, "paid", claude, [say("what was done?"), say("and the cost?"), json.dumps({ "answer": "yes" }), json.dumps({ "answer": "yes" })], events, { "budgetUsd": 1.5, "forceConfirm": true }).start()
   asks = events.filter((e) => e["type"] == "ask")
   expect(asks.map((a) => a["id"]) == ["spending-1", "spending-2"] and asks[1]["budgetUsd"] == 1.5 and asks[0]["providers"] == ["claude-code"], json.dumps(events))
   dones = events.filter((e) => e["type"] == "done")
@@ -93,7 +99,7 @@ testAPaidProviderIsConfirmedTwiceOnceForTheConversation(tmpPath: Path, monkeypat
   expect(args[args.indexOf("--model") + 1] == "haiku" and "--mcp-config" in args)
   // resumed, it does not ask again; --confirm-spending is refused when the project forces the confirmation
   more: <string, any>[] = []
-  chatOf(root, "paid", claude, [say("thanks")], more).start()
+  chatOf(root, "paid", claude, [say("thanks")], more, forcing).start()
   expect(not ("ask" in kinds(more)) and more.last["status"] == "answered")
   Path(root, ".nuclear", "builder.json").writeText(json.dumps({ "forceConfirm": true }))
   forced: <string, any>[] = []

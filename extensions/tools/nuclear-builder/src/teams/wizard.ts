@@ -21,6 +21,8 @@ export interface WizardMember {
   ownSkills?: { id: string; name: string; description: string; text: string; from?: string }[];
   temperament?: string;
   note?: string;
+  /** Worked by the team's brain (spec 023): its own kind, provider and model are not written. */
+  inherits?: boolean;
 }
 
 /** How many of a member's differences are set (the row's count). */
@@ -75,15 +77,18 @@ export function rosterSkills(roster: Record<string, { employees?: { skills?: str
 
 /** The draft `team create` reads: who works a member always written (an older `local` one becomes the default agent);
  * the tech lead is the index of its member. */
-export function draftOf(w: { name: string; description: string; purpose: string; skills: string[]; ownSkills?: { id: string; name: string; description: string; text: string; from?: string }[]; budgetUsd: number; lead: number; logoFile?: string; members: WizardMember[] }): Record<string, unknown> {
+export function draftOf(w: { name: string; description: string; purpose: string; skills: string[]; ownSkills?: { id: string; name: string; description: string; text: string; from?: string }[]; budgetUsd: number; lead: number; logoFile?: string; members: WizardMember[]; brain?: { kind: string; provider: string; model: string } | null; method?: string; instructions?: string }): Record<string, unknown> {
   const members = w.members.map((m) => {
     const out: Record<string, unknown> = { role: m.role };
     if (m.employee) out.employee = m.employee;
     if (m.name) out.name = m.name;
     const local = m.kind === 'local' || !m.kind;
-    out.kind = local ? 'agent' : m.kind;
-    out.provider = local ? 'claude-code' : m.provider;
-    if (m.model && !local) out.model = m.model;
+    // a member worked by the team's brain names no kind, provider nor model of its own
+    if (!(w.brain && m.inherits)) {
+      out.kind = local ? 'agent' : m.kind;
+      out.provider = local ? 'claude-code' : m.provider;
+      if (m.model && !local) out.model = m.model;
+    }
     // what makes it different, each one only when it is set
     if (m.instructions?.trim()) out.instructions = m.instructions.trim();
     if (m.skills) out.skills = m.skills;
@@ -97,5 +102,8 @@ export function draftOf(w: { name: string; description: string; purpose: string;
   if (w.ownSkills?.length) draft.ownSkills = w.ownSkills;
   if (w.lead >= 0 && w.lead < members.length) draft.techLead = w.lead;
   if (w.logoFile) draft.logoFile = w.logoFile;
+  if (w.brain) draft.brain = { kind: w.brain.kind, provider: w.brain.provider, model: w.brain.model ?? '' };
+  if (w.method?.trim()) draft.method = w.method.trim();
+  if (w.instructions?.trim()) draft.instructions = w.instructions.trim();
   return draft;
 }

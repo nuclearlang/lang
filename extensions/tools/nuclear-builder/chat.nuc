@@ -19,10 +19,11 @@ LOCAL_CHAT_TOOLS = ["project_read", "spec_new", "spec_list", "spec_show", "run_s
 CHAT_ROUNDS = 6
 
 // One factory tool call of the local member (a text block): the Builder's MCP tool of that name (tools.nuc, the same
-// arguments, checked against its schema), its text and whether it failed.
-chatTool(root: string, name: string, input: <string, any>) <string, any>
-  if not (name in builderToolNames())
-    return { "text": "no tool `${name}`: ${builderToolNames().join(", ")}", "error": true }
+// arguments, checked against its schema), its text and whether it failed; `informs`: only the informing agent's.
+chatTool(root: string, name: string, input: <string, any>, informs: boolean = false) <string, any>
+  names = builderToolNames().filter((n) => not informs or n in INFORM_TOOLS)
+  if not (name in names)
+    return { "text": "no tool `${name}`: ${names.join(", ")}", "error": true }
   r = callBuilderTool(root, name, smallModelArguments(builderToolList(root).find((t) => t["name"] == name)!, input))
   text: string = r["text"]!
   { "text": text.substring(0, Math.min(text.length, 20000)), "error": r["error"] }
@@ -205,12 +206,13 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
       if m != null and m!["type"] == "say"
         waiting.add("${m!["text"] ?? ""}")
 
-  // The two confirmations before the first paid call (or `--confirm-spending`, refused when the project or the
-  // editor forces them); kept in the history: a resumed conversation does not ask again.
+  // The two confirmations before the first call paid by use (an API, `asksSpending`; every paid provider when the
+  // project or the editor forces them), or `--confirm-spending` (refused when forced); kept in the history: a resumed
+  // conversation does not ask again.
   confirmSpending() boolean
-    if not paid() or confirmed
-      return true
     forced = line["forceConfirm"] == true or options["forceConfirm"] == true
+    if not asksSpending(kind(), forced) or confirmed
+      return true
     if options["confirmSpending"] == true
       if forced
         throw RuntimeError("this project forces the confirmation of spending (.nuclear/builder.json \"forceConfirm\"): --confirm-spending is refused; chat where you can answer")
@@ -273,7 +275,7 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
         c = calls[i]
         callId = "${step}-${round + 1}-${i + 1}"
         out({ "type": "event", "step": step, "event": { "type": "tool", "id": callId, "tool": c["name"], "input": json.dumps(c["input"]) } })
-        r: <string, any> = c["bad"] != null ? { "text": "the arguments are not one JSON object: ${c["bad"]}", "error": true } : chatTool(root, "${c["name"]}", c["input"]!)
+        r: <string, any> = c["bad"] != null ? { "text": "the arguments are not one JSON object: ${c["bad"]}", "error": true } : chatTool(root, "${c["name"]}", c["input"]!, informs())
         out({ "type": "event", "step": step, "event": { "type": "tool-result", "id": callId, "tool": c["name"], "ok": r["error"] != true, "text": r["text"] } })
         keep({ "role": "tool", "tool": c["name"], "input": c["input"], "text": r["text"], "error": r["error"] })
         decision = decide(step, "${c["name"]}", "${r["text"]}")
@@ -338,7 +340,7 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
     // the user's last words: what the local Developer searches its graph and the project's files with
     mine = history.filter((h) => h["role"] == "you")
     query = mine.isEmpty ? "" : "${mine.last["text"] ?? ""}"
-    inputs: <string, any> = { "platform": platform, "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }, "route": "/developer/chat", "stream": true, "body": { "message": prompt, "history": "", "platform": platform in ["backend", "mobile", "web"] ? platform : "backend", "root": root, "query": query } }
+    inputs: <string, any> = { "informs": informs(), "platform": platform, "prices": line["prices"] ?? ({} as <string, any>), "transport": options["transport"], "developerUrl": line["developerUrl"], "watch": { "stallSeconds": line["stallSeconds"] ?? 90, "ollamaUrl": line["ollamaUrl"] ?? "http://localhost:11434" }, "route": "/developer/chat", "stream": true, "body": { "message": prompt, "history": "", "platform": platform in ["backend", "mobile", "web"] ? platform : "backend", "root": root, "query": query } }
     work = Work(root, "${Path(root, CHAT_DIR)}", prompt, {}, [], "${given["model"] ?? ""}", paid() ? left : 0, "${line["mcpCommand"] ?? "nuclear-mcp"}", line["callTimeoutMs"] ?? 900_000, inputs)
     roles = rolesDir()
     before = roleFiles(roles)
@@ -357,6 +359,10 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
     if e["type"] != "text"
       out({ "type": "event", "step": step, "event": e })
 
+  // Whether who answers only informs (Nuclear Atlas, spec 023): its tools read and teach, none does the work.
+  informs() boolean
+    false
+
   // Who answers, as the adapter gives it to the provider.
   persona() Role
     Role("chat", "general agent", "You are the general agent of Nuclear Builder, NuclearLang's software factory.", {}, {}, [], [])
@@ -364,12 +370,14 @@ Chat(root: string, id: string, given: <string, any>, line: <string, any>, read: 
   // The factory's tools, as a prompt's section: an agent or an API model has them as the MCP server
   // `nuclear_builder` (beside `nuclear`); the local member calls them as text blocks.
   toolsSection() string
+    if kind() != "local" and informs()
+      return "## Your tools\n\nThe MCP server `nuclear_builder` gives you what reads the factory: the project's specs, its runs and their state, the teams (team_list: each team's tech lead and whether it is free), a file of the project (project_read); the MCP server `nuclear` gives you Nuclear's documents and the Smart Graph, and the team tools (team_create, team_edit, member_add, member_edit), which ask the user before each change. No tool of yours writes a spec, starts a run or changes the project: that is a team's work."
     if kind() != "local"
       return "## The factory's tools\n\nThe MCP server `nuclear_builder` gives you every action of Nuclear Builder (specs, runs and their answers, checks, teams, the line, the CI file, reading a file of the project): call them as tools. A tool that answers `waiting: spending` or `needsUser` waits for the user: say so, never answer it yourself."
     // a small model's window holds the tools a chat calls most, described; the rest by name
-    all = builderToolList(root)
-    tools = all.filter((t) => t["name"] in LOCAL_CHAT_TOOLS).map((t) => toolLine(t)).join("\n")
-    others = all.filter((t) => not (t["name"] in LOCAL_CHAT_TOOLS)).map((t) => "${t["name"]}")
+    all = builderToolList(root).filter((t) => not informs() or t["name"] in INFORM_TOOLS)
+    tools = all.filter((t) => t["name"] in LOCAL_CHAT_TOOLS or informs()).map((t) => toolLine(t)).join("\n")
+    others = all.filter((t) => not (t["name"] in LOCAL_CHAT_TOOLS) and not informs()).map((t) => "${t["name"]}")
     if not others.isEmpty
       tools = "${tools}\n\nMore tools, by name: ${others.join(", ")}."
     "## The factory's tools\n\nTo call one, end your answer with a line `--- tool: <name> ---` and its JSON arguments on the next line (several calls: one block each). The results come back in the next message; answer the user once you have them. For example:\n\n--- tool: project_read ---\n{\"path\": \"docs/brief.pdf\"}\n\nA tool that answers `waiting: spending` or `needsUser` is asked of the user: never answer it yourself.\n\n${tools}"

@@ -316,17 +316,17 @@
    "id": "faq:ask-the-agent",
    "type": "faq",
    "title": "How do I ask an agent to do something?",
-   "summary": "In VS Code open Nuclear Atlas (`Ctrl+Alt+A`): your direct message with the general agent in Nuclear Chat, answered from the project and the Smart Graph; `/task <what to do>` there is an order, run by the Builder with your team and told in the team's channel. For a whole feature write a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
+   "summary": "In VS Code open Nuclear Atlas (`Ctrl+Alt+A`): your direct message with the general agent in Nuclear Chat, answered from the project and the Smart Graph. Atlas only informs: a task (code, specs, a project) goes to a team's tech lead in Nuclear Chat; Atlas says which teams are free and helps make one. For a whole feature, a spec (`Ctrl+Alt+P`) with its acceptance criteria.",
    "body": [
     "- **A question** (\"what does `BooksAppComponent` expose?\", \"how do I add a route?\"): the agent answers and changes nothing.",
-    "- **An order** (`/task add a use case that lists the books of an author`): a run of the Builder with the project's team; its members tell each station as a thread of the team's channel, and its journal says what was done.",
     "- **A feature**: a spec in the Builder (*+ New spec*, `Ctrl+Alt+P`). Name each piece with the platform's words (a model `Book`, a repository `BookRepository`, a use case `ListBooks`) and add one acceptance criterion per behaviour. For a resource of an API, add its `GET <url>` line or an example answer and the generators write it.",
     "- **Talk to a member** in the Builder's chat: `@qa`, `@<name>`, or the team's channel (its tech lead answers).",
     "- **Choose who answers**: the dropdown in Atlas's header picks the agent (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build, an API model) and its model, per conversation; by default the first agent installed, else an API provider with a key (the setting `nuclear.builder.chat`), and with none it says a provider must be chosen; it works with the Builder's MCP tools, so it can read a document, write the specs and start their runs.",
     "- **From a terminal**: `nuclear-builder run specs/<component>/<id>/spec.md` (the run's team decides who works each station).",
     "- **From Claude Code, Codex or Cursor**: the MCP server `nuclear-mcp` (the generators, the compiler, the graph).",
     "",
-    "The agent tells you when a task is beyond it; then give it to a stronger model or split the task."
+    "The agent tells you when a task is beyond it; then give it to a stronger model or split the task.",
+    "- **A task**: ask a tech lead (`concept:why-a-team`): its first answer is the plan (what, through which stations, who does each part), then it writes the spec and starts the run. `/task` said to Atlas gets the tech leads to ask instead."
    ],
    "keys": [
     "chat",
@@ -350,6 +350,10 @@
     {
      "rel": "when-beyond",
      "to": "playbook:escalate"
+    },
+    {
+     "rel": "tasks-go-to",
+     "to": "concept:why-a-team"
     }
    ],
    "sources": [

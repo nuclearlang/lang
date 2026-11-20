@@ -11,17 +11,37 @@ engine gives the chat its members and how each one answers; the extension mounts
 run in the team's channel, and does what its buttons ask.
 
 ## What the engine gives (`member.nuc`, `chat.nuc`)
-- `nuclear-builder chat-host --json [--root] [--lang]`: the host file (the run's team, [engine.md](engine.md) "The
-  team": every member, any number per role, as `<team>-<member id>` with their face, temperament, personality,
-  responder and brain, who works them: `{agent, kind, provider, model, paid}`; the team with its tech lead, who
-  answers a message to the team; `@<role>` reaches the role's first member as listed; the channels `general` and the
-  team's). Several teams and none chosen: the error with `chooseTeam`.
+- `nuclear-builder chat-host --json [--root] [--lang]`: the host file (spec 023: every saved team, the run's team
+  first, [engine.md](engine.md) "The team"; the local team when none is saved): every member, any number per role, as
+  `<team>-<member id>` with their face, temperament, personality, responder and brain, who works them: `{agent, kind,
+  provider, model, paid}`, and `listed`: true only for each team's tech lead (the one it names, else its Architect,
+  else its first member) and `atlas`; the teams with their tech lead, who answers a message to the team; `@<role>`
+  reaches the role's first member as listed; the channels `general` (its members: the listed ones but Atlas) and each
+  team's (its members: its tech lead). Several teams and none chosen are no error here (`chooseTeam` is gone: every
+  team is in the chat; a run still asks which one).
+  The editor registers from it only the general agent and each team's tech lead (`registration` of
+  `vscode/src/chatHost.ts`, spec 023): Nuclear Chat lists them and no other member; a run's station is then told by
+  the tech lead (`placeOf`: a member the chat does not have is its team's lead); the other members' old
+  conversations stay in the project.
 - `nuclear-builder member --team <id> --member <member id> --events` (`--role <role>`: the role's first member;
   `--role chat`): the responder, one answer per message
   ([teams-and-vault.md](teams-and-vault.md), "A member in Nuclear Chat"). `--role chat` is the general agent
   (`--kind`, `--provider`, `--model`; by default the default external choice, `externalWorker`, while the local models
   are on standby, ADR-platform-0013: the local one asked is that choice too, and with none the command refuses with
   `NO_PROVIDER`; the local Nuclear Developer with them on).
+- **Nuclear Atlas only informs** (spec 023 requirement 1): its prompt (`ATLAS_ROLE` of `member.nuc`) explains
+  Nuclear, the workspace and the projects from the Smart Graph and the project's map; asked for a task it sends the
+  user to a team's tech lead, naming the free teams with their lead (its prompt's *The teams*, from `teamsAtWork`: a
+  team with a run of the project running or waiting is busy), and with none free offers to make one with the Nuclear
+  MCP server's team tools (each change asked first). Its tools are only those that read and teach: both MCP servers
+  run with `--informs` (`nuclear-builder mcp --informs`: `INFORM_TOOLS` of `mcp.nuc`; `nuclear-mcp --informs`), and its
+  local text tools are held to the same list: no `spec_new`, `run_start`, `run_answer`, no team changed by the
+  Builder's tools.
+- **The tech lead plans, explains and assigns** (spec 023 requirement 2): its prompt says that its first answer to a
+  task is the plan (what, how: the stations, the team's method; who does each part, by name and role, from *Your
+  team, by station*), then `spec_new` with criteria and `run_start` assigning those members, and the run's progress
+  told in the thread. Every member's prompt holds the team's method and instructions (`teamWay`, through
+  `withSkills`).
 - **The general agent is a front for any agent** (spec 013 requirement 17): the host file gives the member `atlas`
   (role `chat`, its direct message `dm-atlas`) with `responder.choices`, one per agent of `nuclear-builder agents`
   (`chat_agents.nuc`: the local Nuclear Developer only while the local models are on, Claude Code, OpenCode, Codex and Gemini CLI when their
@@ -32,7 +52,8 @@ run in the team's channel, and does what its buttons ask.
   local models are on standby, `""` with `why` (a provider must be chosen) when this machine has none;
   `"nuclear-developer"` with them on. The user picks the agent and its model in the
   conversation's header; the chat runs that choice's command with `--model`. A spending confirmation holds only for
-  the provider it named: another agent chosen for the same conversation asks twice again.
+  the provider it named: another agent chosen for the same conversation asks twice again. Only an API (kind `api`)
+  asks it; an agent's subscription is not asked unless `forceConfirm` (the project's, or `--force-confirm`) is on.
 - **The answer as it is written**: a chat's turn asks its adapter to stream (`inputs.stream`): Claude Code runs with
   `--include-partial-messages` and each piece of text is a `text-delta` event, told to the chat as
   `{"type": "text-delta", "text"}` (the event `message.delta`); the final `text` is still the answer. The other
@@ -78,9 +99,7 @@ run in the team's channel, and does what its buttons ask.
   as a `data:` URL; the general agent's default for a new conversation is the setting `nuclear.builder.chat` when
   that agent is on the machine, else the local one), again on every reconnection, on a change of the chat's settings
   and when a team changes (a file of `factory/teams/`, `factory/settings.json`'s default team, a project's
-  `.nuclear/builder.json`: watched, one registration after a burst). A host file with `chooseTeam` asks once which
-  team the project uses (a quick pick), saves it (`line set team=<id>`) and registers with it,
-  and what a page missed is read back (`GET events/{ws}?since=`). A service that cannot be reached is said in the
+  `.nuclear/builder.json`: watched, one registration after a burst), and what a page missed is read back (`GET events/{ws}?since=`). A service that cannot be reached is said in the
   page with how to fix it (`nuclear-builder setup`).
 - **No chat in the Builder's page** (the user, 2026-11-20): the conversations are Nuclear Atlas's. A member (the
   team's roster in the spec form), the team (at the foot of the log), *Ask Nuclear Atlas* and *Polish in Nuclear

@@ -78,10 +78,14 @@ jobs:
           version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
           cd extensions/vscode && npm ci --no-audit --no-fund && npm run package
           mkdir -p ../../dist && cp nuclearlang-*.vsix "../../dist/nuclearlang-$version.vsix"
+          # its checksum: the extension checks a copy it downloads from the release against it (spec 023)
+          cd ../../dist && sha256sum "nuclearlang-$version.vsix" > "nuclearlang-$version.vsix.sha256"
       - uses: actions/upload-artifact@v4
         with:
           name: vscode
-          path: dist/*.vsix
+          path: |
+            dist/*.vsix
+            dist/*.vsix.sha256
 
   # the same .vsix on the Visual Studio Marketplace and Open VSX; a job of its own, so a store that fails never stops
   # the GitHub release. The version the stores read is package.json's: a version already published is skipped.

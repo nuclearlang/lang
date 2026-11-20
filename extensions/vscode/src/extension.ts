@@ -20,6 +20,7 @@ import { activateMonitor } from '../../tools/nuclear-monitor/src/panel';
 import { appDir, CARD, projectCard, readCard } from './card';
 import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
 import { activateWorkspace } from './workspace';
+import { initAssets } from './assetsPage';
 import { checkSnapshot } from './snapshot';
 import {
   LanguageClient,
@@ -41,6 +42,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   await migrateSettings();
   // the language of every page and message (nuclear.language): the status bar's globe and the change event
   registerLanguage(context);
+  // the pages' bundled files: the extension's, else the copy taken from its release (spec 023, requirement 7)
+  initAssets(context);
   // a newer release: the floating button of every NuclearLang page, before any page opens
   // the toolchains' settings into the environment of every process and terminal, before the first one starts
   applyToolchains(context);

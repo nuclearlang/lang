@@ -5,7 +5,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { lang, l10n } from '../../../../vscode/src/i18n';
-import { addMembers, Agent, cloneSkill, createSkill, deleteSkill, setSkills, updateSkill, agentsHere, modelsHere, ModelsHere, CommandMissing, createTeam, removeMember, updateMember, deleteTeam, duplicateTeam, exportTeam, importTeam, clearTeamLogo, logoData, renameTeam, rosterFaces, Screen, suggestMembers, suggestNames, saveTeam, setDefaultTeam, setTeamLogo, Team, TeamDraft, TeamEntry, teamScreen, vaultList, vaultSet } from './cli';
+import { addMembers, Agent, chatChannel, cloneSkill, createSkill, deleteSkill, setSkills, updateSkill, agentsHere, modelsHere, ModelsHere, CommandMissing, createTeam, removeMember, updateMember, deleteTeam, duplicateTeam, exportTeam, importTeam, clearTeamLogo, logoData, renameTeam, rosterFaces, TeamChange, updateTeam, Screen, suggestMembers, suggestNames, saveTeam, setDefaultTeam, setTeamLogo, Team, TeamDraft, TeamEntry, teamScreen, vaultList, vaultSet } from './cli';
 import { teamWork } from '../workbench';
 import { memberActivity, teamSpend } from './hud';
 import { teamNumbers } from '../reports/metrics';
@@ -159,6 +159,12 @@ export class TeamsHost {
         this.put(await deleteSkill(id, String(m.skill), m.member ? String(m.member) : undefined));
         return this.state();
       }
+      // the team's brain, method and instructions (spec 023)
+      case 'team:update': {
+        if (!id || !m.change || typeof m.change !== 'object') return;
+        this.put(await updateTeam(id, m.change as TeamChange));
+        return this.state();
+      }
       case 'team:rename': {
         if (!id) return;
         const name = await vscode.window.showInputBox({ title: l10n.t('Rename the team'), value: String(m.name ?? ''), validateInput: (v) => (v.trim() ? undefined : l10n.t('A team needs a name')) });
@@ -219,10 +225,11 @@ export class TeamsHost {
         this.put(await clearTeamLogo(id));
         return this.state();
       case 'team:chat': {
-        // a member's direct message or the team's channel, in Nuclear Atlas (the chat's ids: `<team>-<member>`, `<team>`)
+        // the team's channel, or for a member the tech lead's direct message (the chat lists only the tech leads), in
+        // Nuclear Atlas (the chat's ids: `<team>-<member>`, `<team>`)
         const team = String(m.team ?? ''), member = m.member ? String(m.member) : '';
         if (!/^[\w-]+$/.test(team) || (member && !/^[\w-]+$/.test(member))) return;
-        void vscode.commands.executeCommand('nuclear.atlas.open', undefined, member ? `dm-${team}-${member}` : team);
+        void vscode.commands.executeCommand('nuclear.atlas.open', undefined, chatChannel(team, member, this.screen?.shown[team]));
         return;
       }
       case 'team:reports':

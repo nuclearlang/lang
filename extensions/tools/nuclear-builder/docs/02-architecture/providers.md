@@ -88,7 +88,8 @@ and a member of it is converted on read (teams-and-vault.md); its adapter stays,
   first, so a version is chosen as easily as the latest. The pickers say every line's kind (*Claude Code (agent) ·
   opus 5.5 (claude-opus-5-5)*, *Anthropic API (model) · …*, *Nuclear Developer (local) · qwen2.5-coder 3b*) and every
   group how it is paid (*Claude Code — agent, your Claude account*, *Anthropic API — model, pay per token with a
-  key*, *Local — this machine, free*). The general agent's chat is the exception: its local choice offers only the machine's chat
+  key*, *Local — this machine, free*). Only the pay-per-token kind (`api`) asks the user to confirm the spending
+  (`asksSpending`, spec 023); an agent's subscription is not asked unless `forceConfirm` is on. The general agent's chat is the exception: its local choice offers only the machine's chat
   model (`CHAT_MODEL`, [chat.md](chat.md)).
 - **The memory guard** of a local model: this machine's memory (`machineMemory`: Linux `/proc/meminfo` `MemTotal` and
   `MemAvailable`; macOS `sysctl hw.memsize` and `vm_stat`'s free, inactive and speculative pages; Windows

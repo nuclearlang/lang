@@ -11,7 +11,7 @@ use pathlib{ Path }
 renderGemini(role: Role, work: Work, at: Path) <string, string>
   at.joinpath("GEMINI.md").writeText("# The ${role.title} of the software factory\n\n${role.text()}\n")
   settings = at.joinpath("settings.json")
-  settings.writeText(json.dumps({ "mcpServers": mcpServers(work.mcpCommand, work.root), "tools": { "exclude": ["run_shell_command"] } }, indent = 2))
+  settings.writeText(json.dumps({ "mcpServers": mcpServers(work), "tools": { "exclude": ["run_shell_command"] } }, indent = 2))
   env = toolEnv()
   env["GEMINI_CLI_SYSTEM_SETTINGS_PATH"] = "${settings}"
   env

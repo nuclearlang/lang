@@ -28,7 +28,7 @@ renderGrokHome(work: Work, at: Path) <string, string>
           if not isinstance(e, OSError)
             throw e
   servers: string[] = []
-  for name, server in mcpServers(work.mcpCommand, work.root)
+  for name, server in mcpServers(work)
     servers.add("[mcp_servers.${name}]\ncommand = ${json.dumps(server["command"])}\nargs = ${json.dumps(server["args"])}\n")
   home.joinpath("config.toml").writeText("${servers.join("\n")}\n[permission]\nrules = [{ action = \"deny\", tool = \"bash\" }]\n")
   env = toolEnv()

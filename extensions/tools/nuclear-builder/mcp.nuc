@@ -12,16 +12,23 @@ use mcp/server/mcpserver/exceptions{ MCPServerError }
 
 BUILDER_INSTRUCTIONS = "Nuclear Builder, NuclearLang's software factory, in one project: everything its pages do. A spec (spec_new, with acceptance criteria: ask the user for them when they are not given) goes through a run (run_start) worked by a team; a run stops at its gates for an answer (run_answer) and its progress is in runs and run_file. To work from a document (slides, a brief), read it with project_read, write one spec per feature with its criteria, then start their runs. What is the user's stays the user's: a tool that answers `waiting: spending` or `needsUser` is waiting for the user's confirmation; tell the user and never answer it yourself. Merging a pull request is never yours."
 
+// The tools the informing agent (Nuclear Atlas, spec 023) is given, `--informs`: what reads the project, its specs,
+// runs and teams (each team's tech lead and whether it is free), and nothing that does the work (no spec written, no
+// run started or answered, no team changed: a team is made with the Nuclear MCP server's team tools, which ask the
+// user first).
+INFORM_TOOLS = ["spec_list", "spec_show", "runs", "run_file", "run_journal", "metrics", "checks", "team_list", "team_show", "team_runnable", "team_suggest", "team_name_suggest", "team_roster", "team_temperaments", "skills_list", "skills_show", "line_show", "project_read", "agents_list", "models_list"]
+
 // The tool's name of a method: its own without `Tool` (`specNewTool` → `spec_new`).
 toolName(method: any) string
   name: string = method.__name__
   name.endsWith("_tool") ? name.substring(0, name.length - 5) : name
 
-// The Builder's MCP server for the project `root`.
-builderMcpServer(root: string) MCPServer
+// The Builder's MCP server for the project `root`; `informs`: only the informing agent's tools.
+builderMcpServer(root: string, informs: boolean = false) MCPServer
   server = MCPServer("nuclear_builder", instructions = BUILDER_INSTRUCTIONS)
   for tool in BuilderTools(root).all()
-    server.addTool(tool, name = toolName(tool))
+    if not informs or toolName(tool) in INFORM_TOOLS
+      server.addTool(tool, name = toolName(tool))
   server
 
 // The tools of the server as data: [{name, description, schema}] (what the chat's local member and the knowledge base
@@ -48,15 +55,15 @@ callBuilderTool(root: string, name: string, input: <string, any>) <string, any>
     cause = e.__cause__
     { "text": cause != null and (isinstance(cause, ValueError) or isinstance(cause, OSError)) ? "${cause}" : "${e}", "error": true }
 
-// `nuclear-builder mcp [--root <dir>]`: the server on stdio · `nuclear-builder mcp tools`: its instructions and tools as
-// JSON.
+// `nuclear-builder mcp [--root <dir>] [--informs]`: the server on stdio (`--informs`: only `INFORM_TOOLS`) ·
+// `nuclear-builder mcp tools`: its instructions and tools as JSON.
 mcpLine(args: string[]) int
   root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
   if not args.isEmpty and args[0] == "tools"
     print(json.dumps({ "instructions": BUILDER_INSTRUCTIONS, "tools": builderToolList(root) }, indent = 1))
     return 0
   logging.getLogger("httpx").setLevel(logging.WARNING)
-  builderMcpServer("${Path(root).resolve()}").run()
+  builderMcpServer("${Path(root).resolve()}", "--informs" in args).run()
   0
 
 // The names of the tools, in their order (no server needed).

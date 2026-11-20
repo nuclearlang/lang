@@ -37,10 +37,23 @@ there are no presets.
   { "id": "night-shift", "name": "Night shift", "description": "", "purpose": "A mobile shop", "skills": ["payments"],
     "ownSkills": [{ "id": "house-style", "name": "House style", "description": "How we write.", "text": "## Steps\n…" }],
     "logo": null, "techLead": "dev-017", "budgetUsd": 5, "updated": 1763000000000,
+    "method": "", "instructions": "Small pull requests.", "brain": { "kind": "agent", "provider": "codex", "model": "gpt-5" },
     "members": [{ "id": "dev-017", "role": "developer", "employee": "dev-017", "name": "", "kind": "local",
                   "provider": "nuclear-developer", "model": "qwen2.5-coder:3b", "skills": ["write-tests", "tdd"],
                   "ownSkills": [], "agent": "backend-engineer", "instructions": "", "behaviour": {}, "tasks": [], "personality": { "gifs": "sometimes", "on": ["failure"], "note": "" } }] }
   ```
+- **The method, the instructions and the brain** (spec 023): `method` is how the team works (empty: Scrum,
+  `SCRUM_METHOD`: a backlog of specs with their criteria, a sprint of runs, the stations with their checks, a
+  review at the end), `instructions` what its user wrote for every member; both reach every member's prompt
+  (`teamWay`, through `withSkills`: a run's role and a chat's member). `brain` `{ kind, provider, model }` (or null)
+  works every member that has no `kind` nor `provider` of its own; a member's own wins. `team update --kind
+  --provider --model` sets it and puts every member on it (their own give way; one set after it wins), `--no-brain`
+  takes it away (each member keeps the one it worked with), `team member update --team-brain` gives a member back
+  to it; a new member without a who-works takes it. As read (`withBrains`, `team show`/`screen`), a member carries
+  its effective `kind`, `provider`, `model` and `inheritsBrain` (true: the team's); a save (`team save` of the whole
+  team) keeps `inheritsBrain: true` members without their own, `method`, `instructions` and `brain`. A team of
+  before has none of them: Scrum, no instructions, no brain, every member its own (converted on read, nothing
+  written).
 - A write (`writeAtomic`) goes to a temporary file beside it, then a rename; the previous version stays as
   `<id>.json.bak`. `team delete` moves the file to `<id>.json.bak`.
 - An old file (`roles: { <role>: {…} }`, one member per role, `techLead` a role) is converted on its first read
@@ -123,21 +136,21 @@ Deterministic, no model:
 
 | Command | Prints |
 |---|---|
-| `team list --json` | `[{ "id", "name", "description", "logo", "techLead", "members" (how many), "updated", "default" }]`, by name; `logo` is the image's whole path (null without one); a file that cannot be read is listed too, with its `error` (never left out) |
-| `team show <id> --json` | the team as `teamShown` gives it (with `missing`) |
-| `team create --json` | a new team from the draft on stdin `{ name, description, purpose, skills, budgetUsd, techLead (a member's id or index), logoFile, members: [{ role, employee, name, kind, provider, model, … }] }`, its own free id, saved |
+| `team list --json` | `[{ "id", "name", "description", "logo", "techLead", "members" (how many), "updated", "default", "lead": { "id", "name", "role" } \| null, "running": [run ids], "free" }]`, by name (`lead`: the tech lead; `running`: the runs of the current project running or waiting; `free`: none, `teamsAtWork`); `logo` is the image's whole path (null without one); a file that cannot be read is listed too, with its `error` (never left out) |
+| `team show <id> --json` | the team as `teamShown` gives it (with `missing`; `method`, `methodText`: the method its members follow, `instructions`, `brain`; each member's effective brain and `inheritsBrain`) |
+| `team create --json` | a new team from the draft on stdin `{ name, description, purpose, skills, budgetUsd, techLead (a member's id or index), logoFile, method, instructions, brain, members: [{ role, employee, name, kind, provider, model, … }] }`, its own free id, saved |
 | `team suggest [--purpose …] [--skills a,b] [--lang en\|es] [--limit n] --json` | `{ "purpose", "skills", "terms", "roles": [{ "role", "candidates": [{ "employee", "name", "role", "headline", "face", "temperament", "gender", "score", "why" }] }] }` |
 | `team name-suggest [--purpose …] [--lang en\|es] [--seed n] --json` | five names |
 | `team runnable <id> --json` | `{ "team", "runnable", "missing", "stations" }`, the stations of the project's line |
 | `team member add <id> --role … [--employee …] [--kind] [--provider] [--model] [--name] [--count n] --json` | the team; `--count` adds that many of the same who-works; without `--role`, a member or a list of members on stdin |
 | `team member remove <id> <member> --json` | the team; the tech lead's place goes to the default when it was them |
-| `team member update <id> <member> [--kind] [--provider] [--model] [--employee] [--name] [--skills a,b] [--extra-skills <json>] [--instructions] [--temperament] [--gifs] [--on] [--note] [--agent <id>] --json` | the team; a kind changed without its provider takes that kind's first; `--agent ""` takes the base agent away |
+| `team member update <id> <member> [--kind] [--provider] [--model] [--team-brain] [--employee] [--name] [--skills a,b] [--extra-skills <json>] [--instructions] [--temperament] [--gifs] [--on] [--note] [--agent <id>] --json` | the team; a kind changed without its provider takes that kind's first; `--agent ""` takes the base agent away |
 | `team skills set <id> [--member <m>] --skills a,b --json` | the team: its library skills (or the member's, its role skills on kept); an id that is not in the library is refused |
 | `skills list [--team <t>] [--member <m>] [--lang en\|es] --json` | `{ "library": [{ id, title, description, kind, tags, from }], "agents": [{ …, role, skills }], "team"?: { id, skills, own }, "member"?: { id, role, agent, roleSkills, skills, own }, "composed"?: [{ id, title, description, from: library\|team\|member, overrides }] }` |
 | `skills show <id> [--team] [--member] [--lang] --json` | the skill as that place sees it (the member's own, the team's own, the library's, an agent, the member's role's): `{ id, title, description, kind, tags, from, clonedFrom?, markdown, editable }` |
 | `skills clone <id> --team <t> [--member <m>] --json` | the team: a copy as the team's or the member's own with the same id (a member's from the team's own, else the library's, else its role's); refused when it is its own already |
 | `skills create\|update <id>\|delete <id> --team <t> [--member <m>] --json` | the team; create and update read the SKILL.md on stdin (`ownSkillOf`); update keeps the id and `from`; a library skill is never updated (clone it) |
-| `team update <id> [--name] [--description] [--purpose] [--skills a,b] [--lead <member>] [--budget <usd>] --json` | the team |
+| `team update <id> [--name] [--description] [--purpose] [--skills a,b] [--lead <member>] [--budget <usd>] [--method …] [--instructions …] [--kind … --provider … --model …] [--no-brain] --json` | the team; a brain this machine cannot work is refused |
 | `team logo <id> <image> --json` · `team logo <id> --clear --json` | the team with its new logo (or none) |
 | `team save --json` | the team read on stdin, validated, stamped (`updated`, ms) and written |
 | `team duplicate <id> [--name …] --json` | the copy, its own id, no logo |
@@ -157,17 +170,18 @@ ADR-platform-0008); the Builder is its host.
 - `nuclear-builder chat-host --json [--root <dir>] [--lang en|es]` prints the host file: `{ "host": "builder",
   "members", "channels", "teams", "lang" }`; `teams` is `[{ "id", "name", "lead": "<team>-<techLead>" }]`, the
   member who answers a message to the team (`@<role>` reaches the role's first member as listed: Nuclear Chat's
-  routing). The members are every member of the project's team, any number per role, in the team's order (the run's
-  team, `teamOfRun`: engine.md "The team"), each `{ "id":
+  routing). The members are every member of every saved team (the project's first: `teamOfRun`, engine.md "The
+  team"; the local team when none is saved), any number per role, in the team's order, each `{ "id":
   "<team>-<member id>", "name", "role", "member" (its id in the team), "team", "avatar" (the employee's id, the drawn
   face's seed; `<team>-<member id>` without one), "face" (the
   thumbnail's whole path, the chat's avatar; the portrait's without one; null without either), "temperament" (the member's, else the employee's; null), "profile":
   { "bio", "hrNote", "lang" } (the roster in `lang`), "personality", "responder": { "command": ["nuclear-builder",
   "member", "--team", "<team>", "--member", "<member id>"], "paid" }, "brain": { "agent" (the provider's name), "kind",
-  "provider", "model", "paid" } }` (`paid`: a provider not `local`; `brain`: who works the member, drawn under their
-  name in a direct message). Several teams and none chosen: `{ "error", "chooseTeam": [{ "id", "name" }] }`, exit 1. The channels:
-  `general` (topic *The project <name>*) and the team's (`<team>`, its description as the topic, else its name),
-  every member in both.
+  "provider", "model", "paid" }, "listed" }` (`paid`: a provider not `local`; `brain`: who works the member, drawn
+  under their name in a direct message; `listed`: true only for the team's tech lead, spec 023: the chat's people,
+  each with a direct message, the others write in the team's channel and the runs' threads). The channels:
+  `general` (topic *The project <name>*; the listed members) and each team's (`<team>`, its description as the topic,
+  else its name; its tech lead).
 - `nuclear-builder member --team <id> --member <member id> --events [--root <dir>]` (or `--role <role>`: the
   role's first member, `memberFor`) is the responder (design.md "The
   responder"): one process per answer. stdin's first line is `{ "member", "channel", "thread", "messages" (the last
@@ -176,18 +190,20 @@ ADR-platform-0008); the Builder is its host.
   `{ "type": "ask", "id": "spending-1" | "spending-2", "kind": "spending", "question", "providers", "budgetUsd" }`
   (its answer `{ "answer": "yes" | "no" }` on stdin) and last `{ "type": "done", "costUsd"[, "error"] }`. A usage
   error (no member nor role, no `--events`, no team, no such member, a team without that role, an unknown provider, a first line that is not
-  the conversation) is that `done` with its error and exit code 2.
+  the conversation) is that `done` with its error and exit code 2. The spending is asked only of an API (kind `api`),
+  of an agent too when forced.
 - It is the chat's turn (`Member` extends `Chat`, chat.md): the member's provider and model through
   `runAdapter`, the factory's tools, the role files' guard, the two spending confirmations (refused in advance when
   `"forceConfirm"`), the team's `budgetUsd` (`--budget` overrides it). Its prompt is its own: the member's name and
   role and the team's, the roster's bio and HR note in `lang`, the temperament's name and, as *How you write*, its
   voice (how much they say, the tone, emoji and GIFs, never changing what is true), the personality's note, the member's `instructions`, the tech lead's part (the lead: it answers for the whole team, speaks for everyone, says which member
   owns a question and brings them in, and is accountable for the team's work; another member: who its tech lead
-  is), the factory's tools, the project's components, the chat's messages, the message to answer and this
+  is; the lead's first answer to a task is the plan: what, how, who of *Your team, by station*), the team's method
+  and instructions, the factory's tools, the project's components, the chat's messages, the message to answer and this
   turn's tool results; it answers in `lang`. Each conversation (a channel, or a thread of it) keeps its spending,
   cost and tool results in `.nuclear/builder/chat/member-<team>-<member>-<channel>[-<thread>].jsonl`: the confirmation
   and the budget hold for that conversation.
-- `--role chat` is the general agent (Nuclear Atlas's member): `--provider`, `--model`, `--kind` as `chat` takes
+- `--role chat` is the general agent (Nuclear Atlas's member; it only informs, chat.md): `--provider`, `--model`, `--kind` as `chat` takes
   them (the local Nuclear Developer by default), the team only for its budget (`--team` optional).
 
 ## The vault (`vault.nuc`)
@@ -232,7 +248,7 @@ new team is `team create`, members added or removed `team member add|remove`.
   their modules when they run). The page draws its frame at once, a shimmering skeleton of its panels until the
   state comes. With `work` (the company), the state carries the cards, each logo read as a `data:` URL (`logoData`,
   read only, 1 MB at most). The roster's pictures reach a page once per load as the page's URLs of the files
-  (`rosterFaces` with `webviewFaceUrl`, `src/teams/faceUrl.ts`: the folders join the webview's roots, so the WebP
+  (`rosterFaces` with `webviewFaceUrl`, `src/teams/faceUrl.ts`: the folders join the webview's roots — added to the ones it has, and to VS Code's default ones (the extension's folder and the workspace's folders, `defaultRoots`) when it named none, so the page's own scripts keep loading — so the WebP
   never travel as `data:` URLs): `thumbs` (128 px) for the tiles, cards, rows and avatars, `faces` (512 px) only for
   the open profile; every picture is `loading="lazy"` and `decoding="async"` with its width and height. Typing in a
   pool's search redraws the pool once the typing pauses (120 ms), not on every key. A duplicate is `team duplicate`.

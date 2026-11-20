@@ -13,6 +13,7 @@ import { lineJson } from '../../tools/nuclear-builder/src/runs';
 import { builderSettings } from '../../tools/nuclear-builder/src/settings';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
 import { notices } from './notifications';
+import { assetUrl } from './assetsPage';
 import { projectForcesConfirm, spendingSettings } from './spending';
 
 export const GIF_SOURCES = ['pack', 'tenor', 'giphy'] as const;
@@ -89,7 +90,7 @@ export const chatCsp = (webview: vscode.Webview) => ({ script: webview.cspSource
  * the bridge sends each frame with `post({type: 'chatFrame', frame})` and the page passes what its host sends back
  * (`{type: 'chatFrame'}`) to `frame`. */
 export function chatScript(webview: vscode.Webview, extension: vscode.Uri): string {
-  const embed = webview.asWebviewUri(vscode.Uri.joinPath(extension, 'out', 'chat-embed.js')).toString();
+  const embed = assetUrl(webview, extension, 'out/chat-embed.js');
   return `function nuclearChat(post) {
   let on = null, unmount = null, module = null;
   const bridge = { send: (f) => post({ type: 'chatFrame', frame: f }), onMessage: (cb) => { on = cb; } };

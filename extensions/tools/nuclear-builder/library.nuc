@@ -262,14 +262,16 @@ sharedSkills(team: <string, any>, member: <string, any>, dir: Path? = null) <str
       out.add({ "id": id, "markdown": "${lib!["markdown"]}", "from": "library", "overrides": overrides })
   out
 
-// A member as a run gives it to its provider: its shared skills (`sharedSkills`) and, with a base agent, the agent's
-// text before the member's own instructions.
+// A member as a run and the chat give it to its provider: its shared skills (`sharedSkills`) and its instructions:
+// the team's method and instructions (`teamWay`, spec 023), then, with a base agent, the agent's text, then the
+// member's own.
 withSkills(team: <string, any>, member: <string, any>, dir: Path? = null) <string, any>
   out: <string, any> = dict(member)
   out["sharedSkills"] = sharedSkills(team, member, dir)
   agent = isinstance(member["agent"], str) ? libraryAgent("${member["agent"]}", "en", dir) : null
+  parts = [teamWay(team)]
   if agent != null
-    own = "${member["instructions"] ?? ""}".trim()
-    base = "${frontMatter("${agent!["markdown"]}")["body"]}".trim()
-    out["instructions"] = own.isEmpty ? base : "${base}\n\n${own}"
+    parts.add("${frontMatter("${agent!["markdown"]}")["body"]}".trim())
+  parts.add("${member["instructions"] ?? ""}".trim())
+  out["instructions"] = parts.filter((p) => not p.isEmpty).join("\n\n")
   out

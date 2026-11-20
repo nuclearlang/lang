@@ -97,10 +97,18 @@ testARunStartsApartAndWhatSpendsOrActsInTheUsersNameWaitsForTheUser(tmpPath: Pat
   started = out(tools.runStartTool("lend-a-book"))
   expect(started["run"] == "lend-a-book" and started["waiting"] == null and loadRun(root, "lend-a-book")!["status"] == "pending", json.dumps(started))
   expect(detached(tmpPath, 1) == ["run --resume lend-a-book"])
-  // a team with a paid provider: the run waits for the user's two confirmations
-  paid = saveTeam(crew("Paid", ["analyst", "architect"]))
+  // a team of an agent's subscription asks nothing (spec 023 requirement 4); one paid by use (an API) waits for the
+  // user's two confirmations
+  agents = saveTeam(crew("Agents", ["analyst", "architect"]))
+  expect(paidOf(newRun(root, {}, { "id": "x", "title": "X" }, agents, ["analysis"], "specs/x"), agents)["roles"] == [] and paidOf(newRun(root, {}, { "id": "x", "title": "X" }, agents, ["analysis"], "specs/x"), agents, true)["roles"] == ["analyst"])
+  byUse = crew("Paid", ["analyst", "architect"])
+  for m in byUse["members"] as <string, any>[]
+    if m["provider"] == "claude-code"
+      m["kind"] = "api"
+      m["provider"] = "anthropic"
+  paid = saveTeam(byUse)
   waits = out(tools.runStartTool("lend-a-book", "${paid["id"]}"))
-  expect(waits["waiting"] == "spending" and "claude-code" in ((waits["spending"] as <string, any>)["providers"] as string[]))
+  expect(waits["waiting"] == "spending" and "anthropic" in ((waits["spending"] as <string, any>)["providers"] as string[]), json.dumps(waits))
   run = loadRun(root, "lend-a-book")!
   run["status"] = "waiting"
   run["waiting"] = { "id": "spending-1", "kind": "spending", "question": "Go on?" }

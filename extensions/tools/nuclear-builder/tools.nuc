@@ -109,7 +109,8 @@ spendingOf(root: string, id: string, asked: string = "") <string, any>?
     return null
   own = "${(run!["factory"] ?? ({} as <string, any>))["team"] ?? ""}"
   team = teamOfRetry(root, asked.isEmpty ? null : asked, own)
-  paid = paidOf(run!, team)
+  line = readLine(root, "${projectCard(root)["platform"] ?? ""}")
+  paid = paidOf(run!, team, line["forceConfirm"] == true)
   (paid["roles"] as string[]).isEmpty ? null : { "waiting": "spending", "run": id, "spending": paid, "how": "the user confirms the spending twice where they answer: the Builder page (Resume) or the chat" }
 
 // Every action of Nuclear Builder for an agent, in the project `root` (the folder the server was started in).
@@ -323,10 +324,11 @@ BuilderTools(root: string)
 
   // ---------- the teams ----------
 
-  // The teams of the factory: id, name, whether it is the default.
+  // The teams of the factory: id, name, whether it is the default, its tech lead (lead: id, name, role), the runs of
+  // this project it has in progress (running) and whether it is free (none).
   teamListTool() string
     body = () =>
-      toolSaid(listTeams())
+      toolSaid(teamsAtWork(root))
     attempt(body)
 
   // A team: its members (each with its id, role, employee, name, provider, model, skills, instructions, personality),
@@ -340,12 +342,15 @@ BuilderTools(root: string)
   // { role, employee, name, kind, provider, model, instructions, skills, extraSkills, personality: { temperament,
   // note } }; who works one not said: the first agent installed, else an API with a key (the local models are on standby); a provider this machine lacks is refused:
   // agents_list). A member is its profile, not its model: one agent for all is fine, their instructions and skills
-  // make them different. techLead is a member's id or index. Suggest the members first (team_suggest) and say which
-  // ones cost money.
-  teamCreateTool(name: string, members: <string, any>[] = [], description: string = "", purpose: string = "", skills: string[] = [], budgetUsd: double = 5.0, techLead: string? = null) string
+  // make them different. techLead is a member's id or index. method is how the team works (empty: Scrum),
+  // instructions what every member follows, brain ({ kind, provider, model }) who works every member without its own.
+  // Suggest the members first (team_suggest) and say which ones cost money.
+  teamCreateTool(name: string, members: <string, any>[] = [], description: string = "", purpose: string = "", skills: string[] = [], budgetUsd: double = 5.0, techLead: string? = null, method: string = "", instructions: string = "", brain: <string, any>? = null) string
     body = () =>
       workableAll(members)
-      draft: <string, any> = { "name": name, "members": members, "description": description, "purpose": purpose, "skills": skills, "budgetUsd": budgetUsd, "techLead": techLead }
+      if brain != null
+        workableChange("the team", brain!)
+      draft: <string, any> = { "name": name, "members": members, "description": description, "purpose": purpose, "skills": skills, "budgetUsd": budgetUsd, "techLead": techLead, "method": method, "instructions": instructions, "brain": brain }
       big = tooBigOf(members)
       if big != null
         return needsUser("team_create", { "draft": draft }, "${big!["text"]}. Make the team ${name} with it anyway?", "nuclear-builder team create")
@@ -371,11 +376,14 @@ BuilderTools(root: string)
       toolSaid(runnable(loadTeam(id), line["stations"] ?? STATIONS))
     attempt(body)
 
-  // Change a team's name, description, purpose, skills, tech lead (a member's id) or budget in USD; what is not given
-  // stays.
-  teamUpdateTool(id: string, name: string? = null, description: string? = null, purpose: string? = null, skills: string[]? = null, techLead: string? = null, budgetUsd: double? = null) string
+  // Change a team's name, description, purpose, skills, tech lead (a member's id), budget in USD, method (how it
+  // works: empty is Scrum), instructions (what every member follows) or its brain (kind agent or api, provider,
+  // model: who works every member from then on; noBrain: each member keeps its own); what is not given stays.
+  teamUpdateTool(id: string, name: string? = null, description: string? = null, purpose: string? = null, skills: string[]? = null, techLead: string? = null, budgetUsd: double? = null, method: string? = null, instructions: string? = null, kind: string? = null, provider: string? = null, model: string? = null, noBrain: boolean = false) string
     body = () =>
-      toolSaid(teamShown(updateTeam(id, { "name": name, "description": description, "purpose": purpose, "skills": skills, "techLead": techLead, "budgetUsd": budgetUsd })))
+      fields: <string, any> = { "name": name, "description": description, "purpose": purpose, "skills": skills, "techLead": techLead, "budgetUsd": budgetUsd, "method": method, "instructions": instructions, "kind": kind, "provider": provider, "model": model, "noBrain": noBrain }
+      workableChange("the team", fields)
+      toolSaid(teamShown(updateTeam(id, fields)))
     attempt(body)
 
   // Add members to a team: `count` employees-to-be of a role (analyst, architect, developer, qa or devops; `delivery`, its id before, is still taken), the
@@ -405,11 +413,12 @@ BuilderTools(root: string)
   // model, employee of the roster, name, skills, extra skills ([{ name, text }]), instructions, temperament, how often
   // it sends a GIF (gifs: never, sometimes, often), the note of its personality (its characteristics) and its base
   // agent (an id of the library's agents: skills_list; empty takes it away); what is not given stays. Its skills here
-  // are its role's switched on and library ids; its own skills are skills_create.
-  teamMemberUpdateTool(id: string, member: string, kind: string? = null, provider: string? = null, model: string? = null, employee: string? = null, name: string? = null, skills: string[]? = null, extraSkills: <string, any>[]? = null, instructions: string? = null, temperament: string? = null, gifs: string? = null, note: string? = null, agent: string? = null) string
+  // are its role's switched on and library ids; its own skills are skills_create. A kind, provider or model given is
+  // the member's own, over the team's brain; teamBrain gives the member back to the team's brain.
+  teamMemberUpdateTool(id: string, member: string, kind: string? = null, provider: string? = null, model: string? = null, employee: string? = null, name: string? = null, skills: string[]? = null, extraSkills: <string, any>[]? = null, instructions: string? = null, temperament: string? = null, gifs: string? = null, note: string? = null, agent: string? = null, teamBrain: boolean = false) string
     body = () =>
       workableChange(member, { "kind": kind, "provider": provider })
-      change: <string, any> = { "kind": kind, "provider": provider, "model": model, "employee": employee, "name": name, "skills": skills, "extraSkills": extraSkills, "instructions": instructions, "temperament": temperament, "gifs": gifs, "note": note, "agent": agent }
+      change: <string, any> = { "kind": kind, "provider": provider, "model": model, "employee": employee, "name": name, "skills": skills, "extraSkills": extraSkills, "instructions": instructions, "temperament": temperament, "gifs": gifs, "note": note, "agent": agent, "teamBrain": teamBrain }
       was = ((loadTeam(id)["members"] ?? []) as <string, any>[]).find((m) => m["id"] == member) ?? ({} as <string, any>)
       big = model == null and kind == null ? null : tooBigOf([{ ...was, "kind": kind ?? was["kind"], "model": model ?? was["model"] }])
       if big != null

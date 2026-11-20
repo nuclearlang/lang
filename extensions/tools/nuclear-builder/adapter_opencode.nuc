@@ -13,7 +13,7 @@ renderOpenCode(role: Role, work: Work, at: Path) <string, string>
   dir.joinpath("agent").mkdir(parents = true)
   dir.joinpath("agent", "${role.id}.md").writeText("---\ndescription: The ${role.title} of the software factory\nmode: primary\npermission:\n  bash: deny\n  edit: allow\n---\n\n${role.text()}\n")
   config = at.joinpath("opencode.json")
-  config.writeText(json.dumps({ "$schema": "https://opencode.ai/config.json", "mcp": { "nuclear": { "type": "local", "command": [work.mcpCommand], "enabled": true }, "nuclear_builder": { "type": "local", "command": [builderMcpCommand(), ...builderMcpArgs(work.root)], "enabled": true } }, "permission": { "bash": "deny", "edit": "allow" } }, indent = 2))
+  config.writeText(json.dumps({ "$schema": "https://opencode.ai/config.json", "mcp": { "nuclear": { "type": "local", "command": [work.mcpCommand, ...nuclearMcpArgs(work)], "enabled": true }, "nuclear_builder": { "type": "local", "command": [builderMcpCommand(), ...builderMcpArgs(work)], "enabled": true } }, "permission": { "bash": "deny", "edit": "allow" } }, indent = 2))
   env = toolEnv()
   env["OPENCODE_CONFIG"] = "${config}"
   env["OPENCODE_CONFIG_DIR"] = "${dir}"

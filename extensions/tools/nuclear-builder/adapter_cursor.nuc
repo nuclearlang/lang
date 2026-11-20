@@ -16,7 +16,7 @@ renderCursorPlugin(work: Work, at: Path) Path
   plugin = at.joinpath("plugin")
   plugin.joinpath(".cursor-plugin").mkdir(parents = true)
   plugin.joinpath(".cursor-plugin", "plugin.json").writeText(json.dumps({ "name": "nuclear-factory", "version": "1.0.0", "description": "NuclearLang's software factory, for one run." }))
-  plugin.joinpath("mcp.json").writeText(json.dumps({ "mcpServers": mcpServers(work.mcpCommand, work.root) }, indent = 2))
+  plugin.joinpath("mcp.json").writeText(json.dumps({ "mcpServers": mcpServers(work) }, indent = 2))
   plugin.joinpath("hooks").mkdir()
   deny = "\"${sys.executable}\" -c \"raise SystemExit(2)\""
   plugin.joinpath("hooks", "hooks.json").writeText(json.dumps({ "version": 1, "hooks": { "beforeShellExecution": [{ "command": deny, "failClosed": true }] } }, indent = 2))

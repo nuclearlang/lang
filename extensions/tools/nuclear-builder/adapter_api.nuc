@@ -105,14 +105,14 @@ apiLoop(provider: string, ask: (key: string, model: string, system: string, turn
   key: string? = work.inputs["key"] ?? vaultKey(provider)
   if key == null
     return Outcome(false, "", {}, [], 0, events, "no API key for ${provider}: nuclear-builder vault set ${provider}")
-  mcp = startMcp(work.mcpCommand, work.root)
+  mcp = startMcp(work.mcpCommand, work.root, nuclearMcpArgs(work))
   builder: McpClient? = null
   http = httpx.Client(transport = work.inputs["transport"], timeout = work.timeoutMs / 1000)
   cost = 0.0
   used: <string, any> = {}
   try
     // the Builder's MCP server beside NuclearLang's: each call goes to the server that has the tool
-    builder = startMcp(builderMcpCommand(), work.root, builderMcpArgs(work.root))
+    builder = startMcp(builderMcpCommand(), work.root, builderMcpArgs(work))
     own = mcpTools(mcp)
     theirs = mcpTools(builder!)
     builderNames = theirs.map((t) => "${t["name"]}")

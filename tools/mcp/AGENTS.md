@@ -25,7 +25,7 @@ cd tools/mcp
 nuclear check . && nuclear build .            # the .nuc files → build/nuclear_mcp
 uv sync --extra test
 .venv/bin/python -m pytest -q                 # tests/*.nuc
-nuclear-mcp                                   # the server on stdio (a client starts it)
+nuclear-mcp                                   # the server on stdio (a client starts it); --informs: Atlas's tools only
 nuclear-mcp tools                             # its instructions and tools as JSON (what the knowledge base reads)
 uv tool install tools/mcp                     # from the tree's root, after the build: what the AI set-up does
 claude mcp add --scope user nuclear -- nuclear-mcp

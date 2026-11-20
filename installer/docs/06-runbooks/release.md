@@ -55,7 +55,7 @@ related: [installer/release/delivery.sh, installer/release/after-release.sh, ins
 7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its
    commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the
    GitHub release has every asset `release.yml` publishes (the six archives, the four AI archives, each `.sha256`, the
-   `.vsix`, the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`
+   `.vsix` and its `.sha256` (the extension checks a copy it downloads against it), the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`
    are byte-identical to the tag's (retried for 10 minutes: the site publishes after the website workflow); and runs
    the user's path in a fake `HOME`: the public one-liner, and the previous release installed by its own installer and
    updated as `nuclear update` does. The release is done only when it passes; a failure is fixed by a PATCH release.

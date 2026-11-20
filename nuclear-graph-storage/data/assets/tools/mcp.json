@@ -2341,9 +2341,9 @@
    "id": "mcp:team_create",
    "type": "mcp",
    "title": "`team_create` — a tool of the Nuclear MCP server",
-   "summary": "Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a member not said: the default external agent.",
+   "summary": "Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a member not said: the team's model (kind agent or api, provider, model: who works every member without its own), else the default external agent.",
    "body": [
-    "Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a member not said: the default external agent. Members are never of the local kind (the local models are on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a member not said: the team's model (kind agent or api, provider, model: who works every member without its own), else the default external agent. method is how the team works (empty: Scrum), instructions what every member follows. Members are never of the local kind (the local models are on standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
     "",
     "Parameters:",
     "",
@@ -2353,6 +2353,11 @@
     "- `skills`: any = `null`",
     "- `members`: any = `null`",
     "- `budget_usd`: any = `null`",
+    "- `method`: string = `\"\"`",
+    "- `instructions`: string = `\"\"`",
+    "- `kind`: string = `\"\"`",
+    "- `provider`: string = `\"\"`",
+    "- `model`: string = `\"\"`",
     "- `confirm`: string = `\"\"`"
    ],
    "keys": [
@@ -2415,6 +2420,36 @@
       "type": "any",
       "required": false,
       "default": "null"
+     },
+     {
+      "name": "method",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "instructions",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "kind",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "provider",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "model",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
      },
      {
       "name": "confirm",
@@ -2482,9 +2517,9 @@
    "id": "mcp:team_edit",
    "type": "mcp",
    "title": "`team_edit` — a tool of the Nuclear MCP server",
-   "summary": "Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech lead) or budget_usd.",
+   "summary": "Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech lead), budget_usd, method (how it works; empty: Scrum stays), instructions (what every member follows) or the team's model (kind agent or api, provider, model: it works every member from then on; a member's own set after it wins).",
    "body": [
-    "Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech lead) or budget_usd. Asks the user first (confirm: the token of a preview, when the client cannot ask).",
+    "Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech lead), budget_usd, method (how it works; empty: Scrum stays), instructions (what every member follows) or the team's model (kind agent or api, provider, model: it works every member from then on; a member's own set after it wins). Asks the user first (confirm: the token of a preview, when the client cannot ask).",
     "",
     "Parameters:",
     "",
@@ -2495,6 +2530,11 @@
     "- `skills`: any = `null`",
     "- `lead`: string = `\"\"`",
     "- `budget_usd`: any = `null`",
+    "- `method`: string = `\"\"`",
+    "- `instructions`: string = `\"\"`",
+    "- `kind`: string = `\"\"`",
+    "- `provider`: string = `\"\"`",
+    "- `model`: string = `\"\"`",
     "- `confirm`: string = `\"\"`"
    ],
    "keys": [
@@ -2563,6 +2603,36 @@
       "type": "any",
       "required": false,
       "default": "null"
+     },
+     {
+      "name": "method",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "instructions",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "kind",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "provider",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
+     },
+     {
+      "name": "model",
+      "type": "string",
+      "required": false,
+      "default": "\"\""
      },
      {
       "name": "confirm",

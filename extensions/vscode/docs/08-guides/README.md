@@ -119,7 +119,7 @@ The other settings are one section per tool, edited in VS Code's settings or in 
 | `nuclear.ai.checkEveryMinutes` | `5` |
 | `nuclear.builder.team` | `""` (the default team) |
 | `nuclear.builder.claudeModel` · `nuclear.builder.resumeInterrupted` | `haiku` · `true` |
-| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` |
+| `nuclear.spending.budgetUsd` · `.confirm` · `.forceConfirm` | `5` · `true` · `false` (asked: only an API paid by use; an agent's subscription is not, unless `forceConfirm`) |
 | `nuclear.chat.gifs` | `pack` (the project's own GIFs; `tenor` or `giphy` after them with a key: *Nuclear Chat: Keep a GIF Service's Key*) |
 | `nuclear.http.timeoutSeconds` · `nuclear.devices.idleMinutes` | `30` · `30` |
 
@@ -151,6 +151,7 @@ then *Reload Window*.
 
 | What you see | What to do |
 |---|---|
+| *A file of the NuclearLang extension is missing* | the install is broken (a page's script, style or icon is gone). The extension takes the same version's files from its release on GitHub, checks them and keeps them in its storage: reload the window when it says so. If it cannot (no network, the check fails), install the extension again. Nothing else is loaded from the internet: every page's files come with the extension. |
 | No diagnostics, no completion | *Nuclear: Restart Language Server*. If `nuclear.server.path` is set, check the path. Set `nuclear.trace.server` to `messages` and read the *Output* panel. |
 | Diagnostics of the wrong dialect | the file is outside a project: set `nuclear.dialect`, or create the project's `config.nuc` / `nuclear.toml` |
 | A dialect of your own is not found | add its folder to `nuclear.dialectPaths` |

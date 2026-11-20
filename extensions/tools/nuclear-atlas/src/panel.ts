@@ -2,25 +2,21 @@
 // the general agent (`dm-atlas`, `nuclear-builder member --role chat`, the provider of `nuclear.builder.chat`: an
 // external agent or provider, Claude Code by default, over the Smart Graph; the local models are on standby,
 // ADR-platform-0013). When no agent nor provider can answer on this machine, the page says how to pick one. The conversation is the chat's, kept in the project
-// (`.nuclear/chat/`). `/task <what to do>` is an order: a run of the software factory with the project's team (the
-// Builder's `driveRun`), told by its members in the team's channel; Atlas says in the order's thread where it went
-// and how it ended. Above the chat, the templates built from the project's map fill the chat's composer.
+// (`.nuclear/chat/`). Atlas informs and runs no task (spec 023): a `/task` there is answered with the tech leads to
+// ask. Above the chat, the templates built from the project's map fill the chat's composer.
 //
-// The work does not belong to the page: the members answer through the service, the run is the extension's, and a
-// notification says when an order ends while the page is closed.
+// The work does not belong to the page: the members answer through the service.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { readCard } from '../../../vscode/src/card';
 import { lang, langButton, localize, pageI18n, texts, l10n } from '../../../vscode/src/i18n';
 import { notices } from '../../../vscode/src/notifications';
-import { chat, chatCsp, chatScript, teamChannel, wireChat } from '../../../vscode/src/chatView';
-import { AGENT, ChatEvent, fmt } from '../../../vscode/src/chatHost';
+import { chat, chatCsp, chatScript, wireChat } from '../../../vscode/src/chatView';
+import { AGENT, ChatEvent } from '../../../vscode/src/chatHost';
 import { ATLAS } from './l10n';
-import { chatRoots, templatesOf } from './chat';
-import { criteriaOf } from '../../nuclear-builder/src/support';
-import { loadRun, newRunId, Spec, writeSpec } from '../../nuclear-builder/src/runs';
-import { BuilderProject, driveRun } from '../../nuclear-builder/src/panel';
+import { chatRoots, noTaskText, templatesOf } from './chat';
+import { BuilderProject } from '../../nuclear-builder/src/panel';
 import { agentsHere } from '../../nuclear-builder/src/teams/cli';
 import { SettingsPanel } from '../../../vscode/src/settingsPanel';
 
@@ -34,32 +30,18 @@ function mapOf(root: string): string {
   }
 }
 
-/** An order (`/task …` in Atlas's direct message): its spec written, its run driven by the Builder; Atlas answers in
- * the order's thread when it starts and when it ends. */
-async function task(root: string, said: string, thread: string): Promise<void> {
-  const L = texts(ATLAS);
-  const say = (text: string) => chat().post(root, DM, { author: AGENT, text, thread });
-  const text = said.replace(/^\/task\s*/, '').trim();
-  if (!text) return void (await say(L.taskEmpty));
-  const title = text.split(/[.\n]/)[0].slice(0, 60);
-  const spec: Spec = { id: newRunId(root, title), title, useCase: /^fix\b/i.test(text) ? 'bug' : 'feature', description: text, criteria: criteriaOf(text), context: [], source: { kind: 'local' }, pieces: [] };
-  const p = driveRun(root, spec.id, ['run', writeSpec(root, spec)]);
-  await say(fmt(L.taskStarted, spec.id, teamChannel(root)));
-  const code = await p.exited;
-  const done = loadRun(root, spec.id);
-  await say(done?.status === 'passed' ? fmt(L.taskPassed, spec.id) : done?.status === 'waiting' ? fmt(L.taskWaits, spec.id, done.waiting?.question ?? '') : done ? fmt(L.taskFailed, spec.id) : fmt(L.taskNotStarted, p.error || String(code)));
-  if (!AtlasPanel.visible()) notices.add({ tool: 'atlas', title: done?.status === 'passed' ? l10n.t('The order is done') : l10n.t('The order failed'), text: done?.spec.title ?? spec.id, level: done?.status === 'passed' ? 'info' : 'error', root, ref: spec.id });
-}
-
 let following = false;
-/** Atlas listens to its direct message once per window: a `/task` said there is its order. */
+/** Atlas runs no task (spec 023): a `/task` said in its direct message, which the chat answers not (it starts with
+ * `/`), is answered here, in its thread, with the tech leads to ask, each a link to their conversation. */
 function followChat(): void {
   if (following) return;
   following = true;
   chat().onEvent((root: string, e: ChatEvent) => {
     const m = e.data.message as { id?: string; author?: string; text?: string; thread?: string | null } | undefined;
     if (e.type !== 'message' || e.data.said !== true || e.channel !== DM || m?.author !== 'you' || !/^\/task\b/.test(m.text ?? '')) return;
-    void task(root, m.text!, m.thread ?? m.id!).catch((x) => notices.add({ tool: 'atlas', title: l10n.t('The order failed'), text: String(x instanceof Error ? x.message : x), level: 'error', root }));
+    const reg = chat().registered(root);
+    const leads = reg.teams.flatMap((t) => { const id = reg.lead(t); return id ? [{ id, name: chat().nameOf(root, id), team: t }] : []; });
+    void chat().post(root, DM, { author: AGENT, text: noTaskText(leads, lang()), thread: m.thread ?? m.id! }).catch(() => undefined);
   });
 }
 
@@ -147,10 +129,6 @@ export class AtlasPanel {
     AtlasPanel.current?.panel.dispose();
   }
 
-  static visible(): boolean {
-    return !!AtlasPanel.current?.panel.visible;
-  }
-
   private state(): void {
     const own = this.projects();
     const { roots: projects, root } = chatRoots(own, this.extra, AtlasPanel.fallback?.(), this.root);
@@ -230,7 +208,7 @@ addEventListener('message', (e) => {
   S = m;
   $('#project').innerHTML = S.projects.map((p) => '<option value="' + esc(p.root) + '"' + (p.root === S.root ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('');
   $('#templates').innerHTML = S.templates.map((x, i) => '<button type="button" data-tpl="' + i + '" title="' + esc(x.text) + '">' + esc(x.label) + '</button>').join('');
-  $('#hint').innerHTML = S.root ? (S.hasMap ? '' : t('noMap')) : esc(t('noProject'));
+  $('#hint').innerHTML = S.root ? (S.hasMap ? esc(t('role')) : t('noMap')) : esc(t('noProject'));
   if (!S.root) return show(t('noProject'));
   if (mounted !== S.root) { mounted = S.root; vscode.postMessage({ type: 'chatOpen' }); }
 });

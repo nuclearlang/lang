@@ -89,6 +89,21 @@ tests Chat
     read: Result<Error, Workspace> = inject<WorkspacesAppComponent>().workspace(registered(input).id)
     expect(read.value.members[0].brain.agent == "Claude Code" and read.value.members[0].brain.paid and read.value.members[1].brain.agent == "")
 
+  @test("only the listed members are the chat's people: a direct message each and #general; one kept with a member no longer listed stays")
+  onlyListedPeople() void
+    files = inject<ChatFiles>()
+    input = project(files)
+    ws = registered(input)
+    expect(ws.channel("dm-quinn") != null)
+    for m in input.members
+      m.listed = m.id == "ada" or m.id == "lin"
+    again: Workspace = registered(input)
+    expect(again.channels.map((c) => c.id) == ["general", "core", "web", "dm-ada", "dm-lin", "dm-quinn", "dm-bob"] and again.channel("general")!.members == ["you", "ada", "lin"])
+    // a member never listed gets no direct message
+    input.members.add(member("neo", "Neo", "developer", "core"))
+    input.members.last.listed = false
+    expect(registered(input).channel("dm-neo") == null)
+
   @test("a message is kept, edited, reacted to and threaded; a cut line is skipped; search and unread counts")
   messages() void
     files = inject<ChatFiles>()

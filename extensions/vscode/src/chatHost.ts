@@ -178,18 +178,25 @@ export const AGENT = 'atlas';
  * (`face`: a `data:` URL); the general agent's default for a new conversation, the setting's provider when it is on
  * this machine (else the host file's own default, an external agent: the local models are on standby, ADR-platform-0013); the language and the GIFs of the settings. */
 export function registration(file: HostFile, o: { root: string; lang: 'en' | 'es'; gifs: string; agent: AgentProvider; face: (file: string) => string | null; forceConfirm?: boolean }): Record<string, unknown> {
-  // the paid providers the user put in a team (a member's or the tech lead's): already chosen, so the chat does not ask
-  // the two spending questions again for them (`--confirm-spending`); a paid provider never chosen still asks, and a
-  // forced confirmation (the setting or the project's `forceConfirm`) always asks
+  // the spending questions (`--confirm-spending` skips them): an agent's subscription is never asked (spec 023,
+  // requirement 4); an API's work is not asked again when the user put that provider in a team (a member's or the
+  // tech lead's), and is asked when never chosen; a forced confirmation (the setting or the project's `forceConfirm`)
+  // always asks
   const chosen = new Set(o.forceConfirm ? [] : file.members.filter((m) => m.team && m.brain?.paid).map((m) => m.brain!.provider));
-  const confirmed = (command: string[], provider: string | undefined) => (provider && chosen.has(provider) && !command.includes('--confirm-spending') ? [...command, '--confirm-spending'] : command);
-  const members = file.members.map(({ face, temperament: _t, ...m }) => {
+  const free = (kind: string | undefined, provider: string | undefined) => !o.forceConfirm && (kind === 'agent' || (!!provider && chosen.has(provider)));
+  const confirmed = (command: string[], kind: string | undefined, provider: string | undefined) => (free(kind, provider) && !command.includes('--confirm-spending') ? [...command, '--confirm-spending'] : command);
+  // Nuclear Chat lists Atlas and each team's tech lead, not every member (spec 023, requirement 2): the others are not
+  // registered (their old conversations stay in the project, readable, never deleted)
+  const leads = new Set(file.teams.map((t) => t.lead));
+  const listed = file.members.filter((m) => m.id === AGENT || !m.team || leads.has(m.id));
+  const members = listed.map(({ face, temperament: _t, ...m }) => {
     const out = { ...m, personality: m.personality ?? {}, face: face ? o.face(face) ?? '' : '' };
     const r = m.responder;
     const wanted = r?.choices?.find((c) => c.id === o.agent.provider && c.available !== false);
     if (r && wanted) out.responder = { ...r, choice: wanted.id, model: o.agent.model ?? '' };
-    if (out.responder?.choices) out.responder = { ...out.responder, choices: out.responder.choices.map(({ whyKey: _k, whyArgs: _a, ...c }) => ({ ...c, command: confirmed(c.command, c.id), ...(c.why || _k ? { why: whyOf({ ...c, whyKey: _k, whyArgs: _a }, o.lang) } : {}) })) };
-    if (out.responder) out.responder = { ...out.responder, command: confirmed(out.responder.command, out.responder.choices ? out.responder.choice : m.brain?.provider) };
+    if (out.responder?.choices) out.responder = { ...out.responder, choices: out.responder.choices.map(({ whyKey: _k, whyArgs: _a, ...c }) => ({ ...c, command: confirmed(c.command, c.kind, c.id), ...(c.why || _k ? { why: whyOf({ ...c, whyKey: _k, whyArgs: _a }, o.lang) } : {}) })) };
+    const picked = out.responder?.choices?.find((c) => c.id === out.responder!.choice);
+    if (out.responder) out.responder = { ...out.responder, command: confirmed(out.responder.command, out.responder.choices ? picked?.kind : m.brain?.kind, out.responder.choices ? out.responder.choice : m.brain?.provider) };
     return out;
   });
   return { root: o.root, host: 'builder', members, teams: file.teams, channels: file.channels, lang: o.lang, gifs: o.gifs };
@@ -507,9 +514,9 @@ export class ChatHost {
   }
 
   /** The member ids and channel ids the registration gave. */
-  registered(root: string): { members: string[]; channels: string[]; lead: (team: string) => string | undefined } {
+  registered(root: string): { members: string[]; channels: string[]; teams: string[]; lead: (team: string) => string | undefined } {
     const b = (this.bodies.get(root) ?? {}) as { members?: { id: string }[]; channels?: { id: string }[]; teams?: { id: string; lead: string }[] };
-    return { members: (b.members ?? []).map((m) => m.id), channels: (b.channels ?? []).map((c) => c.id), lead: (t) => b.teams?.find((x) => x.id === t)?.lead };
+    return { members: (b.members ?? []).map((m) => m.id), channels: (b.channels ?? []).map((c) => c.id), teams: (b.teams ?? []).map((t) => t.id), lead: (t) => b.teams?.find((x) => x.id === t)?.lead };
   }
 
   /** A member's name in a registered project (its id when unknown). */

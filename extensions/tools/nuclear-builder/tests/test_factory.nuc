@@ -159,7 +159,9 @@ testTheSpendingIsConfirmedTwiceAsEventsAndHeldToTheBudget(tmpPath: Path, monkeyp
   asked: <string, any>[] = []
   given: <string, any>[] = [{ "answer": "yes" }, { "answer": "yes" }]
   run = newRun(root, { "name": "app", "platform": "backend" }, parseSpec(SPEC, "count-books"), team, ["analysis", "design"])
-  f = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => e["type"] == "ask" ? asked.add(e) : null, { "preflight": false })
+  // an agent's subscription is not asked (spec 023 requirement 4): forceConfirm asks it, as an API's is asked
+  expect(Factory(run, team, readLine(root, "backend"), (q: <string, any>) => null, (e: <string, any>) => null, { "preflight": false }).paidRoles(0).isEmpty)
+  f = Factory(run, team, readLine(root, "backend"), (q: <string, any>) => nextAnswer(given, q), (e: <string, any>) => e["type"] == "ask" ? asked.add(e) : null, { "preflight": false, "forceConfirm": true })
   done = f.start()
   expect(asked.map((q) => q["id"]) == ["spending-1", "spending-2"] and "0.50 USD" in "${asked[1]["question"]}" and "claude-code" in "${asked[1]["question"]}")
   // the analysis cost 0.40 of 0.50; the design went over the budget: the run fails, and says so
@@ -613,7 +615,8 @@ testAPieceTheLocalCoderLeavesWithErrorsGoesToTheLead(tmpPath: Path, monkeypatch:
   fix = stepsOf(done).find((s) => s["title"] == "The Architect fixes lib/count.nuc")!
   expect(fix["key"] == "leadFixFile" and fix["args"] == ["architect", "lib/count.nuc"])
   expect(fix["provider"] == "claude-code" and fix["status"] == "passed" and fix["code"] == "count() int = 0\n" and ((done["costUsd"] as double) - 0.05).abs() < 0.000001)
-  expect((done["spending"] as <string, any>)["providers"] == ["claude-code"])
+  // an agent's subscription asks no spending (spec 023 requirement 4): nothing to confirm, nothing kept
+  expect(done["spending"] == null)
 
 // A station run again judges its work again: a check of its role that failed in an earlier attempt runs again and
 // takes the new result, instead of failing Quality for good.

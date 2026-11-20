@@ -48,6 +48,7 @@ export const PAGE_ACTIONS: Record<string, string> = {
   'team:memberUpdate': 'team member update',
   'team:save': 'team save',
   'team:rename': 'team update',
+  'team:update': 'team update',
   'team:duplicate': 'team duplicate',
   'team:delete': 'team delete',
   'team:default': 'team default',

@@ -67,7 +67,10 @@ opens beside the channel.
 switcher, also Ctrl+K or ⌘K anywhere in the chat: a name, a first name or a role opens the direct message with any
 member of the workspace, a channel's name jumps to it (a closed or archived one too, marked); the arrows move, Enter
 opens, Escape closes. *Members* (and a channel's member count) opens the members list: each one's face, name, role,
-*Tech lead* and the brain that answers as them, and *Message*. The + of *Channels* makes a channel (name, topic, the
+*Tech lead* and the brain that answers as them, and *Message*. Only the members the host lists (`listed`: Nuclear
+Builder lists Atlas and each team's tech lead) are in the members list, its count and the sidebar's direct messages
+(`sidebarDms`); a direct message kept with a member no longer listed stays, out of the sidebar, found by the quick
+switcher by the member's name and readable (never deleted). The + of *Channels* makes a channel (name, topic, the
 members chosen by their faces; a name taken is said in the dialog). The header's ⋯ renames a channel and edits its
 topic, closes the conversation (out of the sidebar; the page goes to `#general`; opening it again from the switcher,
 a search or a member's new message brings it back), archives a channel (read only: where the composer was, a bar

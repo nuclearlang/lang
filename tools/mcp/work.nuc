@@ -348,28 +348,42 @@ WorkTools(runner: any = runCommand)
 
   // Create a team: its name, purpose, description, skills (library ids), budget_usd and members: a list of {role
   // (analyst, architect, developer, qa, devops), employee, kind (agent or api), provider, model, name}; who works a
-  // member not said: the default external agent. Members are never of the local kind (the local models are on
-  // standby). Asks the user first (confirm: the token of a preview, when the client cannot ask).
-  teamCreate(name: string, purpose: string = "", description: string = "", skills: string[]? = null, members: <string, any>[]? = null, budgetUsd: double? = null, confirm: string = "", ctx: Context? = null) string
+  // member not said: the team's model (kind agent or api, provider, model: who works every member without its own),
+  // else the default external agent. method is how the team works (empty: Scrum), instructions what every member
+  // follows. Members are never of the local kind (the local models are on standby). Asks the user first (confirm:
+  // the token of a preview, when the client cannot ask).
+  teamCreate(name: string, purpose: string = "", description: string = "", skills: string[]? = null, members: <string, any>[]? = null, budgetUsd: double? = null, method: string = "", instructions: string = "", kind: string = "", provider: string = "", model: string = "", confirm: string = "", ctx: Context? = null) string
     if name.trim().isEmpty
       return refused("a team needs a name")
     hired: <string, any>[] = members ?? []
-    if hired.any((m) => m["kind"] == "local")
+    if kind == "local" or hired.any((m) => m["kind"] == "local")
       return refused(LOCAL_STANDBY)
-    draft: <string, any> = { "name": name, "purpose": purpose, "description": description, "skills": skills ?? [], "members": hired }
+    draft: <string, any> = { "name": name, "purpose": purpose, "description": description, "skills": skills ?? [], "members": hired, "method": method, "instructions": instructions }
     if budgetUsd != null
       draft["budgetUsd"] = budgetUsd
+    if not kind.isEmpty or not provider.isEmpty
+      brain: <string, any> = { "model": model }
+      if not kind.isEmpty
+        brain["kind"] = kind
+      if not provider.isEmpty
+        brain["provider"] = provider
+      draft["brain"] = brain
     who = hired.map((m) => "${m["role"]}${m["name"] != null ? " ${m["name"]}" : ""}${m["provider"] != null ? " (${m["provider"]}${m["model"] != null ? " ${m["model"]}" : ""})" : ""}")
-    change = "Create the team `${name}` with ${hired.length} member(s)${who.isEmpty ? "" : ": ${who.join(", ")}"}${budgetUsd != null ? "; budget ${budgetUsd} USD" : ""}."
+    brainSaid = draft["brain"] == null ? "" : "; every member worked by ${provider.isEmpty ? kind : provider}${model.isEmpty ? "" : " ${model}"} unless it has its own"
+    change = "Create the team `${name}` with ${hired.length} member(s)${who.isEmpty ? "" : ": ${who.join(", ")}"}${budgetUsd != null ? "; budget ${budgetUsd} USD" : ""}${method.isEmpty ? "" : "; method: ${method}"}${instructions.isEmpty ? "" : "; instructions: ${instructions}"}${brainSaid}."
     no = ~confirmed(ctx, "team_create", draft, change, confirm)
     if no != null
       return no!
     ~builderRun(["team", "create", "--json"], null, Json.encode(draft))
 
   // Change a team: its name, description, purpose, skills (library ids, the whole list), lead (a member's id: the tech
-  // lead) or budget_usd. Asks the user first (confirm: the token of a preview, when the client cannot ask).
-  teamEdit(team: string, name: string = "", description: string = "", purpose: string = "", skills: string[]? = null, lead: string = "", budgetUsd: double? = null, confirm: string = "", ctx: Context? = null) string
-    flags: <string, string> = { "--name": name, "--description": description, "--purpose": purpose, "--lead": lead }
+  // lead), budget_usd, method (how it works; empty: Scrum stays), instructions (what every member follows) or the
+  // team's model (kind agent or api, provider, model: it works every member from then on; a member's own set after
+  // it wins). Asks the user first (confirm: the token of a preview, when the client cannot ask).
+  teamEdit(team: string, name: string = "", description: string = "", purpose: string = "", skills: string[]? = null, lead: string = "", budgetUsd: double? = null, method: string = "", instructions: string = "", kind: string = "", provider: string = "", model: string = "", confirm: string = "", ctx: Context? = null) string
+    if kind == "local"
+      return refused(LOCAL_STANDBY)
+    flags: <string, string> = { "--name": name, "--description": description, "--purpose": purpose, "--lead": lead, "--method": method, "--instructions": instructions, "--kind": kind, "--provider": provider, "--model": model }
     if skills != null
       flags["--skills"] = skills!.join(",")
     if budgetUsd != null
@@ -378,7 +392,7 @@ WorkTools(runner: any = runCommand)
     if team.startsWith("-") or team.isEmpty
       return refused("'${team}' is not a team's id")
     if given.isEmpty
-      return refused("say what changes: name, description, purpose, skills, lead or budget_usd")
+      return refused("say what changes: name, description, purpose, skills, lead, budget_usd, method, instructions, kind, provider or model")
     bad = optionLike(given.map((k) => flags[k]!))
     if bad != null
       return refused("'${bad}' starts with -")

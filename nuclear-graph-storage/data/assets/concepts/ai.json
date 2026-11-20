@@ -740,7 +740,8 @@
     "",
     "**Who does a role** is an assignment: a provider's agent (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Grok Build) or a provider's model through an API (the local agents are on standby, ADR-platform-0013), chosen per member of a **team**. A team (ADR-platform-0010) is the members the user hires from the rosters, any number per role (twenty developers if so), one of them the tech lead; it is made with a five-step wizard (identity with a suggested name, purpose and skills, members suggested from them, the roster with filters, who works each member with every paid one marked), never from a preset. A station is worked by the member the tech lead assigned for the run (`run --assign`), else the role's first member; one budget per run, confirmed twice before any money is spent.",
     "",
-    "**Skills are real files** (spec 011 requirement 34): the library `nuclear-agents/skills/<id>/SKILL.md` (Claude Code's format; domains such as payments, bank accounts, authentication, offline sync; technologies such as the Synapsis backend, mobile and web, WebSockets, SQL, Ollama, CI; practices such as TDD, an OWASP review, clean architecture) and `nuclear-agents/agents/<id>/agent.md` (backend, mobile and web engineers, a QA security tester, a tech writer). A team attaches library skills (`skills`) every member inherits and keeps its own (`ownSkills`, cloned or written in the skills editor); a member has the same and a base `agent`. A member's own skill wins over the team's, the team's over the library's. Commands and MCP tools: `nuclear-builder skills list|show|clone|create|update|delete`, `team skills set` (deleting one of the user's asks the user). Every provider gets them whole: Claude Code as plugin skills, OpenCode, Codex and Gemini CLI in their agent files, an API model in its prompt."
+    "**Skills are real files** (spec 011 requirement 34): the library `nuclear-agents/skills/<id>/SKILL.md` (Claude Code's format; domains such as payments, bank accounts, authentication, offline sync; technologies such as the Synapsis backend, mobile and web, WebSockets, SQL, Ollama, CI; practices such as TDD, an OWASP review, clean architecture) and `nuclear-agents/agents/<id>/agent.md` (backend, mobile and web engineers, a QA security tester, a tech writer). A team attaches library skills (`skills`) every member inherits and keeps its own (`ownSkills`, cloned or written in the skills editor); a member has the same and a base `agent`. A member's own skill wins over the team's, the team's over the library's. Commands and MCP tools: `nuclear-builder skills list|show|clone|create|update|delete`, `team skills set` (deleting one of the user's asks the user). Every provider gets them whole: Claude Code as plugin skills, OpenCode, Codex and Gemini CLI in their agent files, an API model in its prompt.",
+    "A team also has its model for every member (a member's own wins), its method (Scrum by default) and its instructions, which the tech lead and every member follow; why a team costs no more tokens and how its tech lead plans: concept:why-a-team."
    ],
    "keys": [
     "software factory",
@@ -778,6 +779,10 @@
     {
      "rel": "agent",
      "to": "concept:nuclear-developer"
+    },
+    {
+     "rel": "why",
+     "to": "concept:why-a-team"
     }
    ],
    "sources": [
@@ -786,6 +791,68 @@
     "nuclear-agents/skills/README.md",
     "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
    ]
+  },
+  {
+   "id": "concept:why-a-team",
+   "type": "concept",
+   "title": "Why work with a team: a tech lead, stations and checks, like a human development team",
+   "summary": "A team does not cost more tokens than one agent doing the same work: it spends them in order. Its tech lead plans and explains before acting (what, how, who), each part goes through stations with a check between them (analysis, design, tests first, code, quality, delivery), and the team follows the method and instructions its user wrote (Scrum by default). Atlas only informs and sends tasks to a tech lead.",
+   "body": [
+    "**What a team is.** The people of a human development team, played by the agents and API providers you choose: a tech lead and members by role (Analyst, Architect, Developer, QA, DevOps). One model can work the whole team (the team's model), and any member may have its own.",
+    "",
+    "**Why it does not cost more.** The tokens go into the same work an agent alone would do; a team only puts them in order. Each station gets the context it needs (the spec, the design, the tests), not the whole conversation, so prompts stay short; a check between stations stops a wrong step before the next one builds on it, so less work is thrown away and done again. What costs money is said: the spending question is asked only for work paid by use (an API key); an agent's subscription is not asked.",
+    "",
+    "**How it works.**",
+    "1. You ask a tech lead in Nuclear Chat (Atlas tells you which team is free, or helps you make one).",
+    "2. The tech lead answers first with the plan: what it will do, through which stations, and who of its team does each part.",
+    "3. It writes the spec with its acceptance criteria and starts the run in Nuclear Builder; each station is done by its member and checked (the tests first, then the code that passes them, then quality).",
+    "4. Progress is told in the thread; the gates that need you (a delivery, a destructive step, money) wait for you.",
+    "",
+    "**Your rules.** Each team has a method (Scrum by default: a backlog of specs, a sprint of runs, a review at the end, or the method you write) and instructions (your conventions, what to avoid, how to report); the tech lead and every member follow them.",
+    "",
+    "**Atlas and the tech leads.** Atlas explains Nuclear and your projects from the knowledge base; it does not do tasks. The chat lists Atlas and each team's tech lead; the other members work through the runs.",
+    "",
+    "Set it up: *Your software company* (the teams page) — the team's model, method and instructions; by chat, the MCP server's team tools (each change asked first)."
+   ],
+   "keys": [
+    "team",
+    "teams",
+    "tech lead",
+    "scrum",
+    "why a team",
+    "cost",
+    "tokens",
+    "method",
+    "instructions",
+    "equipo",
+    "por que un equipo"
+   ],
+   "asks": [
+    "why should I use a team instead of one agent",
+    "does a team cost more tokens",
+    "what does the tech lead do",
+    "how does a team work in nuclear",
+    "por que trabajar con un equipo",
+    "cuesta mas tokens un equipo"
+   ],
+   "links": [
+    {
+     "rel": "stations",
+     "to": "concept:software-factory"
+    },
+    {
+     "rel": "asked-through",
+     "to": "concept:mcp"
+    }
+   ],
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md",
+    "extensions/tools/nuclear-builder/docs/02-architecture/chat.md",
+    "extensions/tools/nuclear-builder/docs/02-architecture/teams-and-vault.md"
+   ],
+   "meta": {
+    "topic": "ai"
+   }
   }
  ]
 }

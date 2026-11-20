@@ -93,6 +93,8 @@ export interface Member {
   /** Before the library: its own skills as name and text (the command keeps them as `ownSkills`). */
   extraSkills?: { name: string; text: string }[];
   instructions: string;
+  /** Worked by the team's brain (spec 023): its kind, provider and model are then the team's (`team show`). */
+  inheritsBrain?: boolean;
   behaviour: Record<string, boolean>;
   tasks: { id: string; title: string; station: string; on: boolean }[];
 }
@@ -113,6 +115,13 @@ export interface Team {
   logo?: string;
   updated: number;
   budgetUsd: number;
+  /** Who works every member without its own (spec 023); null or absent: each member keeps its own. */
+  brain?: { kind: Kind; provider: string; model?: string } | null;
+  /** The method the user wrote for the team; empty or absent: Scrum (`methodText` says it whole). */
+  method?: string;
+  methodText?: string;
+  /** What every member of the team follows, written by its user. */
+  instructions?: string;
   members: Member[];
   /** The roles it lacks to run every station (`team show`). */
   missing?: RoleId[];
@@ -150,6 +159,17 @@ export interface LibraryEntry {
 
 /** Who works a station of `role`: the role's first member (the run's `--assign` may name another). */
 export const roleMember = (t: { members?: Member[] } | null | undefined, role: string): Member | undefined => t?.members?.find((m) => m.role === role);
+
+/** A team's tech lead: the member it names, else its first Architect. */
+export const leadOf = (t: { techLead?: string | null; members?: Member[] } | null | undefined): string | undefined => t?.techLead || t?.members?.find((m) => m.role === 'architect')?.id;
+
+/** Where a click on a team or one of its members opens Nuclear Chat. The chat lists only the tech leads (spec 023):
+ * the lead's direct message for the lead and for any other member (the lead assigns the work), the team's channel
+ * when the team or its lead is not known. */
+export function chatChannel(team: string, member: string, t?: { techLead?: string | null; members?: Member[] } | null): string {
+  const lead = leadOf(t);
+  return member && lead ? `dm-${team}-${lead}` : team;
+}
 
 /** The wizard's draft for `team create`: the identity, the purpose and skills, the members, the tech lead (an index). */
 export interface TeamDraft {
@@ -250,11 +270,13 @@ export interface MemberChange {
   note?: string;
   /** A library agent as its base; '' takes it away. */
   agent?: string;
+  /** Worked by the team's brain again (its own kind, provider and model given up). */
+  teamBrain?: boolean;
 }
 /** A member changed (`team member update <id> <member>`): only what is given. */
 export function updateMember(id: string, member: string, c: MemberChange): Promise<Team> {
   const flag = (name: string, v: string | undefined) => (v === undefined ? [] : [name, v]);
-  return team<Team>(['member', 'update', id, member, ...flag('--kind', c.kind), ...flag('--provider', c.provider), ...flag('--model', c.model), ...flag('--instructions', c.instructions), ...flag('--skills', c.skills?.join(',')), ...flag('--extra-skills', c.extraSkills && JSON.stringify(c.extraSkills)), ...flag('--temperament', c.temperament), ...flag('--note', c.note), ...flag('--agent', c.agent)]);
+  return team<Team>(['member', 'update', id, member, ...flag('--kind', c.kind), ...flag('--provider', c.provider), ...flag('--model', c.model), ...flag('--instructions', c.instructions), ...flag('--skills', c.skills?.join(',')), ...flag('--extra-skills', c.extraSkills && JSON.stringify(c.extraSkills)), ...flag('--temperament', c.temperament), ...flag('--note', c.note), ...flag('--agent', c.agent), ...(c.teamBrain ? ['--team-brain'] : [])]);
 }
 /** The place of a skill: the team, or one of its members. */
 const skillPlace = (id: string, member?: string) => ['--team', id, ...(member ? ['--member', member] : [])];
@@ -304,6 +326,20 @@ export interface ModelsHere {
  * the command cannot tell (the pickers then list what `agents --json` gave). */
 export const modelsHere = () => call<ModelsHere>(['models', '--json']).then((m) => ({ ...m, providers: Object.fromEntries(Object.entries(m.providers ?? {}).filter(([, p]) => (p.kind as string) !== 'local')) })).catch((): ModelsHere => ({ memory: { totalGb: 0, availableGb: 0 }, providers: {} }));
 /** A team's name changed (`team update <id> --name`). */
+/** What `team update` changes of a team in the team view (spec 023): its brain (`noBrain`: none, each member keeps
+ * its own), its method (empty: Scrum) and its instructions. */
+export interface TeamChange {
+  kind?: Kind;
+  provider?: string;
+  model?: string;
+  noBrain?: boolean;
+  method?: string;
+  instructions?: string;
+}
+export function updateTeam(id: string, c: TeamChange): Promise<Team> {
+  const flag = (name: string, v: string | undefined) => (v === undefined ? [] : [name, v]);
+  return team<Team>(['update', id, ...(c.noBrain ? ['--no-brain'] : [...flag('--kind', c.kind), ...flag('--provider', c.provider), ...flag('--model', c.model)]), ...flag('--method', c.method), ...flag('--instructions', c.instructions)]);
+}
 export const renameTeam = (id: string, name: string) => team<Team>(['update', id, '--name', name]);
 /** A copy of a team under a new name, its own id (`team duplicate`). */
 export const duplicateTeam = (id: string, name: string) => team<Team>(['duplicate', id, '--name', name]);

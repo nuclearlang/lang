@@ -10162,6 +10162,293 @@
    }
   },
   {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#atlas-and-the-tech-lead",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — Atlas and the tech lead",
+   "summary": "`nuclear-mcp --informs`): no tool writes a spec, starts or answers a run, builds or generates; teams are made with the Nuclear MCP server's team tools, which ask first.",
+   "body": [
+    "- Atlas (`member --role chat`) only informs: its MCP servers run `--informs` (`nuclear-builder mcp --informs`,",
+    "  `nuclear-mcp --informs`): no tool writes a spec, starts or answers a run, builds or generates; teams are made with",
+    "  the Nuclear MCP server's team tools, which ask first. Its prompt lists the teams with their lead and free/busy.",
+    "- The tech lead's first answer to a task is the plan (what, the stations, who of *Your team, by station*), then",
+    "  `spec_new` with criteria and `run_start` assigning those members, and the progress in the thread. Every member's",
+    "  prompt has the team's method and instructions."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#spec-023-design-notes-the-engine-s-contract",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract",
+   "summary": "What Nuclear Builder (`nuclear-builder`), the MCP server and Nuclear Chat give the editors for this spec.",
+   "body": "What Nuclear Builder (`nuclear-builder`), the MCP server and Nuclear Chat give the editors for this spec.",
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#the-chat-s-roster-chat-host-json",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — The chat's roster (`chat-host --json`)",
+   "summary": "error (`chooseTeam` is no longer given).",
+   "body": [
+    "- Every saved team, the project's first (the local team when none is saved); several teams and none chosen are no",
+    "  error (`chooseTeam` is no longer given).",
+    "- Every member of each team is in `members` (a run's station can still be told as them), with `listed`: true only",
+    "  for the team's tech lead (`techLead`, else its first Architect, else its first member) and for `atlas`.",
+    "- Channels: `general` (members: the listed ones but Atlas) and one per team (members: its tech lead).",
+    "- Nuclear Chat (`Member.listed`, default true): a direct message and a place in `#general` only for a listed",
+    "  member; a direct message kept with a member no longer listed stays (readable, out of the sidebar, found by the",
+    "  quick switcher by the member's name); the members list shows the listed ones."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#the-commands",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — The commands",
+   "summary": "own give way); a kind without its provider takes the kind's first.",
+   "body": [
+    "- `team update <id> --method <text> --instructions <text>`.",
+    "- `team update <id> --kind <agent|api> --provider <p> --model <m>`: sets the brain and puts every member on it (their",
+    "  own give way); a kind without its provider takes the kind's first. `--no-brain`: takes it away, each member keeps",
+    "  the brain it worked with. A brain this machine cannot work is refused (`{ \"error\" }`, exit 1).",
+    "- `team member update <id> <member> --kind|--provider|--model …`: the member's own, which wins. `--team-brain`:",
+    "  back to the team's. A member added without a who-works takes the team's brain.",
+    "- `team create` (stdin draft): also `method`, `instructions`, `brain`.",
+    "- MCP: Builder's `team_update` (`method`, `instructions`, `kind`, `provider`, `model`, `noBrain`), `team_member_update`",
+    "  (`teamBrain`), `team_create` (`method`, `instructions`, `brain`); the Nuclear MCP server's `team_create` and",
+    "  `team_edit` (`method`, `instructions`, `kind`, `provider`, `model`)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#the-spending",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — The spending",
+   "summary": "Asked only for kind `api`; an agent (`claude-code`, `codex`, `cursor`, `gemini-cli`, `opencode`, `grok`) is not asked; `forceConfirm` (the project's, or `--force-confirm` from the setting) asks it of every paid provider.",
+   "body": [
+    "Asked only for kind `api`; an agent (`claude-code`, `codex`, `cursor`, `gemini-cli`, `opencode`, `grok`) is not asked;",
+    "`forceConfirm` (the project's, or `--force-confirm` from the setting) asks it of every paid provider. The same rule in",
+    "a run (`waiting: spending`, `paidOf`), in a detached run and its tools, and in the chat."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#the-team-team-show-screen-json-team-save",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — The team (`team show|screen --json`, `team save`)",
+   "summary": "user's text, else `SCRUM_METHOD`).",
+   "body": [
+    "- `method`: the text the user wrote, `\"\"` for Scrum (the default). `methodText`: what the members follow (the",
+    "  user's text, else `SCRUM_METHOD`). `instructions`: what every member follows, `\"\"` by default.",
+    "- `brain`: `{ \"kind\": \"agent\" | \"api\", \"provider\", \"model\" }` or `null` (each member its own).",
+    "- Each member: its effective `kind`, `provider`, `model` and `inheritsBrain` (true: worked by the team's brain).",
+    "- `team save` of the whole team keeps `method`, `instructions` and `brain`; a member saved with `inheritsBrain:",
+    "  true` is stored without its own brain.",
+    "- A team of before (no `method`, `instructions`, `brain`): Scrum, `\"\"`, `null`, every member `inheritsBrain: false`",
+    "  (converted on read, nothing written)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/design.md#the-teams-state-team-list-json-team-screen-s-teams-the-tool-team-list",
+   "type": "spec",
+   "title": "Spec 023 — Design notes: the engine's contract — The teams' state (`team list --json`, `team screen`'s `teams`, the tool `team_list`)",
+   "summary": "Each team also has `lead` (`{ \"id\", \"name\", \"role\" }` of its tech lead, or `null` without members), `running` (the ids of the runs of the current project running with a live owner or waiting) and `free` (`running` is empty).",
+   "body": [
+    "Each team also has `lead` (`{ \"id\", \"name\", \"role\" }` of its tech lead, or `null` without members), `running` (the",
+    "ids of the runs of the current project running with a live owner or waiting) and `free` (`running` is empty)."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/design.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#atlas-informs-the-tech-leads-work",
+   "type": "spec",
+   "title": "Spec 023: Teams that work like human development teams — Requirements — Atlas informs, the tech leads work",
+   "summary": "1. Nuclear Atlas only informs: it explains Nuclear and the user's project from the knowledge base (hence its name).",
+   "body": [
+    "1. Nuclear Atlas only informs: it explains Nuclear and the user's project from the knowledge base (hence its name).",
+    "   Asked for a task (code, specs, a project), it does not do it: it says to talk to the tech lead of a team, suggests",
+    "   the teams that are free (no run in progress), and when there is none it helps create one in the same chat (the",
+    "   MCP server's team tools, each change asked first).",
+    "2. Nuclear Chat lists only the **tech lead of each team** (and Atlas), not every member. A tech lead, given a task,",
+    "   says first what it will do, how, and who of its team will do each part, then does it through the Builder (specs,",
+    "   runs), and reports as the run goes.",
+    "3. A team has its method and instructions: Scrum by default (a backlog of specs, a sprint of runs, a review), or the",
+    "   method and the instructions the user wrote for that team; the tech lead and every member follow them."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#explained",
+   "type": "spec",
+   "title": "Spec 023: Teams that work like human development teams — Requirements — Explained",
+   "summary": "6. The knowledge base and Atlas explain why to work with a team: it does not cost more tokens; it organizes the work in stations (analysis, design, tests first, code, quality, delivery) with checks between them, the way a professional team works; the user customizes each team.",
+   "body": [
+    "6. The knowledge base and Atlas explain why to work with a team: it does not cost more tokens; it organizes the work",
+    "   in stations (analysis, design, tests first, code, quality, delivery) with checks between them, the way a",
+    "   professional team works; the user customizes each team. Agents can explain it in these words."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#less-friction",
+   "type": "spec",
+   "title": "Spec 023: Teams that work like human development teams — Requirements — Less friction",
+   "summary": "4. The spending confirmation is asked only for work paid by use through an API key (kind `api`); an agent's subscription (Claude Code, Codex, Cursor…) is not asked.",
+   "body": [
+    "4. The spending confirmation is asked only for work paid by use through an API key (kind `api`); an agent's",
+    "   subscription (Claude Code, Codex, Cursor…) is not asked. `forceConfirm` still forces it for everything.",
+    "5. A team has a model for all its members (its provider and model, chosen once); a member may still have its own,",
+    "   which wins."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#local-first",
+   "type": "spec",
+   "title": "Spec 023: Teams that work like human development teams — Requirements — Local first",
+   "summary": "7. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads anything from the internet.",
+   "body": [
+    "7. Every asset a page needs (scripts, styles, images, fonts, themes, binaries) comes with the extension; no page loads",
+    "   anything from the internet. If a bundled asset is missing (a broken install), the extension says so and, as a",
+    "   contingency, takes it from the release of its own version on GitHub (nuclearlang/lang), checked against the",
+    "   release's checksum, kept in its storage."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/requirements.md#spec-023-teams-that-work-like-human-development-teams-requirements",
+   "type": "spec",
+   "title": "Spec 023: Teams that work like human development teams — Requirements",
+   "summary": "explains and assigns; the members do their part by steps and checks (Scrum or the method the user gives the team); each team follows the instructions its user wrote for it.",
+   "body": [
+    "**Priority: high** (the user, 2026-11-20). The factory's teams work as human development teams do: a tech lead plans,",
+    "explains and assigns; the members do their part by steps and checks (Scrum or the method the user gives the team);",
+    "each team follows the instructions its user wrote for it."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/requirements.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/023-teams-like-human-teams/tasks.md#spec-023-tasks",
+   "type": "spec",
+   "title": "Spec 023 — Tasks",
+   "summary": "one), the chat's members are the tech leads, the tech lead's plan-explain-assign, the team's method and instructions (Scrum by default), spending asked only for `api`, a team's model for all members.",
+   "body": [
+    "- [x] Engine (Nuclear Builder, Nuclear; contract: [design.md](design.md)): Atlas's role (informs, routes to tech leads, suggests free teams, helps make",
+    "      one), the chat's members are the tech leads, the tech lead's plan-explain-assign, the team's method and",
+    "      instructions (Scrum by default), spending asked only for `api`, a team's model for all members.",
+    "- [x] Editor: the chat lists tech leads, the team's model for all, the spending question only for `api`, Atlas's",
+    "      texts, the assets' contingency (a missing bundled file taken from the release, checked).",
+    "- [ ] Knowledge base: why a team, how it works, what it costs; Atlas's answers.",
+    "- [ ] Delivery gate; release."
+   ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/023-teams-like-human-teams/tasks.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:docs/04-specs/README.md#specs-of-the-platform.096416",
    "type": "readme",
    "title": "Specs of the platform",
@@ -10215,6 +10502,22 @@
     "A change that touches several projects. A change to one project is a spec in that project's `docs/04-specs/`.",
     "One folder per change: `requirements.md`, `design.md`, `tasks.md`; `draft → approved → in-progress → done`."
    ],
+   "agents": false,
+   "sources": [
+    "docs/04-specs/README.md"
+   ],
+   "meta": {
+    "section": "11-decisions",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:docs/04-specs/README.md#specs-of-the-platform.292902",
+   "type": "readme",
+   "title": "Specs of the platform",
+   "summary": "Specs of the platform",
+   "body": "| [023-teams-like-human-teams](023-teams-like-human-teams/requirements.md) | **High priority.** Atlas informs and routes tasks to the tech leads; the chat lists only tech leads, who plan, explain and assign; each team has its method (Scrum by default) and instructions; spending asked only for API work; a team's model for all; every asset local, the release as contingency | in progress |",
    "agents": false,
    "sources": [
     "docs/04-specs/README.md"

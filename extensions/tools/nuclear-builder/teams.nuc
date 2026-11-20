@@ -36,6 +36,25 @@ DEFAULT_LEAD = "architect"
 // The id of the team a run takes when there is none at all (`localTeam`, never saved).
 LOCAL_TEAM = "local-team"
 
+// How a team works when its user wrote no method of their own (spec 023): Scrum, the way the factory's stations fit.
+SCRUM_METHOD = "Scrum. The backlog is the team's specs, each with its acceptance criteria; a sprint is a set of runs the tech lead plans with the user; every run goes through the stations (analysis, design, tests first, code, quality, delivery) with its checks between them; at the end of the sprint the team reviews with the user what was delivered and what is next."
+
+// The method a team follows: the one its user wrote, else Scrum.
+teamMethod(team: <string, any>) string
+  own = "${team["method"] ?? ""}".trim()
+  own.isEmpty ? SCRUM_METHOD : own
+
+// What every member of a team follows, as a prompt's text: the team's method and the instructions its user wrote.
+teamWay(team: <string, any>) string
+  told = "${team["instructions"] ?? ""}".trim()
+  "## How the team ${team["name"] ?? ""} works\n\nThe method: ${teamMethod(team)}${told.isEmpty ? "" : "\n\nThe team's instructions, written by its user: ${told}"}"
+
+// Whether the user is asked to confirm the spending of who is of `kind` (spec 023 requirement 4): only work paid by
+// use through an API key (`api`); an agent's subscription is not asked, but `forced` (forceConfirm) asks it of every
+// provider that is not local.
+asksSpending(kind: string, forced: boolean = false) boolean
+  kind == "api" or (forced and kind != "local")
+
 // A team that is not valid: what is wrong, said to the user.
 TeamError(message: string) : ValueError(message)
 
@@ -110,7 +129,7 @@ validTeam(raw: any, known: <string, any>? = null) <string, any>
   budget = t["budgetUsd"] ?? DEFAULT_BUDGET
   if not isNumber(budget) or (budget as double) < 0
     throw TeamError("budgetUsd must be a number of 0 or more")
-  for field in ["description", "purpose"]
+  for field in ["description", "purpose", "method", "instructions"]
     if t[field] != null and not isText(t[field])
       throw TeamError("the ${field} must be a text")
   logo = t["logo"]
@@ -121,9 +140,16 @@ validTeam(raw: any, known: <string, any>? = null) <string, any>
     throw TeamError("members must be a list of { id, role, employee, kind, provider, model, … }")
   people = known ?? rosters()
   moods = temperaments().map((m) => "${m["id"]}")
+  brain = validBrain(t["brain"])
   members: <string, any>[] = []
   for one in membersIn as any[]
-    m = validMember(one, people, moods)
+    // a member without its own brain is worked by the team's (kept without kind, provider and model)
+    inherits = brain != null and isinstance(one, dict) and inheritsOf(one as <string, any>)
+    m = validMember(inherits ? { ...(one as <string, any>), ...brain! } : one, people, moods)
+    m.remove("inheritsBrain")
+    if inherits
+      for k in ["kind", "provider", "model"]
+        m.remove(k)
     if not isText(m["id"])
       m["id"] = freeMemberId("${m["employee"] ?? m["role"]}", members)
     if not validId("${m["id"]}")
@@ -136,12 +162,47 @@ validTeam(raw: any, known: <string, any>? = null) <string, any>
   lead = t["techLead"] ?? defaultLead(members)
   if lead != null and (not isText(lead) or not members.any((x) => x["id"] == lead))
     throw TeamError("techLead is the id of one of the team's members: ${members.map((x) => "${x["id"]}").join(", ")}")
-  kept: <string, any> = { "id": id, "name": (name as string).trim(), "description": "${t["description"] ?? ""}".trim(), "purpose": "${t["purpose"] ?? ""}".trim(), "skills": textList(t["skills"], "the team's skills"), "ownSkills": validOwnSkills(t["ownSkills"], "the team"), "logo": logo, "techLead": lead, "updated": t["updated"] ?? 0, "budgetUsd": budget, "members": members }
+  kept: <string, any> = { "id": id, "name": (name as string).trim(), "description": "${t["description"] ?? ""}".trim(), "purpose": "${t["purpose"] ?? ""}".trim(), "method": "${t["method"] ?? ""}".trim(), "instructions": "${t["instructions"] ?? ""}".trim(), "brain": brain, "skills": textList(t["skills"], "the team's skills"), "ownSkills": validOwnSkills(t["ownSkills"], "the team"), "logo": logo, "techLead": lead, "updated": t["updated"] ?? 0, "budgetUsd": budget, "members": members }
   // what a read had to leave out of an earlier file (`healTeam`), told until the user saves the team
   warnings = textList(t["warnings"], "warnings")
   if not warnings.isEmpty
     kept["warnings"] = warnings
   kept
+
+// Whether a member is worked by its team's brain: it says so (`inheritsBrain`, as a team is shown), or it has no kind
+// nor provider of its own.
+inheritsOf(m: <string, any>) boolean
+  m["inheritsBrain"] == true or (m["inheritsBrain"] == null and m["kind"] == null and m["provider"] == null)
+
+// A team's brain as it is kept (spec 023 requirement 5): `{ kind, provider, model }`, who works every member without
+// its own; null when the team has none (every member keeps its own).
+validBrain(raw: any) <string, any>?
+  if raw == null
+    return null
+  if not isinstance(raw, dict)
+    throw TeamError("the team's brain is { kind, provider, model }")
+  b: <string, any> = raw
+  kind = b["kind"] ?? "agent"
+  if not isText(kind) or not (kind in PROVIDERS)
+    throw TeamError("the team's brain: kind must be one of ${PROVIDERS.keys.join(", ")}")
+  allowed: string[] = PROVIDERS[kind]!
+  provider = b["provider"] ?? allowed[0]
+  if not isText(provider) or not (provider in allowed)
+    throw TeamError("the team's brain: the provider of kind ${kind} must be one of ${allowed.join(", ")}")
+  model = b["model"] ?? ""
+  if not isText(model)
+    throw TeamError("the team's brain: model must be a text")
+  { "kind": kind, "provider": provider, "model": model }
+
+// A team with each member's brain as it works (`inheritsBrain`: true for a member worked by the team's brain, its
+// kind, provider and model then the team's); a team without a brain as it is.
+withBrains(t: <string, any>) <string, any>
+  brain = t["brain"]
+  if not isinstance(brain, dict) or not isinstance(t["members"], list)
+    return t
+  out: <string, any> = dict(t)
+  out["members"] = (t["members"] as any[]).map((m) => isinstance(m, dict) and inheritsOf(m as <string, any>) ? { ...(m as <string, any>), ...(brain as <string, any>), "inheritsBrain": true } : m)
+  out
 
 // A team an earlier version wrote, with what is gone today left out, each with a warning: a temperament no longer in
 // the list (the employee's own then), a base agent no longer in the library, an employee no longer in the roster, a
@@ -168,9 +229,11 @@ healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
       m["role"] = roleId("${m["role"]}")
     who = "${m["id"] ?? m["role"]}"
     kind = m["kind"] ?? "local"
+    // a member worked by the team's brain has no kind of its own to convert
+    inherits = isinstance(t["brain"], dict) and inheritsOf(m)
     // the local kind or a local model while the local models are on standby (ADR-platform-0013): the default external
     // choice works it, and the user is told
-    if not localModels() and (kind == "local" or m["provider"] == "nuclear-developer")
+    if not inherits and not localModels() and (kind == "local" or m["provider"] == "nuclear-developer")
       if standbyWorker == null
         found = externalWorker()
         standbyNone = found == null
@@ -182,11 +245,11 @@ healTeam(raw: <string, any>, known: <string, any>? = null) <string, any>
       label = AGENT_LABELS["${standbyWorker!["provider"]}"] ?? "${standbyWorker!["provider"]}"
       warnings.add(standbyNone ? "${who}: NuclearLang no longer runs local models; ${NO_PROVIDER} (${label} is set until then)" : "${who}: NuclearLang no longer runs local models; ${label} works it now")
       kind = "${m["kind"]}"
-    if isText(kind) and not (kind in PROVIDERS)
+    if not inherits and isText(kind) and not (kind in PROVIDERS)
       warnings.add("${who}: the kind ${kind} is no longer known; the local Nuclear Developer works it now")
       for k in ["kind", "provider", "model"]
         m.remove(k)
-    else if isText(kind) and isText(m["provider"]) and not (m["provider"] in PROVIDERS[kind]!)
+    else if not inherits and isText(kind) and isText(m["provider"]) and not (m["provider"] in PROVIDERS[kind]!)
       warnings.add("${who}: the provider ${m["provider"]} is no longer known; ${PROVIDERS[kind]![0]} works it now")
       m.remove("provider")
       m.remove("model")
@@ -365,10 +428,16 @@ runnable(team: <string, any>, stations: string[] = STATIONS) <string, any>
 // roster when none is given) and the roles it lacks to run every station (`missing`).
 teamShown(t: <string, any>, known: <string, any>? = null) <string, any>
   people = known ?? rosters()
-  shown: <string, any> = dict(t)
+  shown: <string, any> = withBrains(dict(t))
+  // a team of before spec 023: Scrum, no instructions, no brain of its own
+  shown["method"] = t["method"] ?? ""
+  shown["methodText"] = teamMethod(t)
+  shown["instructions"] = t["instructions"] ?? ""
+  shown["brain"] = t["brain"]
   members: <string, any>[] = []
-  for value in (t["members"] ?? []) as <string, any>[]
+  for value in (shown["members"] ?? []) as <string, any>[]
     r: <string, any> = dict(value)
+    r["inheritsBrain"] = r["inheritsBrain"] == true
     staff: <string, any>[] = people["${r["role"]}"] ?? []
     hired = staff.find((p) => p["id"] == r["employee"])
     if not isText(r["name"]) or "${r["name"]}".trim().isEmpty
@@ -455,13 +524,13 @@ loadTeam(id: string) <string, any>
   healed = healTeam(found)
   if healed != found or upgradeTeamSkills(healed) != healed or ((healed["members"] ?? []) as any[]).any((m) => isinstance(m, dict) and "extraSkills" in (m as <string, any>))
     return writeTeam(validTeam(healed))
-  found
+  withBrains(found)
 
 // Writes a valid team, stamped (atomic, its last version kept as `<id>.json.bak`).
 writeTeam(t: <string, any>) <string, any>
   t["updated"] = (time.time() * 1000).round()
   writeAtomic(teamFile(t["id"]!), "${json.dumps(t, indent = 2, ensureAscii = false)}\n", true)
-  t
+  withBrains(t)
 
 // Validates a team, stamps it and writes it; the first team becomes the default.
 saveTeam(raw: any) <string, any>
@@ -577,7 +646,8 @@ defaultWorker(role: string, machine: <string, string>? = null) <string, any>
 
 // A new member from what is given (`team create`, `team member add`): the default worker where who works it is not
 // said, every skill of its role switched on where its skills are not, a free id in the team.
-newMember(fields: <string, any>, members: <string, any>[], machine: <string, string>? = null) <string, any>
+// With `inherits` (a team with its own brain) a member whose who-works is not said is worked by the team's brain.
+newMember(fields: <string, any>, members: <string, any>[], machine: <string, string>? = null, inherits: boolean = false) <string, any>
   role = roleId("${fields["role"] ?? ""}")
   if not (role in ROLES)
     throw TeamError("no such role `${role}`: ${ROLES.join(", ")}")
@@ -586,7 +656,7 @@ newMember(fields: <string, any>, members: <string, any>[], machine: <string, str
     if value != null
       m[key] = value
   m["role"] = role
-  if m["kind"] == null and m["provider"] == null
+  if m["kind"] == null and m["provider"] == null and not inherits
     for key, value in defaultWorker(role, machine)
       m[key] = m[key] ?? value
   if m["skills"] == null
@@ -645,26 +715,40 @@ createTeam(draft: any, machine: <string, string>? = null) <string, any>
   given = d["members"] ?? ([] as any[])
   if not isinstance(given, list)
     throw TeamError("members must be a list")
+  brain = validBrain(d["brain"])
   members: <string, any>[] = []
   for one in given as any[]
     if not isinstance(one, dict)
       throw TeamError("a member is an object { role, employee, kind, provider, model, … }")
-    members.add(newMember(one, members, machine))
+    members.add(newMember(one, members, machine, brain != null))
   lead = d["techLead"]
   if isNumber(lead) and (lead as int) >= 0 and (lead as int) < members.length
     lead = members[lead as int]["id"]
-  team: <string, any> = { "id": freeId(teamSlug(name as string)), "name": name, "description": d["description"] ?? "", "purpose": d["purpose"] ?? "", "skills": d["skills"] ?? ([] as string[]), "ownSkills": d["ownSkills"] ?? ([] as any[]), "budgetUsd": d["budgetUsd"] ?? DEFAULT_BUDGET, "techLead": lead, "members": members }
+  team: <string, any> = { "id": freeId(teamSlug(name as string)), "name": name, "description": d["description"] ?? "", "purpose": d["purpose"] ?? "", "skills": d["skills"] ?? ([] as string[]), "ownSkills": d["ownSkills"] ?? ([] as any[]), "budgetUsd": d["budgetUsd"] ?? DEFAULT_BUDGET, "techLead": lead, "method": d["method"] ?? "", "instructions": d["instructions"] ?? "", "brain": brain, "members": members }
   saved = saveTeam(team)
   logo = d["logoFile"]
   isText(logo) and not (logo as string).isEmpty ? setLogo("${saved["id"]}", logo as string) : saved
 
-// `team update`: the team's name, description, purpose, skills, tech lead (a member's id) and budget; what is not
-// given stays.
+// `team update`: the team's name, description, purpose, skills, tech lead (a member's id), budget, method (empty:
+// Scrum), instructions and brain; what is not given stays. A brain given (`kind`, `provider`, `model`; a kind changed
+// without its provider takes that kind's first) works every member from then on: their own brains give way to it,
+// and a member's own set after it wins. `noBrain` takes the team's brain away: every member keeps the one it had.
 updateTeam(id: string, fields: <string, any>) <string, any>
   t = loadTeam(id)
-  for key in ["name", "description", "purpose", "skills", "ownSkills", "techLead", "budgetUsd"]
+  for key in ["name", "description", "purpose", "skills", "ownSkills", "techLead", "budgetUsd", "method", "instructions"]
     if fields[key] != null
       t[key] = fields[key]
+  if fields["noBrain"] == true
+    t["brain"] = null
+  else if fields["kind"] != null or fields["provider"] != null or fields["model"] != null
+    was: <string, any> = isinstance(t["brain"], dict) ? dict(t["brain"] as <string, any>) : {}
+    if fields["kind"] != null and fields["provider"] == null and fields["kind"] != was["kind"]
+      was.remove("provider")
+    for key in ["kind", "provider", "model"]
+      if fields[key] != null
+        was[key] = fields[key]
+    t["brain"] = was
+    t["members"] = ((t["members"] ?? []) as <string, any>[]).map((m) => ({ ...m, "inheritsBrain": true }))
   saveTeam(t)
 
 // `team member add`: new members of the team (several at once: `count` of the same who-works, each a free id);
@@ -673,7 +757,7 @@ addMembers(id: string, fields: <string, any>[], machine: <string, string>? = nul
   t = loadTeam(id)
   members: <string, any>[] = t["members"] ?? []
   for one in fields
-    members.add(newMember(one, members, machine))
+    members.add(newMember(one, members, machine, isinstance(t["brain"], dict)))
   t["members"] = members
   saveTeam(t)
 
@@ -706,6 +790,11 @@ updateMember(id: string, member: string, fields: <string, any>) <string, any>
   for key in ["kind", "provider", "model", "employee", "name", "skills", "extraSkills", "ownSkills", "instructions", "agent"]
     if fields[key] != null
       r[key] = fields[key]
+  // a who-works said is the member's own, which wins over the team's brain; `teamBrain` gives it back to the team's
+  if fields["kind"] != null or fields["provider"] != null or fields["model"] != null
+    r["inheritsBrain"] = false
+  if fields["teamBrain"] == true
+    r["inheritsBrain"] = true
   // an empty agent takes the base agent away
   if r["agent"] == ""
     r.remove("agent")

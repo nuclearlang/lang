@@ -14,7 +14,7 @@ renderCodex(role: Role, at: Path) string
   text
 
 codexArgs(prompt: string, work: Work) string[]
-  args = ["codex", "exec", "--json", "--skip-git-repo-check", "--sandbox", "workspace-write", "-C", work.root, "-c", "mcp_servers.nuclear.command=${json.dumps(work.mcpCommand)}", "-c", "mcp_servers.nuclear.args=[]", "-c", "mcp_servers.nuclear_builder.command=${json.dumps(builderMcpCommand())}", "-c", "mcp_servers.nuclear_builder.args=${json.dumps(builderMcpArgs(work.root))}"]
+  args = ["codex", "exec", "--json", "--skip-git-repo-check", "--sandbox", "workspace-write", "-C", work.root, "-c", "mcp_servers.nuclear.command=${json.dumps(work.mcpCommand)}", "-c", "mcp_servers.nuclear.args=${json.dumps(nuclearMcpArgs(work))}", "-c", "mcp_servers.nuclear_builder.command=${json.dumps(builderMcpCommand())}", "-c", "mcp_servers.nuclear_builder.args=${json.dumps(builderMcpArgs(work))}"]
   if work.model.length > 0
     args.addAll(["--model", work.model])
   [...args, prompt]

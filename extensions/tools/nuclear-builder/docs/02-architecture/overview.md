@@ -13,7 +13,7 @@ flowchart LR
   page -- "the window's one socket (vscode/src/chatHost.ts)" --> chats[Nuclear Chat: the team's channel, a thread per run]
   chats -- "a member answers" --> member[nuclear-builder member --events]
   page -- "one call each" --> specs[nuclear-builder spec list / new --json]
-  chat[Nuclear Atlas: /task] -- "the page's driveRun" --> line
+  chat[Nuclear Chat: a tech lead] -- "the Builder's tools" --> line
   jb[jetbrains/src/…/NuclearBuilder.java: the JetBrains tool window] -- "one process per run" --> line
   term[a terminal, a CI job] --> line
   line --> factory[line.nuc → factory.nuc → the adapters]

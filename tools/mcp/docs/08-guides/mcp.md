@@ -11,6 +11,11 @@ validate and correct.
 The local models are **on standby** ([ADR-platform-0013](../../../../docs/03-adr/0013-local-models-on-standby.md)):
 the server registers no `developer_*` tool on any machine, and its work cycle never names the local developer.
 
+`nuclear-mcp --informs` is the server of an agent that only informs (Nuclear Atlas, spec 023): it offers only
+`INFORM_TOOLS` (`server.nuc`): what teaches Nuclear and reads the projects, workspaces, specs and teams, and the team
+tools that ask first (`team_create`, `team_edit`, `member_add`, `member_edit`); no generator, build, project command,
+spec or workspace written.
+
 ## 1. Set up
 
 The server comes with the AI services: [set them up](../../../../installer/docs/08-guides/ai-setup.md) first (the
@@ -186,8 +191,8 @@ Every tool but `team_list` and `team_show` asks the user first.
 |---|---|
 | `team_list()` | the teams |
 | `team_show(team)` | a team, its members, purpose, skills, tech lead, budget |
-| `team_create(name, purpose, description, skills, members, budget_usd, confirm)` | `team create` with the draft on stdin; `members`: `[{role, employee, kind, provider, model, name}]` |
-| `team_edit(team, name, description, purpose, skills, lead, budget_usd, confirm)` | `team update` |
+| `team_create(name, purpose, description, skills, members, budget_usd, method, instructions, kind, provider, model, confirm)` | `team create` with the draft on stdin; `members`: `[{role, employee, kind, provider, model, name}]`; `method` (empty: Scrum) and `instructions` every member follows; `kind`/`provider`/`model`: the team's model, the draft's `brain`, which works every member without its own |
+| `team_edit(team, name, description, purpose, skills, lead, budget_usd, method, instructions, kind, provider, model, confirm)` | `team update` (`--method`, `--instructions`, `--kind --provider --model`: the team's model puts every member on it) |
 | `team_delete(team, confirm)` | `team delete` (the file kept as `<id>.json.bak`) |
 | `member_add(team, role, employee, kind, provider, model, name, count, confirm)` | `team member add` |
 | `member_edit(team, member, kind, provider, model, employee, name, instructions, temperament, skills, confirm)` | `team member update` |

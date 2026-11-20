@@ -17,7 +17,7 @@ service WorkspaceRegistry(files: ChatFiles)
         return Err(Invalid("the lead of the team ${t.id} is not a member: ${t.lead}"))
     root = files.absolute(input.root)
     ws = Workspace(id = workspaceId(root), root = root, host = input.host, members = input.members, teams = input.teams, lang = input.lang, gifs = input.gifs)
-    ws.channels = mergedChannels(kept(ws), hostChannels(input))
+    ws.channels = mergedChannels(kept(ws), hostChannels(input), ids)
     known[ws.id] = ws
     keep(ws)
     Ok(ws)
@@ -52,18 +52,20 @@ service WorkspaceRegistry(files: ChatFiles)
 channelMap(c: Channel) <string, any>
   { "id": c.id, "name": c.name, "topic": c.topic, "kind": c.kind, "members": c.members, "team": c.team, "lastRead": c.lastRead, "agent": c.agent, "model": c.model, "state": c.state }
 
-// The channels a host opens: `#general`, its own, a direct message with every member.
+// The channels a host opens: `#general` and a direct message with every listed member, and its own.
 hostChannels(input: NewWorkspace) Channel[]
-  found: Channel[] = [Channel(id = "general", name = "general", topic = "the whole project", members = ["you", ...input.members.map((m) => m.id)])]
+  people = input.members.filter((m) => m.listed)
+  found: Channel[] = [Channel(id = "general", name = "general", topic = "the whole project", members = ["you", ...people.map((m) => m.id)])]
   for c in input.channels
     found.add(c)
-  for m in input.members
+  for m in people
     found.add(Channel(id = "dm-${m.id.lower()}", name = m.name, kind = "dm", members = ["you", m.id]))
   found
 
 // The host's channels, each with what the project kept of it (its last read, its agent, its state, and the name
-// and topic the user gave a channel), then the user's own.
-mergedChannels(kept: Channel[], wanted: Channel[]) Channel[]
+// and topic the user gave a channel), then the user's own and the direct messages kept with a member the host no
+// longer lists (`members`: every member's id; never deleted, still readable).
+mergedChannels(kept: Channel[], wanted: Channel[], members: string[] = []) Channel[]
   found: Channel[] = []
   for w in wanted
     if found.any((f) => f.id == w.id)
@@ -79,7 +81,7 @@ mergedChannels(kept: Channel[], wanted: Channel[]) Channel[]
         w.topic = before!.topic
     found.add(w)
   for k in kept
-    if k.kind == "channel" and not found.any((f) => f.id == k.id)
+    if (k.kind == "channel" or k.members.any((m) => m in members)) and not found.any((f) => f.id == k.id)
       found.add(k)
   found
 

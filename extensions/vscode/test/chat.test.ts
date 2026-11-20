@@ -66,6 +66,26 @@ test('a paid provider the user put in the team is not confirmed again in the cha
   assert.ok(forced.members.every((m) => !m.responder.command.includes('--confirm-spending') && (m.responder.choices ?? []).every((c) => !c.command.includes('--confirm-spending'))));
 });
 
+test('the chat lists Atlas and each team\'s tech lead only; an agent is never asked about spending, an API is unless chosen; forced asks all', () => {
+  type R = { members: { id: string; responder: { command: string[]; choices?: { id: string; command: string[] }[] } }[] };
+  const dev = { ...file.members[0], id: 'core-dev', name: 'Ada', role: 'developer', responder: { command: ['nuclear-builder', 'member', '--team', 'core', '--member', 'dev'] }, brain: { agent: 'OpenAI', kind: 'api', provider: 'openai', model: 'gpt', paid: true } };
+  const lead = { ...file.members[0], brain: { agent: 'Anthropic', kind: 'api', provider: 'anthropic', model: 'haiku', paid: true } };
+  const two: HostFile = { ...file, members: [lead, dev, file.members[1]] };
+  const body = registration(two, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null }) as unknown as R;
+  assert.deepEqual(body.members.map((m) => m.id), ['core-qa', 'atlas'], 'the member who does not lead is not listed');
+  const atlas = body.members[1];
+  // agents: never asked, even never put in a team (codex) or unavailable
+  assert.ok(atlas.responder.command.includes('--confirm-spending'));
+  assert.ok(atlas.responder.choices!.find((c) => c.id === 'codex')!.command.includes('--confirm-spending'));
+  // APIs: Anthropic was put in the team (the lead's), OpenAI only in a member not listed: still chosen by the user
+  assert.ok(body.members[0].responder.command.includes('--confirm-spending'));
+  assert.ok(atlas.responder.choices!.find((c) => c.id === 'anthropic')!.command.includes('--confirm-spending'));
+  const none = registration({ ...file, members: [{ ...lead, brain: { ...lead.brain, kind: 'agent', provider: 'claude-code' } }, file.members[1]] }, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null }) as unknown as R;
+  assert.equal(none.members[1].responder.choices!.find((c) => c.id === 'anthropic')!.command.includes('--confirm-spending'), false, 'an API never chosen is asked');
+  const forced = registration(two, { root: '/p', lang: 'en', gifs: 'pack', agent: { kind: 'agent', provider: 'claude-code' }, face: () => null, forceConfirm: true }) as unknown as R;
+  assert.ok(forced.members.every((m) => !m.responder.command.includes('--confirm-spending') && (m.responder.choices ?? []).every((c) => !c.command.includes('--confirm-spending'))));
+});
+
 const run = (status: string, stages: [string, string][]): RunLike => ({ id: 'loans', status, spec: { title: 'Loans' }, costUsd: 0.25, stages: stages.map(([id, s]) => ({ id, title: id[0].toUpperCase() + id.slice(1), status: s, role: id === 'analysis' ? 'analyst' : 'qa', steps: [{ summary: `${id} said`, status: s, costUsd: 0.1 }] })) });
 const member = (role?: string) => (role ? `core-${role}` : 'system');
 

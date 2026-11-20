@@ -492,14 +492,22 @@ McpTools(graph: GraphClient, tools: Toolchain, web: Web)
       developerTask, developerRetry, developerReview, developerCode, developerTest, developerSecurity,
     ]
 
-// The MCP server with its tools: the local developer's only while `localDeveloper()` (the graph's always).
-mcpServer() MCPServer
+// The tools of an agent that only informs (`nuclear-mcp --informs`: Nuclear Atlas, spec 023): what teaches Nuclear and
+// reads the user's projects, workspaces, specs and teams, and the team tools (each change asked first); nothing that
+// does the work (no generator, build, project command, developer, spec or workspace written).
+INFORM_TOOLS = ["nuclear_start", "nuclear_doc", "graph_search", "graph_answer", "graph_strategy", "graph_card", "graph_prompt", "nuclear_check", "nuclear_help", "nuclear_brief", "nuclear_defs", "project_inspect", "project_monitor", "project_run_log", "graph_monitor", "api_inspect", "web_search", "web_read", "workspace_show", "spec_list", "spec_show", "team_list", "team_show", "team_create", "team_edit", "member_add", "member_edit"]
+
+// The MCP server with its tools: the local developer's only while `localDeveloper()` (the graph's always); `informs`:
+// only `INFORM_TOOLS`.
+mcpServer(informs: boolean = false) MCPServer
   remote = not localDeveloper()
   server = MCPServer("nuclear", instructions = "${FIRST}${LOCAL_FIRST}")
   tools = McpTools(GraphClient("mcp"), Toolchain(), Web())
   for tool in [...tools.all(), ...WorkTools().all()]
     name: string = tool.__name__
     if remote and name.startsWith("developer_")
+      continue
+    if informs and not (name in INFORM_TOOLS)
       continue
     server.addTool(tool)
   server
@@ -516,5 +524,5 @@ mcpTools() <string, any>
   { "instructions": server.instructions ?? "", "tools": tools }
 
 // Serves MCP over stdio until the client closes it.
-mcpMain() void
-  mcpServer().run()
+mcpMain(informs: boolean = false) void
+  mcpServer(informs).run()

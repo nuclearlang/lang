@@ -35,6 +35,7 @@ import { alive, appFolder, dialectsOf, emptyState, markerOf, migrateSaved, parse
 import { nuclearCommand } from './toolchains';
 import { advance, markerHasApps, ONBOARDING, Onboarding, resume, Step, WELCOMED } from './onboarding';
 import { toolEnv } from '../../tools/nuclear-builder/src/support';
+import { assetUrl } from './assetsPage';
 
 interface Tool {
   id: string;
@@ -1137,7 +1138,7 @@ class Icons {
   }
 
   uri(webview: vscode.Webview, ...parts: string[]): string {
-    return webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, ...parts)).toString();
+    return assetUrl(webview, this.context.extensionUri, parts.join('/'));
   }
 
   private icon(webview: vscode.Webview, id: string | undefined): string | undefined {
@@ -2012,7 +2013,7 @@ class WelcomePanel {
 
   private render(): void {
     const w = texts(WELCOME_TEXTS);
-    const logo = this.panel.webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'icons', 'icon.svg'));
+    const logo = assetUrl(this.panel.webview, this.context.extensionUri, 'icons/icon.svg');
     const cur = this.ws.workspace();
     const keyOf = (id: string) => tools().find((t) => t.id === id)?.key ?? 'Ctrl+Alt+N';
     const chat = (step: string) => `<button class="chat" data-chat="${step}">💬 ${w.byChat}</button>`;

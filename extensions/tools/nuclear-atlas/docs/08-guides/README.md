@@ -18,24 +18,28 @@ The AI services of *Nuclear: Set Up the AI Services* ([Set up the AI services](.
 Nuclear Chat (the service `nuclear-chat`) and the Smart Graph, and an agent or a provider to answer. When the chat
 does not answer, the page says so and how to fix it (`nuclear-builder setup`). Who answers is the setting
 `nuclear.builder.chat`: Claude Code's agent by default, or Codex, Gemini CLI, Cursor, OpenCode, Grok Build, or a
-model through an API with its key in the vault; a paid provider asks twice before it spends. When none of them can
+model through an API with its key in the vault; an API paid by use asks twice before it spends (an agent's subscription does not, unless `nuclear.spending.forceConfirm`). When none of them can
 answer on this machine, a line over the chat says so, and its link opens Settings and integrations → Nuclear
 Builder to pick one. The local models are on standby (ADR-platform-0013).
 
 ## Ask
 
+Atlas informs: it explains Nuclear and your project from the knowledge base. For work (code, specs, a project) it
+sends you to a team's tech lead, says which teams are free, and helps you make one when there is none; the page's
+hint says so. Nuclear Chat lists Atlas and each team's tech lead.
+
 Write in the chat and press Enter (Shift+Enter is a new line). Atlas answers there. It is the same conversation as
 *Atlas* in the Builder's chat, and it stays in the project (`.nuclear/chat/`).
 
-## Give an order: `/task`
+## Tasks go to a tech lead
 
-`/task <what to do>`, for example `/task Add a screen that lists the orders`. The order runs as a Nuclear Builder
-run with your project's team; its members tell each station in the team's channel, as a thread, and ask there with
-buttons (a gate, QA's plan). Atlas answers in your order's thread where it went and how it ended. An order that starts
-with "fix" becomes a bug; any other is a feature. How a run works:
-[Nuclear Builder](../../../nuclear-builder/docs/08-guides/README.md).
+Atlas does not run tasks. Ask it for one and it tells you which tech lead to ask and which teams are free; `/task …`
+gets the same answer, with each tech lead as a link to their conversation. The tech lead plans the work with you and
+runs it through the Builder: [Nuclear Builder](../../../nuclear-builder/docs/08-guides/README.md).
 
 ## Templates
 
 The buttons on top are built from your project's own components, use cases and controllers or screens: a click
-puts the text in the chat's composer, with its `…` selected for you to fill.
+puts the text in the chat's composer, with its `…` selected for you to fill. They ask Atlas to explain (a component,
+a use case, where data comes from, security, the platform's kinds), *Who can do a task?* (which tech lead to ask,
+which teams are free) and *Why work with a team?*; none orders work.

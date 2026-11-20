@@ -10,7 +10,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { test } from 'node:test';
 import * as vscode from 'vscode';
-import { confirmSpending, mustConfirm, projectForcesConfirm } from '../../../vscode/src/spending';
+import { asksFor, confirmSpending, mustConfirm, projectForcesConfirm } from '../../../vscode/src/spending';
 import { migrateSettings } from '../../../vscode/src/migrateSettings';
 import { addMembers, agentsHere, CommandMissing, createTeam, listTeams, removeMember, roleMember, roster, saveTeam, showTeam, suggestMembers, suggestNames, teamScreen, updateMember, vaultSet } from '../src/teams/cli';
 import { LineRun, lineJson, localSpecs, newRunId, orphaned, Run, specMarkdown, writeSpec } from '../src/runs';
@@ -27,8 +27,11 @@ import { filterOf } from '../src/reports/host';
 import { REPORTS_SCRIPT } from '../src/reports/page';
 import { chatProvider } from '../src/settings';
 import { backoff, checkConnections, DEFAULT_RETRY, retryAfter, toolEnv, transientStatus } from '../src/support';
-import { templatesOf } from '../../nuclear-atlas/src/chat';
+import { noTaskText, templatesOf } from '../../nuclear-atlas/src/chat';
 import * as http from 'node:http';
+import { webviewFaceUrl } from '../src/teams/faceUrl';
+import { chatChannel } from '../src/teams/cli';
+import { assetUrl, initAssets } from '../../../vscode/src/assetsPage';
 
 const stub = vscode as unknown as { store: Record<string, Record<string, unknown>>; answers: (string | undefined)[]; asked: { message: string; detail?: string; items: string[] }[] };
 const reset = () => {
@@ -83,6 +86,28 @@ test('a user who turned the questions off is not asked, unless they or the proje
   assert.equal(stub.asked.length, 1);
   fs.writeFileSync(path.join(root, '.nuclear', 'builder.json'), '{ not json');
   assert.equal(projectForcesConfirm(root), false);
+});
+
+test('only work paid through an API key is asked; an agent\'s subscription is not, unless the questions are forced (spec 023)', async () => {
+  const on = { confirm: true, forceConfirm: false };
+  assert.equal(asksFor(['claude-code', 'codex'], on, false), false);
+  assert.equal(asksFor(['claude-code', 'anthropic'], on, false), true);
+  assert.equal(asksFor(['someone-new'], on, false), true, 'an unknown provider is asked');
+  assert.equal(asksFor([], on, false), true);
+  assert.equal(asksFor(['claude-code'], { confirm: false, forceConfirm: true }, false), true);
+  assert.equal(asksFor(['claude-code'], on, true), true, "the project's forceConfirm");
+  assert.equal(asksFor(['openai'], { confirm: false, forceConfirm: false }, false), false);
+  reset();
+  assert.equal(await confirmSpending({ ...spend(), ids: ['claude-code'] }), true);
+  assert.equal(stub.asked.length, 0, 'an agent: no question');
+  stub.answers.push('Go on', 'Spend up to 5.00 USD');
+  assert.equal(await confirmSpending({ ...spend(), ids: ['openrouter'] }), true);
+  assert.equal(stub.asked.length, 2, 'an API: asked twice');
+  reset();
+  stub.store.globalValue['nuclear.spending.forceConfirm'] = true;
+  stub.answers.push(undefined);
+  assert.equal(await confirmSpending({ ...spend(), ids: ['claude-code'] }), false);
+  assert.equal(stub.asked.length, 1, 'forced: the agent is asked too');
 });
 
 test('a setting that moved keeps the user\'s value; a value already set in the new place wins', async () => {
@@ -519,7 +544,8 @@ test('a built team shows only its members; the roster opens only to add, and clo
   click({ chatteam: 'core', chatm: 'm1' });
   assert.deepEqual(sent.filter((m) => m.type === 'team:chat').map((m) => [m.team, m.member]), [['core', undefined], ['core', 'm1']]);
   const src = (f: string) => fs.readFileSync(path.join(__dirname, '..', '..', '..', 'tools', 'nuclear-builder', 'src', f), 'utf8');
-  assert.match(src('teams/host.ts'), /'nuclear\.atlas\.open', undefined, member \? `dm-\$\{team\}-\$\{member\}` : team/);
+  // a member opens its tech lead's conversation (the chat lists the tech leads, spec 023), the team its channel
+  assert.match(src('teams/host.ts'), /'nuclear\.atlas\.open', undefined, chatChannel\(team, member, /);
   assert.equal(PAGE_ACTIONS['team:chat'], 'editor');
 });
 
@@ -593,6 +619,12 @@ test('Nuclear Atlas builds templates from the map', () => {
   const map = '## Component `books`\n\n- `x.nuc`\n  - usecase `AllBooks` — all\n';
   assert.ok(templatesOf(map, 'backend').some((t) => t.text.includes('`AllBooks`')));
   assert.ok(templatesOf(map, 'backend', 'es').some((t) => t.label === 'Explicar books'));
+  // Atlas informs and routes (spec 023): no template orders work; a task goes to a tech lead
+  for (const l of ['en', 'es'] as const) assert.ok(templatesOf(map, 'backend', l).every((t) => !t.text.startsWith('/task')));
+  assert.ok(templatesOf(map, 'backend').some((t) => /tech lead/.test(t.text)));
+  // a /task said to Atlas is not run: the tech leads to ask, each a link to their conversation
+  assert.equal(noTaskText([{ id: 'core-arch', name: 'Ada', team: 'core' }]), 'Atlas does not run tasks: ask a tech lead. #dm-core-arch (Ada, core)');
+  assert.match(noTaskText([], 'es'), /^Atlas no ejecuta tareas/);
 });
 
 // ---------- English and Spanish ----------
@@ -907,4 +939,85 @@ test("a member's numbers from the ledger are in their panel's Summary, and its R
   assert.ok(el.innerHTML.includes('sq.mp.numbersText'));
   on.click({ target: { closest: () => ({ dataset: { a: 'reports' }, disabled: false }) } });
   assert.deepEqual(sent.at(-1), { type: 'team:reports', team: 't', member: 'dev' });
+});
+
+test('a face shown on a page that named no roots keeps the extension readable (0.84.0: Atlas and the diagram broke)', () => {
+  const webview = { options: {} as { localResourceRoots?: { fsPath: string }[] }, asWebviewUri: (u: { fsPath: string }) => ({ toString: () => u.fsPath }) };
+  const url = webviewFaceUrl(webview as never);
+  assert.equal(url('/roles/qa/roster/faces/qa-001.webp'), '/roles/qa/roster/faces/qa-001.webp');
+  const roots = (webview.options.localResourceRoots ?? []).map((r) => r.fsPath);
+  assert.ok(roots.includes('/ext'), `the extension's folder stays readable: ${roots.join(', ')}`);
+  assert.ok(roots.includes('/roles/qa/roster/faces'));
+  // a page that named its own roots keeps them, the faces' folder added once
+  const own = { options: { localResourceRoots: [{ fsPath: '/ext/icons' }] }, asWebviewUri: webview.asWebviewUri };
+  const u2 = webviewFaceUrl(own as never);
+  u2('/f/a.webp'); u2('/f/b.webp');
+  assert.deepEqual(own.options.localResourceRoots.map((r) => r.fsPath), ['/ext/icons', '/f']);
+});
+
+test('a click on a member opens the tech lead\'s conversation, a lead its own, the team its channel (spec 023: the chat lists the tech leads)', () => {
+  const t = { techLead: 'arch', members: [{ id: 'arch', role: 'architect' }, { id: 'dev', role: 'developer' }] as never };
+  assert.equal(chatChannel('core', 'dev', t), 'dm-core-arch');
+  assert.equal(chatChannel('core', 'arch', t), 'dm-core-arch');
+  assert.equal(chatChannel('core', '', t), 'core');
+  // no lead named: the first Architect; the team not known: its channel
+  assert.equal(chatChannel('core', 'dev', { techLead: null, members: t.members }), 'dm-core-arch');
+  assert.equal(chatChannel('core', 'dev', undefined), 'core');
+});
+
+test("the wizard's draft carries the team's brain, method and instructions; a member that inherits names no model", () => {
+  const base = { name: 'T', description: '', purpose: '', skills: [], budgetUsd: 5, lead: 0 };
+  const members = [{ role: 'architect', kind: 'agent', provider: 'codex', model: '', inherits: true }, { role: 'qa', kind: 'api', provider: 'openai', model: 'gpt', inherits: false }];
+  const d = draftOf({ ...base, members, brain: { kind: 'agent', provider: 'claude-code', model: 'opus' }, method: ' Kanban ', instructions: 'Small commits.' }) as { brain: unknown; method: string; instructions: string; members: Record<string, unknown>[] };
+  assert.deepEqual(d.brain, { kind: 'agent', provider: 'claude-code', model: 'opus' });
+  assert.deepEqual([d.method, d.instructions], ['Kanban', 'Small commits.']);
+  assert.equal('provider' in d.members[0], false);
+  assert.deepEqual([d.members[1].kind, d.members[1].provider, d.members[1].model], ['api', 'openai', 'gpt']);
+  // no brain: every member as before, nothing new in the draft (Scrum, no instructions)
+  const old = draftOf({ ...base, members }) as Record<string, unknown> & { members: Record<string, unknown>[] };
+  assert.equal(old.members[0].provider, 'codex');
+  assert.ok(!('brain' in old) && !('method' in old) && !('instructions' in old));
+});
+
+test("the team view sets the model for the whole team, each member says whether it inherits it, and a member can take it back", () => {
+  const on: Record<string, (e: unknown) => void> = {};
+  const el = { innerHTML: '', addEventListener: (k: string, f: (e: unknown) => void) => (on[k] = f), querySelector: () => null, querySelectorAll: () => [], contains: () => true, insertAdjacentHTML(_: string, h: string) { this.innerHTML += h; } };
+  const sent: { type: string; [k: string]: unknown }[] = [];
+  const window: { Squad?: { mount(el: unknown, post: (m: unknown) => void, o: unknown): void; receive(m: unknown): boolean } } = {};
+  new Function('window', 'T', 't', 'document', 'matchMedia', SQUAD_SCRIPT)(window, {}, (k: string, ...a: unknown[]) => [k, ...a].join(' '), { activeElement: null }, () => ({ matches: true }));
+  const squad = window.Squad!;
+  squad.mount(el, (m) => sent.push(m as never), { company: false });
+  const member = (id: string, role: string, x: Record<string, unknown>) => ({ id, role, skills: [], extraSkills: [], behaviour: {}, tasks: [], ...x });
+  const team = { id: 't', name: 'T', techLead: 'arch', brain: { kind: 'agent', provider: 'claude-code', model: 'opus' }, method: '', methodText: 'Scrum. The backlog…', instructions: 'Be brief.', members: [member('arch', 'architect', { kind: 'api', provider: 'openai', model: 'gpt', inheritsBrain: false }), member('dev', 'developer', { kind: 'agent', provider: 'claude-code', model: 'opus', inheritsBrain: true })] };
+  squad.receive({ type: 'team:state', teams: [{ id: 't', name: 'T' }], team, roster: {} });
+  assert.ok(el.innerHTML.includes('sq.way.title') && el.innerHTML.includes('sq.way.brainOn 1 2'), 'the team view says how many inherit');
+  assert.ok(el.innerHTML.includes('Scrum. The backlog…') && el.innerHTML.includes('Be brief.'));
+  assert.ok(el.innerHTML.includes('sq.way.teamModel') && el.innerHTML.includes('sq.way.ownModel'));
+  // none: each member keeps its own
+  on.click({ target: { closest: () => ({ dataset: { tbkind: 'none' }, disabled: false }) } });
+  assert.deepEqual(sent.at(-1), { type: 'team:update', id: 't', change: { noBrain: true } });
+  squad.receive({ type: 'team:state', teams: [{ id: 't', name: 'T' }], team, roster: {} });
+  // the lead's own brain back to the team's
+  on.change({ target: { dataset: { f: 'brain' }, value: '__team__' } });
+  assert.deepEqual(sent.at(-1), { type: 'team:memberUpdate', id: 't', member: 'arch', change: { teamBrain: true } });
+  // a member who does not lead: its Talk asks the tech lead
+  on.click({ target: { closest: () => ({ dataset: { member: 'dev' }, disabled: false }) } });
+  assert.ok(el.innerHTML.includes('sq.chatLead'));
+});
+
+test('a bundled file missing in the extension is served from the kept copy, the extension\'s folder kept in the roots', () => {
+  const storage = fs.mkdtempSync(path.join(os.tmpdir(), 'nuc-store-')), ext = fs.mkdtempSync(path.join(os.tmpdir(), 'nuc-ext-'));
+  initAssets({ globalStorageUri: { fsPath: storage }, extension: { packageJSON: { version: '1.2.3' } } } as never);
+  fs.mkdirSync(path.join(ext, 'out')); fs.writeFileSync(path.join(ext, 'out', 'builder-flow.js'), '');
+  const cache = path.join(storage, 'assets', '1.2.3');
+  fs.mkdirSync(path.join(cache, 'out'), { recursive: true }); fs.writeFileSync(path.join(cache, 'out', 'chat-embed.js'), '');
+  const webview = { options: {} as { localResourceRoots?: { fsPath: string }[] }, asWebviewUri: (u: { fsPath: string }) => ({ toString: () => u.fsPath }) };
+  // bundled: the extension's own, the roots untouched
+  assert.equal(assetUrl(webview as never, { fsPath: ext } as never, 'out/builder-flow.js'), `${ext}/out/builder-flow.js`);
+  assert.equal(webview.options.localResourceRoots, undefined);
+  // missing in the extension: the kept copy, its folder added beside the default roots (the extension's folder)
+  assert.equal(assetUrl(webview as never, { fsPath: ext } as never, 'out/chat-embed.js'), path.join(cache, 'out', 'chat-embed.js'));
+  assert.deepEqual(webview.options.localResourceRoots!.map((r) => r.fsPath), ['/ext', cache]);
+  assetUrl(webview as never, { fsPath: ext } as never, 'out/chat-embed.js');
+  assert.equal(webview.options.localResourceRoots!.length, 2, 'added once');
 });

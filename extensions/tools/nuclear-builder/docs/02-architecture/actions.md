@@ -77,7 +77,7 @@ question (the process reads it beside its stdin), else the run goes on with the 
 | Action | Command | Tool | Who |
 |---|---|---|---|
 | The company screen, opened or a team opened: everything it draws in one process (the teams, each one shown, the roster with each face's `face` and `thumb`, the temperaments, the vault's providers) | `team screen [--lang en\|es] --json` | — (one read for a page; an agent asks `team_list`, `team_show`, `team_roster`, `team_temperaments`, `vault_list`) | the page |
-| The teams | `team list --json` | `team_list` | anyone |
+| The teams, each with its tech lead (`lead`: id, name, role) and the runs of this project it has in progress (`running`, `free`) | `team list --json` | `team_list` | anyone |
 | Open a team | `team show <id>` | `team_show` | anyone |
 | New team (the wizard's *Create team*) | `team create` (the draft on stdin: identity, purpose, skills, members, tech lead) | `team_create` | anyone; a local model too big for this machine's memory: user (it can make the computer restart; the answer carries `warnings`) |
 | Suggest members for the purpose and skills (wizard, step 3) | `team suggest [--purpose …] [--skills a,b] [--lang]` | `team_suggest` | anyone |
@@ -85,8 +85,8 @@ question (the process reads it beside its stdin), else the run goes on with the 
 | Whether the team can run (a member of each role the stations need) | `team runnable <id>` | `team_runnable` | anyone |
 | Add members (several at once) | `team member add <id> --role … [--employee …] [--kind] [--provider] [--model] [--name] [--count n]` · a JSON list on stdin | `team_member_add` | anyone; a local model too big for this machine's memory: user (it can make the computer restart; the answer carries `warnings`) |
 | Remove a member | `team member remove <id> <member>` | `team_member_remove` | user |
-| Save a member: who works it (kind, provider, model: one this machine has), skills, extra skills, instructions, personality, temperament, name | `team member update <id> <member> [--kind] [--provider] [--model] [--employee] [--name] [--skills] [--extra-skills <json>] [--instructions] [--temperament] [--gifs] [--on] [--note]` (the page saves the whole team: `team save`) | `team_member_update` | anyone; a local model too big for this machine's memory: user (it can make the computer restart; the answer carries `warnings`) |
-| Rename, description, purpose, skills, tech lead (a member), budget | `team update <id> [--name] [--description] [--purpose] [--skills] [--lead <member>] [--budget]` | `team_update` | anyone |
+| Save a member: who works it (kind, provider, model: one this machine has; its own wins over the team's brain, `--team-brain` gives it back), skills, extra skills, instructions, personality, temperament, name | `team member update <id> <member> [--kind] [--provider] [--model] [--team-brain] [--employee] [--name] [--skills] [--extra-skills <json>] [--instructions] [--temperament] [--gifs] [--on] [--note]` (the page saves the whole team: `team save`) | `team_member_update` | anyone; a local model too big for this machine's memory: user (it can make the computer restart; the answer carries `warnings`) |
+| Rename, description, purpose, skills, tech lead (a member), budget, method (empty: Scrum), instructions every member follows, the team's brain for every member (`--no-brain`: each keeps its own) | `team update <id> [--name] [--description] [--purpose] [--skills] [--lead <member>] [--budget] [--method] [--instructions] [--kind --provider --model] [--no-brain]` (the page may save the whole team: `team save` keeps `method`, `instructions`, `brain`) | `team_update` | anyone |
 | Duplicate | `team duplicate <id> [--name …]` | `team_duplicate` | anyone |
 | Delete (to `<id>.json.bak`) | `team delete <id>` | `team_delete` | user |
 | Make it the default | `team default <id>` | `team_default` | anyone |

@@ -40,7 +40,7 @@ testATeamIsSavedReadListedAndItsLastVersionKept(tmpPath: Path, monkeypatch: any,
   team.remove("missing")
   saved = call(["team", "save", "--json"], monkeypatch, capsys, json.dumps(team))
   expect(saved["code"] == 0 and (saved["out"] as <string, any>)["updated"]! > 0)
-  expect(call(["team", "list", "--json"], monkeypatch, capsys)["out"] == [{ "id": "night-shift", "name": "Night shift", "description": "", "logo": null, "techLead": "architect", "members": 2, "updated": (saved["out"] as <string, any>)["updated"], "default": true }])
+  expect(call(["team", "list", "--json"], monkeypatch, capsys)["out"] == [{ "id": "night-shift", "name": "Night shift", "description": "", "logo": null, "techLead": "architect", "members": 2, "updated": (saved["out"] as <string, any>)["updated"], "default": true, "lead": { "id": "architect", "name": "", "role": "architect" }, "running": [] as string[], "free": true }])
   team["name"] = "Night shift 2"
   call(["team", "save", "--json"], monkeypatch, capsys, json.dumps(team))
   file = tmpPath.joinpath("factory", "teams", "night-shift.json")
@@ -354,8 +354,8 @@ testAStationIsWorkedByTheAssignedMemberElseTheFirstOfItsRole(tmpPath: Path, monk
   run = newRun("${tmpPath}", {}, { "id": "s1", "title": "S" }, team, ["analysis", "code"], "specs/s1", { "developer": "d2" })
   stages = run["stages"] as <string, any>[]
   expect(stages[0]["member"] == "a1" and stages[1]["member"] == "d2" and stages[1]["provider"] == "codex" and run["assign"] == { "developer": "d2" })
-  // the spending asks for the member who works the station, not every member of its role
-  expect(paidOf(run, team)["members"] == ["d2"] and paidOf(newRun("${tmpPath}", {}, { "id": "s2", "title": "S" }, team, ["code"], "specs/s2"), team)["members"] == [])
+  // the spending asks for the member who works the station, not every member of its role (an agent only when forced)
+  expect(paidOf(run, team, true)["members"] == ["d2"] and paidOf(run, team)["members"] == [] and paidOf(newRun("${tmpPath}", {}, { "id": "s2", "title": "S" }, team, ["code"], "specs/s2"), team, true)["members"] == [])
   expect(runnable(team)["missing"] == ["architect", "qa", "devops"] and runnable(team, ["analysis", "code"])["runnable"] == true)
 
 // The wizard's commands: members added (twenty at once), updated and removed by their id; the tech lead's place
@@ -460,3 +460,51 @@ testTheOldDeliveryRoleIsReadAsDevops(tmpPath: Path, monkeypatch: any, capsys: an
   run = upgradeRun({ "stages": [{ "id": "delivery", "role": "delivery", "actors": ["delivery", "shell"], "steps": [{ "role": "delivery" }] }], "assign": { "delivery": "x" } })
   st = (run["stages"] as <string, any>[])[0]
   expect(st["id"] == "delivery" and st["role"] == "devops" and st["actors"] == ["devops", "shell"] and (st["steps"] as <string, any>[])[0]["role"] == "devops" and run["assign"] == { "devops": "x" }, json.dumps(run))
+
+// A team's method and instructions (spec 023 requirement 3) and its brain for every member (requirement 5):
+// `team update --method --instructions` and `--kind --provider --model`; a member's own set after it wins, `--team-brain`
+// gives it back, `--no-brain` leaves each member the one it had; `team show` gives both.
+testATeamsMethodInstructionsAndBrainForEveryMember(tmpPath: Path, monkeypatch: any, capsys: any) void
+  useTempHome(tmpPath, monkeypatch)
+  codex = tmpPath.joinpath("bin", "codex")
+  codex.writeText("#!/bin/sh\n")
+  codex.chmod(493)
+  made = call(["team", "create", "--json"], monkeypatch, capsys, json.dumps({ "name": "Crew", "members": [{ "role": "architect", "id": "arc", "provider": "claude-code", "kind": "agent" }, { "role": "developer", "id": "dev", "kind": "agent", "provider": "claude-code", "model": "haiku" }] }))["out"] as <string, any>
+  expect(made["method"] == "" and made["methodText"] == SCRUM_METHOD and made["instructions"] == "" and made["brain"] == null, json.dumps(made))
+  ways = call(["team", "update", "crew", "--method", "Kanban", "--instructions", "Small pull requests.", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(ways["method"] == "Kanban" and ways["methodText"] == "Kanban" and ways["instructions"] == "Small pull requests.")
+  expect("The method: Kanban" in teamWay(ways) and "Small pull requests." in teamWay(ways) and "The method: Scrum." in teamWay({ "name": "Old" }))
+  // the team's brain works every member: their own give way, the file keeps no brain in them
+  chosen = call(["team", "update", "crew", "--kind", "agent", "--provider", "codex", "--model", "gpt-5", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  members: <string, any>[] = chosen["members"]!
+  expect(chosen["brain"] == { "kind": "agent", "provider": "codex", "model": "gpt-5" } and members.all((m) => m["inheritsBrain"] == true and m["provider"] == "codex" and m["model"] == "gpt-5"), json.dumps(chosen))
+  kept = json.loads(tmpPath.joinpath("factory", "teams", "crew.json").readText())
+  expect((kept["members"] as <string, any>[]).all((m) => not ("provider" in m) and not ("inheritsBrain" in m)), json.dumps(kept))
+  // a member's own wins; a new member without one is worked by the team's; --team-brain gives it back
+  own = call(["team", "member", "update", "crew", "dev", "--provider", "claude-code", "--kind", "agent", "--model", "opus", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  dev = (own["members"] as <string, any>[]).find((m) => m["id"] == "dev")!
+  expect(dev["inheritsBrain"] == false and dev["provider"] == "claude-code" and dev["model"] == "opus")
+  added = call(["team", "member", "add", "crew", "--role", "qa", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect((added["members"] as <string, any>[]).find((m) => m["role"] == "qa")!["provider"] == "codex")
+  back = call(["team", "member", "update", "crew", "dev", "--team-brain", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect((back["members"] as <string, any>[]).find((m) => m["id"] == "dev")!["inheritsBrain"] == true)
+  // without the team's brain, every member keeps the one it had
+  gone = call(["team", "update", "crew", "--no-brain", "--json"], monkeypatch, capsys)["out"] as <string, any>
+  expect(gone["brain"] == null and (gone["members"] as <string, any>[]).all((m) => m["inheritsBrain"] == false and m["provider"] == "codex"), json.dumps(gone))
+  // a brain this machine cannot work is refused
+  expect(call(["team", "update", "crew", "--kind", "agent", "--provider", "gemini-cli"], monkeypatch, capsys)["code"] == 1)
+  // the spending is asked only for an API (paid by use), of every paid provider when forced
+  expect(asksSpending("api") and not asksSpending("agent") and asksSpending("agent", true) and not asksSpending("local", true))
+
+// What Nuclear Atlas tells of the teams (spec 023): each one's tech lead and whether it has a run in progress here.
+testATeamWithARunInProgressIsBusy(tmpPath: Path, monkeypatch: any) void
+  useTempHome(tmpPath, monkeypatch)
+  saveTeam({ "id": "crew", "name": "Crew", "members": [{ "id": "arc", "role": "architect", "kind": "agent", "provider": "claude-code", "name": "Ada" }] })
+  saveTeam({ "id": "idle", "name": "Idle", "members": [] as any[] })
+  root = tmpPath.joinpath("app")
+  run = newRun("${root}", { "name": "app" }, { "id": "s1", "title": "S" }, loadTeam("crew"), ["design"], "specs/s1")
+  run["status"] = "waiting"
+  saveRun(run)
+  found = teamsAtWork("${root}")
+  expect(found.map((t) => [t["id"], t["free"], t["running"]]) == [["crew", false, ["s1"]], ["idle", true, [] as string[]]], json.dumps(found))
+  expect(found[0]["lead"] == { "id": "arc", "name": "Ada", "role": "architect" } and found[1]["lead"] == null)

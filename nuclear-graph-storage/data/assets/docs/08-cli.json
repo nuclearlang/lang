@@ -1461,34 +1461,6 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.1c3594",
-   "type": "context",
-   "title": "Release, and test an installer — Publish a release",
-   "summary": "7. After the tag: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the GitHub release has every asset `release.yml` publishes (the six archives, the…",
-   "body": [
-    "7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its",
-    "   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the",
-    "   GitHub release has every asset `release.yml` publishes (the six archives, the four AI archives, each `.sha256`, the",
-    "   `.vsix`, the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`",
-    "   are byte-identical to the tag's (retried for 10 minutes: the site publishes after the website workflow); and runs",
-    "   the user's path in a fake `HOME`: the public one-liner, and the previous release installed by its own installer and",
-    "   updated as `nuclear update` does. The release is done only when it passes; a failure is fixed by a PATCH release.",
-    "   `AFTER_RELEASE_WAIT` and `AFTER_RELEASE_SITE` change the minutes it waits.",
-    "8. **On a real Mac and a real Linux** (the services cannot start in a fake `HOME`): the public one-liner on a machine",
-    "   that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
-    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each",
-    "   answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed."
-   ],
-   "sources": [
-    "installer/docs/06-runbooks/release.md"
-   ],
-   "meta": {
-    "section": "08-cli",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.4d5e97",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
@@ -1546,11 +1518,42 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.b93cd1",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.85e18d",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "The workflow `installer-windows.yml` has never run (roadmap).",
-   "body": "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md)).",
+   "summary": "answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
+   "body": [
+    "answering on the port of `ai.env`, the MCP server in an AI client, the editor extension installed.",
+    "",
+    "The workflow `installer-windows.yml` has never run ([roadmap](../01-product/roadmap.md))."
+   ],
+   "sources": [
+    "installer/docs/06-runbooks/release.md"
+   ],
+   "meta": {
+    "section": "08-cli",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.b065d3",
+   "type": "context",
+   "title": "Release, and test an installer — Publish a release",
+   "summary": "7. After the tag: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the GitHub release has every asset `release.yml` publishes (the six archives, the…",
+   "body": [
+    "7. **After the tag**: `installer/release/after-release.sh <version>` waits for every workflow of the tag and its",
+    "   commit (release, ci, website, platform-*, the extensions') and fails when one did not succeed; checks that the",
+    "   GitHub release has every asset `release.yml` publishes (the six archives, the four AI archives, each `.sha256`, the",
+    "   `.vsix` and its `.sha256` (the extension checks a copy it downloads against it), the vectors, `install.sh`, `install.ps1`); that `https://nuclearlang.github.io/install.sh` and `install.ps1`",
+    "   are byte-identical to the tag's (retried for 10 minutes: the site publishes after the website workflow); and runs",
+    "   the user's path in a fake `HOME`: the public one-liner, and the previous release installed by its own installer and",
+    "   updated as `nuclear update` does. The release is done only when it passes; a failure is fixed by a PATCH release.",
+    "   `AFTER_RELEASE_WAIT` and `AFTER_RELEASE_SITE` change the minutes it waits.",
+    "8. **On a real Mac and a real Linux** (the services cannot start in a fake `HOME`): the public one-liner on a machine",
+    "   that never had NuclearLang, again on the same machine, and an update over the previous release; after each,",
+    "   `installer/tests/stack.sh` must pass: one job and one process of each service (the Smart Graph, Nuclear Chat), each"
+   ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
    ],

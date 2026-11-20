@@ -65,7 +65,7 @@ testTheHostFileGivesTheGeneralAgentItsChoices(tmpPath: Path, monkeypatch: any) v
   members: <string, any>[] = host["members"]!
   atlas = members.last
   responder: <string, any> = atlas["responder"]!
-  expect(atlas["id"] == "atlas" and atlas["role"] == "chat" and "agente general" in "${(atlas["profile"] as <string, any>)["bio"]}")
+  expect(atlas["id"] == "atlas" and atlas["role"] == "chat" and atlas["listed"] == true and "tech lead" in "${(atlas["profile"] as <string, any>)["bio"]}")
   expect(responder["choice"] == "nuclear-developer" and responder["paid"] == false and responder["command"] == ["nuclear-builder", "member", "--role", "chat", "--kind", "local", "--provider", "nuclear-developer"])
   expect((responder["choices"] as <string, any>[]).length == 11)
 

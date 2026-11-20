@@ -34,7 +34,7 @@ renderClaudePlugin(role: Role, at: Path) Path
 
 claudeArgs(role: Role, prompt: string, work: Work, at: Path) string[]
   mcp = at.joinpath("mcp.json")
-  mcp.writeText(json.dumps({ "mcpServers": mcpServers(work.mcpCommand, work.root) }))
+  mcp.writeText(json.dumps({ "mcpServers": mcpServers(work) }))
   args = ["claude", "-p", prompt, "--output-format", "stream-json", "--verbose", "--mcp-config", "${mcp}", "--strict-mcp-config", "--plugin-dir", "${renderClaudePlugin(role, at)}", "--append-system-prompt", role.text(), "--tools", CLAUDE_TOOLS.join(","), "--allowedTools", ...CLAUDE_TOOLS, "mcp__nuclear", "mcp__nuclear_builder", "--no-session-persistence"]
   if work.inputs["stream"] == true
     args.add("--include-partial-messages")

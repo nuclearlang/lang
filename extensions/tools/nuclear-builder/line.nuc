@@ -130,6 +130,38 @@ teamOfRun(root: string, asked: string?) <string, any>
   found = runTeam(root, asked)
   found ?? localTeam()
 
+// Whether a run is in progress: running (its owner alive) or waiting for the user at a gate or for its spending.
+inProgress(run: <string, any>) boolean
+  run["status"] == "waiting" or (run["status"] == "running" and not orphaned(run["owner"]))
+
+// A team's tech lead as the chat names them: its member id, name (the hired employee's when it has none) and role;
+// null in a team without members.
+leadOf(team: <string, any>) <string, any>?
+  shown = teamShown(team)
+  members: <string, any>[] = shown["members"] ?? []
+  id = shown["techLead"] ?? defaultLead(members)
+  found = members.find((m) => m["id"] == id)
+  found == null ? null : { "id": found!["id"], "name": found!["name"] ?? "", "role": found!["role"] }
+
+// The saved teams (`listTeams`) with what the chat and Nuclear Atlas tell of them (spec 023): each one's tech lead
+// (`lead`), the runs of the project `root` it has in progress (`running`) and whether it is free (none).
+teamsAtWork(root: string) <string, any>[]
+  busy: <string, string[]> = {}
+  for r in listRuns(root).filter((r) => inProgress(r))
+    team = "${(r["factory"] ?? ({} as <string, any>))["team"] ?? ""}"
+    busy[team] = [...(busy[team] ?? []), "${r["id"]}"]
+  found: <string, any>[] = []
+  for t in listTeams()
+    listed: <string, any> = dict(t)
+    lead: <string, any>? = null
+    if t["error"] == null
+      lead = leadOf(loadTeam("${t["id"]}"))
+    listed["lead"] = lead
+    listed["running"] = busy["${t["id"]}"] ?? []
+    listed["free"] = (listed["running"] as string[]).isEmpty
+    found.add(listed)
+  found
+
 // The team of a run again: the one asked for, else the run's own; a run of the local team that was never saved
 // (`local-team`, there was no team at all) gets it again.
 teamOfRetry(root: string, asked: string?, own: string) <string, any>
@@ -191,11 +223,11 @@ detachRun(root: string, id: string, args: string[]) <string, any>
   out.close()
   { "run": id, "detached": p.pid, "log": "${RUNS_DIR}/${id}.out" }
 
-// The roles a team gives a paid provider at the stations of a run (the member who works each, `memberFor`), and the
-// run's budget: what its spending asks.
-paidOf(run: <string, any>, team: <string, any>) <string, any>
+// The roles a team gives a provider whose spending is asked (`asksSpending`: an API, or any paid one when `forced`)
+// at the stations of a run (the member who works each, `memberFor`), and the run's budget: what its spending asks.
+paidOf(run: <string, any>, team: <string, any>, forced: boolean = false) <string, any>
   workers: <string, any>[] = ((run["stages"] ?? []) as <string, any>[]).map((st) => "${st["role"]}").unique().map((r) => memberFor(team, r, run["assign"]) ?? (localModels() ? ({ "role": r, "kind": "local" } as <string, any>) : { "role": r, ...defaultWorker(r) }))
-  paid = workers.filter((m) => "${m["kind"] ?? "local"}" != "local")
+  paid = workers.filter((m) => asksSpending("${m["kind"] ?? "local"}", forced))
   { "roles": paid.map((m) => "${m["role"]}"), "members": paid.map((m) => "${m["id"]}"), "providers": paid.map((m) => "${m["provider"]}").unique(), "budgetUsd": team["budgetUsd"] ?? 5.0 }
 
 // A new run of a spec file by a team, saved: the spec kept in its folder, the project's line, the team.
@@ -227,7 +259,7 @@ startDetached(root: string, file: string, asked: string?, assign: string? = null
     throw ValueError("the run ${run["id"]} is running already")
   saveRun(run)
   started = detachRun(root, "${run["id"]}", ["run", "--resume", "${run["id"]}", ...(asked == null ? [] as string[] : ["--team", asked!])])
-  paid = paidOf(run, made["team"]!)
+  paid = paidOf(run, made["team"]!, made["line"]!["forceConfirm"] == true)
   if not (paid["roles"] as string[]).isEmpty
     started["waiting"] = "spending"
     started["spending"] = paid

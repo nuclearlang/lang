@@ -1,11 +1,12 @@
 // The left of the chat: the project with the *New message* pencil, *Jump to…* (Ctrl+K), the members, its channels
 // (with + to make one) and its direct messages, each with its unread count; the open one marked. A team's channel
-// shows its tech lead. A closed or archived conversation is out of it (but the open one).
+// shows its tech lead. A closed or archived conversation is out of it (but the open one), and so is a direct message
+// with a member the host no longer lists (the jump finds it: it is never deleted).
 stateless Sidebar(ws: Workspace, channels: Channel[], open: string, texts: Texts, onOpen: (id: string) => void, onFind: (people: boolean) => void, onNewChannel: () => void)
   build() Element
     shown = channels.filter((c) => c.state == "open" or c.id == open)
     rooms = shown.filter((c) => c.kind != "dm")
-    dms = shown.filter((c) => c.kind == "dm")
+    dms = sidebarDms(ws, shown, open)
     nav(
       className = "sidebar",
       children = [
@@ -14,7 +15,7 @@ stateless Sidebar(ws: Workspace, channels: Channel[], open: string, texts: Texts
         div(
           className = "rooms",
           children = [
-            button(className = "room", onClick = () => onFind(true), children = [span(className = "icon icon-people"), span(className = "room-name", children = texts.get("people")), span(className = "room-role", children = "${ws.members.length}")]),
+            button(className = "room", onClick = () => onFind(true), children = [span(className = "icon icon-people"), span(className = "room-name", children = texts.get("people")), span(className = "room-role", children = "${ws.members.count((m) => m.listed)}")]),
             div(className = "section", children = [span(children = texts.get("channels")), button(className = "section-add", title = texts.get("newChannel"), onClick = () => onNewChannel(), children = span(className = "icon icon-plus"))]),
             ...rooms.map((c) => ChannelItem(key = c.id, channel = c, ws = ws, open = c.id == open, onOpen = onOpen)),
             div(className = "section", children = [span(children = texts.get("dms")), button(className = "section-add", title = texts.get("newMessage"), onClick = () => onFind(true), children = span(className = "icon icon-plus"))]),
@@ -23,6 +24,10 @@ stateless Sidebar(ws: Workspace, channels: Channel[], open: string, texts: Texts
         ),
       ],
     )
+
+// The direct messages the sidebar lists: those with a listed member (Atlas, the tech leads), and the open one.
+sidebarDms(ws: Workspace, channels: Channel[], open: string) Channel[]
+  channels.filter((c) => c.kind == "dm" and (c.id == open or dmMember(ws, c)?.listed != false))
 
 // The project's name: the last folder of its root.
 projectName(ws: Workspace) string

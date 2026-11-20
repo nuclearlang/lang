@@ -102,11 +102,12 @@ stateful Finder(ws: Workspace, channels: Channel[], texts: Texts, people: boolea
       onClose()
 
 // What a text finds: the members (by name, first name, id or role; each one's direct message) and, but in the
-// members list, the channels (by name or id). An empty text lists them all.
+// members list, the channels (by name or id). An empty text lists them all. The members list holds the listed members;
+// the quick switcher also finds one no longer listed whose direct message is kept (an earlier conversation).
 targets(ws: Workspace, channels: Channel[], query: string, people: boolean, texts: Texts) Target[]
   q = query.trim().lower().replaceAll(Regex(r"^[@#]"), "")
   members = ws.members.filter((m) => q == "" or m.name.lower().startsWith(q) or m.id.lower().startsWith(q) or m.role.lower().startsWith(q) or m.name.lower().split(" ").any((w) => w.startsWith(q)))
-  found: Target[] = members.map((m) =>
+  found: Target[] = members.filter((m) => m.listed or (not people and channels.any((c) => c.kind == "dm" and dmMember(ws, c)?.id == m.id))).map((m) =>
     dm = channels.find((c) => c.kind == "dm" and dmMember(ws, c)?.id == m.id)
     Target(channel = dm?.id ?? "dm-${m.id.lower()}", label = m.name, hint = m.role, member = m, state = dm?.state ?? "open")
   )

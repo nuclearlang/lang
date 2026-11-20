@@ -519,6 +519,43 @@
     }
   },
   "dialect": "fastapi",
+  "env": [
+    {
+      "client": false,
+      "default": "https://api.giphy.com/v1",
+      "name": "NUCLEAR_CHAT_GIPHY_URL",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "client": false,
+      "default": "https://tenor.googleapis.com/v2",
+      "name": "NUCLEAR_CHAT_TENOR_URL",
+      "required": false,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "client": false,
+      "name": "NUCLEAR_CHAT_TOKEN",
+      "required": true,
+      "uses": [
+        {
+          "file": "config/project_config.nuc",
+          "line": 13
+        }
+      ]
+    }
+  ],
   "events": {
     "chat.event": {
       "component": "events",
@@ -1094,6 +1131,12 @@
           "description": "who works the member (an agent and its model), drawn in a direct message's header",
           "name": "brain",
           "type": "Brain"
+        },
+        {
+          "default": true,
+          "description": "whether the member is one of the chat's people (the members list, #general, a direct message of their own); one not listed still writes in channels and threads and is answered when mentioned, and a direct message kept with them stays readable",
+          "name": "listed",
+          "type": "boolean"
         }
       ],
       "key": null
@@ -1659,6 +1702,6 @@
   },
   "platform": "backend",
   "repositories": {},
-  "version": "0.80.0",
+  "version": "0.84.1",
   "webSocket": "/ws"
 }

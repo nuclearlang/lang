@@ -100,6 +100,7 @@ export const SQUAD_CSS = String.raw`
 .sq-logobtn:hover .hex { background: var(--hud2); }
 .sq-logoclear { padding: 0 5px !important; margin-left: -6px; border: none !important; align-self: flex-start; color: var(--mut) !important; }
 .sq-about { grid-column: 1 / -1; margin-top: -6px; } .sq-about input { width: 100%; background: transparent; border-color: transparent; color: var(--mut); padding: 4px 8px; } .sq-about input:hover, .sq-about input:focus { border-color: var(--line); color: var(--fg); background: var(--vscode-input-background); }
+.sq-way { grid-column: 1 / -1; padding: 8px 12px 12px; } .sq-way .wz-same { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 0; border: 0; background: none; } .sq-way textarea { width: 100%; box-sizing: border-box; }
 /* the operations roster: the five slots in station order */
 .op-list { align-self: start; position: sticky; top: 0; z-index: 3; }
 .op-slot { position: relative; display: grid; grid-template-columns: 20px 52px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 9px 12px 9px 10px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
@@ -455,6 +456,8 @@ window.Squad = (() => {
   // HERE: each provider's models and this machine's memory (models --json); ask: the confirmation of a model too big
   // for this machine's memory ({ m, yes }); brainOther: the provider whose model is typed in the brain ({ kind, provider })
   let HERE = null, ask = null, brainOther = null;
+  // the team view's brain: its model typed (*Other…*); its method written by the user (not Scrum)
+  let tbTyping = false, methodOwn = false;
   // NUMBERS: each member's numbers of the shown team, from the factory's ledger (metrics --view people), by member id
   let NUMBERS = {};
 
@@ -500,7 +503,8 @@ window.Squad = (() => {
   // a member an older file left local, not yet converted by the command: said, never offered (ADR-platform-0013)
   const wasLocal = (x) => x?.kind === 'local' || x?.provider === 'nuclear-developer';
   const ledOf = (x) => wasLocal(x) ? ['off', t('sq.converted')] : ['paid', t('sq.led.paid')];
-  const leadOf = (team) => team?.techLead || '';
+  // the tech lead: the member the team names, else its first Architect (teams.nuc)
+  const leadOf = (team) => team?.techLead || team?.members?.find((m) => m.role === 'architect')?.id || '';
   const sep = '<i>//</i>', dot = '<i>·</i>';
   const isPaid = (x) => !!x?.kind && x.kind !== 'local';
   const paidTag = (x) => isPaid(x) ? '<span class="tag paid" title="' + esc(t('sq.wz.paidHint')) + '">' + esc(t('sq.wz.paid')) + '</span>' : '';
@@ -515,7 +519,7 @@ window.Squad = (() => {
     if (view === 'wizard' && W) el.innerHTML = '<div class="sq">' + wizard() + '</div>' + toastHtml();
     else if (view === 'company') el.innerHTML = '<div class="sq sq-company">' + warnLine() + company() + '</div>' + toastHtml();
     else if (!S.team) el.innerHTML = '<div class="sq">' + bar() + warnLine() + empty() + '</div>' + toastHtml();
-    else el.innerHTML = '<div class="sq" style="--rc:' + COLOR[cur()?.role ?? role] + '">' + bar() + warnLine() + about() + teamSkills() + crew() + side() + (adding ? rosterRow() : '') + '</div>' + toastHtml();
+    else el.innerHTML = '<div class="sq" style="--rc:' + COLOR[cur()?.role ?? role] + '">' + bar() + warnLine() + about() + teamWay() + teamSkills() + crew() + side() + (adding ? rosterRow() : '') + '</div>' + toastHtml();
     const sq = el.querySelector('.sq'); if (sq) sq.scrollTop = keep;
     if (focusKey) { const b = el.querySelector('[data-f="' + focusKey + '"]'); if (b) { b.focus({ preventScroll: true }); if (caret) try { b.setSelectionRange(caret[0], caret[1]); } catch {} } }
     if (ask) { (el.querySelector('.sq') ?? el).insertAdjacentHTML('beforeend', askHtml()); el.querySelector('[data-a="ramNo"]')?.focus(); }
@@ -543,8 +547,9 @@ window.Squad = (() => {
     const staffed = list.reduce((n, c) => n + c.members.length, 0), active = list.reduce((n, c) => n + c.work.filter((w) => w.status === 'running' || w.status === 'waiting').length, 0);
     const cards = list.map((c) => {
       const nameOf = (m) => m.name || people(m.role).find((e) => e.id === m.employee)?.name || t('sq.role.' + m.role);
+      const leaderOf = (c) => c.members.find((m) => m.id === c.techLead) ?? c.members.find((m) => m.role === 'architect');
       const shown = c.members.slice(0, 7);
-      const faces = shown.map((m) => '<span class="co-m" data-chatteam="' + esc(c.id) + '" data-chatm="' + esc(m.id) + '" role="button" tabindex="0" title="' + esc(t('sq.chatWith', nameOf(m))) + ' · ' + esc(nameOf(m) + ' · ' + t('sq.role.' + m.role) + (m.provider ? ' · ' + (PNAME[m.provider] ?? m.provider) + (m.model ? ' · ' + m.model : '') : '') + (m.id === c.techLead ? ' · ' + t('sq.techLead') : '')) + '">'
+      const faces = shown.map((m) => '<span class="co-m" data-chatteam="' + esc(c.id) + '" data-chatm="' + esc(m.id) + '" role="button" tabindex="0" title="' + esc(m.id === c.techLead || !leaderOf(c) ? t('sq.chatWith', nameOf(m)) : t('sq.chatLeadHint', nameOf(leaderOf(c)), nameOf(m))) + ' · ' + esc(nameOf(m) + ' · ' + t('sq.role.' + m.role) + (m.provider ? ' · ' + (PNAME[m.provider] ?? m.provider) + (m.model ? ' · ' + m.model : '') : '') + (m.id === c.techLead ? ' · ' + t('sq.techLead') : '')) + '">'
         + pf(m.employee, nameOf(m), COLOR[m.role], '46px') + (m.id === c.techLead ? '<span class="tag lead">' + esc(t('sq.hud.leadTag')) + '</span>' : '<span class="lbl">' + esc(t('sq.abbr.' + m.role)) + '</span>') + '</span>').join('')
         + (c.members.length > shown.length ? '<span class="co-m"><span class="pf vacant" style="--s:46px"><span class="face">+' + (c.members.length - shown.length) + '</span></span><span class="lbl">' + esc(t('sq.wz.more')) + '</span></span>' : '');
       const counts = roleCounts(c.members), lack = c.missing ?? [];
@@ -568,6 +573,28 @@ window.Squad = (() => {
   }
   /** The team's description, under its bar. */
   const about = () => '<div class="sq-about"><input data-f="tdesc" value="' + esc(S.team.description ?? '') + '" placeholder="' + esc(t('sq.descPlaceholder')) + '" aria-label="' + esc(t('sq.description')) + '"></div>';
+  /** How the team works (spec 023): the model for the whole team (none: each member keeps its own), its method (Scrum
+   * unless the user writes theirs) and the instructions every member follows. */
+  function teamWay() {
+    const b = S.team.brain, n = members().filter((x) => x.inheritsBrain).length, method = S.team.method ?? '', own = methodOwn || !!method.trim();
+    return '<div class="sq-way hud brk"><div class="hs"><span>' + esc(t('sq.way.title')) + '</span></div><div class="sq-grid" style="margin-top:0">'
+      + '<label>' + esc(t('sq.way.brain')) + '</label><div class="wz-same">' + brainBar('tb', b ? { ...b, model: b.model ?? '', typing: tbTyping } : null) + '</div>'
+      + '<div class="sq-hint">' + esc(b ? t('sq.way.brainOn', n, members().length) : t('sq.way.brainOff')) + '</div>'
+      + '<label>' + esc(t('sq.way.method')) + '</label><div><select data-f="tmethod" aria-label="' + esc(t('sq.way.method')) + '"><option value="scrum"' + (own ? '' : ' selected') + '>' + esc(t('sq.way.scrum')) + '</option><option value="own"' + (own ? ' selected' : '') + '>' + esc(t('sq.way.own')) + '</option></select>'
+      + (own ? '<textarea data-f="tmethodtext" rows="3" style="margin-top:6px" placeholder="' + esc(t('sq.way.methodPlaceholder')) + '" aria-label="' + esc(t('sq.way.own')) + '">' + esc(method) + '</textarea>' : '') + '</div>'
+      + '<div class="sq-hint">' + esc(own ? t('sq.way.ownHint') : S.team.methodText || t('sq.way.scrumHint')) + '</div>'
+      + '<label style="align-self:start;margin-top:6px">' + esc(t('sq.way.instructions')) + '</label><textarea data-f="tinstr" rows="4" placeholder="' + esc(t('sq.way.instructionsPlaceholder')) + '" aria-label="' + esc(t('sq.way.instructions')) + '">' + esc(S.team.instructions ?? '') + '</textarea>'
+      + '<div class="sq-hint">' + esc(t('sq.way.instructionsHint')) + '</div></div></div>';
+  }
+  /** The model for the whole team, with the pickers a member has (no local kind): none, an agent or an API, its
+   * provider and model. p names its fields (tb: the team view, wzb: the wizard). */
+  function brainBar(p, a) {
+    const kinds = kindButtons('data-' + p + 'kind="', a?.kind).replace(/^<div[^>]*>/, '').replace(/<\/div>$/, '');
+    return '<div class="sq-seg" role="group" aria-label="' + esc(t('sq.way.brain')) + '"><button data-' + p + 'kind="none" aria-pressed="' + !a + '" class="' + (a ? '' : 'sel') + '">' + esc(t('sq.way.none')) + '</button>' + kinds + '</div>'
+      + (a ? '<select data-f="' + p + 'prov" aria-label="' + esc(t('sq.provider')) + '">' + providerOptions(a) + '</select>' + modelPicker(p + 'model', a.provider, a.model, a.kind, a.typing) + ramLine(a.provider, a.model) : '');
+  }
+  /** Whether a member works with the team's model or its own (a team with a brain only). */
+  const brainTag = (x) => !S.team?.brain ? '' : x.inheritsBrain ? '<span class="tag tmp" title="' + esc(t('sq.way.teamModelHint')) + '">' + esc(t('sq.way.teamModel')) + '</span>' : '<span class="tag" title="' + esc(t('sq.way.ownModelHint')) + '">' + esc(t('sq.way.ownModel')) + '</span>';
   function bar() {
     const opts = S.teams.map((x) => '<option value="' + esc(x.id) + '"' + (x.id === S.team?.id ? ' selected' : '') + '>' + (x.default ? '★ ' : '') + esc(x.name) + '</option>').join('');
     const entry = S.teams.find((x) => x.id === S.team?.id);
@@ -599,7 +626,7 @@ window.Squad = (() => {
         return '<div class="op-slot' + (x.id === sel ? ' sel' : '') + '" style="--rc:' + COLOR[r] + '" data-member="' + esc(x.id) + '" tabindex="0" role="button" aria-pressed="' + (x.id === sel) + '" aria-label="' + esc(t('sq.role.' + r) + ': ' + name) + '">'
           + '<span class="op-n">' + String(i + 1).padStart(2, '0') + '</span>' + pf(p?.id, name, COLOR[r], '52px')
           + '<div class="op-who"><b>' + esc(name) + '</b><span class="lbl">' + esc(t('sq.role.' + r)) + ' ' + sep.replace(/<\/?i>/g, '') + ' ' + esc(worksText(r)) + '</span>'
-          + '<div class="op-meta">' + (tm ? '<span class="tag tmp">' + esc(temperName(tm)) + '</span>' : '') + paidTag(x) + '<button class="op-chip" data-cfg="' + esc(x.id) + '" title="' + esc(t('sq.mp.brainHint')) + '">' + esc(whoText(x)) + '</button></div></div>'
+          + '<div class="op-meta">' + (tm ? '<span class="tag tmp">' + esc(temperName(tm)) + '</span>' : '') + paidTag(x) + brainTag(x) + '<button class="op-chip" data-cfg="' + esc(x.id) + '" title="' + esc(t('sq.mp.brainHint')) + '">' + esc(whoText(x)) + '</button></div></div>'
           + '<div class="op-st"><span class="led ' + led + '" title="' + esc(ledText) + '" role="img" aria-label="' + esc(ledText) + '"></span>' + (lead?.id === x.id ? '<span class="tag lead">' + esc(t('sq.hud.leadTag')) + '</span>' : '') + '</div></div>';
       }).join('');
     }).join('');
@@ -674,9 +701,9 @@ window.Squad = (() => {
     const top = '<div class="mp-head">' + pf(p?.id, name, COLOR[r], '64px') + '<div class="mp-id"><h2>' + esc(name) + (lead ? '<span class="tag lead">' + esc(t('sq.techLead')) + '</span>' : '') + paidTag(x) + '</h2>'
       + '<div class="mp-sub"><span style="color:' + COLOR[r] + '">' + esc(t('sq.role.' + r)) + '</span> · ' + esc(worksText(r)) + '</div>'
       + (p ? '<div class="mp-line" title="' + esc(p.headline || p.profile) + '">' + esc(p.headline || p.profile) + '</div>' : '<div class="mp-line sq-muted">' + esc(t('sq.wz.noEmployee')) + '</div>') + '</div>'
-      + '<div class="mp-act"><button data-a="chat" title="' + esc(t('sq.chatWith', name)) + '">💬 ' + esc(t('sq.chat')) + '</button>' + (lead ? '' : '<button data-a="lead">' + esc(t('sq.makeLead')) + '</button>') + '<button class="danger" data-a="remove">' + esc(t('sq.wz.letGo')) + '</button></div></div>';
+      + '<div class="mp-act">' + (lead || !memberById(leadOf(S.team)) ? '<button data-a="chat" title="' + esc(t('sq.chatWith', name)) + '">💬 ' + esc(t('sq.chat')) + '</button>' : '<button data-a="chat" title="' + esc(t('sq.chatLeadHint', memberName(memberById(leadOf(S.team))), name)) + '">💬 ' + esc(t('sq.chatLead')) + '</button>') + (lead ? '' : '<button data-a="lead">' + esc(t('sq.makeLead')) + '</button>') + '<button class="danger" data-a="remove">' + esc(t('sq.wz.letGo')) + '</button></div></div>';
     const level = ramLevel(modelInfo(x.provider, x.model)), typing = brainOther?.provider === x.provider ? brainOther : null;
-    const brain = '<div class="mp-brain"><label for="sqBrain" class="lbl">' + esc(t('sq.mp.brain')) + '</label><select id="sqBrain" data-f="brain" aria-describedby="sqBrainHint"' + (level ? ' class="ram-' + level + '"' : '') + '>' + brainOptions(x) + '</select>'
+    const brain = '<div class="mp-brain"><label for="sqBrain" class="lbl">' + esc(t('sq.mp.brain')) + '</label><select id="sqBrain" data-f="brain" aria-describedby="sqBrainHint"' + (level ? ' class="ram-' + level + '"' : '') + '>' + (S.team.brain ? '<option value="__team__"' + (x.inheritsBrain ? ' selected' : '') + '>' + esc(t('sq.way.teamModel') + ' · ' + whoText(S.team.brain)) + '</option>' : '') + brainOptions(x.inheritsBrain ? { kind: '', provider: '', model: '' } : x, !!x.inheritsBrain) + '</select>'
       + (typing ? '<span class="sq-model"><input data-f="brainother" value="' + esc(x.model ?? '') + '" placeholder="' + esc(t('sq.model.otherPlaceholder')) + '" aria-label="' + esc(t('sq.model.other')) + '"></span>' : '')
       + ramLine(x.provider, x.model)
       + '<span id="sqBrainHint" class="sq-muted">' + esc(t('sq.mp.brainPaid')) + '</span></div>';
@@ -686,7 +713,7 @@ window.Squad = (() => {
   }
   /** Every agent and model this machine offers as one list ("Claude Code · opus"): the model names the agent. Grouped by
    * agent, the paid ones marked, the ones that cannot work here disabled with why (the wizard's rules). */
-  function brainOptions(x) {
+  function brainOptions(x, bare) {
     const kindOf = (prov) => Object.keys(PROVIDERS).find((k) => PROVIDERS[k].includes(prov)) ?? (AGENTS ?? []).find((a) => a.provider === prov)?.kind ?? 'api';
     const ids = [...new Set([...PROVIDERS.agent, ...PROVIDERS.api, ...(AGENTS ?? []).map((a) => a.provider)])];
     const cur = (x.kind || 'agent') + '|' + x.provider + '|' + (x.model ?? '');
@@ -701,7 +728,8 @@ window.Squad = (() => {
     }).join('');
     // a choice this machine does not list (a model typed in the wizard, another machine's agent) stays shown
     // an older local member: said converted, its local value never offered again
-    return (found ? '' : '<option value="' + esc(wasLocal(x) ? '' : cur) + '" selected' + (wasLocal(x) ? ' disabled' : '') + '>' + esc(whoText(x)) + '</option>') + groups;
+    // bare: the team's model is the one chosen, no choice of the member's own is shown
+    return (found || bare ? '' : '<option value="' + esc(wasLocal(x) ? '' : cur) + '" selected' + (wasLocal(x) ? ' disabled' : '') + '>' + esc(whoText(x)) + '</option>') + groups;
   }
   /** The member at a glance: its brain, status, teams, lead, cost and budget, temperament, skills and last work. */
   function overview(x, p, acts) {
@@ -715,7 +743,7 @@ window.Squad = (() => {
     const budget = Number(S.team.budgetUsd ?? 0);
     const feed = acts.length ? acts.slice(0, 4).map((a) => '<div class="li-feed"><span class="led st-' + esc(a.status) + '"></span><span>' + esc(a.step) + ' <span class="sq-muted">· ' + esc(a.station) + ' · ' + esc(a.spec) + '</span></span><small>' + esc(new Date(a.at).toLocaleDateString(t('sq.lang'))) + '</small></div>').join('') : '<div class="li-none">' + esc(t('sq.li.noActivity')) + '</div>';
     return '<div class="ov">'
-      + ro(t('sq.mp.brain'), esc(whoText(x)) + ' ' + paidTag(x), '<button data-a="brain">' + esc(t('sq.mp.change')) + '</button>')
+      + ro(t('sq.mp.brain'), esc(whoText(x)) + ' ' + paidTag(x) + brainTag(x), '<button data-a="brain">' + esc(t('sq.mp.change')) + '</button>')
       + (key ? ro(t('sq.apiKey'), key, keyBtn) : '')
       + ro(t('sq.mp.cost'), esc(t('sq.mp.paidBudget', budget > 0 ? budget.toFixed(2) + ' USD' : t('sq.mp.noLimit'))))
       + numbersRow(x, ro)
@@ -1025,8 +1053,8 @@ window.Squad = (() => {
   function openWizard(mode) {
     const editing = mode === 'edit' && S.team;
     W = { mode: editing ? 'edit' : 'new', step: editing ? 3 : 0, name: '', description: '', purpose: '', skills: [], ownSkills: [], skillText: '', logoFile: '', logoData: null, names: [], nameAt: -1, rolling: false,
-      members: editing ? members().map((x) => ({ id: x.id, role: x.role, employee: x.employee, name: x.name, ...(wasLocal(x) ? defaultWorker() : { kind: x.kind, provider: x.provider, model: x.model ?? '' }), instructions: x.instructions ?? '', skills: x.skills, extraSkills: (x.extraSkills ?? []).map((e) => ({ ...e })), temperament: x.personality?.temperament && x.personality.temperament !== empOf(x)?.temperament ? x.personality.temperament : '', note: x.personality?.note ?? '' })) : [],
-      lead: null, same: { role: '', ...defaultWorker() }, open: [], suggestions: null, picked: [], fRole: '', fTemper: '', fGender: '', fSkill: '', fq: '', budgetUsd: editing ? S.team.budgetUsd ?? 5 : 5, creating: false };
+      members: editing ? members().map((x) => ({ id: x.id, role: x.role, employee: x.employee, name: x.name, ...(wasLocal(x) ? defaultWorker() : { kind: x.kind, provider: x.provider, model: x.model ?? '' }), instructions: x.instructions ?? '', inherits: !!x.inheritsBrain, skills: x.skills, extraSkills: (x.extraSkills ?? []).map((e) => ({ ...e })), temperament: x.personality?.temperament && x.personality.temperament !== empOf(x)?.temperament ? x.personality.temperament : '', note: x.personality?.note ?? '' })) : [],
+      lead: null, same: { role: '', ...defaultWorker() }, brain: editing ? (S.team.brain ? { ...S.team.brain, model: S.team.brain.model ?? '' } : null) : null, method: '', instructions: '', methodOwn: false, open: [], suggestions: null, picked: [], fRole: '', fTemper: '', fGender: '', fSkill: '', fq: '', budgetUsd: editing ? S.team.budgetUsd ?? 5 : 5, creating: false };
     view = 'wizard'; peek = null; SD = null; SQ = '';
     askAgents();
     draw();
@@ -1046,7 +1074,9 @@ window.Squad = (() => {
     return '<div class="wz hud brk"><div class="hs"><span>' + esc(t('sq.team')) + ' ' + sep + ' ' + esc(title) + '</span>' + dot + '<span>' + esc(t('sq.wz.stepOf', at + 1, list.length)) + '</span></div>' + bar + '<div class="wz-body">' + body + '</div>' + nav + '</div>';
   }
   /** Step 1 needs a name; the rest can always be left (a team may lack a role: it is said, and it cannot run yet). */
-  const canLeave = () => (W.step !== 0 || !!W.name.trim()) && (W.step !== 4 || W.members.every((m) => usable(m.provider)));
+  // who works a member in the wizard: the team's brain when it inherits it
+  const workerOf = (m) => W.brain && m.inherits ? W.brain : m;
+  const canLeave = () => (W.step !== 0 || !!W.name.trim()) && (W.step !== 4 || W.members.every((m) => usable(workerOf(m).provider)));
   function stepIdentity() {
     return '<h2>' + esc(t('sq.wz.identityTitle')) + '</h2><div class="sq-muted">' + esc(t('sq.wz.identityHint')) + '</div>'
       + '<div class="wz-id"><div class="wz-logo"><button class="sq-logobtn" data-a="wzLogo" title="' + esc(t('sq.wz.logoPick')) + '" aria-label="' + esc(t('sq.wz.logoPick')) + '">' + logo(W.name || '?', W.name, W.logoData, 112) + '</button><span class="lbl">' + esc(W.logoData ? t('sq.wz.logoChange') : t('sq.wz.logoPick')) + '</span>' + (W.logoData ? '<button data-a="wzLogoClear">' + esc(t('sq.logoClear')) + '</button>' : '') + '</div>'
@@ -1059,7 +1089,10 @@ window.Squad = (() => {
     return '<h2>' + esc(t('sq.wz.purposeTitle')) + '</h2><div class="sq-muted">' + esc(t('sq.wz.purposeHint')) + '</div>'
       + '<div class="wz-field"><span class="lbl">' + esc(t('sq.wz.purpose')) + '</span><textarea data-f="wzpurpose" rows="3" placeholder="' + esc(t('sq.wz.purposePlaceholder')) + '">' + esc(W.purpose) + '</textarea></div>'
       + '<div class="wz-field"><span class="lbl">' + esc(t('sq.wz.skills')) + '</span><div class="sq-muted" style="font-size:12px">' + esc(t('sq.sk.wizardHint')) + '</div>'
-      + skillChosen('w', W.skills, W.ownSkills) + libraryChips('w', W.skills, 'wzskq', SQ) + '</div>';
+      + skillChosen('w', W.skills, W.ownSkills) + libraryChips('w', W.skills, 'wzskq', SQ) + '</div>'
+      + '<div class="wz-field"><span class="lbl">' + esc(t('sq.way.method')) + '</span><select data-f="wzmethod" aria-label="' + esc(t('sq.way.method')) + '"><option value="scrum"' + (W.methodOwn ? '' : ' selected') + '>' + esc(t('sq.way.scrum')) + '</option><option value="own"' + (W.methodOwn ? ' selected' : '') + '>' + esc(t('sq.way.own')) + '</option></select>'
+      + (W.methodOwn ? '<textarea data-f="wzmethodtext" rows="3" placeholder="' + esc(t('sq.way.methodPlaceholder')) + '" aria-label="' + esc(t('sq.way.own')) + '">' + esc(W.method) + '</textarea>' : '<div class="sq-muted" style="font-size:12px">' + esc(t('sq.way.scrumHint')) + '</div>') + '</div>'
+      + '<div class="wz-field"><span class="lbl">' + esc(t('sq.way.instructions')) + '</span><textarea data-f="wzteaminstr" rows="3" placeholder="' + esc(t('sq.way.instructionsPlaceholder')) + '">' + esc(W.instructions) + '</textarea><div class="sq-muted" style="font-size:12px">' + esc(t('sq.way.instructionsHint')) + '</div></div>';
   }
   const chosenIndex = (role0, emp) => W.members.findIndex((m) => m.role === role0 && m.employee === emp);
   const whyText = (w) => '<span><b>' + esc(w.term) + '</b> · ' + esc(t('sq.wz.in.' + w.in)) + (w.in === 'skill' || w.in === 'endorsement' ? ': ' + esc(w.text) : '') + '</span>';
@@ -1198,21 +1231,24 @@ window.Squad = (() => {
   function stepWork() {
     const paid = paidMembers(W.members), removed = W.mode === 'edit' ? members().filter((x) => !W.members.some((m) => m.id === x.id)) : [];
     const rows = W.members.map((m, i) => {
-      const p = people(m.role).find((e) => e.id === m.employee), open = W.open.includes(m), n = differences(m), bad = !usable(m.provider);
+      const p = people(m.role).find((e) => e.id === m.employee), open = W.open.includes(m), n = differences(m), bad = !usable(workerOf(m).provider), team = W.brain && m.inherits;
       return '<div class="wz-work' + (bad ? ' bad' : '') + '">' + pf(m.employee, p?.name ?? m.name, COLOR[m.role], '36px') + '<div class="who"><b>' + esc(m.name || p?.name || t('sq.role.' + m.role)) + '</b><small>' + esc(t('sq.role.' + m.role)) + '</small>'
         + '<button class="wz-open' + (open ? ' on' : '') + '" data-wzopen="' + i + '" aria-expanded="' + open + '" title="' + esc(t('sq.wz.differentHint')) + '">' + (open ? '▾ ' : '▸ ') + esc(n ? t('sq.wz.differentN', n) : t('sq.wz.different')) + '</button></div>'
-        + kindButtons('data-wzkind="' + i + '|', m.kind) + '<select data-f="wzprov-' + i + '" aria-label="' + esc(t('sq.provider')) + '">' + providerOptions(m) + '</select>'
-        + modelPicker('wzmodel-' + i, m.provider, m.model, m.kind, m.typing)
+        // the team's model, or the member's own (any member may still have its own)
+        + (team ? '<span class="tag tmp" title="' + esc(t('sq.way.teamModelHint')) + '">' + esc(t('sq.way.teamModel')) + '</span><span class="sq-muted">' + esc(whoText(W.brain)) + '</span><button data-wzown="' + i + '">' + esc(t('sq.way.useOwn')) + '</button>'
+          : kindButtons('data-wzkind="' + i + '|', m.kind) + '<select data-f="wzprov-' + i + '" aria-label="' + esc(t('sq.provider')) + '">' + providerOptions(m) + '</select>'
+          + modelPicker('wzmodel-' + i, m.provider, m.model, m.kind, m.typing) + (W.brain ? '<button data-wzown="' + i + '">' + esc(t('sq.way.useTeam')) + '</button>' : ''))
         + paidTag(m)
         + (W.mode === 'new' ? '<label class="wz-lead"><input type="radio" name="wzlead" data-wzlead="' + i + '"' + (W.lead === m || (!W.members.includes(W.lead) && i === defaultLead()) ? ' checked' : '') + '> ' + esc(t('sq.techLead')) + '</label>' : '<span></span>')
         + (bad ? '<div class="wz-badwhy">⚠ ' + esc(t('sq.wz.cannotHere', agentOf(m.provider)?.label ?? PNAME[m.provider] ?? m.provider, whyNot(m.provider))) + '</div>' : '')
-        + ramLine(m.provider, m.model)
+        + (team ? '' : ramLine(m.provider, m.model))
         + (open ? differentPanel(m, i) : '') + '</div>';
     }).join('');
     const warn = paid.length
       ? '<div class="wz-warn hud brk"><b>⚠ ' + esc(t('sq.wz.paidCount', paid.length, W.members.length)) + '</b><div>' + esc(t('sq.wz.costWarn', Number(W.budgetUsd || 0) > 0 ? Number(W.budgetUsd).toFixed(2) + ' USD' : t('sq.wz.noLimit'))) + '</div></div>'
       : '';
-    return '<h2>' + esc(t('sq.wz.workTitle')) + '</h2><div class="sq-muted">' + esc(t('sq.wz.workHint')) + '</div>' + warn + sameBar()
+    const teamBar = W.mode === 'new' ? '<div class="wz-same hud"><span class="lbl">' + esc(t('sq.way.brain')) + '</span>' + brainBar('wzb', W.brain) + '<div class="sq-muted" style="grid-column:1/-1;font-size:12px">' + esc(W.brain ? t('sq.way.brainOn', W.members.filter((m) => m.inherits).length, W.members.length) : t('sq.way.brainOff')) + '</div></div>' : '';
+    return '<h2>' + esc(t('sq.wz.workTitle')) + '</h2><div class="sq-muted">' + esc(t('sq.wz.workHint')) + '</div>' + warn + teamBar + sameBar()
       + (W.mode === 'new' ? '<div class="sq-row" style="margin:0;justify-content:flex-end"><label class="wz-budget lbl">' + esc(t('sq.wz.budget')) + ' <input data-f="wzbudget" type="number" min="0" step="0.5" value="' + esc(W.budgetUsd) + '"> USD</label></div>' : '')
       + (removed.length ? '<div class="wz-lack hud">' + esc(t('sq.wz.leaving', removed.map((x) => memberName(x)).join(', '))) + '</div>' : '')
       + '<div class="hud">' + (rows || '<div class="li-none" style="margin:10px">' + esc(t('sq.wz.noneChosen')) + '</div>') + '</div>';
@@ -1222,7 +1258,7 @@ window.Squad = (() => {
   /** A member of the roster put in the wizard's team, kept in the roles' order (the steps show them grouped). */
   function addToWizard(role0, emp) {
     if (chosenIndex(role0, emp) >= 0) return;
-    W.members.push({ role: role0, employee: emp, name: '', ...defaultWorker() });
+    W.members.push({ role: role0, employee: emp, name: '', ...defaultWorker(), inherits: !!W.brain });
     W.members.sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role));
   }
   function wzGo(n) {
@@ -1248,7 +1284,8 @@ window.Squad = (() => {
     for (const m of W.members) {
       const x = m.id && memberById(m.id); if (!x) continue;
       const c = {};
-      if (x.kind !== m.kind || x.provider !== m.provider || (x.model ?? '') !== m.model) Object.assign(c, { kind: m.kind, provider: m.provider, model: m.model });
+      if (W.brain && m.inherits) { if (!x.inheritsBrain) c.teamBrain = true; }
+      else if (x.inheritsBrain || x.kind !== m.kind || x.provider !== m.provider || (x.model ?? '') !== m.model) Object.assign(c, { kind: m.kind, provider: m.provider, model: m.model });
       if ((x.instructions ?? '') !== (m.instructions ?? '')) c.instructions = m.instructions ?? '';
       if (m.skills && JSON.stringify(x.skills ?? []) !== JSON.stringify(m.skills)) c.skills = m.skills;
       if (JSON.stringify(x.extraSkills ?? []) !== JSON.stringify((m.extraSkills ?? []).filter((e) => e.name.trim()))) c.extraSkills = (m.extraSkills ?? []).filter((e) => e.name.trim());
@@ -1276,6 +1313,12 @@ window.Squad = (() => {
     if (ds.wzskill) { W.skills.push(ds.wzskill); W.suggestions = null; return draw(); }
     if (ds.wzkind) { const [i, k] = ds.wzkind.split('|'); setKind(W.members[+i], k); return draw(); }
     if (ds.wzsamekind) { setKind(W.same, ds.wzsamekind); return draw(); }
+    if (ds.wzbkind) {
+      if (ds.wzbkind === 'none') W.brain = null;
+      else { const a = W.brain ?? { kind: '', provider: '', model: '' }; setKind(a, ds.wzbkind); if (a.provider) { if (!W.brain) for (const m of W.members) m.inherits = true; W.brain = a; } }
+      return draw();
+    }
+    if (ds.wzown !== undefined) { const m = W.members[+ds.wzown]; m.inherits = !m.inherits; return draw(); }
     if (ds.wzopen !== undefined) { const m = W.members[+ds.wzopen], j = W.open.indexOf(m); j >= 0 ? W.open.splice(j, 1) : W.open.push(m); return draw(); }
     if (ds.wzsk) { const [i, ...rest] = ds.wzsk.split('|'), sk = rest.join('|'), m = W.members[+i], all = S.roster?.[m.role]?.skills ?? [], on = m.skills ?? all; m.skills = on.includes(sk) ? on.filter((x) => x !== sk) : [...on, sk]; return draw(); }
     if (ds.wzxadd !== undefined) { const m = W.members[+ds.wzxadd]; (m.extraSkills ??= []).push({ name: '', text: '' }); draw(); return el.querySelector('[data-f="wzxn-' + ds.wzxadd + '-' + (m.extraSkills.length - 1) + '"]')?.focus(); }
@@ -1306,6 +1349,9 @@ window.Squad = (() => {
     if (f === 'wzbudget') { W.budgetUsd = Math.max(0, Number(v) || 0); const w = el.querySelector('.wz-warn div'); if (w) w.textContent = t('sq.wz.costWarn', W.budgetUsd > 0 ? W.budgetUsd.toFixed(2) + ' USD' : t('sq.wz.noLimit')); return; }
     if ((m = f.match(/^wzmodel-(\d+)-other$/))) { W.members[+m[1]].model = v.trim(); return; }
     if (f === 'wzsamemodel-other') { W.same.model = v.trim(); return; }
+    if (f === 'wzbmodel-other' && W.brain) { W.brain.model = v.trim(); return; }
+    if (f === 'wzmethodtext') { W.method = v; return; }
+    if (f === 'wzteaminstr') { W.instructions = v; return; }
     if ((m = f.match(/^wznote-(\d+)$/))) { W.members[+m[1]].note = v; return; }
     if ((m = f.match(/^wzinstr-(\d+)$/))) { W.members[+m[1]].instructions = v; return; }
     if ((m = f.match(/^wzx([nt])-(\d+)-(\d+)$/))) { W.members[+m[2]].extraSkills[+m[3]][m[1] === 'n' ? 'name' : 'text'] = v; return; }
@@ -1315,9 +1361,11 @@ window.Squad = (() => {
     if (f === 'wzrole') W.fRole = v; else if (f === 'wztemper') W.fTemper = v; else if (f === 'wzgender') W.fGender = v; else if (f === 'wzfskill') W.fSkill = v;
     else if ((m = f.match(/^wzprov-(\d+)$/))) { const x = W.members[+m[1]]; if (!usable(v)) return false; x.provider = v; x.model = agentOf(v)?.defaultModel ?? ''; x.typing = false; }
     else if (f === 'wzsameprov') { if (!usable(v)) return false; W.same.provider = v; W.same.model = agentOf(v)?.defaultModel ?? ''; W.same.typing = false; }
+    else if (f === 'wzbprov' && W.brain) { if (!usable(v)) return false; W.brain.provider = v; W.brain.model = agentOf(v)?.defaultModel ?? ''; W.brain.typing = false; }
+    else if (f === 'wzmethod') { W.methodOwn = v === 'own'; if (!W.methodOwn) W.method = ''; }
     // a model chosen (a select: every model, every time); *Other…* opens its field; too big: confirmed first
-    else if ((m = f.match(/^wzmodel-(\d+)$/)) || f === 'wzsamemodel') {
-      const x = m ? W.members[+m[1]] : W.same;
+    else if ((m = f.match(/^wzmodel-(\d+)$/)) || f === 'wzsamemodel' || (f === 'wzbmodel' && W.brain)) {
+      const x = m ? W.members[+m[1]] : f === 'wzbmodel' ? W.brain : W.same;
       if (v === '__other__') { x.typing = true; draw(); el.querySelector('[data-f="' + f + '-other"]')?.focus(); return true; }
       x.typing = false; pickModel(x.provider, v, () => { x.model = v; }); return true;
     }
@@ -1337,7 +1385,7 @@ window.Squad = (() => {
   function flush() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; post({ type: 'team:save', team: S.team }); } }
   function select(id) { const x = memberById(id); brainOther = null; sel = x?.id ?? null; if (x) role = x.role; filter = ''; ftemper = ''; fgender = ''; peek = null; viewing = null; skillsAll = false; }
   function onClick(e) {
-    const d = e.target.closest('[data-chatteam],[data-a],[data-cfg],[data-view],[data-member],[data-tab],[data-hire],[data-addemp],[data-addrole],[data-delxs],[data-deltask],[data-team],[data-gifs],[data-wzgo],[data-wzpick],[data-wztoggle],[data-wzdel],[data-wzdelskill],[data-wzskill],[data-wzkind],[data-wzlead],[data-wzsamekind],[data-wzopen],[data-wzsk],[data-wzxadd],[data-wzxdel],[data-skt],[data-skv],[data-ske],[data-skd],[data-skc],[data-sknew],[data-skpick],[data-sd]');
+    const d = e.target.closest('[data-tbkind],[data-wzbkind],[data-wzown],[data-chatteam],[data-a],[data-cfg],[data-view],[data-member],[data-tab],[data-hire],[data-addemp],[data-addrole],[data-delxs],[data-deltask],[data-team],[data-gifs],[data-wzgo],[data-wzpick],[data-wztoggle],[data-wzdel],[data-wzdelskill],[data-wzskill],[data-wzkind],[data-wzlead],[data-wzsamekind],[data-wzopen],[data-wzsk],[data-wzxadd],[data-wzxdel],[data-skt],[data-skv],[data-ske],[data-skd],[data-skc],[data-sknew],[data-skpick],[data-sd]');
     if (!d || !el.contains(d) || d.disabled) return;
     const ds = d.dataset;
     if (ds.a === 'ramYes' || ds.a === 'ramNo') { const yes = ds.a === 'ramYes' ? ask?.yes : null; ask = null; yes?.(); return draw(); }
@@ -1347,6 +1395,12 @@ window.Squad = (() => {
     if (ds.a === 'editMembers') { flush(); return openWizard('edit'); }
     if (skillClick(ds)) return;
     if (view === 'wizard' && W) return wizardClick(ds);
+    if (ds.tbkind && S.team) {
+      if (ds.tbkind === 'none') return S.team.brain ? teamBrain(null) : undefined;
+      const a = S.team.brain ? { ...S.team.brain } : { kind: '', provider: '', model: '' };
+      setKind(a, ds.tbkind);
+      return a.provider ? teamBrain(a) : undefined;
+    }
     if (ds.team) { adding = false; view = 'team'; S.loading = true; draw(); return post({ type: 'team:open', id: ds.team }); }
     const x = cur();
     if (ds.gifs) { x.personality = { gifs: 'sometimes', on: '', note: '', ...x.personality, gifs: ds.gifs }; changed(); return draw(); }
@@ -1392,6 +1446,8 @@ window.Squad = (() => {
     if (f === 'filter') { filter = e.target.value; return later(() => redrawRoster(true)); }
     if (f === 'ftemper' || f === 'fgender' || f === 'prole') return;
     if (f === 'tdesc') { S.team.description = e.target.value; return changed(); }
+    if (f === 'tmethodtext') { S.team.method = e.target.value; return changed(); }
+    if (f === 'tinstr') { S.team.instructions = e.target.value; return changed(); }
     const x = cur(), v = e.target.value;
     if (!x) return;
     let m;
@@ -1415,9 +1471,12 @@ window.Squad = (() => {
     if (t0.dataset.f === 'ftemper') { ftemper = t0.value; return redrawRoster(true); }
     if (t0.dataset.f === 'fgender') { fgender = t0.value; return redrawRoster(true); }
     if (t0.dataset.f === 'prole') { role = t0.value; filter = ''; ftemper = ''; fgender = ''; peek = null; return redrawRoster(true); }
+    if (S.team && teamWayChange(t0.dataset.f ?? '', t0.value)) return;
     const x = cur(); if (!x) return;
     if (t0.dataset.f === 'temper') { x.personality = { gifs: 'sometimes', on: '', note: '', ...x.personality, temperament: t0.value }; changed(); return draw(); }
     if (t0.dataset.f === 'brain') {
+      // the team's model again: the member's own given up
+      if (t0.value === '__team__') { flush(); Object.assign(x, S.team.brain, { inheritsBrain: true }); draw(); return post({ type: 'team:memberUpdate', id: S.team.id, member: x.id, change: { teamBrain: true } }); }
       const [kind, provider, model] = t0.value.split('|');
       // *Other…*: the model is typed in its field, saved when it is left
       if (model === '__other__') { brainOther = { kind, provider }; draw(); return el.querySelector('[data-f="brainother"]')?.focus(); }
@@ -1433,8 +1492,32 @@ window.Squad = (() => {
     else if (k.startsWith('b:')) x.behaviour[k.slice(2)] = t0.checked;
     changed();
   }
+  /** The team view's brain, method and model typed: true when it was one of them. */
+  function teamWayChange(f, v) {
+    const b = S.team.brain;
+    if (f === 'tbprov' && b) { if (usable(v)) teamBrain({ ...b, provider: v, model: agentOf(v)?.defaultModel ?? '' }); return true; }
+    if (f === 'tbmodel' && b) {
+      if (v === '__other__') { tbTyping = true; draw(); el.querySelector('[data-f="tbmodel-other"]')?.focus(); return true; }
+      pickModel(b.provider, v, () => teamBrain({ ...b, model: v })); return true;
+    }
+    if (f === 'tbmodel-other' && b) { teamBrain({ ...b, model: v.trim() }); return true; }
+    if (f === 'tmethod') {
+      methodOwn = v === 'own';
+      if (!methodOwn && S.team.method) { S.team.method = ''; changed(); }
+      draw(); if (methodOwn) el.querySelector('[data-f="tmethodtext"]')?.focus();
+      return true;
+    }
+    return false;
+  }
+  /** The model for the whole team (null: none), saved by its command (team update). */
+  function teamBrain(a) {
+    flush(); tbTyping = false;
+    S.team.brain = a ? { kind: a.kind, provider: a.provider, model: a.model ?? '' } : null;
+    draw();
+    post({ type: 'team:update', id: S.team.id, change: a ? { kind: a.kind, provider: a.provider, model: a.model ?? '' } : { noBrain: true } });
+  }
   /** Who works a member, saved by its command (team member update). */
-  function setBrain(x, kind, provider, model) { flush(); Object.assign(x, { kind, provider, model }); post({ type: 'team:memberUpdate', id: S.team.id, member: x.id, change: { kind, provider, model } }); }
+  function setBrain(x, kind, provider, model) { flush(); Object.assign(x, { kind, provider, model, inheritsBrain: false }); post({ type: 'team:memberUpdate', id: S.team.id, member: x.id, change: { kind, provider, model } }); }
   // the selected member takes another employee of their role: they bring their own temperament (the roster's)
   function hire(id) { const x = cur(); if (!x || inTeam(id)) return; x.employee = id; if (x.personality) delete x.personality.temperament; peek = id; viewing = null; changed(); say(t('sq.signedBang', empOf(x)?.name ?? id, t('sq.role.' + x.role))); }
   // the pool's tile dragged onto a member of its role: that member takes the employee
@@ -1465,7 +1548,7 @@ window.Squad = (() => {
       if (m.type === 'team:state') {
         if (m.faces) FACES = m.faces; if (m.thumbs) THUMBS = m.thumbs; delete m.faces; delete m.thumbs;
         const other = S.team?.id !== m.team?.id; S = { ...S, ...m, loading: false, missing: null };
-        if (other) { peek = null; viewing = null; savedAt = 0; NUMBERS = {}; }
+        if (other) { peek = null; viewing = null; savedAt = 0; NUMBERS = {}; methodOwn = false; tbTyping = false; }
         if (W?.creating && m.team) { W = null; view = 'team'; }
         if (!memberById(sel)) select(members()[0]?.id ?? null);
         // the member panel's brain lists this machine's agents: asked once

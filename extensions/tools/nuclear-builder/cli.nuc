@@ -33,7 +33,9 @@ USAGE = """
 
   nuclear-builder team list|show <id>|save|delete <id>|default <id>|export <id> <file>|import <file>|roster [--lang en|es]|temperaments [--json]
                                   the teams of the software factory (~/.config/nuclearlang/factory/teams): JSON on
-                                  stdout, an error as {"error": "..."} with exit code 1; `save` reads the team on stdin
+                                  stdout, an error as {"error": "..."} with exit code 1; `save` reads the team on stdin;
+                                  `list` gives each team's tech lead (lead) and the runs of this project it has in
+                                  progress (running, free)
   nuclear-builder team screen [--lang en|es] [--json]
                                   everything the company screen draws, in one call: {teams (as list), shown (each
                                   team as show, or {error}), roster, temperaments, vault (as vault list, or null),
@@ -46,10 +48,14 @@ USAGE = """
   nuclear-builder team name-suggest [--purpose <text>] [--lang en|es] [--json]
                                   five satirical names for a team
   nuclear-builder team runnable <id> [--json]  whether the team has a member of each role the project's stations need
-  nuclear-builder team update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>] | duplicate <id> [--name …] [--json]
+  nuclear-builder team update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>]
+                                  [--method <text>] [--instructions <text>] [--kind … --provider … --model …] [--no-brain] [--json]
+                                  the method (empty: Scrum) and the instructions every member follows; the team's
+                                  brain, who works every member (their own give way; --no-brain: each keeps its own)
+  nuclear-builder team duplicate <id> [--name …] [--json]
   nuclear-builder team member add <id> --role <role> [--employee …] [--kind …] [--provider …] [--model …] [--name …] [--count <n>] [--json]
                                   members hired (several: --count, or a JSON list of members on stdin without --role)
-  nuclear-builder team member remove <id> <member> | member update <id> <member> [--kind …] [--provider …] [--model …] [--employee …] [--name …] [--skills a,b] [--extra-skills <json>] [--instructions …] [--temperament …] [--gifs …] [--on …] [--note …] [--agent <library agent>] [--json]
+  nuclear-builder team member remove <id> <member> | member update <id> <member> [--kind …] [--provider …] [--model …] [--team-brain] [--employee …] [--name …] [--skills a,b] [--extra-skills <json>] [--instructions …] [--temperament …] [--gifs …] [--on …] [--note …] [--agent <library agent>] [--json]
                                   a member let go, or changed (by its id in the team); who works a member is one
                                   this machine has (agents --json), else it is refused with why
   nuclear-builder team skills set <id> [--member <m>] --skills a,b [--json]
@@ -443,7 +449,7 @@ rosterByRole(lang: string) <string, any>
 // roles it lacks; a file that cannot be read, its error), the hiring pool, the temperaments and which keys the vault
 // keeps (null when the keyring cannot be asked).
 teamScreen(lang: string) <string, any>
-  found = listTeams()
+  found = teamsAtWork(projectRoot("${Path.cwd()}"))
   shown: <string, any> = {}
   for t in found
     id = "${t["id"]}"
@@ -470,13 +476,13 @@ teamScreen(lang: string) <string, any>
 // The teams' commands: one call per action, JSON on stdout (the editors' contract, design.md "Teams").
 team(args: string[]) int
   what = args.isEmpty ? "list" : args[0]
-  valued = ["--role", "--count", "--purpose", "--extra-skills", "--limit", "--seed", "--name", "--lang", "--description", "--lead", "--budget", "--kind", "--provider", "--model", "--employee", "--instructions", "--temperament", "--gifs", "--note", "--skills", "--on", "--member", "--agent"]
+  valued = ["--role", "--count", "--purpose", "--extra-skills", "--limit", "--seed", "--name", "--lang", "--description", "--lead", "--budget", "--kind", "--provider", "--model", "--employee", "--instructions", "--temperament", "--gifs", "--note", "--skills", "--on", "--member", "--agent", "--method"]
   rest = args.skip(1).filter((a) => not a.startsWith("--")).filter((a) => not (args.indexOf(a) > 0 and args[args.indexOf(a) - 1] in valued))
   asJson = "--json" in args
   need = (n: int) => rest.length >= n
   try
     if what == "list"
-      found = listTeams()
+      found = teamsAtWork(projectRoot("${Path.cwd()}"))
       if asJson
         printJson(found)
       else
@@ -521,7 +527,8 @@ team(args: string[]) int
       line = readLine(root, "${projectCard(root)["platform"] ?? ""}")
       printJson(runnable(loadTeam(rest[0]), line["stations"] ?? STATIONS))
     else if what == "update" and need(1)
-      fields: <string, any> = { "name": option(args, "--name"), "description": option(args, "--description"), "purpose": option(args, "--purpose"), "skills": listOption(args, "--skills"), "techLead": option(args, "--lead") }
+      fields: <string, any> = { "name": option(args, "--name"), "description": option(args, "--description"), "purpose": option(args, "--purpose"), "skills": listOption(args, "--skills"), "techLead": option(args, "--lead"), "method": option(args, "--method"), "instructions": option(args, "--instructions"), "kind": option(args, "--kind"), "provider": option(args, "--provider"), "model": option(args, "--model"), "noBrain": "--no-brain" in args }
+      workableChange("the team", fields)
       budget = option(args, "--budget")
       if budget != null
         fields["budgetUsd"] = budget!.toDouble() ?? -1.0
@@ -540,7 +547,7 @@ team(args: string[]) int
     else if what == "member" and need(3) and rest[0] == "remove"
       printJson(teamShown(removeMember(rest[1], rest[2])))
     else if what == "member" and need(3) and rest[0] == "update"
-      member: <string, any> = { "kind": option(args, "--kind"), "provider": option(args, "--provider"), "model": option(args, "--model"), "employee": option(args, "--employee"), "name": option(args, "--name"), "instructions": option(args, "--instructions"), "temperament": option(args, "--temperament"), "gifs": option(args, "--gifs"), "note": option(args, "--note"), "skills": listOption(args, "--skills"), "on": listOption(args, "--on"), "agent": option(args, "--agent") }
+      member: <string, any> = { "kind": option(args, "--kind"), "provider": option(args, "--provider"), "model": option(args, "--model"), "employee": option(args, "--employee"), "name": option(args, "--name"), "instructions": option(args, "--instructions"), "temperament": option(args, "--temperament"), "gifs": option(args, "--gifs"), "note": option(args, "--note"), "skills": listOption(args, "--skills"), "on": listOption(args, "--on"), "agent": option(args, "--agent"), "teamBrain": "--team-brain" in args }
       extra = option(args, "--extra-skills")
       if extra != null
         member["extraSkills"] = json.loads(extra!)
@@ -552,7 +559,7 @@ team(args: string[]) int
     else if what == "duplicate" and need(1)
       printJson(teamShown(duplicateTeam(rest[0], option(args, "--name"))))
     else
-      printJson({ "error": "usage: nuclear-builder team list|show <id>|screen|save|create|suggest|name-suggest|runnable <id>|delete <id>|default <id>|export <id> <file>|import <file>|logo <id> <image>|logo <id> --clear|roster [--lang en|es]|temperaments|update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>]|member add <id> --role <role> [--employee …] [--count <n>] …|member remove <id> <member>|member update <id> <member> [--kind …] [--provider …] [--model …] …|duplicate <id> [--name …] (nuclear-builder --help)" })
+      printJson({ "error": "usage: nuclear-builder team list|show <id>|screen|save|create|suggest|name-suggest|runnable <id>|delete <id>|default <id>|export <id> <file>|import <file>|logo <id> <image>|logo <id> --clear|roster [--lang en|es]|temperaments|update <id> [--name …] [--description …] [--purpose …] [--skills a,b] [--lead <member id>] [--budget <usd>] [--method …] [--instructions …] [--kind … --provider … --model …] [--no-brain]|member add <id> --role <role> [--employee …] [--count <n>] …|member remove <id> <member>|member update <id> <member> [--kind …] [--provider …] [--model …] …|duplicate <id> [--name …] (nuclear-builder --help)" })
       return 1
   catch e
     if not isinstance(e, ValueError) and not isinstance(e, OSError)

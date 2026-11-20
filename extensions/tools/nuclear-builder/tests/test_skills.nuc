@@ -67,7 +67,9 @@ testAMemberGetsTheTeamsTheAgentsAndItsOwnSkillsItsOwnFirst(tmpPath: Path, monkey
   expect(shared[2]["from"] == "library")
   // a role skill name (tdd-in-nuclear) is the role's, not a shared one; the base agent's text comes before the member's
   who = withSkills(t, m)
-  expect("${who["instructions"]}".startsWith("# Backend engineer") and "${who["instructions"]}".endsWith("Be brief."))
+  // the team's method (Scrum: it wrote none) and instructions first, then the base agent's text, then the member's own
+  told = "${who["instructions"]}"
+  expect(told.startsWith("## How the team") and "The method: Scrum." in told and told.indexOf("The method") < told.indexOf("# Backend engineer") and told.endsWith("Be brief."), told)
   role = composeRole("developer", who, tmpPath.joinpath("no-roles"))
   expect(role.sources == { "payments": "team", "house-style": "member", "testing-in-nuclear": "library" } and "Even shorter." in role.text() and "Stripe only." in role.sharedText())
 

@@ -37,8 +37,9 @@ the error says to run `line set team=<id>` or `team default <id>`.
 run's `assign`, `{ "<role>": "<member id>" }`, from `run --assign developer=<member>,…` or `run_start`'s `assign`,
 checked against the team's members of that role), else the role's first member in the team's order; a role with no
 member is the local Nuclear Developer's. The station and each of its steps name that `member` (beside `employee`,
-`kind`, `provider`, `model`). The spending's questions (`paidOf`) count only the members who work the run's stations,
-never every paid member of the team; a run's checks take the tasks of every member of the role. One member works
+`kind`, `provider`, `model`; a member without its own is worked by the team's `brain`, spec 023). The spending's
+questions (`paidOf`) count only the members who work the run's stations, never every paid member of the team, and
+only those paid by use (kind `api`) unless the confirmation is forced; a run's checks take the tasks of every member of the role. One member works
 the whole station: splitting the Developer's pieces among several developers is in the roadmap.
 
 | Station | Role | Its own steps | Documents in the spec's folder | Today's stages |
@@ -108,8 +109,10 @@ comes from its role's template (`templates/<name>.md`, another role's when its o
 - **Delivery**, approved: `git switch -c factory/<id>`, `git add` of the files the run wrote and the spec's folder,
   `git commit` with git's own identity (the user's; no other author), `git push -u origin`, `gh pr create
   --body-file <the spec's folder>/pr.md`. Never a merge.
-- **The money**: one budget per run (the team's `budgetUsd`, 5 USD by default). Before the first paid call (a role
-  of kind `agent` or `api`) two questions, as events: the providers and the roles, then the amount; both `yes` or the
+- **The money**: one budget per run (the team's `budgetUsd`, 5 USD by default). Only work paid by use through an
+  API key (kind `api`) asks the spending (`asksSpending`, spec 023): an agent's subscription (Claude Code, Codex,
+  Cursor, Gemini CLI, OpenCode, Grok Build) is not asked, unless the project's `"forceConfirm"` or `--force-confirm`
+  asks it of every paid provider. Before the first such call two questions, as events: the providers and the roles, then the amount; both `yes` or the
   run waits. `--confirm-spending` answers them in advance (CI, the editor with `nuclear.spending.confirm` off), refused
   when the project's `"forceConfirm"` or `--force-confirm` (the editor's `nuclear.spending.forceConfirm`) is on. The
   confirmation is kept in the run (`spending`): a resumed run does not ask again. Each paid step gets what is left
@@ -217,7 +220,7 @@ answer: [chat.md](chat.md).
 
 - **VS Code** (`src/runs.ts`, `src/panel.ts`): a spec is placed and written by `spec new … --stdin --json` (the
   form's whole markdown on stdin); the tree is `spec list --json` (overview.md, *The page*). `LineRun` is one run's process; `driveRun` keeps them by run id, at the
-  extension's level (a closed page, another tool or Nuclear Atlas's `/task` share them). The run file is watched by
+  extension's level (a closed page or another tool share them). The run file is watched by
   its `stat` (it is replaced atomically) and drawn at most ten times a second. A `spending` ask is answered by the
   editor's two modal questions (`vscode/src/spending.ts`), a `gate` or `checks` ask by the page; an answer given to a
   run that ended waiting starts `run --resume <id>` and is given again when the same question comes (`answerRun`).

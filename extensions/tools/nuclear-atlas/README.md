@@ -4,7 +4,7 @@
 
 Your direct message with the factory's general agent in [Nuclear Chat](../../../nuclear-chat/README.md), answered
 by the agent or provider you pick (Claude Code by default) from the [Smart Graph](../../../nuclear-graph-storage/README.md). In VS Code (`Ctrl+Alt+A`): a message
-is a question, `/task <what to do>` an order.
+is a question; Atlas informs, and sends a task to a team's tech lead.
 
 ## Why
 
@@ -28,6 +28,6 @@ Then open a Nuclear project in VS Code, press `Ctrl+Alt+A` and ask ([Set up the 
 
 ## Read next
 
-- [The guide](docs/08-guides/README.md): questions, `/task`, the templates
+- [The guide](docs/08-guides/README.md): questions, tasks (to a tech lead), the templates
 - [How a question and an order travel](docs/02-architecture/overview.md)
 - [Roadmap](docs/01-product/roadmap.md) · [AGENTS.md](AGENTS.md) to change it

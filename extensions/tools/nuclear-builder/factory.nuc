@@ -275,14 +275,16 @@ Factory(run: <string, any>, team: <string, any>, line: <string, any>, ask: (ques
 
   // ---------- the money ----------
 
-  // The roles of the stations left that a paid provider works: an agent's command line or an API.
+  // The roles of the stations left whose spending the user confirms (`asksSpending`): an API paid by use; every paid
+  // provider, an agent's command line too, when the project or the editor forces the confirmation.
   paidRoles(at: int) string[]
     left = stages().slice(at)
     roles = left.map((st) => "${st["role"]}").unique()
     leader = lead()
     if leader != null and left.any((st) => st["id"] == "code" or st["id"] == "quality") and not (leader! in roles)
       roles.add(leader!)
-    roles.filter((r) => assigned(r)["kind"] != "local")
+    forced = line["forceConfirm"] == true or options["forceConfirm"] == true
+    roles.filter((r) => asksSpending("${assigned(r)["kind"] ?? "local"}", forced))
 
   // The two confirmations before the first paid call, as events of the run (or `--confirm-spending`, refused when
   // the project or the editor forces the confirmation). Kept in the run: a resumed run does not ask again.

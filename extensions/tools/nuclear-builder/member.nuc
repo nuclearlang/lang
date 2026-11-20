@@ -18,7 +18,13 @@ SAY_IN: <string, string> = { "en": "Answer in English.", "es": "Responde en espa
 // The general agent's member in the chat: its id names its direct message, `dm-atlas`.
 GENERAL_AGENT = "atlas"
 
-GENERAL_AGENT_BIO: <string, string> = { "en": "The general agent of the factory: I read the project, its specs and its runs, and I write a spec when you ask me to.", "es": "El agente general de la fábrica: leo el proyecto, sus specs y sus ejecuciones, y escribo una spec cuando me la pides." }
+GENERAL_AGENT_BIO: <string, string> = { "en": "I explain Nuclear, your workspace and your projects from the knowledge base. A task is a team's: I tell you which tech lead is free, or help you make a team.", "es": "Te explico Nuclear, tu workspace y tus proyectos desde la base de conocimiento. Una tarea es de un equipo: te digo qué tech lead está libre, o te ayudo a crear un equipo." }
+
+// The stations' names as the tech lead's plan says them.
+STATION_TITLES: <string, string> = { "analysis": "analysis", "design": "design", "tests": "tests first", "code": "code", "quality": "quality", "delivery": "delivery" }
+
+// What Nuclear Atlas is (spec 023 requirement 1): it informs and sends the work to a team's tech lead.
+ATLAS_ROLE = "You are Nuclear Atlas, NuclearLang's guide. You only inform: you explain Nuclear, the user's workspace and projects, their specs, runs and teams, from the knowledge base (the Smart Graph: graph_answer, graph_search, nuclear_doc) and the project's map (project_inspect, project_read). You never do a task yourself: asked to write code, a spec, a project or to start a run, you do not do it; you say that a team's tech lead does it and name the teams that are free with their tech lead (the teams below; team_list for the latest), so the user writes to that tech lead in the chat. When no team is free or there is none, offer to make one here: with the user's yes, make it with the team tools of the Nuclear MCP server (team_create, member_add), which ask the user before each change. Why a team: it costs no more tokens than one agent; it works in stations (analysis, design, tests first, code, quality, delivery) with checks between them, as a professional team does; and the user shapes each team (its method, its instructions, its members)."
 
 // The member's spending, cost and tool results of a conversation (a channel, or one of its threads) are kept as a
 // chat's history (`.nuclear/builder/chat/member-<team>-<member>-<channel>[-<thread>].jsonl`): the confirmation holds
@@ -92,6 +98,10 @@ Member: Chat
   assigned() <string, any>
     role == "chat" ? ({} as <string, any>) : given
 
+  // Nuclear Atlas only informs: its tools read and teach (mcp.nuc's `INFORM_TOOLS`, `nuclear-mcp --informs`).
+  informs() boolean
+    role == "chat"
+
   // Who answers, as the ledger names them: the team's member (or the general agent) in the chat's channel.
   ledgerWho() <string, any>
     { "team": "${team["id"] ?? ""}", "teamName": "${team["name"] ?? ""}", "member": "${assigned()["id"] ?? ""}", "employee": "${assigned()["employee"] ?? ""}", "role": role, "channel": "${ask["channel"] ?? "general"}${"${ask["thread"] ?? ""}".isEmpty ? "" : "/${ask["thread"]}"}" }
@@ -144,7 +154,7 @@ Member: Chat
 
   persona() Role
     if role == "chat"
-      return Role("chat", "general agent", "You are the general agent of Nuclear Builder, NuclearLang's software factory.", {}, {}, [], [])
+      return Role("chat", "Nuclear Atlas", ATLAS_ROLE, {}, {}, [], [])
     // the team's and the member's skills (library.nuc), a base agent's text before the member's instructions
     who = withSkills(team, assigned())
     skills: <string, string> = {}
@@ -158,7 +168,7 @@ Member: Chat
   leadSection() string
     lead = "${team["techLead"] ?? ""}"
     if assigned()["id"] == lead
-      return "## You are the team's tech lead\n\nYou answer for the whole team: a message to the team is yours, and you speak for everyone. When a question belongs to another member, say who owns it (by name and role) and bring them in. You are accountable for the team's work."
+      return "## You are the team's tech lead\n\nYou answer for the whole team: a message to the team is yours, and you speak for everyone. When a question belongs to another member, say who owns it (by name and role) and bring them in. You are accountable for the team's work.\n\nGiven a task, your first answer is the plan: what the team will do, how (the stations it goes through, the team's method below) and who of your team does each part, by name and role. Then do it through the factory's tools: a spec with its acceptance criteria (spec_new; ask the user for the criteria when they are not given), then its run (run_start, assigning the members you named), and tell the run's progress here (runs, run_file) until it is delivered or waits for the user.\n\n## Your team, by station\n\n${byStation()}"
     own: <string, any> = ((team["members"] ?? []) as <string, any>[]).find((m) => m["id"] == lead) ?? ({} as <string, any>)
     leadRole = "${own["role"] ?? DEFAULT_LEAD}"
     staff = roster(leadRole, lang())
@@ -166,6 +176,34 @@ Member: Chat
     leadName = "${own["name"] ?? ""}".trim()
     named = leadName.isEmpty ? "${hired["name"] ?? ""}" : leadName
     "## Your tech lead\n\n${named.isEmpty ? "The" : "${named}, the"} ${ROLE_TITLES[leadRole] ?? leadRole}${named.isEmpty ? "" : ","} answers for the team and is accountable for its work; you answer what is asked of you."
+
+  // Who of the team works each station (the role's first member), by name and role: the tech lead's plan.
+  byStation() string
+    lines: string[] = []
+    for station in STATIONS
+      r = STATION_ROLE[station] ?? station
+      m = memberFor(team, r)
+      title = ROLE_TITLES[r] ?? r
+      if m == null
+        lines.add("- ${STATION_TITLES[station] ?? station}: nobody (the team has no ${title})")
+      else
+        own = "${m!["name"] ?? ""}".trim()
+        hired = roster(r, lang()).find((p) => p["id"] == m!["employee"]) ?? ({} as <string, any>)
+        lines.add("- ${STATION_TITLES[station] ?? station}: ${own.isEmpty ? "${hired["name"] ?? title}" : own}, the ${title}")
+    lines.join("\n")
+
+  // The teams Nuclear Atlas tells of: each one's tech lead and whether it is free (line.nuc's `teamsAtWork`).
+  teamsSection() string
+    found = teamsAtWork(root)
+    if found.isEmpty
+      return "## The teams\n\nThere is no team yet: offer to make one."
+    lines = found.map((t) =>
+      lead: <string, any>? = t["lead"]
+      who = lead == null ? "no tech lead (no members)" : "its tech lead ${lead!["name"]}, the ${ROLE_TITLES["${lead!["role"]}"] ?? lead!["role"]}"
+      state = t["free"] == true ? "free" : "busy (runs in progress: ${(t["running"] as string[]).join(", ")})"
+      "- ${t["name"]} (`${t["id"]}`): ${state}; ${who}"
+    )
+    "## The teams\n\n${lines.join("\n")}"
 
   // Who the member is, the factory's tools, the project, the conversation of the chat, the message to answer and the
   // tools' results of this turn.
@@ -176,7 +214,8 @@ Member: Chat
     // the language first and again at the end, where small and large models both follow it
     parts: string[] = [languageRule()]
     if role == "chat"
-      parts.add("You are the general agent of Nuclear Builder, NuclearLang's software factory, in ${where}, talking in Nuclear Chat (${channel}). You do everything Nuclear Builder does: read a document of the project (project_read), write specs with their acceptance criteria, start their runs and answer their gates, keep the teams and the line, with the factory's tools below (and the Nuclear MCP server's when you have them). ${rules}")
+      parts.add("${ATLAS_ROLE} You are in ${where}, talking in Nuclear Chat (${channel}). You never edit a file. Answer as a message of the chat: short.")
+      parts.add(teamsSection())
     else
       p = profile()
       personality: <string, any> = assigned()["personality"] ?? ({} as <string, any>)
@@ -297,26 +336,35 @@ memberLine(args: string[]) int
   member = Member(root, id, given, readLine(root, "${card["platform"] ?? ""}"), readIt, (e: <string, any>) => lines.on(e), options, team, role, request!)
   member.respond()
 
-// The host file of Nuclear Chat for a project (spec 013, design.md "The process"): the members of its team (the
-// run's team, line.nuc's `teamOfRun`: the project's, the default, the only saved one, else the local team), each
-// member of it (any number per role; id `<team>-<member id>`), their profile in `lang`, the brain that answers as them
-// (`brain`: the agent's name, its kind, provider and model, paid or local),
-// their face (the thumbnail's whole path, a chat's avatar; the portrait's without one; null without either), their temperament, their personality and their
-// responder; the channels `general` and the team's; the team with its tech lead, who
-// answers a message to the team.
+// The host file of Nuclear Chat for a project (spec 013, design.md "The process"; spec 023 requirement 2): every
+// saved team (the project's first: line.nuc's `teamOfRun`; the local team when none is saved), each member of each
+// (any number per role; id `<team>-<member id>`), their profile in `lang`, the brain that answers as them (`brain`:
+// the agent's name, its kind, provider and model, paid or local), their face (the thumbnail's whole path, a chat's
+// avatar; the portrait's without one; null without either), their temperament, their personality and their
+// responder. Only the tech lead of each team and Atlas are `listed` (the people of the chat, each with a direct
+// message); the other members write in the team's channel and the run's threads. The channels `general` and each
+// team's, with its tech lead; the teams with their tech lead, who answers a message to the team.
 chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <string, any>
-  team = teamShown(teamOfRun(root, null), rosters(lang))
-  teamId = "${team["id"]}"
   members: <string, any>[] = []
-  for r in team["members"] as <string, any>[]
-    role = "${r["role"]}"
-    own = "${r["id"]}"
-    staff = roster(role, lang)
-    p = staff.find((x) => x["id"] == r["employee"]) ?? ({} as <string, any>)
-    name = "${r["name"] ?? ""}".isEmpty ? ROLE_TITLES[role] ?? role : "${r["name"]}"
-    personality: <string, any> = r["personality"] ?? ({} as <string, any>)
-    members.add({ "id": "${teamId}-${own}", "name": name, "role": role, "member": own, "team": teamId, "avatar": "${r["employee"] ?? "${teamId}-${own}"}", "face": p["thumb"] ?? p["face"], "temperament": personality["temperament"] ?? p["temperament"], "profile": { "bio": p["bio"] ?? "", "hrNote": p["hrNote"] ?? "", "lang": lang }, "personality": r["personality"], "brain": brainOf(r), "responder": { "command": ["nuclear-builder", "member", "--team", teamId, "--member", own], "paid": r["kind"] != "local" } })
-  ids = members.map((m) => "${m["id"]}")
+  teams: <string, any>[] = []
+  channels: <string, any>[] = []
+  for team in hostTeams(root, lang)
+    teamId = "${team["id"]}"
+    lead = "${team["techLead"] ?? defaultLead(team["members"] ?? []) ?? ""}"
+    for r in team["members"] as <string, any>[]
+      role = "${r["role"]}"
+      own = "${r["id"]}"
+      staff = roster(role, lang)
+      p = staff.find((x) => x["id"] == r["employee"]) ?? ({} as <string, any>)
+      name = "${r["name"] ?? ""}".isEmpty ? ROLE_TITLES[role] ?? role : "${r["name"]}"
+      personality: <string, any> = r["personality"] ?? ({} as <string, any>)
+      members.add({ "id": "${teamId}-${own}", "name": name, "role": role, "member": own, "team": teamId, "listed": own == lead, "avatar": "${r["employee"] ?? "${teamId}-${own}"}", "face": p["thumb"] ?? p["face"], "temperament": personality["temperament"] ?? p["temperament"], "profile": { "bio": p["bio"] ?? "", "hrNote": p["hrNote"] ?? "", "lang": lang }, "personality": r["personality"], "brain": brainOf(r), "responder": { "command": ["nuclear-builder", "member", "--team", teamId, "--member", own], "paid": r["kind"] != "local" } })
+    leadId = lead.isEmpty ? "" : "${teamId}-${lead}"
+    // a message to the team goes to its tech lead; `@<role>` to the role's first member as listed here (Nuclear Chat)
+    teams.add({ "id": teamId, "name": team["name"], "lead": leadId })
+    description = "${team["description"] ?? ""}"
+    channels.add({ "id": teamId, "name": teamId, "topic": description.isEmpty ? "${team["name"]}" : description, "members": leadId.isEmpty ? ([] as string[]) : [leadId] })
+  listed = members.filter((m) => m["listed"] == true).map((m) => "${m["id"]}")
   // the general agent: answered by the choice of its conversation, else this default: the local Nuclear Developer
   // while the local models are on, else the default external choice (ADR-platform-0013); none: `why` says to choose
   choices = chatChoices(agentsHere(root, transport))
@@ -325,13 +373,31 @@ chatHost(root: string, lang: string, transport: httpx.BaseTransport? = null) <st
   responder: <string, any> = { "command": (chosen ?? choices[0])["command"], "paid": chosen != null and chosen!["kind"] != "local", "choice": chosen == null ? "" : chosen!["id"], "model": w == null ? "" : w!["model"] ?? "", "choices": choices }
   if chosen == null
     responder["why"] = NO_PROVIDER
-  members.add({ "id": GENERAL_AGENT, "name": "Atlas", "role": "chat", "team": "", "avatar": GENERAL_AGENT, "face": null, "temperament": null, "profile": { "bio": GENERAL_AGENT_BIO[lang] ?? GENERAL_AGENT_BIO["en"], "hrNote": "", "lang": lang }, "personality": { "gifs": "never", "on": [] as string[] }, "responder": responder })
-  // a message to the team goes to its tech lead; `@<role>` to the role's first member as listed here (Nuclear Chat)
-  teams = [{ "id": teamId, "name": team["name"], "lead": team["techLead"] == null ? "" : "${teamId}-${team["techLead"]}" }]
+  members.add({ "id": GENERAL_AGENT, "name": "Atlas", "role": "chat", "team": "", "listed": true, "avatar": GENERAL_AGENT, "face": null, "temperament": null, "profile": { "bio": GENERAL_AGENT_BIO[lang] ?? GENERAL_AGENT_BIO["en"], "hrNote": "", "lang": lang }, "personality": { "gifs": "never", "on": [] as string[] }, "responder": responder })
   project = "${projectCard(root)["name"] ?? Path(root).name}"
-  description = "${team["description"] ?? ""}"
-  channels = [{ "id": "general", "name": "general", "topic": "The project ${project}", "members": ids }, { "id": teamId, "name": teamId, "topic": description.isEmpty ? "${team["name"]}" : description, "members": ids }]
-  { "host": "builder", "members": members, "channels": channels, "teams": teams, "lang": lang }
+  { "host": "builder", "members": members, "channels": [{ "id": "general", "name": "general", "topic": "The project ${project}", "members": listed }, ...channels], "teams": teams, "lang": lang }
+
+// The teams of the chat, as shown: the project's (the run's team: the one of `.nuclear/builder.json`, the default, the
+// only saved one; none chosen among several is no error here), then every other saved team; with none saved, the
+// local team. A team that cannot be read is left out of the chat (the company screen tells what is wrong with it).
+hostTeams(root: string, lang: string) <string, any>[]
+  people = rosters(lang)
+  first: <string, any>? = null
+  try
+    first = teamOfRun(root, null)
+  catch e
+    if not isinstance(e, TeamChoice)
+      throw e
+  found: <string, any>[] = first == null ? [] : [teamShown(first!, people)]
+  for id in teamIds()
+    if found.any((t) => t["id"] == id)
+      continue
+    try
+      found.add(teamShown(loadTeam(id), people))
+    catch e
+      if not isinstance(e, ValueError)
+        throw e
+  found
 
 // Who works a member, as the chat shows it under their name: `Claude Code · opus · paid`.
 brainOf(r: <string, any>) <string, any>
@@ -339,8 +405,8 @@ brainOf(r: <string, any>) <string, any>
   kind = "${r["kind"] ?? kindOf(provider)}"
   { "agent": AGENT_LABELS[provider] ?? provider, "kind": kind, "provider": provider, "model": "${r["model"] ?? ""}", "paid": kind != "local" }
 
-// `nuclear-builder chat-host --json [--root <dir>] [--lang en|es]`; several teams and none chosen: the error with
-// `chooseTeam`, the teams the editor offers to choose from (saved as the project's, `line set team=<id>`).
+// `nuclear-builder chat-host --json [--root <dir>] [--lang en|es]`: every team is in the chat, so several teams and
+// none chosen are no error here (a run still asks which one, `TeamChoice`).
 chatHostLine(args: string[]) int
   root = option(args, "--root") ?? projectRoot("${Path.cwd()}")
   try
@@ -348,6 +414,6 @@ chatHostLine(args: string[]) int
   catch e
     if not isinstance(e, ValueError) and not isinstance(e, OSError)
       throw e
-    printJson(isinstance(e, TeamChoice) ? { "error": "${e}", "chooseTeam": listTeams().map((t) => ({ "id": t["id"], "name": t["name"] })) } : { "error": "${e}" })
+    printJson({ "error": "${e}" })
     return 1
   0

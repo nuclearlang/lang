@@ -110,6 +110,9 @@ whyNotHereSaid(provider: string, prices: <string, any> = {}, env: <string, strin
 // the commands and tools where who works a member is chosen (`team create`, `team member add|update`), not on every save: a team made on
 // another machine still opens. The prices are the project's (`.nuclear/builder.json` of the working folder).
 workableHere(m: <string, any>) void
+  // who works it not said: the team's brain or the default worker, chosen for this machine
+  if m["kind"] == null and m["provider"] == null
+    return
   allowed: string[] = PROVIDERS["${m["kind"] ?? "local"}"] ?? ["nuclear-developer"]
   provider = "${m["provider"] ?? allowed[0]}"
   if provider == "nuclear-developer" and localModels()

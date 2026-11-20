@@ -2,7 +2,9 @@
 // model through an API), the user confirms twice, the second time with the amount and the providers at stake. The
 // settings (`nuclear.spending.*`): `confirm` (on by default) stops the questions when off; `forceConfirm` (off by
 // default) brings them back whatever `confirm` says, and so does `"forceConfirm": true` in a project's
-// `.nuclear/builder.json`, which wins. One module: the Builder and the onboarding ask through it.
+// `.nuclear/builder.json`, which wins. Only work paid by use through an API key (kind `api`) is asked: an agent's
+// subscription (Claude Code, Codex, Cursor…) is not, unless the questions are forced (spec 023, requirement 4). One
+// module: the Builder and the onboarding ask through it.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
@@ -36,6 +38,17 @@ export function mustConfirm(s: Pick<SpendingSettings, 'confirm' | 'forceConfirm'
   return s.forceConfirm || projectForces || s.confirm;
 }
 
+/** The providers paid by use through an API key (teams.nuc's PROVIDERS `api`). */
+export const API_PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter'];
+
+/** Whether spending with `providers` (their ids) is asked: forced always asks; else only when one is an API's and
+ * `confirm` is on. An unknown provider counts as an API's (asked rather than not). */
+export function asksFor(providers: string[], s: Pick<SpendingSettings, 'confirm' | 'forceConfirm'>, projectForces: boolean): boolean {
+  if (s.forceConfirm || projectForces) return true;
+  const agents = ['claude-code', 'codex', 'gemini-cli', 'opencode', 'cursor', 'grok'];
+  return s.confirm && (!providers.length || providers.some((p) => API_PROVIDERS.includes(p) || !agents.includes(p)));
+}
+
 /** An amount as the questions say it. */
 export function amountText(usd: number): string {
   return usd > 0 ? `${usd.toFixed(2)} USD` : l10n.t('no limit');
@@ -50,11 +63,14 @@ export interface Spend {
   amountUsd: number;
   /** The project, whose `.nuclear/builder.json` may force the questions. */
   root?: string;
+  /** The providers' ids: none of an API (agents only) is not asked, unless forced. */
+  ids?: string[];
 }
 
 /** The two questions, when they must be asked: true when the user said yes twice (or is not asked). */
 export async function confirmSpending(spend: Spend): Promise<boolean> {
-  if (!mustConfirm(spendingSettings(), projectForcesConfirm(spend.root))) return true;
+  const forces = projectForcesConfirm(spend.root);
+  if (!mustConfirm(spendingSettings(), forces) || (spend.ids && !asksFor(spend.ids, spendingSettings(), forces))) return true;
   const providers = spend.providers.join(', ');
   const go = l10n.t('Go on');
   const first = await vscode.window.showWarningMessage(

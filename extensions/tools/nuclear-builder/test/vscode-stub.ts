@@ -50,6 +50,7 @@ export const window = {
   },
 };
 export const ViewColumn = { Active: -1 } as const;
+export const extensions = { getExtension: (_id: string) => ({ extensionUri: { fsPath: '/ext' } }) };
 export const Uri = { file: (p: string) => ({ fsPath: p }), joinPath: (u: { fsPath: string }, ...parts: string[]) => ({ fsPath: [u.fsPath, ...parts].join('/') }) };
 
 export const env = { language: 'en' };

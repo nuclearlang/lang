@@ -10,8 +10,17 @@ export function webviewFaceUrl(webview: vscode.Webview): (face?: string | null) 
     const dir = path.dirname(face);
     if (!roots.has(dir)) {
       roots.add(dir);
-      webview.options = { ...webview.options, localResourceRoots: [...(webview.options.localResourceRoots ?? []), vscode.Uri.file(dir)] };
+      webview.options = { ...webview.options, localResourceRoots: [...(webview.options.localResourceRoots ?? defaultRoots()), vscode.Uri.file(dir)] };
     }
     return webview.asWebviewUri(vscode.Uri.file(face)).toString();
   };
+}
+
+/** What a webview reads when it names no roots (VS Code's default): this extension's folder and the workspace's
+ * folders. A page that had none keeps them when a face's folder is added: without them its own scripts
+ * (`out/chat-embed.js`, `out/builder-flow.js`) would no longer load (found in 0.84.0: Atlas and the Builder's diagram
+ * broke once a team's faces were shown). */
+export function defaultRoots(): vscode.Uri[] {
+  const own = vscode.extensions.getExtension('nuclearlang.nuclearlang')?.extensionUri ?? vscode.Uri.file(path.dirname(__dirname));
+  return [own, ...(vscode.workspace.workspaceFolders ?? []).map((f) => f.uri)];
 }

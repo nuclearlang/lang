@@ -34,13 +34,26 @@ Nuclear Builder) and press **New team**: five steps, *Next, Next*.
    their profile, not their model. Under each row, **Make them different** holds what makes that member themselves:
    their temperament (the employee's own unless you choose another), their characteristics, their instructions, the
    role's skills they use and skills of their own. A paid member wears a **PAID** badge; the step counts them and says
-   it plainly: Claude Code, OpenCode, Codex… cost money per run, each run asks you twice before spending, and the
-   team's budget per run caps it. Choose the tech lead, then **Create team**.
+   it plainly: Claude Code, OpenCode, Codex… cost money per run; a run asks you twice before spending only for an API
+   paid by use (an agent's subscription is not asked, unless `nuclear.spending.forceConfirm`), and the team's budget
+   per run caps it. **Model for the whole team** (above *The same for*) gives the team one agent or API and its model,
+   chosen once: every member says *Team's model*, and **Own model…** on a row gives that member its own, which wins;
+   *None* leaves each member its own. Step 2 also holds the team's **Method** (Scrum by default, or *Our own method*
+   written by you) and its **Instructions**, which the tech lead and every member follow. Choose the tech lead, then
+   **Create team**.
 
 Editing a team (**Members…**) reuses steps 4 and 5: add or remove members, change who works them and what makes each one different. The team's page shows only its
 members, grouped by role: the roster's candidates appear only while you add (a role's **+ Add** opens them, **Done**
-closes them). **Talk** on a member, a member's face on the company screen, or a team's **Channel** opens Nuclear
-Atlas on that conversation. The welcome's team step is the same wizard. The Builder's empty page and the team at the foot
+closes them). Nuclear Chat lists each team's tech lead, not every member: **Talk** on the tech lead opens its
+conversation in Nuclear Atlas; on another member it is **Ask the tech lead**, the lead's conversation (the lead assigns
+the work), and so is a member's face on the company screen; a team's **Channel** opens the team's channel.
+
+Under the team's description, **How the team works**: the **Model for the whole team** (*None: each its own*, *Agent*
+or *API*, the provider and the model: the pickers a member has, `team update --kind --provider --model`, or
+`--no-brain`), with how many members inherit it; the **Method** (*Scrum (the default)*, or *Our own method* and its
+text) and the **Instructions** every member follows, saved as you type. Each member's row and Overview say *Team's
+model* or *Own model*; a member's Brain has *Team's model* first, to give its own up (`team member update
+--team-brain`). The welcome's team step is the same wizard. The Builder's empty page and the team at the foot
 of its log have **Build a team**, which opens this wizard straight away; the workspace's strip has *Your software
 company* (three people, `Ctrl+Alt+E`).
 
