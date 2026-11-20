@@ -471,19 +471,25 @@
    "body": [
     "The check runs in the background once a day and never delays a command; it never asks in editors, agents, pipes or CI. `NUCLEAR_NO_UPDATE_CHECK=1` turns the question off.",
     "",
-    "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built."
+    "Only an installation made by the public installers is updated this way; a `nuclear` built from source is updated the way it was built.",
+    "",
+    "Every part of NuclearLang carries one version and goes together (ADR-platform-0011): the compiler, the language server, the Smart Graph and its knowledge base, the MCP server, the local agents, the dialects' runtimes and the editors' extensions. An update installs all of them at the release's version. When a store updates the VS Code extension alone, the extension offers *Update NuclearLang* (`nuclear update`); when the extension is the older one, it offers the installed release's extension."
    ],
    "keys": [
     "update",
     "upgrade nuclear",
     "new version",
-    "actualizar"
+    "actualizar",
+    "same version",
+    "versions mismatch"
    ],
    "asks": [
     "how do I update nuclear",
     "how do I get the latest version",
     "como actualizo nuclear",
-    "why does nuclear ask to update"
+    "why does nuclear ask to update",
+    "the extension and nuclear have different versions",
+    "do all the parts need the same version"
    ],
    "links": [
     {
@@ -492,7 +498,8 @@
     }
    ],
    "sources": [
-    "installer/docs/08-guides/what-gets-installed.md"
+    "installer/docs/08-guides/what-gets-installed.md",
+    "docs/03-adr/0011-one-version-one-release.md"
    ],
    "meta": {
     "topic": "install"

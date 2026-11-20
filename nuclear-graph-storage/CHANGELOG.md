@@ -4,6 +4,7 @@ All notable changes to nuclear-graph are written here; versions follow [Semantic
 
 ## Unreleased
 
+- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them; the release builds nothing when the knowledge base was not built at the tag's version (its component rows name each one's version).
 - The vectors of the knowledge base come with each release (`nuclearlang-embeddings-<version>.npz`, one file for every
   system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so
   an install loads the base in seconds; a text the file does not hold goes to the model.

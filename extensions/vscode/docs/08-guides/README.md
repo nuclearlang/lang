@@ -135,6 +135,15 @@ titles and setting descriptions follow VS Code's own language (VS Code does not 
 
 A project's `.nuclear/builder.json` wins over these settings for its own Nuclear Builder runs.
 
+## Versions
+
+NuclearLang, its services and this extension carry one version, and go together
+([ADR-platform-0011](../../../../docs/03-adr/0011-one-version-one-release.md)). When the store updates the extension
+and the installed NuclearLang is older, a notification offers **Update NuclearLang** (`nuclear update` in a terminal:
+the newest release, its AI services included); when the extension is the older one, it offers the extension of the
+installed release. It asks once per pair of versions and blocks nothing. A NuclearLang built from source is not
+compared.
+
 ## Troubleshooting
 
 | What you see | What to do |

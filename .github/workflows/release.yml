@@ -1,4 +1,5 @@
-# The release of NuclearLang: on a tag v<version> (the version of Cargo.toml [workspace.package]) every target's archive
+# The release of NuclearLang: one snapshot of the whole platform (ADR-platform-0011). On a tag v<version> (the version of
+# Cargo.toml [workspace.package], which every project carries: installer/release/version.sh) every target's archive
 # is built (installer/release/package.sh), with the AI services' archive of each system (ai-runtime.sh) and the VS Code extension, and published in the GitHub release that the
 # installers download from (installer/release/install.sh, install.ps1; also served by the website).
 name: release
@@ -12,7 +13,16 @@ permissions:
   contents: write
 
 jobs:
+  # every project at the tag's version and the knowledge base built at it, or nothing is built nor published
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: One version for every project
+        run: installer/release/version.sh --check "${{ github.ref_type == 'tag' && github.ref_name || '' }}"
+
   archive:
+    needs: snapshot
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +60,7 @@ jobs:
             installer/dist/*.sha256
 
   vscode:
+    needs: snapshot
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,6 +115,7 @@ jobs:
   # the AI services' archive (ADR-installer-0003): a Python of their own with the Smart Graph, the MCP server and the
   # Nuclear Developer, built and tried on a runner of each system (glibc Linux: onnxruntime has no musl wheel)
   ai:
+    needs: snapshot
     strategy:
       fail-fast: false
       matrix:
@@ -147,6 +159,7 @@ jobs:
   # the model, so one file serves Linux, macOS and Windows; the set-up downloads it and the graph loads the base in
   # seconds instead of running its model over every row.
   embeddings:
+    needs: snapshot
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

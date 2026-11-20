@@ -972,3 +972,8 @@ request = true
 ask = "la app está muy lenta al abrir el chat"
 expect = ["strategy:bug-slow"]
 request = true
+
+[[question]]
+ask = "the extension and nuclear have different versions"
+expect = ["faq:update-nuclearlang"]
+says = ["nuclear update"]

@@ -18,6 +18,7 @@ the set-up of the AI services the installers call at their end.
 ```sh
 installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)
 installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall
+installer/release/version.sh [<v>|--check [v<v>]]   # one version for every project (ADR-platform-0011): print, write, check
 installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/
 installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256
 installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it
@@ -40,6 +41,8 @@ irm https://nuclearlang.github.io/install.ps1 | iex
   `nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).
 - `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`
   and `package.sh`.
+- `release/version.sh`: the one version of the platform, written into every manifest and lock file and checked
+  (the CI, the release's job `snapshot`).
 - `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.
 - `release/ai-runtime.sh`: the AI archive of this machine, built and tried before it is packed.
 - `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).

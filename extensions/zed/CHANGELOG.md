@@ -4,6 +4,7 @@ All notable changes to nuclear-zed are written here; versions follow [Semantic V
 
 ## Unreleased
 
+- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.
 - 0.74.0: no change of its own (`nuclear run` writes the project's run log).
 - 0.73.2: no change of its own (the VS Code devices' launch log).
 - 0.73.1: no change of its own (the VS Code launch of a mobile app).

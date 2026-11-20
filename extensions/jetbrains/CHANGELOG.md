@@ -4,6 +4,8 @@ All notable changes to nuclear-jetbrains are written here; versions follow [Sema
 
 ## Unreleased
 
+- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.
+
 - 0.78.0: no change of its own (VS Code's toolchains, only for the platforms you build).
 
 - 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).

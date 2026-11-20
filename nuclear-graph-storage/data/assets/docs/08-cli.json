@@ -643,11 +643,12 @@
    "id": "doc:installer/AGENTS.md#commands",
    "type": "readme",
    "title": "The installers and the release — Commands",
-   "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/build-runtimes.sh # a fresh checkout: the JavaScript runtimes' dist/ installer/release/package.sh [<rust target>]…",
+   "summary": "installer/install.sh # from source into ~/.local (PREFIX=/usr/local for another prefix) installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall installer/release/version.sh [<v>|--check [v<v>]] # one version for every project (ADR-platform-0011): print, write, check…",
    "body": [
     "```sh",
     "installer/install.sh                     # from source into ~/.local (PREFIX=/usr/local for another prefix)",
     "installer/install.sh --no-vscode | --no-zed | --no-agent | --ai | --uninstall",
+    "installer/release/version.sh [<v>|--check [v<v>]]   # one version for every project (ADR-platform-0011): print, write, check",
     "installer/release/build-runtimes.sh      # a fresh checkout: the JavaScript runtimes' dist/",
     "installer/release/package.sh [<rust target>]   # the archive of one target in installer/dist/, with its .sha256",
     "installer/release/ai-runtime.sh          # the AI services' archive of this machine, beside it",
@@ -730,6 +731,8 @@
     "  `nuclear-builder`, `nuclear-chat` and `nuclear-lsp`, installs the skill and the editor extensions).",
     "- `release/stage.sh`: assembles an installation in a folder: the layout the binaries expect. Used by `install.sh`",
     "  and `package.sh`.",
+    "- `release/version.sh`: the one version of the platform, written into every manifest and lock file and checked",
+    "  (the CI, the release's job `snapshot`).",
     "- `release/package.sh`: the release archive of one target. `release/build-runtimes.sh`: what must be built before.",
     "- `release/ai-runtime.sh`: the AI archive of this machine, built and tried before it is packed.",
     "- `release/install.sh`, `release/install.ps1`: the public installers (Linux and macOS; Windows).",
@@ -1370,7 +1373,7 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.52b7c6",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.488bed",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
    "summary": "1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other manifest), raised by Semantic Versioning: a fix PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) (coding.md).",
@@ -1378,17 +1381,17 @@
     "1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other",
     "   manifest), raised by Semantic Versioning: a fix",
     "   PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) ([coding.md](../../../docs/05-standards/coding.md#git)).",
+    "   A release is one snapshot ([ADR-platform-0011](../../../docs/03-adr/0011-one-version-one-release.md)):",
+    "   `installer/release/version.sh <version>` writes it into every project and lock file, then",
+    "   `nuclear-graph knowledge build` (the knowledge base names each component's version), `knowledge check`, `ingest`;",
+    "   `installer/release/version.sh --check v<version>` must say *every project is at <version>*. The CI checks it on",
+    "   every push and the job `snapshot` of the release before anything is built.",
     "2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code",
     "   extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:",
     "   the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts",
     "   that changed are computed, ADR-graph-0003), and publishes them, with `install.sh` and",
     "   `install.ps1`, in the GitHub release of that tag. It can also be started",
-    "   by hand (`workflow_dispatch`).",
-    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
-    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
-    "   environment) and on Open VSX (namespace `nuclearlang`: the secret",
-    "   `OVSX_PAT`, a token scoped to the namespace with *Publishing only*; without it, Trusted Publishing, which Open VSX",
-    "   lets register only once the namespace is verified). The stores read the `version` of"
+    "   by hand (`workflow_dispatch`)."
    ],
    "sources": [
     "installer/docs/06-runbooks/release.md"
@@ -1400,12 +1403,17 @@
    }
   },
   {
-   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.926474",
+   "id": "doc:installer/docs/06-runbooks/release.md#publish-a-release.6ba0df",
    "type": "context",
    "title": "Release, and test an installer — Publish a release",
-   "summary": "`extensions/vscode/package.json`: bump it for the release, or that store skips the upload.",
+   "summary": "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token; the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no environment) and on Open VSX (namespace `nuclearlang`: the secret…",
    "body": [
-    "`extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
+    "3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;",
+    "   the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no",
+    "   environment) and on Open VSX (namespace `nuclearlang`: the secret",
+    "   `OVSX_PAT`, a token scoped to the namespace with *Publishing only*; without it, Trusted Publishing, which Open VSX",
+    "   lets register only once the namespace is verified). The stores read the `version` of",
+    "   `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not",
     "   stop the GitHub release.",
     "4. The public one-liners download from that release: without a release they fail with a clear error.",
     "5. Once the release is published, `.github/workflows/installer-windows.yml` installs it on a real Windows (Windows",
@@ -2483,11 +2491,12 @@
    }
   },
   {
-   "id": "doc:tools/cli/CHANGELOG.md#unreleased.dda230",
+   "id": "doc:tools/cli/CHANGELOG.md#unreleased.a9b960",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "services included).",
    "body": [
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them (`installer/release/version.sh`).",
     "- `nuclear update`: installs the latest release (the public installer run again for this installation, the AI",
     "  services included). In a terminal, every command asks `Update now? [Y/n]` when a newer release is out; the check",
     "  runs in the background once a day, never in editors, agents, pipes or CI (`NUCLEAR_NO_UPDATE_CHECK=1` turns it",

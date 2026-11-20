@@ -10,8 +10,8 @@ as an external binary and talk to it only through LSP and the `nuclear/*` reques
 - `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer
 - `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API
 - `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens
-- One version for the three (0.74.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,
-  `zed/extension.toml`
+- The platform's one version (ADR-platform-0011, 0.80.0 today), written by `installer/release/version.sh` into
+  `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`, `zed/extension.toml` and every other project
 
 ## Commands
 Each extension has its own; they are in its `AGENTS.md`.

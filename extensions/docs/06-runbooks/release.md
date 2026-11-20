@@ -7,15 +7,15 @@ related: [../02-architecture/language-server.md, ../../vscode/AGENTS.md, ../../j
 # Release the extensions
 
 Done after every change of the server, a client, the themes or the bundled dialects and type definitions, without
-asking. The three extensions share one version; Zed's follows VS Code's.
+asking. The extensions carry the platform's one version: a release of them is a release of the whole platform
+([ADR-platform-0011](../../../docs/03-adr/0011-one-version-one-release.md)).
 
 ## Steps
 
-1. Raise the version (minor for a feature, patch for a fix) in:
-   - `extensions/vscode/package.json`
-   - `extensions/jetbrains/resources/META-INF/plugin.xml`
-   - `extensions/zed/extension.toml`
-   - the examples of each `README.md` that name a version
+1. Raise the platform's version (minor for a feature, patch for a fix) with `installer/release/version.sh <version>`:
+   it writes every project, these three extensions among them, and their lock files. Then the examples of each
+   `README.md` that name a version, and the release of the whole platform
+   ([the installer's runbook](../../../installer/docs/06-runbooks/release.md)).
 2. Write the change in the `CHANGELOG.md` of each extension it reaches.
 3. Build (the VS Code extension carries Nuclear Chat's UI: `nuclear-chat/ui/build-embed.sh` first, after `npm ci` in
    `nuclearlang/tools/node` and `installer/release/build-runtimes.sh`; the CI and the release do the same):

@@ -20,6 +20,7 @@ finishes (`onStartupFinished`).
 | `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |
 | `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |
 | `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |
+| `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |
 | `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |
 | `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |
 | `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |

@@ -6243,6 +6243,7 @@
    "title": "Changelog — Unreleased (2026-11-18)",
    "summary": "and `eval_count` summed over the request's model calls; empty when none were counted), for Nuclear Builder's reports (spec 017).",
    "body": [
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
     "- Every answer says the tokens its models used (`usage: {inTokens, outTokens, model}`, Ollama's `prompt_eval_count`",
     "  and `eval_count` summed over the request's model calls; empty when none were counted), for Nuclear Builder's",
     "  reports (spec 017). Each request counts its own (`TALLY`, a context variable): concurrent requests never mix.",
@@ -16135,31 +16136,6 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.0a1ee6",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples, documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the base is behind the tree; `knowledge review` confirms a hand-written row…",
-   "body": [
-    "diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
-    "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
-    "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
-    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what",
-    "  agents wrote at run time. A client writes only `memory` and `examples`.",
-    "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),",
-    "  `GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
-    "  `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`,",
-    "  `declarations`, `context`). MCP `developer_code` takes `project` and the local coder reads the project by itself."
-   ],
-   "sources": [
-    "nuclear-graph-storage/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "10-ai",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.2261c1",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -16188,24 +16164,21 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.46fcf7",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.46727d",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the documents' key would open no card).",
+   "summary": "system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so an install loads the base in seconds; a text the file does not hold goes to the model.",
    "body": [
-    "owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
-    "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
-    "  keyring is waited for, then refused, and never made again.",
-    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that",
-    "  question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
-    "  is a question of `concept:mcp`, no longer of `query:mcp.tools`.",
-    "- The package is typed (`py.typed`): a project that uses it is checked against it.",
-    "- The graph is a library (ADR-graph-0001): nine shelves (`concepts`, `language`, `platforms`, `tools`, `errors`,",
-    "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,",
-    "  instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest). Search by",
-    "  meaning and by exact name over several shelves; `GET /v1/cards/{id}`; `nuclear-graph card`, `search -p --agents`;",
-    "  MCP `graph_search` by shelf and `graph_card`.",
-    "- The knowledge base is asset files: `knowledge build` generates the rows from the working tree (`extract.py`:"
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them; the release builds nothing when the knowledge base was not built at the tag's version (its component rows name each one's version).",
+    "- The vectors of the knowledge base come with each release (`nuclearlang-embeddings-<version>.npz`, one file for every",
+    "  system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so",
+    "  an install loads the base in seconds; a text the file does not hold goes to the model.",
+    "- The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process",
+    "  (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come",
+    "  from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.",
+    "- The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each",
+    "  command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with",
+    "  every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16246,12 +16219,16 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.636c8c",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.649020",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps the text after the front matter (`Paths.roles`, was `Paths.prompts`); the package carries `nuclear_graph/roles`; a prompt named by two skills is refused.",
+   "summary": "stations (`stage:analysis` … `stage:delivery`), read from its engine (`run.nuc`, `roles.nuc`) since the TypeScript engine is gone; `concept:loop` describes the factory, and the rows that linked the nine old stages link the stations (`deploy` → `tool:nuclear-builder.ci`).",
    "body": [
-    "ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps",
+    "stations (`stage:analysis` … `stage:delivery`), read from its engine (`run.nuc`, `roles.nuc`) since the TypeScript",
+    "  engine is gone; `concept:loop` describes the factory, and the rows that linked the nine old stages link the",
+    "  stations (`deploy` → `tool:nuclear-builder.ci`).",
+    "- The prompts moved into the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,",
+    "  ADR-developer-0002), with the same text: `ingest` reads every skill whose front matter names a `prompt` and keeps",
     "  the text after the front matter (`Paths.roles`, was `Paths.prompts`); the package carries `nuclear_graph/roles`; a",
     "  prompt named by two skills is refused. The folder `prompts/` is gone. The software factory is a row",
     "  (`concept:software-factory`).",
@@ -16260,11 +16237,7 @@
     "  the platforms are gone; the path of the platforms is `PLATFORMS_DIR` (it took the name of the list).",
     "- The port comes from the environment, else from `NUCLEAR_GRAPH_PORT` of `ai.env` (the one the set-up chose when 7878 was",
     "  held, ADR-installer-0003), else 7878: a shell that never read `ai.env` reaches the graph (`machineValues` in",
-    "  `paths.nuc`; `Paths.machine()` gives the same).",
-    "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
-    "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
-    "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
-    "  project added (ADR-lang-0008)."
+    "  `paths.nuc`; `Paths.machine()` gives the same)."
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16300,11 +16273,15 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.7f30d5",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.91b146",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`, because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp work\" (27).",
+   "summary": "Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
    "body": [
+    "- The editors' tools are named as the extensions name them: HTTP Connections (was Nuclear Connector) and Nuclear",
+    "  Atlas (was the chat, *Nuclear agent*), in the summary of the tools (`extract_tools.nuc`) and in the rows.",
+    "- MCP: the `synapsis` tool runs `remove` too, and `nuclear_defs` takes the project's folder to show the packages the",
+    "  project added (ADR-lang-0008).",
     "- The planner runs a query of the exact facts only when its exact question is closer to what was asked than the",
     "  closest card of the shelves (ADR-graph-0002): \"que es nuclear lang?\" was answered with every command of `nuclear`,",
     "  because the question writes the tool's name; so were \"what is the smart graph\" (47 rows) and \"how does the mcp",
@@ -16312,11 +16289,7 @@
     "- **The search is exact** (ADR-graph-0001): `Store.near` and `Store.measure` compare the vector the store keeps of every",
     "  item a filter matches; Chroma's approximate index is not asked. Once rows were replaced that index did not reach",
     "  every item it held, and which ones changed at every start of the graph (after an ingest: three cards of 2 617, and",
-    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server.",
-    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
-    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
-    "  was the same as the one asked.",
-    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no"
+    "  \"ModuleNotFoundError: No module named ...\" no longer found its failure). `numpy` is a dependency of the server."
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"
@@ -16328,24 +16301,53 @@
    }
   },
   {
-   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.f1522d",
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.b15235",
    "type": "changelog",
    "title": "Changelog — Unreleased",
-   "summary": "system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so an install loads the base in seconds; a text the file does not hold goes to the model.",
+   "summary": "instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest).",
    "body": [
-    "- The vectors of the knowledge base come with each release (`nuclearlang-embeddings-<version>.npz`, one file for every",
-    "  system, made by `nuclear-graph embeddings`): an ingest takes them instead of running the model over every row, so",
-    "  an install loads the base in seconds; a text the file does not hold goes to the model.",
-    "- The embeddings no longer need Ollama (ADR-graph-0003): EmbeddingGemma in ONNX runs inside the server's process",
-    "  (ONNX Runtime and `tokenizers`, already the store's), the same model and the same vectors as before. Its files come",
-    "  from Hugging Face once, into the data folder's `models/`; `nuclear-graph model` downloads them ahead.",
-    "- The rows of `nuclear-builder`'s commands come from its Nuclear command line (`cli.nuc`, whose help prints each",
-    "  command at the first column) and a command with several forms (`setup --status`, `run --resume`) is one row with",
-    "  every form; `team`, `vault` and `checks` have their rows. The `stage:*` rows are the software factory's six",
-    "  stations (`stage:analysis` … `stage:delivery`), read from its engine (`run.nuc`, `roles.nuc`) since the TypeScript",
-    "  engine is gone; `concept:loop` describes the factory, and the rows that linked the nine old stages link the",
-    "  stations (`deploy` → `tool:nuclear-builder.ci`).",
-    "- The prompts moved into the roles of the software factory (`nuclear-agents/roles/<role>/skills/`, spec 011,"
+    "instead of two collections of document pieces (`knowledge` and `nuclear` are removed by the first ingest). Search by",
+    "  meaning and by exact name over several shelves; `GET /v1/cards/{id}`; `nuclear-graph card`, `search -p --agents`;",
+    "  MCP `graph_search` by shelf and `graph_card`.",
+    "- The knowledge base is asset files: `knowledge build` generates the rows from the working tree (`extract.py`:",
+    "  diagnostics, library, platforms, the CLIs' help, MCP tools, routes, stages, agents, editor, versions, examples,",
+    "  documents), merges the overlays, validates everything and raises the revision; `knowledge check` fails when the",
+    "  base is behind the tree; `knowledge review` confirms a hand-written row whose source changed; `knowledge ask` runs",
+    "  the questions of `questions.toml`. `ingest` takes the knowledge folder only, embeds what changed and keeps what",
+    "  agents wrote at run time. A client writes only `memory` and `examples`.",
+    "- For the agents: `POST /v1/applies` (what of a spec the platform cannot do yet, by the capabilities' trigger words),",
+    "  `GET /v1/kinds/{platform}` (how people write each kind), `GraphClient.applies | kinds | brief | card`, and",
+    "  `workspace.py`: a project's files, read-only and confined to the project (`read`, `list`, `find`, `grep`, `outline`,",
+    "  `declarations`, `context`). MCP `developer_code` takes `project` and the local coder reads the project by itself."
+   ],
+   "sources": [
+    "nuclear-graph-storage/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "10-ai",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:nuclear-graph-storage/CHANGELOG.md#unreleased.f827c5",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that was the same as the one asked.",
+   "body": [
+    "- A search result's `distance` is the closest the card came by meaning, by its text or by any question it answers;",
+    "  it was the distance of whichever of them ranked it, so a card brought in by a name hid a question of its own that",
+    "  was the same as the one asked.",
+    "- **A closed keyring is waited for** (ADR-installer-0002): a graph started at login ran before the keyring opened, found no",
+    "  owner's token and made another one in a file (every `nuclear-graph` command was answered 401; the same on the",
+    "  documents' key would open no card). The names the keyring keeps are written down (`.keyring`); a secret of a closed",
+    "  keyring is waited for, then refused, and never made again.",
+    "- Every MCP tool's card answers \"what does <tool> do\" (a generated question of its row): the planner gave that",
+    "  question the 15 rows of `query:mcp.commands`. `query:examples` answers \"an example of a <kind>\"; \"que hace el mcp\"",
+    "  is a question of `concept:mcp`, no longer of `query:mcp.tools`.",
+    "- The package is typed (`py.typed`): a project that uses it is checked against it.",
+    "- The graph is a library (ADR-graph-0001): nine shelves (`concepts`, `language`, `platforms`, `tools`, `errors`,",
+    "  `capabilities`, `playbooks`, `examples`, `docs`) of rows with a stable id, keys, questions, typed links and sources,"
    ],
    "sources": [
     "nuclear-graph-storage/CHANGELOG.md"

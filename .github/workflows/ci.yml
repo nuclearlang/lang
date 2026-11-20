@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: "One version for every project (ADR-platform-0011)"
+        run: installer/release/version.sh --check
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy

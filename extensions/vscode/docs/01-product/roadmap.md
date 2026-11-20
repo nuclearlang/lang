@@ -14,6 +14,9 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **0.80.0, the version check at start** (`snapshot.ts`): tested (`test/snapshot.test.ts`), never seen in a running
+  editor over a public installation of another version.
+
 - **0.79.0, the workspace's action buttons, the backend scripts and the first build** (reported from a new Mac: a
   backend project in Cursor showed no play and no tasks): compiled, `npm test` (the scripts' list), installed in
   Cursor, where the *Nuclear Scripts* view shows in the explorer; the buttons under the project's name, a ▷ of the

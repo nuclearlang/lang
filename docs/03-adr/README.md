@@ -16,5 +16,6 @@ is not edited: a new one replaces it.
 | [ADR-platform-0008](0008-nuclear-chat-the-factorys-workplace.md) | Nuclear Chat, the factory's workplace, is a project of its own (amends 0006) | accepted |
 | [ADR-platform-0009](0009-the-ui-is-only-a-ui.md) | The UI is only a UI: every action is a command of the engine, and a tool of its MCP server for the agents | accepted |
 | [ADR-platform-0010](0010-a-team-is-its-members.md) | A team is the members the user hires, as many per role as they want; a new team is a wizard (amends 0005) | accepted |
+| [ADR-platform-0011](0011-one-version-one-release.md) | One version for the whole platform; a release and an installation are one snapshot | accepted |
 
 [old-numbers.md](old-numbers.md): the platform-wide numbers used before 2026-11-16 and the decision that stands for each now.

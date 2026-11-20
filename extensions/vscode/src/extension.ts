@@ -20,6 +20,7 @@ import { activateMonitor } from '../../tools/nuclear-monitor/src/panel';
 import { appDir, CARD, projectCard, readCard } from './card';
 import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
 import { activateWorkspace } from './workspace';
+import { checkSnapshot } from './snapshot';
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -101,6 +102,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('nuclear.builder.reports', (f?: { team?: string; member?: string }) => ReportsPanel.show(context, f)),
   );
   void SetupPanel.offer(context);
+  // one release, one snapshot (ADR-platform-0011): an extension the store updated alone offers to bring the rest
+  setTimeout(() => checkSnapshot(context), 4000);
   activateDevice(context, findSynapsis, (deviceId, extra, root, noDebug) => runApp(noDebug ?? false, deviceId, extra, root));
   // a web project's app: from the workspace `nuclear build` writes, or (never built yet) its default place
   // a web project's app: its card (output, toolchain) and the synapsis of its workspace (else the one on the PATH)

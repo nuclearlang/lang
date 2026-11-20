@@ -11,6 +11,11 @@ related: [installer/release/package.sh, installer/release/clean-machine/Dockerfi
 1. One version for the whole platform (`version` of `[workspace.package]` in the root `Cargo.toml` and every other
    manifest), raised by Semantic Versioning: a fix
    PATCH, a new feature MINOR, a breaking change MAJOR (MINOR while it is `0.x`) ([coding.md](../../../docs/05-standards/coding.md#git)).
+   A release is one snapshot ([ADR-platform-0011](../../../docs/03-adr/0011-one-version-one-release.md)):
+   `installer/release/version.sh <version>` writes it into every project and lock file, then
+   `nuclear-graph knowledge build` (the knowledge base names each component's version), `knowledge check`, `ingest`;
+   `installer/release/version.sh --check v<version>` must say *every project is at <version>*. The CI checks it on
+   every push and the job `snapshot` of the release before anything is built.
 2. Push the tag `v<version>`. `.github/workflows/release.yml` builds the six archives, the AI archives, the VS Code
    extension and the vectors of the knowledge base (`nuclearlang-embeddings-<version>.npz`, one file for every system:
    the job `embeddings` runs `nuclear-graph embeddings --reuse` with the previous release's file, so only the texts

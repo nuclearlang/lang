@@ -18,6 +18,10 @@ in [the language project](../../../nuclearlang/docs/01-product/roadmap.md).
 
 ## Pending
 
+- **The JetBrains plugin and the Zed extension compare no versions** (ADR-platform-0011): only VS Code checks its
+  version against the installation's `.version` and offers to bring them together. Left: the same in JetBrains (a
+  notification with `nuclear update`) and, where Zed lets an extension notify, in Zed.
+
 - **Docs that do not match the code** (found writing the user guides, 2026-11-16): the server has no document
   formatting, only on-type formatting (Enter in a comment), so a whole file is formatted with `nuclear fmt`;
   `vscode/docs/02-architecture/client.md` places ▷ Run / Debug in `editor/title/run`, where `package.json` has

@@ -195,13 +195,13 @@
    "id": "doc:extensions/AGENTS.md#stack",
    "type": "readme",
    "title": "Editor extensions — Stack",
-   "summary": "`zed/extension.toml`",
+   "summary": "`vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`, `zed/extension.toml` and every other project",
    "body": [
     "- `vscode/`: TypeScript, esbuild, `vscode-languageclient`; VS Code 1.90 or newer",
     "- `jetbrains/`: Java, compiled with `javac` against the installed IDE (no Gradle); the platform's native LSP API",
     "- `zed/`: Rust → wasm32-wasip2, `zed_extension_api` 0.7, a tree-sitter grammar of tokens",
-    "- One version for the three (0.74.0 today): `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`,",
-    "  `zed/extension.toml`"
+    "- The platform's one version (ADR-platform-0011, 0.80.0 today), written by `installer/release/version.sh` into",
+    "  `vscode/package.json`, `jetbrains/resources/META-INF/plugin.xml`, `zed/extension.toml` and every other project"
    ],
    "sources": [
     "extensions/AGENTS.md"
@@ -881,7 +881,8 @@
    "summary": "Done after every change of the server, a client, the themes or the bundled dialects and type definitions, without asking.",
    "body": [
     "Done after every change of the server, a client, the themes or the bundled dialects and type definitions, without",
-    "asking. The three extensions share one version; Zed's follows VS Code's."
+    "asking. The extensions carry the platform's one version: a release of them is a release of the whole platform",
+    "([ADR-platform-0011](../../../docs/03-adr/0011-one-version-one-release.md))."
    ],
    "sources": [
     "extensions/docs/06-runbooks/release.md"
@@ -915,16 +916,15 @@
    }
   },
   {
-   "id": "doc:extensions/docs/06-runbooks/release.md#steps.fd4863",
+   "id": "doc:extensions/docs/06-runbooks/release.md#steps.8dd751",
    "type": "context",
    "title": "Release the extensions — Steps",
-   "summary": "1. Raise the version (minor for a feature, patch for a fix) in: 2. Write the change in the `CHANGELOG.md` of each extension it reaches.",
+   "summary": "1. Raise the platform's version (minor for a feature, patch for a fix) with `installer/release/version.sh <version>`: it writes every project, these three extensions among them, and their lock files.",
    "body": [
-    "1. Raise the version (minor for a feature, patch for a fix) in:",
-    "   - `extensions/vscode/package.json`",
-    "   - `extensions/jetbrains/resources/META-INF/plugin.xml`",
-    "   - `extensions/zed/extension.toml`",
-    "   - the examples of each `README.md` that name a version",
+    "1. Raise the platform's version (minor for a feature, patch for a fix) with `installer/release/version.sh <version>`:",
+    "   it writes every project, these three extensions among them, and their lock files. Then the examples of each",
+    "   `README.md` that name a version, and the release of the whole platform",
+    "   ([the installer's runbook](../../../installer/docs/06-runbooks/release.md)).",
     "2. Write the change in the `CHANGELOG.md` of each extension it reaches.",
     "3. Build (the VS Code extension carries Nuclear Chat's UI: `nuclear-chat/ui/build-embed.sh` first, after `npm ci` in",
     "   `nuclearlang/tools/node` and `installer/release/build-runtimes.sh`; the CI and the release do the same):",
@@ -1345,6 +1345,29 @@
    }
   },
   {
+   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.1d7853",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
+    "",
+    "- 0.78.0: no change of its own (VS Code's toolchains, only for the platforms you build).",
+    "",
+    "- 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).",
+    "",
+    "- 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build)."
+   ],
+   "sources": [
+    "extensions/jetbrains/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.2775de",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -1358,27 +1381,6 @@
     "- 0.46.0: the version of the three extensions (the Builder's analysis step is in `nuclear-builder`, ADR-developer-0001).",
     "- 0.48.0: the version of the three extensions (the set-up of the AI services is `nuclear-builder setup`, ADR-installer-0002).",
     "- 0.49.0: the version of the three extensions (the Builder's graph of a run, any step run again and a run from scratch are in VS Code and `nuclear-builder`; the language server reads `[project] package` of `nuclear.toml`)."
-   ],
-   "sources": [
-    "extensions/jetbrains/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/jetbrains/CHANGELOG.md#unreleased.2c1a96",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.78.0: no change of its own (VS Code's toolchains, only for the platforms you build).",
-    "",
-    "- 0.77.0: no change of its own (VS Code finds the machine's Flutter; Nuclear Builder's Cursor and Grok Build providers).",
-    "",
-    "- 0.76.0 (fix): the language server is the installer's own `nuclear-lsp` first, then the PATH, and the one bundled in the plugin last (it may be another system's build)."
    ],
    "sources": [
     "extensions/jetbrains/CHANGELOG.md"
@@ -4262,7 +4264,7 @@
     "npm install",
     "npm run compile     # tsc --noEmit, then out/builder-flow.js, out/chat-embed.js (Nuclear Chat's UI, built in nuclear-chat/ui) and out/extension.js",
     "npm run watch       # out/extension.js on every change",
-    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts and test/scripts.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
+    "npm test            # ../tools/nuclear-builder/test/editors.test.ts, then ../tools/nuclear-http-connections/test/sockets.test.ts, ../tools/nuclear-monitor/test/monitor.test.ts, test/chat.test.ts, test/notify.test.ts, test/toolchains.test.ts, test/scripts.test.ts and test/snapshot.test.ts, with node:test (the Builder's engine and set-up are tested in Nuclear: ../tools/nuclear-builder/tests)",
     "npm run theme       # the themes and icons, also of ../jetbrains and ../zed",
     "npm run server      # builds nuclear-lsp and fills server/ (the binary, every dialect, the platform contracts)",
     "npm run package     # theme + compile + server + vsce → nuclearlang-<version>.vsix",
@@ -4407,9 +4409,9 @@
    "id": "doc:extensions/vscode/AGENTS.md#vs-code-extension",
    "type": "readme",
    "title": "VS Code extension",
-   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.79.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
+   "summary": "The NuclearLang extension for VS Code (`nuclearlang`, 0.80.0): the client of the language server, semantic highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections,…",
    "body": [
-    "The NuclearLang extension for VS Code (`nuclearlang`, 0.79.0): the client of the language server, semantic",
+    "The NuclearLang extension for VS Code (`nuclearlang`, 0.80.0): the client of the language server, semantic",
     "highlighting, code metrics, the Nuclear workspace, run and debug of Synapsis projects of every platform, the",
     "Chernobyl themes, and it bundles the tools (Nuclear Builder, HTTP Connections, Nuclear Atlas, the devices), whose code is",
     "in `../tools/<tool>/src/`. Its `theme/` also generates the themes and icons of the JetBrains and Zed extensions. What",
@@ -4658,6 +4660,24 @@
    }
   },
   {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.51928d",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "Unreleased",
+   "body": [
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them. At start the extension compares its version with the installed NuclearLang (`.version`, and `ai/.version`): an extension the store updated alone offers *Update NuclearLang* (`nuclear update`, the newest release whole), an older one offers the extension of the installed release, AI services of another version offer the update; once per pair of versions, nothing blocked, nothing asked on a build from source.",
+    "- 0.79.0: a project's actions (▷ Run or Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, and the rest of its platform's) are buttons in the Nuclear workspace, under the project's name, so they show in Cursor too (it hides an extension's buttons in the editor title bar). A backend project has its scripts like npm's: the explorer's *Nuclear Scripts* view, a ▷ per command (run, test, build, check, install, and migrate once there is a `migrations/` folder), and the same as tasks in *Terminal → Run Task…* (`nuclear: <project>: run`), also before the first build. Run and Debug of a project that was never built cleanly build it first and, when it has errors, say so with *Show Output* instead of \"run `nuclear build` first\". On the Visual Studio Marketplace and Open VSX: the store page shows each tool with its screenshot and its key, an"
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.643206",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4815,24 +4835,6 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a31ad9",
-   "type": "changelog",
-   "title": "Changelog — Unreleased",
-   "summary": "Unreleased",
-   "body": [
-    "- 0.79.0: a project's actions (▷ Run or Serve, ◉ Debug, ✓ Test, ⚒ Build, ☑ Check, and the rest of its platform's) are buttons in the Nuclear workspace, under the project's name, so they show in Cursor too (it hides an extension's buttons in the editor title bar). A backend project has its scripts like npm's: the explorer's *Nuclear Scripts* view, a ▷ per command (run, test, build, check, install, and migrate once there is a `migrations/` folder), and the same as tasks in *Terminal → Run Task…* (`nuclear: <project>: run`), also before the first build. Run and Debug of a project that was never built cleanly build it first and, when it has errors, say so with *Show Output* instead of \"run `nuclear build` first\". On the Visual Studio Marketplace and Open VSX: the store page shows each tool with its screenshot and its key, and how to install NuclearLang first.",
-    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine."
-   ],
-   "sources": [
-    "extensions/vscode/CHANGELOG.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
    "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.a3b726",
    "type": "changelog",
    "title": "Changelog — Unreleased",
@@ -4877,6 +4879,24 @@
    "body": [
     "- 0.56.0: Nuclear Builder draws a run as a living work diagram (React Flow), in two levels like C4: the pipeline, a node per stage with its progress, the members who take part and the step on now, a light round the stage working and the hand-over flowing along its edge; and the inside of a stage, its steps as components with the role that did each and the steps its agent followed, the stages around it a click away. Nodes drag, the view zooms and pans, a minimap shows the whole; the list of who takes part is gone from the side. Claude's defaults are `haiku` and 5 USD per run.",
     "- 0.55.0: the files of a project in the Nuclear workspace are a native tree view (*Files*, below the strip), the same control as the explorer: your file icon theme, git and problem colors, the keyboard, indent guides, *Collapse All*, and the active editor's file selected. Its right-click menu is the same as before (*New with Synapsis* by folder and platform, New File, New Folder, Rename, Delete; protected files and `build/` get nothing), and its title bar has New File, New Folder and New Component for the project's root."
+   ],
+   "sources": [
+    "extensions/vscode/CHANGELOG.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/CHANGELOG.md#unreleased.bdc640",
+   "type": "changelog",
+   "title": "Changelog — Unreleased",
+   "summary": "d how to install NuclearLang first.",
+   "body": [
+    "d how to install NuclearLang first.",
+    "- 0.78.0: a toolchain is needed only for the platforms you build: Flutter is no longer required for a backend or web user, and nothing is asked before you choose; a missing one shows this system's steps to install it, your own install first and NuclearLang's (`nuclear setup`) second, offered on Linux and macOS only and marked where it was never tried on a clean machine."
    ],
    "sources": [
     "extensions/vscode/CHANGELOG.md"
@@ -6133,7 +6153,29 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.03bfce",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.13bccb",
+   "type": "context",
+   "title": "The VS Code extension: its files — `src/`",
+   "summary": "`src/`",
+   "body": [
+    "| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |",
+    "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |",
+    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |",
+    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
+    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
+    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/02-architecture/overview.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.824e2c",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
@@ -6145,9 +6187,8 @@
     "| `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |",
     "| `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |",
     "| `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |",
-    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |",
-    "| `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |",
-    "| `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |"
+    "| `snapshot.ts`, `snapshotCheck.ts` | one release, one snapshot (ADR-platform-0011): at start, this extension's version against the installation's `.version` and `ai/.version`, and the offer that brings them together (`nuclear update`, or the installed release's extension); the comparison tested in `test/snapshot.test.ts` | [the guide](../08-guides/README.md) |",
+    "| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |"
    ],
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
@@ -6159,33 +6200,15 @@
    }
   },
   {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.47bcee",
+   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.ff35f4",
    "type": "context",
    "title": "The VS Code extension: its files — `src/`",
    "summary": "`src/`",
    "body": [
-    "| `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |",
-    "| `toolchains.ts`, `toolchainHost.ts` | the platforms' toolchains: the settings into the environment of every process and terminal, where each is found, the cards of the welcome and the settings page | [ai-services.md](ai-services.md) |",
-    "| `settingsPanel.ts`, `settingsL10n.ts`, `settingsForm.ts`, `aiSettings.ts`, `localModels.ts` | the *Settings and integrations* tool, one section per tool; a section's settings drawn as a form from what `package.json` contributes; the `nuclear.ai.*` settings | [ai-services.md](ai-services.md) |",
-    "| `spending.ts` | the `nuclear.spending.*` settings and the two confirmations before money is spent | [ai-services.md](ai-services.md) |",
     "| `migrateSettings.ts` | the settings that moved to their tool's section, copied at every level, the old id removed only once the new one holds the value | [ai-services.md](ai-services.md) |",
-    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |"
+    "| `language.ts`, `i18n.ts`, `workspaceL10n.ts`, `welcomeL10n.ts` | the language of what the extension shows (`nuclear.language`: automatic, English or Spanish), the globe, the host's `l10n.t`, the pages' dictionaries | [ai-services.md](ai-services.md) |",
+    "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |"
    ],
-   "sources": [
-    "extensions/vscode/docs/02-architecture/overview.md"
-   ],
-   "meta": {
-    "section": "09-editors",
-    "repo": "nuclearlang",
-    "dialect": ""
-   }
-  },
-  {
-   "id": "doc:extensions/vscode/docs/02-architecture/overview.md#src.c40642",
-   "type": "context",
-   "title": "The VS Code extension: its files — `src/`",
-   "summary": "`src/`",
-   "body": "| `connections.ts` | every external connection, checked | [ai-services.md](ai-services.md) |",
    "sources": [
     "extensions/vscode/docs/02-architecture/overview.md"
    ],
@@ -7185,6 +7208,28 @@
     "| A build fails | read the *Synapsis* output panel; the extension runs `nuclear repair` once by itself |",
     "| A new theme does not show | quit VS Code completely and open it again |",
     "| Nuclear Atlas or the Builder says a service is down | open *Settings and integrations* (`Ctrl+Alt+S`) and *Start* it, or run the set-up ([Set up the AI services](../../../../installer/docs/08-guides/ai-setup.md)) |"
+   ],
+   "sources": [
+    "extensions/vscode/docs/08-guides/README.md"
+   ],
+   "meta": {
+    "section": "09-editors",
+    "repo": "nuclearlang",
+    "dialect": ""
+   }
+  },
+  {
+   "id": "doc:extensions/vscode/docs/08-guides/README.md#versions",
+   "type": "readme",
+   "title": "NuclearLang for VS Code — Versions",
+   "summary": "NuclearLang, its services and this extension carry one version, and go together (ADR-platform-0011).",
+   "body": [
+    "NuclearLang, its services and this extension carry one version, and go together",
+    "([ADR-platform-0011](../../../../docs/03-adr/0011-one-version-one-release.md)). When the store updates the extension",
+    "and the installed NuclearLang is older, a notification offers **Update NuclearLang** (`nuclear update` in a terminal:",
+    "the newest release, its AI services included); when the extension is the older one, it offers the extension of the",
+    "installed release. It asks once per pair of versions and blocks nothing. A NuclearLang built from source is not",
+    "compared."
    ],
    "sources": [
     "extensions/vscode/docs/08-guides/README.md"
@@ -9057,13 +9102,21 @@
    }
   },
   {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.3b8d04",
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.0bfa1e",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`).",
-    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project."
+    "- 0.63.0: the version of the Builder's MCP server and VS Code's per-folder workspace; nothing changes in this extension.",
+    "- 0.62.0: the version of VS Code's company screen; nothing changes in this extension.",
+    "- 0.61.0: the version of VS Code's Nuclear Chat, faces and Nuclear Monitor; nothing changes in this extension.",
+    "- 0.60.0: the version of VS Code's second Builder workbench and HTTP Connections' WebSockets; nothing changes in this extension.",
+    "- 0.59.0: the version of VS Code's Builder workbench and chat; nothing changes in this extension.",
+    "- 0.58.0: the version of VS Code's and Android Studio's software factory, onboarding and squad screen; nothing changes in this extension.",
+    "- 0.57.0: the version of VS Code's workspace tree and first Spanish texts; nothing changes in this extension.",
+    "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
+    "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
+    "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension."
    ],
    "sources": [
     "extensions/zed/CHANGELOG.md"
@@ -9075,20 +9128,13 @@
    }
   },
   {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.49cdab",
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.3b8d04",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
-    "- 0.62.0: the version of VS Code's company screen; nothing changes in this extension.",
-    "- 0.61.0: the version of VS Code's Nuclear Chat, faces and Nuclear Monitor; nothing changes in this extension.",
-    "- 0.60.0: the version of VS Code's second Builder workbench and HTTP Connections' WebSockets; nothing changes in this extension.",
-    "- 0.59.0: the version of VS Code's Builder workbench and chat; nothing changes in this extension.",
-    "- 0.58.0: the version of VS Code's and Android Studio's software factory, onboarding and squad screen; nothing changes in this extension.",
-    "- 0.57.0: the version of VS Code's workspace tree and first Spanish texts; nothing changes in this extension.",
-    "- 0.56.0: the version of VS Code's Nuclear Builder diagram; nothing changes in this extension.",
-    "- 0.55.0: the version of VS Code's native file tree in the Nuclear workspace; nothing changes in this extension.",
-    "- 0.54.0: the version of VS Code's Nuclear Builder team view and Claude settings; nothing changes in this extension."
+    "- 0.53.1: the bundled dialects write what a target binds otherwise as the program says it in every target: a name of the program that a function of Python has (`sorted`, `len`, `max`) never hides it; a lambda made in a loop keeps its turn's values; a default list is a new one at every call (Python and Dart); a static field is the class's in Python; `~/` goes toward zero in Python; a chain after `?.` waits for it in Python; a function may change a variable of its file; `m[k] += 1` on a map in Dart; a list of nullable values in TypeScript and of functions in Dart. `==` of two lists, maps or sets compares what they hold (TypeScript, Dart); TypeScript prints a decimal with its `.0` and a missing value as `null`, Python writes `null` and `true` in a text; named arguments to `{ }` parameters reach them in TypeScript; a function type of types only (`(int) => void`).",
+    "- 0.53.0: the bundled dialects: Python's `print` with named arguments, a `for` over `m ?? {}` (also Dart), a conditional spread, `a?.b ?? c`; a typed value at the top of a file is a value, not a declaration; a local or a member no longer imports another file of the project."
    ],
    "sources": [
     "extensions/zed/CHANGELOG.md"
@@ -9124,11 +9170,12 @@
    }
   },
   {
-   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.c9383b",
+   "id": "doc:extensions/zed/CHANGELOG.md#unreleased.981e13",
    "type": "changelog",
    "title": "Changelog — Unreleased",
    "summary": "Unreleased",
    "body": [
+    "- 0.80.0: the platform's one version (ADR-platform-0011): every project of NuclearLang carries the same version and a release is one snapshot of all of them.",
     "- 0.74.0: no change of its own (`nuclear run` writes the project's run log).",
     "- 0.73.2: no change of its own (the VS Code devices' launch log).",
     "- 0.73.1: no change of its own (the VS Code launch of a mobile app).",
@@ -9141,8 +9188,7 @@
     "- 0.67.0: the version of VS Code's team wizard follow-ups; nothing changes in this extension.",
     "- 0.66.0: the version of VS Code's team wizard; nothing changes in this extension.",
     "- 0.65.0: the version of VS Code's portraits and profiles; nothing changes in this extension.",
-    "- 0.64.0: the version of VS Code's chat agent picker; nothing changes in this extension.",
-    "- 0.63.0: the version of the Builder's MCP server and VS Code's per-folder workspace; nothing changes in this extension."
+    "- 0.64.0: the version of VS Code's chat agent picker; nothing changes in this extension."
    ],
    "sources": [
     "extensions/zed/CHANGELOG.md"
