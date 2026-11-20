@@ -14,6 +14,9 @@ More guides: [the Nuclear workspace](workspace.md) · [run, debug and tasks](run
 
 ## Install
 
+- From the store: search **NuclearLang** in the Extensions view (the Visual Studio Marketplace in VS Code; Open VSX
+  in Cursor, VSCodium and Windsurf), or `code --install-extension nuclearlang.nuclearlang`. Install NuclearLang
+  first: the extension runs the installed `nuclear`.
 - The NuclearLang installer installs the `.vsix` when `code` is on the `PATH`.
 - By hand: `code --install-extension nuclearlang-<version>.vsix` (from a GitHub release, or built with
   `npm run package` in `extensions/vscode/`).

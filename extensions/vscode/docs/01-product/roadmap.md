@@ -14,6 +14,13 @@ own: [Nuclear Builder](../../../tools/nuclear-builder/docs/01-product/roadmap.md
 
 ## Untested
 
+- **0.79.0, the workspace's action buttons, the backend scripts and the first build** (reported from a new Mac: a
+  backend project in Cursor showed no play and no tasks): compiled, `npm test` (the scripts' list), installed in
+  Cursor, where the *Nuclear Scripts* view shows in the explorer; the buttons under the project's name, a ▷ of the
+  view and ◉ Debug building a never-built project were not clicked in a running editor (no input tool on this
+  machine). The store page (`README.md` with the website's screenshots, `repository`, `homepage`, `bugs`,
+  `galleryBanner`) is packaged by `vsce` with no warning, not yet seen on the stores.
+
 - **The language button (Unreleased, spec 011 T5.13)**: compiled, tested (`npm test`), the Builder page and the
   company screen rendered headless in English and Spanish with the globe's menu open; never clicked in a running
   VS Code (the re-render of every open page, the status bar item, Nuclear Chat registered again). A WebSocket panel

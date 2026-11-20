@@ -2,10 +2,23 @@
   "name": "nuclearlang",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.78.0",
+  "version": "0.79.0",
   "publisher": "nuclearlang",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
+  "homepage": "https://nuclearlang.github.io/tools/vscode",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nuclearlang/lang.git",
+    "directory": "extensions/vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/nuclearlang/lang/issues"
+  },
+  "galleryBanner": {
+    "color": "#0b0f0c",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -1505,6 +1518,18 @@
         "command": "nuclear.tree.delete",
         "title": "%command.nuclear.tree.delete%",
         "category": "%category.nuclear%"
+      },
+      {
+        "command": "nuclear.scripts.run",
+        "title": "%command.nuclear.scripts.run%",
+        "category": "%category.nuclear%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "nuclear.scripts.refresh",
+        "title": "%command.nuclear.scripts.refresh%",
+        "category": "%category.nuclear%",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -1717,6 +1742,10 @@
         {
           "command": "nuclear.tree.delete",
           "when": "false"
+        },
+        {
+          "command": "nuclear.scripts.run",
+          "when": "false"
         }
       ],
       "debug/toolBar": [
@@ -1895,6 +1924,20 @@
           "command": "nuclear.tree.delete",
           "when": "webviewId == 'nuclear.workspace' && webviewSection == 'file' && nuclearDel",
           "group": "2_edit@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "nuclear.scripts.run",
+          "when": "view == nuclear.scripts && viewItem == nuclearScript",
+          "group": "inline"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "nuclear.scripts.refresh",
+          "when": "view == nuclear.scripts",
+          "group": "navigation"
         }
       ]
     },
@@ -2186,12 +2229,39 @@
           "name": "%view.nuclear.callStack%",
           "when": "nuclear.pausedInNuc"
         }
+      ],
+      "explorer": [
+        {
+          "id": "nuclear.scripts",
+          "name": "%view.nuclear.scripts%",
+          "icon": "icons/nuclear.svg",
+          "when": "nuclear.hasBackend"
+        }
       ]
     },
     "submenus": [
       {
         "id": "nuclear.tree.new",
         "label": "%submenu.nuclear.tree.new%"
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "nuclear",
+        "required": [
+          "script",
+          "project"
+        ],
+        "properties": {
+          "script": {
+            "type": "string",
+            "description": "%taskDefinition.nuclear.script%"
+          },
+          "project": {
+            "type": "string",
+            "description": "%taskDefinition.nuclear.project%"
+          }
+        }
       }
     ]
   },
@@ -2202,7 +2272,7 @@
     "theme": "node theme/build.mjs && node theme/icons.mjs",
     "server": "node scripts/bundle-server.mjs",
     "package": "npm run theme && npm run compile && npm run server && vsce package --no-dependencies --allow-missing-repository",
-    "test": "esbuild ../tools/nuclear-builder/test/editors.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/editors.test.js && esbuild ../tools/nuclear-http-connections/test/sockets.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-http-connections/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/sockets.test.js && esbuild ../tools/nuclear-monitor/test/monitor.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/monitor.test.js && esbuild test/chat.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/chat.test.js && esbuild test/notify.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/notify.test.js && esbuild test/toolchains.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/toolchains.test.js && esbuild test/toolchainPage.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --log-level=error --outdir=out/test --entry-names=[name] && node --test out/test/toolchainPage.test.js && esbuild ../tools/nuclear-device-manager/test/launch-log.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/launch-log.test.js && esbuild ../tools/nuclear-device-manager/test/page.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-device-manager/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/page.test.js && npm run -s test:compat",
+    "test": "esbuild ../tools/nuclear-builder/test/editors.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/editors.test.js && esbuild ../tools/nuclear-http-connections/test/sockets.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-http-connections/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/sockets.test.js && esbuild ../tools/nuclear-monitor/test/monitor.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/monitor.test.js && esbuild test/chat.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/chat.test.js && esbuild test/notify.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/notify.test.js && esbuild test/toolchains.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/toolchains.test.js && esbuild test/scripts.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/scripts.test.js && esbuild test/toolchainPage.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --log-level=error --outdir=out/test --entry-names=[name] && node --test out/test/toolchainPage.test.js && esbuild ../tools/nuclear-device-manager/test/launch-log.test.ts --bundle --platform=node --target=node18 --outdir=out/test --entry-names=[name] && node --test out/test/launch-log.test.js && esbuild ../tools/nuclear-device-manager/test/page.test.ts --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-device-manager/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/page.test.js && npm run -s test:compat",
     "test:compat": "esbuild ../tools/nuclear-builder/test/compat.test.ts --log-level=error --bundle --platform=node --target=node18 --alias:vscode=../tools/nuclear-builder/test/vscode-stub.ts --outdir=out/test --entry-names=[name] && node --test out/test/compat.test.js",
     "chat": "node -e \"const fs=require('fs');const f='../../nuclear-chat/ui/build/app/dist-embed/embed.js';if(!fs.existsSync(f)){console.error('Nuclear Chat UI not built: run nuclear-chat/ui/build-embed.sh (after npm ci in nuclearlang/tools/node)');process.exit(1)}fs.mkdirSync('out',{recursive:true});fs.copyFileSync(f,'out/chat-embed.js')\""
   },
@@ -2220,15 +2290,6 @@
     "react": "19.2.9",
     "react-dom": "19.2.9",
     "typescript": "5.5.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nuclearlang/lang.git",
-    "directory": "extensions/vscode"
-  },
-  "homepage": "https://nuclearlang.github.io",
-  "bugs": {
-    "url": "https://github.com/nuclearlang/lang/issues"
   },
   "l10n": "./l10n"
 }

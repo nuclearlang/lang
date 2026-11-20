@@ -20,6 +20,7 @@ finishes (`onStartupFinished`).
 | `debug.ts` | debugging a `.nuc` under each dialect's debugger | [debugging.md](debugging.md) |
 | `workspace.ts` | the Nuclear workspace: the strip, the pane, the tabs, the actions, the welcome page | [workspace.md](workspace.md) |
 | `treeMenu.ts` | the right-click menu of the workspace's file tree | [workspace.md](workspace.md) |
+| `scripts.ts`, `backendScripts.ts` | a backend project's scripts, like npm's: the task provider (type `nuclear`) and the explorer's *Nuclear Scripts* view; the list (`backendScripts`, tested in `test/scripts.test.ts`) | [run-and-debug](../08-guides/run-and-debug.md) |
 | `notifications.ts` | the one notification system: the notices of what the local agents did, the pop-ups, the chat's notices, *Open* | [ai-services.md](ai-services.md) |
 | `notify.ts` | its rules, no `vscode` import: what pops up per `nuclear.notifications`, seen, folded, the badges, which chat events call the user | [ai-services.md](ai-services.md) |
 | `aiMachine.ts`, `setupPanel.ts`, `setupL10n.ts` | the welcome (the first-run onboarding over every setting): the machine, `nuclear-builder setup` run as a process, the toolchains, the providers, the team, the spending, each tool's settings | [ai-services.md](ai-services.md) |

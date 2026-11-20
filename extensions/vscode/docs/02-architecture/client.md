@@ -34,7 +34,9 @@ Settings: `nuclear.dialect` (`flutter` by default; `base` checks only the base l
 
 ## A Synapsis project
 
-`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes; it works with the
+`findSynapsis(root?)` reads `build/<name>.code-workspace`, which `nuclear build` writes (a folder with a `config.nuc`
+and no such file, never built cleanly, is built once by `firstBuild` when Run or Debug asks; a failed build shows
+its reason with *Show Output*; `nuclear.canRun` is on for any folder with a `config.nuc`); it works with the
 workspace file open (`nuclear code`) and with only the folder open (`code .`). It takes a project's root, so a tab
 of the Nuclear workspace runs its own project; `synapsisOf(file)` walks up from a file for the hot reload on save.
 

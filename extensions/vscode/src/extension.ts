@@ -15,7 +15,7 @@ import { serverCandidates } from './toolchains';
 import { l10n, registerLanguage } from './i18n';
 import { activateDebug } from './debug';
 import { activateDevice } from '../../tools/nuclear-device-manager/src/mobile-device';
-import { activateHttpConnections } from '../../tools/nuclear-http-connections/src/httpConnections';
+import { activateHttpConnections, nuclearBinary } from '../../tools/nuclear-http-connections/src/httpConnections';
 import { activateMonitor } from '../../tools/nuclear-monitor/src/panel';
 import { appDir, CARD, projectCard, readCard } from './card';
 import { activateWebDevice } from '../../tools/nuclear-device-manager/src/web-device';
@@ -188,7 +188,9 @@ function synapsisOf(file: string): Synapsis | undefined {
 }
 
 function updateRunContext(): void {
-  void vscode.commands.executeCommand('setContext', 'nuclear.canRun', findSynapsis() !== undefined);
+  // a project never built cleanly can run too: Run builds it first (firstBuild)
+  const synapsisFolder = (vscode.workspace.workspaceFolders ?? []).some((f) => fs.existsSync(path.join(f.uri.fsPath, 'config.nuc')));
+  void vscode.commands.executeCommand('setContext', 'nuclear.canRun', synapsisFolder || findSynapsis() !== undefined);
 }
 
 /** Exit code of `nuclear build` when the `.nuc` have errors: repairing the app cannot fix them. */
@@ -196,7 +198,7 @@ const CODE_ERRORS = 2;
 
 /** `synapsis <command>` (build: transpile, plus pub get and build_runner when needed); one at a time.
  * Resolves to the exit code (0 = ok). */
-function synapsis(d: Synapsis, command: 'build' | 'repair' = 'build'): Promise<number> {
+function synapsis(d: Pick<Synapsis, 'root' | 'command' | 'env'>, command: 'build' | 'repair' = 'build'): Promise<number> {
   const out = (synapsisOutput ??= vscode.window.createOutputChannel('Synapsis'));
   buildQueue = buildQueue.then(
     () =>
@@ -291,14 +293,31 @@ async function synapsisLaunch(d: Synapsis, base: vscode.DebugConfiguration): Pro
 
 /** `root`: the project (a tab of the Nuclear workspace); without it, the first Synapsis project of the folders. */
 async function runApp(noDebug: boolean, deviceId?: string, extra: Record<string, unknown> = {}, root?: string): Promise<void> {
-  const d = findSynapsis(root);
-  if (!d) {
-    void vscode.window.showWarningMessage(l10n.t('Not a Synapsis project: run `nuclear build` in the project first.'));
-    return;
-  }
+  const d = findSynapsis(root) ?? (await firstBuild(root));
+  if (!d) return;
   if (d.launch.type !== 'dart') return runPlatformApp(d, noDebug);
   const config = await synapsisLaunch(d, { type: 'dart', request: 'launch', name: d.launch.name, ...(deviceId && { deviceId }), ...extra });
   if (config) await startDart(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(d.app)), config, { noDebug });
+}
+
+/** A Synapsis project (a `config.nuc`) that was never built cleanly has no `build/<name>.code-workspace`, the file
+ * Run and Debug read: it is built once here, and a failed build says why instead of a bare "build it first". */
+async function firstBuild(root?: string): Promise<Synapsis | undefined> {
+  const roots = root ? [root] : (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath);
+  const project = roots.find((r) => fs.existsSync(path.join(r, 'config.nuc')));
+  if (!project) {
+    void vscode.window.showWarningMessage(l10n.t('Not a Synapsis project: a Synapsis project has a config.nuc.'));
+    return undefined;
+  }
+  const code = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: l10n.t('Synapsis: building {0} for the first time…', path.basename(project)) }, () =>
+    synapsis({ root: project, command: nuclearBinary(), env: {} }),
+  );
+  updateRunContext();
+  if (code !== 0) {
+    await showBuildError(code === CODE_ERRORS ? l10n.t('the project has errors: fix them, then run it again.') : l10n.t('the build failed.'));
+    return undefined;
+  }
+  return findSynapsis(project);
 }
 
 /** A backend or web app (the launch the CLI wrote for its dialect): build, then that launch. A web app's dev server

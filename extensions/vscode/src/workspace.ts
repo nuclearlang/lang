@@ -24,6 +24,7 @@ import { inline, runOutline, specOfPath, specTree } from '../../tools/nuclear-bu
 import { findProjects, HttpModel, NodeAction, Project, readProject } from '../../tools/nuclear-http-connections/src/httpConnections';
 import { ComponentPanel } from '../../tools/nuclear-http-connections/src/panel';
 import { contextFor, registerTreeCommands } from './treeMenu';
+import { activateScripts } from './scripts';
 import { lang, langButton, localize, onDidChangeLang, pageI18n, texts, l10n } from './i18n';
 import { STRIP } from './workspaceL10n';
 import { WELCOME as WELCOME_TEXTS } from './welcomeL10n';
@@ -198,6 +199,8 @@ const DIALECT_ICONS: Record<string, string> = { flutter: 'flutter', react: 'reac
 
 export function activateWorkspace(context: vscode.ExtensionContext, http: HttpModel): Workspace {
   const ws = new Workspace(context, http);
+  // the backend projects' scripts, like npm's: a task per command and the explorer's Nuclear Scripts view
+  activateScripts(context, () => ws.projects(), ws.onDidChange.event);
   // the notifications of the local agents: a count on each tool's tab, a badge on the strip's icon, Open goes to it
   notices.open = (n) => ws.openNotice(n);
   context.subscriptions.push(notices.onDidChange.event(() => ws.refresh()));
@@ -552,7 +555,7 @@ class Workspace implements vscode.WebviewViewProvider {
     const tool = tools().find((t) => TOOL_PREFIX + t.id === key);
     const envs = this.http.environments();
     const pane = !tool
-      ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect } }
+      ? { kind: 'files', project: active && { ctx: JSON.stringify(contextFor(active.platform, active.root, active.root, true)), root: active.root, name: active.name, platform: active.platform, dialect: active.dialect, actions: platformActions()[active.platform ?? ''] ?? [] } }
       : tool.id === 'http-connections'
         ? { kind: 'tree', nodes: this.http.tree(), environment: envs.active }
         : tool.id === 'devices'
@@ -1093,7 +1096,8 @@ export function stripHtml(webview: vscode.Webview): string {
     pane.appendChild(h);
   }
 
-  // the files of the active project (its actions are in the editor title bar)
+  // the files of the active project, under its actions: in this pane, because an editor may hide the title bar's
+  // (Cursor shows none of an extension's); the title bar has them too
   function renderFiles(pane, p) {
     if (!p.project) {
       head(pane, t('workspace'));
@@ -1104,6 +1108,16 @@ export function stripHtml(webview: vscode.Webview): string {
       return;
     }
     head(pane, p.project.name, (p.project.platform || '') + ' ' + p.project.dialect);
+    if (p.project.actions.length) {
+      const bar = el('div', 'actions');
+      for (const a of p.project.actions) {
+        const b = el('button', a.id === 'run' ? 'primary' : '', a.label);
+        b.title = a.title + (a.key ? ' (' + a.key + ')' : '');
+        b.addEventListener('click', () => vscode.postMessage({ type: 'action', id: a.id }));
+        bar.appendChild(b);
+      }
+      pane.appendChild(bar);
+    }
     const tree = el('div', 'tree files'); tree.id = 'tree'; tree.tabIndex = 0; tree.dataset.vscodeContext = p.project.ctx;
     tree.addEventListener('keydown', treeKey);
     pane.appendChild(tree);

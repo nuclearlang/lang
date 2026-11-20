@@ -47,6 +47,13 @@ them.
 
 ## Backend and web
 
+- **The scripts of a backend project**, like npm's: the explorer's **Nuclear Scripts** view lists each backend
+  project with a ▷ per command (`run`, `test`, `build`, `check`, `install`, and `migrate` once the project has a
+  `migrations/` folder). The same are tasks of *Terminal → Run Task…* (`nuclear: <project>: run`), there before the
+  first build too. Each runs `nuclear <command>` in the project's folder, in a terminal of its own.
+- **A project that never built cleanly** (no `build/<name>.code-workspace`): ◉ Debug builds it first; if it has
+  errors, the notification says so and *Show Output* shows them.
+
 - **◉ Debug** builds the project and starts its debug launch: debugpy for `fastapi`, node with source maps for
   `nestjs`, Chrome for `react`. A `react` app's dev server starts first, in its own terminal.
 - **Build on save** (`nuclear.buildOnSave`, on by default): saving a `.nuc` runs `nuclear build`, and the running

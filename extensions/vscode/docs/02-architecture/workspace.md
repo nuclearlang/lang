@@ -78,7 +78,9 @@ Under every pane, the list of every tool's notices (below, *Badges and notificat
 
 ## The actions of a project
 
-`PLATFORM_ACTIONS[platform]` are the `editor/title` buttons of `package.json`: the commands `nuclear.action.<id>`,
+`platformActions()[platform]` are the buttons of the files pane, under the project's name (`renderFiles`, the
+`.actions` row; a click posts `action`), and the `editor/title` buttons of `package.json` (Cursor shows none of an
+extension's title bar buttons): the commands `nuclear.action.<id>`,
 shown by the context key `nuclear.platform` that `refresh()` sets, run by `action(id)`.
 
 | Platform | Actions |

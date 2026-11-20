@@ -35,7 +35,8 @@ the keyboard walks it (arrows, Home, End, Enter).
 
 ### The actions of a project
 
-The actions of the active project's platform are buttons in the editor title bar, the row of the editor tabs:
+The actions of the active project's platform are buttons under the project's name in the workspace, and also in
+the editor title bar, the row of the editor tabs (Cursor hides the title bar's; the workspace's are always there):
 
 | Platform | Buttons |
 |---|---|

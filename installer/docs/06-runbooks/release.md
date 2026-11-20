@@ -17,8 +17,9 @@ related: [installer/release/package.sh, installer/release/clean-machine/Dockerfi
    by hand (`workflow_dispatch`).
 3. The job `marketplaces` publishes the same `.vsix` on the Visual Studio Marketplace (Trusted Publishing: no token;
    the publisher `nuclearlang` has a policy for owner `nuclearlang`, repository `lang`, workflow `release.yml`, no
-   environment) and on Open VSX (Trusted Publishing too, namespace
-   `nuclearlang`, the same repository and workflow). The stores read the `version` of
+   environment) and on Open VSX (namespace `nuclearlang`: the secret
+   `OVSX_PAT`, a token scoped to the namespace with *Publishing only*; without it, Trusted Publishing, which Open VSX
+   lets register only once the namespace is verified). The stores read the `version` of
    `extensions/vscode/package.json`: bump it for the release, or that store skips the upload. A failure there does not
    stop the GitHub release.
 4. The public one-liners download from that release: without a release they fail with a clear error.
